@@ -1,0 +1,32 @@
+Package: PatientLevelPrediction
+Type: Package
+Title: Package for patient level prediction using data in the OMOP Common Data Model
+Version: 0.0.1
+Date: 2015-03-22
+Author: Martijn J. Schuemie [aut, cre],
+  Marc A. Suchard [aut],
+  Patrick B. Ryan [aut]  
+Maintainer: Martijn J. Schuemie <schuemie@ohdsi.org>
+Description: Add description
+License: Apache License 2.0
+Depends:
+    R (>= 3.1.0),
+    bit,
+    DatabaseConnector (>= 1.1.2),
+    Cyclops (>= 1.0.0)
+Imports:     
+    ggplot2,
+    ff,
+    ffbase, 
+    plyr,
+    Rcpp (>= 0.11.2),   
+    RJDBC,
+    SqlRender (>= 1.1.0),
+    survival
+Suggests:
+    testthat,
+    pROC,
+    gnm,
+    knitr,
+    rmarkdown
+NeedsCompilation: no
