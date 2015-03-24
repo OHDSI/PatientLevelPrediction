@@ -29,4 +29,5 @@ Suggests:
     gnm,
     knitr,
     rmarkdown
-NeedsCompilation: no
+LinkingTo: Rcpp
+NeedsCompilation: yes

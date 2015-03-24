@@ -79,48 +79,48 @@
 #' }
 #' 
 #' @export
-getDbCovariates <- function(connectionDetails = NULL,
-                            connection = NULL,
-                            oracleTempSchema = NULL,
-                            cdmDatabaseSchema,
-                            useExistingCohortPerson = TRUE,
-                            cohortDatabaseSchema = cdmDatabaseSchema,
-                            cohortTable = "cohort",
-                            cohortConceptIds = c(0,1),
-                            useCovariateDemographics = TRUE,
-                            useCovariateConditionOccurrence = TRUE,
-                            useCovariateConditionOccurrence365d = TRUE,
-                            useCovariateConditionOccurrence30d = FALSE,
-                            useCovariateConditionOccurrenceInpt180d = FALSE,
-                            useCovariateConditionEra = FALSE,
-                            useCovariateConditionEraEver = FALSE,
-                            useCovariateConditionEraOverlap = FALSE,
-                            useCovariateConditionGroup = FALSE,
-                            useCovariateDrugExposure = FALSE,
-                            useCovariateDrugExposure365d = FALSE,
-                            useCovariateDrugExposure30d = FALSE,
-                            useCovariateDrugEra = FALSE,
-                            useCovariateDrugEra365d = FALSE,
-                            useCovariateDrugEra30d = FALSE,
-                            useCovariateDrugEraOverlap = FALSE,
-                            useCovariateDrugEraEver = FALSE,
-                            useCovariateDrugGroup = FALSE,
-                            useCovariateProcedureOccurrence = FALSE,
-                            useCovariateProcedureOccurrence365d = FALSE,
-                            useCovariateProcedureOccurrence30d = FALSE,
-                            useCovariateProcedureGroup = FALSE,
-                            useCovariateObservation = FALSE,
-                            useCovariateObservation365d = FALSE,
-                            useCovariateObservation30d = FALSE,
-                            useCovariateObservationBelow = FALSE,
-                            useCovariateObservationAbove = FALSE,
-                            useCovariateObservationCount365d = FALSE,
-                            useCovariateConceptCounts = FALSE,
-                            useCovariateRiskScores = FALSE,
-                            useCovariateInteractionYear = FALSE,
-                            useCovariateInteractionMonth = FALSE,
-                            excludedCovariateConceptIds = "",
-                            deleteCovariatesSmallCount = 100) {
+getDbCovariateData <- function(connectionDetails = NULL,
+                               connection = NULL,
+                               oracleTempSchema = NULL,
+                               cdmDatabaseSchema,
+                               useExistingCohortPerson = FALSE,
+                               cohortDatabaseSchema = cdmDatabaseSchema,
+                               cohortTable = "cohort",
+                               cohortConceptIds = c(0,1),
+                               useCovariateDemographics = TRUE,
+                               useCovariateConditionOccurrence = TRUE,
+                               useCovariateConditionOccurrence365d = TRUE,
+                               useCovariateConditionOccurrence30d = FALSE,
+                               useCovariateConditionOccurrenceInpt180d = FALSE,
+                               useCovariateConditionEra = FALSE,
+                               useCovariateConditionEraEver = FALSE,
+                               useCovariateConditionEraOverlap = FALSE,
+                               useCovariateConditionGroup = FALSE,
+                               useCovariateDrugExposure = FALSE,
+                               useCovariateDrugExposure365d = FALSE,
+                               useCovariateDrugExposure30d = FALSE,
+                               useCovariateDrugEra = FALSE,
+                               useCovariateDrugEra365d = FALSE,
+                               useCovariateDrugEra30d = FALSE,
+                               useCovariateDrugEraOverlap = FALSE,
+                               useCovariateDrugEraEver = FALSE,
+                               useCovariateDrugGroup = FALSE,
+                               useCovariateProcedureOccurrence = FALSE,
+                               useCovariateProcedureOccurrence365d = FALSE,
+                               useCovariateProcedureOccurrence30d = FALSE,
+                               useCovariateProcedureGroup = FALSE,
+                               useCovariateObservation = FALSE,
+                               useCovariateObservation365d = FALSE,
+                               useCovariateObservation30d = FALSE,
+                               useCovariateObservationBelow = FALSE,
+                               useCovariateObservationAbove = FALSE,
+                               useCovariateObservationCount365d = FALSE,
+                               useCovariateConceptCounts = FALSE,
+                               useCovariateRiskScores = FALSE,
+                               useCovariateInteractionYear = FALSE,
+                               useCovariateInteractionMonth = FALSE,
+                               excludedCovariateConceptIds = "",
+                               deleteCovariatesSmallCount = 100) {
   cdmDatabase <- strsplit(cdmDatabaseSchema ,"\\.")[[1]][1]
   if (is.null(connectionDetails) && is.null(connection))
     stop("Either connectionDetails or connection has to be specified")
@@ -136,7 +136,7 @@ getDbCovariates <- function(connectionDetails = NULL,
   }
   
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCovariates.sql",
-                                                   packageName = "CohortMethod",
+                                                   packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
                                                    oracleTempSchema = oracleTempSchema,
                                                    cdm_database = cdmDatabase,
@@ -184,7 +184,7 @@ getDbCovariates <- function(connectionDetails = NULL,
   
   writeLines("Fetching data from server")
   start <- Sys.time()
-  covariateSql <-"SELECT person_id, cohort_start_date, cohort_definition_id, covariate_id, covariate_value FROM #cohort_covariate ORDER BY person_id, covariate_id"
+  covariateSql <-"SELECT person_id, cohort_start_date, cohort_concept_id, covariate_id, covariate_value FROM #cohort_covariate ORDER BY person_id, covariate_id"
   covariateSql <- SqlRender::translateSql(covariateSql, "sql server", attr(conn, "dbms"), oracleTempSchema)$sql
   covariates <- DatabaseConnector::dbGetQuery.ffdf(conn, covariateSql)
   covariateRefSql <-"SELECT covariate_id, covariate_name, analysis_id, concept_id  FROM #cohort_covariate_ref ORDER BY covariate_id"
@@ -194,9 +194,10 @@ getDbCovariates <- function(connectionDetails = NULL,
   writeLines(paste("Loading took", signif(delta,3), attr(delta,"units")))
   
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCovariateTempTables.sql",
-                                                   packageName = "CohortMethod",
+                                                   packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
-                                                   oracleTempSchema = oracleTempSchema)
+                                                   oracleTempSchema = oracleTempSchema,
+                                                   use_existing_cohort_person = useExistingCohortPerson)
   DatabaseConnector::executeSql(conn,renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
   if (is.null(connection)){
     dummy <- RJDBC::dbDisconnect(conn)
@@ -221,3 +222,79 @@ getDbCovariates <- function(connectionDetails = NULL,
   class(result) <- "covariateData"
   return(result)  
 }
+
+
+#' Save the covariate data to folder
+#'
+#' @description
+#' \code{saveCovariateData} saves an object of type covariateData to folder.
+#' 
+#' @param covariateData          An object of type \code{covariateData} as generated using \code{getDbCovariateData}.
+#' @param file                The name of the folder where the data will be written. The folder should
+#' not yet exist.
+#' 
+#' @details
+#' The data will be written to a set of files in the folder specified by the user.
+#'  
+#' @examples 
+#' #todo
+#' 
+#' @export
+saveCovariateData <- function(covariateData, file){
+  if (missing(covariateData))
+    stop("Must specify covariateData")
+  if (missing(file))
+    stop("Must specify file")
+  if (class(covariateData) != "covariateData")
+    stop("Data not of class covariateData")
+  
+  covariates <- covariateData$covariates
+  covariateRef <- covariateData$covariateRef
+  ffbase::save.ffdf(covariates, covariateRef, dir=file)
+  metaData <- covariateData$metaData
+  save(metaData,file=file.path(file,"metaData.Rdata"))
+}
+
+#' Load the covariate data from a folder
+#'
+#' @description
+#' \code{loadCovariateData} loads an object of type covariateData from a folder in the file system.
+#' 
+#' @param file                The name of the folder containing the data.
+#' @param readOnly            If true, the data is opened read only.
+#' 
+#' @details
+#' The data will be written to a set of files in the folder specified by the user.
+#' 
+#' @return
+#' An object of class covariateData
+#'  
+#' @examples 
+#' #todo
+#' 
+#' @export
+loadCovariateData <- function(file, readOnly = FALSE){
+  if (!file.exists(file))
+    stop(paste("Cannot find folder",file))
+  if (!file.info(file)$isdir)
+    stop(paste("Not a folder",file))
+  
+  temp <- setwd(file)
+  absolutePath <- setwd(temp)
+  
+  e <- new.env()  
+  ffbase::load.ffdf(absolutePath,e)
+  load(file.path(absolutePath,"metaData.Rdata"),e)
+  result <- list(covariates = get("covariates", envir=e),
+                 covariateRef = get("covariateRef", envir=e),
+                 metaData = mget("metaData",envir=e))
+  #Open all ffdfs to prevent annoying messages later:
+  open(result$covariates,readonly = readOnly)
+  open(result$covariateRef,readonly = readOnly)
+  
+  class(result) <- "covariateData"
+  rm(e)
+  return(result)
+}
+
+

@@ -64,14 +64,14 @@ USE @cdm_database;
 IF OBJECT_ID('tempdb..#cohort_person', 'U') IS NOT NULL
 	DROP TABLE #cohort_person;
 	
-SELECT cohort_definition_id,
+SELECT cohort_concept_id,
 	subject_id,
 	cohort_start_date,
 	cohort_end_date
 INTO #cohort_person
 FROM @cohort_database_schema.@cohort_table
 {@cohort_concept_ids != ''} ? {
-WHERE cohort_definition_id IN (@cohort_concept_ids)
+WHERE cohort_concept_id IN (@cohort_concept_ids);
 }
 }
 
@@ -80,7 +80,7 @@ IF OBJECT_ID('tempdb..#cohort_covariate', 'U') IS NOT NULL
 
 CREATE TABLE #cohort_covariate (
 	cohort_start_date DATE,
-	cohort_definition_id INT,
+	cohort_concept_id INT,
 	person_id BIGINT,
 	covariate_id BIGINT,
 	covariate_value FLOAT
@@ -112,18 +112,18 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	1 AS covariate_id,
-	cohort_definition_id AS covariate_value
+	cohort_concept_id AS covariate_value
 FROM #cohort_person
-WHERE cohort_definition_id = 1;
+WHERE cohort_concept_id = 1;
 
 /**************************
 ***************************
@@ -156,13 +156,13 @@ INNER JOIN (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	gender_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -199,13 +199,13 @@ INNER JOIN (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	race_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -242,13 +242,13 @@ INNER JOIN (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	race_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -280,13 +280,13 @@ WHERE (year(cp1.cohort_start_date) - p1.YEAR_OF_BIRTH) >= 0
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	FLOOR((YEAR(cp1.cohort_start_date) - p1.YEAR_OF_BIRTH) / 5) + 10 AS covariate_id,
 	1 AS covariate_value
@@ -311,13 +311,13 @@ FROM #cohort_person cp1;
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	YEAR(cohort_start_date) AS covariate_id,
 	1 AS covariate_value
@@ -338,13 +338,13 @@ FROM #cohort_person cp1;
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	MONTH(cohort_start_date) + 40 AS covariate_id,
 	1 AS covariate_value
@@ -384,13 +384,13 @@ WHERE co1.condition_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' 
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 101 AS covariate_id,
 	1 AS covariate_value
@@ -429,13 +429,13 @@ WHERE co1.condition_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' 
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 102 AS covariate_id,
 	1 AS covariate_value
@@ -475,13 +475,13 @@ WHERE co1.condition_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' 
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 103 AS covariate_id,
 	1 AS covariate_value
@@ -526,13 +526,13 @@ WHERE ce1.condition_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' 
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(ce1.condition_concept_id AS BIGINT) * 1000 + 201 AS covariate_id,
 	1 AS covariate_value
@@ -572,13 +572,13 @@ WHERE ce1.condition_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' 
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(ce1.condition_concept_id AS BIGINT) * 1000 + 202 AS covariate_id,
 	1 AS covariate_value
@@ -673,13 +673,13 @@ INNER JOIN concept c1
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
@@ -735,13 +735,13 @@ WHERE de1.drug_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' } ? {
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 401 AS covariate_id,
 	1 AS covariate_value
@@ -780,13 +780,13 @@ WHERE de1.drug_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' } ? {
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 402 AS covariate_id,
 	1 AS covariate_value
@@ -831,13 +831,13 @@ WHERE de1.drug_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' } ? {
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 501 AS covariate_id,
 	1 AS covariate_value
@@ -876,13 +876,13 @@ WHERE de1.drug_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' } ? {
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 502 AS covariate_id,
 	1 AS covariate_value
@@ -921,13 +921,13 @@ WHERE de1.drug_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' } ? {
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 503 AS covariate_id,
 	1 AS covariate_value
@@ -965,13 +965,13 @@ WHERE de1.drug_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' } ? {
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 504 AS covariate_id,
 	1 AS covariate_value
@@ -1058,13 +1058,13 @@ INNER JOIN concept c1
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
@@ -1111,13 +1111,13 @@ WHERE len(c1.concept_code) = 3;
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 601 AS covariate_id,
 	COUNT(DISTINCT ccr1.concept_id) AS covariate_value
@@ -1137,7 +1137,7 @@ INNER JOIN concept c1
 	ON cg1.ancestor_concept_id = c1.concept_id
 WHERE len(c1.concept_code) = 3
 GROUP BY cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 601;
 
@@ -1179,13 +1179,13 @@ WHERE po1.procedure_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' 
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(po1.procedure_concept_id AS BIGINT) * 1000 + 701 AS covariate_id,
 	1 AS covariate_value
@@ -1224,13 +1224,13 @@ WHERE po1.procedure_concept_id NOT IN (0 {@excluded_covariate_concept_ids != '' 
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(po1.procedure_concept_id AS BIGINT) * 1000 + 702 AS covariate_id,
 	1 AS covariate_value
@@ -1315,13 +1315,13 @@ INNER JOIN concept c1
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
@@ -1377,13 +1377,13 @@ WHERE o1.observation_concept_id NOT IN (0 {@excluded_covariate_concept_ids != ''
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 901 AS covariate_id,
 	1 AS covariate_value
@@ -1422,13 +1422,13 @@ WHERE o1.observation_concept_id NOT IN (0 {@excluded_covariate_concept_ids != ''
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 902 AS covariate_id,
 	1 AS covariate_value
@@ -1457,14 +1457,14 @@ SELECT DISTINCT CAST(t1.observation_concept_id AS BIGINT) * 1000 + 903 AS covari
 	903 AS analysis_id,
 	t1.observation_concept_id AS concept_id
 FROM (
-	SELECT cp1.cohort_definition_id,
+	SELECT cp1.cohort_concept_id,
 		cp1.subject_id,
 		o1.observation_concept_id,
 		o1.value_as_number,
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.cohort_definition_id,
+			PARTITION BY cp1.cohort_concept_id,
 			cp1.subject_id,
 			o1.observation_concept_id ORDER BY o1.observation_date DESC
 			) AS rn1
@@ -1485,26 +1485,26 @@ WHERE RN1 = 1
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	CAST(observation_concept_id AS BIGINT) * 1000 + 903 AS covariate_id,
 	1 AS covariate_value
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		o1.observation_concept_id,
 		o1.value_as_number,
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.cohort_definition_id,
+			PARTITION BY cp1.cohort_concept_id,
 			cp1.subject_id,
 			o1.observation_concept_id ORDER BY o1.observation_date DESC
 			) AS rn1
@@ -1539,14 +1539,14 @@ SELECT DISTINCT CAST(t1.observation_concept_id AS BIGINT) * 1000 + 904 AS covari
 	904 AS analysis_id,
 	t1.observation_concept_id AS concept_id
 FROM (
-	SELECT cp1.cohort_definition_id,
+	SELECT cp1.cohort_concept_id,
 		cp1.subject_id,
 		o1.observation_concept_id,
 		o1.value_as_number,
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.cohort_definition_id,
+			PARTITION BY cp1.cohort_concept_id,
 			cp1.subject_id,
 			o1.observation_concept_id ORDER BY o1.observation_date DESC
 			) AS rn1
@@ -1567,26 +1567,26 @@ WHERE RN1 = 1
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	CAST(observation_concept_id AS BIGINT) * 1000 + 904 AS covariate_id,
 	1 AS covariate_value
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		o1.observation_concept_id,
 		o1.value_as_number,
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.cohort_definition_id,
+			PARTITION BY cp1.cohort_concept_id,
 			cp1.subject_id,
 			o1.observation_concept_id ORDER BY o1.observation_date DESC
 			) AS rn1
@@ -1631,13 +1631,13 @@ WHERE o1.observation_concept_id NOT IN (0 {@excluded_covariate_concept_ids != ''
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905 AS covariate_id,
 	count(observation_id) AS covariate_value
@@ -1648,7 +1648,7 @@ WHERE o1.observation_concept_id NOT IN (0 {@excluded_covariate_concept_ids != ''
 	AND o1.observation_date <= cp1.cohort_start_date
 	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905;
 
@@ -1676,13 +1676,13 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1000 AS covariate_id,
 	COUNT(DISTINCT ce1.condition_concept_id) AS covariate_value
@@ -1692,7 +1692,7 @@ INNER JOIN condition_era ce1
 WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	AND ce1.condition_era_end_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 --Number of distinct drug ingredients observed in 365d on or prior to cohort index
@@ -1711,13 +1711,13 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1001 AS covariate_id,
 	COUNT(DISTINCT de1.drug_concept_id) AS covariate_value
@@ -1727,7 +1727,7 @@ INNER JOIN drug_era de1
 WHERE de1.drug_era_start_date <= cp1.cohort_start_date
 	AND de1.drug_era_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 --Number of distinct procedures observed in 365d on or prior to cohort index
@@ -1746,13 +1746,13 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1002 AS covariate_id,
 	COUNT(DISTINCT po1.procedure_concept_id) AS covariate_value
@@ -1762,7 +1762,7 @@ INNER JOIN procedure_occurrence po1
 WHERE po1.procedure_date <= cp1.cohort_start_date
 	AND po1.procedure_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 --Number of distinct observations observed in 365d on or prior to cohort index
@@ -1781,13 +1781,13 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1003 AS covariate_id,
 	COUNT(DISTINCT o1.observation_concept_id) AS covariate_value
@@ -1797,7 +1797,7 @@ INNER JOIN observation o1
 WHERE o1.observation_date <= cp1.cohort_start_date
 	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 --Number of visits observed in 365d on or prior to cohort index
@@ -1816,13 +1816,13 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1004 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1832,7 +1832,7 @@ INNER JOIN visit_occurrence vo1
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 --Number of inpatient visits observed in 365d on or prior to cohort index
@@ -1851,13 +1851,13 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1005 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1868,7 +1868,7 @@ WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 	AND vo1.place_of_service_concept_id = 9201
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 --Number of ER visits observed in 365d on or prior to cohort index
@@ -1887,13 +1887,13 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1006 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1904,7 +1904,7 @@ WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 	AND vo1.place_of_service_concept_id = 9203
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 }
@@ -13666,19 +13666,19 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	1100 AS covariate_id,
 	SUM(weight) AS covariate_value
 FROM (
 	SELECT DISTINCT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		cs1.diag_category_id,
 		cs1.weight
@@ -13700,7 +13700,7 @@ FROM (
 	WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	) t1
 GROUP BY cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id;
 
 TRUNCATE TABLE #Charlson_codes;
@@ -14004,19 +14004,19 @@ VALUES (
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	1101 AS covariate_id,
 	SUM(max_score) AS covariate_value
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		ds1.dcsi_category,
 		max(ds1.DCSI_score) AS max_score
@@ -14027,12 +14027,12 @@ FROM (
 		ON ce1.condition_concept_id = ds1.DCSI_concept_id
 	WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	GROUP BY cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		ds1.dcsi_category
 	) t1
 GROUP BY cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id;
 
 TRUNCATE TABLE #DCSI_scoring;
@@ -14068,7 +14068,7 @@ SELECT DISTINCT CAST(ccr1.covariate_id AS BIGINT) * 10000 + YEAR(cp1.cohort_star
 FROM #cohort_person cp1
 INNER JOIN #cohort_covariate cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_definition_id = cc1.cohort_definition_id
+		AND cp1.cohort_concept_id = cc1.cohort_concept_id
 INNER JOIN #cohort_covariate_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (5)
@@ -14076,20 +14076,20 @@ WHERE ccr1.analysis_id NOT IN (5)
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(YEAR(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
 FROM #cohort_person cp1
 INNER JOIN #cohort_covariate cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_definition_id = cc1.cohort_definition_id
+		AND cp1.cohort_concept_id = cc1.cohort_concept_id
 INNER JOIN #cohort_covariate_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (5)
@@ -14116,7 +14116,7 @@ SELECT DISTINCT CAST(ccr1.covariate_id AS BIGINT) * 10000 + CAST(MONTH(cp1.cohor
 FROM #cohort_person cp1
 INNER JOIN #cohort_covariate cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_definition_id = cc1.cohort_definition_id
+		AND cp1.cohort_concept_id = cc1.cohort_concept_id
 INNER JOIN #cohort_covariate_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (6)
@@ -14124,20 +14124,20 @@ WHERE ccr1.analysis_id NOT IN (6)
 
 INSERT INTO #cohort_covariate (
 	cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	person_id,
 	covariate_id,
 	covariate_value
 	)
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(MONTH(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
 FROM #cohort_person cp1
 INNER JOIN #cohort_covariate cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_definition_id = cc1.cohort_definition_id
+		AND cp1.cohort_concept_id = cc1.cohort_concept_id
 INNER JOIN #cohort_covariate_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (6)
