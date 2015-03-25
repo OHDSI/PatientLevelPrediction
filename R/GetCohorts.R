@@ -88,7 +88,10 @@ getDbCohortsData <- function(connectionDetails = NULL,
   if (is.null(connection)){
     dummy <- RJDBC::dbDisconnect(conn)
   }
-  metaData <- list(call = match.call())
+  if (useExistingCohortPerson)
+    cohortConceptIds = ffbase::unique.ff(cohorts$cohortConceptId)
+  metaData <- list(call = match.call(),
+                   cohortConceptIds = cohortConceptIds)
   result <- list(cohorts = cohorts,
                  metaData = metaData)
   class(result) <- "cohortsData"

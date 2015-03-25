@@ -53,7 +53,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
                              cohortConceptIds = c(0,1),
                              outcomeDatabaseSchema = cdmDatabaseSchema,
                              outcomeTable = "condition_occurrence",
-                             outcomeConceptIds = "",
+                             outcomeConceptIds = c(),
                              outcomeConditionTypeConceptIds = "",
                              firstOutcomeOnly = FALSE) {
   cdmDatabase <- strsplit(cdmDatabaseSchema ,"\\.")[[1]][1]
@@ -117,7 +117,8 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   if (is.null(connection)){
     dummy <- RJDBC::dbDisconnect(conn)
   }
-  metaData <- list(call = match.call())
+  metaData <- list(call = match.call(),
+                   outcomeConceptIds = outcomeConceptIds)
   result <- list(outcomes = outcomes,
                  metaData = metaData)
   if (firstOutcomeOnly)

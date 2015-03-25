@@ -55,11 +55,16 @@
   #covariates <- loadCovariateData("s:/temp/covariateData") 
   #outcomes <- loadOutcomeData("s:/temp/outcomeData")
   
-  model <- fitPredictiveModel(cohorts, covariates, outcomes, prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE))
+  model <- fitPredictiveModel(cohorts, covariates, outcomes, modelType = "logistic", prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE))
   
   modelDetails <- getPredictiveModel(model, covariates)
   
   x <- predict(model, cohorts, covariates)
+  
+  model <- fitPredictiveModel(cohorts, covariates, outcomes, modelType = "poisson", prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE))
+  
+  x <- predict(model, cohorts, covariates)
+  
   
   #   Functions:
   #   

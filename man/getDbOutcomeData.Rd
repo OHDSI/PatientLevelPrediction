@@ -9,7 +9,7 @@ getDbOutcomeData(connectionDetails = NULL, connection = NULL,
   useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort", cohortConceptIds = c(0, 1),
   outcomeDatabaseSchema = cdmDatabaseSchema,
-  outcomeTable = "condition_occurrence", outcomeConceptIds = "",
+  outcomeTable = "condition_occurrence", outcomeConceptIds = c(),
   outcomeConditionTypeConceptIds = "", firstOutcomeOnly = FALSE)
 }
 \arguments{

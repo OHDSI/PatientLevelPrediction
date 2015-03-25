@@ -4,8 +4,8 @@
 \alias{fitPredictiveModel}
 \title{Fit a predictive model}
 \usage{
-fitPredictiveModel(cohortsData, covariateData, outcomeData, modelType = "lr",
-  cohortConceptId = NULL, outcomeConceptId = NULL,
+fitPredictiveModel(cohortsData, covariateData, outcomeData,
+  modelType = "logistic", cohortConceptId = NULL, outcomeConceptId = NULL,
   prior = createPrior("laplace", exclude = c(0), useCrossValidation = TRUE),
   control = createControl(noiseLevel = "silent", cvType = "auto",
   startingVariance = 0.1))
@@ -15,7 +15,7 @@ fitPredictiveModel(cohortsData, covariateData, outcomeData, modelType = "lr",
 
 \item{outcomeData}{An object of type \code{outcomeData}.}
 
-\item{modelType}{The type of predictive model}
+\item{modelType}{The type of predictive model. Options are "logistic", "poisson", and "survival".}
 
 \item{prior}{The prior used to fit the model. See \code{\link[Cyclops]{createPrior}} for details.}
 

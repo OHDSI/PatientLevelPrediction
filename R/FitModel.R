@@ -20,7 +20,7 @@
 #' 
 #' @param covariateData    An object of type \code{covariateData}.
 #' @param outcomeData      An object of type \code{outcomeData}.
-#' @param modelType        The type of predictive model
+#' @param modelType        The type of predictive model. Options are "logistic", "poisson", and "survival".
 #' @param prior            The prior used to fit the model. See \code{\link[Cyclops]{createPrior}} for details.
 #' @param control          The control object used to control the cross-validation used to determine the 
 #' hyperparameters of the prior (if applicable). See \code{\link[Cyclops]{createControl}}  for details.
@@ -29,7 +29,7 @@
 fitPredictiveModel <- function(cohortsData,
                                covariateData, 
                                outcomeData, 
-                               modelType = "lr", 
+                               modelType = "logistic", 
                                cohortConceptId = NULL,
                                outcomeConceptId = NULL,
                                prior = createPrior("laplace", exclude = c(0), useCrossValidation = TRUE),
@@ -52,21 +52,33 @@ fitPredictiveModel <- function(cohortsData,
   
   cohorts$rowId <- ff::ff(1:nrow(cohorts))
   covariates <- merge(covariates, cohorts, by=c("cohortStartDate", "personId"))
-  outcomes$y <- ff::ff(1, length = nrow(outcomes), vmode = "double")
+  if (modelType == "logistic" | modelType == "survival") {
+    outcomes$y <- ff::ff(1, length = nrow(outcomes), vmode = "double")
+  } else { # Poisson
+    outcomes$y <- outcomes$outcomeCount 
+  }
   outcomes <- merge(cohorts, outcomes, by=c("cohortStartDate", "personId"), all.x = TRUE)
   idx <- ffbase::is.na.ff(outcomes$y)
   idx <- ffbase::ffwhich(idx, idx == TRUE)
   outcomes$y <- ff::ffindexset(x=outcomes$y, index =idx, value = ff::ff(0, length=length(idx), vmode = "double")) 
   
+  if (modelType == "logistic")
+    cyclopsModelType = "lr"
+  else # modelType == "poisson" | modelType == "survival"
+    cyclopsModelType = "pr"
+  
   cyclopsData <- convertToCyclopsData(outcomes, 
                                       covariates, 
-                                      modelType = "lr", 
+                                      modelType = cyclopsModelType, 
                                       addIntercept = TRUE,
                                       checkSorting = FALSE, 
                                       checkRowIds = FALSE)
   
   cyclopsFit <- fitCyclopsModel(cyclopsData, prior = prior, control = control)
-  
+  if (is.null(cohortConceptId))
+    cohortConceptId = cohortsData$metaData$cohortConceptIds
+  if (is.null(outcomeConceptId))
+    outcomeConceptId = outcomesData$metaData$outcomeConceptIds
   predictiveModel <- list(cohortConceptId = cohortConceptId,
                           outcomeConceptId = outcomeConceptId,
                           modelType = modelType, 
