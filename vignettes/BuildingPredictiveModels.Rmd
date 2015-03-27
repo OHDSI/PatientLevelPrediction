@@ -1,0 +1,289 @@
+---
+title: "Building patient-level predictive models"
+author: "Martijn J. Schuemie, Marc A. Suchard and Patrick Ryan"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Building patient-level predictive models}
+-->
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(PatientLevelPrediction)
+```
+# Introduction
+
+This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level prediction models. We will walk through all the steps needed to build an exemplar model, and we have selected the well-studied topic of predicting re-hospitalization.
+
+# Installation instructions
+
+Before installing the `PatientLevelPrediction` package make sure you have Java available.  Java can be downloaded from [www.java.com](http://www.java.com). For Windows users, RTools is also necessary.  RTools can be downloaded from [CRAN](http://cran.r-project.org/bin/windows/Rtools/).
+
+The `PatientLevelPrediction` package is currently maintained in a [Github repository](https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `devtools` package:
+
+```{r tidy=TRUE,eval=FALSE}
+install.packages("devtools")
+library(devtools)
+install_github("ohdsi/SqlRender") 
+install_github("ohdsi/DatabaseConnector") 
+install_github("ohdsi/Cyclops") 
+install_github("ohdsi/PatientLevelPrediction") 
+```
+
+Once installed, you can type `library(PatientLevelPrediction)` to load the package.
+
+# Data extraction
+
+The first step in running the `PatientLevelPrediction` is extracting all necessary data from the database server holding the data in the Common Data Model (CDM) format.
+
+## Configuring the connection to the server
+
+We need to tell R how to connect to the server where the data are. `PatientLevelPrediction` uses the `DatabaseConnector` package, which provides the `createConnectionDetails` function. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
+
+```{r tidy=FALSE,eval=FALSE}
+connectionDetails <- createConnectionDetails(dbms = "postgresql", 
+                                             server = "localhost/ohdsi", 
+                                             user = "joe", 
+                                             password = "supersecret")
+
+cdmDatabaseSchema <- "my_cdm_data"
+resultsDatabaseSchema <- "my_results"
+```
+
+The last two lines define the `cdmDatabaseSchema` and `resultSchema` variables, which we'll use later to tell R where the data in CDM format live, and where we want to write intermediate and result tables. Note that for Microsoft SQL Server, these variables need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
+
+## Preparing the cohort and outcome of interest
+
+Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict.We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. For our example study, we need to create the cohort of persons that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations. For this purpose we have created a file called *HospitalizationCohorts.sql* with the following contents:
+
+```sql
+/***********************************
+File HospitalizationCohorts.sql 
+***********************************/
+IF OBJECT_ID('@resultsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
+DROP TABLE @resultsDatabaseSchema.rehospitalization;
+
+SELECT visit_occurrence.person_id AS subject_id,
+MIN(visit_start_date) AS cohort_start_date,
+DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
+1 AS cohort_concept_id
+INTO @resultsDatabaseSchema.rehospitalization
+FROM @cdmDatabaseSchema.visit_occurrence
+INNER JOIN @cdmDatabaseSchema.observation_period
+ON visit_occurrence.person_id = observation_period.person_id
+WHERE place_of_service_concept_id IN (9201, 9203)
+AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
+AND visit_start_date > observation_period_start_date
+AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
+AND visit_start_date < observation_period_end_date
+GROUP BY visit_occurrence.person_id;
+
+INSERT INTO @resultsDatabaseSchema.rehospitalization
+SELECT visit_occurrence.person_id AS subject_id,
+visit_start_date AS cohort_start_date,
+visit_end_date AS cohort_end_date,
+2 AS cohort_concept_id
+FROM @resultsDatabaseSchema.rehospitalization
+INNER JOIN @cdmDatabaseSchema.visit_occurrence
+ON visit_occurrence.person_id = rehospitalization.subject_id
+WHERE place_of_service_concept_id IN (9201, 9203)
+AND visit_start_date > cohort_start_date
+AND visit_start_date <= cohort_end_date
+AND cohort_concept_id = 1;
+```
+
+This is parameterized SQL which can be used by the `SqlRender` package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
+
+
+```{r tidy=FALSE,eval=FALSE}
+library(SqlRender)
+sql <- readSql("HospitalizationCohorts.sql")
+sql <- renderSql(sql,
+                 cdmDatabaseSchema = cdmDatabaseSchema,
+                 resultsDatabaseSchema = resultsDatabaseSchema,
+                 post_time = 30,
+                 pre_time = 365)
+)$sql
+sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+
+connection <- connect(connectionDetails)
+executeSql(connection, sql)
+```
+
+In this code, we first read the SQL from the file into memory. In the next line, we replace four parameter names with the actual values. We then translate the SQL into the dialect appropriate for the DBMS we already specified in the `connectionDetails`. Next, we connect to the server, and submit the rendered and translated SQL.
+
+If all went well, we now have a table with the events of interest. We can see how many events per type:
+
+```{r tidy=FALSE,eval=FALSE}
+sql <- paste("SELECT cohort_concept_id, COUNT(*) AS count",
+             "FROM @resultsDatabaseSchema.rehospitalization",
+             "GROUP BY cohort_concept_id")
+sql <- renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
+sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+
+querySql(connection, sql)
+```
+```{r echo=FALSE,message=FALSE}
+data.frame(cohort_concept_id = c(1,2),count=c(136506,3507))
+```
+
+## Extracting the data from the server
+
+Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis:
+
+```{r tidy=FALSE,eval=FALSE}
+cohortData <- getDbCohortData(connectionDetails$dbms, 
+                              cdmDatabaseSchema = cdmDatabaseSchema, 
+                              cohortDatabaseSchema = resultsDatabaseSchema, 
+                              cohortTable = "rehospitalization", 
+                              cohortConceptIds = 1)
+
+covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
+                                             useCovariateConditionOccurrence = TRUE)
+covariateData <- getDbCovariateData(connectionDetails$dbms, 
+                                    cdmDatabaseSchema = cdmDatabaseSchema, 
+                                    cohortDatabaseSchema = resultsDatabaseSchema, 
+                                    cohortTable = "rehospitalization", 
+                                    cohortConceptIds = 1, 
+                                    covariateSettings = covariateSettings)
+
+outcomeData <- getDbOutcomeData(connectionDetails$dbms, 
+                                cdmDatabaseSchema = cdmDatabaseSchema, 
+                                cohortDatabaseSchema = resultsDatabaseSchema, 
+                                cohortTable = "rehospitalization", 
+                                cohortConceptIds = 1,
+                                outcomeDatabaseSchema = resultsDatabaseSchema,
+                                outcomeTable = "rehospitalization",
+                                outcomeConceptIds = 2)
+```
+
+There are many parameters, but they are all documented in the `PatientLevelPrediction` manual. In short, we are pointing the functions to the table created earlier and indicating which concept IDs in that table identify the cohort and outcome of interest. We construct `cohortData`, an object representing the cohort of interest, `covariateData`, holding all covariate information that will be used as predictors, and `outcomeData` as the set of outcomes during cohort time. All three objects use the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
+
+### Saving the data to file
+
+Creating the three data objects can take considerable computing time, and it is probably a good idea to save them for future sessions. Because `cohortData`, `covariateData` and  ``outcomeData` use `ff`, we cannot use R's regular save function. Instead, we'll have to use the `saveCohortData()`, `saveCovariateData()`, and `saveOutcomeData()` functions:
+
+```{r tidy=TRUE,eval=FALSE}
+saveCohortData(cohortData, "rehosp_cohorts")
+saveCovariateData(covariateData, "rehosp_covariates")
+saveOutcomeData(outcomeData, "rehos_outcomes")
+```
+
+We can use the `loadCohortData()`, `loadCovariateData()`, and `loadOutcomeData()` function to load the data in a future session.
+
+# Fitting the model
+
+## Train-test split
+
+We not only want to build our model, we also want to know how good it is. Because evaluation using the same data on which the model was fitted can lead to overestimation, one typically uses a train-test split of the data or cross-validation. We can use the `splitData()` function to split the data in a 75%-25% split:
+
+```{r tidy=TRUE,eval=FALSE}
+parts <- splitData(cohortData, covariateData, outcomeData, c(0.75,0.25))
+```
+
+The `parts` variable is a list, where each item holds the data for a subset of the full cohort of interest. For example, `parts[[1]]$cohortData` contains the cohort data for 75% of the people in the cohort of interest.
+We can now fit the model on the first part of the data (the training set):
+
+## Fitting the model on the training data
+
+```{r tidy=TRUE,eval=FALSE}
+model <- fitPredictiveModel(parts[[1]]$cohortData, 
+                            parts[[1]]$covariateData, 
+                            parts[[1]]$outcomeData, 
+                            modelType = "logistic")
+```
+
+The `fitPredictiveModel()` function uses the `Cyclops` package to fit a large-scale regularized regression. To fit the model, `Cyclops` needs to know the hyperparameter value which specifies the variance of the prior. By default `Cyclops` will use cross-validation to estimate the optimal hyperparameter. However, be aware that this can take a really long time. You can use the `prior` and `control` parameters of the `fitPredictiveModel()` to specify `Cyclops` behaviour, including using multiple CPUs to speed-up the cross-validation. 
+
+## Model evaluation
+
+```{r echo=FALSE,message=FALSE,eval=TRUE}
+if (file.exists("s:/temp/PatientLevelPrediction")){
+  parts <- list()
+  parts[[2]] <- list()
+  parts[[2]]$cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData_Test")
+  parts[[2]]$covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData_Test")
+  parts[[2]]$outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData_Test")
+  model <- load("s:/temp/PatientLevelPrediction/model.rda")
+  prediction <- load(file = "s:/temp/PatientLevelPrediction/prediction.Rdata")
+} 
+```
+
+
+We can evaluate how well the model is able to predict the outcome, for example on the test data:
+
+```{r tidy=TRUE,eval=FALSE}
+prediction <- predictProbabilities(model,
+                                   parts[[2]]$cohortData, 
+                                   parts[[2]]$covariateData)
+computeAuc(prediction, parts[[2]]$outcomeData)
+```
+```{r echo=FALSE,message=FALSE}
+if (file.exists("s:/temp/PatientLevelPrediction")){
+  computeAuc(prediction, parts[[2]]$outcomeData)
+}
+```
+```{r tidy=TRUE,eval=FALSE}
+plotRoc(prediction, parts[[2]]$outcomeData)
+```
+```{r echo=FALSE,message=FALSE}
+if (file.exists("s:/temp/PatientLevelPrediction")){
+  plotRoc(prediction, parts[[2]]$outcomeData)
+}
+```
+```{r tidy=TRUE,eval=FALSE}
+plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
+```
+```{r echo=FALSE,message=FALSE}
+if (file.exists("s:/temp/PatientLevelPrediction")){
+  plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
+}
+```
+
+## Inspecting the model
+
+Now that we have some idea of the operating characteristics of our predictive model, we can investigate the model itself: 
+
+```{r tidy=TRUE,eval=FALSE}
+modelDetails <- getModelDetails(model, covariateData)
+head(modelDetails)
+```
+```{r echo=FALSE,message=FALSE}
+if (file.exists("s:/temp/PatientLevelPrediction")){
+modelDetails <- getModelDetails(model, covariateData)
+  truncRight <- function(x, n){
+    nc <- nchar(x)
+    x[nc > (n-3)] <- paste('...',substr(x[nc > (n-3)], nc[nc > (n-3)]-n+1, nc[nc > (n-3)]),sep="")
+    x
+  }
+  modelDetails$covariateName <- truncRight(as.character(modelDetails$covariateName),40)
+  head(modelDetails)  
+  }
+```
+
+
+# Acknowledgments
+
+Considerable work has been dedicated to provide the `PatientLevelPrediction` package.
+
+```{r tidy=TRUE,evale=TRUE}
+citation("PatientLevelPrediction")
+```
+
+Further, `PatientLevelPrediction` makes extensive use of the `Cyclops` package.
+
+```{r tidy=TRUE,evale=TRUE}
+citation("Cyclops")
+```
+
+This work is supported in part through the National Science Foundation grant IIS 1251151.
+
+
+

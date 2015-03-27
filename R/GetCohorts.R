@@ -16,35 +16,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Get cohorts for persons in the cohort
+#' Get cohorts of interest
 #'
 #' @description
 #' Gets the cohorts of interest from the database
 #'
-#' @details
-#' Todo
-#'
-#' @param connectionDetails    An R object of type \code{ConnectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.
-#' @param connection          A connection to the server containing the schema as created using the \code{connect} function in the \code{DatabaseConnector} package.
-#' @param cdmDatabaseSchema    The name of the database schema that contains the OMOP CDM instance.  Requires read permissions to this database. On SQL Server, this should specifiy both the database and the schema, so for example 'cdm_instance.dbo'.
+#' @param connectionDetails     An R object of type \code{ConnectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.
+#' @param connection            A connection to the server containing the schema as created using the \code{connect} function in the \code{DatabaseConnector} package.
+#' @param cdmDatabaseSchema     The name of the database schema that contains the OMOP CDM instance.  Requires read permissions to this database. On SQL Server, this should specifiy both the database and the schema, so for example 'cdm_instance.dbo'.
 #' @param oracleTempSchema  	  A schema where temp tables can be created in Oracle.#' @param useExistingCohortPerson  Does the temporary table \code{cohort_person} already exists? Can only be used when the \code{connection} parameter is not NULL.  	
-#' @param cohortDatabaseSchema 		If not using an existing \code{cohort_person} temp table, where is the source cohort table located? Note that on SQL Server, one should include both
+#' @param cohortDatabaseSchema 	If not using an existing \code{cohort_person} temp table, where is the source cohort table located? Note that on SQL Server, one should include both
 #' the database and schema, e.g. "cdm_schema.dbo".
 #' @param cohortTable 		      If not using an existing temp table, what is the name of the table holding the cohort?
 #' @param cohortConceptIds 		  If not using an existing temp table, what is the name of the source cohort table?
 #'  
 #' @return
-#' An object of type \code{cohortsData} containing information on who are in the cohorts.
+#' An object of type \code{cohortData} containing information on who are in the cohorts.
 #'
 #' @export
-getDbCohortsData <- function(connectionDetails = NULL,
-                             connection = NULL,
-                             cdmDatabaseSchema,
-                             oracleTempSchema = cdmDatabaseSchema,
-                             useExistingCohortPerson = FALSE,
-                             cohortDatabaseSchema = cdmDatabaseSchema,
-                             cohortTable = "cohort",
-                             cohortConceptIds = c(0,1)) {
+getDbCohortData <- function(connectionDetails = NULL,
+                            connection = NULL,
+                            cdmDatabaseSchema,
+                            oracleTempSchema = cdmDatabaseSchema,
+                            useExistingCohortPerson = FALSE,
+                            cohortDatabaseSchema = cdmDatabaseSchema,
+                            cohortTable = "cohort",
+                            cohortConceptIds = c(0,1)) {
   cdmDatabase <- strsplit(cdmDatabaseSchema ,"\\.")[[1]][1]
   if (is.null(connectionDetails) && is.null(connection))
     stop("Either connectionDetails or connection has to be specified")
@@ -94,16 +91,16 @@ getDbCohortsData <- function(connectionDetails = NULL,
                    cohortConceptIds = cohortConceptIds)
   result <- list(cohorts = cohorts,
                  metaData = metaData)
-  class(result) <- "cohortsData"
+  class(result) <- "cohortData"
   return(result)
 }
 
 #' Save the cohort data to folder
 #'
 #' @description
-#' \code{saveCohortsData} saves an object of type outcomeData to folder.
+#' \code{saveCohortData} saves an object of type cohortData to folder.
 #' 
-#' @param cohortsData          An object of type \code{cohortsData} as generated using \code{getDbCohortsData}.
+#' @param cohortData          An object of type \code{cohortData} as generated using \code{getDbcohortData}.
 #' @param file                The name of the folder where the data will be written. The folder should
 #' not yet exist.
 #' 
@@ -114,24 +111,25 @@ getDbCohortsData <- function(connectionDetails = NULL,
 #' #todo
 #' 
 #' @export
-saveCohortsData <- function(cohortsData, file){
-  if (missing(cohortsData))
-    stop("Must specify cohortsData")
+saveCohortData <- function(cohortData, file){
+  if (missing(cohortData))
+    stop("Must specify cohortData")
   if (missing(file))
     stop("Must specify file")
-  if (class(cohortsData) != "cohortsData")
-    stop("Data not of class cohortsData")
+  if (class(cohortData) != "cohortData")
+    stop("Data not of class cohortData")
   
-  cohorts <- cohortsData$cohorts
+  cohorts <- cohortData$cohorts
   ffbase::save.ffdf(cohorts, dir=file)
-  metaData <- cohortsData$metaData
+  open(cohortData$cohorts)
+  metaData <- cohortData$metaData
   save(metaData,file=file.path(file,"metaData.Rdata"))
 }
 
 #' Load the cohorts data from a folder
 #'
 #' @description
-#' \code{loadCohortsData} loads an object of type cohortsData from a folder in the file system.
+#' \code{loadCohortData} loads an object of type cohortData from a folder in the file system.
 #' 
 #' @param file                The name of the folder containing the data.
 #' @param readOnly            If true, the data is opened read only.
@@ -140,13 +138,11 @@ saveCohortsData <- function(cohortsData, file){
 #' The data will be written to a set of files in the folder specified by the user.
 #' 
 #' @return
-#' An object of class cohortsData
+#' An object of class cohortData
 #'  
-#' @examples 
-#' #todo
 #' 
 #' @export
-loadCohortsData <- function(file, readOnly = FALSE){
+loadCohortData <- function(file, readOnly = FALSE){
   if (!file.exists(file))
     stop(paste("Cannot find folder",file))
   if (!file.info(file)$isdir)
@@ -157,9 +153,9 @@ loadCohortsData <- function(file, readOnly = FALSE){
   ffbase::load.ffdf(absolutePath,e)
   load(file.path(absolutePath,"metaData.Rdata"),e)
   result <- list(cohorts = get("cohorts", envir=e),
-                 metaData = mget("metaData",envir=e))  
+                 metaData = get("metaData",envir=e))  
   open(result$cohorts,readonly = readOnly)
-  class(result) <- "cohortsData"
+  class(result) <- "cohortData"
   rm(e)
   return(result)
 }

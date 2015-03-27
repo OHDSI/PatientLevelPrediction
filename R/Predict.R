@@ -18,21 +18,21 @@
 
 #' Create predictive probabilities
 #' 
-#' @details Note that the cohortsData and covariateData objects need to come from the same population.
+#' @details Note that the cohortData and covariateData objects need to come from the same population.
 #' 
-#' @param predictiveModel       An object of type \code{predictiveModel} as generated using \code\link{{fitPredictiveModel}}.
-#' @param cohortsData           An object of type \code{cohortsData} as generated using \code\link{{getDbCohortsData}}.
-#' @param covariateData         An object of type \code{covariateData} as generated using \code\link{{getDbCovarteData}}. 
+#' @param predictiveModel      An object of type \code{predictiveModel} as generated using \code{\link{fitPredictiveModel}}.
+#' @param cohortData           An object of type \code{cohortData} as generated using \code{\link{getDbCohortData}}.
+#' @param covariateData        An object of type \code{covariateData} as generated using \code{\link{getDbCovarteData}}. 
 #'
 #' @export
-predict.predictiveModel <- function(predictiveModel, cohortsData, covariateData){
+predictProbabilities <- function(predictiveModel, cohortData, covariateData){
   intercept <- predictiveModel$coefficients[1]
   coefficients <- predictiveModel$coefficients[2:length(predictiveModel$coefficients)]
   coefficients <- data.frame(beta = as.numeric(coefficients), covariateId = as.numeric(names(predictiveModel$coefficients)[2:length(predictiveModel$coefficients)]))
   coefficients <- coefficients[coefficients$beta != 0,]
   cohortConceptId = predictiveModel$cohortConceptId
   covariates <- ffbase::subset.ffdf(covariateData$covariates, cohortConceptId == cohortConceptId, select = c("personId", "cohortStartDate", "covariateId", "covariateValue"))
-  cohorts <- ffbase::subset.ffdf(cohortsData$cohorts, cohortConceptId == cohortConceptId, select = c("personId", "cohortStartDate", "time"))
+  cohorts <- ffbase::subset.ffdf(cohortData$cohorts, cohortConceptId == cohortConceptId, select = c("personId", "cohortStartDate", "time"))
   cohorts$rowId <- ff::ff(1:nrow(cohorts))
   covariates <- merge(covariates, cohorts, by=c("cohortStartDate", "personId"))
   prediction <- merge(covariates, ff::as.ffdf(coefficients), by = "covariateId")
@@ -61,12 +61,15 @@ predict.predictiveModel <- function(predictiveModel, cohortsData, covariateData)
       return(1/(1+exp(0-x)))
     }
     prediction$value <- link(prediction$value)
-  } else if (predictiveModel$modelType == "logistic"){
+  } else if (predictiveModel$modelType == "poisson"){
     prediction$value <- exp(prediction$value)  
     prediction$value <- prediction$value * prediction$time
   } else { #modelType == "survival"
     prediction$value <- exp(prediction$value)  
   }
   prediction$time <- NULL
+  attr(prediction, "modelType") <- predictiveModel$modelType
+  attr(prediction, "cohortConceptId") <- predictiveModel$cohortConceptId
+  attr(prediction, "outcomeConceptId") <- predictiveModel$outcomeConceptId
   return(prediction)
 }

@@ -24,47 +24,62 @@
   executeSql(conn, sql)
   
   #Test package functions:
-  cohorts <- getDbCohortsData(details, 
-                              cdmDatabaseSchema = cdmDatabaseSchema, 
-                              cohortDatabaseSchema = resultsDatabaseSchema, 
-                              cohortTable = "first_hospitalization", 
-                              cohortConceptIds = 1)
-  saveCohortsData(cohorts, "s:/temp/cohortsData")
-  covariates <- getDbCovariateData(details, 
-                                   cdmDatabaseSchema = cdmDatabaseSchema, 
-                                   cohortDatabaseSchema = resultsDatabaseSchema, 
-                                   cohortTable = "first_hospitalization", 
-                                   cohortConceptIds = 1, 
-                                   useCovariateConditionOccurrence = TRUE, 
-                                   deleteCovariatesSmallCount = 1)
+  cohortData <- getDbCohortData(details, 
+                                cdmDatabaseSchema = cdmDatabaseSchema, 
+                                cohortDatabaseSchema = resultsDatabaseSchema, 
+                                cohortTable = "first_hospitalization", 
+                                cohortConceptIds = 1)
+  #savecohortData(cohortData, "s:/temp/cohortData")
+  covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE, useCovariateConditionOccurrence = TRUE)
+  covariateData <- getDbCovariateData(details, 
+                                      cdmDatabaseSchema = cdmDatabaseSchema, 
+                                      cohortDatabaseSchema = resultsDatabaseSchema, 
+                                      cohortTable = "first_hospitalization", 
+                                      cohortConceptIds = 1, 
+                                      covariateSettings = covariateSettings)
   
-  saveCovariateData(covariates, "s:/temp/covariateData")
+  #saveCovariateData(covariateData, "s:/temp/covariateData")
   
-  outcomes <- getDbOutcomeData(details, 
-                               cdmDatabaseSchema = cdmDatabaseSchema, 
-                               cohortDatabaseSchema = resultsDatabaseSchema, 
-                               cohortTable = "first_hospitalization", 
-                               cohortConceptIds = 1,
-                               outcomeDatabaseSchema = resultsDatabaseSchema,
-                               outcomeTable = "rehospitalization",
-                               outcomeConceptIds = 1)
+  outcomeData <- getDbOutcomeData(details, 
+                                  cdmDatabaseSchema = cdmDatabaseSchema, 
+                                  cohortDatabaseSchema = resultsDatabaseSchema, 
+                                  cohortTable = "first_hospitalization", 
+                                  cohortConceptIds = 1,
+                                  outcomeDatabaseSchema = resultsDatabaseSchema,
+                                  outcomeTable = "rehospitalization",
+                                  outcomeConceptIds = 1,
+                                  firstOutcomeOnly = TRUE)
   
-  saveOutcomeData(outcomes, "s:/temp/outcomeData")
- 
-  #cohorts <- loadCohortsData("s:/temp/cohortsData")
-  #covariates <- loadCovariateData("s:/temp/covariateData") 
-  #outcomes <- loadOutcomeData("s:/temp/outcomeData")
+  #saveOutcomeData(outcomeData, "s:/temp/outcomeData")
   
-  model <- fitPredictiveModel(cohorts, covariates, outcomes, modelType = "logistic", prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE))
+  #cohortData <- loadcohortData("s:/temp/cohortData")
+  #covariateData <- loadCovariateData("s:/temp/covariateData") 
+  #outcomeData <- loadOutcomeData("s:/temp/outcomeData")
   
-  modelDetails <- getPredictiveModel(model, covariates)
+  model <- fitPredictiveModel(cohortData, covariateData, outcomeData, modelType = "logistic", prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE))
   
-  x <- predict(model, cohorts, covariates)
+  modelDetails <- getModelDetails(model, covariateData)
   
-  model <- fitPredictiveModel(cohorts, covariates, outcomes, modelType = "poisson", prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE))
+  xLr <- predictProbabilities(model, cohortData, covariateData)
+  simLr <- runif(nrow(xLr)) < xLr$value
+  sum(simLr)
   
-  x <- predict(model, cohorts, covariates)
+  computeAuc(xLr, outcomeData)
+  computeAuc(xLr, outcomeData, confidenceInterval = TRUE)
+  plotCalibration(xLr, outcomeData, fileName = "c:/temp/Calibration.png")
+  plotRoc(xLr, outcomeData, fileName = "c:/temp/Roc.png")
   
+  model <- fitPredictiveModel(cohortData, covariateData, outcomeData, modelType = "poisson", prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE))
+  
+  xPr <- predictProbabilities(model, cohortData, covariateData)
+  simPr <- rpois(nrow(xPr), xPr$value)
+  sum(simPr)
+  
+  model <- fitPredictiveModel(cohortData, covariateData, outcomeData, modelType = "survival", prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE))
+  
+  xSr <- predictProbabilities(model, cohortData, covariateData)
+  simSr <- rexp(nrow(xSr), xSr$value) < 30
+  sum(simSr)
   
   #   Functions:
   #   

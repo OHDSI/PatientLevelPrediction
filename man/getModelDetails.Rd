@@ -18,7 +18,4 @@ included in the model, along with the variable names
 \details{
 Shows the coefficients and names of the covariates with non-zero coefficients.
 }
-\examples{
-#todo
-}
 

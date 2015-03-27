@@ -8,28 +8,7 @@ getDbCovariateData(connectionDetails = NULL, connection = NULL,
   oracleTempSchema = NULL, cdmDatabaseSchema,
   useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort", cohortConceptIds = c(0, 1),
-  useCovariateDemographics = TRUE, useCovariateConditionOccurrence = TRUE,
-  useCovariateConditionOccurrence365d = TRUE,
-  useCovariateConditionOccurrence30d = FALSE,
-  useCovariateConditionOccurrenceInpt180d = FALSE,
-  useCovariateConditionEra = FALSE, useCovariateConditionEraEver = FALSE,
-  useCovariateConditionEraOverlap = FALSE,
-  useCovariateConditionGroup = FALSE, useCovariateDrugExposure = FALSE,
-  useCovariateDrugExposure365d = FALSE, useCovariateDrugExposure30d = FALSE,
-  useCovariateDrugEra = FALSE, useCovariateDrugEra365d = FALSE,
-  useCovariateDrugEra30d = FALSE, useCovariateDrugEraOverlap = FALSE,
-  useCovariateDrugEraEver = FALSE, useCovariateDrugGroup = FALSE,
-  useCovariateProcedureOccurrence = FALSE,
-  useCovariateProcedureOccurrence365d = FALSE,
-  useCovariateProcedureOccurrence30d = FALSE,
-  useCovariateProcedureGroup = FALSE, useCovariateObservation = FALSE,
-  useCovariateObservation365d = FALSE, useCovariateObservation30d = FALSE,
-  useCovariateObservationBelow = FALSE,
-  useCovariateObservationAbove = FALSE,
-  useCovariateObservationCount365d = FALSE,
-  useCovariateConceptCounts = FALSE, useCovariateRiskScores = FALSE,
-  useCovariateInteractionYear = FALSE, useCovariateInteractionMonth = FALSE,
-  excludedCovariateConceptIds = "", deleteCovariatesSmallCount = 100)
+  covariateSettings = createCovariateSettings())
 }
 \arguments{
 \item{connectionDetails}{An R object of type \code{connectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.}
@@ -45,77 +24,11 @@ getDbCovariateData(connectionDetails = NULL, connection = NULL,
 \item{cohortDatabaseSchema}{If not using an existing \code{cohort_person} temp table, where is the source cohort table located? Note that on SQL Server, one should include both
 the database and schema, e.g. "cdm_schema.dbo".}
 
-\item{cohortTable}{}
+\item{cohortTable}{If not using an existing \code{cohort_person} temp table, what is the name of the source cohort table?}
 
-\item{cohortConceptIds}{If not using an existing \code{cohort_person} temp table, what is the name of the source cohort table?}
+\item{cohortConceptIds}{One or more concept IDs used to identify cohorts. If more than one concept ID is provided, the cohorts will be stored separately.}
 
-\item{useCovariateDemographics}{A boolean value (TRUE/FALSE) to determine if demographic covariates (age in 5-yr increments, gender, race, ethnicity, year of index date, month of index date) will be created and included in future models.}
-
-\item{useCovariateConditionOccurrence}{A boolean value (TRUE/FALSE) to determine if covariates derived from CONDITION_OCCURRENCE table will be created and included in future models.}
-
-\item{useCovariateConditionOccurrence365d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of condition in 365d window prior to or on cohort index date.  Only applicable if useCovariateConditionOccurrence = TRUE.}
-
-\item{useCovariateConditionOccurrence30d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of condition in 30d window prior to or on cohort index date.  Only applicable if useCovariateConditionOccurrence = TRUE.}
-
-\item{useCovariateConditionOccurrenceInpt180d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of condition within inpatient type in 180d window prior to or on cohort index date.  Only applicable if useCovariateConditionOccurrence = TRUE.}
-
-\item{useCovariateConditionEra}{A boolean value (TRUE/FALSE) to determine if covariates derived from CONDITION_ERA table will be created and included in future models.}
-
-\item{useCovariateConditionEraEver}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of condition era anytime prior to or on cohort index date.  Only applicable if useCovariateConditionEra = TRUE.}
-
-\item{useCovariateConditionEraOverlap}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of condition era that overlaps the cohort index date.  Only applicable if useCovariateConditionEra = TRUE.}
-
-\item{useCovariateConditionGroup}{A boolean value (TRUE/FALSE) to determine if all CONDITION_OCCURRENCE and CONDITION_ERA covariates should be aggregated or rolled-up to higher-level concepts based on vocabluary classification.}
-
-\item{useCovariateDrugExposure}{A boolean value (TRUE/FALSE) to determine if covariates derived from DRUG_EXPOSURE table will be created and included in future models.}
-
-\item{useCovariateDrugExposure365d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of drug in 365d window prior to or on cohort index date.  Only applicable if useCovariateDrugExposure = TRUE.}
-
-\item{useCovariateDrugExposure30d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of drug in 30d window prior to or on cohort index date.  Only applicable if useCovariateDrugExposure = TRUE.}
-
-\item{useCovariateDrugEra}{A boolean value (TRUE/FALSE) to determine if covariates derived from DRUG_ERA table will be created and included in future models.}
-
-\item{useCovariateDrugEra365d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of drug era in 365d window prior to or on cohort index date.  Only applicable if useCovariateDrugEra = TRUE.}
-
-\item{useCovariateDrugEra30d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of drug era in 30d window prior to or on cohort index date.  Only applicable if useCovariateDrugEra = TRUE.}
-
-\item{useCovariateDrugEraOverlap}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of drug era that overlaps the cohort index date.  Only applicable if useCovariateDrugEra = TRUE.}
-
-\item{useCovariateDrugEraEver}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of drug era anytime prior to or on cohort index date.  Only applicable if useCovariateDrugEra = TRUE.}
-
-\item{useCovariateDrugGroup}{A boolean value (TRUE/FALSE) to determine if all DRUG_EXPOSURE and DRUG_ERA covariates should be aggregated or rolled-up to higher-level concepts of drug classes based on vocabluary classification.}
-
-\item{useCovariateProcedureOccurrence}{A boolean value (TRUE/FALSE) to determine if covariates derived from PROCEDURE_OCCURRENCE table will be created and included in future models.}
-
-\item{useCovariateProcedureOccurrence365d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of procedure in 365d window prior to or on cohort index date.  Only applicable if useCovariateProcedureOccurrence = TRUE.}
-
-\item{useCovariateProcedureOccurrence30d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of procedure in 30d window prior to or on cohort index date.  Only applicable if useCovariateProcedureOccurrence = TRUE.}
-
-\item{useCovariateProcedureGroup}{A boolean value (TRUE/FALSE) to determine if all PROCEDURE_OCCURRENCE covariates should be aggregated or rolled-up to higher-level concepts based on vocabluary classification.}
-
-\item{useCovariateObservation}{A boolean value (TRUE/FALSE) to determine if covariates derived from OBSERVATION table will be created and included in future models.}
-
-\item{useCovariateObservation365d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of observation in 365d window prior to or on cohort index date.  Only applicable if useCovariateObservation = TRUE.}
-
-\item{useCovariateObservation30d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of observation in 30d window prior to or on cohort index date.  Only applicable if useCovariateObservation = TRUE.}
-
-\item{useCovariateObservationBelow}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of observation with a numeric value below normal range for latest value within 180d of cohort index.  Only applicable if useCovariateObservation = TRUE.}
-
-\item{useCovariateObservationAbove}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for presence/absence of observation with a numeric value above normal range for latest value within 180d of cohort index.  Only applicable if useCovariateObservation = TRUE.}
-
-\item{useCovariateObservationCount365d}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that look for the count of each observation concept in 365d window prior to or on cohort index date.  Only applicable if useCovariateObservation = TRUE.}
-
-\item{useCovariateConceptCounts}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that count the number of concepts that a person has within each domain (CONDITION, DRUG, PROCEDURE, OBSERVATION)}
-
-\item{useCovariateRiskScores}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that calculate various Risk Scores, including Charlson, DCSI.}
-
-\item{useCovariateInteractionYear}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that represent interaction terms between all other covariates and the year of the cohort index date.}
-
-\item{useCovariateInteractionMonth}{A boolean value (TRUE/FALSE) to determine if covariates will be created and used in models that represent interaction terms between all other covariates and the month of the cohort index date.}
-
-\item{excludedCovariateConceptIds}{A list of concept IDs that should NOT be used to construct covariates.}
-
-\item{deleteCovariatesSmallCount}{A numeric value used to remove covariates that occur in both cohorts fewer than deleteCovariateSmallCounts time.}
+\item{covariateSettings}{An object of type \code{covariateSettings} as created using the \code{\link{createCovariateSettings}} function.}
 }
 \value{
 Returns an object of type \code{covariateData}, containing information on the baseline covariates. Information about multiple outcomes can be captured at once for efficiency reasons. This object is a list with the following components:
@@ -126,7 +39,7 @@ Returns an object of type \code{covariateData}, containing information on the ba
 }
 }
 \description{
-Constructs a large set of covariates for one or more cohorts using data in the CDM schema.
+Get covariate information from the database
 }
 \details{
 This function uses the data in the CDM to construct a large set of covariates for the provided cohorts. The cohorts are assumed to be in a table

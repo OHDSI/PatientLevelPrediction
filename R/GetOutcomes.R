@@ -19,28 +19,29 @@
 #' Get outcomes for persons in the cohort
 #'
 #' @description
-#' Gets the outcomes for the specified cohort.
+#' Gets the outcomes for the specified cohort(s).
 #'
 #' @details
-#' If the \code{connection} parameter is specified, the cohorts are already assumed to be on the server in the appropriate temp table. Else, the cohorts will be 
-#' identified in the specified cohort table.
+#' For the specified cohorts, retrieve the outcomes of interest during cohort start and end date.
+#' 
+#' Either a \code{connectionDetails} or a \code{connection} object has to be specified.
 #'
-#' @param connectionDetails  	An R object of type \code{ConnectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.
-#' @param connection          A connection to the server containing the schema as created using the \code{connect} function in the \code{DatabaseConnector} package.
-#' @param cdmDatabaseSchema    The name of the database schema that contains the OMOP CDM instance.  Requires read permissions to this database. On SQL Server, this should specifiy both the database and the schema, so for example 'cdm_instance.dbo'.
+#' @param connectionDetails  	  An R object of type \code{connectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.
+#' @param connection            A connection to the server containing the schema as created using the \code{connect} function in the \code{DatabaseConnector} package.
+#' @param cdmDatabaseSchema     The name of the database schema that contains the OMOP CDM instance.  Requires read permissions to this database. On SQL Server, this should specifiy both the database and the schema, so for example 'cdm_instance.dbo'.
 #' @param oracleTempSchema  	  A schema where temp tables can be created in Oracle.#' @param useExistingCohortPerson  Does the temporary table \code{cohort_person} already exists? Can only be used when the \code{connection} parameter is not NULL.  	
-#' @param cohortDatabaseSchema 		If not using an existing \code{cohort_person} temp table, where is the source cohort table located? Note that on SQL Server, one should include both
+#' @param cohortDatabaseSchema 	If not using an existing \code{cohort_person} temp table, where is the source cohort table located? Note that on SQL Server, one should include both
 #' the database and schema, e.g. "cdm_schema.dbo".
 #' @param cohortTable 		      If not using an existing temp table, what is the name of the table holding the cohort?
 #' @param cohortConceptIds 		  If not using an existing temp table, what is the name of the source cohort table?
-#' @param outcomeDatabaseSchema     The name of the database schema that is the location where the data used to define the outcome cohorts is available.  If exposureTable = CONDITION_ERA, exposureDatabaseSchema is not used by assumed to be cdmSchema.  Requires read permissions to this database.    
+#' @param outcomeDatabaseSchema The name of the database schema that is the location where the data used to define the outcome cohorts is available.  If exposureTable = CONDITION_ERA, exposureDatabaseSchema is not used by assumed to be cdmSchema.  Requires read permissions to this database.    
 #' @param outcomeTable   The tablename that contains the outcome cohorts.  If outcomeTable <> CONDITION_OCCURRENCE, then expectation is outcomeTable has format of COHORT table: COHORT_CONCEPT_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.   
-#' @param outcomeConceptIds   A list of CONCEPT_IDs used to define outcomes.  If outcomeTable = CONDITION_OCCURRENCE, the list is a set of ancestor CONCEPT_IDs, and all occurrences of all descendant concepts will be selected.  If outcomeTable <> CONDITION_OCCURRENCE, the list contains records found in COHORT_DEFINITION_ID field.
+#' @param outcomeConceptIds     A list of CONCEPT_IDs used to define outcomes.  If outcomeTable = CONDITION_OCCURRENCE, the list is a set of ancestor CONCEPT_IDs, and all occurrences of all descendant concepts will be selected.  If outcomeTable <> CONDITION_OCCURRENCE, the list contains records found in COHORT_DEFINITION_ID field.
 #' @param outcomeConditionTypeConceptIds   A list of TYPE_CONCEPT_ID values that will restrict condition occurrences.  Only applicable if outcomeTable = CONDITION_OCCURRENCE.
 #' @param firstOutcomeOnly      Only keep the first outcome per person? 
 #'  
 #' @return
-#' An object of type \code{outcomeData} containing information on the outcomes in the cohort.
+#' An object of type \code{outcomeData} containing information on the outcomes in the cohort(s).
 #'
 #' @export
 getDbOutcomeData <- function(connectionDetails = NULL,
@@ -101,9 +102,11 @@ getDbOutcomeData <- function(connectionDetails = NULL,
     excludeSql <- SqlRender::translateSql(excludeSql, "sql server", attr(conn, "dbms"), oracleTempSchema)$sql
     exclude <- DatabaseConnector::dbGetQuery.ffdf(conn, excludeSql)
     colnames(exclude) <- SqlRender::snakeCaseToCamelCase(colnames(exclude))
-    if (nrow(exclude) != 0) {
+    if (nrow(exclude) == 0) {
+      exclude <- NULL
+    } else{
       open(exclude)
-    } 
+    }
   }
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta,3), attr(delta,"units")))
@@ -127,9 +130,6 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   return(result)
 }
 
-
-
-
 #' Save the outcome data to folder
 #'
 #' @description
@@ -141,9 +141,6 @@ getDbOutcomeData <- function(connectionDetails = NULL,
 #' 
 #' @details
 #' The data will be written to a set of files in the folder specified by the user.
-#'  
-#' @examples 
-#' #todo
 #' 
 #' @export
 saveOutcomeData <- function(outcomeData, file){
@@ -158,8 +155,11 @@ saveOutcomeData <- function(outcomeData, file){
   if (!is.null(outcomeData$exclude)){
     exclude = outcomeData$exclude
     ffbase::save.ffdf(outcomes, exclude, dir=file)
+    open(outcomeData$outcomes)
+    open(outcomeData$exclude)
   } else{
     ffbase::save.ffdf(outcomes, dir=file)
+    open(outcomeData$outcomes)
   }
   metaData <- outcomeData$metaData
   save(metaData,file=file.path(file,"metaData.Rdata"))
@@ -178,9 +178,6 @@ saveOutcomeData <- function(outcomeData, file){
 #' 
 #' @return
 #' An object of class outcomeData
-#'  
-#' @examples 
-#' #todo
 #' 
 #' @export
 loadOutcomeData <- function(file, readOnly = FALSE){
@@ -196,12 +193,12 @@ loadOutcomeData <- function(file, readOnly = FALSE){
   if (any(ls(e) == "exclude")){
     result <- list(outcomes = get("outcomes", envir=e),
                    exclude = get("exclude", envir=e),
-                   metaData = mget("metaData",envir=e))  
+                   metaData = get("metaData",envir=e))  
     open(result$outcomes,readonly = readOnly)
     open(result$exclude,readonly = readOnly)
   } else {
     result <- list(outcomes = get("outcomes", envir=e),
-                   metaData = mget("metaData",envir=e))     
+                   metaData = get("metaData",envir=e))     
     open(result$outcomes,readonly = readOnly)
   }
   class(result) <- "outcomeData"

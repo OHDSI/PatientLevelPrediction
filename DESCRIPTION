@@ -7,7 +7,7 @@ Author: Martijn J. Schuemie [aut, cre],
   Marc A. Suchard [aut],
   Patrick B. Ryan [aut]  
 Maintainer: Martijn J. Schuemie <schuemie@ohdsi.org>
-Description: Add description
+Description: A package for creating patient level prediction models. Given a cohort of interest and an outcome of interest, the package can use data in the Common Data Model to build a large set of features. These features can then be used by the Cyclops package to fit a predictive model. Also included are function for evaluating the predictive models.
 License: Apache License 2.0
 Depends:
     R (>= 3.1.0),

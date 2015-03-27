@@ -4,13 +4,15 @@
 \alias{fitPredictiveModel}
 \title{Fit a predictive model}
 \usage{
-fitPredictiveModel(cohortsData, covariateData, outcomeData,
+fitPredictiveModel(cohortData, covariateData, outcomeData,
   modelType = "logistic", cohortConceptId = NULL, outcomeConceptId = NULL,
   prior = createPrior("laplace", exclude = c(0), useCrossValidation = TRUE),
   control = createControl(noiseLevel = "silent", cvType = "auto",
   startingVariance = 0.1))
 }
 \arguments{
+\item{cohortData}{An object of type \code{cohortData}.}
+
 \item{covariateData}{An object of type \code{covariateData}.}
 
 \item{outcomeData}{An object of type \code{outcomeData}.}

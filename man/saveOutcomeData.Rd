@@ -18,7 +18,4 @@ not yet exist.}
 \details{
 The data will be written to a set of files in the folder specified by the user.
 }
-\examples{
-#todo
-}
 

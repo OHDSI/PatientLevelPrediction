@@ -13,7 +13,7 @@ getDbOutcomeData(connectionDetails = NULL, connection = NULL,
   outcomeConditionTypeConceptIds = "", firstOutcomeOnly = FALSE)
 }
 \arguments{
-\item{connectionDetails}{An R object of type \code{ConnectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.}
+\item{connectionDetails}{An R object of type \code{connectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.}
 
 \item{connection}{A connection to the server containing the schema as created using the \code{connect} function in the \code{DatabaseConnector} package.}
 
@@ -41,13 +41,14 @@ the database and schema, e.g. "cdm_schema.dbo".}
 \item{firstOutcomeOnly}{Only keep the first outcome per person?}
 }
 \value{
-An object of type \code{outcomeData} containing information on the outcomes in the cohort.
+An object of type \code{outcomeData} containing information on the outcomes in the cohort(s).
 }
 \description{
-Gets the outcomes for the specified cohort.
+Gets the outcomes for the specified cohort(s).
 }
 \details{
-If the \code{connection} parameter is specified, the cohorts are already assumed to be on the server in the appropriate temp table. Else, the cohorts will be
-identified in the specified cohort table.
+For the specified cohorts, retrieve the outcomes of interest during cohort start and end date.
+
+Either a \code{connectionDetails} or a \code{connection} object has to be specified.
 }
 
