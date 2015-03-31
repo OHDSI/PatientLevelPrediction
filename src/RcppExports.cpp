@@ -9,23 +9,31 @@ using namespace Rcpp;
 std::vector<double> aucWithCi(std::vector<double> propensityScores, std::vector<int> treatment);
 RcppExport SEXP PatientLevelPrediction_aucWithCi(SEXP propensityScoresSEXP, SEXP treatmentSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< std::vector<double> >::type propensityScores(propensityScoresSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type treatment(treatmentSEXP);
-    __result = Rcpp::wrap(aucWithCi(propensityScores, treatment));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< std::vector<double> >::type propensityScores(propensityScoresSEXP );
+        Rcpp::traits::input_parameter< std::vector<int> >::type treatment(treatmentSEXP );
+        std::vector<double> __result = aucWithCi(propensityScores, treatment);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // auc
 double auc(std::vector<double> propensityScores, std::vector<int> treatment);
 RcppExport SEXP PatientLevelPrediction_auc(SEXP propensityScoresSEXP, SEXP treatmentSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< std::vector<double> >::type propensityScores(propensityScoresSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type treatment(treatmentSEXP);
-    __result = Rcpp::wrap(auc(propensityScores, treatment));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< std::vector<double> >::type propensityScores(propensityScoresSEXP );
+        Rcpp::traits::input_parameter< std::vector<int> >::type treatment(treatmentSEXP );
+        double __result = auc(propensityScores, treatment);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }

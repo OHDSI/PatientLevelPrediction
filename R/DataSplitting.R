@@ -37,12 +37,12 @@ splitData <- function(cohortData, covariateData, outcomeData, splits = 2){
   splits <- cumsum(splits)
   rows <- data.frame(rowId = 1:nrow(cohortData$cohorts), rnd = runif(nrow(cohortData$cohorts)))
   q <- quantile(rows$rnd, probs = splits)
-  rows$group <- cut(rows$rnd, breaks = c(0, q), labels = FALSE)
-  rows$rnd <- NULL
+  groups <- ff::as.ff(cut(rows$rnd, breaks = c(0, q), labels = FALSE))
   result <- list()
   for (i in 1:length(splits)) {
-    sampledRowIds <- rows$rowId[rows$group == i]
-    sampledCohorts <- cohortData$cohorts[ff::as.ff(sampledRowIds), ]
+    writeLines(paste("Creating data objects for group",i))
+    sampledRowIds <- ffbase::ffwhich(groups, groups == i)
+    sampledCohorts <- cohortData$cohorts[sampledRowIds, ]
     sampledcohortData <- list(cohorts = sampledCohorts, 
                                  metaData = cohortData$metaData)
     class(sampledcohortData) <- "cohortData"

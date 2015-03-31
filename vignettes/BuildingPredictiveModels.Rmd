@@ -22,6 +22,26 @@ library(PatientLevelPrediction)
 
 This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level prediction models. We will walk through all the steps needed to build an exemplar model, and we have selected the well-studied topic of predicting re-hospitalization.
 
+## Specifying the cohort of interest and outcomes
+
+The `PatientLevelPrediction` package requires longitudinal observational healthcare data in the OMOP Common Data Model format. The user will need to specify two things: 
+
+1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
+2. Outcomes for which we wish to build a predictive model.
+
+The cohort and outcomes should be provided as data in a table on the server, where the table should have the same structure as the cohort table in the OMOP CDM, meaning it should have the following columns:
+
+- `cohort_concept_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
+- `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
+- `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
+- `cohort_end_date`, the end of the time period. Can be NULL for outcomes.
+
+![Diagram showing patient time](Diagram.png)
+
+The package will use data from the time period preceding (and including) the `cohort_start_date` to build a large set of features that can be used to predict outcomes between (and including) the `cohort_start_date` and `cohort_end_date`. These features can include binary indicators for the occurrence of any individual drug, condition, procedures, as well as demographics and comorbidity indices. 
+
+**Important**: Currently, `PatientLevelPrediction` does not check or limit the input data in any way. It is up to the user to make sure there are at least 365 days of observation time preceding the `cohort_start_date` for the cohort of interest. Furthermore, since the `cohort_start_date` is included in both the time used to construct predictors, and the time when outcomes can occurr, it is up to the user to either remove outcomes occurring on the `cohort_start_date`, or to remove predictors that are in fact indicators of the occurrence of an outcome on the `cohort_start_date`.
+
 # Installation instructions
 
 Before installing the `PatientLevelPrediction` package make sure you have Java available.  Java can be downloaded from [www.java.com](http://www.java.com). For Windows users, RTools is also necessary.  RTools can be downloaded from [CRAN](http://cran.r-project.org/bin/windows/Rtools/).
@@ -61,7 +81,9 @@ The last two lines define the `cdmDatabaseSchema` and `resultSchema` variables, 
 
 ## Preparing the cohort and outcome of interest
 
-Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict.We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. For our example study, we need to create the cohort of persons that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations. For this purpose we have created a file called *HospitalizationCohorts.sql* with the following contents:
+Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict.We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. For our example study, we need to create the cohort of persons that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
+
+For this purpose we have created a file called *HospitalizationCohorts.sql* with the following contents:
 
 ```sql
 /***********************************
@@ -131,7 +153,7 @@ sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 querySql(connection, sql)
 ```
 ```{r echo=FALSE,message=FALSE}
-data.frame(cohort_concept_id = c(1,2),count=c(136506,3507))
+data.frame(cohort_concept_id = c(1,2),count=c(4416811,1093943))
 ```
 
 ## Extracting the data from the server
@@ -182,7 +204,7 @@ We can use the `loadCohortData()`, `loadCovariateData()`, and `loadOutcomeData()
 
 ## Train-test split
 
-We not only want to build our model, we also want to know how good it is. Because evaluation using the same data on which the model was fitted can lead to overestimation, one typically uses a train-test split of the data or cross-validation. We can use the `splitData()` function to split the data in a 75%-25% split:
+We typically not only want to build our model, we also want to know how good it is. Because evaluation using the same data on which the model was fitted can lead to overestimation, one  uses a train-test split of the data or cross-validation. We can use the `splitData()` function to split the data in a 75%-25% split:
 
 ```{r tidy=TRUE,eval=FALSE}
 parts <- splitData(cohortData, covariateData, outcomeData, c(0.75,0.25))
@@ -211,8 +233,8 @@ if (file.exists("s:/temp/PatientLevelPrediction")){
   parts[[2]]$cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData_Test")
   parts[[2]]$covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData_Test")
   parts[[2]]$outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData_Test")
-  model <- load("s:/temp/PatientLevelPrediction/model.rda")
-  prediction <- load(file = "s:/temp/PatientLevelPrediction/prediction.Rdata")
+  model <- readRDS("s:/temp/PatientLevelPrediction/model.rda")
+  prediction <- readRDS(file = "s:/temp/PatientLevelPrediction/prediction.rda")
 } 
 ```
 
@@ -257,7 +279,7 @@ head(modelDetails)
 ```
 ```{r echo=FALSE,message=FALSE}
 if (file.exists("s:/temp/PatientLevelPrediction")){
-modelDetails <- getModelDetails(model, covariateData)
+modelDetails <- getModelDetails(model, parts[[2]]$covariateData)
   truncRight <- function(x, n){
     nc <- nchar(x)
     x[nc > (n-3)] <- paste('...',substr(x[nc > (n-3)], nc[nc > (n-3)]-n+1, nc[nc > (n-3)]),sep="")

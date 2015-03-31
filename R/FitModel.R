@@ -99,7 +99,7 @@ fitPredictiveModel <- function(cohortData,
                           modelType = modelType, 
                           coefficients = coef(cyclopsFit),
                           priorVariance = cyclopsFit$variance[1])
-  class(predictiveModel) <- "predictiveModel"
+  class(predictiveModel) <- append(class(predictiveModel), "predictiveModel")
   return(predictiveModel)
 }
 

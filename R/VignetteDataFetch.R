@@ -22,9 +22,9 @@
   #library(SqlRender)
   #library(DatabaseConnector)
   #library(PatientLevelPrediction)
-  #setwd("s:/temp")
+  setwd("s:/temp")
   
-  # If ff is complaining it can't find the temp folder, use   options("fftempdir" = "s:/temp")
+  options("fftempdir" = "s:/temp")
   
   pw <- NULL
   dbms <- "sql server"
@@ -87,9 +87,10 @@
   saveCovariateData(covariateData, "s:/temp/PatientLevelPrediction/covariateData")
   saveOutcomeData(outcomeData, "s:/temp/PatientLevelPrediction/outcomeData")
   
-  #cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData")
-  #covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData") 
-  #outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData")
+  #
+  cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData")
+  covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData") 
+  outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData")
   
   parts <- splitData(cohortData, covariateData, outcomeData, c(0.75,0.25))
 
@@ -103,12 +104,14 @@
                               modelType = "logistic",
                               prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE)) 
   
-  save(model, file = "s:/temp/PatientLevelPrediction/model.rda")
+  saveRDS(model, file = "s:/temp/PatientLevelPrediction/model.rda")
   
+ # model <- readRDS("s:/temp/PatientLevelPrediction/model.rda")
+
   prediction <- predictProbabilities(model,
                                      parts[[2]]$cohortData, 
                                      parts[[2]]$covariateData)
-  save(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rda")
+  saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rda")
   
   computeAuc(prediction, parts[[2]]$outcomeData)
   plotRoc(prediction, parts[[2]]$outcomeData)
