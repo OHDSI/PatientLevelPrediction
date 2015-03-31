@@ -15,6 +15,23 @@ output:
 %\VignetteIndexEntry{Building patient-level predictive models}
 -->
 
+```{r echo=FALSE,message=FALSE,eval=TRUE}
+library(PatientLevelPrediction)
+# Load all needed data if it exists on this computer:
+if (file.exists("s:/temp/PatientLevelPrediction")){
+  cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData")
+  covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData") 
+  outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData")
+  parts <- list()
+  parts[[2]] <- list()
+  parts[[2]]$cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData_Test")
+  parts[[2]]$covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData_Test")
+  parts[[2]]$outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData_Test")
+  model <- readRDS("s:/temp/PatientLevelPrediction/model.rda")
+  prediction <- readRDS(file = "s:/temp/PatientLevelPrediction/prediction.rda")
+  } 
+```
+
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
 ```
@@ -77,7 +94,7 @@ cdmDatabaseSchema <- "my_cdm_data"
 resultsDatabaseSchema <- "my_results"
 ```
 
-The last two lines define the `cdmDatabaseSchema` and `resultSchema` variables, which we'll use later to tell R where the data in CDM format live, and where we want to write intermediate and result tables. Note that for Microsoft SQL Server, these variables need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
+The last two lines define the `cdmDatabaseSchema` and `resultsDatabaseSchema` variables, which we'll use later to tell R where the data in CDM format live, and where we want to write intermediate and result tables. Note that for Microsoft SQL Server, these variables need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
 
 ## Preparing the cohort and outcome of interest
 
@@ -90,35 +107,36 @@ For this purpose we have created a file called *HospitalizationCohorts.sql* with
 File HospitalizationCohorts.sql 
 ***********************************/
 IF OBJECT_ID('@resultsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
-DROP TABLE @resultsDatabaseSchema.rehospitalization;
+  DROP TABLE @resultsDatabaseSchema.rehospitalization;
 
 SELECT visit_occurrence.person_id AS subject_id,
-MIN(visit_start_date) AS cohort_start_date,
-DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
-1 AS cohort_concept_id
+	MIN(visit_start_date) AS cohort_start_date,
+	DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
+	1 AS cohort_concept_id
 INTO @resultsDatabaseSchema.rehospitalization
 FROM @cdmDatabaseSchema.visit_occurrence
 INNER JOIN @cdmDatabaseSchema.observation_period
-ON visit_occurrence.person_id = observation_period.person_id
+	ON visit_occurrence.person_id = observation_period.person_id
 WHERE place_of_service_concept_id IN (9201, 9203)
-AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
-AND visit_start_date > observation_period_start_date
-AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
-AND visit_start_date < observation_period_end_date
+	AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
+	AND visit_start_date > observation_period_start_date
+	AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
+	AND visit_start_date < observation_period_end_date
 GROUP BY visit_occurrence.person_id;
 
 INSERT INTO @resultsDatabaseSchema.rehospitalization
 SELECT visit_occurrence.person_id AS subject_id,
-visit_start_date AS cohort_start_date,
-visit_end_date AS cohort_end_date,
-2 AS cohort_concept_id
+	visit_start_date AS cohort_start_date,
+	visit_end_date AS cohort_end_date,
+	2 AS cohort_concept_id
 FROM @resultsDatabaseSchema.rehospitalization
 INNER JOIN @cdmDatabaseSchema.visit_occurrence
-ON visit_occurrence.person_id = rehospitalization.subject_id
+	ON visit_occurrence.person_id = rehospitalization.subject_id
 WHERE place_of_service_concept_id IN (9201, 9203)
-AND visit_start_date > cohort_start_date
-AND visit_start_date <= cohort_end_date
-AND cohort_concept_id = 1;
+	AND visit_start_date > cohort_start_date
+	AND visit_start_date <= cohort_end_date
+	AND cohort_concept_id = 1;
+
 ```
 
 This is parameterized SQL which can be used by the `SqlRender` package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
@@ -168,7 +186,39 @@ cohortData <- getDbCohortData(connectionDetails$dbms,
                               cohortConceptIds = 1)
 
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
-                                             useCovariateConditionOccurrence = TRUE)
+                                             useCovariateConditionOccurrence = TRUE,
+                                             useCovariateConditionOccurrence365d = TRUE,
+                                             useCovariateConditionOccurrence30d = TRUE,
+                                             useCovariateConditionOccurrenceInpt180d = TRUE,
+                                             useCovariateConditionEra = TRUE,
+                                             useCovariateConditionEraEver = TRUE,
+                                             useCovariateConditionEraOverlap = TRUE,
+                                             useCovariateConditionGroup = TRUE,
+                                             useCovariateDrugExposure = TRUE,
+                                             useCovariateDrugExposure365d = TRUE,
+                                             useCovariateDrugExposure30d = TRUE,
+                                             useCovariateDrugEra = TRUE,
+                                             useCovariateDrugEra365d = TRUE,
+                                             useCovariateDrugEra30d = TRUE,
+                                             useCovariateDrugEraOverlap = TRUE,
+                                             useCovariateDrugEraEver = TRUE,
+                                             useCovariateDrugGroup = TRUE,
+                                             useCovariateProcedureOccurrence = TRUE,
+                                             useCovariateProcedureOccurrence365d = TRUE,
+                                             useCovariateProcedureOccurrence30d = TRUE,
+                                             useCovariateProcedureGroup = TRUE,
+                                             useCovariateObservation = TRUE,
+                                             useCovariateObservation365d = TRUE,
+                                             useCovariateObservation30d = TRUE,
+                                             useCovariateObservationBelow = TRUE,
+                                             useCovariateObservationAbove = TRUE,
+                                             useCovariateObservationCount365d = TRUE,
+                                             useCovariateConceptCounts = TRUE,
+                                             useCovariateRiskScores = TRUE,
+                                             useCovariateInteractionYear = FALSE,
+                                             useCovariateInteractionMonth = FALSE,
+                                             excludedCovariateConceptIds = c(),
+                                             deleteCovariatesSmallCount = 1)
 covariateData <- getDbCovariateData(connectionDetails$dbms, 
                                     cdmDatabaseSchema = cdmDatabaseSchema, 
                                     cohortDatabaseSchema = resultsDatabaseSchema, 
@@ -187,6 +237,33 @@ outcomeData <- getDbOutcomeData(connectionDetails$dbms,
 ```
 
 There are many parameters, but they are all documented in the `PatientLevelPrediction` manual. In short, we are pointing the functions to the table created earlier and indicating which concept IDs in that table identify the cohort and outcome of interest. We construct `cohortData`, an object representing the cohort of interest, `covariateData`, holding all covariate information that will be used as predictors, and `outcomeData` as the set of outcomes during cohort time. All three objects use the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
+
+We can get some overall statistics using the generic `summary()` method:
+
+```{r tidy=FALSE,eval=FALSE}
+summary(cohortData)
+```
+```{r echo=FALSE,message=FALSE,eval=TRUE}
+if (file.exists("s:/temp/PatientLevelPrediction")){
+  summary(cohortData)
+  }
+```
+```{r tidy=FALSE,eval=FALSE}
+summary(covariateData)
+```
+```{r echo=FALSE,message=FALSE,eval=TRUE}
+if (file.exists("s:/temp/PatientLevelPrediction")){
+  summary(covariateData)
+  }
+```
+```{r tidy=FALSE,eval=FALSE}
+summary(outcomeData)
+```
+```{r echo=FALSE,message=FALSE,eval=TRUE}
+if (file.exists("s:/temp/PatientLevelPrediction")){
+  summary(outcomeData)
+  }
+```
 
 ### Saving the data to file
 
@@ -226,20 +303,7 @@ The `fitPredictiveModel()` function uses the `Cyclops` package to fit a large-sc
 
 ## Model evaluation
 
-```{r echo=FALSE,message=FALSE,eval=TRUE}
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  parts <- list()
-  parts[[2]] <- list()
-  parts[[2]]$cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData_Test")
-  parts[[2]]$covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData_Test")
-  parts[[2]]$outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData_Test")
-  model <- readRDS("s:/temp/PatientLevelPrediction/model.rda")
-  prediction <- readRDS(file = "s:/temp/PatientLevelPrediction/prediction.rda")
-} 
-```
-
-
-We can evaluate how well the model is able to predict the outcome, for example on the test data:
+We can evaluate how well the model is able to predict the outcome, for example on the test data we can compute the area under the ROC curve:
 
 ```{r tidy=TRUE,eval=FALSE}
 prediction <- predictProbabilities(model,
@@ -250,23 +314,29 @@ computeAuc(prediction, parts[[2]]$outcomeData)
 ```{r echo=FALSE,message=FALSE}
 if (file.exists("s:/temp/PatientLevelPrediction")){
   computeAuc(prediction, parts[[2]]$outcomeData)
-}
+  }
 ```
+
+And we can plot the ROC curve itself:
+
 ```{r tidy=TRUE,eval=FALSE}
 plotRoc(prediction, parts[[2]]$outcomeData)
 ```
 ```{r echo=FALSE,message=FALSE}
 if (file.exists("s:/temp/PatientLevelPrediction")){
   plotRoc(prediction, parts[[2]]$outcomeData)
-}
+  }
 ```
+
+We can also look at the calibration:
+
 ```{r tidy=TRUE,eval=FALSE}
 plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
 ```
 ```{r echo=FALSE,message=FALSE}
 if (file.exists("s:/temp/PatientLevelPrediction")){
   plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
-}
+  }
 ```
 
 ## Inspecting the model
@@ -279,17 +349,18 @@ head(modelDetails)
 ```
 ```{r echo=FALSE,message=FALSE}
 if (file.exists("s:/temp/PatientLevelPrediction")){
-modelDetails <- getModelDetails(model, parts[[2]]$covariateData)
+  modelDetails <- getModelDetails(model, parts[[2]]$covariateData)
   truncRight <- function(x, n){
     nc <- nchar(x)
     x[nc > (n-3)] <- paste('...',substr(x[nc > (n-3)], nc[nc > (n-3)]-n+1, nc[nc > (n-3)]),sep="")
     x
-  }
+    }
   modelDetails$covariateName <- truncRight(as.character(modelDetails$covariateName),40)
   head(modelDetails)  
   }
 ```
 
+This shows the strongest predictors in the model with their corresponding betas.
 
 # Acknowledgments
 

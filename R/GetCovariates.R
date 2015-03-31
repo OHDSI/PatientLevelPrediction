@@ -136,9 +136,11 @@ getDbCovariateData <- function(connectionDetails = NULL,
   
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
+  if (useExistingCohortPerson)
+    cohortConceptIds = ffbase::unique.ff(covariates$cohortConceptId)
   metaData <- list(sql = renderedSql,
-                   call = match.call()
-  )
+                   call = match.call(),
+                   cohortConceptIds = cohortConceptIds)
   result <- list(covariates = covariates,
                  covariateRef = covariateRef,
                  metaData = metaData
@@ -322,4 +324,29 @@ createCovariateSettings <- function(useCovariateDemographics = TRUE,
   
   class(covariateSettings) <- "covariateSettings"
   return(covariateSettings)  
+}
+
+#' @export
+print.covariateData <- function(x, ...){
+  writeLines("CovariateData object")
+  writeLines("")
+  writeLines(paste("Cohort of interest concept ID(s):", paste(x$metaData$cohortConceptIds,collapse=",")))
+}
+
+#' @export
+summary.covariateData <- function(object, ...){
+  result <- list(metaData = object$metaData,
+                 covariateCount = nrow(object$covariateRef),
+                 covariateValueCount = nrow(object$covariates)                 
+  )
+  class(result) <- "summary.covariateData"
+  return(result)
+}
+
+#' @export
+print.summary.covariateData <- function(x, ...){
+  writeLines("CovariateData object summary")
+  writeLines("")
+  writeLines(paste("Number of covariates:",x$covariateCount))
+  writeLines(paste("Number of non-zero covariate values:",x$covariateValueCount)) 
 }

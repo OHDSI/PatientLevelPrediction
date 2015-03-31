@@ -159,3 +159,38 @@ loadCohortData <- function(file, readOnly = FALSE){
   rm(e)
   return(result)
 }
+
+#' @export
+print.cohortData <- function(x, ...){
+  writeLines("CohortData object")
+  writeLines("")
+  writeLines(paste("Cohort of interest concept ID(s):", paste(x$metaData$cohortConceptIds,collapse=",")))
+}
+
+#' @export
+summary.cohortData <- function(object, ...){
+  counts <- data.frame(cohortConceptId = object$metaData$cohortConceptIds, cohortCount = 0, personCount = 0)
+  for (i in 1:nrow(counts)){
+    cohortConceptId <- counts$cohortConceptId[i]
+    t <- object$cohorts$cohortConceptId == cohortConceptId
+    t <- ffbase::ffwhich(t, t == TRUE)
+    counts$cohortCount[i] <- length(t)
+    counts$personCount[i] <- length(ffbase::unique.ff(object$cohorts$personId[t]))
+  }
+  result <- list(metaData = object$metaData,
+                 counts = counts)                 
+  class(result) <- "summary.cohortData"
+  return(result)
+}
+
+#' @export
+print.summary.cohortData <- function(x, ...){
+  writeLines("CohortData object summary")
+  writeLines("")
+  counts <- x$counts
+  rownames(counts) <- counts$cohortConceptId
+  counts$cohortConceptId <- NULL
+  colnames(counts) <- c("Cohort count","Person count")
+  printCoefmat(counts)
+}
+

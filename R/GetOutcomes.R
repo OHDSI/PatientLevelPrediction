@@ -206,3 +206,36 @@ loadOutcomeData <- function(file, readOnly = FALSE){
   return(result)
 }
 
+#' @export
+print.outcomeData <- function(x, ...){
+  writeLines("OutcomeData object")
+  writeLines("")
+  writeLines(paste("Outcome concept ID(s):", paste(x$metaData$outcomeConceptIds, collapse = ",")))
+}
+
+#' @export
+summary.outcomeData <- function(object, ...){
+  counts <- data.frame(outcomeConceptId = object$metaData$outcomeConceptIds, cohortCount = 0, personCount = 0)
+  for (i in 1:nrow(counts)){
+    outcomeConceptId <- counts$outcomeConceptId[i]
+    t <- object$outcomes$outcomeId == outcomeConceptId
+    t <- ffbase::ffwhich(t, t == TRUE)
+    counts$cohortCount[i] <- length(t)
+    counts$personCount[i] <- length(ffbase::unique.ff(object$outcomes$personId[t]))
+  }
+  result <- list(metaData = object$metaData,
+                 counts = counts)                 
+  class(result) <- "summary.outcomeData"
+  return(result)
+}
+
+#' @export
+print.summary.outcomeData <- function(x, ...){
+  writeLines("OutcomeData object summary")
+  writeLines("")
+  counts <- x$counts
+  rownames(counts) <- counts$outcomeConceptId
+  counts$outcomeConceptId <- NULL
+  colnames(counts) <- c("Cohort count","Person count")
+  printCoefmat(counts)
+}
