@@ -10,3 +10,14 @@
 # RStudio files
 .Rproj.user/
 .Rproj.user
+
+# SqlRender
+statement_*.sql
+errorReport.txt
+
+#C++ objects
+src/*.o
+src/*.so
+src/*.dll
+/Debug
+standalone/build/*

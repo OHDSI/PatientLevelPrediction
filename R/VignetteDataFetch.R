@@ -134,7 +134,8 @@
                               parts[[1]]$covariateData, 
                               parts[[1]]$outcomeData, 
                               modelType = "logistic",
-                              prior = createPrior("laplace", 0.1, exclude = c(0), useCrossValidation = FALSE)) 
+                              prior = createPrior("laplace", exclude = c(0), useCrossValidation = TRUE),
+                              control = createControl(noiseLevel = "silent", cvType = "auto", startingVariance = 0.1, threads = 10)) 
   
   saveRDS(model, file = "s:/temp/PatientLevelPrediction/model.rda")
   

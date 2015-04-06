@@ -12,11 +12,19 @@ INTO @resultsDatabaseSchema.rehospitalization
 FROM @cdmDatabaseSchema.visit_occurrence
 INNER JOIN @cdmDatabaseSchema.observation_period
 	ON visit_occurrence.person_id = observation_period.person_id
+INNER JOIN @cdmDatabaseSchema.condition_occurrence
+ON condition_occurrence.person_id = visit_occurrence.person_id 
 WHERE place_of_service_concept_id IN (9201, 9203)
 	AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
 	AND visit_start_date > observation_period_start_date
 	AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
 	AND visit_start_date < observation_period_end_date
+  AND DATEDIFF(DAY, condition_start_date, visit_start_date) > @pre_time
+  AND condition_start_date <= visit_start_date
+  AND condition_concept_id IN (
+    SELECT descendant_concept_id 
+    FROM @cdmDatabaseSchema.concept_ancestor 
+    WHERE ancestor_concept_id = 201826) /* Type 2 DM */
 GROUP BY visit_occurrence.person_id;
 
 INSERT INTO @resultsDatabaseSchema.rehospitalization

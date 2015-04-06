@@ -47,6 +47,41 @@ computeAuc <- function(prediction,
   }
 }
 
+#' Compute the area under the ROC curve
+#' 
+#' @details Computes the area under the ROC curve for the predicted probabilities, given the 
+#' true observed outcomes.
+#' 
+#' @param prediction          A vector with the predicted hazard rate.
+#' @param status              A vector with the status of 1 (event) or 0 (no event).
+#' @param time                Only for survival models: a vector with the time to event or censor (which ever comes first).
+#' @param confidenceInterval  Should 95 percebt confidence intervals be computed?
+#' @param timePoint           Only for survival models: time point when the AUC should be evaluated
+#' @param modelType           Type of model. Currently supported are "logistic" and "survival".
+#' 
+#' @export
+computeAucFromDataFrames <- function(prediction, status, time = NULL, confidenceInterval = FALSE, timePoint, modelType = "logistic"){
+  if (modelType == "survival" & confidenceInterval)
+    stop("Currently not supporting confidence intervals for survival models")
+  
+  if (modelType == "survival"){
+    Surv.rsp <- Surv(time, status)
+    Surv.rsp.new <- Surv.rsp
+    if (missing(timePoint))
+      timePoint <- max(time[status == 1])
+    auc <- AUC.uno(Surv.rsp, Surv.rsp.new, prediction, timePoint)$auc
+    return(auc*auc)
+  } else {
+    if (confidenceInterval){
+      auc <-  .Call('PatientLevelPrediction_aucWithCi', PACKAGE = 'PatientLevelPrediction', prediction, status)
+      return(data.frame(auc=auc[1],auc_lb95ci=auc[2],auc_lb95ci=auc[3]))    
+    } else {
+      auc <-  .Call('PatientLevelPrediction_auc', PACKAGE = 'PatientLevelPrediction', prediction, status)
+      return(auc)    
+    }
+  }
+}
+
 #' Plot the calibration
 #' 
 #' @details Create a plot showing the predicted probabilities and the observed fractions. Predictions
