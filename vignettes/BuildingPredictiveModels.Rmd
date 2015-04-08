@@ -37,7 +37,7 @@ library(PatientLevelPrediction)
 ```
 # Introduction
 
-This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level prediction models. We will walk through all the steps needed to build an exemplar model, and we have selected the well-studied topic of predicting re-hospitalization.
+This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level prediction models. We will walk through all the steps needed to build an exemplar model, and we have selected the well-studied topic of predicting re-hospitalization. To reduce the scope a bit, we have limited ourselves to a diabetes type 2 population.
 
 ## Specifying the cohort of interest and outcomes
 
@@ -98,7 +98,7 @@ The last two lines define the `cdmDatabaseSchema` and `resultsDatabaseSchema` va
 
 ## Preparing the cohort and outcome of interest
 
-Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict.We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. For our example study, we need to create the cohort of persons that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
+Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
 
 For this purpose we have created a file called *HospitalizationCohorts.sql* with the following contents:
 
@@ -108,7 +108,7 @@ File HospitalizationCohorts.sql
 ***********************************/
 IF OBJECT_ID('@resultsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
   DROP TABLE @resultsDatabaseSchema.rehospitalization;
-
+	
 SELECT visit_occurrence.person_id AS subject_id,
 	MIN(visit_start_date) AS cohort_start_date,
 	DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
@@ -117,11 +117,19 @@ INTO @resultsDatabaseSchema.rehospitalization
 FROM @cdmDatabaseSchema.visit_occurrence
 INNER JOIN @cdmDatabaseSchema.observation_period
 	ON visit_occurrence.person_id = observation_period.person_id
+INNER JOIN @cdmDatabaseSchema.condition_occurrence
+ON condition_occurrence.person_id = visit_occurrence.person_id 
 WHERE place_of_service_concept_id IN (9201, 9203)
 	AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
 	AND visit_start_date > observation_period_start_date
 	AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
 	AND visit_start_date < observation_period_end_date
+  AND DATEDIFF(DAY, condition_start_date, visit_start_date) > @pre_time
+  AND condition_start_date <= visit_start_date
+  AND condition_concept_id IN (
+    SELECT descendant_concept_id 
+    FROM @cdmDatabaseSchema.concept_ancestor 
+    WHERE ancestor_concept_id = 201826) /* Type 2 DM */
 GROUP BY visit_occurrence.person_id;
 
 INSERT INTO @resultsDatabaseSchema.rehospitalization
@@ -136,7 +144,6 @@ WHERE place_of_service_concept_id IN (9201, 9203)
 	AND visit_start_date > cohort_start_date
 	AND visit_start_date <= cohort_end_date
 	AND cohort_concept_id = 1;
-
 ```
 
 This is parameterized SQL which can be used by the `SqlRender` package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
@@ -171,7 +178,7 @@ sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 querySql(connection, sql)
 ```
 ```{r echo=FALSE,message=FALSE}
-data.frame(cohort_concept_id = c(1,2),count=c(4416811,1093943))
+data.frame(cohort_concept_id = c(1, 2),count=c(395910, 165350))
 ```
 
 ## Extracting the data from the server
@@ -355,7 +362,7 @@ if (file.exists("s:/temp/PatientLevelPrediction")){
     x[nc > (n-3)] <- paste('...',substr(x[nc > (n-3)], nc[nc > (n-3)]-n+1, nc[nc > (n-3)]),sep="")
     x
     }
-  modelDetails$covariateName <- truncRight(as.character(modelDetails$covariateName),40)
+  modelDetails$covariateName <- truncRight(as.character(modelDetails$covariateName),35)
   head(modelDetails)  
   }
 ```

@@ -120,9 +120,9 @@
   saveOutcomeData(outcomeData, "s:/temp/PatientLevelPrediction/outcomeData")
   
   #
-  cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData")
-  covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData") 
-  outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData")
+  #cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData")
+  #covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData") 
+  #outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData")
   
   parts <- splitData(cohortData, covariateData, outcomeData, c(0.75,0.25))
 
@@ -135,7 +135,7 @@
                               parts[[1]]$outcomeData, 
                               modelType = "logistic",
                               prior = createPrior("laplace", exclude = c(0), useCrossValidation = TRUE),
-                              control = createControl(noiseLevel = "silent", cvType = "auto", startingVariance = 0.1, threads = 10)) 
+                              control = createControl(noiseLevel = "quiet", cvType = "auto", startingVariance = 0.1, threads = 10)) 
   
   saveRDS(model, file = "s:/temp/PatientLevelPrediction/model.rda")
   
