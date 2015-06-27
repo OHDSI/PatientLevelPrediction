@@ -70,7 +70,7 @@ getDbCohortData <- function(connectionDetails = NULL,
   start <- Sys.time()
   cohortsSql <-"SELECT subject_id AS person_id, cohort_start_date, cohort_concept_id, DATEDIFF(DAY, cohort_start_date, cohort_end_date) AS time FROM #cohort_person ORDER BY person_id, cohort_start_date"
   cohortsSql <- SqlRender::translateSql(cohortsSql, "sql server", attr(conn, "dbms"), oracleTempSchema)$sql
-  cohorts <- DatabaseConnector::dbGetQuery.ffdf(conn, cohortsSql)
+  cohorts <- DatabaseConnector::querySql.ffdf(conn, cohortsSql)
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
   
   delta <- Sys.time() - start

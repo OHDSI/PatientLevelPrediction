@@ -65,11 +65,11 @@ computeAucFromDataFrames <- function(prediction, status, time = NULL, confidence
     stop("Currently not supporting confidence intervals for survival models")
   
   if (modelType == "survival"){
-    Surv.rsp <- Surv(time, status)
+    Surv.rsp <- survival::Surv(time, status)
     Surv.rsp.new <- Surv.rsp
     if (missing(timePoint))
       timePoint <- max(time[status == 1])
-    auc <- AUC.uno(Surv.rsp, Surv.rsp.new, prediction, timePoint)$auc
+    auc <- survAUC::AUC.uno(Surv.rsp, Surv.rsp.new, prediction, timePoint)$auc
     return(auc*auc)
   } else {
     if (confidenceInterval){

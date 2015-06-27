@@ -21,7 +21,6 @@
   shell("rm man/PatientLevelPrediction.pdf")
   shell("R CMD Rd2pdf ./ --output=man/PatientLevelPrediction.pdf")
 
-  require(rmarkdown)
   rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd", 
                     output_file = "../inst/doc/BuildingPredictiveModels.pdf",
                     rmarkdown::pdf_document(latex_engine = "pdflatex",toc = TRUE,number_sections = TRUE))

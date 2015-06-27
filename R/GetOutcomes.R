@@ -90,7 +90,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   start <- Sys.time()
   outcomeSql <-"SELECT person_id, cohort_start_date, cohort_concept_id, outcome_id, outcome_count, time_to_event FROM #cohort_outcome ORDER BY person_id, cohort_start_date"
   outcomeSql <- SqlRender::translateSql(outcomeSql, "sql server", attr(conn, "dbms"), oracleTempSchema)$sql
-  outcomes <- DatabaseConnector::dbGetQuery.ffdf(conn, outcomeSql)
+  outcomes <- DatabaseConnector::querySql.ffdf(conn, outcomeSql)
   colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
   if (nrow(outcomes) == 0){
     warning("No outcome data found")
@@ -100,7 +100,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   if (firstOutcomeOnly){
     excludeSql <-"SELECT person_id, cohort_start_date, cohort_concept_id, outcome_id FROM #cohort_excluded_person ORDER BY outcome_id, person_id"
     excludeSql <- SqlRender::translateSql(excludeSql, "sql server", attr(conn, "dbms"), oracleTempSchema)$sql
-    exclude <- DatabaseConnector::dbGetQuery.ffdf(conn, excludeSql)
+    exclude <- DatabaseConnector::querySql.ffdf(conn, excludeSql)
     colnames(exclude) <- SqlRender::snakeCaseToCamelCase(colnames(exclude))
     if (nrow(exclude) == 0) {
       exclude <- NULL

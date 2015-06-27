@@ -117,7 +117,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   start <- Sys.time()
   covariateSql <-"SELECT person_id, cohort_start_date, cohort_concept_id, covariate_id, covariate_value FROM #cohort_covariate ORDER BY person_id, covariate_id"
   covariateSql <- SqlRender::translateSql(covariateSql, "sql server", attr(conn, "dbms"), oracleTempSchema)$sql
-  covariates <- DatabaseConnector::dbGetQuery.ffdf(conn, covariateSql)
+  covariates <- DatabaseConnector::querySql.ffdf(conn, covariateSql)
   covariateRefSql <-"SELECT covariate_id, covariate_name, analysis_id, concept_id  FROM #cohort_covariate_ref ORDER BY covariate_id"
   covariateRefSql <- SqlRender::translateSql(covariateRefSql, "sql server", attr(conn, "dbms"), oracleTempSchema)$sql
   covariateRef <- DatabaseConnector::dbGetQuery.ffdf(conn, covariateRefSql)
