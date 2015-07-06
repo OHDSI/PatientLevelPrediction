@@ -1,15 +1,20 @@
-{DEFAULT @use_existing_cohort_person = TRUE } 
+TRUNCATE TABLE #cov;
 
-TRUNCATE TABLE #cohort_covariate;
+DROP TABLE #cov;
 
-DROP TABLE #cohort_covariate;
+TRUNCATE TABLE #cov_ref;
 
-TRUNCATE TABLE #cohort_covariate_ref;
+DROP TABLE #cov_ref;
 
-DROP TABLE #cohort_covariate_ref;
+{@has_excluded_covariate_concept_ids} ? {
+TRUNCATE TABLE #excluded_cov;
 
-{!@use_existing_cohort_person} ? {
-TRUNCATE TABLE #cohort_person;
-
-DROP TABLE #cohort_person;
+DROP TABLE #excluded_cov;
 }
+
+{@has_included_covariate_concept_ids} ? {
+TRUNCATE TABLE #included_cov;
+
+DROP TABLE #included_cov;
+}
+

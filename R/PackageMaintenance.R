@@ -1,6 +1,6 @@
 # @file PackageMaintenance
 #
-# Copyright 2014 Observational Health Data Sciences and Informatics
+# Copyright 2015 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -15,6 +15,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+.formatAndCheckCode <- function() {
+  OhdsiRTools::formatRFolder()
+  OhdsiRTools::checkUsagePackage("PatientLevelPrediction")
+  OhdsiRTools::ohdsiLintrFolder()
+}
 
 .createManualAndVignettes <- function(){
 

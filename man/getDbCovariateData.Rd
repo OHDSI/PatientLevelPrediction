@@ -6,44 +6,56 @@
 \usage{
 getDbCovariateData(connectionDetails = NULL, connection = NULL,
   oracleTempSchema = NULL, cdmDatabaseSchema,
-  useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
-  cohortTable = "cohort", cohortConceptIds = c(0, 1),
-  covariateSettings = createCovariateSettings())
+  useExistingCohortPerson = TRUE, cohortDatabaseSchema = cdmDatabaseSchema,
+  cohortTable = "cohort", cohortConceptIds = c(0, 1), covariateSettings)
 }
 \arguments{
-\item{connectionDetails}{An R object of type \code{connectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.}
+\item{connection}{A connection to the server containing the schema as created using
+the \code{connect} function in the \code{DatabaseConnector}
+package.}
 
-\item{connection}{A connection to the server containing the schema as created using the \code{connect} function in the \code{DatabaseConnector} package.}
+\item{cdmDatabaseSchema}{The name of the database schema that contains the OMOP CDM
+instance.  Requires read permissions to this database. On SQL
+Server, this should specifiy both the database and the schema, so
+for example 'cdm_instance.dbo'.}
 
-\item{oracleTempSchema}{A schema where temp tables can be created in Oracle.}
+\item{useExistingCohortPerson}{Does the temporary table \code{cohort_person} already exists? Can
+only be used when the \code{connection} parameter is not NULL.}
 
-\item{cdmDatabaseSchema}{The name of the database schema that contains the OMOP CDM instance.  Requires read permissions to this database. On SQL Server, this should specifiy both the database and the schema, so for example 'cdm_instance.dbo'.}
+\item{cohortDatabaseSchema}{If not using an existing \code{cohort_person} temp table, where is
+the source cohort table located? Note that on SQL Server, one
+should include both the database and schema, e.g. 'cdm_schema.dbo'.}
 
-\item{useExistingCohortPerson}{Does the temporary table \code{cohort_person} already exists? Can only be used when the \code{connection} parameter is not NULL.}
+\item{cohortTable}{}
 
-\item{cohortDatabaseSchema}{If not using an existing \code{cohort_person} temp table, where is the source cohort table located? Note that on SQL Server, one should include both
-the database and schema, e.g. "cdm_schema.dbo".}
-
-\item{cohortTable}{If not using an existing \code{cohort_person} temp table, what is the name of the source cohort table?}
-
-\item{cohortConceptIds}{One or more concept IDs used to identify cohorts. If more than one concept ID is provided, the cohorts will be stored separately.}
+\item{cohortConceptIds}{If not using an existing \code{cohort_person} temp table, what is
+the name of the source cohort table?}
 
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the \code{\link{createCovariateSettings}} function.}
+
+\item{connectionDetailsAn}{R object of type \code{connectionDetails} created using the
+function \code{createConnectionDetails} in the
+\code{DatabaseConnector} package.}
+
+\item{oracleTempSchemaA}{schema where temp tables can be created in Oracle.}
 }
 \value{
-Returns an object of type \code{covariateData}, containing information on the baseline covariates. Information about multiple outcomes can be captured at once for efficiency reasons. This object is a list with the following components:
-\describe{
-  \item{covariates}{An ffdf object listing the baseline covariates per person in the two cohorts. This is done using a sparse representation: covariates with a value of 0 are omitted to save space.}
-  \item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
-  \item{metaData}{A list of objects with information on how the covariateData object was constructed.}
-}
+Returns an object of type \code{covariateData}, containing information on the baseline covariates.
+Information about multiple outcomes can be captured at once for efficiency reasons. This object is
+a list with the following components: \describe{ \item{covariates}{An ffdf object listing the
+baseline covariates per person in the two cohorts. This is done using a sparse representation:
+covariates with a value of 0 are omitted to save space.} \item{covariateRef}{An ffdf object
+describing the covariates that have been extracted.} \item{metaData}{A list of objects with
+information on how the covariateData object was constructed.} }
 }
 \description{
-Get covariate information from the database
+Constructs a large set of covariates for one or more cohorts using data in the CDM schema.
 }
 \details{
-This function uses the data in the CDM to construct a large set of covariates for the provided cohorts. The cohorts are assumed to be in a table
-with the same structure as the cohort table in the OMOP CDM. The subject_id in this table must refer to person_ids in the CDM. One person can occurr
-multiple times, but the combination of subject_id and cohort_start_date is assumed to be unique.
+This function uses the data in the CDM to construct a large set of covariates for the provided
+cohorts. The cohorts are assumed to be in a table with the same structure as the cohort table in
+the OMOP CDM. The subject_id in this table must refer to person_ids in the CDM. One person can
+occurr multiple times, but the combination of subject_id and cohort_start_date is assumed to be
+unique.
 }
 
