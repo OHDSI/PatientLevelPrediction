@@ -7,7 +7,8 @@
 computeAuc(prediction, outcomeData, confidenceInterval = FALSE)
 }
 \arguments{
-\item{prediction}{A prediction object as generated using the \code{\link{predictProbabilities}} function.}
+\item{prediction}{A prediction object as generated using the
+\code{\link{predictProbabilities}} function.}
 
 \item{outcomeData}{An object of type \code{outcomeData}.}
 
@@ -17,7 +18,7 @@ computeAuc(prediction, outcomeData, confidenceInterval = FALSE)
 Compute the area under the ROC curve
 }
 \details{
-Computes the area under the ROC curve for the predicted probabilities, given the
-true observed outcomes.
+Computes the area under the ROC curve for the predicted probabilities, given the true observed
+outcomes.
 }
 

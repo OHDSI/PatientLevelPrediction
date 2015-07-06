@@ -17,20 +17,16 @@
 # limitations under the License.
 
 # Returns a logical vector indicating which elements in a have a value that is in b
-in.ff <- function(a, b){
+in.ff <- function(a, b) {
   if (length(b) == 0)
-    return(ff::as.ff(rep(FALSE, length(a))))
-  else
-    return(ffbase::ffmatch(x = a, table=b, nomatch = 0L) > 0L)
+    return(ff::as.ff(rep(FALSE, length(a)))) else return(ffbase::ffmatch(x = a,
+                                                                         table = b,
+                                                                         nomatch = 0L) > 0L)
 }
 
 # Return a logical value indicating whether any x is TRUE
-any.ff <- function(x, ..., na.rm = FALSE, range = NULL){
-  any( ...
-      , sapply(chunk(x)
-               , function(i){
-                 any(x[i], na.rm = na.rm)
-               }
-      )
-  )
+any.ff <- function(x, ..., na.rm = FALSE, range = NULL) {
+  any(..., sapply(chunk(x), function(i) {
+    any(x[i], na.rm = na.rm)
+  }))
 }

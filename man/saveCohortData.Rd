@@ -9,8 +9,8 @@ saveCohortData(cohortData, file)
 \arguments{
 \item{cohortData}{An object of type \code{cohortData} as generated using \code{getDbcohortData}.}
 
-\item{file}{The name of the folder where the data will be written. The folder should
-not yet exist.}
+\item{file}{The name of the folder where the data will be written. The folder should not yet
+                    exist.}
 }
 \description{
 \code{saveCohortData} saves an object of type cohortData to folder.
@@ -19,6 +19,6 @@ not yet exist.}
 The data will be written to a set of files in the folder specified by the user.
 }
 \examples{
-#todo
+# todo
 }
 

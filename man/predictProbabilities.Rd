@@ -7,11 +7,14 @@
 predictProbabilities(predictiveModel, cohortData, covariateData)
 }
 \arguments{
-\item{predictiveModel}{An object of type \code{predictiveModel} as generated using \code{\link{fitPredictiveModel}}.}
+\item{predictiveModel}{An object of type \code{predictiveModel} as generated using
+\code{\link{fitPredictiveModel}}.}
 
-\item{cohortData}{An object of type \code{cohortData} as generated using \code{\link{getDbCohortData}}.}
+\item{cohortData}{An object of type \code{cohortData} as generated using
+\code{\link{getDbCohortData}}.}
 
-\item{covariateData}{An object of type \code{covariateData} as generated using \code{\link{getDbCovarteData}}.}
+\item{covariateData}{An object of type \code{covariateData} as generated using
+                         \code{\link{getDbCovarteData}}.}
 }
 \description{
 Create predictive probabilities

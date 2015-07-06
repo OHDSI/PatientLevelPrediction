@@ -8,23 +8,26 @@ plotCalibration(prediction, outcomeData, numberOfStrata = 5,
   fileName = NULL)
 }
 \arguments{
-\item{prediction}{A prediction object as generated using the \code{\link{predictProbabilities}} function.}
+\item{prediction}{A prediction object as generated using the
+\code{\link{predictProbabilities}} function.}
 
 \item{outcomeData}{An object of type \code{outcomeData}.}
 
 \item{numberOfStrata}{The number of strata in the plot.}
 
-\item{fileName}{Name of the file where the plot should be saved, for example 'plot.png'. See the
-function \code{ggsave} in the ggplot2 package for supported file formats.}
+\item{fileName}{Name of the file where the plot should be saved, for example 'plot.png'. See
+                        the function \code{ggsave} in the ggplot2 package for supported file
+                        formats.}
 }
 \value{
-A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different format.
+A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
+format.
 }
 \description{
 Plot the calibration
 }
 \details{
-Create a plot showing the predicted probabilities and the observed fractions. Predictions
-are stratefied into equally sized bins of predicted probabilities.
+Create a plot showing the predicted probabilities and the observed fractions. Predictions are
+stratefied into equally sized bins of predicted probabilities.
 }
 

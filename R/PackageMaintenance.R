@@ -22,12 +22,14 @@
   OhdsiRTools::ohdsiLintrFolder()
 }
 
-.createManualAndVignettes <- function(){
+.createManualAndVignettes <- function() {
 
   shell("rm man/PatientLevelPrediction.pdf")
   shell("R CMD Rd2pdf ./ --output=man/PatientLevelPrediction.pdf")
 
-  rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd", 
+  rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd",
                     output_file = "../inst/doc/BuildingPredictiveModels.pdf",
-                    rmarkdown::pdf_document(latex_engine = "pdflatex",toc = TRUE,number_sections = TRUE))
+                    rmarkdown::pdf_document(latex_engine = "pdflatex",
+                                            toc = TRUE,
+                                            number_sections = TRUE))
 }

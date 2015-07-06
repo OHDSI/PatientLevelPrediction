@@ -7,10 +7,11 @@
 saveCovariateData(covariateData, file)
 }
 \arguments{
-\item{covariateData}{An object of type \code{covariateData} as generated using \code{getDbCovariateData}.}
+\item{covariateData}{An object of type \code{covariateData} as generated using
+\code{getDbCovariateData}.}
 
-\item{file}{The name of the folder where the data will be written. The folder should
-not yet exist.}
+\item{file}{The name of the folder where the data will be written. The folder should not
+                       yet exist.}
 }
 \description{
 \code{saveCovariateData} saves an object of type covariateData to folder.
@@ -19,6 +20,6 @@ not yet exist.}
 The data will be written to a set of files in the folder specified by the user.
 }
 \examples{
-#todo
+# todo
 }
 

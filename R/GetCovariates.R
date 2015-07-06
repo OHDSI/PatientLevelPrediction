@@ -47,7 +47,8 @@
 #' @param cohortTable
 #' @param cohortConceptIds          If not using an existing \code{cohort_person} temp table, what is
 #'                                  the name of the source cohort table?
-#' @param covariateSettings       An object of type \code{covariateSettings} as created using the \code{\link{createCovariateSettings}} function.
+#' @param covariateSettings         An object of type \code{covariateSettings} as created using the
+#'                                  \code{\link{createCovariateSettings}} function.
 #'
 #' @return
 #' Returns an object of type \code{covariateData}, containing information on the baseline covariates.
@@ -67,8 +68,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                cohortDatabaseSchema = cdmDatabaseSchema,
                                cohortTable = "cohort",
                                cohortConceptIds = c(0, 1),
-                               covariateSettings
-) {
+                               covariateSettings) {
   if (is.null(connectionDetails) && is.null(connection))
     stop("Either connectionDetails or connection has to be specified")
   if (!is.null(connectionDetails) && !is.null(connection))
@@ -77,16 +77,17 @@ getDbCovariateData <- function(connectionDetails = NULL,
     stop("When using an existing cohort temp table, connection must be specified")
   if (!covariateSettings$useCovariateConditionGroupMeddra & !covariateSettings$useCovariateConditionGroupSnomed)
     covariateSettings$useCovariateConditionGroup <- FALSE
-  
+
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
-  
+
   if (is.null(connection)) {
     conn <- connect(connectionDetails)
   } else {
     conn <- connection
   }
-  
-  if (is.null(covariateSettings$excludedCovariateConceptIds) || length(covariateSettings$excludedCovariateConceptIds) == 0) {
+
+  if (is.null(covariateSettings$excludedCovariateConceptIds) || length(covariateSettings$excludedCovariateConceptIds) ==
+    0) {
     hasExcludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$excludedCovariateConceptIds))
@@ -100,8 +101,9 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
-  if (is.null(covariateSettings$includedCovariateConceptIds) || length(covariateSettings$includedCovariateConceptIds) == 0) {
+
+  if (is.null(covariateSettings$includedCovariateConceptIds) || length(covariateSettings$includedCovariateConceptIds) ==
+    0) {
     hasIncludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$includedCovariateConceptIds))
@@ -115,7 +117,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCovariates.sql",
                                                    packageName = "CohortMethod",
                                                    dbms = attr(conn, "dbms"),
@@ -171,12 +173,12 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                                    has_excluded_covariate_concept_ids = covariateSettings$hasExcludedCovariateConceptIds,
                                                    has_included_covariate_concept_ids = covariateSettings$hasIncludedCovariateConceptIds,
                                                    delete_covariates_small_count = covariateSettings$deleteCovariatesSmallCount)
-  
+
   writeLines("Executing multiple queries. This could take a while")
-  
+
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Done")
-  
+
   writeLines("Fetching data from server")
   start <- Sys.time()
   covariateSql <- "SELECT person_id, cohort_start_date, cohort_definition_id, covariate_id, covariate_value FROM #cov ORDER BY person_id, covariate_id"
@@ -193,7 +195,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   covariateRef <- DatabaseConnector::querySql.ffdf(conn, covariateRefSql)
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCovariateTempTables.sql",
                                                    packageName = "CohortMethod",
                                                    dbms = attr(conn, "dbms"),
@@ -204,7 +206,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   if (is.null(connection)) {
     RJDBC::dbDisconnect(conn)
   }
-  
+
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
   metaData <- list(sql = renderedSql, call = match.call())
@@ -224,81 +226,83 @@ getDbCovariateData <- function(connectionDetails = NULL,
 #'
 #' @description
 #' \code{saveCovariateData} saves an object of type covariateData to folder.
-#' 
-#' @param covariateData          An object of type \code{covariateData} as generated using \code{getDbCovariateData}.
-#' @param file                The name of the folder where the data will be written. The folder should
-#' not yet exist.
-#' 
+#'
+#' @param covariateData   An object of type \code{covariateData} as generated using
+#'                        \code{getDbCovariateData}.
+#' @param file            The name of the folder where the data will be written. The folder should not
+#'                        yet exist.
+#'
 #' @details
 #' The data will be written to a set of files in the folder specified by the user.
-#'  
-#' @examples 
-#' #todo
-#' 
+#'
+#' @examples
+#' # todo
+#'
 #' @export
-saveCovariateData <- function(covariateData, file){
+saveCovariateData <- function(covariateData, file) {
   if (missing(covariateData))
     stop("Must specify covariateData")
   if (missing(file))
     stop("Must specify file")
   if (class(covariateData) != "covariateData")
     stop("Data not of class covariateData")
-  
+
   covariates <- covariateData$covariates
   covariateRef <- covariateData$covariateRef
-  ffbase::save.ffdf(covariates, covariateRef, dir=file)
+  ffbase::save.ffdf(covariates, covariateRef, dir = file)
   open(covariateData$covariates)
-  open(covariateData$covariateRef)  
+  open(covariateData$covariateRef)
   metaData <- covariateData$metaData
-  save(metaData,file=file.path(file,"metaData.Rdata"))
+  save(metaData, file = file.path(file, "metaData.Rdata"))
 }
 
 #' Load the covariate data from a folder
 #'
 #' @description
 #' \code{loadCovariateData} loads an object of type covariateData from a folder in the file system.
-#' 
-#' @param file                The name of the folder containing the data.
-#' @param readOnly            If true, the data is opened read only.
-#' 
+#'
+#' @param file       The name of the folder containing the data.
+#' @param readOnly   If true, the data is opened read only.
+#'
 #' @details
 #' The data will be written to a set of files in the folder specified by the user.
-#' 
+#'
 #' @return
 #' An object of class covariateData
-#'  
-#' @examples 
-#' #todo
-#' 
+#'
+#' @examples
+#' # todo
+#'
 #' @export
-loadCovariateData <- function(file, readOnly = FALSE){
+loadCovariateData <- function(file, readOnly = FALSE) {
   if (!file.exists(file))
-    stop(paste("Cannot find folder",file))
+    stop(paste("Cannot find folder", file))
   if (!file.info(file)$isdir)
-    stop(paste("Not a folder",file))
-  
+    stop(paste("Not a folder", file))
+
   temp <- setwd(file)
   absolutePath <- setwd(temp)
-  
-  e <- new.env()  
-  ffbase::load.ffdf(absolutePath,e)
-  load(file.path(absolutePath,"metaData.Rdata"),e)
-  result <- list(covariates = get("covariates", envir=e),
-                 covariateRef = get("covariateRef", envir=e),
-                 metaData = get("metaData",envir=e))
-  #Open all ffdfs to prevent annoying messages later:
+
+  e <- new.env()
+  ffbase::load.ffdf(absolutePath, e)
+  load(file.path(absolutePath, "metaData.Rdata"), e)
+  result <- list(covariates = get("covariates", envir = e),
+                 covariateRef = get("covariateRef", envir = e),
+                 metaData = get("metaData", envir = e))
+  # Open all ffdfs to prevent annoying messages later:
   open(result$covariates, readonly = readOnly)
   open(result$covariateRef, readonly = readOnly)
-  
+
   class(result) <- "covariateData"
   rm(e)
   return(result)
 }
 
 #' Create covariate settings
-#' 
-#' @details creates an object specifying how covariates should be contructed from data in the CDM model.
-#' 
+#'
+#' @details
+#' creates an object specifying how covariates should be contructed from data in the CDM model.
+#'
 #' @param excludedCovariateConceptIds               A list of concept IDs that should NOT be used to
 #'                                                  construct covariates.
 #' @param includedCovariateConceptIds               A list of concept IDs that should be used to
@@ -483,9 +487,10 @@ loadCovariateData <- function(file, readOnly = FALSE){
 #' @param deleteCovariatesSmallCount                A numeric value used to remove covariates that
 #'                                                  occur in both cohorts fewer than
 #'                                                  deleteCovariateSmallCounts time.
-#'  
-#' @return An object of type \code{covariateSettings}, to be used in other functions.
-#' 
+#'
+#' @return
+#' An object of type \code{covariateSettings}, to be used in other functions.
+#'
 #' @export
 createCovariateSettings <- function(useCovariateDemographics = TRUE,
                                     useCovariateDemographicsGender = TRUE,
@@ -532,45 +537,45 @@ createCovariateSettings <- function(useCovariateDemographics = TRUE,
                                     useCovariateInteractionMonth = FALSE,
                                     excludedCovariateConceptIds = c(),
                                     includedCovariateConceptIds = c(),
-                                    deleteCovariatesSmallCount = 100){
-  #First: get the default values:
+                                    deleteCovariatesSmallCount = 100) {
+  # First: get the default values:
   covariateSettings <- list()
-  for (name in names(formals(createCovariateSettings))){
-    covariateSettings[[name]] = get(name)
+  for (name in names(formals(createCovariateSettings))) {
+    covariateSettings[[name]] <- get(name)
   }
-  #Next: overwrite defaults with actual values if specified:
-  #values <- as.list(match.call())
-  #Note: need this funky code to make sure parameters are stored as values, not symbols:
-  values <- c(list(as.character(match.call()[[1]])),lapply(as.list(match.call())[-1],function(x) eval(x,envir=sys.frame(-3))))
-  for (name in names(values)){
+  # Next: overwrite defaults with actual values if specified: values <- as.list(match.call()) Note:
+  # need this funky code to make sure parameters are stored as values, not symbols:
+  values <- c(list(as.character(match.call()[[1]])),
+              lapply(as.list(match.call())[-1], function(x) eval(x, envir = sys.frame(-3))))
+  for (name in names(values)) {
     if (name %in% names(covariateSettings))
-      covariateSettings[[name]] = values[[name]]
-  } 
+      covariateSettings[[name]] <- values[[name]]
+  }
   class(covariateSettings) <- "covariateSettings"
-  return(covariateSettings)  
+  return(covariateSettings)
 }
 
 #' @export
-print.covariateData <- function(x, ...){
+print.covariateData <- function(x, ...) {
   writeLines("CovariateData object")
   writeLines("")
-  writeLines(paste("Cohort of interest concept ID(s):", paste(x$metaData$cohortConceptIds,collapse=",")))
+  writeLines(paste("Cohort of interest concept ID(s):",
+                   paste(x$metaData$cohortConceptIds, collapse = ",")))
 }
 
 #' @export
-summary.covariateData <- function(object, ...){
+summary.covariateData <- function(object, ...) {
   result <- list(metaData = object$metaData,
                  covariateCount = nrow(object$covariateRef),
-                 covariateValueCount = nrow(object$covariates)                 
-  )
+                 covariateValueCount = nrow(object$covariates))
   class(result) <- "summary.covariateData"
   return(result)
 }
 
 #' @export
-print.summary.covariateData <- function(x, ...){
+print.summary.covariateData <- function(x, ...) {
   writeLines("CovariateData object summary")
   writeLines("")
-  writeLines(paste("Number of covariates:",x$covariateCount))
-  writeLines(paste("Number of non-zero covariate values:",x$covariateValueCount)) 
+  writeLines(paste("Number of covariates:", x$covariateCount))
+  writeLines(paste("Number of non-zero covariate values:", x$covariateValueCount))
 }

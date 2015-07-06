@@ -17,12 +17,15 @@ fitPredictiveModel(cohortData, covariateData, outcomeData,
 
 \item{outcomeData}{An object of type \code{outcomeData}.}
 
-\item{modelType}{The type of predictive model. Options are "logistic", "poisson", and "survival".}
+\item{modelType}{The type of predictive model. Options are "logistic", "poisson", and
+"survival".}
 
-\item{prior}{The prior used to fit the model. See \code{\link[Cyclops]{createPrior}} for details.}
+\item{prior}{The prior used to fit the model. See \code{\link[Cyclops]{createPrior}} for
+details.}
 
 \item{control}{The control object used to control the cross-validation used to determine the
-hyperparameters of the prior (if applicable). See \code{\link[Cyclops]{createControl}}  for details.}
+                       hyperparameters of the prior (if applicable). See
+                       \code{\link[Cyclops]{createControl}} for details.}
 }
 \description{
 Fit a predictive model

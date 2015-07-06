@@ -7,10 +7,11 @@
 saveOutcomeData(outcomeData, file)
 }
 \arguments{
-\item{outcomeData}{An object of type \code{outcomeData} as generated using \code{getDbOutcomeData}.}
+\item{outcomeData}{An object of type \code{outcomeData} as generated using
+\code{getDbOutcomeData}.}
 
-\item{file}{The name of the folder where the data will be written. The folder should
-not yet exist.}
+\item{file}{The name of the folder where the data will be written. The folder should not
+                     yet exist.}
 }
 \description{
 \code{saveOutcomeData} saves an object of type outcomeData to folder.

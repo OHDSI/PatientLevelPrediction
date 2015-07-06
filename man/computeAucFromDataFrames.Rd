@@ -12,7 +12,8 @@ computeAucFromDataFrames(prediction, status, time = NULL,
 
 \item{status}{A vector with the status of 1 (event) or 0 (no event).}
 
-\item{time}{Only for survival models: a vector with the time to event or censor (which ever comes first).}
+\item{time}{Only for survival models: a vector with the time to event or censor
+(which ever comes first).}
 
 \item{confidenceInterval}{Should 95 percebt confidence intervals be computed?}
 
@@ -24,7 +25,7 @@ computeAucFromDataFrames(prediction, status, time = NULL,
 Compute the area under the ROC curve
 }
 \details{
-Computes the area under the ROC curve for the predicted probabilities, given the
-true observed outcomes.
+Computes the area under the ROC curve for the predicted probabilities, given the true observed
+outcomes.
 }
 

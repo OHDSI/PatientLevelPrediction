@@ -31,7 +31,8 @@ should include both the database and schema, e.g. 'cdm_schema.dbo'.}
 \item{cohortConceptIds}{If not using an existing \code{cohort_person} temp table, what is
 the name of the source cohort table?}
 
-\item{covariateSettings}{An object of type \code{covariateSettings} as created using the \code{\link{createCovariateSettings}} function.}
+\item{covariateSettings}{An object of type \code{covariateSettings} as created using the
+                                 \code{\link{createCovariateSettings}} function.}
 
 \item{connectionDetailsAn}{R object of type \code{connectionDetails} created using the
 function \code{createConnectionDetails} in the
