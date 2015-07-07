@@ -64,7 +64,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                connection = NULL,
                                oracleTempSchema = NULL,
                                cdmDatabaseSchema,
-                               useExistingCohortPerson = TRUE,
+                               useExistingCohortPerson = FALSE,
                                cohortDatabaseSchema = cdmDatabaseSchema,
                                cohortTable = "cohort",
                                cohortConceptIds = c(0, 1),
@@ -119,7 +119,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   }
 
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCovariates.sql",
-                                                   packageName = "CohortMethod",
+                                                   packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
                                                    oracleTempSchema = oracleTempSchema,
                                                    cdm_database = cdmDatabase,
@@ -170,8 +170,8 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                                    use_covariate_risk_scores_CHADS2 = covariateSettings$useCovariateRiskScoresCHADS2,
                                                    use_covariate_interaction_year = covariateSettings$useCovariateInteractionYear,
                                                    use_covariate_interaction_month = covariateSettings$useCovariateInteractionMonth,
-                                                   has_excluded_covariate_concept_ids = covariateSettings$hasExcludedCovariateConceptIds,
-                                                   has_included_covariate_concept_ids = covariateSettings$hasIncludedCovariateConceptIds,
+                                                   has_excluded_covariate_concept_ids = hasExcludedCovariateConceptIds,
+                                                   has_included_covariate_concept_ids = hasIncludedCovariateConceptIds,
                                                    delete_covariates_small_count = covariateSettings$deleteCovariatesSmallCount)
 
   writeLines("Executing multiple queries. This could take a while")
@@ -181,7 +181,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
 
   writeLines("Fetching data from server")
   start <- Sys.time()
-  covariateSql <- "SELECT person_id, cohort_start_date, cohort_definition_id, covariate_id, covariate_value FROM #cov ORDER BY person_id, covariate_id"
+  covariateSql <- "SELECT person_id, cohort_start_date, cohort_concept_id, covariate_id, covariate_value FROM #cov ORDER BY person_id, covariate_id"
   covariateSql <- SqlRender::translateSql(covariateSql,
                                           "sql server",
                                           attr(conn, "dbms"),
@@ -197,7 +197,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
 
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCovariateTempTables.sql",
-                                                   packageName = "CohortMethod",
+                                                   packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
                                                    oracleTempSchema = oracleTempSchema,
                                                    has_excluded_covariate_concept_ids = hasExcludedCovariateConceptIds,

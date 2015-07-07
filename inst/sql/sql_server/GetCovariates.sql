@@ -76,14 +76,14 @@ USE @cdm_database;
 IF OBJECT_ID('tempdb..#cohort_person', 'U') IS NOT NULL
 	DROP TABLE #cohort_person;
 
-SELECT cohort_definition_id,
+SELECT cohort_concept_id,
 	subject_id,
 	cohort_start_date,
 	cohort_end_date
 INTO #cohort_person
 FROM @cohort_database_schema.@cohort_table
 {@cohort_concept_ids != ''} ? {
-WHERE cohort_definition_id IN (@cohort_concept_ids)
+WHERE cohort_concept_id IN (@cohort_concept_ids)
 }
 }
 
@@ -117,13 +117,13 @@ VALUES (
 
 
 SELECT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	1 AS covariate_id,
-	cohort_definition_id AS covariate_value
+	cohort_concept_id AS covariate_value
     INTO #cov_exposure
 FROM #cohort_person
-WHERE cohort_definition_id = 1;
+WHERE cohort_concept_id = 1;
 
 /**************************
 ***************************
@@ -137,7 +137,7 @@ DEMOGRAPHICS
 {@use_covariate_demographics_gender} ? {
 --gender
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	gender_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -181,7 +181,7 @@ LEFT JOIN (
 {@use_covariate_demographics_race} ? {
 --race
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	race_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -224,7 +224,7 @@ LEFT JOIN (
 {@use_covariate_demographics_ethnicity} ? {
 --ethnicity
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	ethnicity_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -269,7 +269,7 @@ LEFT JOIN (
 {@use_covariate_demographics_age} ? {
 --age group
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	FLOOR((YEAR(cp1.cohort_start_date) - p1.YEAR_OF_BIRTH) / 5) + 10 AS covariate_id,
 	1 AS covariate_value
@@ -304,7 +304,7 @@ FROM (select distinct covariate_id FROM #cov_age) p1
 {@use_covariate_demographics_year} ? {
 --index year
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	YEAR(cohort_start_date) AS covariate_id,
 	1 AS covariate_value
@@ -333,7 +333,7 @@ FROM (select distinct covariate_id FROM #cov_year) p1
 --index month
 
 SELECT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	MONTH(cohort_start_date) + 40 AS covariate_id,
 	1 AS covariate_value
@@ -369,7 +369,7 @@ CONDITION OCCURRENCE
 
 --conditions exist:  episode in last 365d prior
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 101 AS covariate_id,
 	1 AS covariate_value
@@ -407,7 +407,7 @@ LEFT JOIN concept c1
 
 --conditions:  episode in last 30d prior
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 102 AS covariate_id,
 	1 AS covariate_value
@@ -447,7 +447,7 @@ LEFT JOIN concept c1
 --conditions:  primary inpatient diagnosis in last 180d
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 103 AS covariate_id,
 	1 AS covariate_value
@@ -498,7 +498,7 @@ CONDITION ERA
 --condition:  exist any time prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(ce1.condition_concept_id AS BIGINT) * 1000 + 201 AS covariate_id,
 	1 AS covariate_value
@@ -541,7 +541,7 @@ LEFT JOIN concept c1
 --concurrent on index date (era overlapping)
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(ce1.condition_concept_id AS BIGINT) * 1000 + 202 AS covariate_id,
 	1 AS covariate_value
@@ -698,7 +698,7 @@ INNER JOIN concept c1
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 50 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
@@ -706,7 +706,7 @@ INTO #cov_cg
 FROM
 
 (
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_exposure
 
 {@use_covariate_condition_occurrence} ? {
@@ -715,7 +715,7 @@ FROM #cov_exposure
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_co_365d
 
 }
@@ -724,7 +724,7 @@ FROM #cov_co_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_co_30d
 
 }
@@ -733,7 +733,7 @@ FROM #cov_co_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_co_inpt180d
 
 }
@@ -748,7 +748,7 @@ FROM #cov_co_inpt180d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_ce_ever
 
 }
@@ -757,7 +757,7 @@ FROM #cov_ce_ever
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_ce_overlap
 
 }
@@ -801,7 +801,7 @@ DRUG EXPOSURE
 --drug exist:  episode in last 365d prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 401 AS covariate_id,
 	1 AS covariate_value
@@ -844,7 +844,7 @@ LEFT JOIN concept c1
 --drug exist:  episode in last 30d prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 402 AS covariate_id,
 	1 AS covariate_value
@@ -893,7 +893,7 @@ DRUG ERA
 --drug exist:  episode in last 365d prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 501 AS covariate_id,
 	1 AS covariate_value
@@ -937,7 +937,7 @@ LEFT JOIN concept c1
 --drug exist:  episode in last 30d prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 502 AS covariate_id,
 	1 AS covariate_value
@@ -979,7 +979,7 @@ LEFT JOIN concept c1
 --concurrent on index date (era overlapping)
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 503 AS covariate_id,
 	1 AS covariate_value
@@ -1021,7 +1021,7 @@ LEFT JOIN concept c1
 --drug exist:  episode in all time prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 504 AS covariate_id,
 	1 AS covariate_value
@@ -1131,14 +1131,14 @@ INNER JOIN concept c1
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 50 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
   INTO #cov_dg
 FROM (
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_exposure
 
 {@use_covariate_drug_exposure} ? {
@@ -1147,7 +1147,7 @@ FROM #cov_exposure
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_de_365d
 
 }
@@ -1156,7 +1156,7 @@ FROM #cov_de_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_de_30d
 
 }
@@ -1171,7 +1171,7 @@ FROM #cov_de_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_365d
 
 }
@@ -1180,7 +1180,7 @@ FROM #cov_dera_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_30d
 
 }
@@ -1189,7 +1189,7 @@ FROM #cov_dera_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_ever
 
 }
@@ -1198,7 +1198,7 @@ FROM #cov_dera_ever
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_overlap
 
 }
@@ -1254,7 +1254,7 @@ WHERE len(c1.concept_code) = 3;
 
 
 SELECT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 601 AS covariate_id,
 	COUNT(DISTINCT ccr1.concept_id) AS covariate_value
@@ -1275,7 +1275,7 @@ INNER JOIN concept c1
 	ON cg1.ancestor_concept_id = c1.concept_id
 WHERE len(c1.concept_code) = 3
 GROUP BY cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 601;
 
@@ -1297,7 +1297,7 @@ PROCEDURE OCCURRENCE
 
 --procedures exist:  episode in last 365d prior
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(po1.procedure_concept_id AS BIGINT) * 1000 + 701 AS covariate_id,
 	1 AS covariate_value
@@ -1340,7 +1340,7 @@ LEFT JOIN concept c1
 
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(po1.procedure_concept_id AS BIGINT) * 1000 + 702 AS covariate_id,
 	1 AS covariate_value
@@ -1448,14 +1448,14 @@ INNER JOIN concept c1
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 50 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
   INTO #cov_pg
 FROM (
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_exposure
 
 {@use_covariate_procedure_occurrence} ? {
@@ -1464,7 +1464,7 @@ FROM #cov_exposure
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_po_365d
 
 }
@@ -1473,7 +1473,7 @@ FROM #cov_po_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_po_30d
 
 }
@@ -1516,7 +1516,7 @@ OBSERVATION
 
 --observations exist:  episode in last 365d prior
 SELECT DISTINCT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id as person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 901 AS covariate_id,
 	1 AS covariate_value
@@ -1560,7 +1560,7 @@ LEFT JOIN concept c1
 
 --observation exist:  episode in last 30d prior
 SELECT DISTINCT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
   cp1.subject_id as person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 902 AS covariate_id,
 	1 AS covariate_value
@@ -1605,21 +1605,21 @@ LEFT JOIN concept c1
 
 --for numeric values with valid range, latest value within 180 below low
 SELECT DISTINCT cohort_start_date,
-  cohort_definition_id,
+  cohort_concept_id,
 	subject_id AS person_id,
 	CAST(observation_concept_id AS BIGINT) * 1000 + 903 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_o_below
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		o1.observation_concept_id,
 		o1.value_as_number,
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.cohort_definition_id,
+			PARTITION BY cp1.cohort_concept_id,
 			cp1.subject_id,
 			o1.observation_concept_id ORDER BY o1.observation_date DESC
 			) AS rn1
@@ -1671,21 +1671,21 @@ LEFT JOIN concept c1
 
 --for numeric values with valid range, latest value above high
 SELECT DISTINCT cohort_start_date,
-  cohort_definition_id,
+  cohort_concept_id,
   subject_id AS person_id,
 	CAST(observation_concept_id AS BIGINT) * 1000 + 904 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_o_above
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		o1.observation_concept_id,
 		o1.value_as_number,
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.cohort_definition_id,
+			PARTITION BY cp1.cohort_concept_id,
 			cp1.subject_id,
 			o1.observation_concept_id ORDER BY o1.observation_date DESC
 			) AS rn1
@@ -1734,7 +1734,7 @@ LEFT JOIN concept c1
 
 --number of observations:  episode in last 365d prior
 SELECT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905 AS covariate_id,
 	COUNT(observation_id) AS covariate_value
@@ -1748,7 +1748,7 @@ WHERE o1.observation_concept_id != 0
 	AND o1.observation_date <= cp1.cohort_start_date
 	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905;
 
@@ -1789,7 +1789,7 @@ DATA DENSITY CONCEPT COUNTS
 
 --Number of distinct conditions observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1000 AS covariate_id,
 	COUNT(DISTINCT ce1.condition_concept_id) AS covariate_value
@@ -1800,7 +1800,7 @@ INNER JOIN condition_era ce1
 WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	AND ce1.condition_era_end_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 
@@ -1823,7 +1823,7 @@ VALUES (
 
 --Number of distinct drug ingredients observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1001 AS covariate_id,
 	COUNT(DISTINCT de1.drug_concept_id) AS covariate_value
@@ -1834,7 +1834,7 @@ INNER JOIN drug_era de1
 WHERE de1.drug_era_start_date <= cp1.cohort_start_date
 	AND de1.drug_era_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1854,7 +1854,7 @@ VALUES (
 
 --Number of distinct procedures observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1002 AS covariate_id,
 	COUNT(DISTINCT po1.procedure_concept_id) AS covariate_value
@@ -1865,7 +1865,7 @@ INNER JOIN procedure_occurrence po1
 WHERE po1.procedure_date <= cp1.cohort_start_date
 	AND po1.procedure_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1885,7 +1885,7 @@ VALUES (
 
 --Number of distinct observations observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1003 AS covariate_id,
 	COUNT(DISTINCT o1.observation_concept_id) AS covariate_value
@@ -1896,7 +1896,7 @@ INNER JOIN observation o1
 WHERE o1.observation_date <= cp1.cohort_start_date
 	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1915,7 +1915,7 @@ VALUES (
 
 --Number of visits observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1004 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1926,7 +1926,7 @@ INNER JOIN visit_occurrence vo1
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1946,7 +1946,7 @@ VALUES (
 
 --Number of inpatient visits observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1005 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1958,7 +1958,7 @@ WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 	AND vo1.place_of_service_concept_id = 9201
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1979,7 +1979,7 @@ VALUES (
 
 --Number of ER visits observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_definition_id,
+  cp1.cohort_concept_id,
 	cp1.subject_id AS person_id,
 	1006 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1991,7 +1991,7 @@ WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 	AND vo1.place_of_service_concept_id = 9203
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_definition_id,
+	cp1.cohort_concept_id,
 	cp1.subject_id;
 
 
@@ -2248,14 +2248,14 @@ VALUES (
 
 
 SELECT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	1100 AS covariate_id,
 	SUM(weight) AS covariate_value
   INTO #cov_charlson
 FROM (
 	SELECT DISTINCT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		cs1.diag_category_id,
 		cs1.weight
@@ -2269,7 +2269,7 @@ FROM (
 	WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	) t1
 GROUP BY cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id;
 
 TRUNCATE TABLE #Charlson_concepts;
@@ -2578,14 +2578,14 @@ VALUES (
 
 
 SELECT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	1101 AS covariate_id,
 	SUM(max_score) AS covariate_value
   INTO #cov_DCSI
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		ds1.dcsi_category,
 		max(ds1.DCSI_score) AS max_score
@@ -2596,12 +2596,12 @@ FROM (
 		ON ce1.condition_concept_id = ds1.DCSI_concept_id
 	WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	GROUP BY cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		ds1.dcsi_category
 	) t1
 GROUP BY cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id;
 
 TRUNCATE TABLE #DCSI_scoring;
@@ -2695,14 +2695,14 @@ VALUES (
 
 
 SELECT cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id AS person_id,
 	1102 AS covariate_id,
 	SUM(weight) AS covariate_value
   INTO #cov_CHADS2
 FROM (
 	SELECT DISTINCT cp1.cohort_start_date,
-		cp1.cohort_definition_id,
+		cp1.cohort_concept_id,
 		cp1.subject_id,
 		cs1.diag_category_id,
 		cs1.weight
@@ -2718,7 +2718,7 @@ FROM (
   UNION
 
   SELECT DISTINCT cp1.cohort_start_date,
-  	cp1.cohort_definition_id,
+  	cp1.cohort_concept_id,
 		cp1.subject_id,
 		3 as diag_category_id,
 		1 as weight
@@ -2729,7 +2729,7 @@ FROM (
 
 	) t1
 GROUP BY cohort_start_date,
-	cohort_definition_id,
+	cohort_concept_id,
 	subject_id;
 
 TRUNCATE TABLE #CHADS2_concepts;
@@ -2770,12 +2770,12 @@ put all temp tables together into one cov table
 ***********************************/
 
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 INTO #cov_all
 FROM
 (
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_exposure
 
 
@@ -2784,7 +2784,7 @@ FROM #cov_exposure
 {@use_covariate_demographics_gender} ? {
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_gender
 
 }
@@ -2792,7 +2792,7 @@ FROM #cov_gender
 {@use_covariate_demographics_race} ? {
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_race
 
 }
@@ -2800,7 +2800,7 @@ FROM #cov_race
 {@use_covariate_demographics_ethnicity} ? {
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_ethnicity
 
 }
@@ -2809,7 +2809,7 @@ FROM #cov_ethnicity
 {@use_covariate_demographics_age} ? {
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_age
 
 }
@@ -2817,7 +2817,7 @@ FROM #cov_age
 {@use_covariate_demographics_year} ? {
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_year
 
 }
@@ -2825,7 +2825,7 @@ FROM #cov_year
 {@use_covariate_demographics_month} ? {
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_month
 
 }
@@ -2838,7 +2838,7 @@ FROM #cov_month
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_co_365d
 
 }
@@ -2847,7 +2847,7 @@ FROM #cov_co_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_co_30d
 
 }
@@ -2856,7 +2856,7 @@ FROM #cov_co_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_co_inpt180d
 
 }
@@ -2871,7 +2871,7 @@ FROM #cov_co_inpt180d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_ce_ever
 
 }
@@ -2880,7 +2880,7 @@ FROM #cov_ce_ever
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_ce_overlap
 
 }
@@ -2892,7 +2892,7 @@ FROM #cov_ce_overlap
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_cg
 
 }
@@ -2904,7 +2904,7 @@ FROM #cov_cg
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_de_365d
 
 }
@@ -2913,7 +2913,7 @@ FROM #cov_de_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_de_30d
 
 }
@@ -2928,7 +2928,7 @@ FROM #cov_de_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_365d
 
 }
@@ -2937,7 +2937,7 @@ FROM #cov_dera_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_30d
 
 }
@@ -2946,7 +2946,7 @@ FROM #cov_dera_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_ever
 
 }
@@ -2955,7 +2955,7 @@ FROM #cov_dera_ever
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_overlap
 
 }
@@ -2968,14 +2968,14 @@ FROM #cov_dera_overlap
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dg
 
 
 {@use_covariate_drug_era_ever} ? {
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dg_count
 }
 
@@ -2989,7 +2989,7 @@ FROM #cov_dg_count
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_po_365d
 
 }
@@ -2998,7 +2998,7 @@ FROM #cov_po_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_po_30d
 
 }
@@ -3011,7 +3011,7 @@ FROM #cov_po_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_pg
 
 }
@@ -3023,7 +3023,7 @@ FROM #cov_pg
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_o_365d
 
 }
@@ -3032,7 +3032,7 @@ FROM #cov_o_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_o_30d
 
 }
@@ -3041,7 +3041,7 @@ FROM #cov_o_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_o_below
 
 }
@@ -3051,7 +3051,7 @@ FROM #cov_o_below
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_o_above
 
 
@@ -3061,7 +3061,7 @@ FROM #cov_o_above
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_o_count365d
 
 }
@@ -3072,37 +3072,37 @@ FROM #cov_o_count365d
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_cond
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_drug
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_proc
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_obs
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_visit_all
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_visit_inpt
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_visit_er
 
 
@@ -3116,7 +3116,7 @@ FROM #cov_dd_visit_er
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_charlson
 
 }
@@ -3125,7 +3125,7 @@ FROM #cov_charlson
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_DCSI
 
 }
@@ -3134,7 +3134,7 @@ FROM #cov_DCSI
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_CHADS2
 
 }
@@ -3171,7 +3171,7 @@ FROM #cohort_person cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_definition_id = cc1.cohort_definition_id
+		AND cp1.cohort_concept_id = cc1.cohort_concept_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (5)
@@ -3179,7 +3179,7 @@ WHERE ccr1.analysis_id NOT IN (5)
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(YEAR(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
@@ -3188,7 +3188,7 @@ FROM #cohort_person cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_definition_id = cc1.cohort_definition_id
+		AND cp1.cohort_concept_id = cc1.cohort_concept_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (5)
@@ -3218,7 +3218,7 @@ FROM #cohort_person cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_definition_id = cc1.cohort_definition_id
+		AND cp1.cohort_concept_id = cc1.cohort_concept_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (6)
@@ -3226,7 +3226,7 @@ WHERE ccr1.analysis_id NOT IN (6)
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_definition_id,
+	cc1.cohort_concept_id,
 	cc1.person_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(MONTH(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
@@ -3235,7 +3235,7 @@ FROM #cohort_person cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_definition_id = cc1.cohort_definition_id
+		AND cp1.cohort_concept_id = cc1.cohort_concept_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (6)
@@ -3288,11 +3288,11 @@ SELECT covariate_id
 }
 
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
   INTO #cov
 FROM
 (
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_all
 WHERE covariate_id IN (
   	SELECT covariate_id
@@ -3303,7 +3303,7 @@ WHERE covariate_id IN (
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_int_year
 WHERE covariate_id IN (
     SELECT covariate_id
@@ -3316,7 +3316,7 @@ WHERE covariate_id IN (
 
 UNION
 
-SELECT cohort_start_date, cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
 FROM #cov_int_month
 WHERE covariate_id IN (
     SELECT covariate_id
