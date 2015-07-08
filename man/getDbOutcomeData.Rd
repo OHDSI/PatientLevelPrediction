@@ -7,10 +7,11 @@
 getDbOutcomeData(connectionDetails = NULL, connection = NULL,
   cdmDatabaseSchema, oracleTempSchema = cdmDatabaseSchema,
   useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
-  cohortTable = "cohort", cohortConceptIds = c(0, 1),
+  cohortTable = "cohort", cohortIds = c(0, 1),
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "condition_occurrence", outcomeConceptIds = c(),
-  outcomeConditionTypeConceptIds = "", firstOutcomeOnly = FALSE)
+  outcomeConditionTypeConceptIds = "", firstOutcomeOnly = FALSE,
+  cdmVersion = "4")
 }
 \arguments{
 \item{connectionDetails}{An R object of type \code{connectionDetails} created using
@@ -40,8 +41,7 @@ e.g. "cdm_schema.dbo".}
 \item{cohortTable}{If not using an existing temp table, what is the name of the
 table holding the cohort?}
 
-\item{cohortConceptIds}{If not using an existing temp table, what is the name of the
-source cohort table?}
+\item{cohortIds}{The IDs of the cohorts.}
 
 \item{outcomeDatabaseSchema}{The name of the database schema that is the location where
 the data used to define the outcome cohorts is available. If
@@ -66,6 +66,8 @@ condition occurrences.  Only applicable if outcomeTable =
 CONDITION_OCCURRENCE.}
 
 \item{firstOutcomeOnly}{Only keep the first outcome per person?}
+
+\item{cdmVersion}{Define the OMOP CDM version used:  currently support "4" and "5".}
 }
 \value{
 An object of type \code{outcomeData} containing information on the outcomes in the cohort(s).

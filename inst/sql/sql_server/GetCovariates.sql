@@ -22,7 +22,7 @@ limitations under the License.
 {DEFAULT @use_existing_cohort_person = TRUE } 
 {DEFAULT @cohort_database_schema = 'CDM4_SIM' } 
 {DEFAULT @cohort_table = 'cohort' } 
-{DEFAULT @cohort_concept_ids = '0,1' } 
+{DEFAULT @cohort_ids = '0,1' } 
 {DEFAULT @use_covariate_demographics = TRUE} 
 {DEFAULT @use_covariate_demographics_age = TRUE} 
 {DEFAULT @use_covariate_demographics_gender = TRUE} 
@@ -68,7 +68,11 @@ limitations under the License.
 {DEFAULT @use_covariate_interaction_month = FALSE} 
 {DEFAULT @has_excluded_covariate_concept_ids} 
 {DEFAULT @has_included_covariate_concept_ids} 
-{DEFAULT @delete_covariates_small_count = 100 } 
+{DEFAULT @delete_covariates_small_count = 100}
+{DEFAULT @cdm_version == '4'}
+{DEFAULT @cohort_definition_id = 'cohort_concept_id'} 
+{DEFAULT @concept_class_id = 'concept_class'} 
+{DEFAULT @measurement = 'observation'} 
 
 USE @cdm_database;
 
@@ -76,16 +80,17 @@ USE @cdm_database;
 IF OBJECT_ID('tempdb..#cohort_person', 'U') IS NOT NULL
 	DROP TABLE #cohort_person;
 
-SELECT cohort_concept_id,
+SELECT @cohort_definition_id,
 	subject_id,
 	cohort_start_date,
 	cohort_end_date
 INTO #cohort_person
 FROM @cohort_database_schema.@cohort_table
-{@cohort_concept_ids != ''} ? {
-WHERE cohort_concept_id IN (@cohort_concept_ids)
+{@cohort_ids != ''} ? {
+WHERE @cohort_definition_id IN (@cohort_ids)
 }
 }
+;
 
 IF OBJECT_ID('tempdb..#cov', 'U') IS NOT NULL
 	DROP TABLE #cov;
@@ -117,13 +122,13 @@ VALUES (
 
 
 SELECT cohort_start_date,
-	cohort_concept_id,
+	@cohort_definition_id,
 	subject_id AS person_id,
 	1 AS covariate_id,
-	cohort_concept_id AS covariate_value
+	@cohort_definition_id AS covariate_value
     INTO #cov_exposure
 FROM #cohort_person
-WHERE cohort_concept_id = 1;
+WHERE @cohort_definition_id = 1;
 
 /**************************
 ***************************
@@ -137,7 +142,7 @@ DEMOGRAPHICS
 {@use_covariate_demographics_gender} ? {
 --gender
 SELECT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	gender_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -148,7 +153,7 @@ INNER JOIN person p1
 WHERE p1.gender_concept_id IN (
 		SELECT concept_id
 		FROM concept
-		WHERE LOWER(concept_class) = 'gender'
+		WHERE LOWER(@concept_class_id) = 'gender'
 		);
 
 
@@ -171,7 +176,7 @@ LEFT JOIN (
 	SELECT concept_id,
 		concept_name
 	FROM concept
-	WHERE LOWER(concept_class) = 'gender'
+	WHERE LOWER(@concept_class_id) = 'gender'
 	) v1
 	ON p1.covariate_id = v1.concept_id;
 
@@ -181,7 +186,7 @@ LEFT JOIN (
 {@use_covariate_demographics_race} ? {
 --race
 SELECT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	race_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -192,7 +197,7 @@ INNER JOIN person p1
 WHERE p1.race_concept_id IN (
 		SELECT concept_id
 		FROM concept
-		WHERE LOWER(concept_class) = 'race'
+		WHERE LOWER(@concept_class_id) = 'race'
 		);
 
 
@@ -214,7 +219,7 @@ LEFT JOIN (
 	SELECT concept_id,
 		concept_name
 	FROM concept
-	WHERE LOWER(concept_class) = 'race'
+	WHERE LOWER(@concept_class_id) = 'race'
 	) v1
 	ON p1.covariate_id = v1.concept_id;
 
@@ -224,7 +229,7 @@ LEFT JOIN (
 {@use_covariate_demographics_ethnicity} ? {
 --ethnicity
 SELECT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	ethnicity_concept_id AS covariate_id,
 	1 AS covariate_value
@@ -235,7 +240,7 @@ INNER JOIN person p1
 WHERE p1.ethnicity_concept_id IN (
 		SELECT concept_id
 		FROM concept
-		WHERE LOWER(concept_class) = 'ethnicity'
+		WHERE LOWER(@concept_class_id) = 'ethnicity'
 		);
 
 
@@ -258,7 +263,7 @@ LEFT JOIN (
 	SELECT concept_id,
 		concept_name
 	FROM concept
-	WHERE LOWER(concept_class) = 'ethnicity'
+	WHERE LOWER(@concept_class_id) = 'ethnicity'
 	) v1
 	ON p1.covariate_id = v1.concept_id;
 
@@ -269,7 +274,7 @@ LEFT JOIN (
 {@use_covariate_demographics_age} ? {
 --age group
 SELECT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	FLOOR((YEAR(cp1.cohort_start_date) - p1.YEAR_OF_BIRTH) / 5) + 10 AS covariate_id,
 	1 AS covariate_value
@@ -304,7 +309,7 @@ FROM (select distinct covariate_id FROM #cov_age) p1
 {@use_covariate_demographics_year} ? {
 --index year
 SELECT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	YEAR(cohort_start_date) AS covariate_id,
 	1 AS covariate_value
@@ -333,7 +338,7 @@ FROM (select distinct covariate_id FROM #cov_year) p1
 --index month
 
 SELECT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	MONTH(cohort_start_date) + 40 AS covariate_id,
 	1 AS covariate_value
@@ -369,7 +374,7 @@ CONDITION OCCURRENCE
 
 --conditions exist:  episode in last 365d prior
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 101 AS covariate_id,
 	1 AS covariate_value
@@ -407,7 +412,7 @@ LEFT JOIN concept c1
 
 --conditions:  episode in last 30d prior
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 102 AS covariate_id,
 	1 AS covariate_value
@@ -447,7 +452,7 @@ LEFT JOIN concept c1
 --conditions:  primary inpatient diagnosis in last 180d
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 103 AS covariate_id,
 	1 AS covariate_value
@@ -498,7 +503,7 @@ CONDITION ERA
 --condition:  exist any time prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(ce1.condition_concept_id AS BIGINT) * 1000 + 201 AS covariate_id,
 	1 AS covariate_value
@@ -541,7 +546,7 @@ LEFT JOIN concept c1
 --concurrent on index date (era overlapping)
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(ce1.condition_concept_id AS BIGINT) * 1000 + 202 AS covariate_id,
 	1 AS covariate_value
@@ -623,8 +628,12 @@ INNER JOIN concept_ancestor ca1
 	ON ccr1.concept_id = ca1.descendant_concept_id
 INNER JOIN concept c1
 	ON ca1.ancestor_concept_id = c1.concept_id
+{cdm_version == '4'} ? {
 WHERE c1.vocabulary_id = 15
-	AND c1.concept_class <> 'System Organ Class'
+} : { 
+WHERE c1.vocabulary_id = 'MedDRA'
+}
+	AND c1.@concept_class_id <> 'System Organ Class'
 	AND c1.concept_id NOT IN (36302170, 36303153, 36313966)
 {@has_excluded_covariate_concept_ids} ? {	AND c1.concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
 {@has_included_covariate_concept_ids} ? {	AND c1.concept_id IN (SELECT concept_id FROM #included_cov)}
@@ -649,8 +658,12 @@ INNER JOIN concept_ancestor ca1
 	ON ccr1.concept_id = ca1.descendant_concept_id
 INNER JOIN concept c1
 	ON ca1.ancestor_concept_id = c1.concept_id
+{cdm_version == '4'} ? {
 WHERE c1.vocabulary_id = 1
-  AND c1.concept_class = 'Clinical finding'
+} : { 
+WHERE c1.vocabulary_id = 'SNOMED'
+}
+  AND c1.@concept_class_id = 'Clinical finding'
   AND ca1.min_levels_of_separation = 1
   AND c1.concept_id NOT IN (select distinct descendant_concept_id from concept_ancestor where ancestor_concept_id = 441480 /*clinical finding*/ and max_levels_of_separation <= 2)
 {@has_excluded_covariate_concept_ids} ? {  AND c1.concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
@@ -698,7 +711,7 @@ INNER JOIN concept c1
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_concept_id,
+	cc1.@cohort_definition_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 50 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
@@ -706,7 +719,7 @@ INTO #cov_cg
 FROM
 
 (
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_exposure
 
 {@use_covariate_condition_occurrence} ? {
@@ -715,7 +728,7 @@ FROM #cov_exposure
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_co_365d
 
 }
@@ -724,7 +737,7 @@ FROM #cov_co_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_co_30d
 
 }
@@ -733,7 +746,7 @@ FROM #cov_co_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_co_inpt180d
 
 }
@@ -748,7 +761,7 @@ FROM #cov_co_inpt180d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_ce_ever
 
 }
@@ -757,7 +770,7 @@ FROM #cov_ce_ever
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_ce_overlap
 
 }
@@ -801,7 +814,7 @@ DRUG EXPOSURE
 --drug exist:  episode in last 365d prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 401 AS covariate_id,
 	1 AS covariate_value
@@ -844,7 +857,7 @@ LEFT JOIN concept c1
 --drug exist:  episode in last 30d prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 402 AS covariate_id,
 	1 AS covariate_value
@@ -893,7 +906,7 @@ DRUG ERA
 --drug exist:  episode in last 365d prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 501 AS covariate_id,
 	1 AS covariate_value
@@ -937,7 +950,7 @@ LEFT JOIN concept c1
 --drug exist:  episode in last 30d prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 502 AS covariate_id,
 	1 AS covariate_value
@@ -979,7 +992,7 @@ LEFT JOIN concept c1
 --concurrent on index date (era overlapping)
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 503 AS covariate_id,
 	1 AS covariate_value
@@ -1021,7 +1034,7 @@ LEFT JOIN concept c1
 --drug exist:  episode in all time prior
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 504 AS covariate_id,
 	1 AS covariate_value
@@ -1087,7 +1100,11 @@ INNER JOIN concept_ancestor ca1
 	ON ccr1.concept_id = ca1.descendant_concept_id
 INNER JOIN concept c1
 	ON ca1.ancestor_concept_id = c1.concept_id
+{cdm_version == '4'} ? {
 WHERE c1.vocabulary_id = 21
+} : { 
+WHERE c1.vocabulary_id = 'ATC'
+}
 	AND len(c1.concept_code) IN (1, 3, 5)
 	AND c1.concept_id != 0
 {@has_excluded_covariate_concept_ids} ? {	AND c1.concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
@@ -1131,14 +1148,14 @@ INNER JOIN concept c1
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_concept_id,
+	cc1.@cohort_definition_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 50 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
   INTO #cov_dg
 FROM (
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_exposure
 
 {@use_covariate_drug_exposure} ? {
@@ -1147,7 +1164,7 @@ FROM #cov_exposure
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_de_365d
 
 }
@@ -1156,7 +1173,7 @@ FROM #cov_de_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_de_30d
 
 }
@@ -1171,7 +1188,7 @@ FROM #cov_de_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_365d
 
 }
@@ -1180,7 +1197,7 @@ FROM #cov_dera_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_30d
 
 }
@@ -1189,7 +1206,7 @@ FROM #cov_dera_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_ever
 
 }
@@ -1198,7 +1215,7 @@ FROM #cov_dera_ever
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_overlap
 
 }
@@ -1254,7 +1271,7 @@ WHERE len(c1.concept_code) = 3;
 
 
 SELECT cc1.cohort_start_date,
-	cc1.cohort_concept_id,
+	cc1.@cohort_definition_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 601 AS covariate_id,
 	COUNT(DISTINCT ccr1.concept_id) AS covariate_value
@@ -1275,7 +1292,7 @@ INNER JOIN concept c1
 	ON cg1.ancestor_concept_id = c1.concept_id
 WHERE len(c1.concept_code) = 3
 GROUP BY cc1.cohort_start_date,
-	cc1.cohort_concept_id,
+	cc1.@cohort_definition_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 601;
 
@@ -1297,7 +1314,7 @@ PROCEDURE OCCURRENCE
 
 --procedures exist:  episode in last 365d prior
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(po1.procedure_concept_id AS BIGINT) * 1000 + 701 AS covariate_id,
 	1 AS covariate_value
@@ -1340,7 +1357,7 @@ LEFT JOIN concept c1
 
 
 SELECT DISTINCT cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(po1.procedure_concept_id AS BIGINT) * 1000 + 702 AS covariate_id,
 	1 AS covariate_value
@@ -1407,7 +1424,11 @@ INNER JOIN concept_ancestor ca1
 	ON ccr1.concept_id = ca1.descendant_concept_id
 INNER JOIN concept c1
 	ON ca1.ancestor_concept_id = c1.concept_id
+{cdm_version == '4'} ? {
 WHERE c1.vocabulary_id = 1
+} : { 
+WHERE c1.vocabulary_id = 'SNOMED'
+}
 	AND ca1.min_levels_of_separation <= 2
 	AND c1.concept_id NOT IN (0,
 	76094,67368, 46042, 40949, 31332, 28263, 24955, 18791, 13449, 12571, 10678, 10592, 9878, 9727, 9652, 9451, 9192, 8975, 8930, 8786, 8370, 8161, 7763, 7059, 6923, 6752, 6690, 6611, 6336, 6264, 6204, 6003, 5783)
@@ -1448,14 +1469,14 @@ INNER JOIN concept c1
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_concept_id,
+	cc1.@cohort_definition_id,
 	cc1.person_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 50 + ccr1.analysis_id AS covariate_id,
 	1 AS covariate_value
   INTO #cov_pg
 FROM (
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_exposure
 
 {@use_covariate_procedure_occurrence} ? {
@@ -1464,7 +1485,7 @@ FROM #cov_exposure
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_po_365d
 
 }
@@ -1473,7 +1494,7 @@ FROM #cov_po_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_po_30d
 
 }
@@ -1516,7 +1537,7 @@ OBSERVATION
 
 --observations exist:  episode in last 365d prior
 SELECT DISTINCT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id as person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 901 AS covariate_id,
 	1 AS covariate_value
@@ -1560,7 +1581,7 @@ LEFT JOIN concept c1
 
 --observation exist:  episode in last 30d prior
 SELECT DISTINCT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
   cp1.subject_id as person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 902 AS covariate_id,
 	1 AS covariate_value
@@ -1605,32 +1626,32 @@ LEFT JOIN concept c1
 
 --for numeric values with valid range, latest value within 180 below low
 SELECT DISTINCT cohort_start_date,
-  cohort_concept_id,
+  @cohort_definition_id,
 	subject_id AS person_id,
-	CAST(observation_concept_id AS BIGINT) * 1000 + 903 AS covariate_id,
+	CAST(@measurement_concept_id AS BIGINT) * 1000 + 903 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_o_below
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_concept_id,
+		cp1.@cohort_definition_id,
 		cp1.subject_id,
-		o1.observation_concept_id,
+		o1.@measurement_concept_id,
 		o1.value_as_number,
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.cohort_concept_id,
+			PARTITION BY cp1.@cohort_definition_id,
 			cp1.subject_id,
-			o1.observation_concept_id ORDER BY o1.observation_date DESC
+			o1.@measurement_concept_id ORDER BY o1.@measurement_date DESC
 			) AS rn1
 	FROM #cohort_person cp1
-	INNER JOIN observation o1
+	INNER JOIN @measurement o1
 		ON cp1.subject_id = o1.person_id
-	WHERE o1.observation_concept_id != 0
-{@has_excluded_covariate_concept_ids} ? {		AND o1.observation_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
-{@has_included_covariate_concept_ids} ? {		AND o1.observation_concept_id IN (SELECT concept_id FROM #included_cov)}	
-		AND o1.observation_date <= cp1.cohort_start_date
-		AND o1.observation_date >= dateadd(dd, - 180, cp1.cohort_start_date)
+	WHERE o1.@measurement_concept_id != 0
+{@has_excluded_covariate_concept_ids} ? {		AND o1.@measurement_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
+{@has_included_covariate_concept_ids} ? {		AND o1.@measurement_concept_id IN (SELECT concept_id FROM #included_cov)}	
+		AND o1.@measurement_date <= cp1.cohort_start_date
+		AND o1.@measurement_date >= dateadd(dd, - 180, cp1.cohort_start_date)
 		AND o1.value_as_number >= 0
 		AND o1.range_low >= 0
 		AND o1.range_high >= 0
@@ -1671,32 +1692,32 @@ LEFT JOIN concept c1
 
 --for numeric values with valid range, latest value above high
 SELECT DISTINCT cohort_start_date,
-  cohort_concept_id,
+  @cohort_definition_id,
   subject_id AS person_id,
-	CAST(observation_concept_id AS BIGINT) * 1000 + 904 AS covariate_id,
+	CAST(@measurement_concept_id AS BIGINT) * 1000 + 904 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_o_above
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_concept_id,
+		cp1.@cohort_definition_id,
 		cp1.subject_id,
-		o1.observation_concept_id,
+		o1.@measurement_concept_id,
 		o1.value_as_number,
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.cohort_concept_id,
+			PARTITION BY cp1.@cohort_definition_id,
 			cp1.subject_id,
-			o1.observation_concept_id ORDER BY o1.observation_date DESC
+			o1.@measurement_concept_id ORDER BY o1.@measurement_date DESC
 			) AS rn1
 	FROM #cohort_person cp1
-	INNER JOIN observation o1
+	INNER JOIN @measurement o1
 		ON cp1.subject_id = o1.person_id
-	WHERE o1.observation_concept_id != 0
-{@has_excluded_covariate_concept_ids} ? {		AND o1.observation_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
-{@has_included_covariate_concept_ids} ? {		AND o1.observation_concept_id IN (SELECT concept_id FROM #included_cov)}
-		AND o1.observation_date <= cp1.cohort_start_date
-		AND o1.observation_date >= dateadd(dd, - 180, cp1.cohort_start_date)
+	WHERE o1.@measurement_concept_id != 0
+{@has_excluded_covariate_concept_ids} ? {		AND o1.@measurement_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
+{@has_included_covariate_concept_ids} ? {		AND o1.@measurement_concept_id IN (SELECT concept_id FROM #included_cov)}
+		AND o1.@measurement_date <= cp1.cohort_start_date
+		AND o1.@measurement_date >= dateadd(dd, - 180, cp1.cohort_start_date)
 		AND o1.value_as_number >= 0
 		AND o1.range_low >= 0
 		AND o1.range_high >= 0
@@ -1734,7 +1755,7 @@ LEFT JOIN concept c1
 
 --number of observations:  episode in last 365d prior
 SELECT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905 AS covariate_id,
 	COUNT(observation_id) AS covariate_value
@@ -1748,7 +1769,7 @@ WHERE o1.observation_concept_id != 0
 	AND o1.observation_date <= cp1.cohort_start_date
 	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905;
 
@@ -1789,7 +1810,7 @@ DATA DENSITY CONCEPT COUNTS
 
 --Number of distinct conditions observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	1000 AS covariate_id,
 	COUNT(DISTINCT ce1.condition_concept_id) AS covariate_value
@@ -1800,7 +1821,7 @@ INNER JOIN condition_era ce1
 WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	AND ce1.condition_era_end_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id;
 
 
@@ -1823,7 +1844,7 @@ VALUES (
 
 --Number of distinct drug ingredients observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	1001 AS covariate_id,
 	COUNT(DISTINCT de1.drug_concept_id) AS covariate_value
@@ -1834,7 +1855,7 @@ INNER JOIN drug_era de1
 WHERE de1.drug_era_start_date <= cp1.cohort_start_date
 	AND de1.drug_era_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1854,7 +1875,7 @@ VALUES (
 
 --Number of distinct procedures observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	1002 AS covariate_id,
 	COUNT(DISTINCT po1.procedure_concept_id) AS covariate_value
@@ -1865,7 +1886,7 @@ INNER JOIN procedure_occurrence po1
 WHERE po1.procedure_date <= cp1.cohort_start_date
 	AND po1.procedure_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1885,7 +1906,7 @@ VALUES (
 
 --Number of distinct observations observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	1003 AS covariate_id,
 	COUNT(DISTINCT o1.observation_concept_id) AS covariate_value
@@ -1896,7 +1917,7 @@ INNER JOIN observation o1
 WHERE o1.observation_date <= cp1.cohort_start_date
 	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1915,7 +1936,7 @@ VALUES (
 
 --Number of visits observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	1004 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1926,7 +1947,7 @@ INNER JOIN visit_occurrence vo1
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1946,7 +1967,7 @@ VALUES (
 
 --Number of inpatient visits observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	1005 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1956,9 +1977,13 @@ INNER JOIN visit_occurrence vo1
 	ON cp1.subject_id = vo1.person_id
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
+{cdm_version == '4'} ? {
 	AND vo1.place_of_service_concept_id = 9201
+} : {
+	AND vo1.visit_concept_id = 9201
+}
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id;
 
 INSERT INTO #cov_ref (
@@ -1979,7 +2004,7 @@ VALUES (
 
 --Number of ER visits observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
-  cp1.cohort_concept_id,
+  cp1.@cohort_definition_id,
 	cp1.subject_id AS person_id,
 	1006 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
@@ -1989,9 +2014,13 @@ INNER JOIN visit_occurrence vo1
 	ON cp1.subject_id = vo1.person_id
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
+{cdm_version == '4'} ? {
 	AND vo1.place_of_service_concept_id = 9203
+} : {
+	AND vo1.visit_concept_id = 9203
+}
 GROUP BY cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	cp1.subject_id;
 
 
@@ -2248,14 +2277,14 @@ VALUES (
 
 
 SELECT cohort_start_date,
-	cohort_concept_id,
+	@cohort_definition_id,
 	subject_id AS person_id,
 	1100 AS covariate_id,
 	SUM(weight) AS covariate_value
   INTO #cov_charlson
 FROM (
 	SELECT DISTINCT cp1.cohort_start_date,
-		cp1.cohort_concept_id,
+		cp1.@cohort_definition_id,
 		cp1.subject_id,
 		cs1.diag_category_id,
 		cs1.weight
@@ -2269,7 +2298,7 @@ FROM (
 	WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	) t1
 GROUP BY cohort_start_date,
-	cohort_concept_id,
+	@cohort_definition_id,
 	subject_id;
 
 TRUNCATE TABLE #Charlson_concepts;
@@ -2307,13 +2336,27 @@ SELECT 'Retinopathy' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	1 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
-		source_code LIKE '250.5%'
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE source_code LIKE '250.5%'
 		OR source_code IN ('362.01', '362.1', '362.83', '362.53', '362.81', '362.82')
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2326,14 +2369,29 @@ SELECT 'Retinopathy' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	2 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
-		source_code LIKE '361%'
-		OR source_code LIKE '369%'
-		OR source_code IN ('362.02', '379.23')
-		)
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE
+	source_code LIKE '361%'
+	OR source_code LIKE '369%'
+	OR source_code IN ('362.02', '379.23')
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2346,16 +2404,31 @@ SELECT 'Nephropathy' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	1 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE
 		source_code IN ('250.4', '580', '581', '581.81', '582', '583')
 		OR source_code LIKE '580%'
 		OR source_code LIKE '581%'
 		OR source_code LIKE '582%'
 		OR source_code LIKE '583%'
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2368,15 +2441,30 @@ SELECT 'Nephropathy' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	2 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE
 		source_code IN ('585', '586', '593.9')
 		OR source_code LIKE '585%'
 		OR source_code LIKE '586%'
 		OR source_code LIKE '593.9%'
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2389,10 +2477,26 @@ SELECT 'Neuropathy' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	1 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE
 		source_code IN ('356.9', '250.6', '358.1', '951.0', '951.1', '951.3', '713.5', '357.2', '596.54', '337.0', '337.1', '564.5', '536.3', '458.0')
 		OR (
 			source_code >= '354.0'
@@ -2411,7 +2515,6 @@ WHERE SOURCE_VOCABULARY_ID = 2
 		OR source_code LIKE '564.5%'
 		OR source_code LIKE '536.3%'
 		OR source_code LIKE '458.0%'
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2424,10 +2527,26 @@ SELECT 'Cerebrovascular' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	1 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (source_code LIKE '435%')
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE source_code LIKE '435%'
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2440,16 +2559,30 @@ SELECT 'Cerebrovascular' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	2 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
-		source_code IN ('431', '433', '434', '436')
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE   source_code IN ('431', '433', '434', '436')
 		OR source_code LIKE '431%'
 		OR source_code LIKE '433%'
 		OR source_code LIKE '434%'
 		OR source_code LIKE '436%'
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2462,16 +2595,31 @@ SELECT 'Cardiovascular' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	1 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE
 		source_code LIKE '440%'
 		OR source_code LIKE '411%'
 		OR source_code LIKE '413%'
 		OR source_code LIKE '414%'
 		OR source_code LIKE '429.2%'
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2484,11 +2632,26 @@ SELECT 'Cardiovascular' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	2 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
-		source_code LIKE '410%'
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE   source_code LIKE '410%'
 		OR source_code LIKE '427.1%'
 		OR source_code LIKE '427.3%'
 		OR source_code LIKE '427.4%'
@@ -2497,7 +2660,6 @@ WHERE SOURCE_VOCABULARY_ID = 2
 		OR source_code LIKE '428%'
 		OR source_code LIKE '441%'
 		OR source_code IN ('440.23', '440.24')
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2510,16 +2672,31 @@ SELECT 'Peripheral vascular disease' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	1 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE
 		source_code LIKE '250.7%'
 		OR source_code LIKE '442.3%'
 		OR source_code LIKE '892.1%'
 		OR source_code LIKE '443.9%'
 		OR source_code IN ('443.81')
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2532,15 +2709,29 @@ SELECT 'Peripheral vascular disease' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	2 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
-		source_code LIKE '785.4%'
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE   source_code LIKE '785.4%'
 		OR source_code LIKE '707.1%'
 		OR source_code LIKE '040.0%'
 		OR source_code IN ('444.22')
-		)
 ORDER BY source_code;
 
 INSERT INTO #DCSI_scoring (
@@ -2553,14 +2744,28 @@ SELECT 'Metabolic' AS DCSI_category,
 	source_code,
 	target_concept_id,
 	2 AS DCSI_score
-FROM SOURCE_TO_CONCEPT_MAP
-WHERE SOURCE_VOCABULARY_ID = 2
+FROM (
+{cdm_version == '4'} ? {
+	SELECT source_code, target_concept_id
+	FROM SOURCE_TO_CONCEPT_MAP
+	WHERE c1.vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (
-		source_code LIKE '250.1%'
+} : {
+	SELECT 
+	  source.concept_code AS source_code,
+	  target.concept_id AS target_concept_id
+	FROM concept_relationship
+	INNER JOIN concept source
+	ON source.concept_id = concept_relationship.concept_id_1
+	INNER JOIN concept target
+	ON target.concept_id = concept_relationship.concept_id_2
+	WHERE source.vocabulary_id = 'ICD9CM'
+	  AND target.vocabulary_id = 'SNOMED'
+}
+) source_to_concept_map
+WHERE   source_code LIKE '250.1%'
 		OR source_code LIKE '250.2%'
 		OR source_code LIKE '250.3%'
-		)
 ORDER BY source_code;
 
 INSERT INTO #cov_ref (
@@ -2578,14 +2783,14 @@ VALUES (
 
 
 SELECT cohort_start_date,
-	cohort_concept_id,
+	@cohort_definition_id,
 	subject_id AS person_id,
 	1101 AS covariate_id,
 	SUM(max_score) AS covariate_value
   INTO #cov_DCSI
 FROM (
 	SELECT cp1.cohort_start_date,
-		cp1.cohort_concept_id,
+		cp1.@cohort_definition_id,
 		cp1.subject_id,
 		ds1.dcsi_category,
 		max(ds1.DCSI_score) AS max_score
@@ -2596,12 +2801,12 @@ FROM (
 		ON ce1.condition_concept_id = ds1.DCSI_concept_id
 	WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
 	GROUP BY cp1.cohort_start_date,
-		cp1.cohort_concept_id,
+		cp1.@cohort_definition_id,
 		cp1.subject_id,
 		ds1.dcsi_category
 	) t1
 GROUP BY cohort_start_date,
-	cohort_concept_id,
+	@cohort_definition_id,
 	subject_id;
 
 TRUNCATE TABLE #DCSI_scoring;
@@ -2695,14 +2900,14 @@ VALUES (
 
 
 SELECT cohort_start_date,
-	cohort_concept_id,
+	@cohort_definition_id,
 	subject_id AS person_id,
 	1102 AS covariate_id,
 	SUM(weight) AS covariate_value
   INTO #cov_CHADS2
 FROM (
 	SELECT DISTINCT cp1.cohort_start_date,
-		cp1.cohort_concept_id,
+		cp1.@cohort_definition_id,
 		cp1.subject_id,
 		cs1.diag_category_id,
 		cs1.weight
@@ -2718,7 +2923,7 @@ FROM (
   UNION
 
   SELECT DISTINCT cp1.cohort_start_date,
-  	cp1.cohort_concept_id,
+  	cp1.@cohort_definition_id,
 		cp1.subject_id,
 		3 as diag_category_id,
 		1 as weight
@@ -2729,7 +2934,7 @@ FROM (
 
 	) t1
 GROUP BY cohort_start_date,
-	cohort_concept_id,
+	@cohort_definition_id,
 	subject_id;
 
 TRUNCATE TABLE #CHADS2_concepts;
@@ -2770,12 +2975,12 @@ put all temp tables together into one cov table
 ***********************************/
 
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 INTO #cov_all
 FROM
 (
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_exposure
 
 
@@ -2784,7 +2989,7 @@ FROM #cov_exposure
 {@use_covariate_demographics_gender} ? {
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_gender
 
 }
@@ -2792,7 +2997,7 @@ FROM #cov_gender
 {@use_covariate_demographics_race} ? {
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_race
 
 }
@@ -2800,7 +3005,7 @@ FROM #cov_race
 {@use_covariate_demographics_ethnicity} ? {
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_ethnicity
 
 }
@@ -2809,7 +3014,7 @@ FROM #cov_ethnicity
 {@use_covariate_demographics_age} ? {
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_age
 
 }
@@ -2817,7 +3022,7 @@ FROM #cov_age
 {@use_covariate_demographics_year} ? {
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_year
 
 }
@@ -2825,7 +3030,7 @@ FROM #cov_year
 {@use_covariate_demographics_month} ? {
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_month
 
 }
@@ -2838,7 +3043,7 @@ FROM #cov_month
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_co_365d
 
 }
@@ -2847,7 +3052,7 @@ FROM #cov_co_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_co_30d
 
 }
@@ -2856,7 +3061,7 @@ FROM #cov_co_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_co_inpt180d
 
 }
@@ -2871,7 +3076,7 @@ FROM #cov_co_inpt180d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_ce_ever
 
 }
@@ -2880,7 +3085,7 @@ FROM #cov_ce_ever
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_ce_overlap
 
 }
@@ -2892,7 +3097,7 @@ FROM #cov_ce_overlap
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_cg
 
 }
@@ -2904,7 +3109,7 @@ FROM #cov_cg
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_de_365d
 
 }
@@ -2913,7 +3118,7 @@ FROM #cov_de_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_de_30d
 
 }
@@ -2928,7 +3133,7 @@ FROM #cov_de_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_365d
 
 }
@@ -2937,7 +3142,7 @@ FROM #cov_dera_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_30d
 
 }
@@ -2946,7 +3151,7 @@ FROM #cov_dera_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_ever
 
 }
@@ -2955,7 +3160,7 @@ FROM #cov_dera_ever
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dera_overlap
 
 }
@@ -2968,14 +3173,14 @@ FROM #cov_dera_overlap
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dg
 
 
 {@use_covariate_drug_era_ever} ? {
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dg_count
 }
 
@@ -2989,7 +3194,7 @@ FROM #cov_dg_count
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_po_365d
 
 }
@@ -2998,7 +3203,7 @@ FROM #cov_po_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_po_30d
 
 }
@@ -3011,7 +3216,7 @@ FROM #cov_po_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_pg
 
 }
@@ -3023,7 +3228,7 @@ FROM #cov_pg
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_o_365d
 
 }
@@ -3032,7 +3237,7 @@ FROM #cov_o_365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_o_30d
 
 }
@@ -3041,7 +3246,7 @@ FROM #cov_o_30d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_o_below
 
 }
@@ -3051,7 +3256,7 @@ FROM #cov_o_below
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_o_above
 
 
@@ -3061,7 +3266,7 @@ FROM #cov_o_above
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_o_count365d
 
 }
@@ -3072,37 +3277,37 @@ FROM #cov_o_count365d
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_cond
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_drug
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_proc
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_obs
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_visit_all
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_visit_inpt
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_visit_er
 
 
@@ -3116,7 +3321,7 @@ FROM #cov_dd_visit_er
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_charlson
 
 }
@@ -3125,7 +3330,7 @@ FROM #cov_charlson
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_DCSI
 
 }
@@ -3134,7 +3339,7 @@ FROM #cov_DCSI
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_CHADS2
 
 }
@@ -3171,7 +3376,7 @@ FROM #cohort_person cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_concept_id = cc1.cohort_concept_id
+		AND cp1.@cohort_definition_id = cc1.@cohort_definition_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (5)
@@ -3179,7 +3384,7 @@ WHERE ccr1.analysis_id NOT IN (5)
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_concept_id,
+	cc1.@cohort_definition_id,
 	cc1.person_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(YEAR(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
@@ -3188,7 +3393,7 @@ FROM #cohort_person cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_concept_id = cc1.cohort_concept_id
+		AND cp1.@cohort_definition_id = cc1.@cohort_definition_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (5)
@@ -3218,7 +3423,7 @@ FROM #cohort_person cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_concept_id = cc1.cohort_concept_id
+		AND cp1.@cohort_definition_id = cc1.@cohort_definition_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (6)
@@ -3226,7 +3431,7 @@ WHERE ccr1.analysis_id NOT IN (6)
 
 
 SELECT DISTINCT cc1.cohort_start_date,
-	cc1.cohort_concept_id,
+	cc1.@cohort_definition_id,
 	cc1.person_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(MONTH(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
@@ -3235,7 +3440,7 @@ FROM #cohort_person cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
-		AND cp1.cohort_concept_id = cc1.cohort_concept_id
+		AND cp1.@cohort_definition_id = cc1.@cohort_definition_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (6)
@@ -3288,11 +3493,11 @@ SELECT covariate_id
 }
 
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
   INTO #cov
 FROM
 (
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_all
 WHERE covariate_id IN (
   	SELECT covariate_id
@@ -3303,7 +3508,7 @@ WHERE covariate_id IN (
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_int_year
 WHERE covariate_id IN (
     SELECT covariate_id
@@ -3316,7 +3521,7 @@ WHERE covariate_id IN (
 
 UNION
 
-SELECT cohort_start_date, cohort_concept_id, person_id, covariate_id, covariate_value
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_int_month
 WHERE covariate_id IN (
     SELECT covariate_id

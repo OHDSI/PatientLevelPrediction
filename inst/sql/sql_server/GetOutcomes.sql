@@ -22,12 +22,14 @@ limitations under the License.
 {DEFAULT @use_existing_cohort_person = TRUE } 
 {DEFAULT @cohort_database_schema = 'CDM4_SIM' } 
 {DEFAULT @cohort_table = 'cohort' } 
-{DEFAULT @cohort_concept_ids = '0,1' }
+{DEFAULT @cohort_ids = '0,1' }
 {DEFAULT @outcome_database_schema = 'CDM4_SIM' } 
 {DEFAULT @outcome_table = 'condition_occurrence' }
 {DEFAULT @outcome_concept_ids = '' }
 {DEFAULT @outcome_condition_type_concept_ids = '' }
 {DEFAULT @first_outcome_only = FALSE }
+{DEFAULT @cdm_version == '4'}
+{DEFAULT @cohort_definition_id = 'cohort_concept_id'} 
 
 USE @cdm_database;
 
@@ -41,20 +43,20 @@ IF OBJECT_ID('tempdb..#cohort_excluded_person', 'U') IS NOT NULL
 IF OBJECT_ID('tempdb..#cohort_person', 'U') IS NOT NULL
 	DROP TABLE #cohort_person;
 	
-SELECT cohort_concept_id,
+SELECT @cohort_definition_id,
 	subject_id,
 	cohort_start_date,
 	cohort_end_date
 INTO #cohort_person
 FROM @cohort_database_schema.@cohort_table
-{@cohort_concept_ids != ''} ? {
-WHERE cohort_concept_id IN (@cohort_concept_ids);
+{@cohort_ids != ''} ? {
+WHERE @cohort_definition_id IN (@cohort_ids);
 }
 }
 
 SELECT exposure.subject_id AS person_id,
 	exposure.cohort_start_date,
-	exposure.cohort_concept_id AS cohort_concept_id,
+	exposure.@cohort_definition_id AS @cohort_definition_id,
 	outcome.outcome_id,
 	COUNT(DISTINCT outcome_date) AS outcome_count,
 	MIN(DATEDIFF(DAY, exposure.cohort_start_date, outcome_date)) AS time_to_event
@@ -80,12 +82,12 @@ INNER JOIN (
 	GROUP BY condition_concept_id,
 		person_id
 } : {
-	SELECT cohort_concept_id AS outcome_id,
+	SELECT @cohort_definition_id AS outcome_id,
 	  subject_id AS person_id,
 	  MIN(cohort_start_date) AS outcome_date
 	FROM @outcome_database_schema.@outcome_table co1
-	WHERE cohort_concept_id IN (@outcome_concept_ids)
-	GROUP BY cohort_concept_id,
+	WHERE @cohort_definition_id IN (@outcome_concept_ids)
+	GROUP BY @cohort_definition_id,
 		subject_id
 }}
 } : {
@@ -103,11 +105,11 @@ INNER JOIN (
 	FROM condition_era
 	WHERE condition_concept_id IN (@outcome_concept_ids)
 } : {
-	SELECT cohort_concept_id AS outcome_id,
+	SELECT @cohort_definition_id AS outcome_id,
 	  subject_id AS person_id,
 	  cohort_start_date AS outcome_date
 	FROM @outcome_database_schema.@outcome_table co1
-	WHERE cohort_concept_id IN (@outcome_concept_ids)
+	WHERE @cohort_definition_id IN (@outcome_concept_ids)
 }}
 }
 ) outcome
@@ -116,7 +118,7 @@ ON outcome.person_id = exposure.subject_id
 	AND outcome_date <= exposure.cohort_end_date
 GROUP BY exposure.subject_id,
 	exposure.cohort_start_date,
-	exposure.cohort_concept_id,
+	exposure.@cohort_definition_id,
 	outcome.outcome_id;
 
 
@@ -126,7 +128,7 @@ GROUP BY exposure.subject_id,
 {@outcome_table == 'condition_occurrence' } ? {
 SELECT DISTINCT	cp1.subject_id AS person_id,
 	cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	ca1.ancestor_concept_id AS outcome_id
 INTO #cohort_excluded_person
 FROM #cohort_person cp1
@@ -144,7 +146,7 @@ WHERE {@outcome_condition_type_concept_ids != '' } ? { co1.condition_type_concep
 
 SELECT DISTINCT cp1.subject_id AS person_id,
 	cp1.cohort_start_date,
-	cp1.cohort_concept_id,
+	cp1.@cohort_definition_id,
 	ca1.ancestor_concept_id AS outcome_id
 INTO #cohort_excluded_person
 FROM #cohort_person cp1
@@ -162,12 +164,12 @@ WHERE {@outcome_condition_type_concept_ids != '' } ? { co1.condition_type_concep
 
 SELECT DISTINCT cp1.subject_id AS person_id,
 	cp1.cohort_start_date,
-	cp1.cohort_concept_id,
-	co1.cohort_concept_id AS outcome_id
+	cp1.@cohort_definition_id,
+	co1.@cohort_definition_id AS outcome_id
 INTO #cohort_excluded_person
 FROM #cohort_person cp1
 INNER JOIN @outcome_database_schema.@outcome_table co1
 	ON cp1.subject_id = co1.subject_id
-WHERE co1.cohort_concept_id IN (@outcome_concept_ids)
+WHERE co1.@cohort_definition_id IN (@outcome_concept_ids)
 	AND co1.cohort_start_date < cp1.cohort_start_date } };
 }

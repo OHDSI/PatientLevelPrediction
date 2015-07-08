@@ -22,7 +22,9 @@ limitations under the License.
 {DEFAULT @use_existing_cohort_person = TRUE } 
 {DEFAULT @cohort_database_schema = 'CDM4_SIM' } 
 {DEFAULT @cohort_table = 'cohort' } 
-{DEFAULT @cohort_concept_ids = '0,1' }
+{DEFAULT @cohort_ids = '0,1' }
+{DEFAULT @cdm_version == '4'}
+{DEFAULT @cohort_definition_id = 'cohort_concept_id'} 
 
 USE @cdm_database;
 
@@ -30,13 +32,13 @@ USE @cdm_database;
 IF OBJECT_ID('tempdb..#cohort_person', 'U') IS NOT NULL
 	DROP TABLE #cohort_person;
 	
-SELECT cohort_concept_id,
+SELECT @cohort_definition_id,
 	subject_id,
 	cohort_start_date,
 	cohort_end_date
 INTO #cohort_person
 FROM @cohort_database_schema.@cohort_table
 {@cohort_concept_ids != ''} ? {
-WHERE cohort_concept_id IN (@cohort_concept_ids);
+WHERE @cohort_definition_id IN (@cohort_ids);
 }
 }

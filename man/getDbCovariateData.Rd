@@ -7,7 +7,8 @@
 getDbCovariateData(connectionDetails = NULL, connection = NULL,
   oracleTempSchema = NULL, cdmDatabaseSchema,
   useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
-  cohortTable = "cohort", cohortConceptIds = c(0, 1), covariateSettings)
+  cohortTable = "cohort", cohortIds = c(0, 1), covariateSettings,
+  cdmVersion = "4")
 }
 \arguments{
 \item{connection}{A connection to the server containing the schema as created using
@@ -26,13 +27,15 @@ only be used when the \code{connection} parameter is not NULL.}
 the source cohort table located? Note that on SQL Server, one
 should include both the database and schema, e.g. 'cdm_schema.dbo'.}
 
-\item{cohortTable}{}
-
-\item{cohortConceptIds}{If not using an existing \code{cohort_person} temp table, what is
+\item{cohortTable}{If not using an existing \code{cohort_person} temp table, what is
 the name of the source cohort table?}
 
+\item{cohortIds}{The IDs of the cohortsin the cohort table for which we want to build covariates.}
+
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
-                                 \code{\link{createCovariateSettings}} function.}
+\code{\link{createCovariateSettings}} function.}
+
+\item{cdmVersion}{Define the OMOP CDM version used:  currently support "4" and "5".}
 
 \item{connectionDetailsAn}{R object of type \code{connectionDetails} created using the
 function \code{createConnectionDetails} in the

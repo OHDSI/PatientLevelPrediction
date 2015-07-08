@@ -28,7 +28,7 @@
                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                 cohortDatabaseSchema = resultsDatabaseSchema,
                                 cohortTable = "first_hospitalization",
-                                cohortConceptIds = 1)
+                                cohortIds = 1)
   # savecohortData(cohortData, 's:/temp/cohortData')
   covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                                useCovariateConditionOccurrence = TRUE)
@@ -36,7 +36,7 @@
                                       cdmDatabaseSchema = cdmDatabaseSchema,
                                       cohortDatabaseSchema = resultsDatabaseSchema,
                                       cohortTable = "first_hospitalization",
-                                      cohortConceptIds = 1,
+                                      cohortIds = 1,
                                       covariateSettings = covariateSettings)
 
   # saveCovariateData(covariateData, 's:/temp/covariateData')
@@ -45,7 +45,7 @@
                                   cdmDatabaseSchema = cdmDatabaseSchema,
                                   cohortDatabaseSchema = resultsDatabaseSchema,
                                   cohortTable = "first_hospitalization",
-                                  cohortConceptIds = 1,
+                                  cohortIds = 1,
                                   outcomeDatabaseSchema = resultsDatabaseSchema,
                                   outcomeTable = "rehospitalization",
                                   outcomeConceptIds = 1,
