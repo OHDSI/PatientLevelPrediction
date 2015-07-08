@@ -2479,6 +2479,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE source_code LIKE '250.5%'
@@ -2512,6 +2513,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE
@@ -2547,6 +2549,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE
@@ -2584,6 +2587,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE
@@ -2620,6 +2624,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE
@@ -2670,6 +2675,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE source_code LIKE '435%'
@@ -2702,6 +2708,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE   source_code IN ('431', '433', '434', '436')
@@ -2738,6 +2745,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE
@@ -2775,6 +2783,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE   source_code LIKE '410%'
@@ -2815,6 +2824,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE
@@ -2852,6 +2862,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE   source_code LIKE '785.4%'
@@ -2887,6 +2898,7 @@ FROM (
 	ON target.concept_id = concept_relationship.concept_id_2
 	WHERE source.vocabulary_id = 'ICD9CM'
 	  AND target.vocabulary_id = 'SNOMED'
+	  AND relationship_id = 'Maps to'
 }
 ) source_to_concept_map
 WHERE   source_code LIKE '250.1%'
