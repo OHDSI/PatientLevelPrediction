@@ -632,7 +632,7 @@ INNER JOIN concept_ancestor ca1
 	ON ccr1.concept_id = ca1.descendant_concept_id
 INNER JOIN concept c1
 	ON ca1.ancestor_concept_id = c1.concept_id
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 WHERE c1.vocabulary_id = 15
 } : { 
 WHERE c1.vocabulary_id = 'MedDRA'
@@ -662,7 +662,7 @@ INNER JOIN concept_ancestor ca1
 	ON ccr1.concept_id = ca1.descendant_concept_id
 INNER JOIN concept c1
 	ON ca1.ancestor_concept_id = c1.concept_id
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 WHERE c1.vocabulary_id = 1
 } : { 
 WHERE c1.vocabulary_id = 'SNOMED'
@@ -1104,7 +1104,7 @@ INNER JOIN concept_ancestor ca1
 	ON ccr1.concept_id = ca1.descendant_concept_id
 INNER JOIN concept c1
 	ON ca1.ancestor_concept_id = c1.concept_id
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 WHERE c1.vocabulary_id = 21
 } : { 
 WHERE c1.vocabulary_id = 'ATC'
@@ -1428,7 +1428,7 @@ INNER JOIN concept_ancestor ca1
 	ON ccr1.concept_id = ca1.descendant_concept_id
 INNER JOIN concept c1
 	ON ca1.ancestor_concept_id = c1.concept_id
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 WHERE c1.vocabulary_id = 1
 } : { 
 WHERE c1.vocabulary_id = 'SNOMED'
@@ -1774,7 +1774,7 @@ LEFT JOIN concept c1
 }
 }
 
-{cdm_version != '4' & @use_covariate_measurement} ? {
+{@cdm_version != '4' & @use_covariate_measurement} ? {
 {@use_covariate_measurement_365d} ? {
 
 --measurements exist:  episode in last 365d prior
@@ -2072,7 +2072,7 @@ INNER JOIN visit_occurrence vo1
 	ON cp1.subject_id = vo1.person_id
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	AND vo1.place_of_service_concept_id = 9201
 } : {
 	AND vo1.visit_concept_id = 9201
@@ -2109,7 +2109,7 @@ INNER JOIN visit_occurrence vo1
 	ON cp1.subject_id = vo1.person_id
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
 	AND vo1.visit_start_date >= dateadd(dd, - 365, cp1.cohort_start_date)
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	AND vo1.place_of_service_concept_id = 9203
 } : {
 	AND vo1.visit_concept_id = 9203
@@ -2132,7 +2132,7 @@ VALUES (
 	0
 	);
 	
-{cdm_version != '4'} ? {
+{@cdm_version != '4'} ? {
 --Number of distinct measurements observed in 365d on or prior to cohort index
 SELECT cp1.cohort_start_date,
   cp1.@cohort_definition_id,
@@ -2463,7 +2463,7 @@ SELECT 'Retinopathy' AS DCSI_category,
 	target_concept_id,
 	1 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2497,7 +2497,7 @@ SELECT 'Retinopathy' AS DCSI_category,
 	target_concept_id,
 	2 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2533,7 +2533,7 @@ SELECT 'Nephropathy' AS DCSI_category,
 	target_concept_id,
 	1 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2571,7 +2571,7 @@ SELECT 'Nephropathy' AS DCSI_category,
 	target_concept_id,
 	2 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2608,7 +2608,7 @@ SELECT 'Neuropathy' AS DCSI_category,
 	target_concept_id,
 	1 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2659,7 +2659,7 @@ SELECT 'Cerebrovascular' AS DCSI_category,
 	target_concept_id,
 	1 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2692,7 +2692,7 @@ SELECT 'Cerebrovascular' AS DCSI_category,
 	target_concept_id,
 	2 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2729,7 +2729,7 @@ SELECT 'Cardiovascular' AS DCSI_category,
 	target_concept_id,
 	1 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2767,7 +2767,7 @@ SELECT 'Cardiovascular' AS DCSI_category,
 	target_concept_id,
 	2 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2808,7 +2808,7 @@ SELECT 'Peripheral vascular disease' AS DCSI_category,
 	target_concept_id,
 	1 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2846,7 +2846,7 @@ SELECT 'Peripheral vascular disease' AS DCSI_category,
 	target_concept_id,
 	2 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -2882,7 +2882,7 @@ SELECT 'Metabolic' AS DCSI_category,
 	target_concept_id,
 	2 AS DCSI_score
 FROM (
-{cdm_version == '4'} ? {
+{@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
 	WHERE c1.vocabulary_id = 2
@@ -3412,7 +3412,7 @@ FROM #cov_m_above
 }
 }
 
-{cdm_version != '4' & @use_covariate_measurement} ? {
+{@cdm_version != '4' & @use_covariate_measurement} ? {
 
 
 {@use_covariate_measurement_365d} ? {
@@ -3482,7 +3482,7 @@ UNION
 SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_visit_er
 
-{cdm_version != '4'} ? {
+{@cdm_version != '4'} ? {
 UNION
 
 SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
