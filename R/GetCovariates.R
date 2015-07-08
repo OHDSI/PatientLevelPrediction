@@ -172,9 +172,13 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                                    use_covariate_observation = covariateSettings$useCovariateObservation,
                                                    use_covariate_observation_365d = covariateSettings$useCovariateObservation365d,
                                                    use_covariate_observation_30d = covariateSettings$useCovariateObservation30d,
-                                                   use_covariate_observation_below = covariateSettings$useCovariateObservationBelow,
-                                                   use_covariate_observation_above = covariateSettings$useCovariateObservationAbove,
                                                    use_covariate_observation_count365d = covariateSettings$useCovariateObservationCount365d,
+                                                   use_covariate_measurement = covariateSettings$useCovariateMeasurement,
+                                                   use_covariate_measurement_365d = covariateSettings$useCovariateMeasurement365d,
+                                                   use_covariate_measurement_30d = covariateSettings$useCovariateMeasurement30d,
+                                                   use_covariate_measurement_count365d = covariateSettings$useCovariateMeasurementCount365d,
+                                                   use_covariate_measurement_below = covariateSettings$useCovariateMeasurementBelow,
+                                                   use_covariate_measurement_above = covariateSettings$useCovariateMeasurementAbove,
                                                    use_covariate_concept_counts = covariateSettings$useCovariateConceptCounts,
                                                    use_covariate_risk_scores = covariateSettings$useCovariateRiskScores,
                                                    use_covariate_risk_scores_Charlson = covariateSettings$useCovariateRiskScoresCharlson,
@@ -460,23 +464,41 @@ loadCovariateData <- function(file, readOnly = FALSE) {
 #'                                                  look for presence/absence of observation in 30d
 #'                                                  window prior to or on cohort index date.  Only
 #'                                                  applicable if useCovariateObservation = TRUE.
-#' @param useCovariateObservationBelow              A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates will be created and used in models that
-#'                                                  look for presence/absence of observation with a
-#'                                                  numeric value below normal range for latest value
-#'                                                  within 180d of cohort index.  Only applicable if
-#'                                                  useCovariateObservation = TRUE.
-#' @param useCovariateObservationAbove              A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates will be created and used in models that
-#'                                                  look for presence/absence of observation with a
-#'                                                  numeric value above normal range for latest value
-#'                                                  within 180d of cohort index.  Only applicable if
-#'                                                  useCovariateObservation = TRUE.
 #' @param useCovariateObservationCount365d          A boolean value (TRUE/FALSE) to determine if
 #'                                                  covariates will be created and used in models that
 #'                                                  look for the count of each observation concept in
 #'                                                  365d window prior to or on cohort index date.  Only
 #'                                                  applicable if useCovariateObservation = TRUE.
+#' @param useCovariateMeasurement                   A boolean value (TRUE/FALSE) to determine if
+#'                                                  covariates derived from OBSERVATION table will be
+#'                                                  created and included in future models.
+#' @param useCovariateMeasurement365d               A boolean value (TRUE/FALSE) to determine if
+#'                                                  covariates will be created and used in models that
+#'                                                  look for presence/absence of measurement in 365d
+#'                                                  window prior to or on cohort index date.  Only
+#'                                                  applicable if useCovariateMeasurement = TRUE.
+#' @param useCovariateMeasurement30d                A boolean value (TRUE/FALSE) to determine if
+#'                                                  covariates will be created and used in models that
+#'                                                  look for presence/absence of measurement in 30d
+#'                                                  window prior to or on cohort index date.  Only
+#'                                                  applicable if useCovariateMeasurement = TRUE.
+#' @param useCovariateMeasurementCount365d          A boolean value (TRUE/FALSE) to determine if
+#'                                                  covariates will be created and used in models that
+#'                                                  look for the count of each measurement concept in
+#'                                                  365d window prior to or on cohort index date.  Only
+#'                                                  applicable if useCovariateMeasurement = TRUE.
+#' @param useCovariateMeasurementBelow              A boolean value (TRUE/FALSE) to determine if
+#'                                                  covariates will be created and used in models that
+#'                                                  look for presence/absence of measurement with a
+#'                                                  numeric value below normal range for latest value
+#'                                                  within 180d of cohort index.  Only applicable if
+#'                                                  useCovariateMeasurement = TRUE (CDM v5+) or useCovariateObservation = TRUE (CDM v4).
+#' @param useCovariateMeasurementAbove              A boolean value (TRUE/FALSE) to determine if
+#'                                                  covariates will be created and used in models that
+#'                                                  look for presence/absence of measurement with a
+#'                                                  numeric value above normal range for latest value
+#'                                                  within 180d of cohort index.  Only applicable if
+#'                                                  useCovariateMeasurement = TRUE (CDM v5+) or useCovariateObservation = TRUE (CDM v4).
 #' @param useCovariateConceptCounts                 A boolean value (TRUE/FALSE) to determine if
 #'                                                  covariates will be created and used in models that
 #'                                                  count the number of concepts that a person has
@@ -542,9 +564,13 @@ createCovariateSettings <- function(useCovariateDemographics = TRUE,
                                     useCovariateObservation = FALSE,
                                     useCovariateObservation365d = FALSE,
                                     useCovariateObservation30d = FALSE,
-                                    useCovariateObservationBelow = FALSE,
-                                    useCovariateObservationAbove = FALSE,
                                     useCovariateObservationCount365d = FALSE,
+                                    useCovariateMeasurement = FALSE,
+                                    useCovariateMeasurement365d = FALSE,
+                                    useCovariateMeasurement30d = FALSE,
+                                    useCovariateMeasurementCount365d = FALSE,
+                                    useCovariateMeasurementBelow = FALSE,
+                                    useCovariateMeasurementAbove = FALSE,
                                     useCovariateConceptCounts = FALSE,
                                     useCovariateRiskScores = FALSE,
                                     useCovariateRiskScoresCharlson = FALSE,

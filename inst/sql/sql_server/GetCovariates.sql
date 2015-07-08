@@ -56,9 +56,13 @@ limitations under the License.
 {DEFAULT @use_covariate_observation = FALSE} 
 {DEFAULT @use_covariate_observation_365d = TRUE} 
 {DEFAULT @use_covariate_observation_30d = TRUE} 
-{DEFAULT @use_covariate_observation_below = TRUE} 
-{DEFAULT @use_covariate_observation_above = TRUE} 
 {DEFAULT @use_covariate_observation_count365d = TRUE} 
+{DEFAULT @use_covariate_measurement = FALSE} 
+{DEFAULT @use_covariate_measurement_365d = TRUE} 
+{DEFAULT @use_covariate_measurement_30d = TRUE} 
+{DEFAULT @use_covariate_measurement_below = TRUE} 
+{DEFAULT @use_covariate_measurement_above = TRUE} 
+{DEFAULT @use_covariate_measurement_count365d = TRUE} 
 {DEFAULT @use_covariate_concept_counts = FALSE} 
 {DEFAULT @use_covariate_risk_scores = FALSE} 
 {DEFAULT @use_covariate_risk_scores_Charlson = TRUE} 
@@ -1531,7 +1535,7 @@ DROP TABLE #procedure_group;
 OBSERVATION
 ***************************
 **************************/
-	{@use_covariate_observation} ? {
+{@use_covariate_observation} ? {
 
 {@use_covariate_observation_365d} ? {
 
@@ -1551,9 +1555,6 @@ WHERE o1.observation_concept_id != 0
 	AND o1.observation_date <= cp1.cohort_start_date
 	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date);
 
-
-
-
 INSERT INTO #cov_ref (
   covariate_id,
   covariate_name,
@@ -1572,9 +1573,6 @@ FROM (SELECT DISTINCT covariate_id FROM #cov_o_365d) p1
 LEFT JOIN concept c1
 	ON (p1.covariate_id-901)/1000 = c1.concept_id
 ;
-
-
-
 }
 
 {@use_covariate_observation_30d} ? {
@@ -1595,9 +1593,6 @@ WHERE o1.observation_concept_id != 0
 	AND o1.observation_date <= cp1.cohort_start_date
 	AND o1.observation_date >= dateadd(dd, - 30, cp1.cohort_start_date);
 
-
-
-
 INSERT INTO #cov_ref (
   covariate_id,
   covariate_name,
@@ -1616,13 +1611,55 @@ FROM (SELECT DISTINCT covariate_id FROM #cov_o_30d) p1
 LEFT JOIN concept c1
 	ON (p1.covariate_id-902)/1000 = c1.concept_id
 ;
+}
 
+{@use_covariate_observation_count365d} ? {
 
+--number of observations:  episode in last 365d prior
+SELECT cp1.cohort_start_date,
+  cp1.@cohort_definition_id,
+	cp1.subject_id AS person_id,
+	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905 AS covariate_id,
+	COUNT(observation_id) AS covariate_value
+    INTO #cov_o_count365d
+FROM #cohort_person cp1
+INNER JOIN observation o1
+	ON cp1.subject_id = o1.person_id
+WHERE o1.observation_concept_id != 0
+{@has_excluded_covariate_concept_ids} ? {	AND o1.observation_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
+{@has_included_covariate_concept_ids} ? {	AND o1.observation_concept_id IN (SELECT concept_id FROM #included_cov)}
+	AND o1.observation_date <= cp1.cohort_start_date
+	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date)
+GROUP BY cp1.cohort_start_date,
+	cp1.@cohort_definition_id,
+	cp1.subject_id,
+	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905;
 
+INSERT INTO #cov_ref (
+  covariate_id,
+  covariate_name,
+	analysis_id,
+	concept_id
+	)
+SELECT p1.covariate_id,
+	'Number of observations during 365d on or prior to cohort index:  ' + CAST((p1.covariate_id-905)/1000 AS VARCHAR) + '-' + CASE
+		WHEN c1.concept_name IS NOT NULL
+			THEN c1.concept_name
+		ELSE 'Unknown invalid concept'
+		END AS covariate_name,
+	905 AS analysis_id,
+	(p1.covariate_id-905)/1000 AS concept_id
+FROM (SELECT DISTINCT covariate_id FROM #cov_o_count365d) p1
+LEFT JOIN concept c1
+	ON (p1.covariate_id-905)/1000 = c1.concept_id
+;
+}
 
 }
 
-{@use_covariate_observation_below} ? {
+{(cdm_version == '4' & @use_covariate_observation) | @use_covariate_measurement} ? {
+
+{@use_covariate_measurement_below} ? {
 
 --for numeric values with valid range, latest value within 180 below low
 SELECT DISTINCT cohort_start_date,
@@ -1630,7 +1667,7 @@ SELECT DISTINCT cohort_start_date,
 	subject_id AS person_id,
 	CAST(@measurement_concept_id AS BIGINT) * 1000 + 903 AS covariate_id,
 	1 AS covariate_value
-  INTO #cov_o_below
+  INTO #cov_m_below
 FROM (
 	SELECT cp1.cohort_start_date,
 		cp1.@cohort_definition_id,
@@ -1659,8 +1696,6 @@ FROM (
 WHERE RN1 = 1
 	AND VALUE_AS_NUMBER < RANGE_LOW;
 
-
-
 INSERT INTO #cov_ref (
   covariate_id,
   covariate_name,
@@ -1668,27 +1703,20 @@ INSERT INTO #cov_ref (
 	concept_id
 	)
 SELECT p1.covariate_id,
-	'Observation numeric value below normal range for latest value within 180d of cohort index:  ' + CAST((p1.covariate_id-903)/1000 AS VARCHAR) + '-' + CASE
+	'Measurement numeric value below normal range for latest value within 180d of cohort index:  ' + CAST((p1.covariate_id-903)/1000 AS VARCHAR) + '-' + CASE
 		WHEN c1.concept_name IS NOT NULL
 			THEN c1.concept_name
 		ELSE 'Unknown invalid concept'
 		END AS covariate_name,
 	903 AS analysis_id,
 	(p1.covariate_id-903)/1000 AS concept_id
-FROM (SELECT DISTINCT covariate_id FROM #cov_o_below) p1
+FROM (SELECT DISTINCT covariate_id FROM #cov_m_below) p1
 LEFT JOIN concept c1
 	ON (p1.covariate_id-903)/1000 = c1.concept_id
 ;
-
-
-
-
-
 }
 
-
-
-{@use_covariate_observation_above} ? {
+{@use_covariate_measurement_above} ? {
 
 --for numeric values with valid range, latest value above high
 SELECT DISTINCT cohort_start_date,
@@ -1696,7 +1724,7 @@ SELECT DISTINCT cohort_start_date,
   subject_id AS person_id,
 	CAST(@measurement_concept_id AS BIGINT) * 1000 + 904 AS covariate_id,
 	1 AS covariate_value
-  INTO #cov_o_above
+  INTO #cov_m_above
 FROM (
 	SELECT cp1.cohort_start_date,
 		cp1.@cohort_definition_id,
@@ -1725,8 +1753,6 @@ FROM (
 WHERE RN1 = 1
 	AND VALUE_AS_NUMBER > RANGE_HIGH;
 
-
-
 INSERT INTO #cov_ref (
   covariate_id,
   covariate_name,
@@ -1734,46 +1760,38 @@ INSERT INTO #cov_ref (
 	concept_id
 	)
 SELECT p1.covariate_id,
-	'Observation numeric value above normal range for latest value within 180d of cohort index:  ' + CAST((p1.covariate_id-904)/1000 AS VARCHAR) + '-' + CASE
+	'Measurement numeric value above normal range for latest value within 180d of cohort index:  ' + CAST((p1.covariate_id-904)/1000 AS VARCHAR) + '-' + CASE
 		WHEN c1.concept_name IS NOT NULL
 			THEN c1.concept_name
 		ELSE 'Unknown invalid concept'
 		END AS covariate_name,
 	903 AS analysis_id,
 	(p1.covariate_id-904)/1000 AS concept_id
-FROM (SELECT DISTINCT covariate_id FROM #cov_o_above) p1
+FROM (SELECT DISTINCT covariate_id FROM #cov_m_above) p1
 LEFT JOIN concept c1
 	ON (p1.covariate_id-904)/1000 = c1.concept_id
 ;
-
-
-
+}
 }
 
+{cdm_version != '4' & @use_covariate_measurement} ? {
+{@use_covariate_measurement_365d} ? {
 
-{@use_covariate_observation_count365d} ? {
-
---number of observations:  episode in last 365d prior
-SELECT cp1.cohort_start_date,
+--measurements exist:  episode in last 365d prior
+SELECT DISTINCT cp1.cohort_start_date,
   cp1.@cohort_definition_id,
-	cp1.subject_id AS person_id,
-	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905 AS covariate_id,
-	COUNT(observation_id) AS covariate_value
-    INTO #cov_o_count365d
+	cp1.subject_id as person_id,
+	CAST(o1.measurement_concept_id AS BIGINT) * 1000 + 901 AS covariate_id,
+	1 AS covariate_value
+  INTO #cov_m_365d
 FROM #cohort_person cp1
-INNER JOIN observation o1
+INNER JOIN measurement o1
 	ON cp1.subject_id = o1.person_id
-WHERE o1.observation_concept_id != 0
-{@has_excluded_covariate_concept_ids} ? {	AND o1.observation_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
-{@has_included_covariate_concept_ids} ? {	AND o1.observation_concept_id IN (SELECT concept_id FROM #included_cov)}
-	AND o1.observation_date <= cp1.cohort_start_date
-	AND o1.observation_date >= dateadd(dd, - 365, cp1.cohort_start_date)
-GROUP BY cp1.cohort_start_date,
-	cp1.@cohort_definition_id,
-	cp1.subject_id,
-	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905;
-
-
+WHERE o1.measurement_concept_id != 0
+{@has_excluded_covariate_concept_ids} ? {	AND o1.measurement_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
+{@has_included_covariate_concept_ids} ? {	AND o1.measurement_concept_id IN (SELECT concept_id FROM #included_cov)}		
+	AND o1.measurement_date <= cp1.cohort_start_date
+	AND o1.measurement_date >= dateadd(dd, - 365, cp1.cohort_start_date);
 
 INSERT INTO #cov_ref (
   covariate_id,
@@ -1782,23 +1800,100 @@ INSERT INTO #cov_ref (
 	concept_id
 	)
 SELECT p1.covariate_id,
-	'Number of observations during 365d on or prior to cohort index:  ' + CAST((p1.covariate_id-905)/1000 AS VARCHAR) + '-' + CASE
+	'Measurement record observed during 365d on or prior to cohort index:  ' + CAST((p1.covariate_id-901)/1000 AS VARCHAR) + '-' + CASE
+		WHEN c1.concept_name IS NOT NULL
+			THEN c1.concept_name
+		ELSE 'Unknown invalid concept'
+		END AS covariate_name,
+	901 AS analysis_id,
+	(p1.covariate_id-901)/1000 AS concept_id
+FROM (SELECT DISTINCT covariate_id FROM #cov_m_365d) p1
+LEFT JOIN concept c1
+	ON (p1.covariate_id-901)/1000 = c1.concept_id
+;
+}
+
+{@use_covariate_measurement_30d} ? {
+
+--measurement exist:  episode in last 30d prior
+SELECT DISTINCT cp1.cohort_start_date,
+  cp1.@cohort_definition_id,
+  cp1.subject_id as person_id,
+	CAST(o1.measurement_concept_id AS BIGINT) * 1000 + 902 AS covariate_id,
+	1 AS covariate_value
+  INTO #cov_m_30d
+FROM #cohort_person cp1
+INNER JOIN measurement o1
+	ON cp1.subject_id = o1.person_id
+WHERE o1.measurement_concept_id != 0
+{@has_excluded_covariate_concept_ids} ? {	AND o1.measurement_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
+{@has_included_covariate_concept_ids} ? {	AND o1.measurement_concept_id IN (SELECT concept_id FROM #included_cov)}	
+	AND o1.measurement_date <= cp1.cohort_start_date
+	AND o1.measurement_date >= dateadd(dd, - 30, cp1.cohort_start_date);
+
+INSERT INTO #cov_ref (
+  covariate_id,
+  covariate_name,
+	analysis_id,
+	concept_id
+	)
+SELECT p1.covariate_id,
+	'Measurement record observed during 30d on or prior to cohort index:  ' + CAST((p1.covariate_id-902)/1000 AS VARCHAR) + '-' + CASE
+		WHEN c1.concept_name IS NOT NULL
+			THEN c1.concept_name
+		ELSE 'Unknown invalid concept'
+		END AS covariate_name,
+	902 AS analysis_id,
+	(p1.covariate_id-902)/1000 AS concept_id
+FROM (SELECT DISTINCT covariate_id FROM #cov_m_30d) p1
+LEFT JOIN concept c1
+	ON (p1.covariate_id-902)/1000 = c1.concept_id
+;
+}
+
+{@use_covariate_measurement_count365d} ? {
+
+--number of measurements:  episode in last 365d prior
+SELECT cp1.cohort_start_date,
+  cp1.@cohort_definition_id,
+	cp1.subject_id AS person_id,
+	CAST(o1.measurement_concept_id AS BIGINT) * 1000 + 905 AS covariate_id,
+	COUNT(measurement_id) AS covariate_value
+    INTO #cov_m_count365d
+FROM #cohort_person cp1
+INNER JOIN measurement o1
+	ON cp1.subject_id = o1.person_id
+WHERE o1.measurement_concept_id != 0
+{@has_excluded_covariate_concept_ids} ? {	AND o1.measurement_concept_id NOT IN (SELECT concept_id FROM #excluded_cov)}
+{@has_included_covariate_concept_ids} ? {	AND o1.measurement_concept_id IN (SELECT concept_id FROM #included_cov)}
+	AND o1.measurement_date <= cp1.cohort_start_date
+	AND o1.measurement_date >= dateadd(dd, - 365, cp1.cohort_start_date)
+GROUP BY cp1.cohort_start_date,
+	cp1.@cohort_definition_id,
+	cp1.subject_id,
+	CAST(o1.measurement_concept_id AS BIGINT) * 1000 + 905;
+
+INSERT INTO #cov_ref (
+  covariate_id,
+  covariate_name,
+	analysis_id,
+	concept_id
+	)
+SELECT p1.covariate_id,
+	'Number of measurements during 365d on or prior to cohort index:  ' + CAST((p1.covariate_id-905)/1000 AS VARCHAR) + '-' + CASE
 		WHEN c1.concept_name IS NOT NULL
 			THEN c1.concept_name
 		ELSE 'Unknown invalid concept'
 		END AS covariate_name,
 	905 AS analysis_id,
 	(p1.covariate_id-905)/1000 AS concept_id
-FROM (SELECT DISTINCT covariate_id FROM #cov_o_count365d) p1
+FROM (SELECT DISTINCT covariate_id FROM #cov_m_count365d) p1
 LEFT JOIN concept c1
 	ON (p1.covariate_id-905)/1000 = c1.concept_id
 ;
-
-
 }
 
 }
-
 
 
 /**************************
@@ -2036,6 +2131,37 @@ VALUES (
 	1006,
 	0
 	);
+	
+{cdm_version != '4'} ? {
+--Number of distinct measurements observed in 365d on or prior to cohort index
+SELECT cp1.cohort_start_date,
+  cp1.@cohort_definition_id,
+	cp1.subject_id AS person_id,
+	1007 AS covariate_id,
+	COUNT(DISTINCT o1.measurement_concept_id) AS covariate_value
+  INTO #cov_dd_meas
+FROM #cohort_person cp1
+INNER JOIN measurement o1
+	ON cp1.subject_id = o1.person_id
+WHERE o1.measurement_date <= cp1.cohort_start_date
+	AND o1.measurement_date >= dateadd(dd, - 365, cp1.cohort_start_date)
+GROUP BY cp1.cohort_start_date,
+	cp1.@cohort_definition_id,
+	cp1.subject_id;
+
+INSERT INTO #cov_ref (
+	covariate_id,
+	covariate_name,
+	analysis_id,
+	concept_id
+	)
+VALUES (
+	1007,
+	'Number of distinct measurements observed in 365d on or prior to cohort index',
+	1007,
+	0
+	);
+}
 
 
 
@@ -3242,12 +3368,23 @@ FROM #cov_o_30d
 
 }
 
+{@use_covariate_observation_count365d} ? {
+
+UNION
+
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+FROM #cov_o_count365d
+
+}
+
+}
+{(@cdm_version == '4' & @use_covariate_observation) | @use_covariate_measurement} ? {
 {@use_covariate_observation_below} ? {
 
 UNION
 
 SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
-FROM #cov_o_below
+FROM #cov_m_below
 
 }
 
@@ -3257,19 +3394,42 @@ FROM #cov_o_below
 UNION
 
 SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
-FROM #cov_o_above
+FROM #cov_m_above
 
 
 }
+}
 
-{@use_covariate_observation_count365d} ? {
+{cdm_version != '4' & @use_covariate_measurement} ? {
+
+
+{@use_covariate_measurement_365d} ? {
 
 UNION
 
 SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
-FROM #cov_o_count365d
+FROM #cov_m_365d
 
 }
+
+{@use_covariate_measurement_30d} ? {
+
+UNION
+
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+FROM #cov_m_30d
+
+}
+
+{@use_covariate_measurement_count365d} ? {
+
+UNION
+
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+FROM #cov_m_count365d
+
+}
+
 
 }
 
@@ -3310,6 +3470,12 @@ UNION
 SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
 FROM #cov_dd_visit_er
 
+{cdm_version != '4'} ? {
+UNION
+
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+FROM #cov_dd_meas
+}
 
 }
 
@@ -3586,10 +3752,10 @@ IF OBJECT_ID('tempdb..#cov_o_365d', 'U') IS NOT NULL
   DROP TABLE #cov_o_365d;
 IF OBJECT_ID('tempdb..#cov_o_30d', 'U') IS NOT NULL
   DROP TABLE #cov_o_30d;
-IF OBJECT_ID('tempdb..#cov_o_below', 'U') IS NOT NULL
-  DROP TABLE #cov_o_below;
-IF OBJECT_ID('tempdb..#cov_o_above', 'U') IS NOT NULL
-  DROP TABLE #cov_o_above;
+IF OBJECT_ID('tempdb..#cov_m_below', 'U') IS NOT NULL
+  DROP TABLE #cov_m_below;
+IF OBJECT_ID('tempdb..#cov_m_above', 'U') IS NOT NULL
+  DROP TABLE #cov_m_above;
 IF OBJECT_ID('tempdb..#cov_o_count365d', 'U') IS NOT NULL
   DROP TABLE #cov_o_count365d;
 IF OBJECT_ID('tempdb..#cov_dd_cond', 'U') IS NOT NULL

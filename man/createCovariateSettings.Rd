@@ -28,11 +28,12 @@ createCovariateSettings(useCovariateDemographics = TRUE,
   useCovariateProcedureOccurrence30d = FALSE,
   useCovariateProcedureGroup = FALSE, useCovariateObservation = FALSE,
   useCovariateObservation365d = FALSE, useCovariateObservation30d = FALSE,
-  useCovariateObservationBelow = FALSE,
-  useCovariateObservationAbove = FALSE,
-  useCovariateObservationCount365d = FALSE,
-  useCovariateConceptCounts = FALSE, useCovariateRiskScores = FALSE,
-  useCovariateRiskScoresCharlson = FALSE,
+  useCovariateObservationCount365d = FALSE, useCovariateMeasurement = FALSE,
+  useCovariateMeasurement365d = FALSE, useCovariateMeasurement30d = FALSE,
+  useCovariateMeasurementCount365d = FALSE,
+  useCovariateMeasurementBelow = FALSE,
+  useCovariateMeasurementAbove = FALSE, useCovariateConceptCounts = FALSE,
+  useCovariateRiskScores = FALSE, useCovariateRiskScoresCharlson = FALSE,
   useCovariateRiskScoresDCSI = FALSE, useCovariateRiskScoresCHADS2 = FALSE,
   useCovariateInteractionYear = FALSE, useCovariateInteractionMonth = FALSE,
   excludedCovariateConceptIds = c(), includedCovariateConceptIds = c(),
@@ -208,25 +209,47 @@ look for presence/absence of observation in 30d
 window prior to or on cohort index date.  Only
 applicable if useCovariateObservation = TRUE.}
 
-\item{useCovariateObservationBelow}{A boolean value (TRUE/FALSE) to determine if
-covariates will be created and used in models that
-look for presence/absence of observation with a
-numeric value below normal range for latest value
-within 180d of cohort index.  Only applicable if
-useCovariateObservation = TRUE.}
-
-\item{useCovariateObservationAbove}{A boolean value (TRUE/FALSE) to determine if
-covariates will be created and used in models that
-look for presence/absence of observation with a
-numeric value above normal range for latest value
-within 180d of cohort index.  Only applicable if
-useCovariateObservation = TRUE.}
-
 \item{useCovariateObservationCount365d}{A boolean value (TRUE/FALSE) to determine if
 covariates will be created and used in models that
 look for the count of each observation concept in
 365d window prior to or on cohort index date.  Only
 applicable if useCovariateObservation = TRUE.}
+
+\item{useCovariateMeasurement}{A boolean value (TRUE/FALSE) to determine if
+covariates derived from OBSERVATION table will be
+created and included in future models.}
+
+\item{useCovariateMeasurement365d}{A boolean value (TRUE/FALSE) to determine if
+covariates will be created and used in models that
+look for presence/absence of measurement in 365d
+window prior to or on cohort index date.  Only
+applicable if useCovariateMeasurement = TRUE.}
+
+\item{useCovariateMeasurement30d}{A boolean value (TRUE/FALSE) to determine if
+covariates will be created and used in models that
+look for presence/absence of measurement in 30d
+window prior to or on cohort index date.  Only
+applicable if useCovariateMeasurement = TRUE.}
+
+\item{useCovariateMeasurementCount365d}{A boolean value (TRUE/FALSE) to determine if
+covariates will be created and used in models that
+look for the count of each measurement concept in
+365d window prior to or on cohort index date.  Only
+applicable if useCovariateMeasurement = TRUE.}
+
+\item{useCovariateMeasurementBelow}{A boolean value (TRUE/FALSE) to determine if
+covariates will be created and used in models that
+look for presence/absence of measurement with a
+numeric value below normal range for latest value
+within 180d of cohort index.  Only applicable if
+useCovariateMeasurement = TRUE (CDM v5+) or useCovariateObservation = TRUE (CDM v4).}
+
+\item{useCovariateMeasurementAbove}{A boolean value (TRUE/FALSE) to determine if
+covariates will be created and used in models that
+look for presence/absence of measurement with a
+numeric value above normal range for latest value
+within 180d of cohort index.  Only applicable if
+useCovariateMeasurement = TRUE (CDM v5+) or useCovariateObservation = TRUE (CDM v4).}
 
 \item{useCovariateConceptCounts}{A boolean value (TRUE/FALSE) to determine if
 covariates will be created and used in models that
