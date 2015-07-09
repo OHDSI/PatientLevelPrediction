@@ -120,7 +120,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   covariates <- DatabaseConnector::querySql.ffdf(conn, covariateSql)
   covariateRefSql <-"SELECT covariate_id, covariate_name, analysis_id, concept_id  FROM #cohort_covariate_ref ORDER BY covariate_id"
   covariateRefSql <- SqlRender::translateSql(covariateRefSql, "sql server", attr(conn, "dbms"), oracleTempSchema)$sql
-  covariateRef <- DatabaseConnector::dbGetQuery.ffdf(conn, covariateRefSql)
+  covariateRef <- DatabaseConnector::querySql.ffdf(conn, covariateRefSql)
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta,3), attr(delta,"units")))
   
