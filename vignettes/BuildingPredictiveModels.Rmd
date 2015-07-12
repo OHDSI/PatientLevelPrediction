@@ -48,7 +48,7 @@ The `PatientLevelPrediction` package requires longitudinal observational healthc
 
 The cohort and outcomes should be provided as data in a table on the server, where the table should have the same structure as the cohort table in the OMOP CDM, meaning it should have the following columns:
 
-- `cohort_concept_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
+- `cohort_concept_id` (CDM v4) or `cohort_concept_id` (CDM v5+), a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
 - `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
 - `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
 - `cohort_end_date`, the end of the time period. Can be NULL for outcomes.
@@ -190,7 +190,8 @@ cohortData <- getDbCohortData(connectionDetails$dbms,
                               cdmDatabaseSchema = cdmDatabaseSchema, 
                               cohortDatabaseSchema = resultsDatabaseSchema, 
                               cohortTable = "rehospitalization", 
-                              cohortConceptIds = 1)
+                              cohortIds = 1,
+                              cdmVersion = "4")
 
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateConditionOccurrence = TRUE,
@@ -217,9 +218,13 @@ covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateObservation = TRUE,
                                              useCovariateObservation365d = TRUE,
                                              useCovariateObservation30d = TRUE,
-                                             useCovariateObservationBelow = TRUE,
-                                             useCovariateObservationAbove = TRUE,
                                              useCovariateObservationCount365d = TRUE,
+                                             useCovariateMeasurement = TRUE,
+                                             useCovariateMeasurement365d = TRUE,
+                                             useCovariateMeasurement30d = TRUE,
+                                             useCovariateMeasurementCount365d = TRUE,
+                                             useCovariateMeasurementBelow = TRUE,
+                                             useCovariateMeasurementAbove = TRUE,
                                              useCovariateConceptCounts = TRUE,
                                              useCovariateRiskScores = TRUE,
                                              useCovariateInteractionYear = FALSE,
@@ -230,17 +235,19 @@ covariateData <- getDbCovariateData(connectionDetails$dbms,
                                     cdmDatabaseSchema = cdmDatabaseSchema, 
                                     cohortDatabaseSchema = resultsDatabaseSchema, 
                                     cohortTable = "rehospitalization", 
-                                    cohortConceptIds = 1, 
-                                    covariateSettings = covariateSettings)
+                                    cohortIds = 1, 
+                                    covariateSettings = covariateSettings,
+                                    cdmVersion = "4")
 
 outcomeData <- getDbOutcomeData(connectionDetails$dbms, 
                                 cdmDatabaseSchema = cdmDatabaseSchema, 
                                 cohortDatabaseSchema = resultsDatabaseSchema, 
                                 cohortTable = "rehospitalization", 
-                                cohortConceptIds = 1,
+                                cohortIds = 1,
                                 outcomeDatabaseSchema = resultsDatabaseSchema,
                                 outcomeTable = "rehospitalization",
-                                outcomeConceptIds = 2)
+                                outcomeConceptIds = 2,
+                                cdmVersion = "4")
 ```
 
 There are many parameters, but they are all documented in the `PatientLevelPrediction` manual. In short, we are pointing the functions to the table created earlier and indicating which concept IDs in that table identify the cohort and outcome of interest. We construct `cohortData`, an object representing the cohort of interest, `covariateData`, holding all covariate information that will be used as predictors, and `outcomeData` as the set of outcomes during cohort time. All three objects use the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 

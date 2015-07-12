@@ -32,10 +32,10 @@
   port <- NULL
 
   dbms <- "postgresql"
-  server <- "localhost/enar"
+  server <- "localhost/ohdsi"
   user <- "postgres"
-  password <- pw
-  cdmDatabaseSchema <- "cdm_sim"
+  pw <- "F1r3starter"
+  cdmDatabaseSchema <- "vocabulary5"
   resultsDatabaseSchema <- "scratch"
   port <- NULL
 
@@ -64,7 +64,8 @@
                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                 cohortDatabaseSchema = resultsDatabaseSchema,
                                 cohortTable = "rehospitalization",
-                                cohortConceptIds = 1)
+                                cohortIds = 1,
+                                cdmVersion = '5')
 
   covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                     useCovariateDemographicsGender = TRUE,
@@ -99,9 +100,13 @@
                                     useCovariateObservation = TRUE,
                                     useCovariateObservation365d = TRUE,
                                     useCovariateObservation30d = TRUE,
-                                    useCovariateObservationBelow = TRUE,
-                                    useCovariateObservationAbove = TRUE,
                                     useCovariateObservationCount365d = TRUE,
+                                    useCovariateMeasurement = TRUE,
+                                    useCovariateMeasurement365d = TRUE,
+                                    useCovariateMeasurement30d = TRUE,
+                                    useCovariateMeasurementCount365d = TRUE,
+                                    useCovariateMeasurementBelow = TRUE,
+                                    useCovariateMeasurementAbove = TRUE,
                                     useCovariateConceptCounts = TRUE,
                                     useCovariateRiskScores = TRUE,
                                     useCovariateRiskScoresCharlson = TRUE,
@@ -116,17 +121,19 @@
                                       cdmDatabaseSchema = cdmDatabaseSchema,
                                       cohortDatabaseSchema = resultsDatabaseSchema,
                                       cohortTable = "rehospitalization",
-                                      cohortConceptIds = 1,
-                                      covariateSettings = covariateSettings)
+                                      cohortIds = 1,
+                                      covariateSettings = covariateSettings,
+                                      cdmVersion = '5')
 
   outcomeData <- getDbOutcomeData(connectionDetails,
                                   cdmDatabaseSchema = cdmDatabaseSchema,
                                   cohortDatabaseSchema = resultsDatabaseSchema,
                                   cohortTable = "rehospitalization",
-                                  cohortConceptIds = 1,
+                                  cohortIds = 1,
                                   outcomeDatabaseSchema = resultsDatabaseSchema,
                                   outcomeTable = "rehospitalization",
-                                  outcomeConceptIds = 2)
+                                  outcomeConceptIds = 2,
+                                  cdmVersion = '5')
 
   saveCohortData(cohortData, "s:/temp/PatientLevelPrediction/cohortData")
   saveCovariateData(covariateData, "s:/temp/PatientLevelPrediction/covariateData")

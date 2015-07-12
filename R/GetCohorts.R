@@ -39,8 +39,9 @@
 #'                               include both the database and schema, e.g. "cdm_schema.dbo".
 #' @param cohortTable            If not using an existing temp table, what is the name of the table
 #'                               holding the cohort?
-#' @param cohortConceptIds       If not using an existing temp table, what is the name of the source
+#' @param cohortIds       If not using an existing temp table, what is the name of the source
 #'                               cohort table?
+#' @param cdmVersion                Define the OMOP CDM version used:  currently support "4" and "5".
 #'
 #' @return
 #' An object of type \code{cohortData} containing information on who are in the cohorts.
@@ -53,13 +54,20 @@ getDbCohortData <- function(connectionDetails = NULL,
                             useExistingCohortPerson = FALSE,
                             cohortDatabaseSchema = cdmDatabaseSchema,
                             cohortTable = "cohort",
-                            cohortConceptIds = c(0, 1)) {
+                            cohortIds = c(0, 1),
+                            cdmVersion = "4") {
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
   if (is.null(connectionDetails) && is.null(connection))
     stop("Either connectionDetails or connection has to be specified")
   if (!is.null(connectionDetails) && !is.null(connection))
     stop("Cannot specify both connectionDetails and connection")
-
+  
+  if (cdmVersion == "4"){
+    cohortDefinitionId <- "cohort_concept_id"
+  } else {
+    cohortDefinitionId <- "cohort_definition_id"
+  }
+  
   if (is.null(connection)) {
     conn <- DatabaseConnector::connect(connectionDetails)
   } else {
@@ -74,13 +82,16 @@ getDbCohortData <- function(connectionDetails = NULL,
                                                    use_existing_cohort_person = useExistingCohortPerson,
                                                    cohort_database_schema = cohortDatabaseSchema,
                                                    cohort_table = cohortTable,
-                                                   cohort_concept_ids = cohortConceptIds)
+                                                   cohort_ids = cohortIds,
+                                                   cdm_version = cdmVersion,
+                                                   cohort_definition_id = cohortDefinitionId)
 
   writeLines("Executing multiple queries. This could take a while")
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Fetching data from server")
   start <- Sys.time()
-  cohortsSql <- "SELECT subject_id AS person_id, cohort_start_date, cohort_concept_id, DATEDIFF(DAY, cohort_start_date, cohort_end_date) AS time FROM #cohort_person ORDER BY person_id, cohort_start_date"
+  cohortsSql <- "SELECT subject_id AS person_id, cohort_start_date, @cohort_definition_id AS cohort_id, DATEDIFF(DAY, cohort_start_date, cohort_end_date) AS time FROM #cohort_person ORDER BY person_id, cohort_start_date"
+  cohortsSql <- SqlRender::renderSql(cohortsSql, cohort_definition_id = cohortDefinitionId)$sql
   cohortsSql <- SqlRender::translateSql(cohortsSql,
                                         "sql server",
                                         attr(conn, "dbms"),
@@ -101,8 +112,8 @@ getDbCohortData <- function(connectionDetails = NULL,
     dummy <- RJDBC::dbDisconnect(conn)
   }
   if (useExistingCohortPerson)
-    cohortConceptIds <- ffbase::unique.ff(cohorts$cohortConceptId)
-  metaData <- list(call = match.call(), cohortConceptIds = cohortConceptIds)
+    cohortIds <- ffbase::unique.ff(cohorts$cohortId)
+  metaData <- list(call = match.call(), cohortIds = cohortIds)
   result <- list(cohorts = cohorts, metaData = metaData)
   class(result) <- "cohortData"
   return(result)
@@ -177,17 +188,17 @@ print.cohortData <- function(x, ...) {
   writeLines("CohortData object")
   writeLines("")
   writeLines(paste("Cohort of interest concept ID(s):",
-                   paste(x$metaData$cohortConceptIds, collapse = ",")))
+                   paste(x$metaData$cohortIds, collapse = ",")))
 }
 
 #' @export
 summary.cohortData <- function(object, ...) {
-  counts <- data.frame(cohortConceptId = object$metaData$cohortConceptIds,
+  counts <- data.frame(cohortId = object$metaData$cohortIds,
                        cohortCount = 0,
                        personCount = 0)
   for (i in 1:nrow(counts)) {
-    cohortConceptId <- counts$cohortConceptId[i]
-    t <- object$cohorts$cohortConceptId == cohortConceptId
+    cohortId <- counts$cohortId[i]
+    t <- object$cohorts$cohortId == cohortId
     t <- ffbase::ffwhich(t, t == TRUE)
     counts$cohortCount[i] <- length(t)
     counts$personCount[i] <- length(ffbase::unique.ff(object$cohorts$personId[t]))
@@ -202,8 +213,8 @@ print.summary.cohortData <- function(x, ...) {
   writeLines("CohortData object summary")
   writeLines("")
   counts <- x$counts
-  rownames(counts) <- counts$cohortConceptId
-  counts$cohortConceptId <- NULL
+  rownames(counts) <- counts$cohortId
+  counts$cohortId <- NULL
   colnames(counts) <- c("Cohort count", "Person count")
   printCoefmat(counts)
 }

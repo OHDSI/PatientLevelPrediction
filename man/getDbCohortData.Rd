@@ -7,7 +7,7 @@
 getDbCohortData(connectionDetails = NULL, connection = NULL,
   cdmDatabaseSchema, oracleTempSchema = cdmDatabaseSchema,
   useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
-  cohortTable = "cohort", cohortConceptIds = c(0, 1))
+  cohortTable = "cohort", cohortIds = c(0, 1), cdmVersion = "4")
 }
 \arguments{
 \item{connectionDetails}{An R object of type \code{ConnectionDetails} created using the
@@ -35,8 +35,10 @@ include both the database and schema, e.g. "cdm_schema.dbo".}
 \item{cohortTable}{If not using an existing temp table, what is the name of the table
 holding the cohort?}
 
-\item{cohortConceptIds}{If not using an existing temp table, what is the name of the source
-                              cohort table?}
+\item{cohortIds}{If not using an existing temp table, what is the name of the source
+cohort table?}
+
+\item{cdmVersion}{Define the OMOP CDM version used:  currently support "4" and "5".}
 }
 \value{
 An object of type \code{cohortData} containing information on who are in the cohorts.

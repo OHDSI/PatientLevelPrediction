@@ -45,8 +45,7 @@
 #'                                         e.g. "cdm_schema.dbo".
 #' @param cohortTable                      If not using an existing temp table, what is the name of the
 #'                                         table holding the cohort?
-#' @param cohortConceptIds                 If not using an existing temp table, what is the name of the
-#'                                         source cohort table?
+#' @param cohortIds                        The IDs of the cohorts.
 #' @param outcomeDatabaseSchema            The name of the database schema that is the location where
 #'                                         the data used to define the outcome cohorts is available. If
 #'                                         exposureTable = CONDITION_ERA, exposureDatabaseSchema is not
@@ -66,6 +65,7 @@
 #'                                         condition occurrences.  Only applicable if outcomeTable =
 #'                                         CONDITION_OCCURRENCE.
 #' @param firstOutcomeOnly                 Only keep the first outcome per person?
+#' @param cdmVersion                Define the OMOP CDM version used:  currently support "4" and "5".
 #'
 #' @return
 #' An object of type \code{outcomeData} containing information on the outcomes in the cohort(s).
@@ -78,24 +78,36 @@ getDbOutcomeData <- function(connectionDetails = NULL,
                              useExistingCohortPerson = FALSE,
                              cohortDatabaseSchema = cdmDatabaseSchema,
                              cohortTable = "cohort",
-                             cohortConceptIds = c(0, 1),
+                             cohortIds = c(0, 1),
                              outcomeDatabaseSchema = cdmDatabaseSchema,
                              outcomeTable = "condition_occurrence",
                              outcomeConceptIds = c(),
                              outcomeConditionTypeConceptIds = "",
-                             firstOutcomeOnly = FALSE) {
+                             firstOutcomeOnly = FALSE,
+                             cdmVersion = "4") {
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
   if (is.null(connectionDetails) && is.null(connection))
     stop("Either connectionDetails or connection has to be specified")
   if (!is.null(connectionDetails) && !is.null(connection))
     stop("Cannot specify both connectionDetails and connection")
-
+  
+  if (cdmVersion == "4"){
+    cohortDefinitionId <- "cohort_concept_id"
+    conceptClassId <- "concept_class"
+    measurement <- "observation"
+  } else {
+    cohortDefinitionId <- "cohort_definition_id"
+    conceptClassId <- "concept_class_id"
+    measurement <- "measurement"
+  }
+  
+  
   if (is.null(connection)) {
     conn <- DatabaseConnector::connect(connectionDetails)
   } else {
     conn <- connection
   }
-
+  
   renderedSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -104,19 +116,22 @@ getDbOutcomeData <- function(connectionDetails = NULL,
                                                    use_existing_cohort_person = useExistingCohortPerson,
                                                    cohort_database_schema = cohortDatabaseSchema,
                                                    cohort_table = cohortTable,
-                                                   cohort_concept_ids = cohortConceptIds,
+                                                   cohort_ids = cohortIds,
                                                    outcome_database_schema = outcomeDatabaseSchema,
                                                    outcome_table = outcomeTable,
                                                    outcome_concept_ids = outcomeConceptIds,
                                                    outcome_condition_type_concept_ids = outcomeConditionTypeConceptIds,
-                                                   first_outcome_only = firstOutcomeOnly)
-
+                                                   first_outcome_only = firstOutcomeOnly,
+                                                   cdm_version = cdmVersion,
+                                                   cohort_definition_id = cohortDefinitionId)
+  
   writeLines("Executing multiple queries. This could take a while")
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Fetching data from server")
   start <- Sys.time()
-  outcomeSql <- "SELECT person_id, cohort_start_date, cohort_concept_id, outcome_id, outcome_count, time_to_event FROM #cohort_outcome ORDER BY person_id, cohort_start_date"
-  outcomeSql <- SqlRender::translateSql(outcomeSql,
+  outcomeSql <- "SELECT person_id, cohort_start_date, @cohort_definition_id AS cohort_id, outcome_id, outcome_count, time_to_event FROM #cohort_outcome ORDER BY person_id, cohort_start_date"
+  outcomeSql <- SqlRender::renderSql(outcomeSql, cohort_definition_id = cohortDefinitionId)$sql
+  outcomeSql <- SqlRender::translateSql(outcomeSql, 
                                         "sql server",
                                         attr(conn, "dbms"),
                                         oracleTempSchema)$sql
@@ -128,7 +143,8 @@ getDbOutcomeData <- function(connectionDetails = NULL,
     open(outcomes)
   }
   if (firstOutcomeOnly) {
-    excludeSql <- "SELECT person_id, cohort_start_date, cohort_concept_id, outcome_id FROM #cohort_excluded_person ORDER BY outcome_id, person_id"
+    excludeSql <- "SELECT person_id, cohort_start_date, @cohort_definition_id AS cohort_id, outcome_id FROM #cohort_excluded_person ORDER BY outcome_id, person_id"
+    excludeSql <- SqlRender::renderSql(excludeSql, cohort_definition_id = cohortDefinitionId)$sql
     excludeSql <- SqlRender::translateSql(excludeSql,
                                           "sql server",
                                           attr(conn, "dbms"),
@@ -143,7 +159,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   }
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-
+  
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveOutcomeTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -182,7 +198,7 @@ saveOutcomeData <- function(outcomeData, file) {
     stop("Must specify file")
   if (class(outcomeData) != "outcomeData")
     stop("Data not of class outcomeData")
-
+  
   outcomes <- outcomeData$outcomes
   if (!is.null(outcomeData$exclude)) {
     exclude <- outcomeData$exclude
