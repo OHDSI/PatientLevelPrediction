@@ -92,8 +92,8 @@ INTO #cohort_person
 FROM @cohort_database_schema.@cohort_table
 {@cohort_ids != ''} ? {
 WHERE @cohort_definition_id IN (@cohort_ids)
-}
 };
+}
 
 IF OBJECT_ID('tempdb..#cov', 'U') IS NOT NULL
 	DROP TABLE #cov;

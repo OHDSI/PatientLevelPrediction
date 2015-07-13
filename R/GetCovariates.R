@@ -28,7 +28,7 @@
 #' occurr multiple times, but the combination of subject_id and cohort_start_date is assumed to be
 #' unique.
 #'
-#' @param connectionDetailsAn       R object of type \code{connectionDetails} created using the
+#' @param connectionDetails         An R object of type \code{connectionDetails} created using the
 #'                                  function \code{createConnectionDetails} in the
 #'                                  \code{DatabaseConnector} package.
 #' @param connection                A connection to the server containing the schema as created using

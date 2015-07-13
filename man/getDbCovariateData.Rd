@@ -11,6 +11,10 @@ getDbCovariateData(connectionDetails = NULL, connection = NULL,
   cdmVersion = "4")
 }
 \arguments{
+\item{connectionDetails}{An R object of type \code{connectionDetails} created using the
+function \code{createConnectionDetails} in the
+\code{DatabaseConnector} package.}
+
 \item{connection}{A connection to the server containing the schema as created using
 the \code{connect} function in the \code{DatabaseConnector}
 package.}
@@ -36,10 +40,6 @@ the name of the source cohort table?}
 \code{\link{createCovariateSettings}} function.}
 
 \item{cdmVersion}{Define the OMOP CDM version used:  currently support "4" and "5".}
-
-\item{connectionDetailsAn}{R object of type \code{connectionDetails} created using the
-function \code{createConnectionDetails} in the
-\code{DatabaseConnector} package.}
 
 \item{oracleTempSchemaA}{schema where temp tables can be created in Oracle.}
 }
