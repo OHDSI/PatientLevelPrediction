@@ -39,9 +39,8 @@
 #'                               include both the database and schema, e.g. "cdm_schema.dbo".
 #' @param cohortTable            If not using an existing temp table, what is the name of the table
 #'                               holding the cohort?
-#' @param cohortIds       If not using an existing temp table, what is the name of the source
-#'                               cohort table?
-#' @param cdmVersion                Define the OMOP CDM version used:  currently support "4" and "5".
+#' @param cohortIds              The list of IDs in the cohortTable that identify the cohort(s) of interest.
+#' @param cdmVersion             Define the OMOP CDM version used:  currently support "4" and "5".
 #'
 #' @return
 #' An object of type \code{cohortData} containing information on who are in the cohorts.

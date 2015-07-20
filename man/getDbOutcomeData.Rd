@@ -9,7 +9,7 @@ getDbOutcomeData(connectionDetails = NULL, connection = NULL,
   useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort", cohortIds = c(0, 1),
   outcomeDatabaseSchema = cdmDatabaseSchema,
-  outcomeTable = "condition_occurrence", outcomeConceptIds = c(),
+  outcomeTable = "condition_occurrence", outcomeIds = c(),
   outcomeConditionTypeConceptIds = "", firstOutcomeOnly = FALSE,
   cdmVersion = "4")
 }
@@ -54,7 +54,7 @@ outcomeTable <> CONDITION_OCCURRENCE, then expectation is
 outcomeTable has format of COHORT table: COHORT_CONCEPT_ID,
 SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 
-\item{outcomeConceptIds}{A list of CONCEPT_IDs used to define outcomes.  If
+\item{outcomeIds}{A list of ids used to define outcomes.  If
 outcomeTable = CONDITION_OCCURRENCE, the list is a set of
 ancestor CONCEPT_IDs, and all occurrences of all descendant
 concepts will be selected.  If outcomeTable <>

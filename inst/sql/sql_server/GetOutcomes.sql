@@ -25,7 +25,7 @@ limitations under the License.
 {DEFAULT @cohort_ids = '0,1' }
 {DEFAULT @outcome_database_schema = 'CDM4_SIM' } 
 {DEFAULT @outcome_table = 'condition_occurrence' }
-{DEFAULT @outcome_concept_ids = '' }
+{DEFAULT @outcome_ids = '' }
 {DEFAULT @outcome_condition_type_concept_ids = '' }
 {DEFAULT @first_outcome_only = FALSE }
 {DEFAULT @cdm_version == '4'}
@@ -69,7 +69,7 @@ INNER JOIN (
 		person_id,
 		MIN(condition_start_date) AS outcome_date
 	FROM condition_occurrence
-	WHERE condition_concept_id IN (@outcome_concept_ids)
+	WHERE condition_concept_id IN (@outcome_ids)
 	GROUP BY condition_concept_id,
 		person_id
 	  {@outcome_condition_type_concept_ids} ? {AND condition_type_concept_id IN (@outcome_condition_type_concept_ids}
@@ -78,7 +78,7 @@ INNER JOIN (
 	  person_id,
 	  MIN(condition_era_start_date) AS outcome_date
 	FROM condition_era
-	WHERE condition_concept_id IN (@outcome_concept_ids)
+	WHERE condition_concept_id IN (@outcome_ids)
 	GROUP BY condition_concept_id,
 		person_id
 } : {
@@ -86,7 +86,7 @@ INNER JOIN (
 	  subject_id AS person_id,
 	  MIN(cohort_start_date) AS outcome_date
 	FROM @outcome_database_schema.@outcome_table co1
-	WHERE @cohort_definition_id IN (@outcome_concept_ids)
+	WHERE @cohort_definition_id IN (@outcome_ids)
 	GROUP BY @cohort_definition_id,
 		subject_id
 }}
@@ -96,20 +96,20 @@ INNER JOIN (
 	  person_id,
 	  condition_start_date AS outcome_date
 	FROM condition_occurrence
-	WHERE condition_concept_id IN (@outcome_concept_ids)
+	WHERE condition_concept_id IN (@outcome_ids)
 	  {@outcome_condition_type_concept_ids} ? {AND condition_type_concept_id IN (@outcome_condition_type_concept_ids}
 } : { {@outcome_table == 'condition_era' } ? {
 	SELECT condition_concept_id AS outcome_id,
 	  person_id,
 	  condition_era_start_date AS outcome_date
 	FROM condition_era
-	WHERE condition_concept_id IN (@outcome_concept_ids)
+	WHERE condition_concept_id IN (@outcome_ids)
 } : {
 	SELECT @cohort_definition_id AS outcome_id,
 	  subject_id AS person_id,
 	  cohort_start_date AS outcome_date
 	FROM @outcome_database_schema.@outcome_table co1
-	WHERE @cohort_definition_id IN (@outcome_concept_ids)
+	WHERE @cohort_definition_id IN (@outcome_ids)
 }}
 }
 ) outcome
@@ -138,7 +138,7 @@ INNER JOIN (
 	SELECT descendant_concept_id,
 		ancestor_concept_id
 	FROM concept_ancestor
-	WHERE ancestor_concept_id IN (@outcome_concept_ids)
+	WHERE ancestor_concept_id IN (@outcome_ids)
 	) ca1
 	ON co1.condition_concept_id = descendant_concept_id
 WHERE {@outcome_condition_type_concept_ids != '' } ? { co1.condition_type_concept_id IN (@outcome_condition_type_concept_ids)
@@ -156,7 +156,7 @@ INNER JOIN (
 	SELECT descendant_concept_id,
 		ancestor_concept_id
 	FROM concept_ancestor
-	WHERE ancestor_concept_id IN (@outcome_concept_ids)
+	WHERE ancestor_concept_id IN (@outcome_ids)
 	) ca1
 	ON co1.condition_concept_id = descendant_concept_id
 WHERE {@outcome_condition_type_concept_ids != '' } ? { co1.condition_type_concept_id IN (@outcome_condition_type_concept_ids)
@@ -170,6 +170,6 @@ INTO #cohort_excluded_person
 FROM #cohort_person cp1
 INNER JOIN @outcome_database_schema.@outcome_table co1
 	ON cp1.subject_id = co1.subject_id
-WHERE co1.@cohort_definition_id IN (@outcome_concept_ids)
+WHERE co1.@cohort_definition_id IN (@outcome_ids)
 	AND co1.cohort_start_date < cp1.cohort_start_date } };
 }

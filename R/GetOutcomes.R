@@ -55,7 +55,7 @@
 #'                                         outcomeTable <> CONDITION_OCCURRENCE, then expectation is
 #'                                         outcomeTable has format of COHORT table: COHORT_CONCEPT_ID,
 #'                                         SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
-#' @param outcomeConceptIds                A list of CONCEPT_IDs used to define outcomes.  If
+#' @param outcomeIds                       A list of ids used to define outcomes.  If
 #'                                         outcomeTable = CONDITION_OCCURRENCE, the list is a set of
 #'                                         ancestor CONCEPT_IDs, and all occurrences of all descendant
 #'                                         concepts will be selected.  If outcomeTable <>
@@ -81,7 +81,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
                              cohortIds = c(0, 1),
                              outcomeDatabaseSchema = cdmDatabaseSchema,
                              outcomeTable = "condition_occurrence",
-                             outcomeConceptIds = c(),
+                             outcomeIds = c(),
                              outcomeConditionTypeConceptIds = "",
                              firstOutcomeOnly = FALSE,
                              cdmVersion = "4") {
@@ -119,7 +119,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
                                                    cohort_ids = cohortIds,
                                                    outcome_database_schema = outcomeDatabaseSchema,
                                                    outcome_table = outcomeTable,
-                                                   outcome_concept_ids = outcomeConceptIds,
+                                                   outcome_ids = outcomeIds,
                                                    outcome_condition_type_concept_ids = outcomeConditionTypeConceptIds,
                                                    first_outcome_only = firstOutcomeOnly,
                                                    cdm_version = cdmVersion,
@@ -169,7 +169,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   if (is.null(connection)) {
     dummy <- RJDBC::dbDisconnect(conn)
   }
-  metaData <- list(call = match.call(), outcomeConceptIds = outcomeConceptIds)
+  metaData <- list(call = match.call(), outcomeIds = outcomeIds)
   result <- list(outcomes = outcomes, metaData = metaData)
   if (firstOutcomeOnly)
     result$exclude <- exclude
@@ -257,17 +257,17 @@ loadOutcomeData <- function(file, readOnly = FALSE) {
 print.outcomeData <- function(x, ...) {
   writeLines("OutcomeData object")
   writeLines("")
-  writeLines(paste("Outcome concept ID(s):", paste(x$metaData$outcomeConceptIds, collapse = ",")))
+  writeLines(paste("Outcome ID(s):", paste(x$metaData$outcomeIds, collapse = ",")))
 }
 
 #' @export
 summary.outcomeData <- function(object, ...) {
-  counts <- data.frame(outcomeConceptId = object$metaData$outcomeConceptIds,
+  counts <- data.frame(outcomeId = object$metaData$outcomeIds,
                        cohortCount = 0,
                        personCount = 0)
   for (i in 1:nrow(counts)) {
-    outcomeConceptId <- counts$outcomeConceptId[i]
-    t <- object$outcomes$outcomeId == outcomeConceptId
+    outcomeId <- counts$outcomeId[i]
+    t <- object$outcomes$outcomeId == outcomeId
     t <- ffbase::ffwhich(t, t == TRUE)
     counts$cohortCount[i] <- length(t)
     counts$personCount[i] <- length(ffbase::unique.ff(object$outcomes$personId[t]))
@@ -282,8 +282,8 @@ print.summary.outcomeData <- function(x, ...) {
   writeLines("OutcomeData object summary")
   writeLines("")
   counts <- x$counts
-  rownames(counts) <- counts$outcomeConceptId
-  counts$outcomeConceptId <- NULL
+  rownames(counts) <- counts$outcomeId
+  counts$outcomeId <- NULL
   colnames(counts) <- c("Cohort count", "Person count")
   printCoefmat(counts)
 }

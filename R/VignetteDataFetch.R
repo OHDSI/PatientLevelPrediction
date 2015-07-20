@@ -22,7 +22,7 @@
   # library(SqlRender); library(DatabaseConnector); library(PatientLevelPrediction)
   setwd("s:/temp")
   options(fftempdir = "s:/temp")
-
+  
   pw <- NULL
   dbms <- "sql server"
   user <- NULL
@@ -30,7 +30,7 @@
   cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
   resultsDatabaseSchema <- "scratch.dbo"
   port <- NULL
-
+  
   dbms <- "postgresql"
   server <- "localhost/ohdsi"
   user <- "postgres"
@@ -38,7 +38,17 @@
   cdmDatabaseSchema <- "vocabulary5"
   resultsDatabaseSchema <- "scratch"
   port <- NULL
-
+  
+  pw <- NULL
+  dbms <- "pdw"
+  user <- NULL
+  server <- "JRDUSAPSCTL01"
+  cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
+  resultsDatabaseSchema <- "scratch.dbo"
+  outcomesTable <- "mschuemie_outcomes"
+  outputTable <- "mschuemi_injected_signals"
+  port <- 17001
+  
   connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                                   server = server,
                                                                   user = user,
@@ -53,70 +63,70 @@
                                            pre_time = 365)
   connection <- DatabaseConnector::connect(connectionDetails)
   DatabaseConnector::executeSql(connection, sql)
-
+  
   # Check number of subjects per cohort:
   sql <- "SELECT cohort_concept_id, COUNT(*) AS count FROM @resultsDatabaseSchema.rehospitalization GROUP BY cohort_concept_id"
   sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
   DatabaseConnector::querySql(connection, sql)
-
+  
   cohortData <- getDbCohortData(connectionDetails,
                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                 cohortDatabaseSchema = resultsDatabaseSchema,
                                 cohortTable = "rehospitalization",
                                 cohortIds = 1,
                                 cdmVersion = '5')
-
+  
   covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
-                                    useCovariateDemographicsGender = TRUE,
-                                    useCovariateDemographicsRace = TRUE,
-                                    useCovariateDemographicsEthnicity = TRUE,
-                                    useCovariateDemographicsAge = TRUE,
-                                    useCovariateDemographicsYear = TRUE,
-                                    useCovariateDemographicsMonth = TRUE,
-                                    useCovariateConditionOccurrence = TRUE,
-                                    useCovariateConditionOccurrence365d = TRUE,
-                                    useCovariateConditionOccurrence30d = TRUE,
-                                    useCovariateConditionOccurrenceInpt180d = TRUE,
-                                    useCovariateConditionEra = TRUE,
-                                    useCovariateConditionEraEver = TRUE,
-                                    useCovariateConditionEraOverlap = TRUE,
-                                    useCovariateConditionGroup = TRUE,
-                                    useCovariateConditionGroupMeddra = TRUE,
-                                    useCovariateConditionGroupSnomed = TRUE,
-                                    useCovariateDrugExposure = TRUE,
-                                    useCovariateDrugExposure365d = TRUE,
-                                    useCovariateDrugExposure30d = TRUE,
-                                    useCovariateDrugEra = TRUE,
-                                    useCovariateDrugEra365d = TRUE,
-                                    useCovariateDrugEra30d = TRUE,
-                                    useCovariateDrugEraOverlap = TRUE,
-                                    useCovariateDrugEraEver = TRUE,
-                                    useCovariateDrugGroup = TRUE,
-                                    useCovariateProcedureOccurrence = TRUE,
-                                    useCovariateProcedureOccurrence365d = TRUE,
-                                    useCovariateProcedureOccurrence30d = TRUE,
-                                    useCovariateProcedureGroup = TRUE,
-                                    useCovariateObservation = TRUE,
-                                    useCovariateObservation365d = TRUE,
-                                    useCovariateObservation30d = TRUE,
-                                    useCovariateObservationCount365d = TRUE,
-                                    useCovariateMeasurement = TRUE,
-                                    useCovariateMeasurement365d = TRUE,
-                                    useCovariateMeasurement30d = TRUE,
-                                    useCovariateMeasurementCount365d = TRUE,
-                                    useCovariateMeasurementBelow = TRUE,
-                                    useCovariateMeasurementAbove = TRUE,
-                                    useCovariateConceptCounts = TRUE,
-                                    useCovariateRiskScores = TRUE,
-                                    useCovariateRiskScoresCharlson = TRUE,
-                                    useCovariateRiskScoresDCSI = TRUE,
-                                    useCovariateRiskScoresCHADS2 = TRUE,
-                                    useCovariateInteractionYear = FALSE,
-                                    useCovariateInteractionMonth = FALSE,
-                                    excludedCovariateConceptIds = c(),
-                                    includedCovariateConceptIds = c(),
-                                    deleteCovariatesSmallCount = 100)
+                                               useCovariateDemographicsGender = TRUE,
+                                               useCovariateDemographicsRace = TRUE,
+                                               useCovariateDemographicsEthnicity = TRUE,
+                                               useCovariateDemographicsAge = TRUE,
+                                               useCovariateDemographicsYear = TRUE,
+                                               useCovariateDemographicsMonth = TRUE,
+                                               useCovariateConditionOccurrence = TRUE,
+                                               useCovariateConditionOccurrence365d = TRUE,
+                                               useCovariateConditionOccurrence30d = TRUE,
+                                               useCovariateConditionOccurrenceInpt180d = TRUE,
+                                               useCovariateConditionEra = TRUE,
+                                               useCovariateConditionEraEver = TRUE,
+                                               useCovariateConditionEraOverlap = TRUE,
+                                               useCovariateConditionGroup = TRUE,
+                                               useCovariateConditionGroupMeddra = TRUE,
+                                               useCovariateConditionGroupSnomed = TRUE,
+                                               useCovariateDrugExposure = TRUE,
+                                               useCovariateDrugExposure365d = TRUE,
+                                               useCovariateDrugExposure30d = TRUE,
+                                               useCovariateDrugEra = TRUE,
+                                               useCovariateDrugEra365d = TRUE,
+                                               useCovariateDrugEra30d = TRUE,
+                                               useCovariateDrugEraOverlap = TRUE,
+                                               useCovariateDrugEraEver = TRUE,
+                                               useCovariateDrugGroup = TRUE,
+                                               useCovariateProcedureOccurrence = TRUE,
+                                               useCovariateProcedureOccurrence365d = TRUE,
+                                               useCovariateProcedureOccurrence30d = TRUE,
+                                               useCovariateProcedureGroup = TRUE,
+                                               useCovariateObservation = TRUE,
+                                               useCovariateObservation365d = TRUE,
+                                               useCovariateObservation30d = TRUE,
+                                               useCovariateObservationCount365d = TRUE,
+                                               useCovariateMeasurement = TRUE,
+                                               useCovariateMeasurement365d = TRUE,
+                                               useCovariateMeasurement30d = TRUE,
+                                               useCovariateMeasurementCount365d = TRUE,
+                                               useCovariateMeasurementBelow = TRUE,
+                                               useCovariateMeasurementAbove = TRUE,
+                                               useCovariateConceptCounts = TRUE,
+                                               useCovariateRiskScores = TRUE,
+                                               useCovariateRiskScoresCharlson = TRUE,
+                                               useCovariateRiskScoresDCSI = TRUE,
+                                               useCovariateRiskScoresCHADS2 = TRUE,
+                                               useCovariateInteractionYear = FALSE,
+                                               useCovariateInteractionMonth = FALSE,
+                                               excludedCovariateConceptIds = c(),
+                                               includedCovariateConceptIds = c(),
+                                               deleteCovariatesSmallCount = 100)
   covariateData <- getDbCovariateData(connectionDetails,
                                       cdmDatabaseSchema = cdmDatabaseSchema,
                                       cohortDatabaseSchema = resultsDatabaseSchema,
@@ -124,7 +134,7 @@
                                       cohortIds = 1,
                                       covariateSettings = covariateSettings,
                                       cdmVersion = '5')
-
+  
   outcomeData <- getDbOutcomeData(connectionDetails,
                                   cdmDatabaseSchema = cdmDatabaseSchema,
                                   cohortDatabaseSchema = resultsDatabaseSchema,
@@ -134,21 +144,21 @@
                                   outcomeTable = "rehospitalization",
                                   outcomeConceptIds = 2,
                                   cdmVersion = '5')
-
+  
   saveCohortData(cohortData, "s:/temp/PatientLevelPrediction/cohortData")
   saveCovariateData(covariateData, "s:/temp/PatientLevelPrediction/covariateData")
   saveOutcomeData(outcomeData, "s:/temp/PatientLevelPrediction/outcomeData")
-
+  
   # cohortData <- loadCohortData('s:/temp/PatientLevelPrediction/cohortData') covariateData <-
   # loadCovariateData('s:/temp/PatientLevelPrediction/covariateData') outcomeData <-
   # loadOutcomeData('s:/temp/PatientLevelPrediction/outcomeData')
-
+  
   parts <- splitData(cohortData, covariateData, outcomeData, c(0.75, 0.25))
-
+  
   saveCohortData(parts[[2]]$cohortData, "s:/temp/PatientLevelPrediction/cohortData_Test")
   saveCovariateData(parts[[2]]$covariateData, "s:/temp/PatientLevelPrediction/covariateData_Test")
   saveOutcomeData(parts[[2]]$outcomeData, "s:/temp/PatientLevelPrediction/outcomeData_Test")
-
+  
   model <- fitPredictiveModel(parts[[1]]$cohortData,
                               parts[[1]]$covariateData,
                               parts[[1]]$outcomeData,
@@ -160,18 +170,18 @@
                                                       cvType = "auto",
                                                       startingVariance = 0.1,
                                                       threads = 10))
-
+  
   saveRDS(model, file = "s:/temp/PatientLevelPrediction/model.rda")
-
+  
   # model <- readRDS('s:/temp/PatientLevelPrediction/model.rda')
-
+  
   prediction <- predictProbabilities(model, parts[[2]]$cohortData, parts[[2]]$covariateData)
   saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rda")
-
+  
   computeAuc(prediction, parts[[2]]$outcomeData)
   plotRoc(prediction, parts[[2]]$outcomeData)
   plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
-
+  
   modelDetails <- getModelDetails(model, covariateData)
   head(modelDetails)
 }

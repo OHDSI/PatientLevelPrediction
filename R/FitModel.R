@@ -23,6 +23,8 @@
 #' @param outcomeData     An object of type \code{outcomeData}.
 #' @param modelType       The type of predictive model. Options are "logistic", "poisson", and
 #'                        "survival".
+#' @param cohortId        The ID of the specific cohort for which to fit a model.
+#' @param outcomeId       The ID of the specific outcome for which to fit a model.
 #' @param prior           The prior used to fit the model. See \code{\link[Cyclops]{createPrior}} for
 #'                        details.
 #' @param control         The control object used to control the cross-validation used to determine the
@@ -34,20 +36,20 @@ fitPredictiveModel <- function(cohortData,
                                covariateData,
                                outcomeData,
                                modelType = "logistic",
-                               cohortConceptId = NULL,
-                               outcomeConceptId = NULL,
+                               cohortId = NULL,
+                               outcomeId = NULL,
                                prior = createPrior("laplace",
                                                    exclude = c(0),
                                                    useCrossValidation = TRUE),
                                control = createControl(noiseLevel = "silent",
                                                        cvType = "auto",
                                                        startingVariance = 0.1)) {
-  if (is.null(cohortConceptId) && length(cohortData$metaData$cohortConceptIds) != 1)
-    stop("No cohort concept ID specified, but multiple cohorts found")
-  if (is.null(outcomeConceptId) && length(outcomeData$metaData$outcomeConceptId) != 1)
-    stop("No outcome concept ID specified, but multiple outcomes found")
+  if (is.null(cohortId) && length(cohortData$metaData$cohortIds) != 1)
+    stop("No cohort ID specified, but multiple cohorts found")
+  if (is.null(outcomeId) && length(outcomeData$metaData$outcomeIds) != 1)
+    stop("No outcome ID specified, but multiple outcomes found")
 
-  if (is.null(cohortConceptId)) {
+  if (is.null(cohortId)) {
     covariates <- ffbase::subset.ffdf(covariateData$covariates, select = c("personId",
                                                                            "cohortStartDate",
                                                                            "covariateId",
@@ -61,32 +63,32 @@ fitPredictiveModel <- function(cohortData,
                                                                      "timeToEvent"))
   } else {
     covariates <- ffbase::subset.ffdf(covariateData$covariates,
-                                      cohortConceptId == cohortConceptId,
+                                      cohortId == cohortId,
                                       select = c("personId",
                                                  "cohortStartDate",
                                                  "covariateId",
                                                  "covariateValue"))
     cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
-                                   cohortConceptId == cohortConceptId,
+                                   cohortId == cohortId,
                                    select = c("personId", "cohortStartDate", "time"))
     outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                    cohortConceptId == cohortConceptId,
+                                    cohortId == cohortId,
                                     select = c("personId",
                                                "cohortStartDate",
                                                "outcomeId",
                                                "outcomeCount",
                                                "timeToEvent"))
   }
-  if (!is.null(outcomeConceptId)) {
-    outcomes <- ffbase::subset.ffdf(outcomes, outcomeId == outcomeConceptId)
+  if (!is.null(outcomeId)) {
+    outcomes <- ffbase::subset.ffdf(outcomes, outcomeId == outcomeId)
   }
   if (!is.null(outcomeData$exclude) && nrow(outcomeData$exclude) != 0) {
-    if (is.null(outcomeConceptId)) {
+    if (is.null(outcomeId)) {
       exclude <- outcomeData$exclude
     } else {
       exclude <- ffbase::subset.ffdf(outcomeData$exclude,
-                                     outcomeId == outcomeConceptId,
-                                     select = c("personId", "cohortStartDate", "cohortConceptId"))
+                                     outcomeId == outcomeId,
+                                     select = c("personId", "cohortStartDate", "cohortId"))
     }
     exclude$dummy <- ff::ff(1, length = nrow(exclude), vmode = "double")
     cohorts <- merge(cohorts, exclude, all.x = TRUE)
