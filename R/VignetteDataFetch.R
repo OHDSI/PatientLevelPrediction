@@ -176,6 +176,8 @@
   
   # model <- readRDS('s:/temp/PatientLevelPrediction/model.rds')
   
+  #parts <- list() ; parts[[2]] <- list(); parts[[2]]$cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData_Test"); parts[[2]]$covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData_Test");parts[[2]]$outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData_Test")
+  
   prediction <- predictProbabilities(model, parts[[2]]$cohortData, parts[[2]]$covariateData)
   saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rds")
   
@@ -183,7 +185,7 @@
   plotRoc(prediction, parts[[2]]$outcomeData)
   plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
   
-  modelDetails <- getModelDetails(model, covariateData)
+  modelDetails <- getModelDetails(model, parts[[2]]$covariateData)
   head(modelDetails)
 }
 

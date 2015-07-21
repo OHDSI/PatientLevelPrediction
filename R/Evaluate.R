@@ -31,16 +31,16 @@
 computeAuc <- function(prediction, outcomeData, confidenceInterval = FALSE) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Computing AUC is only implemented for logistic models")
-
-  cohortConceptId <- attr(prediction, "cohortConceptId")
-  outcomeConceptId <- attr(prediction, "outcomeConceptId")
+  
+  cohortId <- attr(prediction, "cohortId")
+  outcomeId <- attr(prediction, "outcomeId")
   outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortConceptId == cohortConceptId & outcomeId ==
-    outcomeConceptId, select = c("personId",
-                                 "cohortStartDate",
-                                 "outcomeId",
-                                 "outcomeCount",
-                                 "timeToEvent"))
+                                  cohortId == cohortId & outcomeId == outcomeId,
+                                  select = c("personId",
+                                             "cohortStartDate",
+                                             "outcomeId",
+                                             "outcomeCount",
+                                             "timeToEvent"))
   prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
@@ -82,7 +82,7 @@ computeAucFromDataFrames <- function(prediction,
                                      modelType = "logistic") {
   if (modelType == "survival" & confidenceInterval)
     stop("Currently not supporting confidence intervals for survival models")
-
+  
   if (modelType == "survival") {
     Surv.rsp <- survival::Surv(time, status)
     Surv.rsp.new <- Surv.rsp
@@ -129,20 +129,20 @@ computeAucFromDataFrames <- function(prediction,
 plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the calibration is only implemented for logistic models")
-
-  cohortConceptId <- attr(prediction, "cohortConceptId")
-  outcomeConceptId <- attr(prediction, "outcomeConceptId")
+  
+  cohortId <- attr(prediction, "cohortId")
+  outcomeId <- attr(prediction, "outcomeId")
   outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortConceptId == cohortConceptId & outcomeId ==
-    outcomeConceptId, select = c("personId",
-                                 "cohortStartDate",
-                                 "outcomeId",
-                                 "outcomeCount",
-                                 "timeToEvent"))
+                                  cohortId == cohortId & outcomeId == outcomeId,
+                                  select = c("personId",
+                                             "cohortStartDate",
+                                             "outcomeId",
+                                             "outcomeCount",
+                                             "timeToEvent"))
   prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
-
+  
   q <- quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata)
   prediction$strata <- cut(prediction$value,
                            breaks = c(0, q, max(prediction$value)),
@@ -167,11 +167,11 @@ plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileNam
   strataData$fraction <- strataData$counts/strataData$backgroundCounts
   plot <- ggplot2::ggplot(strataData,
                           ggplot2::aes(xmin = minx, xmax = maxx, ymin = 0, ymax = fraction)) +
-          ggplot2::geom_abline() +
-          ggplot2::geom_rect(color = rgb(0, 0, 0.8, alpha = 0.8),
-                             fill = rgb(0, 0, 0.8, alpha = 0.5)) +
-          ggplot2::scale_x_continuous("Predicted probability") +
-          ggplot2::scale_y_continuous("Observed fraction")
+    ggplot2::geom_abline() +
+    ggplot2::geom_rect(color = rgb(0, 0, 0.8, alpha = 0.8),
+                       fill = rgb(0, 0, 0.8, alpha = 0.5)) +
+    ggplot2::scale_x_continuous("Predicted probability") +
+    ggplot2::scale_y_continuous("Observed fraction")
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
   return(plot)
@@ -197,12 +197,12 @@ plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileNam
 plotRoc <- function(prediction, outcomeData, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the ROC curve is only implemented for logistic models")
-
-  cohortConceptId <- attr(prediction, "cohortConceptId")
-  outcomeConceptId <- attr(prediction, "outcomeConceptId")
+  
+  cohortId <- attr(prediction, "cohortId")
+  outcomeId <- attr(prediction, "outcomeId")
   outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortConceptId == cohortConceptId & outcomeId ==
-    outcomeConceptId, select = c("personId", "cohortStartDate", "outcomeId", "outcomeCount"))
+                                  cohortId == cohortId & outcomeId == outcomeId, 
+                                  select = c("personId", "cohortStartDate", "outcomeId", "outcomeCount"))
   prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
@@ -212,10 +212,11 @@ plotRoc <- function(prediction, outcomeData, fileName = NULL) {
   data <- aggregate(fpRate ~ sens, data = prediction, min)
   data <- aggregate(sens ~ fpRate, data = data, min)
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = fpRate, y = sens)) +
-          ggplot2::geom_area(color = rgb(0, 0, 0.8, alpha = 0.8),
-                             fill = rgb(0, 0, 0.8, alpha = 0.4)) +
-          ggplot2::scale_x_continuous("1 - specificity") +
-          ggplot2::scale_y_continuous("Sensitivity")
+    ggplot2::geom_abline(intercept = 0, slope = 1) +
+    ggplot2::geom_area(color = rgb(0, 0, 0.8, alpha = 0.8),
+                       fill = rgb(0, 0, 0.8, alpha = 0.4)) +
+    ggplot2::scale_x_continuous("1 - specificity") +
+    ggplot2::scale_y_continuous("Sensitivity")
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
   return(plot)

@@ -95,12 +95,12 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
   prediction <- merge(ff::as.ram(outcomes), prediction, by = "rowId", all.x = TRUE)
   prediction$value[is.na(prediction$value)] <- 0
   prediction$value <- prediction$value + intercept
-  if (predictiveModel$modelType == "logistic") {
+  if (modelType == "logistic") {
     link <- function(x) {
       return(1/(1 + exp(0 - x)))
     }
     prediction$value <- link(prediction$value)
-  } else if (predictiveModel$modelType == "poisson") {
+  } else if (modelType == "poisson") {
     
     prediction$value <- exp(prediction$value)
     prediction$value <- prediction$value * prediction$time

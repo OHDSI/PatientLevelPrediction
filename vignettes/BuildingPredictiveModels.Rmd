@@ -92,13 +92,16 @@ connectionDetails <- createConnectionDetails(dbms = "postgresql",
 
 cdmDatabaseSchema <- "my_cdm_data"
 resultsDatabaseSchema <- "my_results"
+cdmVersion <- "4"
 ```
 
-The last two lines define the `cdmDatabaseSchema` and `resultsDatabaseSchema` variables, which we'll use later to tell R where the data in CDM format live, and where we want to write intermediate and result tables. Note that for Microsoft SQL Server, these variables need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
+The last three lines define the `cdmDatabaseSchema` and `resultSchema` variables,as well as the CDM version. We'll use these later to tell R where the data in CDM format live, where we want to write intermediate and result tables, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
 
 ## Preparing the cohort and outcome of interest
 
-Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
+Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. For CDM v4, this means it should have the fields `cohort_concept_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. For CDM v4, the `cohort_concept_id` field must be called `cohort_definition_id`. 
+
+For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
 
 For this purpose we have created a file called *HospitalizationCohorts.sql* with the following contents:
 
@@ -191,7 +194,7 @@ cohortData <- getDbCohortData(connectionDetails$dbms,
                               cohortDatabaseSchema = resultsDatabaseSchema, 
                               cohortTable = "rehospitalization", 
                               cohortIds = 1,
-                              cdmVersion = "4")
+                              cdmVersion = cdmVersion)
 
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateConditionOccurrence = TRUE,
@@ -231,13 +234,14 @@ covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateInteractionMonth = FALSE,
                                              excludedCovariateConceptIds = c(),
                                              deleteCovariatesSmallCount = 1)
+
 covariateData <- getDbCovariateData(connectionDetails$dbms, 
                                     cdmDatabaseSchema = cdmDatabaseSchema, 
                                     cohortDatabaseSchema = resultsDatabaseSchema, 
                                     cohortTable = "rehospitalization", 
                                     cohortIds = 1, 
                                     covariateSettings = covariateSettings,
-                                    cdmVersion = "4")
+                                    cdmVersion = cdmVersion)
 
 outcomeData <- getDbOutcomeData(connectionDetails$dbms, 
                                 cdmDatabaseSchema = cdmDatabaseSchema, 
@@ -247,7 +251,7 @@ outcomeData <- getDbOutcomeData(connectionDetails$dbms,
                                 outcomeDatabaseSchema = resultsDatabaseSchema,
                                 outcomeTable = "rehospitalization",
                                 outcomeConceptIds = 2,
-                                cdmVersion = "4")
+                                cdmVersion = cdmVersion)
 ```
 
 There are many parameters, but they are all documented in the `PatientLevelPrediction` manual. In short, we are pointing the functions to the table created earlier and indicating which concept IDs in that table identify the cohort and outcome of interest. We construct `cohortData`, an object representing the cohort of interest, `covariateData`, holding all covariate information that will be used as predictors, and `outcomeData` as the set of outcomes during cohort time. All three objects use the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
@@ -286,7 +290,7 @@ Creating the three data objects can take considerable computing time, and it is 
 ```{r tidy=TRUE,eval=FALSE}
 saveCohortData(cohortData, "rehosp_cohorts")
 saveCovariateData(covariateData, "rehosp_covariates")
-saveOutcomeData(outcomeData, "rehos_outcomes")
+saveOutcomeData(outcomeData, "rehosp_outcomes")
 ```
 
 We can use the `loadCohortData()`, `loadCovariateData()`, and `loadOutcomeData()` function to load the data in a future session.
