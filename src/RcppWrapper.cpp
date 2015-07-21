@@ -3,7 +3,7 @@
  *
  * This file is part of PatientLevelPrediction
  *
- * Copyright 2014 Observational Health Data Sciences and Informatics
+ * Copyright 2015 Observational Health Data Sciences and Informatics
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,14 @@
 
 #include <Rcpp.h>
 #include "Auc.h"
+#include "BySum.h"
 
 using namespace Rcpp;
 
 // [[Rcpp::export(".aucWithCi")]]
 std::vector<double> aucWithCi(std::vector<double> propensityScores, std::vector<int> treatment) {
 
-  using namespace ohdsi::cohortMethod;
+  using namespace ohdsi::patientLevelPrediction;
 
   try {
 		std::vector<double> auc = Auc::aucWithCi(propensityScores, treatment);
@@ -47,7 +48,7 @@ std::vector<double> aucWithCi(std::vector<double> propensityScores, std::vector<
 // [[Rcpp::export(".auc")]]
 double auc(std::vector<double> propensityScores, std::vector<int> treatment) {
 
-  using namespace ohdsi::cohortMethod;
+  using namespace ohdsi::patientLevelPrediction;
 
   try {
 		double auc = Auc::auc(propensityScores, treatment);
@@ -59,5 +60,28 @@ double auc(std::vector<double> propensityScores, std::vector<int> treatment) {
 	}
 	return 0.0;
 }
+
+// [[Rcpp::export(".bySum")]]
+DataFrame bySum(List ffValues, List ffBins) {
+  
+  using namespace ohdsi::patientLevelPrediction;
+  
+  try {
+    std::map<double,double> map = BySum::bySum(ffValues, ffBins);
+    std::vector<double> bins;
+    std::vector<double> sums;
+    for(std::map<double,double>::iterator iter = map.begin(); iter != map.end(); ++iter){
+      bins.push_back(iter->first);
+      sums.push_back(iter->second);
+    }
+    return DataFrame::create(_["bins"] = bins, _["sums"] = sums);
+  } catch (std::exception &e) {
+    forward_exception_to_r(e);
+  } catch (...) {
+    ::Rf_error("c++ exception (unknown reason)");
+  }
+  return DataFrame::create();
+}
+
 
 #endif // __RcppWrapper_cpp__

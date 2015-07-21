@@ -1,5 +1,5 @@
 /**
- * @file Auc.h
+ * @file BySum.h
  *
  * This file is part of PatientLevelPrediction
  *
@@ -18,24 +18,23 @@
  * limitations under the License.
  */
 
-#ifndef __Auc_h__
-#define __Auc_h__
+#ifndef __BySum_h__
+#define __BySum_h__
 
 #include <vector>
-#include <cstdint>
+#include <map>
+#include <Rcpp.h>
+
+using namespace Rcpp;
 
 namespace ohdsi {
 	namespace patientLevelPrediction {
 
-
-		struct Auc {
+		struct BySum {
 		public:
-			static double auc(const std::vector<double> &propensityScores, const std::vector<int> &treatment);
-			static std::vector<double> aucWithCi(const std::vector<double> &propensityScores, const std::vector<int> &treatment);
-		private:
-			static double mannWhitneyKernel(const double &x, const double &y);
+			static std::map<double, double> bySum(const List &ffValues, const List &ffBins);
 		};
 	}
 }
 
-#endif // __Auc_h__
+#endif // __BySum_h__

@@ -27,8 +27,8 @@ if (file.exists("s:/temp/PatientLevelPrediction")){
   parts[[2]]$cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData_Test")
   parts[[2]]$covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData_Test")
   parts[[2]]$outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData_Test")
-  model <- readRDS("s:/temp/PatientLevelPrediction/model.rda")
-  prediction <- readRDS(file = "s:/temp/PatientLevelPrediction/prediction.rda")
+  model <- readRDS("s:/temp/PatientLevelPrediction/model.rds")
+  prediction <- readRDS(file = "s:/temp/PatientLevelPrediction/prediction.rds")
   } 
 ```
 
@@ -246,7 +246,7 @@ outcomeData <- getDbOutcomeData(connectionDetails$dbms,
                                 cohortIds = 1,
                                 outcomeDatabaseSchema = resultsDatabaseSchema,
                                 outcomeTable = "rehospitalization",
-                                outcomeIds = 2,
+                                outcomeConceptIds = 2,
                                 cdmVersion = "4")
 ```
 

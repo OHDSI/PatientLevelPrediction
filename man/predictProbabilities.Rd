@@ -14,7 +14,7 @@ predictProbabilities(predictiveModel, cohortData, covariateData)
 \code{\link{getDbCohortData}}.}
 
 \item{covariateData}{An object of type \code{covariateData} as generated using
-                         \code{\link{getDbCovarteData}}.}
+\code{\link{getDbCovarteData}}.}
 }
 \description{
 Create predictive probabilities

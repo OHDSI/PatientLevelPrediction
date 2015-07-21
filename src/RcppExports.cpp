@@ -29,3 +29,15 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// bySum
+DataFrame bySum(List ffValues, List ffBins);
+RcppExport SEXP PatientLevelPrediction_bySum(SEXP ffValuesSEXP, SEXP ffBinsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< List >::type ffValues(ffValuesSEXP);
+    Rcpp::traits::input_parameter< List >::type ffBins(ffBinsSEXP);
+    __result = Rcpp::wrap(bySum(ffValues, ffBins));
+    return __result;
+END_RCPP
+}

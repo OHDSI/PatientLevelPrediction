@@ -35,7 +35,7 @@
   server <- "localhost/ohdsi"
   user <- "postgres"
   pw <- "F1r3starter"
-  cdmDatabaseSchema <- "vocabulary5"
+  cdmDatabaseSchema <- "cdm4_sim"
   resultsDatabaseSchema <- "scratch"
   port <- NULL
   
@@ -172,12 +172,12 @@
                                                       startingVariance = 0.1,
                                                       threads = 10))
   
-  saveRDS(model, file = "s:/temp/PatientLevelPrediction/model.rda")
+  saveRDS(model, file = "s:/temp/PatientLevelPrediction/model.rds")
   
-  # model <- readRDS('s:/temp/PatientLevelPrediction/model.rda')
+  # model <- readRDS('s:/temp/PatientLevelPrediction/model.rds')
   
   prediction <- predictProbabilities(model, parts[[2]]$cohortData, parts[[2]]$covariateData)
-  saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rda")
+  saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rds")
   
   computeAuc(prediction, parts[[2]]$outcomeData)
   plotRoc(prediction, parts[[2]]$outcomeData)

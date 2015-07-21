@@ -9,3 +9,7 @@
     .Call('PatientLevelPrediction_auc', PACKAGE = 'PatientLevelPrediction', propensityScores, treatment)
 }
 
+.bySum <- function(ffValues, ffBins) {
+    .Call('PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
+}
+
