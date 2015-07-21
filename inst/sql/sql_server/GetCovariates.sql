@@ -2465,7 +2465,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id = 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2499,7 +2499,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2535,7 +2535,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2573,7 +2573,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2610,7 +2610,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2661,7 +2661,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2694,7 +2694,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2731,7 +2731,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2769,7 +2769,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2810,7 +2810,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2848,7 +2848,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
@@ -2884,7 +2884,7 @@ FROM (
 {@cdm_version == '4'} ? {
 	SELECT source_code, target_concept_id
 	FROM SOURCE_TO_CONCEPT_MAP
-	WHERE c1.vocabulary_id = 2
+	WHERE source_vocabulary_id= 2
 	AND target_vocabulary_id = 1
 } : {
 	SELECT 
