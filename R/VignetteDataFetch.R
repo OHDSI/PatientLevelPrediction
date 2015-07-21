@@ -21,7 +21,7 @@
   # This function should be used to fetch the data that is used in the vignettes. 
   # library(SqlRender); library(DatabaseConnector); library(PatientLevelPrediction)
   setwd("s:/temp")
-  options(fftempdir = "s:/temp")
+  options(fftempdir = "s:/FFtemp")
   
   pw <- NULL
   dbms <- "sql server"
@@ -69,13 +69,14 @@
   sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
   DatabaseConnector::querySql(connection, sql)
+  dbDisconnect(connection)
   
   cohortData <- getDbCohortData(connectionDetails,
                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                 cohortDatabaseSchema = resultsDatabaseSchema,
                                 cohortTable = "rehospitalization",
                                 cohortIds = 1,
-                                cdmVersion = '5')
+                                cdmVersion = "4")
   
   covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                                useCovariateDemographicsGender = TRUE,
@@ -88,52 +89,53 @@
                                                useCovariateConditionOccurrence365d = TRUE,
                                                useCovariateConditionOccurrence30d = TRUE,
                                                useCovariateConditionOccurrenceInpt180d = TRUE,
-                                               useCovariateConditionEra = TRUE,
-                                               useCovariateConditionEraEver = TRUE,
-                                               useCovariateConditionEraOverlap = TRUE,
-                                               useCovariateConditionGroup = TRUE,
-                                               useCovariateConditionGroupMeddra = TRUE,
-                                               useCovariateConditionGroupSnomed = TRUE,
-                                               useCovariateDrugExposure = TRUE,
-                                               useCovariateDrugExposure365d = TRUE,
-                                               useCovariateDrugExposure30d = TRUE,
-                                               useCovariateDrugEra = TRUE,
-                                               useCovariateDrugEra365d = TRUE,
-                                               useCovariateDrugEra30d = TRUE,
-                                               useCovariateDrugEraOverlap = TRUE,
-                                               useCovariateDrugEraEver = TRUE,
-                                               useCovariateDrugGroup = TRUE,
-                                               useCovariateProcedureOccurrence = TRUE,
-                                               useCovariateProcedureOccurrence365d = TRUE,
-                                               useCovariateProcedureOccurrence30d = TRUE,
-                                               useCovariateProcedureGroup = TRUE,
-                                               useCovariateObservation = TRUE,
-                                               useCovariateObservation365d = TRUE,
-                                               useCovariateObservation30d = TRUE,
-                                               useCovariateObservationCount365d = TRUE,
-                                               useCovariateMeasurement = TRUE,
-                                               useCovariateMeasurement365d = TRUE,
-                                               useCovariateMeasurement30d = TRUE,
-                                               useCovariateMeasurementCount365d = TRUE,
-                                               useCovariateMeasurementBelow = TRUE,
-                                               useCovariateMeasurementAbove = TRUE,
-                                               useCovariateConceptCounts = TRUE,
-                                               useCovariateRiskScores = TRUE,
-                                               useCovariateRiskScoresCharlson = TRUE,
-                                               useCovariateRiskScoresDCSI = TRUE,
-                                               useCovariateRiskScoresCHADS2 = TRUE,
+                                               useCovariateConditionEra = FALSE,
+                                               useCovariateConditionEraEver = FALSE,
+                                               useCovariateConditionEraOverlap = FALSE,
+                                               useCovariateConditionGroup = FALSE,
+                                               useCovariateConditionGroupMeddra = FALSE,
+                                               useCovariateConditionGroupSnomed = FALSE,
+                                               useCovariateDrugExposure = FALSE,
+                                               useCovariateDrugExposure365d = FALSE,
+                                               useCovariateDrugExposure30d = FALSE,
+                                               useCovariateDrugEra = FALSE,
+                                               useCovariateDrugEra365d = FALSE,
+                                               useCovariateDrugEra30d = FALSE,
+                                               useCovariateDrugEraOverlap = FALSE,
+                                               useCovariateDrugEraEver = FALSE,
+                                               useCovariateDrugGroup = FALSE,
+                                               useCovariateProcedureOccurrence = FALSE,
+                                               useCovariateProcedureOccurrence365d = FALSE,
+                                               useCovariateProcedureOccurrence30d = FALSE,
+                                               useCovariateProcedureGroup = FALSE,
+                                               useCovariateObservation = FALSE,
+                                               useCovariateObservation365d = FALSE,
+                                               useCovariateObservation30d = FALSE,
+                                               useCovariateObservationCount365d = FALSE,
+                                               useCovariateMeasurement = FALSE,
+                                               useCovariateMeasurement365d = FALSE,
+                                               useCovariateMeasurement30d = FALSE,
+                                               useCovariateMeasurementCount365d = FALSE,
+                                               useCovariateMeasurementBelow = FALSE,
+                                               useCovariateMeasurementAbove = FALSE,
+                                               useCovariateConceptCounts = FALSE,
+                                               useCovariateRiskScores = FALSE,
+                                               useCovariateRiskScoresCharlson = FALSE,
+                                               useCovariateRiskScoresDCSI = FALSE,
+                                               useCovariateRiskScoresCHADS2 = FALSE,
                                                useCovariateInteractionYear = FALSE,
                                                useCovariateInteractionMonth = FALSE,
                                                excludedCovariateConceptIds = c(),
                                                includedCovariateConceptIds = c(),
                                                deleteCovariatesSmallCount = 100)
+  
   covariateData <- getDbCovariateData(connectionDetails,
                                       cdmDatabaseSchema = cdmDatabaseSchema,
                                       cohortDatabaseSchema = resultsDatabaseSchema,
                                       cohortTable = "rehospitalization",
                                       cohortIds = 1,
                                       covariateSettings = covariateSettings,
-                                      cdmVersion = '5')
+                                      cdmVersion = "4")
   
   outcomeData <- getDbOutcomeData(connectionDetails,
                                   cdmDatabaseSchema = cdmDatabaseSchema,
@@ -142,16 +144,14 @@
                                   cohortIds = 1,
                                   outcomeDatabaseSchema = resultsDatabaseSchema,
                                   outcomeTable = "rehospitalization",
-                                  outcomeConceptIds = 2,
-                                  cdmVersion = '5')
+                                  outcomeIds = 2,
+                                  cdmVersion = "4")
   
   saveCohortData(cohortData, "s:/temp/PatientLevelPrediction/cohortData")
   saveCovariateData(covariateData, "s:/temp/PatientLevelPrediction/covariateData")
   saveOutcomeData(outcomeData, "s:/temp/PatientLevelPrediction/outcomeData")
   
-  # cohortData <- loadCohortData('s:/temp/PatientLevelPrediction/cohortData') covariateData <-
-  # loadCovariateData('s:/temp/PatientLevelPrediction/covariateData') outcomeData <-
-  # loadOutcomeData('s:/temp/PatientLevelPrediction/outcomeData')
+  # cohortData <- loadCohortData('s:/temp/PatientLevelPrediction/cohortData'); covariateData <- loadCovariateData('s:/temp/PatientLevelPrediction/covariateData'); outcomeData <- loadOutcomeData('s:/temp/PatientLevelPrediction/outcomeData')
   
   parts <- splitData(cohortData, covariateData, outcomeData, c(0.75, 0.25))
   
@@ -165,7 +165,8 @@
                               modelType = "logistic",
                               prior = createPrior("laplace",
                                                   exclude = c(0),
-                                                  useCrossValidation = TRUE),
+                                                  variance = 0.0782712,
+                                                  useCrossValidation = FALSE),
                               control = createControl(noiseLevel = "quiet",
                                                       cvType = "auto",
                                                       startingVariance = 0.1,

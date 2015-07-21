@@ -246,7 +246,7 @@ outcomeData <- getDbOutcomeData(connectionDetails$dbms,
                                 cohortIds = 1,
                                 outcomeDatabaseSchema = resultsDatabaseSchema,
                                 outcomeTable = "rehospitalization",
-                                outcomeConceptIds = 2,
+                                outcomeIds = 2,
                                 cdmVersion = "4")
 ```
 

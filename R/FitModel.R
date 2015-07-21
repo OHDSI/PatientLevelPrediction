@@ -117,21 +117,23 @@ fitPredictiveModel <- function(cohortData,
                                     index = idx,
                                     value = outcomes$timeToEvent[idx])
   }
-  if (modelType == "logistic")
-    cyclopsModelType <- "lr" else cyclopsModelType <- "pr"
+  if (modelType == "logistic") {
+    cyclopsModelType <- "lr" 
+  } else { 
+    cyclopsModelType <- "pr"
+  }
   cyclopsData <- convertToCyclopsData(outcomes,
                                       covariates,
                                       modelType = cyclopsModelType,
                                       addIntercept = TRUE,
-                                      checkSorting = FALSE,
-                                      checkRowIds = FALSE)
+                                      quiet = TRUE)
   cyclopsFit <- fitCyclopsModel(cyclopsData, prior = prior, control = control)
-  if (is.null(cohortConceptId))
-    cohortConceptId <- cohortData$metaData$cohortConceptIds
-  if (is.null(outcomeConceptId))
-    outcomeConceptId <- outcomeData$metaData$outcomeConceptIds
-  predictiveModel <- list(cohortConceptId = cohortConceptId,
-                          outcomeConceptId = outcomeConceptId,
+  if (is.null(cohortId))
+    cohortId <- cohortData$metaData$cohortIds
+  if (is.null(outcomeId))
+    outcomeId <- outcomeData$metaData$outcomeIds
+  predictiveModel <- list(cohortId = cohortId,
+                          outcomeId = outcomeId,
                           modelType = modelType,
                           coefficients = coef(cyclopsFit),
                           priorVariance = cyclopsFit$variance[1])

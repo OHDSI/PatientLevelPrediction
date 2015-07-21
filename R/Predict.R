@@ -35,15 +35,15 @@ predictProbabilities <- function(predictiveModel, cohortData, covariateData) {
   coefficients <- data.frame(beta = as.numeric(coefficients),
                              covariateId = as.numeric(names(predictiveModel$coefficients)[2:length(predictiveModel$coefficients)]))
   coefficients <- coefficients[coefficients$beta != 0, ]
-  cohortConceptId <- predictiveModel$cohortConceptId
+  cohortId <- predictiveModel$cohortId
   covariates <- ffbase::subset.ffdf(covariateData$covariates,
-                                    cohortConceptId == cohortConceptId,
+                                    cohortId == cohortId,
                                     select = c("personId",
                                                "cohortStartDate",
                                                "covariateId",
                                                "covariateValue"))
   cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
-                                 cohortConceptId == cohortConceptId,
+                                 cohortId == cohortId,
                                  select = c("personId", "cohortStartDate", "time"))
   cohorts$rowId <- ff::ff(1:nrow(cohorts))
   covariates <- merge(covariates, cohorts, by = c("cohortStartDate", "personId"))
