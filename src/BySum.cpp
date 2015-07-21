@@ -34,10 +34,10 @@ std::map<double, double> BySum::bySum(const List &ffValues, const List &ffBins){
   List chunks = chunk(ffValues);
   Environment ff = Environment::namespace_env("ff");
   Function subset = ff["[.ff"];
-  for (unsigned int i = 0; i < chunks.size(); i++){
+  for (int i = 0; i < chunks.size(); i++){
     NumericVector bins = subset(ffBins, chunks[i]);
     NumericVector values = subset(ffValues, chunks[i]);
-    for (unsigned int j = 0; j < bins.size(); j++){
+    for (int j = 0; j < bins.size(); j++){
       binToValue[bins[j]] = binToValue[bins[j]] + values[j];
     }
   }

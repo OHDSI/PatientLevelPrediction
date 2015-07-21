@@ -230,7 +230,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
-  metaData <- list(sql = renderedSql, call = match.call())
+  metaData <- list(sql = renderedSql, call = match.call(), cohortIds = cohortIds)
   result <- list(covariates = covariates, covariateRef = covariateRef, metaData = metaData)
   # Open all ffdfs to prevent annoying messages later:
   if (nrow(result$covariates) == 0) {

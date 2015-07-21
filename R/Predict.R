@@ -88,7 +88,7 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
   coefficients <- data.frame(beta = as.numeric(coefficients),
                              covariateId = as.numeric(names(coefficients)))
   coefficients <- coefficients[coefficients$beta != 0, ]
-  prediction <- merge(cohortMethodData$covariates, ff::as.ffdf(coefficients), by = "covariateId")
+  prediction <- merge(covariates, ff::as.ffdf(coefficients), by = "covariateId")
   prediction$value <- prediction$covariateValue * prediction$beta
   prediction <- bySumFf(prediction$value, prediction$rowId)
   colnames(prediction) <- c("rowId", "value")
@@ -108,9 +108,6 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
     # modelType == 'survival'
     prediction$value <- exp(prediction$value)
   }
-  link <- function(x) {
-    return(1/(1 + exp(0 - x)))
-  }
   return(prediction)
 }
 
@@ -119,7 +116,12 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
 #' @param values   An ff object containing the numeric values to be summed
 #' @param bins     An ff object containing the numeric values to bin by
 #' 
+#' @examples 
+#' values <- ff::as.ff(c(1,1,2,2,1))
+#' bins <- ff::as.ff(c(1,1,1,2,2))
+#' bySumFf(values, bins)
+#' 
 #' @export
-bySumFf <- function(values, bins) {
-  .Call("PatientLevelPrediction_bySum", PACKAGE = "PatientLevelPrediction", values, bins)
+bySumFf <- function(ffValues, ffBins) {
+  .Call('PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
 }
