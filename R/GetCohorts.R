@@ -39,8 +39,9 @@
 #'                               include both the database and schema, e.g. "cdm_schema.dbo".
 #' @param cohortTable            If not using an existing temp table, what is the name of the table
 #'                               holding the cohort?
-#' @param cohortIds              The list of IDs in the cohortTable that identify the cohort(s) of interest.
-#' @param cdmVersion             Define the OMOP CDM version used:  currently support "4" and "5".
+#' @param cohortIds              The list of IDs in the cohortTable that identify the cohort(s) of
+#'                               interest.
+#' @param cdmVersion             Define the OMOP CDM version used: currently support "4" and "5".
 #'
 #' @return
 #' An object of type \code{cohortData} containing information on who are in the cohorts.
@@ -60,13 +61,13 @@ getDbCohortData <- function(connectionDetails = NULL,
     stop("Either connectionDetails or connection has to be specified")
   if (!is.null(connectionDetails) && !is.null(connection))
     stop("Cannot specify both connectionDetails and connection")
-  
-  if (cdmVersion == "4"){
+
+  if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
   } else {
     cohortDefinitionId <- "cohort_definition_id"
   }
-  
+
   if (is.null(connection)) {
     conn <- DatabaseConnector::connect(connectionDetails)
   } else {
@@ -192,9 +193,7 @@ print.cohortData <- function(x, ...) {
 
 #' @export
 summary.cohortData <- function(object, ...) {
-  counts <- data.frame(cohortId = object$metaData$cohortIds,
-                       cohortCount = 0,
-                       personCount = 0)
+  counts <- data.frame(cohortId = object$metaData$cohortIds, cohortCount = 0, personCount = 0)
   for (i in 1:nrow(counts)) {
     cohortId <- counts$cohortId[i]
     t <- object$cohorts$cohortId == cohortId

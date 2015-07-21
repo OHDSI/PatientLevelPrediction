@@ -242,14 +242,16 @@ covariates will be created and used in models that
 look for presence/absence of measurement with a
 numeric value below normal range for latest value
 within 180d of cohort index.  Only applicable if
-useCovariateMeasurement = TRUE (CDM v5+) or useCovariateObservation = TRUE (CDM v4).}
+useCovariateMeasurement = TRUE (CDM v5+) or
+useCovariateObservation = TRUE (CDM v4).}
 
 \item{useCovariateMeasurementAbove}{A boolean value (TRUE/FALSE) to determine if
 covariates will be created and used in models that
 look for presence/absence of measurement with a
 numeric value above normal range for latest value
 within 180d of cohort index.  Only applicable if
-useCovariateMeasurement = TRUE (CDM v5+) or useCovariateObservation = TRUE (CDM v4).}
+useCovariateMeasurement = TRUE (CDM v5+) or
+useCovariateObservation = TRUE (CDM v4).}
 
 \item{useCovariateConceptCounts}{A boolean value (TRUE/FALSE) to determine if
 covariates will be created and used in models that

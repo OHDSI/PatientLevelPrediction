@@ -34,12 +34,13 @@ should include both the database and schema, e.g. 'cdm_schema.dbo'.}
 \item{cohortTable}{If not using an existing \code{cohort_person} temp table, what is
 the name of the source cohort table?}
 
-\item{cohortIds}{The IDs of the cohortsin the cohort table for which we want to build covariates.}
+\item{cohortIds}{The IDs of the cohortsin the cohort table for which we want to
+build covariates.}
 
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
 \code{\link{createCovariateSettings}} function.}
 
-\item{cdmVersion}{Define the OMOP CDM version used:  currently support "4" and "5".}
+\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
 
 \item{oracleTempSchemaA}{schema where temp tables can be created in Oracle.}
 }

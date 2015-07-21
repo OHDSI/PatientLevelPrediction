@@ -48,7 +48,7 @@ fitPredictiveModel <- function(cohortData,
     stop("No cohort ID specified, but multiple cohorts found")
   if (is.null(outcomeId) && length(outcomeData$metaData$outcomeIds) != 1)
     stop("No outcome ID specified, but multiple outcomes found")
-
+  
   if (is.null(cohortId)) {
     covariates <- ffbase::subset.ffdf(covariateData$covariates, select = c("personId",
                                                                            "cohortStartDate",
@@ -118,8 +118,8 @@ fitPredictiveModel <- function(cohortData,
                                     value = outcomes$timeToEvent[idx])
   }
   if (modelType == "logistic") {
-    cyclopsModelType <- "lr" 
-  } else { 
+    cyclopsModelType <- "lr"
+  } else {
     cyclopsModelType <- "pr"
   }
   cyclopsData <- convertToCyclopsData(outcomes,
@@ -158,11 +158,11 @@ fitPredictiveModel <- function(cohortData,
 #' @export
 getModelDetails <- function(predictiveModel, covariateData) {
   cfs <- predictiveModel$coefficients
-
+  
   cfs <- cfs[cfs != 0]
   attr(cfs, "names")[attr(cfs, "names") == "(Intercept)"] <- 0
   cfs <- data.frame(coefficient = cfs, id = as.numeric(attr(cfs, "names")))
-
+  
   cfs <- merge(ff::as.ffdf(cfs),
                covariateData$covariateRef,
                by.x = "id",

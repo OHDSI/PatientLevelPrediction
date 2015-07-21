@@ -18,11 +18,11 @@
 
 #' @keywords internal
 .vignetteDataFetch <- function() {
-  # This function should be used to fetch the data that is used in the vignettes. 
-  # library(SqlRender); library(DatabaseConnector); library(PatientLevelPrediction)
+  # This function should be used to fetch the data that is used in the vignettes.  library(SqlRender);
+  # library(DatabaseConnector); library(PatientLevelPrediction)
   setwd("s:/temp")
   options(fftempdir = "s:/FFtemp")
-  
+
   pw <- NULL
   dbms <- "sql server"
   user <- NULL
@@ -30,7 +30,7 @@
   cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
   resultsDatabaseSchema <- "scratch.dbo"
   port <- NULL
-  
+
   dbms <- "postgresql"
   server <- "localhost/ohdsi"
   user <- "postgres"
@@ -38,7 +38,7 @@
   cdmDatabaseSchema <- "cdm4_sim"
   resultsDatabaseSchema <- "scratch"
   port <- NULL
-  
+
   pw <- NULL
   dbms <- "pdw"
   user <- NULL
@@ -48,7 +48,7 @@
   outcomesTable <- "mschuemie_outcomes"
   outputTable <- "mschuemi_injected_signals"
   port <- 17001
-  
+
   connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                                   server = server,
                                                                   user = user,
@@ -63,21 +63,21 @@
                                            pre_time = 365)
   connection <- DatabaseConnector::connect(connectionDetails)
   DatabaseConnector::executeSql(connection, sql)
-  
+
   # Check number of subjects per cohort:
   sql <- "SELECT cohort_concept_id, COUNT(*) AS count FROM @resultsDatabaseSchema.rehospitalization GROUP BY cohort_concept_id"
   sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
   DatabaseConnector::querySql(connection, sql)
   dbDisconnect(connection)
-  
+
   cohortData <- getDbCohortData(connectionDetails,
                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                 cohortDatabaseSchema = resultsDatabaseSchema,
                                 cohortTable = "rehospitalization",
                                 cohortIds = 1,
                                 cdmVersion = "4")
-  
+
   covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                                useCovariateDemographicsGender = TRUE,
                                                useCovariateDemographicsRace = TRUE,
@@ -128,7 +128,7 @@
                                                excludedCovariateConceptIds = c(),
                                                includedCovariateConceptIds = c(),
                                                deleteCovariatesSmallCount = 100)
-  
+
   covariateData <- getDbCovariateData(connectionDetails,
                                       cdmDatabaseSchema = cdmDatabaseSchema,
                                       cohortDatabaseSchema = resultsDatabaseSchema,
@@ -136,7 +136,7 @@
                                       cohortIds = 1,
                                       covariateSettings = covariateSettings,
                                       cdmVersion = "4")
-  
+
   outcomeData <- getDbOutcomeData(connectionDetails,
                                   cdmDatabaseSchema = cdmDatabaseSchema,
                                   cohortDatabaseSchema = resultsDatabaseSchema,
@@ -146,19 +146,21 @@
                                   outcomeTable = "rehospitalization",
                                   outcomeIds = 2,
                                   cdmVersion = "4")
-  
+
   saveCohortData(cohortData, "s:/temp/PatientLevelPrediction/cohortData")
   saveCovariateData(covariateData, "s:/temp/PatientLevelPrediction/covariateData")
   saveOutcomeData(outcomeData, "s:/temp/PatientLevelPrediction/outcomeData")
-  
-  # cohortData <- loadCohortData('s:/temp/PatientLevelPrediction/cohortData'); covariateData <- loadCovariateData('s:/temp/PatientLevelPrediction/covariateData'); outcomeData <- loadOutcomeData('s:/temp/PatientLevelPrediction/outcomeData')
-  
+
+  # cohortData <- loadCohortData('s:/temp/PatientLevelPrediction/cohortData'); covariateData <-
+  # loadCovariateData('s:/temp/PatientLevelPrediction/covariateData'); outcomeData <-
+  # loadOutcomeData('s:/temp/PatientLevelPrediction/outcomeData')
+
   parts <- splitData(cohortData, covariateData, outcomeData, c(0.75, 0.25))
-  
+
   saveCohortData(parts[[2]]$cohortData, "s:/temp/PatientLevelPrediction/cohortData_Test")
   saveCovariateData(parts[[2]]$covariateData, "s:/temp/PatientLevelPrediction/covariateData_Test")
   saveOutcomeData(parts[[2]]$outcomeData, "s:/temp/PatientLevelPrediction/outcomeData_Test")
-  
+
   model <- fitPredictiveModel(parts[[1]]$cohortData,
                               parts[[1]]$covariateData,
                               parts[[1]]$outcomeData,
@@ -171,20 +173,23 @@
                                                       cvType = "auto",
                                                       startingVariance = 0.1,
                                                       threads = 10))
-  
+
   saveRDS(model, file = "s:/temp/PatientLevelPrediction/model.rds")
-  
+
   # model <- readRDS('s:/temp/PatientLevelPrediction/model.rds')
-  
-  #parts <- list() ; parts[[2]] <- list(); parts[[2]]$cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData_Test"); parts[[2]]$covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData_Test");parts[[2]]$outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData_Test")
-  
+
+  # parts <- list() ; parts[[2]] <- list(); parts[[2]]$cohortData <-
+  # loadCohortData('s:/temp/PatientLevelPrediction/cohortData_Test'); parts[[2]]$covariateData <-
+  # loadCovariateData('s:/temp/PatientLevelPrediction/covariateData_Test');parts[[2]]$outcomeData <-
+  # loadOutcomeData('s:/temp/PatientLevelPrediction/outcomeData_Test')
+
   prediction <- predictProbabilities(model, parts[[2]]$cohortData, parts[[2]]$covariateData)
   saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rds")
-  
+
   computeAuc(prediction, parts[[2]]$outcomeData)
   plotRoc(prediction, parts[[2]]$outcomeData)
   plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
-  
+
   modelDetails <- getModelDetails(model, parts[[2]]$covariateData)
   head(modelDetails)
 }

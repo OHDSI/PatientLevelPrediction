@@ -55,17 +55,18 @@
 #'                                         outcomeTable <> CONDITION_OCCURRENCE, then expectation is
 #'                                         outcomeTable has format of COHORT table: COHORT_CONCEPT_ID,
 #'                                         SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
-#' @param outcomeIds                       A list of ids used to define outcomes.  If
-#'                                         outcomeTable = CONDITION_OCCURRENCE, the list is a set of
-#'                                         ancestor CONCEPT_IDs, and all occurrences of all descendant
-#'                                         concepts will be selected.  If outcomeTable <>
-#'                                         CONDITION_OCCURRENCE, the list contains records found in
-#'                                         COHORT_DEFINITION_ID field.
+#' @param outcomeIds                       A list of ids used to define outcomes.  If outcomeTable =
+#'                                         CONDITION_OCCURRENCE, the list is a set of ancestor
+#'                                         CONCEPT_IDs, and all occurrences of all descendant concepts
+#'                                         will be selected.  If outcomeTable <> CONDITION_OCCURRENCE,
+#'                                         the list contains records found in COHORT_DEFINITION_ID
+#'                                         field.
 #' @param outcomeConditionTypeConceptIds   A list of TYPE_CONCEPT_ID values that will restrict
 #'                                         condition occurrences.  Only applicable if outcomeTable =
 #'                                         CONDITION_OCCURRENCE.
 #' @param firstOutcomeOnly                 Only keep the first outcome per person?
-#' @param cdmVersion                Define the OMOP CDM version used:  currently support "4" and "5".
+#' @param cdmVersion                       Define the OMOP CDM version used: currently support "4" and
+#'                                         "5".
 #'
 #' @return
 #' An object of type \code{outcomeData} containing information on the outcomes in the cohort(s).
@@ -91,16 +92,11 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   if (!is.null(connectionDetails) && !is.null(connection))
     stop("Cannot specify both connectionDetails and connection")
   
-  if (cdmVersion == "4"){
+  if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
-    conceptClassId <- "concept_class"
-    measurement <- "observation"
   } else {
     cohortDefinitionId <- "cohort_definition_id"
-    conceptClassId <- "concept_class_id"
-    measurement <- "measurement"
   }
-  
   
   if (is.null(connection)) {
     conn <- DatabaseConnector::connect(connectionDetails)
@@ -131,7 +127,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   start <- Sys.time()
   outcomeSql <- "SELECT person_id, cohort_start_date, @cohort_definition_id AS cohort_id, outcome_id, outcome_count, time_to_event FROM #cohort_outcome ORDER BY person_id, cohort_start_date"
   outcomeSql <- SqlRender::renderSql(outcomeSql, cohort_definition_id = cohortDefinitionId)$sql
-  outcomeSql <- SqlRender::translateSql(outcomeSql, 
+  outcomeSql <- SqlRender::translateSql(outcomeSql,
                                         "sql server",
                                         attr(conn, "dbms"),
                                         oracleTempSchema)$sql
@@ -262,9 +258,7 @@ print.outcomeData <- function(x, ...) {
 
 #' @export
 summary.outcomeData <- function(object, ...) {
-  counts <- data.frame(outcomeId = object$metaData$outcomeIds,
-                       cohortCount = 0,
-                       personCount = 0)
+  counts <- data.frame(outcomeId = object$metaData$outcomeIds, cohortCount = 0, personCount = 0)
   for (i in 1:nrow(counts)) {
     outcomeId <- counts$outcomeId[i]
     t <- object$outcomes$outcomeId == outcomeId

@@ -41,7 +41,10 @@ predictProbabilities <- function(predictiveModel, cohortData, covariateData) {
                                  select = c("personId", "cohortStartDate", "time"))
   cohorts$rowId <- ff::ff(1:nrow(cohorts))
   covariates <- merge(covariates, cohorts, by = c("cohortStartDate", "personId"))
-  prediction <- predictFfdf(predictiveModel$coefficients, cohorts, covariates, predictiveModel$modelType)
+  prediction <- predictFfdf(predictiveModel$coefficients,
+                            cohorts,
+                            covariates,
+                            predictiveModel$modelType)
   prediction$time <- NULL
   attr(prediction, "modelType") <- predictiveModel$modelType
   attr(prediction, "cohortConceptId") <- predictiveModel$cohortConceptId
@@ -50,37 +53,34 @@ predictProbabilities <- function(predictiveModel, cohortData, covariateData) {
 }
 
 #' Generated predictions from a regression model
-#' 
-#' @param coefficients  A names numeric vector where the names are the covariateIds, except for the first value which is expected
-#'                      to be the intercept.
-#' @param outcomes      A data frame or ffdf object containing the outcomes with predefined columns (see below).
-#' @param covariates    A data frame or ffdf object containing the covariates with predefined columns (see below).
-#' @param modelType     Current supported types are "logistic", "poisson", or "survival".
-#' 
-#' @details
-#' These columns are expected in the outcome object:
-#' \tabular{lll}{
-#'   \verb{rowId}  	\tab(integer) \tab Row ID is used to link multiple covariates (x) to a single outcome (y) \cr
-#'   \verb{time}    \tab(real) \tab For models that use time (e.g. Poisson or Cox regression) this contains time \cr
-#'                  \tab        \tab(e.g. number of days) \cr
-#' }
 #'
-#' These columns are expected in the covariates object:
-#' \tabular{lll}{
-#'   \verb{rowId}  	\tab(integer) \tab Row ID is used to link multiple covariates (x) to a single outcome (y) \cr
-#'   \verb{covariateId}    \tab(integer) \tab A numeric identifier of a covariate  \cr
-#'   \verb{covariateValue}    \tab(real) \tab The value of the specified covariate \cr
-#' }
-#' 
+#' @param coefficients   A names numeric vector where the names are the covariateIds, except for the
+#'                       first value which is expected to be the intercept.
+#' @param outcomes       A data frame or ffdf object containing the outcomes with predefined columns
+#'                       (see below).
+#' @param covariates     A data frame or ffdf object containing the covariates with predefined columns
+#'                       (see below).
+#' @param modelType      Current supported types are "logistic", "poisson", or "survival".
+#'
+#' @details
+#' These columns are expected in the outcome object: \tabular{lll}{ \verb{rowId} \tab(integer) \tab
+#' Row ID is used to link multiple covariates (x) to a single outcome (y) \cr \verb{time} \tab(real)
+#' \tab For models that use time (e.g. Poisson or Cox regression) this contains time \cr \tab
+#' \tab(e.g. number of days) \cr }
+#' These columns are expected in the covariates object: \tabular{lll}{ \verb{rowId} \tab(integer) \tab
+#' Row ID is used to link multiple covariates (x) to a single outcome (y) \cr \verb{covariateId}
+#' \tab(integer) \tab A numeric identifier of a covariate \cr \verb{covariateValue} \tab(real) \tab
+#' The value of the specified covariate \cr }
+#'
 #' @export
 predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logistic") {
-  if (!(modelType %in% c("logistic","poisson","survival"))){
+  if (!(modelType %in% c("logistic", "poisson", "survival"))) {
     stop(paste("Unknown modelType:", modelType))
   }
-  if (class(outcomes) != "ffdf"){
+  if (class(outcomes) != "ffdf") {
     stop("Outcomes should be of type ffdf")
   }
-  if (class(covariates) != "ffdf"){
+  if (class(covariates) != "ffdf") {
     stop("Covariates should be of type ffdf")
   }
   intercept <- coefficients[1]
@@ -112,16 +112,16 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
 }
 
 #' Compute sum of values binned by a second variable
-#' 
+#'
 #' @param values   An ff object containing the numeric values to be summed
 #' @param bins     An ff object containing the numeric values to bin by
-#' 
-#' @examples 
-#' values <- ff::as.ff(c(1,1,2,2,1))
-#' bins <- ff::as.ff(c(1,1,1,2,2))
+#'
+#' @examples
+#' values <- ff::as.ff(c(1, 1, 2, 2, 1))
+#' bins <- ff::as.ff(c(1, 1, 1, 2, 2))
 #' bySumFf(values, bins)
-#' 
+#'
 #' @export
-bySumFf <- function(ffValues, ffBins) {
-  .Call('PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
+bySumFf <- function(values, bins) {
+  .Call("PatientLevelPrediction_bySum", PACKAGE = "PatientLevelPrediction", values, bins)
 }

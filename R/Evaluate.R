@@ -201,8 +201,11 @@ plotRoc <- function(prediction, outcomeData, fileName = NULL) {
   cohortId <- attr(prediction, "cohortId")
   outcomeId <- attr(prediction, "outcomeId")
   outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortId == cohortId & outcomeId == outcomeId, 
-                                  select = c("personId", "cohortStartDate", "outcomeId", "outcomeCount"))
+                                  cohortId == cohortId & outcomeId == outcomeId,
+                                  select = c("personId",
+                                             "cohortStartDate",
+                                             "outcomeId",
+                                             "outcomeCount"))
   prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0

@@ -54,12 +54,12 @@ outcomeTable <> CONDITION_OCCURRENCE, then expectation is
 outcomeTable has format of COHORT table: COHORT_CONCEPT_ID,
 SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 
-\item{outcomeIds}{A list of ids used to define outcomes.  If
-outcomeTable = CONDITION_OCCURRENCE, the list is a set of
-ancestor CONCEPT_IDs, and all occurrences of all descendant
-concepts will be selected.  If outcomeTable <>
-CONDITION_OCCURRENCE, the list contains records found in
-COHORT_DEFINITION_ID field.}
+\item{outcomeIds}{A list of ids used to define outcomes.  If outcomeTable =
+CONDITION_OCCURRENCE, the list is a set of ancestor
+CONCEPT_IDs, and all occurrences of all descendant concepts
+will be selected.  If outcomeTable <> CONDITION_OCCURRENCE,
+the list contains records found in COHORT_DEFINITION_ID
+field.}
 
 \item{outcomeConditionTypeConceptIds}{A list of TYPE_CONCEPT_ID values that will restrict
 condition occurrences.  Only applicable if outcomeTable =
@@ -67,7 +67,8 @@ CONDITION_OCCURRENCE.}
 
 \item{firstOutcomeOnly}{Only keep the first outcome per person?}
 
-\item{cdmVersion}{Define the OMOP CDM version used:  currently support "4" and "5".}
+\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and
+                                        "5".}
 }
 \value{
 An object of type \code{outcomeData} containing information on the outcomes in the cohort(s).

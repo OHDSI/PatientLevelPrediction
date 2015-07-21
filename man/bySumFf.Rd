@@ -4,7 +4,7 @@
 \alias{bySumFf}
 \title{Compute sum of values binned by a second variable}
 \usage{
-bySumFf(ffValues, ffBins)
+bySumFf(values, bins)
 }
 \arguments{
 \item{values}{An ff object containing the numeric values to be summed}
@@ -15,8 +15,8 @@ bySumFf(ffValues, ffBins)
 Compute sum of values binned by a second variable
 }
 \examples{
-values <- ff::as.ff(c(1,1,2,2,1))
-bins <- ff::as.ff(c(1,1,1,2,2))
+values <- ff::as.ff(c(1, 1, 2, 2, 1))
+bins <- ff::as.ff(c(1, 1, 1, 2, 2))
 bySumFf(values, bins)
 }
 

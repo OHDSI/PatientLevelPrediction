@@ -46,10 +46,11 @@
 #'                                  should include both the database and schema, e.g. 'cdm_schema.dbo'.
 #' @param cohortTable               If not using an existing \code{cohort_person} temp table, what is
 #'                                  the name of the source cohort table?
-#' @param cohortIds                 The IDs of the cohortsin the cohort table for which we want to build covariates.
+#' @param cohortIds                 The IDs of the cohortsin the cohort table for which we want to
+#'                                  build covariates.
 #' @param covariateSettings         An object of type \code{covariateSettings} as created using the
 #'                                  \code{\link{createCovariateSettings}} function.
-#' @param cdmVersion                Define the OMOP CDM version used:  currently support "4" and "5".
+#' @param cdmVersion                Define the OMOP CDM version used: currently support "4" and "5".
 #'
 #' @return
 #' Returns an object of type \code{covariateData}, containing information on the baseline covariates.
@@ -79,10 +80,10 @@ getDbCovariateData <- function(connectionDetails = NULL,
     stop("When using an existing cohort temp table, connection must be specified")
   if (!covariateSettings$useCovariateConditionGroupMeddra & !covariateSettings$useCovariateConditionGroupSnomed)
     covariateSettings$useCovariateConditionGroup <- FALSE
-  
+
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
-  
-  if (cdmVersion == "4"){
+
+  if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
     conceptClassId <- "concept_class"
     measurement <- "observation"
@@ -91,15 +92,15 @@ getDbCovariateData <- function(connectionDetails = NULL,
     conceptClassId <- "concept_class_id"
     measurement <- "measurement"
   }
-  
+
   if (is.null(connection)) {
     conn <- connect(connectionDetails)
   } else {
     conn <- connection
   }
-  
+
   if (is.null(covariateSettings$excludedCovariateConceptIds) || length(covariateSettings$excludedCovariateConceptIds) ==
-      0) {
+    0) {
     hasExcludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$excludedCovariateConceptIds))
@@ -113,9 +114,9 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
+
   if (is.null(covariateSettings$includedCovariateConceptIds) || length(covariateSettings$includedCovariateConceptIds) ==
-      0) {
+    0) {
     hasIncludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$includedCovariateConceptIds))
@@ -129,7 +130,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCovariates.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -193,12 +194,12 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                                    cohort_definition_id = cohortDefinitionId,
                                                    concept_class_id = conceptClassId,
                                                    measurement = measurement)
-  
+
   writeLines("Executing multiple queries. This could take a while")
-  
+
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Done")
-  
+
   writeLines("Fetching data from server")
   start <- Sys.time()
   covariateSql <- "SELECT person_id, cohort_start_date, @cohort_definition_id AS cohort_definition_id, covariate_id, covariate_value FROM #cov ORDER BY person_id, covariate_id"
@@ -216,7 +217,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   covariateRef <- DatabaseConnector::querySql.ffdf(conn, covariateRefSql)
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCovariateTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -227,7 +228,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   if (is.null(connection)) {
     RJDBC::dbDisconnect(conn)
   }
-  
+
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
   metaData <- list(sql = renderedSql, call = match.call(), cohortIds = cohortIds)
@@ -267,7 +268,7 @@ saveCovariateData <- function(covariateData, file) {
     stop("Must specify file")
   if (class(covariateData) != "covariateData")
     stop("Data not of class covariateData")
-  
+
   covariates <- covariateData$covariates
   covariateRef <- covariateData$covariateRef
   ffbase::save.ffdf(covariates, covariateRef, dir = file)
@@ -300,10 +301,10 @@ loadCovariateData <- function(file, readOnly = FALSE) {
     stop(paste("Cannot find folder", file))
   if (!file.info(file)$isdir)
     stop(paste("Not a folder", file))
-  
+
   temp <- setwd(file)
   absolutePath <- setwd(temp)
-  
+
   e <- new.env()
   ffbase::load.ffdf(absolutePath, e)
   load(file.path(absolutePath, "metaData.Rdata"), e)
@@ -313,7 +314,7 @@ loadCovariateData <- function(file, readOnly = FALSE) {
   # Open all ffdfs to prevent annoying messages later:
   open(result$covariates, readonly = readOnly)
   open(result$covariateRef, readonly = readOnly)
-  
+
   class(result) <- "covariateData"
   rm(e)
   return(result)
@@ -492,13 +493,15 @@ loadCovariateData <- function(file, readOnly = FALSE) {
 #'                                                  look for presence/absence of measurement with a
 #'                                                  numeric value below normal range for latest value
 #'                                                  within 180d of cohort index.  Only applicable if
-#'                                                  useCovariateMeasurement = TRUE (CDM v5+) or useCovariateObservation = TRUE (CDM v4).
+#'                                                  useCovariateMeasurement = TRUE (CDM v5+) or
+#'                                                  useCovariateObservation = TRUE (CDM v4).
 #' @param useCovariateMeasurementAbove              A boolean value (TRUE/FALSE) to determine if
 #'                                                  covariates will be created and used in models that
 #'                                                  look for presence/absence of measurement with a
 #'                                                  numeric value above normal range for latest value
 #'                                                  within 180d of cohort index.  Only applicable if
-#'                                                  useCovariateMeasurement = TRUE (CDM v5+) or useCovariateObservation = TRUE (CDM v4).
+#'                                                  useCovariateMeasurement = TRUE (CDM v5+) or
+#'                                                  useCovariateObservation = TRUE (CDM v4).
 #' @param useCovariateConceptCounts                 A boolean value (TRUE/FALSE) to determine if
 #'                                                  covariates will be created and used in models that
 #'                                                  count the number of concepts that a person has
