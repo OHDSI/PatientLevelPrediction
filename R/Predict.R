@@ -123,5 +123,6 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
 #'
 #' @export
 bySumFf <- function(values, bins) {
-  .Call("PatientLevelPrediction_bySum", PACKAGE = "PatientLevelPrediction", values, bins)
+  .bySum(values, bins)
+  # .Call("PatientLevelPrediction_bySum", PACKAGE = "PatientLevelPrediction", values, bins)
 }
