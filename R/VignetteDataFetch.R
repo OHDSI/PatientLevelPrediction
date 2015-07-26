@@ -168,8 +168,7 @@
                               modelType = "logistic",
                               prior = createPrior("laplace",
                                                   exclude = c(0),
-                                                  variance = 0.0782712,
-                                                  useCrossValidation = FALSE),
+                                                  useCrossValidation = TRUE),
                               control = createControl(noiseLevel = "quiet",
                                                       cvType = "auto",
                                                       startingVariance = 0.1,
@@ -187,6 +186,8 @@
   prediction <- predictProbabilities(model, parts[[2]]$cohortData, parts[[2]]$covariateData)
   saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rds")
 
+  #prediction <- readRDS("s:/temp/PatientLevelPrediction/prediction.rds")
+  
   computeAuc(prediction, parts[[2]]$outcomeData)
   plotRoc(prediction, parts[[2]]$outcomeData)
   plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
