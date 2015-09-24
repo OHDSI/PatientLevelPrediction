@@ -3310,7 +3310,7 @@ FROM (
 
   UNION
 
-  SELECT DISTINCT 
+  SELECT DISTINCT cp1.cohort_start_date,
     cp1.@cohort_definition_id,
 		cp1.subject_id,
 		7 as diag_category_id,
@@ -3322,7 +3322,7 @@ FROM (
 
   UNION 
 
-  SELECT DISTINCT
+  SELECT DISTINCT cp1.cohort_start_date,
     cp1.@cohort_definition_id,
 		cp1.subject_id,
 		8 as diag_category_id,
@@ -3784,6 +3784,17 @@ FROM #cov_CHADS2
 
 }
 
+{@use_covariate_risk_scores_CHADS2VASc} ? {
+
+UNION
+
+SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+FROM #cov_CHADS2VASc
+
+}
+
+
+
 }
 
 
@@ -4052,7 +4063,8 @@ IF OBJECT_ID('tempdb..#cov_DCSI', 'U') IS NOT NULL
   DROP TABLE #cov_DCSI;
 IF OBJECT_ID('tempdb..#cov_CHADS2', 'U') IS NOT NULL
   DROP TABLE #cov_CHADS2;
-
+IF OBJECT_ID('tempdb..#cov_CHADS2VASc', 'U') IS NOT NULL
+  DROP TABLE #cov_CHADS2VASc;
 
 IF OBJECT_ID('tempdb..#cov_int_year', 'U') IS NOT NULL
   DROP TABLE #cov_int_year;
