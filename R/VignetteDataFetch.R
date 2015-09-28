@@ -124,6 +124,7 @@
                                                useCovariateRiskScoresCharlson = TRUE,
                                                useCovariateRiskScoresDCSI = TRUE,
                                                useCovariateRiskScoresCHADS2 = TRUE,
+                                               useCovariateRiskScoresCHADS2VASc = TRUE,
                                                useCovariateInteractionYear = FALSE,
                                                useCovariateInteractionMonth = FALSE,
                                                excludedCovariateConceptIds = c(),
