@@ -92,7 +92,10 @@ fitPredictiveModel <- function(cohortData,
     }
     exclude$dummy <- ff::ff(1, length = nrow(exclude), vmode = "double")
     cohorts <- merge(cohorts, exclude, all.x = TRUE)
-    cohorts <- ffbase::subset.ffdf(cohorts, dummy != 1)
+    t <- cohorts$dummy == 1
+    if (ffbase::any.ff(t)){
+      cohorts <- cohorts[ffbase::ffwhich(t, is.na(t)),]
+    }
     cohorts$dummy <- NULL
   }
   cohorts$rowId <- ff::ff(1:nrow(cohorts))

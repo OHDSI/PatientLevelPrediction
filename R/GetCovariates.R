@@ -203,7 +203,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
 
   writeLines("Fetching data from server")
   start <- Sys.time()
-  covariateSql <- "SELECT person_id, cohort_start_date, @cohort_definition_id AS cohort_definition_id, covariate_id, covariate_value FROM #cov ORDER BY person_id, covariate_id"
+  covariateSql <- "SELECT person_id, cohort_start_date, @cohort_definition_id AS cohort_id, covariate_id, covariate_value FROM #cov ORDER BY person_id, covariate_id"
   covariateSql <- SqlRender::renderSql(covariateSql, cohort_definition_id = cohortDefinitionId)$sql
   covariateSql <- SqlRender::translateSql(covariateSql,
                                           "sql server",

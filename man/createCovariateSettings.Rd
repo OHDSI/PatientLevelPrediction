@@ -35,6 +35,7 @@ createCovariateSettings(useCovariateDemographics = TRUE,
   useCovariateMeasurementAbove = FALSE, useCovariateConceptCounts = FALSE,
   useCovariateRiskScores = FALSE, useCovariateRiskScoresCharlson = FALSE,
   useCovariateRiskScoresDCSI = FALSE, useCovariateRiskScoresCHADS2 = FALSE,
+  useCovariateRiskScoresCHADS2VASc = FALSE,
   useCovariateInteractionYear = FALSE, useCovariateInteractionMonth = FALSE,
   excludedCovariateConceptIds = c(), includedCovariateConceptIds = c(),
   deleteCovariatesSmallCount = 100)

@@ -29,15 +29,15 @@
 #'                          \code{\link{getDbCovarteData}}.
 #' @export
 predictProbabilities <- function(predictiveModel, cohortData, covariateData) {
-  cohortId <- predictiveModel$cohortId
+  targetCohortId <- predictiveModel$cohortId
   covariates <- ffbase::subset.ffdf(covariateData$covariates,
-                                    cohortId == cohortId,
+                                    cohortId == targetCohortId,
                                     select = c("personId",
                                                "cohortStartDate",
                                                "covariateId",
                                                "covariateValue"))
   cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
-                                 cohortId == cohortId,
+                                 cohortId == targetCohortId,
                                  select = c("personId", "cohortStartDate", "time"))
   cohorts$rowId <- ff::ff(1:nrow(cohorts))
   covariates <- merge(covariates, cohorts, by = c("cohortStartDate", "personId"))
