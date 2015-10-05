@@ -262,9 +262,14 @@ summary.outcomeData <- function(object, ...) {
   for (i in 1:nrow(counts)) {
     outcomeId <- counts$outcomeId[i]
     t <- object$outcomes$outcomeId == outcomeId
+	if (ffbase::any.ff(t)){
     t <- ffbase::ffwhich(t, t == TRUE)
-    counts$cohortCount[i] <- length(t)
-    counts$personCount[i] <- length(ffbase::unique.ff(object$outcomes$personId[t]))
+		counts$cohortCount[i] <- length(t)
+		counts$personCount[i] <- length(ffbase::unique.ff(object$outcomes$personId[t]))
+	} else {
+		counts$cohortCount[i] <- 0
+		counts$personCount[i] <- 0
+	}
   }
   result <- list(metaData = object$metaData, counts = counts)
   class(result) <- "summary.outcomeData"
