@@ -47,8 +47,8 @@ predictProbabilities <- function(predictiveModel, cohortData, covariateData) {
                             predictiveModel$modelType)
   prediction$time <- NULL
   attr(prediction, "modelType") <- predictiveModel$modelType
-  attr(prediction, "cohortConceptId") <- predictiveModel$cohortConceptId
-  attr(prediction, "outcomeConceptId") <- predictiveModel$outcomeConceptId
+  attr(prediction, "cohortId") <- predictiveModel$cohortId
+  attr(prediction, "outcomeId") <- predictiveModel$outcomeId
   return(prediction)
 }
 

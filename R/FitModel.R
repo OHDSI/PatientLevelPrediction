@@ -49,46 +49,41 @@ fitPredictiveModel <- function(cohortData,
   if (is.null(outcomeId) && length(outcomeData$metaData$outcomeIds) != 1)
     stop("No outcome ID specified, but multiple outcomes found")
   
-  if (is.null(cohortId)) {
-    covariates <- ffbase::subset.ffdf(covariateData$covariates, select = c("personId",
-                                                                           "cohortStartDate",
-                                                                           "covariateId",
-                                                                           "covariateValue"))
-    cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
-                                   select = c("personId", "cohortStartDate", "time"))
-    outcomes <- ffbase::subset.ffdf(outcomeData$outcomes, select = c("personId",
-                                                                     "cohortStartDate",
-                                                                     "outcomeId",
-                                                                     "outcomeCount",
-                                                                     "timeToEvent"))
-  } else {
-    covariates <- ffbase::subset.ffdf(covariateData$covariates,
-                                      cohortId == cohortId,
-                                      select = c("personId",
-                                                 "cohortStartDate",
-                                                 "covariateId",
-                                                 "covariateValue"))
-    cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
-                                   cohortId == cohortId,
-                                   select = c("personId", "cohortStartDate", "time"))
-    outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                    cohortId == cohortId,
-                                    select = c("personId",
-                                               "cohortStartDate",
-                                               "outcomeId",
-                                               "outcomeCount",
-                                               "timeToEvent"))
-  }
+  
+  covariates <- ffbase::subset.ffdf(covariateData$covariates, select = c("personId",
+                                                                         "cohortStartDate",
+                                                                         "covariateId",
+                                                                         "covariateValue"))
+  cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
+                                 select = c("personId", "cohortStartDate", "time"))
+  outcomes <- ffbase::subset.ffdf(outcomeData$outcomes, select = c("personId",
+                                                                   "cohortStartDate",
+                                                                   "outcomeId",
+                                                                   "outcomeCount",
+                                                                   "timeToEvent"))
+  if (!is.null(cohortId)) {
+    t <- covariates$cohortId = cohortId
+    covariates <- covariates[ffbase::ffwhich(t, t = TRUE),]
+    
+    t <- cohorts$cohortId = cohortId
+    cohorts <- cohorts[ffbase::ffwhich(t, t = TRUE),]
+    
+    t <- outcomes$cohortId = cohortId
+    outcomes <- outcomes[ffbase::ffwhich(t, t = TRUE),]
+  }  
+  
   if (!is.null(outcomeId)) {
-    outcomes <- ffbase::subset.ffdf(outcomes, outcomeId == outcomeId)
+    t <- outcomes$outcomeId == outcomeId
+    if (!ffbase::any.ff(t)){
+      stop(paste("No outcomes with outcome ID", outcomeId)) 
+    }
+    outcomes <- outcomes[ffbase::ffwhich(t, t == TRUE),]
   }
   if (!is.null(outcomeData$exclude) && nrow(outcomeData$exclude) != 0) {
-    if (is.null(outcomeId)) {
-      exclude <- outcomeData$exclude
-    } else {
-      exclude <- ffbase::subset.ffdf(outcomeData$exclude,
-                                     outcomeId == outcomeId,
-                                     select = c("personId", "cohortStartDate", "cohortId"))
+    exclude <- outcomeData$exclude
+    if (!is.null(outcomeId)) {
+      t <- exclude$outcomeId == outcomeId
+      exclude <- exclude[ffbase::ffwhich(t, t == TRUE)]
     }
     exclude$dummy <- ff::ff(1, length = nrow(exclude), vmode = "double")
     cohorts <- merge(cohorts, exclude, all.x = TRUE)

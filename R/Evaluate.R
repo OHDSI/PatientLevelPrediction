@@ -3,13 +3,13 @@
 # Copyright 2015 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,12 +31,12 @@
 computeAuc <- function(prediction, outcomeData, confidenceInterval = FALSE) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Computing AUC is only implemented for logistic models")
-  
-  cohortId <- attr(prediction, "cohortId")
-  outcomeId <- attr(prediction, "outcomeId")
+  targetCohortId <- attr(prediction, "cohortId")
+  targetOutcomeId <- attr(prediction, "outcomeId")
   outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortId == cohortId & outcomeId == outcomeId,
+                                  cohortId == targetCohortId & outcomeId == targetOutcomeId,
                                   select = c("personId",
+                                             "cohortId",
                                              "cohortStartDate",
                                              "outcomeId",
                                              "outcomeCount",
@@ -82,7 +82,7 @@ computeAucFromDataFrames <- function(prediction,
                                      modelType = "logistic") {
   if (modelType == "survival" & confidenceInterval)
     stop("Currently not supporting confidence intervals for survival models")
-  
+
   if (modelType == "survival") {
     Surv.rsp <- survival::Surv(time, status)
     Surv.rsp.new <- Surv.rsp
@@ -129,20 +129,22 @@ computeAucFromDataFrames <- function(prediction,
 plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the calibration is only implemented for logistic models")
-  
-  cohortId <- attr(prediction, "cohortId")
-  outcomeId <- attr(prediction, "outcomeId")
+
+  targetCohortId <- attr(prediction, "cohortId")
+  targetOutcomeId <- attr(prediction, "outcomeId")
   outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortId == cohortId & outcomeId == outcomeId,
+                                  cohortId == targetCohortId & outcomeId == targetOutcomeId,
                                   select = c("personId",
+                                             "cohortId",
                                              "cohortStartDate",
                                              "outcomeId",
                                              "outcomeCount",
                                              "timeToEvent"))
+
   prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
-  
+
   q <- quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata)
   prediction$strata <- cut(prediction$value,
                            breaks = c(0, q, max(prediction$value)),
@@ -197,15 +199,18 @@ plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileNam
 plotRoc <- function(prediction, outcomeData, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the ROC curve is only implemented for logistic models")
-  
-  cohortId <- attr(prediction, "cohortId")
-  outcomeId <- attr(prediction, "outcomeId")
+
+  targetCohortId <- attr(prediction, "cohortId")
+  targetOutcomeId <- attr(prediction, "outcomeId")
   outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortId == cohortId & outcomeId == outcomeId,
+                                  cohortId == targetCohortId & outcomeId == targetOutcomeId,
                                   select = c("personId",
+                                             "cohortId",
                                              "cohortStartDate",
                                              "outcomeId",
-                                             "outcomeCount"))
+                                             "outcomeCount",
+                                             "timeToEvent"))
+
   prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
@@ -214,6 +219,13 @@ plotRoc <- function(prediction, outcomeData, fileName = NULL) {
   prediction$fpRate <- cumsum(prediction$outcomeCount == 0)/sum(prediction$outcomeCount == 0)
   data <- aggregate(fpRate ~ sens, data = prediction, min)
   data <- aggregate(sens ~ fpRate, data = data, min)
+  data <- rbind(data, data.frame(fpRate = 1, sens = 1))
+  if (nrow(data) < 10000) {
+      # Turn it into a step function:
+      steps <- data.frame(sens = data$sens[1:(nrow(data)-1)] , fpRate = data$fpRate[2:nrow(data)] - 1e-9)
+      data <- rbind(data, steps)
+      data <- data[order(data$sens, data$fpRate),]
+  }
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = fpRate, y = sens)) +
     ggplot2::geom_abline(intercept = 0, slope = 1) +
     ggplot2::geom_area(color = rgb(0, 0, 0.8, alpha = 0.8),
