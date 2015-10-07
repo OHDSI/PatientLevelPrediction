@@ -28,7 +28,7 @@ quickSum <- function(data, squared = FALSE) {
   return(x)
 }
 
-computeStats <- function(n, covariates, label = NULL){
+computeStats <- function(n, covariates, label = NULL) {
   stats <- quickSum(covariates)
   statsSqr <- quickSum(covariates, squared = TRUE)
   stats <- merge(stats, statsSqr)
@@ -47,19 +47,23 @@ computeStats <- function(n, covariates, label = NULL){
 #'
 #' @param cohortData      An object of type \code{cohortData}.
 #' @param covariateData   An object of type \code{covariateData}.
-#' @param outcomeData     An object of type \code{outcomeData}. If NULL then only the overall means will 
-#'                        be computed, else the means will also be computed within the group with the outcome
-#'                        and the group without the outcome.
+#' @param outcomeData     An object of type \code{outcomeData}. If NULL then only the overall means
+#'                        will be computed, else the means will also be computed within the group with
+#'                        the outcome and the group without the outcome.
 #' @param cohortId        The ID of the specific cohort for which to compute the means.
 #' @param outcomeId       The ID of the specific outcome for which to compute the subgroup means.
 #'
 #' @export
-computeCovariateMeans <- function(cohortData, covariateData, outcomeData = NULL, cohortId = NULL, outcomeId = NULL) { 
+computeCovariateMeans <- function(cohortData,
+                                  covariateData,
+                                  outcomeData = NULL,
+                                  cohortId = NULL,
+                                  outcomeId = NULL) {
   if (is.null(cohortId) && length(cohortData$metaData$cohortIds) != 1)
     stop("No cohort ID specified, but multiple cohorts found")
   if (is.null(outcomeId) && !is.null(outcomeData) && length(outcomeData$metaData$outcomeIds) != 1)
     stop("No outcome ID specified, but multiple outcomes found")
-  
+
   start <- Sys.time()
   if (is.null(cohortId)) {
     covariates <- ffbase::subset.ffdf(covariateData$covariates, select = c("personId",
@@ -68,7 +72,7 @@ computeCovariateMeans <- function(cohortData, covariateData, outcomeData = NULL,
                                                                            "covariateValue"))
     cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
                                    select = c("personId", "cohortStartDate", "time"))
-    if (!is.null(outcomeData)){
+    if (!is.null(outcomeData)) {
       outcomes <- ffbase::subset.ffdf(outcomeData$outcomes, select = c("personId",
                                                                        "cohortStartDate",
                                                                        "outcomeId",
@@ -85,14 +89,14 @@ computeCovariateMeans <- function(cohortData, covariateData, outcomeData = NULL,
     cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
                                    cohortId == cohortId,
                                    select = c("personId", "cohortStartDate", "time"))
-    if (!is.null(outcomeData)){
+    if (!is.null(outcomeData)) {
       outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
                                       cohortId == cohortId,
                                       select = c("personId",
-                                                 "cohortStartDate",
-                                                 "outcomeId",
-                                                 "outcomeCount",
-                                                 "timeToEvent"))
+                                                                                             "cohortStartDate",
+                                                                                             "outcomeId",
+                                                                                             "outcomeCount",
+                                                                                             "timeToEvent"))
     }
   }
   if (!is.null(outcomeId)) {
@@ -111,26 +115,29 @@ computeCovariateMeans <- function(cohortData, covariateData, outcomeData = NULL,
     cohorts <- ffbase::subset.ffdf(cohorts, dummy != 1)
     cohorts$dummy <- NULL
   }
-  
+
   writeLines("Computing overall stats")
   stats <- computeStats(nrow(cohorts), covariates, "overall")
-  if (!is.null(outcomes)){
+  if (!is.null(outcomes)) {
     writeLines("Computing subgroup stats")
-    covariates <- merge(covariates, 
-                        ffbase::subset.ffdf(outcomes, select=c("personId", "cohortStartDate", "outcomeCount")), 
-                        by = c("personId", "cohortStartDate"), all.x = TRUE)
+    covariates <- merge(covariates,
+                        ffbase::subset.ffdf(outcomes, select = c("personId",
+                                                                 "cohortStartDate",
+                                                                 "outcomeCount")),
+                        by = c("personId", "cohortStartDate"),
+                        all.x = TRUE)
     t <- !is.na(covariates$outcomeCount)
     nOutcomes <- nrow(outcomes)
-    covariatesSubset <- covariates[ffbase::ffwhich(t, t == TRUE),]
+    covariatesSubset <- covariates[ffbase::ffwhich(t, t == TRUE), ]
     statsWithOutcome <- computeStats(nOutcomes, covariatesSubset, "with_outcome")
-    
+
     nNotOutcomes <- nrow(cohorts) - nOutcomes
-    covariatesSubset <- covariates[ffbase::ffwhich(t, t == FALSE),]
+    covariatesSubset <- covariates[ffbase::ffwhich(t, t == FALSE), ]
     statsWithoutOutcome <- computeStats(nNotOutcomes, covariatesSubset, "without_outcome")
-    
+
     stats <- merge(stats, statsWithOutcome, all.x = TRUE)
     stats <- merge(stats, statsWithoutOutcome, all.x = TRUE)
-    stats$std_difference <- (stats$mean_with_outcome - stats$mean_without_outcome) / sqrt((stats$sd_with_outcome ^ 2 + stats$sd_without_outcome ^ 2) / 2)
+    stats$std_difference <- (stats$mean_with_outcome - stats$mean_without_outcome)/sqrt((stats$sd_with_outcome^2 + stats$sd_without_outcome^2)/2)
   }
   stats <- merge(stats, ff::as.ram(covariateData$covariateRef))
   delta <- Sys.time() - start
@@ -149,15 +156,15 @@ computeCovariateMeans <- function(cohortData, covariateData, outcomeData = NULL,
 #' Plot variables with largest standardized difference
 #'
 #' @description
-#' Create a plot showing those variables having the largest standardized difference between the 
-#' group having the outcome and the group that doesn't have the outcome. Requires running 
+#' Create a plot showing those variables having the largest standardized difference between the group
+#' having the outcome and the group that doesn't have the outcome. Requires running
 #' \code{computeCovariateMeans} first.
 #'
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
 #'
-#' @param means     A data frame created by the \code{computeCovariateMeans} funcion.
+#' @param means          A data frame created by the \code{computeCovariateMeans} funcion.
 #' @param n              Count of variates to plot.
 #' @param maxNameWidth   Covariate names longer than this number of characters are truncated to create
 #'                       a nicer plot.
@@ -177,17 +184,17 @@ plotCovariateDifferenceOfTopVariables <- function(means,
                      difference = top$std_difference,
                      rowId = rep(nrow(top):1, 2))
   top$covariateName <- .truncRight(as.character(top$covariateName), maxNameWidth)
-  plot <- ggplot2::ggplot(data, ggplot2::aes(x = difference,
-                                             y = rowId)) +
-    ggplot2::geom_point(color = rgb(0, 0, 0.8, alpha = 0.5), fill = rgb(0, 0, 0.8, alpha = 0.5)) +
-    ggplot2::geom_vline(xintercept = 0) +
-    ggplot2::scale_x_continuous("Standardized difference of mean") +
-    ggplot2::scale_y_continuous(breaks = nrow(top):1, labels = top$covariateName) +
-    ggplot2::theme(axis.text.y = ggplot2::element_text(size = 7),
-                   axis.title.y = ggplot2::element_blank(),
-                   legend.position = "top",
-                   legend.direction = "vertical",
-                   legend.title = ggplot2::element_blank())
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = difference, y = rowId)) +
+          ggplot2::geom_point(color = rgb(0, 0, 0.8, alpha = 0.5),
+                              fill = rgb(0, 0, 0.8, alpha = 0.5)) +
+          ggplot2::geom_vline(xintercept = 0) +
+          ggplot2::scale_x_continuous("Standardized difference of mean") +
+          ggplot2::scale_y_continuous(breaks = nrow(top):1, labels = top$covariateName) +
+          ggplot2::theme(axis.text.y = ggplot2::element_text(size = 7),
+                         axis.title.y = ggplot2::element_blank(),
+                         legend.position = "top",
+                         legend.direction = "vertical",
+                         legend.title = ggplot2::element_blank())
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 10, height = max(2 + n * 0.1, 5), dpi = 400)
   return(plot)

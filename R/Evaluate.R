@@ -169,11 +169,11 @@ plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileNam
   strataData$fraction <- strataData$counts/strataData$backgroundCounts
   plot <- ggplot2::ggplot(strataData,
                           ggplot2::aes(xmin = minx, xmax = maxx, ymin = 0, ymax = fraction)) +
-    ggplot2::geom_abline() +
-    ggplot2::geom_rect(color = rgb(0, 0, 0.8, alpha = 0.8),
-                       fill = rgb(0, 0, 0.8, alpha = 0.5)) +
-    ggplot2::scale_x_continuous("Predicted probability") +
-    ggplot2::scale_y_continuous("Observed fraction")
+          ggplot2::geom_abline() +
+          ggplot2::geom_rect(color = rgb(0, 0, 0.8, alpha = 0.8),
+                             fill = rgb(0, 0, 0.8, alpha = 0.5)) +
+          ggplot2::scale_x_continuous("Predicted probability") +
+          ggplot2::scale_y_continuous("Observed fraction")
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
   return(plot)
@@ -221,17 +221,18 @@ plotRoc <- function(prediction, outcomeData, fileName = NULL) {
   data <- aggregate(sens ~ fpRate, data = data, min)
   data <- rbind(data, data.frame(fpRate = 1, sens = 1))
   if (nrow(data) < 10000) {
-      # Turn it into a step function:
-      steps <- data.frame(sens = data$sens[1:(nrow(data)-1)] , fpRate = data$fpRate[2:nrow(data)] - 1e-9)
-      data <- rbind(data, steps)
-      data <- data[order(data$sens, data$fpRate),]
+    # Turn it into a step function:
+    steps <- data.frame(sens = data$sens[1:(nrow(data) - 1)],
+                        fpRate = data$fpRate[2:nrow(data)] - 1e-09)
+    data <- rbind(data, steps)
+    data <- data[order(data$sens, data$fpRate), ]
   }
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = fpRate, y = sens)) +
-    ggplot2::geom_abline(intercept = 0, slope = 1) +
-    ggplot2::geom_area(color = rgb(0, 0, 0.8, alpha = 0.8),
-                       fill = rgb(0, 0, 0.8, alpha = 0.4)) +
-    ggplot2::scale_x_continuous("1 - specificity") +
-    ggplot2::scale_y_continuous("Sensitivity")
+          ggplot2::geom_abline(intercept = 0, slope = 1) +
+          ggplot2::geom_area(color = rgb(0, 0, 0.8, alpha = 0.8),
+                             fill = rgb(0, 0, 0.8, alpha = 0.4)) +
+          ggplot2::scale_x_continuous("1 - specificity") +
+          ggplot2::scale_y_continuous("Sensitivity")
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
   return(plot)

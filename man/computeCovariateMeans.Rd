@@ -12,9 +12,9 @@ computeCovariateMeans(cohortData, covariateData, outcomeData = NULL,
 
 \item{covariateData}{An object of type \code{covariateData}.}
 
-\item{outcomeData}{An object of type \code{outcomeData}. If NULL then only the overall means will
-be computed, else the means will also be computed within the group with the outcome
-and the group without the outcome.}
+\item{outcomeData}{An object of type \code{outcomeData}. If NULL then only the overall means
+will be computed, else the means will also be computed within the group with
+the outcome and the group without the outcome.}
 
 \item{cohortId}{The ID of the specific cohort for which to compute the means.}
 

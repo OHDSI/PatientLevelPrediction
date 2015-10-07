@@ -187,8 +187,8 @@
   prediction <- predictProbabilities(model, parts[[2]]$cohortData, parts[[2]]$covariateData)
   saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rds")
 
-  #prediction <- readRDS("s:/temp/PatientLevelPrediction/prediction.rds")
-  
+  # prediction <- readRDS('s:/temp/PatientLevelPrediction/prediction.rds')
+
   computeAuc(prediction, parts[[2]]$outcomeData)
   plotRoc(prediction, parts[[2]]$outcomeData)
   plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)

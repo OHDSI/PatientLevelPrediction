@@ -48,8 +48,8 @@ fitPredictiveModel <- function(cohortData,
     stop("No cohort ID specified, but multiple cohorts found")
   if (is.null(outcomeId) && length(outcomeData$metaData$outcomeIds) != 1)
     stop("No outcome ID specified, but multiple outcomes found")
-  
-  
+
+
   covariates <- ffbase::subset.ffdf(covariateData$covariates, select = c("personId",
                                                                          "cohortStartDate",
                                                                          "covariateId",
@@ -62,22 +62,22 @@ fitPredictiveModel <- function(cohortData,
                                                                    "outcomeCount",
                                                                    "timeToEvent"))
   if (!is.null(cohortId)) {
-    t <- covariates$cohortId = cohortId
-    covariates <- covariates[ffbase::ffwhich(t, t = TRUE),]
-    
-    t <- cohorts$cohortId = cohortId
-    cohorts <- cohorts[ffbase::ffwhich(t, t = TRUE),]
-    
-    t <- outcomes$cohortId = cohortId
-    outcomes <- outcomes[ffbase::ffwhich(t, t = TRUE),]
-  }  
-  
+    (t <- covariates$cohortId) <- cohortId
+    covariates <- covariates[ffbase::ffwhich(t, t = TRUE), ]
+
+    (t <- cohorts$cohortId) <- cohortId
+    cohorts <- cohorts[ffbase::ffwhich(t, t = TRUE), ]
+
+    (t <- outcomes$cohortId) <- cohortId
+    outcomes <- outcomes[ffbase::ffwhich(t, t = TRUE), ]
+  }
+
   if (!is.null(outcomeId)) {
     t <- outcomes$outcomeId == outcomeId
-    if (!ffbase::any.ff(t)){
-      stop(paste("No outcomes with outcome ID", outcomeId)) 
+    if (!ffbase::any.ff(t)) {
+      stop(paste("No outcomes with outcome ID", outcomeId))
     }
-    outcomes <- outcomes[ffbase::ffwhich(t, t == TRUE),]
+    outcomes <- outcomes[ffbase::ffwhich(t, t == TRUE), ]
   }
   if (!is.null(outcomeData$exclude) && nrow(outcomeData$exclude) != 0) {
     exclude <- outcomeData$exclude
@@ -88,8 +88,8 @@ fitPredictiveModel <- function(cohortData,
     exclude$dummy <- ff::ff(1, length = nrow(exclude), vmode = "double")
     cohorts <- merge(cohorts, exclude, all.x = TRUE)
     t <- cohorts$dummy == 1
-    if (ffbase::any.ff(t)){
-      cohorts <- cohorts[ffbase::ffwhich(t, is.na(t)),]
+    if (ffbase::any.ff(t)) {
+      cohorts <- cohorts[ffbase::ffwhich(t, is.na(t)), ]
     }
     cohorts$dummy <- NULL
   }
@@ -156,11 +156,11 @@ fitPredictiveModel <- function(cohortData,
 #' @export
 getModelDetails <- function(predictiveModel, covariateData) {
   cfs <- predictiveModel$coefficients
-  
+
   cfs <- cfs[cfs != 0]
   attr(cfs, "names")[attr(cfs, "names") == "(Intercept)"] <- 0
   cfs <- data.frame(coefficient = cfs, id = as.numeric(attr(cfs, "names")))
-  
+
   cfs <- merge(ff::as.ffdf(cfs),
                covariateData$covariateRef,
                by.x = "id",

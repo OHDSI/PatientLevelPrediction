@@ -21,30 +21,30 @@
 #' @description
 #' Gets the cohorts of interest from the database.
 #'
-#' @param connectionDetails      An R object of type \code{ConnectionDetails} created using the
-#'                               function \code{createConnectionDetails} in the
-#'                               \code{DatabaseConnector} package.
-#' @param connection             A connection to the server containing the schema as created using the
-#'                               \code{connect} function in the \code{DatabaseConnector} package.
-#' @param cdmDatabaseSchema      The name of the database schema that contains the OMOP CDM instance.
-#'                               Requires read permissions to this database. On SQL Server, this should
-#'                               specifiy both the database and the schema, so for example
-#'                               'cdm_instance.dbo'.
-#' @param oracleTempSchema       A schema where temp tables can be created in Oracle.
-#' @param useExistingCohortPerson Does the temporary table \code{cohort_person}
-#'                               already exists? Can only be used when the \code{connection} parameter
-#'                               is not NULL.
-#' @param cohortDatabaseSchema   If not using an existing \code{cohort_person} temp table, where is the
-#'                               source cohort table located? Note that on SQL Server, one should
-#'                               include both the database and schema, e.g. "cdm_schema.dbo".
-#' @param cohortTable            If not using an existing temp table, what is the name of the table
-#'                               holding the cohort?
-#' @param cohortIds              The list of IDs in the cohortTable that identify the cohort(s) of
-#'                               interest.
-#' @param useCohortEndDate       Use the cohort end date as the basis for the end of the risk window?
-#'                               If FALSE, the cohort start date will be used instead.
-#' @param windowPersistence      The number of days the risk window should persist.
-#' @param cdmVersion             Define the OMOP CDM version used: currently support "4" and "5".
+#' @param connectionDetails         An R object of type \code{ConnectionDetails} created using the
+#'                                  function \code{createConnectionDetails} in the
+#'                                  \code{DatabaseConnector} package.
+#' @param connection                A connection to the server containing the schema as created using
+#'                                  the \code{connect} function in the \code{DatabaseConnector}
+#'                                  package.
+#' @param cdmDatabaseSchema         The name of the database schema that contains the OMOP CDM
+#'                                  instance. Requires read permissions to this database. On SQL
+#'                                  Server, this should specifiy both the database and the schema, so
+#'                                  for example 'cdm_instance.dbo'.
+#' @param oracleTempSchema          A schema where temp tables can be created in Oracle.
+#' @param useExistingCohortPerson   Does the temporary table \code{cohort_person} already exists? Can
+#'                                  only be used when the \code{connection} parameter is not NULL.
+#' @param cohortDatabaseSchema      If not using an existing \code{cohort_person} temp table, where is
+#'                                  the source cohort table located? Note that on SQL Server, one
+#'                                  should include both the database and schema, e.g. "cdm_schema.dbo".
+#' @param cohortTable               If not using an existing temp table, what is the name of the table
+#'                                  holding the cohort?
+#' @param cohortIds                 The list of IDs in the cohortTable that identify the cohort(s) of
+#'                                  interest.
+#' @param useCohortEndDate          Use the cohort end date as the basis for the end of the risk
+#'                                  window? If FALSE, the cohort start date will be used instead.
+#' @param windowPersistence         The number of days the risk window should persist.
+#' @param cdmVersion                Define the OMOP CDM version used: currently support "4" and "5".
 #'
 #' @return
 #' An object of type \code{cohortData} containing information on who are in the cohorts.

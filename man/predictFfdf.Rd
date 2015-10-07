@@ -25,10 +25,9 @@ Generated predictions from a regression model
 These columns are expected in the outcome object: \tabular{lll}{ \verb{rowId} \tab(integer) \tab
 Row ID is used to link multiple covariates (x) to a single outcome (y) \cr \verb{time} \tab(real)
 \tab For models that use time (e.g. Poisson or Cox regression) this contains time \cr \tab
-\tab(e.g. number of days) \cr }
-These columns are expected in the covariates object: \tabular{lll}{ \verb{rowId} \tab(integer) \tab
-Row ID is used to link multiple covariates (x) to a single outcome (y) \cr \verb{covariateId}
-\tab(integer) \tab A numeric identifier of a covariate \cr \verb{covariateValue} \tab(real) \tab
-The value of the specified covariate \cr }
+\tab(e.g. number of days) \cr } These columns are expected in the covariates object: \tabular{lll}{
+\verb{rowId} \tab(integer) \tab Row ID is used to link multiple covariates (x) to a single outcome
+(y) \cr \verb{covariateId} \tab(integer) \tab A numeric identifier of a covariate \cr
+\verb{covariateValue} \tab(real) \tab The value of the specified covariate \cr }
 }
 

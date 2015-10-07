@@ -91,19 +91,19 @@ getDbOutcomeData <- function(connectionDetails = NULL,
     stop("Either connectionDetails or connection has to be specified")
   if (!is.null(connectionDetails) && !is.null(connection))
     stop("Cannot specify both connectionDetails and connection")
-  
+
   if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
   } else {
     cohortDefinitionId <- "cohort_definition_id"
   }
-  
+
   if (is.null(connection)) {
     conn <- DatabaseConnector::connect(connectionDetails)
   } else {
     conn <- connection
   }
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -120,7 +120,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
                                                    first_outcome_only = firstOutcomeOnly,
                                                    cdm_version = cdmVersion,
                                                    cohort_definition_id = cohortDefinitionId)
-  
+
   writeLines("Executing multiple queries. This could take a while")
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Fetching data from server")
@@ -155,7 +155,7 @@ getDbOutcomeData <- function(connectionDetails = NULL,
   }
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveOutcomeTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -194,7 +194,7 @@ saveOutcomeData <- function(outcomeData, file) {
     stop("Must specify file")
   if (class(outcomeData) != "outcomeData")
     stop("Data not of class outcomeData")
-  
+
   outcomes <- outcomeData$outcomes
   if (!is.null(outcomeData$exclude)) {
     exclude <- outcomeData$exclude
@@ -262,14 +262,14 @@ summary.outcomeData <- function(object, ...) {
   for (i in 1:nrow(counts)) {
     outcomeId <- counts$outcomeId[i]
     t <- object$outcomes$outcomeId == outcomeId
-	if (ffbase::any.ff(t)){
-    t <- ffbase::ffwhich(t, t == TRUE)
-		counts$cohortCount[i] <- length(t)
-		counts$personCount[i] <- length(ffbase::unique.ff(object$outcomes$personId[t]))
-	} else {
-		counts$cohortCount[i] <- 0
-		counts$personCount[i] <- 0
-	}
+    if (ffbase::any.ff(t)) {
+      t <- ffbase::ffwhich(t, t == TRUE)
+      counts$cohortCount[i] <- length(t)
+      counts$personCount[i] <- length(ffbase::unique.ff(object$outcomes$personId[t]))
+    } else {
+      counts$cohortCount[i] <- 0
+      counts$personCount[i] <- 0
+    }
   }
   result <- list(metaData = object$metaData, counts = counts)
   class(result) <- "summary.outcomeData"

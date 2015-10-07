@@ -66,11 +66,10 @@ predictProbabilities <- function(predictiveModel, cohortData, covariateData) {
 #' These columns are expected in the outcome object: \tabular{lll}{ \verb{rowId} \tab(integer) \tab
 #' Row ID is used to link multiple covariates (x) to a single outcome (y) \cr \verb{time} \tab(real)
 #' \tab For models that use time (e.g. Poisson or Cox regression) this contains time \cr \tab
-#' \tab(e.g. number of days) \cr }
-#' These columns are expected in the covariates object: \tabular{lll}{ \verb{rowId} \tab(integer) \tab
-#' Row ID is used to link multiple covariates (x) to a single outcome (y) \cr \verb{covariateId}
-#' \tab(integer) \tab A numeric identifier of a covariate \cr \verb{covariateValue} \tab(real) \tab
-#' The value of the specified covariate \cr }
+#' \tab(e.g. number of days) \cr } These columns are expected in the covariates object: \tabular{lll}{
+#' \verb{rowId} \tab(integer) \tab Row ID is used to link multiple covariates (x) to a single outcome
+#' (y) \cr \verb{covariateId} \tab(integer) \tab A numeric identifier of a covariate \cr
+#' \verb{covariateValue} \tab(real) \tab The value of the specified covariate \cr }
 #'
 #' @export
 predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logistic") {
@@ -101,7 +100,7 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
     }
     prediction$value <- link(prediction$value)
   } else if (modelType == "poisson") {
-    
+
     prediction$value <- exp(prediction$value)
     prediction$value <- prediction$value * prediction$time
   } else {
@@ -124,5 +123,5 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
 #' @export
 bySumFf <- function(values, bins) {
   .bySum(values, bins)
-  # .Call("PatientLevelPrediction_bySum", PACKAGE = "PatientLevelPrediction", values, bins)
+  # .Call('PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', values, bins)
 }

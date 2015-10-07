@@ -15,23 +15,23 @@ getDbCohortData(connectionDetails = NULL, connection = NULL,
 function \code{createConnectionDetails} in the
 \code{DatabaseConnector} package.}
 
-\item{connection}{A connection to the server containing the schema as created using the
-\code{connect} function in the \code{DatabaseConnector} package.}
+\item{connection}{A connection to the server containing the schema as created using
+the \code{connect} function in the \code{DatabaseConnector}
+package.}
 
-\item{cdmDatabaseSchema}{The name of the database schema that contains the OMOP CDM instance.
-Requires read permissions to this database. On SQL Server, this should
-specifiy both the database and the schema, so for example
-'cdm_instance.dbo'.}
+\item{cdmDatabaseSchema}{The name of the database schema that contains the OMOP CDM
+instance. Requires read permissions to this database. On SQL
+Server, this should specifiy both the database and the schema, so
+for example 'cdm_instance.dbo'.}
 
 \item{oracleTempSchema}{A schema where temp tables can be created in Oracle.}
 
-\item{useExistingCohortPerson}{Does the temporary table \code{cohort_person}
-already exists? Can only be used when the \code{connection} parameter
-is not NULL.}
+\item{useExistingCohortPerson}{Does the temporary table \code{cohort_person} already exists? Can
+only be used when the \code{connection} parameter is not NULL.}
 
-\item{cohortDatabaseSchema}{If not using an existing \code{cohort_person} temp table, where is the
-source cohort table located? Note that on SQL Server, one should
-include both the database and schema, e.g. "cdm_schema.dbo".}
+\item{cohortDatabaseSchema}{If not using an existing \code{cohort_person} temp table, where is
+the source cohort table located? Note that on SQL Server, one
+should include both the database and schema, e.g. "cdm_schema.dbo".}
 
 \item{cohortTable}{If not using an existing temp table, what is the name of the table
 holding the cohort?}
@@ -39,8 +39,8 @@ holding the cohort?}
 \item{cohortIds}{The list of IDs in the cohortTable that identify the cohort(s) of
 interest.}
 
-\item{useCohortEndDate}{Use the cohort end date as the basis for the end of the risk window?
-If FALSE, the cohort start date will be used instead.}
+\item{useCohortEndDate}{Use the cohort end date as the basis for the end of the risk
+window? If FALSE, the cohort start date will be used instead.}
 
 \item{windowPersistence}{The number of days the risk window should persist.}
 

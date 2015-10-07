@@ -23,8 +23,8 @@ A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file 
 format.
 }
 \description{
-Create a plot showing those variables having the largest standardized difference between the
-group having the outcome and the group that doesn't have the outcome. Requires running
+Create a plot showing those variables having the largest standardized difference between the group
+having the outcome and the group that doesn't have the outcome. Requires running
 \code{computeCovariateMeans} first.
 }
 
