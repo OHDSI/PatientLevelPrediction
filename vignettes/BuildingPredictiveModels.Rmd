@@ -247,7 +247,7 @@ covariateData <- getDbCovariateData(connectionDetails$dbms,
                                     cdmDatabaseSchema = cdmDatabaseSchema, 
                                     cohortDatabaseSchema = resultsDatabaseSchema, 
                                     cohortTable = "rehospitalization", 
-                                    cohortIds = 1, 
+                                    cohortIds = 1,
                                     covariateSettings = covariateSettings,
                                     cdmVersion = cdmVersion)
 
@@ -256,6 +256,8 @@ outcomeData <- getDbOutcomeData(connectionDetails$dbms,
                                 cohortDatabaseSchema = resultsDatabaseSchema, 
                                 cohortTable = "rehospitalization", 
                                 cohortIds = 1,
+								useCohortEndDate = TRUE,
+								windowPersistence = 0,
                                 outcomeDatabaseSchema = resultsDatabaseSchema,
                                 outcomeTable = "rehospitalization",
                                 outcomeConceptIds = 2,
@@ -263,6 +265,8 @@ outcomeData <- getDbOutcomeData(connectionDetails$dbms,
 ```
 
 There are many parameters, but they are all documented in the `PatientLevelPrediction` manual. In short, we are pointing the functions to the table created earlier and indicating which concept IDs in that table identify the cohort and outcome of interest. We construct `cohortData`, an object representing the cohort of interest, `covariateData`, holding all covariate information that will be used as predictors, and `outcomeData` as the set of outcomes during cohort time. All three objects use the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
+
+**Important**: Make sure the same prediction window definition (e.g. `useCohortEndDate` and `windowPersistence`) is used when calling both `getDbCohortData` and `getDbOutcomeData`.
 
 We can get some overall statistics using the generic `summary()` method:
 

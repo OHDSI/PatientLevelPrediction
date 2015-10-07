@@ -10,6 +10,7 @@ getDbOutcomeData(connectionDetails = NULL, connection = NULL,
   cohortTable = "cohort", cohortIds = c(0, 1),
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "condition_occurrence", outcomeIds = c(),
+  useCohortEndDate = TRUE, windowPersistence = 0,
   outcomeConditionTypeConceptIds = "", firstOutcomeOnly = FALSE,
   cdmVersion = "4")
 }
@@ -60,6 +61,11 @@ CONCEPT_IDs, and all occurrences of all descendant concepts
 will be selected.  If outcomeTable <> CONDITION_OCCURRENCE,
 the list contains records found in COHORT_DEFINITION_ID
 field.}
+
+\item{useCohortEndDate}{Use the cohort end date as the basis for the end of the risk
+window? If FALSE, the cohort start date will be used instead.}
+
+\item{windowPersistence}{The number of days the risk window should persist.}
 
 \item{outcomeConditionTypeConceptIds}{A list of TYPE_CONCEPT_ID values that will restrict
 condition occurrences.  Only applicable if outcomeTable =

@@ -46,6 +46,9 @@
 #' @param cohortTable                      If not using an existing temp table, what is the name of the
 #'                                         table holding the cohort?
 #' @param cohortIds                        The IDs of the cohorts.
+#' @param useCohortEndDate          Use the cohort end date as the basis for the end of the risk
+#'                                  window? If FALSE, the cohort start date will be used instead.
+#' @param windowPersistence         The number of days the risk window should persist.
 #' @param outcomeDatabaseSchema            The name of the database schema that is the location where
 #'                                         the data used to define the outcome cohorts is available. If
 #'                                         exposureTable = CONDITION_ERA, exposureDatabaseSchema is not
@@ -83,6 +86,8 @@ getDbOutcomeData <- function(connectionDetails = NULL,
                              outcomeDatabaseSchema = cdmDatabaseSchema,
                              outcomeTable = "condition_occurrence",
                              outcomeIds = c(),
+                             useCohortEndDate = TRUE,
+                             windowPersistence = 0,
                              outcomeConditionTypeConceptIds = "",
                              firstOutcomeOnly = FALSE,
                              cdmVersion = "4") {
@@ -113,6 +118,8 @@ getDbOutcomeData <- function(connectionDetails = NULL,
                                                    cohort_database_schema = cohortDatabaseSchema,
                                                    cohort_table = cohortTable,
                                                    cohort_ids = cohortIds,
+                                                   use_cohort_end_date = useCohortEndDate,
+                                                   window_persistence = windowPersistence,
                                                    outcome_database_schema = outcomeDatabaseSchema,
                                                    outcome_table = outcomeTable,
                                                    outcome_ids = outcomeIds,
