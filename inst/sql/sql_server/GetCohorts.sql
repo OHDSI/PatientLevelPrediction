@@ -25,6 +25,8 @@ limitations under the License.
 {DEFAULT @cohort_ids = '0,1' }
 {DEFAULT @cdm_version == '4'}
 {DEFAULT @cohort_definition_id = 'cohort_concept_id'} 
+{DEFAULT @use_cohort_end_date = TRUE}
+{DEFAULT @window_persistence = 0}
 
 USE @cdm_database;
 
@@ -32,12 +34,24 @@ USE @cdm_database;
 IF OBJECT_ID('tempdb..#cohort_person', 'U') IS NOT NULL
 	DROP TABLE #cohort_person;
 	
-SELECT @cohort_definition_id,
+SELECT DISTINCT @cohort_definition_id,
 	subject_id,
 	cohort_start_date,
-	cohort_end_date
+{@use_cohort_end_date} ? {
+	CASE 
+		WHEN DATEADD(DAY, @window_persistence, cohort_end_date) > observation_period_end_date THEN observation_period_end_date 
+		ELSE DATEADD(DAY, @window_persistence, cohort_end_date)
+	END AS cohort_end_date
+} : {
+	CASE 
+		WHEN DATEADD(DAY, @window_persistence, cohort_start_date) > observation_period_end_date THEN observation_period_end_date 
+		ELSE DATEADD(DAY, @window_persistence, cohort_start_date)
+	END AS cohort_end_date
+}	
 INTO #cohort_person
-FROM @cohort_database_schema.@cohort_table
+FROM @cohort_database_schema.@cohort_table cohort
+INNER JOIN observation_period
+ON cohort.subject_id = observation_period.person_id
 {@cohort_concept_ids != ''} ? {
 WHERE @cohort_definition_id IN (@cohort_ids);
 }

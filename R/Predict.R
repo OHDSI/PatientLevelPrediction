@@ -26,7 +26,7 @@
 #' @param cohortData        An object of type \code{cohortData} as generated using
 #'                          \code{\link{getDbCohortData}}.
 #' @param covariateData     An object of type \code{covariateData} as generated using
-#'                          \code{\link{getDbCovarteData}}.
+#'                          \code{\link{getDbCovariateData}}.
 #' @export
 predictProbabilities <- function(predictiveModel, cohortData, covariateData) {
   targetCohortId <- predictiveModel$cohortId

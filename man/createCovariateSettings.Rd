@@ -275,6 +275,9 @@ DCSI score should be included in the model.}
 \item{useCovariateRiskScoresCHADS2}{A boolean value (TRUE/FALSE) to determine if the
 CHADS2 score should be included in the model.}
 
+\item{useCovariateRiskScoresCHADS2VASc}{A boolean value (TRUE/FALSE) to determine if the
+CHADS2VASc score should be included in the model.}
+
 \item{useCovariateInteractionYear}{A boolean value (TRUE/FALSE) to determine if
 covariates will be created and used in models that
 represent interaction terms between all other

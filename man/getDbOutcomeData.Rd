@@ -5,7 +5,7 @@
 \title{Get outcomes for persons in the cohort}
 \usage{
 getDbOutcomeData(connectionDetails = NULL, connection = NULL,
-  cdmDatabaseSchema, oracleTempSchema = cdmDatabaseSchema,
+  cdmDatabaseSchema, oracleTempSchema = NULL,
   useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort", cohortIds = c(0, 1),
   outcomeDatabaseSchema = cdmDatabaseSchema,

@@ -75,7 +75,7 @@
 getDbOutcomeData <- function(connectionDetails = NULL,
                              connection = NULL,
                              cdmDatabaseSchema,
-                             oracleTempSchema = cdmDatabaseSchema,
+                             oracleTempSchema = NULL,
                              useExistingCohortPerson = FALSE,
                              cohortDatabaseSchema = cdmDatabaseSchema,
                              cohortTable = "cohort",

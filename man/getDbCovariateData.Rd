@@ -19,6 +19,8 @@ function \code{createConnectionDetails} in the
 the \code{connect} function in the \code{DatabaseConnector}
 package.}
 
+\item{oracleTempSchema}{A schema where temp tables can be created in Oracle.}
+
 \item{cdmDatabaseSchema}{The name of the database schema that contains the OMOP CDM
 instance.  Requires read permissions to this database. On SQL
 Server, this should specifiy both the database and the schema, so
@@ -41,8 +43,6 @@ build covariates.}
 \code{\link{createCovariateSettings}} function.}
 
 \item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
-
-\item{oracleTempSchemaA}{schema where temp tables can be created in Oracle.}
 }
 \value{
 Returns an object of type \code{covariateData}, containing information on the baseline covariates.

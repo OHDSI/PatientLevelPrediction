@@ -5,9 +5,10 @@
 \title{Get cohorts of interest}
 \usage{
 getDbCohortData(connectionDetails = NULL, connection = NULL,
-  cdmDatabaseSchema, oracleTempSchema = cdmDatabaseSchema,
+  cdmDatabaseSchema, oracleTempSchema = NULL,
   useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
-  cohortTable = "cohort", cohortIds = c(0, 1), cdmVersion = "4")
+  cohortTable = "cohort", cohortIds = c(0, 1), useCohortEndDate = TRUE,
+  windowPersistence = 0, cdmVersion = "4")
 }
 \arguments{
 \item{connectionDetails}{An R object of type \code{ConnectionDetails} created using the
@@ -22,7 +23,7 @@ Requires read permissions to this database. On SQL Server, this should
 specifiy both the database and the schema, so for example
 'cdm_instance.dbo'.}
 
-\item{oracleTempSchema}{A schema where temp tables can be created in Oracle.#'}
+\item{oracleTempSchema}{A schema where temp tables can be created in Oracle.}
 
 \item{useExistingCohortPerson}{Does the temporary table \code{cohort_person}
 already exists? Can only be used when the \code{connection} parameter
@@ -38,12 +39,17 @@ holding the cohort?}
 \item{cohortIds}{The list of IDs in the cohortTable that identify the cohort(s) of
 interest.}
 
+\item{useCohortEndDate}{Use the cohort end date as the basis for the end of the risk window?
+If FALSE, the cohort start date will be used instead.}
+
+\item{windowPersistence}{The number of days the risk window should persist.}
+
 \item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
 }
 \value{
 An object of type \code{cohortData} containing information on who are in the cohorts.
 }
 \description{
-Gets the cohorts of interest from the database
+Gets the cohorts of interest from the database.
 }
 

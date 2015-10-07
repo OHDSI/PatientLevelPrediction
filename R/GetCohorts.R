@@ -19,7 +19,7 @@
 #' Get cohorts of interest
 #'
 #' @description
-#' Gets the cohorts of interest from the database
+#' Gets the cohorts of interest from the database.
 #'
 #' @param connectionDetails      An R object of type \code{ConnectionDetails} created using the
 #'                               function \code{createConnectionDetails} in the
@@ -30,8 +30,8 @@
 #'                               Requires read permissions to this database. On SQL Server, this should
 #'                               specifiy both the database and the schema, so for example
 #'                               'cdm_instance.dbo'.
-#' @param oracleTempSchema       A schema where temp tables can be created in Oracle.#' @param
-#'                               useExistingCohortPerson Does the temporary table \code{cohort_person}
+#' @param oracleTempSchema       A schema where temp tables can be created in Oracle.
+#' @param useExistingCohortPerson Does the temporary table \code{cohort_person}
 #'                               already exists? Can only be used when the \code{connection} parameter
 #'                               is not NULL.
 #' @param cohortDatabaseSchema   If not using an existing \code{cohort_person} temp table, where is the
@@ -41,6 +41,9 @@
 #'                               holding the cohort?
 #' @param cohortIds              The list of IDs in the cohortTable that identify the cohort(s) of
 #'                               interest.
+#' @param useCohortEndDate       Use the cohort end date as the basis for the end of the risk window?
+#'                               If FALSE, the cohort start date will be used instead.
+#' @param windowPersistence      The number of days the risk window should persist.
 #' @param cdmVersion             Define the OMOP CDM version used: currently support "4" and "5".
 #'
 #' @return
@@ -50,11 +53,13 @@
 getDbCohortData <- function(connectionDetails = NULL,
                             connection = NULL,
                             cdmDatabaseSchema,
-                            oracleTempSchema = cdmDatabaseSchema,
+                            oracleTempSchema = NULL,
                             useExistingCohortPerson = FALSE,
                             cohortDatabaseSchema = cdmDatabaseSchema,
                             cohortTable = "cohort",
                             cohortIds = c(0, 1),
+                            useCohortEndDate = TRUE,
+                            windowPersistence = 0,
                             cdmVersion = "4") {
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
   if (is.null(connectionDetails) && is.null(connection))
@@ -83,6 +88,8 @@ getDbCohortData <- function(connectionDetails = NULL,
                                                    cohort_database_schema = cohortDatabaseSchema,
                                                    cohort_table = cohortTable,
                                                    cohort_ids = cohortIds,
+                                                   use_cohort_end_date = useCohortEndDate,
+                                                   window_persistence = windowPersistence,
                                                    cdm_version = cdmVersion,
                                                    cohort_definition_id = cohortDefinitionId)
 

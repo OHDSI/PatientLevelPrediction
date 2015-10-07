@@ -34,7 +34,7 @@
 #' @param connection                A connection to the server containing the schema as created using
 #'                                  the \code{connect} function in the \code{DatabaseConnector}
 #'                                  package.
-#' @param oracleTempSchemaA         schema where temp tables can be created in Oracle.
+#' @param oracleTempSchema          A schema where temp tables can be created in Oracle.
 #' @param cdmDatabaseSchema         The name of the database schema that contains the OMOP CDM
 #'                                  instance.  Requires read permissions to this database. On SQL
 #'                                  Server, this should specifiy both the database and the schema, so
@@ -519,6 +519,8 @@ loadCovariateData <- function(file, readOnly = FALSE) {
 #'                                                  DCSI score should be included in the model.
 #' @param useCovariateRiskScoresCHADS2              A boolean value (TRUE/FALSE) to determine if the
 #'                                                  CHADS2 score should be included in the model.
+#' @param useCovariateRiskScoresCHADS2VASc          A boolean value (TRUE/FALSE) to determine if the
+#'                                                  CHADS2VASc score should be included in the model.
 #' @param useCovariateInteractionYear               A boolean value (TRUE/FALSE) to determine if
 #'                                                  covariates will be created and used in models that
 #'                                                  represent interaction terms between all other
