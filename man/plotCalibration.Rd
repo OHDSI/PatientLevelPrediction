@@ -4,14 +4,21 @@
 \alias{plotCalibration}
 \title{Plot the calibration}
 \usage{
-plotCalibration(prediction, outcomeData, numberOfStrata = 5,
-  fileName = NULL)
+plotCalibration(prediction, outcomeData, cohortData = NULL,
+  removeDropoutsForLr = TRUE, numberOfStrata = 5, fileName = NULL)
 }
 \arguments{
 \item{prediction}{A prediction object as generated using the
 \code{\link{predictProbabilities}} function.}
 
 \item{outcomeData}{An object of type \code{outcomeData}.}
+
+\item{cohortData}{An object of type \code{cohortData} as generated using
+\code{\link{getDbCohortData}}. Only needed if removeDropoutsForLr is TRUE.}
+
+\item{removeDropoutsForLr}{If TRUE and modelType is "logistic", subjects that do not have the full
+observation window (i.e. are censored earlier) and do not have the outcome
+are removed prior to evaluating the model.}
 
 \item{numberOfStrata}{The number of strata in the plot.}
 

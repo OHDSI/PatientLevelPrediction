@@ -5,10 +5,10 @@
 \title{Fit a predictive model}
 \usage{
 fitPredictiveModel(cohortData, covariateData, outcomeData,
-  modelType = "logistic", cohortId = NULL, outcomeId = NULL,
-  prior = createPrior("laplace", exclude = c(0), useCrossValidation = TRUE),
-  control = createControl(noiseLevel = "silent", cvType = "auto",
-  startingVariance = 0.1))
+  modelType = "logistic", removeDropoutsForLr = TRUE, cohortId = NULL,
+  outcomeId = NULL, prior = createPrior("laplace", exclude = c(0),
+  useCrossValidation = TRUE), control = createControl(noiseLevel = "silent",
+  cvType = "auto", startingVariance = 0.1))
 }
 \arguments{
 \item{cohortData}{An object of type \code{cohortData}.}
@@ -19,6 +19,10 @@ fitPredictiveModel(cohortData, covariateData, outcomeData,
 
 \item{modelType}{The type of predictive model. Options are "logistic", "poisson", and
 "survival".}
+
+\item{removeDropoutsForLr}{If TRUE and modelType is "logistic", subjects that do not have the full
+observation window (i.e. are censored earlier) and do not have the outcome
+are removed prior to fitting the model.}
 
 \item{cohortId}{The ID of the specific cohort for which to fit a model.}
 

@@ -16,21 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Compute the area under the ROC curve
-#'
-#' @details
-#' Computes the area under the ROC curve for the predicted probabilities, given the true observed
-#' outcomes.
-#'
-#' @param prediction           A prediction object as generated using the
-#'                             \code{\link{predictProbabilities}} function.
-#' @param outcomeData          An object of type \code{outcomeData}.
-#' @param confidenceInterval   Should 95 percebt confidence intervals be computed?
-#'
-#' @export
-computeAuc <- function(prediction, outcomeData, confidenceInterval = FALSE) {
-  if (attr(prediction, "modelType") != "logistic")
-    stop("Computing AUC is only implemented for logistic models")
+prepareDataForEval <- function(prediction, outcomeData, cohortData, removeDropouts){
+  if (removeDropouts && is.null(cohortData)){
+    stop("Must provide cohortData when you want to remove dropouts") 
+  }
   targetCohortId <- attr(prediction, "cohortId")
   targetOutcomeId <- attr(prediction, "outcomeId")
   outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
@@ -44,6 +33,37 @@ computeAuc <- function(prediction, outcomeData, confidenceInterval = FALSE) {
   prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
+  if (removeDropouts) {
+    prediction <- merge(prediction, ff::as.ram(cohortData$cohorts)[,c("personId", "cohortStartDate", "time")])
+    fullWindowLength <- ffbase::max.ff(cohortData$cohorts$time) 
+    prediction <- prediction[prediction$outcomeCount != 0 | prediction$time == fullWindowLength, ]
+  }
+  return(prediction)
+}
+
+#' Compute the area under the ROC curve
+#'
+#' @details
+#' Computes the area under the ROC curve for the predicted probabilities, given the true observed
+#' outcomes.
+#'
+#' @param prediction           A prediction object as generated using the
+#'                             \code{\link{predictProbabilities}} function.
+#' @param outcomeData          An object of type \code{outcomeData}.
+#' @param cohortData        An object of type \code{cohortData} as generated using
+#'                          \code{\link{getDbCohortData}}. Only needed if removeDropoutsForLr is TRUE.
+#' @param removeDropoutsForLr  If TRUE and modelType is "logistic", subjects that do not have the full 
+#'                             observation window (i.e. are censored earlier) and do not have the outcome
+#'                             are removed prior to evaluating the model.
+#' @param confidenceInterval   Should 95 percebt confidence intervals be computed?
+#'
+#' @export
+computeAuc <- function(prediction, outcomeData, cohortData = NULL, removeDropoutsForLr = TRUE, confidenceInterval = FALSE) {
+  if (attr(prediction, "modelType") != "logistic")
+    stop("Computing AUC is only implemented for logistic models")
+  
+  prediction <- prepareDataForEval(prediction, outcomeData, cohortData, removeDropoutsForLr)
+  
   if (confidenceInterval) {
     auc <- .Call("PatientLevelPrediction_aucWithCi",
                  PACKAGE = "PatientLevelPrediction",
@@ -82,7 +102,7 @@ computeAucFromDataFrames <- function(prediction,
                                      modelType = "logistic") {
   if (modelType == "survival" & confidenceInterval)
     stop("Currently not supporting confidence intervals for survival models")
-
+  
   if (modelType == "survival") {
     Surv.rsp <- survival::Surv(time, status)
     Surv.rsp.new <- Surv.rsp
@@ -116,6 +136,11 @@ computeAucFromDataFrames <- function(prediction,
 #' @param prediction       A prediction object as generated using the
 #'                         \code{\link{predictProbabilities}} function.
 #' @param outcomeData      An object of type \code{outcomeData}.
+#' @param cohortData        An object of type \code{cohortData} as generated using
+#'                          \code{\link{getDbCohortData}}. Only needed if removeDropoutsForLr is TRUE.
+#' @param removeDropoutsForLr  If TRUE and modelType is "logistic", subjects that do not have the full 
+#'                             observation window (i.e. are censored earlier) and do not have the outcome
+#'                             are removed prior to evaluating the model.
 #' @param numberOfStrata   The number of strata in the plot.
 #' @param fileName         Name of the file where the plot should be saved, for example 'plot.png'. See
 #'                         the function \code{ggsave} in the ggplot2 package for supported file
@@ -126,24 +151,11 @@ computeAucFromDataFrames <- function(prediction,
 #' format.
 #'
 #' @export
-plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileName = NULL) {
+plotCalibration <- function(prediction, outcomeData, cohortData = NULL, removeDropoutsForLr = TRUE, numberOfStrata = 5, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the calibration is only implemented for logistic models")
 
-  targetCohortId <- attr(prediction, "cohortId")
-  targetOutcomeId <- attr(prediction, "outcomeId")
-  outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortId == targetCohortId & outcomeId == targetOutcomeId,
-                                  select = c("personId",
-                                             "cohortId",
-                                             "cohortStartDate",
-                                             "outcomeId",
-                                             "outcomeCount",
-                                             "timeToEvent"))
-
-  prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
-  prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
-  prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
+  prediction <- prepareDataForEval(prediction, outcomeData, cohortData, removeDropoutsForLr)
 
   q <- quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata)
   prediction$strata <- cut(prediction$value,
@@ -169,11 +181,11 @@ plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileNam
   strataData$fraction <- strataData$counts/strataData$backgroundCounts
   plot <- ggplot2::ggplot(strataData,
                           ggplot2::aes(xmin = minx, xmax = maxx, ymin = 0, ymax = fraction)) +
-          ggplot2::geom_abline() +
-          ggplot2::geom_rect(color = rgb(0, 0, 0.8, alpha = 0.8),
-                             fill = rgb(0, 0, 0.8, alpha = 0.5)) +
-          ggplot2::scale_x_continuous("Predicted probability") +
-          ggplot2::scale_y_continuous("Observed fraction")
+    ggplot2::geom_abline() +
+    ggplot2::geom_rect(color = rgb(0, 0, 0.8, alpha = 0.8),
+                       fill = rgb(0, 0, 0.8, alpha = 0.5)) +
+    ggplot2::scale_x_continuous("Predicted probability") +
+    ggplot2::scale_y_continuous("Observed fraction")
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
   return(plot)
@@ -188,6 +200,11 @@ plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileNam
 #' @param prediction    A prediction object as generated using the \code{\link{predictProbabilities}}
 #'                      function.
 #' @param outcomeData   An object of type \code{outcomeData}.
+#' @param cohortData        An object of type \code{cohortData} as generated using
+#'                          \code{\link{getDbCohortData}}. Only needed if removeDropoutsForLr is TRUE.
+#' @param removeDropoutsForLr  If TRUE and modelType is "logistic", subjects that do not have the full 
+#'                             observation window (i.e. are censored earlier) and do not have the outcome
+#'                             are removed prior to evaluating the model.
 #' @param fileName      Name of the file where the plot should be saved, for example 'plot.png'. See
 #'                      the function \code{ggsave} in the ggplot2 package for supported file formats.
 #'
@@ -196,24 +213,12 @@ plotCalibration <- function(prediction, outcomeData, numberOfStrata = 5, fileNam
 #' format.
 #'
 #' @export
-plotRoc <- function(prediction, outcomeData, fileName = NULL) {
+plotRoc <- function(prediction, outcomeData, cohortData = NULL, removeDropoutsForLr = TRUE, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the ROC curve is only implemented for logistic models")
-
-  targetCohortId <- attr(prediction, "cohortId")
-  targetOutcomeId <- attr(prediction, "outcomeId")
-  outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortId == targetCohortId & outcomeId == targetOutcomeId,
-                                  select = c("personId",
-                                             "cohortId",
-                                             "cohortStartDate",
-                                             "outcomeId",
-                                             "outcomeCount",
-                                             "timeToEvent"))
-
-  prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
-  prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
-  prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
+  
+  prediction <- prepareDataForEval(prediction, outcomeData, cohortData, removeDropoutsForLr)
+  
   prediction <- prediction[order(-prediction$value), c("value", "outcomeCount")]
   prediction$sens <- cumsum(prediction$outcomeCount)/sum(prediction$outcomeCount)
   prediction$fpRate <- cumsum(prediction$outcomeCount == 0)/sum(prediction$outcomeCount == 0)
@@ -228,11 +233,11 @@ plotRoc <- function(prediction, outcomeData, fileName = NULL) {
     data <- data[order(data$sens, data$fpRate), ]
   }
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = fpRate, y = sens)) +
-          ggplot2::geom_abline(intercept = 0, slope = 1) +
-          ggplot2::geom_area(color = rgb(0, 0, 0.8, alpha = 0.8),
-                             fill = rgb(0, 0, 0.8, alpha = 0.4)) +
-          ggplot2::scale_x_continuous("1 - specificity") +
-          ggplot2::scale_y_continuous("Sensitivity")
+    ggplot2::geom_abline(intercept = 0, slope = 1) +
+    ggplot2::geom_area(color = rgb(0, 0, 0.8, alpha = 0.8),
+                       fill = rgb(0, 0, 0.8, alpha = 0.4)) +
+    ggplot2::scale_x_continuous("1 - specificity") +
+    ggplot2::scale_y_continuous("Sensitivity")
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
   return(plot)
