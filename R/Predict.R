@@ -23,24 +23,44 @@
 #'
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using
 #'                          \code{\link{fitPredictiveModel}}.
-#' @param cohortData        An object of type \code{cohortData} as generated using
-#'                          \code{\link{getDbCohortData}}.
-#' @param covariateData     An object of type \code{covariateData} as generated using
-#'                          \code{\link{getDbCovariateData}}.
+#' @param plpData        An object of type \code{plpData} as generated using
+#'                          \code{\link{getDbPlpData}}.
 #' @export
-predictProbabilities <- function(predictiveModel, cohortData, covariateData) {
-  targetCohortId <- predictiveModel$cohortId
-  covariates <- ffbase::subset.ffdf(covariateData$covariates,
-                                    cohortId == targetCohortId,
-                                    select = c("personId",
-                                               "cohortStartDate",
-                                               "covariateId",
-                                               "covariateValue"))
-  cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
-                                 cohortId == targetCohortId,
-                                 select = c("personId", "cohortStartDate", "time"))
-  cohorts$rowId <- ff::ff(1:nrow(cohorts))
-  covariates <- merge(covariates, cohorts, by = c("cohortStartDate", "personId"))
+predictProbabilities <- function(predictiveModel, plpData) {
+  covariates <- plpData$covariates
+  cohorts <- plpData$cohorts
+  
+  if (length(plpData$metaData$cohortIds) > 1) {
+    # Filter by cohort ID:
+	cohortId <- predictiveModel$cohortId
+	t <- cohorts$cohortId == cohortId
+	  if (!ffbase::any.ff(t)) {
+      stop(paste("No cohorts with cohort ID", cohortId))
+    }    
+    cohorts <- cohorts[ffbase::ffwhich(t, t == TRUE), ]
+	
+	idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
+	covariates <- covariates[idx, ]
+  }
+  
+  if (!is.null(plpData$exclude) && nrow(plpData$exclude) != 0) {
+    # Filter subjects with previous outcomes:
+    exclude <- plpData$exclude
+    outcomeId <- predictiveModel$outcomeId
+    t <- exclude$outcomeId == outcomeId
+	if (ffbase::any.ff(t)){
+		exclude <- exclude[ffbase::ffwhich(t, t == TRUE)]
+		t <- ffbase::ffmatch(x = cohorts$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+		if (ffbase::any.ff(t)) {
+			cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE)]
+		}	
+		t <- ffbase::ffmatch(x = covariate$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+		if (ffbase::any.ff(t)) {
+			covariate <- covariate[ffbase::ffwhich(t, t == FALSE)]
+		}
+	}
+  }
+
   prediction <- predictFfdf(predictiveModel$coefficients,
                             cohorts,
                             covariates,

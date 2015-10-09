@@ -27,6 +27,8 @@
 #' the OMOP CDM. The subject_id in this table must refer to person_ids in the CDM. One person can
 #' occurr multiple times, but the combination of subject_id and cohort_start_date is assumed to be
 #' unique.
+#' 
+#' This function is called automatically by the \code{\link{getDbPlpData}} function.
 #'
 #' @param connectionDetails         An R object of type \code{connectionDetails} created using the
 #'                                  function \code{createConnectionDetails} in the
@@ -41,6 +43,9 @@
 #'                                  for example 'cdm_instance.dbo'.
 #' @param useExistingCohortPerson   Does the temporary table \code{cohort_person} already exists? Can
 #'                                  only be used when the \code{connection} parameter is not NULL.
+#' @param rowIdField                The name of the field in the existing cohort_person table that is to 
+#'                                  be used as the row_id field in the output table. This can be especially
+#'                                  usefull if there is more than one period per person.                                
 #' @param cohortDatabaseSchema      If not using an existing \code{cohort_person} temp table, where is
 #'                                  the source cohort table located? Note that on SQL Server, one
 #'                                  should include both the database and schema, e.g. 'cdm_schema.dbo'.
@@ -56,8 +61,10 @@
 #' Returns an object of type \code{covariateData}, containing information on the baseline covariates.
 #' Information about multiple outcomes can be captured at once for efficiency reasons. This object is
 #' a list with the following components: \describe{ \item{covariates}{An ffdf object listing the
-#' baseline covariates per person in the two cohorts. This is done using a sparse representation:
-#' covariates with a value of 0 are omitted to save space.} \item{covariateRef}{An ffdf object
+#' baseline covariates per person in the cohorts. This is done using a sparse representation:
+#' covariates with a value of 0 are omitted to save space. The covariates object will have three columns: rowId, 
+#' covariateId, and covariateValue. The rowId is usually equal to the person_id, unless specified otherwise in the 
+#' rowIdField argument.} \item{covariateRef}{An ffdf object
 #' describing the covariates that have been extracted.} \item{metaData}{A list of objects with
 #' information on how the covariateData object was constructed.} }
 #'
@@ -67,6 +74,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                oracleTempSchema = NULL,
                                cdmDatabaseSchema,
                                useExistingCohortPerson = FALSE,
+                               rowIdField = "person_id",
                                cohortDatabaseSchema = cdmDatabaseSchema,
                                cohortTable = "cohort",
                                cohortIds = c(0, 1),
@@ -140,6 +148,8 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                                    cohort_database_schema = cohortDatabaseSchema,
                                                    cohort_table = cohortTable,
                                                    cohort_ids = cohortIds,
+                                                   row_id_field = rowIdField,
+                                                   use_covariate_cohort_id_is_1 = covariateSettings$useCovariateCohortIdIs1,
                                                    use_covariate_demographics = covariateSettings$useCovariateDemographics,
                                                    use_covariate_demographics_gender = covariateSettings$useCovariateDemographicsGender,
                                                    use_covariate_demographics_race = covariateSettings$useCovariateDemographicsRace,
@@ -203,7 +213,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
 
   writeLines("Fetching data from server")
   start <- Sys.time()
-  covariateSql <- "SELECT person_id, cohort_start_date, @cohort_definition_id AS cohort_id, covariate_id, covariate_value FROM #cov ORDER BY person_id, covariate_id"
+  covariateSql <- "SELECT row_id, covariate_id, covariate_value FROM #cov ORDER BY covariate_id, row_id"
   covariateSql <- SqlRender::renderSql(covariateSql, cohort_definition_id = cohortDefinitionId)$sql
   covariateSql <- SqlRender::translateSql(covariateSql,
                                           "sql server",
@@ -222,9 +232,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCovariateTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
-                                                   oracleTempSchema = oracleTempSchema,
-                                                   has_excluded_covariate_concept_ids = hasExcludedCovariateConceptIds,
-                                                   has_included_covariate_concept_ids = hasIncludedCovariateConceptIds)
+                                                   oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(conn, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
   if (is.null(connection)) {
     RJDBC::dbDisconnect(conn)
@@ -330,6 +338,10 @@ loadCovariateData <- function(file, readOnly = FALSE) {
 #'                                                  construct covariates.
 #' @param includedCovariateConceptIds               A list of concept IDs that should be used to
 #'                                                  construct covariates.
+#' @param useCovariateCohortIdIs1                   A boolean value (TRUE/FALSE) to determine if a 
+#'                                                  covariate should be contructed for whether the 
+#'                                                  cohort ID is 1 (currently primarily used in 
+#'                                                  CohortMethod). 
 #' @param useCovariateDemographics                  A boolean value (TRUE/FALSE) to determine if
 #'                                                  demographic covariates (age in 5-yr increments,
 #'                                                  gender, race, ethnicity, year of index date, month
@@ -537,7 +549,8 @@ loadCovariateData <- function(file, readOnly = FALSE) {
 #' An object of type \code{covariateSettings}, to be used in other functions.
 #'
 #' @export
-createCovariateSettings <- function(useCovariateDemographics = TRUE,
+createCovariateSettings <- function(useCovariateCohortIdIs1 = FALSE,
+                                    useCovariateDemographics = TRUE,
                                     useCovariateDemographicsGender = TRUE,
                                     useCovariateDemographicsRace = TRUE,
                                     useCovariateDemographicsEthnicity = TRUE,

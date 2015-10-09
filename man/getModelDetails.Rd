@@ -4,14 +4,14 @@
 \alias{getModelDetails}
 \title{Get the predictive model details}
 \usage{
-getModelDetails(predictiveModel, covariateData)
+getModelDetails(predictiveModel, plpData)
 }
 \arguments{
 \item{predictiveModel}{An object of type \code{predictiveModel} as generated using he
 \code{\link{fitPredictiveModel}} function.}
 
-\item{covariateData}{An object of type \code{covariateData} as generated using
-                         \code{\link{getDbCovariateData}}.}
+\item{plpData}{An object of type \code{plpData} as generated using
+                         \code{\link{getDbPlpData}}.}
 }
 \description{
 \code{getModelDetails} shows the full model, so showing the betas of all variables included in the

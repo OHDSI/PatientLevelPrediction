@@ -16,26 +16,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-prepareDataForEval <- function(prediction, outcomeData, cohortData, removeDropouts){
-  if (removeDropouts && is.null(cohortData)){
-    stop("Must provide cohortData when you want to remove dropouts") 
+prepareDataForEval <- function(prediction, plpData, removeDropouts){
+  outcomes <- plpData$outcomes
+  prediction <- as.ffdf(prediction)
+  
+  if (length(plpData$metaData$outcomeIds) > 1) {
+    # Filter by outcome ID:
+	outcomeId <- attr(prediction, "outcomeId")
+    t <- outcomes$outcomeId == outcomeId
+    if (!ffbase::any.ff(t)) {
+      stop(paste("No outcomes with outcome ID", outcomeId))
+    }
+    outcomes <- outcomes[ffbase::ffwhich(t, t == TRUE), ]
   }
-  targetCohortId <- attr(prediction, "cohortId")
-  targetOutcomeId <- attr(prediction, "outcomeId")
-  outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                  cohortId == targetCohortId & outcomeId == targetOutcomeId,
-                                  select = c("personId",
-                                             "cohortId",
-                                             "cohortStartDate",
-                                             "outcomeId",
-                                             "outcomeCount",
-                                             "timeToEvent"))
-  prediction <- merge(prediction, ff::as.ram(outcomes), all.x = TRUE)
+  
+  if (!is.null(plpData$exclude) && nrow(plpData$exclude) != 0) {
+    # Filter subjects with previous outcomes:
+    exclude <- plpData$exclude
+    if (!is.null(outcomeId)) {
+		t <- exclude$outcomeId == outcomeId
+		if (ffbase::any.ff(t)) {
+		exclude <- exclude[ffbase::ffwhich(t, t == TRUE)] 
+    
+		t <- ffbase::ffmatch(x = prediction$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+		if (ffbase::any.ff(t)) {
+		  prediction <- prediction[ffbase::ffwhich(t, t == FALSE)]
+		}
+		
+		t <- ffbase::ffmatch(x = outcomes$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+		if (ffbase::any.ff(t)) {
+		  outcomes <- outcomes[ffbase::ffwhich(t, t == FALSE)]
+		}
+	}
+  }
+  prediction <- merge(prediction, outcomes, all.x = TRUE)
+  prediction <- ff::as.ram(prediction)
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
   if (removeDropouts) {
-    prediction <- merge(prediction, ff::as.ram(cohortData$cohorts)[,c("personId", "cohortStartDate", "time")])
-    fullWindowLength <- ffbase::max.ff(cohortData$cohorts$time) 
+    prediction <- merge(prediction, ff::as.ram(plpData$cohorts)[,c("rowId", "time")])
+    fullWindowLength <- ffbase::max.ff(plpData$cohorts$time) 
     prediction <- prediction[prediction$outcomeCount != 0 | prediction$time == fullWindowLength, ]
   }
   return(prediction)
@@ -49,20 +69,18 @@ prepareDataForEval <- function(prediction, outcomeData, cohortData, removeDropou
 #'
 #' @param prediction           A prediction object as generated using the
 #'                             \code{\link{predictProbabilities}} function.
-#' @param outcomeData          An object of type \code{outcomeData}.
-#' @param cohortData        An object of type \code{cohortData} as generated using
-#'                          \code{\link{getDbCohortData}}. Only needed if removeDropoutsForLr is TRUE.
+#' @param plpData              An object of type \code{plpData}.
 #' @param removeDropoutsForLr  If TRUE and modelType is "logistic", subjects that do not have the full 
 #'                             observation window (i.e. are censored earlier) and do not have the outcome
 #'                             are removed prior to evaluating the model.
 #' @param confidenceInterval   Should 95 percebt confidence intervals be computed?
 #'
 #' @export
-computeAuc <- function(prediction, outcomeData, cohortData = NULL, removeDropoutsForLr = TRUE, confidenceInterval = FALSE) {
+computeAuc <- function(prediction, plpData, removeDropoutsForLr = TRUE, confidenceInterval = FALSE) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Computing AUC is only implemented for logistic models")
   
-  prediction <- prepareDataForEval(prediction, outcomeData, cohortData, removeDropoutsForLr)
+  prediction <- prepareDataForEval(prediction, plpData, removeDropoutsForLr)
   
   if (confidenceInterval) {
     auc <- .Call("PatientLevelPrediction_aucWithCi",
@@ -135,9 +153,7 @@ computeAucFromDataFrames <- function(prediction,
 #'
 #' @param prediction       A prediction object as generated using the
 #'                         \code{\link{predictProbabilities}} function.
-#' @param outcomeData      An object of type \code{outcomeData}.
-#' @param cohortData        An object of type \code{cohortData} as generated using
-#'                          \code{\link{getDbCohortData}}. Only needed if removeDropoutsForLr is TRUE.
+#' @param plpData      An object of type \code{plpData}.
 #' @param removeDropoutsForLr  If TRUE and modelType is "logistic", subjects that do not have the full 
 #'                             observation window (i.e. are censored earlier) and do not have the outcome
 #'                             are removed prior to evaluating the model.
@@ -151,11 +167,11 @@ computeAucFromDataFrames <- function(prediction,
 #' format.
 #'
 #' @export
-plotCalibration <- function(prediction, outcomeData, cohortData = NULL, removeDropoutsForLr = TRUE, numberOfStrata = 5, fileName = NULL) {
+plotCalibration <- function(prediction, plpData, removeDropoutsForLr = TRUE, numberOfStrata = 5, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the calibration is only implemented for logistic models")
 
-  prediction <- prepareDataForEval(prediction, outcomeData, cohortData, removeDropoutsForLr)
+  prediction <- prepareDataForEval(prediction, plpData, removeDropoutsForLr)
 
   q <- quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata)
   prediction$strata <- cut(prediction$value,
@@ -199,9 +215,7 @@ plotCalibration <- function(prediction, outcomeData, cohortData = NULL, removeDr
 #'
 #' @param prediction    A prediction object as generated using the \code{\link{predictProbabilities}}
 #'                      function.
-#' @param outcomeData   An object of type \code{outcomeData}.
-#' @param cohortData        An object of type \code{cohortData} as generated using
-#'                          \code{\link{getDbCohortData}}. Only needed if removeDropoutsForLr is TRUE.
+#' @param plpData   An object of type \code{plpData}.
 #' @param removeDropoutsForLr  If TRUE and modelType is "logistic", subjects that do not have the full 
 #'                             observation window (i.e. are censored earlier) and do not have the outcome
 #'                             are removed prior to evaluating the model.
@@ -213,11 +227,11 @@ plotCalibration <- function(prediction, outcomeData, cohortData = NULL, removeDr
 #' format.
 #'
 #' @export
-plotRoc <- function(prediction, outcomeData, cohortData = NULL, removeDropoutsForLr = TRUE, fileName = NULL) {
+plotRoc <- function(prediction, plpData, removeDropoutsForLr = TRUE, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the ROC curve is only implemented for logistic models")
   
-  prediction <- prepareDataForEval(prediction, outcomeData, cohortData, removeDropoutsForLr)
+  prediction <- prepareDataForEval(prediction, plpData, removeDropoutsForLr)
   
   prediction <- prediction[order(-prediction$value), c("value", "outcomeCount")]
   prediction$sens <- cumsum(prediction$outcomeCount)/sum(prediction$outcomeCount)

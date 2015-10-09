@@ -4,8 +4,8 @@
 \alias{createCovariateSettings}
 \title{Create covariate settings}
 \usage{
-createCovariateSettings(useCovariateDemographics = TRUE,
-  useCovariateDemographicsGender = TRUE,
+createCovariateSettings(useCovariateCohortIdIs1 = FALSE,
+  useCovariateDemographics = TRUE, useCovariateDemographicsGender = TRUE,
   useCovariateDemographicsRace = TRUE,
   useCovariateDemographicsEthnicity = TRUE,
   useCovariateDemographicsAge = TRUE, useCovariateDemographicsYear = TRUE,
@@ -41,6 +41,11 @@ createCovariateSettings(useCovariateDemographics = TRUE,
   deleteCovariatesSmallCount = 100)
 }
 \arguments{
+\item{useCovariateCohortIdIs1}{A boolean value (TRUE/FALSE) to determine if a
+covariate should be contructed for whether the
+cohort ID is 1 (currently primarily used in
+CohortMethod).}
+
 \item{useCovariateDemographics}{A boolean value (TRUE/FALSE) to determine if
 demographic covariates (age in 5-yr increments,
 gender, race, ethnicity, year of index date, month

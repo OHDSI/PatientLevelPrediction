@@ -6,9 +6,9 @@
 \usage{
 getDbCovariateData(connectionDetails = NULL, connection = NULL,
   oracleTempSchema = NULL, cdmDatabaseSchema,
-  useExistingCohortPerson = FALSE, cohortDatabaseSchema = cdmDatabaseSchema,
-  cohortTable = "cohort", cohortIds = c(0, 1), covariateSettings,
-  cdmVersion = "4")
+  useExistingCohortPerson = FALSE, rowIdField = "person_id",
+  cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
+  cohortIds = c(0, 1), covariateSettings, cdmVersion = "4")
 }
 \arguments{
 \item{connectionDetails}{An R object of type \code{connectionDetails} created using the
@@ -29,6 +29,10 @@ for example 'cdm_instance.dbo'.}
 \item{useExistingCohortPerson}{Does the temporary table \code{cohort_person} already exists? Can
 only be used when the \code{connection} parameter is not NULL.}
 
+\item{rowIdField}{The name of the field in the existing cohort_person table that is to
+be used as the row_id field in the output table. This can be especially
+usefull if there is more than one period per person.}
+
 \item{cohortDatabaseSchema}{If not using an existing \code{cohort_person} temp table, where is
 the source cohort table located? Note that on SQL Server, one
 should include both the database and schema, e.g. 'cdm_schema.dbo'.}
@@ -48,8 +52,10 @@ build covariates.}
 Returns an object of type \code{covariateData}, containing information on the baseline covariates.
 Information about multiple outcomes can be captured at once for efficiency reasons. This object is
 a list with the following components: \describe{ \item{covariates}{An ffdf object listing the
-baseline covariates per person in the two cohorts. This is done using a sparse representation:
-covariates with a value of 0 are omitted to save space.} \item{covariateRef}{An ffdf object
+baseline covariates per person in the cohorts. This is done using a sparse representation:
+covariates with a value of 0 are omitted to save space. The covariates object will have three columns: rowId,
+covariateId, and covariateValue. The rowId is usually equal to the person_id, unless specified otherwise in the
+rowIdField argument.} \item{covariateRef}{An ffdf object
 describing the covariates that have been extracted.} \item{metaData}{A list of objects with
 information on how the covariateData object was constructed.} }
 }
@@ -62,5 +68,7 @@ cohorts. The cohorts are assumed to be in a table with the same structure as the
 the OMOP CDM. The subject_id in this table must refer to person_ids in the CDM. One person can
 occurr multiple times, but the combination of subject_id and cohort_start_date is assumed to be
 unique.
+
+This function is called automatically by the \code{\link{getDbPlpData}} function.
 }
 

@@ -4,19 +4,13 @@
 \alias{fitPredictiveModel}
 \title{Fit a predictive model}
 \usage{
-fitPredictiveModel(cohortData, covariateData, outcomeData,
-  modelType = "logistic", removeDropoutsForLr = TRUE, cohortId = NULL,
-  outcomeId = NULL, prior = createPrior("laplace", exclude = c(0),
-  useCrossValidation = TRUE), control = createControl(noiseLevel = "silent",
-  cvType = "auto", startingVariance = 0.1))
+fitPredictiveModel(plpData, modelType = "logistic",
+  removeDropoutsForLr = TRUE, cohortId = NULL, outcomeId = NULL,
+  prior = createPrior("laplace", exclude = c(0), useCrossValidation = TRUE),
+  control = createControl(noiseLevel = "silent", cvType = "auto",
+  startingVariance = 0.1))
 }
 \arguments{
-\item{cohortData}{An object of type \code{cohortData}.}
-
-\item{covariateData}{An object of type \code{covariateData}.}
-
-\item{outcomeData}{An object of type \code{outcomeData}.}
-
 \item{modelType}{The type of predictive model. Options are "logistic", "poisson", and
 "survival".}
 
@@ -34,6 +28,12 @@ details.}
 \item{control}{The control object used to control the cross-validation used to determine the
                        hyperparameters of the prior (if applicable). See
                        \code{\link[Cyclops]{createControl}} for details.}
+
+\item{cohortData}{An object of type \code{cohortData}.}
+
+\item{covariateData}{An object of type \code{covariateData}.}
+
+\item{outcomeData}{An object of type \code{outcomeData}.}
 }
 \description{
 Fit a predictive model

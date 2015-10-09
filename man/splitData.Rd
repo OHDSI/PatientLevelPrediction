@@ -4,22 +4,17 @@
 \alias{splitData}
 \title{Split data into random subsets}
 \usage{
-splitData(cohortData, covariateData, outcomeData, splits = 2)
+splitData(plpData, splits = 2)
 }
 \arguments{
-\item{cohortData}{An object of type \code{cohortData}.}
-
-\item{covariateData}{An object of type \code{covariateData}.}
-
-\item{outcomeData}{An object of type \code{outcomeData}.}
+\item{plpData}{An object of type \code{plpData}.}
 
 \item{splits}{This can be either a single integer, in which case the data will be split up
                        into equally sized parts. If a vector is provided instead, these are
                        interpreted as the relative sizes of each part.}
 }
 \value{
-A list with entries for each part. An entry itself is a list containing a cohortData,
-covariateData, and outcomeData object.
+A list with entries for each part. An entry itself is a plpData object.
 }
 \description{
 Split data into random subsets
