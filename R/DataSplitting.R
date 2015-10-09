@@ -41,29 +41,32 @@ splitData <- function(plpData, splits = 2) {
   for (i in 1:length(splits)) {
     writeLines(paste("Creating data objects for group", i))
     sampledIndices <- ffbase::ffwhich(groups, groups == i)
-	
+    
     sampledCohorts <- plpData$cohorts[sampledIndices, ]
-	sampledRowIds <- sampledCohorts$rowId
-	
-	idx <- ffbase::ffmatch(x = plpData$outcomes$rowId, table = sampledRowIds)
-	sampledOutcomes <- plpData$outcomes[idc, ]
-	
-	idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = sampledRowIds)
-	sampledCovariates <- plpData$covariates[idc, ]
-	
+    sampledRowIds <- sampledCohorts$rowId
+    
+    idx <- ffbase::ffmatch(x = plpData$outcomes$rowId, table = sampledRowIds)
+    idx <- ffbase::ffwhich(idx, !is.na(idx))
+    sampledOutcomes <- plpData$outcomes[idx, ]
+    
+    idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = sampledRowIds)
+    idx <- ffbase::ffwhich(idx, !is.na(idx))
+    sampledCovariates <- plpData$covariates[idx, ]
+    
     if (!is.null(plpData$exclude)) {
-		idx <- ffbase::ffmatch(x = plpData$exclude$rowId, table = sampledRowIds)
-		sampledExclude <- plpData$exclude[idc, ]
+      idx <- ffbase::ffmatch(x = plpData$exclude$rowId, table = sampledRowIds)
+      idx <- ffbase::ffwhich(idx, !is.na(idx))
+      sampledExclude <- plpData$exclude[idc, ]
     } else {
-		sampledExclude <- NULL
-	}
-	result[[i]] <- list(cohorts = sampledCohorts,
-                 outcomes = sampledOutcomes,
-                 exclude = sampledExclude,
-                 covariates = sampledCovariates,
-                 covariateRef = ff::clone.ffdf(plpData$covariateRef),
-                 metaData = plpData$metaData)
-	
+      sampledExclude <- NULL
+    }
+    result[[i]] <- list(cohorts = sampledCohorts,
+                        outcomes = sampledOutcomes,
+                        exclude = sampledExclude,
+                        covariates = sampledCovariates,
+                        covariateRef = ff::clone.ffdf(plpData$covariateRef),
+                        metaData = plpData$metaData)
+    
     class(result[[i]]) <- "plpData"
   }
   return(result)

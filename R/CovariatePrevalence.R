@@ -45,18 +45,12 @@ computeStats <- function(n, covariates, label = NULL) {
 
 #' Compute covariate means
 #'
-#' @param cohortData      An object of type \code{cohortData}.
-#' @param covariateData   An object of type \code{covariateData}.
-#' @param outcomeData     An object of type \code{outcomeData}. If NULL then only the overall means
-#'                        will be computed, else the means will also be computed within the group with
-#'                        the outcome and the group without the outcome.
+#' @param plpData      An object of type \code{plpData}.
 #' @param cohortId        The ID of the specific cohort for which to compute the means.
 #' @param outcomeId       The ID of the specific outcome for which to compute the subgroup means.
 #'
 #' @export
-computeCovariateMeans <- function(cohortData,
-                                  covariateData,
-                                  outcomeData = NULL,
+computeCovariateMeans <- function(plpData,
                                   cohortId = NULL,
                                   outcomeId = NULL) {
   if (is.null(cohortId) && length(cohortData$metaData$cohortIds) != 1)
@@ -65,55 +59,33 @@ computeCovariateMeans <- function(cohortData,
     stop("No outcome ID specified, but multiple outcomes found")
 
   start <- Sys.time()
-  if (is.null(cohortId)) {
-    covariates <- ffbase::subset.ffdf(covariateData$covariates, select = c("personId",
-                                                                           "cohortStartDate",
-                                                                           "covariateId",
-                                                                           "covariateValue"))
-    cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
-                                   select = c("personId", "cohortStartDate", "time"))
-    if (!is.null(outcomeData)) {
-      outcomes <- ffbase::subset.ffdf(outcomeData$outcomes, select = c("personId",
-                                                                       "cohortStartDate",
-                                                                       "outcomeId",
-                                                                       "outcomeCount",
-                                                                       "timeToEvent"))
-    }
-  } else {
-    covariates <- ffbase::subset.ffdf(covariateData$covariates,
-                                      cohortId == cohortId,
-                                      select = c("personId",
-                                                 "cohortStartDate",
-                                                 "covariateId",
-                                                 "covariateValue"))
-    cohorts <- ffbase::subset.ffdf(cohortData$cohorts,
-                                   cohortId == cohortId,
-                                   select = c("personId", "cohortStartDate", "time"))
-    if (!is.null(outcomeData)) {
-      outcomes <- ffbase::subset.ffdf(outcomeData$outcomes,
-                                      cohortId == cohortId,
-                                      select = c("personId",
-                                                                                             "cohortStartDate",
-                                                                                             "outcomeId",
-                                                                                             "outcomeCount",
-                                                                                             "timeToEvent"))
-    }
+  
+  
+  covariates <- plpData$covariates
+  cohorts <- plpData$cohorts
+  outcomes <- plpData$outcomes
+  
+  if (!is.null(cohortId) && length(plpData$metaData$cohortIds) > 1) {
+    # Filter by cohort ID:
+    t <- cohorts$cohortId == cohortId
+    if (!ffbase::any.ff(t)) {
+      stop(paste("No cohorts with cohort ID", cohortId))
+    }    
+    cohorts <- cohorts[ffbase::ffwhich(t, t == TRUE), ]
+    
+    idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
+    covariates <- covariates[idx, ]
+    
+    # No need to filter outcomes since we'll merge outcomes with cohorts later
   }
-  if (!is.null(outcomeId)) {
-    outcomes <- ffbase::subset.ffdf(outcomes, outcomeId == outcomeId)
-  }
-  if (!is.null(outcomeData) && !is.null(outcomeData$exclude) && nrow(outcomeData$exclude) != 0) {
-    if (is.null(outcomeId)) {
-      exclude <- outcomeData$exclude
-    } else {
-      exclude <- ffbase::subset.ffdf(outcomeData$exclude,
-                                     outcomeId == outcomeId,
-                                     select = c("personId", "cohortStartDate", "cohortId"))
+  
+  if (!is.null(outcomeId) && length(plpData$metaData$outcomeIds) > 1) {
+    # Filter by outcome ID:
+    t <- outcomes$outcomeId == outcomeId
+    if (!ffbase::any.ff(t)) {
+      stop(paste("No outcomes with outcome ID", outcomeId))
     }
-    exclude$dummy <- ff::ff(1, length = nrow(exclude), vmode = "double")
-    cohorts <- merge(cohorts, exclude, all.x = TRUE)
-    cohorts <- ffbase::subset.ffdf(cohorts, dummy != 1)
-    cohorts$dummy <- NULL
+    outcomes <- outcomes[ffbase::ffwhich(t, t == TRUE), ]
   }
 
   writeLines("Computing overall stats")

@@ -320,7 +320,9 @@ loadPlPData <- function(file, readOnly = FALSE) {
   open(result$outcomes, readonly = readOnly)
   open(result$cohorts, readonly = readOnly)
   open(result$covariates, readonly = readOnly)
-  open(result$exclude, readonly = readOnly)
+  if (!is.null(result$exclude)){
+    open(result$exclude, readonly = readOnly)
+  }
   open(result$covariateRef, readonly = readOnly)
   
   class(result) <- "plpData"
@@ -340,7 +342,7 @@ print.plpData <- function(x, ...) {
 
 #' @export
 summary.plpData <- function(object, ...) {
-  subjectCount <- length(ffbase::unique.ff(object$cohorts$person_id))
+  subjectCount <- length(ffbase::unique.ff(object$cohorts$personId))
   windowCount <- nrow(object$cohorts)
   
   outcomeCounts <- data.frame(outcomeId = object$metaData$outcomeIds,

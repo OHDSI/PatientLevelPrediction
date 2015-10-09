@@ -3575,9 +3575,7 @@ INNER JOIN #cov_ref ccr1
 WHERE ccr1.analysis_id NOT IN (6)
 	AND ccr1.covariate_id > 1;
 	
-SELECT DISTINCT cc1.cohort_start_date,
-	cc1.@cohort_definition_id,
-	cc1.person_id,
+SELECT DISTINCT cc1.row_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(MONTH(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
     INTO #cov_int_month

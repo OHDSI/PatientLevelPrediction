@@ -4,17 +4,10 @@
 \alias{computeCovariateMeans}
 \title{Compute covariate means}
 \usage{
-computeCovariateMeans(cohortData, covariateData, outcomeData = NULL,
-  cohortId = NULL, outcomeId = NULL)
+computeCovariateMeans(plpData, cohortId = NULL, outcomeId = NULL)
 }
 \arguments{
-\item{cohortData}{An object of type \code{cohortData}.}
-
-\item{covariateData}{An object of type \code{covariateData}.}
-
-\item{outcomeData}{An object of type \code{outcomeData}. If NULL then only the overall means
-will be computed, else the means will also be computed within the group with
-the outcome and the group without the outcome.}
+\item{plpData}{An object of type \code{plpData}.}
 
 \item{cohortId}{The ID of the specific cohort for which to compute the means.}
 

@@ -48,35 +48,36 @@ fitPredictiveModel <- function(plpData,
                                                        startingVariance = 0.1)) {
   if (is.null(cohortId) && length(plpData$metaData$cohortIds) != 1){
     stop("No cohort ID specified, but multiple cohorts found")
-	}
+  }
   if (is.null(outcomeId) && length(plpData$metaData$outcomeIds) != 1){
     stop("No outcome ID specified, but multiple outcomes found")
-	}
+  }
   if (!is.null(cohortId) && !(cohortId %in% plpData$metaData$cohortIds)){
     stop("Cohort ID not found")
   }
   if (!is.null(outcomeId) && !(outcomeId %in% plpData$metaData$outcomeIds)){
     stop("Outcome ID not found")
   }
-
+  
   covariates <- plpData$covariates
   cohorts <- plpData$cohorts
   outcomes <- plpData$outcomes
   
   if (!is.null(cohortId) && length(plpData$metaData$cohortIds) > 1) {
     # Filter by cohort ID:
-	t <- cohorts$cohortId == cohortId
-	  if (!ffbase::any.ff(t)) {
+    t <- cohorts$cohortId == cohortId
+    if (!ffbase::any.ff(t)) {
       stop(paste("No cohorts with cohort ID", cohortId))
     }    
     cohorts <- cohorts[ffbase::ffwhich(t, t == TRUE), ]
-	
-	idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
-	covariates <- covariates[idx, ]
-	
-	# No need to filter outcomes since we'll merge outcomes with cohorts later
+    
+    idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
+    idx <- ffbase::ffwhich(idx, !is.na(idx))
+    covariates <- covariates[idx, ]
+    
+    # No need to filter outcomes since we'll merge outcomes with cohorts later
   }
-
+  
   if (!is.null(outcomeId) && length(plpData$metaData$outcomeIds) > 1) {
     # Filter by outcome ID:
     t <- outcomes$outcomeId == outcomeId
@@ -89,24 +90,24 @@ fitPredictiveModel <- function(plpData,
   if (!is.null(plpData$exclude) && nrow(plpData$exclude) != 0) {
     # Filter subjects with previous outcomes:
     if (!is.null(outcomeId)) {
-		exclude <- plpData$exclude
-		t <- exclude$outcomeId == outcomeId
-		if (ffbase::any.ff(t)){
-			exclude <- exclude[ffbase::ffwhich(t, t == TRUE)]
-    
-			t <- ffbase::ffmatch(x = cohorts$rowId, table = exclude$rowId, nomatch = 0L) > 0L
-			if (ffbase::any.ff(t)) {
-				cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE)]
-			}
-			
-			t <- ffbase::ffmatch(x = covariate$rowId, table = exclude$rowId, nomatch = 0L) > 0L
-			if (ffbase::any.ff(t)) {
-				covariate <- covariate[ffbase::ffwhich(t, t == FALSE)]
-			}
-		
-			# No need to filter outcomes since we'll merge outcomes with cohorts later
-		}
-	  }
+      exclude <- plpData$exclude
+      t <- exclude$outcomeId == outcomeId
+      if (ffbase::any.ff(t)){
+        exclude <- exclude[ffbase::ffwhich(t, t == TRUE)]
+        
+        t <- ffbase::ffmatch(x = cohorts$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+        if (ffbase::any.ff(t)) {
+          cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE)]
+        }
+        
+        t <- ffbase::ffmatch(x = covariate$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+        if (ffbase::any.ff(t)) {
+          covariate <- covariate[ffbase::ffwhich(t, t == FALSE)]
+        }
+        
+        # No need to filter outcomes since we'll merge outcomes with cohorts later
+      }
+    }
   }
   
   if (modelType == "logistic" | modelType == "survival") {
@@ -138,8 +139,12 @@ fitPredictiveModel <- function(plpData,
     fullWindowLength <- ffbase::max.ff(plpData$cohorts$time) 
     t <- outcomes$y != 0 | outcomes$time == fullWindowLength
     outcomes <- outcomes[ffbase::ffwhich(t, t == TRUE),]
-  }
     
+    idx <- ffbase::ffmatch(x = covariates$rowId, table = outcomes$rowId)
+    idx <- ffbase::ffwhich(idx, !is.na(idx))
+    covariates <- covariates[idx, ]
+  }
+  
   if (modelType == "logistic") {
     cyclopsModelType <- "lr"
   } else {
@@ -185,11 +190,11 @@ fitPredictiveModel <- function(plpData,
 #' @export
 getModelDetails <- function(predictiveModel, plpData) {
   cfs <- predictiveModel$coefficients
-
+  
   cfs <- cfs[cfs != 0]
   attr(cfs, "names")[attr(cfs, "names") == "(Intercept)"] <- 0
   cfs <- data.frame(coefficient = cfs, id = as.numeric(attr(cfs, "names")))
-
+  
   cfs <- merge(ff::as.ffdf(cfs),
                plpData$covariateRef,
                by.x = "id",

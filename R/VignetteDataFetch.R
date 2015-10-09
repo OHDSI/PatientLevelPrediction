@@ -46,7 +46,6 @@
   cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
   resultsDatabaseSchema <- "scratch.dbo"
   outcomesTable <- "mschuemie_outcomes"
-  outputTable <- "mschuemi_injected_signals"
   port <- 17001
   cdmVersion <- "4"
 
@@ -139,13 +138,13 @@
 				  firstOutcomeOnly = FALSE, 
 				  cdmVersion = cdmVersion)
   									   
-  savePlpData(plpData, "s:/temp/PlPVignette/plpData")
+  savePlpData(plpData, "s:/temp/PlpVignette/plpData")
 
-  # plpData <- loadPlpData('s:/temp/PlPVignette/plpData')
+  # plpData <- loadPlpData('s:/temp/PlpVignette/plpData')
 
   parts <- splitData(plpData, c(0.75, 0.25))
 
-  savePlpData(parts[[2]], "s:/temp/PlPVignette/plpData_test")
+  savePlpData(parts[[2]], "s:/temp/PlpVignette/plpData_test")
 
   model <- fitPredictiveModel(parts[[1]],
                               modelType = "logistic",
@@ -157,16 +156,17 @@
                                                       startingVariance = 0.1,
                                                       threads = 10))
 
-  saveRDS(model, file = "s:/temp/PlPVignette/model.rds")
+  saveRDS(model, file = "s:/temp/PlpVignette/model.rds")
 
-  # model <- readRDS('s:/temp/PlPVignette/model.rds')
+  # model <- readRDS('s:/temp/PlpVignette/model.rds')
 
-  # parts <- list(); parts[[2]] <- loadPlpData('s:/temp/PlPVignette/plpData_test')
+  # parts <- list(); parts[[2]] <- loadPlpData('s:/temp/PlpVignette/plpData_test')
  
   prediction <- predictProbabilities(model, parts[[2]])
-  saveRDS(prediction, file = "s:/temp/PatientLevelPrediction/prediction.rds")
+  
+  saveRDS(prediction, file = "s:/temp/PlpVignette/prediction.rds")
 
-  # prediction <- readRDS('s:/temp/PatientLevelPrediction/prediction.rds')
+  # prediction <- readRDS('s:/temp/PlpVignette/prediction.rds')
 
   computeAuc(prediction, parts[[2]])
   plotRoc(prediction, parts[[2]])

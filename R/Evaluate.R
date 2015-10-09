@@ -22,7 +22,7 @@ prepareDataForEval <- function(prediction, plpData, removeDropouts){
   
   if (length(plpData$metaData$outcomeIds) > 1) {
     # Filter by outcome ID:
-	outcomeId <- attr(prediction, "outcomeId")
+    outcomeId <- attr(prediction, "outcomeId")
     t <- outcomes$outcomeId == outcomeId
     if (!ffbase::any.ff(t)) {
       stop(paste("No outcomes with outcome ID", outcomeId))
@@ -34,20 +34,21 @@ prepareDataForEval <- function(prediction, plpData, removeDropouts){
     # Filter subjects with previous outcomes:
     exclude <- plpData$exclude
     if (!is.null(outcomeId)) {
-		t <- exclude$outcomeId == outcomeId
-		if (ffbase::any.ff(t)) {
-		exclude <- exclude[ffbase::ffwhich(t, t == TRUE)] 
-    
-		t <- ffbase::ffmatch(x = prediction$rowId, table = exclude$rowId, nomatch = 0L) > 0L
-		if (ffbase::any.ff(t)) {
-		  prediction <- prediction[ffbase::ffwhich(t, t == FALSE)]
-		}
-		
-		t <- ffbase::ffmatch(x = outcomes$rowId, table = exclude$rowId, nomatch = 0L) > 0L
-		if (ffbase::any.ff(t)) {
-		  outcomes <- outcomes[ffbase::ffwhich(t, t == FALSE)]
-		}
-	}
+      t <- exclude$outcomeId == outcomeId
+      if (ffbase::any.ff(t)) {
+        exclude <- exclude[ffbase::ffwhich(t, t == TRUE)] 
+        
+        t <- ffbase::ffmatch(x = prediction$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+        if (ffbase::any.ff(t)) {
+          prediction <- prediction[ffbase::ffwhich(t, t == FALSE)]
+        }
+        
+        t <- ffbase::ffmatch(x = outcomes$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+        if (ffbase::any.ff(t)) {
+          outcomes <- outcomes[ffbase::ffwhich(t, t == FALSE)]
+        }
+      }
+    }
   }
   prediction <- merge(prediction, outcomes, all.x = TRUE)
   prediction <- ff::as.ram(prediction)
@@ -170,9 +171,9 @@ computeAucFromDataFrames <- function(prediction,
 plotCalibration <- function(prediction, plpData, removeDropoutsForLr = TRUE, numberOfStrata = 5, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the calibration is only implemented for logistic models")
-
+  
   prediction <- prepareDataForEval(prediction, plpData, removeDropoutsForLr)
-
+  
   q <- quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata)
   prediction$strata <- cut(prediction$value,
                            breaks = c(0, q, max(prediction$value)),

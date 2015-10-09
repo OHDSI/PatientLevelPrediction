@@ -4,17 +4,13 @@
 \alias{plotRoc}
 \title{Plot the ROC curve}
 \usage{
-plotRoc(prediction, outcomeData, cohortData = NULL,
-  removeDropoutsForLr = TRUE, fileName = NULL)
+plotRoc(prediction, plpData, removeDropoutsForLr = TRUE, fileName = NULL)
 }
 \arguments{
 \item{prediction}{A prediction object as generated using the \code{\link{predictProbabilities}}
 function.}
 
-\item{outcomeData}{An object of type \code{outcomeData}.}
-
-\item{cohortData}{An object of type \code{cohortData} as generated using
-\code{\link{getDbCohortData}}. Only needed if removeDropoutsForLr is TRUE.}
+\item{plpData}{An object of type \code{plpData}.}
 
 \item{removeDropoutsForLr}{If TRUE and modelType is "logistic", subjects that do not have the full
 observation window (i.e. are censored earlier) and do not have the outcome

@@ -97,6 +97,40 @@
                           firstOutcomeOnly = FALSE, 
                           cdmVersion = cdmVersion)
   
+  savePlpData(plpData, "s:/temp/plpData")
+  
+  plpData <- loadPlPData("s:/temp/plpData")
+  
+  plpData
+  summary(plpData)
+  
+  x <- aggregate(rowId ~ covariateId, data = plpData$covariates, length)
+  x <- x[order(-x$rowId),]
+  format(head(x$covariateId))
+  
+  t <- plpData$covariateRef$covariateId == 1001
+  plpData$covariateRef[ffbase::ffwhich(t, t == TRUE),]
+  
+  
+  splits <- splitData(plpData, splits = c(0.75,0.25))
+  
+  summary(splits[[1]])
+  summary(splits[[2]])
+  
+  model <- fitPredictiveModel(plpData = splits[[1]],
+                              modelType = "logistic",
+                              removeDropoutsForLr = TRUE,
+                              cohortId = 1,
+                              outcomeId = 10,
+                              prior = createPrior("laplace",
+                                                  exclude = c(0),
+                                                  variance = 0.007))
+  
+  saveRDS(model, file = "s:/temp/plpTestmodel.rds")
+  
+  # model <- readRDS('s:/temp/plpTestmodel.rds')
+  
+  prediction <- predictProbabilities(model, parts[[2]])
   
   connectionDetails = connectionDetails
   cdmDatabaseSchema = cdmDatabaseSchema
@@ -120,7 +154,7 @@
   
   # library(PatientLevelPrediction); library(SqlRender)
   options(fftempdir = "s:/fftemp")
-
+  
   dbms <- "postgresql"
   server <- "localhost/enar"
   user <- "postgres"
@@ -128,7 +162,7 @@
   cdmDatabaseSchema <- "cdm_sim"
   resultsDatabaseSchema <- "scratch"
   port <- NULL
-
+  
   pw <- NULL
   dbms <- "pdw"
   user <- NULL
@@ -136,13 +170,13 @@
   cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
   resultsDatabaseSchema <- "scratch.dbo"
   port <- 17001
-
+  
   details <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                         server = server,
                                                         user = user,
                                                         password = pw,
                                                         port = port)
-
+  
   # Create cohorts:
   conn <- connect(details)
   sql <- loadRenderTranslateSql("HospitalizationCohorts.sql",
@@ -153,7 +187,7 @@
                                 post_time = 30,
                                 pre_time = 365)
   executeSql(conn, sql)
-
+  
   # Test package functions:
   cohortData <- getDbCohortData(details,
                                 cdmDatabaseSchema = cdmDatabaseSchema,
@@ -169,9 +203,9 @@
                                       cohortTable = "rehospitalization",
                                       cohortIds = 1,
                                       covariateSettings = covariateSettings)
-
+  
   # saveCovariateData(covariateData, 's:/temp/covariateData')
-
+  
   outcomeData <- getDbOutcomeData(details,
                                   cdmDatabaseSchema = cdmDatabaseSchema,
                                   cohortDatabaseSchema = resultsDatabaseSchema,
@@ -181,12 +215,12 @@
                                   outcomeTable = "rehospitalization",
                                   outcomeConceptIds = 1,
                                   firstOutcomeOnly = TRUE)
-
+  
   # saveOutcomeData(outcomeData, 's:/temp/outcomeData')
-
+  
   # cohortData <- loadcohortData('s:/temp/cohortData') covariateData <-
   # loadCovariateData('s:/temp/covariateData') outcomeData <- loadOutcomeData('s:/temp/outcomeData')
-
+  
   model <- fitPredictiveModel(cohortData,
                               covariateData,
                               outcomeData,
@@ -195,18 +229,18 @@
                                                   0.1,
                                                   exclude = c(0),
                                                   useCrossValidation = FALSE))
-
+  
   modelDetails <- getModelDetails(model, covariateData)
-
+  
   xLr <- predictProbabilities(model, cohortData, covariateData)
   simLr <- runif(nrow(xLr)) < xLr$value
   sum(simLr)
-
+  
   computeAuc(xLr, outcomeData)
   computeAuc(xLr, outcomeData, confidenceInterval = TRUE)
   plotCalibration(xLr, outcomeData, fileName = "c:/temp/Calibration.png")
   plotRoc(xLr, outcomeData, fileName = "c:/temp/Roc.png")
-
+  
   model <- fitPredictiveModel(cohortData,
                               covariateData,
                               outcomeData,
@@ -215,11 +249,11 @@
                                                   0.1,
                                                   exclude = c(0),
                                                   useCrossValidation = FALSE))
-
+  
   xPr <- predictProbabilities(model, cohortData, covariateData)
   simPr <- rpois(nrow(xPr), xPr$value)
   sum(simPr)
-
+  
   model <- fitPredictiveModel(cohortData,
                               covariateData,
                               outcomeData,
@@ -228,14 +262,14 @@
                                                   0.1,
                                                   exclude = c(0),
                                                   useCrossValidation = FALSE))
-
+  
   xSr <- predictProbabilities(model, cohortData, covariateData)
   simSr <- rexp(nrow(xSr), xSr$value) < 30
   sum(simSr)
-
+  
   # Functions: fitPredictiveModel(covariateData, outcomeData) Creates predictiveModel (CyclopsFit?)
   # predict(model, covariateData) Creates data.frame:personId, cohortStartDate, prediction
   # computeAuc(prediction, outcomeData) plotCalibration(prediction, outcomeData)
   # crossValidation(covariateData, outcomeData, folds)
-
+  
 }
