@@ -84,24 +84,24 @@
 #'
 #' @export
 getDbPlpData <- function(connectionDetails = NULL,
-                       cdmDatabaseSchema,
-                       oracleTempSchema = NULL,
-                       cohortDatabaseSchema = cdmDatabaseSchema,
-                       cohortTable = "cohort",
-                       cohortIds = c(0, 1),
-                       useCohortEndDate = TRUE,
-                       windowPersistence = 0,
-                       covariateSettings,
-                       outcomeDatabaseSchema = cdmDatabaseSchema,
-                       outcomeTable = "condition_occurrence",
-                       outcomeIds = c(),
-                       outcomeConditionTypeConceptIds = "",
-                       firstOutcomeOnly = FALSE,
-                       cdmVersion = "4") {
+                         cdmDatabaseSchema,
+                         oracleTempSchema = NULL,
+                         cohortDatabaseSchema = cdmDatabaseSchema,
+                         cohortTable = "cohort",
+                         cohortIds = c(0, 1),
+                         useCohortEndDate = TRUE,
+                         windowPersistence = 0,
+                         covariateSettings,
+                         outcomeDatabaseSchema = cdmDatabaseSchema,
+                         outcomeTable = "condition_occurrence",
+                         outcomeIds = c(),
+                         outcomeConditionTypeConceptIds = "",
+                         firstOutcomeOnly = FALSE,
+                         cdmVersion = "4") {
   conn <- connect(connectionDetails)
   
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
-
+  
   if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
     conceptClassId <- "concept_class"
@@ -111,7 +111,7 @@ getDbPlpData <- function(connectionDetails = NULL,
     conceptClassId <- "concept_class_id"
     measurement <- "measurement"
   }
-
+  
   
   ### Create cohort_person temp table, and fetch cohort data ###
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCohorts.sql",
@@ -194,7 +194,7 @@ getDbPlpData <- function(connectionDetails = NULL,
   } else {
     exclude <- NULL
   }
-
+  
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveOutcomeTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -223,7 +223,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                    oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(conn, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
   dummy <- RJDBC::dbDisconnect(conn)
-
+  
   metaData <- list(cohortIds = cohortIds,
                    outcomeIds = outcomeIds,
                    useCohortEndDate = useCohortEndDate,
@@ -236,7 +236,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                  covariates = covariateData$covariates,
                  covariateRef = covariateData$covariateRef,
                  metaData = metaData)
-
+  
   class(result) <- "plpData"
   return(result)
 }
@@ -269,9 +269,13 @@ savePlpData <- function(plpData, file) {
   outcomes <- plpData$outcomes
   cohorts <- plpData$cohorts
   covariates <- plpData$covariates
-  exclude <- plpData$exclude
   covariateRef <- plpData$covariateRef
-  ffbase::save.ffdf(outcomes, cohorts, covariates, exclude, covariateRef, dir = file)
+  if (is.null(plpData$exclude)){
+    ffbase::save.ffdf(outcomes, cohorts, covariates, covariateRef, dir = file)
+  } else {
+    exclude <- plpData$exclude
+    ffbase::save.ffdf(outcomes, cohorts, covariates, exclude, covariateRef, dir = file)
+  }
   metaData <- plpData$metaData
   save(metaData, file = file.path(file, "metaData.Rdata"))
 }
@@ -310,12 +314,14 @@ loadPlPData <- function(file, readOnly = FALSE) {
   result <- list(outcomes = get("outcomes", envir = e),
                  cohorts = get("cohorts", envir = e),
                  covariates = get("covariates", envir = e),
-                 exclude = get("exclude", envir = e),
                  covariateRef = get("covariateRef", envir = e),
                  metaData = mget("metaData",
                                  envir = e,
                                  ifnotfound = list(NULL))[[1]]  #For backwards compatibility
-  )
+  )         
+  if ("exclude" %in% ls(envir = e)){
+    result$exclude <- exclude = get("exclude", envir = e)   
+  }
   # Open all ffdfs to prevent annoying messages later:
   open(result$outcomes, readonly = readOnly)
   open(result$cohorts, readonly = readOnly)
@@ -392,4 +398,3 @@ print.summary.plpData <- function(x, ...) {
   writeLines(paste("Number of non-zero covariate values:", x$covariateValueCount))
 }
 
-  
