@@ -45,7 +45,7 @@
   server <- "JRDUSAPSCTL01"
   cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
   resultsDatabaseSchema <- "scratch.dbo"
-  outcomesTable <- "mschuemie_outcomes"
+  oracleTempSchema <- NULL
   port <- 17001
   cdmVersion <- "4"
 
@@ -142,6 +142,12 @@
 
   # plpData <- loadPlpData('s:/temp/PlpVignette/plpData')
 
+  means <- computeCovariateMeans(plpData = plpData, outcomeId = 2)
+  
+  saveRDS(means, "s:/temp/PlpVignette/means.rds")
+  
+  #plotCovariateDifferenceOfTopVariables(means)
+  
   parts <- splitData(plpData, c(0.75, 0.25))
 
   savePlpData(parts[[2]], "s:/temp/PlpVignette/plpData_test")
@@ -153,9 +159,9 @@
                                                   useCrossValidation = TRUE),
                               control = createControl(noiseLevel = "quiet",
                                                       cvType = "auto",
-                                                      startingVariance = 0.1,
+                                                      startingVariance = 0.01,
                                                       threads = 10))
-
+  
   saveRDS(model, file = "s:/temp/PlpVignette/model.rds")
 
   # model <- readRDS('s:/temp/PlpVignette/model.rds')
@@ -170,9 +176,9 @@
 
   computeAuc(prediction, parts[[2]])
   plotRoc(prediction, parts[[2]])
-  plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
+  plotCalibration(prediction, parts[[2]], numberOfStrata = 10)
 
-  modelDetails <- getModelDetails(model, parts[[2]]$covariateData)
+  modelDetails <- getModelDetails(model, parts[[2]])
   head(modelDetails)
 }
 

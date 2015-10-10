@@ -17,12 +17,13 @@
 # limitations under the License.
 
 prepareDataForEval <- function(prediction, plpData, removeDropouts){
+  outcomeId <- attr(prediction, "outcomeId")
+  
   outcomes <- plpData$outcomes
-  prediction <- as.ffdf(prediction)
+  prediction <- ff::as.ffdf(prediction)
   
   if (length(plpData$metaData$outcomeIds) > 1) {
     # Filter by outcome ID:
-    outcomeId <- attr(prediction, "outcomeId")
     t <- outcomes$outcomeId == outcomeId
     if (!ffbase::any.ff(t)) {
       stop(paste("No outcomes with outcome ID", outcomeId))
@@ -55,8 +56,8 @@ prepareDataForEval <- function(prediction, plpData, removeDropouts){
   prediction$outcomeCount[!is.na(prediction$outcomeCount)] <- 1
   prediction$outcomeCount[is.na(prediction$outcomeCount)] <- 0
   if (removeDropouts) {
-    prediction <- merge(prediction, ff::as.ram(plpData$cohorts)[,c("rowId", "time")])
     fullWindowLength <- ffbase::max.ff(plpData$cohorts$time) 
+    prediction <- merge(prediction, ff::as.ram(plpData$cohorts)[,c("rowId", "time")])
     prediction <- prediction[prediction$outcomeCount != 0 | prediction$time == fullWindowLength, ]
   }
   return(prediction)

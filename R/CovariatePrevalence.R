@@ -53,13 +53,12 @@ computeStats <- function(n, covariates, label = NULL) {
 computeCovariateMeans <- function(plpData,
                                   cohortId = NULL,
                                   outcomeId = NULL) {
-  if (is.null(cohortId) && length(cohortData$metaData$cohortIds) != 1)
+  if (is.null(cohortId) && length(plpData$metaData$cohortIds) != 1)
     stop("No cohort ID specified, but multiple cohorts found")
-  if (is.null(outcomeId) && !is.null(outcomeData) && length(outcomeData$metaData$outcomeIds) != 1)
+  if (is.null(outcomeId) && length(plpData$metaData$outcomeIds) != 1)
     stop("No outcome ID specified, but multiple outcomes found")
 
   start <- Sys.time()
-  
   
   covariates <- plpData$covariates
   cohorts <- plpData$cohorts
@@ -74,6 +73,7 @@ computeCovariateMeans <- function(plpData,
     cohorts <- cohorts[ffbase::ffwhich(t, t == TRUE), ]
     
     idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
+    idx <- ffbase::ffwhich(idx, !is.na(idx))
     covariates <- covariates[idx, ]
     
     # No need to filter outcomes since we'll merge outcomes with cohorts later
@@ -92,26 +92,20 @@ computeCovariateMeans <- function(plpData,
   stats <- computeStats(nrow(cohorts), covariates, "overall")
   if (!is.null(outcomes)) {
     writeLines("Computing subgroup stats")
-    covariates <- merge(covariates,
-                        ffbase::subset.ffdf(outcomes, select = c("personId",
-                                                                 "cohortStartDate",
-                                                                 "outcomeCount")),
-                        by = c("personId", "cohortStartDate"),
-                        all.x = TRUE)
-    t <- !is.na(covariates$outcomeCount)
+    matched <- !ffbase::is.na.ff(ffbase::ffmatch(x = covariates$rowId, table = outcomes$rowId))
     nOutcomes <- nrow(outcomes)
-    covariatesSubset <- covariates[ffbase::ffwhich(t, t == TRUE), ]
+    covariatesSubset <- covariates[ffbase::ffwhich(matched, matched == TRUE), ]
     statsWithOutcome <- computeStats(nOutcomes, covariatesSubset, "with_outcome")
 
     nNotOutcomes <- nrow(cohorts) - nOutcomes
-    covariatesSubset <- covariates[ffbase::ffwhich(t, t == FALSE), ]
+    covariatesSubset <- covariates[ffbase::ffwhich(matched, matched == FALSE), ]
     statsWithoutOutcome <- computeStats(nNotOutcomes, covariatesSubset, "without_outcome")
 
     stats <- merge(stats, statsWithOutcome, all.x = TRUE)
     stats <- merge(stats, statsWithoutOutcome, all.x = TRUE)
     stats$std_difference <- (stats$mean_with_outcome - stats$mean_without_outcome)/sqrt((stats$sd_with_outcome^2 + stats$sd_without_outcome^2)/2)
   }
-  stats <- merge(stats, ff::as.ram(covariateData$covariateRef))
+  stats <- merge(stats, ff::as.ram(plpData$covariateRef))
   delta <- Sys.time() - start
   writeLines(paste("Computing covariate means took", signif(delta, 3), attr(delta, "units")))
   return(stats)

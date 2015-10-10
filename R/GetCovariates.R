@@ -206,7 +206,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                                    concept_class_id = conceptClassId,
                                                    measurement = measurement)
 
-  writeLines("Executing multiple queries. This could take a while")
+  writeLines("Constructing covariates")
 
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Done")
@@ -240,6 +240,25 @@ getDbCovariateData <- function(connectionDetails = NULL,
 
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
+  
+  # Remove redundant covariates
+  problematicAnalysisIds <- c(2,3,4,5,6,7) # Gender, race, ethnicity, age, year, month
+  deletedCovariateIds <- c()
+  for (analysisId in problematicAnalysisIds){
+    t <- covariateRef$analysisId == analysisId
+    if (ffbase::sum.ff(t) != 0) {
+      covariateIds <- ff::as.ram(covariateRef$covariateId[ffbase::ffwhich(t, t == TRUE)])
+      freq <- sapply(covariateIds, function(x) {ffbase::sum.ff(covariates$covariateId == x)})
+      if (sum(freq) == populationSize) {
+        #Each row belongs to one of the categories, making one redunant. Remove most prevalent one
+        categoryToDelete <- covariateIds[which(freq == max(freq))[1]]
+        deletedCovariateIds <- c(deletedCovariateIds, categoryToDelete)
+        t <- covariates$covariateId == categoryToDelete
+        covariates <- covariates[ffbase::ffwhich(t, t == FALSE),]
+      }
+    }
+  }
+  
   metaData <- list(sql = renderedSql, call = match.call(), cohortIds = cohortIds)
   result <- list(covariates = covariates, covariateRef = covariateRef, metaData = metaData)
   # Open all ffdfs to prevent annoying messages later:

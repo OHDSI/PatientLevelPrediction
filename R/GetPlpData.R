@@ -299,7 +299,7 @@ savePlpData <- function(plpData, file) {
 #' # todo
 #'
 #' @export
-loadPlPData <- function(file, readOnly = FALSE) {
+loadPlpData <- function(file, readOnly = FALSE) {
   if (!file.exists(file))
     stop(paste("Cannot find folder", file))
   if (!file.info(file)$isdir)
@@ -320,7 +320,7 @@ loadPlPData <- function(file, readOnly = FALSE) {
                                  ifnotfound = list(NULL))[[1]]  #For backwards compatibility
   )         
   if ("exclude" %in% ls(envir = e)){
-    result$exclude <- exclude = get("exclude", envir = e)   
+    result$exclude <- get("exclude", envir = e)   
   }
   # Open all ffdfs to prevent annoying messages later:
   open(result$outcomes, readonly = readOnly)

@@ -18,17 +18,13 @@ output:
 ```{r echo=FALSE,message=FALSE,eval=TRUE}
 library(PatientLevelPrediction)
 # Load all needed data if it exists on this computer:
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData")
-  covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData") 
-  outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData")
+if (file.exists("s:/temp/PlpVignette")){
+  plpData <- loadPlpData("s:/temp/PlpVignette/plpData")
   parts <- list()
-  parts[[2]] <- list()
-  parts[[2]]$cohortData <- loadCohortData("s:/temp/PatientLevelPrediction/cohortData_Test")
-  parts[[2]]$covariateData <- loadCovariateData("s:/temp/PatientLevelPrediction/covariateData_Test")
-  parts[[2]]$outcomeData <- loadOutcomeData("s:/temp/PatientLevelPrediction/outcomeData_Test")
-  model <- readRDS("s:/temp/PatientLevelPrediction/model.rds")
-  prediction <- readRDS(file = "s:/temp/PatientLevelPrediction/prediction.rds")
+  parts[[2]] <- loadPlpData("s:/temp/PlpVignette/plpData_Test")
+  model <- readRDS("s:/temp/PlpVignette/model.rds")
+  prediction <- readRDS(file = "s:/temp/PlpVignette/prediction.rds")
+  means <- readRDS(file = "s:/temp/PlpVignette/means.rds")
 } 
 ```
 
@@ -55,7 +51,7 @@ The cohort and outcomes should be provided as data in a table on the server, whe
 
 ![Diagram showing patient time](Diagram.png)
 
-The prediction window always starts on the `cohort_end_date`. When the `useCohortEndDate` argument is set to `TRUE`, the prediction window will end on the `cohort_end_date` plus the number of days specified using the `windowPersistence` argument. If the `useCohortEndDate` argument is set to `FALSE`, the prediction window will end on the `cohort_start_date` plus the number of days specified using the `windowPersistence` argument.
+The prediction window always starts on the `cohort_start_date`. When the `useCohortEndDate` argument is set to `TRUE`, the prediction window will end on the `cohort_end_date` plus the number of days specified using the `windowPersistence` argument. If the `useCohortEndDate` argument is set to `FALSE`, the prediction window will end on the `cohort_start_date` plus the number of days specified using the `windowPersistence` argument.
 
 The package will use data from the time period preceding (and including) the `cohort_start_date` to build a large set of features that can be used to predict outcomes during the prediction window (including the first and last day of the prediction window). These features can include binary indicators for the occurrence of any individual drug, condition, procedures, as well as demographics and comorbidity indices. 
 
@@ -190,16 +186,7 @@ data.frame(cohort_concept_id = c(1, 2),count=c(395910, 165350))
 
 Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis:
 
-```{r tidy=FALSE,eval=FALSE}
-cohortData <- getDbCohortData(connectionDetails$dbms, 
-                              cdmDatabaseSchema = cdmDatabaseSchema, 
-                              cohortDatabaseSchema = resultsDatabaseSchema, 
-                              cohortTable = "rehospitalization", 
-                              cohortIds = 1,
-                              useCohortEndDate = TRUE,
-                              windowPersistence = 0,
-                              cdmVersion = cdmVersion)
-
+```{r tidy=FALSE,eval=FALSE}		   
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateConditionOccurrence = TRUE,
                                              useCovariateConditionOccurrence365d = TRUE,
@@ -241,71 +228,46 @@ covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateInteractionYear = FALSE,
                                              useCovariateInteractionMonth = FALSE,
                                              excludedCovariateConceptIds = c(),
-                                             deleteCovariatesSmallCount = 1)
+                                             deleteCovariatesSmallCount = 100)
 
-covariateData <- getDbCovariateData(connectionDetails$dbms, 
-                                    cdmDatabaseSchema = cdmDatabaseSchema, 
-                                    cohortDatabaseSchema = resultsDatabaseSchema, 
-                                    cohortTable = "rehospitalization", 
-                                    cohortIds = 1,
-                                    covariateSettings = covariateSettings,
-                                    cdmVersion = cdmVersion)
-
-outcomeData <- getDbOutcomeData(connectionDetails$dbms, 
-                                cdmDatabaseSchema = cdmDatabaseSchema, 
-                                cohortDatabaseSchema = resultsDatabaseSchema, 
-                                cohortTable = "rehospitalization", 
-                                cohortIds = 1,
-								useCohortEndDate = TRUE,
-								windowPersistence = 0,
-                                outcomeDatabaseSchema = resultsDatabaseSchema,
-                                outcomeTable = "rehospitalization",
-                                outcomeConceptIds = 2,
-                                cdmVersion = cdmVersion)
+plpData <- getDbPlpData(connectionDetails = connectionDetails,
+			  cdmDatabaseSchema = cdmDatabaseSchema,
+			  oracleTempSchema = oracleTempSchema,
+			  cohortDatabaseSchema = resultsDatabaseSchema,
+			  cohortTable = "rehospitalization",
+			  cohortIds = 1,
+			  useCohortEndDate = TRUE,
+			  windowPersistence = 0,
+			  covariateSettings = covariateSettings,
+			  outcomeDatabaseSchema = resultsDatabaseSchema,
+			  outcomeTable = "rehospitalization",
+			  outcomeIds = 2,
+			  firstOutcomeOnly = FALSE, 
+			  cdmVersion = cdmVersion)
 ```
 
-There are many parameters, but they are all documented in the `PatientLevelPrediction` manual. In short, we are pointing the functions to the table created earlier and indicating which concept IDs in that table identify the cohort and outcome of interest. We construct `cohortData`, an object representing the cohort of interest, `covariateData`, holding all covariate information that will be used as predictors, and `outcomeData` as the set of outcomes during cohort time. All three objects use the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
-
-**Important**: Make sure the same prediction window definition (e.g. `useCohortEndDate` and `windowPersistence`) is used when calling both `getDbCohortData` and `getDbOutcomeData`.
+There are many parameters, but they are all documented in the `PatientLevelPrediction` manual. In short, we are using the `getDbPlpData` to get all data on the cohort of interest, outcomes and covariates from the database. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
 
 We can get some overall statistics using the generic `summary()` method:
 
 ```{r tidy=FALSE,eval=FALSE}
-summary(cohortData)
+summary(plpData)
 ```
 ```{r echo=FALSE,message=FALSE,eval=TRUE}
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  summary(cohortData)
-}
-```
-```{r tidy=FALSE,eval=FALSE}
-summary(covariateData)
-```
-```{r echo=FALSE,message=FALSE,eval=TRUE}
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  summary(covariateData)
-}
-```
-```{r tidy=FALSE,eval=FALSE}
-summary(outcomeData)
-```
-```{r echo=FALSE,message=FALSE,eval=TRUE}
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  summary(outcomeData)
+if (file.exists("s:/temp/PlpVignette")){
+  summary(plpData)
 }
 ```
 
 ### Saving the data to file
 
-Creating the three data objects can take considerable computing time, and it is probably a good idea to save them for future sessions. Because `cohortData`, `covariateData` and  ``outcomeData` use `ff`, we cannot use R's regular save function. Instead, we'll have to use the `saveCohortData()`, `saveCovariateData()`, and `saveOutcomeData()` functions:
+Creating the `plpData` object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because `plpData` uses `ff`, we cannot use R's regular save function. Instead, we'll have to use the `savePlpData()` function:
 
 ```{r tidy=TRUE,eval=FALSE}
-saveCohortData(cohortData, "rehosp_cohorts")
-saveCovariateData(covariateData, "rehosp_covariates")
-saveOutcomeData(outcomeData, "rehosp_outcomes")
+savePlpData(plpData, "rehosp_plp_data")
 ```
 
-We can use the `loadCohortData()`, `loadCovariateData()`, and `loadOutcomeData()` function to load the data in a future session.
+We can use the `loadPlpData()` function to load the data in a future session.
 
 # Fitting the model
 
@@ -314,19 +276,17 @@ We can use the `loadCohortData()`, `loadCovariateData()`, and `loadOutcomeData()
 We typically not only want to build our model, we also want to know how good it is. Because evaluation using the same data on which the model was fitted can lead to overestimation, one  uses a train-test split of the data or cross-validation. We can use the `splitData()` function to split the data in a 75%-25% split:
 
 ```{r tidy=TRUE,eval=FALSE}
-parts <- splitData(cohortData, covariateData, outcomeData, c(0.75,0.25))
+parts <- splitData(plpDataData, c(0.75,0.25))
 ```
 
-The `parts` variable is a list, where each item holds the data for a subset of the full cohort of interest. For example, `parts[[1]]$cohortData` contains the cohort data for 75% of the people in the cohort of interest.
+The `parts` variable is a list of `plpData` objects.
+
 We can now fit the model on the first part of the data (the training set):
 
 ## Fitting the model on the training data
 
 ```{r tidy=TRUE,eval=FALSE}
-model <- fitPredictiveModel(parts[[1]]$cohortData, 
-                            parts[[1]]$covariateData, 
-                            parts[[1]]$outcomeData, 
-                            modelType = "logistic")
+model <- fitPredictiveModel(parts[[1]], modelType = "logistic")
 ```
 
 The `fitPredictiveModel()` function uses the `Cyclops` package to fit a large-scale regularized regression. To fit the model, `Cyclops` needs to know the hyperparameter value which specifies the variance of the prior. By default `Cyclops` will use cross-validation to estimate the optimal hyperparameter. However, be aware that this can take a really long time. You can use the `prior` and `control` parameters of the `fitPredictiveModel()` to specify `Cyclops` behaviour, including using multiple CPUs to speed-up the cross-validation. 
@@ -336,36 +296,34 @@ The `fitPredictiveModel()` function uses the `Cyclops` package to fit a large-sc
 We can evaluate how well the model is able to predict the outcome, for example on the test data we can compute the area under the ROC curve:
 
 ```{r tidy=TRUE,eval=FALSE}
-prediction <- predictProbabilities(model,
-                                   parts[[2]]$cohortData, 
-                                   parts[[2]]$covariateData)
-computeAuc(prediction, parts[[2]]$outcomeData)
+prediction <- predictProbabilities(model, parts[[2]])
+computeAuc(prediction, parts[[2]])
 ```
 ```{r echo=FALSE,message=FALSE}
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  computeAuc(prediction, parts[[2]]$outcomeData)
+if (file.exists("s:/temp/PlpVignette")){
+  computeAuc(prediction, parts[[2]])
 }
 ```
 
 And we can plot the ROC curve itself:
 
 ```{r tidy=TRUE,eval=FALSE}
-plotRoc(prediction, parts[[2]]$outcomeData)
+plotRoc(prediction, parts[[2]])
 ```
 ```{r echo=FALSE,message=FALSE}
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  plotRoc(prediction, parts[[2]]$outcomeData)
+if (file.exists("s:/temp/PlpVignette")){
+  plotRoc(prediction, parts[[2]])
 }
 ```
 
 We can also look at the calibration:
 
 ```{r tidy=TRUE,eval=FALSE}
-plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
+plotCalibration(prediction, parts[[2]], numberOfStrata = 10)
 ```
 ```{r echo=FALSE,message=FALSE}
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  plotCalibration(prediction, parts[[2]]$outcomeData, numberOfStrata = 10)
+if (file.exists("s:/temp/PlpVignette")){
+  plotCalibration(prediction, parts[[2]], numberOfStrata = 10)
 }
 ```
 
@@ -378,8 +336,8 @@ modelDetails <- getModelDetails(model, covariateData)
 head(modelDetails)
 ```
 ```{r echo=FALSE,message=FALSE}
-if (file.exists("s:/temp/PatientLevelPrediction")){
-  modelDetails <- getModelDetails(model, parts[[2]]$covariateData)
+if (file.exists("s:/temp/PlpVignette")){
+  modelDetails <- getModelDetails(model, parts[[2]])
   truncRight <- function(x, n){
     nc <- nchar(x)
     x[nc > (n-3)] <- paste('...',substr(x[nc > (n-3)], nc[nc > (n-3)]-n+1, nc[nc > (n-3)]),sep="")

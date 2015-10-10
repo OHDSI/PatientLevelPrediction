@@ -32,15 +32,16 @@ predictProbabilities <- function(predictiveModel, plpData) {
   
   if (length(plpData$metaData$cohortIds) > 1) {
     # Filter by cohort ID:
-	cohortId <- predictiveModel$cohortId
-	t <- cohorts$cohortId == cohortId
-	  if (!ffbase::any.ff(t)) {
+    cohortId <- predictiveModel$cohortId
+    t <- cohorts$cohortId == cohortId
+    if (!ffbase::any.ff(t)) {
       stop(paste("No cohorts with cohort ID", cohortId))
     }    
     cohorts <- cohorts[ffbase::ffwhich(t, t == TRUE), ]
-	
-	idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
-	covariates <- covariates[idx, ]
+    
+    idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
+    idx <- ffbase::ffwhich(idx, !is.na(idx))
+    covariates <- covariates[idx, ]
   }
   
   if (!is.null(plpData$exclude) && nrow(plpData$exclude) != 0) {
@@ -48,19 +49,19 @@ predictProbabilities <- function(predictiveModel, plpData) {
     exclude <- plpData$exclude
     outcomeId <- predictiveModel$outcomeId
     t <- exclude$outcomeId == outcomeId
-	if (ffbase::any.ff(t)){
-		exclude <- exclude[ffbase::ffwhich(t, t == TRUE)]
-		t <- ffbase::ffmatch(x = cohorts$rowId, table = exclude$rowId, nomatch = 0L) > 0L
-		if (ffbase::any.ff(t)) {
-			cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE)]
-		}	
-		t <- ffbase::ffmatch(x = covariate$rowId, table = exclude$rowId, nomatch = 0L) > 0L
-		if (ffbase::any.ff(t)) {
-			covariate <- covariate[ffbase::ffwhich(t, t == FALSE)]
-		}
-	}
+    if (ffbase::any.ff(t)){
+      exclude <- exclude[ffbase::ffwhich(t, t == TRUE)]
+      t <- ffbase::ffmatch(x = cohorts$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+      if (ffbase::any.ff(t)) {
+        cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE)]
+      }	
+      t <- ffbase::ffmatch(x = covariate$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+      if (ffbase::any.ff(t)) {
+        covariate <- covariate[ffbase::ffwhich(t, t == FALSE)]
+      }
+    }
   }
-
+  
   prediction <- predictFfdf(predictiveModel$coefficients,
                             cohorts,
                             covariates,
@@ -120,7 +121,7 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
     }
     prediction$value <- link(prediction$value)
   } else if (modelType == "poisson") {
-
+    
     prediction$value <- exp(prediction$value)
     prediction$value <- prediction$value * prediction$time
   } else {

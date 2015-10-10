@@ -157,11 +157,11 @@ fitPredictiveModel <- function(plpData,
                                       quiet = TRUE)
   cyclopsFit <- fitCyclopsModel(cyclopsData, prior = prior, control = control)
   if (is.null(cohortId))
-    cohortId <- cohortData$metaData$cohortIds
+    cohortId <- plpData$metaData$cohortIds
   if (is.null(outcomeId))
-    outcomeId <- outcomeData$metaData$outcomeIds
-  trainSetStatistics <- list(numberOfSubjects = nrow(outcomes),
-                             numberOfSubjectsWithOutcomes = ffbase::sum.ff(outcomes$y != 0),
+    outcomeId <- plpData$metaData$outcomeIds
+  trainSetStatistics <- list(numberOfPeriods = nrow(outcomes),
+                             numberOfPeriodsWithOutcomes = ffbase::sum.ff(outcomes$y != 0),
                              numberOfOutcomes = ffbase::sum.ff(outcomes$y))
   predictiveModel <- list(cohortId = cohortId,
                           outcomeId = outcomeId,

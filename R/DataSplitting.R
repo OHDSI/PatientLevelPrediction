@@ -56,7 +56,7 @@ splitData <- function(plpData, splits = 2) {
     if (!is.null(plpData$exclude)) {
       idx <- ffbase::ffmatch(x = plpData$exclude$rowId, table = sampledRowIds)
       idx <- ffbase::ffwhich(idx, !is.na(idx))
-      sampledExclude <- plpData$exclude[idc, ]
+      sampledExclude <- plpData$exclude[idx, ]
     } else {
       sampledExclude <- NULL
     }
