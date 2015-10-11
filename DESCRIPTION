@@ -22,7 +22,7 @@ Imports:
     survAUC,
     Rcpp (>= 0.11.2),   
     RJDBC,
-    SqlRender (>= 1.1.0),
+    SqlRender (>= 1.1.3),
     survival
 Suggests:
     testthat,

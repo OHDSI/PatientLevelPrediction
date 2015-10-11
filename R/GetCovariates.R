@@ -205,7 +205,10 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                                    cohort_definition_id = cohortDefinitionId,
                                                    concept_class_id = conceptClassId,
                                                    measurement = measurement)
-
+  if (!useExistingCohortPerson && rowIdField != "person_id") {
+    stop("rowIdField can only be 'person_id' when not using existing cohort_person table")
+  }
+  
   writeLines("Constructing covariates")
 
   DatabaseConnector::executeSql(conn, renderedSql)
@@ -226,6 +229,11 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                              attr(conn, "dbms"),
                                              oracleTempSchema)$sql
   covariateRef <- DatabaseConnector::querySql.ffdf(conn, covariateRefSql)
+  
+  sql <- "SELECT COUNT_BIG(*) FROM #cohort_person"
+  sql <- SqlRender::translateSql(sql, targetDialect = attr(conn, "dbms"),  oracleTempSchema = oracleTempSchema)$sql
+  populationSize <- DatabaseConnector::querySql(conn, sql)[1]
+  
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
 

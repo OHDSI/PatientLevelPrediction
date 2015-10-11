@@ -27,6 +27,8 @@
 #'                          \code{\link{getDbPlpData}}.
 #' @export
 predictProbabilities <- function(predictiveModel, plpData) {
+  start <- Sys.time()
+  
   covariates <- plpData$covariates
   cohorts <- plpData$cohorts
   
@@ -70,6 +72,9 @@ predictProbabilities <- function(predictiveModel, plpData) {
   attr(prediction, "modelType") <- predictiveModel$modelType
   attr(prediction, "cohortId") <- predictiveModel$cohortId
   attr(prediction, "outcomeId") <- predictiveModel$outcomeId
+  
+  delta <- Sys.time() - start
+  writeLines(paste("Prediction took", signif(delta, 3), attr(delta, "units")))
   return(prediction)
 }
 

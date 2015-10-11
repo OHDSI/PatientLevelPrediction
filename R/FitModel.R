@@ -59,6 +59,8 @@ fitPredictiveModel <- function(plpData,
     stop("Outcome ID not found")
   }
   
+  start <- Sys.time()
+  
   covariates <- plpData$covariates
   cohorts <- plpData$cohorts
   outcomes <- plpData$outcomes
@@ -170,6 +172,8 @@ fitPredictiveModel <- function(plpData,
                           priorVariance = cyclopsFit$variance[1],
                           trainSetStatistics = trainSetStatistics)
   class(predictiveModel) <- append(class(predictiveModel), "predictiveModel")
+  delta <- Sys.time() - start
+  writeLines(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))
   return(predictiveModel)
 }
 

@@ -31,6 +31,8 @@
 #'
 #' @export
 splitData <- function(plpData, splits = 2) {
+  start <- Sys.time()
+  
   if (length(splits) == 1)
     splits <- rep(1/splits, splits)
   splits <- cumsum(splits)
@@ -69,5 +71,7 @@ splitData <- function(plpData, splits = 2) {
     
     class(result[[i]]) <- "plpData"
   }
+  delta <- Sys.time() - start
+  writeLines(paste("Splitting data took", signif(delta, 3), attr(delta, "units")))
   return(result)
 }

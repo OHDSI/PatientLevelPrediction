@@ -22,7 +22,7 @@
   # library(DatabaseConnector); library(PatientLevelPrediction)
   setwd("s:/temp")
   options(fftempdir = "s:/FFtemp")
-
+  
   pw <- NULL
   dbms <- "sql server"
   user <- NULL
@@ -30,7 +30,7 @@
   cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
   resultsDatabaseSchema <- "scratch.dbo"
   port <- NULL
-
+  
   dbms <- "postgresql"
   server <- "localhost/ohdsi"
   user <- "postgres"
@@ -38,7 +38,7 @@
   cdmDatabaseSchema <- "cdm4_sim"
   resultsDatabaseSchema <- "scratch"
   port <- NULL
-
+  
   pw <- NULL
   dbms <- "pdw"
   user <- NULL
@@ -48,7 +48,7 @@
   oracleTempSchema <- NULL
   port <- 17001
   cdmVersion <- "4"
-
+  
   connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                                   server = server,
                                                                   user = user,
@@ -63,14 +63,14 @@
                                            pre_time = 365)
   connection <- DatabaseConnector::connect(connectionDetails)
   DatabaseConnector::executeSql(connection, sql)
-
+  
   # Check number of subjects per cohort:
   sql <- "SELECT cohort_concept_id, COUNT(*) AS count FROM @resultsDatabaseSchema.rehospitalization GROUP BY cohort_concept_id"
   sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
   DatabaseConnector::querySql(connection, sql)
   dbDisconnect(connection)
-
+  
   covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                                useCovariateDemographicsGender = TRUE,
                                                useCovariateDemographicsRace = TRUE,
@@ -122,26 +122,26 @@
                                                excludedCovariateConceptIds = c(),
                                                includedCovariateConceptIds = c(),
                                                deleteCovariatesSmallCount = 100)
-											   
+  
   plpData <- getDbPlpData(connectionDetails = connectionDetails,
-				  cdmDatabaseSchema = cdmDatabaseSchema,
-				  oracleTempSchema = oracleTempSchema,
-				  cohortDatabaseSchema = resultsDatabaseSchema,
-				  cohortTable = "rehospitalization",
-				  cohortIds = 1,
-				  useCohortEndDate = TRUE,
-				  windowPersistence = 0,
-				  covariateSettings = covariateSettings,
-				  outcomeDatabaseSchema = resultsDatabaseSchema,
-				  outcomeTable = "rehospitalization",
-				  outcomeIds = 2,
-				  firstOutcomeOnly = FALSE, 
-				  cdmVersion = cdmVersion)
-  									   
+                          cdmDatabaseSchema = cdmDatabaseSchema,
+                          oracleTempSchema = oracleTempSchema,
+                          cohortDatabaseSchema = resultsDatabaseSchema,
+                          cohortTable = "rehospitalization",
+                          cohortIds = 1,
+                          useCohortEndDate = TRUE,
+                          windowPersistence = 0,
+                          covariateSettings = covariateSettings,
+                          outcomeDatabaseSchema = resultsDatabaseSchema,
+                          outcomeTable = "rehospitalization",
+                          outcomeIds = 2,
+                          firstOutcomeOnly = FALSE, 
+                          cdmVersion = cdmVersion)
+  
   savePlpData(plpData, "s:/temp/PlpVignette/plpData")
-
+  
   # plpData <- loadPlpData('s:/temp/PlpVignette/plpData')
-
+  
   means <- computeCovariateMeans(plpData = plpData, outcomeId = 2)
   
   saveRDS(means, "s:/temp/PlpVignette/means.rds")
@@ -149,9 +149,9 @@
   #plotCovariateDifferenceOfTopVariables(means)
   
   parts <- splitData(plpData, c(0.75, 0.25))
-
+  
   savePlpData(parts[[2]], "s:/temp/PlpVignette/plpData_test")
-
+  
   model <- fitPredictiveModel(parts[[1]],
                               modelType = "logistic",
                               prior = createPrior("laplace",
@@ -163,21 +163,21 @@
                                                       threads = 10))
   
   saveRDS(model, file = "s:/temp/PlpVignette/model.rds")
-
+  
   # model <- readRDS('s:/temp/PlpVignette/model.rds')
-
+  
   # parts <- list(); parts[[2]] <- loadPlpData('s:/temp/PlpVignette/plpData_test')
- 
+  
   prediction <- predictProbabilities(model, parts[[2]])
   
   saveRDS(prediction, file = "s:/temp/PlpVignette/prediction.rds")
-
+  
   # prediction <- readRDS('s:/temp/PlpVignette/prediction.rds')
-
+  
   computeAuc(prediction, parts[[2]])
   plotRoc(prediction, parts[[2]])
   plotCalibration(prediction, parts[[2]], numberOfStrata = 10)
-
+  
   modelDetails <- getModelDetails(model, parts[[2]])
   head(modelDetails)
 }
