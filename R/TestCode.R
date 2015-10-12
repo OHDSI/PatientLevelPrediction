@@ -94,23 +94,15 @@
                           outcomeDatabaseSchema = workDatabaseSchema,
                           outcomeTable = studyCohortTable,
                           outcomeIds = 10:16,
-                          firstOutcomeOnly = FALSE, 
+                          firstOutcomeOnly = TRUE, 
                           cdmVersion = cdmVersion)
   
   savePlpData(plpData, "s:/temp/plpData")
   
-  plpData <- loadPlPData("s:/temp/plpData")
+  plpData <- loadPlpData("s:/temp/plpData")
   
   plpData
   summary(plpData)
-  
-  x <- aggregate(rowId ~ covariateId, data = plpData$covariates, length)
-  x <- x[order(-x$rowId),]
-  format(head(x$covariateId))
-  
-  t <- plpData$covariateRef$covariateId == 1001
-  plpData$covariateRef[ffbase::ffwhich(t, t == TRUE),]
-  
   
   splits <- splitData(plpData, splits = c(0.75,0.25))
   
@@ -130,7 +122,7 @@
   
   # model <- readRDS('s:/temp/plpTestmodel.rds')
   
-  prediction <- predictProbabilities(model, parts[[2]])
+  prediction <- predictProbabilities(model, splits[[2]])
   
   connectionDetails = connectionDetails
   cdmDatabaseSchema = cdmDatabaseSchema

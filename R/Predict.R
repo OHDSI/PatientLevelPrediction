@@ -52,14 +52,14 @@ predictProbabilities <- function(predictiveModel, plpData) {
     outcomeId <- predictiveModel$outcomeId
     t <- exclude$outcomeId == outcomeId
     if (ffbase::any.ff(t)){
-      exclude <- exclude[ffbase::ffwhich(t, t == TRUE)]
+      exclude <- exclude[ffbase::ffwhich(t, t == TRUE),]
       t <- ffbase::ffmatch(x = cohorts$rowId, table = exclude$rowId, nomatch = 0L) > 0L
       if (ffbase::any.ff(t)) {
-        cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE)]
+        cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE),]
       }	
-      t <- ffbase::ffmatch(x = covariate$rowId, table = exclude$rowId, nomatch = 0L) > 0L
+      t <- ffbase::ffmatch(x = covariates$rowId, table = exclude$rowId, nomatch = 0L) > 0L
       if (ffbase::any.ff(t)) {
-        covariate <- covariate[ffbase::ffwhich(t, t == FALSE)]
+        covariates <- covariates[ffbase::ffwhich(t, t == FALSE),]
       }
     }
   }

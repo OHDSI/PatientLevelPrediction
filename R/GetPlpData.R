@@ -228,6 +228,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                    outcomeIds = outcomeIds,
                    useCohortEndDate = useCohortEndDate,
                    windowPersistence = windowPersistence,
+                   deletedCovariateIds = covariateData$deletedCovariateIds,
                    call = match.call())
   
   result <- list(cohorts = cohorts,

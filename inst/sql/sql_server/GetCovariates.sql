@@ -138,9 +138,7 @@ VALUES (
 
 
 SELECT 
-	cohort_start_date,
-	@cohort_definition_id,
-	subject_id AS person_id,
+	@row_id_field AS row_id,
 	1 AS covariate_id,
 	@cohort_definition_id AS covariate_value
 INTO #cov_exposure
@@ -1196,7 +1194,7 @@ INNER JOIN #drug_group cg1
 INNER JOIN concept c1
 	ON cg1.ancestor_concept_id = c1.concept_id
 WHERE len(c1.concept_code) = 3
-GROUP BY cc1.@row_id_field,
+GROUP BY cc1.row_id,
 	CAST(cg1.ancestor_concept_id AS BIGINT) * 1000 + 601;
 }
 

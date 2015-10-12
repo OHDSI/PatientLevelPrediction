@@ -74,7 +74,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                oracleTempSchema = NULL,
                                cdmDatabaseSchema,
                                useExistingCohortPerson = FALSE,
-                               rowIdField = "person_id",
+                               rowIdField = "subject_id",
                                cohortDatabaseSchema = cdmDatabaseSchema,
                                cohortTable = "cohort",
                                cohortIds = c(0, 1),
@@ -86,11 +86,16 @@ getDbCovariateData <- function(connectionDetails = NULL,
     stop("Cannot specify both connectionDetails and connection")
   if (useExistingCohortPerson && is.null(connection))
     stop("When using an existing cohort temp table, connection must be specified")
+  if (!useExistingCohortPerson && rowIdField != "subject_id") {
+    stop("rowIdField can only be 'subject_id' when not using existing cohort_person table")
+  }
+  writeLines("Constructing covariates")
+  
   if (!covariateSettings$useCovariateConditionGroupMeddra & !covariateSettings$useCovariateConditionGroupSnomed)
     covariateSettings$useCovariateConditionGroup <- FALSE
-
+  
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
-
+  
   if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
     conceptClassId <- "concept_class"
@@ -100,15 +105,15 @@ getDbCovariateData <- function(connectionDetails = NULL,
     conceptClassId <- "concept_class_id"
     measurement <- "measurement"
   }
-
+  
   if (is.null(connection)) {
     conn <- connect(connectionDetails)
   } else {
     conn <- connection
   }
-
+  
   if (is.null(covariateSettings$excludedCovariateConceptIds) || length(covariateSettings$excludedCovariateConceptIds) ==
-    0) {
+      0) {
     hasExcludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$excludedCovariateConceptIds))
@@ -122,9 +127,9 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-
+  
   if (is.null(covariateSettings$includedCovariateConceptIds) || length(covariateSettings$includedCovariateConceptIds) ==
-    0) {
+      0) {
     hasIncludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$includedCovariateConceptIds))
@@ -138,7 +143,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-
+  
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCovariates.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -205,15 +210,10 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                                    cohort_definition_id = cohortDefinitionId,
                                                    concept_class_id = conceptClassId,
                                                    measurement = measurement)
-  if (!useExistingCohortPerson && rowIdField != "person_id") {
-    stop("rowIdField can only be 'person_id' when not using existing cohort_person table")
-  }
   
-  writeLines("Constructing covariates")
-
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Done")
-
+  
   writeLines("Fetching data from server")
   start <- Sys.time()
   covariateSql <- "SELECT row_id, covariate_id, covariate_value FROM #cov ORDER BY covariate_id, row_id"
@@ -236,7 +236,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-
+  
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCovariateTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
@@ -245,13 +245,28 @@ getDbCovariateData <- function(connectionDetails = NULL,
   if (is.null(connection)) {
     RJDBC::dbDisconnect(conn)
   }
-
+  
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
   
   # Remove redundant covariates
-  problematicAnalysisIds <- c(2,3,4,5,6,7) # Gender, race, ethnicity, age, year, month
+  writeLines("Removing redundant covariates")
+  # First delete all single covariates that appear in every row with the same value
   deletedCovariateIds <- c()
+  valueCounts <- bySumFf(ff::ff(1, length = nrow(covariates)), covariates$covariateId)
+  nonSparseIds <- valueCounts$bins[valueCounts$sums == populationSize]
+  for (covariateId in nonSparseIds){
+    selection <- covariates$covariateId == covariateId
+    idx <- ffbase::ffwhich(selection, selection == TRUE)
+    values <- ffbase::unique.ff(covariates$covariateValue[idx])  
+    if (length(values) == 1){
+      idx <- ffbase::ffwhich(selection, selection == FALSE)
+      covariates <- covariates[idx,]
+      deletedCovariateIds <- c(deletedCovariateIds, covariateId)
+    }
+  }
+  # Next, from groups of covariates that together cover every row, remove the most prevalence one
+  problematicAnalysisIds <- c(2,3,4,5,6,7) # Gender, race, ethnicity, age, year, month
   for (analysisId in problematicAnalysisIds){
     t <- covariateRef$analysisId == analysisId
     if (ffbase::sum.ff(t) != 0) {
@@ -267,7 +282,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
     }
   }
   
-  metaData <- list(sql = renderedSql, call = match.call(), cohortIds = cohortIds)
+  metaData <- list(sql = renderedSql, call = match.call(), cohortIds = cohortIds, deletedCovariateIds = deletedCovariateIds)
   result <- list(covariates = covariates, covariateRef = covariateRef, metaData = metaData)
   # Open all ffdfs to prevent annoying messages later:
   if (nrow(result$covariates) == 0) {
@@ -304,7 +319,7 @@ saveCovariateData <- function(covariateData, file) {
     stop("Must specify file")
   if (class(covariateData) != "covariateData")
     stop("Data not of class covariateData")
-
+  
   covariates <- covariateData$covariates
   covariateRef <- covariateData$covariateRef
   ffbase::save.ffdf(covariates, covariateRef, dir = file)
@@ -337,10 +352,10 @@ loadCovariateData <- function(file, readOnly = FALSE) {
     stop(paste("Cannot find folder", file))
   if (!file.info(file)$isdir)
     stop(paste("Not a folder", file))
-
+  
   temp <- setwd(file)
   absolutePath <- setwd(temp)
-
+  
   e <- new.env()
   ffbase::load.ffdf(absolutePath, e)
   load(file.path(absolutePath, "metaData.Rdata"), e)
@@ -350,7 +365,7 @@ loadCovariateData <- function(file, readOnly = FALSE) {
   # Open all ffdfs to prevent annoying messages later:
   open(result$covariates, readonly = readOnly)
   open(result$covariateRef, readonly = readOnly)
-
+  
   class(result) <- "covariateData"
   rm(e)
   return(result)

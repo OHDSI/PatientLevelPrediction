@@ -6,7 +6,7 @@
 \usage{
 getDbCovariateData(connectionDetails = NULL, connection = NULL,
   oracleTempSchema = NULL, cdmDatabaseSchema,
-  useExistingCohortPerson = FALSE, rowIdField = "person_id",
+  useExistingCohortPerson = FALSE, rowIdField = "subject_id",
   cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
   cohortIds = c(0, 1), covariateSettings, cdmVersion = "4")
 }
