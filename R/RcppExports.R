@@ -13,3 +13,7 @@
     .Call('PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
 }
 
+.byMax <- function(ffValues, ffBins) {
+    .Call('PatientLevelPrediction_byMax', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
+}
+

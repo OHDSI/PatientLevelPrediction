@@ -55,6 +55,8 @@
 #'                                  build covariates.
 #' @param covariateSettings         An object of type \code{covariateSettings} as created using the
 #'                                  \code{\link{createCovariateSettings}} function.
+#' @param normalize                 Should covariate values be normalized? If true, values will be 
+#'                                  divided by the max value per covariate.
 #' @param cdmVersion                Define the OMOP CDM version used: currently support "4" and "5".
 #'
 #' @return
@@ -79,6 +81,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
                                cohortTable = "cohort",
                                cohortIds = c(0, 1),
                                covariateSettings,
+                               normalize = TRUE,
                                cdmVersion = "4") {
   if (is.null(connectionDetails) && is.null(connection))
     stop("Either connectionDetails or connection has to be specified")
@@ -280,6 +283,10 @@ getDbCovariateData <- function(connectionDetails = NULL,
         covariates <- covariates[ffbase::ffwhich(t, t == FALSE),]
       }
     }
+  }
+  
+  if (normalize) {
+    covariates <- normalizeCovariates(covariates) 
   }
   
   metaData <- list(sql = renderedSql, call = match.call(), cohortIds = cohortIds, deletedCovariateIds = deletedCovariateIds)
@@ -684,3 +691,37 @@ print.summary.covariateData <- function(x, ...) {
   writeLines(paste("Number of covariates:", x$covariateCount))
   writeLines(paste("Number of non-zero covariate values:", x$covariateValueCount))
 }
+
+
+#' Compute max of values binned by a second variable
+#'
+#' @param values   An ff object containing the numeric values to take the max of.
+#' @param bins     An ff object containing the numeric values to bin by.
+#'
+#' @examples
+#' values <- ff::as.ff(c(1, 1, 2, 2, 1))
+#' bins <- ff::as.ff(c(1, 1, 1, 2, 2))
+#' byMaxFf(values, bins)
+#'
+#' @export
+byMaxFf <- function(values, bins) {
+  .byMax(values, bins)
+}
+
+#' Normalize covariate values 
+#' 
+#' @details 
+#' Normalize covariate values by dividing by the max. This is to avoid numeric problems when fitting models.
+#'
+#' @param covariates   An ffdf object as generated using the \code{\link{getDbCovariateData}} function.#' 
+#'
+#' @export
+normalizeCovariates <- function(covariates){
+  maxs <- byMaxFf(covariates$covariateValue, covariates$covariateId)
+  names(maxs)[names(maxs) == "bins"] <- "covariateId"
+  result <- ffbase::merge.ffdf(covariates, ff::as.ffdf(maxs))
+  result$covariateValue <- result$covariateValue / result$maxs
+  result$maxs <- NULL
+  return(result)
+}
+

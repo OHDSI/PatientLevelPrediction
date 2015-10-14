@@ -25,6 +25,7 @@
 #include <Rcpp.h>
 #include "Auc.h"
 #include "BySum.h"
+#include "ByMax.h"
 
 using namespace Rcpp;
 
@@ -83,5 +84,26 @@ DataFrame bySum(List ffValues, List ffBins) {
   return DataFrame::create();
 }
 
+// [[Rcpp::export(".byMax")]]
+DataFrame byMax(List ffValues, List ffBins) {
+  
+  using namespace ohdsi::patientLevelPrediction;
+  
+  try {
+    std::map<double,double> map = ByMax::byMax(ffValues, ffBins);
+    std::vector<double> bins;
+    std::vector<double> maxs;
+    for(std::map<double,double>::iterator iter = map.begin(); iter != map.end(); ++iter){
+      bins.push_back(iter->first);
+      maxs.push_back(iter->second);
+    }
+    return DataFrame::create(_["bins"] = bins, _["maxs"] = maxs);
+  } catch (std::exception &e) {
+    forward_exception_to_r(e);
+  } catch (...) {
+    ::Rf_error("c++ exception (unknown reason)");
+  }
+  return DataFrame::create();
+}
 
 #endif // __RcppWrapper_cpp__

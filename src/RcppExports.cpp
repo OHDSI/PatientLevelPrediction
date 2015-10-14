@@ -41,3 +41,15 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// byMax
+DataFrame byMax(List ffValues, List ffBins);
+RcppExport SEXP PatientLevelPrediction_byMax(SEXP ffValuesSEXP, SEXP ffBinsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< List >::type ffValues(ffValuesSEXP);
+    Rcpp::traits::input_parameter< List >::type ffBins(ffBinsSEXP);
+    __result = Rcpp::wrap(byMax(ffValues, ffBins));
+    return __result;
+END_RCPP
+}
