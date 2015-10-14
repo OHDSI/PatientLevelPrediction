@@ -286,6 +286,7 @@ getDbCovariateData <- function(connectionDetails = NULL,
   }
   
   if (normalize) {
+    writeLines("Normalizing covariates")
     covariates <- normalizeCovariates(covariates) 
   }
   
