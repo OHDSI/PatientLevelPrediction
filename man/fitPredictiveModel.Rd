@@ -11,6 +11,8 @@ fitPredictiveModel(plpData, modelType = "logistic",
   startingVariance = 0.1))
 }
 \arguments{
+\item{plpData}{An object of type \code{plpData}.}
+
 \item{modelType}{The type of predictive model. Options are "logistic", "poisson", and
 "survival".}
 
@@ -28,12 +30,6 @@ details.}
 \item{control}{The control object used to control the cross-validation used to determine the
                        hyperparameters of the prior (if applicable). See
                        \code{\link[Cyclops]{createControl}} for details.}
-
-\item{cohortData}{An object of type \code{cohortData}.}
-
-\item{covariateData}{An object of type \code{covariateData}.}
-
-\item{outcomeData}{An object of type \code{outcomeData}.}
 }
 \description{
 Fit a predictive model

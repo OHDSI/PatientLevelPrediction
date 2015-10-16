@@ -19,7 +19,11 @@
 #' Create predictive probabilities
 #'
 #' @details
-#' Note that the cohortData and covariateData objects need to come from the same population.
+#' Generates predictions for the population specified in plpData given the model. 
+#' 
+#' @return 
+#' The value column in the result data.frame is: logistic: probabilities of the outcome, 
+#' poisson: Poisson rate (per day) of the outome, survival: hazard rate (per day) of the outcome.
 #'
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using
 #'                          \code{\link{fitPredictiveModel}}.

@@ -37,7 +37,7 @@ prepareDataForEval <- function(prediction, plpData, removeDropouts){
     if (!is.null(outcomeId)) {
       t <- exclude$outcomeId == outcomeId
       if (ffbase::any.ff(t)) {
-        exclude <- exclude[ffbase::ffwhich(t, t == TRUE)] 
+        exclude <- exclude[ffbase::ffwhich(t, t == TRUE),] 
         
         t <- ffbase::ffmatch(x = prediction$rowId, table = exclude$rowId, nomatch = 0L) > 0L
         if (ffbase::any.ff(t)) {
@@ -160,6 +160,8 @@ computeAucFromDataFrames <- function(prediction,
 #'                             observation window (i.e. are censored earlier) and do not have the outcome
 #'                             are removed prior to evaluating the model.
 #' @param numberOfStrata   The number of strata in the plot.
+#' @param truncateFraction This fraction of probability values will be ignored when plotting, to avoid
+#'                         the x-axis scale being dominated by a few outliers.
 #' @param fileName         Name of the file where the plot should be saved, for example 'plot.png'. See
 #'                         the function \code{ggsave} in the ggplot2 package for supported file
 #'                         formats.
@@ -169,7 +171,7 @@ computeAucFromDataFrames <- function(prediction,
 #' format.
 #'
 #' @export
-plotCalibration <- function(prediction, plpData, removeDropoutsForLr = TRUE, numberOfStrata = 5, fileName = NULL) {
+plotCalibration <- function(prediction, plpData, removeDropoutsForLr = TRUE, numberOfStrata = 5, truncateFraction = 0.01, fileName = NULL) {
   if (attr(prediction, "modelType") != "logistic")
     stop("Plotting the calibration is only implemented for logistic models")
   
@@ -197,12 +199,14 @@ plotCalibration <- function(prediction, plpData, removeDropoutsForLr = TRUE, num
   strataData <- merge(strataData, minx)
   strataData <- merge(strataData, maxx)
   strataData$fraction <- strataData$counts/strataData$backgroundCounts
+  lims <- quantile(prediction$value, c(truncateFraction, 1-truncateFraction))
   plot <- ggplot2::ggplot(strataData,
                           ggplot2::aes(xmin = minx, xmax = maxx, ymin = 0, ymax = fraction)) +
     ggplot2::geom_abline() +
     ggplot2::geom_rect(color = rgb(0, 0, 0.8, alpha = 0.8),
                        fill = rgb(0, 0, 0.8, alpha = 0.5)) +
     ggplot2::scale_x_continuous("Predicted probability") +
+    ggplot2::coord_cartesian(xlim = lims) + 
     ggplot2::scale_y_continuous("Observed fraction")
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)

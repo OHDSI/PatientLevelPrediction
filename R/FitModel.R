@@ -18,9 +18,7 @@
 
 #' Fit a predictive model
 #'
-#' @param cohortData      An object of type \code{cohortData}.
-#' @param covariateData   An object of type \code{covariateData}.
-#' @param outcomeData     An object of type \code{outcomeData}.
+#' @param plpData      An object of type \code{plpData}.
 #' @param modelType       The type of predictive model. Options are "logistic", "poisson", and
 #'                        "survival".
 #' @param removeDropoutsForLr  If TRUE and modelType is "logistic", subjects that do not have the full 
@@ -168,6 +166,7 @@ fitPredictiveModel <- function(plpData,
   predictiveModel <- list(cohortId = cohortId,
                           outcomeId = outcomeId,
                           modelType = modelType,
+                          removeDropouts = (modelType == "logistic" & removeDropoutsForLr),
                           coefficients = coef(cyclopsFit),
                           priorVariance = cyclopsFit$variance[1],
                           trainSetStatistics = trainSetStatistics)

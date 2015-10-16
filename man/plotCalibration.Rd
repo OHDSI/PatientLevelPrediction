@@ -5,7 +5,7 @@
 \title{Plot the calibration}
 \usage{
 plotCalibration(prediction, plpData, removeDropoutsForLr = TRUE,
-  numberOfStrata = 5, fileName = NULL)
+  numberOfStrata = 5, truncateFraction = 0.01, fileName = NULL)
 }
 \arguments{
 \item{prediction}{A prediction object as generated using the
@@ -18,6 +18,9 @@ observation window (i.e. are censored earlier) and do not have the outcome
 are removed prior to evaluating the model.}
 
 \item{numberOfStrata}{The number of strata in the plot.}
+
+\item{truncateFraction}{This fraction of probability values will be ignored when plotting, to avoid
+the x-axis scale being dominated by a few outliers.}
 
 \item{fileName}{Name of the file where the plot should be saved, for example 'plot.png'. See
                         the function \code{ggsave} in the ggplot2 package for supported file

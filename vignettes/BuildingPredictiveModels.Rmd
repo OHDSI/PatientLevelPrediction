@@ -276,7 +276,7 @@ We can use the `loadPlpData()` function to load the data in a future session.
 We typically not only want to build our model, we also want to know how good it is. Because evaluation using the same data on which the model was fitted can lead to overestimation, one  uses a train-test split of the data or cross-validation. We can use the `splitData()` function to split the data in a 75%-25% split:
 
 ```{r tidy=TRUE,eval=FALSE}
-parts <- splitData(plpDataData, c(0.75,0.25))
+parts <- splitData(plpData, c(0.75,0.25))
 ```
 
 The `parts` variable is a list of `plpData` objects.
@@ -332,7 +332,7 @@ if (file.exists("s:/temp/PlpVignette")){
 Now that we have some idea of the operating characteristics of our predictive model, we can investigate the model itself: 
 
 ```{r tidy=TRUE,eval=FALSE}
-modelDetails <- getModelDetails(model, covariateData)
+modelDetails <- getModelDetails(model, plpData)
 head(modelDetails)
 ```
 ```{r echo=FALSE,message=FALSE}
