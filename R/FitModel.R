@@ -149,6 +149,7 @@ fitPredictiveModel <- function(plpData,
     cyclopsModelType <- "lr"
   } else {
     cyclopsModelType <- "pr"
+    outcomes$time <- outcomes$time + 1 # Assume same day means duration of 1
   }
   cyclopsData <- convertToCyclopsData(outcomes,
                                       covariates,

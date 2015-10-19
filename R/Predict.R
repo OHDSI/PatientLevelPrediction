@@ -129,14 +129,9 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
       return(1/(1 + exp(0 - x)))
     }
     prediction$value <- link(prediction$value)
-  } else if (modelType == "poisson") {
-    
+  } else if (modelType == "poisson" || modelType == 'survival') {
     prediction$value <- exp(prediction$value)
-    prediction$value <- prediction$value * prediction$time
-  } else {
-    # modelType == 'survival'
-    prediction$value <- exp(prediction$value)
-  }
+  } 
   return(prediction)
 }
 
