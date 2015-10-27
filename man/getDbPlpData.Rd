@@ -6,8 +6,8 @@
 \usage{
 getDbPlpData(connectionDetails = NULL, cdmDatabaseSchema,
   oracleTempSchema = NULL, cohortDatabaseSchema = cdmDatabaseSchema,
-  cohortTable = "cohort", cohortIds = c(0, 1), useCohortEndDate = TRUE,
-  windowPersistence = 0, covariateSettings,
+  cohortTable = "cohort", cohortIds = c(0, 1), washoutWindow = 183,
+  useCohortEndDate = TRUE, windowPersistence = 0, covariateSettings,
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "condition_occurrence", outcomeIds = c(),
   outcomeConditionTypeConceptIds = "", firstOutcomeOnly = FALSE,
@@ -32,6 +32,9 @@ e.g. "cdm_schema.dbo".}
 \item{cohortTable}{What is the name of the table holding the cohort?}
 
 \item{cohortIds}{The IDs of the cohorts for which we want to create models.}
+
+\item{washoutWindow}{The mininum required continuous observation time prior to index
+date for a person to be included in the cohort.}
 
 \item{useCohortEndDate}{Use the cohort end date as the basis for the end of the risk
 window? If FALSE, the cohort start date will be used instead.}

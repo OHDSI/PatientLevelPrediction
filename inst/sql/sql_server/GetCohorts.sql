@@ -22,6 +22,7 @@ limitations under the License.
 {DEFAULT @cohort_database_schema = 'CDM4_SIM' } 
 {DEFAULT @cohort_table = 'cohort' } 
 {DEFAULT @cohort_ids = '0,1' }
+{DEFAULT @washout_window = 183 }
 {DEFAULT @cdm_version == '4'}
 {DEFAULT @cohort_definition_id = 'cohort_concept_id'} 
 {DEFAULT @use_cohort_end_date = TRUE}
@@ -61,5 +62,6 @@ FROM (
 {@cohort_concept_ids != ''} ? {
 	AND @cohort_definition_id IN (@cohort_ids)
 } 
+	AND cohort_start_date >= DATEADD(DAY, @washout_window, observation_period_start_date) 
 ) unique_periods
 ;

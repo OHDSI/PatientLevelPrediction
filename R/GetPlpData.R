@@ -38,6 +38,8 @@
 #'                                         e.g. "cdm_schema.dbo".
 #' @param cohortTable                      What is the name of the table holding the cohort?
 #' @param cohortIds                        The IDs of the cohorts for which we want to create models.
+#' @param washoutWindow                The mininum required continuous observation time prior to index
+#'                                     date for a person to be included in the cohort.
 #' @param useCohortEndDate          Use the cohort end date as the basis for the end of the risk
 #'                                  window? If FALSE, the cohort start date will be used instead.
 #' @param windowPersistence         The number of days the risk window should persist.
@@ -89,6 +91,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                          cohortDatabaseSchema = cdmDatabaseSchema,
                          cohortTable = "cohort",
                          cohortIds = c(0, 1),
+                         washoutWindow = 183,
                          useCohortEndDate = TRUE,
                          windowPersistence = 0,
                          covariateSettings,
@@ -122,6 +125,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                    cohort_database_schema = cohortDatabaseSchema,
                                                    cohort_table = cohortTable,
                                                    cohort_ids = cohortIds,
+                                                   washout_window = washoutWindow,
                                                    use_cohort_end_date = useCohortEndDate,
                                                    window_persistence = windowPersistence,
                                                    cdm_version = cdmVersion,

@@ -55,7 +55,7 @@ The prediction window always starts on the `cohort_start_date`. When the `useCoh
 
 The package will use data from the time period preceding (and including) the `cohort_start_date` to build a large set of features that can be used to predict outcomes during the prediction window (including the first and last day of the prediction window). These features can include binary indicators for the occurrence of any individual drug, condition, procedures, as well as demographics and comorbidity indices. 
 
-**Important**: Currently, `PatientLevelPrediction` does not check or limit the input data in any way. It is up to the user to make sure there are at least 365 days of observation time preceding the `cohort_start_date` for the cohort of interest. Furthermore, since the `cohort_start_date` is included in both the time used to construct predictors, and the time when outcomes can occurr, it is up to the user to either remove outcomes occurring on the `cohort_start_date`, or to remove predictors that are in fact indicators of the occurrence of an outcome on the `cohort_start_date`.
+**Important**: Since the `cohort_start_date` is included in both the time used to construct predictors, and the time when outcomes can occurr, it is up to the user to either remove outcomes occurring on the `cohort_start_date`, or to remove predictors that are in fact indicators of the occurrence of an outcome on the `cohort_start_date`.
 
 # Installation instructions
 
@@ -68,6 +68,7 @@ install.packages("devtools")
 library(devtools)
 install_github("ohdsi/SqlRender") 
 install_github("ohdsi/DatabaseConnector") 
+install_github("ohdsi/OhdsiRTools") 
 install_github("ohdsi/Cyclops") 
 install_github("ohdsi/PatientLevelPrediction") 
 ```
@@ -89,11 +90,11 @@ connectionDetails <- createConnectionDetails(dbms = "postgresql",
                                              password = "supersecret")
 
 cdmDatabaseSchema <- "my_cdm_data"
-resultsDatabaseSchema <- "my_results"
+cohortsDatabaseSchema <- "my_results"
 cdmVersion <- "4"
 ```
 
-The last three lines define the `cdmDatabaseSchema` and `resultSchema` variables,as well as the CDM version. We'll use these later to tell R where the data in CDM format live, where we want to write intermediate and result tables, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
+The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` variables,as well as the CDM version. We'll use these later to tell R where the data in CDM format live, where we want to create the cohorts of interest, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
 
 ## Preparing the cohort and outcome of interest
 
@@ -107,14 +108,14 @@ For this purpose we have created a file called *HospitalizationCohorts.sql* with
 /***********************************
 File HospitalizationCohorts.sql 
 ***********************************/
-IF OBJECT_ID('@resultsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
-DROP TABLE @resultsDatabaseSchema.rehospitalization;
+IF OBJECT_ID('@cohortsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
+DROP TABLE @cohortsDatabaseSchema.rehospitalization;
 
 SELECT visit_occurrence.person_id AS subject_id,
 MIN(visit_start_date) AS cohort_start_date,
 DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
 1 AS cohort_concept_id
-INTO @resultsDatabaseSchema.rehospitalization
+INTO @cohortsDatabaseSchema.rehospitalization
 FROM @cdmDatabaseSchema.visit_occurrence
 INNER JOIN @cdmDatabaseSchema.observation_period
 ON visit_occurrence.person_id = observation_period.person_id
@@ -133,12 +134,12 @@ FROM @cdmDatabaseSchema.concept_ancestor
 WHERE ancestor_concept_id = 201826) /* Type 2 DM */
 GROUP BY visit_occurrence.person_id;
 
-INSERT INTO @resultsDatabaseSchema.rehospitalization
+INSERT INTO @cohortsDatabaseSchema.rehospitalization
 SELECT visit_occurrence.person_id AS subject_id,
 visit_start_date AS cohort_start_date,
 visit_end_date AS cohort_end_date,
 2 AS cohort_concept_id
-FROM @resultsDatabaseSchema.rehospitalization
+FROM @cohortsDatabaseSchema.rehospitalization
 INNER JOIN @cdmDatabaseSchema.visit_occurrence
 ON visit_occurrence.person_id = rehospitalization.subject_id
 WHERE place_of_service_concept_id IN (9201, 9203)
@@ -155,7 +156,7 @@ library(SqlRender)
 sql <- readSql("HospitalizationCohorts.sql")
 sql <- renderSql(sql,
                  cdmDatabaseSchema = cdmDatabaseSchema,
-                 resultsDatabaseSchema = resultsDatabaseSchema,
+                 cohortsDatabaseSchema = cohortsDatabaseSchema,
                  post_time = 30,
                  pre_time = 365)
 )$sql
@@ -171,9 +172,9 @@ If all went well, we now have a table with the events of interest. We can see ho
 
 ```{r tidy=FALSE,eval=FALSE}
 sql <- paste("SELECT cohort_concept_id, COUNT(*) AS count",
-             "FROM @resultsDatabaseSchema.rehospitalization",
+             "FROM @cohortsDatabaseSchema.rehospitalization",
              "GROUP BY cohort_concept_id")
-sql <- renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
+sql <- renderSql(sql, cohortsDatabaseSchema = cohortsDatabaseSchema)$sql
 sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 
 querySql(connection, sql)
@@ -233,13 +234,14 @@ covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
 plpData <- getDbPlpData(connectionDetails = connectionDetails,
 			  cdmDatabaseSchema = cdmDatabaseSchema,
 			  oracleTempSchema = oracleTempSchema,
-			  cohortDatabaseSchema = resultsDatabaseSchema,
+			  cohortDatabaseSchema = cohortsDatabaseSchema,
 			  cohortTable = "rehospitalization",
 			  cohortIds = 1,
+			  washoutWindow = 183,
 			  useCohortEndDate = TRUE,
 			  windowPersistence = 0,
 			  covariateSettings = covariateSettings,
-			  outcomeDatabaseSchema = resultsDatabaseSchema,
+			  outcomeDatabaseSchema = cohortsDatabaseSchema,
 			  outcomeTable = "rehospitalization",
 			  outcomeIds = 2,
 			  firstOutcomeOnly = FALSE, 
