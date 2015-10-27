@@ -7,14 +7,14 @@
 savePlpData(plpData, file)
 }
 \arguments{
+\item{plpData}{An object of type \code{plpData} as generated using
+\code{getDbPlPData}.}
+
 \item{file}{The name of the folder where the data will be written. The folder should
                           not yet exist.}
-
-\item{cohortMethodData}{An object of type \code{plpData} as generated using
-\code{getDbPlPData}.}
 }
 \description{
-\code{saveCohortMethodData} saves an object of type cohortMethodData to folder.
+\code{savePlpData} saves an object of type plpData to folder.
 }
 \details{
 The data will be written to a set of files in the folder specified by the user.

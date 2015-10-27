@@ -41,12 +41,12 @@ prepareDataForEval <- function(prediction, plpData, removeDropouts){
         
         t <- ffbase::ffmatch(x = prediction$rowId, table = exclude$rowId, nomatch = 0L) > 0L
         if (ffbase::any.ff(t)) {
-          prediction <- prediction[ffbase::ffwhich(t, t == FALSE)]
+          prediction <- prediction[ffbase::ffwhich(t, t == FALSE),]
         }
         
         t <- ffbase::ffmatch(x = outcomes$rowId, table = exclude$rowId, nomatch = 0L) > 0L
         if (ffbase::any.ff(t)) {
-          outcomes <- outcomes[ffbase::ffwhich(t, t == FALSE)]
+          outcomes <- outcomes[ffbase::ffwhich(t, t == FALSE),]
         }
       }
     }

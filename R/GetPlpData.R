@@ -249,9 +249,9 @@ getDbPlpData <- function(connectionDetails = NULL,
 #' Save the PatientLevelPrediction data to folder
 #'
 #' @description
-#' \code{saveCohortMethodData} saves an object of type cohortMethodData to folder.
+#' \code{savePlpData} saves an object of type plpData to folder.
 #'
-#' @param cohortMethodData   An object of type \code{plpData} as generated using
+#' @param plpData   An object of type \code{plpData} as generated using
 #'                           \code{getDbPlPData}.
 #' @param file               The name of the folder where the data will be written. The folder should
 #'                           not yet exist.

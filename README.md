@@ -55,6 +55,7 @@ Getting Started
   library(devtools)
   install_github("ohdsi/SqlRender") 
   install_github("ohdsi/DatabaseConnector") 
+  install_github("ohdsi/OhdsiRTools") 
   install_github("ohdsi/Cyclops") 
   install_github("ohdsi/PatientLevelPrediction") 
   ```
@@ -75,6 +76,9 @@ Development
 PatientLevelPrediction is being developed in R Studio.
 
 ###Development status
+[![Build Status](https://travis-ci.org/OHDSI/PatientLevelPrediction.svg?branch=master)](https://travis-ci.org/OHDSI/PatientLevelPrediction)
+[![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=master)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=master)
+
 Beta
 
 # Acknowledgements

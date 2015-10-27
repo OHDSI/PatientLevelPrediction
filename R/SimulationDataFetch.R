@@ -20,7 +20,6 @@
 .simulationDataFetch <- function() {
   # This function should be used to create the simulation profile used in some of the unit tests
   # library(PatientLevelPrediction); options('fftempdir' = 's:/fftemp');
-  # setwd('C:/Users/mschuemi/git/PatientLevelPrediction/data')
   
   pw <- NULL
   dbms <- "sql server"
@@ -36,6 +35,7 @@
   cdmDatabaseSchema <- "cdm_truven_mdcd_v5.dbo"
   resultsDatabaseSchema <- "scratch.dbo"
   port <- 17001
+  cdmVersion <- 5
   
   connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                                   server = server,
@@ -97,7 +97,7 @@
   sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
   DatabaseConnector::querySql(conn, sql)
   
-  DBI::dbDisconnect(conn)
+  RJDBC::dbDisconnect(conn)
   
   covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                                useCovariateDemographicsGender = TRUE,
@@ -163,18 +163,19 @@
                           outcomeTable = "mschuemi_stroke",
                           outcomeIds = 2,
                           firstOutcomeOnly = TRUE,
-                          cdmVersion = "5")
+                          cdmVersion = cdmVersion)
+  summary(plpData)
   
-  savePlpData("s:/temp/plpStrokeData")
-  #plpData <- loadPlpData("s:/temp/plpData")
-  
+  savePlpData(plpData, "s:/temp/plpStrokeData")
+  #plpData <- loadPlpData("s:/temp/plpStrokeData")
+  #plpData$outcomes
   # Delete all but first outcome for this example:
-  plpData$metaData$outcomeIds <- c(10)
-  t <- plpData$outcomes$outcomeId == 10
-  plpData$outcomes <- plpData$outcomes[ffbase::ffwhich(t, t == TRUE),]
-  t <- plpData$exclude$outcomeId == 10
-  plpData$exclude <- plpData$exclude[ffbase::ffwhich(t, t == TRUE),]
-  
+#   plpData$metaData$outcomeIds <- c(10)
+#   t <- plpData$outcomes$outcomeId == 10
+#   plpData$outcomes <- plpData$outcomes[ffbase::ffwhich(t, t == TRUE),]
+#   t <- plpData$exclude$outcomeId == 10
+#   plpData$exclude <- plpData$exclude[ffbase::ffwhich(t, t == TRUE),]
+#   
   
   plpDataSimulationProfile <- createPlPSimulationProfile(plpData)
   save(plpDataSimulationProfile,
@@ -185,11 +186,19 @@
   
   
   # load('C:/Users/mschuemi/git/PatientLevelPrediction/data/plpDataSimulationProfile.rda')
-  plpData <- simulateplpData(plpDataSimulationProfile)
+  plpData <- simulateplpData(plpDataSimulationProfile, n = 1000)
   
   plpData
   summary(plpData)
-  model <- fitPredictiveModel(plpData, modelType = "logistic", outcomeId = 10)
+  
+  model <- fitPredictiveModel(plpData, modelType = "poisson", outcomeId = 2)
+  
+  model <- fitPredictiveModel(plpData, modelType = "logistic", outcomeId = 2)
   prediction <- predictProbabilities(model, plpData)
   
+  computeAuc(prediction, plpData)
+  plotCalibration(prediction, plpData)
+  plotRoc(prediction, plpData)
+  means <- computeCovariateMeans(plpData, outcomeId = 2)
+  plotCovariateDifferenceOfTopVariables(means)
 }

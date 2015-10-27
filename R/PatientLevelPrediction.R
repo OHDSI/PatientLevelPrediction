@@ -30,6 +30,15 @@
 #' @useDynLib PatientLevelPrediction
 NULL
 
+#' A simulation profile
+#' @docType data
+#' @keywords datasets
+#' @name plpDataSimulationProfile
+#' @usage
+#' data(plpDataSimulationProfile)
+NULL
+
+
 .onLoad <- function(libname, pkgname) {
   # Copied this from the ff package:
   if (is.null(getOption("ffmaxbytes"))) {

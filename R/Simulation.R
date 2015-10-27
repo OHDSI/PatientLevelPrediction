@@ -57,8 +57,7 @@ createPlPSimulationProfile <- function(plpData) {
                                 outcomeId = outcomeId, 
                                 modelType = "poisson",
                                 prior = Cyclops::createPrior("laplace", exclude = c(0), variance = 0.01))
-    # Temporary fix until we have the intercept problem figured out:
-    model$coefficients[1] <- log(ffbase::sum.ff(plpData$outcomes$outcomeCount) / ffbase::sum.ff(plpData$cohorts$time))
+    #model$coefficients[1] <- log(ffbase::sum.ff(plpData$outcomes$outcomeCount) / ffbase::sum.ff(plpData$cohorts$time))
     model$coefficients <- model$coefficients[model$coefficients != 0]
     outcomeModels[[i]] <- model$coefficients
   }
@@ -125,33 +124,20 @@ simulateplpData <- function(plpDataSimulationProfile, n = 10000) {
                         cohortId = 1)
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
   r <- runif(n)
-  cohorts$time <- as.numeric(cut(r, breaks = c(0,breaks), labels = names(breaks)))
+  cohorts$time <- as.numeric(as.character(cut(r, breaks = c(0,breaks), labels = names(breaks))))
   cohorts <- ff::as.ffdf(cohorts)
   
   writeLines("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
     prediction <- predictFfdf(plpDataSimulationProfile$outcomeModels[[i]], cohorts, covariates, modelType = "poisson")
-    
-    temp <- merge(prediction, cohorts[, c("rowId", "time")])
-    temp$value <- temp$value * temp$time  #Value is lambda
-    temp$nOutcomes <- rpois(n, temp$value)
-    temp$nOutcomes[temp$nOutcomes > temp$time] <- temp$time[temp$nOutcomes > temp$time]
-    outcomeRows <- sum(temp$nOutcomes)
-    outcomes <- data.frame(rowId = rep(0, outcomeRows),
-                           outcomeId = rep(plpDataSimulationProfile$metaData$outcomeIds[i],
-                                           outcomeRows),
-                           timeToEvent = rep(0, outcomeRows))
-    cursor <- 1
-    for (i in 1:nrow(temp)) {
-      nOutcomes <- temp$nOutcomes[i]
-      if (nOutcomes != 0) {
-        outcomes$rowId[cursor:(cursor + nOutcomes - 1)] <- temp$rowId[i]
-        outcomes$timeToEvent[cursor:(cursor + nOutcomes - 1)] <- sample.int(size = nOutcomes,
-                                                                            temp$time[i])
-        cursor <- cursor + nOutcomes
-      }
-    }
+    outcomes <- merge(prediction, cohorts[, c("rowId", "time")])
+    outcomes$value <- outcomes$value * outcomes$time  #Value is lambda
+    outcomes$outcomeCount <- as.numeric(rpois(n, outcomes$value))
+    outcomes <- outcomes[outcomes$outcomeCount != 0,]
+    outcomes$outcomeId <- plpDataSimulationProfile$metaData$outcomeIds[i]
+    outcomes$timeToEvent <- round(runif(nrow(outcomes),0,outcomes$time))
+    outcomes <- outcomes[,c("rowId", "outcomeId", "outcomeCount", "timeToEvent")]                              
     allOutcomes <- rbind(allOutcomes, outcomes)
   }
   
