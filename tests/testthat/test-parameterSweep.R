@@ -19,6 +19,7 @@ library("testthat")
 # This is a broad, shallow sweep of all functionality. It checks whether the code produces an output
 # (and does not throw an error) under a wide range of parameter settings
 set.seed(1234)
+print(getOption("fftempdir"))
 data(plpDataSimulationProfile)
 sampleSize <- 1000
 plpData <- simulateplpData(plpDataSimulationProfile, n = sampleSize)
@@ -64,6 +65,7 @@ test_that("model evaluation functions", {
   lrModel <- fitPredictiveModel(splits[[1]], modelType = "logistic", outcomeId = 2, prior = prior)
   
   lrPrediction <- predictProbabilities(lrModel, splits[[2]])  
+  writeLines(paste("min:",min(lrPrediction$value), ",max:",max(lrPrediction$value),",length:",length(lrPrediction$value)))
   auc <- computeAuc(lrPrediction, splits[[2]])
   expect_gt(auc, 0.8)
   
