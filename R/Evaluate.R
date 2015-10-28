@@ -177,7 +177,7 @@ plotCalibration <- function(prediction, plpData, removeDropoutsForLr = TRUE, num
   
   prediction <- prepareDataForEval(prediction, plpData, removeDropoutsForLr)
   
-  q <- quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata)
+  q <- unique(quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata))
   prediction$strata <- cut(prediction$value,
                            breaks = c(0, q, max(prediction$value)),
                            labels = FALSE)
