@@ -15,7 +15,7 @@ output:
 %\VignetteIndexEntry{Building patient-level predictive models}
 -->
 
-```{r echo=FALSE,message=FALSE,eval=TRUE}
+```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
 library(PatientLevelPrediction)
 # Load all needed data if it exists on this computer:
 if (file.exists("s:/temp/PlpVignette")){

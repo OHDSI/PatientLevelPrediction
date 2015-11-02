@@ -1,6 +1,6 @@
 # @file VignetteDataFetch.R
 #
-# Copyright 2014 Observational Health Data Sciences and Informatics
+# Copyright 2015 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -129,6 +129,7 @@
                           cohortDatabaseSchema = resultsDatabaseSchema,
                           cohortTable = "rehospitalization",
                           cohortIds = 1,
+                          washoutWindow = 183,
                           useCohortEndDate = TRUE,
                           windowPersistence = 0,
                           covariateSettings = covariateSettings,
@@ -150,6 +151,8 @@
   
   parts <- splitData(plpData, c(0.75, 0.25))
   
+  savePlpData(parts[[1]], "s:/temp/PlpVignette/plpData_train")
+  
   savePlpData(parts[[2]], "s:/temp/PlpVignette/plpData_test")
   
   model <- fitPredictiveModel(parts[[1]],
@@ -159,7 +162,7 @@
                                                   useCrossValidation = TRUE),
                               control = createControl(noiseLevel = "quiet",
                                                       cvType = "auto",
-                                                      startingVariance = 0.01,
+                                                      startingVariance = 0.001,
                                                       threads = 10))
   
   saveRDS(model, file = "s:/temp/PlpVignette/model.rds")
