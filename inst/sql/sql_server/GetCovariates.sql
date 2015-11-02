@@ -19,11 +19,12 @@ limitations under the License.
 ************************************************************************/
 
 {DEFAULT @cdm_database = 'CDM4_SIM' } 
-{DEFAULT @use_existing_cohort_person = FALSE}
-{DEFAULT @cohort_database_schema = 'CDM4_SIM' } 
-{DEFAULT @cohort_table = 'cohort' } 
-{DEFAULT @cohort_ids = '0,1' } 
-{DEFAULT @row_id_field_field = 'person_id'}
+{DEFAULT @cdm_version == '4'}
+{DEFAULT @cohort_temp_table = '#cohort_person'}
+{DEFAULT @row_id_field = 'person_id'}
+{DEFAULT @cohort_definition_id = 'cohort_concept_id'} 
+{DEFAULT @concept_class_id = 'concept_class'} 
+{DEFAULT @measurement = 'observation'} 
 {DEFAULT @use_covariate_cohort_id_is_1 = FALSE}
 {DEFAULT @use_covariate_demographics = TRUE} 
 {DEFAULT @use_covariate_demographics_age = TRUE} 
@@ -76,28 +77,8 @@ limitations under the License.
 {DEFAULT @has_excluded_covariate_concept_ids} 
 {DEFAULT @has_included_covariate_concept_ids} 
 {DEFAULT @delete_covariates_small_count = 100}
-{DEFAULT @cdm_version == '4'}
-{DEFAULT @cohort_definition_id = 'cohort_concept_id'} 
-{DEFAULT @concept_class_id = 'concept_class'} 
-{DEFAULT @measurement = 'observation'} 
 
 USE @cdm_database;
-
-{!@use_existing_cohort_person} ? {
-IF OBJECT_ID('tempdb..#cohort_person', 'U') IS NOT NULL
-	DROP TABLE #cohort_person;
-
-SELECT ROW_NUMBER() OVER (ORDER BY subject_id, cohort_start_date) AS row_id,
-  	@cohort_definition_id,
-	subject_id,
-	cohort_start_date
-INTO #cohort_person
-FROM @cohort_database_schema.@cohort_table cohort
-{@cohort_concept_ids != ''} ? {
-WHERE @cohort_definition_id IN (@cohort_ids)
-}
-;
-}
 
 IF OBJECT_ID('tempdb..#cov', 'U') IS NOT NULL
 	DROP TABLE #cov;
@@ -142,7 +123,7 @@ SELECT
 	1 AS covariate_id,
 	@cohort_definition_id AS covariate_value
 INTO #cov_exposure
-FROM #cohort_person
+FROM @cohort_temp_table
 WHERE @cohort_definition_id = 1;
 }
 
@@ -161,7 +142,7 @@ SELECT cp1.@row_id_field AS row_id,
 	gender_concept_id AS covariate_id,
 	1 AS covariate_value
 INTO #cov_gender
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN person p1
 	ON cp1.subject_id = p1.person_id
 WHERE p1.gender_concept_id IN (
@@ -203,7 +184,7 @@ SELECT cp1.@row_id_field AS row_id,
 	race_concept_id AS covariate_id,
 	1 AS covariate_value
   INTO #cov_race
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN person p1
 	ON cp1.subject_id = p1.person_id
 WHERE p1.race_concept_id IN (
@@ -244,7 +225,7 @@ SELECT cp1.@row_id_field AS row_id,
 	ethnicity_concept_id AS covariate_id,
 	1 AS covariate_value
   INTO #cov_ethnicity
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN person p1
 	ON cp1.subject_id = p1.person_id
 WHERE p1.ethnicity_concept_id IN (
@@ -287,7 +268,7 @@ SELECT cp1.@row_id_field AS row_id,
 	FLOOR((YEAR(cp1.cohort_start_date) - p1.YEAR_OF_BIRTH) / 5) + 10 AS covariate_id,
 	1 AS covariate_value
     INTO #cov_age
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN person p1
 	ON cp1.subject_id = p1.person_id
 WHERE (YEAR(cp1.cohort_start_date) - p1.YEAR_OF_BIRTH) >= 0
@@ -320,7 +301,7 @@ SELECT cp1.@row_id_field AS row_id,
 	YEAR(cohort_start_date) AS covariate_id,
 	1 AS covariate_value
     INTO #cov_year
-FROM #cohort_person cp1;
+FROM @cohort_temp_table cp1;
 
 
 INSERT INTO #cov_ref (
@@ -347,7 +328,7 @@ SELECT cp1.@row_id_field AS row_id,
 	MONTH(cohort_start_date) + 40 AS covariate_id,
 	1 AS covariate_value
     INTO #cov_month
-FROM #cohort_person cp1;
+FROM @cohort_temp_table cp1;
 
 
 INSERT INTO #cov_ref (
@@ -381,7 +362,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 101 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_co_365d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN condition_occurrence co1
 	ON cp1.subject_id = co1.person_id
 WHERE co1.condition_concept_id != 0
@@ -417,7 +398,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 102 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_co_30d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN condition_occurrence co1
 	ON cp1.subject_id = co1.person_id
 WHERE co1.condition_concept_id != 0
@@ -455,7 +436,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(co1.condition_concept_id AS BIGINT) * 1000 + 103 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_co_inpt180d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN condition_occurrence co1
 	ON cp1.subject_id = co1.person_id
 WHERE co1.condition_concept_id != 0
@@ -504,7 +485,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(ce1.condition_concept_id AS BIGINT) * 1000 + 201 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_ce_ever
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN condition_era ce1
 	ON cp1.subject_id = ce1.person_id
 LEFT JOIN concept c1
@@ -545,7 +526,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(ce1.condition_concept_id AS BIGINT) * 1000 + 202 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_ce_overlap
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN condition_era ce1
 	ON cp1.subject_id = ce1.person_id
 LEFT JOIN concept c1
@@ -773,7 +754,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 401 AS covariate_id,
 	1 AS covariate_value
 INTO #cov_de_365d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN drug_exposure de1
 	ON cp1.subject_id = de1.person_id
 WHERE de1.drug_concept_id != 0 
@@ -812,7 +793,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 402 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_de_30d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN drug_exposure de1
 	ON cp1.subject_id = de1.person_id
 WHERE de1.drug_concept_id != 0
@@ -859,7 +840,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 501 AS covariate_id,
 	1 AS covariate_value
 INTO #cov_dera_365d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN drug_era de1
 	ON cp1.subject_id = de1.person_id
 WHERE de1.drug_concept_id != 0
@@ -901,7 +882,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 502 AS covariate_id,
 	1 AS covariate_value
 INTO #cov_dera_30d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN drug_era de1
 	ON cp1.subject_id = de1.person_id
 WHERE de1.drug_concept_id != 0
@@ -941,7 +922,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 503 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_dera_overlap
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN drug_era de1
 	ON cp1.subject_id = de1.person_id
 WHERE de1.drug_concept_id != 0
@@ -981,7 +962,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(de1.drug_concept_id AS BIGINT) * 1000 + 504 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_dera_ever
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN drug_era de1
 	ON cp1.subject_id = de1.person_id
 WHERE de1.drug_concept_id != 0
@@ -1215,7 +1196,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(po1.procedure_concept_id AS BIGINT) * 1000 + 701 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_po_365d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN procedure_occurrence po1
 	ON cp1.subject_id = po1.person_id
 WHERE po1.procedure_concept_id  != 0
@@ -1252,7 +1233,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(po1.procedure_concept_id AS BIGINT) * 1000 + 702 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_po_30d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN procedure_occurrence po1
 	ON cp1.subject_id = po1.person_id
 WHERE po1.procedure_concept_id  != 0
@@ -1409,7 +1390,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 901 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_o_365d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN observation o1
 	ON cp1.subject_id = o1.person_id
 WHERE o1.observation_concept_id != 0
@@ -1445,7 +1426,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 902 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_o_30d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN observation o1
 	ON cp1.subject_id = o1.person_id
 WHERE o1.observation_concept_id != 0
@@ -1481,7 +1462,7 @@ SELECT cp1.@row_id_field AS row_id,
 	CAST(o1.observation_concept_id AS BIGINT) * 1000 + 905 AS covariate_id,
 	COUNT(observation_id) AS covariate_value
     INTO #cov_o_count365d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN observation o1
 	ON cp1.subject_id = o1.person_id
 WHERE o1.observation_concept_id != 0
@@ -1530,11 +1511,10 @@ FROM (
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.@cohort_definition_id,
-			cp1.subject_id,
+			PARTITION BY cp1.@row_id_field,
 			o1.@measurement_concept_id ORDER BY o1.@measurement_date DESC
 			) AS rn1
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
 	INNER JOIN @measurement o1
 		ON cp1.subject_id = o1.person_id
 	WHERE o1.@measurement_concept_id != 0
@@ -1583,11 +1563,10 @@ FROM (
 		o1.range_low,
 		o1.range_high,
 		ROW_NUMBER() OVER (
-			PARTITION BY cp1.@cohort_definition_id,
-			cp1.subject_id,
+			PARTITION BY cp1.@row_id_field,
 			o1.@measurement_concept_id ORDER BY o1.@measurement_date DESC
 			) AS rn1
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
 	INNER JOIN @measurement o1
 		ON cp1.subject_id = o1.person_id
 	WHERE o1.@measurement_concept_id != 0
@@ -1631,7 +1610,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(o1.measurement_concept_id AS BIGINT) * 1000 + 901 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_m_365d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN measurement o1
 	ON cp1.subject_id = o1.person_id
 WHERE o1.measurement_concept_id != 0
@@ -1667,7 +1646,7 @@ SELECT DISTINCT cp1.@row_id_field AS row_id,
 	CAST(o1.measurement_concept_id AS BIGINT) * 1000 + 902 AS covariate_id,
 	1 AS covariate_value
   INTO #cov_m_30d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN measurement o1
 	ON cp1.subject_id = o1.person_id
 WHERE o1.measurement_concept_id != 0
@@ -1703,7 +1682,7 @@ SELECT cp1.@row_id_field AS row_id,
 	CAST(o1.measurement_concept_id AS BIGINT) * 1000 + 905 AS covariate_id,
 	COUNT(measurement_id) AS covariate_value
     INTO #cov_m_count365d
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN measurement o1
 	ON cp1.subject_id = o1.person_id
 WHERE o1.measurement_concept_id != 0
@@ -1748,7 +1727,7 @@ SELECT cp1.@row_id_field AS row_id,
 	1000 AS covariate_id,
 	COUNT(DISTINCT ce1.condition_concept_id) AS covariate_value
     INTO #cov_dd_cond
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN condition_era ce1
 	ON cp1.subject_id = ce1.person_id
 WHERE ce1.condition_era_start_date <= cp1.cohort_start_date
@@ -1775,7 +1754,7 @@ SELECT cp1.@row_id_field AS row_id,
 	1001 AS covariate_id,
 	COUNT(DISTINCT de1.drug_concept_id) AS covariate_value
   INTO #cov_dd_drug
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN drug_era de1
 	ON cp1.subject_id = de1.person_id
 WHERE de1.drug_era_start_date <= cp1.cohort_start_date
@@ -1801,7 +1780,7 @@ SELECT cp1.@row_id_field AS row_id,
 	1002 AS covariate_id,
 	COUNT(DISTINCT po1.procedure_concept_id) AS covariate_value
   INTO #cov_dd_proc
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN procedure_occurrence po1
 	ON cp1.subject_id = po1.person_id
 WHERE po1.procedure_date <= cp1.cohort_start_date
@@ -1827,7 +1806,7 @@ SELECT cp1.@row_id_field AS row_id,
 	1003 AS covariate_id,
 	COUNT(DISTINCT o1.observation_concept_id) AS covariate_value
   INTO #cov_dd_obs
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN observation o1
 	ON cp1.subject_id = o1.person_id
 WHERE o1.observation_date <= cp1.cohort_start_date
@@ -1852,7 +1831,7 @@ SELECT cp1.@row_id_field AS row_id,
 	1004 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
   INTO #cov_dd_visit_all
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN visit_occurrence vo1
 	ON cp1.subject_id = vo1.person_id
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
@@ -1878,7 +1857,7 @@ SELECT cp1.@row_id_field AS row_id,
 	1005 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
   INTO #cov_dd_visit_inpt
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN visit_occurrence vo1
 	ON cp1.subject_id = vo1.person_id
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
@@ -1909,7 +1888,7 @@ SELECT cp1.@row_id_field AS row_id,
 	1006 AS covariate_id,
 	COUNT(vo1.visit_occurrence_id) AS covariate_value
 INTO #cov_dd_visit_er
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN visit_occurrence vo1
 	ON cp1.subject_id = vo1.person_id
 WHERE vo1.visit_start_date <= cp1.cohort_start_date
@@ -1941,7 +1920,7 @@ SELECT cp1.@row_id_field AS row_id,
 	1007 AS covariate_id,
 	COUNT(DISTINCT o1.measurement_concept_id) AS covariate_value
   INTO #cov_dd_meas
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN measurement o1
 	ON cp1.subject_id = o1.person_id
 WHERE o1.measurement_date <= cp1.cohort_start_date
@@ -2184,7 +2163,7 @@ FROM (
 	SELECT DISTINCT cp1.@row_id_field AS row_id,
 		cs1.diag_category_id,
 		cs1.weight
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
 	INNER JOIN condition_era ce1
 		ON cp1.subject_id = ce1.person_id
 	INNER JOIN #Charlson_concepts c1
@@ -2694,7 +2673,7 @@ FROM (
 	SELECT cp1.@row_id_field AS row_id,
 		ds1.dcsi_category,
 		max(ds1.DCSI_score) AS max_score
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
 	INNER JOIN condition_era ce1
 		ON cp1.subject_id = ce1.person_id
 	INNER JOIN #DCSI_scoring ds1
@@ -2797,7 +2776,7 @@ FROM (
 	SELECT DISTINCT cp1.@row_id_field AS row_id,
 		cs1.diag_category_id,
 		cs1.weight
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
 	INNER JOIN condition_era ce1
 		ON cp1.subject_id = ce1.person_id
 	INNER JOIN #CHADS2_concepts c1
@@ -2811,7 +2790,7 @@ FROM (
   SELECT DISTINCT cp1.@row_id_field AS row_id,
 		3 as diag_category_id,
 		1 as weight
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
   INNER JOIN person p1
   ON cp1.subject_id = p1.person_id
   WHERE year(cp1.cohort_start_date) - p1.year_of_birth >= 75
@@ -3024,7 +3003,7 @@ FROM (
 	SELECT DISTINCT cp1.@row_id_field AS row_id,
 		cs1.diag_category_id,
 		cs1.weight
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
 	INNER JOIN condition_era ce1
 		ON cp1.subject_id = ce1.person_id
 	INNER JOIN #CHADS2VASc_concepts c1
@@ -3038,7 +3017,7 @@ FROM (
   SELECT DISTINCT cp1.@row_id_field AS row_id,
 		3 as diag_category_id,
 		2 as weight
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
   INNER JOIN person p1 
     ON cp1.subject_id = p1.person_id
   WHERE year(cp1.cohort_start_date) - p1.year_of_birth >= 75
@@ -3048,7 +3027,7 @@ FROM (
   SELECT DISTINCT cp1.@row_id_field AS row_id,
 		7 as diag_category_id,
 		1 as weight
-	FROM #cohort_person cp1
+	FROM @cohort_temp_table cp1
   INNER JOIN person p1 
     ON cp1.subject_id = p1.person_id
   WHERE year(cp1.cohort_start_date) - p1.year_of_birth between 65 and 74
@@ -3058,7 +3037,7 @@ FROM (
   SELECT DISTINCT cp1.@row_id_field AS row_id,
 		8 as diag_category_id,
 		1 as weight
-  FROM #cohort_person cp1
+  FROM @cohort_temp_table cp1
   INNER JOIN person p1 
     ON cp1.subject_id = p1.person_id
   WHERE p1.gender_concept_id = 8532 
@@ -3523,7 +3502,7 @@ SELECT DISTINCT CAST(ccr1.covariate_id AS BIGINT) * 10000 + YEAR(cp1.cohort_star
 	ccr1.covariate_name + ' * interaction term with index year: ' + CAST(YEAR(cp1.cohort_start_date) AS VARCHAR) AS covariate_name,
 	ccr1.analysis_id,
 	ccr1.concept_id
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN
   #cov_all  cc1
 	ON cp1.subject_id = cc1.person_id
@@ -3538,7 +3517,7 @@ SELECT DISTINCT cc1.row_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(YEAR(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
     INTO #cov_int_year
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN #cov_all cc1
 	ON cp1.@row_id_field = cc1.row_id
 INNER JOIN #cov_ref ccr1
@@ -3565,7 +3544,7 @@ SELECT DISTINCT CAST(ccr1.covariate_id AS BIGINT) * 10000 + CAST(MONTH(cp1.cohor
 	ccr1.covariate_name + ' * interaction term with index month: ' + CAST(MONTH(cp1.cohort_start_date) AS VARCHAR) AS covariate_name,
 	ccr1.analysis_id,
 	ccr1.concept_id
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN #cov_all cc1
 	ON cp1.@row_id_field = cc1.row_id
 INNER JOIN #cov_ref ccr1
@@ -3577,7 +3556,7 @@ SELECT DISTINCT cc1.row_id,
 	CAST(cc1.covariate_id AS BIGINT) * 10000 + CAST(MONTH(cp1.cohort_start_date) AS BIGINT) AS covariate_id,
 	cc1.covariate_value AS covariate_value
     INTO #cov_int_month
-FROM #cohort_person cp1
+FROM @cohort_temp_table cp1
 INNER JOIN #cov_all cc1
 	ON cc1.covariate_id = ccr1.covariate_id
 INNER JOIN #cov_ref ccr1
@@ -3746,12 +3725,6 @@ IF OBJECT_ID('tempdb..#cov_all', 'U') IS NOT NULL
   DROP TABLE #cov_all;
 TRUNCATE TABLE #dummy;
   DROP TABLE #dummy;
-  
-{!@use_existing_cohort_person} ? {
-TRUNCATE TABLE #cohort_person;
-
-DROP TABLE #cohort_person;
-}
 
 {@has_excluded_covariate_concept_ids} ? {
 TRUNCATE TABLE #excluded_cov;
