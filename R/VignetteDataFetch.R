@@ -185,3 +185,135 @@
   head(modelDetails)
 }
 
+#' @keywords internal
+.vignette2DataFetch <- function() {
+  
+  createLooCovariateSettings <- function(useLengthOfObs = TRUE) {
+    covariateSettings <- list(useLengthOfObs = useLengthOfObs)
+    attr(covariateSettings, "fun") <- "getDbLooCovariateData"
+    class(covariateSettings) <- "covariateSettings"
+    return(covariateSettings)
+  }
+  
+  
+  getDbLooCovariateData <- function(connection,
+                                    oracleTempSchema = NULL,
+                                    cdmDatabaseSchema,
+                                    cdmVersion = "4",
+                                    cohortTempTable = "cohort_person",
+                                    rowIdField = "subject_id",
+                                    covariateSettings) {
+    if (covariateSettings$useLengthOfObs == FALSE) {
+      return(NULL)
+    }
+    
+    # Temp table names must start with a '#' in SQL Server, our source dialect:
+    if (substr(cohortTempTable, 1, 1) != "#") {
+      cohortTempTable <- paste("#", cohortTempTable, sep = "")
+    }
+    
+    # Some SQL to construct the covariate:
+    sql <- paste("SELECT row_id, 1 AS covariate_id,", 
+                 "DATEDIFF(DAY, cohort_start_date, observation_period_start_date)",
+                 "AS covariate_value",
+                 "FROM @cohort_temp_table c",
+                 "INNER JOIN @cdm_database_schema.observation_period op",
+                 "ON op.person_id = c.subject_id",
+                 "WHERE cohort_start_date >= observation_period_start_date",
+                 "AND cohort_start_date <= observation_period_end_date")
+    sql <- SqlRender::renderSql(sql, 
+                                cohort_temp_table = cohortTempTable,
+                                cdm_database_schema = cdmDatabaseSchema)$sql
+    sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"))$sql
+    
+    # Retrieve the covariate:
+    covariates <- DatabaseConnector::querySql.ffdf(connection, sql)
+    
+    # Convert colum names to camelCase:
+    colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
+    
+    # Construct covariate reference:
+    covariateRef <- data.frame(covariateId = 1, 
+                               covariateName = "Length of observation",
+                               analysisId = 1, 
+                               conceptId = 0)
+    covariateRef <- ff::as.ffdf(covariateRef)
+    
+    metaData <- list(sql = sql, call = match.call())
+    result <- list(covariates = covariates, 
+                   covariateRef = covariateRef, 
+                   metaData = metaData)
+    class(result) <- "covariateData"
+    return(result)
+  }
+  
+  looCovariateSettings <- createLooCovariateSettings(useLengthOfObs = TRUE)
+  
+  plpData <- getDbPlpData(connectionDetails = connectionDetails,
+                          cdmDatabaseSchema = cdmDatabaseSchema,
+                          cohortDatabaseSchema = resultsDatabaseSchema,
+                          cohortTable = "mschuemi_stroke",
+                          cohortIds = 1,
+                          useCohortEndDate = TRUE,
+                          windowPersistence = 0,
+                          covariateSettings = looCovariateSettings,
+                          outcomeDatabaseSchema = resultsDatabaseSchema,
+                          outcomeTable = "mschuemi_stroke",
+                          outcomeIds = 2,
+                          firstOutcomeOnly = TRUE,
+                          cdmVersion = cdmVersion)
+  
+  covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
+                                               useCovariateDemographicsGender = TRUE,
+                                               useCovariateDemographicsRace = TRUE,
+                                               useCovariateDemographicsEthnicity = TRUE,
+                                               useCovariateDemographicsAge = TRUE,
+                                               useCovariateDemographicsYear = TRUE,
+                                               useCovariateDemographicsMonth = TRUE)
+  looCovariateSettings <- createLooCovariateSettings(useLengthOfObs = TRUE)
+  covariateSettingsList <- list(covariateSettings, looCovariateSettings)
+  
+  plpData <- getDbPlpData(connectionDetails = connectionDetails,
+                          cdmDatabaseSchema = cdmDatabaseSchema,
+                          cohortDatabaseSchema = resultsDatabaseSchema,
+                          cohortTable = "mschuemi_stroke",
+                          cohortIds = 1,
+                          useCohortEndDate = TRUE,
+                          windowPersistence = 0,
+                          covariateSettings = covariateSettingsList,
+                          outcomeDatabaseSchema = resultsDatabaseSchema,
+                          outcomeTable = "mschuemi_stroke",
+                          outcomeIds = 2,
+                          firstOutcomeOnly = TRUE,
+                          cdmVersion = cdmVersion)
+  
+  covariateSettings <- createHdpsCovariateSettings(useCovariateCohortIdIs1 = FALSE,
+                                                   useCovariateDemographics = TRUE,
+                                                   useCovariateDemographicsGender = TRUE,
+                                                   useCovariateDemographicsRace = TRUE,
+                                                   useCovariateDemographicsEthnicity = TRUE,
+                                                   useCovariateDemographicsAge = TRUE,
+                                                   useCovariateDemographicsYear = TRUE,
+                                                   useCovariateDemographicsMonth = TRUE,
+                                                   useCovariateConditionOccurrence = TRUE,
+                                                   useCovariate3DigitIcd9Inpatient180d = TRUE,
+                                                   useCovariate3DigitIcd9Inpatient180dMedF = TRUE,
+                                                   useCovariate3DigitIcd9Inpatient180d75F = TRUE,
+                                                   useCovariate3DigitIcd9Ambulatory180d = TRUE,
+                                                   useCovariate3DigitIcd9Ambulatory180dMedF = TRUE,
+                                                   useCovariate3DigitIcd9Ambulatory180d75F = TRUE,
+                                                   useCovariateDrugExposure = TRUE,
+                                                   useCovariateIngredientExposure180d = TRUE,
+                                                   useCovariateIngredientExposure180dMedF = TRUE,
+                                                   useCovariateIngredientExposure180d75F = TRUE,
+                                                   useCovariateProcedureOccurrence = TRUE,
+                                                   useCovariateProcedureOccurrenceInpatient180d = TRUE,
+                                                   useCovariateProcedureOccurrenceInpatient180dMedF = TRUE,
+                                                   useCovariateProcedureOccurrenceInpatient180d75F = TRUE,
+                                                   useCovariateProcedureOccurrenceAmbulatory180d = TRUE,
+                                                   useCovariateProcedureOccurrenceAmbulatory180dMedF = TRUE,
+                                                   useCovariateProcedureOccurrenceAmbulatory180d75F = TRUE,
+                                                   excludedCovariateConceptIds = c(),
+                                                   includedCovariateConceptIds = c(),
+                                                   deleteCovariatesSmallCount = 100)
+}

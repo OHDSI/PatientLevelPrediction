@@ -40,10 +40,7 @@ getDbHdpsCovariateData <- function(connection,
     cohortTempTable <- paste("#", cohortTempTable, sep = "")
   }
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
-  if (!covariateSettings$useCovariateConditionGroupMeddra & !covariateSettings$useCovariateConditionGroupSnomed) {
-    covariateSettings$useCovariateConditionGroup <- FALSE
-  }
-  
+
   if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
     conceptClassId <- "concept_class"
@@ -146,9 +143,10 @@ getDbHdpsCovariateData <- function(connection,
                                              oracleTempSchema)$sql
   covariateRef <- DatabaseConnector::querySql.ffdf(connection, covariateRefSql)
   
-  sql <- "SELECT COUNT_BIG(*) FROM #cohort_person"
+  sql <- "SELECT COUNT_BIG(*) FROM @cohort_temp_table"
+  sql <- SqlRender::renderSql(sql, cohort_temp_table = cohortTempTable)$sql
   sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"),  oracleTempSchema = oracleTempSchema)$sql
-  populationSize <- DatabaseConnector::querySql(connection, sql)[1]
+  populationSize <- DatabaseConnector::querySql(connection, sql)[1,1]
   
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
@@ -194,7 +192,7 @@ getDbHdpsCovariateData <- function(connection,
       }
     }
   }
-  metaData <- list(sql = renderedSql, call = match.call(), cohortIds = cohortIds, deletedCovariateIds = deletedCovariateIds)
+  metaData <- list(sql = renderedSql, call = match.call(), deletedCovariateIds = deletedCovariateIds)
   result <- list(covariates = covariates, covariateRef = covariateRef, metaData = metaData)
   class(result) <- "covariateData"
   return(result)

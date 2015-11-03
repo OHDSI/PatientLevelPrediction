@@ -3505,8 +3505,7 @@ SELECT DISTINCT CAST(ccr1.covariate_id AS BIGINT) * 10000 + YEAR(cp1.cohort_star
 FROM @cohort_temp_table cp1
 INNER JOIN
   #cov_all  cc1
-	ON cp1.subject_id = cc1.person_id
-		AND cp1.@cohort_definition_id = cc1.@cohort_definition_id
+	ON cp1.@row_id_field = cc1.row_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (5)

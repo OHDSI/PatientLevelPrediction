@@ -361,7 +361,7 @@ LEFT JOIN (
 	ON icd9_to_new_concept_id.icd9 = LEFT(source_to_concept_map.source_code, 3)
 WHERE source_vocabulary_id = 2
 	AND target_vocabulary_id = 1
-	AND (source_to_concept_map.invalid_reason IS NULL OR source_to_concept_map.invalid_reason = '');
+	AND source_to_concept_map.invalid_reason IS NULL;
 } : {
 SELECT DISTINCT LEFT(icd9.concept_code, 3) AS icd9,
    CASE 
@@ -388,8 +388,8 @@ LEFT JOIN (
 WHERE condition.standard_concept = 'S'
 	AND relationship_id = 'Maps to'
 	AND icd9.vocabulary_id = 'ICD9CM'
-	AND (icd9.invalid_reason IS NULL OR icd9.invalid_reason = '')
-	AND (concept_relationship.invalid_reason IS NULL OR concept_relationship.invalid_reason = '');
+	AND icd9.invalid_reason IS NULL
+	AND concept_relationship.invalid_reason IS NULL;
 }
 
 -- If condition_concept_id maps to more than one ICD9 code, just pick one:
@@ -1110,7 +1110,7 @@ COMBINE INTO ONE TABLE
 ***************************
 **************************/
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id, covariate_id, covariate_value
 INTO #cov_all
 FROM
 (
@@ -1130,7 +1130,7 @@ FROM #cov_exposure
 {@use_covariate_demographics_gender} ? {
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_gender
 
 }
@@ -1138,7 +1138,7 @@ FROM #cov_gender
 {@use_covariate_demographics_race} ? {
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_race
 
 }
@@ -1146,7 +1146,7 @@ FROM #cov_race
 {@use_covariate_demographics_ethnicity} ? {
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_ethnicity
 
 }
@@ -1155,7 +1155,7 @@ FROM #cov_ethnicity
 {@use_covariate_demographics_age} ? {
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_age
 
 }
@@ -1163,7 +1163,7 @@ FROM #cov_age
 {@use_covariate_demographics_year} ? {
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_year
 
 }
@@ -1171,7 +1171,7 @@ FROM #cov_year
 {@use_covariate_demographics_month} ? {
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_month
 
 }
@@ -1184,7 +1184,7 @@ FROM #cov_month
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_co_i_icd_180d
 
 }
@@ -1193,7 +1193,7 @@ FROM #cov_co_i_icd_180d
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_co_i_icd_180d_m
 
 }
@@ -1202,7 +1202,7 @@ FROM #cov_co_i_icd_180d_m
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_co_i_icd_180d_75
 
 }
@@ -1211,7 +1211,7 @@ FROM #cov_co_i_icd_180d_75
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_co_a_icd_180d
 
 }
@@ -1220,7 +1220,7 @@ FROM #cov_co_a_icd_180d
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_co_a_icd_180d_m
 
 }
@@ -1229,7 +1229,7 @@ FROM #cov_co_a_icd_180d_m
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_co_a_icd_180d_75
 
 }
@@ -1243,7 +1243,7 @@ FROM #cov_co_a_icd_180d_75
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_ie_180d
 
 }
@@ -1252,7 +1252,7 @@ FROM #cov_ie_180d
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_ie_180d_m
 
 }
@@ -1261,7 +1261,7 @@ FROM #cov_ie_180d_m
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_ie_180d_75
 
 }
@@ -1276,7 +1276,7 @@ FROM #cov_ie_180d_75
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_po_i_180d
 
 }
@@ -1285,7 +1285,7 @@ FROM #cov_po_i_180d
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_po_i_180d_m
 
 }
@@ -1294,7 +1294,7 @@ FROM #cov_po_i_180d_m
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_po_i_180d_75
 
 }
@@ -1303,7 +1303,7 @@ FROM #cov_po_i_180d_75
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_po_a_180d
 
 }
@@ -1312,7 +1312,7 @@ FROM #cov_po_a_180d
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_po_a_180d_m
 
 }
@@ -1321,7 +1321,7 @@ FROM #cov_po_a_180d_m
 
 UNION
 
-SELECT cohort_start_date, @cohort_definition_id, person_id, covariate_id, covariate_value
+SELECT row_id,covariate_id, covariate_value
 FROM #cov_po_a_180d_75
 
 }
@@ -1382,12 +1382,6 @@ TRUNCATE TABLE #cov_all;
   DROP TABLE #cov_all;
 TRUNCATE TABLE #dummy;
   DROP TABLE #dummy;
-  
-{!@use_existing_cohort_person} ? {
-TRUNCATE TABLE @cohort_temp_table;
-
-DROP TABLE @cohort_temp_table;
-}
 
 {@has_excluded_covariate_concept_ids} ? {
 TRUNCATE TABLE #excluded_cov;

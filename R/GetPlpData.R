@@ -214,11 +214,9 @@ getDbPlpData <- function(connectionDetails = NULL,
   covariateData <- PatientLevelPrediction::getDbCovariateData(connection = conn,
                                                               oracleTempSchema = oracleTempSchema,
                                                               cdmDatabaseSchema = cdmDatabaseSchema,
-                                                              useExistingCohortPerson = TRUE,
                                                               rowIdField = "row_id",
                                                               covariateSettings = covariateSettings,
                                                               cdmVersion = cdmVersion)
-  
   
   ### Clean up ###
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",

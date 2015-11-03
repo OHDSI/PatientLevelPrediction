@@ -39,12 +39,13 @@ getDbCovariateData <- function(connection,
                                normalize = TRUE) {
   if (class(covariateSettings) == "covariateSettings") {
     fun <- attr(covariateSettings, "fun") 
-    args <- covariateSettings
-    args$connection <- connection
-    args$oracleTempSchema <- oracleTempSchema
-    args$cdmVersion <- cdmVersion
-    args$cohortTempTable <- cohortTempTable
-    args$rowIdField <- rowIdField
+    args <- list(connection = connection,
+                 oracleTempSchema = oracleTempSchema,
+                 cdmDatabaseSchema = cdmDatabaseSchema,
+                 cdmVersion = cdmVersion,
+                 cohortTempTable = cohortTempTable,
+                 rowIdField = rowIdField,
+                 covariateSettings = covariateSettings)
     covariateData <- do.call(fun, args)
     
     if (nrow(covariateData$covariates) == 0) {
@@ -55,18 +56,19 @@ getDbCovariateData <- function(connection,
     }
   } else if (is.list(covariateSettings)) {
     covariateData <- NULL
-    for (i in 1:lenght(covariateSettings)){
-      fun <- attr(covariateSettings, "fun") 
-      args <- covariateSettings
-      args$connection <- connection
-      args$oracleTempSchema <- oracleTempSchema
-      args$cdmVersion <- cdmVersion
-      args$cohortTempTable <- cohortTempTable
-      args$rowIdField <- rowIdField
+    for (i in 1:length(covariateSettings)){
+      fun <- attr(covariateSettings[[i]], "fun") 
+      args <- list(connection = connection,
+                   oracleTempSchema = oracleTempSchema,
+                   cdmDatabaseSchema = cdmDatabaseSchema,
+                   cdmVersion = cdmVersion,
+                   cohortTempTable = cohortTempTable,
+                   rowIdField = rowIdField,
+                   covariateSettings = covariateSettings[[i]])
       tempCovariateData <- do.call(fun, args)
       
-      if (nrow(tempCovariateData$covariates) == 0) {
-        stop("No data found")
+      if (is.null(tempCovariateData) || nrow(tempCovariateData$covariates) == 0) {
+        warning("No data found")
       } else {
         if (is.null(covariateData)) {
           covariateData <- tempCovariateData
