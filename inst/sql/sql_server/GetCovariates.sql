@@ -3557,7 +3557,7 @@ SELECT DISTINCT cc1.row_id,
     INTO #cov_int_month
 FROM @cohort_temp_table cp1
 INNER JOIN #cov_all cc1
-	ON cc1.covariate_id = ccr1.covariate_id
+	ON cp1.@row_id_field = cc1.row_id
 INNER JOIN #cov_ref ccr1
 	ON cc1.covariate_id = ccr1.covariate_id
 WHERE ccr1.analysis_id NOT IN (6)
