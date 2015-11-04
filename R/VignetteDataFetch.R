@@ -213,7 +213,7 @@
     }
     
     # Some SQL to construct the covariate:
-    sql <- paste("SELECT row_id, 1 AS covariate_id,", 
+    sql <- paste("SELECT @row_id_field AS row_id, 1 AS covariate_id,", 
                  "DATEDIFF(DAY, cohort_start_date, observation_period_start_date)",
                  "AS covariate_value",
                  "FROM @cohort_temp_table c",
@@ -223,6 +223,7 @@
                  "AND cohort_start_date <= observation_period_end_date")
     sql <- SqlRender::renderSql(sql, 
                                 cohort_temp_table = cohortTempTable,
+                                row_id_field = rowIdField,
                                 cdm_database_schema = cdmDatabaseSchema)$sql
     sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"))$sql
     
