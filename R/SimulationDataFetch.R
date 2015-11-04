@@ -177,7 +177,7 @@
 #   plpData$exclude <- plpData$exclude[ffbase::ffwhich(t, t == TRUE),]
 #   
   
-  plpDataSimulationProfile <- createPlPSimulationProfile(plpData)
+  plpDataSimulationProfile <- createPlpSimulationProfile(plpData)
   save(plpDataSimulationProfile,
        file = "C:/Users/mschuemi/git/PatientLevelPrediction/data/plpDataSimulationProfile.rda",
        compress = "xz")
@@ -186,7 +186,7 @@
   
   
   # load('C:/Users/mschuemi/git/PatientLevelPrediction/data/plpDataSimulationProfile.rda')
-  plpData <- simulateplpData(plpDataSimulationProfile, n = 1000)
+  plpData <- simulatePlpData(plpDataSimulationProfile, n = 1000)
   
   plpData
   summary(plpData)

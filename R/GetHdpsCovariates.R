@@ -213,78 +213,133 @@ getDbHdpsCovariateData <- function(connection,
 #' @details
 #' creates an object specifying how covariates should be contructed from data in the CDM model.
 #'
-#' @param useCovariateCohortIdIs1                         A boolean value (TRUE/FALSE) to determine if
-#'                                                        a covariate should be contructed for whether
-#'                                                        the cohort ID is 1 (currently primarily used
-#'                                                        in CohortMethod).
-#' @param useCovariateDemographics                        A boolean value (TRUE/FALSE) to determine if
-#'                                                        demographic covariates (age in 5-yr
-#'                                                        increments, gender, race, ethnicity, year of
-#'                                                        index date, month of index date) will be
-#'                                                        created and included in future models.
-#' @param useCovariateDemographicsGender                  A boolean value (TRUE/FALSE) to determine if
-#'                                                        gender should be included in the model.
-#' @param useCovariateDemographicsRace                    A boolean value (TRUE/FALSE) to determine if
-#'                                                        race should be included in the model.
-#' @param useCovariateDemographicsEthnicity               A boolean value (TRUE/FALSE) to determine if
-#'                                                        ethnicity should be included in the model.
-#' @param useCovariateDemographicsAge                     A boolean value (TRUE/FALSE) to determine if
-#'                                                        age (in 5 year increments) should be included
-#'                                                        in the model.
-#' @param useCovariateDemographicsYear                    A boolean value (TRUE/FALSE) to determine if
-#'                                                        calendar year should be included in the
-#'                                                        model.
-#' @param useCovariateDemographicsMonth                   A boolean value (TRUE/FALSE) to determine if
-#'                                                        calendar month should be included in the
-#'                                                        model.
-#' @param useCovariateConditionOccurrence                 A boolean value (TRUE/FALSE) to determine if
-#'                                                        covariates derived from CONDITION_OCCURRENCE
-#'                                                        table will be created and included in future
-#'                                                        models.
-#' @param useCovariate3DigitIcd9Inpatient180d             A boolean value (TRUE/FALSE) to determine if
-#'                                                        covariates will be created and used in models
-#'                                                        that look for presence/absence of condition
-#'                                                        within inpatient setting in 180d window prior
-#'                                                        to or on cohort index date. Conditions are
-#'                                                        aggregated at the ICD-9 3-digit level. Only
-#'                                                        applicable if useCovariateConditionOccurrence
-#'                                                        = TRUE.
-#' @param useCovariate3DigitIcd9Ambulatory180d            A boolean value (TRUE/FALSE) to determine if
-#'                                                        covariates will be created and used in models
-#'                                                        that look for presence/absence of condition
-#'                                                        within ambulatory setting in 180d window
-#'                                                        prior to or on cohort index date. Conditions
-#'                                                        are aggregated at the ICD-9 3-digit level.
-#'                                                        Only applicable if
-#'                                                        useCovariateConditionOccurrence = TRUE.
-#' @param useCovariateDrugExposure                        A boolean value (TRUE/FALSE) to determine if
-#'                                                        covariates derived from DRUG_EXPOSURE table
-#'                                                        will be created and included in future
-#'                                                        models.
-#' @param useCovariateProcedureOccurrence                 A boolean value (TRUE/FALSE) to determine if
-#'                                                        covariates derived from PROCEDURE_OCCURRENCE
-#'                                                        table will be created and included in future
-#'                                                        models.
-#' @param useCovariateProcedureOccurrenceInpatient180d    A boolean value (TRUE/FALSE) to determine if
-#'                                                        covariates will be created and used in models
-#'                                                        that look for presence/absence of procedure
-#'                                                        within inpatient setting in 180d window prior
-#'                                                        to or on cohort index date.  Only applicable
-#'                                                        if useCovariateProcedureOccurrence = TRUE.
-#' @param useCovariateProcedureOccurrenceAmbulatory180d   A boolean value (TRUE/FALSE) to determine if
-#'                                                        covariates will be created and used in models
-#'                                                        that look for presence/absence of procedure
-#'                                                        within ambulatory setting in 180d window
-#'                                                        prior to or on cohort index date.  Only
-#'                                                        applicable if useCovariateProcedureOccurrence
-#'                                                        = TRUE.
-#' @param excludedCovariateConceptIds                     A list of concept IDs that should NOT be used
-#'                                                        to construct covariates.
-#' @param includedCovariateConceptIds                     A list of concept IDs that should be used to
-#'                                                        construct covariates.
-#' @param deleteCovariatesSmallCount                      A numeric value used to remove covariates
-#'                                                        that occur in both cohorts fewer than
-#'                                                        deleteCovariateSmallCounts time.
+#' @param useCovariateCohortIdIs1                             A boolean value (TRUE/FALSE) to determine
+#'                                                            if a covariate should be contructed for
+#'                                                            whether the cohort ID is 1 (currently
+#'                                                            primarily used in CohortMethod).
+#' @param useCovariateDemographics                            A boolean value (TRUE/FALSE) to determine
+#'                                                            if demographic covariates (age in 5-yr
+#'                                                            increments, gender, race, ethnicity, year
+#'                                                            of index date, month of index date) will
+#'                                                            be created and included in future models.
+#' @param useCovariateDemographicsGender                      A boolean value (TRUE/FALSE) to determine
+#'                                                            if gender should be included in the
+#'                                                            model.
+#' @param useCovariateDemographicsRace                        A boolean value (TRUE/FALSE) to determine
+#'                                                            if race should be included in the model.
+#' @param useCovariateDemographicsEthnicity                   A boolean value (TRUE/FALSE) to determine
+#'                                                            if ethnicity should be included in the
+#'                                                            model.
+#' @param useCovariateDemographicsAge                         A boolean value (TRUE/FALSE) to determine
+#'                                                            if age (in 5 year increments) should be
+#'                                                            included in the model.
+#' @param useCovariateDemographicsYear                        A boolean value (TRUE/FALSE) to determine
+#'                                                            if calendar year should be included in
+#'                                                            the model.
+#' @param useCovariateDemographicsMonth                       A boolean value (TRUE/FALSE) to determine
+#'                                                            if calendar month should be included in
+#'                                                            the model.
+#' @param useCovariateConditionOccurrence                     A boolean value (TRUE/FALSE) to determine
+#'                                                            if covariates derived from
+#'                                                            CONDITION_OCCURRENCE table will be
+#'                                                            created and included in future models.
+#' @param useCovariate3DigitIcd9Inpatient180d                 A boolean value (TRUE/FALSE) to determine
+#'                                                            if covariates will be created and used in
+#'                                                            models that look for presence/absence of
+#'                                                            condition within inpatient setting in
+#'                                                            180d window prior to or on cohort index
+#'                                                            date. Conditions are aggregated at the
+#'                                                            ICD-9 3-digit level. Only applicable if
+#'                                                            useCovariateConditionOccurrence = TRUE.
+#' @param useCovariate3DigitIcd9Inpatient180dMedF             Similar to
+#'                                                            \code{useCovariate3DigitIcd9Inpatient180d},
+#'                                                            but now only if the frequency of the
+#'                                                            ICD-9 code is higher than the median.
+#' @param useCovariate3DigitIcd9Inpatient180d75F              Similar to
+#'                                                            \code{useCovariate3DigitIcd9Inpatient180d},
+#'                                                            but now only if the frequency of the
+#'                                                            ICD-9 code is higher than the 75th
+#'                                                            percentile.
+#' @param useCovariate3DigitIcd9Ambulatory180d                A boolean value (TRUE/FALSE) to determine
+#'                                                            if covariates will be created and used in
+#'                                                            models that look for presence/absence of
+#'                                                            condition within ambulatory setting in
+#'                                                            180d window prior to or on cohort index
+#'                                                            date. Conditions are aggregated at the
+#'                                                            ICD-9 3-digit level. Only applicable if
+#'                                                            useCovariateConditionOccurrence = TRUE.
+#' @param useCovariate3DigitIcd9Ambulatory180dMedF            Similar to
+#'                                                            \code{useCovariate3DigitIcd9Ambulatory180d},
+#'                                                            but now only if the frequency of the
+#'                                                            ICD-9 code is higher than the median.
+#' @param useCovariate3DigitIcd9Ambulatory180d75F             Similar to
+#'                                                            \code{useCovariate3DigitIcd9Ambulatory180d},
+#'                                                            but now only if the frequency of the
+#'                                                            ICD-9 code is higher than the 75th
+#'                                                            percentile.
+#' @param useCovariateDrugExposure                            A boolean value (TRUE/FALSE) to determine
+#'                                                            if covariates derived from DRUG_EXPOSURE
+#'                                                            table will be created and included in
+#'                                                            future models.
+#' @param useCovariateIngredientExposure180d                  A boolean value (TRUE/FALSE) to determine
+#'                                                            if covariates will be created and used in
+#'                                                            models that look for presence/absence of
+#'                                                            drug ingredients within inpatient setting
+#'                                                            in 180d window prior to or on cohort
+#'                                                            index date.  Only applicable if
+#'                                                            useCovariateDrugExposure = TRUE.
+#' @param useCovariateIngredientExposure180dMedF              Similar to
+#'                                                            \code{useCovariateIngredientExposure180d},
+#'                                                            but now only if the frequency of the
+#'                                                            ingredient is higher than the median.
+#' @param useCovariateIngredientExposure180d75F               Similar to
+#'                                                            \code{useCovariateIngredientExposure180d},
+#'                                                            but now only if the frequency of the
+#'                                                            ingredient is higher than the 75th
+#'                                                            percentile.
+#' @param useCovariateProcedureOccurrence                     A boolean value (TRUE/FALSE) to determine
+#'                                                            if covariates derived from
+#'                                                            PROCEDURE_OCCURRENCE table will be
+#'                                                            created and included in future models.
+#' @param useCovariateProcedureOccurrenceInpatient180d        A boolean value (TRUE/FALSE) to determine
+#'                                                            if covariates will be created and used in
+#'                                                            models that look for presence/absence of
+#'                                                            procedures within inpatient setting in
+#'                                                            180d window prior to or on cohort index
+#'                                                            date.  Only applicable if
+#'                                                            useCovariateProcedureOccurrence = TRUE.
+#' @param useCovariateProcedureOccurrenceInpatient180dMedF    Similar to
+#'                                                            \code{useCovariateProcedureOccurrenceInpatient180d},
+#'                                                            but now only if the frequency of the
+#'                                                            procedure code is higher than the median.
+#' @param useCovariateProcedureOccurrenceInpatient180d75F     Similar to
+#'                                                            \code{useCovariateProcedureOccurrenceInpatient180d},
+#'                                                            but now only if the frequency of the
+#'                                                            procedure code is higher than the 75th
+#'                                                            percentile.
+#' @param useCovariateProcedureOccurrenceAmbulatory180d       A boolean value (TRUE/FALSE) to determine
+#'                                                            if covariates will be created and used in
+#'                                                            models that look for presence/absence of
+#'                                                            procedures within ambulatory setting in
+#'                                                            180d window prior to or on cohort index
+#'                                                            date.  Only applicable if
+#'                                                            useCovariateProcedureOccurrence = TRUE.
+#' @param useCovariateProcedureOccurrenceAmbulatory180dMedF   Similar to
+#'                                                            \code{useCovariateProcedureOccurrenceAmbulatory180d},
+#'                                                            but now only if the frequency of the
+#'                                                            procedure code is higher than the median.
+#' @param useCovariateProcedureOccurrenceAmbulatory180d75F    Similar to
+#'                                                            \code{useCovariateProcedureOccurrenceAmbulatory180d},
+#'                                                            but now only if the frequency of the
+#'                                                            procedure code is higher than the 75th
+#'                                                            percentile.
+#' @param excludedCovariateConceptIds                         A list of concept IDs that should NOT be
+#'                                                            used to construct covariates.
+#' @param includedCovariateConceptIds                         A list of concept IDs that should be used
+#'                                                            to construct covariates.
+#' @param deleteCovariatesSmallCount                          A numeric value used to remove covariates
+#'                                                            that occur in both cohorts fewer than
+#'                                                            deleteCovariateSmallCounts time.
 #'
 #' @return
 #' An object of type \code{hdpsCovariateSettings}, to be used in other functions.

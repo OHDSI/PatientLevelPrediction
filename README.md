@@ -19,10 +19,10 @@ Screenshots
 <table border = "">
 <tr valign="top">
 <td width = 50%>
-  <img src="https://github.com/OHDSI/PatientLevelPrediction/blob/master/man/Calibration.png" alt="Prediction calibration plot" title="Prediction calibration plot" />
+  <img src="https://github.com/OHDSI/PatientLevelPrediction/blob/master/extras/Calibration.png" alt="Prediction calibration plot" title="Prediction calibration plot" />
 </td>
 <td width = 50%>
- <img src="https://github.com/OHDSI/PatientLevelPrediction/blob/master/man/Roc.png" alt="ROC plot" title="ROC plot" />
+ <img src="https://github.com/OHDSI/PatientLevelPrediction/blob/master/extras/Roc.png" alt="ROC plot" title="ROC plot" />
 </td>
 </tr><tr>
 <td>Calibration plot</td><td>ROC plot</td>

@@ -32,7 +32,7 @@
 #' An object of type \code{plpDataSimulationProfile}.
 #'
 #' @export
-createPlPSimulationProfile <- function(plpData) {
+createPlpSimulationProfile <- function(plpData) {
   writeLines("Computing covariate prevalence")  # (Note: currently assuming binary covariates)
   sums <- bySumFf(plpData$covariates$covariateValue, plpData$covariates$covariateId)
   covariatePrevalence <- sums$sums/nrow(plpData$cohorts)
@@ -96,7 +96,7 @@ createPlPSimulationProfile <- function(plpData) {
 #' An object of type \code{plpData}.
 #'
 #' @export
-simulateplpData <- function(plpDataSimulationProfile, n = 10000) {
+simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise, storing in
   # ffdf
   writeLines("Generating covariates")

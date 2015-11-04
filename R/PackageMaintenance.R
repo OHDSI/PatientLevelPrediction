@@ -23,8 +23,8 @@
 
 .createManualAndVignettes <- function() {
 
-  shell("rm man/PatientLevelPrediction.pdf")
-  shell("R CMD Rd2pdf ./ --output=man/PatientLevelPrediction.pdf")
+  shell("rm extras/PatientLevelPrediction.pdf")
+  shell("R CMD Rd2pdf ./ --output=extras/PatientLevelPrediction.pdf")
 
   rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd",
                     output_file = "../inst/doc/BuildingPredictiveModels.pdf",

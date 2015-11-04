@@ -32,95 +32,161 @@ createHdpsCovariateSettings(useCovariateCohortIdIs1 = FALSE,
   deleteCovariatesSmallCount = 100)
 }
 \arguments{
-\item{useCovariateCohortIdIs1}{A boolean value (TRUE/FALSE) to determine if
-a covariate should be contructed for whether
-the cohort ID is 1 (currently primarily used
-in CohortMethod).}
+\item{useCovariateCohortIdIs1}{A boolean value (TRUE/FALSE) to determine
+if a covariate should be contructed for
+whether the cohort ID is 1 (currently
+primarily used in CohortMethod).}
 
-\item{useCovariateDemographics}{A boolean value (TRUE/FALSE) to determine if
-demographic covariates (age in 5-yr
-increments, gender, race, ethnicity, year of
-index date, month of index date) will be
+\item{useCovariateDemographics}{A boolean value (TRUE/FALSE) to determine
+if demographic covariates (age in 5-yr
+increments, gender, race, ethnicity, year
+of index date, month of index date) will
+be created and included in future models.}
+
+\item{useCovariateDemographicsGender}{A boolean value (TRUE/FALSE) to determine
+if gender should be included in the
+model.}
+
+\item{useCovariateDemographicsRace}{A boolean value (TRUE/FALSE) to determine
+if race should be included in the model.}
+
+\item{useCovariateDemographicsEthnicity}{A boolean value (TRUE/FALSE) to determine
+if ethnicity should be included in the
+model.}
+
+\item{useCovariateDemographicsAge}{A boolean value (TRUE/FALSE) to determine
+if age (in 5 year increments) should be
+included in the model.}
+
+\item{useCovariateDemographicsYear}{A boolean value (TRUE/FALSE) to determine
+if calendar year should be included in
+the model.}
+
+\item{useCovariateDemographicsMonth}{A boolean value (TRUE/FALSE) to determine
+if calendar month should be included in
+the model.}
+
+\item{useCovariateConditionOccurrence}{A boolean value (TRUE/FALSE) to determine
+if covariates derived from
+CONDITION_OCCURRENCE table will be
 created and included in future models.}
 
-\item{useCovariateDemographicsGender}{A boolean value (TRUE/FALSE) to determine if
-gender should be included in the model.}
-
-\item{useCovariateDemographicsRace}{A boolean value (TRUE/FALSE) to determine if
-race should be included in the model.}
-
-\item{useCovariateDemographicsEthnicity}{A boolean value (TRUE/FALSE) to determine if
-ethnicity should be included in the model.}
-
-\item{useCovariateDemographicsAge}{A boolean value (TRUE/FALSE) to determine if
-age (in 5 year increments) should be included
-in the model.}
-
-\item{useCovariateDemographicsYear}{A boolean value (TRUE/FALSE) to determine if
-calendar year should be included in the
-model.}
-
-\item{useCovariateDemographicsMonth}{A boolean value (TRUE/FALSE) to determine if
-calendar month should be included in the
-model.}
-
-\item{useCovariateConditionOccurrence}{A boolean value (TRUE/FALSE) to determine if
-covariates derived from CONDITION_OCCURRENCE
-table will be created and included in future
-models.}
-
-\item{useCovariate3DigitIcd9Inpatient180d}{A boolean value (TRUE/FALSE) to determine if
-covariates will be created and used in models
-that look for presence/absence of condition
-within inpatient setting in 180d window prior
-to or on cohort index date. Conditions are
-aggregated at the ICD-9 3-digit level. Only
-applicable if useCovariateConditionOccurrence
-= TRUE.}
-
-\item{useCovariate3DigitIcd9Ambulatory180d}{A boolean value (TRUE/FALSE) to determine if
-covariates will be created and used in models
-that look for presence/absence of condition
-within ambulatory setting in 180d window
-prior to or on cohort index date. Conditions
-are aggregated at the ICD-9 3-digit level.
-Only applicable if
+\item{useCovariate3DigitIcd9Inpatient180d}{A boolean value (TRUE/FALSE) to determine
+if covariates will be created and used in
+models that look for presence/absence of
+condition within inpatient setting in
+180d window prior to or on cohort index
+date. Conditions are aggregated at the
+ICD-9 3-digit level. Only applicable if
 useCovariateConditionOccurrence = TRUE.}
 
-\item{useCovariateDrugExposure}{A boolean value (TRUE/FALSE) to determine if
-covariates derived from DRUG_EXPOSURE table
-will be created and included in future
-models.}
+\item{useCovariate3DigitIcd9Inpatient180dMedF}{Similar to
+\code{useCovariate3DigitIcd9Inpatient180d},
+but now only if the frequency of the
+ICD-9 code is higher than the median.}
 
-\item{useCovariateProcedureOccurrence}{A boolean value (TRUE/FALSE) to determine if
-covariates derived from PROCEDURE_OCCURRENCE
-table will be created and included in future
-models.}
+\item{useCovariate3DigitIcd9Inpatient180d75F}{Similar to
+\code{useCovariate3DigitIcd9Inpatient180d},
+but now only if the frequency of the
+ICD-9 code is higher than the 75th
+percentile.}
 
-\item{useCovariateProcedureOccurrenceInpatient180d}{A boolean value (TRUE/FALSE) to determine if
-covariates will be created and used in models
-that look for presence/absence of procedure
-within inpatient setting in 180d window prior
-to or on cohort index date.  Only applicable
-if useCovariateProcedureOccurrence = TRUE.}
+\item{useCovariate3DigitIcd9Ambulatory180d}{A boolean value (TRUE/FALSE) to determine
+if covariates will be created and used in
+models that look for presence/absence of
+condition within ambulatory setting in
+180d window prior to or on cohort index
+date. Conditions are aggregated at the
+ICD-9 3-digit level. Only applicable if
+useCovariateConditionOccurrence = TRUE.}
 
-\item{useCovariateProcedureOccurrenceAmbulatory180d}{A boolean value (TRUE/FALSE) to determine if
-covariates will be created and used in models
-that look for presence/absence of procedure
-within ambulatory setting in 180d window
-prior to or on cohort index date.  Only
-applicable if useCovariateProcedureOccurrence
-= TRUE.}
+\item{useCovariate3DigitIcd9Ambulatory180dMedF}{Similar to
+\code{useCovariate3DigitIcd9Ambulatory180d},
+but now only if the frequency of the
+ICD-9 code is higher than the median.}
 
-\item{excludedCovariateConceptIds}{A list of concept IDs that should NOT be used
+\item{useCovariate3DigitIcd9Ambulatory180d75F}{Similar to
+\code{useCovariate3DigitIcd9Ambulatory180d},
+but now only if the frequency of the
+ICD-9 code is higher than the 75th
+percentile.}
+
+\item{useCovariateDrugExposure}{A boolean value (TRUE/FALSE) to determine
+if covariates derived from DRUG_EXPOSURE
+table will be created and included in
+future models.}
+
+\item{useCovariateIngredientExposure180d}{A boolean value (TRUE/FALSE) to determine
+if covariates will be created and used in
+models that look for presence/absence of
+drug ingredients within inpatient setting
+in 180d window prior to or on cohort
+index date.  Only applicable if
+useCovariateDrugExposure = TRUE.}
+
+\item{useCovariateIngredientExposure180dMedF}{Similar to
+\code{useCovariateIngredientExposure180d},
+but now only if the frequency of the
+ingredient is higher than the median.}
+
+\item{useCovariateIngredientExposure180d75F}{Similar to
+\code{useCovariateIngredientExposure180d},
+but now only if the frequency of the
+ingredient is higher than the 75th
+percentile.}
+
+\item{useCovariateProcedureOccurrence}{A boolean value (TRUE/FALSE) to determine
+if covariates derived from
+PROCEDURE_OCCURRENCE table will be
+created and included in future models.}
+
+\item{useCovariateProcedureOccurrenceInpatient180d}{A boolean value (TRUE/FALSE) to determine
+if covariates will be created and used in
+models that look for presence/absence of
+procedures within inpatient setting in
+180d window prior to or on cohort index
+date.  Only applicable if
+useCovariateProcedureOccurrence = TRUE.}
+
+\item{useCovariateProcedureOccurrenceInpatient180dMedF}{Similar to
+\code{useCovariateProcedureOccurrenceInpatient180d},
+but now only if the frequency of the
+procedure code is higher than the median.}
+
+\item{useCovariateProcedureOccurrenceInpatient180d75F}{Similar to
+\code{useCovariateProcedureOccurrenceInpatient180d},
+but now only if the frequency of the
+procedure code is higher than the 75th
+percentile.}
+
+\item{useCovariateProcedureOccurrenceAmbulatory180d}{A boolean value (TRUE/FALSE) to determine
+if covariates will be created and used in
+models that look for presence/absence of
+procedures within ambulatory setting in
+180d window prior to or on cohort index
+date.  Only applicable if
+useCovariateProcedureOccurrence = TRUE.}
+
+\item{useCovariateProcedureOccurrenceAmbulatory180dMedF}{Similar to
+\code{useCovariateProcedureOccurrenceAmbulatory180d},
+but now only if the frequency of the
+procedure code is higher than the median.}
+
+\item{useCovariateProcedureOccurrenceAmbulatory180d75F}{Similar to
+\code{useCovariateProcedureOccurrenceAmbulatory180d},
+but now only if the frequency of the
+procedure code is higher than the 75th
+percentile.}
+
+\item{excludedCovariateConceptIds}{A list of concept IDs that should NOT be
+used to construct covariates.}
+
+\item{includedCovariateConceptIds}{A list of concept IDs that should be used
 to construct covariates.}
 
-\item{includedCovariateConceptIds}{A list of concept IDs that should be used to
-construct covariates.}
-
 \item{deleteCovariatesSmallCount}{A numeric value used to remove covariates
-                                                       that occur in both cohorts fewer than
-                                                       deleteCovariateSmallCounts time.}
+                                                           that occur in both cohorts fewer than
+                                                           deleteCovariateSmallCounts time.}
 }
 \value{
 An object of type \code{hdpsCovariateSettings}, to be used in other functions.
