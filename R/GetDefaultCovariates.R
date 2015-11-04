@@ -56,7 +56,7 @@ getDbDefaultCovariateData <- function(connection,
   }
 
   if (is.null(covariateSettings$excludedCovariateConceptIds) || length(covariateSettings$excludedCovariateConceptIds) ==
-    0) {
+      0) {
     hasExcludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$excludedCovariateConceptIds))
@@ -72,7 +72,7 @@ getDbDefaultCovariateData <- function(connection,
   }
 
   if (is.null(covariateSettings$includedCovariateConceptIds) || length(covariateSettings$includedCovariateConceptIds) ==
-    0) {
+      0) {
     hasIncludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$includedCovariateConceptIds))
@@ -194,35 +194,37 @@ getDbDefaultCovariateData <- function(connection,
 
   # Remove redundant covariates
   writeLines("Removing redundant covariates")
-  # First delete all single covariates that appear in every row with the same value
   deletedCovariateIds <- c()
-  valueCounts <- bySumFf(ff::ff(1, length = nrow(covariates)), covariates$covariateId)
-  nonSparseIds <- valueCounts$bins[valueCounts$sums == populationSize]
-  for (covariateId in nonSparseIds) {
-    selection <- covariates$covariateId == covariateId
-    idx <- ffbase::ffwhich(selection, selection == TRUE)
-    values <- ffbase::unique.ff(covariates$covariateValue[idx])
-    if (length(values) == 1) {
-      idx <- ffbase::ffwhich(selection, selection == FALSE)
-      covariates <- covariates[idx, ]
-      deletedCovariateIds <- c(deletedCovariateIds, covariateId)
+  if (nrow(covariates) != 0) {
+    # First delete all single covariates that appear in every row with the same value
+    valueCounts <- bySumFf(ff::ff(1, length = nrow(covariates)), covariates$covariateId)
+    nonSparseIds <- valueCounts$bins[valueCounts$sums == populationSize]
+    for (covariateId in nonSparseIds) {
+      selection <- covariates$covariateId == covariateId
+      idx <- ffbase::ffwhich(selection, selection == TRUE)
+      values <- ffbase::unique.ff(covariates$covariateValue[idx])
+      if (length(values) == 1) {
+        idx <- ffbase::ffwhich(selection, selection == FALSE)
+        covariates <- covariates[idx, ]
+        deletedCovariateIds <- c(deletedCovariateIds, covariateId)
+      }
     }
-  }
-  # Next, from groups of covariates that together cover every row, remove the most prevalence one
-  problematicAnalysisIds <- c(2, 3, 4, 5, 6, 7)  # Gender, race, ethnicity, age, year, month
-  for (analysisId in problematicAnalysisIds) {
-    t <- covariateRef$analysisId == analysisId
-    if (ffbase::sum.ff(t) != 0) {
-      covariateIds <- ff::as.ram(covariateRef$covariateId[ffbase::ffwhich(t, t == TRUE)])
-      freq <- sapply(covariateIds, function(x) {
-        ffbase::sum.ff(covariates$covariateId == x)
-      })
-      if (sum(freq) == populationSize) {
-        # Each row belongs to one of the categories, making one redunant. Remove most prevalent one
-        categoryToDelete <- covariateIds[which(freq == max(freq))[1]]
-        deletedCovariateIds <- c(deletedCovariateIds, categoryToDelete)
-        t <- covariates$covariateId == categoryToDelete
-        covariates <- covariates[ffbase::ffwhich(t, t == FALSE), ]
+    # Next, from groups of covariates that together cover every row, remove the most prevalence one
+    problematicAnalysisIds <- c(2, 3, 4, 5, 6, 7)  # Gender, race, ethnicity, age, year, month
+    for (analysisId in problematicAnalysisIds) {
+      t <- covariateRef$analysisId == analysisId
+      if (ffbase::sum.ff(t) != 0) {
+        covariateIds <- ff::as.ram(covariateRef$covariateId[ffbase::ffwhich(t, t == TRUE)])
+        freq <- sapply(covariateIds, function(x) {
+          ffbase::sum.ff(covariates$covariateId == x)
+        })
+        if (sum(freq) == populationSize) {
+          # Each row belongs to one of the categories, making one redunant. Remove most prevalent one
+          categoryToDelete <- covariateIds[which(freq == max(freq))[1]]
+          deletedCovariateIds <- c(deletedCovariateIds, categoryToDelete)
+          t <- covariates$covariateId == categoryToDelete
+          covariates <- covariates[ffbase::ffwhich(t, t == FALSE), ]
+        }
       }
     }
   }

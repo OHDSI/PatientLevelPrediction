@@ -47,7 +47,7 @@ getDbCovariateData <- function(connection,
                  rowIdField = rowIdField,
                  covariateSettings = covariateSettings)
     covariateData <- do.call(fun, args)
-
+    
     if (nrow(covariateData$covariates) == 0) {
       warning("No data found")
     } else {
@@ -66,7 +66,7 @@ getDbCovariateData <- function(connection,
                    rowIdField = rowIdField,
                    covariateSettings = covariateSettings[[i]])
       tempCovariateData <- do.call(fun, args)
-
+      
       if (is.null(tempCovariateData) || nrow(tempCovariateData$covariates) == 0) {
         warning("No data found")
       } else {
@@ -86,7 +86,7 @@ getDbCovariateData <- function(connection,
       }
     }
   }
-
+  
   if (normalize) {
     writeLines("Normalizing covariates")
     covariateData$covariates <- normalizeCovariates(covariateData$covariates)
@@ -119,7 +119,7 @@ saveCovariateData <- function(covariateData, file) {
     stop("Must specify file")
   if (class(covariateData) != "covariateData")
     stop("Data not of class covariateData")
-
+  
   covariates <- covariateData$covariates
   covariateRef <- covariateData$covariateRef
   ffbase::save.ffdf(covariates, covariateRef, dir = file)
@@ -152,10 +152,10 @@ loadCovariateData <- function(file, readOnly = FALSE) {
     stop(paste("Cannot find folder", file))
   if (!file.info(file)$isdir)
     stop(paste("Not a folder", file))
-
+  
   temp <- setwd(file)
   absolutePath <- setwd(temp)
-
+  
   e <- new.env()
   ffbase::load.ffdf(absolutePath, e)
   load(file.path(absolutePath, "metaData.Rdata"), e)
@@ -165,7 +165,7 @@ loadCovariateData <- function(file, readOnly = FALSE) {
   # Open all ffdfs to prevent annoying messages later:
   open(result$covariates, readonly = readOnly)
   open(result$covariateRef, readonly = readOnly)
-
+  
   class(result) <- "covariateData"
   rm(e)
   return(result)
@@ -224,10 +224,14 @@ byMaxFf <- function(values, bins) {
 #'
 #' @export
 normalizeCovariates <- function(covariates) {
-  maxs <- byMaxFf(covariates$covariateValue, covariates$covariateId)
-  names(maxs)[names(maxs) == "bins"] <- "covariateId"
-  result <- ffbase::merge.ffdf(covariates, ff::as.ffdf(maxs))
-  result$covariateValue <- result$covariateValue/result$maxs
-  result$maxs <- NULL
-  return(result)
+  if (nrow(covariates) == 0){
+    return(covariates)
+  } else {
+    maxs <- byMaxFf(covariates$covariateValue, covariates$covariateId)
+    names(maxs)[names(maxs) == "bins"] <- "covariateId"
+    result <- ffbase::merge.ffdf(covariates, ff::as.ffdf(maxs))
+    result$covariateValue <- result$covariateValue/result$maxs
+    result$maxs <- NULL
+    return(result)
+  }
 }
