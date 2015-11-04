@@ -7,19 +7,17 @@
 createPlPSimulationProfile(plpData)
 }
 \arguments{
-\item{plpData}{An object of type \code{plpData} as generated using
-                          \code{getDbplpData}.}
+\item{plpData}{An object of type \code{plpData} as generated using \code{getDbplpData}.}
 }
 \value{
 An object of type \code{plpDataSimulationProfile}.
 }
 \description{
-\code{createplpDataSimulationProfile} creates a profile based on the provided
-plpData object, which can be used to generate simulated data that has similar
-characteristics.
+\code{createplpDataSimulationProfile} creates a profile based on the provided plpData object, which
+can be used to generate simulated data that has similar characteristics.
 }
 \details{
-The output of this function is an object that can be used by the \code{simulateplpData}
-function to generate a plpData object.
+The output of this function is an object that can be used by the \code{simulateplpData} function to
+generate a plpData object.
 }
 

@@ -15,8 +15,7 @@ loadPlpData(file, readOnly = FALSE)
 An object of class PlPData
 }
 \description{
-\code{loadPlPData} loads an object of type \code{plpData} from a folder in the file
-system.
+\code{loadPlPData} loads an object of type \code{plpData} from a folder in the file system.
 }
 \details{
 The data will be written to a set of files in the folder specified by the user.

@@ -19,11 +19,11 @@
 #' Get HDPS covariate information from the database
 #'
 #' @description
-#' Constructs the set of covariates for one or more cohorts using data in the CDM schema. This implements the
-#' covariates typically used in the HDPS algorithm.
-#' 
-#' @param covariateSettings  An object of type \code{covariateSettings} as created using the
-#'                                  \code{\link{createHdpsCovariateSettings}} function.
+#' Constructs the set of covariates for one or more cohorts using data in the CDM schema. This
+#' implements the covariates typically used in the HDPS algorithm.
+#'
+#' @param covariateSettings   An object of type \code{covariateSettings} as created using the
+#'                            \code{\link{createHdpsCovariateSettings}} function.
 #'
 #' @template GetCovarParams
 #'
@@ -50,9 +50,9 @@ getDbHdpsCovariateData <- function(connection,
     conceptClassId <- "concept_class_id"
     measurement <- "measurement"
   }
-  
+
   if (is.null(covariateSettings$excludedCovariateConceptIds) || length(covariateSettings$excludedCovariateConceptIds) ==
-      0) {
+    0) {
     hasExcludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$excludedCovariateConceptIds))
@@ -66,9 +66,9 @@ getDbHdpsCovariateData <- function(connection,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
+
   if (is.null(covariateSettings$includedCovariateConceptIds) || length(covariateSettings$includedCovariateConceptIds) ==
-      0) {
+    0) {
     hasIncludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$includedCovariateConceptIds))
@@ -82,7 +82,7 @@ getDbHdpsCovariateData <- function(connection,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("GetHdpsCovariates.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(connection, "dbms"),
@@ -123,10 +123,10 @@ getDbHdpsCovariateData <- function(connection,
                                                    has_excluded_covariate_concept_ids = hasExcludedCovariateConceptIds,
                                                    has_included_covariate_concept_ids = hasIncludedCovariateConceptIds,
                                                    delete_covariates_small_count = covariateSettings$deleteCovariatesSmallCount)
-  
+
   DatabaseConnector::executeSql(connection, renderedSql)
   writeLines("Done")
-  
+
   writeLines("Fetching data from server")
   start <- Sys.time()
   covariateSql <- "SELECT row_id, covariate_id, covariate_value FROM #cov ORDER BY covariate_id, row_id"
@@ -142,57 +142,66 @@ getDbHdpsCovariateData <- function(connection,
                                              attr(connection, "dbms"),
                                              oracleTempSchema)$sql
   covariateRef <- DatabaseConnector::querySql.ffdf(connection, covariateRefSql)
-  
+
   sql <- "SELECT COUNT_BIG(*) FROM @cohort_temp_table"
   sql <- SqlRender::renderSql(sql, cohort_temp_table = cohortTempTable)$sql
-  sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"),  oracleTempSchema = oracleTempSchema)$sql
-  populationSize <- DatabaseConnector::querySql(connection, sql)[1,1]
-  
+  sql <- SqlRender::translateSql(sql,
+                                 targetDialect = attr(connection, "dbms"),
+                                 oracleTempSchema = oracleTempSchema)$sql
+  populationSize <- DatabaseConnector::querySql(connection, sql)[1, 1]
+
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCovariateTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(connection, "dbms"),
                                                    oracleTempSchema = oracleTempSchema)
-  DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
-  
+  DatabaseConnector::executeSql(connection,
+                                renderedSql,
+                                progressBar = FALSE,
+                                reportOverallTime = FALSE)
+
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
-  
+
   # Remove redundant covariates
   writeLines("Removing redundant covariates")
   # First delete all single covariates that appear in every row with the same value
   deletedCovariateIds <- c()
   valueCounts <- bySumFf(ff::ff(1, length = nrow(covariates)), covariates$covariateId)
   nonSparseIds <- valueCounts$bins[valueCounts$sums == populationSize]
-  for (covariateId in nonSparseIds){
+  for (covariateId in nonSparseIds) {
     selection <- covariates$covariateId == covariateId
     idx <- ffbase::ffwhich(selection, selection == TRUE)
-    values <- ffbase::unique.ff(covariates$covariateValue[idx])  
-    if (length(values) == 1){
+    values <- ffbase::unique.ff(covariates$covariateValue[idx])
+    if (length(values) == 1) {
       idx <- ffbase::ffwhich(selection, selection == FALSE)
-      covariates <- covariates[idx,]
+      covariates <- covariates[idx, ]
       deletedCovariateIds <- c(deletedCovariateIds, covariateId)
     }
   }
   # Next, from groups of covariates that together cover every row, remove the most prevalence one
-  problematicAnalysisIds <- c(2,3,4,5,6,7) # Gender, race, ethnicity, age, year, month
-  for (analysisId in problematicAnalysisIds){
+  problematicAnalysisIds <- c(2, 3, 4, 5, 6, 7)  # Gender, race, ethnicity, age, year, month
+  for (analysisId in problematicAnalysisIds) {
     t <- covariateRef$analysisId == analysisId
     if (ffbase::sum.ff(t) != 0) {
       covariateIds <- ff::as.ram(covariateRef$covariateId[ffbase::ffwhich(t, t == TRUE)])
-      freq <- sapply(covariateIds, function(x) {ffbase::sum.ff(covariates$covariateId == x)})
+      freq <- sapply(covariateIds, function(x) {
+        ffbase::sum.ff(covariates$covariateId == x)
+      })
       if (sum(freq) == populationSize) {
-        #Each row belongs to one of the categories, making one redunant. Remove most prevalent one
+        # Each row belongs to one of the categories, making one redunant. Remove most prevalent one
         categoryToDelete <- covariateIds[which(freq == max(freq))[1]]
         deletedCovariateIds <- c(deletedCovariateIds, categoryToDelete)
         t <- covariates$covariateId == categoryToDelete
-        covariates <- covariates[ffbase::ffwhich(t, t == FALSE),]
+        covariates <- covariates[ffbase::ffwhich(t, t == FALSE), ]
       }
     }
   }
-  metaData <- list(sql = renderedSql, call = match.call(), deletedCovariateIds = deletedCovariateIds)
+  metaData <- list(sql = renderedSql,
+                   call = match.call(),
+                   deletedCovariateIds = deletedCovariateIds)
   result <- list(covariates = covariates, covariateRef = covariateRef, metaData = metaData)
   class(result) <- "covariateData"
   return(result)
@@ -204,68 +213,78 @@ getDbHdpsCovariateData <- function(connection,
 #' @details
 #' creates an object specifying how covariates should be contructed from data in the CDM model.
 #'
-#' @param useCovariateCohortIdIs1                   A boolean value (TRUE/FALSE) to determine if a 
-#'                                                  covariate should be contructed for whether the 
-#'                                                  cohort ID is 1 (currently primarily used in 
-#'                                                  CohortMethod). 
-#' @param useCovariateDemographics                  A boolean value (TRUE/FALSE) to determine if
-#'                                                  demographic covariates (age in 5-yr increments,
-#'                                                  gender, race, ethnicity, year of index date, month
-#'                                                  of index date) will be created and included in
-#'                                                  future models.
-#' @param useCovariateDemographicsGender            A boolean value (TRUE/FALSE) to determine if gender
-#'                                                  should be included in the model.
-#' @param useCovariateDemographicsRace              A boolean value (TRUE/FALSE) to determine if race
-#'                                                  should be included in the model.
-#' @param useCovariateDemographicsEthnicity         A boolean value (TRUE/FALSE) to determine if
-#'                                                  ethnicity should be included in the model.
-#' @param useCovariateDemographicsAge               A boolean value (TRUE/FALSE) to determine if age
-#'                                                  (in 5 year increments) should be included in the
-#'                                                  model.
-#' @param useCovariateDemographicsYear              A boolean value (TRUE/FALSE) to determine if
-#'                                                  calendar year should be included in the model.
-#' @param useCovariateDemographicsMonth             A boolean value (TRUE/FALSE) to determine if
-#'                                                  calendar month should be included in the model.
-#' @param useCovariateConditionOccurrence           A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates derived from CONDITION_OCCURRENCE table
-#'                                                  will be created and included in future models.
-#' @param useCovariate3DigitIcd9Inpatient180d       A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates will be created and used in models that
-#'                                                  look for presence/absence of condition within
-#'                                                  inpatient setting in 180d window prior to or on cohort
-#'                                                  index date. Conditions are aggregated at the ICD-9 3-digit level.
-#'                                                  Only applicable if useCovariateConditionOccurrence = TRUE.
-#' @param useCovariate3DigitIcd9Ambulatory180d      A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates will be created and used in models that
-#'                                                  look for presence/absence of condition within
-#'                                                  ambulatory setting in 180d window prior to or on cohort
-#'                                                  index date. Conditions are aggregated at the ICD-9 3-digit level.
-#'                                                  Only applicable if useCovariateConditionOccurrence = TRUE.
-#' @param useCovariateDrugExposure                  A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates derived from DRUG_EXPOSURE table will be
-#'                                                  created and included in future models.
-#' @param useCovariateProcedureOccurrence           A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates derived from PROCEDURE_OCCURRENCE table
-#'                                                  will be created and included in future models.                 
-#' @param useCovariateProcedureOccurrenceInpatient180d        A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates will be created and used in models that
-#'                                                  look for presence/absence of procedure within inpatient setting in 180d
-#'                                                  window prior to or on cohort index date.  Only
-#'                                                  applicable if useCovariateProcedureOccurrence =
-#'                                                  TRUE.
-#' @param useCovariateProcedureOccurrenceAmbulatory180d        A boolean value (TRUE/FALSE) to determine if
-#'                                                  covariates will be created and used in models that
-#'                                                  look for presence/absence of procedure within ambulatory setting in 180d
-#'                                                  window prior to or on cohort index date.  Only
-#'                                                  applicable if useCovariateProcedureOccurrence =
-#'                                                  TRUE.
-#' @param excludedCovariateConceptIds               A list of concept IDs that should NOT be used to
-#'                                                  construct covariates.
-#' @param includedCovariateConceptIds               A list of concept IDs that should be used to
-#'                                                  construct covariates.
-#' @param deleteCovariatesSmallCount                A numeric value used to remove covariates that
-#'                                                  occur in both cohorts fewer than
-#'                                                  deleteCovariateSmallCounts time.
+#' @param useCovariateCohortIdIs1                         A boolean value (TRUE/FALSE) to determine if
+#'                                                        a covariate should be contructed for whether
+#'                                                        the cohort ID is 1 (currently primarily used
+#'                                                        in CohortMethod).
+#' @param useCovariateDemographics                        A boolean value (TRUE/FALSE) to determine if
+#'                                                        demographic covariates (age in 5-yr
+#'                                                        increments, gender, race, ethnicity, year of
+#'                                                        index date, month of index date) will be
+#'                                                        created and included in future models.
+#' @param useCovariateDemographicsGender                  A boolean value (TRUE/FALSE) to determine if
+#'                                                        gender should be included in the model.
+#' @param useCovariateDemographicsRace                    A boolean value (TRUE/FALSE) to determine if
+#'                                                        race should be included in the model.
+#' @param useCovariateDemographicsEthnicity               A boolean value (TRUE/FALSE) to determine if
+#'                                                        ethnicity should be included in the model.
+#' @param useCovariateDemographicsAge                     A boolean value (TRUE/FALSE) to determine if
+#'                                                        age (in 5 year increments) should be included
+#'                                                        in the model.
+#' @param useCovariateDemographicsYear                    A boolean value (TRUE/FALSE) to determine if
+#'                                                        calendar year should be included in the
+#'                                                        model.
+#' @param useCovariateDemographicsMonth                   A boolean value (TRUE/FALSE) to determine if
+#'                                                        calendar month should be included in the
+#'                                                        model.
+#' @param useCovariateConditionOccurrence                 A boolean value (TRUE/FALSE) to determine if
+#'                                                        covariates derived from CONDITION_OCCURRENCE
+#'                                                        table will be created and included in future
+#'                                                        models.
+#' @param useCovariate3DigitIcd9Inpatient180d             A boolean value (TRUE/FALSE) to determine if
+#'                                                        covariates will be created and used in models
+#'                                                        that look for presence/absence of condition
+#'                                                        within inpatient setting in 180d window prior
+#'                                                        to or on cohort index date. Conditions are
+#'                                                        aggregated at the ICD-9 3-digit level. Only
+#'                                                        applicable if useCovariateConditionOccurrence
+#'                                                        = TRUE.
+#' @param useCovariate3DigitIcd9Ambulatory180d            A boolean value (TRUE/FALSE) to determine if
+#'                                                        covariates will be created and used in models
+#'                                                        that look for presence/absence of condition
+#'                                                        within ambulatory setting in 180d window
+#'                                                        prior to or on cohort index date. Conditions
+#'                                                        are aggregated at the ICD-9 3-digit level.
+#'                                                        Only applicable if
+#'                                                        useCovariateConditionOccurrence = TRUE.
+#' @param useCovariateDrugExposure                        A boolean value (TRUE/FALSE) to determine if
+#'                                                        covariates derived from DRUG_EXPOSURE table
+#'                                                        will be created and included in future
+#'                                                        models.
+#' @param useCovariateProcedureOccurrence                 A boolean value (TRUE/FALSE) to determine if
+#'                                                        covariates derived from PROCEDURE_OCCURRENCE
+#'                                                        table will be created and included in future
+#'                                                        models.
+#' @param useCovariateProcedureOccurrenceInpatient180d    A boolean value (TRUE/FALSE) to determine if
+#'                                                        covariates will be created and used in models
+#'                                                        that look for presence/absence of procedure
+#'                                                        within inpatient setting in 180d window prior
+#'                                                        to or on cohort index date.  Only applicable
+#'                                                        if useCovariateProcedureOccurrence = TRUE.
+#' @param useCovariateProcedureOccurrenceAmbulatory180d   A boolean value (TRUE/FALSE) to determine if
+#'                                                        covariates will be created and used in models
+#'                                                        that look for presence/absence of procedure
+#'                                                        within ambulatory setting in 180d window
+#'                                                        prior to or on cohort index date.  Only
+#'                                                        applicable if useCovariateProcedureOccurrence
+#'                                                        = TRUE.
+#' @param excludedCovariateConceptIds                     A list of concept IDs that should NOT be used
+#'                                                        to construct covariates.
+#' @param includedCovariateConceptIds                     A list of concept IDs that should be used to
+#'                                                        construct covariates.
+#' @param deleteCovariatesSmallCount                      A numeric value used to remove covariates
+#'                                                        that occur in both cohorts fewer than
+#'                                                        deleteCovariateSmallCounts time.
 #'
 #' @return
 #' An object of type \code{hdpsCovariateSettings}, to be used in other functions.

@@ -7,9 +7,8 @@
 simulateplpData(plpDataSimulationProfile, n = 10000)
 }
 \arguments{
-\item{plpDataSimulationProfile}{An object of type \code{plpDataSimulationProfile} as
-generated using the
-\cr\code{createplpDataSimulationProfile} function.}
+\item{plpDataSimulationProfile}{An object of type \code{plpDataSimulationProfile} as generated
+using the \cr\code{createplpDataSimulationProfile} function.}
 
 \item{n}{The size of the population to be generated.}
 }

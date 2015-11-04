@@ -45,40 +45,38 @@ computeStats <- function(n, covariates, label = NULL) {
 
 #' Compute covariate means
 #'
-#' @param plpData      An object of type \code{plpData}.
-#' @param cohortId        The ID of the specific cohort for which to compute the means.
-#' @param outcomeId       The ID of the specific outcome for which to compute the subgroup means.
+#' @param plpData     An object of type \code{plpData}.
+#' @param cohortId    The ID of the specific cohort for which to compute the means.
+#' @param outcomeId   The ID of the specific outcome for which to compute the subgroup means.
 #'
 #' @export
-computeCovariateMeans <- function(plpData,
-                                  cohortId = NULL,
-                                  outcomeId = NULL) {
+computeCovariateMeans <- function(plpData, cohortId = NULL, outcomeId = NULL) {
   if (is.null(cohortId) && length(plpData$metaData$cohortIds) != 1)
     stop("No cohort ID specified, but multiple cohorts found")
   if (is.null(outcomeId) && length(plpData$metaData$outcomeIds) != 1)
     stop("No outcome ID specified, but multiple outcomes found")
 
   start <- Sys.time()
-  
+
   covariates <- plpData$covariates
   cohorts <- plpData$cohorts
   outcomes <- plpData$outcomes
-  
+
   if (!is.null(cohortId) && length(plpData$metaData$cohortIds) > 1) {
     # Filter by cohort ID:
     t <- cohorts$cohortId == cohortId
     if (!ffbase::any.ff(t)) {
       stop(paste("No cohorts with cohort ID", cohortId))
-    }    
+    }
     cohorts <- cohorts[ffbase::ffwhich(t, t == TRUE), ]
-    
+
     idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
     idx <- ffbase::ffwhich(idx, !is.na(idx))
     covariates <- covariates[idx, ]
-    
+
     # No need to filter outcomes since we'll merge outcomes with cohorts later
   }
-  
+
   if (!is.null(outcomeId) && length(plpData$metaData$outcomeIds) > 1) {
     # Filter by outcome ID:
     t <- outcomes$outcomeId == outcomeId

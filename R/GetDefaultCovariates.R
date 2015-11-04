@@ -19,11 +19,12 @@
 #' Get default covariate information from the database
 #'
 #' @description
-#' Constructs a large default set of covariates for one or more cohorts using data in the CDM schema. Includes covariates for
-#' all drugs, drug classes, condition, condition classes, procedures, observations, etc.
-#' 
-#' @param covariateSettings  An object of type \code{defaultCovariateSettings} as created using the
-#'                                  \code{\link{createCovariateSettings}} function.
+#' Constructs a large default set of covariates for one or more cohorts using data in the CDM schema.
+#' Includes covariates for all drugs, drug classes, condition, condition classes, procedures,
+#' observations, etc.
+#'
+#' @param covariateSettings   An object of type \code{defaultCovariateSettings} as created using the
+#'                            \code{\link{createCovariateSettings}} function.
 #'
 #' @template GetCovarParams
 #'
@@ -43,7 +44,7 @@ getDbDefaultCovariateData <- function(connection,
   if (!covariateSettings$useCovariateConditionGroupMeddra & !covariateSettings$useCovariateConditionGroupSnomed) {
     covariateSettings$useCovariateConditionGroup <- FALSE
   }
-  
+
   if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
     conceptClassId <- "concept_class"
@@ -53,9 +54,9 @@ getDbDefaultCovariateData <- function(connection,
     conceptClassId <- "concept_class_id"
     measurement <- "measurement"
   }
-  
+
   if (is.null(covariateSettings$excludedCovariateConceptIds) || length(covariateSettings$excludedCovariateConceptIds) ==
-      0) {
+    0) {
     hasExcludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$excludedCovariateConceptIds))
@@ -69,9 +70,9 @@ getDbDefaultCovariateData <- function(connection,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
+
   if (is.null(covariateSettings$includedCovariateConceptIds) || length(covariateSettings$includedCovariateConceptIds) ==
-      0) {
+    0) {
     hasIncludedCovariateConceptIds <- FALSE
   } else {
     if (!is.numeric(covariateSettings$includedCovariateConceptIds))
@@ -85,7 +86,7 @@ getDbDefaultCovariateData <- function(connection,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCovariates.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(connection, "dbms"),
@@ -149,10 +150,10 @@ getDbDefaultCovariateData <- function(connection,
                                                    has_excluded_covariate_concept_ids = hasExcludedCovariateConceptIds,
                                                    has_included_covariate_concept_ids = hasIncludedCovariateConceptIds,
                                                    delete_covariates_small_count = covariateSettings$deleteCovariatesSmallCount)
-  
+
   DatabaseConnector::executeSql(connection, renderedSql)
   writeLines("Done")
-  
+
   writeLines("Fetching data from server")
   start <- Sys.time()
   covariateSql <- "SELECT row_id, covariate_id, covariate_value FROM #cov ORDER BY covariate_id, row_id"
@@ -168,57 +169,66 @@ getDbDefaultCovariateData <- function(connection,
                                              attr(connection, "dbms"),
                                              oracleTempSchema)$sql
   covariateRef <- DatabaseConnector::querySql.ffdf(connection, covariateRefSql)
-  
+
   sql <- "SELECT COUNT_BIG(*) FROM @cohort_temp_table"
   sql <- SqlRender::renderSql(sql, cohort_temp_table = cohortTempTable)$sql
-  sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"),  oracleTempSchema = oracleTempSchema)$sql
-  populationSize <- DatabaseConnector::querySql(connection, sql)[1,1]
-  
+  sql <- SqlRender::translateSql(sql,
+                                 targetDialect = attr(connection, "dbms"),
+                                 oracleTempSchema = oracleTempSchema)$sql
+  populationSize <- DatabaseConnector::querySql(connection, sql)[1, 1]
+
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCovariateTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(connection, "dbms"),
                                                    oracleTempSchema = oracleTempSchema)
-  DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
-  
+  DatabaseConnector::executeSql(connection,
+                                renderedSql,
+                                progressBar = FALSE,
+                                reportOverallTime = FALSE)
+
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
-  
+
   # Remove redundant covariates
   writeLines("Removing redundant covariates")
   # First delete all single covariates that appear in every row with the same value
   deletedCovariateIds <- c()
   valueCounts <- bySumFf(ff::ff(1, length = nrow(covariates)), covariates$covariateId)
   nonSparseIds <- valueCounts$bins[valueCounts$sums == populationSize]
-  for (covariateId in nonSparseIds){
+  for (covariateId in nonSparseIds) {
     selection <- covariates$covariateId == covariateId
     idx <- ffbase::ffwhich(selection, selection == TRUE)
-    values <- ffbase::unique.ff(covariates$covariateValue[idx])  
-    if (length(values) == 1){
+    values <- ffbase::unique.ff(covariates$covariateValue[idx])
+    if (length(values) == 1) {
       idx <- ffbase::ffwhich(selection, selection == FALSE)
-      covariates <- covariates[idx,]
+      covariates <- covariates[idx, ]
       deletedCovariateIds <- c(deletedCovariateIds, covariateId)
     }
   }
   # Next, from groups of covariates that together cover every row, remove the most prevalence one
-  problematicAnalysisIds <- c(2,3,4,5,6,7) # Gender, race, ethnicity, age, year, month
-  for (analysisId in problematicAnalysisIds){
+  problematicAnalysisIds <- c(2, 3, 4, 5, 6, 7)  # Gender, race, ethnicity, age, year, month
+  for (analysisId in problematicAnalysisIds) {
     t <- covariateRef$analysisId == analysisId
     if (ffbase::sum.ff(t) != 0) {
       covariateIds <- ff::as.ram(covariateRef$covariateId[ffbase::ffwhich(t, t == TRUE)])
-      freq <- sapply(covariateIds, function(x) {ffbase::sum.ff(covariates$covariateId == x)})
+      freq <- sapply(covariateIds, function(x) {
+        ffbase::sum.ff(covariates$covariateId == x)
+      })
       if (sum(freq) == populationSize) {
-        #Each row belongs to one of the categories, making one redunant. Remove most prevalent one
+        # Each row belongs to one of the categories, making one redunant. Remove most prevalent one
         categoryToDelete <- covariateIds[which(freq == max(freq))[1]]
         deletedCovariateIds <- c(deletedCovariateIds, categoryToDelete)
         t <- covariates$covariateId == categoryToDelete
-        covariates <- covariates[ffbase::ffwhich(t, t == FALSE),]
+        covariates <- covariates[ffbase::ffwhich(t, t == FALSE), ]
       }
     }
   }
-  metaData <- list(sql = renderedSql, call = match.call(), deletedCovariateIds = deletedCovariateIds)
+  metaData <- list(sql = renderedSql,
+                   call = match.call(),
+                   deletedCovariateIds = deletedCovariateIds)
   result <- list(covariates = covariates, covariateRef = covariateRef, metaData = metaData)
   class(result) <- "covariateData"
   return(result)
@@ -234,10 +244,10 @@ getDbDefaultCovariateData <- function(connection,
 #'                                                  construct covariates.
 #' @param includedCovariateConceptIds               A list of concept IDs that should be used to
 #'                                                  construct covariates.
-#' @param useCovariateCohortIdIs1                   A boolean value (TRUE/FALSE) to determine if a 
-#'                                                  covariate should be contructed for whether the 
-#'                                                  cohort ID is 1 (currently primarily used in 
-#'                                                  CohortMethod). 
+#' @param useCovariateCohortIdIs1                   A boolean value (TRUE/FALSE) to determine if a
+#'                                                  covariate should be contructed for whether the
+#'                                                  cohort ID is 1 (currently primarily used in
+#'                                                  CohortMethod).
 #' @param useCovariateDemographics                  A boolean value (TRUE/FALSE) to determine if
 #'                                                  demographic covariates (age in 5-yr increments,
 #'                                                  gender, race, ethnicity, year of index date, month

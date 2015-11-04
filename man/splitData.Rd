@@ -9,9 +9,9 @@ splitData(plpData, splits = 2)
 \arguments{
 \item{plpData}{An object of type \code{plpData}.}
 
-\item{splits}{This can be either a single integer, in which case the data will be split up
-                       into equally sized parts. If a vector is provided instead, these are
-                       interpreted as the relative sizes of each part.}
+\item{splits}{This can be either a single integer, in which case the data will be split up into
+                 equally sized parts. If a vector is provided instead, these are interpreted as the
+                 relative sizes of each part.}
 }
 \value{
 A list with entries for each part. An entry itself is a plpData object.

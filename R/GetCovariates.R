@@ -19,12 +19,12 @@
 #' Get covariate information from the database
 #'
 #' @description
-#' Uses one or several covariate builder functions to construct covariates. 
-#' 
-#' @param covariateSettings  Either an object of type \code{covariateSettings} as created using one of the 
-#' createCovariate functions, or a list of such objects.
-#' @param normalize                 Should covariate values be normalized? If true, values will be 
-#'                                  divided by the max value per covariate.
+#' Uses one or several covariate builder functions to construct covariates.
+#'
+#' @param covariateSettings   Either an object of type \code{covariateSettings} as created using one of
+#'                            the createCovariate functions, or a list of such objects.
+#' @param normalize           Should covariate values be normalized? If true, values will be divided by
+#'                            the max value per covariate.
 #'
 #' @template GetCovarParams
 #'
@@ -38,7 +38,7 @@ getDbCovariateData <- function(connection,
                                covariateSettings,
                                normalize = TRUE) {
   if (class(covariateSettings) == "covariateSettings") {
-    fun <- attr(covariateSettings, "fun") 
+    fun <- attr(covariateSettings, "fun")
     args <- list(connection = connection,
                  oracleTempSchema = oracleTempSchema,
                  cdmDatabaseSchema = cdmDatabaseSchema,
@@ -47,7 +47,7 @@ getDbCovariateData <- function(connection,
                  rowIdField = rowIdField,
                  covariateSettings = covariateSettings)
     covariateData <- do.call(fun, args)
-    
+
     if (nrow(covariateData$covariates) == 0) {
       warning("No data found")
     } else {
@@ -56,8 +56,8 @@ getDbCovariateData <- function(connection,
     }
   } else if (is.list(covariateSettings)) {
     covariateData <- NULL
-    for (i in 1:length(covariateSettings)){
-      fun <- attr(covariateSettings[[i]], "fun") 
+    for (i in 1:length(covariateSettings)) {
+      fun <- attr(covariateSettings[[i]], "fun")
       args <- list(connection = connection,
                    oracleTempSchema = oracleTempSchema,
                    cdmDatabaseSchema = cdmDatabaseSchema,
@@ -66,7 +66,7 @@ getDbCovariateData <- function(connection,
                    rowIdField = rowIdField,
                    covariateSettings = covariateSettings[[i]])
       tempCovariateData <- do.call(fun, args)
-      
+
       if (is.null(tempCovariateData) || nrow(tempCovariateData$covariates) == 0) {
         warning("No data found")
       } else {
@@ -74,17 +74,22 @@ getDbCovariateData <- function(connection,
           covariateData <- tempCovariateData
         } else {
           # TODO: handle overlap in covariate ID space
-          covariateData$covariates <- ffbase::ffdfappend(covariateData$covariates, tempCovariateData$covariates)
-          covariateData$covariateRef <- ffbase::ffdfappend(covariateData$covariateRef, tempCovariateData$covariateRef)
-          covariateData$metaData <- mapply(c, covariateData$metaData, tempCovariateData$metaData, SIMPLIFY=FALSE)
+          covariateData$covariates <- ffbase::ffdfappend(covariateData$covariates,
+                                                         tempCovariateData$covariates)
+          covariateData$covariateRef <- ffbase::ffdfappend(covariateData$covariateRef,
+                                                           tempCovariateData$covariateRef)
+          covariateData$metaData <- mapply(c,
+                                           covariateData$metaData,
+                                           tempCovariateData$metaData,
+                                           SIMPLIFY = FALSE)
         }
       }
     }
   }
-  
+
   if (normalize) {
     writeLines("Normalizing covariates")
-    covariateData$covariates <- normalizeCovariates(covariateData$covariates) 
+    covariateData$covariates <- normalizeCovariates(covariateData$covariates)
   }
   return(covariateData)
 }
@@ -114,7 +119,7 @@ saveCovariateData <- function(covariateData, file) {
     stop("Must specify file")
   if (class(covariateData) != "covariateData")
     stop("Data not of class covariateData")
-  
+
   covariates <- covariateData$covariates
   covariateRef <- covariateData$covariateRef
   ffbase::save.ffdf(covariates, covariateRef, dir = file)
@@ -147,10 +152,10 @@ loadCovariateData <- function(file, readOnly = FALSE) {
     stop(paste("Cannot find folder", file))
   if (!file.info(file)$isdir)
     stop(paste("Not a folder", file))
-  
+
   temp <- setwd(file)
   absolutePath <- setwd(temp)
-  
+
   e <- new.env()
   ffbase::load.ffdf(absolutePath, e)
   load(file.path(absolutePath, "metaData.Rdata"), e)
@@ -160,7 +165,7 @@ loadCovariateData <- function(file, readOnly = FALSE) {
   # Open all ffdfs to prevent annoying messages later:
   open(result$covariates, readonly = readOnly)
   open(result$covariateRef, readonly = readOnly)
-  
+
   class(result) <- "covariateData"
   rm(e)
   return(result)
@@ -208,19 +213,21 @@ byMaxFf <- function(values, bins) {
   .byMax(values, bins)
 }
 
-#' Normalize covariate values 
-#' 
-#' @details 
-#' Normalize covariate values by dividing by the max. This is to avoid numeric problems when fitting models.
+#' Normalize covariate values
 #'
-#' @param covariates   An ffdf object as generated using the \code{\link{getDbCovariateData}} function.#' 
+#' @details
+#' Normalize covariate values by dividing by the max. This is to avoid numeric problems when fitting
+#' models.
+#'
+#' @param covariates   An ffdf object as generated using the \code{\link{getDbCovariateData}}
+#'                     function.#'
 #'
 #' @export
-normalizeCovariates <- function(covariates){
+normalizeCovariates <- function(covariates) {
   maxs <- byMaxFf(covariates$covariateValue, covariates$covariateId)
   names(maxs)[names(maxs) == "bins"] <- "covariateId"
   result <- ffbase::merge.ffdf(covariates, ff::as.ffdf(maxs))
-  result$covariateValue <- result$covariateValue / result$maxs
+  result$covariateValue <- result$covariateValue/result$maxs
   result$maxs <- NULL
   return(result)
 }

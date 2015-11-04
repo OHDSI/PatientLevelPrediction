@@ -14,8 +14,8 @@ predictProbabilities(predictiveModel, plpData)
 \code{\link{getDbPlpData}}.}
 }
 \value{
-The value column in the result data.frame is: logistic: probabilities of the outcome,
-poisson: Poisson rate (per day) of the outome, survival: hazard rate (per day) of the outcome.
+The value column in the result data.frame is: logistic: probabilities of the outcome, poisson:
+Poisson rate (per day) of the outome, survival: hazard rate (per day) of the outcome.
 }
 \description{
 Create predictive probabilities

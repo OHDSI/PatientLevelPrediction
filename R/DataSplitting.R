@@ -21,10 +21,10 @@
 #' @details
 #' Splits cohort, covariate, and outcome data into random subsets, to be used for validation.
 #'
-#' @param plpData     		An object of type \code{plpData}.
-#' @param splits          This can be either a single integer, in which case the data will be split up
-#'                        into equally sized parts. If a vector is provided instead, these are
-#'                        interpreted as the relative sizes of each part.
+#' @param plpData   An object of type \code{plpData}.
+#' @param splits    This can be either a single integer, in which case the data will be split up into
+#'                  equally sized parts. If a vector is provided instead, these are interpreted as the
+#'                  relative sizes of each part.
 #'
 #' @return
 #' A list with entries for each part. An entry itself is a plpData object.
@@ -32,7 +32,7 @@
 #' @export
 splitData <- function(plpData, splits = 2) {
   start <- Sys.time()
-  
+
   if (length(splits) == 1)
     splits <- rep(1/splits, splits)
   splits <- cumsum(splits)
@@ -43,18 +43,18 @@ splitData <- function(plpData, splits = 2) {
   for (i in 1:length(splits)) {
     writeLines(paste("Creating data objects for group", i))
     sampledIndices <- ffbase::ffwhich(groups, groups == i)
-    
+
     sampledCohorts <- plpData$cohorts[sampledIndices, ]
     sampledRowIds <- sampledCohorts$rowId
-    
+
     idx <- ffbase::ffmatch(x = plpData$outcomes$rowId, table = sampledRowIds)
     idx <- ffbase::ffwhich(idx, !is.na(idx))
     sampledOutcomes <- plpData$outcomes[idx, ]
-    
+
     idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = sampledRowIds)
     idx <- ffbase::ffwhich(idx, !is.na(idx))
     sampledCovariates <- plpData$covariates[idx, ]
-    
+
     if (!is.null(plpData$exclude)) {
       idx <- ffbase::ffmatch(x = plpData$exclude$rowId, table = sampledRowIds)
       idx <- ffbase::ffwhich(idx, !is.na(idx))
@@ -68,7 +68,7 @@ splitData <- function(plpData, splits = 2) {
                         covariates = sampledCovariates,
                         covariateRef = ff::clone.ffdf(plpData$covariateRef),
                         metaData = plpData$metaData)
-    
+
     class(result[[i]]) <- "plpData"
   }
   delta <- Sys.time() - start

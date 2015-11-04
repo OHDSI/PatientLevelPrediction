@@ -19,7 +19,6 @@
 .formatAndCheckCode <- function() {
   OhdsiRTools::formatRFolder()
   OhdsiRTools::checkUsagePackage("PatientLevelPrediction")
-  OhdsiRTools::ohdsiLintrFolder()
 }
 
 .createManualAndVignettes <- function() {
@@ -32,8 +31,8 @@
                     rmarkdown::pdf_document(latex_engine = "pdflatex",
                                             toc = TRUE,
                                             number_sections = TRUE))
-											
- rmarkdown::render("vignettes/CreatingCustomCovariateBuilders.Rmd",
+
+  rmarkdown::render("vignettes/CreatingCustomCovariateBuilders.Rmd",
                     output_file = "../inst/doc/CreatingCustomCovariateBuilders.pdf",
                     rmarkdown::pdf_document(latex_engine = "pdflatex",
                                             toc = TRUE,

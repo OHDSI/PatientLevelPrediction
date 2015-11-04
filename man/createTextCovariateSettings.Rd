@@ -12,9 +12,8 @@ createTextCovariateSettings(language = "eng", removeNegations = TRUE,
 
 \item{removeNegations}{Remove negated text prior to constructing features.}
 
-\item{deleteCovariatesSmallCount}{A numeric value used to remove covariates that
-                                                 occur in both cohorts fewer than
-                                                 deleteCovariateSmallCounts time.}
+\item{deleteCovariatesSmallCount}{A numeric value used to remove covariates that occur in both
+                                    cohorts fewer than deleteCovariateSmallCounts time.}
 }
 \value{
 An object of type \code{covariateSettings}, to be used in other functions.
@@ -23,6 +22,7 @@ An object of type \code{covariateSettings}, to be used in other functions.
 Create text covariate settings
 }
 \details{
-creates an object specifying how covariates should be constructed from text in notes table in the CDM model.
+creates an object specifying how covariates should be constructed from text in notes table in the
+CDM model.
 }
 

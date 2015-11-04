@@ -7,12 +7,14 @@
 normalizeCovariates(covariates)
 }
 \arguments{
-\item{covariates}{An ffdf object as generated using the \code{\link{getDbCovariateData}} function.#'}
+\item{covariates}{An ffdf object as generated using the \code{\link{getDbCovariateData}}
+                    function.#'}
 }
 \description{
 Normalize covariate values
 }
 \details{
-Normalize covariate values by dividing by the max. This is to avoid numeric problems when fitting models.
+Normalize covariate values by dividing by the max. This is to avoid numeric problems when fitting
+models.
 }
 

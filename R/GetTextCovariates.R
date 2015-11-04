@@ -20,9 +20,9 @@
 #'
 #' @description
 #' Uses a bag-of-words approach to construct covariates based on free-text.
-#' 
-#' @param covariateSettings  An object of type \code{covariateSettings} as created using the
-#'                                  \code{\link{createTextCovariateSettings}} function.
+#'
+#' @param covariateSettings   An object of type \code{covariateSettings} as created using the
+#'                            \code{\link{createTextCovariateSettings}} function.
 #'
 #' @template GetCovarParams
 #'
@@ -40,13 +40,13 @@ getDbTextCovariateData <- function(connection,
 #' Create text covariate settings
 #'
 #' @details
-#' creates an object specifying how covariates should be constructed from text in notes table in the CDM model.
+#' creates an object specifying how covariates should be constructed from text in notes table in the
+#' CDM model.
 #'
-#' @param language                                  Specify the language of the free-text. 
-#' @param removeNegations                           Remove negated text prior to constructing features.
-#' @param deleteCovariatesSmallCount                A numeric value used to remove covariates that
-#'                                                  occur in both cohorts fewer than
-#'                                                  deleteCovariateSmallCounts time.
+#' @param language                     Specify the language of the free-text.
+#' @param removeNegations              Remove negated text prior to constructing features.
+#' @param deleteCovariatesSmallCount   A numeric value used to remove covariates that occur in both
+#'                                     cohorts fewer than deleteCovariateSmallCounts time.
 #'
 #' @return
 #' An object of type \code{covariateSettings}, to be used in other functions.
@@ -60,13 +60,13 @@ createTextCovariateSettings <- function(language = "eng",
   for (name in names(formals(createTextCovariateSettings))) {
     covariateSettings[[name]] <- get(name)
   }
-  # Next: overwrite defaults with actual values if specified: 
+  # Next: overwrite defaults with actual values if specified:
   values <- lapply(as.list(match.call())[-1], function(x) eval(x, envir = sys.frame(-3)))
   for (name in names(values)) {
     if (name %in% names(covariateSettings))
       covariateSettings[[name]] <- values[[name]]
   }
-  
+
   attr(covariateSettings, "fun") <- "getDbTextCovariateData"
   class(covariateSettings) <- "covariateSettings"
   return(covariateSettings)

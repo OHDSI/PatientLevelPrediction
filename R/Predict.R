@@ -19,55 +19,55 @@
 #' Create predictive probabilities
 #'
 #' @details
-#' Generates predictions for the population specified in plpData given the model. 
-#' 
-#' @return 
-#' The value column in the result data.frame is: logistic: probabilities of the outcome, 
-#' poisson: Poisson rate (per day) of the outome, survival: hazard rate (per day) of the outcome.
+#' Generates predictions for the population specified in plpData given the model.
+#'
+#' @return
+#' The value column in the result data.frame is: logistic: probabilities of the outcome, poisson:
+#' Poisson rate (per day) of the outome, survival: hazard rate (per day) of the outcome.
 #'
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using
 #'                          \code{\link{fitPredictiveModel}}.
-#' @param plpData        An object of type \code{plpData} as generated using
+#' @param plpData           An object of type \code{plpData} as generated using
 #'                          \code{\link{getDbPlpData}}.
 #' @export
 predictProbabilities <- function(predictiveModel, plpData) {
   start <- Sys.time()
-  
+
   covariates <- plpData$covariates
   cohorts <- plpData$cohorts
-  
+
   if (length(plpData$metaData$cohortIds) > 1) {
     # Filter by cohort ID:
     cohortId <- predictiveModel$cohortId
     t <- cohorts$cohortId == cohortId
     if (!ffbase::any.ff(t)) {
       stop(paste("No cohorts with cohort ID", cohortId))
-    }    
+    }
     cohorts <- cohorts[ffbase::ffwhich(t, t == TRUE), ]
-    
+
     idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
     idx <- ffbase::ffwhich(idx, !is.na(idx))
     covariates <- covariates[idx, ]
   }
-  
+
   if (!is.null(plpData$exclude) && nrow(plpData$exclude) != 0) {
     # Filter subjects with previous outcomes:
     exclude <- plpData$exclude
     outcomeId <- predictiveModel$outcomeId
     t <- exclude$outcomeId == outcomeId
-    if (ffbase::any.ff(t)){
-      exclude <- exclude[ffbase::ffwhich(t, t == TRUE),]
+    if (ffbase::any.ff(t)) {
+      exclude <- exclude[ffbase::ffwhich(t, t == TRUE), ]
       t <- ffbase::ffmatch(x = cohorts$rowId, table = exclude$rowId, nomatch = 0L) > 0L
       if (ffbase::any.ff(t)) {
-        cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE),]
-      }	
+        cohorts <- cohorts[ffbase::ffwhich(t, t == FALSE), ]
+      }
       t <- ffbase::ffmatch(x = covariates$rowId, table = exclude$rowId, nomatch = 0L) > 0L
       if (ffbase::any.ff(t)) {
-        covariates <- covariates[ffbase::ffwhich(t, t == FALSE),]
+        covariates <- covariates[ffbase::ffwhich(t, t == FALSE), ]
       }
     }
   }
-  
+
   prediction <- predictFfdf(predictiveModel$coefficients,
                             cohorts,
                             covariates,
@@ -76,7 +76,7 @@ predictProbabilities <- function(predictiveModel, plpData) {
   attr(prediction, "modelType") <- predictiveModel$modelType
   attr(prediction, "cohortId") <- predictiveModel$cohortId
   attr(prediction, "outcomeId") <- predictiveModel$outcomeId
-  
+
   delta <- Sys.time() - start
   writeLines(paste("Prediction took", signif(delta, 3), attr(delta, "units")))
   return(prediction)
@@ -129,9 +129,9 @@ predictFfdf <- function(coefficients, outcomes, covariates, modelType = "logisti
       return(1/(1 + exp(0 - x)))
     }
     prediction$value <- link(prediction$value)
-  } else if (modelType == "poisson" || modelType == 'survival') {
+  } else if (modelType == "poisson" || modelType == "survival") {
     prediction$value <- exp(prediction$value)
-  } 
+  }
   return(prediction)
 }
 

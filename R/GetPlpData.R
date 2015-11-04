@@ -19,11 +19,11 @@
 #' Get outcomes for persons in the cohort
 #'
 #' @description
-#' Get all the data for the prediction problem from the server. 
+#' Get all the data for the prediction problem from the server.
 #'
 #' @details
-#' For the specified cohorts, retrieve the outcomes of interest and covariates to be used for the prediction
-#' problem.
+#' For the specified cohorts, retrieve the outcomes of interest and covariates to be used for the
+#' prediction problem.
 #'
 #' @param connectionDetails                An R object of type \code{connectionDetails} created using
 #'                                         the function \code{createConnectionDetails} in the
@@ -38,13 +38,14 @@
 #'                                         e.g. "cdm_schema.dbo".
 #' @param cohortTable                      What is the name of the table holding the cohort?
 #' @param cohortIds                        The IDs of the cohorts for which we want to create models.
-#' @param washoutWindow                The mininum required continuous observation time prior to index
-#'                                     date for a person to be included in the cohort.
-#' @param useCohortEndDate          Use the cohort end date as the basis for the end of the risk
-#'                                  window? If FALSE, the cohort start date will be used instead.
-#' @param windowPersistence         The number of days the risk window should persist.
-#' @param covariateSettings         An object of type \code{covariateSettings} as created using the
-#'                                  \code{\link{createCovariateSettings}} function.
+#' @param washoutWindow                    The mininum required continuous observation time prior to
+#'                                         index date for a person to be included in the cohort.
+#' @param useCohortEndDate                 Use the cohort end date as the basis for the end of the risk
+#'                                         window? If FALSE, the cohort start date will be used
+#'                                         instead.
+#' @param windowPersistence                The number of days the risk window should persist.
+#' @param covariateSettings                An object of type \code{covariateSettings} as created using
+#'                                         the \code{\link{createCovariateSettings}} function.
 #' @param outcomeDatabaseSchema            The name of the database schema that is the location where
 #'                                         the data used to define the outcome cohorts is available. If
 #'                                         outcomeTable = CONDITION_ERA, outcomeDatabaseSchema is not
@@ -67,22 +68,19 @@
 #'                                         "5".
 #'
 #' @return
-#' An object of type \code{plpData} containing information on the prediction problem. This object will contain the following data:
-#' 
-#' \describe{ 
-#' \item{cohorts}{An ffdf object listing all persons and their prediction periods. This object will have these fields: 
-#' row_id (a unique ID per period), person_id, cohort_start_date, cohort_id, time (number of days in the window).}
-#' \item{outcomes}{An ffdf object listing all outcomes per period. This object will have these fields: 
-#' row_id, outcome_id, outcome_count, time_to_event.} 
-#' \item{exclude}{Either NULL or an ffdf object listing per outcome ID which windows had the outcome prior
-#' to the window. This object will have these fields: rowId, outcomeId.}
-#' \item{covariates}{An ffdf object listing the baseline covariates per person in the cohorts. This is done using a sparse representation:
-#' covariates with a value of 0 are omitted to save space. The covariates object will have three columns: rowId,
-#' covariateId, and covariateValue. } 
-#' \item{covariateRef}{An ffdf object describing the covariates that have been extracted.} 
-#' \item{metaData}{A list of objects with
-#' information on how the plpData object was constructed.} 
-#' }
+#' An object of type \code{plpData} containing information on the prediction problem. This object will
+#' contain the following data:
+#' \describe{ \item{cohorts}{An ffdf object listing all persons and their prediction periods. This
+#' object will have these fields: row_id (a unique ID per period), person_id, cohort_start_date,
+#' cohort_id, time (number of days in the window).} \item{outcomes}{An ffdf object listing all
+#' outcomes per period. This object will have these fields: row_id, outcome_id, outcome_count,
+#' time_to_event.} \item{exclude}{Either NULL or an ffdf object listing per outcome ID which windows
+#' had the outcome prior to the window. This object will have these fields: rowId, outcomeId.}
+#' \item{covariates}{An ffdf object listing the baseline covariates per person in the cohorts. This is
+#' done using a sparse representation: covariates with a value of 0 are omitted to save space. The
+#' covariates object will have three columns: rowId, covariateId, and covariateValue. }
+#' \item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
+#' \item{metaData}{A list of objects with information on how the plpData object was constructed.} }
 #'
 #' @export
 getDbPlpData <- function(connectionDetails = NULL,
@@ -102,9 +100,9 @@ getDbPlpData <- function(connectionDetails = NULL,
                          firstOutcomeOnly = FALSE,
                          cdmVersion = "4") {
   conn <- connect(connectionDetails)
-  
+
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
-  
+
   if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
     conceptClassId <- "concept_class"
@@ -114,8 +112,8 @@ getDbPlpData <- function(connectionDetails = NULL,
     conceptClassId <- "concept_class_id"
     measurement <- "measurement"
   }
-  
-  
+
+
   ### Create cohort_person temp table, and fetch cohort data ###
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCohorts.sql",
                                                    packageName = "PatientLevelPrediction",
@@ -130,7 +128,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                    window_persistence = windowPersistence,
                                                    cdm_version = cdmVersion,
                                                    cohort_definition_id = cohortDefinitionId)
-  
+
   writeLines("Constructing cohorts of interest")
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Fetching data from server")
@@ -146,11 +144,11 @@ getDbPlpData <- function(connectionDetails = NULL,
   if (nrow(cohorts) != 0) {
     open(cohorts)
   }
-  
+
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-  
-  
+
+
   ### Fetch outcomes ###
   renderedSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
                                                    packageName = "PatientLevelPrediction",
@@ -164,7 +162,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                    first_outcome_only = firstOutcomeOnly,
                                                    cdm_version = cdmVersion,
                                                    cohort_definition_id = cohortDefinitionId)
-  
+
   writeLines("Constructing outcomes")
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Fetching data from server")
@@ -198,18 +196,18 @@ getDbPlpData <- function(connectionDetails = NULL,
   } else {
     exclude <- NULL
   }
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveOutcomeTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
                                                    oracleTempSchema = oracleTempSchema,
                                                    first_outcome_only = firstOutcomeOnly)
   DatabaseConnector::executeSql(conn, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
-  
+
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-  
-  
+
+
   ### Fetch covariates ###
   covariateData <- PatientLevelPrediction::getDbCovariateData(connection = conn,
                                                               oracleTempSchema = oracleTempSchema,
@@ -217,7 +215,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                               rowIdField = "row_id",
                                                               covariateSettings = covariateSettings,
                                                               cdmVersion = cdmVersion)
-  
+
   ### Clean up ###
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
@@ -225,21 +223,21 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                    oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(conn, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
   dummy <- RJDBC::dbDisconnect(conn)
-  
+
   metaData <- list(cohortIds = cohortIds,
                    outcomeIds = outcomeIds,
                    useCohortEndDate = useCohortEndDate,
                    windowPersistence = windowPersistence,
                    deletedCovariateIds = covariateData$metaData$deletedCovariateIds,
                    call = match.call())
-  
+
   result <- list(cohorts = cohorts,
                  outcomes = outcomes,
                  exclude = exclude,
                  covariates = covariateData$covariates,
                  covariateRef = covariateData$covariateRef,
                  metaData = metaData)
-  
+
   class(result) <- "plpData"
   return(result)
 }
@@ -249,10 +247,9 @@ getDbPlpData <- function(connectionDetails = NULL,
 #' @description
 #' \code{savePlpData} saves an object of type plpData to folder.
 #'
-#' @param plpData   An object of type \code{plpData} as generated using
-#'                           \code{getDbPlPData}.
-#' @param file               The name of the folder where the data will be written. The folder should
-#'                           not yet exist.
+#' @param plpData   An object of type \code{plpData} as generated using \code{getDbPlPData}.
+#' @param file      The name of the folder where the data will be written. The folder should not yet
+#'                  exist.
 #'
 #' @details
 #' The data will be written to a set of files in the folder specified by the user.
@@ -268,12 +265,12 @@ savePlpData <- function(plpData, file) {
     stop("Must specify file")
   if (class(plpData) != "plpData")
     stop("Data not of class plpData")
-  
+
   outcomes <- plpData$outcomes
   cohorts <- plpData$cohorts
   covariates <- plpData$covariates
   covariateRef <- plpData$covariateRef
-  if (is.null(plpData$exclude)){
+  if (is.null(plpData$exclude)) {
     ffbase::save.ffdf(outcomes, cohorts, covariates, covariateRef, dir = file)
   } else {
     exclude <- plpData$exclude
@@ -286,8 +283,7 @@ savePlpData <- function(plpData, file) {
 #' Load the PatientLevelPrediction data from a folder
 #'
 #' @description
-#' \code{loadPlPData} loads an object of type \code{plpData} from a folder in the file
-#' system.
+#' \code{loadPlPData} loads an object of type \code{plpData} from a folder in the file system.
 #'
 #' @param file       The name of the folder containing the data.
 #' @param readOnly   If true, the data is opened read only.
@@ -307,10 +303,10 @@ loadPlpData <- function(file, readOnly = FALSE) {
     stop(paste("Cannot find folder", file))
   if (!file.info(file)$isdir)
     stop(paste("Not a folder", file))
-  
+
   temp <- setwd(file)
   absolutePath <- setwd(temp)
-  
+
   e <- new.env()
   ffbase::load.ffdf(absolutePath, e)
   load(file.path(absolutePath, "metaData.Rdata"), e)
@@ -321,19 +317,19 @@ loadPlpData <- function(file, readOnly = FALSE) {
                  metaData = mget("metaData",
                                  envir = e,
                                  ifnotfound = list(NULL))[[1]]  #For backwards compatibility
-  )         
-  if ("exclude" %in% ls(envir = e)){
-    result$exclude <- get("exclude", envir = e)   
+)
+  if ("exclude" %in% ls(envir = e)) {
+    result$exclude <- get("exclude", envir = e)
   }
   # Open all ffdfs to prevent annoying messages later:
   open(result$outcomes, readonly = readOnly)
   open(result$cohorts, readonly = readOnly)
   open(result$covariates, readonly = readOnly)
-  if (!is.null(result$exclude)){
+  if (!is.null(result$exclude)) {
     open(result$exclude, readonly = readOnly)
   }
   open(result$covariateRef, readonly = readOnly)
-  
+
   class(result) <- "plpData"
   rm(e)
   return(result)
@@ -353,20 +349,21 @@ print.plpData <- function(x, ...) {
 summary.plpData <- function(object, ...) {
   subjectCount <- length(ffbase::unique.ff(object$cohorts$personId))
   windowCount <- nrow(object$cohorts)
-  
+
   outcomeCounts <- data.frame(outcomeId = object$metaData$outcomeIds,
                               eventCount = 0,
                               windowCount = 0)
   for (i in 1:nrow(outcomeCounts)) {
     outcomeCounts$eventCount[i] <- ffbase::sum.ff(object$outcomes$outcomeId == object$metaData$outcomeIds[i])
     if (outcomeCounts$eventCount[i] == 0) {
-      outcomeCounts$windowCount[i] <- 0 
+      outcomeCounts$windowCount[i] <- 0
     } else {
       t <- (object$outcomes$outcomeId == object$metaData$outcomeIds[i])
-      outcomeCounts$windowCount[i] <- length(ffbase::unique.ff(object$outcomes$rowId[ffbase::ffwhich(t, t == TRUE)]))
+      outcomeCounts$windowCount[i] <- length(ffbase::unique.ff(object$outcomes$rowId[ffbase::ffwhich(t,
+                                                                                                     t == TRUE)]))
     }
   }
-  
+
   result <- list(metaData = object$metaData,
                  subjectCount = subjectCount,
                  windowCount = windowCount,

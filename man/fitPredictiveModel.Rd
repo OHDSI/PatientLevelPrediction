@@ -17,19 +17,19 @@ fitPredictiveModel(plpData, modelType = "logistic",
 "survival".}
 
 \item{removeDropoutsForLr}{If TRUE and modelType is "logistic", subjects that do not have the full
-observation window (i.e. are censored earlier) and do not have the outcome
-are removed prior to fitting the model.}
+observation window (i.e. are censored earlier) and do not have the
+outcome are removed prior to fitting the model.}
 
 \item{cohortId}{The ID of the specific cohort for which to fit a model.}
 
 \item{outcomeId}{The ID of the specific outcome for which to fit a model.}
 
-\item{prior}{The prior used to fit the model. See \code{\link[Cyclops]{createPrior}} for
-details.}
+\item{prior}{The prior used to fit the model. See \code{\link[Cyclops]{createPrior}}
+for details.}
 
-\item{control}{The control object used to control the cross-validation used to determine the
-                       hyperparameters of the prior (if applicable). See
-                       \code{\link[Cyclops]{createControl}} for details.}
+\item{control}{The control object used to control the cross-validation used to
+                             determine the hyperparameters of the prior (if applicable). See
+                             \code{\link[Cyclops]{createControl}} for details.}
 }
 \description{
 Fit a predictive model

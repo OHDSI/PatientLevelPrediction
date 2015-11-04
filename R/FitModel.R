@@ -18,19 +18,19 @@
 
 #' Fit a predictive model
 #'
-#' @param plpData      An object of type \code{plpData}.
-#' @param modelType       The type of predictive model. Options are "logistic", "poisson", and
-#'                        "survival".
-#' @param removeDropoutsForLr  If TRUE and modelType is "logistic", subjects that do not have the full 
-#'                             observation window (i.e. are censored earlier) and do not have the outcome
-#'                             are removed prior to fitting the model.
-#' @param cohortId        The ID of the specific cohort for which to fit a model.
-#' @param outcomeId       The ID of the specific outcome for which to fit a model.
-#' @param prior           The prior used to fit the model. See \code{\link[Cyclops]{createPrior}} for
-#'                        details.
-#' @param control         The control object used to control the cross-validation used to determine the
-#'                        hyperparameters of the prior (if applicable). See
-#'                        \code{\link[Cyclops]{createControl}} for details.
+#' @param plpData               An object of type \code{plpData}.
+#' @param modelType             The type of predictive model. Options are "logistic", "poisson", and
+#'                              "survival".
+#' @param removeDropoutsForLr   If TRUE and modelType is "logistic", subjects that do not have the full
+#'                              observation window (i.e. are censored earlier) and do not have the
+#'                              outcome are removed prior to fitting the model.
+#' @param cohortId              The ID of the specific cohort for which to fit a model.
+#' @param outcomeId             The ID of the specific outcome for which to fit a model.
+#' @param prior                 The prior used to fit the model. See \code{\link[Cyclops]{createPrior}}
+#'                              for details.
+#' @param control               The control object used to control the cross-validation used to
+#'                              determine the hyperparameters of the prior (if applicable). See
+#'                              \code{\link[Cyclops]{createControl}} for details.
 #'
 #' @export
 fitPredictiveModel <- function(plpData,
@@ -44,16 +44,16 @@ fitPredictiveModel <- function(plpData,
                                control = createControl(noiseLevel = "silent",
                                                        cvType = "auto",
                                                        startingVariance = 0.1)) {
-  if (is.null(cohortId) && length(plpData$metaData$cohortIds) != 1){
+  if (is.null(cohortId) && length(plpData$metaData$cohortIds) != 1) {
     stop("No cohort ID specified, but multiple cohorts found")
   }
-  if (is.null(outcomeId) && length(plpData$metaData$outcomeIds) != 1){
+  if (is.null(outcomeId) && length(plpData$metaData$outcomeIds) != 1) {
     stop("No outcome ID specified, but multiple outcomes found")
   }
-  if (!is.null(cohortId) && !(cohortId %in% plpData$metaData$cohortIds)){
+  if (!is.null(cohortId) && !(cohortId %in% plpData$metaData$cohortIds)) {
     stop("Cohort ID not found")
   }
-  if (!is.null(outcomeId) && !(outcomeId %in% plpData$metaData$outcomeIds)){
+  if (!is.null(outcomeId) && !(outcomeId %in% plpData$metaData$outcomeIds)) {
     stop("Outcome ID not found")
   }
   
@@ -68,7 +68,7 @@ fitPredictiveModel <- function(plpData,
     t <- cohorts$cohortId == cohortId
     if (!ffbase::any.ff(t)) {
       stop(paste("No cohorts with cohort ID", cohortId))
-    }    
+    }
     cohorts <- cohorts[ffbase::ffwhich(t, t == TRUE), ]
     
     idx <- ffbase::ffmatch(x = covariates$rowId, table = cohorts$rowId)
@@ -92,7 +92,7 @@ fitPredictiveModel <- function(plpData,
     if (!is.null(outcomeId)) {
       exclude <- plpData$exclude
       t <- exclude$outcomeId == outcomeId
-      if (ffbase::any.ff(t)){
+      if (ffbase::any.ff(t)) {
         exclude <- exclude[ffbase::ffwhich(t, t == TRUE), ]
         
         t <- ffbase::ffmatch(x = cohorts$rowId, table = exclude$rowId, nomatch = 0L) > 0L
@@ -136,9 +136,9 @@ fitPredictiveModel <- function(plpData,
   
   if (modelType == "logistic" && removeDropoutsForLr) {
     # Select only subjects with observation spanning the full window, or with an outcome:
-    fullWindowLength <- ffbase::max.ff(plpData$cohorts$time) 
+    fullWindowLength <- ffbase::max.ff(plpData$cohorts$time)
     t <- outcomes$y != 0 | outcomes$time == fullWindowLength
-    outcomes <- outcomes[ffbase::ffwhich(t, t == TRUE),]
+    outcomes <- outcomes[ffbase::ffwhich(t, t == TRUE), ]
     
     idx <- ffbase::ffmatch(x = covariates$rowId, table = outcomes$rowId)
     idx <- ffbase::ffwhich(idx, !is.na(idx))
@@ -149,7 +149,7 @@ fitPredictiveModel <- function(plpData,
     cyclopsModelType <- "lr"
   } else {
     cyclopsModelType <- "pr"
-    outcomes$time <- outcomes$time + 1 # Assume same day means duration of 1
+    outcomes$time <- outcomes$time + 1  # Assume same day means duration of 1
   }
   cyclopsData <- convertToCyclopsData(outcomes,
                                       covariates,
@@ -162,15 +162,13 @@ fitPredictiveModel <- function(plpData,
   if (is.null(outcomeId))
     outcomeId <- plpData$metaData$outcomeIds
   trainSetStatistics <- list(numberOfPeriods = nrow(outcomes),
-                             numberOfPeriodsWithOutcomes = ffbase::sum.ff(outcomes$y != 0),
-                             numberOfOutcomes = ffbase::sum.ff(outcomes$y))
+                             numberOfPeriodsWithOutcomes = ffbase::sum.ff(outcomes$y !=
+                                                                            0), numberOfOutcomes = ffbase::sum.ff(outcomes$y))
   predictiveModel <- list(cohortId = cohortId,
                           outcomeId = outcomeId,
                           modelType = modelType,
-                          removeDropouts = (modelType == "logistic" & removeDropoutsForLr),
-                          coefficients = coef(cyclopsFit),
-                          priorVariance = cyclopsFit$variance[1],
-                          trainSetStatistics = trainSetStatistics)
+                          removeDropouts = (modelType ==
+                                              "logistic" & removeDropoutsForLr), coefficients = coef(cyclopsFit), priorVariance = cyclopsFit$variance[1], trainSetStatistics = trainSetStatistics)
   class(predictiveModel) <- append(class(predictiveModel), "predictiveModel")
   delta <- Sys.time() - start
   writeLines(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))
@@ -185,7 +183,7 @@ fitPredictiveModel <- function(plpData,
 #'
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using he
 #'                          \code{\link{fitPredictiveModel}} function.
-#' @param plpData     An object of type \code{plpData} as generated using
+#' @param plpData           An object of type \code{plpData} as generated using
 #'                          \code{\link{getDbPlpData}}.
 #'
 #' @details

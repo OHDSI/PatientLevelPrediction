@@ -33,16 +33,17 @@ e.g. "cdm_schema.dbo".}
 
 \item{cohortIds}{The IDs of the cohorts for which we want to create models.}
 
-\item{washoutWindow}{The mininum required continuous observation time prior to index
-date for a person to be included in the cohort.}
+\item{washoutWindow}{The mininum required continuous observation time prior to
+index date for a person to be included in the cohort.}
 
 \item{useCohortEndDate}{Use the cohort end date as the basis for the end of the risk
-window? If FALSE, the cohort start date will be used instead.}
+window? If FALSE, the cohort start date will be used
+instead.}
 
 \item{windowPersistence}{The number of days the risk window should persist.}
 
-\item{covariateSettings}{An object of type \code{covariateSettings} as created using the
-\code{\link{createCovariateSettings}} function.}
+\item{covariateSettings}{An object of type \code{covariateSettings} as created using
+the \code{\link{createCovariateSettings}} function.}
 
 \item{outcomeDatabaseSchema}{The name of the database schema that is the location where
 the data used to define the outcome cohorts is available. If
@@ -71,28 +72,25 @@ CONDITION_OCCURRENCE.}
                                         "5".}
 }
 \value{
-An object of type \code{plpData} containing information on the prediction problem. This object will contain the following data:
-
-\describe{
-\item{cohorts}{An ffdf object listing all persons and their prediction periods. This object will have these fields:
-row_id (a unique ID per period), person_id, cohort_start_date, cohort_id, time (number of days in the window).}
-\item{outcomes}{An ffdf object listing all outcomes per period. This object will have these fields:
-row_id, outcome_id, outcome_count, time_to_event.}
-\item{exclude}{Either NULL or an ffdf object listing per outcome ID which windows had the outcome prior
-to the window. This object will have these fields: rowId, outcomeId.}
-\item{covariates}{An ffdf object listing the baseline covariates per person in the cohorts. This is done using a sparse representation:
-covariates with a value of 0 are omitted to save space. The covariates object will have three columns: rowId,
-covariateId, and covariateValue. }
+An object of type \code{plpData} containing information on the prediction problem. This object will
+contain the following data:
+\describe{ \item{cohorts}{An ffdf object listing all persons and their prediction periods. This
+object will have these fields: row_id (a unique ID per period), person_id, cohort_start_date,
+cohort_id, time (number of days in the window).} \item{outcomes}{An ffdf object listing all
+outcomes per period. This object will have these fields: row_id, outcome_id, outcome_count,
+time_to_event.} \item{exclude}{Either NULL or an ffdf object listing per outcome ID which windows
+had the outcome prior to the window. This object will have these fields: rowId, outcomeId.}
+\item{covariates}{An ffdf object listing the baseline covariates per person in the cohorts. This is
+done using a sparse representation: covariates with a value of 0 are omitted to save space. The
+covariates object will have three columns: rowId, covariateId, and covariateValue. }
 \item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
-\item{metaData}{A list of objects with
-information on how the plpData object was constructed.}
-}
+\item{metaData}{A list of objects with information on how the plpData object was constructed.} }
 }
 \description{
 Get all the data for the prediction problem from the server.
 }
 \details{
-For the specified cohorts, retrieve the outcomes of interest and covariates to be used for the prediction
-problem.
+For the specified cohorts, retrieve the outcomes of interest and covariates to be used for the
+prediction problem.
 }
 
