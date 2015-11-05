@@ -43,18 +43,13 @@ createPlpSimulationProfile <- function(plpData) {
   outcomeModels <- vector("list", length(plpData$metaData$outcomeIds))
   for (i in 1:length(plpData$metaData$outcomeIds)) {
     outcomeId <- plpData$metaData$outcomeIds[i]
-    # model <- fitPredictiveModel(plpData = plpData, outcomeId = outcomeId, modelType = 'poisson', prior
-    # = Cyclops::createPrior('laplace', exclude = c(0), useCrossValidation = TRUE), control =
-    # Cyclops::createControl(noiseLevel = 'quiet', cvType = 'auto', startingVariance = 0.01, threads =
-    # 10))
     model <- fitPredictiveModel(plpData = plpData,
                                 outcomeId = outcomeId,
                                 modelType = "poisson",
                                 prior = Cyclops::createPrior("laplace",
                                                              exclude = c(0),
-                                                             variance = 0.01))
-    # model$coefficients[1] <- log(ffbase::sum.ff(plpData$outcomes$outcomeCount) /
-    # ffbase::sum.ff(plpData$cohorts$time))
+                                                             useCrossValidation = TRUE),
+                                control = Cyclops::createControl(noiseLevel = "quiet", cvType = "auto", startingVariance = 0.001, threads = 10))
     model$coefficients <- model$coefficients[model$coefficients != 0]
     outcomeModels[[i]] <- model$coefficients
   }

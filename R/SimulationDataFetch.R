@@ -73,7 +73,16 @@
   2 AS cohort_concept_id
   FROM  @cdmDatabaseSchema.condition_occurrence
   WHERE condition_concept_id IN (4108356, 4110189, 4110190, 4110192, 45767658, 45772786) /* Cerebral infarct */
-  AND condition_type_concept_id  = 38000183;
+  AND condition_type_concept_id  IN (38000183,38000199,44786627,38000184,38000200);
+
+  INSERT INTO @resultsDatabaseSchema.mschuemi_stroke
+  SELECT condition_occurrence.person_id AS subject_id,
+  condition_start_date AS cohort_start_date,
+  condition_end_date AS cohort_end_date,
+  3 AS cohort_concept_id
+  FROM  @cdmDatabaseSchema.condition_occurrence
+  WHERE condition_concept_id IN (312327, 434376, 436706, 438170, 438438, 438447, 439693, 441579, 444406) /* Myocardial infarction */
+  AND condition_type_concept_id IN (38000183,38000199,44786627,38000184,38000200);
   "
   sql <- SqlRender::renderSql(sql, 
                               cdmDatabaseSchema = cdmDatabaseSchema,
@@ -161,7 +170,7 @@
                           covariateSettings = covariateSettings,
                           outcomeDatabaseSchema = resultsDatabaseSchema,
                           outcomeTable = "mschuemi_stroke",
-                          outcomeIds = 2,
+                          outcomeIds = c(2,3),
                           firstOutcomeOnly = TRUE,
                           cdmVersion = cdmVersion)
   summary(plpData)
@@ -182,7 +191,7 @@
        file = "C:/Users/mschuemi/git/PatientLevelPrediction/data/plpDataSimulationProfile.rda",
        compress = "xz")
   
-  #plpDataSimulationProfile$outcomeModels[[1]][1]
+  #plpDataSimulationProfile$outcomeModels[[]][1]
   
   
   # load('C:/Users/mschuemi/git/PatientLevelPrediction/data/plpDataSimulationProfile.rda')
