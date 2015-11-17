@@ -35,7 +35,7 @@ PatientLevelPrediction is an R package, with some functions implemented in C++.
 
 System Requirements
 ===================
-Requires R (version 3.1.0 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java.
+Requires R (version 3.2.2 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java.
 
 Dependencies
 ============
