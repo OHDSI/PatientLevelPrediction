@@ -78,10 +78,13 @@ getDbCovariateData <- function(connection,
                                                          tempCovariateData$covariates)
           covariateData$covariateRef <- ffbase::ffdfappend(covariateData$covariateRef,
                                                            tempCovariateData$covariateRef)
-          covariateData$metaData <- mapply(c,
-                                           covariateData$metaData,
-                                           tempCovariateData$metaData,
-                                           SIMPLIFY = FALSE)
+          for (name in names(tempCovariateData$metaData)) {
+            if (is.null(covariateData$metaData[name])) {
+              covariateData$metaData[name] <- tempCovariateData$metaData[name]
+            } else {
+              covariateData$metaData[name] <- list(covariateData$metaData[name], tempCovariateData$metaData[name])
+            }
+          }
         }
       }
     }

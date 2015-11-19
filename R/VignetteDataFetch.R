@@ -203,6 +203,7 @@
                                     cohortTempTable = "cohort_person",
                                     rowIdField = "subject_id",
                                     covariateSettings) {
+    writeLines("Constructing length of observation covariates")
     if (covariateSettings$useLengthOfObs == FALSE) {
       return(NULL)
     }
