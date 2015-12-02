@@ -1,35 +1,29 @@
-# Sample .travis.yml for R projects from https://github.com/craigcitro/r-travis
-
 language: c
-
 before_install:
-  - curl -OL http://raw.github.com/craigcitro/r-travis/master/scripts/travis-tool.sh
-  - chmod 755 ./travis-tool.sh
-  - ./travis-tool.sh bootstrap
-
+- curl -OL http://raw.github.com/craigcitro/r-travis/master/scripts/travis-tool.sh
+- chmod 755 ./travis-tool.sh
+- ./travis-tool.sh bootstrap
 install:
-  - ./travis-tool.sh install_deps
-  - ./travis-tool.sh install_r_binary rJava
-  - ./travis-tool.sh install_github OHDSI/Cyclops
-  - ./travis-tool.sh install_github OHDSI/SqlRender
-  - ./travis-tool.sh install_github OHDSI/DatabaseConnector
-  - ./travis-tool.sh install_github OHDSI/OhdsiRTools
-  - ./travis-tool.sh install_github jimhester/covr
-
+- ./travis-tool.sh install_deps
+- ./travis-tool.sh install_r_binary rJava
+- ./travis-tool.sh install_github OHDSI/Cyclops
+- ./travis-tool.sh install_github OHDSI/SqlRender
+- ./travis-tool.sh install_github OHDSI/DatabaseConnector
+- ./travis-tool.sh install_github OHDSI/OhdsiRTools
+- ./travis-tool.sh install_github jimhester/covr
 script: ./travis-tool.sh run_tests
-
 after_failure:
-  - ./travis-tool.sh dump_logs
-
+- ./travis-tool.sh dump_logs
 notifications:
   recipients:
-    - msuchard@gmail.com
-    - schuemie@ohdsi.org
+  - msuchard@gmail.com
+  - schuemie@ohdsi.org
   email:
     on_success: change
     on_failure: change
-
 after_success:
-  - Rscript -e 'library(covr);codecov()'
-  # Rebuild docker container
-  - curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/development/trigger/e51f720d-c4e7-45df-b042-5d8a362bd7e0/
+- Rscript -e 'library(covr);codecov()'
+- curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/development/trigger/e51f720d-c4e7-45df-b042-5d8a362bd7e0/
+env:
+  global:
+    secure: pEhWT0SZmEpxcK0iclaqIro0HfU9gI555/dxaGm4h6lbJnZOJLTv19o65EV52HJRpTXtuv612bR7jf5+eOIqIkcrzO9XdbLMigp/R/YHkp22RFEZBnnGX9xH/3D6QbeeUaHn0h8goBildzX5q1ZyCVNBIpA7kP418b2pG3rWgaA=

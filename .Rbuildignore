@@ -6,3 +6,4 @@ standalone
 man/CohortMethod.pdf
 man/balanceScatterPlot.png
 man/ps.png
+deploy.sh
