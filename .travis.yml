@@ -11,6 +11,7 @@ install:
 - ./travis-tool.sh install_github OHDSI/DatabaseConnector
 - ./travis-tool.sh install_github OHDSI/OhdsiRTools
 - ./travis-tool.sh install_github jimhester/covr
+- ./travis-tool.sh install_github eddelbuettel/drat
 before_script:
 - export PKG_NAME=$(Rscript -e 'cat(paste0(devtools::as.package(".")$package))')
 - export PKG_TARBALL=$(Rscript -e 'pkg <- devtools::as.package("."); cat(paste0(pkg$package,"_",pkg$version,".tar.gz"))')
