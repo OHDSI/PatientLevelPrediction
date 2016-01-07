@@ -235,6 +235,7 @@ normalizeCovariates <- function(covariates) {
     result <- ffbase::merge.ffdf(covariates, ff::as.ffdf(maxs))
     result$covariateValue <- result$covariateValue/result$maxs
     result$maxs <- NULL
+    attr(result, "normFactors") <- maxs
     return(result)
   }
 }
