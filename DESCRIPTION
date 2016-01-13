@@ -6,7 +6,8 @@ Version: 1.1.0
 Date: 2015-11-4
 Author: Martijn J. Schuemie [aut, cre],
     Marc A. Suchard [aut],
-    Patrick B. Ryan [aut]
+    Patrick B. Ryan [aut],
+    Jenna Reps [aut]
 Maintainer: Martijn J. Schuemie <schuemie@ohdsi.org>
 Description: A package for creating patient level prediction models. Given a
     cohort of interest and an outcome of interest, the package can use data in the
