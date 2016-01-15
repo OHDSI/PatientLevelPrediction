@@ -98,7 +98,7 @@ The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` 
 
 ## Preparing the cohort and outcome of interest
 
-Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. For CDM v4, this means it should have the fields `cohort_concept_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. For CDM v4, the `cohort_concept_id` field must be called `cohort_definition_id`. 
+Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. For CDM v4, this means it should have the fields `cohort_concept_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. For CDM v5, the `cohort_concept_id` field must be called `cohort_definition_id`. 
 
 For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
 
@@ -147,6 +147,7 @@ AND visit_start_date > cohort_start_date
 AND visit_start_date <= cohort_end_date
 AND cohort_concept_id = 1;
 ```
+Note on CDMV5 place_of_service_concept_id should be visit_concept_id.
 
 This is parameterized SQL which can be used by the `SqlRender` package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
 
@@ -158,8 +159,7 @@ sql <- renderSql(sql,
                  cdmDatabaseSchema = cdmDatabaseSchema,
                  cohortsDatabaseSchema = cohortsDatabaseSchema,
                  post_time = 30,
-                 pre_time = 365)
-)$sql
+                 pre_time = 365)$sql
 sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 
 connection <- connect(connectionDetails)
