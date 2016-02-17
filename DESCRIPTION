@@ -35,8 +35,7 @@ Suggests:
     pROC,
     gnm,
     knitr,
-    rmarkdown,
-    OhdsiRTools
+    rmarkdown
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 5.0.1
