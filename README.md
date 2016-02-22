@@ -55,7 +55,6 @@ Getting Started
   library(devtools)
   install_github("ohdsi/SqlRender") 
   install_github("ohdsi/DatabaseConnector") 
-  install_github("ohdsi/OhdsiRTools") 
   install_github("ohdsi/Cyclops") 
   install_github("ohdsi/PatientLevelPrediction") 
   ```

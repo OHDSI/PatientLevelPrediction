@@ -43,11 +43,11 @@ pw <- NULL
 dbms <- "pdw"
 user <- NULL
 server <- "JRDUSAPSCTL01"
-cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
+cdmDatabaseSchema <- "cdm_truven_mdcd_v5.dbo"
 resultsDatabaseSchema <- "scratch.dbo"
 oracleTempSchema <- NULL
 port <- 17001
-cdmVersion <- "4"
+cdmVersion <- "5"
 
 connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                                 server = server,
@@ -65,7 +65,7 @@ connection <- DatabaseConnector::connect(connectionDetails)
 DatabaseConnector::executeSql(connection, sql)
 
 # Check number of subjects per cohort:
-sql <- "SELECT cohort_concept_id, COUNT(*) AS count FROM @resultsDatabaseSchema.rehospitalization GROUP BY cohort_concept_id"
+sql <- "SELECT cohort_definition_id, COUNT(*) AS count FROM @resultsDatabaseSchema.rehospitalization GROUP BY cohort_definition_id"
 sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 DatabaseConnector::querySql(connection, sql)
@@ -155,6 +155,8 @@ savePlpData(parts[[1]], "s:/temp/PlpVignette/plpData_train")
 
 savePlpData(parts[[2]], "s:/temp/PlpVignette/plpData_test")
 
+# parts <- list(); parts[[1]] <- loadPlpData('s:/temp/PlpVignette/plpData_train'); parts[[2]] <- loadPlpData('s:/temp/PlpVignette/plpData_test')
+
 model <- fitPredictiveModel(parts[[1]],
                             modelType = "logistic",
                             prior = createPrior("laplace",
@@ -163,13 +165,16 @@ model <- fitPredictiveModel(parts[[1]],
                             control = createControl(noiseLevel = "quiet",
                                                     cvType = "auto",
                                                     startingVariance = 0.001,
-                                                    threads = 10))
+                                                    tolerance = 1e-07,
+                                                    cvRepetitions = 10,
+                                                    seed = 123,
+                                                    threads = 30))
 
 saveRDS(model, file = "s:/temp/PlpVignette/model.rds")
 
 # model <- readRDS('s:/temp/PlpVignette/model.rds')
 
-# parts <- list(); parts[[2]] <- loadPlpData('s:/temp/PlpVignette/plpData_test')
+
 
 prediction <- predictProbabilities(model, parts[[2]])
 

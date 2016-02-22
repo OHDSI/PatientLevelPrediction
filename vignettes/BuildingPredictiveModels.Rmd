@@ -42,9 +42,9 @@ The `PatientLevelPrediction` package requires longitudinal observational healthc
 1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
 2. Outcomes for which we wish to build a predictive model.
 
-The cohort and outcomes should be provided as data in a table on the server, where the table should have the same structure as the cohort table in the OMOP CDM, meaning it should have the following columns:
+The cohort and outcomes should be provided as data in a table on the server, where the table should have the same structure as the 'cohort' table in the OMOP CDM, meaning it should have the following columns:
 
-- `cohort_concept_id` (CDM v4) or `cohort_concept_id` (CDM v5+), a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
+- `cohort_definition_id` (CDM v5+) or `cohort_concept_id` (CDM v4), a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
 - `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
 - `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
 - `cohort_end_date`, which can be used to determine the end of the prediction window. Can be NULL for outcomes.
@@ -68,7 +68,6 @@ install.packages("devtools")
 library(devtools)
 install_github("ohdsi/SqlRender") 
 install_github("ohdsi/DatabaseConnector") 
-install_github("ohdsi/OhdsiRTools") 
 install_github("ohdsi/Cyclops") 
 install_github("ohdsi/PatientLevelPrediction") 
 ```
@@ -91,14 +90,14 @@ connectionDetails <- createConnectionDetails(dbms = "postgresql",
 
 cdmDatabaseSchema <- "my_cdm_data"
 cohortsDatabaseSchema <- "my_results"
-cdmVersion <- "4"
+cdmVersion <- "5"
 ```
 
 The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` variables,as well as the CDM version. We'll use these later to tell R where the data in CDM format live, where we want to create the cohorts of interest, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
 
 ## Preparing the cohort and outcome of interest
 
-Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. For CDM v4, this means it should have the fields `cohort_concept_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. For CDM v5, the `cohort_concept_id` field must be called `cohort_definition_id`. 
+Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. For CDM v5, this means it should have the fields `cohort_definition_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. For CDM v4, the `cohort_definition_id` field must be called `cohort_concept_id`. 
 
 For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
 
@@ -108,46 +107,46 @@ For this purpose we have created a file called *HospitalizationCohorts.sql* with
 /***********************************
 File HospitalizationCohorts.sql 
 ***********************************/
-IF OBJECT_ID('@cohortsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
-DROP TABLE @cohortsDatabaseSchema.rehospitalization;
-
+IF OBJECT_ID('@resultsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
+	DROP TABLE @resultsDatabaseSchema.rehospitalization;
+	
 SELECT visit_occurrence.person_id AS subject_id,
-MIN(visit_start_date) AS cohort_start_date,
-DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
-1 AS cohort_concept_id
-INTO @cohortsDatabaseSchema.rehospitalization
+	MIN(visit_start_date) AS cohort_start_date,
+	DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
+	1 AS cohort_definition_id
+INTO @resultsDatabaseSchema.rehospitalization
 FROM @cdmDatabaseSchema.visit_occurrence
 INNER JOIN @cdmDatabaseSchema.observation_period
-ON visit_occurrence.person_id = observation_period.person_id
+	ON visit_occurrence.person_id = observation_period.person_id
 INNER JOIN @cdmDatabaseSchema.condition_occurrence
 ON condition_occurrence.person_id = visit_occurrence.person_id 
-WHERE place_of_service_concept_id IN (9201, 9203)
-AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
-AND visit_start_date > observation_period_start_date
-AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
-AND visit_start_date < observation_period_end_date
-AND DATEDIFF(DAY, condition_start_date, visit_start_date) > @pre_time
-AND condition_start_date <= visit_start_date
-AND condition_concept_id IN (
-SELECT descendant_concept_id 
-FROM @cdmDatabaseSchema.concept_ancestor 
-WHERE ancestor_concept_id = 201826) /* Type 2 DM */
+WHERE visit_concept_id IN (9201, 9203)
+	AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
+	AND visit_start_date > observation_period_start_date
+	AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
+	AND visit_start_date < observation_period_end_date
+  AND DATEDIFF(DAY, condition_start_date, visit_start_date) > @pre_time
+  AND condition_start_date <= visit_start_date
+  AND condition_concept_id IN (
+    SELECT descendant_concept_id 
+    FROM @cdmDatabaseSchema.concept_ancestor 
+    WHERE ancestor_concept_id = 201826) /* Type 2 DM */
 GROUP BY visit_occurrence.person_id;
 
-INSERT INTO @cohortsDatabaseSchema.rehospitalization
+INSERT INTO @resultsDatabaseSchema.rehospitalization
 SELECT visit_occurrence.person_id AS subject_id,
-visit_start_date AS cohort_start_date,
-visit_end_date AS cohort_end_date,
-2 AS cohort_concept_id
-FROM @cohortsDatabaseSchema.rehospitalization
+	visit_start_date AS cohort_start_date,
+	visit_end_date AS cohort_end_date,
+	2 AS cohort_definition_id
+FROM @resultsDatabaseSchema.rehospitalization
 INNER JOIN @cdmDatabaseSchema.visit_occurrence
-ON visit_occurrence.person_id = rehospitalization.subject_id
-WHERE place_of_service_concept_id IN (9201, 9203)
-AND visit_start_date > cohort_start_date
-AND visit_start_date <= cohort_end_date
-AND cohort_concept_id = 1;
+	ON visit_occurrence.person_id = rehospitalization.subject_id
+WHERE visit_concept_id IN (9201, 9203)
+	AND visit_start_date > cohort_start_date
+	AND visit_start_date <= cohort_end_date
+	AND cohort_definition_id = 1;
 ```
-Note on CDMV5 place_of_service_concept_id should be visit_concept_id.
+Note on CDM V4 `visit_concept_id` should be `place_of_service_concept_id`, and `cohort_definition_id` should be `cohort_concept_id`.
 
 This is parameterized SQL which can be used by the `SqlRender` package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
 
@@ -171,16 +170,16 @@ In this code, we first read the SQL from the file into memory. In the next line,
 If all went well, we now have a table with the events of interest. We can see how many events per type:
 
 ```{r tidy=FALSE,eval=FALSE}
-sql <- paste("SELECT cohort_concept_id, COUNT(*) AS count",
+sql <- paste("SELECT cohort_definition_id, COUNT(*) AS count",
              "FROM @cohortsDatabaseSchema.rehospitalization",
-             "GROUP BY cohort_concept_id")
+             "GROUP BY cohort_definition_id")
 sql <- renderSql(sql, cohortsDatabaseSchema = cohortsDatabaseSchema)$sql
 sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 
 querySql(connection, sql)
 ```
 ```{r echo=FALSE,message=FALSE}
-data.frame(cohort_concept_id = c(1, 2),count=c(395910, 165350))
+data.frame(cohort_definition_id = c(1, 2),count=c(446375, 186982))
 ```
 
 ## Extracting the data from the server
