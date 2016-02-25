@@ -323,3 +323,119 @@ covariateSettings <- createHdpsCovariateSettings(useCovariateCohortIdIs1 = FALSE
                                                  excludedCovariateConceptIds = c(),
                                                  includedCovariateConceptIds = c(),
                                                  deleteCovariatesSmallCount = 100)
+
+
+
+#### Datafetch for cohort attribute covariate builder #####
+
+library(SqlRender)
+library(DatabaseConnector)
+library(PatientLevelPrediction)
+setwd("s:/temp")
+options(fftempdir = "s:/FFtemp")
+
+pw <- NULL
+dbms <- "sql server"
+user <- NULL
+server <- "RNDUSRDHIT07.jnj.com"
+cdmDatabaseSchema <- "cdm_truven_mdcd.dbo"
+resultsDatabaseSchema <- "scratch.dbo"
+port <- NULL
+
+dbms <- "postgresql"
+server <- "localhost/ohdsi"
+user <- "postgres"
+pw <- "F1r3starter"
+cdmDatabaseSchema <- "cdm4_sim"
+resultsDatabaseSchema <- "scratch"
+port <- NULL
+
+pw <- NULL
+dbms <- "pdw"
+user <- NULL
+server <- "JRDUSAPSCTL01"
+cdmDatabaseSchema <- "cdm_truven_mdcd_v5.dbo"
+cohortDatabaseSchema <- "scratch.dbo"
+oracleTempSchema <- NULL
+port <- 17001
+cdmVersion <- "5"
+
+connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
+                                                                server = server,
+                                                                user = user,
+                                                                password = pw,
+                                                                port = port)
+connection <- DatabaseConnector::connect(connectionDetails)
+
+# Build cohorts:
+sql <- SqlRender::loadRenderTranslateSql("HospitalizationCohorts.sql",
+                                         packageName = "PatientLevelPrediction",
+                                         dbms = dbms,
+                                         cdmDatabaseSchema = cdmDatabaseSchema,
+                                         resultsDatabaseSchema = cohortDatabaseSchema,
+                                         post_time = 30,
+                                         pre_time = 365)
+DatabaseConnector::executeSql(connection, sql)
+
+# Build cohort attributes:
+sql <- SqlRender::loadRenderTranslateSql("LengthOfObsCohortAttr.sql",
+                                         packageName = "PatientLevelPrediction",
+                                         dbms = dbms,
+                                         cdm_database_schema = cdmDatabaseSchema,
+                                         cohort_database_schema = cohortDatabaseSchema,
+                                         cohort_table = "rehospitalization",
+                                         cohort_attribute_table = "loo_cohort_attribute",
+                                         attribute_definition_table = "loo_attribute_definition",
+                                         cohort_definition_ids = c(1,2))
+DatabaseConnector::executeSql(connection, sql)
+
+
+querySql(connection, "SELECT TOP 100 * FROM scratch.dbo.loo_cohort_attribute")
+
+looCovariateSettings <- createCohortAttrCovariateSettings(attrDatabaseSchema = cohortDatabaseSchema,
+                                                          cohortAttrTable = "loo_cohort_attribute",
+                                                          attrDefinitionTable = "loo_attribute_definition",
+                                                          includeAttrIds = c())
+
+plpData <- getDbPlpData(connectionDetails = connectionDetails,
+                        cdmDatabaseSchema = cdmDatabaseSchema,
+                        cohortDatabaseSchema = cohortDatabaseSchema,
+                        cohortTable = "rehospitalization",
+                        cohortIds = 1,
+                        useCohortEndDate = TRUE,
+                        windowPersistence = 0,
+                        covariateSettings = looCovariateSettings,
+                        outcomeDatabaseSchema = cohortDatabaseSchema,
+                        outcomeTable = "rehospitalization",
+                        outcomeIds = 2,
+                        firstOutcomeOnly = TRUE,
+                        cdmVersion = cdmVersion)
+summary(plpData)
+plpData$covariates
+covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
+                                             useCovariateDemographicsGender = TRUE,
+                                             useCovariateDemographicsRace = TRUE,
+                                             useCovariateDemographicsEthnicity = TRUE,
+                                             useCovariateDemographicsAge = TRUE,
+                                             useCovariateDemographicsYear = TRUE,
+                                             useCovariateDemographicsMonth = TRUE)
+looCovariateSettings <- createLooCovariateSettings(useLengthOfObs = TRUE)
+covariateSettingsList <- list(covariateSettings, looCovariateSettings)
+
+plpData <- getDbPlpData(connectionDetails = connectionDetails,
+                        cdmDatabaseSchema = cdmDatabaseSchema,
+                        cohortDatabaseSchema = cohortDatabaseSchema,
+                        cohortTable = "rehospitalization",
+                        cohortIds = 1,
+                        useCohortEndDate = TRUE,
+                        windowPersistence = 0,
+                        covariateSettings = covariateSettingsList,
+                        outcomeDatabaseSchema = cohortDatabaseSchema,
+                        outcomeTable = "rehospitalization",
+                        outcomeIds = 2,
+                        firstOutcomeOnly = TRUE,
+                        cdmVersion = cdmVersion)
+
+sql <- "DROP TABLE @cohort_database_schema.rehospitalization"
+sql <- SqlRender::renderSql(sql, cohort_database_schema = cohortDatabaseSchema)$sql
+sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"))$sql
