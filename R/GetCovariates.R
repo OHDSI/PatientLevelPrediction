@@ -82,7 +82,8 @@ getDbCovariateData <- function(connection,
             if (is.null(covariateData$metaData[name])) {
               covariateData$metaData[name] <- tempCovariateData$metaData[name]
             } else {
-              covariateData$metaData[name] <- list(covariateData$metaData[name], tempCovariateData$metaData[name])
+              covariateData$metaData[name] <- list(covariateData$metaData[name],
+                                                   tempCovariateData$metaData[name])
             }
           }
         }
@@ -227,7 +228,7 @@ byMaxFf <- function(values, bins) {
 #'
 #' @export
 normalizeCovariates <- function(covariates) {
-  if (nrow(covariates) == 0){
+  if (nrow(covariates) == 0) {
     return(covariates)
   } else {
     maxs <- byMaxFf(covariates$covariateValue, covariates$covariateId)

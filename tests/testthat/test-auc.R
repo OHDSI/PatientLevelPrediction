@@ -2,15 +2,12 @@ library("testthat")
 library("pROC")
 
 test_that("AUC", {
-  prediction = runif(100)
-  status = round(runif(100))
+  prediction <- runif(100)
+  status <- round(runif(100))
   rocobj <- roc(status, prediction, algorithm = 3)
   goldStandard <- as.numeric(ci(rocobj, method = "delong"))
-  auc <- .Call("PatientLevelPrediction_auc",
-               PACKAGE = "PatientLevelPrediction",
-               prediction,
-               status)
-  
+  auc <- .Call("PatientLevelPrediction_auc", PACKAGE = "PatientLevelPrediction", prediction, status)
+
   aucWithCi <- .Call("PatientLevelPrediction_aucWithCi",
                      PACKAGE = "PatientLevelPrediction",
                      prediction,

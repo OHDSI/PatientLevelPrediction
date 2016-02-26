@@ -25,7 +25,7 @@ sql <- "SELECT descendant_concept_id FROM @cdm_database_schema.concept_ancestor 
 sql <- SqlRender::renderSql(sql, cdm_database_schema = cdmDatabaseSchema)$sql
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 celecoxibDrugs <- DatabaseConnector::querySql(conn, sql)
-celecoxibDrugs <- celecoxibDrugs[,1]
+celecoxibDrugs <- celecoxibDrugs[, 1]
 RJDBC::dbDisconnect(conn)
 
 covariateSettings <- PatientLevelPrediction::createCovariateSettings(useCovariateDemographics = TRUE,
@@ -93,7 +93,7 @@ plpData <- getDbPlpData(connectionDetails = connectionDetails,
                         outcomeDatabaseSchema = workDatabaseSchema,
                         outcomeTable = studyCohortTable,
                         outcomeIds = 10:16,
-                        firstOutcomeOnly = TRUE, 
+                        firstOutcomeOnly = TRUE,
                         cdmVersion = cdmVersion)
 
 savePlpData(plpData, "s:/temp/plpData")
@@ -103,7 +103,7 @@ plpData <- loadPlpData("s:/temp/plpData")
 plpData
 summary(plpData)
 
-splits <- splitData(plpData, splits = c(0.75,0.25))
+splits <- splitData(plpData, splits = c(0.75, 0.25))
 
 summary(splits[[1]])
 summary(splits[[2]])
@@ -113,9 +113,7 @@ model <- fitPredictiveModel(plpData = splits[[1]],
                             removeDropoutsForLr = TRUE,
                             cohortId = 1,
                             outcomeId = 10,
-                            prior = createPrior("laplace",
-                                                exclude = c(0),
-                                                variance = 0.007))
+                            prior = createPrior("laplace", exclude = c(0), variance = 0.007))
 
 saveRDS(model, file = "s:/temp/plpTestmodel.rds")
 
@@ -126,6 +124,10 @@ prediction <- predictProbabilities(model, splits[[2]])
 
 saveRDS(prediction, file = "s:/temp/plpTestPredicition.rds")
 
-prediction <- readRDS('s:/temp/plpTestPredicition.rds')
+prediction <- readRDS("s:/temp/plpTestPredicition.rds")
 
-plotCalibration(prediction, splits[[2]], numberOfStrata = 10, truncateFraction = 0.01, fileName = "s:/temp/calibration.png")  
+plotCalibration(prediction,
+                splits[[2]],
+                numberOfStrata = 10,
+                truncateFraction = 0.01,
+                fileName = "s:/temp/calibration.png")

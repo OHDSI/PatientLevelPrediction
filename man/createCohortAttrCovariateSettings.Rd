@@ -9,7 +9,8 @@ createCohortAttrCovariateSettings(attrDatabaseSchema,
   cohortAttrTable = "cohort_attribute", includeAttrIds = c())
 }
 \arguments{
-\item{attrDatabaseSchema}{The database schema where the attribute definition and cohort attribute table can be found.}
+\item{attrDatabaseSchema}{The database schema where the attribute definition and cohort attribute
+table can be found.}
 
 \item{attrDefinitionTable}{The name of the attribute definition table.}
 
@@ -24,20 +25,16 @@ An object of type \code{covariateSettings}, to be used in other functions.
 Create cohort attribute covariate settings
 }
 \details{
-Creates an object specifying where the cohort attributes can be found to construct covariates. The attributes should be defined
-in a table with the same structure as the attribute_definition table in the Common Data Model. It should at least have these columns:
-\describe{
-\item{attribute_definition_id}{A unique identifier of type integer.}
-\item{attribute_name}{A short description of the attribute.}
-}
-The cohort attributes themselves should be stored in a table with the same format as the cohort_attribute table in the Common 
-Data Model. It should at least have these columns:
-\describe{
-\item{cohort_definition_id}{A key to link to the cohort table. On CDM v4, this field should be called \code{cohort_concept_id}.}
-\item{subject_id}{A key to link to the cohort table.}
-\item{cohort_start_date}{A key to link to the cohort table.}
+Creates an object specifying where the cohort attributes can be found to construct covariates. The
+attributes should be defined in a table with the same structure as the attribute_definition table
+in the Common Data Model. It should at least have these columns: \describe{
+\item{attribute_definition_id}{A unique identifier of type integer.} \item{attribute_name}{A short
+description of the attribute.} } The cohort attributes themselves should be stored in a table with
+the same format as the cohort_attribute table in the Common Data Model. It should at least have
+these columns: \describe{ \item{cohort_definition_id}{A key to link to the cohort table. On CDM v4,
+this field should be called \code{cohort_concept_id}.} \item{subject_id}{A key to link to the
+cohort table.} \item{cohort_start_date}{A key to link to the cohort table.}
 \item{attribute_definition_id}{An foreign key linking to the attribute definition table.}
-\item{value_as_number}{A real number.}
-}
+\item{value_as_number}{A real number.} }
 }
 

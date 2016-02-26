@@ -41,7 +41,7 @@ getDbCohortAttrCovariatesData <- function(connection,
   if (substr(cohortTempTable, 1, 1) != "#") {
     cohortTempTable <- paste("#", cohortTempTable, sep = "")
   }
-  
+
   if (is.null(covariateSettings$includeAttrIds) || length(covariateSettings$includeAttrIds) == 0) {
     hasIncludeAttrIds <- FALSE
   } else {
@@ -56,7 +56,7 @@ getDbCohortAttrCovariatesData <- function(connection,
                                    tempTable = TRUE,
                                    oracleTempSchema = oracleTempSchema)
   }
-  
+
   renderedSql <- SqlRender::loadRenderTranslateSql("GetAttrCovariates.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(connection, "dbms"),
@@ -67,11 +67,11 @@ getDbCohortAttrCovariatesData <- function(connection,
                                                    row_id_field = rowIdField,
                                                    cohort_attribute_table = covariateSettings$cohortAttrTable,
                                                    has_include_attr_ids = hasIncludeAttrIds)
-  
+
   covariates <- DatabaseConnector::querySql.ffdf(connection, renderedSql)
-  
+
   covariateRefSql <- "SELECT attribute_definition_id AS covariate_id, attribute_name AS covariate_name FROM @attr_database_schema.@attr_definition_table ORDER BY attribute_definition_id"
-  covariateRefSql <- SqlRender::renderSql(covariateRefSql, 
+  covariateRefSql <- SqlRender::renderSql(covariateRefSql,
                                           attr_database_schema = covariateSettings$attrDatabaseSchema,
                                           attr_definition_table = covariateSettings$attrDefinitionTable)$sql
   covariateRefSql <- SqlRender::translateSql(sql = covariateRefSql,
@@ -79,20 +79,20 @@ getDbCohortAttrCovariatesData <- function(connection,
                                              targetDialect = attr(connection, "dbms"),
                                              oracleTempSchema = oracleTempSchema)$sql
   covariateRef <- DatabaseConnector::querySql.ffdf(connection, covariateRefSql)
-  
+
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
-  
+
   sql <- "SELECT COUNT_BIG(*) FROM @cohort_temp_table"
   sql <- SqlRender::renderSql(sql, cohort_temp_table = cohortTempTable)$sql
   sql <- SqlRender::translateSql(sql,
                                  targetDialect = attr(connection, "dbms"),
                                  oracleTempSchema = oracleTempSchema)$sql
   populationSize <- DatabaseConnector::querySql(connection, sql)[1, 1]
-  
+
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-  
+
   # Remove redundant covariates
   writeLines("Removing redundant covariates")
   deletedCovariateIds <- c()
@@ -122,32 +122,29 @@ getDbCohortAttrCovariatesData <- function(connection,
 #' Create cohort attribute covariate settings
 #'
 #' @details
-#' Creates an object specifying where the cohort attributes can be found to construct covariates. The attributes should be defined
-#' in a table with the same structure as the attribute_definition table in the Common Data Model. It should at least have these columns:
-#' \describe{
-#' \item{attribute_definition_id}{A unique identifier of type integer.}
-#' \item{attribute_name}{A short description of the attribute.}
-#' }
-#' The cohort attributes themselves should be stored in a table with the same format as the cohort_attribute table in the Common 
-#' Data Model. It should at least have these columns:
-#' \describe{
-#' \item{cohort_definition_id}{A key to link to the cohort table. On CDM v4, this field should be called \code{cohort_concept_id}.}
-#' \item{subject_id}{A key to link to the cohort table.}
-#' \item{cohort_start_date}{A key to link to the cohort table.}
+#' Creates an object specifying where the cohort attributes can be found to construct covariates. The
+#' attributes should be defined in a table with the same structure as the attribute_definition table
+#' in the Common Data Model. It should at least have these columns: \describe{
+#' \item{attribute_definition_id}{A unique identifier of type integer.} \item{attribute_name}{A short
+#' description of the attribute.} } The cohort attributes themselves should be stored in a table with
+#' the same format as the cohort_attribute table in the Common Data Model. It should at least have
+#' these columns: \describe{ \item{cohort_definition_id}{A key to link to the cohort table. On CDM v4,
+#' this field should be called \code{cohort_concept_id}.} \item{subject_id}{A key to link to the
+#' cohort table.} \item{cohort_start_date}{A key to link to the cohort table.}
 #' \item{attribute_definition_id}{An foreign key linking to the attribute definition table.}
-#' \item{value_as_number}{A real number.}
-#' }
+#' \item{value_as_number}{A real number.} }
 #'
-#' @param attrDatabaseSchema  The database schema where the attribute definition and cohort attribute table can be found.
-#' @param attrDefinitionTable       The name of the attribute definition table.
-#' @param cohortAttrTable           The name of the cohort attribute table.
-#' @param includeAttrIds            (optional) A list of attribute definition IDs to restrict to.
-#' 
+#' @param attrDatabaseSchema    The database schema where the attribute definition and cohort attribute
+#'                              table can be found.
+#' @param attrDefinitionTable   The name of the attribute definition table.
+#' @param cohortAttrTable       The name of the cohort attribute table.
+#' @param includeAttrIds        (optional) A list of attribute definition IDs to restrict to.
+#'
 #' @return
 #' An object of type \code{covariateSettings}, to be used in other functions.
 #'
 #' @export
-createCohortAttrCovariateSettings <- function(attrDatabaseSchema, 
+createCohortAttrCovariateSettings <- function(attrDatabaseSchema,
                                               attrDefinitionTable = "attribute_definition",
                                               cohortAttrTable = "cohort_attribute",
                                               includeAttrIds = c()) {
@@ -162,7 +159,7 @@ createCohortAttrCovariateSettings <- function(attrDatabaseSchema,
     if (name %in% names(covariateSettings))
       covariateSettings[[name]] <- values[[name]]
   }
-  
+
   attr(covariateSettings, "fun") <- "getDbCohortAttrCovariatesData"
   class(covariateSettings) <- "covariateSettings"
   return(covariateSettings)

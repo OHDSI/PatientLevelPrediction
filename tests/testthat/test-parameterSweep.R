@@ -32,47 +32,51 @@ test_that("plpData functions", {
 test_that("modelfitting and prediction functions", {
   prior <- createPrior("laplace", 0.01, exclude = 0)
 
-  lrModel <- fitPredictiveModel(plpData, modelType = "logistic", removeDropoutsForLr = FALSE, outcomeId = 2, prior = prior)
+  lrModel <- fitPredictiveModel(plpData,
+                                modelType = "logistic",
+                                removeDropoutsForLr = FALSE,
+                                outcomeId = 2,
+                                prior = prior)
   expect_is(lrModel, "predictiveModel")
-    
+
   lrModel <- fitPredictiveModel(plpData, modelType = "logistic", outcomeId = 2, prior = prior)
   expect_is(lrModel, "predictiveModel")
-  
+
   prModel <- fitPredictiveModel(plpData, modelType = "poisson", outcomeId = 2, prior = prior)
   expect_is(prModel, "predictiveModel")
-  
+
   survModel <- fitPredictiveModel(plpData, modelType = "survival", outcomeId = 2, prior = prior)
   expect_is(survModel, "predictiveModel")
-  
+
   expect_false(identical(lrModel$coefficients, prModel$coefficients))
   expect_false(identical(lrModel$coefficients, survModel$coefficients))
-  
+
   lrPrediction <- predictProbabilities(lrModel, plpData)
   expect_is(lrPrediction, "data.frame")
-  
+
   prPrediction <- predictProbabilities(prModel, plpData)
   expect_is(prPrediction, "data.frame")
-  
+
   survPrediction <- predictProbabilities(survModel, plpData)
   expect_is(survPrediction, "data.frame")
 })
 
 test_that("model evaluation functions", {
   prior <- createPrior("laplace", 0.01, exclude = 0)
-  
-  splits <- splitData(plpData, c(0.5,0.5))  
+
+  splits <- splitData(plpData, c(0.5, 0.5))
   lrModel <- fitPredictiveModel(splits[[1]], modelType = "logistic", outcomeId = 2, prior = prior)
-  
-  lrPrediction <- predictProbabilities(lrModel, splits[[2]])  
+
+  lrPrediction <- predictProbabilities(lrModel, splits[[2]])
   auc <- computeAuc(lrPrediction, splits[[2]])
   expect_equal(auc > 0.7, TRUE)
-  
+
   plot <- plotCalibration(lrPrediction, splits[[2]])
   expect_is(plot, "ggplot")
-  
+
   plot <- plotRoc(lrPrediction, splits[[2]])
   expect_is(plot, "ggplot")
-})  
+})
 
 test_that("covariate means functions", {
   means <- computeCovariateMeans(plpData, outcomeId = 2)

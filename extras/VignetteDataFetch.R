@@ -136,7 +136,7 @@ plpData <- getDbPlpData(connectionDetails = connectionDetails,
                         outcomeDatabaseSchema = resultsDatabaseSchema,
                         outcomeTable = "rehospitalization",
                         outcomeIds = 2,
-                        firstOutcomeOnly = FALSE, 
+                        firstOutcomeOnly = FALSE,
                         cdmVersion = cdmVersion)
 
 savePlpData(plpData, "s:/temp/PlpVignette/plpData")
@@ -147,7 +147,7 @@ means <- computeCovariateMeans(plpData = plpData, outcomeId = 2)
 
 saveRDS(means, "s:/temp/PlpVignette/means.rds")
 
-#plotCovariateDifferenceOfTopVariables(means)
+# plotCovariateDifferenceOfTopVariables(means)
 
 parts <- splitData(plpData, c(0.75, 0.25))
 
@@ -155,7 +155,8 @@ savePlpData(parts[[1]], "s:/temp/PlpVignette/plpData_train")
 
 savePlpData(parts[[2]], "s:/temp/PlpVignette/plpData_test")
 
-# parts <- list(); parts[[1]] <- loadPlpData('s:/temp/PlpVignette/plpData_train'); parts[[2]] <- loadPlpData('s:/temp/PlpVignette/plpData_test')
+# parts <- list(); parts[[1]] <- loadPlpData('s:/temp/PlpVignette/plpData_train'); parts[[2]] <-
+# loadPlpData('s:/temp/PlpVignette/plpData_test')
 
 model <- fitPredictiveModel(parts[[1]],
                             modelType = "logistic",
@@ -212,14 +213,14 @@ getDbLooCovariateData <- function(connection,
   if (covariateSettings$useLengthOfObs == FALSE) {
     return(NULL)
   }
-  
+
   # Temp table names must start with a '#' in SQL Server, our source dialect:
   if (substr(cohortTempTable, 1, 1) != "#") {
     cohortTempTable <- paste("#", cohortTempTable, sep = "")
   }
-  
+
   # Some SQL to construct the covariate:
-  sql <- paste("SELECT @row_id_field AS row_id, 1 AS covariate_id,", 
+  sql <- paste("SELECT @row_id_field AS row_id, 1 AS covariate_id,",
                "DATEDIFF(DAY, cohort_start_date, observation_period_start_date)",
                "AS covariate_value",
                "FROM @cohort_temp_table c",
@@ -227,29 +228,27 @@ getDbLooCovariateData <- function(connection,
                "ON op.person_id = c.subject_id",
                "WHERE cohort_start_date >= observation_period_start_date",
                "AND cohort_start_date <= observation_period_end_date")
-  sql <- SqlRender::renderSql(sql, 
+  sql <- SqlRender::renderSql(sql,
                               cohort_temp_table = cohortTempTable,
                               row_id_field = rowIdField,
                               cdm_database_schema = cdmDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"))$sql
-  
+
   # Retrieve the covariate:
   covariates <- DatabaseConnector::querySql.ffdf(connection, sql)
-  
+
   # Convert colum names to camelCase:
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
-  
+
   # Construct covariate reference:
-  covariateRef <- data.frame(covariateId = 1, 
+  covariateRef <- data.frame(covariateId = 1,
                              covariateName = "Length of observation",
-                             analysisId = 1, 
+                             analysisId = 1,
                              conceptId = 0)
   covariateRef <- ff::as.ffdf(covariateRef)
-  
+
   metaData <- list(sql = sql, call = match.call())
-  result <- list(covariates = covariates, 
-                 covariateRef = covariateRef, 
-                 metaData = metaData)
+  result <- list(covariates = covariates, covariateRef = covariateRef, metaData = metaData)
   class(result) <- "covariateData"
   return(result)
 }
@@ -386,7 +385,7 @@ sql <- SqlRender::loadRenderTranslateSql("LengthOfObsCohortAttr.sql",
                                          cohort_table = "rehospitalization",
                                          cohort_attribute_table = "loo_cohort_attribute",
                                          attribute_definition_table = "loo_attribute_definition",
-                                         cohort_definition_ids = c(1,2))
+                                         cohort_definition_ids = c(1, 2))
 DatabaseConnector::executeSql(connection, sql)
 
 

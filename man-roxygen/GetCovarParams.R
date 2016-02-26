@@ -2,8 +2,8 @@
 #' This function uses the data in the CDM to construct a large set of covariates for the provided
 #' cohort. The cohort is assumed to be in an existing temp table with these fields: 'subject_id',
 #' 'cohort_definition_id', 'cohort_start_date'. Optionally, an extra field can be added containing the
-#' unique identifier that will be used as rowID in the output.
-#' This function is called automatically by the \code{\link{getDbPlpData}} function.
+#' unique identifier that will be used as rowID in the output. This function is called automatically
+#' by the \code{\link{getDbPlpData}} function.
 #'
 #' @param connection          A connection to the server containing the schema as created using the
 #'                            \code{connect} function in the \code{DatabaseConnector} package.

@@ -73,17 +73,16 @@ CONDITION_OCCURRENCE.}
 }
 \value{
 An object of type \code{plpData} containing information on the prediction problem. This object will
-contain the following data:
-\describe{ \item{cohorts}{An ffdf object listing all persons and their prediction periods. This
-object will have these fields: row_id (a unique ID per period), person_id, cohort_start_date,
-cohort_id, time (number of days in the window).} \item{outcomes}{An ffdf object listing all
-outcomes per period. This object will have these fields: row_id, outcome_id, outcome_count,
-time_to_event.} \item{exclude}{Either NULL or an ffdf object listing per outcome ID which windows
-had the outcome prior to the window. This object will have these fields: rowId, outcomeId.}
-\item{covariates}{An ffdf object listing the baseline covariates per person in the cohorts. This is
-done using a sparse representation: covariates with a value of 0 are omitted to save space. The
-covariates object will have three columns: rowId, covariateId, and covariateValue. }
-\item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
+contain the following data: \describe{ \item{cohorts}{An ffdf object listing all persons and their
+prediction periods. This object will have these fields: row_id (a unique ID per period), person_id,
+cohort_start_date, cohort_id, time (number of days in the window).} \item{outcomes}{An ffdf object
+listing all outcomes per period. This object will have these fields: row_id, outcome_id,
+outcome_count, time_to_event.} \item{exclude}{Either NULL or an ffdf object listing per outcome ID
+which windows had the outcome prior to the window. This object will have these fields: rowId,
+outcomeId.} \item{covariates}{An ffdf object listing the baseline covariates per person in the
+cohorts. This is done using a sparse representation: covariates with a value of 0 are omitted to
+save space. The covariates object will have three columns: rowId, covariateId, and covariateValue.
+} \item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
 \item{metaData}{A list of objects with information on how the plpData object was constructed.} }
 }
 \description{

@@ -37,8 +37,8 @@ createPlpSimulationProfile <- function(plpData) {
   sums <- bySumFf(plpData$covariates$covariateValue, plpData$covariates$covariateId)
   covariatePrevalence <- sums$sums/nrow(plpData$cohorts)
   attr(covariatePrevalence, "names") <- sums$bins
-
-
+  
+  
   writeLines("Fitting outcome model(s)")
   outcomeModels <- vector("list", length(plpData$metaData$outcomeIds))
   for (i in 1:length(plpData$metaData$outcomeIds)) {
@@ -49,14 +49,17 @@ createPlpSimulationProfile <- function(plpData) {
                                 prior = Cyclops::createPrior("laplace",
                                                              exclude = c(0),
                                                              useCrossValidation = TRUE),
-                                control = Cyclops::createControl(noiseLevel = "quiet", cvType = "auto", startingVariance = 0.001, threads = 10))
+                                control = Cyclops::createControl(noiseLevel = "quiet",
+                                                                 cvType = "auto",
+                                                                 startingVariance = 0.001,
+                                                                 threads = 10))
     model$coefficients <- model$coefficients[model$coefficients != 0]
     outcomeModels[[i]] <- model$coefficients
   }
-
+  
   writeLines("Computing time distribution")
   timePrevalence <- table(ff::as.ram(plpData$cohorts$time))/nrow(plpData$cohorts)
-
+  
   if (!is.null(plpData$exclude)) {
     writeLines("Computing prevalence of exlusion")
     exclusionPrevalence <- table(ff::as.ram(plpData$exclude$outcomeId))/nrow(plpData$cohorts)
@@ -96,7 +99,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   # ffdf
   writeLines("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariatePrevalence
-
+  
   personsPerCov <- rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
   personsPerCov[personsPerCov > n] <- n
   rowId <- sapply(personsPerCov, function(x, n) sample.int(size = x, n), n = n)
@@ -112,14 +115,14 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   covariates <- ff::as.ffdf(data.frame(rowId = rowId,
                                        covariateId = covariateId,
                                        covariateValue = covariateValue))
-
+  
   writeLines("Generating cohorts")
   cohorts <- data.frame(rowId = 1:n, personId = 2e+10 + (1:n), cohortId = 1)
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
   r <- runif(n)
   cohorts$time <- as.numeric(as.character(cut(r, breaks = c(0, breaks), labels = names(breaks))))
   cohorts <- ff::as.ffdf(cohorts)
-
+  
   writeLines("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
@@ -136,7 +139,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
     outcomes <- outcomes[, c("rowId", "outcomeId", "outcomeCount", "timeToEvent")]
     allOutcomes <- rbind(allOutcomes, outcomes)
   }
-
+  
   if (!is.null(plpDataSimulationProfile$exclusionPrevalence)) {
     writeLines("Generating exclusion")
     exclude <- data.frame()
@@ -153,14 +156,14 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   rownames(covariates) <- NULL
   rownames(exclude) <- NULL
   rownames(plpDataSimulationProfile$covariateRef) <- NULL
-
+  
   result <- list(outcomes = ff::as.ffdf(allOutcomes),
                  cohorts = ff::as.ffdf(cohorts),
                  covariates = ff::as.ffdf(covariates),
                  exclude = ff::as.ffdf(exclude),
                  covariateRef = ff::as.ffdf(plpDataSimulationProfile$covariateRef),
                  metaData = plpDataSimulationProfile$metaData)
-
+  
   class(result) <- "plpData"
   return(result)
 }

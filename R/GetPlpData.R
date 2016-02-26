@@ -69,17 +69,16 @@
 #'
 #' @return
 #' An object of type \code{plpData} containing information on the prediction problem. This object will
-#' contain the following data:
-#' \describe{ \item{cohorts}{An ffdf object listing all persons and their prediction periods. This
-#' object will have these fields: row_id (a unique ID per period), person_id, cohort_start_date,
-#' cohort_id, time (number of days in the window).} \item{outcomes}{An ffdf object listing all
-#' outcomes per period. This object will have these fields: row_id, outcome_id, outcome_count,
-#' time_to_event.} \item{exclude}{Either NULL or an ffdf object listing per outcome ID which windows
-#' had the outcome prior to the window. This object will have these fields: rowId, outcomeId.}
-#' \item{covariates}{An ffdf object listing the baseline covariates per person in the cohorts. This is
-#' done using a sparse representation: covariates with a value of 0 are omitted to save space. The
-#' covariates object will have three columns: rowId, covariateId, and covariateValue. }
-#' \item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
+#' contain the following data: \describe{ \item{cohorts}{An ffdf object listing all persons and their
+#' prediction periods. This object will have these fields: row_id (a unique ID per period), person_id,
+#' cohort_start_date, cohort_id, time (number of days in the window).} \item{outcomes}{An ffdf object
+#' listing all outcomes per period. This object will have these fields: row_id, outcome_id,
+#' outcome_count, time_to_event.} \item{exclude}{Either NULL or an ffdf object listing per outcome ID
+#' which windows had the outcome prior to the window. This object will have these fields: rowId,
+#' outcomeId.} \item{covariates}{An ffdf object listing the baseline covariates per person in the
+#' cohorts. This is done using a sparse representation: covariates with a value of 0 are omitted to
+#' save space. The covariates object will have three columns: rowId, covariateId, and covariateValue.
+#' } \item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
 #' \item{metaData}{A list of objects with information on how the plpData object was constructed.} }
 #'
 #' @export
@@ -100,9 +99,9 @@ getDbPlpData <- function(connectionDetails = NULL,
                          firstOutcomeOnly = FALSE,
                          cdmVersion = "4") {
   conn <- connect(connectionDetails)
-
+  
   cdmDatabase <- strsplit(cdmDatabaseSchema, "\\.")[[1]][1]
-
+  
   if (cdmVersion == "4") {
     cohortDefinitionId <- "cohort_concept_id"
     conceptClassId <- "concept_class"
@@ -112,8 +111,8 @@ getDbPlpData <- function(connectionDetails = NULL,
     conceptClassId <- "concept_class_id"
     measurement <- "measurement"
   }
-
-
+  
+  
   ### Create cohort_person temp table, and fetch cohort data ###
   renderedSql <- SqlRender::loadRenderTranslateSql("GetCohorts.sql",
                                                    packageName = "PatientLevelPrediction",
@@ -128,7 +127,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                    window_persistence = windowPersistence,
                                                    cdm_version = cdmVersion,
                                                    cohort_definition_id = cohortDefinitionId)
-
+  
   writeLines("Constructing cohorts of interest")
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Fetching data from server")
@@ -144,11 +143,11 @@ getDbPlpData <- function(connectionDetails = NULL,
   if (nrow(cohorts) != 0) {
     open(cohorts)
   }
-
+  
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-
-
+  
+  
   ### Fetch outcomes ###
   renderedSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
                                                    packageName = "PatientLevelPrediction",
@@ -162,7 +161,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                    first_outcome_only = firstOutcomeOnly,
                                                    cdm_version = cdmVersion,
                                                    cohort_definition_id = cohortDefinitionId)
-
+  
   writeLines("Constructing outcomes")
   DatabaseConnector::executeSql(conn, renderedSql)
   writeLines("Fetching data from server")
@@ -196,18 +195,18 @@ getDbPlpData <- function(connectionDetails = NULL,
   } else {
     exclude <- NULL
   }
-
+  
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveOutcomeTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = attr(conn, "dbms"),
                                                    oracleTempSchema = oracleTempSchema,
                                                    first_outcome_only = firstOutcomeOnly)
   DatabaseConnector::executeSql(conn, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
-
+  
   delta <- Sys.time() - start
   writeLines(paste("Loading took", signif(delta, 3), attr(delta, "units")))
-
-
+  
+  
   ### Fetch covariates ###
   covariateData <- PatientLevelPrediction::getDbCovariateData(connection = conn,
                                                               oracleTempSchema = oracleTempSchema,
@@ -215,7 +214,7 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                               rowIdField = "row_id",
                                                               covariateSettings = covariateSettings,
                                                               cdmVersion = cdmVersion)
-
+  
   ### Clean up ###
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
@@ -223,21 +222,21 @@ getDbPlpData <- function(connectionDetails = NULL,
                                                    oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(conn, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
   dummy <- RJDBC::dbDisconnect(conn)
-
+  
   metaData <- list(cohortIds = cohortIds,
                    outcomeIds = outcomeIds,
                    useCohortEndDate = useCohortEndDate,
                    windowPersistence = windowPersistence,
                    deletedCovariateIds = covariateData$metaData$deletedCovariateIds,
                    call = match.call())
-
+  
   result <- list(cohorts = cohorts,
                  outcomes = outcomes,
                  exclude = exclude,
                  covariates = covariateData$covariates,
                  covariateRef = covariateData$covariateRef,
                  metaData = metaData)
-
+  
   class(result) <- "plpData"
   return(result)
 }
@@ -265,7 +264,7 @@ savePlpData <- function(plpData, file) {
     stop("Must specify file")
   if (class(plpData) != "plpData")
     stop("Data not of class plpData")
-
+  
   outcomes <- plpData$outcomes
   cohorts <- plpData$cohorts
   covariates <- plpData$covariates
@@ -303,10 +302,10 @@ loadPlpData <- function(file, readOnly = FALSE) {
     stop(paste("Cannot find folder", file))
   if (!file.info(file)$isdir)
     stop(paste("Not a folder", file))
-
+  
   temp <- setwd(file)
   absolutePath <- setwd(temp)
-
+  
   e <- new.env()
   ffbase::load.ffdf(absolutePath, e)
   load(file.path(absolutePath, "metaData.Rdata"), e)
@@ -317,7 +316,7 @@ loadPlpData <- function(file, readOnly = FALSE) {
                  metaData = mget("metaData",
                                  envir = e,
                                  ifnotfound = list(NULL))[[1]]  #For backwards compatibility
-)
+  )
   if ("exclude" %in% ls(envir = e)) {
     result$exclude <- get("exclude", envir = e)
   }
@@ -329,7 +328,7 @@ loadPlpData <- function(file, readOnly = FALSE) {
     open(result$exclude, readonly = readOnly)
   }
   open(result$covariateRef, readonly = readOnly)
-
+  
   class(result) <- "plpData"
   rm(e)
   return(result)
@@ -349,7 +348,7 @@ print.plpData <- function(x, ...) {
 summary.plpData <- function(object, ...) {
   subjectCount <- length(ffbase::unique.ff(object$cohorts$personId))
   windowCount <- nrow(object$cohorts)
-
+  
   outcomeCounts <- data.frame(outcomeId = object$metaData$outcomeIds,
                               eventCount = 0,
                               windowCount = 0)
@@ -363,7 +362,7 @@ summary.plpData <- function(object, ...) {
                                                                                                      t == TRUE)]))
     }
   }
-
+  
   result <- list(metaData = object$metaData,
                  subjectCount = subjectCount,
                  windowCount = windowCount,
