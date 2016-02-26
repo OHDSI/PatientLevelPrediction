@@ -99,7 +99,7 @@ The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` 
 
 Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. For CDM v5, this means it should have the fields `cohort_definition_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. For CDM v4, the `cohort_definition_id` field must be called `cohort_concept_id`. 
 
-For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to defined re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
+For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to define re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
 
 For this purpose we have created a file called *HospitalizationCohorts.sql* with the following contents:
 
@@ -179,7 +179,7 @@ sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 querySql(connection, sql)
 ```
 ```{r echo=FALSE,message=FALSE}
-data.frame(cohort_definition_id = c(1, 2),count=c(446375, 186982))
+data.frame(cohort_definition_id = c(1, 2),count = c(446375, 186982))
 ```
 
 ## Extracting the data from the server
@@ -274,7 +274,7 @@ We can use the `loadPlpData()` function to load the data in a future session.
 
 ## Train-test split
 
-We typically not only want to build our model, we also want to know how good it is. Because evaluation using the same data on which the model was fitted can lead to overestimation, one  uses a train-test split of the data or cross-validation. We can use the `splitData()` function to split the data in a 75%-25% split:
+We typically not only want to build our model, we also want to know how good it is. Because evaluation using the same data on which the model was built can lead to overfitting, one  uses a train-test split of the data or cross-validation. We can use the `splitData()` function to split the data in a 75%-25% split:
 
 ```{r tidy=TRUE,eval=FALSE}
 parts <- splitData(plpData, c(0.75,0.25))
@@ -294,7 +294,7 @@ The `fitPredictiveModel()` function uses the `Cyclops` package to fit a large-sc
 
 ## Model evaluation
 
-We can evaluate how well the model is able to predict the outcome, for example on the test data we can compute the area under the ROC curve:
+We can evaluate how well the model is able to predict the outcome. For example on the test data, we can compute the area under the ROC curve:
 
 ```{r tidy=TRUE,eval=FALSE}
 prediction <- predictProbabilities(model, parts[[2]])
