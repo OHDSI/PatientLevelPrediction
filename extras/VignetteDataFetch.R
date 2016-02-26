@@ -411,15 +411,23 @@ plpData <- getDbPlpData(connectionDetails = connectionDetails,
                         cdmVersion = cdmVersion)
 summary(plpData)
 plpData$covariates
-covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
-                                             useCovariateDemographicsGender = TRUE,
-                                             useCovariateDemographicsRace = TRUE,
-                                             useCovariateDemographicsEthnicity = TRUE,
-                                             useCovariateDemographicsAge = TRUE,
-                                             useCovariateDemographicsYear = TRUE,
-                                             useCovariateDemographicsMonth = TRUE)
-looCovariateSettings <- createLooCovariateSettings(useLengthOfObs = TRUE)
-covariateSettingsList <- list(covariateSettings, looCovariateSettings)
+
+
+sql <- "DROP TABLE @cohort_database_schema.rehospitalization"
+sql <- SqlRender::renderSql(sql, cohort_database_schema = cohortDatabaseSchema)$sql
+sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"))$sql
+
+
+
+
+
+
+
+looCovariateSettings <- createCohortAttrCovariateSettings(attrDatabaseSchema = cohortDatabaseSchema,
+                                                          cohortAttrTable = "loo_cohort_attribute",
+                                                          attrDefinitionTable = "loo_attribute_definition",
+                                                          includeAttrIds = c())
+covariateSettingsList <- list(looCovariateSettings, looCovariateSettings)
 
 plpData <- getDbPlpData(connectionDetails = connectionDetails,
                         cdmDatabaseSchema = cdmDatabaseSchema,
@@ -434,7 +442,3 @@ plpData <- getDbPlpData(connectionDetails = connectionDetails,
                         outcomeIds = 2,
                         firstOutcomeOnly = TRUE,
                         cdmVersion = cdmVersion)
-
-sql <- "DROP TABLE @cohort_database_schema.rehospitalization"
-sql <- SqlRender::renderSql(sql, cohort_database_schema = cohortDatabaseSchema)$sql
-sql <- SqlRender::translateSql(sql, targetDialect = attr(connection, "dbms"))$sql

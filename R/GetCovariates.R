@@ -73,7 +73,26 @@ getDbCovariateData <- function(connection,
         if (is.null(covariateData)) {
           covariateData <- tempCovariateData
         } else {
-          # TODO: handle overlap in covariate ID space
+          # Remapping covariate IDs when there's overlap:          
+          tempCovariateIds <- ff::as.ram(tempCovariateData$covariateRef$covariateId)
+          covariateIds <- ff::as.ram(covariateData$covariateRef$covariateId)
+          overlapping <- tempCovariateIds[tempCovariateIds %in% covariateIds]
+          if (length(covariateIds) != 0) {
+            startId <- max(covariateIds)
+            startId <- max(startId, tempCovariateIds)
+            startId <- startId + 1
+            newIds = startId:(startId+length(overlapping) - 1)
+            for (i in bit::chunk(tempCovariateData$covariateRef$covariateId)) {
+               ids <- tempCovariateData$covariateRef$covariateId[i]
+               ids <- plyr::mapvalues(ids, overlapping, newIds, warn_missing = FALSE)
+               tempCovariateData$covariateRef$covariateId[i] <- ids
+            }
+            for (i in bit::chunk(tempCovariateData$covariates$covariateId)) {
+              ids <- tempCovariateData$covariates$covariateId[i]
+              ids <- plyr::mapvalues(ids, overlapping, newIds, warn_missing = FALSE)
+              tempCovariateData$covariates$covariateId[i] <- ids
+            }
+          }
           covariateData$covariates <- ffbase::ffdfappend(covariateData$covariates,
                                                          tempCovariateData$covariates)
           covariateData$covariateRef <- ffbase::ffdfappend(covariateData$covariateRef,
