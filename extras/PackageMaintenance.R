@@ -36,3 +36,9 @@ rmarkdown::render("vignettes/CreatingCustomCovariateBuilders.Rmd",
                   rmarkdown::pdf_document(latex_engine = "pdflatex",
                                           toc = TRUE,
                                           number_sections = TRUE))
+
+rmarkdown::render("vignettes/CreatingCovariatesUsingCohortAttributes.Rmd",
+                  output_file = "../inst/doc/CreatingCovariatesUsingCohortAttributes.pdf",
+                  rmarkdown::pdf_document(latex_engine = "pdflatex",
+                                          toc = TRUE,
+                                          number_sections = TRUE))

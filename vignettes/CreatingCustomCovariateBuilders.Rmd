@@ -23,9 +23,11 @@ library(PatientLevelPrediction)
 
 This vignette assumes you are already familiar with the `PatientLevelPrediction` package.
 
-The `PatientLevelPrediction` package can generate a default set of covariates, such as one covariate for each condition found in the condition_occurrence table. However, for some reasons one might need other covariates than those included in the default set. Sometimes it might sense to request the new covariates be added the standard list, but other times there is good reason to keep them separated. 
+The `PatientLevelPrediction` package can generate a default set of covariates, such as one covariate for each condition found in the `condition_occurrence` table. However, for some reasons one might need other covariates than those included in the default set. Sometimes it might sense to request the new covariates be added to the standard list, but other times there is good reason to keep them separated. 
 
 The `PatientLevelPrediction` package has a mechanism for including custom covariate builders to either replace or complement the covariate builders included in the package. This vignette describes that mechanism.
+
+Note: another way to add custom covariates is by using the `cohort_attribute` table in the common data model. This approach is described in the vignette called `reating covariates using cohort attributes`.
 
 # Overview
 
@@ -147,13 +149,13 @@ We can use our custom covariate builder in the `PatientLevelPrediction` package,
   plpData <- getDbPlpData(connectionDetails = connectionDetails,
                           cdmDatabaseSchema = cdmDatabaseSchema,
                           cohortDatabaseSchema = resultsDatabaseSchema,
-                          cohortTable = "mschuemi_stroke",
+                          cohortTable = "rehospitalization",
                           cohortIds = 1,
                           useCohortEndDate = TRUE,
                           windowPersistence = 0,
                           covariateSettings = looCovariateSettings,
                           outcomeDatabaseSchema = resultsDatabaseSchema,
-                          outcomeTable = "mschuemi_stroke",
+                          outcomeTable = "rehospitalization",
                           outcomeIds = 2,
                           firstOutcomeOnly = TRUE,
                           cdmVersion = cdmVersion)
@@ -176,13 +178,13 @@ In this case we will have only one covariate for our predictive model, the lengt
   plpData <- getDbPlpData(connectionDetails = connectionDetails,
                           cdmDatabaseSchema = cdmDatabaseSchema,
                           cohortDatabaseSchema = resultsDatabaseSchema,
-                          cohortTable = "mschuemi_stroke",
+                          cohortTable = "rehospitalization",
                           cohortIds = 1,
                           useCohortEndDate = TRUE,
                           windowPersistence = 0,
                           covariateSettings = covariateSettingsList,
                           outcomeDatabaseSchema = resultsDatabaseSchema,
-                          outcomeTable = "mschuemi_stroke",
+                          outcomeTable = "rehospitalization",
                           outcomeIds = 2,
                           firstOutcomeOnly = TRUE,
                           cdmVersion = cdmVersion)

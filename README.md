@@ -62,6 +62,7 @@ Getting Started
 Getting Involved
 ================
 * Vignette: [Building patient-level predictive models](https://raw.githubusercontent.com/OHDSI/PatientLevelPrediction/master/inst/doc/BuildingPredictiveModels.pdf)
+* Vignette: [Creating covariates using cohort attributes](https://raw.githubusercontent.com/OHDSI/PatientLevelPrediction/master/inst/doc/CreatingCovariatesUsingCohortAttributes.pdf)
 * Vignette: [Creating custom covariate builders](https://raw.githubusercontent.com/OHDSI/PatientLevelPrediction/master/inst/doc/CreatingCustomCovariateBuilders.pdf)
 * Package manual: [PatientLevelPrediction.pdf](https://raw.githubusercontent.com/OHDSI/PatientLevelPrediction/master/extras/PatientLevelPrediction.pdf) 
 * Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
