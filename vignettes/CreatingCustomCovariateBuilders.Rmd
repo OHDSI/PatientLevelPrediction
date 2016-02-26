@@ -27,7 +27,7 @@ The `PatientLevelPrediction` package can generate a default set of covariates, s
 
 The `PatientLevelPrediction` package has a mechanism for including custom covariate builders to either replace or complement the covariate builders included in the package. This vignette describes that mechanism.
 
-Note: another way to add custom covariates is by using the `cohort_attribute` table in the common data model. This approach is described in the vignette called `reating covariates using cohort attributes`.
+Note: another way to add custom covariates is by using the `cohort_attribute` table in the common data model. This approach is described in the vignette called `creating covariates using cohort attributes`.
 
 # Overview
 
