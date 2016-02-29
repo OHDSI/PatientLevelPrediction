@@ -39,7 +39,7 @@ install:
   - Rscript -e 'if(!"ff" %in% rownames(installed.packages())) { install.packages("ff", dependencies = TRUE) }'
   - Rscript -e 'if(!"ffbase" %in% rownames(installed.packages())) { install.packages("ffbase", dependencies = TRUE) }'
   - Rscript -e 'if(!"plyr" %in% rownames(installed.packages())) { install.packages("plyr", dependencies = TRUE) }'
-  - Rscript -e 'if(!"survAUC" %in% rownames(installed.packages())) { install.packages("ffbase", dependencies = TRUE) }'
+  - Rscript -e 'if(!"survAUC" %in% rownames(installed.packages())) { install.packages("survAUC", dependencies = TRUE) }'
   - Rscript -e 'if(!"RJDBC" %in% rownames(installed.packages())) { install.packages("RJDBC", dependencies = TRUE) }'
   - Rscript -e 'if(!"survival" %in% rownames(installed.packages())) { install.packages("survival", dependencies = TRUE) }'
 
