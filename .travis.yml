@@ -1,23 +1,68 @@
 language: c
-before_install:
-- curl -OL http://raw.github.com/craigcitro/r-travis/master/scripts/travis-tool.sh
-- chmod 755 ./travis-tool.sh
-- ./travis-tool.sh bootstrap
+
+# use containers
+sudo: false
+
+addons:
+  apt:
+    sources:
+    - r-packages-precise
+    packages:
+    - r-base-dev
+    - r-recommended
+    - pandoc
+    - default-jdk
+    - default-jre
+
+# cache local R libraries directory:
+cache:
+  directories:
+    - ~/Rlib
+
+# install the package and dependencies:
 install:
-- ./travis-tool.sh install_deps
-- ./travis-tool.sh install_r_binary rJava
-- ./travis-tool.sh install_github OHDSI/Cyclops
-- ./travis-tool.sh install_github OHDSI/SqlRender
-- ./travis-tool.sh install_github OHDSI/DatabaseConnector
-- ./travis-tool.sh install_github OHDSI/OhdsiRTools
-- ./travis-tool.sh install_github jimhester/covr
-- ./travis-tool.sh install_github eddelbuettel/drat
+  - mkdir -p ~/Rlib
+  - echo 'R_LIBS=~/Rlib' > .Renviron
+  - echo 'options(repos = "http://cran.rstudio.com")' > .Rprofile
+  - mkdir -p ~/.R
+  - Rscript -e 'if(!"devtools" %in% rownames(installed.packages())) { install.packages("devtools", dependencies = TRUE) }'
+  - Rscript -e 'if (!require("covr")) devtools::install_github("jimhester/covr")'
+  - Rscript -e 'if (!require("drat")) install.packages("drat")'     
+  - Rscript -e 'if(!"rJava" %in% rownames(installed.packages())) { install.packages("rJava", dependencies = TRUE) }'
+  - Rscript -e 'if(!"testthat" %in% rownames(installed.packages())) { install.packages("testthat", dependencies = TRUE) }'
+  - Rscript -e 'if(!"knitr" %in% rownames(installed.packages())) { install.packages("knitr", dependencies = TRUE) }'
+  - Rscript -e 'if(!"pROC" %in% rownames(installed.packages())) { install.packages("pROC", dependencies = TRUE) }'
+  - Rscript -e 'if(!"gnm" %in% rownames(installed.packages())) { install.packages("gnm", dependencies = TRUE) }'
+  - Rscript -e 'if(!"rmarkdown" %in% rownames(installed.packages())) { install.packages("rmarkdown", dependencies = TRUE) }'
+  - Rscript -e 'if(!"ggplot2" %in% rownames(installed.packages())) { install.packages("ggplot2", dependencies = TRUE) }'
+  - Rscript -e 'if(!"bit" %in% rownames(installed.packages())) { install.packages("bit", dependencies = TRUE) }'
+  - Rscript -e 'if(!"ff" %in% rownames(installed.packages())) { install.packages("ff", dependencies = TRUE) }'
+  - Rscript -e 'if(!"ffbase" %in% rownames(installed.packages())) { install.packages("ffbase", dependencies = TRUE) }'
+  - Rscript -e 'if(!"plyr" %in% rownames(installed.packages())) { install.packages("plyr", dependencies = TRUE) }'
+  - Rscript -e 'if(!"survAUC" %in% rownames(installed.packages())) { install.packages("ffbase", dependencies = TRUE) }'
+  - Rscript -e 'if(!"RJDBC" %in% rownames(installed.packages())) { install.packages("RJDBC", dependencies = TRUE) }'
+  - Rscript -e 'if(!"survival" %in% rownames(installed.packages())) { install.packages("survival", dependencies = TRUE) }'
+
+  # Install OHDSI dependencies
+  - Rscript -e 'devtools::install_github("OHDSI/SqlRender")'
+  - Rscript -e 'devtools::install_github("OHDSI/DatabaseConnector")'
+  - Rscript -e 'devtools::install_github("OHDSI/Cyclops")'
+    
+  - Rscript -e 'update.packages(ask = FALSE, instlib = "~/Rlib")'
+  - Rscript -e 'devtools::install_deps(pkg = ".", dependencies = TRUE)'
+
 before_script:
-- export PKG_NAME=$(Rscript -e 'cat(paste0(devtools::as.package(".")$package))')
-- export PKG_TARBALL=$(Rscript -e 'pkg <- devtools::as.package("."); cat(paste0(pkg$package,"_",pkg$version,".tar.gz"))')
-script: ./travis-tool.sh run_tests
-after_failure:
-- ./travis-tool.sh dump_logs
+  - export PKG_NAME=$(Rscript -e 'cat(paste0(devtools::as.package(".")$package))')
+  - export PKG_TARBALL=$(Rscript -e 'pkg <- devtools::as.package("."); cat(paste0(pkg$package,"_",pkg$version,".tar.gz"))')
+
+# Build and check package
+script:
+  - R CMD build . --no-build-vignettes --no-manual
+  - PKG_FILE_NAME=$(ls -1t *.tar.gz | head -n 1)
+  - PKG_NAME=$(ls -1t *.tar.gz | head -n 1 | sed 's/_.*gz//')
+  - _R_CHECK_CRAN_INCOMING_=FALSE R CMD check "${PKG_FILE_NAME}" --no-build-vignettes --no-manual
+  - cat ${PKG_NAME}.Rcheck/00install.out # Print out install / compile log
+
 notifications:
   recipients:
   - msuchard@gmail.com
