@@ -29,7 +29,7 @@ row_id field in the output table. This can be especially usefull if there
 is more than one period per person.}
 
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
-\code{\link{cohortAttrCovariateSettings}} function.}
+\code{\link{createCohortAttrCovariateSettings}} function.}
 }
 \value{
 Returns an object of type \code{covariateData}, containing information on the baseline covariates.

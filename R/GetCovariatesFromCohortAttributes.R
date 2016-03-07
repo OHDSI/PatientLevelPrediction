@@ -24,7 +24,7 @@
 #' observations, etc.
 #'
 #' @param covariateSettings   An object of type \code{covariateSettings} as created using the
-#'                            \code{\link{cohortAttrCovariateSettings}} function.
+#'                            \code{\link{createCohortAttrCovariateSettings}} function.
 #'
 #' @template GetCovarParams
 #'

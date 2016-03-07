@@ -167,6 +167,7 @@ getDbHdpsCovariateData <- function(connection,
   
   # Remove redundant covariates
   writeLines("Removing redundant covariates")
+  start <- Sys.time()
   deletedCovariateIds <- c()
   if (nrow(covariates) != 0) {
     # First delete all single covariates that appear in every row with the same value
@@ -201,6 +202,9 @@ getDbHdpsCovariateData <- function(connection,
       }
     }
   }
+  delta <- Sys.time() - start
+  writeLines(paste("Removing redundant covariates took", signif(delta, 3), attr(delta, "units")))
+  
   metaData <- list(sql = renderedSql,
                    call = match.call(),
                    deletedCovariateIds = deletedCovariateIds)
