@@ -4,18 +4,12 @@
 \alias{plotCalibration}
 \title{Plot the calibration}
 \usage{
-plotCalibration(prediction, plpData, removeDropoutsForLr = TRUE,
-  numberOfStrata = 5, truncateFraction = 0.01, fileName = NULL)
+plotCalibration(prediction, numberOfStrata = 5, truncateFraction = 0.01,
+  fileName = NULL)
 }
 \arguments{
 \item{prediction}{A prediction object as generated using the
-\code{\link{predictProbabilities}} function.}
-
-\item{plpData}{An object of type \code{plpData}.}
-
-\item{removeDropoutsForLr}{If TRUE and modelType is "logistic", subjects that do not have the full
-observation window (i.e. are censored earlier) and do not have the
-outcome are removed prior to evaluating the model.}
+\code{\link{predict}} functions.}
 
 \item{numberOfStrata}{The number of strata in the plot.}
 

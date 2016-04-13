@@ -4,17 +4,11 @@
 \alias{plotRoc}
 \title{Plot the ROC curve}
 \usage{
-plotRoc(prediction, plpData, removeDropoutsForLr = TRUE, fileName = NULL)
+plotRoc(prediction, fileName = NULL)
 }
 \arguments{
 \item{prediction}{A prediction object as generated using the
 \code{\link{predictProbabilities}} function.}
-
-\item{plpData}{An object of type \code{plpData}.}
-
-\item{removeDropoutsForLr}{If TRUE and modelType is "logistic", subjects that do not have the full
-observation window (i.e. are censored earlier) and do not have the
-outcome are removed prior to evaluating the model.}
 
 \item{fileName}{Name of the file where the plot should be saved, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for

@@ -4,18 +4,11 @@
 \alias{computeAuc}
 \title{Compute the area under the ROC curve}
 \usage{
-computeAuc(prediction, plpData, removeDropoutsForLr = TRUE,
-  confidenceInterval = FALSE)
+computeAuc(prediction, confidenceInterval = FALSE)
 }
 \arguments{
 \item{prediction}{A prediction object as generated using the
-\code{\link{predictProbabilities}} function.}
-
-\item{plpData}{An object of type \code{plpData}.}
-
-\item{removeDropoutsForLr}{If TRUE and modelType is "logistic", subjects that do not have the full
-observation window (i.e. are censored earlier) and do not have the
-outcome are removed prior to evaluating the model.}
+\code{\link{predict}} functions.}
 
 \item{confidenceInterval}{Should 95 percebt confidence intervals be computed?}
 }

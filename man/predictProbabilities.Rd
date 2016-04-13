@@ -4,7 +4,7 @@
 \alias{predictProbabilities}
 \title{Create predictive probabilities}
 \usage{
-predictProbabilities(predictiveModel, plpData)
+predictProbabilities(predictiveModel, population, covariates, silent = F)
 }
 \arguments{
 \item{predictiveModel}{An object of type \code{predictiveModel} as generated using
