@@ -116,7 +116,7 @@ computeAucFromDataFrames <- function(prediction,
 #'
 #' @export
 plotCalibration <- function(prediction,
-                            numberOfStrata = 5,
+                            numberOfStrata = 10,
                             truncateFraction = 0.01,
                             fileName = NULL) {
   if (attr(prediction, "metaData")$predictionType != "binary")
@@ -155,7 +155,7 @@ plotCalibration <- function(prediction,
           ggplot2::scale_y_continuous("Observed fraction")
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
-  return(plot)
+  return(list(plot=plot, strataData=strataData))
 }
 
 
@@ -288,8 +288,9 @@ sparseMetric <- function(prediction, aveP=T){
                  precision.recall = roc.sparse[,c('TPR','PPV')],
                  F.measure = roc.sparse[,c('Fmeasure')],
                  preferenceScores = prefScore$sparsePrefScore,
+                 calSparse =calPlot$strataData,
                  quantiles = quantiles$quantiles,
-                 calPlot =calPlot, prefScorePlot = prefScore$plot,
+                 calPlot =calPlot$plot, prefScorePlot = prefScore$plot,
                  boxPlot = quantiles$plot
   )
   class(result) <- 'metric.sparse'

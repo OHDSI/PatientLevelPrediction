@@ -218,7 +218,23 @@ getDbPlpData <- function(connectionDetails,
   
   metaData <- covariateData$metaData
   metaData$call <- match.call()
-  
+  metaData$call$connectionDetails = connectionDetails
+  metaData$call$cdmDatabaseSchema = cdmDatabaseSchema
+  metaData$call$oracleTempSchema = oracleTempSchema
+  metaData$call$cohortId = cohortId
+  metaData$call$outcomeIds = outcomeIds
+  metaData$call$studyStartDate = studyStartDate
+  metaData$call$studyEndDate = studyEndDate
+  metaData$call$cohortDatabaseSchema = cohortDatabaseSchema
+  metaData$call$cohortTable = cohortTable
+  metaData$call$outcomeDatabaseSchema = outcomeDatabaseSchema
+  metaData$call$outcomeTable = outcomeTable
+  metaData$call$cdmVersion = cdmVersion
+  metaData$call$excludeDrugsFromCovariates = excludeDrugsFromCovariates
+  metaData$call$firstExposureOnly = firstExposureOnly
+  metaData$call$washoutPeriod = washoutPeriod
+  metaData$call$covariateSettings= covariateSettings
+
   result <- list(cohorts = cohorts,
                  outcomes = outcomes,
                  covariates = covariateData$covariates,

@@ -128,6 +128,8 @@ developModel <- function(population, plpData,
                          ){
   if(!testSplit%in%c('person','time'))
     stop('Invalid testSplit')
+  
+  # TODO - add input checks
     
   start.all <- Sys.time()
   analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
@@ -150,12 +152,18 @@ developModel <- function(population, plpData,
   
   if(nrow(population)!=nrow(indexes))
     stop('Population dimension not compatible with indexes')
-  population$indexes <- indexes$index
+  tempmeta <- attr(population, "metaData")
+  population <- merge(population, indexes)
+  colnames(population)[colnames(population)=='index'] <- 'indexes'
+  attr(population, "metaData") <- tempmeta
+  #population$indexes <- indexes$index
   
   settings <- list(data=plpData, dirPath=dirPath, index=indexes,
                    featureSettings = featureSettings,
                    modelSettings = modelSettings,
-                   population=population, quiet=silent)
+                   population=population, quiet=silent,
+                   cohortId=cohortId,
+                   outcomeId=outcomeId)
   
   populationLoc <- file.path(dirPath,analysisId, 'population.txt')
   write.table(population, populationLoc, row.names=F)
@@ -174,62 +182,79 @@ developModel <- function(population, plpData,
     writeLines('2) Prediction Calculated')
  
   # calculate metrics
-  performance <- evaluatePlp(prediction)
-  if(!silent)
-    writeLines('3) Performance calculated')
-  write.table(performance$raw, file.path(dirPath,analysisId , 'rocRawSparse.txt'), row.names=F)
-  write.table(performance$preferenceScores, file.path(dirPath,analysisId , 'preferenceScoresSparse.txt'), row.names=F)
+  if(!is.null(prediction)){
+    if(length(unique(prediction$value))>1){
+    performance <- evaluatePlp(prediction)
+    if(!silent)
+      writeLines('3) Performance calculated')
+    write.table(performance$raw, file.path(dirPath,analysisId , 'rocRawSparse.txt'), row.names=F)
+    write.table(performance$preferenceScores, file.path(dirPath,analysisId , 'preferenceScoresSparse.txt'), row.names=F)
+    write.table(performance$calSparse, file.path(dirPath,analysisId , 'calSparse.txt'), row.names=F)
+    write.table(performance$quantiles, file.path(dirPath,analysisId , 'quantiles.txt'), row.names=F)
+    
+    #save plots:
+    pdf(file.path(dirPath,analysisId,'plots.pdf'))
+    gridExtra::grid.arrange(performance$calPlot, 
+                            gridExtra::arrangeGrob(performance$prefScorePlot, performance$boxPlot), 
+                            nrow=2,
+                            top='Performance Plots')
+    print(PatientLevelPrediction::plotRoc(prediction))
+    
+    dev.off()
+    
+    comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
+    
+    # make nice formated model info table and performance table
+    tryCatch({
+      modelInfo <- data.frame(datetime = start.all,
+                              trainDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
+                              testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
+                              cohortId=attr(prediction, "metaData")$cohortId,
+                              outcomeId=attr(prediction, "metaData")$outcomeId,
+                              # add fold information and test/train size/ num events?
+                              model= model$modelSettings$model,
+                              splitOn = testSplit,
+                              modelLoc =modelLoc ,
+                              populationLoc=populationLoc ,
+                              parameters = paste(names(model$modelSettings$modelParameters), unlist(model$modelSettings$modelParameters), sep=':', collapse=','),
+                              modelTime = comp)
+    }, error= function(err){print(paste("MY_ERROR:  ",err))
+      writeLines(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, model$modelSettings$model, sep='-'))
+      
+    })
+    performanceInfo <- data.frame(datetime =start.all,
+                                  AUC = performance$auc[1],
+                                  AUC_lb = performance$auc[2],
+                                  AUC_ub = performance$auc[3],
+                                  Brier = performance$brier,
+                                  BrierScaled = performance$brierScaled,
+                                  hosmerlemeshow_chi2 = performance$hosmerlemeshow[1],
+                                  hosmerlemeshow_df = performance$hosmerlemeshow[2],
+                                  hosmerlemeshow_pvalue = performance$hosmerlemeshow[3],
+                                  calibrationIntercept = performance$calibrationIntercept,
+                                  calibrationGradient = performance$calibrationGradient
+    )
+    
+    # search for modelInfo in directory - if does not exist create and save model info table
+    # otherwise append model info to existing file
+    if(file.exists(file.path(dirPath, 'modelInfo.txt')))
+      write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
+    if(!file.exists(file.path(dirPath, 'modelInfo.txt')))
+      write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
+    
+    # repeat for performance info
+    if(file.exists(file.path(dirPath, 'performanceInfo.txt')))
+      write.table(performanceInfo, file.path(dirPath, 'performanceInfo.txt'), append=T, row.names = F, col.names = F)
+    if(!file.exists(file.path(dirPath, 'performanceInfo.txt')))
+      write.table(performanceInfo, file.path(dirPath, 'performanceInfo.txt'), row.names = F)
   
-  #save plots:
-  pdf(file.path(dirPath,analysisId,'plots.pdf'))
-  gridExtra::grid.arrange(performance$calPlot, 
-                          gridExtra::arrangeGrob(performance$prefScorePlot, performance$boxPlot), 
-                          nrow=2,
-                          top='Performance Plots')
-  
-  dev.off()
-  
-  comp <- Sys.time() - start.all
-  
-  # make nice formated model info table and performance table
-  
-  modelInfo <- data.frame(datetime = start.all,
-                          trainDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
-                          testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
-                          cohortId=attr(prediction, "metaData")$cohortId,
-                          outcomeId=attr(prediction, "metaData")$outcomeId,
-                          # add fold information and test/train size/ num events?
-                          model= model$modelSettings$model,
-                          splitOn = testSplit,
-                          modelLoc =modelLoc ,
-                          populationLoc=populationLoc ,
-                          parameters = paste(names(model$modelSettings$modelParameters), unlist(model$modelSettings$modelParameters), sep=':', collapse=','),
-                          modelTime = comp)
-  performanceInfo <- data.frame(datetime =start.all,
-                                AUC = performance$auc[1],
-                                AUC_lb = performance$auc[2],
-                                AUC_ub = performance$auc[3],
-                                Brier = performance$brier,
-                                BrierScaled = performance$brierScaled,
-                                hosmerlemeshow_chi2 = performance$hosmerlemeshow[1],
-                                hosmerlemeshow_df = performance$hosmerlemeshow[2],
-                                hosmerlemeshow_pvalue = performance$hosmerlemeshow[3],
-                                calibrationIntercept = performance$calibrationIntercept,
-                                calibrationGradient = performance$calibrationGradient
-                                )
-  
-  # search for modelInfo in directory - if does not exist create and save model info table
-  # otherwise append model info to existing file
-  if(file.exists(file.path(dirPath, 'modelInfo.txt')))
-    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
-  if(!file.exists(file.path(dirPath, 'modelInfo.txt')))
-    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
-
-  # repeat for performance info
-  if(file.exists(file.path(dirPath, 'performanceInfo.txt')))
-    write.table(performanceInfo, file.path(dirPath, 'performanceInfo.txt'), append=T, row.names = F, col.names = F)
-  if(!file.exists(file.path(dirPath, 'performanceInfo.txt')))
-    write.table(performanceInfo, file.path(dirPath, 'performanceInfo.txt'), row.names = F)
+  }else{
+    performance <- NULL
+    comp <- comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1) }} else{
+    performance <- NULL
+    comp <- comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
+    
+  }
   
   results <- list(transform=model$transform,
                   model=model,
@@ -292,7 +317,8 @@ developModel <- function(population, plpData,
 #'
 
 #' @export
-fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirPath, quiet){
+fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirPath, quiet,
+                   cohortId, outcomeId){
   plpData <- list(outcomes =data$outcomes,
                   cohorts = data$cohorts,
                   covariates =ff::clone(data$covariates),
@@ -352,7 +378,7 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
   # Now apply the classifier:
   fun <- modelSettings$model
   args <- list(plpData =plpData,param =modelSettings$param, index=index, dirPath=dirPath,
-               population=population, quiet=quiet)
+               population=population, quiet=quiet, cohortId=cohortId, outcomeId=outcomeId)
   plpModel <- do.call(fun, args)
   
   # add the transform functions and details to the model:
@@ -363,9 +389,9 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
   createTransform <- function(plpModel,mappingVal){
     transform <- function(plpData=NULL, population=NULL, file=dirPath, silent=F){
       #check model fitting makes sense:
-      if(plpData$metaData$call$cohortId!=plpModel$metaData$call$cohortId)
+      if(attr(population, "metaData")$cohortId!=plpModel$cohortId)
         warning('cohortId of new data does not match training data')
-      if(plpData$metaData$call$outcomeId!=plpModel$metaData$call$outcomeId)
+      if(attr(population, "metaData")$outcomeId!=plpModel$outcomeId)
         warning('outcomeId of new data does not match training data')
       
       #TODO: recalibrate
@@ -386,8 +412,9 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
                        testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
                        studyStartDate = do.call(paste,list(plpModel$metaData$call$studyStartDate)), 
                        studyEndDate = do.call(paste,list(plpModel$metaData$call$studyEndDate)),
-                       cohortId = plpModel$metaData$cohortId,
-                       outcomeId = plpModel$metaData$outcomeId
+                       cohortId = plpModel$cohortId,
+                       outcomeId = plpModel$outcomeId,
+                       predictionType ='binary'
       )
       attr(pred, 'metaData') <- metaData
       return(pred)
@@ -421,11 +448,12 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
 #' @export
 predictPlp <- function(plpModel, population, plpData, dirPath, index=NULL, silent=F){
   # in the model part add an attribute type - plp, h2o, caret, ... then apply prediciton for that type or allow custom
-  if(!silent) writeLines(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
   # apply the feature transformations
   if(!is.null(index)){
+    if(!silent) writeLines(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
     ind <- population$rowId%in%index$rowId[index$index<0]
   } else{
+    if(!silent) writeLines(paste0('Calculating prediction for ',nrow(population),' in test set'))
     ind <- rep(T, nrow(population))
   }
   # do the predction on the new data

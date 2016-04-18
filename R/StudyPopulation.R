@@ -81,7 +81,7 @@ createStudyPopulation <- function(plpData,
   if (firstExposureOnly) {
     if(!silent) writeLines("Keeping only first exposure per subject")
     population <- population[order(population$subjectId, as.Date(population$cohortStartDate)), ]
-    idx <- duplicated(population[, c("subjectId", "treatment")])
+    idx <- duplicated(population[, c("subjectId", "cohortId")])
     population <- population[!idx, ]
     metaData$attrition <- rbind(metaData$attrition, getCounts(population, "First exposure only"))
   }
@@ -131,6 +131,13 @@ createStudyPopulation <- function(plpData,
     outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
     outcomes <- merge(outcomes, population[, c("rowId", "riskStart", "riskEnd")])
     outcomes <- outcomes[outcomes$daysToEvent >= outcomes$riskStart & outcomes$daysToEvent <= outcomes$riskEnd, ]
+    
+    # check outcome still there
+    if(nrow(outcomes)==0){
+      population <- NULL
+      warning('No outcomes left...')
+      return(population)
+    }
     
     # Create outcome count column
     if(binary){

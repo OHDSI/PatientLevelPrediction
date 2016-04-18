@@ -1,9 +1,9 @@
-lr_lasso <- function(population, plpData, param,index, search='adaptive', quiet=F,...){
-  #trainInd <- index$rowId[index$index>0]
-  #plpData <- subsetPlpdata(plpData, trainInd)
-  #if(nrow(plpData$cohorts)!=length(trainInd)) writeLines('dimension mismatch')
-  
+lr_lasso <- function(population, plpData, param,index, search='adaptive', quiet=F,
+                     outcomeId, cohortId, ...){
+
+  metaData <- attr(population, 'metaData')
   population <- population[population$indexes>0,]
+  attr(population, 'metaData') <- metaData
   #TODO - how to incorporate indexes?
   val <- 0.003
   if(!is.null(param$val )) val <- param$val
@@ -42,6 +42,8 @@ lr_lasso <- function(population, plpData, param,index, search='adaptive', quiet=
                  trainCalibration=NULL,
                  modelSettings = list(model='lr_lasso', modelParameters=param),
                  metaData = plpData$metaData,
+                 outcomeId=outcomeId,
+                 cohortId=cohortId,
                  varImp = varImp,
                  trainingTime=comp
   )
@@ -186,7 +188,8 @@ svmRadial_plp <- function(plpData, param, index, search='grid', quiet=F,...){
 
 #================ H2o models ======================
 
-randomForest_plp <- function(population, plpData, param, dirPath, index, search='grid', quiet=F,...){
+randomForest_plp <- function(population, plpData, param, dirPath, index, search='grid', quiet=F,
+                             outcomeId, cohortId, ...){
   
   if(!quiet)
     writeLines(paste0('Training random forest model...' ))
@@ -250,6 +253,8 @@ randomForest_plp <- function(population, plpData, param, dirPath, index, search=
                  trainCalibration= NULL,
                  modelSettings = list(model='randomForest_plp',modelParameters=param.best),
                  metaData = plpData$metaData,
+                 outcomeId=outcomeId,
+                 cohortId=cohortId,
                  varImp = varImp,
                  trainingTime =comp
   )
@@ -266,7 +271,9 @@ randomForest_plp <- function(population, plpData, param, dirPath, index, search=
 
 
 
-gbm_plp <- function(population,plpData, param, dirPath, index, search='grid', quiet=F,...){
+gbm_plp <- function(population,plpData, param, dirPath, index, search='grid', quiet=F,
+                    outcomeId, cohortId, ...){
+  
   if(!quiet)
     writeLines(paste0('Training gradient boosting machine model...' ))
   start <- Sys.time()
@@ -322,6 +329,8 @@ gbm_plp <- function(population,plpData, param, dirPath, index, search='grid', qu
                  trainCalibration= NULL,
                  modelSettings = list(model='gbm_plp',modelParameters=param.best),
                  metaData = plpData$metaData,
+                 outcomeId=outcomeId,
+                 cohortId=cohortId,
                  varImp = varImp,
                  trainingTime =comp
   )
@@ -335,7 +344,9 @@ gbm_plp <- function(population,plpData, param, dirPath, index, search='grid', qu
 
 
 
-lr_enet_plp <- function(population, plpData,dirPath,index,  param, search='grid', quiet=F,...){
+lr_enet_plp <- function(population, plpData,dirPath,index,  param, search='grid', quiet=F,
+                        outcomeId, cohortId, ...){
+  
   trainInd <- index$rowId[index$index>0]
   if(!quiet)
     writeLines(paste0('Training logistic regression with elastic net model...' ))
@@ -392,6 +403,8 @@ lr_enet_plp <- function(population, plpData,dirPath,index,  param, search='grid'
                  trainCalibration= NULL,
                  modelSettings = list(model='glm_plp',modelParameters=param.best),
                  metaData = plpData$metaData,
+                 outcomeId=outcomeId,
+                 cohortId=cohortId,
                  varImp = varImp,
                  trainingTime =comp
   )
@@ -405,7 +418,7 @@ lr_enet_plp <- function(population, plpData,dirPath,index,  param, search='grid'
 
 #========================================================
 
-knn_plp <- function(plpData, index, param, quiet=T, ...){
+knn_plp <- function(plpData, index, param, quiet=T, cohortId, outcomeId, ...){
   trainInd <- index$rowId[index$index>0]
   plpData <- subsetPlpdata(plpData, trainInd)
   start <- Sys.time()
@@ -444,6 +457,8 @@ knn_plp <- function(plpData, index, param, quiet=T, ...){
                                       indexFolder=indexFolder
                  ),
                  metaData = plpData$metaData,
+                 outcomeId=outcomeId,
+                 cohortId=cohortId,
                  trainingTime =comp
   )
   class(result) <- 'plpModel'
