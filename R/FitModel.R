@@ -88,7 +88,7 @@ fitPredictiveModel <- function(population,
                                                  modelType = modelTypeToCyclopsModelType(modelType),
                                                  checkSorting = TRUE,
                                                  checkRowIds = FALSE,
-                                                 normalize = F,
+                                                 normalize = NULL,
                                                  quiet = TRUE)
     fit <- tryCatch({
       Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)

@@ -175,85 +175,38 @@ developModel <- function(population, plpData,
   modelLoc <- file.path(dirPath,analysisId, 'savedModel' )
   savePlpModel(model, modelLoc)
   
-  # do prediction
-  prediction <- predictPlp(plpModel=model, population=population,plpData=plpData, 
-                           index=indexes, dirPath=dirPath, silent=silent)
+  # do prediction (on all data as we want test + train model performances)
+  prediction <- predictPlp(plpModel=model, population=population, plpData=plpData, 
+                           index=NULL, dirPath=dirPath, silent=silent)
   if(!silent)
     writeLines('2) Prediction Calculated')
  
   # calculate metrics
-  if(!is.null(prediction)){
-    if(length(unique(prediction$value))>1){
-    performance <- evaluatePlp(prediction)
+  if(ifelse(is.null(prediction), FALSE, length(unique(prediction$value))>1)){
+    
+    performance.test <- evaluatePlp(prediction[prediction$indexes<0,])
+    writeLines(' Test set predictions evaluated')
+    performance.train <- evaluatePlp(prediction[prediction$indexes>0,])
+    writeLines(' Train set predictions evaluated')
     if(!silent)
       writeLines('3) Performance calculated')
-    write.table(performance$raw, file.path(dirPath,analysisId , 'rocRawSparse.txt'), row.names=F)
-    write.table(performance$preferenceScores, file.path(dirPath,analysisId , 'preferenceScoresSparse.txt'), row.names=F)
-    write.table(performance$calSparse, file.path(dirPath,analysisId , 'calSparse.txt'), row.names=F)
-    write.table(performance$quantiles, file.path(dirPath,analysisId , 'quantiles.txt'), row.names=F)
     
-    #save plots:
-    pdf(file.path(dirPath,analysisId,'plots.pdf'))
-    gridExtra::grid.arrange(performance$calPlot, 
-                            gridExtra::arrangeGrob(performance$prefScorePlot, performance$boxPlot), 
-                            nrow=2,
-                            top='Performance Plots')
-    print(PatientLevelPrediction::plotRoc(prediction))
+    writeOutput(prediction=prediction, 
+                performance.test=performance.test, 
+                performance.train=performance.train, 
+                plpModel=model,
+                population = population,
+                plpData = plpData,
+                dirPath=dirPath,
+                analysisId=analysisId,
+                start.all=start.all,
+                testSplit=testSplit,
+                modelLoc=modelLoc,
+                populationLoc=populationLoc)
     
-    dev.off()
-    
-    comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
-    
-    # make nice formated model info table and performance table
-    tryCatch({
-      modelInfo <- data.frame(datetime = start.all,
-                              trainDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
-                              testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
-                              cohortId=attr(prediction, "metaData")$cohortId,
-                              outcomeId=attr(prediction, "metaData")$outcomeId,
-                              # add fold information and test/train size/ num events?
-                              model= model$modelSettings$model,
-                              splitOn = testSplit,
-                              modelLoc =modelLoc ,
-                              populationLoc=populationLoc ,
-                              parameters = paste(names(model$modelSettings$modelParameters), unlist(model$modelSettings$modelParameters), sep=':', collapse=','),
-                              modelTime = comp)
-    }, error= function(err){print(paste("MY_ERROR:  ",err))
-      writeLines(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, model$modelSettings$model, sep='-'))
-      
-    })
-    performanceInfo <- data.frame(datetime =start.all,
-                                  AUC = performance$auc[1],
-                                  AUC_lb = performance$auc[2],
-                                  AUC_ub = performance$auc[3],
-                                  Brier = performance$brier,
-                                  BrierScaled = performance$brierScaled,
-                                  hosmerlemeshow_chi2 = performance$hosmerlemeshow[1],
-                                  hosmerlemeshow_df = performance$hosmerlemeshow[2],
-                                  hosmerlemeshow_pvalue = performance$hosmerlemeshow[3],
-                                  calibrationIntercept = performance$calibrationIntercept,
-                                  calibrationGradient = performance$calibrationGradient
-    )
-    
-    # search for modelInfo in directory - if does not exist create and save model info table
-    # otherwise append model info to existing file
-    if(file.exists(file.path(dirPath, 'modelInfo.txt')))
-      write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
-    if(!file.exists(file.path(dirPath, 'modelInfo.txt')))
-      write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
-    
-    # repeat for performance info
-    if(file.exists(file.path(dirPath, 'performanceInfo.txt')))
-      write.table(performanceInfo, file.path(dirPath, 'performanceInfo.txt'), append=T, row.names = F, col.names = F)
-    if(!file.exists(file.path(dirPath, 'performanceInfo.txt')))
-      write.table(performanceInfo, file.path(dirPath, 'performanceInfo.txt'), row.names = F)
-  
   }else{
-    performance <- NULL
-    comp <- comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1) }} else{
-    performance <- NULL
-    comp <- comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
-    
+    performance.test <- NULL
+    performance.train <- NULL
   }
   
   results <- list(transform=model$transform,
@@ -261,8 +214,9 @@ developModel <- function(population, plpData,
                   prediction=prediction,
                   index=indexes,
                   evalType=testSplit,
-                  performance=performance,
-                  time=comp)
+                  performanceTest=performance.test,
+                  performanceTrain=performance.train,
+                  time=format(difftime(Sys.time(), start.all, units='hours'), nsmall=1))
   class(results) <- c('list','plpModel')
   
   return(results)
@@ -453,7 +407,7 @@ predictPlp <- function(plpModel, population, plpData, dirPath, index=NULL, silen
     if(!silent) writeLines(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
     ind <- population$rowId%in%index$rowId[index$index<0]
   } else{
-    if(!silent) writeLines(paste0('Calculating prediction for ',nrow(population),' in test set'))
+    if(!silent) writeLines(paste0('Calculating prediction for ',nrow(population),' in dataset'))
     ind <- rep(T, nrow(population))
   }
   # do the predction on the new data
@@ -573,4 +527,106 @@ loadPlpModel <- function(dirPath, readOnly = TRUE) {
   class(result) <- "plpModel"
   
   return(result)
+}
+
+
+
+writeOutput <- function(prediction, 
+                        performance.test, 
+                        performance.train, 
+                        plpModel,
+                        population,
+                        plpData,
+                        dirPath,
+                        analysisId,
+                        start.all,
+                        testSplit,
+                        modelLoc,
+                        populationLoc){
+  write.table(performance.test$raw, file.path(dirPath,analysisId , 'rocRawSparse.txt'), row.names=F)
+  write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'preferenceScoresSparse.txt'), row.names=F)
+  write.table(performance.test$calSparse, file.path(dirPath,analysisId , 'calSparse.txt'), row.names=F)
+  write.table(performance.test$calSparse2_10, file.path(dirPath,analysisId , 'calSparse2_10.txt'), row.names=F)
+  write.table(performance.test$calSparse2_100, file.path(dirPath,analysisId , 'calSparse2_100.txt'), row.names=F)
+  write.table(performance.test$quantiles, file.path(dirPath,analysisId , 'quantiles.txt'), row.names=F)
+  
+  #save plots:
+  pdf(file.path(dirPath,analysisId,'plots.pdf'))
+  gridExtra::grid.arrange(performance.test$calPlot, 
+                          gridExtra::arrangeGrob(performance.test$prefScorePlot, performance.test$boxPlot), 
+                          nrow=2,
+                          top='Performance Plots')
+  print(PatientLevelPrediction::plotRoc(prediction[prediction$indexes<0,]))
+  
+  dev.off()
+  
+  comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
+  
+  # make nice formated model info table and performance table
+  tryCatch({
+    modelInfo <- data.frame(datetime = start.all,
+                            trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
+                            testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
+                            cohortId=attr(prediction, "metaData")$cohortId,
+                            outcomeId=attr(prediction, "metaData")$outcomeId,
+                            # add fold information and test/train size/ num events?
+                            model= plpModel$modelSettings$model,
+                            splitOn = testSplit,
+                            modelLoc =modelLoc ,
+                            populationLoc=populationLoc ,
+                            parameters = paste(names(plpModel$modelSettings$modelParameters), unlist(plpModel$modelSettings$modelParameters), sep=':', collapse=','),
+                            modelTime = comp)
+  }, error= function(err){print(paste("MY_ERROR:  ",err))
+    writeLines(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, plpModel$modelSettings$model, sep='-'))
+    
+  })
+  performanceInfoTest <- data.frame(datetime =start.all,
+                                    AUC = performance.test$auc[1],
+                                    AUC_lb = performance.test$auc[2],
+                                    AUC_ub = performance.test$auc[3],
+                                    Brier = performance.test$brier,
+                                    BrierScaled = performance.test$brierScaled,
+                                    hosmerlemeshow_chi2 = performance.test$hosmerlemeshow[1],
+                                    hosmerlemeshow_df = performance.test$hosmerlemeshow[2],
+                                    hosmerlemeshow_pvalue = performance.test$hosmerlemeshow[3],
+                                    calibrationIntercept = performance.test$calibrationIntercept10,
+                                    calibrationGradient = performance.test$calibrationGradient10,
+                                    preference4070_0 = performance.test$preference4070_0,
+                                    preference4070_1 = performance.test$preference4070_1
+  )
+  
+  performanceInfoTrain <- data.frame(datetime =start.all,
+                                     AUC = performance.train$auc[1],
+                                     AUC_lb = performance.train$auc[2],
+                                     AUC_ub = performance.train$auc[3],
+                                     Brier = performance.train$brier,
+                                     BrierScaled = performance.train$brierScaled,
+                                     hosmerlemeshow_chi2 = performance.train$hosmerlemeshow[1],
+                                     hosmerlemeshow_df = performance.train$hosmerlemeshow[2],
+                                     hosmerlemeshow_pvalue = performance.train$hosmerlemeshow[3],
+                                     calibrationIntercept = performance.train$calibrationIntercept10,
+                                     calibrationGradient = performance.train$calibrationGradient10,
+                                     preference4070_0 = performance.train$preference4070_0,
+                                     preference4070_1 = performance.train$preference4070_1
+  )
+  
+  # search for modelInfo in directory - if does not exist create and save model info table
+  # otherwise append model info to existing file
+  if(file.exists(file.path(dirPath, 'modelInfo.txt')))
+    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
+  if(!file.exists(file.path(dirPath, 'modelInfo.txt')))
+    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
+  
+  # repeat for performance info
+  if(file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
+    write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), append=T, row.names = F, col.names = F)
+  if(!file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
+    write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), row.names = F)
+  if(file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
+    write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), append=T, row.names = F, col.names = F)
+  if(!file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
+    write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), row.names = F)
+  
+  
+  
 }

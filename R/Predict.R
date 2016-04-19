@@ -87,23 +87,18 @@ predict.caret <- function(plpModel, population, plpData, dirPath,silent=F, ...){
 
 
 # default h2o prediction
-predict.h2o <- function(plpModel, population, plpData, dirPath, testInd=NULL, silent=F){
+predict.h2o <- function(plpModel, population, plpData, dirPath, silent=F){
   covariates <- ff::clone(plpData$covariates)
   
   #load libSvm file and use index to extract test data?
   cov.h2o <- h2o::h2o.importFile(path = file.path(dirPath,'libSVM','plpData.txt'))
   rowIds <- read.table(file.path(dirPath,'libSVM','rowId.txt'))[,1]
   if(nrow(cov.h2o)!=length(rowIds)) writeLines('dimension mismatch')
-  if(!is.null(testInd)){
-    ind <- (1:nrow(cov.h2o))[rowIds%in%population$rowId[testInd]]
-  } else {
-    ind <- (1:nrow(cov.h2o))
-  }
 
-  value <- h2o::h2o.predict(plpModel$model, cov.h2o[ind,-1])
+  value <- h2o::h2o.predict(plpModel$model, cov.h2o[,-1])
   #writeLines(paste(colnames(value), sep='-',collapse='-'))
   #writeLines(paste(as.data.frame(value)[1,], sep='-',collapse='-'))
-  pred <- data.frame(rowId=rowIds[ind], value=as.data.frame(value)[,3])
+  pred <- data.frame(rowId=rowIds, value=as.data.frame(value)[,3])
   #writeLines(paste(pred[1,], sep='-',collapse='-'))
   #writeLines(paste(colnames(ff::as.ram(plpData$cohorts)), sep='-',collapse='-'))
   prediction <- merge(population, pred, all.x=T)

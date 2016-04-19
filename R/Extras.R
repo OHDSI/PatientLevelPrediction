@@ -13,8 +13,8 @@ createAnalysisSummary <- function (dirPath, save=F){
     colnames(modelInfo) <- header
   }
 
-  performanceInfo <- read.csv(file.path(analysisLocation, 'performanceInfo.txt'), header=T)
-  header <- read.table(file.path(analysisLocation, 'performanceInfo.txt'), nrows=1,
+  performanceInfo <- read.csv(file.path(analysisLocation, 'performanceInfoTest.txt'), header=T)
+  header <- read.table(file.path(analysisLocation, 'performanceInfoTest.txt'), nrows=1,
                        colClasses = "character")
   
   performanceInfo <- t(unlist(apply(performanceInfo, 1,
@@ -22,8 +22,19 @@ createAnalysisSummary <- function (dirPath, save=F){
                                     c(paste(temp[1],temp[2]), round(as.double(temp[-(1:2)]), digits=3)   )
                                     }   )))
   colnames(performanceInfo) <- as.character(header)
-  #performanceInfo[,-1] <- round(performanceInfo[,-1], digits=3)
   
+  # train performance:
+  performanceInfo2 <- read.csv(file.path(analysisLocation, 'performanceInfoTrain.txt'), header=T)
+  header <- read.table(file.path(analysisLocation, 'performanceInfoTrain.txt'), nrows=1,
+                       colClasses = "character")
+  
+  performanceInfo2 <- t(unlist(apply(performanceInfo2, 1,
+                                    function(x) {temp <- strsplit(as.character(x), ' ' )[[1]];
+                                    c(paste(temp[1],temp[2]), round(as.double(temp[-(1:2)]), digits=3)   )
+                                    }   )))
+  colnames(performanceInfo2) <- paste0('train_',as.character(header))
+  performanceInfo <-merge(performanceInfo, performanceInfo2, by.x='datetime', by.y='train_datetime')
+    
   allInfo <- merge(modelInfo, performanceInfo)
   
   cohortInfo <- read.table(file.path(analysisLocation, 'analysis.txt'), header=T)

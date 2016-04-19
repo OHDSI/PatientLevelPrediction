@@ -234,7 +234,8 @@ sparseMetric <- function(prediction, aveP=T){
                     confidenceInterval = T)
   
   # calibration linear fit- returns gradient, intercept
-  calLine <- calibrationLine(prediction)
+  calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
+  calLine100 <- calibrationLine(prediction, numberOfStrata = 100)
   
   calPlot <- plotCalibration(prediction,
                              numberOfStrata = 10,
@@ -281,17 +282,22 @@ sparseMetric <- function(prediction, aveP=T){
   }
   
   result <- list(auc=auc,aveP=aveP.val, brier=brier$brier, brierScaled=brier$brierScaled,
-                 calibrationIntercept=calLine$lm[1], calibrationGradient = calLine$lm[2],
-                 hosmerlemeshow = calLine$hosmerlemeshow,
+                 calibrationIntercept10=calLine10$lm[1], calibrationGradient10 = calLine10$lm[2],
+                 calibrationIntercept100=calLine100$lm[1], calibrationGradient100 = calLine100$lm[2],
+                 hosmerlemeshow = calLine10$hosmerlemeshow,
                  roc = roc.sparse[,c('FPR','TPR')],
                  raw = roc.sparse[,c('TP','FP','TN','FN','FOR','accuracy')],
                  precision.recall = roc.sparse[,c('TPR','PPV')],
                  F.measure = roc.sparse[,c('Fmeasure')],
                  preferenceScores = prefScore$sparsePrefScore,
                  calSparse =calPlot$strataData,
+                 calSparse2_10 = calLine10$aggregateLmData,
+                 calSparse2_100 = calLine100$aggregateLmData,
                  quantiles = quantiles$quantiles,
                  calPlot =calPlot$plot, prefScorePlot = prefScore$plot,
-                 boxPlot = quantiles$plot
+                 boxPlot = quantiles$plot,
+                 preference4070_0 = prefScore$similar_0,
+                 preference4070_1 = prefScore$similar_1
   )
   class(result) <- 'metric.sparse'
   return(result)
@@ -347,6 +353,7 @@ calibrationLine <- function(prediction,numberOfStrata=10, ...){
   names(res) <- c('Intercept','Gradient')
   
   result <- list(lm=res,
+                 aggregateLmData = lmData,
                  hosmerlemeshow = hosmerlemeshow)
   return(result)
 }
@@ -358,7 +365,7 @@ quantiles <- function(prediction){
                                                       fill=as.factor(outcomeCount))) + ggplot2::geom_boxplot() +
     ggplot2::guides(fill=FALSE) + ggplot2::xlab("Class") + ggplot2::ylab("Prediction") 
   quantiles <- aggregate(prediction$value, list(prediction$outcomeCount), 
-                         function(x) quantile(x, probs = c(0.00, 0.25, 0.5, 0.75, 1.00))
+                         function(x) quantile(x, probs = c(0.00,0.1, 0.25, 0.5, 0.75,0.9, 1.00))
   )
   return(list(plot=boxPlot,
               quantiles=quantiles))                      
@@ -392,8 +399,20 @@ computePreferenceScore <- function(prediction) {
     ggplot2::scale_x_continuous(limits = c(0, 1)) +
     ggplot2::geom_vline(xintercept = 0.3) + ggplot2::geom_vline(xintercept = 0.7)
   
+  # get the density between 0.4-0.7 for outcome and non-outcome
+  prediction$indif <- prediction$preferenceScore <= 0.7 & prediction$preferenceScore >= 0.4
+  count <- aggregate(prediction$indif, list(prediction$outcomeCount), sum)
+  colnames(count) <- c('Outcome','total0407')
+  countN <- aggregate(prediction$indif, list(prediction$outcomeCount),length)
+  colnames(countN) <- c('Outcome','total')
+  
+  similar4070 <- merge(count, countN)
+  similar4070$density <- similar4070$total0407/similar4070$total
+  
   result <- list(sparsePrefScore = res,
-                 plot = plot
+                 plot = plot,
+                 similar_1=similar4070$density[2],
+                 similar_0=similar4070$density[1]
   )
   
   return(result)
