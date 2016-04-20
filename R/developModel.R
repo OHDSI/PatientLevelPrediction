@@ -128,6 +128,8 @@ developModel <- function(population, plpData,
                          ){
   if(!testSplit%in%c('person','time'))
     stop('Invalid testSplit')
+  if(sum(population[,'outcomeCount']>0) < 25)
+    stop('Outcome occurrence too low')
   
   # TODO - add input checks
     
@@ -343,10 +345,10 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
   createTransform <- function(plpModel,mappingVal){
     transform <- function(plpData=NULL, population=NULL, file=dirPath, silent=F){
       #check model fitting makes sense:
-      if(attr(population, "metaData")$cohortId!=plpModel$cohortId)
+      if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$cohortId)
         warning('cohortId of new data does not match training data')
-      if(attr(population, "metaData")$outcomeId!=plpModel$outcomeId)
-        warning('outcomeId of new data does not match training data')
+      if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
+        warning('outcomeId of new data does not match training data or does not exist')
       
       #TODO: recalibrate
       
@@ -489,10 +491,10 @@ savePlpModel <- function(plpModel, dirPath){
   
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   saveRDS(plpModel$transform, file = file.path(dirPath, "transform.rds"))
-  saveRDS(plpModel$trainAUC, file = file.path(dirPath, "trainAUC.rds"))
-  saveRDS(plpModel$trainCalibration, file = file.path(dirPath, "trainCalibration.rds"))
+  saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
   saveRDS(plpModel$modelSettings, file = file.path(dirPath,  "modelSettings.rds"))
   saveRDS(plpModel$metaData, file = file.path(dirPath, "metaData.rds"))
+  saveRDS(plpModel$populationSettings, file = file.path(dirPath, "populationSettings.rds"))
   saveRDS(plpModel$trainingTime, file = file.path(dirPath,  "trainingTime.rds"))
   saveRDS(plpModel$varImp, file = file.path(dirPath,  "varImp.rds"))
   
@@ -513,10 +515,10 @@ loadPlpModel <- function(dirPath, readOnly = TRUE) {
 
   result <- list(model = readRDS(file.path(dirPath, "model.rds")),
                  transform = readRDS(file.path(dirPath, "transform.rds")),
-                 trainAUC = readRDS(file.path(dirPath, "trainAUC.rds")),
-                 trainCalibration = readRDS(file.path(dirPath, "trainCalibration.rds")),
+                 trainCVAuc = readRDS(file.path(dirPath, "trainCVAuc.rds")),
                  modelSettings = readRDS(file.path(dirPath, "modelSettings.rds")),
                  metaData = readRDS(file.path(dirPath, "metaData.rds")),
+                 populationSettings= readRDS(file.path(dirPath, "populationSettings.rds")),
                  trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
                  varImp = readRDS(file.path(dirPath, "varImp.rds"))
                  
@@ -543,12 +545,22 @@ writeOutput <- function(prediction,
                         testSplit,
                         modelLoc,
                         populationLoc){
-  write.table(performance.test$raw, file.path(dirPath,analysisId , 'rocRawSparse.txt'), row.names=F)
-  write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'preferenceScoresSparse.txt'), row.names=F)
-  write.table(performance.test$calSparse, file.path(dirPath,analysisId , 'calSparse.txt'), row.names=F)
-  write.table(performance.test$calSparse2_10, file.path(dirPath,analysisId , 'calSparse2_10.txt'), row.names=F)
-  write.table(performance.test$calSparse2_100, file.path(dirPath,analysisId , 'calSparse2_100.txt'), row.names=F)
-  write.table(performance.test$quantiles, file.path(dirPath,analysisId , 'quantiles.txt'), row.names=F)
+  if(!dir.exists(file.path(dirPath,analysisId , 'test'))){dir.create(file.path(dirPath,analysisId , 'test'))}
+  write.table(performance.test$raw, file.path(dirPath,analysisId , 'test','rocRawSparse.txt'), row.names=F)
+  write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'test','preferenceScoresSparse.txt'), row.names=F)
+  write.table(performance.test$calSparse, file.path(dirPath,analysisId , 'test','calSparse.txt'), row.names=F)
+  write.table(performance.test$calSparse2_10, file.path(dirPath,analysisId , 'test','calSparse2_10.txt'), row.names=F)
+  write.table(performance.test$calSparse2_100, file.path(dirPath,analysisId , 'test','calSparse2_100.txt'), row.names=F)
+  write.table(performance.test$quantiles, file.path(dirPath,analysisId , 'test','quantiles.txt'), row.names=F)
+  
+  if(!dir.exists(file.path(dirPath,analysisId , 'train'))){dir.create(file.path(dirPath,analysisId , 'train'))}
+  write.table(performance.train$raw, file.path(dirPath,analysisId , 'train','rocRawSparse.txt'), row.names=F)
+  write.table(performance.train$preferenceScores, file.path(dirPath,analysisId , 'train','preferenceScoresSparse.txt'), row.names=F)
+  write.table(performance.train$calSparse, file.path(dirPath,analysisId , 'train','calSparse.txt'), row.names=F)
+  write.table(performance.train$calSparse2_10, file.path(dirPath,analysisId , 'train','calSparse2_10.txt'), row.names=F)
+  write.table(performance.train$calSparse2_100, file.path(dirPath,analysisId , 'train','calSparse2_100.txt'), row.names=F)
+  write.table(performance.train$quantiles, file.path(dirPath,analysisId , 'train','quantiles.txt'), row.names=F)
+  
   
   #save plots:
   pdf(file.path(dirPath,analysisId,'plots.pdf'))
@@ -564,9 +576,8 @@ writeOutput <- function(prediction,
   
   # make nice formated model info table and performance table
   tryCatch({
-    modelInfo <- data.frame(datetime = start.all,
-                            trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
-                            testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
+    modelInfo <- data.frame(modelId = analysisId,
+                            database = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
                             cohortId=attr(prediction, "metaData")$cohortId,
                             outcomeId=attr(prediction, "metaData")$outcomeId,
                             # add fold information and test/train size/ num events?
@@ -580,7 +591,7 @@ writeOutput <- function(prediction,
     writeLines(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, plpModel$modelSettings$model, sep='-'))
     
   })
-  performanceInfoTest <- data.frame(datetime =start.all,
+  performanceInfoTest <- data.frame(modelId =analysisId,
                                     AUC = performance.test$auc[1],
                                     AUC_lb = performance.test$auc[2],
                                     AUC_ub = performance.test$auc[3],
@@ -595,7 +606,7 @@ writeOutput <- function(prediction,
                                     preference4070_1 = performance.test$preference4070_1
   )
   
-  performanceInfoTrain <- data.frame(datetime =start.all,
+  performanceInfoTrain <- data.frame(modelId =analysisId,
                                      AUC = performance.train$auc[1],
                                      AUC_lb = performance.train$auc[2],
                                      AUC_ub = performance.train$auc[3],

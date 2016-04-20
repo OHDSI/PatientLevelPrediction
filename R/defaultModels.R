@@ -17,7 +17,7 @@ lr_lasso <- function(population, plpData, param,index, search='adaptive', quiet=
                                      control = createControl(noiseLevel = "quiet", cvType = "auto",
                                                              startingVariance = val,
                                                              tolerance  = 2e-07,
-                                                             cvRepetitions = 1, fold=max(index$index),
+                                                             cvRepetitions = 1, fold=ifelse(!is.null(index$index),max(index$index),1),
                                                              selectorType = "byPid",
                                                              threads=-1),
                                      silent=quiet)
@@ -38,11 +38,11 @@ lr_lasso <- function(population, plpData, param,index, search='adaptive', quiet=
   
   
   result <- list(model = modelTrained,
-                 trainAuc = NULL,
-                 trainCalibration=NULL,
-                 modelSettings = list(model='lr_lasso', modelParameters=param),
+                 modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
+                 trainCVAuc = NULL,
                  metaData = plpData$metaData,
-                 outcomeId=outcomeId,
+                 populationSettings = attr(population, 'metaData'),
+                 outcomeId=outcomeId,# can use populationSettings$outcomeId?
                  cohortId=cohortId,
                  varImp = varImp,
                  trainingTime=comp
@@ -54,143 +54,15 @@ lr_lasso <- function(population, plpData, param,index, search='adaptive', quiet=
 }
 
 
-nnet_plp <- function(plpData, param,index, search='grid',quiet=F,... ){
-  trainInd <- index$rowId[index$index>0]
-  plpData <- subsetPlpdata(plpData, trainInd)
-  if(!quiet)
-    writeLines('Training neural network')
-  start <- Sys.time()
-  plpMat <- cov_to_mat(plpData, quiet=F)
-  #writeLines(paste0(sum(is.na(plpMat))))
-  #writeLines(paste0(plpMat[1,colnames(plpMat)%in%'outcomeCount']))
-  labs <- rep('no', nrow(plpMat))
-  labs[plpMat[,colnames(plpMat)%in%'outcomeCount']==1] <- 'yes'
-  colnames(plpMat)[!colnames(plpMat)%in%c('rowId','outcomeCount')] <- paste0('X',colnames(plpMat)[!colnames(plpMat)%in%c('rowId','outcomeCount')])
-  
-  size <- c(2,ifelse(nrow(plpMat)>=50, 25, floor(nrow(plpMat)/2)) ,ifelse(nrow(plpMat)>=50, 50, nrow(plpMat)) )
-  if(!is.null(param$size))
-    size <- param$size
-  decay <- c(0,0.1, 0.05)
-  if(!is.null(param$size))
-    decay <- param$decay
-  
-  maxits<- 500
-  maxwts <- 20000
-  if(!is.null(param$maxwts))
-    maxwts <- param$maxwts
-  if(!is.null(param$maxits))
-    maxits <- param$maxits
-  
-  weights <- rep(1, nrow(plpMat))
-  weights[labs=='yes'] <- sum(labs=='no')/sum(labs=='yes')
-  
-  tuneGrid <- expand.grid(size=size, decay=decay)
-  fitControl <- caret::trainControl(method = "repeatedcv", number = 3,repeats = 1,
-                                    verboseIter = FALSE,classProbs = TRUE,
-                                    summaryFunction=caret::twoClassSummary)
-  
-  model1 <- caret::train(x=plpMat[,!colnames(plpMat)%in%c('outcomeCount','rowId')],
-                         y=as.factor(labs),
-                         method = "nnet",
-                         #preProcess = NULL,
-                         weights = weights,
-                         metric = 'ROC',
-                         maximize = TRUE,
-                         trControl = fitControl,
-                         tuneGrid = tuneGrid,
-                         maxit=maxits,MaxNWts=maxwts)
-  
-  param.string <- paste(paste0(c('size','decay'),':',model1$results[which.max(model1$results$ROC),c('size','decay')]), collapse=',')
-  if(!quiet)
-    writeLines(paste0('Neural Network with parameters ',param.string,' obtained AUC: ', format(model1$results$ROC[which.max(model1$results$ROC)], digits=3)))
-  
-  param.best <- model1$results[which.max(model1$results$ROC),c('size','decay')]
-  
-  comp <- Sys.time() - start
-  
-  metaData <- list(param.search=param)
-  plpData$metaData$modelSearch <- metaData
-  
-  result <- list(model = model1,
-                 trainAuc = model1$results$ROC[which.max(model1$results$ROC)],
-                 trainCalibration= NULL,
-                 modelSettings = list(model='nnet',modelParameters=param.best),
-                 metaData = plpData$metaData,
-                 covariateRef = plpData$covariateRef,
-                 trainingTime =comp
-  )
-  class(result) <- 'plpModel'
-  attr(result, 'type') <- 'caret'
-  attr(result, 'predictionType') <- 'binary'
-  return(result)
-}
-
-
-
-svmRadial_plp <- function(plpData, param, index, search='grid', quiet=F,...){
-  trainInd <- index$rowId[index$index>0]
-  plpData <- subsetPlpdata(plpData, trainInd)
-  if(!quiet)
-    writeLines('Training svmRadial model')
-  start <- Sys.time()
-  plpMat <- cov_to_mat(plpData, quiet=F)
-  labs <- rep('no', nrow(plpMat))
-  labs[plpMat[,colnames(plpMat)%in%'outcomeCount']==1] <- 'yes'
-  colnames(plpMat)[!colnames(plpMat)%in%c('rowId','outcomeCount')] <- paste0('X',colnames(plpMat)[!colnames(plpMat)%in%c('rowId','outcomeCount')])
-  
-  sigma <- c(0.001,0.1,1,10)
-  if(!is.null(param$sigma))
-    sigma <- param$sigma
-  C <- seq(1,10,2)
-  if(!is.null(param$C))
-    C <- param$C
-  tuneGrid <- expand.grid(sigma=sigma, C=C)
-  
-  
-  if(!is.null(plpMat)){
-    fitControl <- caret::trainControl(method = "repeatedcv", number = 3,repeats = 1,
-                                      verboseIter = FALSE,returnResamp = "all",classProbs = TRUE,
-                                      summaryFunction=caret::twoClassSummary)
-    
-    model1 <- caret::train(x=plpMat[,!colnames(plpMat)%in%c('outcomeCount','rowId')],
-                           y=as.factor(labs),
-                           method = "svmRadial",
-                           preProcess = NULL,
-                           weights = NULL,
-                           metric = 'ROC',
-                           maximize = TRUE,
-                           tuneGrid = tuneGrid,
-                           trControl = fitControl)
-    param.string <- paste(paste0(c('sigma','C'),':',model1$results[which.max(model1$results$ROC),c('sigma','C')]), collapse=',')
-    if(!quiet)
-      writeLines(paste0('svmRadial with parameters ',param.string,' obtained AUC: ', format(model1$results$ROC[which.max(model1$results$ROC)], digits=3)))
-    
-    param.best <- model1$results[which.max(model1$results$ROC),c('sigma','C')]
-    
-    comp <- Sys.time() - start
-    
-    metaData <- list(param.search=param)
-    plpData$metaData$modelSearch <- metaData
-    
-    result <- list(model = model1,
-                   trainAuc = model1$results$ROC[which.max(model1$results$ROC)],
-                   trainCalibration= NULL,
-                   modelSettings = list(model='svmRadial',modelParameters=param.best),
-                   metaData = plpData$metaData,
-                   trainingTime =comp
-    )
-    class(result) <- 'plpModel'
-    attr(result, 'type') <- 'caret'
-    attr(result, 'predictionType') <- 'binary'
-  }
-  return(result)
-}
+#todo - create python exe for neural network and other methods 
+# SVM not suitable for our data
 
 #================ H2o models ======================
 
 randomForest_plp <- function(population, plpData, param, dirPath, index, search='grid', quiet=F,
                              outcomeId, cohortId, ...){
   
+  #todo - ave svmlib class of plpdata and just test for this for h2o models
   if(!quiet)
     writeLines(paste0('Training random forest model...' ))
   start <- Sys.time()
@@ -247,12 +119,12 @@ randomForest_plp <- function(population, plpData, param, dirPath, index, search=
   varImp<-varImp[order(-varImp$scaled_importance),]
   
   result <- list(model = modelTrained,
-                 trainAuc = ifelse(is.null(modelTrained@model$cross_validation_metrics@metrics$AUC),
+                 trainCVAuc = ifelse(is.null(modelTrained@model$cross_validation_metrics@metrics$AUC),
                                    modelTrained@model$training_metrics@metrics$AUC,
                                    modelTrained@model$cross_validation_metrics@metrics$AUC),
-                 trainCalibration= NULL,
                  modelSettings = list(model='randomForest_plp',modelParameters=param.best),
                  metaData = plpData$metaData,
+                 populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
                  cohortId=cohortId,
                  varImp = varImp,
@@ -323,12 +195,12 @@ gbm_plp <- function(population,plpData, param, dirPath, index, search='grid', qu
   varImp<-varImp[order(-varImp$scaled_importance),]
   
   result <- list(model = modelTrained,
-                 trainAuc = ifelse(is.null(modelTrained@model$cross_validation_metrics@metrics$AUC),
+                 trainCVAuc = ifelse(is.null(modelTrained@model$cross_validation_metrics@metrics$AUC),
                                    modelTrained@model$training_metrics@metrics$AUC,
                                    modelTrained@model$cross_validation_metrics@metrics$AUC),
-                 trainCalibration= NULL,
                  modelSettings = list(model='gbm_plp',modelParameters=param.best),
                  metaData = plpData$metaData,
+                 populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
                  cohortId=cohortId,
                  varImp = varImp,
@@ -397,12 +269,12 @@ lr_enet_plp <- function(population, plpData,dirPath,index,  param, search='grid'
   varImp<-varImp[order(-varImp$scaled_importance),]
   
   result <- list(model = modelTrained,
-                 trainAuc = ifelse(is.null(modelTrained@model$cross_validation_metrics@metrics$AUC),
+                 trainCVAuc = ifelse(is.null(modelTrained@model$cross_validation_metrics@metrics$AUC),
                                    modelTrained@model$training_metrics@metrics$AUC,
                                    modelTrained@model$cross_validation_metrics@metrics$AUC),
-                 trainCalibration= NULL,
                  modelSettings = list(model='glm_plp',modelParameters=param.best),
                  metaData = plpData$metaData,
+                 populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
                  cohortId=cohortId,
                  varImp = varImp,
@@ -418,7 +290,7 @@ lr_enet_plp <- function(population, plpData,dirPath,index,  param, search='grid'
 
 #========================================================
 
-knn_plp <- function(plpData, index, param, quiet=T, cohortId, outcomeId, ...){
+knn_plp <- function(plpData,population, index, param, quiet=T, cohortId, outcomeId, ...){
   trainInd <- index$rowId[index$index>0]
   plpData <- subsetPlpdata(plpData, trainInd)
   start <- Sys.time()
@@ -450,13 +322,12 @@ knn_plp <- function(plpData, index, param, quiet=T, cohortId, outcomeId, ...){
   
   result <- list(model = indexFolder,
                  modelLoc = indexFolder,    # did I actually save this!?
-                 trainAuc = NULL,
-                 trainCalibration=NULL,
                  modelSettings = list(model='knn',
                                       modelParameters=list(k=k),
                                       indexFolder=indexFolder
                  ),
                  metaData = plpData$metaData,
+                 populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
                  cohortId=cohortId,
                  trainingTime =comp

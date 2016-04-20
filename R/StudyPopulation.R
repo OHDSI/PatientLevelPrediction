@@ -72,12 +72,25 @@ createStudyPopulation <- function(plpData,
                                   addExposureDaysToStart = FALSE,
                                   riskWindowEnd = 365,
                                   addExposureDaysToEnd = F,
-                                  silent=F) {
+                                  silent=F,...) {
   if (is.null(population)) {
     population <- plpData$cohorts
   }
   metaData <- attr(population, "metaData")
   metaData$outcomeId <- outcomeId
+  metaData$binary <- binary
+  metaData$firstExposureOnly = firstExposureOnly
+  metaData$washoutPeriod = washoutPeriod
+  metaData$removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome
+  metaData$priorOutcomeLookback = priorOutcomeLookback
+  metaData$requireTimeAtRisk = requireTimeAtRisk
+  metaData$minTimeAtRisk=minTimeAtRisk
+  metaData$riskWindowStart = riskWindowStart
+  metaData$addExposureDaysToStart = addExposureDaysToStart
+  metaData$riskWindowEnd = riskWindowEnd
+  metaData$addExposureDaysToEnd = addExposureDaysToEnd
+  metaData$silent=silent
+  
   if (firstExposureOnly) {
     if(!silent) writeLines("Keeping only first exposure per subject")
     population <- population[order(population$subjectId, as.Date(population$cohortStartDate)), ]

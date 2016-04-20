@@ -9,7 +9,7 @@ createStudyPopulation(plpData, population = NULL, outcomeId, binary = T,
   removeSubjectsWithPriorOutcome = TRUE, priorOutcomeLookback = 99999,
   requireTimeAtRisk = T, minTimeAtRisk = 365, riskWindowStart = 0,
   addExposureDaysToStart = FALSE, riskWindowEnd = 365,
-  addExposureDaysToEnd = F, silent = F)
+  addExposureDaysToEnd = F, silent = F, ...)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using

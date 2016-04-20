@@ -4,7 +4,7 @@
 \alias{plotCalibration}
 \title{Plot the calibration}
 \usage{
-plotCalibration(prediction, numberOfStrata = 5, truncateFraction = 0.01,
+plotCalibration(prediction, numberOfStrata = 10, truncateFraction = 0.01,
   fileName = NULL)
 }
 \arguments{
