@@ -107,14 +107,14 @@ For this purpose we have created a file called *HospitalizationCohorts.sql* with
 /***********************************
 File HospitalizationCohorts.sql 
 ***********************************/
-IF OBJECT_ID('@resultsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
-	DROP TABLE @resultsDatabaseSchema.rehospitalization;
+IF OBJECT_ID('@cohortsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
+	DROP TABLE @cohortsDatabaseSchema.rehospitalization;
 	
 SELECT visit_occurrence.person_id AS subject_id,
 	MIN(visit_start_date) AS cohort_start_date,
 	DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
 	1 AS cohort_definition_id
-INTO @resultsDatabaseSchema.rehospitalization
+INTO @cohortsDatabaseSchema.rehospitalization
 FROM @cdmDatabaseSchema.visit_occurrence
 INNER JOIN @cdmDatabaseSchema.observation_period
 	ON visit_occurrence.person_id = observation_period.person_id
@@ -133,12 +133,12 @@ WHERE visit_concept_id IN (9201, 9203)
     WHERE ancestor_concept_id = 201826) /* Type 2 DM */
 GROUP BY visit_occurrence.person_id;
 
-INSERT INTO @resultsDatabaseSchema.rehospitalization
+INSERT INTO @cohortsDatabaseSchema.rehospitalization
 SELECT visit_occurrence.person_id AS subject_id,
 	visit_start_date AS cohort_start_date,
 	visit_end_date AS cohort_end_date,
 	2 AS cohort_definition_id
-FROM @resultsDatabaseSchema.rehospitalization
+FROM @cohortsDatabaseSchema.rehospitalization
 INNER JOIN @cdmDatabaseSchema.visit_occurrence
 	ON visit_occurrence.person_id = rehospitalization.subject_id
 WHERE visit_concept_id IN (9201, 9203)
