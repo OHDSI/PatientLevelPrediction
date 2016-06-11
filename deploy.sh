@@ -15,7 +15,11 @@ addToDrat(){
   git remote add upstream "https://$GH_TOKEN@github.com/OHDSI/drat.git"
   git fetch upstream 2>err.txt
   git checkout gh-pages
-
+  
+  ## Install drat
+  mkdir -p ~/Rlib
+  echo 'R_LIBS=~/Rlib' > .Renviron
+  
   Rscript -e "drat::insertPackage('$PKG_REPO/$PKG_TARBALL', \
     repodir = '.', \
     commit='Travis update: $PKG_TARBALL build $TRAVIS_BUILD_NUMBER')"
