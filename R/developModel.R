@@ -57,6 +57,8 @@
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #' @param indexes                          A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)
 #' @param dirFold                          The path to the directory where the models will be saved
+#' @param silent                           Whether to suppress output progress to the consol (default F)
+#' @param log                              The location of the log file (if null uses dirFold, if dirFold also null then it is in the folder plpmodels within the current working directory)
 
 #'
 #' @return
@@ -124,76 +126,233 @@ developModel <- function(population, plpData,
                          featureSettings=NULL,
                          modelSettings,
                          testSplit = 'time', testFraction=0.3, nfold=3, indexes=NULL,
-                         dirPath=NULL, silent=F
+                         dirPath=NULL, silent=F, log=NULL, analysisId=NULL
                          ){
-  if(!testSplit%in%c('person','time'))
-    stop('Invalid testSplit')
-  if(sum(population[,'outcomeCount']>0) < 25)
-    stop('Outcome occurrence too low')
-  
-  # TODO - add input checks
-    
   start.all <- Sys.time()
-  analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
+  if(is.null(analysisId))
+    analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
   
   if(is.null(dirPath)) dirPath <- file.path(getwd(),'plpmodels')
   if(!dir.exists(file.path(dirPath,analysisId))){dir.create(file.path(dirPath,analysisId),recursive=T)}
   
+  # start logging connection
+  if(missing(log) || is.null(log)){log <- dirPath}
+  log <- file.path(log, 'plplog.txt')
+  write('******************************************', file=log, append=F)
+  write('Develop plp model log', file=log, append=T)
+  write(paste0('Start:', Sys.time()), file=log, append=T)
+  write('******************************************', file=log, append=T)
+  write(paste0('Checking input started at: ', Sys.time()), file=log, append=T)
+  #===================== START INPUT CHECKS ===============================#
+  if(!testSplit%in%c('person','time')){
+    write(paste0('#ERROR: Invalid testSplit'), file=log, append=T)
+    stop('Invalid testSplit')
+  }
+  if(sum(population[,'outcomeCount']>0) < 25){
+    write(paste0('#ERROR: Outcome too low'), file=log, append=T)
+    stop('Outcome occurrence too low')
+  }
+  
+  if(!class(plpData)%in%c('plpData.libsvm','plpData.coo','plpData')){
+    write(paste0('#ERROR: Wrong plpData input'), file=log, append=T)
+    stop('Wrong plpData input')
+  }
+  
+  if(class(testFraction)!="numeric"){
+    write(paste0('#ERROR: Invalid testFraction'), file=log, append=T)
+    stop('testFraction must be a numeric between 0 and 1')
+  }
+  if(testFraction>=1){
+    write(paste0('@WARNING: testFraction too high, using 0.25 instead'), file=log, append=T)
+    warning('testFraction greater or equal to 1 - using 0.25 instead')
+    testFraction <- 0.25
+  }
+  if(testFraction<=0){
+    write(paste0('@WARNING: testFraction too low using 0.25 instead'), file=log, append=T)
+    warning('testFraction less or equal to 0 - using 0.25 instead')
+    testFraction <- 0.25
+  }
+  if(class(nfold)!="numeric"){
+    write(paste0('#ERROR: nfold invalid'), file=log, append=T)
+    stop('nfold must be an integer 1 or greater')
+  }
+  if(nfold<=0){
+    write(paste0('@WARNING: nfold invalid - using nfold=1 instead'), file=log, append=T)
+    warning('nfold less or equal to 0 - using 1 instead')
+    nfold <- 1
+  }
+  
+  # check correct plpData
+  if(attr(modelSettings, 'libSVM')){
+    if(class(plpData)!='plpData.libsvm'){
+      write(paste0('#ERROR: Invalid plpData format'), file=log, append=T)
+      stop('Model requires libsvm plpData - apply convertToLibsvm to plpData')
+    }
+  }
+  
+  # if libsvm connect to h2o:
+  if(attr(modelSettings, 'libSVM')){
+    maxRam <- '4g'
+    systemInfo <- Sys.info()
+    if(systemInfo['sysname']=="Windows"){
+      maxRam <- paste0(round(memory.limit(size=NA)/1000*0.8),'g')
+      writeLines(paste0('Initiating H2o with max Ram of: ',maxRam))
+      write(paste0('-- Initiating h2o with maxRam of: ',maxRam ), file=log, append=T)
+      tryCatch(h2o::h2o.init(nthreads=-1, max_mem_size = maxRam),
+               error =function(e) write(paste0('#ERROR: ', e), file=log, append=T),
+               warning = function(w) write(paste0('@WARNING: ', w), file=log, append=T),
+               finally=write(paste0('-- end of h2o initiating'), file=log, append=T)
+      )
+    } else { # need to test this on mac
+      #maxRam <- paste0(mem.limits(nsize=NA, vsize=NA)*0.8,'g')
+      writeLines(paste0('Initiating H2o with default Ram - initiate h2o yourself to edit this '))
+      tryCatch(h2o::h2o.init(nthreads=-1), 
+               error =function(e) write(paste0('#ERROR: ', e), file=log, append=T),
+               warning = function(w) write(paste0('@WARNING: ', w), file=log, append=T),
+               finally=write(paste0('-- end of h2o initiating'), file=log, append=T)
+      )
+    }
+  }
+  
+  write(paste0('Checking input ended at: ', Sys.time()), file=log, append=T)
+  #===================== END INPUT CHECKS ===============================#
+    
   #================ GET COHORT/OUTCOME ==============================
   cohortId <- attr(population, "metaData")$cohortId
   outcomeId <- attr(population, "metaData")$outcomeId
   #=========================================================================
+  write(paste0(' '), file=log, append=T)
+  write(paste0('***************************************************'), file=log, append=T)
+  write(paste0('AnalysisID: ', analysisId), file=log, append=T)
+  write(paste0('CohortID: ', cohortId), file=log, append=T)
+  write(paste0('OutcomeID: ', outcomeId), file=log, append=T)
+  write(paste0('***************************************************'), file=log, append=T)
+  write(paste0(' '), file=log, append=T)
+  
+  
   
   # construct the settings for the model pipeline
   if(is.null(indexes)){
-    if(testSplit=='time')
-      indexes <- timeSplitter(population, test=testFraction, nfold=nfold, silent=silent)
-    if(testSplit=='person')
-      indexes <- personSplitter(population, test=testFraction, nfold=nfold, silent=silent)
+    if(testSplit=='time'){
+      write(paste0('Starting time test/train/validation splits at time: ', Sys.time()), file=log, append=T)
+      indexes <- tryCatch(timeSplitter(population, test=testFraction, nfold=nfold, silent=silent),
+                          error = function(e) stop(e),
+                          warning = function(w) write(paste0('@WARNING: ', w)))
+      write(paste0('Completed test/train/validation splits by time: ', Sys.time()), file=log, append=T)
+    }
+    if(testSplit=='person'){
+      write(paste0('Starting person test/train/validation splits at time: ', Sys.time()), file=log, append=T)
+      indexes <- tryCatch(personSplitter(population, test=testFraction, nfold=nfold, silent=silent),
+                          error = function(e) stop(e),
+                          warning = function(w) write(paste0('@WARNING: ', w)))
+      write(paste0('Completed test/train/validation splits by time: ', Sys.time()), file=log, append=T)
+    }
   }
   
-  if(nrow(population)!=nrow(indexes))
+  if(nrow(population)!=nrow(indexes)){
+    write(paste0('#ERROR: Population dimension not compatible with indexes: ', nrow(population) ,'--', nrow(indexes)), file=log, append=T)
     stop('Population dimension not compatible with indexes')
+  }
   tempmeta <- attr(population, "metaData")
   population <- merge(population, indexes)
   colnames(population)[colnames(population)=='index'] <- 'indexes'
   attr(population, "metaData") <- tempmeta
-  #population$indexes <- indexes$index
+ 
+  #================= LOG POPULATION, PLPDATA, COVARIATE SETTINGS =================#
+  write(paste0(' '), file=log, append=T)
+  write(paste0('****************************************************'), file=log, append=T)
   
-  settings <- list(data=plpData, dirPath=dirPath, index=indexes,
+  write(paste0('-- PlpData has: ', nrow(plpData$cohorts) ,' people'), file=log, append=T)
+  
+  write(paste0('-- Population has: ', nrow(population) ,' rows and ', ncol(population),' columns'), file=log, append=T)
+  write(paste0('-- Population has: ', sum(population$outcomeCount>0) ,' outcomes'), file=log, append=T)
+
+  write(paste0('-- PlpData has: ', nrow(plpData$covariateRef) ,' covariates'), file=log, append=T)
+  
+  write(paste0('****************************************************'), file=log, append=T)
+  write(paste0(' '), file=log, append=T)
+  #===============================================================================#
+  
+  
+  #================== SUMMARISE TRAIN/TEST/FOLD DATA FOR LOG =============================#
+  
+  # TODO add covariate summary - test/train/val frequencies
+  
+  #=======================================================================================#
+
+  
+  settings <- list(data=plpData,  index=indexes,
                    featureSettings = featureSettings,
                    modelSettings = modelSettings,
                    population=population, quiet=silent,
                    cohortId=cohortId,
                    outcomeId=outcomeId)
   
-  populationLoc <- file.path(dirPath,analysisId, 'population.txt')
-  write.table(population, populationLoc, row.names=F)
+  #============================  TRAIN MODEL =====================================#
+  write(paste0('-- Starting model training at ', Sys.time()), file=log, append=T)
+  model <- tryCatch(do.call(fitPlp, settings),
+                    warning = function(w)  write(paste0('@WARNING: ', w ), file=log, append=T),
+                    error = function(e) stop(e),
+                    finally= write(paste0('-- Finished model training at ', Sys.time()), file=log, append=T)
+                    )
   
-  # train model
-  model <- do.call(fitPlp, settings)
   if(!silent)
     writeLines('1: Model Trained')
   modelLoc <- file.path(dirPath,analysisId, 'savedModel' )
-  savePlpModel(model, modelLoc)
+  tryCatch(savePlpModel(model, modelLoc),
+           warning = function(w)  write(paste0('@WARNING: ', w ), file=log, append=T),
+           error = function(e) stop(e),
+           finally= write(paste0('-- Model (class:',class(model),') saved to ', modelLoc), file=log, append=T)
+  )
   
+  # TODO: LOG MODELING TRAINING START TIME, PROGRESS, END TIME + SUMMARY
+  #       LOG CONVERGENCE + OPTIMAL HYPER-PARAMERTERS
+  
+  #==============================================================================#
+  
+  #==============================================================================#
   # do prediction (on all data as we want test + train model performances)
-  prediction <- predictPlp(plpModel=model, population=population, plpData=plpData, 
-                           index=NULL, dirPath=dirPath, silent=silent)
+  # TODO:put all in trycatch()
+  write(paste0('-- Starting prediction calculation at ', Sys.time()), file=log, append=T)
+
+  prediction <- tryCatch(predictPlp(plpModel=model, population=population, plpData=plpData, 
+                           index=NULL,silent=silent),
+                         warning = function(w)  write(paste0('@WARNING: ', w ), file=log, append=T),
+                         error = function(e) stop(e),
+                         finally= write(paste0('-- Finished prediction at ', Sys.time()), file=log, append=T)
+  )
+  writeLines(paste('silent 5 ',silent))
+  writeLines(paste('silent 2: ',!silent))
   if(!silent)
     writeLines('2) Prediction Calculated')
  
+  # LOGGING COMPLETE UP TO HERE
   # calculate metrics
   if(ifelse(is.null(prediction), FALSE, length(unique(prediction$value))>1)){
     
-    performance.test <- evaluatePlp(prediction[prediction$indexes<0,])
+    write(paste0(' '), file=log, append=T)
+    write(paste0('-- Starting test set evaluation at ', Sys.time()), file=log, append=T)
+    performance.test <- tryCatch(evaluatePlp(prediction[prediction$indexes<0,]),
+                                 warning = function(w)  write(paste0('@WARNING: ', w ), file=log, append=T),
+                                 error = function(e) stop(e),
+                                 finally= write(paste0('-- Finished test set evaluation at ', Sys.time()), file=log, append=T)
+    )
     writeLines(' Test set predictions evaluated')
-    performance.train <- evaluatePlp(prediction[prediction$indexes>0,])
+    
+    write(paste0(' '), file=log, append=T)
+    write(paste0('-- Starting train set evaluation at ', Sys.time()), file=log, append=T)
+    performance.train <- tryCatch(evaluatePlp(prediction[prediction$indexes>0,]),
+                                  warning = function(w)  write(paste0('@WARNING: ', w ), file=log, append=T),
+                                  error = function(e) stop(e),
+                                  finally= write(paste0('-- Finished train set evaluation at ', Sys.time()), file=log, append=T)
+    )
     writeLines(' Train set predictions evaluated')
     if(!silent)
       writeLines('3) Performance calculated')
     
-    writeOutput(prediction=prediction, 
+    write(paste0(' '), file=log, append=T)
+    write(paste0('-- Started saving evaluation at ', Sys.time()), file=log, append=T)
+    tryCatch(writeOutput(prediction=prediction, 
                 performance.test=performance.test, 
                 performance.train=performance.train, 
                 plpModel=model,
@@ -203,13 +362,20 @@ developModel <- function(population, plpData,
                 analysisId=analysisId,
                 start.all=start.all,
                 testSplit=testSplit,
-                modelLoc=modelLoc,
-                populationLoc=populationLoc)
+                modelLoc=modelLoc),
+             warning = function(w)  write(paste0('@WARNING: ', w ), file=log, append=T),
+             error = function(e) write(paste0('#ERROR: ', e ), file=log, append=T),
+             finally= write(paste0('-- Finished saving evaluation at ', Sys.time()), file=log, append=T)
+    )
     
   }else{
+    write(paste0('@WARNING: evaluation not possible as prediciton NULL or all the same values'), file=log, append=T)
     performance.test <- NULL
     performance.train <- NULL
   }
+  
+  
+  #===============================================================================#
   
   results <- list(transform=model$transform,
                   model=model,
@@ -218,6 +384,7 @@ developModel <- function(population, plpData,
                   evalType=testSplit,
                   performanceTest=performance.test,
                   performanceTrain=performance.train,
+                  # ADD OUTPUT LOCATION?
                   time=format(difftime(Sys.time(), start.all, units='hours'), nsmall=1))
   class(results) <- c('list','plpModel')
   
@@ -258,7 +425,6 @@ developModel <- function(population, plpData,
 #'                                         \item{GLRMfeature()}{ Non-negative matrix factorisation}
 #'                                         
 #'                                         }
-#' @param dirPath                              The path to the directory where the model will be saved
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
@@ -273,14 +439,18 @@ developModel <- function(population, plpData,
 #'
 
 #' @export
-fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirPath, quiet,
+fitPlp <- function(population, data, index,  modelSettings,featureSettings, quiet,
                    cohortId, outcomeId){
-  plpData <- list(outcomes =data$outcomes,
-                  cohorts = data$cohorts,
-                  covariates =ff::clone(data$covariates),
-                  covariateRef=ff::clone(data$covariateRef),
-                  metaData=data$metaData
-  )
+  silent <- quiet
+  if('ffdf'%in%class(data$covariates)){
+    plpData <- list(outcomes =data$outcomes,
+                    cohorts = data$cohorts,
+                    covariates =ff::clone(data$covariates),
+                    covariateRef=ff::clone(data$covariateRef),
+                    metaData=data$metaData
+    )} else{
+    plpData <- data
+  }
 
   
   #=========================================================
@@ -291,20 +461,20 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
   # apply each featureSetting option in order of the list entry to do feature engineering/selection
   if (class(featureSettings) == "featureSettings") {
     fun <- featureSettings$method
-    args <- list(plpData =plpData, dirPath=dirPath, index=index, param=featureSettings$param)
+    args <- list(plpData =plpData, index=index, param=featureSettings$param)
     plpTransform <- do.call(fun, args)
     
     # transform all the data:
     plpData <- plpTransform$transform(plpData)
     
     if (nrow(plpData$covariates) == 0) {
-      warning("No features remaining")
+      stop("No features remaining")
     } 
   } else if (is.list(featureSettings)) {
     for (i in 1:length(featureSettings)) {
       #fun <- attr(featureSettings[[i]], "fun")
       fun <- featureSettings[[i]]$method
-      args <- list(plpData=plpData,dirPath=dirPath,  index=index, param=featureSettings[[i]]$param)
+      args <- list(plpData=plpData,  index=index, param=featureSettings[[i]]$param)
       plpTransform.temp <- do.call(fun, args)
       
       if(i==1){
@@ -320,20 +490,15 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
       plpData <- plpTransform$transform[[i]](plpData)
       
       if (nrow(plpData$covariates) == 0) {
-        warning("No features remaining")
+        stop("No features remaining")
       } 
     }
   }
   
 
-  # if model is h2o save to libSVM:
-  if(attr(modelSettings, 'libSVM')){
-    mappingVal <- saveLibSVM(population, plpData, filePath=dirPath)
-  }
-
   # Now apply the classifier:
   fun <- modelSettings$model
-  args <- list(plpData =plpData,param =modelSettings$param, index=index, dirPath=dirPath,
+  args <- list(plpData =plpData,param =modelSettings$param, index=index,
                population=population, quiet=quiet, cohortId=cohortId, outcomeId=outcomeId)
   plpModel <- do.call(fun, args)
   
@@ -342,8 +507,9 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
     plpModel$metaData$featureSettings <-  plpTransform 
   
   # create transformation function
-  createTransform <- function(plpModel,mappingVal){
-    transform <- function(plpData=NULL, population=NULL, file=dirPath, silent=F){
+  createTransform <- function(plpModel){
+    
+    transform <- function(plpData=NULL, population=NULL, silent=F){
       #check model fitting makes sense:
       if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$cohortId)
         warning('cohortId of new data does not match training data')
@@ -356,13 +522,11 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
       if(!silent) writeLines("Applying model's feature selection...")
       plpData <- lapply(plpModel$metaData$featureSettings$transform, function(x) do.call(x, list(newData=plpData)))
      }
-      if(attr(modelSettings, 'libSVM'))
-        saveLibSVM(population, plpData, filePath=file, mapping=mappingVal)
+      
       if(!silent) writeLines('Applying model to calculate predictions...')
       pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                               plpData=plpData, 
                                                               population=population, 
-                                                              dirPath=file,
                                                               silent=silent))
       metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
                        testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
@@ -372,12 +536,13 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
                        outcomeId = plpModel$outcomeId,
                        predictionType ='binary'
       )
+      writeLines(paste('silent end trans ',silent))
       attr(pred, 'metaData') <- metaData
       return(pred)
     }
     return(transform)
   }
-  plpModel$transform <- createTransform(plpModel,mappingVal)
+  plpModel$transform <- createTransform(plpModel)
   
   return(plpModel)
   
@@ -402,8 +567,8 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, dirP
 #'
 
 #' @export
-predictPlp <- function(plpModel, population, plpData, dirPath, index=NULL, silent=F){
-  # in the model part add an attribute type - plp, h2o, caret, ... then apply prediciton for that type or allow custom
+predictPlp <- function(plpModel, population, plpData,  index=NULL, silent=F){
+  
   # apply the feature transformations
   if(!is.null(index)){
     if(!silent) writeLines(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
@@ -412,10 +577,12 @@ predictPlp <- function(plpModel, population, plpData, dirPath, index=NULL, silen
     if(!silent) writeLines(paste0('Calculating prediction for ',nrow(population),' in dataset'))
     ind <- rep(T, nrow(population))
   }
+  
   # do the predction on the new data
   if(class(plpModel)=='plpModel'){
     # extract the classifier type
-    prediction <- plpModel$transform(plpData=plpData,population=population[ind,],file=dirPath, silent=silent)
+    prediction <- plpModel$transform(plpData=plpData,population=population[ind,], silent=silent)
+    
     if(nrow(prediction)!=nrow(population[ind,]))
       warning(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
   } else{
@@ -543,8 +710,7 @@ writeOutput <- function(prediction,
                         analysisId,
                         start.all,
                         testSplit,
-                        modelLoc,
-                        populationLoc){
+                        modelLoc){
   if(!dir.exists(file.path(dirPath,analysisId , 'test'))){dir.create(file.path(dirPath,analysisId , 'test'))}
   write.table(performance.test$raw, file.path(dirPath,analysisId , 'test','rocRawSparse.txt'), row.names=F)
   write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'test','preferenceScoresSparse.txt'), row.names=F)
@@ -584,7 +750,7 @@ writeOutput <- function(prediction,
                             model= plpModel$modelSettings$model,
                             splitOn = testSplit,
                             modelLoc =modelLoc ,
-                            populationLoc=populationLoc ,
+                            populationLoc='NULL' ,
                             parameters = paste(names(plpModel$modelSettings$modelParameters), unlist(plpModel$modelSettings$modelParameters), sep=':', collapse=','),
                             modelTime = comp)
   }, error= function(err){print(paste("MY_ERROR:  ",err))
@@ -602,8 +768,8 @@ writeOutput <- function(prediction,
                                     hosmerlemeshow_pvalue = performance.test$hosmerlemeshow[3],
                                     calibrationIntercept = performance.test$calibrationIntercept10,
                                     calibrationGradient = performance.test$calibrationGradient10,
-                                    preference4070_0 = performance.test$preference4070_0,
-                                    preference4070_1 = performance.test$preference4070_1
+                                    preference3070_0 = performance.test$preference3070_0,
+                                    preference3070_1 = performance.test$preference3070_1
   )
   
   performanceInfoTrain <- data.frame(modelId =analysisId,
@@ -617,8 +783,8 @@ writeOutput <- function(prediction,
                                      hosmerlemeshow_pvalue = performance.train$hosmerlemeshow[3],
                                      calibrationIntercept = performance.train$calibrationIntercept10,
                                      calibrationGradient = performance.train$calibrationGradient10,
-                                     preference4070_0 = performance.train$preference4070_0,
-                                     preference4070_1 = performance.train$preference4070_1
+                                     preference3070_0 = performance.train$preference3070_0,
+                                     preference3070_1 = performance.train$preference3070_1
   )
   
   # search for modelInfo in directory - if does not exist create and save model info table

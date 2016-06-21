@@ -33,7 +33,10 @@ Imports:
     SqlRender (>= 1.1.3),
     survival,
     h2o,
-    FeatureExtraction
+    FeatureExtraction,
+    xgboost,
+    Matrix,
+    AUC
 Suggests:
     testthat,
     pROC,
@@ -42,4 +45,4 @@ Suggests:
     rmarkdown
 LinkingTo: Rcpp
 NeedsCompilation: yes
-RoxygenNote: 5.0.0
+RoxygenNote: 5.0.1

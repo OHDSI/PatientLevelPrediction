@@ -217,42 +217,75 @@ plotRoc <- function(prediction, fileName = NULL) {
 #'
 
 #' @export
-evaluatePlp <- function(prediction){
+evaluatePlp <- function(prediction, silent=F){
   type <- attr(prediction, "metaData")$predictionType
   if (type != "binary")
     stop("Currently only support binary classification models")
   if(is.null(prediction$outcomeCount)) stop('No outcomeCount column present')
   if(length(unique(prediction$value))==1) stop('Cannot evaluate as predictions all the same value')
-  eval <- sparseMetric(prediction, aveP=T)
+  eval <- sparseMetric(prediction, aveP=T, silent=silent)
   
   return(eval) 
 }
 
-sparseMetric <- function(prediction, aveP=T){
+sparseMetric <- function(prediction, aveP=T, silent=F){
   #writeLines(paste0('na: ', sum(is.na(prediction$value))))
+  if(!silent)
+    writeLines(paste0('Calculating auc started at: ', Sys.time()))
+  if(nrow(prediction) < 100000){
   auc <- computeAuc(prediction,
                     confidenceInterval = T)
-  
+  } else{
+  auc <- AUC:::auc(AUC:::roc(prediction$value, factor(prediction$outcomeCount)))
+  }
+  if(!silent)
+    writeLines(paste0('Calculating auc ended at: ', Sys.time()))
   # calibration linear fit- returns gradient, intercept
+  
+  if(!silent)
+    writeLines(paste0('Calculating calibration line started at: ', Sys.time()))
   calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
   calLine100 <- calibrationLine(prediction, numberOfStrata = 100)
+  if(!silent)
+    writeLines(paste0('Calculating calibration line ended at: ', Sys.time()))
   
+  if(!silent)
+    writeLines(paste0('Calculating calibration plot started at: ', Sys.time()))
   calPlot <- plotCalibration(prediction,
                              numberOfStrata = 10,
                              truncateFraction = 0.01,
                              fileName = NULL)
+  if(!silent)
+    writeLines(paste0('Calculating calibration plot ended at: ', Sys.time()))
   
   
   # brier scores-returnss; brier, brierScaled
+  if(!silent)
+    writeLines(paste0('Calculating brier score started at: ', Sys.time()))
   brier <- brierScore(prediction)
+  if(!silent)
+    writeLines(paste0('Calculating brier score ended at: ', Sys.time()))
+  
   
   # boxplot and quantiles:
+  if(!silent)
+    writeLines(paste0('Calculating quantiles started at: ', Sys.time()))
   quantiles <- quantiles(prediction)  
+  if(!silent)
+    writeLines(paste0('Calculating quantiles ended at: ', Sys.time()))
   
   # preference score sparse:
+  if(!silent)
+    writeLines(paste0('Calculating preference score at: ', Sys.time()))
   prefScore <- computePreferenceScore(prediction) 
+  if(!silent)
+    writeLines(paste0('Calculating preference ended at: ', Sys.time()))
   
+
   # now calculate 100 point tpr, fpr
+  if(!silent)
+    writeLines(paste0('Calculating sparse ROC started at: ', Sys.time()))
+  
   lab.order <- prediction$outcomeCount[order(-prediction$value)]
   n <- nrow(prediction)
   P <- sum(prediction$outcomeCount>0)
@@ -260,8 +293,15 @@ sparseMetric <- function(prediction, aveP=T){
   change.ind <- which(lab.order==0)
   ind.oi <- change.ind[c(seq(1,length(change.ind)-1,
                              floor((length(change.ind)-1)/99)), length(change.ind))]
-  TP <- sapply(ind.oi, function(x) sum(lab.order[1:x]>0))
-  FP <- sapply(ind.oi, function(x) sum(lab.order[1:x]==0))
+  # code test: improve speed create vector with cum sum 
+  temp.cumsum <- rep(0, length(lab.order))
+  temp.cumsum[lab.order==0] <- 1:sum(lab.order==0)
+  TP <- sapply(ind.oi, function(x) x-temp.cumsum[x])
+  FP <- sapply(ind.oi, function(x) temp.cumsum[x])
+  # end of code testing
+  
+  #TP <- sapply(ind.oi, function(x) sum(lab.order[1:x]>0))
+  #FP <- sapply(ind.oi, function(x) sum(lab.order[1:x]==0))
   TN <- N-FP
   FN <- P-TP
   
@@ -273,6 +313,9 @@ sparseMetric <- function(prediction, aveP=T){
   Fmeasure <- 2*(PPV*TPR)/(PPV+TPR)
   
   roc.sparse <- data.frame(TP,FP,TN,FN, TPR, FPR,PPV,FOR, accuracy, Fmeasure)
+  if(!silent)
+    writeLines(paste0('Calculating ROC sparse ended at: ', Sys.time()))
+  
   
   aveP.val <- NULL
   if(aveP==T){
@@ -296,8 +339,8 @@ sparseMetric <- function(prediction, aveP=T){
                  quantiles = quantiles$quantiles,
                  calPlot =calPlot$plot, prefScorePlot = prefScore$plot,
                  boxPlot = quantiles$plot,
-                 preference4070_0 = prefScore$similar_0,
-                 preference4070_1 = prefScore$similar_1
+                 preference3070_0 = prefScore$similar_0,
+                 preference3070_1 = prefScore$similar_1
   )
   class(result) <- 'metric.sparse'
   return(result)
@@ -317,40 +360,52 @@ calibrationLine <- function(prediction,numberOfStrata=10, ...){
   outPpl <- unique(prediction$rowId)
 
   q <- unique(quantile(prediction$value, c((1:(numberOfStrata - 1))/numberOfStrata, 1)))
-  prediction$strata <- cut(prediction$value,
-                           breaks = unique(c(0,q)), #,max(prediction$value)),
-                           labels = FALSE)
   
-  # get observed events:
-  obs.Points <- aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=mean)
-  colnames(obs.Points) <- c('group','obs')
-  pred.Points <- aggregate(prediction$value, by=list(prediction$strata), FUN=mean)
-  colnames(pred.Points) <- c('group','pred')
-  
-  # hosmer-lemeshow-goodness-of-fit-test
-  obs.count <- aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
-  colnames(obs.count) <- c('group','observed')
-  expected.count <- aggregate(prediction$value, by=list(prediction$strata), FUN=sum)
-  colnames(expected.count) <- c('group','expected')
-  hoslem <- merge(obs.count, expected.count, by='group')
-  obs.count2 <- aggregate(1-prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
-  colnames(obs.count2) <- c('group','observed')
-  expected.count2 <- aggregate(1-prediction$value, by=list(prediction$strata), FUN=sum)
-  colnames(expected.count2) <- c('group','expected')
-  nhoslem <- merge(obs.count2, expected.count2, by='group')
-  Xsquared <- sum((hoslem$observed-hoslem$expected)^2/hoslem$expected) +
-    sum((nhoslem$observed-nhoslem$expected)^2/nhoslem$expected)
-  pvalue <- pchisq(Xsquared, df=numberOfStrata-2, lower.tail = F)
-  hosmerlemeshow <- data.frame(Xsquared=Xsquared, df=numberOfStrata-2, pvalue=pvalue)
-  
-  # linear model fitting obs to pred:
-  lmData <- merge(obs.Points, pred.Points, by='group')
-  model <- lm(obs ~pred, data=lmData)
-  
-  plot(lmData$pred, lmData$obs)
-  abline(a = model$coefficients[1], b = model$coefficients[2], col='red')
-  res <- model$coefficients
-  names(res) <- c('Intercept','Gradient')
+  if(length(unique(c(0,q)))==2){
+    warning('Prediction not spread')
+    #res <- c(0,0)
+    #lmData <- NULL
+    #hosmerlemeshow <-  c(0,0,0)
+    prediction$strata <- cut(prediction$value,
+                             breaks = c(0,0.5,1), #,max(prediction$value)),
+                             labels = FALSE)
+  } else {
+    prediction$strata <- cut(prediction$value,
+                             breaks = unique(c(0,q)), #,max(prediction$value)),
+                             labels = FALSE)
+  }
+    
+    # get observed events:
+    obs.Points <- aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=mean)
+    colnames(obs.Points) <- c('group','obs')
+    pred.Points <- aggregate(prediction$value, by=list(prediction$strata), FUN=mean)
+    colnames(pred.Points) <- c('group','pred')
+    
+    # hosmer-lemeshow-goodness-of-fit-test
+    obs.count <- aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
+    colnames(obs.count) <- c('group','observed')
+    expected.count <- aggregate(prediction$value, by=list(prediction$strata), FUN=sum)
+    colnames(expected.count) <- c('group','expected')
+    hoslem <- merge(obs.count, expected.count, by='group')
+    obs.count2 <- aggregate(1-prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
+    colnames(obs.count2) <- c('group','observed')
+    expected.count2 <- aggregate(1-prediction$value, by=list(prediction$strata), FUN=sum)
+    colnames(expected.count2) <- c('group','expected')
+    nhoslem <- merge(obs.count2, expected.count2, by='group')
+    Xsquared <- sum((hoslem$observed-hoslem$expected)^2/hoslem$expected) +
+      sum((nhoslem$observed-nhoslem$expected)^2/nhoslem$expected)
+    pvalue <- pchisq(Xsquared, df=numberOfStrata-2, lower.tail = F)
+    hosmerlemeshow <- data.frame(Xsquared=Xsquared, df=numberOfStrata-2, pvalue=pvalue)
+    
+    # linear model fitting obs to pred:
+    lmData <- merge(obs.Points, pred.Points, by='group')
+    model <- lm(obs ~pred, data=lmData)
+    
+    plot(lmData$pred, lmData$obs)
+    abline(a = model$coefficients[1], b = model$coefficients[2], col='red')
+    res <- model$coefficients
+    names(res) <- c('Intercept','Gradient')
+  #
   
   result <- list(lm=res,
                  aggregateLmData = lmData,
@@ -399,20 +454,20 @@ computePreferenceScore <- function(prediction) {
     ggplot2::scale_x_continuous(limits = c(0, 1)) +
     ggplot2::geom_vline(xintercept = 0.3) + ggplot2::geom_vline(xintercept = 0.7)
   
-  # get the density between 0.4-0.7 for outcome and non-outcome
-  prediction$indif <- prediction$preferenceScore <= 0.7 & prediction$preferenceScore >= 0.4
+  # get the density between 0.3-0.7 for outcome and non-outcome
+  prediction$indif <- prediction$preferenceScore <= 0.7 & prediction$preferenceScore >= 0.3
   count <- aggregate(prediction$indif, list(prediction$outcomeCount), sum)
-  colnames(count) <- c('Outcome','total0407')
+  colnames(count) <- c('Outcome','total0307')
   countN <- aggregate(prediction$indif, list(prediction$outcomeCount),length)
   colnames(countN) <- c('Outcome','total')
   
-  similar4070 <- merge(count, countN)
-  similar4070$density <- similar4070$total0407/similar4070$total
+  similar3070 <- merge(count, countN)
+  similar3070$density <- similar3070$total0307/similar3070$total
   
   result <- list(sparsePrefScore = res,
                  plot = plot,
-                 similar_1=similar4070$density[2],
-                 similar_0=similar4070$density[1]
+                 similar_1=similar3070$density[2],
+                 similar_0=similar3070$density[1]
   )
   
   return(result)

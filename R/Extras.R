@@ -12,18 +12,23 @@ createAnalysisSummary <- function (dirPath, save=F){
     
   allInfo <- merge(modelInfo, performanceInfo)
   
-  cohortInfo <- read.table(file.path(analysisLocation, 'analysis.txt'), header=T)
-  
-  y.match <- 'cohortId'
-  x.match <- 'COHORT_DEFINITION_ID'
-  if('outcomeId'%in%colnames(allInfo) & 'OUTCOME_ID'%in%colnames(cohortInfo)){
-    y.match <- c('cohortId', 'outcomeId')
-    x.match <- c('COHORT_DEFINITION_ID', 'OUTCOME_ID')
+  if(file.exists(file.path(analysisLocation, 'analysis.txt'))){
+    cohortInfo <- read.table(file.path(analysisLocation, 'analysis.txt'), header=T)
+    
+    
+    y.match <- 'cohortId'
+    x.match <- 'COHORT_DEFINITION_ID'
+    if('outcomeId'%in%colnames(allInfo) & 'OUTCOME_ID'%in%colnames(cohortInfo)){
+      y.match <- c('cohortId', 'outcomeId')
+      x.match <- c('COHORT_DEFINITION_ID', 'OUTCOME_ID')
+    }
+    
+    
+    mainResult <- merge(cohortInfo, allInfo[,!colnames(allInfo)%in%c('populationLoc')], 
+                        by.y=y.match, by.x=x.match)
+  } else {
+    mainResult <- allInfo[,!colnames(allInfo)%in%c('populationLoc')]
   }
-  
-  
-  mainResult <- merge(cohortInfo, allInfo[,!colnames(allInfo)%in%c('modelLoc','populationLoc')], 
-                      by.y=y.match, by.x=x.match)
   
   if(save==T)
     write.csv(mainResult, file.path(analysisLocation,'largeScaleResults.csv'), 

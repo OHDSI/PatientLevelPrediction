@@ -4,8 +4,8 @@
 \alias{fitPlp}
 \title{fitModel}
 \usage{
-fitPlp(population, data, index, modelSettings, featureSettings, dirPath, quiet,
-  cohortId, outcomeId)
+fitPlp(population, data, index, modelSettings, featureSettings, quiet, cohortId,
+  outcomeId)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted}
@@ -31,8 +31,6 @@ rowIds. If used, only the rowIds with a negative index value are used to calcula
 \item{GLRMfeature()}{ Non-negative matrix factorisation}
 
 }}
-
-\item{dirPath}{The path to the directory where the model will be saved}
 }
 \value{
 An object of class \code{plpModel} containing:

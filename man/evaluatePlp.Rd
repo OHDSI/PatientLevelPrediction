@@ -4,7 +4,7 @@
 \alias{evaluatePlp}
 \title{evaluatePlp}
 \usage{
-evaluatePlp(prediction)
+evaluatePlp(prediction, silent = F)
 }
 \arguments{
 \item{prediction}{The patient level prediction model's prediction}

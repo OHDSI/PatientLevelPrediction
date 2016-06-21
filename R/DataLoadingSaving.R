@@ -142,6 +142,7 @@ getDbPlpData <- function(connectionDetails,
     conceptIds <- DatabaseConnector::querySql(connection, sql)
     names(conceptIds) <- SqlRender::snakeCaseToCamelCase(names(conceptIds))
     conceptIds <- conceptIds$descendantConceptId
+    # TODO this needs to be edited for multi coariate setting
     covariateSettings$excludedCovariateConceptIds <- c(covariateSettings$excludedCovariateConceptIds,
                                                        conceptIds)
   }
@@ -171,17 +172,15 @@ getDbPlpData <- function(connectionDetails,
                                                  cdm_version = cdmVersion)
   cohorts <- DatabaseConnector::querySql(connection, cohortSql)
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
-  metaData <- list(cohortId = cohortId,
+  metaData.cohort <- list(cohortId = cohortId,
                    studyStartDate = studyStartDate,
                    studyEndDate = studyEndDate)
   
-  metaData$attrition <- getCounts(cohorts, "Original cohorts")
-  attr(cohorts, "metaData") <- metaData
-  
+
   delta <- Sys.time() - start
   writeLines(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
   
-  covariateSettings$useCovariateCohortIdIs1 <- TRUE
+  #covariateSettings$useCovariateCohortIdIs1 <- TRUE
   covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
                                                          oracleTempSchema = oracleTempSchema,
                                                          cdmDatabaseSchema = cdmDatabaseSchema,
@@ -203,8 +202,12 @@ getDbPlpData <- function(connectionDetails,
                                                   cdm_version = cdmVersion)
   outcomes <- DatabaseConnector::querySql(connection, outcomeSql)
   colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
-  metaData <- data.frame(outcomeIds =outcomeIds)
-  attr(outcomes, "metaData") <- metaData
+  metaData.outcome <- data.frame(outcomeIds =outcomeIds)
+  attr(outcomes, "metaData") <- metaData.outcome
+  
+  metaData.cohort$attrition <- getCounts(cohorts,nrow(outcomes), "Original cohorts")
+  attr(cohorts, "metaData") <- metaData.cohort
+  
   delta <- Sys.time() - start
   writeLines(paste("Loading outcomes took", signif(delta, 3), attr(delta, "units")))
   
@@ -267,7 +270,7 @@ savePlpData <- function(plpData, file, envir=NULL) {
     stop("Must specify plpData")
   if (missing(file))
     stop("Must specify file")
-  if (class(plpData) != "plpData")
+  if (!class(plpData) %in% c("plpData","plpData.libsvm"  ))
     stop("Data not of class plpData")
   
   # save the actual values in the metaData
@@ -276,9 +279,15 @@ savePlpData <- function(plpData, file, envir=NULL) {
     plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
   }
   
-  covariates <- plpData$covariates
-  covariateRef <- plpData$covariateRef
-  ffbase::save.ffdf(covariates, covariateRef, dir = file, clone = TRUE)
+  if('ffdf'%in%class(plpData$covariates)){
+    covariates <- plpData$covariates
+    covariateRef <- plpData$covariateRef
+    ffbase::save.ffdf(covariates, covariateRef, dir = file, clone = TRUE)
+  } else{
+    covariateRef <- plpData$covariateRef
+    ffbase::save.ffdf(covariateRef, dir = file, clone = TRUE)
+    saveRDS(plpData$covariates, file = file.path(file, "covariates.rds"))
+  }
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
   saveRDS(plpData$outcomes, file = file.path(file, "outcomes.rds"))
   saveRDS(plpData$metaData, file = file.path(file, "metaData.rds"))
@@ -312,6 +321,7 @@ loadPlpData <- function(file, readOnly = TRUE) {
   temp <- setwd(file)
   absolutePath <- setwd(temp)
   
+  if(!file.exists(file.path(file, "covariates.rds"))){
   e <- new.env()
   ffbase::load.ffdf(absolutePath, e)
   result <- list(covariates = get("covariates", envir = e),
@@ -323,6 +333,19 @@ loadPlpData <- function(file, readOnly = TRUE) {
   open(result$covariates, readonly = readOnly)
   open(result$covariateRef, readonly = readOnly)
   class(result) <- "plpData"
+  } else{
+    e <- new.env()
+    ffbase::load.ffdf(absolutePath, e)
+    result <- list(covariates = readRDS(file.path(file, "covariates.rds")),
+                   covariateRef = get("covariateRef", envir = e),
+                   cohorts = readRDS(file.path(file, "cohorts.rds")),
+                   outcomes = readRDS(file.path(file, "outcomes.rds")),
+                   metaData = readRDS(file.path(file, "metaData.rds")))
+    # Open all ffdfs to prevent annoying messages later:
+    open(result$covariateRef, readonly = readOnly)
+    class(result) <- "plpData.libsvm"
+  }
+
   rm(e)
   return(result)
 }

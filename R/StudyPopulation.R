@@ -96,12 +96,20 @@ createStudyPopulation <- function(plpData,
     population <- population[order(population$subjectId, as.Date(population$cohortStartDate)), ]
     idx <- duplicated(population[, c("subjectId", "cohortId")])
     population <- population[!idx, ]
-    metaData$attrition <- rbind(metaData$attrition, getCounts(population, "First exposure only"))
+    
+    # get outcome count:
+    outCount <- 0
+    if(!missing(outcomeId) && !is.null(outcomeId))
+      outCount <- sum(plpData$outcomes$rowId%in%population$rowId & plpData$outcomes$outcomeId == outcomeId)
+    metaData$attrition <- rbind(metaData$attrition, getCounts(population,outCount, "First exposure only"))
   }
   if (washoutPeriod) {
     if(!silent) writeLines(paste("Requiring", washoutPeriod, "days of observation prior index date"))
     population <- population[population$daysFromObsStart >= washoutPeriod,]
-    metaData$attrition <- rbind(metaData$attrition, getCounts(population, paste("At least", washoutPeriod, "days of observation prior")))
+    outCount <- 0
+    if(!missing(outcomeId) && !is.null(outcomeId))
+      outCount <- sum(plpData$outcomes$rowId%in%population$rowId & plpData$outcomes$outcomeId == outcomeId)
+    metaData$attrition <- rbind(metaData$attrition, getCounts(population, outCount, paste("At least", washoutPeriod, "days of observation prior")))
   }
   if (removeSubjectsWithPriorOutcome) {
     if (missing(outcomeId) || is.null(outcomeId)){
@@ -116,7 +124,10 @@ createStudyPopulation <- function(plpData,
         priorOutcomeRowIds <- outcomes$rowId[outcomes$daysToEvent > -priorOutcomeLookback & outcomes$daysToEvent < riskWindowStart]
       }
       population <- population[!(population$rowId %in% priorOutcomeRowIds), ]
-      metaData$attrition <- rbind(metaData$attrition, getCounts(population, paste("No prior outcome")))
+      outCount <- 0
+      if(!missing(outcomeId) && !is.null(outcomeId))
+        outCount <- sum(plpData$outcomes$rowId%in%population$rowId & plpData$outcomes$outcomeId == outcomeId)
+      metaData$attrition <- rbind(metaData$attrition, getCounts(population,outCount, paste("No prior outcome")))
     }
   }
   # Create risk windows:
@@ -135,7 +146,10 @@ createStudyPopulation <- function(plpData,
     if(!silent) writeLines("Removing subjects with no time at risk (if any)")
     noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart + minTimeAtRisk ]
     population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
-    metaData$attrition <- rbind(metaData$attrition, getCounts(population, paste("Have time at risk")))
+    outCount <- 0
+    if(!missing(outcomeId) && !is.null(outcomeId))
+      outCount <- sum(plpData$outcomes$rowId%in%population$rowId & plpData$outcomes$outcomeId == outcomeId)
+    metaData$attrition <- rbind(metaData$attrition, getCounts(population, outCount, paste("Have time at risk")))
   }
   if (missing(outcomeId) || is.null(outcomeId)){
     if(!silent) writeLines("No outcome specified so not creating outcome and time variables")
@@ -208,9 +222,11 @@ getAttritionTable <- function(object) {
   }
 }
 
-getCounts <- function(population, description = "") {
+getCounts <- function(population,outCount, description = "") {
   persons <- length(unique(population$subjectId))
+
   counts <- data.frame(description = description,
-                       persons = persons)
+                       persons = persons,
+                       outcomes = outCount)
   return(counts)
 }

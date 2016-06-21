@@ -5,7 +5,7 @@
 \title{Create setting for generalised linear model with elastic-new regularisation}
 \usage{
 GLMclassifier(alpha = 0.5, lambda = 1e-06, lambda_search = T,
-  nlambdas = 100, lambda_min_ratio = 1/10000)
+  nlambdas = 100, lambda_min_ratio = 1e-05)
 }
 \arguments{
 \item{alpha}{...}

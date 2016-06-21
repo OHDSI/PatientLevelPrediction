@@ -42,11 +42,12 @@ fitPredictiveModel <- function(population,
                             control = createControl(cvType = "auto",
                                                     fold=3,
                                                     startingVariance = 0.01,
-                                                    tolerance  = 2e-07,
+                                                    tolerance  = 2e-06,
                                                     cvRepetitions = 1,
                                                     selectorType = "byPid",
                                                     noiseLevel = "quiet",
-                                                    threads=-1),
+                                                    threads=-1,
+                                                    maxIterations = 3000),
                             silent=F) {
   start <- Sys.time()
   

@@ -40,12 +40,12 @@ personSplitter <- function(population, test=0.3, nfold=3, silent=F){
   outPpl <- outPpl[order(runif(length(outPpl)))]
   
   nonPpl.group <- rep(-1, length(nonPpl))
-  nonPpl.group[round(length(nonPpl)*0.3):length(nonPpl)] <- rep(1:nfold,
-                                                                each=ceiling((length(nonPpl)-round(length(nonPpl)*0.3)+1)/nfold)
-  )[1:(length(nonPpl)-round(length(nonPpl)*0.3)+1)]
+  nonPpl.group[round(length(nonPpl)*test):length(nonPpl)] <- rep(1:nfold,
+                                                                each=ceiling((length(nonPpl)-round(length(nonPpl)*test)+1)/nfold)
+  )[1:(length(nonPpl)-round(length(nonPpl)*test)+1)]
   
   outPpl.group <- rep(-1, length(outPpl))
-  outPpl.group[round(length(outPpl)*0.3):length(outPpl)] <- rep(1:nfold,each=ceiling((length(outPpl)-round(length(outPpl)*0.3)+1)/nfold))[1:(length(outPpl)-round(length(outPpl)*0.3)+1)]
+  outPpl.group[round(length(outPpl)*test):length(outPpl)] <- rep(1:nfold,each=ceiling((length(outPpl)-round(length(outPpl)*test)+1)/nfold))[1:(length(outPpl)-round(length(outPpl)*test)+1)]
   
   
   split <- data.frame(rowId=c(nonPpl,outPpl), index=c(nonPpl.group,outPpl.group))

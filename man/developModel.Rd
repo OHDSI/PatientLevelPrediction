@@ -6,7 +6,7 @@
 \usage{
 developModel(population, plpData, featureSettings = NULL, modelSettings,
   testSplit = "time", testFraction = 0.3, nfold = 3, indexes = NULL,
-  dirPath = NULL, silent = F)
+  dirPath = NULL, silent = F, log = NULL, analysisId = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -41,6 +41,10 @@ split evaluation.}
 \item{nfold}{The number of folds used in the cross validation (default 3)}
 
 \item{indexes}{A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)}
+
+\item{silent}{Whether to suppress output progress to the consol (default F)}
+
+\item{log}{The location of the log file (if null uses dirFold, if dirFold also null then it is in the folder plpmodels within the current working directory)}
 
 \item{dirFold}{The path to the directory where the models will be saved}
 }
