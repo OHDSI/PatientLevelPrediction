@@ -776,6 +776,9 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
   cov <- ff::clone(plpData$covariates)
   covref <- ff::clone(plpData$covariateRef)
 
+  
+  writeLines(paste0('Max cov:', max(ff::as.ram(cov$covariateId))))
+  
   # restrict to popualtion for speed
   if(!silent)
     writeLines('restricting to population for speed...')
@@ -785,22 +788,38 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
   
   if(!silent)
     writeLines('Now converting covariateId...')
-  oldIds <- ff::as.ram(plpData$covariateRef$covariateId)
+  oldIds <- as.double(ff::as.ram(plpData$covariateRef$covariateId))
   newIds <- 1:nrow(plpData$covariateRef)
   
+  if(!is.null(map)){
+    writeLines('restricting to model variables...')
+    writeLines(paste0('oldIds: ',length(map[,'oldIds'])))
+    writeLines(paste0('newIds:', max(as.double(map[,'newIds']))))
+    ind <- ffbase::ffmatch(x=covref$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
+    ind <- ffbase::ffwhich(ind, !is.na(ind))
+    covref <- covref[ind,]
+    
+    ind <- ffbase::ffmatch(x=cov$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
+    ind <- ffbase::ffwhich(ind, !is.na(ind))
+    cov <- cov[ind,]
+  }
   if(is.null(map))
     map <- data.frame(oldIds=oldIds, newIds=newIds)
   
+
+  
   for (i in bit::chunk(covref$covariateId)) {
-    ids <- covref$covariateId[i]
-    ids <- plyr::mapvalues(ids, map$oldIds, map$newIds, warn_missing = FALSE)
-    covref$covariateId[i] <- ids
+    ids <- covref$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(map$oldIds), as.double(map$newIds), warn_missing = FALSE)
+    covref$covariateId[i[1]:i[2]] <- ids
+    # tested and working
   }
   for (i in bit::chunk(cov$covariateId)) {
-    ids <- cov$covariateId[i]
-    ids <- plyr::mapvalues(ids, map$oldIds, map$newIds, warn_missing = FALSE)
-    cov$covariateId[i] <- ids
+    ids <- cov$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(map$oldIds), as.double(map$newIds), warn_missing = FALSE)
+    cov$covariateId[i[1]:i[2]] <- ids
   }
+  writeLines(paste0('Max ',ffbase::max.ff(cov$covariateId)))
   if(!silent)
     writeLines('Finished - Converting covariateIds to actual column numbers')
   
@@ -808,7 +827,6 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
   if(!silent){
     writeLines(paste0('# cols: ', nrow(covref)))
     writeLines(paste0('Max rowId: ', ffbase::max.ff(cov$rowId)))
-
   }
   
   # chunk then add
@@ -816,13 +834,13 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
   data <- Matrix::sparseMatrix(i=1,
                                j=1,
                                x=0,
-                               dims=c(ffbase::max.ff(cov$rowId), nrow(covref)))
+                               dims=c(ffbase::max.ff(cov$rowId), max(map$newIds))) # edit this to max(map$newIds)
   for (ind in bit::chunk(cov$covariateId)) {
     writeLines(paste0('start:', ind[1],'- end:',ind[2]))
     temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(cov$rowId[ind]),
                                           j=ff::as.ram(cov$covariateId[ind]),
                                           x=ff::as.ram(cov$covariateValue[ind]),
-                                          dims=c(ffbase::max.ff(cov$rowId), nrow(covref))),
+                                          dims=c(ffbase::max.ff(cov$rowId), max(map$newIds))),
                      warning = function(w) writeLines(paste(w)),
                      error = function(e) writeLines(paste(e))
     )

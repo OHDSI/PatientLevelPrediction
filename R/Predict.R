@@ -27,7 +27,7 @@ predict.plp <- function(plpModel,population, plpData, silent=F, ...){
 
 # for gxboost
 predict.xgboost <- function(plpModel,population, plpData, silent=F, ...){ 
-  result <- toSparseM(plpData, population, map=plpModel$map,silent=silent)
+  result <- toSparseM(plpData, population, map=plpModel$covariateMap,silent=silent)
   data <- result$data[population$rowId,]
   prediction <- data.frame(rowId=population$rowId, 
                            value=xgboost::predict(plpModel$model, data)
