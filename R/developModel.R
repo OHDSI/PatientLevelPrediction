@@ -198,19 +198,19 @@ developModel <- function(population, plpData,
       maxRam <- paste0(round(memory.limit(size=NA)/1000*0.8),'g')
       writeLines(paste0('Initiating H2o with max Ram of: ',maxRam))
       write(paste0('-- Initiating h2o with maxRam of: ',maxRam ), file=log, append=T)
-      tryCatch(h2o::h2o.init(nthreads=-1, max_mem_size = maxRam),
-               error =function(e) write(paste0('#ERROR: ', e), file=log, append=T),
-               warning = function(w) write(paste0('@WARNING: ', w), file=log, append=T),
-               finally=write(paste0('-- end of h2o initiating'), file=log, append=T)
-      )
+      #tryCatch(h2o::h2o.init(nthreads=-1, max_mem_size = maxRam),
+      #         error =function(e) write(paste0('#ERROR: ', e), file=log, append=T),
+      #         warning = function(w) write(paste0('@WARNING: ', w), file=log, append=T),
+      #         finally=write(paste0('-- end of h2o initiating'), file=log, append=T)
+      #)
     } else { # need to test this on mac
       #maxRam <- paste0(mem.limits(nsize=NA, vsize=NA)*0.8,'g')
       writeLines(paste0('Initiating H2o with default Ram - initiate h2o yourself to edit this '))
-      tryCatch(h2o::h2o.init(nthreads=-1), 
-               error =function(e) write(paste0('#ERROR: ', e), file=log, append=T),
-               warning = function(w) write(paste0('@WARNING: ', w), file=log, append=T),
-               finally=write(paste0('-- end of h2o initiating'), file=log, append=T)
-      )
+      #tryCatch(h2o::h2o.init(nthreads=-1), 
+      #         error =function(e) write(paste0('#ERROR: ', e), file=log, append=T),
+      #         warning = function(w) write(paste0('@WARNING: ', w), file=log, append=T),
+      #         finally=write(paste0('-- end of h2o initiating'), file=log, append=T)
+      #)
     }
   }
   
