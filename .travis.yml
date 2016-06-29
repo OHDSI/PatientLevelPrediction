@@ -68,6 +68,7 @@ notifications:
   recipients:
   - msuchard@gmail.com
   - schuemie@ohdsi.org
+  - jreps@ITS.JNJ.com
   email:
     on_success: change
     on_failure: change
