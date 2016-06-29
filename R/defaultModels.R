@@ -132,6 +132,10 @@ gbm_xgboost <- function(population, plpData, param,index, quiet=F,
 }
 
 
+#===================== PYTHON LINKED MODEL ===================
+# this models run an exe file for windows so they dont need python but for mac and 
+# other users they need python installed
+
 #todo - create python exe for neural network/randon forest/naive bayes and other methods 
 # SVM not suitable for our data
 
@@ -165,9 +169,18 @@ python_rf <- function(population, plpData, param, index, search='grid', quiet=F,
 
   #do var imp
   if(param$varImp[1]==T){
-    system(paste(system.file(package='PatientLevelPrediction', 'executionables',
-                             'win64','python','rf_var_imp.exe'), gsub('/','\\\\',plpData$covariates), 
-                 gsub('/','\\\\',plpData$covariates )  ))
+    
+    
+    # if windows: 
+    if(systemInfo['sysname']=="Windows"){
+      system(paste(system.file(package='PatientLevelPrediction', 'executionables',
+                               'win64','python','rf_var_imp.exe'), gsub('/','\\\\',plpData$covariates), 
+                   gsub('/','\\\\',plpData$covariates )  ))
+      
+      # end if windows and add else:  
+    } else {
+      system(paste('python',  system.file(package='PatientLevelPrediction','python','rf_var_imp.py '),gsub('/','\\\\',plpData$covariates),gsub('/','\\\\',plpData$covariates)))
+    }
     
     #load var imp and create mapping/missing
     varImp <- read.table(file.path(plpData$covariates, 'varImp.txt'))[,1]
@@ -189,10 +202,21 @@ python_rf <- function(population, plpData, param, index, search='grid', quiet=F,
   outLoc <- file.path(getwd(),'temp_models')
   all_auc <- c()
   for(i in 1:nrow(param)){
-    system(paste(system.file(package='PatientLevelPrediction', 'executionables',
-                             'win64','python','rf_train.exe'), gsub('/','\\\\',plpData$covariates),
-                 param$ntrees[i],param$max_depth[i], 
-                 param$mtries[i], 0,0, gsub('/','\\\\',outLoc),i )  )
+    
+    if(systemInfo['sysname']=="Windows"){
+      system(paste(system.file(package='PatientLevelPrediction', 'executionables',
+                               'win64','python','rf_train.exe'), gsub('/','\\\\',plpData$covariates),
+                   param$ntrees[i],param$max_depth[i], 
+                   param$mtries[i], 0,0, gsub('/','\\\\',outLoc),i )  )
+      
+      # end if windows and add else:  
+    } else {
+      system(paste('python',  system.file(package='PatientLevelPrediction','python','rf_train.py '),
+                   gsub('/','\\\\',plpData$covariates),
+                   param$ntrees[i],param$max_depth[i], 
+                   param$mtries[i], 0,0, gsub('/','\\\\',outLoc),i
+                   ))
+    }
     
     
     pred <- read.csv(file.path(outLoc,i,'prediction.txt'), header=F)
@@ -275,10 +299,19 @@ python_nb <- function(population, plpData, param, index, search='grid', quiet=F,
   
   # run model:
   outLoc <- file.path(getwd(),'temp_models')
-  system(paste(system.file(package='PatientLevelPrediction', 'executionables',
+  
+  if(systemInfo['sysname']=="Windows"){
+    system(paste(system.file(package='PatientLevelPrediction', 'executionables',
                              'win64','python','naive_bayes.exe'), gsub('/','\\\\',plpData$covariates),
-                  gsub('/','\\\\',outLoc),1 )  )
+                 gsub('/','\\\\',outLoc),1 )  )
     
+    # end if windows and add else:  
+  } else {
+    system(paste('python', system.file(package='PatientLevelPrediction','python','naive_bayes.py '),
+                 gsub('/','\\\\',plpData$covariates),
+                 gsub('/','\\\\',outLoc),1 )  )
+  }
+  
     
   pred <- read.csv(file.path(outLoc,1,'prediction.txt'), header=F)
   colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
@@ -642,7 +675,7 @@ lr_enet_plp <- function(population, plpData,index,  param, search='grid', quiet=
   return(result)
 }
 
-#========================================================
+#=============KNN ===========================================
 
 knn_plp <- function(plpData,population, index, param, quiet=T, cohortId, outcomeId, ...){
   # check plpData is coo format:
