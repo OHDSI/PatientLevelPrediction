@@ -49,7 +49,7 @@ personSplitter <- function(population, test=0.3, nfold=3, silent=F){
     nonPpl.group[train.ind] <- c(rep(1:nfold,each=reps), 1:leftOver)
   if(leftOver==0)
     nonPpl.group[train.ind] <- rep(1:nfold,each=reps)
-
+  
   outPpl.group <- rep(-1, length(outPpl))
   train.ind <- round(length(outPpl)*test+1):length(outPpl)
   reps <- floor(length(train.ind)/nfold)
@@ -102,7 +102,7 @@ personSplitter <- function(population, test=0.3, nfold=3, silent=F){
 #' A dataframe containing the columns: rowId and index
 #' @export
 timeSplitter <- function(population, test=0.3, nfold=3, silent=F){
-
+  
   dates <-  as.Date(population$cohortStartDate, format = "%Y-%m-%d")
   
   outPpl <- data.frame(rowId=population$rowId[population$outcomeCount==1],
@@ -118,15 +118,27 @@ timeSplitter <- function(population, test=0.3, nfold=3, silent=F){
   if(!silent) writeLines(paste0('Test/train split on date: ', testDate))
   
   # give random number to all and shuffle then assign to test/train/cv
-  nonPpl <- nonPpl[order(runif(nrow(nonPpl))),]
-  outPpl <- outPpl[order(runif(nrow(outPpl))),]
+  nonPpl <- nonPpl[order(runif(length(nonPpl)))]
+  outPpl <- outPpl[order(runif(length(outPpl)))]
   
   nonPpl.group <- rep(-1, nrow(nonPpl))
-  nonPpl.group[nonPpl$date<=testDate] <- rep(1:nfold,each=ceiling(sum(nonPpl$date<=testDate)/nfold))[1:sum(nonPpl$date<=testDate)]
+  train.ind <- nonPpl$date<=testDate
+  reps <- floor(length(train.ind)/nfold)
+  leftOver <- length(train.ind)%%nfold
+  if(leftOver>0)
+    nonPpl.group[train.ind] <- c(rep(1:nfold,each=reps), 1:leftOver)
+  if(leftOver==0)
+    nonPpl.group[train.ind] <- rep(1:nfold,each=reps)
   
-  outPpl.group <- rep(-1, nrow(outPpl))
-  outPpl.group[outPpl$date<=testDate] <- rep(1:nfold,each=ceiling(sum(outPpl$date<=testDate)/nfold))[1:sum(outPpl$date<=testDate)]
+  outPpl.group <- rep(-1, length(outPpl))
+  train.ind <- outPpl$date<=testDate
+  reps <- floor(length(train.ind)/nfold)
+  leftOver <- length(train.ind)%%nfold
   
+  if(leftOver>0)
+    outPpl.group[train.ind ] <- c(rep(1:nfold,each=reps), 1:leftOver)
+  if(leftOver==0)
+    outPpl.group[train.ind ] <- rep(1:nfold,each=reps)
   
   split <- data.frame(rowId=c(nonPpl$rowId,outPpl$rowId), index=c(nonPpl.group,outPpl.group))
   split <- split[order(split$rowId),]
