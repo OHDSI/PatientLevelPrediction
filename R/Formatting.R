@@ -1,6 +1,6 @@
-# @file saveLibSVM.R
+# @file formatting.R
 #
-# Copyright 2015 Observational Health Data Sciences and Informatics
+# Copyright 2016 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -15,142 +15,151 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+restrictLibsvmToPopulation <- function(plpData, population){
+  
+  if(missing(plpData) || is.null(plpData))
+    stop('No plpData input')
+  if(missing(population) || is.null(population))
+    stop('No population input')
+  if(!'plpData.libsvm'%in%class(plpData))
+    stop('plpData is not in libsvm format - convert first')
+  
+  writeLines('loading libsvm data into h2o...')
+  popSize = nrow(population)
+  h2oData <- h2o::h2o.importFile(path = file.path(plpData$covariates,'covariate.txt'))
+  rowIds <- read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
+  covariateIds <- read.table(file.path(plpData$covariates,'covariateRef.txt'), header=T)
+  h2oData <- h2oData[,-1] # remove dummy label column that was required for format
+  h2o::colnames(h2oData) =  covariateIds$covariateId
+  
+  # remove 0 columns
+  zeroVals <- h2o::h2o.mean(h2oData)
+  inds.zero <-which(zeroVals>0, arr.ind =T)
+  h2oData <- h2oData[,inds.zero]
+  
+  h2oData$rowId <- h2o::as.h2o(rowIds)
+  
+  
+  if(!is.null(population$outcomeCount)){
+    if(!is.null(population$indexes)){
+      writeLines('merging data with population of interest...')
+      colnames(population)[colnames(population)=='indexes'] <- 'fold'
+      h2oData2 <- h2o::h2o.merge(h2o::as.h2o(population[,c('rowId','fold','outcomeCount')]),
+                                 h2oData)
+      #h2o::colnames(h2oData)[colnames(h2oData)=='indexes'] <- 'fold'
+    } else{
+      h2oData2 <- h2o::h2o.merge(h2o::as.h2o(population[,c('rowId','outcomeCount')]), h2oData)
+    }
+    # convert label to factor
+    writeLines(paste0('ncols: ', h2o::ncol.H2OFrame(h2oData2), 
+                      ' nrows: ', h2o::nrow.H2OFrame(h2oData2)))
+    ##writeLines(paste0('converting outcome p1...')) 
+    names <- h2o::as.h2o(h2o::colnames(h2oData2))
+    ##writeLines(paste0('converting outcome p2...'))
+    ind <- h2o::h2o.which(names=='outcomeCount')
+    ##writeLines(paste0('converting outcome p3...'))
+    ind <- as.double(as.data.frame(ind))
+    ##writeLines(paste0('converting outcome p4...'))
+    writeLines(paste0('converting outcome (column ',ind,') to factor...')) 
+    h2oData2[,ind] = h2o::as.factor(h2oData2[,ind])
+    writeLines('converted...')
+    
+  } else {
+    h2oData2 <- h2o::h2o.merge(h2o::as.h2o(population[,c('rowId','subjectId')]), h2oData)
+  }
+  
+  if(nrow(h2oData2)!=popSize)
+    warning('Some popualtion missing from plpData - not included')
+  
+  
+  return(h2oData2)
+}
 
-#' Save the plpData in the sparse libSVM format
-#' 
-#' @description
-#' Converts the plpData to libSVM format and saves the data in the user specified directory 
-#' 
-#' @details
-#' Given the plpData and a directory the libSVM format data will be saved into the directory.  The file plpData.txt 
-#' contains the plpData in libSVM format, file covRef.txt is the covariate reference dataframe, the file rowId.txt is a 
-#' vector of the rowIds of each row in the plpData file.  The plpData.txt can be loaded into h2o, oython or spark for 
-#' running efficient machine learning techniques
-#' @param population                       The population created using createStudyPopulation() who will be used to develop the model
-#' @param plpData                          An object of type \code{plpData} - the patient level prediction 
-#'                                         data extracted from the CDM.
-#' @param filePath                       The path to the directory to output the files
-#' @param mappings                       An ffdf containing originalCovariateId (old) and covariateId (new) columns specifying the old to new mapping
-#' @param silent                         Whether to turn off progress reporting
-#' @examples    
-#' # To convert plpData into libSVM and save results to C:\plpData
-#' 
-#' @return
-#' NULL
-#'
-#' @export
-saveLibSVM <- function(population, plpData, filePath, mapping=NULL, silent=F){
-  #cl <- makeCluster(20, type = "SOCK")
-  #registerDoSNOW(cl)
-  start <- Sys.time()
+
+
+toSparseM <- function(plpData,population, map=NULL, silent=T){
+  cov <- ff::clone(plpData$covariates)
+  covref <- ff::clone(plpData$covariateRef)
+  
+  
+  writeLines(paste0('Max cov:', max(ff::as.ram(cov$covariateId))))
+  
+  # restrict to popualtion for speed
+  if(!silent)
+    writeLines('restricting to population for speed...')
+  idx <- ffbase::ffmatch(x = cov$rowId, table = ff::as.ff(population$rowId))
+  idx <- ffbase::ffwhich(idx, !is.na(idx))
+  cov <- cov[idx, ]
   
   if(!silent)
-    writeLines('Starting to convert to libSVM format...')
-  covs <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
-  covrefs <-ff::clone(plpData$covariateRef)
+    writeLines('Now converting covariateId...')
+  oldIds <- as.double(ff::as.ram(plpData$covariateRef$covariateId))
+  newIds <- 1:nrow(plpData$covariateRef)
   
-  # add originalCovariateId to coverfs
-  covrefs$originalCovariateId <- ff::clone(covrefs$covariateId)
+  if(!is.null(map)){
+    writeLines('restricting to model variables...')
+    writeLines(paste0('oldIds: ',length(map[,'oldIds'])))
+    writeLines(paste0('newIds:', max(as.double(map[,'newIds']))))
+    ind <- ffbase::ffmatch(x=covref$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
+    ind <- ffbase::ffwhich(ind, !is.na(ind))
+    covref <- covref[ind,]
+    
+    ind <- ffbase::ffmatch(x=cov$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
+    ind <- ffbase::ffwhich(ind, !is.na(ind))
+    cov <- cov[ind,]
+  }
+  if(is.null(map))
+    map <- data.frame(oldIds=oldIds, newIds=newIds)
   
-  if(!silent){
-    writeLines(paste0(nrow(population),' people'))
-    writeLines(paste0(nrow(covrefs),' features'))
-  }
   
-  # first redo id numbers:
-  if(!silent)
-    writeLines('Starting - Converting covariateIds to actual column numbers...')
-  if(!is.null(mapping)){ # use existing mapping if given
-    t <- ffbase::ffmatch(covrefs$covariateId, table=mapping$originalCovariateId)
-    covrefs <- covrefs[ffbase::ffwhich(t, !is.na(t)),]
-    t <- ffbase::ffmatch(covs$covariateId, table=mapping$originalCovariateId)
-    covs <- covs[ffbase::ffwhich(t, !is.na(t)),]
-    oldIds <- ff::as.ram(mapping$originalCovariateId)
-    newIds <- ff::as.ram(mapping$covariateId)
-  }else{
-    oldIds = ff::as.ram(covrefs$covariateId)
-    newIds = 1:(length(oldIds))
+  
+  for (i in bit::chunk(covref$covariateId)) {
+    ids <- covref$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(map$oldIds), as.double(map$newIds), warn_missing = FALSE)
+    covref$covariateId[i[1]:i[2]] <- ids
+    # tested and working
   }
-  for (i in bit::chunk(covrefs$covariateId)) {
-    ids <- covrefs$covariateId[i]
-    ids <- plyr::mapvalues(ids, oldIds, newIds, warn_missing = FALSE)
-    covrefs$covariateId[i] <- ids
+  for (i in bit::chunk(cov$covariateId)) {
+    ids <- cov$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(map$oldIds), as.double(map$newIds), warn_missing = FALSE)
+    cov$covariateId[i[1]:i[2]] <- ids
   }
-  for (i in bit::chunk(covs$covariateId)) {
-    ids <- covs$covariateId[i]
-    ids <- plyr::mapvalues(ids, oldIds, newIds, warn_missing = FALSE)
-    covs$covariateId[i] <- ids
-  }
+  writeLines(paste0('Max ',ffbase::max.ff(cov$covariateId)))
   if(!silent)
     writeLines('Finished - Converting covariateIds to actual column numbers')
   
-  # sort:
-  if(!silent)
-    writeLines('Starting to sort data...')
-  covs <- ff::ffdfsort(covs)
-  if(!silent)
-    writeLines('Finished - sorting data')
+  #convert into sparseM
+  if(!silent){
+    writeLines(paste0('# cols: ', nrow(covref)))
+    writeLines(paste0('Max rowId: ', ffbase::max.ff(cov$rowId)))
+  }
   
-  # then group
-  if(!silent)
-    writeLines('Starting to group covariateIds:covariateValue per person')
-  all <- c()
-  for (i in bit::chunk(covs$rowId)) {
-    #ids <- plpData$cohorts$rowId[i]
-    #t <- ffbase::ffmatch(covs$rowId, table=as.ff(ids))
-    #tempCov <- as.ram(covs[ffbase::ffwhich(t, !is.na(t)),])
-    tempCov <- ff::as.ram(covs[i,])
-    
-    # now create covariateId:value
-    test <- plyr::ddply(tempCov, "rowId", plyr::summarize,  
-                        covString=paste(covariateId,covariateValue,
-                                        sep=':', collapse=' ')
-    )#, .parallel = F)
-    all <- rbind(all, test)
+  # chunk then add
+  
+  data <- Matrix::sparseMatrix(i=1,
+                               j=1,
+                               x=0,
+                               dims=c(ffbase::max.ff(cov$rowId), max(map$newIds))) # edit this to max(map$newIds)
+  for (ind in bit::chunk(cov$covariateId)) {
+    writeLines(paste0('start:', ind[1],'- end:',ind[2]))
+    temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(cov$rowId[ind]),
+                                          j=ff::as.ram(cov$covariateId[ind]),
+                                          x=ff::as.ram(cov$covariateValue[ind]),
+                                          dims=c(ffbase::max.ff(cov$rowId), max(map$newIds))),
+                     warning = function(w) writeLines(paste(w)),
+                     error = function(e) writeLines(paste(e))
+    )
+    data <- data+ temp
   }
   if(!silent)
-    writeLines('Finished grouping covariateIds:covariateValue per person')
+    writeLines(paste0('Sparse matrix with dimensionality: ', dim(data)))
   
-  # now merge with outcome
-  if(!silent)
-    writeLines('Adding outcome...')
+  result <- list(data=data,
+                 covariateRef=covref,
+                 map=map)
+  return(result)
   
-  #all <- merge(all, plpData$outcomes[,c('rowId','outcomeId')], all.x=T, by='rowId')
-  #all$outcomeCount <- 1
-  #all$outcomeCount[is.na(all$outcomeId)] <- 0
-  all <- merge(population[,c('rowId','outcomeCount')],all, by='rowId')
-  
-  timeTol <- difftime(Sys.time(),start, units = "mins")
-  if(!silent)
-    writeLines(paste0('Converting to libSVM completed - took: ', timeTol, ' mins'))
-  #stopCluster(cl)
-  
-  
-  if(!silent)
-    writeLines('Saving libSVM file...')
-  if(!dir.exists(file.path(filePath, 'libSVM'))) dir.create(file.path(filePath, 'libSVM'), recursive = T)
-  start <- Sys.time()
-  write.table(all[,c('outcomeCount','covString')],
-              quote=FALSE, sep= " ", eol = "\n", 
-              row.names=FALSE,col.names=FALSE,
-              file=file.path(filePath,'libSVM', paste0('plpData.txt')))
-  write.table(ff::as.ram(covrefs),
-              quote=TRUE, sep= " ", eol = "\n", 
-              row.names=FALSE,col.names=TRUE,
-              file=file.path(filePath,'libSVM', 'covariateRef.txt')
-  )
-  write.table(all[,'rowId'],
-              quote=FALSE, sep= " ", eol = "\n", 
-              row.names=FALSE,col.names=F,
-              file=file.path(filePath,'libSVM', paste0('rowId.txt'))
-  )
-  timeTol <- difftime(Sys.time(),start, units = "mins")
-  if(!silent)
-    writeLines(paste0('Saving libSVM completed - took: ', timeTol, ' mins'))
-  
-  return(covrefs)
 }
-
 
 #' Convert the plpData in COO format into the sparse libSVM format
 #' 

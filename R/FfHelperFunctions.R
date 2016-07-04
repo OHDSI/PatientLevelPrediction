@@ -1,4 +1,4 @@
-# @file FfHelperFunctions.R
+# @file ffHelperFunctions.R
 #
 # Copyright 2016 Observational Health Data Sciences and Informatics
 #

@@ -1,4 +1,4 @@
-# @file Predict.R
+# @file predict.R
 #
 # Copyright 2016 Observational Health Data Sciences and Informatics
 #
@@ -16,6 +16,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#' predictPlp
+#'
+#' @description
+#' Predict the risk of the outcome using the input plpModel for the input plpData
+#' @details
+#' The function applied the trained model on the plpData to make predictions
+#' @param plpModel                         An object of type \code{plpModel} - a patient level prediction model
+#' @param population                       The population created using createStudyPopulation() who will have their risks predicted
+#' @param plpData                          An object of type \code{plpData} - the patient level prediction
+#'                                         data extracted from the CDM.
+#' @param dirPath                          The location of the output directory.  If using a h2o model, the libSvm will be saved here                                         
+#' @param index                            A data frame containing rowId: a vector of rowids and index: a vector of doubles the same length as the rowIds. If used, only the rowIds with a negative index value are used to calculate the prediction.  
+#' 
+#' @return
+#' A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.
+#'
+
+# parent predict that calls the others
+#' @export
+predictPlp <- function(plpModel, population, plpData,  index=NULL, silent=F){
+  
+  # apply the feature transformations
+  if(!is.null(index)){
+    if(!silent) writeLines(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
+    ind <- population$rowId%in%index$rowId[index$index<0]
+  } else{
+    if(!silent) writeLines(paste0('Calculating prediction for ',nrow(population),' in dataset'))
+    ind <- rep(T, nrow(population))
+  }
+  
+  # do the predction on the new data
+  if(class(plpModel)=='plpModel'){
+    # extract the classifier type
+    prediction <- plpModel$transform(plpData=plpData,population=population[ind,], silent=silent)
+    
+    if(nrow(prediction)!=nrow(population[ind,]))
+      warning(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
+  } else{
+    stop('Non plpModel input')
+  }
+  
+  metaData <- list(predictionType="binary",
+                   cohortId = attr(population,'metaData')$cohortId,
+                   outcomeId = attr(population,'metaData')$outcomeId)
+  
+  attr(prediction, "metaData") <- metaData
+  return(prediction)
+}
 
 # default patient level prediction prediction  
 predict.plp <- function(plpModel,population, plpData, silent=F, ...){

@@ -1,4 +1,4 @@
-# @file developModelFramework.R
+# @file RunPlp.R
 #
 # Copyright 2015 Observational Health Data Sciences and Informatics
 #
@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' developModel - Train and evaluate the model
+#' RunPlp - Train and evaluate the model
 #'
 #' @description
 #' This provides a general framework for training patient level prediction models.  The user can select 
@@ -101,7 +101,7 @@
 #' #70% in train set where the model hyper-parameters are selected using 3-fold cross validation:
 #' #and results are saved to file.path('C:','User','home')
 #' model.lr <- logisticRegressionModel()
-#' mod.lr <- developModel(population=population,
+#' mod.lr <- RunPlp(population=population,
 #'                         plpData= plpData,
 #'                         featureSettings = NULL,
 #'                         modelSettings = model.lr ,
@@ -114,7 +114,7 @@
 #' # using the test/train/folds created for the lasso logistic regression above                       
 #' model.gbm <- GBMclassifier(rsampRate=c(0.5,0.9,1),csampRate=1, ntrees=c(10,100), bal=c(F,T),
 #'                            max_depth=c(4,5), learn_rate=c(0.1,0.01))
-#' mod.gbm <- developModel(population=population,
+#' mod.gbm <- RunPlp(population=population,
 #'                         plpData= plpData,
 #'                         featureSettings = NULL,
 #'                         modelSettings = model.gbm,
@@ -122,7 +122,7 @@
 #'                         nfold=3, indexes=mod.lr$indexes,
 #'                         dirPath=file.path('C:','User','home'))
 #' 
-developModel <- function(population, plpData,
+RunPlp <- function(population, plpData,
                          featureSettings=NULL,
                          modelSettings,
                          testSplit = 'time', testFraction=0.3, nfold=3, indexes=NULL,
@@ -196,8 +196,8 @@ developModel <- function(population, plpData,
     systemInfo <- Sys.info()
     if(systemInfo['sysname']=="Windows"){
       maxRam <- paste0(round(memory.limit(size=NA)/1000*0.8),'g')
-      writeLines(paste0('Initiating H2o with max Ram of: ',maxRam))
-      write(paste0('-- Initiating h2o with maxRam of: ',maxRam ), file=log, append=T)
+      #writeLines(paste0('Initiating H2o with max Ram of: ',maxRam))
+      #write(paste0('-- Initiating h2o with maxRam of: ',maxRam ), file=log, append=T)
       #tryCatch(h2o::h2o.init(nthreads=-1, max_mem_size = maxRam),
       #         error =function(e) write(paste0('#ERROR: ', e), file=log, append=T),
       #         warning = function(w) write(paste0('@WARNING: ', w), file=log, append=T),
@@ -205,7 +205,7 @@ developModel <- function(population, plpData,
       #)
     } else { # need to test this on mac
       #maxRam <- paste0(mem.limits(nsize=NA, vsize=NA)*0.8,'g')
-      writeLines(paste0('Initiating H2o with default Ram - initiate h2o yourself to edit this '))
+      #writeLines(paste0('Initiating H2o with default Ram - initiate h2o yourself to edit this '))
       #tryCatch(h2o::h2o.init(nthreads=-1), 
       #         error =function(e) write(paste0('#ERROR: ', e), file=log, append=T),
       #         warning = function(w) write(paste0('@WARNING: ', w), file=log, append=T),
@@ -397,230 +397,8 @@ developModel <- function(population, plpData,
 
 
 
-#' fitModel
-#'
-#' @description
-#' Train various models using a default parameter gird search or user specified parameters
-#'
-#' @details
-#' The user can define the machine learning model to train (regularised logistic regression, random forest,
-#' gradient boosting machine, neural network and )
-#' 
-#' @param population                       The population created using createStudyPopulation() who will have their risks predicted
-#' @param data                             An object of type \code{plpData} - the patient level prediction
-#'                                         data extracted from the CDM.
-#' @param index                            A data frame containing rowId: a vector of rowids and index: a vector of doubles the same length as the 
-#'                                         rowIds. If used, only the rowIds with a negative index value are used to calculate the prediction.  
-#' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
-#'                                         \itemize{
-#'                                         \item{logisticRegressionModel()}{ A lasso logistic regression model}
-#'                                         \item{GBMclassifier()}{ A gradient boosting machine}
-#'                                         \item{RFclassifier()}{ A random forest model}
-#'                                         \item{GLMclassifier ()}{ A generalised linear model}
-#'                                         \item{KNNclassifier()}{ A KNN model}
-#'                                         }
-#' @param featureSettings                  An object of class \code{featureSettings} created using one of the function:
-#'                                         \itemize{
-#'                                         \item{filterCovariates()}{ Filter covariate/concept/analysis ids }
-#'                                         \item{GLRMfeature()}{ Non-negative matrix factorisation}
-#'                                         
-#'                                         }
-#' @return
-#' An object of class \code{plpModel} containing:
-#' 
-#' \item{model}{The trained prediction model}
-#' \item{modelLoc}{The path to where the model is saved (if saved)}
-#' \item{trainAuc}{The AUC obtained on the training set}
-#' \item{trainCalibration}{The calibration obtained on the training set}
-#' \item{modelSettings}{A list specifiying the model, preprocessing, outcomeId and cohortId}
-#' \item{metaData}{The model meta data}
-#' \item{trainingTime}{The time taken to train the classifier}
-#'
-#'
-
-#' @export
-fitPlp <- function(population, data, index,  modelSettings,featureSettings, quiet,
-                   cohortId, outcomeId){
-  silent <- quiet
-  if('ffdf'%in%class(data$covariates)){
-    plpData <- list(outcomes =data$outcomes,
-                    cohorts = data$cohorts,
-                    covariates =ff::clone(data$covariates),
-                    covariateRef=ff::clone(data$covariateRef),
-                    metaData=data$metaData
-    )} else{
-    plpData <- data
-  }
-
-  
-  #=========================================================
-  # run through pipeline list and apply:
-  #=========================================================
-  plpTransform <- NULL
-  
-  # apply each featureSetting option in order of the list entry to do feature engineering/selection
-  if (class(featureSettings) == "featureSettings") {
-    fun <- featureSettings$method
-    args <- list(plpData =plpData, index=index, param=featureSettings$param)
-    plpTransform <- do.call(fun, args)
-    
-    # transform all the data:
-    plpData <- plpTransform$transform(plpData)
-    
-    if (nrow(plpData$covariates) == 0) {
-      stop("No features remaining")
-    } 
-  } else if (is.list(featureSettings)) {
-    for (i in 1:length(featureSettings)) {
-      #fun <- attr(featureSettings[[i]], "fun")
-      fun <- featureSettings[[i]]$method
-      args <- list(plpData=plpData,  index=index, param=featureSettings[[i]]$param)
-      plpTransform.temp <- do.call(fun, args)
-      
-      if(i==1){
-        plpTransform$transform <- plpTransform.temp$transform
-        plpTransform$transformDetails <- plpTransform.temp$transformDetails
-      }
-      if(i > 1){
-        plpTransform$transform <- c(plpTransform$transform,  plpTransform.temp$transform)
-        plpTransform$transformDetails <- c(plpTransform$transformDetails,  plpTransform.temp$transformDetails)
-      }
-      
-      # transform all the data:
-      plpData <- plpTransform$transform[[i]](plpData)
-      
-      if (nrow(plpData$covariates) == 0) {
-        stop("No features remaining")
-      } 
-    }
-  }
-  
-
-  # Now apply the classifier:
-  fun <- modelSettings$model
-  args <- list(plpData =plpData,param =modelSettings$param, index=index,
-               population=population, quiet=quiet, cohortId=cohortId, outcomeId=outcomeId)
-  plpModel <- do.call(fun, args)
-  
-  # add the transform functions and details to the model:
-  if(!is.null(plpTransform))
-    plpModel$metaData$featureSettings <-  plpTransform 
-  
-  # create transformation function
-  createTransform <- function(plpModel){
-    
-    transform <- function(plpData=NULL, population=NULL, silent=F){
-      #check model fitting makes sense:
-      if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$cohortId)
-        warning('cohortId of new data does not match training data')
-      if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
-        warning('outcomeId of new data does not match training data or does not exist')
-      
-      #TODO: recalibrate
-      
-    if(!is.null(plpModel$metaData$featureSettings)){
-      if(!silent) writeLines("Applying model's feature selection...")
-      plpData <- lapply(plpModel$metaData$featureSettings$transform, function(x) do.call(x, list(newData=plpData)))
-     }
-      
-      if(!silent) writeLines('Applying model to calculate predictions...')
-      pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
-                                                              plpData=plpData, 
-                                                              population=population, 
-                                                              silent=silent))
-      metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
-                       testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
-                       studyStartDate = do.call(paste,list(plpModel$metaData$call$studyStartDate)), 
-                       studyEndDate = do.call(paste,list(plpModel$metaData$call$studyEndDate)),
-                       cohortId = plpModel$cohortId,
-                       outcomeId = plpModel$outcomeId,
-                       predictionType ='binary'
-      )
-      writeLines(paste('silent end trans ',silent))
-      attr(pred, 'metaData') <- metaData
-      return(pred)
-    }
-    return(transform)
-  }
-  plpModel$transform <- createTransform(plpModel)
-  
-  return(plpModel)
-  
-}
 
 
-#' predictPlp
-#'
-#' @description
-#' Predict the risk of the outcome using the input plpModel for the input plpData
-#' @details
-#' The function applied the trained model on the plpData to make predictions
-#' @param plpModel                         An object of type \code{plpModel} - a patient level prediction model
-#' @param population                       The population created using createStudyPopulation() who will have their risks predicted
-#' @param plpData                          An object of type \code{plpData} - the patient level prediction
-#'                                         data extracted from the CDM.
-#' @param dirPath                          The location of the output directory.  If using a h2o model, the libSvm will be saved here                                         
-#' @param index                            A data frame containing rowId: a vector of rowids and index: a vector of doubles the same length as the rowIds. If used, only the rowIds with a negative index value are used to calculate the prediction.  
-#' 
-#' @return
-#' A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.
-#'
-
-#' @export
-predictPlp <- function(plpModel, population, plpData,  index=NULL, silent=F){
-  
-  # apply the feature transformations
-  if(!is.null(index)){
-    if(!silent) writeLines(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
-    ind <- population$rowId%in%index$rowId[index$index<0]
-  } else{
-    if(!silent) writeLines(paste0('Calculating prediction for ',nrow(population),' in dataset'))
-    ind <- rep(T, nrow(population))
-  }
-  
-  # do the predction on the new data
-  if(class(plpModel)=='plpModel'){
-    # extract the classifier type
-    prediction <- plpModel$transform(plpData=plpData,population=population[ind,], silent=silent)
-    
-    if(nrow(prediction)!=nrow(population[ind,]))
-      warning(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
-  } else{
-    stop('Non plpModel input')
-  }
-  
-  metaData <- list(predictionType="binary",
-                   cohortId = attr(population,'metaData')$cohortId,
-                   outcomeId = attr(population,'metaData')$outcomeId)
-  
-  attr(prediction, "metaData") <- metaData
-  return(prediction)
-}
-
-
-#' makeRandomString
-#'
-#' @description
-#' A function for making a random string
-#' @details
-#' The function creates n random strings of size length
-#' @param n                                An integer - the number of random string to generate
-#' @param length                           An integer - the number of characters for each string
-#'
-#' @return
-#' A list containing n random strings with the number of characters specified by the use input length
-#'
-makeRandomString <- function(n=1, lenght=12)
-{
-  randomString <- c(1:n)                  # initialize vector
-  for (i in 1:n)
-  {
-    randomString[i] <- paste(sample(c(0:9, letters, LETTERS),
-                                    lenght, replace=TRUE),
-                             collapse="")
-  }
-  return(randomString)
-}
 
 
 #' @export
@@ -645,165 +423,5 @@ summary.plpModel <- function(object, ...) {
 
 
 
-#' @export
-savePlpModel <- function(plpModel, dirPath){
-  if (missing(plpModel))
-    stop("Must specify plpModel")
-  if (missing(dirPath))
-    stop("Must specify directory path")
-  if (class(plpModel) != "plpModel")
-    stop("Not a plpModel")
-  
-  if(!dir.exists(dirPath)) dir.create(dirPath)
-  
-  saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
-  saveRDS(plpModel$transform, file = file.path(dirPath, "transform.rds"))
-  saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
-  saveRDS(plpModel$modelSettings, file = file.path(dirPath,  "modelSettings.rds"))
-  saveRDS(plpModel$metaData, file = file.path(dirPath, "metaData.rds"))
-  saveRDS(plpModel$populationSettings, file = file.path(dirPath, "populationSettings.rds"))
-  saveRDS(plpModel$trainingTime, file = file.path(dirPath,  "trainingTime.rds"))
-  saveRDS(plpModel$varImp, file = file.path(dirPath,  "varImp.rds"))
-  
-  
-  attributes <- list(type=attr(plpModel, 'type'), predictionType=attr(plpModel, 'predictionType') )
-  saveRDS(attributes, file = file.path(dirPath,  "attributes.rds"))
-  
-  
-}
-
-#' @export
-loadPlpModel <- function(dirPath, readOnly = TRUE) {
-  if (!file.exists(dirPath))
-    stop(paste("Cannot find folder", dirPath))
-  if (!file.info(dirPath)$isdir)
-    stop(paste("Not a folder", dirPath))
-  
-
-  result <- list(model = readRDS(file.path(dirPath, "model.rds")),
-                 transform = readRDS(file.path(dirPath, "transform.rds")),
-                 trainCVAuc = readRDS(file.path(dirPath, "trainCVAuc.rds")),
-                 modelSettings = readRDS(file.path(dirPath, "modelSettings.rds")),
-                 metaData = readRDS(file.path(dirPath, "metaData.rds")),
-                 populationSettings= readRDS(file.path(dirPath, "populationSettings.rds")),
-                 trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
-                 varImp = readRDS(file.path(dirPath, "varImp.rds"))
-                 
-                 )
-  attributes <- readRDS(file.path(dirPath, "attributes.rds"))
-  attr(result, 'type') <- attributes$type
-  attr(result, 'predictionType') <- attributes$predictionType
-  class(result) <- "plpModel"
-  
-  return(result)
-}
 
 
-
-writeOutput <- function(prediction, 
-                        performance.test, 
-                        performance.train, 
-                        plpModel,
-                        population,
-                        plpData,
-                        dirPath,
-                        analysisId,
-                        start.all,
-                        testSplit,
-                        modelLoc){
-  if(!dir.exists(file.path(dirPath,analysisId , 'test'))){dir.create(file.path(dirPath,analysisId , 'test'))}
-  write.table(performance.test$raw, file.path(dirPath,analysisId , 'test','rocRawSparse.txt'), row.names=F)
-  write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'test','preferenceScoresSparse.txt'), row.names=F)
-  write.table(performance.test$calSparse, file.path(dirPath,analysisId , 'test','calSparse.txt'), row.names=F)
-  write.table(performance.test$calSparse2_10, file.path(dirPath,analysisId , 'test','calSparse2_10.txt'), row.names=F)
-  write.table(performance.test$calSparse2_100, file.path(dirPath,analysisId , 'test','calSparse2_100.txt'), row.names=F)
-  write.table(performance.test$quantiles, file.path(dirPath,analysisId , 'test','quantiles.txt'), row.names=F)
-  
-  if(!dir.exists(file.path(dirPath,analysisId , 'train'))){dir.create(file.path(dirPath,analysisId , 'train'))}
-  write.table(performance.train$raw, file.path(dirPath,analysisId , 'train','rocRawSparse.txt'), row.names=F)
-  write.table(performance.train$preferenceScores, file.path(dirPath,analysisId , 'train','preferenceScoresSparse.txt'), row.names=F)
-  write.table(performance.train$calSparse, file.path(dirPath,analysisId , 'train','calSparse.txt'), row.names=F)
-  write.table(performance.train$calSparse2_10, file.path(dirPath,analysisId , 'train','calSparse2_10.txt'), row.names=F)
-  write.table(performance.train$calSparse2_100, file.path(dirPath,analysisId , 'train','calSparse2_100.txt'), row.names=F)
-  write.table(performance.train$quantiles, file.path(dirPath,analysisId , 'train','quantiles.txt'), row.names=F)
-  
-  
-  #save plots:
-  pdf(file.path(dirPath,analysisId,'plots.pdf'))
-  gridExtra::grid.arrange(performance.test$calPlot, 
-                          gridExtra::arrangeGrob(performance.test$prefScorePlot, performance.test$boxPlot), 
-                          nrow=2,
-                          top='Performance Plots')
-  print(PatientLevelPrediction::plotRoc(prediction[prediction$indexes<0,]))
-  
-  dev.off()
-  
-  comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
-  
-  # make nice formated model info table and performance table
-  tryCatch({
-    modelInfo <- data.frame(modelId = analysisId,
-                            database = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
-                            cohortId=attr(prediction, "metaData")$cohortId,
-                            outcomeId=attr(prediction, "metaData")$outcomeId,
-                            # add fold information and test/train size/ num events?
-                            model= plpModel$modelSettings$model,
-                            splitOn = testSplit,
-                            modelLoc =modelLoc ,
-                            populationLoc='NULL' ,
-                            parameters = paste(names(plpModel$modelSettings$modelParameters), unlist(plpModel$modelSettings$modelParameters), sep=':', collapse=','),
-                            modelTime = comp)
-  }, error= function(err){print(paste("MY_ERROR:  ",err))
-    writeLines(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, plpModel$modelSettings$model, sep='-'))
-    
-  })
-  performanceInfoTest <- data.frame(modelId =analysisId,
-                                    AUC = performance.test$auc[1],
-                                    AUC_lb = performance.test$auc[2],
-                                    AUC_ub = performance.test$auc[3],
-                                    Brier = performance.test$brier,
-                                    BrierScaled = performance.test$brierScaled,
-                                    hosmerlemeshow_chi2 = performance.test$hosmerlemeshow[1],
-                                    hosmerlemeshow_df = performance.test$hosmerlemeshow[2],
-                                    hosmerlemeshow_pvalue = performance.test$hosmerlemeshow[3],
-                                    calibrationIntercept = performance.test$calibrationIntercept10,
-                                    calibrationGradient = performance.test$calibrationGradient10,
-                                    preference3070_0 = performance.test$preference3070_0,
-                                    preference3070_1 = performance.test$preference3070_1
-  )
-  
-  performanceInfoTrain <- data.frame(modelId =analysisId,
-                                     AUC = performance.train$auc[1],
-                                     AUC_lb = performance.train$auc[2],
-                                     AUC_ub = performance.train$auc[3],
-                                     Brier = performance.train$brier,
-                                     BrierScaled = performance.train$brierScaled,
-                                     hosmerlemeshow_chi2 = performance.train$hosmerlemeshow[1],
-                                     hosmerlemeshow_df = performance.train$hosmerlemeshow[2],
-                                     hosmerlemeshow_pvalue = performance.train$hosmerlemeshow[3],
-                                     calibrationIntercept = performance.train$calibrationIntercept10,
-                                     calibrationGradient = performance.train$calibrationGradient10,
-                                     preference3070_0 = performance.train$preference3070_0,
-                                     preference3070_1 = performance.train$preference3070_1
-  )
-  
-  # search for modelInfo in directory - if does not exist create and save model info table
-  # otherwise append model info to existing file
-  if(file.exists(file.path(dirPath, 'modelInfo.txt')))
-    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
-  if(!file.exists(file.path(dirPath, 'modelInfo.txt')))
-    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
-  
-  # repeat for performance info
-  if(file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
-    write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), append=T, row.names = F, col.names = F)
-  if(!file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
-    write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), row.names = F)
-  if(file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
-    write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), append=T, row.names = F, col.names = F)
-  if(!file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
-    write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), row.names = F)
-  
-  
-  
-}

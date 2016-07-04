@@ -1,4 +1,4 @@
-# @file DataSplitting.R
+# @file dataSplitting.R
 # Copyright 2016 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
@@ -31,6 +31,8 @@
 personSplitter <- function(population, test=0.3, nfold=3, silent=F){
   if(length(table(population$outcomeCount))<=1 | sum(population$outcomeCount>0)<10)
     stop('Insufficient outcomes')
+  if(floor(sum(population$outcomeCount>0)*test/nfold)==0)
+    stop('Insufficient outcomes for choosen nfold value, please reduce')
   if(!silent) writeLines(paste0('Creating ',test*100,'% test: ',(1-test)*100,'% train (into ',nfold,' folds) splits by random patient stratified splitting'))
   outPpl <- population$rowId[population$outcomeCount==1]
   nonPpl <- population$rowId[population$outcomeCount==0]
@@ -40,12 +42,23 @@ personSplitter <- function(population, test=0.3, nfold=3, silent=F){
   outPpl <- outPpl[order(runif(length(outPpl)))]
   
   nonPpl.group <- rep(-1, length(nonPpl))
-  nonPpl.group[round(length(nonPpl)*test):length(nonPpl)] <- rep(1:nfold,
-                                                                each=ceiling((length(nonPpl)-round(length(nonPpl)*test)+1)/nfold)
-  )[1:(length(nonPpl)-round(length(nonPpl)*test)+1)]
-  
+  train.ind <- round(length(nonPpl)*test+1):length(nonPpl)
+  reps <- floor(length(train.ind)/nfold)
+  leftOver <- length(train.ind)%%nfold
+  if(leftOver>0)
+    nonPpl.group[train.ind] <- c(rep(1:nfold,each=reps), 1:leftOver)
+  if(leftOver==0)
+    nonPpl.group[train.ind] <- rep(1:nfold,each=reps)
+
   outPpl.group <- rep(-1, length(outPpl))
-  outPpl.group[round(length(outPpl)*test):length(outPpl)] <- rep(1:nfold,each=ceiling((length(outPpl)-round(length(outPpl)*test)+1)/nfold))[1:(length(outPpl)-round(length(outPpl)*test)+1)]
+  train.ind <- round(length(outPpl)*test+1):length(outPpl)
+  reps <- floor(length(train.ind)/nfold)
+  leftOver <- length(train.ind)%%nfold
+  
+  if(leftOver>0)
+    outPpl.group[train.ind ] <- c(rep(1:nfold,each=reps), 1:leftOver)
+  if(leftOver==0)
+    outPpl.group[train.ind ] <- rep(1:nfold,each=reps)
   
   
   split <- data.frame(rowId=c(nonPpl,outPpl), index=c(nonPpl.group,outPpl.group))

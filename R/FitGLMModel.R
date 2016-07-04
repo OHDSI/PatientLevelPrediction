@@ -1,4 +1,4 @@
-# @file FitModel.R
+# @file fitGLMModel.R
 #
 # Copyright 2016 Observational Health Data Sciences and Informatics
 #
@@ -33,7 +33,7 @@
 #'                               \code{\link[Cyclops]{createControl}} for details.
 #'
 #' @export
-fitPredictiveModel <- function(population,
+fitGLMModel <- function(population,
                             plpData,
                             modelType = "logistic",
                             excludeCovariateIds = c(),

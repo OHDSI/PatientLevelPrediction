@@ -1,4 +1,4 @@
-# @file DataLoadingSaving.R
+# @file PlpSaveLoad.R
 #
 # Copyright 2016 Observational Health Data Sciences and Informatics
 #
@@ -108,7 +108,7 @@
 #' constructed.} } The generic \code{()} and \code{summary()} functions have been implemented for this object.
 #'
 #' @export
-getDbPlpData <- function(connectionDetails,
+getPlpData <- function(connectionDetails,
                                   cdmDatabaseSchema,
                                   oracleTempSchema = cdmDatabaseSchema,
                                   cohortId,
@@ -502,4 +502,201 @@ insertDbPopulation <- function(population,
   delta <- Sys.time() - start
   writeLines(paste("Inserting rows took", signif(delta, 3), attr(delta, "units")))
   invisible(TRUE)
+}
+
+
+
+#' @export
+savePlpModel <- function(plpModel, dirPath){
+  if (missing(plpModel))
+    stop("Must specify plpModel")
+  if (missing(dirPath))
+    stop("Must specify directory path")
+  if (class(plpModel) != "plpModel")
+    stop("Not a plpModel")
+  
+  if(!dir.exists(dirPath)) dir.create(dirPath)
+  
+  saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
+  saveRDS(plpModel$transform, file = file.path(dirPath, "transform.rds"))
+  saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
+  saveRDS(plpModel$modelSettings, file = file.path(dirPath,  "modelSettings.rds"))
+  saveRDS(plpModel$metaData, file = file.path(dirPath, "metaData.rds"))
+  saveRDS(plpModel$populationSettings, file = file.path(dirPath, "populationSettings.rds"))
+  saveRDS(plpModel$trainingTime, file = file.path(dirPath,  "trainingTime.rds"))
+  saveRDS(plpModel$varImp, file = file.path(dirPath,  "varImp.rds"))
+  
+  
+  attributes <- list(type=attr(plpModel, 'type'), predictionType=attr(plpModel, 'predictionType') )
+  saveRDS(attributes, file = file.path(dirPath,  "attributes.rds"))
+  
+  
+}
+
+#' @export
+loadPlpModel <- function(dirPath, readOnly = TRUE) {
+  if (!file.exists(dirPath))
+    stop(paste("Cannot find folder", dirPath))
+  if (!file.info(dirPath)$isdir)
+    stop(paste("Not a folder", dirPath))
+  
+  
+  result <- list(model = readRDS(file.path(dirPath, "model.rds")),
+                 transform = readRDS(file.path(dirPath, "transform.rds")),
+                 trainCVAuc = readRDS(file.path(dirPath, "trainCVAuc.rds")),
+                 modelSettings = readRDS(file.path(dirPath, "modelSettings.rds")),
+                 metaData = readRDS(file.path(dirPath, "metaData.rds")),
+                 populationSettings= readRDS(file.path(dirPath, "populationSettings.rds")),
+                 trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
+                 varImp = readRDS(file.path(dirPath, "varImp.rds"))
+                 
+  )
+  attributes <- readRDS(file.path(dirPath, "attributes.rds"))
+  attr(result, 'type') <- attributes$type
+  attr(result, 'predictionType') <- attributes$predictionType
+  class(result) <- "plpModel"
+  
+  return(result)
+}
+
+#' Saves the prediciton dataframe to csv
+#'
+#' @details
+#' Saves the prediciton data frame returned by predict.R to a csv file
+#'
+#' @param prediction                   The prediciton data.frame
+#' @param location                     The directory to save the csv
+#' 
+#' @export
+savePrediction <- function(prediction, location){
+  #TODO check inupts
+  write.csv(prediction, file=location)
+  
+}
+
+#' Saves the evalaution dataframe to csv
+#'
+#' @details
+#' Saves the evaluation on new data to the input location
+#'
+#' @param evaluation                   The evaluation object
+#' @param location                     The directory to save the csv
+#' 
+#' @export
+saveEvaluation <- function(evaluation, location){
+  #TODO check inupts
+  
+  #TODO add saving 
+  
+}
+
+
+
+
+writeOutput <- function(prediction, 
+                        performance.test, 
+                        performance.train, 
+                        plpModel,
+                        population,
+                        plpData,
+                        dirPath,
+                        analysisId,
+                        start.all,
+                        testSplit,
+                        modelLoc){
+  if(!dir.exists(file.path(dirPath,analysisId , 'test'))){dir.create(file.path(dirPath,analysisId , 'test'))}
+  write.table(performance.test$raw, file.path(dirPath,analysisId , 'test','rocRawSparse.txt'), row.names=F)
+  write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'test','preferenceScoresSparse.txt'), row.names=F)
+  write.table(performance.test$calSparse, file.path(dirPath,analysisId , 'test','calSparse.txt'), row.names=F)
+  write.table(performance.test$calSparse2_10, file.path(dirPath,analysisId , 'test','calSparse2_10.txt'), row.names=F)
+  write.table(performance.test$calSparse2_100, file.path(dirPath,analysisId , 'test','calSparse2_100.txt'), row.names=F)
+  write.table(performance.test$quantiles, file.path(dirPath,analysisId , 'test','quantiles.txt'), row.names=F)
+  
+  if(!dir.exists(file.path(dirPath,analysisId , 'train'))){dir.create(file.path(dirPath,analysisId , 'train'))}
+  write.table(performance.train$raw, file.path(dirPath,analysisId , 'train','rocRawSparse.txt'), row.names=F)
+  write.table(performance.train$preferenceScores, file.path(dirPath,analysisId , 'train','preferenceScoresSparse.txt'), row.names=F)
+  write.table(performance.train$calSparse, file.path(dirPath,analysisId , 'train','calSparse.txt'), row.names=F)
+  write.table(performance.train$calSparse2_10, file.path(dirPath,analysisId , 'train','calSparse2_10.txt'), row.names=F)
+  write.table(performance.train$calSparse2_100, file.path(dirPath,analysisId , 'train','calSparse2_100.txt'), row.names=F)
+  write.table(performance.train$quantiles, file.path(dirPath,analysisId , 'train','quantiles.txt'), row.names=F)
+  
+  
+  #save plots:
+  pdf(file.path(dirPath,analysisId,'plots.pdf'))
+  gridExtra::grid.arrange(performance.test$calPlot, 
+                          gridExtra::arrangeGrob(performance.test$prefScorePlot, performance.test$boxPlot), 
+                          nrow=2,
+                          top='Performance Plots')
+  print(PatientLevelPrediction::plotRoc(prediction[prediction$indexes<0,]))
+  
+  dev.off()
+  
+  comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
+  
+  # make nice formated model info table and performance table
+  tryCatch({
+    modelInfo <- data.frame(modelId = analysisId,
+                            database = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
+                            cohortId=attr(prediction, "metaData")$cohortId,
+                            outcomeId=attr(prediction, "metaData")$outcomeId,
+                            # add fold information and test/train size/ num events?
+                            model= plpModel$modelSettings$model,
+                            splitOn = testSplit,
+                            modelLoc =modelLoc ,
+                            populationLoc='NULL' ,
+                            parameters = paste(names(plpModel$modelSettings$modelParameters), unlist(plpModel$modelSettings$modelParameters), sep=':', collapse=','),
+                            modelTime = comp)
+  }, error= function(err){print(paste("MY_ERROR:  ",err))
+    writeLines(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, plpModel$modelSettings$model, sep='-'))
+    
+  })
+  performanceInfoTest <- data.frame(modelId =analysisId,
+                                    AUC = performance.test$auc[1],
+                                    AUC_lb = performance.test$auc[2],
+                                    AUC_ub = performance.test$auc[3],
+                                    Brier = performance.test$brier,
+                                    BrierScaled = performance.test$brierScaled,
+                                    hosmerlemeshow_chi2 = performance.test$hosmerlemeshow[1],
+                                    hosmerlemeshow_df = performance.test$hosmerlemeshow[2],
+                                    hosmerlemeshow_pvalue = performance.test$hosmerlemeshow[3],
+                                    calibrationIntercept = performance.test$calibrationIntercept10,
+                                    calibrationGradient = performance.test$calibrationGradient10,
+                                    preference3070_0 = performance.test$preference3070_0,
+                                    preference3070_1 = performance.test$preference3070_1
+  )
+  
+  performanceInfoTrain <- data.frame(modelId =analysisId,
+                                     AUC = performance.train$auc[1],
+                                     AUC_lb = performance.train$auc[2],
+                                     AUC_ub = performance.train$auc[3],
+                                     Brier = performance.train$brier,
+                                     BrierScaled = performance.train$brierScaled,
+                                     hosmerlemeshow_chi2 = performance.train$hosmerlemeshow[1],
+                                     hosmerlemeshow_df = performance.train$hosmerlemeshow[2],
+                                     hosmerlemeshow_pvalue = performance.train$hosmerlemeshow[3],
+                                     calibrationIntercept = performance.train$calibrationIntercept10,
+                                     calibrationGradient = performance.train$calibrationGradient10,
+                                     preference3070_0 = performance.train$preference3070_0,
+                                     preference3070_1 = performance.train$preference3070_1
+  )
+  
+  # search for modelInfo in directory - if does not exist create and save model info table
+  # otherwise append model info to existing file
+  if(file.exists(file.path(dirPath, 'modelInfo.txt')))
+    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
+  if(!file.exists(file.path(dirPath, 'modelInfo.txt')))
+    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
+  
+  # repeat for performance info
+  if(file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
+    write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), append=T, row.names = F, col.names = F)
+  if(!file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
+    write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), row.names = F)
+  if(file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
+    write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), append=T, row.names = F, col.names = F)
+  if(!file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
+    write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), row.names = F)
+  
+  
+  
 }
