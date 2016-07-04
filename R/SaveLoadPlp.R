@@ -697,5 +697,3 @@ writeOutput <- function(prediction,
   
   
 }
-=======
->>>>>>> origin/develop:R/DataLoadingSaving.R
