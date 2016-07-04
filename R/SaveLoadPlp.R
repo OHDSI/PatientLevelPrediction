@@ -120,7 +120,7 @@ getPlpData <- function(connectionDetails,
                                   outcomeDatabaseSchema = cdmDatabaseSchema,
                                   outcomeTable = "cohort",
                                   cdmVersion = "5",
-                                  excludeDrugsFromCovariates = F,
+                                  excludeDrugsFromCovariates = F, #ToDo: rename to excludeFromFeatures
                                   firstExposureOnly = FALSE,
                                   washoutPeriod = 0,
                                   covariateSettings) {
@@ -128,12 +128,11 @@ getPlpData <- function(connectionDetails,
     stop("Study start date must have format YYYYMMDD")
   if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)
     stop("Study end date must have format YYYYMMDD")
+  #ToDo: add other checks the inputs are valid
   
   connection <- DatabaseConnector::connect(connectionDetails)
   
-  if (excludeDrugsFromCovariates) {
-    if (cohortTable != "drug_era")
-      warning("Removing drugs from covariates, but not sure if cohort IDs are valid drug concepts")
+  if (excludeDrugsFromCovariates) { #ToDo: rename to excludeFromFeatures
     sql <- "SELECT descendant_concept_id FROM @cdm_database_schema.concept_ancestor WHERE ancestor_concept_id IN (@cohort_id)"
     sql <- SqlRender::renderSql(sql,
                                 cdm_database_schema = cdmDatabaseSchema,
@@ -503,6 +502,7 @@ insertDbPopulation <- function(population,
   writeLines(paste("Inserting rows took", signif(delta, 3), attr(delta, "units")))
   invisible(TRUE)
 }
+<<<<<<< HEAD:R/SaveLoadPlp.R
 
 
 
@@ -700,3 +700,5 @@ writeOutput <- function(prediction,
   
   
 }
+=======
+>>>>>>> origin/develop:R/DataLoadingSaving.R
