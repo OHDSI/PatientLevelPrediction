@@ -28,6 +28,12 @@
 #' @export
 randomForest.set<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
   
+  # test python is available and the required dependancies are there:
+  python.test <- autodetectPython(pythonExePath = NULL)
+  
+  if(is.null(python.test$pythonExePath))
+    stop('You need to install python for this method - please see ...')
+  
   result <- list(model='randomForest.fit', param= expand.grid(ntrees=ntrees, mtries=mtries,
                                                        max_depth=max_depth, varImp=varImp))
   class(result) <- 'modelSettings' 
@@ -69,6 +75,9 @@ randomForest.fit <- function(population, plpData, param, index, search='grid', q
   
   #do var imp
   if(param$varImp[1]==T){
+    
+    
+    
     
     
     # if windows: 

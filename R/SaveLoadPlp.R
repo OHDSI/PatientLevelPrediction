@@ -502,9 +502,6 @@ insertDbPopulation <- function(population,
   writeLines(paste("Inserting rows took", signif(delta, 3), attr(delta, "units")))
   invisible(TRUE)
 }
-<<<<<<< HEAD:R/SaveLoadPlp.R
-
-
 
 #' @export
 savePlpModel <- function(plpModel, dirPath){
