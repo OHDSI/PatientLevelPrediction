@@ -72,10 +72,32 @@ createStudyPopulation <- function(plpData,
                                   addExposureDaysToStart = FALSE,
                                   riskWindowEnd = 365,
                                   addExposureDaysToEnd = F,
+                                  log = NULL,
                                   silent=F,...) {
+  
+  # parameter checks
+  if(!class(plpData)%in%c('plpData.libsvm','plpData.coo','plpData')){
+    write(paste0('#ERROR: Check plpData input'), file=log, append=T)
+    stop('Wrong plpData input')
+  }
+  checkNotNull(outcomeId,log)
+  checkBoolean(binary,log)
+  checkBoolean(firstExposureOnly,log)
+  checkNonNegative(washoutPeriod,log)
+  checkBoolean(removeSubjectsWithPriorOutcome,log)
+  checkNonNegative(priorOutcomeLookback,log)
+  checkBoolean(requireTimeAtRisk,log)
+  checkNonNegative(minTimeAtRisk,log)
+  checkNonNegative(riskWindowStart,log)
+  checkBoolean(addExposureDaysToStart,log)
+  checkNonNegative(riskWindowEnd,log)
+  checkBoolean(addExposureDaysToEnd,log)
+  
   if (is.null(population)) {
     population <- plpData$cohorts
   }
+  
+  # save the metadata
   metaData <- attr(population, "metaData")
   metaData$outcomeId <- outcomeId
   metaData$binary <- binary

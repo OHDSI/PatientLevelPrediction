@@ -264,7 +264,8 @@ predictFfdf <- function(coefficients, population, covariates, modelType = "logis
     prediction$value <- prediction$covariateValue * prediction$beta
     prediction <- bySumFf(prediction$value, prediction$rowId)
     colnames(prediction) <- c("rowId", "value")
-    prediction <- merge(population, ff::as.ram(prediction), by = "rowId", all.x = TRUE)
+   # prediction <- merge(population, ff::as.ram(prediction), by = "rowId", all.x = TRUE)
+    prediction <- merge(ff::as.ram(population), prediction, by ="rowId", all.x = TRUE)
     prediction$value[is.na(prediction$value)] <- 0
     prediction$value <- prediction$value + intercept
   } else{

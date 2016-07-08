@@ -117,10 +117,15 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                                        covariateValue = covariateValue))
   
   writeLines("Generating cohorts")
-  cohorts <- data.frame(rowId = 1:n, personId = 2e+10 + (1:n), cohortId = 1)
+  cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), cohortId = 1)
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
   r <- runif(n)
   cohorts$time <- as.numeric(as.character(cut(r, breaks = c(0, breaks), labels = names(breaks))))
+  cohorts$cohortStartDates <- sample(-1000:1000,n,replace=TRUE) + as.Date("2010-01-01")
+  cohorts$daysFromObsStart <- sample(1:1000,n,replace=TRUE)
+  cohorts$daysToCohortEnd <- sample(1:1000,n,replace=TRUE)
+  cohorts$daysToObsEnd <- cohorts$daysToCohortEnd + sample(1:1000,n,replace=TRUE)
+  
   cohorts <- ff::as.ffdf(cohorts)
   
   writeLines("Generating outcomes")
@@ -135,8 +140,8 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
     outcomes$outcomeCount <- as.numeric(rpois(n, outcomes$value))
     outcomes <- outcomes[outcomes$outcomeCount != 0, ]
     outcomes$outcomeId <- plpDataSimulationProfile$metaData$outcomeIds[i]
-    outcomes$timeToEvent <- round(runif(nrow(outcomes), 0, outcomes$time))
-    outcomes <- outcomes[, c("rowId", "outcomeId", "outcomeCount", "timeToEvent")]
+    outcomes$daysToEvent <- round(runif(nrow(outcomes), 0, outcomes$time))
+    outcomes <- outcomes[, c("rowId", "outcomeId", "outcomeCount", "daysToEvent")]
     allOutcomes <- rbind(allOutcomes, outcomes)
   }
   
@@ -156,13 +161,28 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   rownames(covariates) <- NULL
   rownames(exclude) <- NULL
   rownames(plpDataSimulationProfile$covariateRef) <- NULL
+
+  metaData = plpDataSimulationProfile$metaData
+  metaData$call$cdmDatabaseSchema = "Profile"
+
+  #convert to correct format
+  outcomes = ff::as.data.frame.ffdf(allOutcomes)
+  cohorts = ff::as.data.frame.ffdf(cohorts)
+  exclude = ff::as.data.frame.ffdf(exclude)
+  covariateRef = ff::as.ffdf(plpDataSimulationProfile$covariateRef)
   
-  result <- list(outcomes = ff::as.ffdf(allOutcomes),
-                 cohorts = ff::as.ffdf(cohorts),
-                 covariates = ff::as.ffdf(covariates),
-                 exclude = ff::as.ffdf(exclude),
-                 covariateRef = ff::as.ffdf(plpDataSimulationProfile$covariateRef),
-                 metaData = plpDataSimulationProfile$metaData)
+
+  temp <- list(cohortId = 0,
+               studyStartDate = NULL,
+               studyEndDate = NULL)
+  attr(cohorts, "metaData") <- temp
+  
+  result <- list(outcomes = outcomes,
+                 cohorts = cohorts,
+                 covariates = covariates,
+                 exclude = exclude,
+                 covariateRef = covariateRef,
+                 metaData = metaData)
   
   class(result) <- "plpData"
   return(result)

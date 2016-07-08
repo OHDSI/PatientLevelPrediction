@@ -16,7 +16,9 @@
 
 library("testthat")
 
-# This is a test of the creation of the study population. It checks expected errors
+# Test unit for the creation of the study population. The firstExposureOnly, 
+# washout, requireTimeAtRisk are checked. Additionally, error messages are checked.
+
 set.seed(1234)
 data(plpDataSimulationProfile)
 sampleSize <- 2000
@@ -25,31 +27,89 @@ plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n =
 test_that("population creation parameters", {
   
   studyPopulation <- createStudyPopulation(plpData,
-                        population = NULL,
-                        outcomeId,
+                        outcomeId = 3,
                         binary = TRUE,
                         firstExposureOnly = FALSE,
-                        washoutPeriod = -1,
-                        removeSubjectsWithPriorOutcome = TRUE,
+                        washoutPeriod = 0,
+                        removeSubjectsWithPriorOutcome = FALSE,
                         priorOutcomeLookback = 99999,
-                        requireTimeAtRisk = TRUE,
-                        minTimeAtRisk=365,
+                        requireTimeAtRisk = FALSE,
+                        minTimeAtRisk=0,
                         riskWindowStart = 0,
                         addExposureDaysToStart = FALSE,
                         riskWindowEnd = 365,
                         addExposureDaysToEnd = FALSE,
-                        silent=F,...)
+                        silent=TRUE)
 
   #plpData = plpData
-  expect_is(studyPopulation, "plpData")
+  expect_is(studyPopulation, "data.frame")
   
-    
+  nrOutcomes1 <- sum(studyPopulation$outcomeCount) 
+  expect_gt(nrOutcomes1,0)
+  
+  #firstExposureOnly test (should have no effect on simulated data)
+  studyPopulation <- createStudyPopulation(plpData,
+                                           outcomeId = 3,
+                                           binary = TRUE,
+                                           firstExposureOnly = TRUE,
+                                           washoutPeriod = 0,
+                                           removeSubjectsWithPriorOutcome = FALSE,
+                                           priorOutcomeLookback = 99999,
+                                           requireTimeAtRisk = FALSE,
+                                           minTimeAtRisk=0,
+                                           riskWindowStart = 0,
+                                           addExposureDaysToStart = FALSE,
+                                           riskWindowEnd = 365,
+                                           addExposureDaysToEnd = FALSE,
+                                           silent=TRUE)
+  
+  nrOutcomes2 <- sum(studyPopulation$outcomeCount)
+  expect_gt(nrOutcomes2,0)
+  expect_equal(nrOutcomes1,nrOutcomes2)
+  
+  #requireTimeAtRisk
+  studyPopulation <- createStudyPopulation(plpData,
+                                           outcomeId = 3,
+                                           binary = TRUE,
+                                           firstExposureOnly = TRUE,
+                                           washoutPeriod = 0,
+                                           removeSubjectsWithPriorOutcome = FALSE,
+                                           priorOutcomeLookback = 99999,
+                                           requireTimeAtRisk = TRUE,
+                                           minTimeAtRisk=365,
+                                           riskWindowStart = 0,
+                                           addExposureDaysToStart = FALSE,
+                                           riskWindowEnd = 365,
+                                           addExposureDaysToEnd = FALSE,
+                                           silent=TRUE)
+  nrOutcomes3 <- sum(studyPopulation$outcomeCount)
+  expect_gt(nrOutcomes3,0)
+  expect_false(nrOutcomes3 == nrOutcomes1) 
+  
+  #washoutPeriod
+  studyPopulation <- createStudyPopulation(plpData,
+                                           outcomeId = 3,
+                                           binary = TRUE,
+                                           firstExposureOnly = TRUE,
+                                           washoutPeriod = 365,
+                                           removeSubjectsWithPriorOutcome = FALSE,
+                                           priorOutcomeLookback = 99999,
+                                           requireTimeAtRisk = FALSE,
+                                           minTimeAtRisk=365,
+                                           riskWindowStart = 0,
+                                           addExposureDaysToStart = FALSE,
+                                           riskWindowEnd = 365,
+                                           addExposureDaysToEnd = FALSE,
+                                           silent=TRUE)
+  nrOutcomes4 <- sum(studyPopulation$outcomeCount)
+  expect_gt(nrOutcomes4,0)
+  expect_false(nrOutcomes4 == nrOutcomes1) 
   
   #washoutPeriod >=0
   expect_error(
                 createStudyPopulation(plpData,
                                 population = NULL,
-                                outcomeId,
+                                outcomeId = 3,
                                 binary = TRUE,
                                 firstExposureOnly = FALSE,
                                 washoutPeriod = -1,
@@ -61,14 +121,14 @@ test_that("population creation parameters", {
                                 addExposureDaysToStart = FALSE,
                                 riskWindowEnd = 365,
                                 addExposureDaysToEnd = FALSE,
-                                silent=F,...)
+                                silent=F)
   )
   
   #priorOutcomeLookback >=0
   expect_error(
     createStudyPopulation(plpData,
                           population = NULL,
-                          outcomeId,
+                          outcomeId = 3,
                           binary = TRUE,
                           firstExposureOnly = FALSE,
                           washoutPeriod = 0,
@@ -80,14 +140,14 @@ test_that("population creation parameters", {
                           addExposureDaysToStart = FALSE,
                           riskWindowEnd = 365,
                           addExposureDaysToEnd = F,
-                          silent=F,...)
+                          silent=F)
   )
   
   #minTimeAtRisk >=0
   expect_error(
     createStudyPopulation(plpData,
                           population = NULL,
-                          outcomeId,
+                          outcomeId = 3,
                           binary = T,
                           firstExposureOnly = FALSE,
                           washoutPeriod = 0,
@@ -99,28 +159,8 @@ test_that("population creation parameters", {
                           addExposureDaysToStart = FALSE,
                           riskWindowEnd = 365,
                           addExposureDaysToEnd = F,
-                          silent=F,...)
+                          silent=F)
   )
-  
-  #minTimeAtRisk >=0
-  expect_error(
-    createStudyPopulation(plpData,
-                          population = NULL,
-                          outcomeId,
-                          binary = T,
-                          firstExposureOnly = FALSE,
-                          washoutPeriod = 0,
-                          removeSubjectsWithPriorOutcome = TRUE,
-                          priorOutcomeLookback = 99999,
-                          requireTimeAtRisk = TRUE,
-                          minTimeAtRisk=-1,
-                          riskWindowStart = 0,
-                          addExposureDaysToStart = FALSE,
-                          riskWindowEnd = 365,
-                          addExposureDaysToEnd = FALSE,
-                          silent=F,...)
-  )
-  
   
 })
 
