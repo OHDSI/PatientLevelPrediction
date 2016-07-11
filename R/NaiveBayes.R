@@ -76,12 +76,17 @@ naiveBayes.fit <- function(population, plpData, param, index, search='grid', qui
   rowData[rowIds%in%population$rowId] <- 1
   write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
   
-  # make sure populating is ordered?
+  # make sure population is ordered?
   write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
   
-  # run model:
-  outLoc <- file.path(getwd(),'temp_models')
+  # save the model to outLoc
+  outLoc <- file.path(getwd(),'python_models')
+  # clear the existing model pickles
+  for(file in dir(outLoc))
+    file.remove(file.path(outLoc,file))
+
   
+  # run model:
   PythonInR::pySet("dataLocation" ,plpData$covariates)
   outLoc <- file.path(getwd(),'python_models')
   PythonInR::pySet("modelOutput",outLoc)

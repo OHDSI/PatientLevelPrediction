@@ -82,7 +82,7 @@ RandomForest.fit <- function(population, plpData, param, index, search='grid', q
   rowData[rowIds%in%population$rowId] <- 1
   write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
   
-  # make sure populating is ordered?
+  # make sure population is ordered?
   write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
   
   #do var imp
@@ -114,8 +114,13 @@ RandomForest.fit <- function(population, plpData, param, index, search='grid', q
   # above now is loaded threw pythoninR
   
   
-  # run rf_plp for each grid search:
+  # save the model to outLoc
   outLoc <- file.path(getwd(),'python_models')
+  # clear the existing model pickles
+  for(file in dir(outLoc))
+    file.remove(file.path(outLoc,file))
+  
+  # run rf_plp for each grid search:
   all_auc <- c()
   for(i in 1:nrow(param)){
     

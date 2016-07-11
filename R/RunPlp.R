@@ -282,7 +282,7 @@ RunPlp <- function(population, plpData,
 
   
   settings <- list(data=plpData,  index=indexes,
-                   featureSettings = featureSettings,
+                   #featureSettings = featureSettings,
                    modelSettings = modelSettings,
                    population=population, quiet=silent,
                    cohortId=cohortId,

@@ -38,12 +38,6 @@
 #'                                         \item{GLMclassifier ()}{ A generalised linear model}
 #'                                         \item{KNNclassifier()}{ A KNN model}
 #'                                         }
-#' @param featureSettings                  An object of class \code{featureSettings} created using one of the function:
-#'                                         \itemize{
-#'                                         \item{filterCovariates()}{ Filter covariate/concept/analysis ids }
-#'                                         \item{GLRMfeature()}{ Non-negative matrix factorisation}
-#'                                         
-#'                                         }
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
@@ -58,7 +52,8 @@
 #'
 
 #' @export
-fitPlp <- function(population, data, index,  modelSettings,featureSettings, quiet,
+fitPlp <- function(population, data, index,  modelSettings,#featureSettings, 
+                   quiet,
                    cohortId, outcomeId){
   silent <- quiet
   if('ffdf'%in%class(data$covariates)){
@@ -75,94 +70,46 @@ fitPlp <- function(population, data, index,  modelSettings,featureSettings, quie
   #=========================================================
   # run through pipeline list and apply:
   #=========================================================
-  plpTransform <- NULL
-  
-  # apply each featureSetting option in order of the list entry to do feature engineering/selection
-  if (class(featureSettings) == "featureSettings") {
-    fun <- featureSettings$method
-    args <- list(plpData =plpData, index=index, param=featureSettings$param)
-    plpTransform <- do.call(fun, args)
-    
-    # transform all the data:
-    plpData <- plpTransform$transform(plpData)
-    
-    if (nrow(plpData$covariates) == 0) {
-      stop("No features remaining")
-    } 
-  } else if (is.list(featureSettings)) {
-    for (i in 1:length(featureSettings)) {
-      #fun <- attr(featureSettings[[i]], "fun")
-      fun <- featureSettings[[i]]$method
-      args <- list(plpData=plpData,  index=index, param=featureSettings[[i]]$param)
-      plpTransform.temp <- do.call(fun, args)
-      
-      if(i==1){
-        plpTransform$transform <- plpTransform.temp$transform
-        plpTransform$transformDetails <- plpTransform.temp$transformDetails
-      }
-      if(i > 1){
-        plpTransform$transform <- c(plpTransform$transform,  plpTransform.temp$transform)
-        plpTransform$transformDetails <- c(plpTransform$transformDetails,  plpTransform.temp$transformDetails)
-      }
-      
-      # transform all the data:
-      plpData <- plpTransform$transform[[i]](plpData)
-      
-      if (nrow(plpData$covariates) == 0) {
-        stop("No features remaining")
-      } 
-    }
-  }
-  
-  
   # Now apply the classifier:
   fun <- modelSettings$model
   args <- list(plpData =plpData,param =modelSettings$param, index=index,
                population=population, quiet=quiet, cohortId=cohortId, outcomeId=outcomeId)
   plpModel <- do.call(fun, args)
   
-  # add the transform functions and details to the model:
-  if(!is.null(plpTransform))
-    plpModel$metaData$featureSettings <-  plpTransform 
-  
-  # create transformation function
-  createTransform <- function(plpModel){
-    
-    transform <- function(plpData=NULL, population=NULL, silent=F){
-      #check model fitting makes sense:
-      if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$cohortId)
-        warning('cohortId of new data does not match training data')
-      if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
-        warning('outcomeId of new data does not match training data or does not exist')
-      
-      #TODO: recalibrate
-      
-      if(!is.null(plpModel$metaData$featureSettings)){
-        if(!silent) writeLines("Applying model's feature selection...")
-        plpData <- lapply(plpModel$metaData$featureSettings$transform, function(x) do.call(x, list(newData=plpData)))
-      }
-      
-      if(!silent) writeLines('Applying model to calculate predictions...')
-      pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
-                                                                      plpData=plpData, 
-                                                                      population=population, 
-                                                                      silent=silent))
-      metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
-                       testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
-                       studyStartDate = do.call(paste,list(plpModel$metaData$call$studyStartDate)), 
-                       studyEndDate = do.call(paste,list(plpModel$metaData$call$studyEndDate)),
-                       cohortId = plpModel$cohortId,
-                       outcomeId = plpModel$outcomeId,
-                       predictionType ='binary'
-      )
-      writeLines(paste('silent end trans ',silent))
-      attr(pred, 'metaData') <- metaData
-      return(pred)
-    }
-    return(transform)
-  }
   plpModel$transform <- createTransform(plpModel)
   
   return(plpModel)
   
+}
+
+
+# create transformation function
+createTransform <- function(plpModel){
+  
+  transform <- function(plpData=NULL, population=NULL, silent=F){
+    #check model fitting makes sense:
+    if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$cohortId)
+      warning('cohortId of new data does not match training data')
+    if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
+      warning('outcomeId of new data does not match training data or does not exist')
+    
+    #TODO: recalibrate
+    
+    if(!silent) writeLines('Applying model to calculate predictions...')
+    pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
+                                                                    plpData=plpData, 
+                                                                    population=population, 
+                                                                    silent=silent))
+    metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
+                     testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
+                     studyStartDate = do.call(paste,list(plpModel$metaData$call$studyStartDate)), 
+                     studyEndDate = do.call(paste,list(plpModel$metaData$call$studyEndDate)),
+                     cohortId = plpModel$cohortId,
+                     outcomeId = plpModel$outcomeId,
+                     predictionType ='binary'
+    )
+    attr(pred, 'metaData') <- metaData
+    return(pred)
+  }
+  return(transform)
 }

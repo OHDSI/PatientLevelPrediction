@@ -514,6 +514,24 @@ savePlpModel <- function(plpModel, dirPath){
   
   if(!dir.exists(dirPath)) dir.create(dirPath)
   
+  #==================================================================
+  # if python then move pickle
+  #==================================================================
+  if(attr(plpModel, 'type') =='python'){
+    warning('Moving python pickle to save location...')
+    if(!dir.exists(file.path(dirPath,'python_model')))
+      dir.create(file.path(dirPath,'python_model'))
+    for(file in dir(plpModel$model)){
+      file.copy(file.path(plpModel$model,file), 
+                file.path(dirPath,'python_model'),  recursive = FALSE,
+                copy.mode = TRUE, copy.date = FALSE)
+    }
+    
+    plpModel$model <- file.path(dirPath,'python_model')
+    plpModel$transform <- createTransform(plpModel)
+  }
+  #============================================================
+    
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   saveRDS(plpModel$transform, file = file.path(dirPath, "transform.rds"))
   saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))

@@ -16,6 +16,127 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#' evaluatePlp
+#'
+#' @description
+#' Evaluates the performance of the patient level prediction model
+#' @details
+#' The function calculates various metrics to measure the performance of the model
+#' @param prediction                         The patient level prediction model's prediction
+#' @return
+#' A list containing the performance values
+#'
+
+#' @export
+evaluatePlp <- function(prediction, silent=F){
+  if(!silent)
+    writeLines('Checking Inputs')
+  type <- attr(prediction, "metaData")$predictionType
+  if (type != "binary")
+    stop("Currently only support binary classification models")
+  if(is.null(prediction$outcomeCount)) stop('No outcomeCount column present')
+  if(length(unique(prediction$value))==1) stop('Cannot evaluate as predictions all the same value')
+
+  #============= AUC ======================
+  if(!silent)
+    writeLines(paste0('Calculating auc started at: ', Sys.time()))
+  if(nrow(prediction) < 100000){
+    auc <- computeAuc(prediction, confidenceInterval = T)
+  } else{
+    # speed issues with big data so using AUC package
+    auc <- AUC:::auc(AUC:::roc(prediction$value, factor(prediction$outcomeCount)))
+  }
+  if(!silent)
+    writeLines(paste0('Calculating auc ended at: ', Sys.time()))
+  #=========================================
+  
+  # calibration linear fit- returns gradient, intercept
+  #=====================================================
+  if(!silent)
+    writeLines(paste0('Calculating calibration line started at: ', Sys.time()))
+  calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
+  calLine100 <- calibrationLine(prediction, numberOfStrata = 100)
+  if(!silent)
+    writeLines(paste0('Calculating calibration line ended at: ', Sys.time()))
+  #=====================================================
+  
+  if(!silent)
+    writeLines(paste0('Calculating calibration plot started at: ', Sys.time()))
+  calPlot <- plotCalibration(prediction,
+                             numberOfStrata = 10,
+                             truncateFraction = 0.01,
+                             fileName = NULL)
+  if(!silent)
+    writeLines(paste0('Calculating calibration plot ended at: ', Sys.time()))
+  
+  #=====================================================
+  # brier scores-returnss; brier, brierScaled
+  if(!silent)
+    writeLines(paste0('Calculating brier score started at: ', Sys.time()))
+  brier <- brierScore(prediction)
+  if(!silent)
+    writeLines(paste0('Calculating brier score ended at: ', Sys.time()))
+  #=====================================================
+  
+  
+  #=====================================================
+  # boxplot and quantiles:
+  if(!silent)
+    writeLines(paste0('Calculating quantiles started at: ', Sys.time()))
+  quantiles <- quantiles(prediction)  
+  if(!silent)
+    writeLines(paste0('Calculating quantiles ended at: ', Sys.time()))
+  #=====================================================
+  
+  #=====================================================
+  # preference score sparse:
+  if(!silent)
+    writeLines(paste0('Calculating preference score at: ', Sys.time()))
+  prefScore <- computePreferenceScore(prediction) 
+  if(!silent)
+    writeLines(paste0('Calculating preference ended at: ', Sys.time()))
+  #=====================================================
+  
+  
+  #=====================================================
+  # now calculate 100 point tpr, fpr
+  if(!silent)
+    writeLines(paste0('Calculating sparse ROC started at: ', Sys.time()))
+  roc.sparse <-rocSparse(prediction)
+  if(!silent)
+    writeLines(paste0('Calculating ROC sparse ended at: ', Sys.time()))
+  #=====================================================
+  
+  
+  
+  #=====================================================
+  # Average Precision
+  aveP.val <- averagePrecision(prediction)
+  #=====================================================
+  
+  result <- list(auc=auc,aveP=aveP.val, brier=brier$brier, brierScaled=brier$brierScaled,
+                 calibrationIntercept10=calLine10$lm[1], calibrationGradient10 = calLine10$lm[2],
+                 calibrationIntercept100=calLine100$lm[1], calibrationGradient100 = calLine100$lm[2],
+                 hosmerlemeshow = calLine10$hosmerlemeshow,
+                 roc = roc.sparse[,c('FPR','TPR')],
+                 raw = roc.sparse[,c('TP','FP','TN','FN','FOR','accuracy')],
+                 precision.recall = roc.sparse[,c('TPR','PPV')],
+                 F.measure = roc.sparse[,c('Fmeasure')],
+                 preferenceScores = prefScore$sparsePrefScore,
+                 calSparse =calPlot$strataData,
+                 calSparse2_10 = calLine10$aggregateLmData,
+                 calSparse2_100 = calLine100$aggregateLmData,
+                 quantiles = quantiles$quantiles,
+                 calPlot =calPlot$plot, prefScorePlot = prefScore$plot, # remove plots?
+                 boxPlot = quantiles$plot,
+                 preference3070_0 = prefScore$similar_0,
+                 preference3070_1 = prefScore$similar_1
+  )
+  class(result) <- 'metric.sparse'
+  return(result)
+  
+}
+
 #' Compute the area under the ROC curve
 #'
 #' @details
@@ -204,104 +325,41 @@ plotRoc <- function(prediction, fileName = NULL) {
 }
 
 
-
-#' evaluatePlp
-#'
-#' @description
-#' Evaluates the performance of the patient level prediction model
-#' @details
-#' The function calculates various metrics to measure the performance of the model
-#' @param prediction                         The patient level prediction model's prediction
-#' @return
-#' A list containing the performance values
-#'
-
-#' @export
-evaluatePlp <- function(prediction, silent=F){
-  type <- attr(prediction, "metaData")$predictionType
-  if (type != "binary")
-    stop("Currently only support binary classification models")
-  if(is.null(prediction$outcomeCount)) stop('No outcomeCount column present')
-  if(length(unique(prediction$value))==1) stop('Cannot evaluate as predictions all the same value')
-  eval <- sparseMetric(prediction, aveP=T, silent=silent)
-  
-  return(eval) 
+averagePrecision <- function(prediction){
+  lab.order <- prediction$outcomeCount[order(-prediction$value)]
+  n <- nrow(prediction)
+  P <- sum(prediction$outcomeCount>0)
+  val <- rep(0, n)
+  val[lab.order>0] <- 1:P
+  return(sum(val/(1:n))/P)
 }
 
-sparseMetric <- function(prediction, aveP=T, silent=F){
-  #writeLines(paste0('na: ', sum(is.na(prediction$value))))
-  if(!silent)
-    writeLines(paste0('Calculating auc started at: ', Sys.time()))
-  if(nrow(prediction) < 100000){
-  auc <- computeAuc(prediction,
-                    confidenceInterval = T)
-  } else{
-  auc <- AUC:::auc(AUC:::roc(prediction$value, factor(prediction$outcomeCount)))
+rocSparse <- function(prediction){
+  if(nrow(prediction)<99){
+    warning('sparse roc not calculated due to small dataset')
+    return(NULL)
   }
-  if(!silent)
-    writeLines(paste0('Calculating auc ended at: ', Sys.time()))
-  # calibration linear fit- returns gradient, intercept
-  
-  if(!silent)
-    writeLines(paste0('Calculating calibration line started at: ', Sys.time()))
-  calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
-  calLine100 <- calibrationLine(prediction, numberOfStrata = 100)
-  if(!silent)
-    writeLines(paste0('Calculating calibration line ended at: ', Sys.time()))
-  
-  if(!silent)
-    writeLines(paste0('Calculating calibration plot started at: ', Sys.time()))
-  calPlot <- plotCalibration(prediction,
-                             numberOfStrata = 10,
-                             truncateFraction = 0.01,
-                             fileName = NULL)
-  if(!silent)
-    writeLines(paste0('Calculating calibration plot ended at: ', Sys.time()))
-  
-  
-  # brier scores-returnss; brier, brierScaled
-  if(!silent)
-    writeLines(paste0('Calculating brier score started at: ', Sys.time()))
-  brier <- brierScore(prediction)
-  if(!silent)
-    writeLines(paste0('Calculating brier score ended at: ', Sys.time()))
-  
-  
-  # boxplot and quantiles:
-  if(!silent)
-    writeLines(paste0('Calculating quantiles started at: ', Sys.time()))
-  quantiles <- quantiles(prediction)  
-  if(!silent)
-    writeLines(paste0('Calculating quantiles ended at: ', Sys.time()))
-  
-  # preference score sparse:
-  if(!silent)
-    writeLines(paste0('Calculating preference score at: ', Sys.time()))
-  prefScore <- computePreferenceScore(prediction) 
-  if(!silent)
-    writeLines(paste0('Calculating preference ended at: ', Sys.time()))
-  
-
-  # now calculate 100 point tpr, fpr
-  if(!silent)
-    writeLines(paste0('Calculating sparse ROC started at: ', Sys.time()))
-  
+    
   lab.order <- prediction$outcomeCount[order(-prediction$value)]
   n <- nrow(prediction)
   P <- sum(prediction$outcomeCount>0)
   N <- n - P
-  change.ind <- which(lab.order==0)
-  ind.oi <- change.ind[c(seq(1,length(change.ind)-1,
-                             floor((length(change.ind)-1)/99)), length(change.ind))]
-  # code test: improve speed create vector with cum sum 
+  # find points where there is a change (0 to 1)
+  change.ind <-which(abs(lab.order[-length(lab.order)]-lab.order[-1])==1)
+  
+  if(length(change.ind)<=101){
+    ind.oi <- change.ind
+  } else {
+  #change.ind <- which(lab.order==0)
+    ind.oi <- change.ind[c(seq(1,length(change.ind)-1,
+                               floor((length(change.ind)-1)/99)), length(change.ind))]
+  }
+  # improve speed create vector with cum sum 
   temp.cumsum <- rep(0, length(lab.order))
   temp.cumsum[lab.order==0] <- 1:sum(lab.order==0)
   TP <- sapply(ind.oi, function(x) x-temp.cumsum[x])
   FP <- sapply(ind.oi, function(x) temp.cumsum[x])
-  # end of code testing
   
-  #TP <- sapply(ind.oi, function(x) sum(lab.order[1:x]>0))
-  #FP <- sapply(ind.oi, function(x) sum(lab.order[1:x]==0))
   TN <- N-FP
   FN <- P-TP
   
@@ -312,40 +370,10 @@ sparseMetric <- function(prediction, aveP=T, silent=F){
   FOR <- FN/(FN+TN)
   Fmeasure <- 2*(PPV*TPR)/(PPV+TPR)
   
-  roc.sparse <- data.frame(TP,FP,TN,FN, TPR, FPR,PPV,FOR, accuracy, Fmeasure)
-  if(!silent)
-    writeLines(paste0('Calculating ROC sparse ended at: ', Sys.time()))
-  
-  
-  aveP.val <- NULL
-  if(aveP==T){
-    val <- rep(0, n)
-    val[lab.order>0] <- 1:P
-    aveP.val <- sum(val/(1:n))/P
-  }
-  
-  result <- list(auc=auc,aveP=aveP.val, brier=brier$brier, brierScaled=brier$brierScaled,
-                 calibrationIntercept10=calLine10$lm[1], calibrationGradient10 = calLine10$lm[2],
-                 calibrationIntercept100=calLine100$lm[1], calibrationGradient100 = calLine100$lm[2],
-                 hosmerlemeshow = calLine10$hosmerlemeshow,
-                 roc = roc.sparse[,c('FPR','TPR')],
-                 raw = roc.sparse[,c('TP','FP','TN','FN','FOR','accuracy')],
-                 precision.recall = roc.sparse[,c('TPR','PPV')],
-                 F.measure = roc.sparse[,c('Fmeasure')],
-                 preferenceScores = prefScore$sparsePrefScore,
-                 calSparse =calPlot$strataData,
-                 calSparse2_10 = calLine10$aggregateLmData,
-                 calSparse2_100 = calLine100$aggregateLmData,
-                 quantiles = quantiles$quantiles,
-                 calPlot =calPlot$plot, prefScorePlot = prefScore$plot,
-                 boxPlot = quantiles$plot,
-                 preference3070_0 = prefScore$similar_0,
-                 preference3070_1 = prefScore$similar_1
-  )
-  class(result) <- 'metric.sparse'
-  return(result)
+  return(data.frame(TP,FP,TN,FN, TPR, FPR,PPV,FOR, accuracy, Fmeasure))
   
 }
+
 
 brierScore <- function(prediction, ...){
 
