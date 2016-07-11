@@ -15,123 +15,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-restrictLibsvmToPopulation <- function(plpData, population){
-  
-  if(missing(plpData) || is.null(plpData))
-    stop('No plpData input')
-  if(missing(population) || is.null(population))
-    stop('No population input')
-  if(!'plpData.libsvm'%in%class(plpData))
-    stop('plpData is not in libsvm format - convert first')
-  
-  writeLines('loading libsvm data into h2o...')
-  popSize = nrow(population)
-  h2oData <- h2o::h2o.importFile(path = file.path(plpData$covariates,'covariate.txt'))
-  rowIds <- read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
-  covariateIds <- read.table(file.path(plpData$covariates,'covariateRef.txt'), header=T)
-  h2oData <- h2oData[,-1] # remove dummy label column that was required for format
-  h2o::colnames(h2oData) =  covariateIds$covariateId
-  
-  # remove 0 columns
-  zeroVals <- h2o::h2o.mean(h2oData)
-  inds.zero <-which(zeroVals>0, arr.ind =T)
-  h2oData <- h2oData[,inds.zero]
-  
-  h2oData$rowId <- h2o::as.h2o(rowIds)
-  
-  
-  if(!is.null(population$outcomeCount)){
-    if(!is.null(population$indexes)){
-      writeLines('merging data with population of interest...')
-      colnames(population)[colnames(population)=='indexes'] <- 'fold'
-      h2oData2 <- h2o::h2o.merge(h2o::as.h2o(population[,c('rowId','fold','outcomeCount')]),
-                                 h2oData)
-      #h2o::colnames(h2oData)[colnames(h2oData)=='indexes'] <- 'fold'
-    } else{
-      h2oData2 <- h2o::h2o.merge(h2o::as.h2o(population[,c('rowId','outcomeCount')]), h2oData)
-    }
-    # convert label to factor
-    writeLines(paste0('ncols: ', h2o::ncol.H2OFrame(h2oData2), 
-                      ' nrows: ', h2o::nrow.H2OFrame(h2oData2)))
-    ##writeLines(paste0('converting outcome p1...')) 
-    names <- h2o::as.h2o(h2o::colnames(h2oData2))
-    ##writeLines(paste0('converting outcome p2...'))
-    ind <- h2o::h2o.which(names=='outcomeCount')
-    ##writeLines(paste0('converting outcome p3...'))
-    ind <- as.double(as.data.frame(ind))
-    ##writeLines(paste0('converting outcome p4...'))
-    writeLines(paste0('converting outcome (column ',ind,') to factor...')) 
-    h2oData2[,ind] = h2o::as.factor(h2oData2[,ind])
-    writeLines('converted...')
-    
-  } else {
-    h2oData2 <- h2o::h2o.merge(h2o::as.h2o(population[,c('rowId','subjectId')]), h2oData)
-  }
-  
-  if(nrow(h2oData2)!=popSize)
-    warning('Some popualtion missing from plpData - not included')
-  
-  
-  return(h2oData2)
-}
-
 
 
 toSparseM <- function(plpData,population, map=NULL, silent=T){
   cov <- ff::clone(plpData$covariates)
   covref <- ff::clone(plpData$covariateRef)
   
-  
-  writeLines(paste0('Max cov:', max(ff::as.ram(cov$covariateId))))
-  
-  # restrict to popualtion for speed
-  if(!silent)
-    writeLines('restricting to population for speed...')
-  idx <- ffbase::ffmatch(x = cov$rowId, table = ff::as.ff(population$rowId))
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  cov <- cov[idx, ]
-  
-  if(!silent)
-    writeLines('Now converting covariateId...')
-  oldIds <- as.double(ff::as.ram(plpData$covariateRef$covariateId))
-  newIds <- 1:nrow(plpData$covariateRef)
-  
-  if(!is.null(map)){
-    writeLines('restricting to model variables...')
-    writeLines(paste0('oldIds: ',length(map[,'oldIds'])))
-    writeLines(paste0('newIds:', max(as.double(map[,'newIds']))))
-    ind <- ffbase::ffmatch(x=covref$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
-    ind <- ffbase::ffwhich(ind, !is.na(ind))
-    covref <- covref[ind,]
-    
-    ind <- ffbase::ffmatch(x=cov$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
-    ind <- ffbase::ffwhich(ind, !is.na(ind))
-    cov <- cov[ind,]
-  }
-  if(is.null(map))
-    map <- data.frame(oldIds=oldIds, newIds=newIds)
-  
-  
-  
-  for (i in bit::chunk(covref$covariateId)) {
-    ids <- covref$covariateId[i[1]:i[2]]
-    ids <- plyr::mapvalues(ids, as.double(map$oldIds), as.double(map$newIds), warn_missing = FALSE)
-    covref$covariateId[i[1]:i[2]] <- ids
+  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=covref, 
+                                  population, map)
+
+  for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
+    ids <- plpData.mapped$covariateRef$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariateRef$covariateId[i[1]:i[2]] <- ids
     # tested and working
   }
-  for (i in bit::chunk(cov$covariateId)) {
-    ids <- cov$covariateId[i[1]:i[2]]
-    ids <- plyr::mapvalues(ids, as.double(map$oldIds), as.double(map$newIds), warn_missing = FALSE)
-    cov$covariateId[i[1]:i[2]] <- ids
+  for (i in bit::chunk(plpData.mapped$covariates$covariateId)) {
+    ids <- plpData.mapped$covariates$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  writeLines(paste0('Max ',ffbase::max.ff(cov$covariateId)))
+  writeLines(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
   if(!silent)
     writeLines('Finished - Converting covariateIds to actual column numbers')
   
   #convert into sparseM
   if(!silent){
-    writeLines(paste0('# cols: ', nrow(covref)))
-    writeLines(paste0('Max rowId: ', ffbase::max.ff(cov$rowId)))
+    writeLines(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
+    writeLines(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
   }
   
   # chunk then add
@@ -139,13 +50,13 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
   data <- Matrix::sparseMatrix(i=1,
                                j=1,
                                x=0,
-                               dims=c(ffbase::max.ff(cov$rowId), max(map$newIds))) # edit this to max(map$newIds)
-  for (ind in bit::chunk(cov$covariateId)) {
+                               dims=c(ffbase::max.ff(plpData.mapped$covariates$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
+  for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
     writeLines(paste0('start:', ind[1],'- end:',ind[2]))
-    temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(cov$rowId[ind]),
-                                          j=ff::as.ram(cov$covariateId[ind]),
-                                          x=ff::as.ram(cov$covariateValue[ind]),
-                                          dims=c(ffbase::max.ff(cov$rowId), max(map$newIds))),
+    temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
+                                          j=ff::as.ram(plpData.mapped$covariates$covariateId[ind]),
+                                          x=ff::as.ram(plpData.mapped$covariates$covariateValue[ind]),
+                                          dims=c(ffbase::max.ff(plpData.mapped$covariates$rowId), max(plpData.mapped$map$newIds))),
                      warning = function(w) writeLines(paste(w)),
                      error = function(e) writeLines(paste(e))
     )
@@ -155,8 +66,8 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
     writeLines(paste0('Sparse matrix with dimensionality: ', dim(data)))
   
   result <- list(data=data,
-                 covariateRef=covref,
-                 map=map)
+                 covariateRef=plpData.mapped$covariateRef,
+                 map=plpData.mapped$map)
   return(result)
   
 }
@@ -211,8 +122,11 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
   
   cov <- ff::clone(plpData$covariates)
   covref <- ff::clone(plpData$covariateRef)
+  
+  
   if(!silent)
-    writeLines('Now converting the covariate data into libvsm...')
+    writeLines('Now converting the covariate data into libsvm...')
+  
   
   oldIds <- ff::as.ram(plpData$covariateRef$covariateId)
   newIds <- 1:nrow(plpData$covariateRef)
@@ -300,3 +214,38 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
   return(results)
   
 }
+
+MapCovariates <- function(covariates, covariateRef, population, map, silent=F){
+  writeLines(paste0('Max cov:', max(ff::as.ram(covariates$covariateId))))
+  
+  # restrict to popualtion for speed
+  if(!silent)
+    writeLines('restricting to population for speed...')
+  idx <- ffbase::ffmatch(x = covariates$rowId, table = ff::as.ff(population$rowId))
+  idx <- ffbase::ffwhich(idx, !is.na(idx))
+  covariates <- covariates[idx, ]
+  
+  if(!silent)
+    writeLines('Now converting covariateId...')
+  oldIds <- as.double(ff::as.ram(covariateRef$covariateId))
+  newIds <- 1:nrow(covariateRef)
+  
+  if(!is.null(map)){
+    writeLines('restricting to model variables...')
+    writeLines(paste0('oldIds: ',length(map[,'oldIds'])))
+    writeLines(paste0('newIds:', max(as.double(map[,'newIds']))))
+    ind <- ffbase::ffmatch(x=covariateRef$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
+    ind <- ffbase::ffwhich(ind, !is.na(ind))
+    covariateRef <- covariateRef[ind,]
+    
+    ind <- ffbase::ffmatch(x=covariates$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
+    ind <- ffbase::ffwhich(ind, !is.na(ind))
+    covariates <- covariates[ind,]
+  }
+  if(is.null(map))
+    map <- data.frame(oldIds=oldIds, newIds=newIds)
+  
+  return(list(covariates=covariates,
+              covariateRef=covariateRef,
+              map=map))
+} 

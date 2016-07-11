@@ -16,7 +16,7 @@ import math
 from sklearn.naive_bayes import GaussianNB #BernoulliNB
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.feature_selection import SelectFromModel#from sklearn.cross_validation import PredefinedSplit
-##from sklearn.externals.joblib import Memory
+from sklearn.externals.joblib import Memory
 from sklearn.datasets import load_svmlight_file
 from sklearn.externals import joblib
 
@@ -24,30 +24,28 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
 #================================================================
-output = sys.argv[2]
-id = sys.argv[3]
 featnum = 2000
 
 print "Training Naive Bayes model " 
 
 print "Loading Data..."
 # load data + train,test indexes + validation index
-##mem = Memory("./mycache")
+mem = Memory("./mycache")
 
-##@mem.cache
+@mem.cache
 def get_data():
-    data = load_svmlight_file(sys.argv[1]+"\covariate.txt")
+    data = load_svmlight_file(dataLocation+"\covariate.txt")
     return data[0], data[1]
 
 X, y = get_data()
 # only get the population data
-dataRows = np.loadtxt(sys.argv[1]+'\dataRows.txt', delimiter=' ')
+dataRows = np.loadtxt(dataLocation+'\dataRows.txt', delimiter=' ')
 X = X[dataRows>0,:]
 
 print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
 
 # load index file
-population = np.loadtxt(sys.argv[1]+'\population.txt', delimiter=' ')
+population = np.loadtxt(dataLocation+'\population.txt', delimiter=' ')
 y = population[:,1]
 print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
 
@@ -105,16 +103,12 @@ end_time = timeit.default_timer()
 print "Training final took: %.2f s" %(end_time-start_time)
 	
 # save the model:
-if not os.path.exists(output+'\\'+id):
-    os.makedirs(output+'\\'+id)
-print "Model saved to: %s" %(output+'\\'+id)	
+if not os.path.exists(modelOutput):
+    os.makedirs(modelOutput)
+print "Model saved to: %s" %(modelOutput)	
 	
-joblib.dump(gnb, output+'\\'+id+'\\model.pkl') 
-np.savetxt(output+'\\'+id+'\\varImp.txt',kbest.scores_, fmt='%.18e', delimiter=',', newline='\n')
+joblib.dump(gnb, modelOutput+'\\model.pkl') 
 
 # merge pred with indexes[testInd,:]
-# save 
 test_pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
 prediction = np.append(population[population[:,population.shape[1]-1] > 0,:],test_pred, axis=1)
-#print "%s - %s" %(prediction.shape[0], prediction.shape[1])
-np.savetxt(output+'\\'+id+'\\prediction.txt', prediction, fmt='%.18e', delimiter=',', newline='\n')

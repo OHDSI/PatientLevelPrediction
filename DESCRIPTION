@@ -32,11 +32,11 @@ Imports:
     RJDBC,
     SqlRender (>= 1.1.3),
     survival,
-    h2o,
     FeatureExtraction,
     xgboost,
     Matrix,
-    AUC
+    AUC,
+    PythonInR
 Suggests:
     testthat,
     pROC,

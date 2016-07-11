@@ -67,7 +67,7 @@ createStudyPopulation <- function(plpData,
                                   removeSubjectsWithPriorOutcome = TRUE,
                                   priorOutcomeLookback = 99999,
                                   requireTimeAtRisk = T,
-                                  minTimeAtRisk=365,
+                                  minTimeAtRisk=365, # outcome nonoutcome
                                   riskWindowStart = 0,
                                   addExposureDaysToStart = FALSE,
                                   riskWindowEnd = 365,

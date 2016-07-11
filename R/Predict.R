@@ -92,19 +92,38 @@ predict.xgboost <- function(plpModel,population, plpData, silent=F, ...){
 # caret model prediction 
 predict.python <- function(plpModel, population, plpData,  silent=F){
   
-  dense <- plpModel$dense
+  # connect to python if not connected
+  if ( !PythonInR::pyIsConnected() ){ 
+    PythonInR::pyConnect()
+    PythonInR::pyOptions("numpyAlias", "np")
+    PythonInR::pyOptions("useNumpy", TRUE)
+    PythonInR::pyImport("numpy") # issues with this using as np
+    }
+  
+  # return error if we can't connect to python
+  if ( !PythonInR::pyIsConnected() )
+    stop('Python not connect error')
+  
+  ##PythonInR::pyImport("numpy", as="np") #crashing R?
+
+  writeLines('Setting inputs...')
+  PythonInR::pySet("dense", plpModel$dense)
+  PythonInR::pySet("data_loc", plpData$covariates)
+  PythonInR::pySet("model_loc", plpModel$model)
   
   # restrict plpdata to populaiton:
   # create vector of 1s and 0s indicating whether the plpData row is in the populaiton
+  ## TODO dont save this instead use - PythonInR::pySet('dataRows', rowData)
   rowIds <- read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
   rowData <- rep(0, length(rowIds))
   rowData[rowIds%in%population$rowId] <- 1
-  write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
+  ##write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
+  PythonInR::pySet('dataRows', as.matrix(rowData))
   
-  
+  writeLines('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
-  originalCovs <- read.table(file.path(plpModel$model,'covs.txt'), header = T) 
+  originalCovs <- plpModel$varImp[plpModel$varImp[,'included']==1,] #read.table(file.path(plpModel$model,'covs.txt'), header = T) 
   originalCovs$rowInd.org <- (1:nrow(originalCovs))-1 # python index starts at 0
   newCovs <- ff::as.ram(plpData$covariateRef)
   newCovs$rowInd.new <- (1:nrow(newCovs))-1 # python index starts at 0
@@ -113,9 +132,20 @@ predict.python <- function(plpModel, population, plpData,  silent=F){
   map$rowInd.new[is.na(map$rowInd.new)] <- -1
   map$rowInd.org[is.na(map$rowInd.org)] <- -1
   
-  write.table(map[, c('rowInd.new','rowInd.org')], file.path(plpData$covariates, 'mapping.txt'), 
-              row.names=F, col.names=F)
+  #write.table(map[, c('rowInd.new','rowInd.org')], file.path(plpData$covariates, 'mapping.txt'), 
+  #            row.names=F, col.names=F)
+  
+  # set mapping rather than saving/loading 
+  writeLines('Loading mapping...')
+  PythonInR::pySet('mapping', as.matrix(map[, c('rowInd.new','rowInd.org')]), 
+                   namespace = "__main__", useNumpy = TRUE)
 
+  # set popualtion (crashed R with 300k pop)
+  ##if('indexes'%in%colnames(population)){
+  ##  PythonInR::pySet("pop",as.matrix(population[,c('rowId','outcomeCount','indexes')]), namespace = "__main__", useNumpy = TRUE)
+  ##} else {
+  ##  PythonInR::pySet("pop",as.matrix(population[,c('rowId','outcomeCount')]), namespace = "__main__", useNumpy = TRUE )
+  ##}
   # save popualtion
   if('indexes'%in%colnames(population)){
     write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates, 'population.txt'), 
@@ -125,14 +155,17 @@ predict.python <- function(plpModel, population, plpData,  silent=F){
                 row.names=F, col.names=F)
   }
   
-  # data, model, output
-  output <- file.path(getwd(), 'results')
-  if(!dir.exists(output)) dir.create(output)
-  system(paste(system.file(package='PatientLevelPrediction', 'executionables',
-         'win64','python','python_predict.exe'), gsub('/','\\\\',plpData$covariates), 
-         gsub('/','\\\\',plpModel$model), gsub('/','\\\\',output), dense )  )
+  # run the python predict code:
+  writeLines('Executing prediction...')
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py '))
   
-  prediction <- read.csv(file.path(output, 'new_pred.txt'), header=F)
+  #get the prediction from python and reformat:
+  writeLines('Returning results...')
+  prediction <- PythonInR::pyGet('prediction', simplify = F)
+  prediction <-  apply(prediction,1, unlist)
+  prediction <- t(prediction)
+  prediction <- as.data.frame(prediction)
+  attr(prediction, "metaData") <- list(predictionType="binary")
   if(ncol(prediction)==4){
     colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
   } else {

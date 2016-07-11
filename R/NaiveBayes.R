@@ -23,6 +23,15 @@
 #' @export
 naiveBayes.set <- function(){
   
+  # test python is available and the required dependancies are there:
+  if ( !PythonInR::pyIsConnected() ){
+    python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
+    
+    
+    if(is.null(python.test$pythonExePath))
+      stop('You need to install python for this method - please see ...')
+  }
+  
   result <- list(model='naiveBayes.fit', param= '')
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- T
@@ -44,6 +53,18 @@ naiveBayes.fit <- function(population, plpData, param, index, search='grid', qui
     population$indexes <- rep(1, nrow(popualtion))
   }
   
+  # connect to python if not connected
+  if ( !PythonInR::pyIsConnected() ){ 
+    PythonInR::pyConnect()
+    PythonInR::pyOptions("numpyAlias", "np")
+    PythonInR::pyOptions("useNumpy", TRUE)
+    PythonInR::pyImport("numpy")}
+  
+  
+  # return error if we can't connect to python
+  if ( !PythonInR::pyIsConnected() )
+    stop('Python not connect error')
+  
   
   if(!quiet)
     writeLines(paste0('Training naive bayes model...' ))
@@ -61,28 +82,33 @@ naiveBayes.fit <- function(population, plpData, param, index, search='grid', qui
   # run model:
   outLoc <- file.path(getwd(),'temp_models')
   
-  if(systemInfo['sysname']=="Windows"){
-    system(paste(system.file(package='PatientLevelPrediction', 'executionables',
-                             'win64','python','naive_bayes.exe'), gsub('/','\\\\',plpData$covariates),
-                 gsub('/','\\\\',outLoc),1 )  )
-    
-    # end if windows and add else:  
-  } else {
-    system(paste('python', system.file(package='PatientLevelPrediction','python','naive_bayes.py '),
-                 gsub('/','\\\\',plpData$covariates),
-                 gsub('/','\\\\',outLoc),1 )  )
-  }
+  PythonInR::pySet("dataLocation" ,plpData$covariates)
+  outLoc <- file.path(getwd(),'python_models')
+  PythonInR::pySet("modelOutput",outLoc)
   
+
+  # then run standard python code
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','naive_bayes.py '))
   
-  pred <- read.csv(file.path(outLoc,1,'prediction.txt'), header=F)
+  # then get the prediction 
+  pred <- PythonInR::pyGet('prediction', simplify = FALSE)
+  pred <-  apply(pred,1, unlist)
+  pred <- t(pred)
   colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
+  pred <- as.data.frame(pred)
   attr(pred, "metaData") <- list(predictionType="binary")
+  
+  
+  ##pred <- read.csv(file.path(outLoc,1,'prediction.txt'), header=F)
+  ##colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
+  ##attr(pred, "metaData") <- list(predictionType="binary")
   pred$value <- 1-pred$value
   auc <- PatientLevelPrediction::computeAuc(pred)
   writeLines(paste0('Model obtained CV AUC of ', auc))
   
   # get the univeriate selected features (nb requires dense so need feat sel)
-  varImp <- read.csv(file.path(outLoc,1, 'varImp.txt'), header=F)[,1]
+  #varImp <- read.csv(file.path(outLoc,1, 'varImp.txt'), header=F)[,1]
+  varImp <- PythonInR::pyGet('kbest.scores_', simplify = F)[,1]
   varImp[is.na(varImp)] <- 0
   if(mean(varImp)==0)
     stop('No important variables - seems to be an issue with the data')
@@ -90,14 +116,16 @@ naiveBayes.fit <- function(population, plpData, param, index, search='grid', qui
   top2000 <- varImp[order(-varImp)][2000]
   inc <- which(varImp>=top2000, arr.ind=T)
   covariateRef <- ff::as.ram(plpData$covariateRef)
+  incs <- rep(0, nrow(covariateRef))
+  incs[inc] <- 1
+  covariateRef$included <- incs
   covariateRef$varImp <- varImp
-  
-  covariateRef <- covariateRef[inc,] # this messes up order
-  write.table(covariateRef, file.path(outLoc, 1,'covs.txt'), row.names=F, col.names=T)
+  ##covariateRef <- covariateRef[inc,] # this messes up order
+  ##write.table(covariateRef, file.path(outLoc, 1,'covs.txt'), row.names=F, col.names=T)
   
   
   # select best model and remove the others
-  modelTrained <- file.path(outLoc, 1) 
+  modelTrained <- file.path(outLoc) 
   param.best <- ''
   
   comp <- start-Sys.time()

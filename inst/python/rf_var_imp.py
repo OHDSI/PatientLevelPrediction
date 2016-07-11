@@ -14,7 +14,7 @@ import math
 from sklearn.ensemble import RandomForestClassifier
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 from sklearn.feature_selection import SelectFromModel
-##from sklearn.externals.joblib import Memory
+from sklearn.externals.joblib import Memory
 from sklearn.datasets import load_svmlight_file
 
 
@@ -22,27 +22,25 @@ from sklearn.datasets import load_svmlight_file
 ntrees = 2000
 max_depth = 17
 
-output = sys.argv[2]
-
 print "Using Random Forest to select features" 
 
 print "Loading Data..."
 # load data + train,test indexes + validation index
-##mem = Memory("./mycache")
+mem = Memory("./mycache")
+@mem.cache
 
-##@mem.cache
 def get_data():
-    data = load_svmlight_file(sys.argv[1]+"\covariate.txt")
+    data = load_svmlight_file(dataLocation+"\covariate.txt")
     return data[0], data[1]
 
 X, y = get_data()
 # only get the population data
-dataRows = np.loadtxt(sys.argv[1]+'\dataRows.txt', delimiter=' ')
+dataRows = np.loadtxt(dataLocation+'\dataRows.txt', delimiter=' ')
 X = X[dataRows>0,:]
 print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
 
 # load index file
-population = np.loadtxt(sys.argv[1]+'\population.txt', delimiter=' ')
+population = np.loadtxt(dataLocation+'\population.txt', delimiter=' ')
 y = population[:,1]
 print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
 
@@ -64,8 +62,5 @@ feat_sel = SelectFromModel(rf,threshold='mean', prefit=True)
 train_x = feat_sel.transform(train_x)
 print "Selected %s number of features" %(train_x.shape[1])
 	
-# save results
-np.savetxt( output+'\\varImp.txt',rf.feature_importances_,  fmt='%.18e', delimiter=',', newline='\n')
-
 
 
