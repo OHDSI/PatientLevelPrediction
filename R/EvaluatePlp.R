@@ -324,7 +324,18 @@ plotRoc <- function(prediction, fileName = NULL) {
   return(plot)
 }
 
-
+#' Calculate the average precision
+#'
+#' @details
+#' Calculates the average precision from a predition object
+#'
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predictProbabilities}} function.
+#'                              
+#' @return
+#' The average precision
+#'
+#' @export
 averagePrecision <- function(prediction){
   lab.order <- prediction$outcomeCount[order(-prediction$value)]
   n <- nrow(prediction)
@@ -334,6 +345,19 @@ averagePrecision <- function(prediction){
   return(sum(val/(1:n))/P)
 }
 
+#' Calculate all measures for sparse ROC
+#'
+#' @details
+#' Calculates the TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
+#' from a predition object
+#'
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predictProbabilities}} function.
+#'                              
+#' @return
+#' A data.frame with all the measures
+#'
+#' @export
 rocSparse <- function(prediction){
   if(nrow(prediction)<99){
     warning('sparse roc not calculated due to small dataset')
@@ -374,7 +398,18 @@ rocSparse <- function(prediction){
   
 }
 
-
+#' brierScore
+#'
+#' @details
+#' Calculates the brierScore from prediction object
+#'
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predictProbabilities}} function.
+#'
+#' @return
+#' A list containing the brier score and the scaled brier score
+#'
+#' @export
 brierScore <- function(prediction, ...){
 
   brier <- sum((prediction$outcomeCount -prediction$value)^2)/nrow(prediction)
@@ -442,7 +477,18 @@ calibrationLine <- function(prediction,numberOfStrata=10, ...){
 }
 
 
-
+#' Calculate Quantiles
+#'
+#' @details
+#' Calculates the quantiles from a predition object
+#'
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predictProbabilities}} function.
+#'                              
+#' @return
+#' The 0.00, 0.1, 0.25, 0.5, 0.75, 0.9, 1.00 quantile pf the prediction
+#'
+#' @export
 quantiles <- function(prediction){
   boxPlot <- ggplot2::ggplot(prediction, ggplot2::aes(x=as.factor(outcomeCount), y=value, 
                                                       fill=as.factor(outcomeCount))) + ggplot2::geom_boxplot() +
@@ -454,7 +500,18 @@ quantiles <- function(prediction){
               quantiles=quantiles))                      
 }
 
-
+#' Compute the preference score
+#'
+#' @details
+#' Calculates the preference score from a predition object
+#'
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predictProbabilities}} function.
+#'                              
+#' @return
+#' The preference score
+#'
+#' @export
 computePreferenceScore <- function(prediction) {
   proportion <- sum(prediction$outcomeCount)/nrow(prediction) 
   x <- exp(log(prediction$value/(1 - prediction$value)) - log(proportion/(1 - proportion)))
