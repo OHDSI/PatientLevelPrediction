@@ -24,14 +24,14 @@
 naiveBayes.set <- function(){
   
   # test python is available and the required dependancies are there:
-  if ( !PythonInR::pyIsConnected() ){
-    python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    
-    
-    if(is.null(python.test$pythonExePath))
-      stop('You need to install python for this method - please see ...')
+  if (!PythonInR::pyIsConnected()){
+    tryCatch({
+      python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
+    }, error = function(err){
+        stop('Python was not found on your system. See the vignette for instructions.')
+       }  
+    )
   }
-  
   result <- list(model='naiveBayes.fit', param= '')
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- T
