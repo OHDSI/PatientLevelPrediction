@@ -4,8 +4,7 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(population, data, index, modelSettings, featureSettings, quiet, cohortId,
-  outcomeId)
+fitPlp(population, data, index, modelSettings, quiet, cohortId, outcomeId)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted}
@@ -23,13 +22,6 @@ rowIds. If used, only the rowIds with a negative index value are used to calcula
 \item{RFclassifier()}{ A random forest model}
 \item{GLMclassifier ()}{ A generalised linear model}
 \item{KNNclassifier()}{ A KNN model}
-}}
-
-\item{featureSettings}{An object of class \code{featureSettings} created using one of the function:
-\itemize{
-\item{filterCovariates()}{ Filter covariate/concept/analysis ids }
-\item{GLRMfeature()}{ Non-negative matrix factorisation}
-
 }}
 }
 \value{

@@ -4,7 +4,7 @@
 \alias{timeSplitter}
 \title{Split test/train data by time and then partitions training set into random folds stratified by class}
 \usage{
-timeSplitter(population, test = 0.3, nfold = 3, silent = F)
+timeSplitter(population, test = 0.3, nfold = 3, silent = F, seed = NULL)
 }
 \arguments{
 \item{population}{An object created using createStudyPopulation().}
