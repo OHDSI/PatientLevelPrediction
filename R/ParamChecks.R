@@ -22,31 +22,87 @@ checkBoolean <- function(parameter,log=NULL) {
   name = deparse(substitute(parameter))
   if (!is.logical(parameter)) {
     if (!is.null(log)) {
-      write(paste0('#ERROR:', name, 'needs to be a boolean'), file=log, append=T)      
+      write(paste0('#ERROR:', name, ' needs to be a boolean'), file=log, append=T)      
     }
     stop(paste0(name, ' not defined correctly'))
   }
   return(TRUE)
 }  
 
-checkNonNegative <- function(parameter,log=NULL) {
+checkHigherEqual <- function(parameter,value,log=NULL) {
   name = deparse(substitute(parameter))
-  if (!is.numeric(parameter) | parameter<0) {
+  if (!is.numeric(parameter) | parameter<value) {
     if (!is.null(log)) {
-      write(paste0('#ERROR:', name, 'needs to be >= 0'), file=log, append=T)      
+      write(paste0('#ERROR:', name, ' needs to be >= ',value), file=log, append=T)      
     }
-    stop(paste0(name, ' needs to be >= 0'))
+    stop(paste0(name, ' needs to be >= ', value))
   }
   return(TRUE)
 } 
+
+checkLowerEqual <- function(parameter,value,log=NULL) {
+  name = deparse(substitute(parameter))
+  if (!is.numeric(parameter) | parameter>value) {
+    if (!is.null(log)) {
+      write(paste0('#ERROR:', name, ' needs to be <= ',value), file=log, append=T)      
+    }
+    stop(paste0(name, ' needs to be <= ', value))
+  }
+  return(TRUE)
+} 
+
+checkHigher <- function(parameter,value,log=NULL) {
+  name = deparse(substitute(parameter))
+  if (!is.numeric(parameter) | parameter<=value) {
+    if (!is.null(log)) {
+      write(paste0('#ERROR:', name, ' needs to be > ',value), file=log, append=T)      
+    }
+    stop(paste0(name, ' needs to be > ', value))
+  }
+  return(TRUE)
+}
+
+checkLower <- function(parameter,value,log=NULL) {
+  name = deparse(substitute(parameter))
+  if (!is.numeric(parameter) | parameter>=value) {
+    if (!is.null(log)) {
+      write(paste0('#ERROR:', name, ' needs to be < ',value), file=log, append=T)      
+    }
+    stop(paste0(name, ' needs to be < ', value))
+  }
+  return(TRUE)
+}
 
 checkNotNull <- function(parameter,log=NULL) {
   name = deparse(substitute(parameter))
   if (is.null(parameter)) {
     if (!is.null(log)) {
-      write(paste0('#ERROR:', name, 'cannot be empty'), file=log, append=T)      
+      write(paste0('#ERROR:', name, ' cannot be empty'), file=log, append=T)      
     }
     stop(paste0(name, ' cannot be empty'))
+  }
+  return(TRUE)
+}
+
+
+checkIsClass<- function(parameter,classes,log=NULL) {
+  name = deparse(substitute(parameter))
+  if (!class(parameter)%in%classes) {
+    if (!is.null(log)) {
+      write(paste0('#ERROR:', name, ' should be of class:', classes), file=log, append=T)      
+    }
+    stop(paste0(name, ' is wrong class'))
+  }
+  return(TRUE)
+}
+
+checkInStringVector<- function(parameter,values,log=NULL) {
+  name = deparse(substitute(parameter))
+  if (!parameter%in%values) {
+    if (!is.null(log)) {
+      write(paste0('#ERROR:', name, ' should be in ', strings), file=log, append=T)      
+    }
+    stop(paste0(name, ' has incorrect value'))
   }
   return(TRUE)
 }

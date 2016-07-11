@@ -122,9 +122,8 @@ timeSplitter <- function(population, test=0.3, nfold=3, silent=F, seed=NULL){
   dates.ord <- dates[order(dates)]
   testDate <- dates.ord[round(length(dates.ord)*(1-test))]
   
-  if(!silent) writeLines(paste0('Creating ',test*100,'% test: ',(1-test)*100,'% train (into ',nfold,' folds) splits by time split stratified sampling'))
-  if(!silent) writeLines(paste0('Test/train split on date: ', testDate))
-  
+  if(!silent) writeLines(paste0('Creating ',test*100,'% test and ',(1-test)*100,'% train (into ',nfold,' folds) stratified split at ', testDate))
+
   # give random number to all and shuffle then assign to test/train/cv
   nonPpl <- nonPpl[order(runif(nrow(nonPpl))),]
   outPpl <- outPpl[order(runif(nrow(outPpl))),]
