@@ -1,5 +1,4 @@
 
-
 ### Simulated data from a database profile
 set.seed(1234)
 data(plpDataSimulationProfile)
@@ -30,5 +29,11 @@ lr_results <- PatientLevelPrediction::RunPlp(population, plpData,
                                                    testFraction=0.25,
                                                    nfold=2)
 
-# To Do Add other results and plots
+# naive bayes model using python. Check you have installed Python
+nb_model <- PatientLevelPrediction::naiveBayes.set()
+nb_results <- PatientLevelPrediction::RunPlp(population, plpData, 
+                                             modelSettings = nb_model,
+                                             testSplit='time',
+                                             testFraction=0.25,
+                                             nfold=2)
 

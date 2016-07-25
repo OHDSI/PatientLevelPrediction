@@ -120,10 +120,8 @@ timeSplitter <- function(population, test=0.3, nfold=3, silent=F){
   nonPpl <- nonPpl[order(runif(nrow(nonPpl))),]
   outPpl <- outPpl[order(runif(nrow(outPpl))),]
   
-  
-  if(!silent) writeLines(paste0('Creating ',test*100,'% test: ',(1-test)*100,'% train (into ',nfold,' folds) splits by time split stratified sampling'))
-  if(!silent) writeLines(paste0('Test/train split on date: ', testDate))
-  
+  if(!silent) writeLines(paste0('Creating ',test*100,'% test and ',(1-test)*100,'% train (into ',nfold,' folds) stratified split at ', testDate))
+
   nonPpl.group <- rep(-1, nrow(nonPpl))
   nonPpl.group[nonPpl$date<=testDate] <- rep(1:nfold,each=ceiling(sum(nonPpl$date<=testDate)/nfold))[1:sum(nonPpl$date<=testDate)]
   
