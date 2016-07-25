@@ -30,3 +30,56 @@ any.ff <- function(x, ..., na.rm = FALSE, range = NULL) {
     any(x[i], na.rm = na.rm)
   }))
 }
+
+
+# return prev of ffdf 
+calculatePrevs <- function(plpData, population){
+  #===========================
+  # outcome prevs
+  #===========================
+  ppl <- ff::as.ff(population$rowId[population$outcomeCount==1])
+  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
+  idx <- ffbase::ffwhich(idx, !is.na(idx))
+  covariates <- plpData$covariates[idx, ]
+  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId")], 
+                              split=covariates$covariateId, 
+                              FUN = function(data){
+                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
+                                
+                                data <- as.data.frame(data)
+                                result <- aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                as.data.frame(result)
+                              })
+  
+  prev.out <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
+                         prev.out=ff::as.ram(grp_qty$x))
+  prev.out$prev.out <- prev.out$prev.out/length(ppl) 
+  
+  #===========================
+  # non-outcome prevs
+  #===========================
+  ppl <- ff::as.ff(population$rowId[population$outcomeCount==0])
+  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
+  idx <- ffbase::ffwhich(idx, !is.na(idx))
+  covariates <- plpData$covariates[idx, ]
+  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId")], 
+                              split=covariates$covariateId, 
+                              FUN = function(data){
+                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
+                                
+                                data <- as.data.frame(data)
+                                result <- aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                as.data.frame(result)
+                              })
+  
+  prev.noout <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
+                           prev.noout=ff::as.ram(grp_qty$x))
+  prev.noout$prev.noout <- prev.noout$prev.noout/(length(ppl) )
+  
+  # now merge the predictors with prev.out and prev.noout
+  prevs <- merge(prev.out,prev.noout, all=T)
+  prevs[is.na(prevs)] <- 0
+  
+  return(prevs)
+}
+

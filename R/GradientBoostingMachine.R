@@ -81,7 +81,7 @@ gradientBoostingMachine.fit <- function(population, plpData, param,index, quiet=
   writeLines('train')
   datas <- list(population=population, data=data)
   param.sel <- lapply(param, function(x) do.call(gbm_model2, c(x,datas)  ))
-  writeLines('hyper')
+  #writeLines('hyper')
   param.sel <- unlist(lapply(param.sel, function(x) x$auc))
   
   param <- param[[which.max(param.sel)]]
@@ -96,7 +96,8 @@ gradientBoostingMachine.fit <- function(population, plpData, param,index, quiet=
   
   varImp <- xgboost::xgb.importance(model =trainedModel)
   varImp$Feature <- as.double(varImp$Feature)
-  varImp<- merge(varImp, ff::as.ram(result$covariateRef), by.x='Feature', by.y='covariateId')
+  varImp<- merge(varImp, ff::as.ram(result$covariateRef), by.x='Feature', by.y='covariateId', all=T)
+  varImp$Gain[is.na(varImp$Gain)] <- 0
   varImp <- varImp[order(-varImp$Gain),]
   colnames(varImp)[colnames(varImp)=='Gain'] <- 'value'
   

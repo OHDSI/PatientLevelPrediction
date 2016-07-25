@@ -76,7 +76,9 @@ fitPlp <- function(population, data, index,  modelSettings,#featureSettings,
                population=population, quiet=quiet, cohortId=cohortId, outcomeId=outcomeId)
   plpModel <- do.call(fun, args)
   
-  plpModel$transform <- createTransform(plpModel)
+  plpModel$predict <- createTransform(plpModel)
+  plpModel$index <- index
+  class(plpModel) <- 'plpModel'
   
   return(plpModel)
   

@@ -67,19 +67,18 @@ lassoLogisticRegression.fit<- function(population, plpData, param,index, search=
   comp <- Sys.time() - start
   if(!quiet)
     writeLines(paste0('Model Logistic Regression with Lasso regularisation trained - took:',  format(comp, digits=3)))
-  
   varImp <- data.frame(covariateId=names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'], 
                        value=modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
   if(sum(abs(varImp$value)>0)==0){
     warning('No non-zero coefficients')
     varImp <- NULL
   } else {
-    varImp <- varImp[abs(varImp$value)>0,]
-    varImp <- merge(varImp, ff::as.ram(plpData$covariateRef))
-    varImp<-varImp[order(-abs(varImp$value)),]
+    #varImp <- varImp[abs(varImp$value)>0,]
+    varImp <- merge(ff::as.ram(plpData$covariateRef), varImp, 
+                    by='covariateId',all=T)
+    varImp$value[is.na(varImp$value)] <- 0
+    varImp <- varImp[order(-abs(varImp$value)),]
   }
-  
-  
   result <- list(model = modelTrained,
                  modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
                  trainCVAuc = NULL,

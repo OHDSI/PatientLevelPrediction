@@ -42,7 +42,10 @@ Suggests:
     pROC,
     gnm,
     knitr,
-    rmarkdown
+    rmarkdown,
+    e1071,
+    Metrics,
+    scoring
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 5.0.1

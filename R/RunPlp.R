@@ -42,12 +42,7 @@
 #'                                         \item{GLMclassifier ()}{ A generalised linear model}
 #'                                         \item{KNNclassifier()}{ A KNN model}
 #'                                         }
-#' @param featureSettings                  An object of class \code{featureSettings} created using one of the function:
-#'                                         \itemize{
-#'                                         \item{filterCovariates()}{ Filter covariate/concept/analysis ids }
-#'                                         \item{GLRMfeature()}{ Non-negative matrix factorisation}
 #'                                         
-#'                                         }
 #' @param testSplit                         Either 'person' or 'time' specifying the type of evaluation used.
 #'                                         'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
 #'                                         'person' splits the data into test (1-testFraction of the data) and
@@ -56,9 +51,9 @@
 #'                                         split evaluation.
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #' @param indexes                          A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)
-#' @param dirFold                          The path to the directory where the models will be saved
+#' @param save                          The path to the directory where the models will be saved
 #' @param silent                           Whether to suppress output progress to the consol (default F)
-#' @param log                              The location of the log file (if null uses dirFold, if dirFold also null then it is in the folder plpmodels within the current working directory)
+#' @param log                              The location of the log file (if null uses save, if save also null then it is in the folder plpmodels within the current working directory)
 
 #'
 #' @return
@@ -103,11 +98,10 @@
 #' model.lr <- logisticRegressionModel()
 #' mod.lr <- RunPlp(population=population,
 #'                         plpData= plpData,
-#'                         featureSettings = NULL,
 #'                         modelSettings = model.lr ,
 #'                         testSplit = 'time', testFraction=0.3, 
 #'                         nfold=3, indexes=NULL,
-#'                         dirPath=file.path('C:','User','home'))
+#'                         save=file.path('C:','User','home'))
 #'  
 #' #******** EXAMPLE 2 *********                                               
 #' # Gradient boosting machine with a grid search to select hyper parameters  
@@ -116,27 +110,27 @@
 #'                            max_depth=c(4,5), learn_rate=c(0.1,0.01))
 #' mod.gbm <- RunPlp(population=population,
 #'                         plpData= plpData,
-#'                         featureSettings = NULL,
 #'                         modelSettings = model.gbm,
 #'                         testSplit = 'time', testFraction=0.3, 
 #'                         nfold=3, indexes=mod.lr$indexes,
-#'                         dirPath=file.path('C:','User','home'))
+#'                         save=file.path('C:','User','home'))
 #' 
 RunPlp <- function(population, plpData,
-                         featureSettings=NULL,
                          modelSettings,
                          testSplit = 'time', testFraction=0.3, nfold=3, indexes=NULL,
-                         dirPath=NULL, silent=F, log=NULL, analysisId=NULL
+                         save=NULL, silent=F, log=NULL, analysisId=NULL
                          ){
   start.all <- Sys.time()
   if(is.null(analysisId))
     analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
   
-  if(is.null(dirPath)) dirPath <- file.path(getwd(),'plpmodels')
-  if(!dir.exists(file.path(dirPath,analysisId))){dir.create(file.path(dirPath,analysisId),recursive=T)}
+  #if(is.null(dirPath)) dirPath <- file.path(getwd(),'plpmodels') if NULL dont save
+  if(!is.null(save))
+    if(!dir.exists(file.path(save,analysisId))){dir.create(file.path(save,analysisId),recursive=T)}
   
   # start logging connection
-  if(missing(log) || is.null(log)){log <- dirPath}
+  if(missing(log) || is.null(log)){log <- save} 
+  if(is.null(log)) log <- getwd()
   log <- file.path(log, 'plplog.txt')
   write('******************************************', file=log, append=F)
   write('Develop plp model log', file=log, append=T)
@@ -298,12 +292,15 @@ RunPlp <- function(population, plpData,
   
   if(!silent)
     writeLines('1: Model Trained')
-  modelLoc <- file.path(dirPath,analysisId, 'savedModel' )
-  tryCatch(savePlpModel(model, modelLoc),
-           warning = function(w)  write(paste0('@WARNING: ', w ), file=log, append=T),
-           error = function(e) stop(e),
-           finally= write(paste0('-- Model (class:',class(model),') saved to ', modelLoc), file=log, append=T)
-  )
+  if(!is.null(save)){
+    modelLoc <- file.path(save,analysisId, 'savedModel' )
+    finalMessage <- paste0('-- Model (class:',class(model),') saved to ', modelLoc)
+    tryCatch(savePlpModel(model, modelLoc),
+             warning = function(w)  write(paste0('@WARNING: ', w ), file=log, append=T),
+             error = function(e) stop(e),
+             finally= write(finalMessage, file=log, append=T)
+    )
+  }
   
   # TODO: LOG MODELING TRAINING START TIME, PROGRESS, END TIME + SUMMARY
   #       LOG CONVERGENCE + OPTIMAL HYPER-PARAMERTERS
@@ -321,8 +318,6 @@ RunPlp <- function(population, plpData,
                          error = function(e) stop(e),
                          finally= write(paste0('-- Finished prediction at ', Sys.time()), file=log, append=T)
   )
-  writeLines(paste('silent 5 ',silent))
-  writeLines(paste('silent 2: ',!silent))
   if(!silent)
     writeLines('2) Prediction Calculated')
  
@@ -358,7 +353,7 @@ RunPlp <- function(population, plpData,
                 plpModel=model,
                 population = population,
                 plpData = plpData,
-                dirPath=dirPath,
+                dirPath=save,
                 analysisId=analysisId,
                 start.all=start.all,
                 testSplit=testSplit,
@@ -377,14 +372,13 @@ RunPlp <- function(population, plpData,
   
   #===============================================================================#
   
-  results <- list(transform=model$transform,
+  results <- list(predict=model$predict,
                   model=model,
                   prediction=prediction,
-                  index=indexes,
+                  #index=indexes, - moved this to model
                   evalType=testSplit,
                   performanceTest=performance.test,
                   performanceTrain=performance.train,
-                  # ADD OUTPUT LOCATION?
                   time=format(difftime(Sys.time(), start.all, units='hours'), nsmall=1))
   class(results) <- c('list','plpModel')
   

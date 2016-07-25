@@ -359,34 +359,60 @@ averagePrecision <- function(prediction){
 #'
 #' @export
 rocSparse <- function(prediction){
-  if(nrow(prediction)<99){
-    warning('sparse roc not calculated due to small dataset')
+  
+  # do input checks
+  if(nrow(prediction)<1){
+    warning('sparse roc not calculated due to empty dataset')
     return(NULL)
   }
-    
+  
+ 
   lab.order <- prediction$outcomeCount[order(-prediction$value)]
   n <- nrow(prediction)
   P <- sum(prediction$outcomeCount>0)
   N <- n - P
-  # find points where there is a change (0 to 1)
-  change.ind <-which(abs(lab.order[-length(lab.order)]-lab.order[-1])==1)
   
-  if(length(change.ind)<=101){
-    ind.oi <- change.ind
-  } else {
+  if(N==0){
+    warning('Number of negatives is zero')
+    return(NULL)
+  } 
+  if(P==0){
+    warning('Number of positives is zero')
+    return(NULL)
+  } 
+  
+  # get 100 points of specificity 
+  specificiyOfInt <- round(seq(0,100, length.out=min(N,100))/100*N)+1 #adding one as I want the max sens per spec
+  specificiyOfInt[specificiyOfInt>N] <- N  # boundary issue fix caused by adding 1 
+  
+  indexesOfInt <- which(lab.order==0, arr.ind=T)[specificiyOfInt]-1
+  indexesOfInt[length(indexesOfInt)] <- n
+  if(indexesOfInt[1]==0) indexesOfInt[1] <- 1
+  
+  #================= old code start
+  # find points where there is a change (0 to 1)
+  ##change.ind <-which(abs(lab.order[-length(lab.order)]-lab.order[-1])==1)
+  ##if(length(change.ind)<=101){
+  ##  ind.oi <- change.ind
+  ##} else {
   #change.ind <- which(lab.order==0)
-    ind.oi <- change.ind[c(seq(1,length(change.ind)-1,
-                               floor((length(change.ind)-1)/99)), length(change.ind))]
-  }
+  ##  ind.oi <- change.ind[c(seq(1,length(change.ind)-1,
+  ##                             floor((length(change.ind)-1)/99)), length(change.ind))]
+  ##}
+  #================= old code end
+  
   # improve speed create vector with cum sum 
   temp.cumsum <- rep(0, length(lab.order))
   temp.cumsum[lab.order==0] <- 1:sum(lab.order==0)
-  TP <- sapply(ind.oi, function(x) x-temp.cumsum[x])
-  FP <- sapply(ind.oi, function(x) temp.cumsum[x])
+  temp.cumsum[lab.order==1] <- which(lab.order==1, arr.ind=T)-1:sum(lab.order==1)
+  TP <- sapply(indexesOfInt, function(x) x-temp.cumsum[x])
+  FP <- sapply(indexesOfInt, function(x) temp.cumsum[x])
   
   TN <- N-FP
   FN <- P-TP
   
+  specificity <- TN/N
+  sensitivity <- TP/P
   TPR <- TP/P
   FPR <- FP/N
   accuracy <- (TP+TN)/n
@@ -394,7 +420,7 @@ rocSparse <- function(prediction){
   FOR <- FN/(FN+TN)
   Fmeasure <- 2*(PPV*TPR)/(PPV+TPR)
   
-  return(data.frame(TP,FP,TN,FN, TPR, FPR,PPV,FOR, accuracy, Fmeasure))
+  return(data.frame(specificity,sensitivity , TP,FP,TN,FN, TPR, FPR,PPV,FOR, accuracy, Fmeasure))
   
 }
 
@@ -418,7 +444,12 @@ brierScore <- function(prediction, ...){
   return(list(brier=brier,brierScaled=brierScaled))
 }
 
-# linear regression a+b values
+#' calibrationLine
+#'
+#' @details
+#' Calculates the calibration from prediction object
+#'
+#' @export
 calibrationLine <- function(prediction,numberOfStrata=10, ...){
   outPpl <- unique(prediction$rowId)
 
@@ -430,11 +461,11 @@ calibrationLine <- function(prediction,numberOfStrata=10, ...){
     #lmData <- NULL
     #hosmerlemeshow <-  c(0,0,0)
     prediction$strata <- cut(prediction$value,
-                             breaks = c(0,0.5,1), #,max(prediction$value)),
+                             breaks = c(-0.1,0.5,1), #,max(prediction$value)),
                              labels = FALSE)
   } else {
     prediction$strata <- cut(prediction$value,
-                             breaks = unique(c(0,q)), #,max(prediction$value)),
+                             breaks = unique(c(-0.1,q)), #,max(prediction$value)),
                              labels = FALSE)
   }
     

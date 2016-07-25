@@ -26,7 +26,6 @@
 #' @param population                       The population created using createStudyPopulation() who will have their risks predicted
 #' @param plpData                          An object of type \code{plpData} - the patient level prediction
 #'                                         data extracted from the CDM.
-#' @param dirPath                          The location of the output directory.  If using a h2o model, the libSvm will be saved here                                         
 #' @param index                            A data frame containing rowId: a vector of rowids and index: a vector of doubles the same length as the rowIds. If used, only the rowIds with a negative index value are used to calculate the prediction.  
 #' 
 #' @return
@@ -49,7 +48,7 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL, silent=F){
   # do the predction on the new data
   if(class(plpModel)=='plpModel'){
     # extract the classifier type
-    prediction <- plpModel$transform(plpData=plpData,population=population[ind,], silent=silent)
+    prediction <- plpModel$predict(plpData=plpData,population=population[ind,], silent=silent)
     
     if(nrow(prediction)!=nrow(population[ind,]))
       warning(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
@@ -176,35 +175,6 @@ predict.python <- function(plpModel, population, plpData,  silent=F){
   
   return(prediction)
 }
-
-
-# default h2o prediction
-predict.h2o <- function(plpModel, population, plpData,  silent=F){
-  # check plpData is libsvm format:
-  if('ffdf'%in%class(plpData$covariates) || class(plpData)!='plpData.libsvm')
-    stop('H2o models require plpData in libsvm format')
-  if(!file.exists(file.path(plpData$covariates,'covariate.txt')))
-    stop('Cannot find libsvm file')
-  
-  
-  #load libSvm file and use index to extract test data?
-  h2oData <- restrictLibsvmToPopulation(plpData, population)
-  
-  # any missing covariates will be filled with mean values from train set
-  # TODO add option of replacing with zeros?
-  
-  value <- h2o::h2o.predict(plpModel$model, h2oData)
-  #writeLines(paste(colnames(value), sep='-',collapse='-'))
-  #writeLines(paste(as.data.frame(value)[1,], sep='-',collapse='-'))
-  pred <- data.frame(rowId=as.data.frame(h2oData[,'rowId']), value=as.data.frame(value)[,3])
-  #writeLines(paste(pred[1,], sep='-',collapse='-'))
-  #writeLines(paste(colnames(ff::as.ram(plpData$cohorts)), sep='-',collapse='-'))
-  prediction <- merge(population, pred, all.x=T)
-  prediction$value[is.na(prediction$value)] <- 0
-  #writeLines(paste(prediction[1,], sep='-',collapse='-'))
-  return(prediction)
-}
-
 
 
 predict.knn <- function(plpData, population, plpModel,silent=T, ...){
@@ -388,7 +358,7 @@ applyModel <- function(population, plpData, plpModel,
   if(!silent)
     writeLines(paste('Starting Prediction ', Sys.time(), 'for ', peopleCount, ' people') )  
 
-  prediction <- plpModel$transform(plpData=plpData, population=population)  
+  prediction <- plpModel$predict(plpData=plpData, population=population)  
   
   if(!is.null(logConnection)){
     cat('Prediction completed at ', Sys.time(), file=logConnection)

@@ -70,68 +70,106 @@ test_that("Quantiles", {
 })
 
 test_that("Sparse ROC", {
-  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  #prediction with no negatives - returns error
+  sampSize <- sample(100,1)
+  prediction.noneg <- data.frame(value=runif(sampSize), 
+                                  outcomeCount=rep(1,sampSize))
+  expect_warning(rocSparse(prediction.noneg))
   
-  prediction.quant <- data.frame(value=c(rep(0,10), 0.001,0.03,0.1,0.12,0.2,
-                                         0.2,0.33,0.4,0.5,0.9),
-                                 outcomeCount=c(rep(0,10), rep(1,10)))
-  expect_warning(rocSparse(prediction.quant))
+  #prediction with no positives - returns error
+  prediction.nopos <- data.frame(value=runif(sampSize), 
+                                 outcomeCount=rep(0,sampSize))
+  expect_warning(rocSparse(prediction.nopos))
   
-  prediction.quant2 <- data.frame(value=c(rep(0,50), rep(0.1,50)),
-                                 outcomeCount=c(rep(0,50), rep(1,50))
-  )
-  rocSparse.plp <- rocSparse(prediction.quant2)
-  rocSparse.manual <- c(50,0,50,0,1,0,1,0,1,1)
-  expect_that(sum(rocSparse.plp==rocSparse.manual), equals(10))
+  # test non-sparse return size when less than 100 negatives
+  numNeg <- sample(100,1)
+  prediction.sizeSmall <- data.frame(value= runif(200), 
+                                     outcomeCount =c(rep(0,numNeg), rep(1,200-numNeg)))
+  rocSparse.plp <- rocSparse(prediction.sizeSmall)
+  expect_that(nrow(rocSparse.plp), equals(numNeg))
   
-  # check output of other predicts:
-  prediction.roc1 <- data.frame(value=runif(10000),
-                                 outcomeCount=c(rep(0,10000-49), rep(1,49))
+  # test non-sparse return size when more than 100 negatives
+  numNeg <- 100+sample(100,1)
+  prediction.sizeBig <- data.frame(value= runif(250), 
+                                   outcomeCount =c(rep(0,numNeg), rep(1,250-numNeg)))
+  rocSparse.plp <- rocSparse(prediction.sizeBig)
+  expect_that(nrow(rocSparse.plp), equals(100))
+  
+  # check output of simple input:
+  numPos <- sample(200,1)
+  prediction.manualTest1 <- data.frame(value=runif(10000),
+                                 outcomeCount=c(rep(0,10000-numPos), rep(1,numPos))
                                 )
-  rocSparse.plp2 <- rocSparse(prediction.roc1)
-  expect_that(nrow(rocSparse.plp2)<100, equals(T))
-  
-  prediction.roc2 <- data.frame(value=runif(10000),
-                                outcomeCount=c(rep(0,50000), rep(1,50000))
-  )
-  rocSparse.plp3 <- rocSparse(prediction.roc2)
-  expect_that(nrow(rocSparse.plp3)==100, equals(T))
-  
+  rocSparse.manualTest1 <- rocSparse(prediction.manualTest1)
+
   # total is correct:
-  expect_that(sum(rocSparse.plp3$TP+rocSparse.plp3$FP+rocSparse.plp3$TN+rocSparse.plp3$FN == 1e+05),
-              equals(length(rocSparse.plp3$TP)))
+  expect_that(sum(rocSparse.manualTest1$TP+rocSparse.manualTest1$FP+
+                  rocSparse.manualTest1$TN+rocSparse.manualTest1$FN == 1e+04),
+              equals(length(rocSparse.manualTest1$TP)))
   
   # correct num of positives
-  expect_that(sum(rocSparse.plp3$TP+rocSparse.plp3$FN == 5e+04),
-              equals(length(rocSparse.plp3$TP)))
+  expect_that(sum(rocSparse.manualTest1$TP+rocSparse.manualTest1$FN == numPos),
+              equals(length(rocSparse.manualTest1$TP)))
+  
+  ## check output for perfect prediction:
+  numPos <- sample(200,1)
+  prediction.manualTest2 <- data.frame(value=seq(0,1, length.out=1000),
+                                       outcomeCount=c(rep(0,1000-numPos), rep(1,numPos))
+  )
+  rocSparse.manualTest2 <- rocSparse(prediction.manualTest2)
+  
+  expect_that(sum(rocSparse.manualTest2$TP == rep(numPos,100)),
+              equals(100))
+  
+  ## check output for work prediction:
+  numPos <- sample(200,1)
+  prediction.manualTest3 <- data.frame(value=seq(0,1, length.out=1000),
+                                       outcomeCount=c(rep(1,numPos),rep(0,1000-numPos))
+  )
+  rocSparse.manualTest3 <- rocSparse(prediction.manualTest3)
+  
+  expect_that(sum(rocSparse.manualTest3$TP == c(rep(0,99),numPos)),
+              equals(100))
   
 })
 
-  # TODO: test pref scores and calibration
+
+test_that("Calibration", {
+  prediction <- data.frame(rowId=1:100,
+                           value= c(rep(0,50),rep(1,50)), 
+                           outcomeCount =c(rep(0,50),rep(1,50)))
+  # test the output 
+  calibrationTest1 <- calibrationLine(prediction,numberOfStrata=2)
+  expect_that(calibrationTest1$lm['Intercept'],  is_equivalent_to(0))
+  expect_that(calibrationTest1$lm['Gradient'],  is_equivalent_to(1))
+  expect_that(nrow(calibrationTest1$aggregateLmData)==2, equals(T))
+  
+  # should return - need to test all three
+  ##lm # has the 'Intercept' and 'Gradient'
+  ##aggregateLmData # obs vs pred for groups
+  ##hosmerlemeshow # hosmerlemeshow value
+  prediction2 <- data.frame(rowId=1:100,
+                           value= c(0.1+runif(50)*0.9,runif(50)*0.6), 
+                           outcomeCount =c(rep(1,50),rep(0,50)))
+  
+  hs.exist2 <- ResourceSelection::hoslem.test(prediction2$outcomeCount, 
+                                              prediction2$value, g=10)
+  calibrationTest2 <- calibrationLine(prediction2,numberOfStrata=10)
+  #  test plp values vs ResourceSelection::hoslem.test 
+  expect_that(calibrationTest2$hosmerlemeshow['Xsquared'],  
+              is_equivalent_to(hs.exist2$statistic))  
+  expect_that(calibrationTest2$hosmerlemeshow['df'],  
+              is_equivalent_to(hs.exist2$parameter))  
+  expect_that(calibrationTest2$hosmerlemeshow['pvalue'],  
+              is_equivalent_to(hs.exist2$p.value)) 
+  
+  })
+
+  # TODO: test pref scores 
   # test computePreferenceScore(prediction)
-  ##writeLines('Testing preference scores...')
-  
+ 
   #############################################################################
-  # prediction.perfect <- data.frame(value=c(rep(0, 10), rep(0.1,10), rep(0.2,10),
-  #                                          rep(0.3,10), rep(0.4,10), rep(0.5,10),
-  #                                          rep(0.6,10), rep(0.7,10), rep(0.8,10),
-  #                                          rep(0.9,10)),
-  #                                  outcomeCount =c(rep(0,10), 1, rep(0,9), 
-  #                                                  rep(1,2), rep(0,8),
-  #                                                  rep(1,3), rep(0,7),
-  #                                                  rep(1,4), rep(0,6),
-  #                                                  rep(1,5), rep(0,5),
-  #                                                  rep(1,6), rep(0,4),
-  #                                                  rep(1,7), rep(0,3),
-  #                                                  rep(1,8), rep(0,2),
-  #                                                  rep(1,9), rep(0,1))
-  #                                 )
-  # test calibrationLine(prediction, numberOfStrata = 10)
   
-  #hl score: PredictABEL::plotCalibration(data, cOutcome, predRisk, groups, rangeaxis,plottitle, xlabel, ylabel, filename, fileplot, plottype)
-  
-  
-  ## writeLines('Testing calibration...')
   
   
 

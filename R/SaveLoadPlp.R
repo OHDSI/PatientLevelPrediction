@@ -528,12 +528,13 @@ savePlpModel <- function(plpModel, dirPath){
     }
     
     plpModel$model <- file.path(dirPath,'python_model')
-    plpModel$transform <- createTransform(plpModel)
+    plpModel$predict <- createTransform(plpModel)
   }
   #============================================================
     
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
-  saveRDS(plpModel$transform, file = file.path(dirPath, "transform.rds"))
+  saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
+  saveRDS(plpModel$index, file = file.path(dirPath, "index.rds"))
   saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
   saveRDS(plpModel$modelSettings, file = file.path(dirPath,  "modelSettings.rds"))
   saveRDS(plpModel$metaData, file = file.path(dirPath, "metaData.rds"))
@@ -557,7 +558,8 @@ loadPlpModel <- function(dirPath, readOnly = TRUE) {
   
   
   result <- list(model = readRDS(file.path(dirPath, "model.rds")),
-                 transform = readRDS(file.path(dirPath, "transform.rds")),
+                 predict = readRDS(file.path(dirPath, "transform.rds")),
+                 index = readRDS(file.path(dirPath, "index.rds")),
                  trainCVAuc = readRDS(file.path(dirPath, "trainCVAuc.rds")),
                  modelSettings = readRDS(file.path(dirPath, "modelSettings.rds")),
                  metaData = readRDS(file.path(dirPath, "metaData.rds")),
@@ -585,8 +587,22 @@ loadPlpModel <- function(dirPath, readOnly = TRUE) {
 #' @export
 savePrediction <- function(prediction, location){
   #TODO check inupts
-  write.csv(prediction, file=location)
+  write.csv(prediction, file=location, row.names = F, col.names = T)
   
+}
+
+#' Loads the prediciton dataframe to csv
+#'
+#' @details
+#' Loads the prediciton  csv file
+#'
+#' @param location                     The directory to saved the csv
+#' 
+#' @export
+loadPrediction <- function(location){
+  #TODO check inupts
+  prediction <- read.csv(file=location, header = T)
+  return(prediction)
 }
 
 #' Saves the evalaution dataframe to csv
@@ -602,10 +618,25 @@ saveEvaluation <- function(evaluation, location){
   #TODO check inupts
   
   #TODO add saving 
+  saveRDS(evaluation, file=location)
   
 }
 
-
+#' Loads the evalaution dataframe
+#'
+#' @details
+#' Loads the evaluation 
+#'
+#' @param location                     The directory where the evaluation was saved
+#' 
+#' @export
+loadEvaluation <- function(location){
+  #TODO check inupts
+  
+  #TODO add saving 
+  evaluation <- readRDS(location)
+  return(evaluation)
+}
 
 
 writeOutput <- function(prediction, 

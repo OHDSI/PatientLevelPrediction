@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+#' @export
 toSparseM <- function(plpData,population, map=NULL, silent=T){
   cov <- ff::clone(plpData$covariates)
   covref <- ff::clone(plpData$covariateRef)

@@ -4,22 +4,15 @@
 \alias{RunPlp}
 \title{RunPlp - Train and evaluate the model}
 \usage{
-RunPlp(population, plpData, featureSettings = NULL, modelSettings,
-  testSplit = "time", testFraction = 0.3, nfold = 3, indexes = NULL,
-  dirPath = NULL, silent = F, log = NULL, analysisId = NULL)
+RunPlp(population, plpData, modelSettings, testSplit = "time",
+  testFraction = 0.3, nfold = 3, indexes = NULL, save = NULL,
+  silent = F, log = NULL, analysisId = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
 
 \item{plpData}{An object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
-
-\item{featureSettings}{An object of class \code{featureSettings} created using one of the function:
-\itemize{
-\item{filterCovariates()}{ Filter covariate/concept/analysis ids }
-\item{GLRMfeature()}{ Non-negative matrix factorisation}
-
-}}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
@@ -42,11 +35,11 @@ split evaluation.}
 
 \item{indexes}{A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)}
 
+\item{save}{The path to the directory where the models will be saved}
+
 \item{silent}{Whether to suppress output progress to the consol (default F)}
 
-\item{log}{The location of the log file (if null uses dirFold, if dirFold also null then it is in the folder plpmodels within the current working directory)}
-
-\item{dirFold}{The path to the directory where the models will be saved}
+\item{log}{The location of the log file (if null uses save, if save also null then it is in the folder plpmodels within the current working directory)}
 }
 \value{
 An object containing the model or location where the model is save, the data selection settings, the preprocessing
@@ -101,11 +94,10 @@ population <- createStudyPopulation(plpData,outcomeId=2042,
 model.lr <- logisticRegressionModel()
 mod.lr <- RunPlp(population=population,
                         plpData= plpData,
-                        featureSettings = NULL,
                         modelSettings = model.lr ,
                         testSplit = 'time', testFraction=0.3, 
                         nfold=3, indexes=NULL,
-                        dirPath=file.path('C:','User','home'))
+                        save=file.path('C:','User','home'))
  
 #******** EXAMPLE 2 *********                                               
 # Gradient boosting machine with a grid search to select hyper parameters  
@@ -114,11 +106,10 @@ model.gbm <- GBMclassifier(rsampRate=c(0.5,0.9,1),csampRate=1, ntrees=c(10,100),
                            max_depth=c(4,5), learn_rate=c(0.1,0.01))
 mod.gbm <- RunPlp(population=population,
                         plpData= plpData,
-                        featureSettings = NULL,
                         modelSettings = model.gbm,
                         testSplit = 'time', testFraction=0.3, 
                         nfold=3, indexes=mod.lr$indexes,
-                        dirPath=file.path('C:','User','home'))
+                        save=file.path('C:','User','home'))
 
 }
 
