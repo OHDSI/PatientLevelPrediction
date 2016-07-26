@@ -4,7 +4,7 @@
 \alias{timeSplitter}
 \title{Split test/train data by time and then partitions training set into random folds stratified by class}
 \usage{
-timeSplitter(population, test = 0.3, nfold = 3, silent = F)
+timeSplitter(population, test = 0.3, nfold = 3, seed = NULL)
 }
 \arguments{
 \item{population}{An object created using createStudyPopulation().}
@@ -13,7 +13,7 @@ timeSplitter(population, test = 0.3, nfold = 3, silent = F)
 
 \item{nfold}{An integer >= 1 specifying the number of folds used in cross validation}
 
-\item{silent}{Whether to turn off the progress reporting}
+\item{seed}{If set a fixed seed is used, otherwise a random split is performed}
 }
 \value{
 A dataframe containing the columns: rowId and index

@@ -4,7 +4,7 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(population, data, index, modelSettings, quiet, cohortId, outcomeId)
+fitPlp(population, data, index, modelSettings, cohortId, outcomeId)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted}
@@ -23,6 +23,10 @@ rowIds. If used, only the rowIds with a negative index value are used to calcula
 \item{GLMclassifier ()}{ A generalised linear model}
 \item{KNNclassifier()}{ A KNN model}
 }}
+
+\item{cohortId}{Id of study cohort}
+
+\item{outcomeId}{Id of outcome cohort}
 }
 \value{
 An object of class \code{plpModel} containing:

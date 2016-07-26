@@ -17,7 +17,7 @@
 # limitations under the License.
 
 #' @export
-toSparseM <- function(plpData,population, map=NULL, silent=T){
+toSparseM <- function(plpData,population, map=NULL){
   cov <- ff::clone(plpData$covariates)
   covref <- ff::clone(plpData$covariateRef)
   
@@ -35,15 +35,11 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
     ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
     plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  writeLines(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
-  if(!silent)
-    writeLines('Finished - Converting covariateIds to actual column numbers')
-  
-  #convert into sparseM
-  if(!silent){
-    writeLines(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
-    writeLines(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
-  }
+  flog.debug(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
+
+    #convert into sparseM
+  flog.debug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
+  flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
   
   # chunk then add
   
@@ -52,18 +48,15 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
                                x=0,
                                dims=c(ffbase::max.ff(plpData.mapped$covariates$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
   for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
-    writeLines(paste0('start:', ind[1],'- end:',ind[2]))
-    temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
+    flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
+    temp <- ftry(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
                                           j=ff::as.ram(plpData.mapped$covariates$covariateId[ind]),
                                           x=ff::as.ram(plpData.mapped$covariates$covariateValue[ind]),
-                                          dims=c(ffbase::max.ff(plpData.mapped$covariates$rowId), max(plpData.mapped$map$newIds))),
-                     warning = function(w) writeLines(paste(w)),
-                     error = function(e) writeLines(paste(e))
+                                          dims=c(ffbase::max.ff(plpData.mapped$covariates$rowId), max(plpData.mapped$map$newIds)))
     )
     data <- data+ temp
   }
-  if(!silent)
-    writeLines(paste0('Sparse matrix with dimensionality: ', dim(data)))
+  flog.debug(paste0('Sparse matrix with dimensionality: ', dim(data)))
   
   result <- list(data=data,
                  covariateRef=plpData.mapped$covariateRef,
@@ -84,7 +77,6 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
 #' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction 
 #'                                      data extracted from the CDM.
 #' @param filePath                       The path to the directory to output the libsvm files
-#' @param silent                         Whether to turn off progress reporting
 #' @examples    
 #' #TODO
 #' 
@@ -103,7 +95,8 @@ toSparseM <- function(plpData,population, map=NULL, silent=T){
 #' constructed.} }
 #'
 #' @export
-convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
+convertToLibsvm <- function(plpData,filePath=NULL){
+  
   if(missing(plpData) || is.null(plpData))
     stop('No plpData input')
   if(!'ffdf'%in%class(plpData$covariates))
@@ -112,11 +105,8 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
   if(missing(filePath) || is.null(filePath)){
     timestamp <- gsub(' ', '', gsub('-','', gsub(':','',Sys.time())))
     filePath <- file.path(getwd(), paste0('libsvm_', timestamp))
-    warning(paste0('filePath not specified so saving libsvm to: ', filePath))
+    flog.warn(paste0('filePath not specified so saving libsvm to: ', filePath))
   }
-  
-  if(!silent)
-    writeLines('Completed input checks')
   
   start <- Sys.time()
   
@@ -124,8 +114,7 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
   covref <- ff::clone(plpData$covariateRef)
   
   
-  if(!silent)
-    writeLines('Now converting the covariate data into libsvm...')
+  flog.trace('Now converting the covariate data into libsvm...')
   
   
   oldIds <- ff::as.ram(plpData$covariateRef$covariateId)
@@ -141,24 +130,20 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
     ids <- plyr::mapvalues(ids, oldIds, newIds, warn_missing = FALSE)
     cov$covariateId[i] <- ids
   }
-  if(!silent)
-    writeLines('Finished - Converting covariateIds to actual column numbers')
+  flog.trace('Done.')
   
   # sort:
-  if(!silent)
-    writeLines('Starting to sort data...')
+  flog.trace('Starting to sort data...')
   cov <- ff::ffdfsort(cov)
-  if(!silent)
-    writeLines('Finished - sorting data')
+  flog.trace('Done.')
   
   # then group
-  if(!silent)
-    writeLines('Starting to group covariateIds:covariateValue per person')
+  flog.trace('Starting to group covariateIds:covariateValue per person')
   all <- c()
   test_count <- 0
   for (i in bit::chunk(cov$rowId)) {
     test_count <- test_count +1
-    writeLines(paste0(test_count))
+    flog.trace(paste0(test_count))
     tempCov <- ff::as.ram(cov[i,])
     
     # now create covariateId:value
@@ -167,8 +152,7 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
                                         sep=':', collapse=' ')) 
     all <- rbind(all, test) 
   } 
-  if(!silent)
-    writeLines('Finished grouping covariateIds:covariateValue per person')
+  flog.trace('Done.')
   
   # add a dummy column of zeros as first column (this will be replaced in future)
   libsvm <- merge(plpData$cohorts[,c('rowId','subjectId')], all, all.x=T, by='rowId')
@@ -176,11 +160,9 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
   libsvm$subjectId <- 0
   
   timeTol <- difftime(Sys.time(),start, units = "mins")
-  if(!silent)
-    writeLines(paste0('Converting to libSVM completed - took: ', timeTol, ' mins'))
+  flog.trace(paste0('Converting to libSVM completed - took: ', timeTol, ' mins'))
   
-  if(!silent)
-    writeLines('Saving libSVM file...')
+  flog.trace('Saving libSVM file...')
   if(!dir.exists(file.path(filePath))) dir.create(file.path(filePath), recursive = T)
   start <- Sys.time()
   write.table(libsvm[,c('subjectId','covString')],
@@ -198,8 +180,7 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
               file=file.path(filePath, paste0('rowId.txt'))
   )
   timeTol <- difftime(Sys.time(),start, units = "mins")
-  if(!silent)
-    writeLines(paste0('Saving libSVM completed - took: ', timeTol, ' mins'))
+  flog.trace(paste0('Saving libSVM completed - took: ', timeTol, ' mins'))
   
   
   results <- list(cohorts=plpData$cohorts,
@@ -215,25 +196,59 @@ convertToLibsvm <- function(plpData,filePath=NULL,silent=F){
   
 }
 
-MapCovariates <- function(covariates, covariateRef, population, map, silent=F){
+#' Check plpData is in libSVM format and convert if needed
+#' 
+#' @description
+#' Allows to automatically convert to libsvm format if needed and saves it in the current
+#' directory or a pre-defined path
+#' 
+#' @details
+#' This function checks if the plpData is in libsvm format
+#' If not it calls convertToLibsvm if convert is TRUE or stops otherwise. 
+#' The converted plpData is automatically saved to allow re-use.
+#' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction 
+#'                                      data extracted from the CDM.
+#' @param filePath                      The path to the directory to output the libsvm files
+#' @param convert                       Whether to convert or stop
+#' @examples    
+#' #TODO
+#' 
+#' @return
+#' return a plpData object in LibSVM format as using for the Python calls
+checkLibsvm <- function(plpData, filePath = NULL, convert = TRUE){
+  
+  result <- plpData
+  if('ffdf'%in%class(plpData$covariates) || class(plpData)!='plpData.libsvm') {
+    if (convert){
+      message("Hint:you can avoid conversion on the fly by converting your plp data first using convertToLibsvm")
+      flog.info('Converting to Libsvm')
+      result = convertToLibsvm(plpData,filePath)
+
+    } else {
+        stop('The plpData should be in libsvm format please convert first using convertToLibsvm')
+    }
+  } 
+  return(result)
+}
+
+MapCovariates <- function(covariates, covariateRef, population, map){
+  
   writeLines(paste0('Max cov:', max(ff::as.ram(covariates$covariateId))))
   
-  # restrict to popualtion for speed
-  if(!silent)
-    writeLines('restricting to population for speed...')
+  # restrict to population for speed
+  flog.trace('restricting to population for speed...')
   idx <- ffbase::ffmatch(x = covariates$rowId, table = ff::as.ff(population$rowId))
   idx <- ffbase::ffwhich(idx, !is.na(idx))
   covariates <- covariates[idx, ]
   
-  if(!silent)
-    writeLines('Now converting covariateId...')
+  flog.trace('Now converting covariateId...')
   oldIds <- as.double(ff::as.ram(covariateRef$covariateId))
   newIds <- 1:nrow(covariateRef)
   
   if(!is.null(map)){
-    writeLines('restricting to model variables...')
-    writeLines(paste0('oldIds: ',length(map[,'oldIds'])))
-    writeLines(paste0('newIds:', max(as.double(map[,'newIds']))))
+    flog.trace('restricting to model variables...')
+    flog.trace(paste0('oldIds: ',length(map[,'oldIds'])))
+    flog.trace(paste0('newIds:', max(as.double(map[,'newIds']))))
     ind <- ffbase::ffmatch(x=covariateRef$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
     ind <- ffbase::ffwhich(ind, !is.na(ind))
     covariateRef <- covariateRef[ind,]

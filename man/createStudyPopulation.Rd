@@ -9,7 +9,7 @@ createStudyPopulation(plpData, population = NULL, outcomeId, binary = T,
   removeSubjectsWithPriorOutcome = TRUE, priorOutcomeLookback = 99999,
   requireTimeAtRisk = T, minTimeAtRisk = 365, riskWindowStart = 0,
   addExposureDaysToStart = FALSE, riskWindowEnd = 365,
-  addExposureDaysToEnd = F, log = NULL, silent = F, ...)
+  addExposureDaysToEnd = F, verbosity = INFO, ...)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
@@ -48,6 +48,16 @@ days of exposure if the \code{addExposureDaysToEnd} parameter is
 specified).}
 
 \item{addExposureDaysToEnd}{Add the length of exposure the risk window?}
+
+\item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
+\itemize{
+\item{DEBUG}{Highest verbosity showing all debug statements}
+\item{TRACE}{Showing information about start and end of steps}
+\item{INFO}{Show informative information (Default)}
+\item{WARN}{Show warning messages}
+\item{ERROR}{Show error messages}
+\item{FATAL}{Be silent except for fatal errors} 
+}}
 }
 \value{
 A data frame specifying the study population. This data frame will have the following columns:

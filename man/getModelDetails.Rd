@@ -8,10 +8,10 @@ getModelDetails(predictiveModel, plpData)
 }
 \arguments{
 \item{predictiveModel}{An object of type \code{predictiveModel} as generated using he
-\code{\link{fitPredictiveModel}} function.}
+\code{\link{fitPlp}} function.}
 
 \item{plpData}{An object of type \code{plpData} as generated using
-\code{\link{getDbPlpData}}.}
+\code{\link{getPlpData}}.}
 }
 \description{
 \code{getModelDetails} shows the full model, so showing the betas of all variables included in the

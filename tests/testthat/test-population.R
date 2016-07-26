@@ -39,7 +39,7 @@ test_that("population creation parameters", {
                         addExposureDaysToStart = FALSE,
                         riskWindowEnd = 365,
                         addExposureDaysToEnd = FALSE,
-                        silent=TRUE)
+                        verbosity = FATAL)
 
   #plpData = plpData
   expect_is(studyPopulation, "data.frame")
@@ -61,7 +61,7 @@ test_that("population creation parameters", {
                                            addExposureDaysToStart = FALSE,
                                            riskWindowEnd = 365,
                                            addExposureDaysToEnd = FALSE,
-                                           silent=TRUE)
+                                           verbosity = FATAL)
   
   nrOutcomes2 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes2,0)
@@ -81,7 +81,7 @@ test_that("population creation parameters", {
                                            addExposureDaysToStart = FALSE,
                                            riskWindowEnd = 365,
                                            addExposureDaysToEnd = FALSE,
-                                           silent=TRUE)
+                                           verbosity = FATAL)
   nrOutcomes3 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes3,0)
   expect_false(nrOutcomes3 == nrOutcomes1) 
@@ -100,7 +100,7 @@ test_that("population creation parameters", {
                                            addExposureDaysToStart = FALSE,
                                            riskWindowEnd = 365,
                                            addExposureDaysToEnd = FALSE,
-                                           silent=TRUE)
+                                           verbosity = FATAL)
   nrOutcomes4 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes4,0)
   expect_false(nrOutcomes4 == nrOutcomes1) 
@@ -121,7 +121,7 @@ test_that("population creation parameters", {
                                 addExposureDaysToStart = FALSE,
                                 riskWindowEnd = 365,
                                 addExposureDaysToEnd = FALSE,
-                                silent=F)
+                                verbosity = FATAL)
   )
   
   #priorOutcomeLookback >=0
@@ -140,7 +140,7 @@ test_that("population creation parameters", {
                           addExposureDaysToStart = FALSE,
                           riskWindowEnd = 365,
                           addExposureDaysToEnd = F,
-                          silent=F)
+                          verbosity = FATAL)
   )
   
   #minTimeAtRisk >=0
@@ -159,7 +159,7 @@ test_that("population creation parameters", {
                           addExposureDaysToStart = FALSE,
                           riskWindowEnd = 365,
                           addExposureDaysToEnd = F,
-                          silent=F)
+                          verbosity = FATAL)
   )
   
 })

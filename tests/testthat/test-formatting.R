@@ -18,6 +18,9 @@ library("testthat")
 
 context("Formatting")
 
+# switch of all messages
+flog.threshold(FATAL)
+
 test_that("Formatting", {
   
   # testing manually constructed data...
@@ -46,9 +49,9 @@ test_that("Formatting", {
   class(plpData) <- 'plpData'
   population <- createStudyPopulation(plpData=plpData,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
-                                      riskWindowEnd = 365)
+                                      riskWindowEnd = 365, verbosity = FATAL)
   # test gbm coo to sparse matrix 
-  sparseMat.test <- toSparseM(plpData,population, map=NULL, silent=T)
+  sparseMat.test <- toSparseM(plpData,population, map=NULL)
   matrix.real <- matrix(rep(0, 6*10), ncol=10)
   x <- c(1,1,1,2,4,4,4,6,6)
   y <- c(1,2,10,1,2,3,4,9,8)
@@ -59,8 +62,9 @@ test_that("Formatting", {
   population2 <- createStudyPopulation(plpData=plpData,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
                                       riskWindowEnd = 365,
-                                      washoutPeriod = 100)
-  sparseMat.test2 <- toSparseM(plpData,population2, map=NULL, silent=T)
+                                      washoutPeriod = 100, 
+                                      verbosity = FATAL)
+  sparseMat.test2 <- toSparseM(plpData,population2, map=NULL)
   matrix.real2 <- matrix(rep(0, 6*10), ncol=10)
   x <- c(1,1,1,4,4,4,6,6)
   y <- c(1,2,10,2,3,4,9,8)
@@ -78,8 +82,9 @@ test_that("Formatting", {
   class(plpData2) <- 'plpData'
   population3 <- createStudyPopulation(plpData=plpData2,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
-                                      riskWindowEnd = 365)
-  sparseMat.test3 <- toSparseM(plpData2,population3, map=sparseMat.test$map, silent=T)
+                                      riskWindowEnd = 365,
+                                      verbosity = FATAL)
+  sparseMat.test3 <- toSparseM(plpData2,population3, map=sparseMat.test$map)
   matrix.real3 <- matrix(rep(0, 6*10), ncol=10)
   x <- c(1,6,3,3,4,5,5,6,6)
   y <- c(10,10,10,1,2,1,4,1,8)
@@ -88,7 +93,7 @@ test_that("Formatting", {
   
   #==============================
   # test libsvm format
-  plpData.lsvm <- convertToLibsvm(plpData,filePath=NULL,silent=F)
+  plpData.lsvm <- convertToLibsvm(plpData,filePath=NULL)
 
   # load the libsvm
   data.test <- e1071::read.matrix.csr(file.path(plpData.lsvm$covariates,'covariate.txt'))

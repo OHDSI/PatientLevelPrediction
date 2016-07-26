@@ -22,7 +22,7 @@ gradientBoostingMachine.set(ntrees = c(10, 100), nthread = 20,
 Create setting for gradient boosting machine model using gbm_xgboost implementation
 }
 \examples{
-model.gbm <- GBMclassifier_xgboost(ntrees=c(10,100), nthread=20,
+model.gbm <- gradientBoostingMachine.set(ntrees=c(10,100), nthread=20,
                            max_depth=c(4,6), learn_rate=c(0.1,0.3))
 
 }

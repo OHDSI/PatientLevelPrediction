@@ -22,23 +22,25 @@
 #'                   best performance on the cross validation set is choosen
 #'
 #' @examples
-#' model.lr <- logisticRegressionModel()
+#' model.lr <- lassoLogisticRegression.set()
 #' @export
 lassoLogisticRegression.set<- function(variance=0.01){
-  result <- list(model='lassoLogisticRegression.fit', param=list(val=variance))
+  result <- list(model='lassoLogisticRegression.fit', param=list(val=variance), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- F
   
   return(result)
 }
 
-lassoLogisticRegression.fit<- function(population, plpData, param,index, search='adaptive', quiet=F,
+lassoLogisticRegression.fit<- function(population, plpData, param,index, search='adaptive', 
                      outcomeId, cohortId, ...){
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm')
-    stop('Lasso Logistic regression requires plpData in coo format')
-  
+  if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm'){
+    flog.error('Lasso Logistic regression requires plpData in coo format')
+    stop()
+  }
+
   metaData <- attr(population, 'metaData')
   if(!is.null(population$indexes))
     population <- population[population$indexes>0,]
@@ -46,8 +48,6 @@ lassoLogisticRegression.fit<- function(population, plpData, param,index, search=
   #TODO - how to incorporate indexes?
   val <- 0.003
   if(!is.null(param$val )) val <- param$val
-  if(!quiet)
-    writeLines(paste0('Training lasso logistic regression model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
   start <- Sys.time()
   modelTrained <- fitGLMModel(population,
                                      plpData = plpData,
@@ -59,18 +59,15 @@ lassoLogisticRegression.fit<- function(population, plpData, param,index, search=
                                                              cvRepetitions = 1, fold=ifelse(!is.null(index$index),max(index$index),1),
                                                              selectorType = "byPid",
                                                              threads=-1,
-                                                             maxIterations = 3000),
-                                     silent=quiet)
+                                                             maxIterations = 3000))
   
   # TODO get optimal lambda value
   
   comp <- Sys.time() - start
-  if(!quiet)
-    writeLines(paste0('Model Logistic Regression with Lasso regularisation trained - took:',  format(comp, digits=3)))
   varImp <- data.frame(covariateId=names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'], 
                        value=modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
   if(sum(abs(varImp$value)>0)==0){
-    warning('No non-zero coefficients')
+    flog.warn('No non-zero coefficients')
     varImp <- NULL
   } else {
     #varImp <- varImp[abs(varImp$value)>0,]
@@ -79,6 +76,7 @@ lassoLogisticRegression.fit<- function(population, plpData, param,index, search=
     varImp$value[is.na(varImp$value)] <- 0
     varImp <- varImp[order(-abs(varImp$value)),]
   }
+  
   result <- list(model = modelTrained,
                  modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
                  trainCVAuc = NULL,

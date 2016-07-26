@@ -42,10 +42,24 @@ install:
   - Rscript -e 'if(!"survAUC" %in% rownames(installed.packages())) { install.packages("survAUC", dependencies = TRUE) }'
   - Rscript -e 'if(!"RJDBC" %in% rownames(installed.packages())) { install.packages("RJDBC", dependencies = TRUE) }'
   - Rscript -e 'if(!"survival" %in% rownames(installed.packages())) { install.packages("survival", dependencies = TRUE) }'
-
+  - Rscript -e 'if(!"gridExtra" %in% rownames(installed.packages())) { install.packages("gridExtra", dependencies = TRUE) }'
+  - Rscript -e 'if(!"Rcpp" %in% rownames(installed.packages())) { install.packages("Rcpp", dependencies = TRUE) }'
+  - Rscript -e 'if(!"xgboost" %in% rownames(installed.packages())) { install.packages("xgboost", dependencies = TRUE) }'
+  - Rscript -e 'if(!"Matrix" %in% rownames(installed.packages())) { install.packages("Matrix", dependencies = TRUE) }'
+  - Rscript -e 'if(!"AUC" %in% rownames(installed.packages())) { install.packages("AUC", dependencies = TRUE) }'
+  - Rscript -e 'if(!"PythonInR" %in% rownames(installed.packages())) { install.packages("PythonInR", dependencies = TRUE) }'
+  - Rscript -e 'if(!"scoring" %in% rownames(installed.packages())) { install.packages("scoring", dependencies = TRUE) }'
+  - Rscript -e 'if(!"Metrics" %in% rownames(installed.packages())) { install.packages("Metrics", dependencies = TRUE) }'
+  - Rscript -e 'if(!"futile.logger" %in% rownames(installed.packages())) { install.packages("futile.logger", dependencies = TRUE) }'  
+  - Rscript -e 'if(!"utils" %in% rownames(installed.packages())) { install.packages("utils", dependencies = TRUE) }'  
+  - Rscript -e 'if(!"e1071" %in% rownames(installed.packages())) { install.packages("e1071", dependencies = TRUE) }'
+  - Rscript -e 'if(!"ResourceSelection" %in% rownames(installed.packages())) { install.packages("ResourceSelection", dependencies = TRUE) }'
+  - Rscript -e 'if(!"SparseM" %in% rownames(installed.packages())) { install.packages("SparseM", dependencies = TRUE) }'
+  
   # Install OHDSI dependencies
   - Rscript -e 'devtools::install_github("OHDSI/SqlRender")'
   - Rscript -e 'devtools::install_github("OHDSI/DatabaseConnector")'
+  - Rscript -e 'devtools::install_github("OHDSI/FeatureExtraction")'
   - Rscript -e 'devtools::install_github("OHDSI/Cyclops")'
     
   - Rscript -e 'update.packages(ask = FALSE, instlib = "~/Rlib")'
@@ -67,6 +81,7 @@ notifications:
   recipients:
   - msuchard@gmail.com
   - schuemie@ohdsi.org
+  - p.rijnbeek@erasmusmc.nl
   email:
     on_success: change
     on_failure: change

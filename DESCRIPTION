@@ -36,7 +36,14 @@ Imports:
     xgboost,
     Matrix,
     AUC,
-    PythonInR
+    PythonInR,
+    scoring,
+    Metrics,
+    futile.logger,
+    utils,
+    e1071,
+    ResourceSelection,
+    SparseM
 Suggests:
     testthat,
     pROC,

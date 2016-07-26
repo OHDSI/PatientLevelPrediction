@@ -22,7 +22,7 @@
 #' @param indexFolder The directory where the results and intermediate steps are output
 #'
 #' @examples
-#' model.knn <- KNNclassifier(k=c(3,100,1000))
+#' model.knn <- KNN.set(k=c(3,100,1000))
 #' @export
 KNN.set <- function(k=1000, indexFolder=getwd()){
   

@@ -4,14 +4,14 @@
 \alias{predictProbabilities}
 \title{Create predictive probabilities}
 \usage{
-predictProbabilities(predictiveModel, population, covariates, silent = F)
+predictProbabilities(predictiveModel, population, covariates)
 }
 \arguments{
 \item{predictiveModel}{An object of type \code{predictiveModel} as generated using
-\code{\link{fitPredictiveModel}}.}
+\code{\link{fitPlp}}.}
 
 \item{plpData}{An object of type \code{plpData} as generated using
-\code{\link{getDbPlpData}}.}
+\code{\link{getPlpData}}.}
 }
 \value{
 The value column in the result data.frame is: logistic: probabilities of the outcome, poisson:

@@ -4,7 +4,7 @@
 \alias{predictPlp}
 \title{predictPlp}
 \usage{
-predictPlp(plpModel, population, plpData, index = NULL, silent = F)
+predictPlp(plpModel, population, plpData, index = NULL)
 }
 \arguments{
 \item{plpModel}{An object of type \code{plpModel} - a patient level prediction model}
@@ -15,8 +15,6 @@ predictPlp(plpModel, population, plpData, index = NULL, silent = F)
 data extracted from the CDM.}
 
 \item{index}{A data frame containing rowId: a vector of rowids and index: a vector of doubles the same length as the rowIds. If used, only the rowIds with a negative index value are used to calculate the prediction.}
-
-\item{dirPath}{The location of the output directory.  If using a h2o model, the libSvm will be saved here}
 }
 \value{
 A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.

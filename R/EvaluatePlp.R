@@ -28,91 +28,61 @@
 #'
 
 #' @export
-evaluatePlp <- function(prediction, silent=F){
-  if(!silent)
-    writeLines('Checking Inputs')
+evaluatePlp <- function(prediction){
+  
   type <- attr(prediction, "metaData")$predictionType
-  if (type != "binary")
-    stop("Currently only support binary classification models")
-  if(is.null(prediction$outcomeCount)) stop('No outcomeCount column present')
-  if(length(unique(prediction$value))==1) stop('Cannot evaluate as predictions all the same value')
+  if (type != "binary") {
+    flog.fatal('Currently only support binary classification models')
+    stop()
+  }
 
-  #============= AUC ======================
-  if(!silent)
-    writeLines(paste0('Calculating auc started at: ', Sys.time()))
+  if(is.null(prediction$outcomeCount)){
+    flog.fatal('No outcomeCount column present') 
+    stop()
+  } 
+  if(length(unique(prediction$value))==1){
+    flog.fatal('Cannot evaluate as predictions all the same value')
+    stop()
+  } 
+
+  # auc
+  flog.trace('Calculating AUC')
   if(nrow(prediction) < 100000){
     auc <- computeAuc(prediction, confidenceInterval = T)
   } else{
     # speed issues with big data so using AUC package
-    auc <- AUC:::auc(AUC:::roc(prediction$value, factor(prediction$outcomeCount)))
+    auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
   }
-  if(!silent)
-    writeLines(paste0('Calculating auc ended at: ', Sys.time()))
-  #=========================================
+  flog.info(sprintf('%-20s%.2f', 'AUC: ', auc$auc*100))
   
   # calibration linear fit- returns gradient, intercept
-  #=====================================================
-  if(!silent)
-    writeLines(paste0('Calculating calibration line started at: ', Sys.time()))
+  flog.trace('Calculating Calibration')
   calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
   calLine100 <- calibrationLine(prediction, numberOfStrata = 100)
-  if(!silent)
-    writeLines(paste0('Calculating calibration line ended at: ', Sys.time()))
-  #=====================================================
-  
-  if(!silent)
-    writeLines(paste0('Calculating calibration plot started at: ', Sys.time()))
   calPlot <- plotCalibration(prediction,
                              numberOfStrata = 10,
                              truncateFraction = 0.01,
                              fileName = NULL)
-  if(!silent)
-    writeLines(paste0('Calculating calibration plot ended at: ', Sys.time()))
-  
-  #=====================================================
   # brier scores-returnss; brier, brierScaled
-  if(!silent)
-    writeLines(paste0('Calculating brier score started at: ', Sys.time()))
+  flog.trace('Calculating brier score')
   brier <- brierScore(prediction)
-  if(!silent)
-    writeLines(paste0('Calculating brier score ended at: ', Sys.time()))
-  #=====================================================
-  
-  
-  #=====================================================
+  flog.info(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
+
   # boxplot and quantiles:
-  if(!silent)
-    writeLines(paste0('Calculating quantiles started at: ', Sys.time()))
+  flog.trace('Calculating Quantiles')
   quantiles <- quantiles(prediction)  
-  if(!silent)
-    writeLines(paste0('Calculating quantiles ended at: ', Sys.time()))
-  #=====================================================
-  
-  #=====================================================
+
   # preference score sparse:
-  if(!silent)
-    writeLines(paste0('Calculating preference score at: ', Sys.time()))
+  flog.trace('Preference score')
   prefScore <- computePreferenceScore(prediction) 
-  if(!silent)
-    writeLines(paste0('Calculating preference ended at: ', Sys.time()))
-  #=====================================================
-  
-  
-  #=====================================================
+
   # now calculate 100 point tpr, fpr
-  if(!silent)
-    writeLines(paste0('Calculating sparse ROC started at: ', Sys.time()))
+  flog.trace('Sparce ROC')
   roc.sparse <-rocSparse(prediction)
-  if(!silent)
-    writeLines(paste0('Calculating ROC sparse ended at: ', Sys.time()))
-  #=====================================================
-  
-  
-  
-  #=====================================================
+
   # Average Precision
   aveP.val <- averagePrecision(prediction)
-  #=====================================================
+  flog.info(sprintf('%-20s%.2f', 'Average Precision: ', aveP.val))
   
   result <- list(auc=auc,aveP=aveP.val, brier=brier$brier, brierScaled=brier$brierScaled,
                  calibrationIntercept10=calLine10$lm[1], calibrationGradient10 = calLine10$lm[2],

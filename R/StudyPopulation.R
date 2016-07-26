@@ -45,6 +45,15 @@
 #'                               days of exposure if the \code{addExposureDaysToEnd} parameter is
 #'                               specified).
 #' @param addExposureDaysToEnd   Add the length of exposure the risk window?
+#' @param verbosity              Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
+#'                               \itemize{
+#'                               \item{DEBUG}{Highest verbosity showing all debug statements}
+#'                               \item{TRACE}{Showing information about start and end of steps}
+#'                               \item{INFO}{Show informative information (Default)}
+#'                               \item{WARN}{Show warning messages}
+#'                               \item{ERROR}{Show error messages}
+#'                               \item{FATAL}{Be silent except for fatal errors} 
+#'                               }
 #'
 #' @return
 #' A data frame specifying the study population. This data frame will have the following columns:
@@ -72,26 +81,33 @@ createStudyPopulation <- function(plpData,
                                   addExposureDaysToStart = FALSE,
                                   riskWindowEnd = 365,
                                   addExposureDaysToEnd = F,
-                                  log = NULL,
-                                  silent=F,...) {
+                                  verbosity = INFO,
+                                  ...) {
+  
+  if (verbosity == TRACE){
+    flog.layout(layout.format('[~l]\t[~t]\t~m'))
+  } else {
+    flog.layout(layout.format('~m'))
+  }
+  flog.threshold(verbosity)
   
   # parameter checks
   if(!class(plpData)%in%c('plpData.libsvm','plpData.coo','plpData')){
-    write(paste0('#ERROR: Check plpData input'), file=log, append=T)
+    flog.error('Check plpData format')
     stop('Wrong plpData input')
   }
-  checkNotNull(outcomeId,log)
-  checkBoolean(binary,log)
-  checkBoolean(firstExposureOnly,log)
-  checkHigherEqual(washoutPeriod,0,log)
-  checkBoolean(removeSubjectsWithPriorOutcome,log)
-  checkHigher(priorOutcomeLookback,0,log)
-  checkBoolean(requireTimeAtRisk,log)
-  checkHigherEqual(minTimeAtRisk,0,log)
-  checkHigherEqual(riskWindowStart,0,log)
-  checkBoolean(addExposureDaysToStart,log)
-  checkHigherEqual(riskWindowEnd,0,log)
-  checkBoolean(addExposureDaysToEnd,log)
+  checkNotNull(outcomeId)
+  checkBoolean(binary)
+  checkBoolean(firstExposureOnly)
+  checkHigherEqual(washoutPeriod,0)
+  checkBoolean(removeSubjectsWithPriorOutcome)
+  checkHigher(priorOutcomeLookback,0)
+  checkBoolean(requireTimeAtRisk)
+  checkHigherEqual(minTimeAtRisk,0)
+  checkHigherEqual(riskWindowStart,0)
+  checkBoolean(addExposureDaysToStart)
+  checkHigherEqual(riskWindowEnd,0)
+  checkBoolean(addExposureDaysToEnd)
   
   if (is.null(population)) {
     population <- plpData$cohorts
@@ -111,10 +127,9 @@ createStudyPopulation <- function(plpData,
   metaData$addExposureDaysToStart = addExposureDaysToStart
   metaData$riskWindowEnd = riskWindowEnd
   metaData$addExposureDaysToEnd = addExposureDaysToEnd
-  metaData$silent=silent
   
   if (firstExposureOnly) {
-    if(!silent) writeLines("Keeping only first exposure per subject")
+    flog.trace("Keeping only first exposure per subject")
     population <- population[order(population$subjectId, as.Date(population$cohortStartDate)), ]
     idx <- duplicated(population[, c("subjectId", "cohortId")])
     population <- population[!idx, ]
@@ -126,7 +141,7 @@ createStudyPopulation <- function(plpData,
     metaData$attrition <- rbind(metaData$attrition, getCounts(population,outCount, "First exposure only"))
   }
   if (washoutPeriod) {
-    if(!silent) writeLines(paste("Requiring", washoutPeriod, "days of observation prior index date"))
+    flog.trace(paste("Requiring", washoutPeriod, "days of observation prior index date"))
     population <- population[population$daysFromObsStart >= washoutPeriod,]
     outCount <- 0
     if(!missing(outcomeId) && !is.null(outcomeId))
@@ -135,9 +150,9 @@ createStudyPopulation <- function(plpData,
   }
   if (removeSubjectsWithPriorOutcome) {
     if (missing(outcomeId) || is.null(outcomeId)){
-      if(!silent) writeLines("No outcome specified so skipping removing people with prior outcomes")
+      flog.trace("No outcome specified so skipping removing people with prior outcomes")
     } else {
-      if(!silent) writeLines("Removing subjects with prior outcomes (if any)")
+      flog.trace("Removing subjects with prior outcomes (if any)")
       outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
       if (addExposureDaysToStart) {
         outcomes <- merge(outcomes, population[, c("rowId","daysToCohortEnd")])
@@ -165,7 +180,7 @@ createStudyPopulation <- function(plpData,
   population$riskEnd[population$riskEnd > population$daysToObsEnd] <- population$daysToObsEnd[population$riskEnd > population$daysToObsEnd]
   
   if (requireTimeAtRisk) {
-    if(!silent) writeLines("Removing subjects with no time at risk (if any)")
+    flog.trace("Removing subjects with no time at risk (if any)")
     noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart + minTimeAtRisk ]
     population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
     outCount <- 0
@@ -174,7 +189,7 @@ createStudyPopulation <- function(plpData,
     metaData$attrition <- rbind(metaData$attrition, getCounts(population, outCount, paste("Have time at risk")))
   }
   if (missing(outcomeId) || is.null(outcomeId)){
-    if(!silent) writeLines("No outcome specified so not creating outcome and time variables")
+    flog.trace("No outcome specified so not creating outcome and time variables")
   } else {
     # Select outcomes during time at risk
     outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
@@ -184,17 +199,17 @@ createStudyPopulation <- function(plpData,
     # check outcome still there
     if(nrow(outcomes)==0){
       population <- NULL
-      warning('No outcomes left...')
+      flog.warn('No outcomes left...')
       return(population)
     }
     
     # Create outcome count column
     if(binary){
-      if(!silent) writeLines("Outcome is 0 or 1")
+      flog.info("Outcome is 0 or 1")
       one <- function(x) return(1)
       outcomeCount <- aggregate(outcomeId ~ rowId, data = outcomes, one)
     } else {
-      if(!silent) writeLines("Outcome is count")
+      flog.trace("Outcome is count")
       outcomeCount <- aggregate(outcomeId ~ rowId, data = outcomes, length)
     }
     colnames(outcomeCount)[colnames(outcomeCount) == "outcomeId"] <- "outcomeCount"

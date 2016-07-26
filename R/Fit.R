@@ -38,6 +38,8 @@
 #'                                         \item{GLMclassifier ()}{ A generalised linear model}
 #'                                         \item{KNNclassifier()}{ A KNN model}
 #'                                         }
+#' @param cohortId                         Id of study cohort
+#' @param outcomeId                        Id of outcome cohort
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
@@ -53,9 +55,8 @@
 
 #' @export
 fitPlp <- function(population, data, index,  modelSettings,#featureSettings, 
-                   quiet,
                    cohortId, outcomeId){
-  silent <- quiet
+  
   if('ffdf'%in%class(data$covariates)){
     plpData <- list(outcomes =data$outcomes,
                     cohorts = data$cohorts,
@@ -73,7 +74,7 @@ fitPlp <- function(population, data, index,  modelSettings,#featureSettings,
   # Now apply the classifier:
   fun <- modelSettings$model
   args <- list(plpData =plpData,param =modelSettings$param, index=index,
-               population=population, quiet=quiet, cohortId=cohortId, outcomeId=outcomeId)
+               population=population, cohortId=cohortId, outcomeId=outcomeId)
   plpModel <- do.call(fun, args)
   
   plpModel$predict <- createTransform(plpModel)
@@ -88,20 +89,16 @@ fitPlp <- function(population, data, index,  modelSettings,#featureSettings,
 # create transformation function
 createTransform <- function(plpModel){
   
-  transform <- function(plpData=NULL, population=NULL, silent=F){
+  transform <- function(plpData=NULL, population=NULL){
     #check model fitting makes sense:
     if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$cohortId)
-      warning('cohortId of new data does not match training data')
+      flog.warn('cohortId of new data does not match training data')
     if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
-      warning('outcomeId of new data does not match training data or does not exist')
+      flog.warn('outcomeId of new data does not match training data or does not exist')
     
-    #TODO: recalibrate
-    
-    if(!silent) writeLines('Applying model to calculate predictions...')
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData, 
-                                                                    population=population, 
-                                                                    silent=silent))
+                                                                    population=population))
     metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
                      testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
                      studyStartDate = do.call(paste,list(plpModel$metaData$call$studyStartDate)), 

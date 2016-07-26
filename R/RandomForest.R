@@ -23,10 +23,12 @@
 #' @param max_depth  Maximum number of interactions - a large value will lead to slow model training
 #'
 #' @examples
+#' \dontrun{
 #' model.rf <- randomForest.set(mtries=c(-1,5,20),  ntrees=c(10,100), 
 #'                            max_depth=c(5,20))
+#' }                           
 #' @export
-RandomForest.set<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
+randomForest.set<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
   
   # test python is available and the required dependancies are there:
   if ( !PythonInR::pyIsConnected() ){
@@ -46,7 +48,7 @@ RandomForest.set<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
 
 
 
-RandomForest.fit <- function(population, plpData, param, index, search='grid', quiet=F,
+randomForest.fit <- function(population, plpData, param, index, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format:

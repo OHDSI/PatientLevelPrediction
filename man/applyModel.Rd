@@ -17,14 +17,17 @@ applyModel(population, plpData, plpModel, logConnection = NULL,
 \item{logConnection}{A connection to output any logging during the process}
 
 \item{databaseOutput}{Whether to save the details into the prediction database}
+
+\item{silent}{Whether to turn off progress reporting}
 }
 \description{
 Apply a Patient Level Prediction model on Patient Level Prediction Data
-and get the predicted risk in [0,1] for each person in the popualtion.
+and get the predicted risk in [0,1] for each person in the population.
 If the user inputs a population with an outcomeCount column then the 
 function also returns the evaluation of the prediction (AUC, brier score, calibration)
 }
 \examples{
+\dontrun{
 # load the model and data
 plpData <- loadPlpData('C:/plpdata')
 plpModel <- loadPlpModel('C:/plpmodel')
@@ -36,6 +39,6 @@ population <- do.call(createStudyPopulation, populationSettings)
 
 # get the prediction:
 prediction <- applyModel(population, plpData, plpModel)$prediction
-
+}
 }
 

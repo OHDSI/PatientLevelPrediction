@@ -4,7 +4,7 @@
 \alias{personSplitter}
 \title{Split data into random subsets stratified by class}
 \usage{
-personSplitter(population, test = 0.3, nfold = 3, silent = F)
+personSplitter(population, test = 0.3, nfold = 3, seed = NULL)
 }
 \arguments{
 \item{population}{An object created using createStudyPopulation().}
@@ -13,7 +13,7 @@ personSplitter(population, test = 0.3, nfold = 3, silent = F)
 
 \item{nfold}{An integer >= 1 specifying the number of folds used in cross validation}
 
-\item{silent}{Whether to turn off the progress reporting}
+\item{seed}{If set a fixed seed is used, otherwise a random split is performed}
 }
 \value{
 A dataframe containing the columns: rowId and index

@@ -15,6 +15,6 @@ KNN.set(k = 1000, indexFolder = getwd())
 Create setting for knn model
 }
 \examples{
-model.knn <- KNNclassifier(k=c(3,100,1000))
+model.knn <- KNN.set(k=c(3,100,1000))
 }
 

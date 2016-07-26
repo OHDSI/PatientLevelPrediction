@@ -27,7 +27,7 @@ test_that("AUC", {
   
   proc.auc <- pROC::roc(prediction$outcomeCount, prediction$value, algorithm = 3,
                         direction="<")
-  auc.auc <- AUC::auc(AUC:::roc(prediction$value, factor(prediction$outcomeCount)))
+  auc.auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
   tolerance <- 0.001
   expect_equal(as.numeric(proc.auc$auc), auc.auc, tolerance = tolerance)
 })

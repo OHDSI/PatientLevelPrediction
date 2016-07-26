@@ -10,6 +10,8 @@ naiveBayes.set()
 Create setting for naive bayes model with python
 }
 \examples{
-model.nb <- NBclassifie_pythonr()
+\dontrun{
+model.nb <- naiveBayes.set()
+}
 }
 

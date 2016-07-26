@@ -34,26 +34,27 @@
 
 # parent predict that calls the others
 #' @export
-predictPlp <- function(plpModel, population, plpData,  index=NULL, silent=F){
+predictPlp <- function(plpModel, population, plpData,  index=NULL){
   
   # apply the feature transformations
   if(!is.null(index)){
-    if(!silent) writeLines(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
+    flog.trace(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
     ind <- population$rowId%in%index$rowId[index$index<0]
   } else{
-    if(!silent) writeLines(paste0('Calculating prediction for ',nrow(population),' in dataset'))
+    flog.trace(paste0('Calculating prediction for ',nrow(population),' in dataset'))
     ind <- rep(T, nrow(population))
   }
   
   # do the predction on the new data
   if(class(plpModel)=='plpModel'){
     # extract the classifier type
-    prediction <- plpModel$predict(plpData=plpData,population=population[ind,], silent=silent)
+    prediction <- plpModel$predict(plpData=plpData,population=population[ind,])
     
     if(nrow(prediction)!=nrow(population[ind,]))
-      warning(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
+      flog.warn(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
   } else{
-    stop('Non plpModel input')
+    flog.error('Non plpModel input')
+    stop()
   }
   
   metaData <- list(predictionType="binary",
@@ -65,16 +66,16 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL, silent=F){
 }
 
 # default patient level prediction prediction  
-predict.plp <- function(plpModel,population, plpData, silent=F, ...){
+predict.plp <- function(plpModel,population, plpData, ...){
   covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
-  prediction <- predictProbabilities(plpModel$model, population, covariates, silent=silent)
+  prediction <- predictProbabilities(plpModel$model, population, covariates)
   
   return(prediction)
 }
 
 # for gxboost
-predict.xgboost <- function(plpModel,population, plpData, silent=F, ...){ 
-  result <- toSparseM(plpData, population, map=plpModel$covariateMap,silent=silent)
+predict.xgboost <- function(plpModel,population, plpData, ...){ 
+  result <- toSparseM(plpData, population, map=plpModel$covariateMap)
   data <- result$data[population$rowId,]
   prediction <- data.frame(rowId=population$rowId, 
                            value=xgboost::predict(plpModel$model, data)
@@ -89,7 +90,7 @@ predict.xgboost <- function(plpModel,population, plpData, silent=F, ...){
 
 # TODO: edit caret methods (or remove as slow - replace with python)
 # caret model prediction 
-predict.python <- function(plpModel, population, plpData,  silent=F){
+predict.python <- function(plpModel, population, plpData){
   
   # connect to python if not connected
   if ( !PythonInR::pyIsConnected() ){ 
@@ -100,12 +101,14 @@ predict.python <- function(plpModel, population, plpData,  silent=F){
     }
   
   # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
+  if ( !PythonInR::pyIsConnected() ){
+    flog.error('Python not connect error')
+    stop()
+  }
   
   ##PythonInR::pyImport("numpy", as="np") #crashing R?
 
-  writeLines('Setting inputs...')
+  flog.info('Setting inputs...')
   PythonInR::pySet("dense", plpModel$dense)
   PythonInR::pySet("data_loc", plpData$covariates)
   PythonInR::pySet("model_loc", plpModel$model)
@@ -119,7 +122,7 @@ predict.python <- function(plpModel, population, plpData,  silent=F){
   ##write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
   PythonInR::pySet('dataRows', as.matrix(rowData))
   
-  writeLines('Mapping covariates...')
+  flog.info('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
   originalCovs <- plpModel$varImp[plpModel$varImp[,'included']==1,] #read.table(file.path(plpModel$model,'covs.txt'), header = T) 
@@ -135,17 +138,17 @@ predict.python <- function(plpModel, population, plpData,  silent=F){
   #            row.names=F, col.names=F)
   
   # set mapping rather than saving/loading 
-  writeLines('Loading mapping...')
+  flog.info('Loading mapping...')
   PythonInR::pySet('mapping', as.matrix(map[, c('rowInd.new','rowInd.org')]), 
                    namespace = "__main__", useNumpy = TRUE)
 
-  # set popualtion (crashed R with 300k pop)
+  # set population (crashed R with 300k pop)
   ##if('indexes'%in%colnames(population)){
   ##  PythonInR::pySet("pop",as.matrix(population[,c('rowId','outcomeCount','indexes')]), namespace = "__main__", useNumpy = TRUE)
   ##} else {
   ##  PythonInR::pySet("pop",as.matrix(population[,c('rowId','outcomeCount')]), namespace = "__main__", useNumpy = TRUE )
   ##}
-  # save popualtion
+  # save population
   if('indexes'%in%colnames(population)){
     write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates, 'population.txt'), 
                 row.names=F, col.names=F)
@@ -155,11 +158,11 @@ predict.python <- function(plpModel, population, plpData,  silent=F){
   }
   
   # run the python predict code:
-  writeLines('Executing prediction...')
+  flog.info('Executing prediction...')
   PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py '))
   
   #get the prediction from python and reformat:
-  writeLines('Returning results...')
+  flog.info('Returning results...')
   prediction <- PythonInR::pyGet('prediction', simplify = F)
   prediction <-  apply(prediction,1, unlist)
   prediction <- t(prediction)
@@ -176,8 +179,7 @@ predict.python <- function(plpModel, population, plpData,  silent=F){
   return(prediction)
 }
 
-
-predict.knn <- function(plpData, population, plpModel,silent=T, ...){
+predict.knn <- function(plpData, population, plpModel, ...){
   covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
   prediction <- BigKnn::predictKnn(covariates = covariates,
                                    indexFolder = plpModel$model,
@@ -207,13 +209,12 @@ predict.knn <- function(plpData, population, plpModel,silent=T, ...){
 #' Poisson rate (per day) of the outome, survival: hazard rate (per day) of the outcome.
 #'
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using
-#'                          \code{\link{fitPredictiveModel}}.
+#'                          \code{\link{fitPlp}}.
 #' @param plpData           An object of type \code{plpData} as generated using
-#'                          \code{\link{getDbPlpData}}.
+#'                          \code{\link{getPlpData}}.
 #' @export
-predictProbabilities <- function(predictiveModel, population, covariates, silent=F) {
+predictProbabilities <- function(predictiveModel, population, covariates) {
   start <- Sys.time()
-
 
   prediction <- predictFfdf(predictiveModel$coefficients,
                             population,
@@ -225,7 +226,7 @@ predictProbabilities <- function(predictiveModel, population, covariates, silent
   attr(prediction, "outcomeId") <- attr(population, "metadata")$outcomeId
 
   delta <- Sys.time() - start
-  if(!silent) writeLines(paste("Prediction took", signif(delta, 3), attr(delta, "units")))
+  flog.info("Prediction took", signif(delta, 3), attr(delta, "units"))
   return(prediction)
 }
 
@@ -308,7 +309,7 @@ bySumFf <- function(values, bins) {
 #' Apply train model on new data
 #' 
 #' Apply a Patient Level Prediction model on Patient Level Prediction Data
-#' and get the predicted risk in [0,1] for each person in the popualtion.
+#' and get the predicted risk in [0,1] for each person in the population.
 #' If the user inputs a population with an outcomeCount column then the 
 #' function also returns the evaluation of the prediction (AUC, brier score, calibration)
 #'
@@ -317,8 +318,10 @@ bySumFf <- function(values, bins) {
 #' @param plpModel   The trained PatientLevelPrediction model
 #' @param logConnection        A connection to output any logging during the process
 #' @param databaseOutput Whether to save the details into the prediction database
+#' @param silent         Whether to turn off progress reporting
 #'
 #' @examples
+#' \dontrun{
 #' # load the model and data
 #' plpData <- loadPlpData('C:/plpdata')
 #' plpModel <- loadPlpModel('C:/plpmodel')
@@ -330,7 +333,7 @@ bySumFf <- function(values, bins) {
 #' 
 #' # get the prediction:
 #' prediction <- applyModel(population, plpData, plpModel)$prediction
-#'
+#' }
 #' @export
 applyModel <- function(population, plpData, plpModel,
                        logConnection=NULL,
@@ -338,7 +341,7 @@ applyModel <- function(population, plpData, plpModel,
                        silent=F){
 #check input:
   if(is.null(population))
-    stop('NULL popualtion')
+    stop('NULL population')
   if(class(plpData)!='plpData')
     stop('Incorrect plpData class')
   if(class(plpModel)!='plpModel')

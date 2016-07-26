@@ -4,15 +4,13 @@
 \alias{convertToLibsvm}
 \title{Convert the plpData in COO format into the sparse libSVM format}
 \usage{
-convertToLibsvm(plpData, filePath = NULL, silent = F)
+convertToLibsvm(plpData, filePath = NULL)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} with covariate in coo format - the patient level prediction 
 data extracted from the CDM.}
 
 \item{filePath}{The path to the directory to output the libsvm files}
-
-\item{silent}{Whether to turn off progress reporting}
 }
 \value{
 Returns an object of type \code{plpData}, containing information on the cohorts, their

@@ -518,7 +518,6 @@ savePlpModel <- function(plpModel, dirPath){
   # if python then move pickle
   #==================================================================
   if(attr(plpModel, 'type') =='python'){
-    warning('Moving python pickle to save location...')
     if(!dir.exists(file.path(dirPath,'python_model')))
       dir.create(file.path(dirPath,'python_model'))
     for(file in dir(plpModel$model)){

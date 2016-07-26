@@ -19,7 +19,9 @@
 #' Create setting for naive bayes model with python 
 #'
 #' @examples
-#' model.nb <- NBclassifie_pythonr()
+#' \dontrun{
+#' model.nb <- naiveBayes.set()
+#' }
 #' @export
 naiveBayes.set <- function(){
   
@@ -32,7 +34,7 @@ naiveBayes.set <- function(){
        }  
     )
   }
-  result <- list(model='naiveBayes.fit', param= '')
+  result <- list(model='naiveBayes.fit', name='Naive Bayes', param= '')
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- T
   
@@ -42,9 +44,8 @@ naiveBayes.set <- function(){
 naiveBayes.fit <- function(population, plpData, param, index, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
-  # check plpData is libsvm format:
-  if('ffdf'%in%class(plpData$covariates) || class(plpData)!='plpData.libsvm')
-    stop('Random forest requires plpData in libsvm format')
+  # check plpData is libsvm format or convert if needed
+  plpData <- checkLibsvm(plpData)
   if(!file.exists(file.path(plpData$covariates,'covariate.txt')))
     stop('Cannot find libsvm file')
   
@@ -65,9 +66,6 @@ naiveBayes.fit <- function(population, plpData, param, index, search='grid', qui
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
   
-  
-  if(!quiet)
-    writeLines(paste0('Training naive bayes model...' ))
   start <- Sys.time()
   
   # create vector of 1s and 0s indicating whether the plpData row is in the populaiton

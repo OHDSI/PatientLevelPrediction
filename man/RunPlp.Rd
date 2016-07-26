@@ -6,7 +6,7 @@
 \usage{
 RunPlp(population, plpData, modelSettings, testSplit = "time",
   testFraction = 0.3, nfold = 3, indexes = NULL, save = NULL,
-  silent = F, log = NULL, analysisId = NULL)
+  verbosity = INFO, timeStamp = FALSE, analysisId = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -37,9 +37,19 @@ split evaluation.}
 
 \item{save}{The path to the directory where the models will be saved}
 
-\item{silent}{Whether to suppress output progress to the consol (default F)}
+\item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
+\itemize{
+\item{DEBUG}{Highest verbosity showing all debug statements}
+\item{TRACE}{Showing information about start and end of steps}
+\item{INFO}{Show informative information (Default)}
+\item{WARN}{Show warning messages}
+\item{ERROR}{Show error messages}
+\item{FATAL}{Be silent except for fatal errors}
+}}
 
-\item{log}{The location of the log file (if null uses save, if save also null then it is in the folder plpmodels within the current working directory)}
+\item{timeStamp}{If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.}
+
+\item{analysisId}{Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
 }
 \value{
 An object containing the model or location where the model is save, the data selection settings, the preprocessing
@@ -67,6 +77,7 @@ the cohprt dates.  The user can then specify whether they wish to exclude patien
 during the whole risk period, cohort period or experienced the outcome prior to the risk period.
 }
 \examples{
+\dontrun{
 #******** EXAMPLE 1 ********* 
 #load plpData:
 plpData <- loadPlpData(file.path('C:','User','home','data'))
@@ -80,18 +91,18 @@ population <- createStudyPopulation(plpData,outcomeId=2042,
                                     washoutPeriod = 365,
                                     removeSubjectsWithPriorOutcome = TRUE,
                                     priorOutcomeLookback = 99999,
-                                    requireTimeAtRisk = T,
+                                    requireTimeAtRisk = TRUE,
                                     minTimeAtRisk=365,
                                     riskWindowStart = 0,
                                     addExposureDaysToStart = FALSE,
                                     riskWindowEnd = 365,
-                                    addExposureDaysToEnd = F)
+                                    addExposureDaysToEnd = FALSE)
 
 #lasso logistic regression predicting outcome 200 in cohorts 10 
 #using no feature selection with a time split evaluation with 30\% in test set
 #70\% in train set where the model hyper-parameters are selected using 3-fold cross validation:
 #and results are saved to file.path('C:','User','home')
-model.lr <- logisticRegressionModel()
+model.lr <- lassoLogisticRegression.set()
 mod.lr <- RunPlp(population=population,
                         plpData= plpData,
                         modelSettings = model.lr ,
@@ -102,7 +113,8 @@ mod.lr <- RunPlp(population=population,
 #******** EXAMPLE 2 *********                                               
 # Gradient boosting machine with a grid search to select hyper parameters  
 # using the test/train/folds created for the lasso logistic regression above                       
-model.gbm <- GBMclassifier(rsampRate=c(0.5,0.9,1),csampRate=1, ntrees=c(10,100), bal=c(F,T),
+model.gbm <- gradientBoostingMachine.set(rsampRate=c(0.5,0.9,1),csampRate=1, 
+                           ntrees=c(10,100), bal=c(F,T),
                            max_depth=c(4,5), learn_rate=c(0.1,0.01))
 mod.gbm <- RunPlp(population=population,
                         plpData= plpData,
@@ -110,6 +122,6 @@ mod.gbm <- RunPlp(population=population,
                         testSplit = 'time', testFraction=0.3, 
                         nfold=3, indexes=mod.lr$indexes,
                         save=file.path('C:','User','home'))
-
+} 
 }
 

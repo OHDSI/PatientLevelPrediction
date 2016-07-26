@@ -14,6 +14,6 @@ best performance on the cross validation set is choosen}
 Create setting for lasso logistic regression
 }
 \examples{
-model.lr <- logisticRegressionModel()
+model.lr <- lassoLogisticRegression.set()
 }
 

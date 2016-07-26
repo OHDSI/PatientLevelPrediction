@@ -45,12 +45,12 @@ fitGLMModel <- function(population,
                                                     tolerance  = 2e-06,
                                                     cvRepetitions = 1,
                                                     selectorType = "byPid",
-                                                    noiseLevel = "quiet",
+                                                    noiseLevel = "silent",
                                                     threads=-1,
-                                                    maxIterations = 3000),
-                            silent=F) {
-  start <- Sys.time()
+                                                    maxIterations = 3000)) {
+
   
+  start <- Sys.time()
   if (nrow(population) == 0) {
     status <- "NO SUBJECTS IN POPULATION, CANNOT FIT"
   } else if (sum(population$outcomeCount) == 0) {
@@ -91,11 +91,9 @@ fitGLMModel <- function(population,
                                                  checkRowIds = FALSE,
                                                  normalize = NULL,
                                                  quiet = TRUE)
-    fit <- tryCatch({
-      Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)
-    }, error = function(e) {
-      e$message
-    })
+    fit <- ftry({
+      flog.trace('Running Cyclops')
+      Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)}, finally = flog.trace('Done.'))
     if (is.character(fit)) {
       coefficients <- c(0)
        status <- fit
@@ -122,8 +120,7 @@ fitGLMModel <- function(population,
   }
   class(outcomeModel) <- "plpModel"
   delta <- Sys.time() - start
-  if(!silent)
-    writeLines(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))
+  flog.trace(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))
   return(outcomeModel)
 }
 
@@ -140,8 +137,11 @@ modelTypeToCyclopsModelType <- function(modelType, stratified=F) {
       return("pr")
   } else if (modelType == "cox") {
     return("cox")
-  } else
-    stop(paste("Unknown model type:", modelType))
+  } else {
+    flog.error(paste("Unknown model type:", modelType))
+    stop()
+  }
+
 }
 
 #' Get the predictive model details
@@ -151,9 +151,9 @@ modelTypeToCyclopsModelType <- function(modelType, stratified=F) {
 #' model, along with the variable names
 #'
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using he
-#'                          \code{\link{fitPredictiveModel}} function.
+#'                          \code{\link{fitPlp}} function.
 #' @param plpData           An object of type \code{plpData} as generated using
-#'                          \code{\link{getDbPlpData}}.
+#'                          \code{\link{getPlpData}}.
 #'
 #' @details
 #' Shows the coefficients and names of the covariates with non-zero coefficients.
