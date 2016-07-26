@@ -13,6 +13,8 @@ randomForest.set(mtries = -1, ntrees = c(10, 500), max_depth = 17,
 \item{ntrees}{The number of trees to build}
 
 \item{max_depth}{Maximum number of interactions - a large value will lead to slow model training}
+
+\item{varImp}{Perform an initial variable selection prior to fitting the model to select the useful variables}
 }
 \description{
 Create setting for random forest model with python (very fast)

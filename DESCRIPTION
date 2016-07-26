@@ -37,22 +37,20 @@ Imports:
     Matrix,
     AUC,
     PythonInR,
-    scoring,
-    Metrics,
     futile.logger,
     utils,
-    e1071,
     ResourceSelection,
-    SparseM
+    methods
 Suggests:
     testthat,
     pROC,
     gnm,
     knitr,
     rmarkdown,
-    e1071,
+    scoring,
     Metrics,
-    scoring
+    SparseM,
+    e1071
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 5.0.1

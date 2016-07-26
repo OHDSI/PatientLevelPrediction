@@ -105,7 +105,7 @@ fitGLMModel <- function(population,
        status <- "REACHED MAXIMUM NUMBER OF ITERATIONS, CANNOT FIT"
     } else {
       status <- "OK"
-      coefficients <- coef(fit)
+      coefficients <- stats::coef(fit) # not sure this is stats??
        }
   }
   outcomeModel <- attr(population, "metaData")

@@ -10,13 +10,13 @@ gradientBoostingMachine.set(ntrees = c(10, 100), nthread = 20,
 \arguments{
 \item{ntrees}{The number of trees to build}
 
+\item{nthread}{The number of computer threads to (how many cores do you have?)}
+
 \item{max_depth}{Maximum number of interactions - a large value will lead to slow model training}
 
 \item{min_rows}{The minimum number of rows required at each end node of the tree}
 
 \item{learn_rate}{The boosting learn rate}
-
-\item{nthreads}{The number of computer threads to (how many cores do you have?)}
 }
 \description{
 Create setting for gradient boosting machine model using gbm_xgboost implementation

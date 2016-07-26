@@ -10,13 +10,12 @@ predictFfdf(coefficients, population, covariates, modelType = "logistic")
 \item{coefficients}{A names numeric vector where the names are the covariateIds, except for the
 first value which is expected to be the intercept.}
 
+\item{population}{A data frame containing the population to do the prediction for}
+
 \item{covariates}{A data frame or ffdf object containing the covariates with predefined columns
 (see below).}
 
 \item{modelType}{Current supported types are "logistic", "poisson", or "survival".}
-
-\item{outcomes}{A data frame or ffdf object containing the outcomes with predefined columns
-(see below).}
 }
 \description{
 Generated predictions from a regression model

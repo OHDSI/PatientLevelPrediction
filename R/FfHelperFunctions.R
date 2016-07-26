@@ -1,4 +1,4 @@
-# @file ffHelperFunctions.R
+?# @file ffHelperFunctions.R
 #
 # Copyright 2016 Observational Health Data Sciences and Informatics
 #
@@ -47,7 +47,7 @@ calculatePrevs <- function(plpData, population){
                                 ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
                                 
                                 data <- as.data.frame(data)
-                                result <- aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                result <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
                                 as.data.frame(result)
                               })
   
@@ -68,7 +68,7 @@ calculatePrevs <- function(plpData, population){
                                 ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
                                 
                                 data <- as.data.frame(data)
-                                result <- aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                result <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
                                 as.data.frame(result)
                               })
   

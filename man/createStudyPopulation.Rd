@@ -58,6 +58,8 @@ specified).}
 \item{ERROR}{Show error messages}
 \item{FATAL}{Be silent except for fatal errors} 
 }}
+
+\item{...}{Other inputs}
 }
 \value{
 A data frame specifying the study population. This data frame will have the following columns:

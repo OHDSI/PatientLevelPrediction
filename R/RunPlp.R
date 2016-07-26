@@ -67,12 +67,12 @@
 #' An object containing the model or location where the model is save, the data selection settings, the preprocessing
 #' and training settings as well as various performance measures obtained by the model.
 #'
+#' \item{predict}{A function that can be applied to new data to apply the trained model and make predictions}
 #' \item{model}{A list of class \code{plpModel} containing the model, training metrics and model metadata}
-#' \item{dataSummary}{A list detailing the size of the train/test sets and outcome prevalence}
-#' \item{indexes}{The dataframe with the rowIds and indexes used to split the data into test/train and cross-validation folds}
-#' \item{type}{The type of evaluation that was performed ('person' or 'time')}
 #' \item{prediction}{A dataframe containing the prediction for each person in the test set }
-#' \item{performance}{A list detailing the performance of the model}
+#' \item{evalType}{The type of evaluation that was performed ('person' or 'time')}
+#' \item{performanceTest}{A list detailing the size of the test sets}
+#' \item{performanceTrain}{A list detailing the size of the train sets}
 #' \item{time}{The complete time taken to do the model framework}
 #'
 #'
@@ -109,7 +109,8 @@
 #'                         modelSettings = model.lr ,
 #'                         testSplit = 'time', testFraction=0.3, 
 #'                         nfold=3, indexes=NULL,
-#'                         save=file.path('C:','User','home'))
+#'                         save=file.path('C:','User','home'),
+#'                         verbosity='INFO')
 #'  
 #' #******** EXAMPLE 2 *********                                               
 #' # Gradient boosting machine with a grid search to select hyper parameters  
@@ -264,20 +265,22 @@ RunPlp <- function(population, plpData,
     performance.test <- evaluatePlp(prediction[prediction$indexes<0,])
     flog.trace('Done.')
 
-    flog.trace('Saving evaluation')
-    ftry(writeOutput(prediction=prediction, 
-                performance.test=performance.test, 
-                performance.train=performance.train, 
-                plpModel=model,
-                population = population,
-                plpData = plpData,
-                dirPath=save,
-                analysisId=analysisId,
-                start.all=start.all,
-                testSplit=testSplit,
-                modelLoc=modelLoc),
-        finally= flog.trace('Done.')
-    )
+    if(!is.null(save)){
+      flog.trace('Saving evaluation')
+      ftry(writeOutput(prediction=prediction, 
+                       performance.test=performance.test, 
+                       performance.train=performance.train, 
+                       plpModel=model,
+                       population = population,
+                       plpData = plpData,
+                       dirPath=save,
+                       analysisId=analysisId,
+                       start.all=start.all,
+                       testSplit=testSplit,
+                       modelLoc=modelLoc),
+           finally= flog.trace('Done.')
+      )
+    }
     flog.seperator()
     
   }else{

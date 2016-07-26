@@ -73,7 +73,7 @@ KNN.fit <- function(plpData,population, index, param, quiet=T, cohortId, outcome
     writeLines(paste0('Model knn trained - took:',  format(comp, digits=3)))
   
   result <- list(model = indexFolder,
-                 trainCVAuc = -1,    # did I actually save this!?
+                 trainCVAuc = NULL,    # did I actually save this!?
                  modelSettings = list(model='knn',
                                       modelParameters=list(k=k),
                                       indexFolder=indexFolder

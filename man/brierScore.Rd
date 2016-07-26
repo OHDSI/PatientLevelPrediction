@@ -4,7 +4,7 @@
 \alias{brierScore}
 \title{brierScore}
 \usage{
-brierScore(prediction, ...)
+brierScore(prediction)
 }
 \arguments{
 \item{prediction}{A prediction object as generated using the

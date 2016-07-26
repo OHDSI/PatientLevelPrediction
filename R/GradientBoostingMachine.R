@@ -19,7 +19,7 @@
 #' Create setting for gradient boosting machine model using gbm_xgboost implementation
 #'
 #' @param ntrees     The number of trees to build 
-#' @param nthreads   The number of computer threads to (how many cores do you have?)
+#' @param nthread   The number of computer threads to (how many cores do you have?)
 #' @param max_depth  Maximum number of interactions - a large value will lead to slow model training
 #' @param min_rows   The minimum number of rows required at each end node of the tree
 #' @param learn_rate The boosting learn rate
@@ -33,7 +33,7 @@ gradientBoostingMachine.set <- function(ntrees=c(10,100), nthread=20,
                                   max_depth=6, min_rows=20, learn_rate=0.1){
   
   if(length(nthread)>1)
-    error(paste('nthreads must be length 1'))
+    stop(paste('nthreads must be length 1'))
   
   result <- list(model='gradientBoostingMachine.fit', 
                  param= split(expand.grid(nround=ntrees, 
@@ -66,7 +66,7 @@ gradientBoostingMachine.fit <- function(population, plpData, param,index, quiet=
   #TODO - how to incorporate indexes?
   
   # convert data into sparse Matrix:
-  result <- toSparseM(plpData,population,map=NULL, silent=F)
+  result <- toSparseM(plpData,population,map=NULL)
   data <- result$data
   
   # now get population of interest

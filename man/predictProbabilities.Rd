@@ -10,8 +10,9 @@ predictProbabilities(predictiveModel, population, covariates)
 \item{predictiveModel}{An object of type \code{predictiveModel} as generated using
 \code{\link{fitPlp}}.}
 
-\item{plpData}{An object of type \code{plpData} as generated using
-\code{\link{getPlpData}}.}
+\item{population}{The population to calculate the prediction for}
+
+\item{covariates}{The covariate part of PlpData containing the covariates for the population}
 }
 \value{
 The value column in the result data.frame is: logistic: probabilities of the outcome, poisson:

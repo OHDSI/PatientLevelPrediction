@@ -15,11 +15,10 @@
 # limitations under the License.
 
 library("testthat")
-
 context("Formatting")
 
 # switch of all messages
-flog.threshold(FATAL)
+futile.logger::flog.threshold(FATAL) ## <- this caused an error when using testthat::test_file()
 
 test_that("Formatting", {
   
@@ -62,8 +61,8 @@ test_that("Formatting", {
   population2 <- createStudyPopulation(plpData=plpData,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
                                       riskWindowEnd = 365,
-                                      washoutPeriod = 100, 
-                                      verbosity = FATAL)
+                                      washoutPeriod = 100,verbosity = FATAL
+                                      )
   sparseMat.test2 <- toSparseM(plpData,population2, map=NULL)
   matrix.real2 <- matrix(rep(0, 6*10), ncol=10)
   x <- c(1,1,1,4,4,4,6,6)
@@ -82,8 +81,8 @@ test_that("Formatting", {
   class(plpData2) <- 'plpData'
   population3 <- createStudyPopulation(plpData=plpData2,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
-                                      riskWindowEnd = 365,
-                                      verbosity = FATAL)
+                                      riskWindowEnd = 365,verbosity = FATAL
+                                      )
   sparseMat.test3 <- toSparseM(plpData2,population3, map=sparseMat.test$map)
   matrix.real3 <- matrix(rep(0, 6*10), ncol=10)
   x <- c(1,6,3,3,4,5,5,6,6)
@@ -107,6 +106,9 @@ test_that("Formatting", {
   
   # test the class  'plpData.libsvm'
   expect_that(class(plpData.lsvm), is_equivalent_to('plpData.libsvm'))
+  
+  # delete the temp libsvm test: plpData.lsvm$covariates
+  unlink(plpData.lsvm$covariates, recursive = T, force = T)
   
   # test python new data for given covariateRef
   # predict lines: 124-140 (make into a function?)

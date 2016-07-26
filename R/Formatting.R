@@ -16,6 +16,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#' Convert the plpData in COO format into a sparse R matrix
+#' 
+#' @description
+#' Converts the standard plpData to a sparse matrix  
+#' 
+#' @details
+#' This function converts the covariate file from ffdf in COO format into a sparse matrix from 
+#' the package Matrix
+#' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction 
+#'                                      data extracted from the CDM.
+#' @param population                    The population to include in the matrix
+#' @param map                           A covariate map (telling us the column number for covariates)
+#' @examples    
+#' #TODO
+#' 
+#' @return
+#' Returns a list, containing the data as a sparse matrix, the plpData covariateRef
+#' and a data.frame named map that tells us what covariate corresponds to each column
+#' This object is a list with the following components: \describe{
+#' \item{data}{A sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.} 
+#' \item{covariateRef}{The plpData covariateRef.} 
+#' \item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.} 
+#' }
+#'
 #' @export
 toSparseM <- function(plpData,population, map=NULL){
   cov <- ff::clone(plpData$covariates)
@@ -35,11 +59,11 @@ toSparseM <- function(plpData,population, map=NULL){
     ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
     plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  flog.debug(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
+  futile.logger::flog.debug(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
 
     #convert into sparseM
-  flog.debug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
-  flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  futile.logger::flog.debug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
+  futile.logger::flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
   
   # chunk then add
   
@@ -48,7 +72,7 @@ toSparseM <- function(plpData,population, map=NULL){
                                x=0,
                                dims=c(ffbase::max.ff(plpData.mapped$covariates$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
   for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
-    flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
+    futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
     temp <- ftry(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
                                           j=ff::as.ram(plpData.mapped$covariates$covariateId[ind]),
                                           x=ff::as.ram(plpData.mapped$covariates$covariateValue[ind]),
@@ -56,7 +80,7 @@ toSparseM <- function(plpData,population, map=NULL){
     )
     data <- data+ temp
   }
-  flog.debug(paste0('Sparse matrix with dimensionality: ', dim(data)))
+  futile.logger::flog.debug(paste0('Sparse matrix with dimensionality: ', dim(data)))
   
   result <- list(data=data,
                  covariateRef=plpData.mapped$covariateRef,
@@ -105,7 +129,7 @@ convertToLibsvm <- function(plpData,filePath=NULL){
   if(missing(filePath) || is.null(filePath)){
     timestamp <- gsub(' ', '', gsub('-','', gsub(':','',Sys.time())))
     filePath <- file.path(getwd(), paste0('libsvm_', timestamp))
-    flog.warn(paste0('filePath not specified so saving libsvm to: ', filePath))
+    futile.logger::flog.warn(paste0('filePath not specified so saving libsvm to: ', filePath))
   }
   
   start <- Sys.time()
@@ -114,7 +138,7 @@ convertToLibsvm <- function(plpData,filePath=NULL){
   covref <- ff::clone(plpData$covariateRef)
   
   
-  flog.trace('Now converting the covariate data into libsvm...')
+  futile.logger::flog.trace('Now converting the covariate data into libsvm...')
   
   
   oldIds <- ff::as.ram(plpData$covariateRef$covariateId)
@@ -130,20 +154,20 @@ convertToLibsvm <- function(plpData,filePath=NULL){
     ids <- plyr::mapvalues(ids, oldIds, newIds, warn_missing = FALSE)
     cov$covariateId[i] <- ids
   }
-  flog.trace('Done.')
+  futile.logger::flog.trace('Done.')
   
   # sort:
-  flog.trace('Starting to sort data...')
+  futile.logger::flog.trace('Starting to sort data...')
   cov <- ff::ffdfsort(cov)
-  flog.trace('Done.')
+  futile.logger::flog.trace('Done.')
   
   # then group
-  flog.trace('Starting to group covariateIds:covariateValue per person')
+  futile.logger::flog.trace('Starting to group covariateIds:covariateValue per person')
   all <- c()
   test_count <- 0
   for (i in bit::chunk(cov$rowId)) {
     test_count <- test_count +1
-    flog.trace(paste0(test_count))
+    futile.logger::flog.trace(paste0(test_count))
     tempCov <- ff::as.ram(cov[i,])
     
     # now create covariateId:value
@@ -152,7 +176,7 @@ convertToLibsvm <- function(plpData,filePath=NULL){
                                         sep=':', collapse=' ')) 
     all <- rbind(all, test) 
   } 
-  flog.trace('Done.')
+  futile.logger::flog.trace('Done.')
   
   # add a dummy column of zeros as first column (this will be replaced in future)
   libsvm <- merge(plpData$cohorts[,c('rowId','subjectId')], all, all.x=T, by='rowId')
@@ -160,27 +184,27 @@ convertToLibsvm <- function(plpData,filePath=NULL){
   libsvm$subjectId <- 0
   
   timeTol <- difftime(Sys.time(),start, units = "mins")
-  flog.trace(paste0('Converting to libSVM completed - took: ', timeTol, ' mins'))
+  futile.logger::flog.trace(paste0('Converting to libSVM completed - took: ', timeTol, ' mins'))
   
-  flog.trace('Saving libSVM file...')
+  futile.logger::flog.trace('Saving libSVM file...')
   if(!dir.exists(file.path(filePath))) dir.create(file.path(filePath), recursive = T)
   start <- Sys.time()
-  write.table(libsvm[,c('subjectId','covString')],
+  utils::write.table(libsvm[,c('subjectId','covString')],
               quote=FALSE, sep= " ", eol = "\n", 
               row.names=FALSE,col.names=FALSE,
               file=file.path(filePath, paste0('covariate.txt')))
-  write.table(ff::as.ram(plpData$covariateRef),
+  utils::write.table(ff::as.ram(plpData$covariateRef),
               quote=TRUE, sep= " ", eol = "\n", 
               row.names=FALSE,col.names=TRUE,
               file=file.path(filePath, 'covariateRef.txt')
   )
-  write.table(libsvm[,'rowId'],
+  utils::write.table(libsvm[,'rowId'],
               quote=FALSE, sep= " ", eol = "\n", 
               row.names=FALSE,col.names=F,
               file=file.path(filePath, paste0('rowId.txt'))
   )
   timeTol <- difftime(Sys.time(),start, units = "mins")
-  flog.trace(paste0('Saving libSVM completed - took: ', timeTol, ' mins'))
+  futile.logger::flog.trace(paste0('Saving libSVM completed - took: ', timeTol, ' mins'))
   
   
   results <- list(cohorts=plpData$cohorts,
@@ -221,7 +245,7 @@ checkLibsvm <- function(plpData, filePath = NULL, convert = TRUE){
   if('ffdf'%in%class(plpData$covariates) || class(plpData)!='plpData.libsvm') {
     if (convert){
       message("Hint:you can avoid conversion on the fly by converting your plp data first using convertToLibsvm")
-      flog.info('Converting to Libsvm')
+      futile.logger::flog.info('Converting to Libsvm')
       result = convertToLibsvm(plpData,filePath)
 
     } else {
@@ -236,19 +260,19 @@ MapCovariates <- function(covariates, covariateRef, population, map){
   writeLines(paste0('Max cov:', max(ff::as.ram(covariates$covariateId))))
   
   # restrict to population for speed
-  flog.trace('restricting to population for speed...')
+  futile.logger::flog.trace('restricting to population for speed...')
   idx <- ffbase::ffmatch(x = covariates$rowId, table = ff::as.ff(population$rowId))
   idx <- ffbase::ffwhich(idx, !is.na(idx))
   covariates <- covariates[idx, ]
   
-  flog.trace('Now converting covariateId...')
+  futile.logger::flog.trace('Now converting covariateId...')
   oldIds <- as.double(ff::as.ram(covariateRef$covariateId))
   newIds <- 1:nrow(covariateRef)
   
   if(!is.null(map)){
-    flog.trace('restricting to model variables...')
-    flog.trace(paste0('oldIds: ',length(map[,'oldIds'])))
-    flog.trace(paste0('newIds:', max(as.double(map[,'newIds']))))
+    futile.logger::flog.trace('restricting to model variables...')
+    futile.logger::flog.trace(paste0('oldIds: ',length(map[,'oldIds'])))
+    futile.logger::flog.trace(paste0('newIds:', max(as.double(map[,'newIds']))))
     ind <- ffbase::ffmatch(x=covariateRef$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
     ind <- ffbase::ffwhich(ind, !is.na(ind))
     covariateRef <- covariateRef[ind,]

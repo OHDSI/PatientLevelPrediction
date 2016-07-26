@@ -49,11 +49,13 @@ evaluatePlp <- function(prediction){
   flog.trace('Calculating AUC')
   if(nrow(prediction) < 100000){
     auc <- computeAuc(prediction, confidenceInterval = T)
+    flog.info(sprintf('%-20s%.2f', 'AUC: ', auc*100))
   } else{
     # speed issues with big data so using AUC package
     auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
+    flog.info(sprintf('%-20s%.2f', 'AUC: ', auc*100))
   }
-  flog.info(sprintf('%-20s%.2f', 'AUC: ', auc$auc*100))
+  
   
   # calibration linear fit- returns gradient, intercept
   flog.trace('Calculating Calibration')
@@ -213,7 +215,7 @@ plotCalibration <- function(prediction,
   if (attr(prediction, "metaData")$predictionType != "binary")
     stop("Plotting the calibration is only implemented for binary classification models")
 
-  q <- unique(quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata))
+  q <- unique(stats::quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata))
   prediction$strata <- cut(prediction$value,
                            breaks = unique(c(0, q, max(prediction$value))),
                            labels = FALSE)
@@ -223,24 +225,24 @@ plotCalibration <- function(prediction,
                       fraction = sum(data$outcomeCount)/nrow(data)))
   }
   # strataData <- plyr::ddply(prediction, prediction$strata, computeStratumStats)
-  counts <- aggregate(outcomeCount ~ strata, data = prediction, sum)
+  counts <- stats::aggregate(outcomeCount ~ strata, data = prediction, sum)
   names(counts)[2] <- "counts"
-  backgroundCounts <- aggregate(rowId ~ strata, data = prediction, length)
+  backgroundCounts <- stats::aggregate(rowId ~ strata, data = prediction, length)
   names(backgroundCounts)[2] <- "backgroundCounts"
-  minx <- aggregate(value ~ strata, data = prediction, min)
+  minx <- stats::aggregate(value ~ strata, data = prediction, min)
   names(minx)[2] <- "minx"
-  maxx <- aggregate(value ~ strata, data = prediction, max)
+  maxx <- stats::aggregate(value ~ strata, data = prediction, max)
   names(maxx)[2] <- "maxx"
   strataData <- merge(counts, backgroundCounts)
   strataData <- merge(strataData, minx)
   strataData <- merge(strataData, maxx)
   strataData$fraction <- strataData$counts/strataData$backgroundCounts
-  lims <- quantile(prediction$value, c(truncateFraction, 1 - truncateFraction))
+  lims <- stats::quantile(prediction$value, c(truncateFraction, 1 - truncateFraction))
   plot <- ggplot2::ggplot(strataData,
                           ggplot2::aes(xmin = minx, xmax = maxx, ymin = 0, ymax = fraction)) +
           ggplot2::geom_abline() +
-          ggplot2::geom_rect(color = rgb(0, 0, 0.8, alpha = 0.8),
-                             fill = rgb(0, 0, 0.8, alpha = 0.5)) +
+          ggplot2::geom_rect(color = grDevices::rgb(0, 0, 0.8, alpha = 0.8),
+                             fill = grDevices::rgb(0, 0, 0.8, alpha = 0.5)) +
           ggplot2::scale_x_continuous("Predicted probability") +
           ggplot2::coord_cartesian(xlim = lims) +
           ggplot2::scale_y_continuous("Observed fraction")
@@ -273,8 +275,8 @@ plotRoc <- function(prediction, fileName = NULL) {
   prediction <- prediction[order(-prediction$value), c("value", "outcomeCount")]
   prediction$sens <- cumsum(prediction$outcomeCount)/sum(prediction$outcomeCount)
   prediction$fpRate <- cumsum(prediction$outcomeCount == 0)/sum(prediction$outcomeCount == 0)
-  data <- aggregate(fpRate ~ sens, data = prediction, min)
-  data <- aggregate(sens ~ fpRate, data = data, min)
+  data <- stats::aggregate(fpRate ~ sens, data = prediction, min)
+  data <- stats::aggregate(sens ~ fpRate, data = data, min)
   data <- rbind(data, data.frame(fpRate = 1, sens = 1))
   if (nrow(data) < 10000) {
     # Turn it into a step function:
@@ -285,8 +287,8 @@ plotRoc <- function(prediction, fileName = NULL) {
   }
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = fpRate, y = sens)) +
           ggplot2::geom_abline(intercept = 0, slope = 1) +
-          ggplot2::geom_area(color = rgb(0, 0, 0.8, alpha = 0.8),
-                             fill = rgb(0, 0, 0.8, alpha = 0.4)) +
+          ggplot2::geom_area(color = grDevices::rgb(0, 0, 0.8, alpha = 0.8),
+                             fill = grDevices::rgb(0, 0, 0.8, alpha = 0.4)) +
           ggplot2::scale_x_continuous("1 - specificity") +
           ggplot2::scale_y_continuous("Sensitivity")
   if (!is.null(fileName))
@@ -406,7 +408,7 @@ rocSparse <- function(prediction){
 #' A list containing the brier score and the scaled brier score
 #'
 #' @export
-brierScore <- function(prediction, ...){
+brierScore <- function(prediction){
 
   brier <- sum((prediction$outcomeCount -prediction$value)^2)/nrow(prediction)
   brierMax <- mean(prediction$value)*(1-mean(prediction$value))
@@ -415,15 +417,19 @@ brierScore <- function(prediction, ...){
 }
 
 #' calibrationLine
+#' 
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predictProbabilities}} function.
+#' @param numberOfStrata        The number of groups to split the prediction into
 #'
 #' @details
 #' Calculates the calibration from prediction object
 #'
 #' @export
-calibrationLine <- function(prediction,numberOfStrata=10, ...){
+calibrationLine <- function(prediction,numberOfStrata=10){
   outPpl <- unique(prediction$rowId)
 
-  q <- unique(quantile(prediction$value, c((1:(numberOfStrata - 1))/numberOfStrata, 1)))
+  q <- unique(stats::quantile(prediction$value, c((1:(numberOfStrata - 1))/numberOfStrata, 1)))
   
   if(length(unique(c(0,q)))==2){
     warning('Prediction not spread')
@@ -440,33 +446,33 @@ calibrationLine <- function(prediction,numberOfStrata=10, ...){
   }
     
     # get observed events:
-    obs.Points <- aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=mean)
+    obs.Points <- stats::aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=mean)
     colnames(obs.Points) <- c('group','obs')
-    pred.Points <- aggregate(prediction$value, by=list(prediction$strata), FUN=mean)
+    pred.Points <- stats::aggregate(prediction$value, by=list(prediction$strata), FUN=mean)
     colnames(pred.Points) <- c('group','pred')
     
     # hosmer-lemeshow-goodness-of-fit-test
-    obs.count <- aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
+    obs.count <- stats::aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
     colnames(obs.count) <- c('group','observed')
-    expected.count <- aggregate(prediction$value, by=list(prediction$strata), FUN=sum)
+    expected.count <- stats::aggregate(prediction$value, by=list(prediction$strata), FUN=sum)
     colnames(expected.count) <- c('group','expected')
     hoslem <- merge(obs.count, expected.count, by='group')
-    obs.count2 <- aggregate(1-prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
+    obs.count2 <- stats::aggregate(1-prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
     colnames(obs.count2) <- c('group','observed')
-    expected.count2 <- aggregate(1-prediction$value, by=list(prediction$strata), FUN=sum)
+    expected.count2 <- stats::aggregate(1-prediction$value, by=list(prediction$strata), FUN=sum)
     colnames(expected.count2) <- c('group','expected')
     nhoslem <- merge(obs.count2, expected.count2, by='group')
     Xsquared <- sum((hoslem$observed-hoslem$expected)^2/hoslem$expected) +
       sum((nhoslem$observed-nhoslem$expected)^2/nhoslem$expected)
-    pvalue <- pchisq(Xsquared, df=numberOfStrata-2, lower.tail = F)
+    pvalue <- stats::pchisq(Xsquared, df=numberOfStrata-2, lower.tail = F)
     hosmerlemeshow <- data.frame(Xsquared=Xsquared, df=numberOfStrata-2, pvalue=pvalue)
     
     # linear model fitting obs to pred:
     lmData <- merge(obs.Points, pred.Points, by='group')
-    model <- lm(obs ~pred, data=lmData)
+    model <- stats::lm(obs ~pred, data=lmData)
     
-    plot(lmData$pred, lmData$obs)
-    abline(a = model$coefficients[1], b = model$coefficients[2], col='red')
+    graphics::plot(lmData$pred, lmData$obs)
+    graphics::abline(a = model$coefficients[1], b = model$coefficients[2], col='red')
     res <- model$coefficients
     names(res) <- c('Intercept','Gradient')
   #
@@ -494,8 +500,8 @@ quantiles <- function(prediction){
   boxPlot <- ggplot2::ggplot(prediction, ggplot2::aes(x=as.factor(outcomeCount), y=value, 
                                                       fill=as.factor(outcomeCount))) + ggplot2::geom_boxplot() +
     ggplot2::guides(fill=FALSE) + ggplot2::xlab("Class") + ggplot2::ylab("Prediction") 
-  quantiles <- aggregate(prediction$value, list(prediction$outcomeCount), 
-                         function(x) quantile(x, probs = c(0.00,0.1, 0.25, 0.5, 0.75,0.9, 1.00))
+  quantiles <- stats::aggregate(prediction$value, list(prediction$outcomeCount), 
+                         function(x) stats::quantile(x, probs = c(0.00,0.1, 0.25, 0.5, 0.75,0.9, 1.00))
   )
   return(list(plot=boxPlot,
               quantiles=quantiles))                      
@@ -523,7 +529,7 @@ computePreferenceScore <- function(prediction) {
                                                                                         labels=NULL))
   
   
-  res <- do.call(data.frame,aggregate(preferenceScore~group+outcomeCount, df1, 
+  res <- do.call(data.frame,stats::aggregate(preferenceScore~group+outcomeCount, df1, 
                                       FUN=function(x) c(density=length(x))))
   
   res <- merge(res, data.frame(outcomeCount=c(0,1), N=c(sum(prediction$outcomeCount==0),
@@ -542,9 +548,9 @@ computePreferenceScore <- function(prediction) {
   
   # get the density between 0.3-0.7 for outcome and non-outcome
   prediction$indif <- prediction$preferenceScore <= 0.7 & prediction$preferenceScore >= 0.3
-  count <- aggregate(prediction$indif, list(prediction$outcomeCount), sum)
+  count <- stats::aggregate(prediction$indif, list(prediction$outcomeCount), sum)
   colnames(count) <- c('Outcome','total0307')
-  countN <- aggregate(prediction$indif, list(prediction$outcomeCount),length)
+  countN <- stats::aggregate(prediction$indif, list(prediction$outcomeCount),length)
   colnames(countN) <- c('Outcome','total')
   
   similar3070 <- merge(count, countN)

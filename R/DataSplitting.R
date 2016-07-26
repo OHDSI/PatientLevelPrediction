@@ -59,11 +59,11 @@ personSplitter <- function(population, test=0.3, nfold=3, seed=NULL){
   nonPpl <- population$rowId[population$outcomeCount==0]
   
   # give random number to all and shuffle then assign to test/train/cv
-  ## if using set.seed() then use permutation <- runif(length(nonPpl)+length(outPpl))
+  ## if using set.seed() then use permutation <- stats::runif(length(nonPpl)+length(outPpl))
   ## and nonPpl <- nonPpl[order(permutation[1:length(nonPpl)])]
   ## and outPpl <- outPpl[order(permutation[(1+length(nonPpl)):length(permutation)])]
-  nonPpl <- nonPpl[order(runif(length(nonPpl)))]
-  outPpl <- outPpl[order(runif(length(outPpl)))]
+  nonPpl <- nonPpl[order(stats::runif(length(nonPpl)))]
+  outPpl <- outPpl[order(stats::runif(length(outPpl)))]
   
   nonPpl.group <- rep(-1, length(nonPpl))
   train.ind <- round(length(nonPpl)*test+1):length(nonPpl)
@@ -88,7 +88,7 @@ personSplitter <- function(population, test=0.3, nfold=3, seed=NULL){
   split <- data.frame(rowId=c(nonPpl,outPpl), index=c(nonPpl.group,outPpl.group))
   split <- split[order(-split$rowId),]
 
-  foldSizesTrain <-tail(table(split$index),nfold)
+  foldSizesTrain <-utils::tail(table(split$index),nfold)
   flog.info(paste0('Data split into ',sum(split$index<0),' test cases and ',sum(split$index>0),' train cases',' (',toString(foldSizesTrain),')'))
 
   # return index vector
@@ -152,8 +152,8 @@ timeSplitter <- function(population, test=0.3, nfold=3, seed=NULL){
   
   flog.info(paste0('Creating ',test*100,'% test and ',(1-test)*100,'% train (into ',nfold,' folds) stratified split at ', testDate))
   #shuffle the data
-  nonPpl <- nonPpl[order(runif(nrow(nonPpl))),]
-  outPpl <- outPpl[order(runif(nrow(outPpl))),]
+  nonPpl <- nonPpl[order(stats::runif(nrow(nonPpl))),]
+  outPpl <- outPpl[order(stats::runif(nrow(outPpl))),]
   
   nonPpl.group <- rep(-1, nrow(nonPpl))
   nonPpl.group[nonPpl$date<=testDate] <- rep(1:nfold,each=ceiling(sum(nonPpl$date<=testDate)/nfold))[1:sum(nonPpl$date<=testDate)]
@@ -164,7 +164,7 @@ timeSplitter <- function(population, test=0.3, nfold=3, seed=NULL){
   split <- data.frame(rowId=c(nonPpl$rowId,outPpl$rowId), index=c(nonPpl.group,outPpl.group))
   split <- split[order(split$rowId),]
   
-  foldSizesTrain <-tail(table(split$index),nfold)
+  foldSizesTrain <-utils::tail(table(split$index),nfold)
   flog.info(paste0('Data split into ',sum(split$index<0),' test cases and ',sum(split$index>0),' train samples',' (',toString(foldSizesTrain),')'))
   
   # return index vector

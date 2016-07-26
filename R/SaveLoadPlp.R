@@ -256,6 +256,7 @@ getPlpData <- function(connectionDetails,
 #'                           \code{getDbPlpData}.
 #' @param file               The name of the folder where the data will be written. The folder should
 #'                           not yet exist.
+#' @param envir              The environment for to evaluate variables when saving
 #'
 #' @details
 #' The data will be written to a set of files in the folder specified by the user.
@@ -463,7 +464,7 @@ insertDbPopulation <- function(population,
                                createTable = FALSE,
                                dropTableIfExists = TRUE,
                                cdmVersion = "5") {
-  if (is(population, "plpData")) {
+  if (methods::is(population, "plpData")) {
     population = population$cohorts
   }
   ids <- population$cohort
@@ -503,6 +504,15 @@ insertDbPopulation <- function(population,
   invisible(TRUE)
 }
 
+
+#' Saves the plp model
+#'
+#' @details
+#' Saves the plp model to a user specificed folder
+#'
+#' @param plpModel                   A trained classifier returned by running \code{RunPlp()$model}
+#' @param dirPath                  A location to save the model to
+#'
 #' @export
 savePlpModel <- function(plpModel, dirPath){
   if (missing(plpModel))
@@ -548,8 +558,16 @@ savePlpModel <- function(plpModel, dirPath){
   
 }
 
+#' loads the plp model
+#'
+#' @details
+#' Loads a plp model that was saved using \code{savePlpModel()}
+#'
+#' @param dirPath                  The location of the model
+#'
 #' @export
-loadPlpModel <- function(dirPath, readOnly = TRUE) {
+
+loadPlpModel <- function(dirPath) {
   if (!file.exists(dirPath))
     stop(paste("Cannot find folder", dirPath))
   if (!file.info(dirPath)$isdir)
@@ -586,7 +604,7 @@ loadPlpModel <- function(dirPath, readOnly = TRUE) {
 #' @export
 savePrediction <- function(prediction, location){
   #TODO check inupts
-  write.csv(prediction, file=location, row.names = F, col.names = T)
+  utils::write.csv(prediction, file=location, row.names = F, col.names = T)
   
 }
 
@@ -600,7 +618,7 @@ savePrediction <- function(prediction, location){
 #' @export
 loadPrediction <- function(location){
   #TODO check inupts
-  prediction <- read.csv(file=location, header = T)
+  prediction <- utils::read.csv(file=location, header = T)
   return(prediction)
 }
 
@@ -650,31 +668,31 @@ writeOutput <- function(prediction,
                         testSplit,
                         modelLoc){
   if(!dir.exists(file.path(dirPath,analysisId , 'test'))){dir.create(file.path(dirPath,analysisId , 'test'))}
-  write.table(performance.test$raw, file.path(dirPath,analysisId , 'test','rocRawSparse.txt'), row.names=F)
-  write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'test','preferenceScoresSparse.txt'), row.names=F)
-  write.table(performance.test$calSparse, file.path(dirPath,analysisId , 'test','calSparse.txt'), row.names=F)
-  write.table(performance.test$calSparse2_10, file.path(dirPath,analysisId , 'test','calSparse2_10.txt'), row.names=F)
-  write.table(performance.test$calSparse2_100, file.path(dirPath,analysisId , 'test','calSparse2_100.txt'), row.names=F)
-  write.table(performance.test$quantiles, file.path(dirPath,analysisId , 'test','quantiles.txt'), row.names=F)
+  utils::write.table(performance.test$raw, file.path(dirPath,analysisId , 'test','rocRawSparse.txt'), row.names=F)
+  utils::write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'test','preferenceScoresSparse.txt'), row.names=F)
+  utils::write.table(performance.test$calSparse, file.path(dirPath,analysisId , 'test','calSparse.txt'), row.names=F)
+  utils::write.table(performance.test$calSparse2_10, file.path(dirPath,analysisId , 'test','calSparse2_10.txt'), row.names=F)
+  utils::write.table(performance.test$calSparse2_100, file.path(dirPath,analysisId , 'test','calSparse2_100.txt'), row.names=F)
+  utils::write.table(performance.test$quantiles, file.path(dirPath,analysisId , 'test','quantiles.txt'), row.names=F)
   
   if(!dir.exists(file.path(dirPath,analysisId , 'train'))){dir.create(file.path(dirPath,analysisId , 'train'))}
-  write.table(performance.train$raw, file.path(dirPath,analysisId , 'train','rocRawSparse.txt'), row.names=F)
-  write.table(performance.train$preferenceScores, file.path(dirPath,analysisId , 'train','preferenceScoresSparse.txt'), row.names=F)
-  write.table(performance.train$calSparse, file.path(dirPath,analysisId , 'train','calSparse.txt'), row.names=F)
-  write.table(performance.train$calSparse2_10, file.path(dirPath,analysisId , 'train','calSparse2_10.txt'), row.names=F)
-  write.table(performance.train$calSparse2_100, file.path(dirPath,analysisId , 'train','calSparse2_100.txt'), row.names=F)
-  write.table(performance.train$quantiles, file.path(dirPath,analysisId , 'train','quantiles.txt'), row.names=F)
+  utils::write.table(performance.train$raw, file.path(dirPath,analysisId , 'train','rocRawSparse.txt'), row.names=F)
+  utils::write.table(performance.train$preferenceScores, file.path(dirPath,analysisId , 'train','preferenceScoresSparse.txt'), row.names=F)
+  utils::write.table(performance.train$calSparse, file.path(dirPath,analysisId , 'train','calSparse.txt'), row.names=F)
+  utils::write.table(performance.train$calSparse2_10, file.path(dirPath,analysisId , 'train','calSparse2_10.txt'), row.names=F)
+  utils::write.table(performance.train$calSparse2_100, file.path(dirPath,analysisId , 'train','calSparse2_100.txt'), row.names=F)
+  utils::write.table(performance.train$quantiles, file.path(dirPath,analysisId , 'train','quantiles.txt'), row.names=F)
   
   
   #save plots:
-  pdf(file.path(dirPath,analysisId,'plots.pdf'))
+  grDevices::pdf(file.path(dirPath,analysisId,'plots.pdf'))
   gridExtra::grid.arrange(performance.test$calPlot, 
                           gridExtra::arrangeGrob(performance.test$prefScorePlot, performance.test$boxPlot), 
                           nrow=2,
                           top='Performance Plots')
   print(PatientLevelPrediction::plotRoc(prediction[prediction$indexes<0,]))
   
-  dev.off()
+  grDevices::dev.off()
   
   comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
   
@@ -728,19 +746,19 @@ writeOutput <- function(prediction,
   # search for modelInfo in directory - if does not exist create and save model info table
   # otherwise append model info to existing file
   if(file.exists(file.path(dirPath, 'modelInfo.txt')))
-    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
+    utils::write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
   if(!file.exists(file.path(dirPath, 'modelInfo.txt')))
-    write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
+    utils::write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
   
   # repeat for performance info
   if(file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
-    write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), append=T, row.names = F, col.names = F)
+    utils::write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), append=T, row.names = F, col.names = F)
   if(!file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
-    write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), row.names = F)
+    utils::write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), row.names = F)
   if(file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
-    write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), append=T, row.names = F, col.names = F)
+    utils::write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), append=T, row.names = F, col.names = F)
   if(!file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
-    write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), row.names = F)
+    utils::write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), row.names = F)
   
   
   

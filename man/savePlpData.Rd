@@ -12,6 +12,8 @@ savePlpData(plpData, file, envir = NULL)
 
 \item{file}{The name of the folder where the data will be written. The folder should
 not yet exist.}
+
+\item{envir}{The environment for to evaluate variables when saving}
 }
 \description{
 \code{savePlpData} saves an object of type plpData to folder.

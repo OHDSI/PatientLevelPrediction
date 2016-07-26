@@ -21,6 +21,7 @@
 #' @param mtries     The number of features to include in each tree (-1 defaults to square root of total features)
 #' @param ntrees     The number of trees to build 
 #' @param max_depth  Maximum number of interactions - a large value will lead to slow model training
+#' @param varImp     Perform an initial variable selection prior to fitting the model to select the useful variables
 #'
 #' @examples
 #' \dontrun{
@@ -79,13 +80,13 @@ randomForest.fit <- function(population, plpData, param, index, search='grid', q
   start <- Sys.time()
   
   # create vector of 1s and 0s indicating whether the plpData row is in the populaiton
-  rowIds <- read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
+  rowIds <- utils::read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
   rowData <- rep(0, length(rowIds))
   rowData[rowIds%in%population$rowId] <- 1
-  write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
+  utils::write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
   
   # make sure population is ordered?
-  write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
+  utils::write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
   
   #do var imp
   if(param$varImp[1]==T){

@@ -116,7 +116,7 @@ predict.python <- function(plpModel, population, plpData){
   # restrict plpdata to populaiton:
   # create vector of 1s and 0s indicating whether the plpData row is in the populaiton
   ## TODO dont save this instead use - PythonInR::pySet('dataRows', rowData)
-  rowIds <- read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
+  rowIds <- utils::read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
   rowData <- rep(0, length(rowIds))
   rowData[rowIds%in%population$rowId] <- 1
   ##write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
@@ -150,10 +150,10 @@ predict.python <- function(plpModel, population, plpData){
   ##}
   # save population
   if('indexes'%in%colnames(population)){
-    write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates, 'population.txt'), 
+    utils::write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates, 'population.txt'), 
                 row.names=F, col.names=F)
   } else {
-    write.table(population[,c('rowId','outcomeCount')], file.path(plpData$covariates, 'population.txt'), 
+    utils::write.table(population[,c('rowId','outcomeCount')], file.path(plpData$covariates, 'population.txt'), 
                 row.names=F, col.names=F)
   }
   
@@ -210,8 +210,8 @@ predict.knn <- function(plpData, population, plpModel, ...){
 #'
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using
 #'                          \code{\link{fitPlp}}.
-#' @param plpData           An object of type \code{plpData} as generated using
-#'                          \code{\link{getPlpData}}.
+#' @param population        The population to calculate the prediction for
+#' @param covariates        The covariate part of PlpData containing the covariates for the population
 #' @export
 predictProbabilities <- function(predictiveModel, population, covariates) {
   start <- Sys.time()
@@ -234,8 +234,7 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
 #'
 #' @param coefficients   A names numeric vector where the names are the covariateIds, except for the
 #'                       first value which is expected to be the intercept.
-#' @param outcomes       A data frame or ffdf object containing the outcomes with predefined columns
-#'                       (see below).
+#' @param population       A data frame containing the population to do the prediction for
 #' @param covariates     A data frame or ffdf object containing the covariates with predefined columns
 #'                       (see below).
 #' @param modelType      Current supported types are "logistic", "poisson", or "survival".
@@ -304,91 +303,3 @@ bySumFf <- function(values, bins) {
   # .Call('PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', values, bins)
 }
 
-
-
-#' Apply train model on new data
-#' 
-#' Apply a Patient Level Prediction model on Patient Level Prediction Data
-#' and get the predicted risk in [0,1] for each person in the population.
-#' If the user inputs a population with an outcomeCount column then the 
-#' function also returns the evaluation of the prediction (AUC, brier score, calibration)
-#'
-#' @param population   The population of people who you want to predict the risk for
-#' @param plpData    The plpData for the population
-#' @param plpModel   The trained PatientLevelPrediction model
-#' @param logConnection        A connection to output any logging during the process
-#' @param databaseOutput Whether to save the details into the prediction database
-#' @param silent         Whether to turn off progress reporting
-#'
-#' @examples
-#' \dontrun{
-#' # load the model and data
-#' plpData <- loadPlpData('C:/plpdata')
-#' plpModel <- loadPlpModel('C:/plpmodel')
-#' 
-#' # use the same population settings as the model:
-#' populationSettings <- plpModel$populationSettings
-#' populationSettings$plpData <- plpData
-#' population <- do.call(createStudyPopulation, populationSettings)
-#' 
-#' # get the prediction:
-#' prediction <- applyModel(population, plpData, plpModel)$prediction
-#' }
-#' @export
-applyModel <- function(population, plpData, plpModel,
-                       logConnection=NULL,
-                       databaseOutput=NULL,
-                       silent=F){
-#check input:
-  if(is.null(population))
-    stop('NULL population')
-  if(class(plpData)!='plpData')
-    stop('Incorrect plpData class')
-  if(class(plpModel)!='plpModel')
-    stop('Incorrect plpModel class')
-  if(!ifelse(is.null(logConnection),TRUE,"connection"%in%class(logConnection)))
-    stop('logConnection not NULL or a connection')
-  
-  # log the trained model details
-  # TODO
-  
-  # get prediction counts:
-  peopleCount <- nrow(population)
-    
-  start.pred <- Sys.time()
-  if(!is.null(logConnection))
-    cat('Starting Prediction at ', Sys.time(), 'for ', peopleCount, ' people', file=logConnection)
-  if(!silent)
-    writeLines(paste('Starting Prediction ', Sys.time(), 'for ', peopleCount, ' people') )  
-
-  prediction <- plpModel$predict(plpData=plpData, population=population)  
-  
-  if(!is.null(logConnection)){
-    cat('Prediction completed at ', Sys.time(), file=logConnection)
-    cat('Took: ', start.pred - Sys.time(), file=logConnection)
-  }
-  if(!silent)
-    writeLines(paste('Prediction completed at ', Sys.time(), ' taking ', start.pred-Sys.time()) )  
-  
-  
-  if(!'outcomeCount'%in%colnames(prediction))
-    return(list(prediction=prediction))
-  
-  if(!is.null(logConnection)){
-    cat('Starting evaluation at ', Sys.time(), file=logConnection)
-    }
-  if(!silent)
-    writeLines(paste('Starting evaulation at ', Sys.time()) )  
-  
-  performance <- evaluatePlp(prediction)
-  
-  if(!is.null(logConnection)){
-    cat('Evaluation completed at ', Sys.time(), file=logConnection)
-    cat('Took: ', start.pred - Sys.time(), file=logConnection)
-  }
-  if(!silent)
-    writeLines(paste('Evaluation completed at ', Sys.time(), ' taking ', start.pred-Sys.time()) )  
-  
-  result <- list(prediction=prediction,
-                 performance = performance)
-}

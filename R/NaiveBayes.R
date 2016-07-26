@@ -69,13 +69,13 @@ naiveBayes.fit <- function(population, plpData, param, index, search='grid', qui
   start <- Sys.time()
   
   # create vector of 1s and 0s indicating whether the plpData row is in the populaiton
-  rowIds <- read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
+  rowIds <- utils::read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
   rowData <- rep(0, length(rowIds))
   rowData[rowIds%in%population$rowId] <- 1
-  write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
+  utils::write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
   
   # make sure population is ordered?
-  write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
+  utils::write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
   
   # save the model to outLoc
   outLoc <- file.path(getwd(),'python_models')

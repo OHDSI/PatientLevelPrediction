@@ -54,6 +54,7 @@
 #'                               \item{ERROR}{Show error messages}
 #'                               \item{FATAL}{Be silent except for fatal errors} 
 #'                               }
+#' @param ...                   Other inputs
 #'
 #' @return
 #' A data frame specifying the study population. This data frame will have the following columns:
@@ -85,15 +86,15 @@ createStudyPopulation <- function(plpData,
                                   ...) {
   
   if (verbosity == TRACE){
-    flog.layout(layout.format('[~l]\t[~t]\t~m'))
+    futile.logger::flog.layout(layout.format('[~l]\t[~t]\t~m'))
   } else {
-    flog.layout(layout.format('~m'))
+    futile.logger::flog.layout(layout.format('~m'))
   }
-  flog.threshold(verbosity)
+  futile.logger::flog.threshold(verbosity)
   
   # parameter checks
   if(!class(plpData)%in%c('plpData.libsvm','plpData.coo','plpData')){
-    flog.error('Check plpData format')
+    futile.logger::flog.error('Check plpData format')
     stop('Wrong plpData input')
   }
   checkNotNull(outcomeId)
@@ -129,7 +130,7 @@ createStudyPopulation <- function(plpData,
   metaData$addExposureDaysToEnd = addExposureDaysToEnd
   
   if (firstExposureOnly) {
-    flog.trace("Keeping only first exposure per subject")
+    futile.logger::flog.trace("Keeping only first exposure per subject")
     population <- population[order(population$subjectId, as.Date(population$cohortStartDate)), ]
     idx <- duplicated(population[, c("subjectId", "cohortId")])
     population <- population[!idx, ]
@@ -141,7 +142,7 @@ createStudyPopulation <- function(plpData,
     metaData$attrition <- rbind(metaData$attrition, getCounts(population,outCount, "First exposure only"))
   }
   if (washoutPeriod) {
-    flog.trace(paste("Requiring", washoutPeriod, "days of observation prior index date"))
+    futile.logger::flog.trace(paste("Requiring", washoutPeriod, "days of observation prior index date"))
     population <- population[population$daysFromObsStart >= washoutPeriod,]
     outCount <- 0
     if(!missing(outcomeId) && !is.null(outcomeId))
@@ -150,9 +151,9 @@ createStudyPopulation <- function(plpData,
   }
   if (removeSubjectsWithPriorOutcome) {
     if (missing(outcomeId) || is.null(outcomeId)){
-      flog.trace("No outcome specified so skipping removing people with prior outcomes")
+      futile.logger::flog.trace("No outcome specified so skipping removing people with prior outcomes")
     } else {
-      flog.trace("Removing subjects with prior outcomes (if any)")
+      futile.logger::flog.trace("Removing subjects with prior outcomes (if any)")
       outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
       if (addExposureDaysToStart) {
         outcomes <- merge(outcomes, population[, c("rowId","daysToCohortEnd")])
@@ -180,7 +181,7 @@ createStudyPopulation <- function(plpData,
   population$riskEnd[population$riskEnd > population$daysToObsEnd] <- population$daysToObsEnd[population$riskEnd > population$daysToObsEnd]
   
   if (requireTimeAtRisk) {
-    flog.trace("Removing subjects with no time at risk (if any)")
+    futile.logger::flog.trace("Removing subjects with no time at risk (if any)")
     noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart + minTimeAtRisk ]
     population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
     outCount <- 0
@@ -189,7 +190,7 @@ createStudyPopulation <- function(plpData,
     metaData$attrition <- rbind(metaData$attrition, getCounts(population, outCount, paste("Have time at risk")))
   }
   if (missing(outcomeId) || is.null(outcomeId)){
-    flog.trace("No outcome specified so not creating outcome and time variables")
+    futile.logger::flog.trace("No outcome specified so not creating outcome and time variables")
   } else {
     # Select outcomes during time at risk
     outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
@@ -199,18 +200,18 @@ createStudyPopulation <- function(plpData,
     # check outcome still there
     if(nrow(outcomes)==0){
       population <- NULL
-      flog.warn('No outcomes left...')
+      futile.logger::flog.warn('No outcomes left...')
       return(population)
     }
     
     # Create outcome count column
     if(binary){
-      flog.info("Outcome is 0 or 1")
+      futile.logger::flog.info("Outcome is 0 or 1")
       one <- function(x) return(1)
-      outcomeCount <- aggregate(outcomeId ~ rowId, data = outcomes, one)
+      outcomeCount <- stats::aggregate(outcomeId ~ rowId, data = outcomes, one)
     } else {
-      flog.trace("Outcome is count")
-      outcomeCount <- aggregate(outcomeId ~ rowId, data = outcomes, length)
+      futile.logger::flog.trace("Outcome is count")
+      outcomeCount <- stats::aggregate(outcomeId ~ rowId, data = outcomes, length)
     }
     colnames(outcomeCount)[colnames(outcomeCount) == "outcomeId"] <- "outcomeCount"
     population <- merge(population, outcomeCount[, c("rowId", "outcomeCount")], all.x = TRUE)
@@ -252,7 +253,7 @@ getAttritionTable <- function(object) {
   if (is(object, "plpData")) {
     object = object$cohorts
   }
-  if (is(object, "outcomeModel")){
+  if (methods::is(object, "outcomeModel")){
     return(object$attrition)
   } else {
     return(attr(object, "metaData")$attrition)
