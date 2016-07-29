@@ -32,6 +32,7 @@ lassoLogisticRegression.set<- function(variance=0.01){
   return(result)
 }
 
+fitLassoLogisticRegression<- function(population, plpData, param, search='adaptive', 
                      outcomeId, cohortId, ...){
   
   # check plpData is coo format:

@@ -34,6 +34,7 @@ KNN.set <- function(k=1000, indexFolder=getwd()){
   
   return(result)
 }
+fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...){
   # check plpData is coo format:
   if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm')
     stop('KNN requires plpData in coo format')

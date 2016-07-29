@@ -50,6 +50,7 @@ randomForest.set<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
 
 
 
+fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format:

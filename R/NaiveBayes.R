@@ -41,6 +41,7 @@ naiveBayes.set <- function(){
   return(result)
 }
 
+fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
