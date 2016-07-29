@@ -39,8 +39,9 @@ randomForest.set<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
       stop('You need to install python for this method - please see ...')
   }
   
-  result <- list(model='RandomForest.fit', param= expand.grid(ntrees=ntrees, mtries=mtries,
-                                                       max_depth=max_depth, varImp=varImp))
+  result <- list(model='fitRandomForest', param= expand.grid(ntrees=ntrees, mtries=mtries,
+                                                       max_depth=max_depth, varImp=varImp),
+                 name='Random forest')
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- T
   
@@ -49,7 +50,6 @@ randomForest.set<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
 
 
 
-randomForest.fit <- function(population, plpData, param, index, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format:

@@ -28,8 +28,6 @@
 #' @param population                       The population created using createStudyPopulation() who will have their risks predicted
 #' @param data                             An object of type \code{plpData} - the patient level prediction
 #'                                         data extracted from the CDM.
-#' @param index                            A data frame containing rowId: a vector of rowids and index: a vector of doubles the same length as the 
-#'                                         rowIds. If used, only the rowIds with a negative index value are used to calculate the prediction.  
 #' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
 #'                                         \item{logisticRegressionModel()}{ A lasso logistic regression model}
@@ -54,7 +52,7 @@
 #'
 
 #' @export
-fitPlp <- function(population, data, index,  modelSettings,#featureSettings, 
+fitPlp <- function(population, data,   modelSettings,#featureSettings, 
                    cohortId, outcomeId){
   
   if('ffdf'%in%class(data$covariates)){
@@ -73,12 +71,12 @@ fitPlp <- function(population, data, index,  modelSettings,#featureSettings,
   #=========================================================
   # Now apply the classifier:
   fun <- modelSettings$model
-  args <- list(plpData =plpData,param =modelSettings$param, index=index,
+  args <- list(plpData =plpData,param =modelSettings$param, 
                population=population, cohortId=cohortId, outcomeId=outcomeId)
   plpModel <- do.call(fun, args)
   
   plpModel$predict <- createTransform(plpModel)
-  plpModel$index <- index
+  plpModel$index <- population$indexes
   class(plpModel) <- 'plpModel'
   
   return(plpModel)

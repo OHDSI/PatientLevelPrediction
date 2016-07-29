@@ -4,16 +4,13 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(population, data, index, modelSettings, cohortId, outcomeId)
+fitPlp(population, data, modelSettings, cohortId, outcomeId)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted}
 
 \item{data}{An object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
-
-\item{index}{A data frame containing rowId: a vector of rowids and index: a vector of doubles the same length as the 
-rowIds. If used, only the rowIds with a negative index value are used to calculate the prediction.}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{

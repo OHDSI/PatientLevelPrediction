@@ -35,11 +35,12 @@ gradientBoostingMachine.set <- function(ntrees=c(10,100), nthread=20,
   if(length(nthread)>1)
     stop(paste('nthreads must be length 1'))
   
-  result <- list(model='gradientBoostingMachine.fit', 
+  result <- list(model='fitGradientBoostingMachine', 
                  param= split(expand.grid(nround=ntrees, 
                                           max.depth=max_depth, min_child_weight=min_rows, 
                                           eta=learn_rate, nthread=nthread),
-                              1:(length(ntrees)*length(max_depth)*length(min_rows)*length(learn_rate)  ))
+                              1:(length(ntrees)*length(max_depth)*length(min_rows)*length(learn_rate)  )),
+                 name='Gradient boosting machine'
   )
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- F
@@ -49,7 +50,6 @@ gradientBoostingMachine.set <- function(ntrees=c(10,100), nthread=20,
 
 
 #xgboost
-gradientBoostingMachine.fit <- function(population, plpData, param,index, quiet=F,
                         outcomeId, cohortId, ...){
   
   if(!quiet)

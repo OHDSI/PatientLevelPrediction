@@ -40,7 +40,8 @@ Imports:
     futile.logger,
     utils,
     ResourceSelection,
-    methods
+    methods,
+    BigKnn
 Suggests:
     testthat,
     pROC,

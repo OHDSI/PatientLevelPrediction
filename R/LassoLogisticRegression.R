@@ -25,14 +25,13 @@
 #' model.lr <- lassoLogisticRegression.set()
 #' @export
 lassoLogisticRegression.set<- function(variance=0.01){
-  result <- list(model='lassoLogisticRegression.fit', param=list(val=variance), name="Lasso Logistic Regression")
+  result <- list(model='fitLassoLogisticRegression', param=list(val=variance), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- F
   
   return(result)
 }
 
-lassoLogisticRegression.fit<- function(population, plpData, param,index, search='adaptive', 
                      outcomeId, cohortId, ...){
   
   # check plpData is coo format:

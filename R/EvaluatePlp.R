@@ -65,6 +65,9 @@ evaluatePlp <- function(prediction){
                              numberOfStrata = 10,
                              truncateFraction = 0.01,
                              fileName = NULL)
+  flog.info(sprintf('%-20s%.2f%-20s%.2f', 'Calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
+  
+  
   # brier scores-returnss; brier, brierScaled
   flog.trace('Calculating brier score')
   brier <- brierScore(prediction)

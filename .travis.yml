@@ -61,7 +61,8 @@ install:
   - Rscript -e 'devtools::install_github("OHDSI/DatabaseConnector")'
   - Rscript -e 'devtools::install_github("OHDSI/FeatureExtraction")'
   - Rscript -e 'devtools::install_github("OHDSI/Cyclops")'
-    
+  - Rscript -e 'devtools::install_github("OHDSI/BigKnn")'
+      
   - Rscript -e 'update.packages(ask = FALSE, instlib = "~/Rlib")'
   - Rscript -e 'devtools::install_deps(pkg = ".", dependencies = TRUE)'
 
@@ -82,6 +83,7 @@ notifications:
   - msuchard@gmail.com
   - schuemie@ohdsi.org
   - p.rijnbeek@erasmusmc.nl
+  - jreps@its.jnj.com
   email:
     on_success: change
     on_failure: change

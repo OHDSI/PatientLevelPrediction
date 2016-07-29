@@ -26,14 +26,14 @@
 #' @export
 KNN.set <- function(k=1000, indexFolder=getwd()){
   
-  result <- list(model='KNN.fit', param=list(k=k, indexFolder=indexFolder)
+  result <- list(model='fitKNN', param=list(k=k, indexFolder=indexFolder),
+                 name='KNN'
   )
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- F
   
   return(result)
 }
-KNN.fit <- function(plpData,population, index, param, quiet=T, cohortId, outcomeId, ...){
   # check plpData is coo format:
   if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm')
     stop('KNN requires plpData in coo format')

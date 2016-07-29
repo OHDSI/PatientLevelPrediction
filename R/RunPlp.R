@@ -50,7 +50,8 @@
 #'                                         split evaluation.
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #' @param indexes                          A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)
-#' @param save                             The path to the directory where the models will be saved
+#' @param save                             The path to the directory where the models will be saved (if NULL uses working directory)
+#' @param saveModel                        Binary indicating whether to save the model once it is trained (default is T)
 #' @param verbosity                        Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 #'                                         \itemize{
 #'                                         \item{DEBUG}{Highest verbosity showing all debug statements}
@@ -126,9 +127,10 @@
 #'                         save=file.path('C:','User','home'))
 #' } 
 RunPlp <- function(population, plpData,
-                         modelSettings,
-                         testSplit = 'time', testFraction=0.3, nfold=3, indexes=NULL,
-                         save=NULL, verbosity=INFO, timeStamp=FALSE, analysisId=NULL
+                   modelSettings,
+                   testSplit = 'time', testFraction=0.3, nfold=3, indexes=NULL,
+                   save=NULL, saveModel=T,
+                   verbosity=INFO, timeStamp=FALSE, analysisId=NULL
                          ){
   
   if (timeStamp | verbosity == TRACE){
@@ -142,18 +144,14 @@ RunPlp <- function(population, plpData,
   start.all <- Sys.time()
   if(is.null(analysisId))
     analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
-  #if(is.null(dirPath)) dirPath <- file.path(getwd(),'plpmodels') if NULL dont save
+  
+  if(is.null(save)) save <- file.path(getwd(),'plpmodels') #if NULL save to wd
   
   # TODO: This will not work for example if libsvm conversion is needed and no Save is filled in.
   
-  if(!is.null(save)) {
-     analysisPath = file.path(save,analysisId)
-     if(!dir.exists(analysisPath)){dir.create(analysisPath,recursive=T)}
-     logFileName = paste0(analysisPath,'/plplog.txt')
-  } else {
-     analysisPath = getwd()
-     logFileName = paste0(analysisPath,'/plplog.txt') 
-  }
+  analysisPath = file.path(save,analysisId)
+  if(!dir.exists(analysisPath)){dir.create(analysisPath,recursive=T)}
+  logFileName = paste0(analysisPath,'/plplog.txt')
   	
   # write log to both console and file (tee). 
   # note other appenders can be created, e.g., to webservice or database!
@@ -222,7 +220,7 @@ RunPlp <- function(population, plpData,
   colnames(population)[colnames(population)=='index'] <- 'indexes'
   attr(population, "metaData") <- tempmeta
   
-  settings <- list(data=plpData,  index=indexes,
+  settings <- list(data=plpData,
                    #featureSettings = featureSettings,
                    modelSettings = modelSettings,
                    population=population,
@@ -237,7 +235,7 @@ RunPlp <- function(population, plpData,
   sink(logFileName, append = TRUE, split = TRUE)
 
   model <- ftry(do.call(fitPlp, settings),
-                error = {sink()
+                error = function(e) {sink()
                   flog.error(e)
                   stop(e)},
                 finally = {
@@ -245,7 +243,7 @@ RunPlp <- function(population, plpData,
   sink()
   
   # save the model
-  if(!is.null(save)){
+  if(saveModel==T){
     modelLoc <- file.path(save,analysisId, 'savedModel' )
     ftry(savePlpModel(model, modelLoc),finally= flog.trace('Done.'))
     flog.info(paste0('Model saved to ..\\',analysisId,'\\savedModel'))

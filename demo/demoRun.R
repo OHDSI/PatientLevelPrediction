@@ -19,7 +19,7 @@ population <- createStudyPopulation(plpData,
                                     addExposureDaysToStart = FALSE,
                                     riskWindowEnd = 365,
                                     addExposureDaysToEnd = FALSE,
-                                    verbosity=INFO)
+                                    verbosity=futile.logger::INFO)
 
 ### Example 1: Regularised logistic regression
 lr_model <- PatientLevelPrediction::lassoLogisticRegression.set()
@@ -27,7 +27,7 @@ lr_results <- PatientLevelPrediction::RunPlp(population, plpData,
                                              modelSettings = lr_model,
                                              testSplit='time',
                                              testFraction=0.25,
-                                             nfold=2, verbosity=INFO, 
+                                             nfold=2, verbosity=futile.logger::INFO, 
                                              save='./plpmodels')
 
 ### Example 2: Naive bayes model using python
@@ -39,6 +39,6 @@ nb_results <- PatientLevelPrediction::RunPlp(population, plpData,
                                              modelSettings = nb_model,
                                              testSplit='time',
                                              testFraction=0.25,
-                                             nfold=2, verbosity=INFO, 
+                                             nfold=2, verbosity=futile.logger::INFO, 
                                              save='./plpmodels')
 

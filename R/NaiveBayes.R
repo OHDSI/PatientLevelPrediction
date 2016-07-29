@@ -34,14 +34,13 @@ naiveBayes.set <- function(){
        }  
     )
   }
-  result <- list(model='naiveBayes.fit', name='Naive Bayes', param= '')
+  result <- list(model='fitNaiveBayes', name='Naive Bayes', param= '')
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- T
   
   return(result)
 }
 
-naiveBayes.fit <- function(population, plpData, param, index, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed

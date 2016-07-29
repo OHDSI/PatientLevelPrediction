@@ -6,7 +6,7 @@
 \usage{
 RunPlp(population, plpData, modelSettings, testSplit = "time",
   testFraction = 0.3, nfold = 3, indexes = NULL, save = NULL,
-  verbosity = INFO, timeStamp = FALSE, analysisId = NULL)
+  saveModel = T, verbosity = INFO, timeStamp = FALSE, analysisId = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -35,7 +35,9 @@ split evaluation.}
 
 \item{indexes}{A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)}
 
-\item{save}{The path to the directory where the models will be saved}
+\item{save}{The path to the directory where the models will be saved (if NULL uses working directory)}
+
+\item{saveModel}{Binary indicating whether to save the model once it is trained (default is T)}
 
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 \itemize{
