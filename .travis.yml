@@ -61,6 +61,7 @@ install:
   - Rscript -e 'devtools::install_github("OHDSI/DatabaseConnector")'
   - Rscript -e 'devtools::install_github("OHDSI/FeatureExtraction")'
   - Rscript -e 'devtools::install_github("OHDSI/Cyclops")'
+  - Rscript -e 'devtools::install_github("OHDSI/OhdsiRTools")'
   - Rscript -e 'devtools::install_github("OHDSI/BigKnn")'
       
   - Rscript -e 'update.packages(ask = FALSE, instlib = "~/Rlib")'
