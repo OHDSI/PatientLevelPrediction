@@ -68,7 +68,7 @@ test_that("prediction", {
   #=====================================
   # checking Logistic Regression 
   #=====================================
-  model_set <- lassoLogisticRegression.set()
+  model_set <- setLassoLogisticRegression()
   testthat::expect_that(model_set, is_a("modelSettings"))
   #checkPrediction(model_set=lr_set, plpData=plpData, population, index)
   ##model <-PatientLevelPrediction::fitPlp(population[population$indexes>0,], data=plpData,  
@@ -81,7 +81,7 @@ test_that("prediction", {
   #=====================================
   # checking Gradient Boosting Machine
   #=====================================
-  gbm_set <- gradientBoostingMachine.set(ntrees = 10)
+  gbm_set <- setGradientBoostingMachine(ntrees = 10)
   testthat::expect_that(gbm_set, is_a("modelSettings"))
   ##model <- loadPlpModel('gbm_model')  # (NEEDED MODEL FOLDER)
   ##checkPrediction(model, plpData=plpData, population, index)
