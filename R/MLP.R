@@ -1,4 +1,4 @@
-# @file naiveBayes.R
+# @file MLP.R
 #
 # Copyright 2016 Observational Health Data Sciences and Informatics
 #
@@ -16,14 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create setting for naive bayes model with python 
+#' Create setting for neural network model with python 
 #'
 #' @examples
 #' \dontrun{
-#' model.nb <- setNaiveBayes()
+#' model.mlp <- setMLP()
 #' }
 #' @export
-setNaiveBayes <- function(){
+setMLP <- function(){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -34,14 +34,14 @@ setNaiveBayes <- function(){
        }  
     )
   }
-  result <- list(model='fitNaiveBayes', name='Naive Bayes', param= '')
+  result <- list(model='fitMLP', name='Neural network', param= '')
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- T
   
   return(result)
 }
 
-fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
+fitMLP <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
@@ -77,7 +77,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   # make sure population is ordered?
   utils::write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
   
-  # save the model to outLoc
+  # save the model to outLoc  TODO: make this an input or temp location?
   outLoc <- file.path(getwd(),'python_models')
   # clear the existing model pickles
   for(file in dir(outLoc))
@@ -91,7 +91,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   
 
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','naive_bayes.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp.py '))
   
   # then get the prediction 
   pred <- PythonInR::pyGet('prediction', simplify = FALSE)
@@ -111,16 +111,11 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   
   # get the univeriate selected features (nb requires dense so need feat sel)
   #varImp <- read.csv(file.path(outLoc,1, 'varImp.txt'), header=F)[,1]
-  varImp <- PythonInR::pyGet('kbest.scores_', simplify = F)[,1]
+  varImp <- PythonInR::pyGet('mlp.coefs_[0]', simplify = F)[,1]
   varImp[is.na(varImp)] <- 0
-  if(mean(varImp)==0)
-    stop('No important variables - seems to be an issue with the data')
   
-  top2000 <- varImp[order(-varImp)][2000]
-  inc <- which(varImp>=top2000, arr.ind=T)
   covariateRef <- ff::as.ram(plpData$covariateRef)
-  incs <- rep(0, nrow(covariateRef))
-  incs[inc] <- 1
+  incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
   covariateRef$varImp <- varImp
   ##covariateRef <- covariateRef[inc,] # this messes up order
@@ -136,14 +131,14 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   # return model location
   result <- list(model = modelTrained,
                  trainCVAuc = auc,
-                 modelSettings = list(model='naiveBayes_python',modelParameters=param.best),
+                 modelSettings = list(model='fitMLP',modelParameters=param.best),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
                  cohortId=cohortId,
                  varImp = covariateRef,
                  trainingTime =comp,
-                 dense=1
+                 dense=0
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'

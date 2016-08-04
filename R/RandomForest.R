@@ -25,11 +25,11 @@
 #'
 #' @examples
 #' \dontrun{
-#' model.rf <- randomForest.set(mtries=c(-1,5,20),  ntrees=c(10,100), 
+#' model.rf <- setRandomForest(mtries=c(-1,5,20),  ntrees=c(10,100), 
 #'                            max_depth=c(5,20))
 #' }                           
 #' @export
-randomForest.set<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
+setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
   
   # test python is available and the required dependancies are there:
   if ( !PythonInR::pyIsConnected() ){

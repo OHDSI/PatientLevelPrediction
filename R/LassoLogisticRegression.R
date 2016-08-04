@@ -22,9 +22,9 @@
 #'                   best performance on the cross validation set is choosen
 #'
 #' @examples
-#' model.lr <- lassoLogisticRegression.set()
+#' model.lr <- setLassoLogisticRegression()
 #' @export
-lassoLogisticRegression.set<- function(variance=0.01){
+setLassoLogisticRegression<- function(variance=0.01){
   result <- list(model='fitLassoLogisticRegression', param=list(val=variance), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   attr(result, 'libSVM') <- F
@@ -56,7 +56,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                      control = createControl(noiseLevel = "quiet", cvType = "auto",
                                                              startingVariance = val,
                                                              tolerance  = 2e-06,
-                                                             cvRepetitions = 1, fold=ifelse(!is.null(index$index),max(index$index),1),
+                                                             cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
                                                              selectorType = "byPid",
                                                              threads=-1,
                                                              maxIterations = 3000))

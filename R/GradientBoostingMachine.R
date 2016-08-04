@@ -25,11 +25,11 @@
 #' @param learn_rate The boosting learn rate
 #'
 #' @examples
-#' model.gbm <- gradientBoostingMachine.set(ntrees=c(10,100), nthread=20,
+#' model.gbm <- setGradientBoostingMachine(ntrees=c(10,100), nthread=20,
 #'                            max_depth=c(4,6), learn_rate=c(0.1,0.3))
 #'
 #' @export
-gradientBoostingMachine.set <- function(ntrees=c(10,100), nthread=20,
+setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
                                   max_depth=6, min_rows=20, learn_rate=0.1){
   
   if(length(nthread)>1)
