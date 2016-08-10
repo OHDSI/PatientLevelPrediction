@@ -23,19 +23,22 @@
 #' @details
 #' The function calculates various metrics to measure the performance of the model
 #' @param prediction                         The patient level prediction model's prediction
+#' @param plpData                            The patient level prediction data
 #' @return
 #' A list containing the performance values
 #'
 
 #' @export
-evaluatePlp <- function(prediction){
+evaluatePlp <- function(prediction, plpData){
   
+  # checking inputs
+  #========================================
   type <- attr(prediction, "metaData")$predictionType
   if (type != "binary") {
     flog.fatal('Currently only support binary classification models')
     stop()
   }
-
+  
   if(is.null(prediction$outcomeCount)){
     flog.fatal('No outcomeCount column present') 
     stop()
@@ -44,7 +47,8 @@ evaluatePlp <- function(prediction){
     flog.fatal('Cannot evaluate as predictions all the same value')
     stop()
   } 
-
+  #============================
+  
   # auc
   flog.trace('Calculating AUC')
   if(nrow(prediction) < 100000){
@@ -57,57 +61,59 @@ evaluatePlp <- function(prediction){
   }
   
   
-  # calibration linear fit- returns gradient, intercept
-  flog.trace('Calculating Calibration')
-  calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
-  calLine100 <- calibrationLine(prediction, numberOfStrata = 100)
-  calPlot <- plotCalibration(prediction,
-                             numberOfStrata = 10,
-                             truncateFraction = 0.01,
-                             fileName = NULL)
-  flog.info(sprintf('%-20s%.2f%-20s%.2f', 'Calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
-  
-  
   # brier scores-returnss; brier, brierScaled
-  flog.trace('Calculating brier score')
+  flog.trace('Calculating Brier Score')
   brier <- brierScore(prediction)
   flog.info(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
-
-  # boxplot and quantiles:
-  flog.trace('Calculating Quantiles')
-  quantiles <- quantiles(prediction)  
-
-  # preference score sparse:
-  flog.trace('Preference score')
-  prefScore <- computePreferenceScore(prediction) 
-
-  # now calculate 100 point tpr, fpr
-  flog.trace('Sparce ROC')
-  roc.sparse <-rocSparse(prediction)
-
-  # Average Precision
+  
+  # 2) thresholdSummary
+  # need to update thresholdSummary this with all the requested values 
+  flog.trace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
+  thresholdSummary <-getThresholdSummary(prediction) # rename and edit this
+  flog.trace(paste0('Completed @ ',Sys.time()))
+  
+  # 3) demographicSummary
+  flog.trace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
+  demographicSummary <- getDemographicSummary(prediction, plpData)
+  flog.trace(paste0('Completed @ ',Sys.time()))
+  # need to edit covSettings to make age/gender always calculated!
+  
+  # calibration linear fit- returns gradient, intercept
+  flog.trace('Calculating Calibration Line')
+  calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
+  flog.info(sprintf('%-20s%.2f%-20s%.2f', 'Calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
+  # 4) calibrationSummary
+  flog.trace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
+  calibrationSummary <- getCalibration(prediction,
+                                       numberOfStrata = 10,
+                                       truncateFraction = 0.01)
+  flog.trace(paste0('Completed @ ',Sys.time()))
+  
+  # 5) predictionDistribution - done
+  flog.trace(paste0('Calculating Quantiles Started @ ',Sys.time()))
+  predictionDistribution <- getPredictionDistribution(prediction)  
+  flog.trace(paste0('Completed @ ',Sys.time()))
+  
+  # Extra: Average Precision
   aveP.val <- averagePrecision(prediction)
   flog.info(sprintf('%-20s%.2f', 'Average Precision: ', aveP.val))
   
-  result <- list(auc=auc,aveP=aveP.val, brier=brier$brier, brierScaled=brier$brierScaled,
-                 calibrationIntercept10=calLine10$lm[1], calibrationGradient10 = calLine10$lm[2],
-                 calibrationIntercept100=calLine100$lm[1], calibrationGradient100 = calLine100$lm[2],
-                 hosmerlemeshow = calLine10$hosmerlemeshow,
-                 roc = roc.sparse[,c('FPR','TPR')],
-                 raw = roc.sparse[,c('TP','FP','TN','FN','FOR','accuracy')],
-                 precision.recall = roc.sparse[,c('TPR','PPV')],
-                 F.measure = roc.sparse[,c('Fmeasure')],
-                 preferenceScores = prefScore$sparsePrefScore,
-                 calSparse =calPlot$strataData,
-                 calSparse2_10 = calLine10$aggregateLmData,
-                 calSparse2_100 = calLine100$aggregateLmData,
-                 quantiles = quantiles$quantiles,
-                 calPlot =calPlot$plot, prefScorePlot = prefScore$plot, # remove plots?
-                 boxPlot = quantiles$plot,
-                 preference3070_0 = prefScore$similar_0,
-                 preference3070_1 = prefScore$similar_1
+  # evaluationStatistics:
+  evaluationStatistics <- list(analysisId= attr(prediction, "metaData")$analysisId,
+                               # need to add analysisId to metaData!
+                               AUC= auc,	
+                               BrierScore = brier$brier,	
+                               BrierScaled= brier$brierScaled,	
+                               CalibrationIntercept= calLine10$lm[1],	
+                               CalibrationSlope = calLine10$lm[2])
+  
+  result <- list(evaluationStatistics= evaluationStatistics,
+                 thresholdSummary= thresholdSummary,
+                 demographicSummary = demographicSummary,
+                 calibrationSummary = calibrationSummary,
+                 predictionDistribution = predictionDistribution
   )
-  class(result) <- 'metric.sparse'
+  class(result) <- 'plpEvaluation'
   return(result)
   
 }
@@ -127,7 +133,7 @@ computeAuc <- function(prediction,
                        confidenceInterval = FALSE) {
   if (attr(prediction, "metaData")$predictionType != "binary")
     stop("Computing AUC is only implemented for binary classification models")
-
+  
   if (confidenceInterval) {
     auc <- .Call("PatientLevelPrediction_aucWithCi",
                  PACKAGE = "PatientLevelPrediction",
@@ -166,7 +172,7 @@ computeAucFromDataFrames <- function(prediction,
                                      modelType = "logistic") {
   if (modelType == "survival" & confidenceInterval)
     stop("Currently not supporting confidence intervals for survival models")
-
+  
   if (modelType == "survival") {
     Surv.rsp <- survival::Surv(time, status)
     Surv.rsp.new <- Surv.rsp
@@ -191,112 +197,91 @@ computeAucFromDataFrames <- function(prediction,
   }
 }
 
-#' Plot the calibration
+#' brierScore
 #'
 #' @details
-#' Create a plot showing the predicted probabilities and the observed fractions. Predictions are
-#' stratefied into equally sized bins of predicted probabilities.
-#'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predict}} functions.
-#' @param numberOfStrata        The number of strata in the plot.
-#' @param truncateFraction      This fraction of probability values will be ignored when plotting, to
-#'                              avoid the x-axis scale being dominated by a few outliers.
-#' @param fileName              Name of the file where the plot should be saved, for example
-#'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
-#'                              supported file formats.
-#'
-#' @return
-#' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
-#' format.
-#'
-#' @export
-plotCalibration <- function(prediction,
-                            numberOfStrata = 10,
-                            truncateFraction = 0.01,
-                            fileName = NULL) {
-  if (attr(prediction, "metaData")$predictionType != "binary")
-    stop("Plotting the calibration is only implemented for binary classification models")
-
-  q <- unique(stats::quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata))
-  prediction$strata <- cut(prediction$value,
-                           breaks = unique(c(0, q, max(prediction$value))),
-                           labels = FALSE)
-  computeStratumStats <- function(data) {
-    return(data.frame(minx = min(data$value),
-                      maxx = max(data$value),
-                      fraction = sum(data$outcomeCount)/nrow(data)))
-  }
-  # strataData <- plyr::ddply(prediction, prediction$strata, computeStratumStats)
-  counts <- stats::aggregate(outcomeCount ~ strata, data = prediction, sum)
-  names(counts)[2] <- "counts"
-  backgroundCounts <- stats::aggregate(rowId ~ strata, data = prediction, length)
-  names(backgroundCounts)[2] <- "backgroundCounts"
-  minx <- stats::aggregate(value ~ strata, data = prediction, min)
-  names(minx)[2] <- "minx"
-  maxx <- stats::aggregate(value ~ strata, data = prediction, max)
-  names(maxx)[2] <- "maxx"
-  strataData <- merge(counts, backgroundCounts)
-  strataData <- merge(strataData, minx)
-  strataData <- merge(strataData, maxx)
-  strataData$fraction <- strataData$counts/strataData$backgroundCounts
-  lims <- stats::quantile(prediction$value, c(truncateFraction, 1 - truncateFraction))
-  plot <- ggplot2::ggplot(strataData,
-                          ggplot2::aes(xmin = minx, xmax = maxx, ymin = 0, ymax = fraction)) +
-          ggplot2::geom_abline() +
-          ggplot2::geom_rect(color = grDevices::rgb(0, 0, 0.8, alpha = 0.8),
-                             fill = grDevices::rgb(0, 0, 0.8, alpha = 0.5)) +
-          ggplot2::scale_x_continuous("Predicted probability") +
-          ggplot2::coord_cartesian(xlim = lims) +
-          ggplot2::scale_y_continuous("Observed fraction")
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
-  return(list(plot=plot, strataData=strataData))
-}
-
-
-#' Plot the ROC curve
-#'
-#' @details
-#' Create a plot showing the Receiver Operator Characteristics (ROC) curve.
+#' Calculates the brierScore from prediction object
 #'
 #' @param prediction            A prediction object as generated using the
 #'                              \code{\link{predictProbabilities}} function.
-#' @param fileName              Name of the file where the plot should be saved, for example
-#'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
-#'                              supported file formats.
 #'
 #' @return
-#' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
-#' format.
+#' A list containing the brier score and the scaled brier score
 #'
 #' @export
-plotRoc <- function(prediction, fileName = NULL) {
-  if (attr(prediction, "metaData")$predictionType != "binary")
-    stop("Plotting the ROC curve is only implemented for binary classification models")
+brierScore <- function(prediction){
+  
+  brier <- sum((prediction$outcomeCount -prediction$value)^2)/nrow(prediction)
+  brierMax <- mean(prediction$value)*(1-mean(prediction$value))
+  brierScaled <- 1-brier/brierMax
+  return(list(brier=brier,brierScaled=brierScaled))
+}
 
-  prediction <- prediction[order(-prediction$value), c("value", "outcomeCount")]
-  prediction$sens <- cumsum(prediction$outcomeCount)/sum(prediction$outcomeCount)
-  prediction$fpRate <- cumsum(prediction$outcomeCount == 0)/sum(prediction$outcomeCount == 0)
-  data <- stats::aggregate(fpRate ~ sens, data = prediction, min)
-  data <- stats::aggregate(sens ~ fpRate, data = data, min)
-  data <- rbind(data, data.frame(fpRate = 1, sens = 1))
-  if (nrow(data) < 10000) {
-    # Turn it into a step function:
-    steps <- data.frame(sens = data$sens[1:(nrow(data) - 1)],
-                        fpRate = data$fpRate[2:nrow(data)] - 1e-09)
-    data <- rbind(data, steps)
-    data <- data[order(data$sens, data$fpRate), ]
+#' calibrationLine
+#' 
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predictProbabilities}} function.
+#' @param numberOfStrata        The number of groups to split the prediction into
+#'
+#' @details
+#' Calculates the calibration from prediction object
+#'
+#' @export
+calibrationLine <- function(prediction,numberOfStrata=10){
+  outPpl <- unique(prediction$rowId)
+  
+  q <- unique(stats::quantile(prediction$value, c((1:(numberOfStrata - 1))/numberOfStrata, 1)))
+  
+  if(length(unique(c(0,q)))==2){
+    warning('Prediction not spread')
+    #res <- c(0,0)
+    #lmData <- NULL
+    #hosmerlemeshow <-  c(0,0,0)
+    prediction$strata <- cut(prediction$value,
+                             breaks = c(-0.1,0.5,1), #,max(prediction$value)),
+                             labels = FALSE)
+  } else {
+    prediction$strata <- cut(prediction$value,
+                             breaks = unique(c(-0.1,q)), #,max(prediction$value)),
+                             labels = FALSE)
   }
-  plot <- ggplot2::ggplot(data, ggplot2::aes(x = fpRate, y = sens)) +
-          ggplot2::geom_abline(intercept = 0, slope = 1) +
-          ggplot2::geom_area(color = grDevices::rgb(0, 0, 0.8, alpha = 0.8),
-                             fill = grDevices::rgb(0, 0, 0.8, alpha = 0.4)) +
-          ggplot2::scale_x_continuous("1 - specificity") +
-          ggplot2::scale_y_continuous("Sensitivity")
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
+  
+  # get observed events:
+  obs.Points <- stats::aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=mean)
+  colnames(obs.Points) <- c('group','obs')
+  pred.Points <- stats::aggregate(prediction$value, by=list(prediction$strata), FUN=mean)
+  colnames(pred.Points) <- c('group','pred')
+  
+  # hosmer-lemeshow-goodness-of-fit-test
+  obs.count <- stats::aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
+  colnames(obs.count) <- c('group','observed')
+  expected.count <- stats::aggregate(prediction$value, by=list(prediction$strata), FUN=sum)
+  colnames(expected.count) <- c('group','expected')
+  hoslem <- merge(obs.count, expected.count, by='group')
+  obs.count2 <- stats::aggregate(1-prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
+  colnames(obs.count2) <- c('group','observed')
+  expected.count2 <- stats::aggregate(1-prediction$value, by=list(prediction$strata), FUN=sum)
+  colnames(expected.count2) <- c('group','expected')
+  nhoslem <- merge(obs.count2, expected.count2, by='group')
+  Xsquared <- sum((hoslem$observed-hoslem$expected)^2/hoslem$expected) +
+    sum((nhoslem$observed-nhoslem$expected)^2/nhoslem$expected)
+  pvalue <- stats::pchisq(Xsquared, df=numberOfStrata-2, lower.tail = F)
+  hosmerlemeshow <- data.frame(Xsquared=Xsquared, df=numberOfStrata-2, pvalue=pvalue)
+  
+  # linear model fitting obs to pred:
+  lmData <- merge(obs.Points, pred.Points, by='group')
+  model <- stats::lm(obs ~pred, data=lmData)
+  
+  ##graphics::plot(lmData$pred, lmData$obs)
+  ##graphics::abline(a = model$coefficients[1], b = model$coefficients[2], col='red')
+  res <- model$coefficients
+  names(res) <- c('Intercept','Gradient')
+  #
+  
+  result <- list(lm=res,
+                 aggregateLmData = lmData,
+                 hosmerlemeshow = hosmerlemeshow)
+  return(result)
 }
 
 #' Calculate the average precision
@@ -320,6 +305,87 @@ averagePrecision <- function(prediction){
   return(sum(val/(1:n))/P)
 }
 
+
+#' Get a sparse summary of the calibration
+#'
+#' @details
+#' Generates a sparse summary showing the predicted probabilities and the observed fractions. Predictions are
+#' stratefied into equally sized bins of predicted probabilities.
+#'
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predict}} functions.
+#' @param numberOfStrata        The number of strata in the plot.
+#' @param truncateFraction      This fraction of probability values will be ignored when plotting, to
+#'                              avoid the x-axis scale being dominated by a few outliers.
+#'
+#' @return
+#' A dataframe with the calibration summary
+#'
+#' @export
+getCalibration <- function(prediction,
+                           numberOfStrata = 10,
+                           truncateFraction = 0.01) {
+  if (attr(prediction, "metaData")$predictionType != "binary")
+    stop("Plotting the calibration is only implemented for binary classification models")
+  
+  q <- unique(stats::quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata))
+  prediction$predictionThresholdId <- cut(prediction$value,
+                                          breaks = unique(c(0, q, max(prediction$value))),
+                                          labels = FALSE)
+  
+  prediction <- merge(prediction, 
+                      data.frame(predictionThresholdId=1:(length(q)+1), predictionThreshold=c(0, q)),
+                      by='predictionThresholdId', all=T)
+  
+  computeStratumStats <- function(data) {
+    return(data.frame(minx = min(data$value),
+                      maxx = max(data$value),
+                      fraction = sum(data$outcomeCount)/nrow(data)))
+  }
+  
+  # count the number of persons with the age/gender strata
+  PersonCountAtRisk <- stats::aggregate(rowId ~ predictionThreshold, data = prediction, length)
+  names(PersonCountAtRisk)[2] <- "PersonCountAtRisk"
+  
+  # count the number of persons with the age/gender strata in T also in O at time-at-risk
+  PersonCountWithOutcome <- stats::aggregate(outcomeCount ~ predictionThreshold, data = prediction, sum)
+  names(PersonCountWithOutcome)[2] <- "PersonCountWithOutcome"
+  
+  strataData <- merge(PersonCountAtRisk,
+                      PersonCountWithOutcome)
+  
+  # Select all persons within the predictionThreshold, compute their average predicted probability
+  averagePredictedProbability <- stats::aggregate(prediction$value, list(prediction$predictionThreshold), 
+                                                  mean)
+  colnames(averagePredictedProbability) <- c('predictionThreshold', 'averagePredictedProbability')
+  strataData <- merge(strataData,averagePredictedProbability)
+  
+  StDevPredictedProbability <- stats::aggregate(prediction$value, list(prediction$predictionThreshold), 
+                                                sd)
+  colnames(StDevPredictedProbability) <- c('predictionThreshold', 'StDevPredictedProbability')
+  strataData <- merge(strataData, StDevPredictedProbability)
+  
+  # MinPredictedProbability, P25PredictedProbability, MedianPredictedProbability,
+  # P75PredictedProbability, MaxPredictedProbability
+  quantiles <- stats::aggregate(prediction$value, list(prediction$predictionThreshold), 
+                                function(x) stats::quantile(x, probs = c(0,0.25,0.5,0.75,1))
+  )
+  quantiles <- as.matrix(quantiles)
+  colnames(quantiles) <- c('predictionThreshold', 'MinPredictedProbability', 
+                           'P25PredictedProbability', 'MedianPredictedProbability',
+                           'P75PredictedProbability', 'MaxPredictedProbability')
+  strataData <- merge(strataData, quantiles)
+  
+  # From among all persons in T within the age/gender strata, compute the proportion in O during the time-at-risk  (PersonCountWithOutcome / PersonCountAtRisk)
+  # TODO: need to make sure PersonCountAtRisk is not zero - how to handle zeros?
+  strataData$observedIncidence <- strataData$PersonCountWithOutcome/strataData$PersonCountAtRisk
+  
+  attr(strataData,'lims') <- stats::quantile(prediction$value, c(truncateFraction, 1 - truncateFraction))
+  
+  return(strataData)
+}
+
+
 #' Calculate all measures for sparse ROC
 #'
 #' @details
@@ -333,7 +399,7 @@ averagePrecision <- function(prediction){
 #' A data.frame with all the measures
 #'
 #' @export
-rocSparse <- function(prediction){
+getThresholdSummary <- function(prediction){
   
   # do input checks
   if(nrow(prediction)<1){
@@ -341,8 +407,6 @@ rocSparse <- function(prediction){
     return(NULL)
   }
   
- 
-  lab.order <- prediction$outcomeCount[order(-prediction$value)]
   n <- nrow(prediction)
   P <- sum(prediction$outcomeCount>0)
   N <- n - P
@@ -356,25 +420,22 @@ rocSparse <- function(prediction){
     return(NULL)
   } 
   
-  # get 100 points of specificity 
-  specificiyOfInt <- round(seq(0,100, length.out=min(N,100))/100*N)+1 #adding one as I want the max sens per spec
-  specificiyOfInt[specificiyOfInt>N] <- N  # boundary issue fix caused by adding 1 
+  # add the preference score:
+  proportion <- sum(prediction$outcomeCount)/nrow(prediction) 
+  x <- exp(log(prediction$value/(1 - prediction$value)) - log(proportion/(1 - proportion)))
+  prediction$preferenceScore <- x/(x + 1)
   
-  indexesOfInt <- which(lab.order==0, arr.ind=T)[specificiyOfInt]-1
-  indexesOfInt[length(indexesOfInt)] <- n
-  if(indexesOfInt[1]==0) indexesOfInt[1] <- 1
+  # get 100 points of distribution:
+  # get the predictionThreshold and preferenceThreshold
+  predictionThreshold <- stats::quantile(prediction$value, seq(0,0.99,0.01))
+  preferenceThreshold <- stats::quantile(prediction$preferenceScore, seq(0,0.99,0.01))
   
-  #================= old code start
-  # find points where there is a change (0 to 1)
-  ##change.ind <-which(abs(lab.order[-length(lab.order)]-lab.order[-1])==1)
-  ##if(length(change.ind)<=101){
-  ##  ind.oi <- change.ind
-  ##} else {
-  #change.ind <- which(lab.order==0)
-  ##  ind.oi <- change.ind[c(seq(1,length(change.ind)-1,
-  ##                             floor((length(change.ind)-1)/99)), length(change.ind))]
-  ##}
-  #================= old code end
+  # get the outcomeCount ordered by predicted value
+  lab.order <- prediction$outcomeCount[order(-prediction$value)]
+  valueOrdered <- prediction$value[order(-prediction$value)]
+  
+  # get the indexes for the predictionThreshold
+  indexesOfInt <- sapply(predictionThreshold, function(x) min(which(valueOrdered<=x)))
   
   # improve speed create vector with cum sum 
   temp.cumsum <- rep(0, length(lab.order))
@@ -386,108 +447,58 @@ rocSparse <- function(prediction){
   TN <- N-FP
   FN <- P-TP
   
-  specificity <- TN/N
-  sensitivity <- TP/P
-  TPR <- TP/P
-  FPR <- FP/N
-  accuracy <- (TP+TN)/n
-  PPV<- TP/(TP+FP)
-  FOR <- FN/(FN+TN)
-  Fmeasure <- 2*(PPV*TPR)/(PPV+TPR)
+  positiveCount <- TP+FP
+  negativeCount <- TN+FN
+  trueCount <- TP+FN
+  falseCount <- TN + FP
+  truePositiveCount <- TP	
+  trueNegativeCount <- TN	
+  falsePositiveCount <- FP	
+  falseNegativeCount <- FN
   
-  return(data.frame(specificity,sensitivity , TP,FP,TN,FN, TPR, FPR,PPV,FOR, accuracy, Fmeasure))
+  f1Score <- f1Score(TP,TN,FN,FP)
+  accuracy <- accuracy(TP,TN,FN,FP)
+  sensitivity <- sensitivity(TP,TN,FN,FP)
+  falseNegativeRate <- falseNegativeRate(TP,TN,FN,FP)
+  falsePositiveRate <- falsePositiveRate(TP,TN,FN,FP)
+  specificity <-  specificity(TP,TN,FN,FP)
+  positivePredictiveValue <- positivePredictiveValue(TP,TN,FN,FP)
+  falseDiscoveryRate <- falseDiscoveryRate(TP,TN,FN,FP)
+  negativePredictiveValue <- negativePredictiveValue(TP,TN,FN,FP)
+  falseOmissionRate <- falseOmissionRate(TP,TN,FN,FP)
+  positiveLikelihoodRatio <- positiveLikelihoodRatio(TP,TN,FN,FP)
+  negativeLikelihoodRatio <- negativeLikelihoodRatio(TP,TN,FN,FP)
+  diagnosticOddsRatio <- diagnosticOddsRatio(TP,TN,FN,FP)
+  
+  return(data.frame(predictionThreshold=predictionThreshold,
+                    preferenceThreshold=preferenceThreshold,
+                    positiveCount=positiveCount,
+                    negativeCount=negativeCount,
+                    trueCount=trueCount, falseCount=falseCount,
+                    truePositiveCount=truePositiveCount,
+                    trueNegativeCount=trueNegativeCount,
+                    falsePositiveCount=falsePositiveCount,
+                    falseNegativeCount=falseNegativeCount,
+                    f1Score=f1Score, accuracy=accuracy,
+                    sensitivity=sensitivity,
+                    falseNegativeRate=falseNegativeRate,
+                    falsePositiveRate=falsePositiveRate,
+                    specificity=specificity,
+                    positivePredictiveValue=positivePredictiveValue,
+                    falseDiscoveryRate=falseDiscoveryRate,
+                    negativePredictiveValue=negativePredictiveValue,
+                    falseOmissionRate=falseOmissionRate,
+                    positiveLikelihoodRatio=positiveLikelihoodRatio,
+                    negativeLikelihoodRatio=negativeLikelihoodRatio,
+                    diagnosticOddsRatio=diagnosticOddsRatio
+  ))
   
 }
 
-#' brierScore
-#'
-#' @details
-#' Calculates the brierScore from prediction object
-#'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
-#'
-#' @return
-#' A list containing the brier score and the scaled brier score
-#'
-#' @export
-brierScore <- function(prediction){
-
-  brier <- sum((prediction$outcomeCount -prediction$value)^2)/nrow(prediction)
-  brierMax <- mean(prediction$value)*(1-mean(prediction$value))
-  brierScaled <- 1-brier/brierMax
-  return(list(brier=brier,brierScaled=brierScaled))
-}
-
-#' calibrationLine
-#' 
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
-#' @param numberOfStrata        The number of groups to split the prediction into
-#'
-#' @details
-#' Calculates the calibration from prediction object
-#'
-#' @export
-calibrationLine <- function(prediction,numberOfStrata=10){
-  outPpl <- unique(prediction$rowId)
-
-  q <- unique(stats::quantile(prediction$value, c((1:(numberOfStrata - 1))/numberOfStrata, 1)))
-  
-  if(length(unique(c(0,q)))==2){
-    warning('Prediction not spread')
-    #res <- c(0,0)
-    #lmData <- NULL
-    #hosmerlemeshow <-  c(0,0,0)
-    prediction$strata <- cut(prediction$value,
-                             breaks = c(-0.1,0.5,1), #,max(prediction$value)),
-                             labels = FALSE)
-  } else {
-    prediction$strata <- cut(prediction$value,
-                             breaks = unique(c(-0.1,q)), #,max(prediction$value)),
-                             labels = FALSE)
-  }
-    
-    # get observed events:
-    obs.Points <- stats::aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=mean)
-    colnames(obs.Points) <- c('group','obs')
-    pred.Points <- stats::aggregate(prediction$value, by=list(prediction$strata), FUN=mean)
-    colnames(pred.Points) <- c('group','pred')
-    
-    # hosmer-lemeshow-goodness-of-fit-test
-    obs.count <- stats::aggregate(prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
-    colnames(obs.count) <- c('group','observed')
-    expected.count <- stats::aggregate(prediction$value, by=list(prediction$strata), FUN=sum)
-    colnames(expected.count) <- c('group','expected')
-    hoslem <- merge(obs.count, expected.count, by='group')
-    obs.count2 <- stats::aggregate(1-prediction$outcomeCount, by=list(prediction$strata), FUN=sum)
-    colnames(obs.count2) <- c('group','observed')
-    expected.count2 <- stats::aggregate(1-prediction$value, by=list(prediction$strata), FUN=sum)
-    colnames(expected.count2) <- c('group','expected')
-    nhoslem <- merge(obs.count2, expected.count2, by='group')
-    Xsquared <- sum((hoslem$observed-hoslem$expected)^2/hoslem$expected) +
-      sum((nhoslem$observed-nhoslem$expected)^2/nhoslem$expected)
-    pvalue <- stats::pchisq(Xsquared, df=numberOfStrata-2, lower.tail = F)
-    hosmerlemeshow <- data.frame(Xsquared=Xsquared, df=numberOfStrata-2, pvalue=pvalue)
-    
-    # linear model fitting obs to pred:
-    lmData <- merge(obs.Points, pred.Points, by='group')
-    model <- stats::lm(obs ~pred, data=lmData)
-    
-    graphics::plot(lmData$pred, lmData$obs)
-    graphics::abline(a = model$coefficients[1], b = model$coefficients[2], col='red')
-    res <- model$coefficients
-    names(res) <- c('Intercept','Gradient')
-  #
-  
-  result <- list(lm=res,
-                 aggregateLmData = lmData,
-                 hosmerlemeshow = hosmerlemeshow)
-  return(result)
-}
 
 
-#' Calculate Quantiles
+
+#' Calculates the prediction distribution
 #'
 #' @details
 #' Calculates the quantiles from a predition object
@@ -496,74 +507,249 @@ calibrationLine <- function(prediction,numberOfStrata=10){
 #'                              \code{\link{predictProbabilities}} function.
 #'                              
 #' @return
-#' The 0.00, 0.1, 0.25, 0.5, 0.75, 0.9, 1.00 quantile pf the prediction
+#' The 0.00, 0.1, 0.25, 0.5, 0.75, 0.9, 1.00 quantile pf the prediction, 
+#' the mean and standard deviation per class
 #'
 #' @export
-quantiles <- function(prediction){
-  boxPlot <- ggplot2::ggplot(prediction, ggplot2::aes(x=as.factor(outcomeCount), y=value, 
-                                                      fill=as.factor(outcomeCount))) + ggplot2::geom_boxplot() +
-    ggplot2::guides(fill=FALSE) + ggplot2::xlab("Class") + ggplot2::ylab("Prediction") 
+getPredictionDistribution <- function(prediction){
+  
+  # PersonCount - count the number of persons in the class
+  predictionDistribution <- stats::aggregate(prediction$value, list(prediction$outcomeCount), 
+                                             length)
+  colnames(predictionDistribution) <- c('class', 'PersonCount')
+  
+  # averagePredictedProbability	StDevPredictedProbability
+  averagePredictedProbability <- stats::aggregate(prediction$value, list(prediction$outcomeCount), 
+                                                  mean)
+  colnames(averagePredictedProbability) <- c('class', 'averagePredictedProbability')
+  StDevPredictedProbability <- stats::aggregate(prediction$value, list(prediction$outcomeCount), 
+                                                sd)
+  colnames(StDevPredictedProbability) <- c('class', 'StDevPredictedProbability')
+  
+  predictionDistribution <- merge(predictionDistribution,averagePredictedProbability )
+  predictionDistribution <- merge(predictionDistribution,StDevPredictedProbability )
+  
   quantiles <- stats::aggregate(prediction$value, list(prediction$outcomeCount), 
-                         function(x) stats::quantile(x, probs = c(0.00,0.1, 0.25, 0.5, 0.75,0.9, 1.00))
+                                function(x) stats::quantile(x, probs = c(0.00,0.05, 0.25, 0.5, 0.75,0.95, 1.00))
   )
-  return(list(plot=boxPlot,
-              quantiles=quantiles))                      
+  quantiles <- as.matrix(quantiles)
+  colnames(quantiles) <- c('class', 'MinPredictedProbability', 'P05PredictedProbability',
+                           'P25PredictedProbability', 'MedianPredictedProbability',
+                           'P75PredictedProbability', 'P95PredictedProbability',
+                           'MaxPredictedProbability')
+  predictionDistribution <- merge(predictionDistribution,quantiles )
+  
+  return(predictionDistribution)                      
 }
 
-#' Compute the preference score
-#'
-#' @details
-#' Calculates the preference score from a predition object
-#'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
-#'                              
-#' @return
-#' The preference score
-#'
-#' @export
-computePreferenceScore <- function(prediction) {
-  proportion <- sum(prediction$outcomeCount)/nrow(prediction) 
-  x <- exp(log(prediction$value/(1 - prediction$value)) - log(proportion/(1 - proportion)))
-  prediction$preferenceScore <- x/(x + 1)
+getDemographicSummary <- function(prediction, plpData){
+  # for each age covariate + gender covariate pair:
+  # speed test needed for this - probs slow!
   
-  df1 <-  transform(prediction[,c('rowId','outcomeCount','preferenceScore')], group=cut(prediction$preferenceScore, 
-                                                                                        breaks=seq(-0.005,1.005,0.01),
-                                                                                        labels=NULL))
+  demographicData <-  cbind(demographicId=1:40,
+                            ageId=rep(10:29,2),    
+                            ageGroup = rep(c('Age group: 0-4','Age group: 5-9','Age group: 10-14','Age group: 15-19',
+                                             'Age group: 20-24', 'Age group: 25-29', 'Age group: 30-34', 'Age group: 35-39',
+                                             'Age group: 40-44', 'Age group: 45-49', 'Age group: 50-54', 'Age group: 55-59',
+                                             'Age group: 60-64', 'Age group: 65-69', 'Age group: 70-74', 'Age group: 75-79',
+                                             'Age group: 80-84', 'Age group: 85-89', 'Age group: 90-94', 'Age group: 95-99'),2),
+                            genId = c(rep(8507,20), rep(8532,20)),
+                            genGroup = c(rep('Male',20), rep('Female',20)) )
   
   
-  res <- do.call(data.frame,stats::aggregate(preferenceScore~group+outcomeCount, df1, 
-                                      FUN=function(x) c(density=length(x))))
+  prediction$demographicId <- 0
+  for (i in 1:nrow(demographicData)){
+    ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(demographicData[i,'ageId'])))
+    ind <- ffbase::ffwhich(ind, !is.na(ind))
+    if(length(ind)>0){
+      pplofintAge <- plpData$covariates$rowId[ind]
+      ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(demographicData[i,'genId'])))
+      ind <- ffbase::ffwhich(ind, !is.na(ind)) 
+      if(length(ind)>0){
+        pplofintGen <- plpData$covariates$rowId[ind]
+        pplofint <- intersect(ff::as.ram(pplofintAge), ff::as.ram(pplofintGen))
+        prediction$demographicId[prediction$rowId%in%ff::as.ram(pplofint)] <- i
+      }
+      
+    }
+  }
   
-  res <- merge(res, data.frame(outcomeCount=c(0,1), N=c(sum(prediction$outcomeCount==0),
-                                                        sum(prediction$outcomeCount==1))))
-  res$density <- res$preferenceScore/res$N
+  #calcualte PersonCountAtRisk	PersonCountWithOutcome	
+  #          averagePredictedProbability	StDevPredictedProbability	
+  #         MedianPredictedProbability	P25PredictedProbability	
+  #         P75PredictedProbability	MinPredictedProbability	
+  #         MaxPredictedProbability	observedIncidence
   
-  res$groupVal <- unlist(lapply(gsub(']','', gsub('\\(', '',res$group)), 
-                                function(x) mean(as.double(strsplit(x, ',')[[1]]))))
+  val1 <- stats::aggregate(prediction$outcomeCount, list(prediction$demographicId), 
+                           function(x) c(length(x), sum(x)))
+  val1 <- as.matrix(val1)
+  colnames(val1) <- c('demographicId','PersonCountAtRisk','PersonCountWithOutcome')
   
-  plot <- ggplot2::ggplot(res, ggplot2::aes(x=groupVal, y=density, 
-                                            group=as.factor(outcomeCount), col=as.factor(outcomeCount),
-                                            fill=as.factor(outcomeCount))) +
-    ggplot2::geom_line() + ggplot2::xlab("Preference") + ggplot2::ylab("Density") +
-    ggplot2::scale_x_continuous(limits = c(0, 1)) +
-    ggplot2::geom_vline(xintercept = 0.3) + ggplot2::geom_vline(xintercept = 0.7)
+  val2 <- stats::aggregate(prediction$outcomeCount, list(prediction$demographicId), 
+                           function(x) c(mean(x), sd(x)))
+  val2 <- as.matrix(val2)
+  colnames(val2) <- c('demographicId','averagePredictedProbability',
+                      'StDevPredictedProbability')	
   
-  # get the density between 0.3-0.7 for outcome and non-outcome
-  prediction$indif <- prediction$preferenceScore <= 0.7 & prediction$preferenceScore >= 0.3
-  count <- stats::aggregate(prediction$indif, list(prediction$outcomeCount), sum)
-  colnames(count) <- c('Outcome','total0307')
-  countN <- stats::aggregate(prediction$indif, list(prediction$outcomeCount),length)
-  colnames(countN) <- c('Outcome','total')
-  
-  similar3070 <- merge(count, countN)
-  similar3070$density <- similar3070$total0307/similar3070$total
-  
-  result <- list(sparsePrefScore = res,
-                 plot = plot,
-                 similar_1=similar3070$density[2],
-                 similar_0=similar3070$density[1]
+  val3 <- stats::aggregate(prediction$value, list(prediction$demographicId), 
+                           function(x) stats::quantile(x, probs = c(0,0.25,0.5,0.75,1))
   )
+  val3 <- as.matrix(val3)
+  colnames(val3) <- c('demographicId','MinPredictedProbability',	
+                      'P25PredictedProbability','MedianPredictedProbability',
+                      'P75PredictedProbability','MaxPredictedProbability')
   
-  return(result)
+  demographicData <- merge(demographicData, val1, all.x=T)
+  demographicData <- merge(demographicData, val2, all.x=T)
+  demographicData <- merge(demographicData, val3, all.x=T)
+  
+  return(demographicData)
 }
+
+
+
+# making all this single for easy unit testing 
+#' @export
+f1Score <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  return(2*(TP/(TP+FP))*(TP/(TP+FN))/((TP/(TP+FP))+(TP/(TP+FN))))
+         }
+#' @export
+accuracy <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  (TP+TN)/(TP+TN+FP+FN)}
+#' @export
+sensitivity <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  TP/(TP+FN)}
+#' @export
+falseNegativeRate <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  FN/(TP+FN)}
+#' @export
+falsePositiveRate <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  FP/(FP+TN)}
+#' @export
+specificity <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  TN/(FP+TN)}
+#' @export
+positivePredictiveValue <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  TP/(TP+FP)}
+#' @export
+falseDiscoveryRate <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  FP/(TP+FP)}
+#' @export
+negativePredictiveValue <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  TN/(FN+TN)}
+#' @export
+falseOmissionRate <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  FN/(FN+TN)}
+#' @export
+positiveLikelihoodRatio <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  (TP/(TP+FN))/(FP/(FP+TN))}
+#' @export
+negativeLikelihoodRatio <- function(TP,TN,FN,FP){
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  (FN/(TP+FN))/(TN/(FP+TN))}
+#' @export
+diagnosticOddsRatio <- function(TP,TN,FN,FP){  
+  if(sum(TP<0)>0) stop('TP < 0')
+  if(sum(FP<0)>0) stop('FP < 0')
+  if(sum(TN<0)>0) stop('TN < 0')
+  if(sum(FN<0)>0) stop('FN < 0')
+  if(class(TP)!='numeric') stop('Incorrect TP class')
+  if(class(FP)!='numeric') stop('Incorrect FP class')
+  if(class(TN)!='numeric') stop('Incorrect TN class')
+  if(class(FN)!='numeric') stop('Incorrect FN class')
+  ((TP/(TP+FN))/(FP/(FP+TN)))/((FN/(TP+FN))/(TN/(FP+TN)))}

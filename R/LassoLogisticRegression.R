@@ -33,7 +33,7 @@ setLassoLogisticRegression<- function(variance=0.01){
 }
 
 fitLassoLogisticRegression<- function(population, plpData, param, search='adaptive', 
-                     outcomeId, cohortId, ...){
+                     outcomeId, cohortId, trace=F,...){
   
   # check plpData is coo format:
   if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm'){
@@ -53,7 +53,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                      plpData = plpData,
                                      modelType = "logistic",
                                      prior = createPrior("laplace",exclude = c(0),useCrossValidation = TRUE),
-                                     control = createControl(noiseLevel = "quiet", cvType = "auto",
+                                     control = createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                              startingVariance = val,
                                                              tolerance  = 2e-06,
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),

@@ -131,7 +131,10 @@ RunPlp <- function(population, plpData,
                    testSplit = 'time', testFraction=0.3, nfold=3, indexes=NULL,
                    save=NULL, saveModel=T,
                    verbosity=INFO, timeStamp=FALSE, analysisId=NULL
-                         ){
+){
+  
+  # log the start time:
+  ExecutionDateTime <- Sys.time()
   
   if (timeStamp | verbosity == TRACE){
     flog.layout(layout.format('[~l]\t[~t]\t~m'))
@@ -139,7 +142,7 @@ RunPlp <- function(population, plpData,
     flog.layout(layout.format('~m'))
   }
   flog.threshold(verbosity)
-
+  
   # create an analysisid and folder to save the results
   start.all <- Sys.time()
   if(is.null(analysisId))
@@ -152,15 +155,15 @@ RunPlp <- function(population, plpData,
   analysisPath = file.path(save,analysisId)
   if(!dir.exists(analysisPath)){dir.create(analysisPath,recursive=T)}
   logFileName = paste0(analysisPath,'/plplog.txt')
-  	
+  
   # write log to both console and file (tee). 
   # note other appenders can be created, e.g., to webservice or database!
-
+  
   flog.appender(appender.tee(logFileName))
   
   flog.seperator()
   flog.info(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
-
+  
   # get ids
   cohortId <- attr(population, "metaData")$cohortId
   outcomeId <- attr(population, "metaData")$outcomeId
@@ -221,7 +224,6 @@ RunPlp <- function(population, plpData,
   attr(population, "metaData") <- tempmeta
   
   settings <- list(data=plpData,
-                   #featureSettings = featureSettings,
                    modelSettings = modelSettings,
                    population=population,
                    cohortId=cohortId,
@@ -233,7 +235,7 @@ RunPlp <- function(population, plpData,
     flog.warn(paste0('sink had ',sink.number,' connections open!'))    
   }
   sink(logFileName, append = TRUE, split = TRUE)
-
+  
   model <- ftry(do.call(fitPlp, settings),
                 error = function(e) {sink()
                   flog.error(e)
@@ -248,35 +250,57 @@ RunPlp <- function(population, plpData,
     ftry(savePlpModel(model, modelLoc),finally= flog.trace('Done.'))
     flog.info(paste0('Model saved to ..\\',analysisId,'\\savedModel'))
   }
-
+  
   # calculate metrics
   flog.seperator()
   flog.trace('Prediction')
   prediction <- ftry(predictPlp(plpModel = model, population = population, plpData = plpData, index = NULL), 
                      finally = flog.trace('Done.'))
   if(ifelse(is.null(prediction), FALSE, length(unique(prediction$value))>1)){
-
+    
+    # add analysisID
+    attr(prediction, "metaData")$analysisId <- analysisId
+    
     flog.info('Train set evaluation')
-    performance.train <- evaluatePlp(prediction[prediction$indexes>0,])
+    performance.train <- evaluatePlp(prediction[prediction$indexes>0,], plpData)
     flog.trace('Done.')
     flog.info('Test set evaluation')
-    performance.test <- evaluatePlp(prediction[prediction$indexes<0,])
+    performance.test <- evaluatePlp(prediction[prediction$indexes<0,], plpData)
     flog.trace('Done.')
-
+    
     if(!is.null(save)){
       flog.trace('Saving evaluation')
-      ftry(writeOutput(prediction=prediction, 
-                       performance.test=performance.test, 
-                       performance.train=performance.train, 
-                       plpModel=model,
-                       population = population,
-                       plpData = plpData,
-                       dirPath=save,
-                       analysisId=analysisId,
-                       start.all=start.all,
-                       testSplit=testSplit,
-                       modelLoc=modelLoc),
-           finally= flog.trace('Done.')
+      if(!dir.exists( file.path(analysisPath, 'evaluation') ))
+        dir.create(file.path(analysisPath, 'evaluation'))
+      ftry(utils::write.csv(performance.train$evaluationStatistics, file.path(analysisPath, 'evaluation', 'trainEvaluationStatistics.csv'), row.names=F ),
+           finally= flog.trace('Saved trainEvaluationStatistics.')
+      )
+      ftry(utils::write.csv(performance.test$evaluationStatistics, file.path(analysisPath, 'evaluation', 'testEvaluationStatistics.csv'), row.names=F ),
+           finally= flog.trace('Saved testEvaluationStatistics.')
+      )
+      ftry(utils::write.csv(performance.train$thresholdSummary, file.path(analysisPath, 'evaluation', 'trainThresholdSummary.csv'), row.names=F ),
+           finally= flog.trace('Saved trainThresholdSummary.')
+      )
+      ftry(utils::write.csv(performance.test$thresholdSummary, file.path(analysisPath, 'evaluation', 'testThresholdSummary.csv'), row.names=F ),
+           finally= flog.trace('Saved testThresholdSummary.')
+      )
+      ftry(utils::write.csv(performance.train$demographicSummary, file.path(analysisPath, 'evaluation', 'trainDemographicSummary.csv'), row.names=F),
+           finally= flog.trace('Saved trainDemographicSummary.')
+      )
+      ftry(utils::write.csv(performance.test$demographicSummary, file.path(analysisPath, 'evaluation', 'testDemographicSummary.csv'), row.names=F ),
+           finally= flog.trace('Saved testDemographicSummary.')
+      )
+      ftry(utils::write.csv(performance.train$calibrationSummary, file.path(analysisPath, 'evaluation', 'trainCalibrationSummary.csv'), row.names=F),
+           finally= flog.trace('Saved trainCalibrationSummary.')
+      )
+      ftry(utils::write.csv(performance.test$calibrationSummary, file.path(analysisPath, 'evaluation', 'testCalibrationSummary.csv'), row.names=F ),
+           finally= flog.trace('Saved testCalibrationSummary.')
+      )
+      ftry(utils::write.csv(performance.train$predictionDistribution, file.path(analysisPath, 'evaluation', 'trainPredictionDistribution.csv'), row.names=F),
+           finally= flog.trace('Saved trainPredictionDistribution.')
+      )
+      ftry(utils::write.csv(performance.test$predictionDistribution, file.path(analysisPath, 'evaluation', 'testPredictionDistribution.csv'), row.names=F ),
+           finally= flog.trace('Saved testPredictionDistribution.')
       )
     }
     flog.seperator()
@@ -287,16 +311,55 @@ RunPlp <- function(population, plpData,
     performance.train <- NULL
   }
   
-  results <- list(predict=model$predict,
+  # log the end time:
+  endTime <- Sys.time()
+  TotalExecutionElapsedTime <- endTime-ExecutionDateTime
+  
+  # 1) input settings:
+  inputSetting <- list(dataExtrractionSettings=plpData$metaData$call,
+                       populationSettings=attr(population, "metaData"),
+                       modelSettings = modelSettings,
+                       testSplit = testSplit, 
+                       testFraction= testFraction)
+  
+  # 2) Executionsummary details:
+  executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                 packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                           PlatformDetails= list(platform= R.Version()$platform,
+                                                 cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                 RAM=utils::memory.size()), #  test for non-windows needed
+                           # Sys.info()
+                           TotalExecutionElapsedTime = TotalExecutionElapsedTime,
+                           ExecutionDateTime = ExecutionDateTime,
+                           Log = logFileName # location for now
+                           #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
+  )
+  
+  flog.seperator()
+  flog.info(paste0('Calculating covariate summary @ ', Sys.time()))
+  flog.info('This can take a while...')
+  covSummary <- covariateSummary(plpData, population)
+  covSummary <- merge(model$varImp, covSummary, by='covariateId', all=T)
+  trainCovariateSummary <- covariateSummary(plpData, population[population$index>0,])
+  colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'] <- paste0('Train',colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'])
+  testCovariateSummary <- covariateSummary(plpData, population[population$index<0,])
+  colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'] <- paste0('Test',colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'])
+  covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
+  covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
+  flog.info(paste0('Finished covariate summary @ ', Sys.time()))
+  
+  results <- list(inputSetting=inputSetting,
+                  executionSummary=executionSummary,
                   model=model,
                   prediction=prediction,
-                  #index=indexes, - moved this to model
-                  evalType=testSplit,
-                  performanceTest=performance.test,
-                  performanceTrain=performance.train,
-                  time=format(difftime(Sys.time(), start.all, units='hours'), nsmall=1))
+                  performanceEvaluationTest=performance.test,
+                  performanceEvaluationTrain=performance.train,
+                  covariateSummary=covSummary,
+                  analysisRef=list(analysisId=analysisId,
+                                   analysisName=NULL,#analysisName,
+                                   analysisSettings= NULL))
   class(results) <- c('list','plpModel')
-
+  
   flog.info(paste0('Log saved to ',logFileName))  
   flog.info("Run finished successfully.")
   return(results)
@@ -311,19 +374,119 @@ summary.plpModel <- function(object, ...) {
                  outcomeId=attr(object$prediction, "metaData")$outcomeId,
                  model= object$model$modelSettings$model,
                  parameters = object$model$modelSettings$param,
-                 modelTime = object$time,
-                 AUC = object$performance$auc,
-                 Brier = object$performance$brier,
-                 BrierScaled = object$performance$brierScaled,
-                 hosmerlemeshow = object$performance$hosmerlemeshow,
-                 calibrationIntercept = object$performance$calibrationIntercept,
-                 calibrationGradient = object$performance$calibrationGradient
+                 elaspsedTime = object$executionSummary$TotalExecutionElapsedTime,
+                 AUC = object$performanceEvaluationTest$evaluationStatistics$AUC,
+                 BrierScore = object$performanceEvaluationTest$evaluationStatistics$BrierScore,
+                 BrierScaled = object$performanceEvaluationTest$evaluationStatistics$BrierScaled,
+                 calibrationIntercept = object$performanceEvaluationTest$evaluationStatistics$calibrationIntercept,
+                 CalibrationSlope = object$performanceEvaluationTest$evaluationStatistics$CalibrationSlope
                  
   )
   class(result) <- "summary.plpModel"
   return(result)
 }
 
+
+
+# this function calcualtes:
+# CovariateCount	CovariateCountWithOutcome	
+# CovariateCountWithNoOutcome	CovariateMeanWithOutcome	
+# CovariateMeanWithNoOutcome	CovariateStDevWithOutcome	
+# CovariateStDevWithNoOutcome	CovariateStandardizedMeanDifference
+covariateSummary <- function(plpData, population, trace=F){
+ 
+  #===========================
+  # all 
+  #===========================
+  ppl <- ff::as.ff(population$rowId)
+  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
+  idx <- ffbase::ffwhich(idx, !is.na(idx))
+  covariates <- plpData$covariates[idx, ]
+  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId")], 
+                              split=ffbase::as.character.ff(covariates$covariateId), 
+                              FUN = function(data){
+                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
+                                
+                                data <- as.data.frame(data)
+                                CovariateCount <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                
+                                as.data.frame(CovariateCount)
+                              }, trace = trace)
+  
+  allPeople <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
+                          CovariateCount=ff::as.ram(grp_qty$x))
+  
+  #===========================
+  # outcome prevs
+  #===========================
+  ppl <- ff::as.ff(population$rowId[population$outcomeCount==1])
+  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
+  idx <- ffbase::ffwhich(idx, !is.na(idx))
+  covariates <- plpData$covariates[idx, ]
+  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId", "covariateValue")], 
+                              split=ffbase::as.character.ff(covariates$covariateId), 
+                              FUN = function(data){
+                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
+                                
+                                data <- as.data.frame(data)
+                                count <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                sum <- stats::aggregate(data$covariateValue, by=list(data$covariateId), FUN=sum)
+                                sumSquared <- stats::aggregate(data$covariateValue, by=list(data$covariateId), FUN=function(x){sum(x^2)})
+                                
+                                result <- merge(merge(count, sum, by='Group.1'),
+                                                sumSquared, by='Group.1')
+                                colnames(result) <- c('Group.1','count', 'sum',
+                                                      'sumSquared')
+                                return(result)
+                              }, trace = trace)
+  
+  outPeople <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
+                          CovariateCountWithOutcome=ff::as.ram(grp_qty$count),
+                          CovariateMeanWithOutcome=ff::as.ram(grp_qty$sum)/length(ppl),
+                          CovariateStDevWithOutcome=  sqrt( (ff::as.ram(grp_qty$sumSquared)-(ff::as.ram(grp_qty$sum)^2)/length(ppl) )/(length(ppl)-1)  ))
+  
+  #===========================
+  # non-outcome prevs
+  #===========================
+  ppl <- ff::as.ff(population$rowId[population$outcomeCount==0])
+  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
+  idx <- ffbase::ffwhich(idx, !is.na(idx))
+  covariates <- plpData$covariates[idx, ]
+  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId", "covariateValue")], 
+                              split=ffbase::as.character.ff(covariates$covariateId), 
+                              FUN = function(data){
+                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
+                                
+                                data <- as.data.frame(data)
+                                count <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                sum <- stats::aggregate(data$covariateValue, by=list(data$covariateId), FUN=sum)
+                                sumSquared <- stats::aggregate(data$covariateValue, by=list(data$covariateId), FUN=function(x){sum(x^2)})
+                                
+                                result <- merge(merge(count, sum, by='Group.1'),
+                                                sumSquared, by='Group.1')
+                                colnames(result) <- c('Group.1','count', 'sum',
+                                                      'sumSquared')
+                                return(result)
+                              }, trace = trace)
+  
+  noOutPeople <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
+                            CovariateCountWithNoOutcome=ff::as.ram(grp_qty$count),
+                            CovariateMeanWithNoOutcome=ff::as.ram(grp_qty$sum)/length(ppl),
+                            CovariateStDevWithNoOutcome=  sqrt( (ff::as.ram(grp_qty$sumSquared)-(ff::as.ram(grp_qty$sum)^2)/length(ppl) )/(length(ppl)-1)  ))
+  
+
+  # now merge the predictors with prev.out and prev.noout
+  prevs <- merge(merge(allPeople,outPeople, all=T), noOutPeople, all=T)
+  prevs[is.na(prevs)] <- 0
+  
+  prevs$CovariateStandardizedMeanDifference <- 
+    (prevs$CovariateMeanWithOutcome - prevs$CovariateMeanWithNoOutcome) / 
+  sqrt(prevs$CovariateStDevWithOutcome^2  + prevs$CovariateStDevWithNoOutcome^2)
+  
+ 
+  return(prevs)
+  
+}
 
 
 

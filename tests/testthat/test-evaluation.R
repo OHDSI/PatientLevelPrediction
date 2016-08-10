@@ -50,87 +50,220 @@ test_that("Average precision", {
   expect_that(as.double(aveP.metrics), equals(aveP.plp))
 })
 
-test_that("Quantiles", {
-  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
 
-  prediction.quant <- data.frame(value=c(rep(0,10), 0.001,0.03,0.1,0.12,0.2,
-                                         0.2,0.33,0.4,0.5,0.9),
-                                 outcomeCount=c(rep(0,10), rep(1,10)))
-  quant.test <- quantiles(prediction.quant)$quantiles
-  
-  quant.test.0 <- quant.test[quant.test[,1]==0,-1]
-  quant.test.1max <- max(quant.test[quant.test[,1]==1,-1])
-  quant.test.1min <- min(quant.test[quant.test[,1]==1,-1])
-  quant.test.1median <- median(quant.test[quant.test[,1]==1,-1])
-  
-  expect_that(sum(quant.test[quant.test[,1]==0,-1]==c(0,0,0,0,0,0,0)), equals(7))
-  expect_that(quant.test.1max, equals(0.9))
-  expect_that(quant.test.1min, equals(0.001))
-  expect_that(quant.test.1median, equals(0.2))
+test_that("f1Score", {
+  expect_that(f1Score(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(f1Score(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(f1Score(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(f1Score(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(f1Score(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(f1Score(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(f1Score(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(f1Score(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(f1Score(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(f1Score(TP=10,TN=3,FN=5,FP=5),  equals(0.6666667,tolerance  = 0.0001) )
 })
 
-test_that("Sparse ROC", {
-  #prediction with no negatives - returns error
-  sampSize <- sample(100,1)
-  prediction.noneg <- data.frame(value=runif(sampSize), 
-                                  outcomeCount=rep(1,sampSize))
-  expect_warning(rocSparse(prediction.noneg))
-  
-  #prediction with no positives - returns error
-  prediction.nopos <- data.frame(value=runif(sampSize), 
-                                 outcomeCount=rep(0,sampSize))
-  expect_warning(rocSparse(prediction.nopos))
-  
-  # test non-sparse return size when less than 100 negatives
-  numNeg <- sample(100,1)
-  prediction.sizeSmall <- data.frame(value= runif(200), 
-                                     outcomeCount =c(rep(0,numNeg), rep(1,200-numNeg)))
-  rocSparse.plp <- rocSparse(prediction.sizeSmall)
-  expect_that(nrow(rocSparse.plp), equals(numNeg))
-  
-  # test non-sparse return size when more than 100 negatives
-  numNeg <- 100+sample(100,1)
-  prediction.sizeBig <- data.frame(value= runif(250), 
-                                   outcomeCount =c(rep(0,numNeg), rep(1,250-numNeg)))
-  rocSparse.plp <- rocSparse(prediction.sizeBig)
-  expect_that(nrow(rocSparse.plp), equals(100))
-  
-  # check output of simple input:
-  numPos <- sample(200,1)
-  prediction.manualTest1 <- data.frame(value=runif(10000),
-                                 outcomeCount=c(rep(0,10000-numPos), rep(1,numPos))
-                                )
-  rocSparse.manualTest1 <- rocSparse(prediction.manualTest1)
+test_that("accuracy", {
+  expect_that(accuracy(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(accuracy(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(accuracy(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(accuracy(TP=10,TN=3,FN=5,FP=5), equals(13/23, tolerance  = 0.0001))
+})
 
-  # total is correct:
-  expect_that(sum(rocSparse.manualTest1$TP+rocSparse.manualTest1$FP+
-                  rocSparse.manualTest1$TN+rocSparse.manualTest1$FN == 1e+04),
-              equals(length(rocSparse.manualTest1$TP)))
+test_that("sensitivity", {
+  expect_that(sensitivity(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(sensitivity(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(sensitivity(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(sensitivity(TP=10,TN=3,FN=5,FP=5), equals(10/(10+5),tolerance  = 0.0001))
+})
+
+test_that("falseNegativeRate", {
+  expect_that(falseNegativeRate(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(falseNegativeRate(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(falseNegativeRate(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(falseNegativeRate(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(falseNegativeRate(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(falseNegativeRate(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(falseNegativeRate(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(falseNegativeRate(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(falseNegativeRate(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(falseNegativeRate(TP=10,TN=3,FN=5,FP=5), equals(5/(10+5), tolerance  = 0.0001))
+})
+
+test_that("falsePositiveRate", {
+  expect_that(falsePositiveRate(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(falsePositiveRate(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(falsePositiveRate(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(falsePositiveRate(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(falsePositiveRate(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(falsePositiveRate(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(falsePositiveRate(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(falsePositiveRate(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(falsePositiveRate(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(falsePositiveRate(TP=10,TN=3,FN=5,FP=5), equals(5/(5+3), tolerance  = 0.0001))
+})
+
+test_that("specificity", {
+  expect_that(specificity(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(specificity(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(specificity(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(specificity(TP=10,TN=3,FN=5,FP=5), equals(3/(5+3), tolerance  = 0.0001))
+})
+
+test_that("positivePredictiveValue", {
+  expect_that(positivePredictiveValue(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(positivePredictiveValue(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(positivePredictiveValue(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(positivePredictiveValue(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(positivePredictiveValue(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(positivePredictiveValue(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(positivePredictiveValue(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(positivePredictiveValue(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(positivePredictiveValue(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(positivePredictiveValue(TP=10,TN=3,FN=5,FP=5), equals(10/(10+5), tolerance  = 0.0001))
+})
+
+
+test_that("falseDiscoveryRate", {
+  expect_that(falseDiscoveryRate(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(falseDiscoveryRate(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(falseDiscoveryRate(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(falseDiscoveryRate(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(falseDiscoveryRate(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(falseDiscoveryRate(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(falseDiscoveryRate(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(falseDiscoveryRate(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(falseDiscoveryRate(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(falseDiscoveryRate(TP=10,TN=3,FN=5,FP=5), equals(5/(10+5), tolerance  = 0.0001))
+})
+
+test_that("negativePredictiveValue", {
+  expect_that(negativePredictiveValue(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(negativePredictiveValue(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(negativePredictiveValue(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(negativePredictiveValue(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(negativePredictiveValue(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(negativePredictiveValue(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(negativePredictiveValue(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(negativePredictiveValue(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(negativePredictiveValue(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(negativePredictiveValue(TP=10,TN=3,FN=5,FP=5), equals(3/(5+3), tolerance  = 0.0001))
+})
+
+test_that("falseOmissionRate", {
+  expect_that(falseOmissionRate(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(falseOmissionRate(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(falseOmissionRate(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(falseOmissionRate(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(falseOmissionRate(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(falseOmissionRate(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(falseOmissionRate(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(falseOmissionRate(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(falseOmissionRate(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(falseOmissionRate(TP=10,TN=3,FN=5,FP=5), equals(5/(5+3), tolerance  = 0.0001))
+})
+
+test_that("negativeLikelihoodRatio", {
+  expect_that(negativeLikelihoodRatio(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(negativeLikelihoodRatio(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(negativeLikelihoodRatio(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(negativeLikelihoodRatio(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(negativeLikelihoodRatio(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(negativeLikelihoodRatio(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(negativeLikelihoodRatio(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(negativeLikelihoodRatio(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(negativeLikelihoodRatio(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(negativeLikelihoodRatio(TP=10,TN=3,FN=5,FP=5), equals((5/(10+5))/(3/(5+3)), tolerance  = 0.0001))
+})
+
+test_that("positiveLikelihoodRatio", {
+  expect_that(positiveLikelihoodRatio(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(positiveLikelihoodRatio(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(positiveLikelihoodRatio(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(positiveLikelihoodRatio(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(positiveLikelihoodRatio(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(positiveLikelihoodRatio(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(positiveLikelihoodRatio(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(positiveLikelihoodRatio(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(positiveLikelihoodRatio(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(positiveLikelihoodRatio(TP=10,TN=3,FN=5,FP=5), equals((10/(10+5))/(5/(5+3)), tolerance  = 0.0001))
+})
+
+
+test_that("diagnosticOddsRatio", {
+  expect_that(diagnosticOddsRatio(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(diagnosticOddsRatio(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(diagnosticOddsRatio(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(diagnosticOddsRatio(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(diagnosticOddsRatio(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(diagnosticOddsRatio(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(diagnosticOddsRatio(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(diagnosticOddsRatio(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(diagnosticOddsRatio(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(diagnosticOddsRatio(TP=10,TN=3,FN=5,FP=5), equals(((10/(10+5))/(5/(5+3)))/((5/(10+5))/(3/(5+3))), tolerance  = 0.0001))
+})
+
+
+test_that("getDemographicSummary", {
+  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  data(plpDataSimulationProfile)
+  sampleSize <- 2000
+  plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+  demoSum <- getDemographicSummary(prediction, plpData)
+
+  expect_that(nrow(demoSum), equals(40))
+  expect_that(ncol(demoSum), equals(14))
+})
+
+test_that("getPredictionDistribution", {
+  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  predSum <- getPredictionDistribution(prediction)
   
-  # correct num of positives
-  expect_that(sum(rocSparse.manualTest1$TP+rocSparse.manualTest1$FN == numPos),
-              equals(length(rocSparse.manualTest1$TP)))
+  expect_that(nrow(predSum ), equals(2))
+  expect_that(ncol(predSum ), equals(11))
+})
+
+test_that("getCalibration", {
+  prediction <- data.frame(rowId=1:100, value= runif(100), outcomeCount =round(runif(100)))
+  attr(prediction, "metaData")$predictionType <-  "binary"
+  calib <- getCalibration(prediction)
   
-  ## check output for perfect prediction:
-  numPos <- sample(200,1)
-  prediction.manualTest2 <- data.frame(value=seq(0,1, length.out=1000),
-                                       outcomeCount=c(rep(0,1000-numPos), rep(1,numPos))
-  )
-  rocSparse.manualTest2 <- rocSparse(prediction.manualTest2)
+  expect_that(nrow(calib ), equals(10))
+  expect_that(ncol(calib ), equals(11))
+})
+
+test_that("getThresholdSummary", {
+  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  thresSum <- getThresholdSummary(prediction)
   
-  expect_that(sum(rocSparse.manualTest2$TP == rep(numPos,100)),
-              equals(100))
+  expect_that(nrow(thresSum), equals(100))
+  expect_that(ncol(thresSum), equals(23))
   
-  ## check output for work prediction:
-  numPos <- sample(200,1)
-  prediction.manualTest3 <- data.frame(value=seq(0,1, length.out=1000),
-                                       outcomeCount=c(rep(1,numPos),rep(0,1000-numPos))
-  )
-  rocSparse.manualTest3 <- rocSparse(prediction.manualTest3)
+  expect_that(thresSum$truePositiveCount+thresSum$falseNegativeCount, 
+              equals(rep(sum(prediction$outcomeCount),100)))
   
-  expect_that(sum(rocSparse.manualTest3$TP == c(rep(0,99),numPos)),
-              equals(100))
-  
+  expect_that(thresSum$truePositiveCount+thresSum$falsePositiveCount+
+              thresSum$trueNegativeCount+thresSum$falseNegativeCount, 
+              equals(rep(nrow(prediction),100)))
 })
 
 

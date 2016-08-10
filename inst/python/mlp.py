@@ -15,7 +15,7 @@ import timeit
 import math
 from sklearn.neural_network import MLPClassifier
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
-#from sklearn.feature_selection import SelectFromModel#from sklearn.cross_validation import PredefinedSplit
+#from sklearn.feature_selection import SelectFromModel
 from sklearn.externals.joblib import Memory
 from sklearn.datasets import load_svmlight_file
 from sklearn.externals import joblib
@@ -25,9 +25,9 @@ print "Training Neural Network model "
 
 print "Loading Data..."
 # load data + train,test indexes + validation index
-mem = Memory("./mycache")
+##mem = Memory("./mycache")
 
-@mem.cache
+##@mem.cache
 def get_data():
     data = load_svmlight_file(dataLocation+"\covariate.txt")
     return data[0], data[1]
@@ -45,6 +45,7 @@ population = np.loadtxt(dataLocation+'\population.txt', delimiter=' ')
 y = population[:,1]
 # reduce y to the popualtion with an index value >0 (to be used in training set)
 y = y[population[:,population.shape[1]-1] > 0]
+X = X[population[:,population.shape[1]-1] > 0,:]
 print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
 ###########################################################################
 
@@ -65,7 +66,7 @@ for i in range(1, int(np.max(population[:,population.shape[1]-1])+1), 1):
   # train on fold
   print "Training fold %s" %(i)
   start_time = timeit.default_timer()	
-  mlp = GMLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+  mlp = MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
   mlp = mlp.fit(train_x, train_y)
   end_time = timeit.default_timer()
   print "Training fold took: %.2f s" %(end_time-start_time)
@@ -79,8 +80,10 @@ for i in range(1, int(np.max(population[:,population.shape[1]-1])+1), 1):
 	
 # train final:
 print "Training final neural network model on all train data..."
+print "X- %s rows and Y %s columns" %(X.shape[0], y.shape[0])
+
 start_time = timeit.default_timer()	
-mlp = GMLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+mlp = MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
 mlp = mlp.fit(X, y)
 end_time = timeit.default_timer()
 print "Training final took: %.2f s" %(end_time-start_time)
@@ -90,7 +93,7 @@ if not os.path.exists(modelOutput):
     os.makedirs(modelOutput)
 print "Model saved to: %s" %(modelOutput)	
 	
-joblib.dump(gnb, modelOutput+'\\model.pkl') 
+joblib.dump(mlp, modelOutput+'\\model.pkl') 
 
 # merge pred with indexes[testInd,:]
 test_pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
