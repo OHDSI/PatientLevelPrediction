@@ -330,12 +330,12 @@ getCalibration <- function(prediction,
   
   q <- unique(stats::quantile(prediction$value, (1:(numberOfStrata - 1))/numberOfStrata))
   prediction$predictionThresholdId <- cut(prediction$value,
-                                          breaks = unique(c(0, q, max(prediction$value))),
+                                          breaks = unique(c(-0.00001, q, max(prediction$value))),
                                           labels = FALSE)
   
   prediction <- merge(prediction, 
                       data.frame(predictionThresholdId=1:(length(q)+1), predictionThreshold=c(0, q)),
-                      by='predictionThresholdId', all=T)
+                      by='predictionThresholdId', all.x=T)
   
   computeStratumStats <- function(data) {
     return(data.frame(minx = min(data$value),
@@ -422,6 +422,8 @@ getThresholdSummary <- function(prediction){
   
   # add the preference score:
   proportion <- sum(prediction$outcomeCount)/nrow(prediction) 
+  # ISSUE WITH CAL # remove any predictions of 1
+  prediction$value[prediction$value==1] <- 0.99999999
   x <- exp(log(prediction$value/(1 - prediction$value)) - log(proportion/(1 - proportion)))
   prediction$preferenceScore <- x/(x + 1)
   

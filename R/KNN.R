@@ -30,7 +30,6 @@ KNN.set <- function(k=1000, indexFolder=getwd()){
                  name='KNN'
   )
   class(result) <- 'modelSettings' 
-  attr(result, 'libSVM') <- F
   
   return(result)
 }

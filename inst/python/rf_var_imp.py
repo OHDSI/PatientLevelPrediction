@@ -24,24 +24,20 @@ max_depth = 17
 
 print "Using Random Forest to select features" 
 
-print "Loading Data..."
+##print "Loading Data..."
 # load data + train,test indexes + validation index
-mem = Memory("./mycache")
-@mem.cache
+##mem = Memory("./mycache")
+##@mem.cache
 
-def get_data():
-    data = load_svmlight_file(dataLocation+"\covariate.txt")
-    return data[0], data[1]
+##def get_data():
+##    data = load_svmlight_file(dataLocation+"\covariate.txt")
+##    return data[0], data[1]
 
-X, y = get_data()
-# only get the population data
-dataRows = np.loadtxt(dataLocation+'\dataRows.txt', delimiter=' ')
-X = X[dataRows>0,:]
-print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
+##X, y = get_data()
 
 # load index file
-population = np.loadtxt(dataLocation+'\population.txt', delimiter=' ')
 y = population[:,1]
+X = plpData[population[:,0],:]
 print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
 
 trainInd =population[:,population.shape[1]-1] >0

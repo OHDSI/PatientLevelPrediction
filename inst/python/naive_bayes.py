@@ -28,33 +28,17 @@ featnum = 2000
 
 print "Training Naive Bayes model " 
 
-print "Loading Data..."
-# load data + train,test indexes + validation index
-mem = Memory("./mycache")
-
-@mem.cache
-def get_data():
-    data = load_svmlight_file(dataLocation+"\covariate.txt")
-    return data[0], data[1]
-
-X, y = get_data()
-# only get the population data
-dataRows = np.loadtxt(dataLocation+'\dataRows.txt', delimiter=' ')
-X = X[dataRows>0,:]
-
-print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
 
 # load index file
-population = np.loadtxt(dataLocation+'\population.txt', delimiter=' ')
 y = population[:,1]
+X = plpData[population[:,0],:]
 print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
-
+print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
 ###########################################################################
 
 print "Applying univariate feature selection to select %s features as naive bayes reqires non-sparse data " %(featnum)
 kbest = SelectKBest(chi2, k=2000).fit(X[population[:,population.shape[1]-1] > 0,:], y[population[:,population.shape[1]-1] > 0])
 kbest.scores_ = np.nan_to_num(kbest.scores_)
-#X = kbest.transform(X[population[:,population.shape[1]-1] > 0,:])  - issues with ordering
 print "Test kbest length: %s non-zero: %s" %(kbest.scores_.shape[0], np.sum(kbest.scores_!=0))
 threshold = -np.sort(-kbest.scores_)[featnum-1]
 print "Threshold varImp set at %s" %(threshold)

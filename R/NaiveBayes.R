@@ -36,7 +36,6 @@ setNaiveBayes <- function(){
   }
   result <- list(model='fitNaiveBayes', name='Naive Bayes', param= '')
   class(result) <- 'modelSettings' 
-  attr(result, 'libSVM') <- T
   
   return(result)
 }
@@ -45,13 +44,12 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
-  plpData <- checkLibsvm(plpData)
-  if(!file.exists(file.path(plpData$covariates,'covariate.txt')))
-    stop('Cannot find libsvm file')
+  if(!'ffdf'%in%class(plpData$covariates))
+    stop('Need plpData')
   
   if(colnames(population)[ncol(population)]!='indexes'){
     warning('indexes column not present as last column - setting all index to 1')
-    population$indexes <- rep(1, nrow(popualtion))
+    population$indexes <- rep(1, nrow(population))
   }
   
   # connect to python if not connected
@@ -59,7 +57,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy")}
+    PythonInR::pyImport("numpy", as='np')}
   
   
   # return error if we can't connect to python
@@ -68,14 +66,12 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   
   start <- Sys.time()
   
-  # create vector of 1s and 0s indicating whether the plpData row is in the populaiton
-  rowIds <- utils::read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
-  rowData <- rep(0, length(rowIds))
-  rowData[rowIds%in%population$rowId] <- 1
-  utils::write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
-  
   # make sure population is ordered?
-  utils::write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
+  population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+  PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
+  
+  # convert plpData in coo to python:
+  x <- toSparsePython(plpData,population, map=NULL)
   
   # save the model to outLoc
   outLoc <- file.path(getwd(),'python_models')
@@ -85,7 +81,6 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
 
   
   # run model:
-  PythonInR::pySet("dataLocation" ,plpData$covariates)
   outLoc <- file.path(getwd(),'python_models')
   PythonInR::pySet("modelOutput",outLoc)
   
@@ -101,10 +96,6 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   pred <- as.data.frame(pred)
   attr(pred, "metaData") <- list(predictionType="binary")
   
-  
-  ##pred <- read.csv(file.path(outLoc,1,'prediction.txt'), header=F)
-  ##colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
-  ##attr(pred, "metaData") <- list(predictionType="binary")
   pred$value <- 1-pred$value
   auc <- PatientLevelPrediction::computeAuc(pred)
   writeLines(paste0('Model obtained CV AUC of ', auc))
@@ -123,9 +114,6 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   incs[inc] <- 1
   covariateRef$included <- incs
   covariateRef$varImp <- varImp
-  ##covariateRef <- covariateRef[inc,] # this messes up order
-  ##write.table(covariateRef, file.path(outLoc, 1,'covs.txt'), row.names=F, col.names=T)
-  
   
   # select best model and remove the others
   modelTrained <- file.path(outLoc) 
@@ -143,7 +131,8 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef,
                  trainingTime =comp,
-                 dense=1
+                 dense=1,
+                 covariateMap=x$map
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'

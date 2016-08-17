@@ -70,13 +70,13 @@ toSparseM <- function(plpData,population, map=NULL){
   data <- Matrix::sparseMatrix(i=1,
                                j=1,
                                x=0,
-                               dims=c(ffbase::max.ff(plpData.mapped$covariates$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
+                               dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
   for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
     futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
     temp <- ftry(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
                                           j=ff::as.ram(plpData.mapped$covariates$covariateId[ind]),
                                           x=ff::as.ram(plpData.mapped$covariates$covariateValue[ind]),
-                                          dims=c(ffbase::max.ff(plpData.mapped$covariates$rowId), max(plpData.mapped$map$newIds)))
+                                          dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
     )
     data <- data+ temp
   }
@@ -89,175 +89,8 @@ toSparseM <- function(plpData,population, map=NULL){
   
 }
 
-#' Convert the plpData in COO format into the sparse libSVM format
-#' 
-#' @description
-#' Converts the standard plpData to libSVM format 
-#' 
-#' @details
-#' This function converts the covariate file from ffdf in COO format into a libsvm format and
-#' returns a plpData object with the covariate item representing the directory where the 
-#' libsvm file is saved. 
-#' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction 
-#'                                      data extracted from the CDM.
-#' @param filePath                       The path to the directory to output the libsvm files
-#' @examples    
-#' #TODO
-#' 
-#' @return
-#' Returns an object of type \code{plpData}, containing information on the cohorts, their
-#' outcomes, and baseline covariates. Information about multiple outcomes can be captured at once for
-#' efficiency reasons. This object is a list with the following components: \describe{
-#' \item{outcomes}{A data frame listing the outcomes per person, including the time to event, and
-#' the outcome id. Outcomes are not yet filtered based on risk window, since this is done at
-#' a later stage.} \item{cohorts}{A data frame listing the persons in each cohort, listing their
-#' exposure status as well as the time to the end of the observation period and time to the end of the
-#' cohort (usually the end of the exposure era).} \item{covariates}{A character object pointing to a directory
-#' containing a libsvm file with the baseline covariates per person in the cohort. This is done using a sparse representation:
-#' covariates with a value of 0 are omitted to save space.} \item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
-#' \item{metaData}{A list of objects with information on how the cohortMethodData object was
-#' constructed.} }
-#'
-#' @export
-convertToLibsvm <- function(plpData,filePath=NULL){
-  
-  if(missing(plpData) || is.null(plpData))
-    stop('No plpData input')
-  if(!'ffdf'%in%class(plpData$covariates))
-    stop('plpData covriate object not in ffdf - maybe you already converted the data?')
-  
-  if(missing(filePath) || is.null(filePath)){
-    timestamp <- gsub(' ', '', gsub('-','', gsub(':','',Sys.time())))
-    filePath <- file.path(getwd(), paste0('libsvm_', timestamp))
-    futile.logger::flog.warn(paste0('filePath not specified so saving libsvm to: ', filePath))
-  }
-  
-  start <- Sys.time()
-  
-  cov <- ff::clone(plpData$covariates)
-  covref <- ff::clone(plpData$covariateRef)
-  
-  
-  futile.logger::flog.trace('Now converting the covariate data into libsvm...')
-  
-  
-  oldIds <- ff::as.ram(plpData$covariateRef$covariateId)
-  newIds <- 1:nrow(plpData$covariateRef)
-  
-  for (i in bit::chunk(covref$covariateId)) {
-    ids <- covref$covariateId[i]
-    ids <- plyr::mapvalues(ids, oldIds, newIds, warn_missing = FALSE)
-    covref$covariateId[i] <- ids
-  }
-  for (i in bit::chunk(cov$covariateId)) {
-    ids <- cov$covariateId[i]
-    ids <- plyr::mapvalues(ids, oldIds, newIds, warn_missing = FALSE)
-    cov$covariateId[i] <- ids
-  }
-  futile.logger::flog.trace('Done.')
-  
-  # sort:
-  futile.logger::flog.trace('Starting to sort data...')
-  cov <- ff::ffdfsort(cov)
-  futile.logger::flog.trace('Done.')
-  
-  # then group
-  futile.logger::flog.trace('Starting to group covariateIds:covariateValue per person')
-  all <- c()
-  test_count <- 0
-  for (i in bit::chunk(cov$rowId)) {
-    test_count <- test_count +1
-    futile.logger::flog.trace(paste0(test_count))
-    tempCov <- ff::as.ram(cov[i,])
-    
-    # now create covariateId:value
-    test <- plyr::ddply(tempCov, "rowId", plyr::summarize,  
-                        covString=paste(covariateId,covariateValue,
-                                        sep=':', collapse=' ')) 
-    all <- rbind(all, test) 
-  } 
-  futile.logger::flog.trace('Done.')
-  
-  # add a dummy column of zeros as first column (this will be replaced in future)
-  libsvm <- merge(plpData$cohorts[,c('rowId','subjectId')], all, all.x=T, by='rowId')
-  libsvm[is.na(libsvm)] <- ''
-  libsvm$subjectId <- 0
-  
-  timeTol <- difftime(Sys.time(),start, units = "mins")
-  futile.logger::flog.trace(paste0('Converting to libSVM completed - took: ', timeTol, ' mins'))
-  
-  futile.logger::flog.trace('Saving libSVM file...')
-  if(!dir.exists(file.path(filePath))) dir.create(file.path(filePath), recursive = T)
-  start <- Sys.time()
-  utils::write.table(libsvm[,c('subjectId','covString')],
-              quote=FALSE, sep= " ", eol = "\n", 
-              row.names=FALSE,col.names=FALSE,
-              file=file.path(filePath, paste0('covariate.txt')))
-  utils::write.table(ff::as.ram(plpData$covariateRef),
-              quote=TRUE, sep= " ", eol = "\n", 
-              row.names=FALSE,col.names=TRUE,
-              file=file.path(filePath, 'covariateRef.txt')
-  )
-  utils::write.table(libsvm[,'rowId'],
-              quote=FALSE, sep= " ", eol = "\n", 
-              row.names=FALSE,col.names=F,
-              file=file.path(filePath, paste0('rowId.txt'))
-  )
-  timeTol <- difftime(Sys.time(),start, units = "mins")
-  futile.logger::flog.trace(paste0('Saving libSVM completed - took: ', timeTol, ' mins'))
-  
-  
-  results <- list(cohorts=plpData$cohorts,
-                  outcomes=plpData$outcomes,
-                  covariates =  filePath,
-                  covariateRef=ff::clone(plpData$covariateRef),
-                  metaData = plpData$metaData
-  )
-  
-  class(results) <- 'plpData.libsvm'
-  
-  return(results)
-  
-}
-
-#' Check plpData is in libSVM format and convert if needed
-#' 
-#' @description
-#' Allows to automatically convert to libsvm format if needed and saves it in the current
-#' directory or a pre-defined path
-#' 
-#' @details
-#' This function checks if the plpData is in libsvm format
-#' If not it calls convertToLibsvm if convert is TRUE or stops otherwise. 
-#' The converted plpData is automatically saved to allow re-use.
-#' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction 
-#'                                      data extracted from the CDM.
-#' @param filePath                      The path to the directory to output the libsvm files
-#' @param convert                       Whether to convert or stop
-#' @examples    
-#' #TODO
-#' 
-#' @return
-#' return a plpData object in LibSVM format as using for the Python calls
-checkLibsvm <- function(plpData, filePath = NULL, convert = TRUE){
-  
-  result <- plpData
-  if('ffdf'%in%class(plpData$covariates) || class(plpData)!='plpData.libsvm') {
-    if (convert){
-      message("Hint:you can avoid conversion on the fly by converting your plp data first using convertToLibsvm")
-      futile.logger::flog.info('Converting to Libsvm')
-      result = convertToLibsvm(plpData,filePath)
-
-    } else {
-        stop('The plpData should be in libsvm format please convert first using convertToLibsvm')
-    }
-  } 
-  return(result)
-}
-
+# restricts to pop and saves/creates mapping
 MapCovariates <- function(covariates, covariateRef, population, map){
-  
-  writeLines(paste0('Max cov:', max(ff::as.ram(covariates$covariateId))))
   
   # restrict to population for speed
   futile.logger::flog.trace('restricting to population for speed...')
@@ -288,3 +121,100 @@ MapCovariates <- function(covariates, covariateRef, population, map){
               covariateRef=covariateRef,
               map=map))
 } 
+
+
+#' Convert the plpData in COO format into a sparse python matrix
+#' 
+#' @description
+#' Converts the standard plpData to a sparse matrix firectly into python 
+#' 
+#' @details
+#' This function converts the covariate file from ffdf in COO format into a sparse matrix from 
+#' the package Matrix
+#' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction 
+#'                                      data extracted from the CDM.
+#' @param population                    The population to include in the matrix
+#' @param map                           A covariate map (telling us the column number for covariates)
+#' @examples    
+#' #TODO
+#' 
+#' @return
+#' Returns a list, containing the python object name of the sparse matrix, the plpData covariateRef
+#' and a data.frame named map that tells us what covariate corresponds to each column
+#' This object is a list with the following components: \describe{
+#' \item{data}{The python object name containing a sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.} 
+#' \item{covariateRef}{The plpData covariateRef.} 
+#' \item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.} 
+#' }
+#'
+#' @export
+toSparsePython <- function(plpData,population, map=NULL){
+  # test python is available and the required dependancies are there:
+  if ( !PythonInR::pyIsConnected() ){
+    python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
+    
+    if(is.null(python.test$pythonExePath))
+      stop('You need to install python for this method - please see ...')
+  }
+  if ( !PythonInR::pyIsConnected() ){ 
+    PythonInR::pyConnect()
+    PythonInR::pyOptions("numpyAlias", "np")
+    PythonInR::pyOptions("useNumpy", TRUE)
+    PythonInR::pyImport("numpy", as='np')
+    }
+  
+  # return error if we can't connect to python
+  if ( !PythonInR::pyIsConnected() )
+    stop('Python not connect error')
+  
+  cov <- ff::clone(plpData$covariates)
+  covref <- ff::clone(plpData$covariateRef)
+  
+  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=covref, 
+                                  population, map=map)
+  
+  for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
+    ids <- plpData.mapped$covariateRef$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariateRef$covariateId[i[1]:i[2]] <- ids
+    # tested and working
+  }
+  for (i in bit::chunk(plpData.mapped$covariates$covariateId)) {
+    ids <- plpData.mapped$covariates$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
+  }
+  futile.logger::flog.debug(paste0('Converting data into python sparse matrix...'))
+  
+  #convert into sparseM
+  futile.logger::flog.debug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
+  futile.logger::flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  
+  # chunk then add
+  
+  # now load each part of the coo data into python as 3 vectors
+  # containing row, column and value
+  # create the sparse python matrix and then add to it
+  PythonInR::pySet('xmax',as.double(max(population$rowId)))
+  PythonInR::pySet('ymax',as.double(max(plpData.mapped$map$newIds)))
+  PythonInR::pyExec('from scipy.sparse import coo_matrix')
+  PythonInR::pyExec("plpData = coo_matrix((np.array([0]), (np.array([0]), np.array([0]) )), shape=(xmax, ymax))")
+  for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
+    futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
+    # then load in the three vectors based on ram limits and add to the current matrix
+    PythonInR::pySet('data', as.matrix(ff::as.ram(plpData.mapped$covariates$covariateValue[ind])))
+    PythonInR::pySet('x', as.matrix(ff::as.ram(plpData.mapped$covariates$rowId[ind])-1))
+    PythonInR::pySet('y', as.matrix(ff::as.ram(plpData.mapped$covariates$covariateId[ind])-1))
+    
+    PythonInR::pyExec("tempData = coo_matrix((data[:,0], (x[:,0], y[:,0])), shape=(xmax, ymax))") 
+    PythonInR::pyExec("plpData = plpData+tempData") 
+  }
+  futile.logger::flog.debug(paste0('Sparse python matrix done '))
+  futile.logger::flog.debug(PythonInR::pyExec("print  'dataset has %s rows and %s columns' %(plpData.shape[0],plpData.shape[1])")
+  )
+  result <- list(data='plpData',
+                 covariateRef=plpData.mapped$covariateRef,
+                 map=plpData.mapped$map)
+  return(result)
+  
+}

@@ -43,7 +43,6 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
                  name='Gradient boosting machine'
   )
   class(result) <- 'modelSettings' 
-  attr(result, 'libSVM') <- F
   
   return(result)
 }
@@ -97,7 +96,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   
   varImp <- xgboost::xgb.importance(model =trainedModel)
   varImp$Feature <- as.double(varImp$Feature)
-  varImp<- merge(varImp, ff::as.ram(result$covariateRef), by.x='Feature', by.y='covariateId', all=T)
+  varImp<- merge(ff::as.ram(result$covariateRef),varImp,  by.y='Feature', by.x='covariateId', all=T)
   varImp$Gain[is.na(varImp$Gain)] <- 0
   varImp <- varImp[order(-varImp$Gain),]
   colnames(varImp)[colnames(varImp)=='Gain'] <- 'value'

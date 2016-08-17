@@ -27,7 +27,6 @@
 setLassoLogisticRegression<- function(variance=0.01){
   result <- list(model='fitLassoLogisticRegression', param=list(val=variance), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
-  attr(result, 'libSVM') <- F
   
   return(result)
 }

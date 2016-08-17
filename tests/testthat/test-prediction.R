@@ -44,7 +44,6 @@ test_that("prediction", {
   sampleSize <- 2000
   plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
   
-  plpData.lsvm <- convertToLibsvm(plpData,'./libsvm')
   # create popualtion for outcome 2
   population <- createStudyPopulation(plpData,
                                       outcomeId = 2,
@@ -105,9 +104,7 @@ test_that("prediction", {
   
   # removing files created duirng the test:
   unlink('./plpmodels', recursive = T, force = T)
-  unlink('./mycache', recursive = T, force = T)
   unlink('./python_models', recursive = T, force = T)
-  unlink('./libsvm', recursive = T, force = T)
   
   })
 

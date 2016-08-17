@@ -183,18 +183,13 @@ RunPlp <- function(population, plpData,
   flog.trace('Parameter Check Started')
   checkInStringVector(testSplit, c('person','time'))
   checkHigherEqual(sum(population[,'outcomeCount']>0), 25)
-  checkIsClass(plpData, c('plpData.libsvm','plpData.coo','plpData'))
+  checkIsClass(plpData, c('plpData.coo','plpData'))
   checkIsClass(testFraction, 'numeric')
   checkHigher(testFraction,0)
   checkIsClass(nfold, 'numeric')
   checkHigher(nfold, 0)
   
-  # check format and convert if needed
-  if(attr(modelSettings, 'libSVM')){
-    plpData <- checkLibsvm(plpData, filePath=analysisPath)
-    flog.seperator()
-  }
-  
+
   # construct the settings for the model pipeline
   if(is.null(indexes)){
     if(testSplit=='time'){
@@ -393,8 +388,7 @@ summary.plpModel <- function(object, ...) {
 # CovariateCountWithNoOutcome	CovariateMeanWithOutcome	
 # CovariateMeanWithNoOutcome	CovariateStDevWithOutcome	
 # CovariateStDevWithNoOutcome	CovariateStandardizedMeanDifference
-covariateSummary <- function(plpData, population, trace=F){
- 
+covariateSummary <- function(plpData, population){
   #===========================
   # all 
   #===========================
@@ -402,19 +396,12 @@ covariateSummary <- function(plpData, population, trace=F){
   idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
   idx <- ffbase::ffwhich(idx, !is.na(idx))
   covariates <- plpData$covariates[idx, ]
-  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId")], 
-                              split=ffbase::as.character.ff(covariates$covariateId), 
-                              FUN = function(data){
-                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
-                                
-                                data <- as.data.frame(data)
-                                CovariateCount <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
-                                
-                                as.data.frame(CovariateCount)
-                              }, trace = trace)
   
-  allPeople <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
-                          CovariateCount=ff::as.ram(grp_qty$x))
+  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
+  grp_qty <- bySumFf(covariates$ones, covariates$covariateId)
+  
+  allPeople <- data.frame(covariateId=ff::as.ram(grp_qty$bins), 
+                          CovariateCount=ff::as.ram(grp_qty$sums))
   
   #===========================
   # outcome prevs
@@ -423,27 +410,17 @@ covariateSummary <- function(plpData, population, trace=F){
   idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
   idx <- ffbase::ffwhich(idx, !is.na(idx))
   covariates <- plpData$covariates[idx, ]
-  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId", "covariateValue")], 
-                              split=ffbase::as.character.ff(covariates$covariateId), 
-                              FUN = function(data){
-                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
-                                
-                                data <- as.data.frame(data)
-                                count <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
-                                sum <- stats::aggregate(data$covariateValue, by=list(data$covariateId), FUN=sum)
-                                sumSquared <- stats::aggregate(data$covariateValue, by=list(data$covariateId), FUN=function(x){sum(x^2)})
-                                
-                                result <- merge(merge(count, sum, by='Group.1'),
-                                                sumSquared, by='Group.1')
-                                colnames(result) <- c('Group.1','count', 'sum',
-                                                      'sumSquared')
-                                return(result)
-                              }, trace = trace)
   
-  outPeople <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
-                          CovariateCountWithOutcome=ff::as.ram(grp_qty$count),
-                          CovariateMeanWithOutcome=ff::as.ram(grp_qty$sum)/length(ppl),
-                          CovariateStDevWithOutcome=  sqrt( (ff::as.ram(grp_qty$sumSquared)-(ff::as.ram(grp_qty$sum)^2)/length(ppl) )/(length(ppl)-1)  ))
+  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
+  covariates$squared <- covariates$covariateValue^2
+  
+  lengths <- bySumFf(covariates$ones, covariates$covariateId)
+  sumval <- bySumFf(covariates$covariateValue, covariates$covariateId)
+  sumvalsquared <- bySumFf(covariates$squared, covariates$covariateId)
+  outPeople <- data.frame(covariateId=lengths$bins, 
+                          CovariateCountWithOutcome=lengths$sums,
+                          CovariateMeanWithOutcome=sumval$sums/length(ppl),
+                          CovariateStDevWithOutcome=  sqrt( (sumvalsquared$sums-(sumval$sums^2)/length(ppl) )/(length(ppl)-1)  ))
   
   #===========================
   # non-outcome prevs
@@ -452,38 +429,23 @@ covariateSummary <- function(plpData, population, trace=F){
   idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
   idx <- ffbase::ffwhich(idx, !is.na(idx))
   covariates <- plpData$covariates[idx, ]
-  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId", "covariateValue")], 
-                              split=ffbase::as.character.ff(covariates$covariateId), 
-                              FUN = function(data){
-                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
-                                
-                                data <- as.data.frame(data)
-                                count <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
-                                sum <- stats::aggregate(data$covariateValue, by=list(data$covariateId), FUN=sum)
-                                sumSquared <- stats::aggregate(data$covariateValue, by=list(data$covariateId), FUN=function(x){sum(x^2)})
-                                
-                                result <- merge(merge(count, sum, by='Group.1'),
-                                                sumSquared, by='Group.1')
-                                colnames(result) <- c('Group.1','count', 'sum',
-                                                      'sumSquared')
-                                return(result)
-                              }, trace = trace)
   
-  noOutPeople <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
-                            CovariateCountWithNoOutcome=ff::as.ram(grp_qty$count),
-                            CovariateMeanWithNoOutcome=ff::as.ram(grp_qty$sum)/length(ppl),
-                            CovariateStDevWithNoOutcome=  sqrt( (ff::as.ram(grp_qty$sumSquared)-(ff::as.ram(grp_qty$sum)^2)/length(ppl) )/(length(ppl)-1)  ))
   
-
+  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
+  covariates$squared <- covariates$covariateValue^2
+  
+  lengths <- bySumFf(covariates$ones, covariates$covariateId)
+  sumval <- bySumFf(covariates$covariateValue, covariates$covariateId)
+  sumvalsquared <- bySumFf(covariates$squared, covariates$covariateId)
+  noOutPeople <- data.frame(covariateId=lengths$bins, 
+                            CovariateCountWithNoOutcome=lengths$sums,
+                            CovariateMeanWithNoOutcome=sumval$sums/length(ppl),
+                            CovariateStDevWithNoOutcome=  sqrt( (sumvalsquared$sums-(sumval$sums^2)/length(ppl) )/(length(ppl)-1)  ))
+  
   # now merge the predictors with prev.out and prev.noout
   prevs <- merge(merge(allPeople,outPeople, all=T), noOutPeople, all=T)
   prevs[is.na(prevs)] <- 0
   
-  prevs$CovariateStandardizedMeanDifference <- 
-    (prevs$CovariateMeanWithOutcome - prevs$CovariateMeanWithNoOutcome) / 
-  sqrt(prevs$CovariateStDevWithOutcome^2  + prevs$CovariateStDevWithNoOutcome^2)
-  
- 
   return(prevs)
   
 }

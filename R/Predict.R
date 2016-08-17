@@ -106,55 +106,29 @@ predict.python <- function(plpModel, population, plpData){
     stop()
   }
   
-  ##PythonInR::pyImport("numpy", as="np") #crashing R?
-
+  ##PythonInR::pyImport("numpy", as="np") #crashing R
+  
   flog.info('Setting inputs...')
   PythonInR::pySet("dense", plpModel$dense)
-  PythonInR::pySet("data_loc", plpData$covariates)
   PythonInR::pySet("model_loc", plpModel$model)
-  
-  # restrict plpdata to populaiton:
-  # create vector of 1s and 0s indicating whether the plpData row is in the populaiton
-  ## TODO dont save this instead use - PythonInR::pySet('dataRows', rowData)
-  rowIds <- utils::read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
-  rowData <- rep(0, length(rowIds))
-  rowData[rowIds%in%population$rowId] <- 1
-  ##write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
-  PythonInR::pySet('dataRows', as.matrix(rowData))
   
   flog.info('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
-  originalCovs <- plpModel$varImp[plpModel$varImp[,'included']==1,] #read.table(file.path(plpModel$model,'covs.txt'), header = T) 
-  originalCovs$rowInd.org <- (1:nrow(originalCovs))-1 # python index starts at 0
-  newCovs <- ff::as.ram(plpData$covariateRef)
-  newCovs$rowInd.new <- (1:nrow(newCovs))-1 # python index starts at 0
+  newData <- toSparsePython(plpData, population, map=plpModel$covariateMap)
   
-  map <- merge(newCovs, originalCovs, by='covariateId', all.x=T, all.y=T)
-  map$rowInd.new[is.na(map$rowInd.new)] <- -1
-  map$rowInd.org[is.na(map$rowInd.org)] <- -1
-  
-  #write.table(map[, c('rowInd.new','rowInd.org')], file.path(plpData$covariates, 'mapping.txt'), 
-  #            row.names=F, col.names=F)
-  
-  # set mapping rather than saving/loading 
-  flog.info('Loading mapping...')
-  PythonInR::pySet('mapping', as.matrix(map[, c('rowInd.new','rowInd.org')]), 
-                   namespace = "__main__", useNumpy = TRUE)
+  included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
+  included <- newData$map$newIds[newData$map$oldIds%in%included]-1 # python starts at 0, r at 1
+  PythonInR::pySet("included", as.matrix(sort(included)))
 
-  # set population (crashed R with 300k pop)
-  ##if('indexes'%in%colnames(population)){
-  ##  PythonInR::pySet("pop",as.matrix(population[,c('rowId','outcomeCount','indexes')]), namespace = "__main__", useNumpy = TRUE)
-  ##} else {
-  ##  PythonInR::pySet("pop",as.matrix(population[,c('rowId','outcomeCount')]), namespace = "__main__", useNumpy = TRUE )
-  ##}
   # save population
   if('indexes'%in%colnames(population)){
-    utils::write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates, 'population.txt'), 
-                row.names=F, col.names=F)
+    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+    PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
+    
   } else {
-    utils::write.table(population[,c('rowId','outcomeCount')], file.path(plpData$covariates, 'population.txt'), 
-                row.names=F, col.names=F)
+    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+    PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount')]) )
   }
   
   # run the python predict code:

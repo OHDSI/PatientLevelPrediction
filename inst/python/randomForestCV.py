@@ -32,32 +32,13 @@ from sklearn.externals import joblib
  
 print "Training Random Forest with: mtry: %s - max_depth: %s - ntrees: %s " %(mtry, max_depth, ntrees)
 
-print "Loading Data..."
-# load data + train,test indexes + validation index
-mem = Memory("./mycache")
-@mem.cache
-
-def get_data():
-    data = load_svmlight_file(dataLocation+"\covariate.txt") #sys.argv[1]
-    return data[0], data[1]
-
-X, y = get_data()
-# only get the population data
-dataRows = np.loadtxt(dataLocation+'\dataRows.txt', delimiter=' ') #sys.argv[1]
-X = X[dataRows>0,:]
-# load variables included by varImp:
-##included = np.loadtxt(dataLocation+'\included.txt', delimiter=' ') #sys.argv[1]
-X = X[:,included[:,0]]
-
-print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
-
 if (mtry==-1):
   mtry =int(np.round(np.sqrt(X.shape[1])))
 
-
 # load index file
-population = np.loadtxt(dataLocation+'\population.txt', delimiter=' ') #sys.argv[1]
 y = population[:,1]
+X = plpData[population[:,0],:]
+X = X[:,included.flatten()]
 print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
 
 ###########################################################################

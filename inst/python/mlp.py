@@ -23,29 +23,11 @@ from sklearn.externals import joblib
 #================================================================
 print "Training Neural Network model " 
 
-print "Loading Data..."
-# load data + train,test indexes + validation index
-##mem = Memory("./mycache")
-
-##@mem.cache
-def get_data():
-    data = load_svmlight_file(dataLocation+"\covariate.txt")
-    return data[0], data[1]
-
-X, y = get_data()
-# only get the population data (dataRows is a binary vector with 0 representing a non-training 
-# data point and 1 representing a data point ot be used for training)
-dataRows = np.loadtxt(dataLocation+'\dataRows.txt', delimiter=' ')
-X = X[dataRows>0,:]
+y = population[:,1]
+X = plpData[population[:,0],:]
+trainInds =population[:,population.shape[1]-1] >0
 
 print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
-
-# load index file
-population = np.loadtxt(dataLocation+'\population.txt', delimiter=' ')
-y = population[:,1]
-# reduce y to the popualtion with an index value >0 (to be used in training set)
-y = y[population[:,population.shape[1]-1] > 0]
-X = X[population[:,population.shape[1]-1] > 0,:]
 print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
 ###########################################################################
 
@@ -56,17 +38,17 @@ test_pred = np.zeros(pred_size)# zeros length sum(population[:,population.size[1
 for i in range(1, int(np.max(population[:,population.shape[1]-1])+1), 1):
   testInd =population[population[:,population.shape[1]-1] > 0,population.shape[1]-1] ==i
   trainInd = (population[population[:,population.shape[1]-1] > 0,population.shape[1]-1] !=i)
-  train_x = X[trainInd,:]
-  train_y = y[trainInd]
+  train_x = X[trainInds,:][trainInd,:]
+  train_y = y[trainInds][trainInd]
   
-  test_x = X[testInd,:]	
+  test_x = X[trainInds,:][testInd,:]	
   print "Fold %s split %s in train set and %s in test set" %(i, train_x.shape[0], test_x.shape[0])
   print "Train set contains %s outcomes " %(np.sum(train_y))
 
   # train on fold
   print "Training fold %s" %(i)
   start_time = timeit.default_timer()	
-  mlp = MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+  mlp = MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(500, 2), random_state=1)
   mlp = mlp.fit(train_x, train_y)
   end_time = timeit.default_timer()
   print "Training fold took: %.2f s" %(end_time-start_time)
@@ -80,11 +62,11 @@ for i in range(1, int(np.max(population[:,population.shape[1]-1])+1), 1):
 	
 # train final:
 print "Training final neural network model on all train data..."
-print "X- %s rows and Y %s columns" %(X.shape[0], y.shape[0])
+print "X- %s rows and Y %s length" %(X[trainInds,:].shape[0], y[trainInds].shape[0])
 
 start_time = timeit.default_timer()	
-mlp = MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
-mlp = mlp.fit(X, y)
+mlp = MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(500, 2), random_state=1)
+mlp = mlp.fit(X[trainInds,:], y[trainInds])
 end_time = timeit.default_timer()
 print "Training final took: %.2f s" %(end_time-start_time)
 	

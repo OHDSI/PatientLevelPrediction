@@ -43,7 +43,6 @@ setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
                                                        max_depth=max_depth, varImp=varImp),
                  name='Random forest')
   class(result) <- 'modelSettings' 
-  attr(result, 'libSVM') <- T
   
   return(result)
 }
@@ -54,10 +53,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format:
-  if('ffdf'%in%class(plpData$covariates) || class(plpData)!='plpData.libsvm')
-    stop('Random forest requires plpData in libsvm format')
-  if(!file.exists(file.path(plpData$covariates,'covariate.txt')))
-    stop('Cannot find libsvm file')
+  if(!'ffdf'%in%class(plpData$covariates))
+    stop('Random forest requires plpData')
   
   if(colnames(population)[ncol(population)]!='indexes'){
     warning('indexes column not present as last column - setting all index to 1')
@@ -69,7 +66,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy")}
+    PythonInR::pyImport("numpy", as='np')}
   
   # return error if we can't connect to python
   if ( !PythonInR::pyIsConnected() )
@@ -80,20 +77,17 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     writeLines(paste0('Training random forest model...' ))
   start <- Sys.time()
   
-  # create vector of 1s and 0s indicating whether the plpData row is in the populaiton
-  rowIds <- utils::read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
-  rowData <- rep(0, length(rowIds))
-  rowData[rowIds%in%population$rowId] <- 1
-  utils::write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
-  
   # make sure population is ordered?
-  utils::write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
+  population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+  PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
   
+  # convert plpData in coo to python:
+  x <- toSparsePython(plpData,population, map=NULL)
+    
   #do var imp
   if(param$varImp[1]==T){
   
     # python checked in .set 
-    PythonInR::pySet("dataLocation" ,plpData$covariates)
     PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','rf_var_imp.py '))
     
     
@@ -133,10 +127,10 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     PythonInR::pyExec(paste0("max_depth = int(",param$max_depth[i],")"))
     PythonInR::pySet("mtry",param$mtries[i])
     
-    PythonInR::pySet("dataLocation" ,plpData$covariates)
+    ##PythonInR::pySet("dataLocation" ,plpData$covariates)
     
     # do inc-1 to go to python index as python starts at 0, R starts at 1
-    PythonInR::pyImport("numpy", as="np")
+    ##PythonInR::pyImport("numpy", as="np")
     PythonInR::pySet('included', as.matrix(inc-1), 
                      namespace = "__main__", useNumpy = TRUE)
     
@@ -209,7 +203,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef,
                  trainingTime =comp,
-                 dense=0
+                 dense=0,
+                 covariateMap=x$map
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'

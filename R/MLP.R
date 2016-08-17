@@ -36,7 +36,6 @@ setMLP <- function(){
   }
   result <- list(model='fitMLP', name='Neural network', param= '')
   class(result) <- 'modelSettings' 
-  attr(result, 'libSVM') <- T
   
   return(result)
 }
@@ -45,9 +44,8 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
-  plpData <- checkLibsvm(plpData)
-  if(!file.exists(file.path(plpData$covariates,'covariate.txt')))
-    stop('Cannot find libsvm file')
+  if(!'ffdf'%in%class(plpData$covariates))
+    stop('Needs plpData')
   
   if(colnames(population)[ncol(population)]!='indexes'){
     warning('indexes column not present as last column - setting all index to 1')
@@ -59,7 +57,7 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy")}
+    PythonInR::pyImport("numpy", as='np')}
   
   
   # return error if we can't connect to python
@@ -68,14 +66,11 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   
   start <- Sys.time()
   
-  # create vector of 1s and 0s indicating whether the plpData row is in the populaiton
-  rowIds <- utils::read.table(file.path(plpData$covariates,'rowId.txt'))[,1]
-  rowData <- rep(0, length(rowIds))
-  rowData[rowIds%in%population$rowId] <- 1
-  utils::write.table(rowData, file.path(plpData$covariates,'dataRows.txt'), col.names=F, row.names = F)
+  population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+  PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
   
-  # make sure population is ordered?
-  utils::write.table(population[,c('rowId','outcomeCount','indexes')], file.path(plpData$covariates,'population.txt'), col.names=F, row.names = F)
+  # convert plpData in coo to python:
+  x <- toSparsePython(plpData,population, map=NULL)
   
   # save the model to outLoc  TODO: make this an input or temp location?
   outLoc <- file.path(getwd(),'python_models')
@@ -83,9 +78,7 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
 
-  
   # run model:
-  PythonInR::pySet("dataLocation" ,plpData$covariates)
   outLoc <- file.path(getwd(),'python_models')
   PythonInR::pySet("modelOutput",outLoc)
   
