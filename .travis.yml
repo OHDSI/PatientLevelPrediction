@@ -52,7 +52,7 @@ install:
   - Rscript -e 'if(!"Metrics" %in% rownames(installed.packages())) { install.packages("Metrics", dependencies = TRUE) }'
   - Rscript -e 'if(!"futile.logger" %in% rownames(installed.packages())) { install.packages("futile.logger", dependencies = TRUE) }'  
   - Rscript -e 'if(!"utils" %in% rownames(installed.packages())) { install.packages("utils", dependencies = TRUE) }'  
-  - Rscript -e 'if(!"e1071" %in% rownames(installed.packages())) { install.packages("e1071", dependencies = TRUE) }'
+  - Rscript -e 'if(!"reshape2" %in% rownames(installed.packages())) { install.packages("reshape2", dependencies = TRUE) }'
   - Rscript -e 'if(!"ResourceSelection" %in% rownames(installed.packages())) { install.packages("ResourceSelection", dependencies = TRUE) }'
   - Rscript -e 'if(!"SparseM" %in% rownames(installed.packages())) { install.packages("SparseM", dependencies = TRUE) }'
   

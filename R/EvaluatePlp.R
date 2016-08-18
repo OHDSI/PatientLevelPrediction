@@ -611,6 +611,19 @@ getDemographicSummary <- function(prediction, plpData){
 
 
 # making all this single for easy unit testing 
+#' Calculate the f1Score
+#'
+#' @details
+#' Calculate the f1Score
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' f1Score value
+#'
 #' @export
 f1Score <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -623,6 +636,19 @@ f1Score <- function(TP,TN,FN,FP){
   if(class(FN)!='numeric') stop('Incorrect FN class')
   return(2*(TP/(TP+FP))*(TP/(TP+FN))/((TP/(TP+FP))+(TP/(TP+FN))))
          }
+#' Calculate the accuracy
+#'
+#' @details
+#' Calculate the accuracy 
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' accuracy value
+#'
 #' @export
 accuracy <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -634,6 +660,19 @@ accuracy <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   (TP+TN)/(TP+TN+FP+FN)}
+#' Calculate the sensitivity
+#'
+#' @details
+#' Calculate the sensitivity 
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' sensitivity value
+#'
 #' @export
 sensitivity <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -645,6 +684,19 @@ sensitivity <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   TP/(TP+FN)}
+#' Calculate the falseNegativeRate 
+#'
+#' @details
+#' Calculate the falseNegativeRate 
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' falseNegativeRate  value
+#'
 #' @export
 falseNegativeRate <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -656,6 +708,19 @@ falseNegativeRate <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   FN/(TP+FN)}
+#' Calculate the falsePositiveRate 
+#'
+#' @details
+#' Calculate the falsePositiveRate 
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' falsePositiveRate  value
+#'
 #' @export
 falsePositiveRate <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -667,6 +732,19 @@ falsePositiveRate <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   FP/(FP+TN)}
+#' Calculate the specificity
+#'
+#' @details
+#' Calculate the specificity
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' specificity value
+#'
 #' @export
 specificity <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -678,6 +756,19 @@ specificity <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   TN/(FP+TN)}
+#' Calculate the positivePredictiveValue
+#'
+#' @details
+#' Calculate the positivePredictiveValue
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' positivePredictiveValue value
+#'
 #' @export
 positivePredictiveValue <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -689,6 +780,19 @@ positivePredictiveValue <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   TP/(TP+FP)}
+#' Calculate the falseDiscoveryRate
+#'
+#' @details
+#' Calculate the falseDiscoveryRate
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' falseDiscoveryRate value
+#'
 #' @export
 falseDiscoveryRate <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -700,6 +804,19 @@ falseDiscoveryRate <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   FP/(TP+FP)}
+#' Calculate the negativePredictiveValue
+#'
+#' @details
+#' Calculate the negativePredictiveValue
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' negativePredictiveValue value
+#'
 #' @export
 negativePredictiveValue <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -711,6 +828,19 @@ negativePredictiveValue <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   TN/(FN+TN)}
+#' Calculate the falseOmissionRate
+#'
+#' @details
+#' Calculate the falseOmissionRate
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' falseOmissionRate value
+#'
 #' @export
 falseOmissionRate <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -722,6 +852,20 @@ falseOmissionRate <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   FN/(FN+TN)}
+
+#' Calculate the positiveLikelihoodRatio
+#'
+#' @details
+#' Calculate the positiveLikelihoodRatio
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' positiveLikelihoodRatio value
+#'
 #' @export
 positiveLikelihoodRatio <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -733,6 +877,20 @@ positiveLikelihoodRatio <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   (TP/(TP+FN))/(FP/(FP+TN))}
+
+#' Calculate the negativeLikelihoodRatio
+#'
+#' @details
+#' Calculate the negativeLikelihoodRatio
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' negativeLikelihoodRatio value
+#'
 #' @export
 negativeLikelihoodRatio <- function(TP,TN,FN,FP){
   if(sum(TP<0)>0) stop('TP < 0')
@@ -744,6 +902,21 @@ negativeLikelihoodRatio <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   (FN/(TP+FN))/(TN/(FP+TN))}
+
+
+#' Calculate the diagnostic odds ratio
+#'
+#' @details
+#' Calculate the diagnostic odds ratio
+#'
+#' @param TP                Number of true positives
+#' @param TN                Number of true negatives
+#' @param FN                Number of false negatives
+#' @param FP                Number of false positives
+#'
+#' @return
+#' diagnosticOddsRatio value
+#'
 #' @export
 diagnosticOddsRatio <- function(TP,TN,FN,FP){  
   if(sum(TP<0)>0) stop('TP < 0')

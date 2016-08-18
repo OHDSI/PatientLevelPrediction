@@ -41,7 +41,8 @@ Imports:
     utils,
     ResourceSelection,
     methods,
-    BigKnn
+    BigKnn,
+    reshape2
 Suggests:
     testthat,
     pROC,
@@ -50,8 +51,7 @@ Suggests:
     rmarkdown,
     scoring,
     Metrics,
-    SparseM,
-    e1071
+    SparseM
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 5.0.1

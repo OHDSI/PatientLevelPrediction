@@ -16,6 +16,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+#' Plot all the PatientLevelPrediction plots
+#'
+#' @details
+#' Create a directory with all the plots
+#'
+#' @param result                Object returned by the RunPlp() function
+#' @param filename              Name of the file where the plot should be saved, for example
+#'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
+#'                              supported file formats.
+#'
+#' @return
+#' TRUE if it ran 
+#'
+#' @export
+plotPlp <- function(result, filename){
+  
+  # check inputs
+  
+  if(!dir.exists(file.path(filename, 'plots'))){dir.create(file.path(filename, 'plots'), recursive =T)}
+  
+  # run each of the plots:
+  plotSparseRoc(result$performanceEvaluationTest, 
+                fileName=file.path(filename, 'plots','sparseROC.pdf'))
+  plotPredictedPDF(result$performanceEvaluationTest, 
+                   fileName=file.path(filename, 'plots','predictedPDF.pdf'))
+  plotPreferencePDF(result$performanceEvaluationTest, 
+                    fileName=file.path(filename, 'plots','preferencePDF.pdf'))
+  plotPrecisionRecall(result$performanceEvaluationTest, 
+                      fileName=file.path(filename, 'plots','precisionRecall.pdf'))
+  plotF1Measure(result$performanceEvaluationTest, 
+                fileName=file.path(filename, 'plots','f1Measure.pdf'))
+  plotDemographicSummary(result$performanceEvaluationTest, 
+                         fileName=file.path(filename, 'plots','demographicSummary.pdf'))
+  plotSparseCalibration(result$performanceEvaluationTest, 
+                        fileName=file.path(filename, 'plots','sparseCalibration.pdf'))
+  plotPredictionDistribution(result$performanceEvaluationTest, 
+                             fileName=file.path(filename, 'plots','predictionDistribution.pdf'))
+  
+  plotVariableScatterplot(result$covariateSummary, 
+                          fileName=file.path(filename, 'plots','variableScatterplot.pdf'))
+  plotGenerlizabilityOutcome(result$covariateSummary, 
+                             fileName=file.path(filename, 'plots','generlizabilityOutcome.pdf'))
+  plotGenerlizabilityNoOutcome(result$covariateSummary, 
+                               fileName=file.path(filename, 'plots','generlizabilityNoOutcome.pdf'))
+  
+  return(TRUE)
+}
+
 #' Plot the ROC curve
 #'
 #' @details
