@@ -39,7 +39,6 @@ Imports:
     PythonInR,
     futile.logger,
     utils,
-    ResourceSelection,
     methods,
     BigKnn,
     reshape2
@@ -51,7 +50,8 @@ Suggests:
     rmarkdown,
     scoring,
     Metrics,
-    SparseM
+    SparseM,
+    ResourceSelection
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 5.0.1

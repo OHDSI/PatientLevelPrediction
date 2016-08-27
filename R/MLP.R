@@ -49,7 +49,7 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   
   if(colnames(population)[ncol(population)]!='indexes'){
     warning('indexes column not present as last column - setting all index to 1')
-    population$indexes <- rep(1, nrow(popualtion))
+    population$indexes <- rep(1, nrow(population))
   }
   
   # connect to python if not connected
