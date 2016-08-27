@@ -18,6 +18,7 @@
 
 # Add explicit bindings. 
 # Could maybe better be done using importFrom (to be decided)
+# MAS: Highly recommend using importFrom (in case futile.logger changes its API)
 
 INFO  <- futile.logger::INFO
 TRACE <- futile.logger::TRACE
