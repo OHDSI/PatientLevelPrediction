@@ -55,12 +55,12 @@ install:
   - Rscript -e 'if(!"reshape2" %in% rownames(installed.packages())) { install.packages("reshape2", dependencies = TRUE) }'
   - Rscript -e 'if(!"ResourceSelection" %in% rownames(installed.packages())) { install.packages("ResourceSelection", dependencies = TRUE) }'
   - Rscript -e 'if(!"SparseM" %in% rownames(installed.packages())) { install.packages("SparseM", dependencies = TRUE) }'
+  - Rscript -e 'if(!"Cyclops" %in% rownames(installed.packages())) { install.packages("Cyclops", dependencies = TRUE) }'
+  - Rscript -e 'if(!"SqlRender" %in% rownames(installed.packages())) { install.packages("SqlRender", dependencies = TRUE) }'  
   
   # Install OHDSI dependencies
-  - Rscript -e 'devtools::install_github("OHDSI/SqlRender")'
   - Rscript -e 'devtools::install_github("OHDSI/DatabaseConnector")'
   - Rscript -e 'devtools::install_github("OHDSI/FeatureExtraction")'
-  - Rscript -e 'devtools::install_github("OHDSI/Cyclops")'
   - Rscript -e 'devtools::install_github("OHDSI/OhdsiRTools")'
   - Rscript -e 'devtools::install_github("OHDSI/BigKnn")'
       
