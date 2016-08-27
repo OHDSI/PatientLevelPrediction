@@ -113,7 +113,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   incs <- rep(0, nrow(covariateRef))
   incs[inc] <- 1
   covariateRef$included <- incs
-  covariateRef$varImp <- varImp
+  covariateRef$value <- varImp
   
   # select best model and remove the others
   modelTrained <- file.path(outLoc) 

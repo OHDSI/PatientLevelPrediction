@@ -565,16 +565,34 @@ getDemographicSummary <- function(prediction, plpData){
     ind <- ffbase::ffwhich(ind, !is.na(ind))
     if(length(ind)>0){
       pplofintAge <- plpData$covariates$rowId[ind]
-      ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(demographicData[i,'genId'])))
-      ind <- ffbase::ffwhich(ind, !is.na(ind)) 
-      if(length(ind)>0){
-        pplofintGen <- plpData$covariates$rowId[ind]
-        pplofint <- intersect(ff::as.ram(pplofintAge), ff::as.ram(pplofintGen))
-        prediction$demographicId[prediction$rowId%in%ff::as.ram(pplofint)] <- i
+      if(as.double(demographicData[i,'genId'])!=8532){
+        ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(demographicData[i,'genId'])))
+        ind <- ffbase::ffwhich(ind, !is.na(ind)) 
+        if(length(ind)>0){
+          pplofintGen <- plpData$covariates$rowId[ind]
+          pplofint <- intersect(ff::as.ram(pplofintAge), ff::as.ram(pplofintGen))
+          prediction$demographicId[prediction$rowId%in%ff::as.ram(pplofint)] <- i
+        }
+        } else{
+          ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(8507)))
+          ind <- ffbase::ffwhich(ind, !is.na(ind)) 
+          if(length(ind)>0){
+            pplofintGen <- plpData$covariates$rowId[ind]
+            pplofintGen <-  prediction$rowId[!prediction$rowId%in%ff::as.ram(pplofintGen)]
+          } else {
+            pplofintGen <-  prediction$rowId
+          }
+          pplofint <- intersect(ff::as.ram(pplofintAge), ff::as.ram(pplofintGen))
+          prediction$demographicId[prediction$rowId%in%ff::as.ram(pplofint)] <- i
+          
       }
+        
       
     }
   }
+  
+  # TODO: now add the missing age_group (zeros)
+  #(1:40)[!(1:40)%in%unique(prediction$demographicId)]
   
   #calcualte PersonCountAtRisk	PersonCountWithOutcome	
   #          averagePredictedProbability	StDevPredictedProbability	

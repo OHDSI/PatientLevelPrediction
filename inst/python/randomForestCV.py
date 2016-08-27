@@ -57,7 +57,7 @@ for i in range(1, int(np.max(population[:,population.shape[1]-1])+1), 1):
   # train on full test data using hyper parameters
   print "Training user specified random forest..."
   start_time = timeit.default_timer()	
-  rf = RandomForestClassifier(max_features=mtry, n_estimators=ntrees,max_depth=max_depth,min_samples_split=5, random_state=0, n_jobs=-1, bootstrap=False)#, class_weight="balanced_subsample")
+  rf = RandomForestClassifier(max_features=int(mtry), n_estimators=ntrees,max_depth=max_depth,min_samples_split=5,  n_jobs=-1, bootstrap=False)#, class_weight="balanced_subsample")
   #rf = RandomForestClassifier(max_features=mtry, n_estimators=500,max_depth=4,min_samples_split=5, random_state=0, n_jobs=-1, bootstrap=False)#, class_weight="balanced_subsample")
   rf = rf.fit(train_x, train_y)
   end_time = timeit.default_timer()

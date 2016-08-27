@@ -174,7 +174,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   incs <- rep(0, nrow(covariateRef))
   incs[inc] <- 1
   covariateRef <- cbind(covariateRef, incs, variableImportance)
-  colnames(covariateRef) <- c('covariateId','covariateName','analysisId','conceptId','included','varImp')
+  colnames(covariateRef) <- c('covariateId','covariateName','analysisId','conceptId','included','value')
   ##write.table(covariateRef, file.path(outLoc, 'covs.txt'), row.names=F, col.names=T) # might not need?
   
   pred <- PythonInR::pyGet('prediction', simplify = F)

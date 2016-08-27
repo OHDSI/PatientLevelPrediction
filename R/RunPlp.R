@@ -341,6 +341,13 @@ RunPlp <- function(population, plpData,
   colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'] <- paste0('Test',colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'])
   covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
   covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
+  if(!is.null(save)){
+    flog.trace('Saving covariate summary')
+    if(!dir.exists( file.path(analysisPath, 'evaluation') ))
+      dir.create(file.path(analysisPath, 'evaluation'))
+    ftry(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
+         finally= flog.trace('Saved covariate summary.')
+    )}
   flog.info(paste0('Finished covariate summary @ ', Sys.time()))
   
   results <- list(inputSetting=inputSetting,

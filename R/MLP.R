@@ -110,7 +110,7 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
-  covariateRef$varImp <- varImp
+  covariateRef$value <- varImp
   ##covariateRef <- covariateRef[inc,] # this messes up order
   ##write.table(covariateRef, file.path(outLoc, 1,'covs.txt'), row.names=F, col.names=T)
   
