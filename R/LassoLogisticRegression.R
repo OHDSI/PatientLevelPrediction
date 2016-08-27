@@ -54,7 +54,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                      prior = createPrior("laplace",exclude = c(0),useCrossValidation = TRUE),
                                      control = createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                              startingVariance = val,
-                                                             tolerance  = 2e-06,
+                                                             tolerance  = 2e-07,
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
                                                              selectorType = "byPid",
                                                              threads=-1,

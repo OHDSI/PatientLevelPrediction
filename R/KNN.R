@@ -22,9 +22,9 @@
 #' @param indexFolder The directory where the results and intermediate steps are output
 #'
 #' @examples
-#' model.knn <- KNN.set(k=c(3,100,1000))
+#' model.knn <- setKNN(k=c(3,100,1000))
 #' @export
-KNN.set <- function(k=1000, indexFolder=getwd()){
+setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
   
   result <- list(model='fitKNN', param=list(k=k, indexFolder=indexFolder),
                  name='KNN'
@@ -72,6 +72,9 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
   if(!quiet)
     writeLines(paste0('Model knn trained - took:',  format(comp, digits=3)))
   
+  varImp<- ff::as.ram(plpData$covariateRef)
+  varImp$value <- rep(0, nrow(varImp))
+  
   result <- list(model = indexFolder,
                  trainCVAuc = NULL,    # did I actually save this!?
                  modelSettings = list(model='knn',
@@ -82,7 +85,7 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
                  cohortId=cohortId,
-                 varImp = NULL,
+                 varImp = varImp,
                  trainingTime =comp
   )
   class(result) <- 'plpModel'

@@ -15,5 +15,6 @@ setKNN(k = 1000, indexFolder = file.path(getwd(), "knn"))
 Create setting for knn model
 }
 \examples{
+model.knn <- setKNN(k=c(3,100,1000))
 }
 
