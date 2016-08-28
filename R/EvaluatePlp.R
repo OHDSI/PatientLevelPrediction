@@ -100,6 +100,8 @@ evaluatePlp <- function(prediction, plpData){
   
   # evaluationStatistics:
   evaluationStatistics <- list(analysisId= attr(prediction, "metaData")$analysisId,
+                               populationSize = nrow(prediction),
+                               outcomeCount = sum(prediction$outcomeCount),
                                # need to add analysisId to metaData!
                                AUC= auc,	
                                BrierScore = brier$brier,	
@@ -558,14 +560,24 @@ getDemographicSummary <- function(prediction, plpData){
                             genId = c(rep(8507,20), rep(8532,20)),
                             genGroup = c(rep('Male',20), rep('Female',20)) )
   
+  missGen <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
+  otherGen <- c(8507,8532)[!c(8507,8532)%in%missGen]
+  missAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
   
-  prediction$demographicId <- 0
+  defaultVal <- 0
+  if(length(missAge)==1){
+    ind <- demographicData[,'genId']==missGen & demographicData[,'ageId']==missAge
+    defaultVal <- as.integer(demographicData[ind,'demographicId'])
+  }
+  
+  prediction$demographicId <- defaultVal
   for (i in 1:nrow(demographicData)){
+    #get age ppl
     ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(demographicData[i,'ageId'])))
     ind <- ffbase::ffwhich(ind, !is.na(ind))
     if(length(ind)>0){
       pplofintAge <- plpData$covariates$rowId[ind]
-      if(as.double(demographicData[i,'genId'])!=8532){
+      if(as.double(demographicData[i,'genId'])!=missGen){
         ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(demographicData[i,'genId'])))
         ind <- ffbase::ffwhich(ind, !is.na(ind)) 
         if(length(ind)>0){
@@ -574,7 +586,7 @@ getDemographicSummary <- function(prediction, plpData){
           prediction$demographicId[prediction$rowId%in%ff::as.ram(pplofint)] <- i
         }
         } else{
-          ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(8507)))
+          ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(otherGen)))
           ind <- ffbase::ffwhich(ind, !is.na(ind)) 
           if(length(ind)>0){
             pplofintGen <- plpData$covariates$rowId[ind]
@@ -590,9 +602,22 @@ getDemographicSummary <- function(prediction, plpData){
       
     }
   }
-  
-  # TODO: now add the missing age_group (zeros)
-  #(1:40)[!(1:40)%in%unique(prediction$demographicId)]
+
+  #add missing age:
+  if(length(missAge)==1){
+    ind <- demographicData[,'genId']==otherGen & demographicData[,'ageId']==missAge
+    missingVal <- as.integer(demographicData[ind,'demographicId'])
+    
+    ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(otherGen)))
+    ind <- ffbase::ffwhich(ind, !is.na(ind))
+    if(length(ind)>0){
+      pplofintGen <- plpData$covariates$rowId[ind]
+      pplmiss <- prediction$rowId[prediction$demographicId == defaultVal]
+      pplofint <- intersect(ff::as.ram(pplofintGen),pplmiss)
+      prediction$demographicId[prediction$rowId%in%pplofint] <- missingVal
+    }
+  }
+    
   
   #calcualte PersonCountAtRisk	PersonCountWithOutcome	
   #          averagePredictedProbability	StDevPredictedProbability	
