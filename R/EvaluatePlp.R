@@ -561,7 +561,10 @@ getDemographicSummary <- function(prediction, plpData){
                             genGroup = c(rep('Male',20), rep('Female',20)) )
   
   missGen <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
-  otherGen <- c(8507,8532)[!c(8507,8532)%in%missGen]
+  if(length(missGen)==1){
+    otherGen <- c(8507,8532)[!c(8507,8532)%in%missGen]} else
+    {otherGen <- 8507
+     missGen <- 8532}
   missAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
   
   defaultVal <- 0
