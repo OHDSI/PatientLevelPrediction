@@ -57,10 +57,8 @@ plotPlp <- function(result, filename){
   
   plotVariableScatterplot(result$covariateSummary, 
                           fileName=file.path(filename, 'plots','variableScatterplot.pdf'))
-  plotGenerlizabilityOutcome(result$covariateSummary, 
-                             fileName=file.path(filename, 'plots','generlizabilityOutcome.pdf'))
-  plotGenerlizabilityNoOutcome(result$covariateSummary, 
-                               fileName=file.path(filename, 'plots','generlizabilityNoOutcome.pdf'))
+  plotGenerlizability(result$covariateSummary, 
+                             fileName=file.path(filename, 'plots','generlizability.pdf'))
   
   return(TRUE)
 }
@@ -176,22 +174,39 @@ plotPredictedPDF <- function(evaluation, fileName=NULL){
   
   x<- evaluation$thresholdSummary[,c('predictionThreshold','truePositiveCount','trueNegativeCount',
                                      'falsePositiveCount','falseNegativeCount')]
+
+  x$out <- c(x$truePositiveCount[-length(x$truePositiveCount)]-x$truePositiveCount[-1], x$truePositiveCount[length(x$truePositiveCount)])
+  x$nout <- c(x$falsePositiveCount[-length(x$falsePositiveCount)]-x$falsePositiveCount[-1], x$falsePositiveCount[length(x$falsePositiveCount)])
   
-  x$TC <- x$truePositiveCount+x$trueNegativeCount
-  x$FC <- x$falsePositiveCount+x$falseNegativeCount
+  vals <- c()
+  for(i in 1:length(x$predictionThreshold)){
+    if(i!=length(x$predictionThreshold)){
+      upper <- x$predictionThreshold[i+1]} else {upper <- min(x$predictionThreshold[i]+0.01,1)}
+  val <- x$predictionThreshold[i]+runif(x$out[i])*(upper-x$predictionThreshold[i])
+  vals <- c(val, vals)
+  }
+  vals[!is.na(vals)]
   
-  x <- x[,c('predictionThreshold','TC','FC')]
-  x <- reshape2::melt(x, id.vars='predictionThreshold')
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x=x$predictionThreshold,y= x$value,
-                                          group=x$variable, color=x$variable)) +
-    #ggplot2::geom_polygon(fill = "blue", alpha = 0.2) +
-    ggplot2::geom_line(size=0.5) +
-    ggplot2::geom_point(size=1) +
-    ggplot2::scale_x_continuous("Prediction Threshold", limits=c(0,1)) +
-    ggplot2::scale_y_continuous("Count") +
-    ggplot2::scale_colour_manual(values = c("green4","red1"),
-                                 guide = ggplot2::guide_legend(title = NULL),
-                                 labels = c("True Predictions", "False Predictions"))
+  vals2 <- c()
+  for(i in 1:length(x$predictionThreshold)){
+    if(i!=length(x$predictionThreshold)){
+      upper <- x$predictionThreshold[i+1]} else {upper <- min(x$predictionThreshold[i]+0.01,1)}
+    val2 <- x$predictionThreshold[i]+runif(x$nout[i])*(upper-x$predictionThreshold[i])
+    vals2 <- c(val2, vals2)
+  }
+  vals2[!is.na(vals2)]
+  
+  x <- rbind(data.frame(variable=rep('outcome',length(vals)), value=vals),
+             data.frame(variable=rep('No outcome',length(vals2)), value=vals2)
+  )
+  
+  plot <- ggplot2::ggplot(x, ggplot2::aes(x=x$value,
+                                          group=x$variable,
+                                          fill=x$variable)) +
+    ggplot2::geom_density(ggplot2::aes(x=x$value, fill=x$variable), alpha=.3) +
+    ggplot2::scale_x_continuous("Prediction Threshold")+#, limits=c(0,1)) +
+    ggplot2::scale_y_continuous("Density") + 
+    ggplot2::guides(fill=ggplot2::guide_legend(title="Class"))
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
@@ -221,21 +236,38 @@ plotPreferencePDF <- function(evaluation, fileName=NULL){
   x<- evaluation$thresholdSummary[,c('preferenceThreshold','truePositiveCount','trueNegativeCount',
                                      'falsePositiveCount','falseNegativeCount')]
   
-  x$TC <- x$truePositiveCount+x$trueNegativeCount
-  x$FC <- x$falsePositiveCount+x$falseNegativeCount
+  x$out <- c(x$truePositiveCount[-length(x$truePositiveCount)]-x$truePositiveCount[-1], x$truePositiveCount[length(x$truePositiveCount)])
+  x$nout <- c(x$falsePositiveCount[-length(x$falsePositiveCount)]-x$falsePositiveCount[-1], x$falsePositiveCount[length(x$falsePositiveCount)])
   
-  x <- x[,c('preferenceThreshold','TC','FC')]
-  x <- reshape2::melt(x, id.vars='preferenceThreshold')
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x=x$preferenceThreshold,y= x$value,
-                                          group=x$variable, color=x$variable)) +
-    #ggplot2::geom_polygon(fill = "blue", alpha = 0.2) +
-    ggplot2::geom_line(size=0.5) +
-    ggplot2::geom_point(size=1) +
-    ggplot2::scale_x_continuous("Preference Threshold", limits=c(0,1)) +
-    ggplot2::scale_y_continuous("Count") +
-    ggplot2::scale_colour_manual(values = c("green4","red1"),
-                                 guide = ggplot2::guide_legend(title = NULL),
-                                 labels = c("True Predictions", "False Predictions"))
+  vals <- c()
+  for(i in 1:length(x$preferenceThreshold)){
+    if(i!=length(x$preferenceThreshold)){
+    upper <- x$preferenceThreshold[i+1]} else {upper <- 1}
+    val <- x$preferenceThreshold[i]+runif(x$out[i])*(upper-x$preferenceThreshold[i])
+    vals <- c(val, vals)
+  }
+  vals[!is.na(vals)]
+  
+  vals2 <- c()
+  for(i in 1:length(x$preferenceThreshold)){
+    if(i!=length(x$preferenceThreshold)){
+      upper <- x$preferenceThreshold[i+1]} else {upper <- 1}
+    val2 <- x$preferenceThreshold[i]+runif(x$nout[i])*(upper-x$preferenceThreshold[i])
+    vals2 <- c(val2, vals2)
+  }
+  vals2[!is.na(vals2)]
+  
+  x <- rbind(data.frame(variable=rep('outcome',length(vals)), value=vals),
+             data.frame(variable=rep('No outcome',length(vals2)), value=vals2)
+  )
+  
+  plot <- ggplot2::ggplot(x, ggplot2::aes(x=x$value,
+                                          group=x$variable,
+                                          fill=x$variable)) +
+    ggplot2::geom_density(ggplot2::aes(x=x$value, fill=x$variable), alpha=.3) +
+    ggplot2::scale_x_continuous("Preference Threshold")+#, limits=c(0,1)) +
+    ggplot2::scale_y_continuous("Density") + 
+    ggplot2::guides(fill=ggplot2::guide_legend(title="Class"))
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
@@ -262,12 +294,12 @@ plotPreferencePDF <- function(evaluation, fileName=NULL){
 #' @export
 plotPrecisionRecall <- function(evaluation, fileName=NULL){
   x<- evaluation$thresholdSummary[,c('positivePredictiveValue', 'sensitivity')]
-  x <- rbind(c(0,1), x, c(1,0))
+  #x <- rbind(c(0,1), x, c(1,0))
   
   plot <- ggplot2::ggplot(x, ggplot2::aes(x$positivePredictiveValue, x$sensitivity)) +
     ggplot2::geom_line(size=1) +
-    ggplot2::scale_x_continuous("Recall", limits=c(0,1)) +
-    ggplot2::scale_y_continuous("Precision", limits=c(0,1))
+    ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
+    ggplot2::scale_y_continuous("Precision")#, limits=c(0,1))
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
@@ -299,8 +331,8 @@ plotF1Measure <- function(evaluation, fileName=NULL){
   plot <- ggplot2::ggplot(x, ggplot2::aes(x$predictionThreshold, x$f1Score)) +
     ggplot2::geom_line(size=1) +
     ggplot2::geom_point(size=1) +
-    ggplot2::scale_x_continuous("predictionThreshold", limits=c(0,1)) +
-    ggplot2::scale_y_continuous("F1Score", limits=c(0,1))
+    ggplot2::scale_x_continuous("predictionThreshold")+#, limits=c(0,1)) +
+    ggplot2::scale_y_continuous("F1Score")#, limits=c(0,1))
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
@@ -335,25 +367,43 @@ plotDemographicSummary <- function(evaluation, fileName=NULL){
   x <- x[c('ageGroup','genGroup','averagePredictedProbability','observed')]
   x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
   
+ # 1.96*StDevPredictedProbability
+  ci <- evaluation$demographicSummary[,c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
+  ci$StDevPredictedProbability[is.na(ci$StDevPredictedProbability)] <- 1
+  ci$lower <- ci$averagePredictedProbability-1.96*ci$StDevPredictedProbability
+  ci$lower[ci$lower <0] <- 0
+  ci$upper <- ci$averagePredictedProbability+1.96*ci$StDevPredictedProbability
+  ci$upper[ci$upper >1] <- max(ci$upper[ci$upper <1])
+  
   x$age <- gsub('Age group:','', x$ageGroup)
   x$age <- factor(x$age,levels=c(" 0-4"," 5-9"," 10-14",
                                 " 15-19"," 20-24"," 25-29"," 30-34"," 35-39"," 40-44",
                                 " 45-49"," 50-54"," 55-59"," 60-64"," 65-69"," 70-74",
                                 " 75-79"," 80-84"," 85-89"," 90-94"," 95-99"),ordered=TRUE)
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x=age, y=value,
-                                          fill=variable)) +
-    ggplot2::geom_bar(stat="identity", position="dodge") +
-    ggplot2::coord_flip() +
+  x <- merge(x, ci[,c('ageGroup','genGroup','lower','upper')], by=c('ageGroup','genGroup'))
+  
+  plot <- ggplot2::ggplot(data=x, 
+                    ggplot2::aes(x=age, group=variable*genGroup)) +
+    ggplot2::geom_line(ggplot2::aes(y=value, group=variable,
+                                    color=variable,
+                                    linetype = variable))+
+    ggplot2::geom_ribbon(data=x[x$variable!='observed',],
+                         ggplot2::aes(ymin=lower, ymax=upper
+                                      , group=genGroup), 
+                fill="blue", alpha="0.2") +
+      ggplot2::facet_grid(.~ genGroup, scales = "free") +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
+    #ggplot2::coord_flip() +
     ggplot2::scale_y_continuous("Fraction") +
     ggplot2::scale_x_discrete("Age") +
-    ggplot2::facet_grid(.~ genGroup, scales = "free") +
-    ggplot2::scale_fill_manual(values = c("gold2","royalblue4"),
+    ggplot2::scale_color_manual(values = c("royalblue4","red"),
                                  guide = ggplot2::guide_legend(title = NULL),
-                                 labels = c("Expected", "Observed"))
+                                 labels = c("Expected", "Observed")) +
+    ggplot2::guides(linetype=FALSE)
   
   if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
+    ggplot2::ggsave(fileName, plot, width = 7, height = 4.5, dpi = 400)
   return(plot)
 }
 
@@ -380,13 +430,28 @@ plotDemographicSummary <- function(evaluation, fileName=NULL){
 plotSparseCalibration <- function(evaluation, fileName=NULL){
   x<- evaluation$calibrationSummary[,c('averagePredictedProbability','observedIncidence')]
   
+  model <- stats::lm(observedIncidence ~averagePredictedProbability, data=x)
+  res <- model$coefficients
+  names(res) <- c('Intercept','Gradient')
+  
+  # confidence int
+  interceptConf <- stats::confint(model)[1,]
+  gradientConf <- stats::confint(model)[2,]
+  
   # TODO: CHECK INPUT
   plot <- ggplot2::ggplot(x,
-                          ggplot2::aes(x=averagePredictedProbability, y=observedIncidence)) +
-    ggplot2::geom_line() +
+                          ggplot2::aes(y=averagePredictedProbability, x=observedIncidence)) +
+    #ggplot2::geom_line() +
     ggplot2::geom_point(size=1) +
-    ggplot2::scale_x_continuous("Average Predicted probability") +
-    ggplot2::scale_y_continuous("Observed Incidence")
+    ggplot2::scale_y_continuous("Average Predicted Risk") +
+    ggplot2::scale_x_continuous("Observed Risk") +
+    ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
+    ggplot2::geom_abline(intercept = res['Intercept'], slope = res['Gradient'],linetype = 1) +
+    ggplot2::geom_abline(intercept = interceptConf[1], slope = gradientConf[1],linetype = 1,
+                         color='blue') +
+    ggplot2::geom_abline(intercept = interceptConf[2], slope = gradientConf[2],linetype = 1,
+                         color='blue') 
+  
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
   return(plot)
@@ -470,11 +535,14 @@ plotPredictionDistribution <- function(evaluation, fileName=NULL){
 #' @export
 plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
  
-  plot <- ggplot2::ggplot(covariateSummary, ggplot2::aes(CovariateMeanWithOutcome, CovariateMeanWithNoOutcome)) +
-          ggplot2::geom_point(ggplot2::aes(color = abs(value))) + 
-          ggplot2::scale_colour_gradient(low = "white", high="red") +
-    ggplot2::scale_x_continuous("Outcome Incidence") +
-    ggplot2::scale_y_continuous("Non-outcome Incidence") + 
+  plot <- ggplot2::ggplot(covariateSummary, ggplot2::aes(y=CovariateMeanWithOutcome, 
+                                                         x=CovariateMeanWithNoOutcome,
+                                                         size=abs(value)+0.1)) +
+          ggplot2::geom_point(ggplot2::aes(color = value)) +
+          ggplot2::scale_size(range = c(0, 5)) +
+          ggplot2::scale_colour_gradient2(low = "red",mid = "blue", high="green") +
+    ggplot2::scale_y_continuous("Outcome Covariate Mean") +
+    ggplot2::scale_x_continuous("Non-outcome Covariate Mean") + 
     ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
     ggplot2::theme(legend.position="none")
   if (!is.null(fileName))
@@ -483,10 +551,10 @@ plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
 }
 
 
-#' Plot the train/test generalizability diagnostic #1
+#' Plot the train/test generalizability diagnostic
 #'
 #' @details
-#' Create a plot showing the train/test generalizability diagnostic #1
+#' Create a plot showing the train/test generalizability diagnostic
 #' #'
 #' @param covariateSummary      A prediction object as generated using the
 #'                              \code{\link{RunPlp}} function.
@@ -499,51 +567,36 @@ plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
 #' format.
 #'
 #' @export
-plotGenerlizabilityOutcome <- function(covariateSummary, fileName=NULL){
+plotGenerlizability<- function(covariateSummary, fileName=NULL){
   
   covariateSummary$TrainCovariateMeanWithOutcome[is.na(covariateSummary$TrainCovariateMeanWithOutcome)] <- 0
   covariateSummary$TestCovariateMeanWithOutcome[is.na(covariateSummary$TestCovariateMeanWithOutcome)] <- 0
   
-  plot <- ggplot2::ggplot(covariateSummary, 
+  plot1 <- ggplot2::ggplot(covariateSummary, 
                           ggplot2::aes(TrainCovariateMeanWithOutcome, 
                                        TestCovariateMeanWithOutcome)) +
     ggplot2::geom_point() +
-    ggplot2::scale_x_continuous("Train set Incidence") +
-    ggplot2::scale_y_continuous("Test Set Incidence") + 
-    ggplot2::theme(legend.position="none")
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
-  return(plot)
-}
-
-#' Plot the train/test generalizability diagnostic #2
-#'
-#' @details
-#' Create a plot showing the train/test generalizability diagnostic #2
-#' #'
-#' @param covariateSummary      A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
-#' @param fileName              Name of the file where the plot should be saved, for example
-#'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
-#'                              supported file formats.
-#'
-#' @return
-#' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
-#' format.
-#'
-#' @export
-plotGenerlizabilityNoOutcome <- function(covariateSummary, fileName=NULL){
-  
+    ggplot2::scale_x_continuous("Train set Mean") +
+    ggplot2::scale_y_continuous("Test Set Mean") + 
+    ggplot2::theme(legend.position="none") +
+    ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2)+
+    ggplot2::ggtitle("Outcome")
+    
+ 
   covariateSummary$TrainCovariateMeanWithNoNOutcome[is.na(covariateSummary$TrainCovariateMeanWithNoOutcome)] <- 0
   covariateSummary$TestCovariateMeanWithNoOutcome[is.na(covariateSummary$TestCovariateMeanWithNoOutcome)] <- 0
   
-  plot <- ggplot2::ggplot(covariateSummary, 
+  plot2 <- ggplot2::ggplot(covariateSummary, 
                           ggplot2::aes(TrainCovariateMeanWithNoOutcome, 
                                        TestCovariateMeanWithNoOutcome)) +
     ggplot2::geom_point() +
-    ggplot2::scale_x_continuous("Train set Incidence") +
-    ggplot2::scale_y_continuous("Test Set Incidence") + 
-    ggplot2::theme(legend.position="none")
+    ggplot2::scale_x_continuous("Train set Mean") +
+    ggplot2::scale_y_continuous("Test Set Mean") + 
+    ggplot2::theme(legend.position="none") +
+    ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
+    ggplot2::ggtitle("No Outcome")
+  
+  plot <- gridExtra::grid.arrange(plot1, plot2, ncol=2)
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
   return(plot)

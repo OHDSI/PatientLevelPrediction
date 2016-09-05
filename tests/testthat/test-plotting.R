@@ -81,12 +81,8 @@ test_that("plots", {
   test <- plotVariableScatterplot(lr_results$covariateSummary)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotGenerlizabilityOutcome(lr_results$covariateSummary)
-  testthat::expect_s3_class(test, 'ggplot')
-  
-  test <- plotGenerlizabilityNoOutcome(lr_results$covariateSummary)
-  testthat::expect_s3_class(test, 'ggplot')
+  test <- plotGenerlizability(lr_results$covariateSummary)
+  testthat::expect_s3_class(test, 'grob')
 
-  
   
 })
