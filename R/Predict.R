@@ -97,7 +97,7 @@ predict.python <- function(plpModel, population, plpData){
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy") # issues with this using as np
+    PythonInR::pyImport("numpy", as='np') # issues with this using as np
     }
   
   # return error if we can't connect to python
@@ -147,6 +147,9 @@ predict.python <- function(plpModel, population, plpData){
   } else {
     colnames(prediction) <- c('rowId','outcomeCount', 'value')
   }
+  
+  # add 1 to rowId from python:
+  prediction$rowId <- prediction$rowId+1
   
   # TODO delete results
   

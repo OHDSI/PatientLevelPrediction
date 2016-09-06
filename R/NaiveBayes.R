@@ -96,6 +96,9 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   pred <- as.data.frame(pred)
   attr(pred, "metaData") <- list(predictionType="binary")
   
+  # add 1 to rowId from python:
+  pred$rowId <- pred$rowId+1
+  
   pred$value <- 1-pred$value
   auc <- PatientLevelPrediction::computeAuc(pred)
   writeLines(paste0('Model obtained CV AUC of ', auc))

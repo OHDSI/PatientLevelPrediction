@@ -137,7 +137,7 @@ plotSparseRoc <- function(evaluation, fileName=NULL){
   # add the bit to get the step
   stepsExtra <- cbind(x[-1,1], x[-nrow(x),2])
   colnames( stepsExtra) <- colnames(x)
-  x <- rbind(x, stepsExtra, c(0,0))
+  x <- rbind(c(1,1), x, stepsExtra, c(0,0))
   x <- x[order(x$falsePositiveRate, x$sensitivity),]
   
   
@@ -174,7 +174,7 @@ plotPredictedPDF <- function(evaluation, fileName=NULL){
   
   x<- evaluation$thresholdSummary[,c('predictionThreshold','truePositiveCount','trueNegativeCount',
                                      'falsePositiveCount','falseNegativeCount')]
-
+  x<- x[order(x$predictionThreshold,-x$truePositiveCount, -x$falsePositiveCount),]
   x$out <- c(x$truePositiveCount[-length(x$truePositiveCount)]-x$truePositiveCount[-1], x$truePositiveCount[length(x$truePositiveCount)])
   x$nout <- c(x$falsePositiveCount[-length(x$falsePositiveCount)]-x$falsePositiveCount[-1], x$falsePositiveCount[length(x$falsePositiveCount)])
   
@@ -235,7 +235,7 @@ plotPreferencePDF <- function(evaluation, fileName=NULL){
   
   x<- evaluation$thresholdSummary[,c('preferenceThreshold','truePositiveCount','trueNegativeCount',
                                      'falsePositiveCount','falseNegativeCount')]
-  
+  x<- x[order(x$preferenceThreshold,-x$truePositiveCount),]
   x$out <- c(x$truePositiveCount[-length(x$truePositiveCount)]-x$truePositiveCount[-1], x$truePositiveCount[length(x$truePositiveCount)])
   x$nout <- c(x$falsePositiveCount[-length(x$falsePositiveCount)]-x$falsePositiveCount[-1], x$falsePositiveCount[length(x$falsePositiveCount)])
   
@@ -430,7 +430,7 @@ plotDemographicSummary <- function(evaluation, fileName=NULL){
 plotSparseCalibration <- function(evaluation, fileName=NULL){
   x<- evaluation$calibrationSummary[,c('averagePredictedProbability','observedIncidence')]
   
-  model <- stats::lm(observedIncidence ~averagePredictedProbability, data=x)
+  model <- stats::lm(averagePredictedProbability ~observedIncidence, data=x)
   res <- model$coefficients
   names(res) <- c('Intercept','Gradient')
   
@@ -450,7 +450,7 @@ plotSparseCalibration <- function(evaluation, fileName=NULL){
     ggplot2::geom_abline(intercept = interceptConf[1], slope = gradientConf[1],linetype = 1,
                          color='blue') +
     ggplot2::geom_abline(intercept = interceptConf[2], slope = gradientConf[2],linetype = 1,
-                         color='blue') 
+                         color='blue')
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)

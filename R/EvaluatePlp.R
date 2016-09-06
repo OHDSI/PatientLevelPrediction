@@ -441,6 +441,9 @@ getThresholdSummary <- function(prediction){
   # get the indexes for the predictionThreshold
   indexesOfInt <- sapply(predictionThreshold, function(x) min(which(valueOrdered<=x)))
   
+  #TODO: FIGURE THIS BUG OUT # remove infs caused by R bug?
+  indexesOfInt <- indexesOfInt[!is.infinite(indexesOfInt)]
+  
   # improve speed create vector with cum sum 
   temp.cumsum <- rep(0, length(lab.order))
   temp.cumsum[lab.order==0] <- 1:sum(lab.order==0)
