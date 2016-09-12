@@ -159,6 +159,7 @@ predict.python <- function(plpModel, population, plpData){
 predict.knn <- function(plpData, population, plpModel, ...){
   covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
   prediction <- BigKnn::predictKnn(covariates = covariates,
+                                   cohorts=ff::as.ffdf(population),
                                    indexFolder = plpModel$model,
                                    k = plpModel$modelSettings$modelParameters$k,
                                    weighted = TRUE)
