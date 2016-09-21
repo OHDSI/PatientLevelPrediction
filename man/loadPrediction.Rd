@@ -4,10 +4,10 @@
 \alias{loadPrediction}
 \title{Loads the prediciton dataframe to csv}
 \usage{
-loadPrediction(location)
+loadPrediction(dirPath)
 }
 \arguments{
-\item{location}{The directory to saved the csv}
+\item{dirPath}{The directory to saved the csv}
 }
 \description{
 Loads the prediciton dataframe to csv

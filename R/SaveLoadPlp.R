@@ -593,18 +593,18 @@ loadPlpModel <- function(dirPath) {
   return(result)
 }
 
-#' Saves the prediciton dataframe to csv
+#' Saves the prediction dataframe to csv
 #'
 #' @details
-#' Saves the prediciton data frame returned by predict.R to a csv file
+#' Saves the prediction data frame returned by predict.R to a csv file
 #'
 #' @param prediction                   The prediciton data.frame
-#' @param location                     The directory to save the csv
+#' @param dirPath                     The directory to save the csv
 #' 
 #' @export
-savePrediction <- function(prediction, location){
+savePrediction <- function(prediction, dirPath){
   #TODO check inupts
-  utils::write.csv(prediction, file=location, row.names = F, col.names = T)
+  utils::write.csv(prediction, file=dirPath, row.names = F, col.names = T)
   
 }
 
@@ -613,29 +613,43 @@ savePrediction <- function(prediction, location){
 #' @details
 #' Loads the prediciton  csv file
 #'
-#' @param location                     The directory to saved the csv
+#' @param dirPath                     The directory to saved the csv
 #' 
 #' @export
-loadPrediction <- function(location){
+loadPrediction <- function(dirPath){
   #TODO check inupts
-  prediction <- utils::read.csv(file=location, header = T)
+  prediction <- utils::read.csv(file=dirPath, header = T)
   return(prediction)
 }
 
-#' Saves the evalaution dataframe to csv
+#' Saves the result from runPlp into the location directory
 #'
 #' @details
-#' Saves the evaluation on new data to the input location
+#' Saves the result from runPlp into the location directory
 #'
-#' @param evaluation                   The evaluation object
-#' @param location                     The directory to save the csv
+#' @param result                       The result of running RunPlp()
+#' @param dirPath                     The directory to save the csv
 #' 
 #' @export
-saveEvaluation <- function(evaluation, location){
-  #TODO check inupts
+savePlpResult <- function(result, dirPath){
+  if (missing(result))
+    stop("Must specify RunPlp output")
+  if (missing(dirPath))
+    stop("Must specify directory location")
+  #if (class(plpModel) != "plpModel")
+  #  stop("Not a plpModel")
   
-  #TODO add saving 
-  saveRDS(evaluation, file=location)
+  if(!dir.exists(dirPath)) dir.create(dirPath, recursive = T)
+  
+  savePlpModel(result$model, dirPath=file.path(dirPath,'model') )
+  saveRDS(result$analysisRef, file = file.path(dirPath, "analysisRef.rds"))
+  saveRDS(result$inputSetting, file = file.path(dirPath, "inputSetting.rds"))
+  saveRDS(result$executionSummary, file = file.path(dirPath, "executionSummary.rds"))
+  saveRDS(result$prediction, file = file.path(dirPath, "prediction.rds"))
+  saveRDS(result$performanceEvaluationTest, file = file.path(dirPath, "performanceEvaluationTest.rds"))
+  saveRDS(result$performanceEvaluationTrain, file = file.path(dirPath, "performanceEvaluationTrain.rds"))
+  saveRDS(result$covariateSummary, file = file.path(dirPath, "covariateSummary.rds"))
+  
   
 }
 
@@ -644,18 +658,34 @@ saveEvaluation <- function(evaluation, location){
 #' @details
 #' Loads the evaluation 
 #'
-#' @param location                     The directory where the evaluation was saved
+#' @param dirPath                     The directory where the evaluation was saved
 #' 
 #' @export
-loadEvaluation <- function(location){
-  #TODO check inupts
+loadPlpResult <- function(dirPath){
+  if (!file.exists(dirPath))
+    stop(paste("Cannot find folder", dirPath))
+  if (!file.info(dirPath)$isdir)
+    stop(paste("Not a folder", dirPath))
   
-  #TODO add saving 
-  evaluation <- readRDS(location)
-  return(evaluation)
+  
+  result <- list(model = loadPlpModel(file.path(dirPath, "model")),
+                 analysisRef = readRDS(file.path(dirPath, "analysisRef.rds")),
+                 inputSetting = readRDS(file.path(dirPath, "inputSetting.rds")),
+                 executionSummary = readRDS(file.path(dirPath, "executionSummary.rds")),
+                 prediction = readRDS(file.path(dirPath, "prediction.rds")),
+                 performanceEvaluationTest = readRDS(file.path(dirPath, "performanceEvaluationTest.rds")),
+                 performanceEvaluationTrain= readRDS(file.path(dirPath, "performanceEvaluationTrain.rds")),
+                 covariateSummary = readRDS(file.path(dirPath, "covariateSummary.rds"))
+  )
+  class(result) <- "runPlp"
+  
+  return(result)
+  
 }
 
 
+
+# this code is not needed now?
 writeOutput <- function(prediction, 
                         performance.test, 
                         performance.train, 

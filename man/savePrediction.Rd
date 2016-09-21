@@ -2,19 +2,19 @@
 % Please edit documentation in R/SaveLoadPlp.R
 \name{savePrediction}
 \alias{savePrediction}
-\title{Saves the prediciton dataframe to csv}
+\title{Saves the prediction dataframe to csv}
 \usage{
-savePrediction(prediction, location)
+savePrediction(prediction, dirPath)
 }
 \arguments{
 \item{prediction}{The prediciton data.frame}
 
-\item{location}{The directory to save the csv}
+\item{dirPath}{The directory to save the csv}
 }
 \description{
-Saves the prediciton dataframe to csv
+Saves the prediction dataframe to csv
 }
 \details{
-Saves the prediciton data frame returned by predict.R to a csv file
+Saves the prediction data frame returned by predict.R to a csv file
 }
 

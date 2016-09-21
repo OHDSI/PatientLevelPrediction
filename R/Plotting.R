@@ -133,6 +133,7 @@ plotRoc <- function(prediction, fileName = NULL) {
 #' @export
 plotSparseRoc <- function(evaluation, fileName=NULL){
   x<- evaluation$thresholdSummary[,c('falsePositiveRate','sensitivity')]
+  x <- x[order(x$falsePositiveRate, x$sensitivity),]
   
   # add the bit to get the step
   stepsExtra <- cbind(x[-1,1], x[-nrow(x),2])
@@ -429,8 +430,8 @@ plotDemographicSummary <- function(evaluation, fileName=NULL){
 #' @export
 plotSparseCalibration <- function(evaluation, fileName=NULL){
   x<- evaluation$calibrationSummary[,c('averagePredictedProbability','observedIncidence')]
-  
-  model <- stats::lm(averagePredictedProbability ~observedIncidence, data=x)
+  maxVal <- max(x$averagePredictedProbability,x$observedIncidence)
+  model <- stats::lm(observedIncidence~averagePredictedProbability, data=x)
   res <- model$coefficients
   names(res) <- c('Intercept','Gradient')
   
@@ -438,19 +439,28 @@ plotSparseCalibration <- function(evaluation, fileName=NULL){
   interceptConf <- stats::confint(model)[1,]
   gradientConf <- stats::confint(model)[2,]
   
+  cis <- data.frame(lci = interceptConf[1]+seq(0,1,length.out = nrow(x))*gradientConf[1],
+                    uci = interceptConf[2]+seq(0,1,length.out = nrow(x))*gradientConf[2],
+                    x=seq(0,1,length.out = nrow(x)))
+  
+  x <- cbind(x, cis)
   # TODO: CHECK INPUT
-  plot <- ggplot2::ggplot(x,
-                          ggplot2::aes(y=averagePredictedProbability, x=observedIncidence)) +
-    #ggplot2::geom_line() +
-    ggplot2::geom_point(size=1) +
-    ggplot2::scale_y_continuous("Average Predicted Risk") +
-    ggplot2::scale_x_continuous("Observed Risk") +
-    ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
-    ggplot2::geom_abline(intercept = res['Intercept'], slope = res['Gradient'],linetype = 1) +
-    ggplot2::geom_abline(intercept = interceptConf[1], slope = gradientConf[1],linetype = 1,
-                         color='blue') +
-    ggplot2::geom_abline(intercept = interceptConf[2], slope = gradientConf[2],linetype = 1,
-                         color='blue')
+  plot <- ggplot2::ggplot(data=x,
+                          ggplot2::aes(x=averagePredictedProbability, y=observedIncidence
+                                       )) +
+    ggplot2::geom_ribbon(ggplot2::aes(ymin=lci,ymax=uci, x=x), 
+                         fill="blue", alpha="0.2") +
+    ggplot2::geom_point(size=1, color='darkblue') +
+    ggplot2::coord_cartesian(ylim = c(0, maxVal), xlim =c(0,maxVal)) +
+    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 2, size=1,
+                         show.legend = TRUE) +
+    ggplot2::geom_abline(intercept = res['Intercept'], slope = res['Gradient'],
+                         linetype = 1,show.legend = TRUE,
+                         color='darkblue') +
+    ggplot2::scale_x_continuous("Average Predicted Probability") +
+    ggplot2::scale_y_continuous("Observed Fraction With Outcome")
+
+    
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)

@@ -53,7 +53,7 @@ evaluatePlp <- function(prediction, plpData){
   flog.trace('Calculating AUC')
   if(nrow(prediction) < 100000){
     auc <- computeAuc(prediction, confidenceInterval = T)
-    flog.info(sprintf('%-20s%.2f', 'AUC: ', auc*100))
+    flog.info(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
   } else{
     # speed issues with big data so using AUC package
     auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
