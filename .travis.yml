@@ -78,6 +78,7 @@ script:
   - PKG_NAME=$(ls -1t *.tar.gz | head -n 1 | sed 's/_.*gz//')
   - _R_CHECK_CRAN_INCOMING_=FALSE R CMD check "${PKG_FILE_NAME}" --no-build-vignettes --no-manual
   - cat ${PKG_NAME}.Rcheck/00install.out # Print out install / compile log
+  - cat ${PKG_NAME}.Rcheck/tests/testthat/hs_err*.log # Print out testthat crash information
 
 notifications:
   recipients:
