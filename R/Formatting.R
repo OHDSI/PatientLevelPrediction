@@ -80,7 +80,7 @@ toSparseM <- function(plpData,population, map=NULL){
     )
     data <- data+ temp
   }
-  futile.logger::flog.debug(paste0('Sparse matrix with dimensionality: ', dim(data)))
+  futile.logger::flog.debug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
   
   result <- list(data=data,
                  covariateRef=plpData.mapped$covariateRef,
