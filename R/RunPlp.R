@@ -198,9 +198,9 @@ RunPlp <- function(population, plpData,
                      finally=flog.trace('Done.'))
     }
     if(testSplit=='person'){
-      flog.trace('Dataset time split starter')
+      flog.trace('Dataset person split starter')
       indexes <- ftry(personSplitter(population, test=testFraction, nfold=nfold),
-                      finally= flog.trace(log,'Done.')
+                      finally= flog.trace('Done.')
       )
     }
   }
