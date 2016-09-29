@@ -89,7 +89,7 @@ script:
   - for i in $(find ./ -maxdepth 1 -name 'core*' -print); do gdb $(pwd)/test core* -ex "thread apply all bt" -ex "set pagination 0" -batch; done;  
   - gdb R ${PKG_NAME}.Rcheck/tests/testthat/core* -ex "thread apply all bt" -ex "set pagination 0" -batch  
   - cat ${PKG_NAME}.Rcheck/tests/*Rout* # Print out install / compile log
-  - locate -b R | fgrep -w R/bin
+  - find / -name "*bin/R*"
 
 notifications:
   recipients:
