@@ -63,6 +63,7 @@ install:
   - Rscript -e 'devtools::install_github("OHDSI/FeatureExtraction")'
   - Rscript -e 'devtools::install_github("OHDSI/OhdsiRTools")'
   - Rscript -e 'devtools::install_github("OHDSI/BigKnn")'
+
       
   - Rscript -e 'update.packages(ask = FALSE, instlib = "~/Rlib")'
   - Rscript -e 'devtools::install_deps(pkg = ".", dependencies = TRUE)'
@@ -91,7 +92,7 @@ notifications:
     on_failure: change
 after_success:
 - Rscript -e 'library(covr);codecov()'
-- curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/development/trigger/e51f720d-c4e7-45df-b042-5d8a362bd7e0/
+- curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/broadsea-methodslibrary/trigger/f0b51cec-4027-4781-9383-4b38b42dd4f5/
 - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
 env:
   global:
