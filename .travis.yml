@@ -72,6 +72,7 @@ install:
   - Rscript -e 'devtools::install_deps(pkg = ".", dependencies = TRUE)'
 
 before_script:
+  - ulimit -c unlimited -S
   - export PKG_NAME=$(Rscript -e 'cat(paste0(devtools::as.package(".")$package))')
   - export PKG_TARBALL=$(Rscript -e 'pkg <- devtools::as.package("."); cat(paste0(pkg$package,"_",pkg$version,".tar.gz"))')
 
