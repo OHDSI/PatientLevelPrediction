@@ -13,12 +13,14 @@ addons:
     - pandoc
     - default-jdk
     - default-jre
-    - r-cran-rjava
 
 # cache local R libraries directory:
 cache:
   directories:
     - ~/Rlib
+    
+before_install:
+- export LD_LIBRARY_PATH=$JAVA_HOME:$LD_LIBRARY_PATH
 
 # install the package and dependencies:
 install:
