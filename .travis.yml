@@ -33,6 +33,7 @@ install:
   - Rscript -e 'if(!"devtools" %in% rownames(installed.packages())) { install.packages("devtools", dependencies = TRUE) }'
   - Rscript -e 'if (!require("covr")) devtools::install_github("jimhester/covr")'
   - Rscript -e 'if (!require("drat")) install.packages("drat")'     
+  - echo 'drat::addRepo("OHDSI")' >> .Rprofile
   - Rscript -e 'if(!"rJava" %in% rownames(installed.packages())) { install.packages("rJava", dependencies = TRUE) }'
   - Rscript -e 'if(!"testthat" %in% rownames(installed.packages())) { install.packages("testthat", dependencies = TRUE) }'
   - Rscript -e 'if(!"knitr" %in% rownames(installed.packages())) { install.packages("knitr", dependencies = TRUE) }'
