@@ -87,8 +87,9 @@ script:
   - cat ${PKG_NAME}.Rcheck/00install.out # Print out install / compile log
   - cat ${PKG_NAME}.Rcheck/tests/testthat/hs_err*.log # Print out testthat crash information  
   - for i in $(find ./ -maxdepth 1 -name 'core*' -print); do gdb $(pwd)/test core* -ex "thread apply all bt" -ex "set pagination 0" -batch; done;  
-  - gdb ${PKG_NAME}.Rcheck/tests/testthat/core* -ex "thread apply all bt" -ex "set pagination 0" -batch  
+  - gdb R ${PKG_NAME}.Rcheck/tests/testthat/core* -ex "thread apply all bt" -ex "set pagination 0" -batch  
   - cat ${PKG_NAME}.Rcheck/tests/*Rout* # Print out install / compile log
+  - locate -b R | fgrep -w R/bin
 
 notifications:
   recipients:
