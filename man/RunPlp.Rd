@@ -6,7 +6,8 @@
 \usage{
 RunPlp(population, plpData, modelSettings, testSplit = "time",
   testFraction = 0.3, nfold = 3, indexes = NULL, save = NULL,
-  saveModel = T, verbosity = INFO, timeStamp = FALSE, analysisId = NULL)
+  saveModel = T, verbosity = futile.logger::INFO, timeStamp = FALSE,
+  analysisId = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}

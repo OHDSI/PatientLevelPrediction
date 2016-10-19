@@ -5,11 +5,11 @@
 \title{Create a study population}
 \usage{
 createStudyPopulation(plpData, population = NULL, outcomeId, binary = T,
-  firstExposureOnly = FALSE, washoutPeriod = 0,
+  includeAllOutcomes = T, firstExposureOnly = FALSE, washoutPeriod = 0,
   removeSubjectsWithPriorOutcome = TRUE, priorOutcomeLookback = 99999,
   requireTimeAtRisk = T, minTimeAtRisk = 365, riskWindowStart = 0,
   addExposureDaysToStart = FALSE, riskWindowEnd = 365,
-  addExposureDaysToEnd = F, verbosity = INFO, ...)
+  addExposureDaysToEnd = F, verbosity = futile.logger::INFO, ...)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
@@ -22,6 +22,8 @@ cohorts in the \code{plpData} object.}
 be performed.}
 
 \item{binary}{Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)}
+
+\item{includeAllOutcomes}{(binary) indicating whether to include people with outcomes who are not observed for the whole at risk period}
 
 \item{firstExposureOnly}{Should only the first exposure per subject be included? Note that
 this is typically done in the \code{createStudyPopulation} function,}

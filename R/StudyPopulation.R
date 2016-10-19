@@ -29,6 +29,7 @@
 #' @param binary                Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)                              
 #' @param outcomeId             The  ID of the outcome. If not specified, no outcome-specific transformations will
 #'                              be performed.
+#' @param includeAllOutcomes    (binary) indicating whether to include people with outcomes who are not observed for the whole at risk period
 #' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
 #' @param washoutPeriod                The mininum required continuous observation time prior to index
@@ -72,6 +73,7 @@ createStudyPopulation <- function(plpData,
                                   population = NULL,
                                   outcomeId,
                                   binary = T,
+                                  includeAllOutcomes = T,
                                   firstExposureOnly = FALSE,
                                   washoutPeriod = 0,
                                   removeSubjectsWithPriorOutcome = TRUE,
@@ -82,7 +84,7 @@ createStudyPopulation <- function(plpData,
                                   addExposureDaysToStart = FALSE,
                                   riskWindowEnd = 365,
                                   addExposureDaysToEnd = F,
-                                  verbosity = INFO,
+                                  verbosity = futile.logger::INFO,
                                   ...) {
   
   if (verbosity == TRACE){
@@ -99,6 +101,7 @@ createStudyPopulation <- function(plpData,
   }
   checkNotNull(outcomeId)
   checkBoolean(binary)
+  checkBoolean(includeAllOutcomes)
   checkBoolean(firstExposureOnly)
   checkHigherEqual(washoutPeriod,0)
   checkBoolean(removeSubjectsWithPriorOutcome)
@@ -118,6 +121,7 @@ createStudyPopulation <- function(plpData,
   metaData <- attr(population, "metaData")
   metaData$outcomeId <- outcomeId
   metaData$binary <- binary
+  metaData$includeAllOutcomes <- includeAllOutcomes
   metaData$firstExposureOnly = firstExposureOnly
   metaData$washoutPeriod = washoutPeriod
   metaData$removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome
@@ -181,9 +185,24 @@ createStudyPopulation <- function(plpData,
   population$riskEnd[population$riskEnd > population$daysToObsEnd] <- population$daysToObsEnd[population$riskEnd > population$daysToObsEnd]
   
   if (requireTimeAtRisk) {
-    futile.logger::flog.trace("Removing subjects with no time at risk (if any)")
-    noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart + minTimeAtRisk ]
-    population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
+    if(includeAllOutcomes){
+      futile.logger::flog.trace("Removing non outcome subjects with insufficient time at risk (if any)")
+      
+      #people with the outcome:
+      outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
+      outcomes <- merge(outcomes, population[, c("rowId", "riskStart", "riskEnd")])
+      outcomes <- outcomes[outcomes$daysToEvent >= outcomes$riskStart & outcomes$daysToEvent <= outcomes$riskEnd, ]
+      outcomePpl <- unique(outcomes$rowId)
+      
+      noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart + minTimeAtRisk ]
+      noAtRiskTimeRowIds <- noAtRiskTimeRowIds[!noAtRiskTimeRowIds%in%outcomePpl]
+      population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
+    }
+    else {
+      futile.logger::flog.trace("Removing subjects with insufficient time at risk (if any)")
+      noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart + minTimeAtRisk ]
+      population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
+    }
     outCount <- 0
     if(!missing(outcomeId) && !is.null(outcomeId))
       outCount <- sum(plpData$outcomes$rowId%in%population$rowId & plpData$outcomes$outcomeId == outcomeId)
