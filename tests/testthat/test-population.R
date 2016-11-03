@@ -29,6 +29,7 @@ test_that("population creation parameters", {
   studyPopulation <- createStudyPopulation(plpData,
                         outcomeId = 3,
                         binary = TRUE,
+                        includeAllOutcomes = F,
                         firstExposureOnly = FALSE,
                         washoutPeriod = 0,
                         removeSubjectsWithPriorOutcome = FALSE,
@@ -51,6 +52,7 @@ test_that("population creation parameters", {
   studyPopulation <- createStudyPopulation(plpData,
                                            outcomeId = 3,
                                            binary = TRUE,
+                                           includeAllOutcomes = F,
                                            firstExposureOnly = TRUE,
                                            washoutPeriod = 0,
                                            removeSubjectsWithPriorOutcome = FALSE,
@@ -71,6 +73,7 @@ test_that("population creation parameters", {
   studyPopulation <- createStudyPopulation(plpData,
                                            outcomeId = 3,
                                            binary = TRUE,
+                                           includeAllOutcomes = F,
                                            firstExposureOnly = TRUE,
                                            washoutPeriod = 0,
                                            removeSubjectsWithPriorOutcome = FALSE,
@@ -90,6 +93,7 @@ test_that("population creation parameters", {
   studyPopulation <- createStudyPopulation(plpData,
                                            outcomeId = 3,
                                            binary = TRUE,
+                                           includeAllOutcomes = F,
                                            firstExposureOnly = TRUE,
                                            washoutPeriod = 365,
                                            removeSubjectsWithPriorOutcome = FALSE,
@@ -111,6 +115,7 @@ test_that("population creation parameters", {
                                 population = NULL,
                                 outcomeId = 3,
                                 binary = TRUE,
+                                includeAllOutcomes = F,
                                 firstExposureOnly = FALSE,
                                 washoutPeriod = -1,
                                 removeSubjectsWithPriorOutcome = TRUE,
@@ -130,6 +135,7 @@ test_that("population creation parameters", {
                           population = NULL,
                           outcomeId = 3,
                           binary = TRUE,
+                          includeAllOutcomes = F,
                           firstExposureOnly = FALSE,
                           washoutPeriod = 0,
                           removeSubjectsWithPriorOutcome = TRUE,
@@ -149,6 +155,7 @@ test_that("population creation parameters", {
                           population = NULL,
                           outcomeId = 3,
                           binary = T,
+                          includeAllOutcomes = F,
                           firstExposureOnly = FALSE,
                           washoutPeriod = 0,
                           removeSubjectsWithPriorOutcome = TRUE,
@@ -161,6 +168,88 @@ test_that("population creation parameters", {
                           addExposureDaysToEnd = F,
                           verbosity = FATAL)
   )
+  
+  
+  # check outcomes that only have partial timeatrisk are included:
+  
+  outcomes <- data.frame(rowId= c(1,1,1,4,5), 
+                         outcomeId=c(1,1,1,1,2), 
+                         outcomeCount=rep(1,5),
+                         daysToEvent=c(-30,30,180,60,4)
+  )
+  cohorts <- data.frame(rowId=1:20, 
+                        subjectId=1:20, 
+                        cohortId=rep(2,20),
+                        time=rep(365,20),
+                        cohortStartDates=rep('2012-04-12',20),
+                        daysFromObsStart=rep(740,20),
+                        daysToCohortEnd=rep(1,20),
+                        daysToObsEnd=c(40, rep(900,19))
+                        )
+  plpData2 <- plpData
+  plpData2$outcomes <- outcomes
+  plpData2$cohorts <- cohorts
+  
+  pop <- createStudyPopulation(plpData2,
+                        population = NULL,
+                        outcomeId = 1,
+                        binary = T,
+                        includeAllOutcomes = T,
+                        firstExposureOnly = FALSE,
+                        washoutPeriod = 0,
+                        removeSubjectsWithPriorOutcome = F,
+                        priorOutcomeLookback = 99999,
+                        requireTimeAtRisk = T,
+                        minTimeAtRisk=365,
+                        riskWindowStart = 0,
+                        addExposureDaysToStart = F,
+                        riskWindowEnd = 365,
+                        addExposureDaysToEnd = F,
+                        verbosity = futile.logger::FATAL)
+  
+  # person 1 and 4 should be retruned
+  expect_equal(pop$rowId[pop$outcomeCount>0], c(1,4))
+  
+  pop2 <- createStudyPopulation(plpData2,
+                               population = NULL,
+                               outcomeId = 1,
+                               binary = T,
+                               includeAllOutcomes = T,
+                               firstExposureOnly = F,
+                               washoutPeriod = 0,
+                               removeSubjectsWithPriorOutcome = T,
+                               priorOutcomeLookback = 99999,
+                               requireTimeAtRisk = T,
+                               minTimeAtRisk=365,
+                               riskWindowStart = 0,
+                               addExposureDaysToStart = F,
+                               riskWindowEnd = 365,
+                               addExposureDaysToEnd = F,
+                               verbosity = futile.logger::FATAL)
+  
+  # person 4 only as person 1 has it before
+  expect_equal(pop2$rowId[pop2$outcomeCount>0], c(4))
+  
+  pop3 <- createStudyPopulation(plpData2,
+                               population = NULL,
+                               outcomeId = 1,
+                               binary = T,
+                               includeAllOutcomes = F,
+                               firstExposureOnly = FALSE,
+                               washoutPeriod = 0,
+                               removeSubjectsWithPriorOutcome = F,
+                               priorOutcomeLookback = 99999,
+                               requireTimeAtRisk = T,
+                               minTimeAtRisk=365,
+                               riskWindowStart = 0,
+                               addExposureDaysToStart = F,
+                               riskWindowEnd = 365,
+                               addExposureDaysToEnd = F,
+                               verbosity = futile.logger::FATAL)
+  
+  # 4 only should be retruned
+  expect_equal(pop3$rowId[pop3$outcomeCount>0], c(4))
+  
   
 })
 

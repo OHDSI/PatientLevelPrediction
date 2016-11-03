@@ -130,7 +130,7 @@ RunPlp <- function(population, plpData,
                    modelSettings,
                    testSplit = 'time', testFraction=0.3, nfold=3, indexes=NULL,
                    save=NULL, saveModel=T,
-                   verbosity=INFO, timeStamp=FALSE, analysisId=NULL
+                   verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL
 ){
   
   # log the start time:
