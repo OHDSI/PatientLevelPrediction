@@ -227,7 +227,7 @@ RunPlp <- function(population, plpData,
   flog.info(sprintf('Training %s model',settings$modelSettings$name))  
   # the call is sinked because of the external calls (Python etc)
   if (sink.number()>0){
-    flog.warn(paste0('sink had ',sink.number,' connections open!'))    
+    flog.warn(paste0('sink had ',sink.number(),' connections open!'))
   }
   sink(logFileName, append = TRUE, split = TRUE)
   
