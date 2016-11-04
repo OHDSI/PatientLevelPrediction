@@ -362,50 +362,53 @@ plotF1Measure <- function(evaluation, fileName=NULL){
 #'
 #' @export
 plotDemographicSummary <- function(evaluation, fileName=NULL){
-  x<- evaluation$demographicSummary[,c('ageGroup','genGroup','averagePredictedProbability',
-                                       'PersonCountAtRisk', 'PersonCountWithOutcome')]
-  x$observed <- x$PersonCountWithOutcome/x$PersonCountAtRisk
-  x <- x[c('ageGroup','genGroup','averagePredictedProbability','observed')]
-  x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
-  
- # 1.96*StDevPredictedProbability
-  ci <- evaluation$demographicSummary[,c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
-  ci$StDevPredictedProbability[is.na(ci$StDevPredictedProbability)] <- 1
-  ci$lower <- ci$averagePredictedProbability-1.96*ci$StDevPredictedProbability
-  ci$lower[ci$lower <0] <- 0
-  ci$upper <- ci$averagePredictedProbability+1.96*ci$StDevPredictedProbability
-  ci$upper[ci$upper >1] <- max(ci$upper[ci$upper <1])
-  
-  x$age <- gsub('Age group:','', x$ageGroup)
-  x$age <- factor(x$age,levels=c(" 0-4"," 5-9"," 10-14",
-                                " 15-19"," 20-24"," 25-29"," 30-34"," 35-39"," 40-44",
-                                " 45-49"," 50-54"," 55-59"," 60-64"," 65-69"," 70-74",
-                                " 75-79"," 80-84"," 85-89"," 90-94"," 95-99"),ordered=TRUE)
-  
-  x <- merge(x, ci[,c('ageGroup','genGroup','lower','upper')], by=c('ageGroup','genGroup'))
-  
-  plot <- ggplot2::ggplot(data=x, 
-                    ggplot2::aes(x=age, group=variable*genGroup)) +
-    ggplot2::geom_line(ggplot2::aes(y=value, group=variable,
-                                    color=variable,
-                                    linetype = variable))+
-    ggplot2::geom_ribbon(data=x[x$variable!='observed',],
-                         ggplot2::aes(ymin=lower, ymax=upper
-                                      , group=genGroup), 
-                fill="blue", alpha="0.2") +
-      ggplot2::facet_grid(.~ genGroup, scales = "free") +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
-    #ggplot2::coord_flip() +
-    ggplot2::scale_y_continuous("Fraction") +
-    ggplot2::scale_x_discrete("Age") +
-    ggplot2::scale_color_manual(values = c("royalblue4","red"),
-                                 guide = ggplot2::guide_legend(title = NULL),
-                                 labels = c("Expected", "Observed")) +
-    ggplot2::guides(linetype=FALSE)
-  
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 7, height = 4.5, dpi = 400)
-  return(plot)
+  if (!all(is.na(evaluation$demographicSummary$averagePredictedProbability))){
+    # Only create a demographic graph if demographics were used as a covariate
+    x<- evaluation$demographicSummary[,c('ageGroup','genGroup','averagePredictedProbability',
+                                         'PersonCountAtRisk', 'PersonCountWithOutcome')]
+    x$observed <- x$PersonCountWithOutcome/x$PersonCountAtRisk
+    x <- x[c('ageGroup','genGroup','averagePredictedProbability','observed')]
+    x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
+    
+    # 1.96*StDevPredictedProbability
+    ci <- evaluation$demographicSummary[,c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
+    ci$StDevPredictedProbability[is.na(ci$StDevPredictedProbability)] <- 1
+    ci$lower <- ci$averagePredictedProbability-1.96*ci$StDevPredictedProbability
+    ci$lower[ci$lower <0] <- 0
+    ci$upper <- ci$averagePredictedProbability+1.96*ci$StDevPredictedProbability
+    ci$upper[ci$upper >1] <- max(ci$upper[ci$upper <1])
+    
+    x$age <- gsub('Age group:','', x$ageGroup)
+    x$age <- factor(x$age,levels=c(" 0-4"," 5-9"," 10-14",
+                                  " 15-19"," 20-24"," 25-29"," 30-34"," 35-39"," 40-44",
+                                  " 45-49"," 50-54"," 55-59"," 60-64"," 65-69"," 70-74",
+                                  " 75-79"," 80-84"," 85-89"," 90-94"," 95-99"),ordered=TRUE)
+
+    x <- merge(x, ci[,c('ageGroup','genGroup','lower','upper')], by=c('ageGroup','genGroup'))
+
+    plot <- ggplot2::ggplot(data=x, 
+                      ggplot2::aes(x=age, group=variable*genGroup)) +
+      ggplot2::geom_line(ggplot2::aes(y=value, group=variable,
+                                      color=variable,
+                                      linetype = variable))+
+      ggplot2::geom_ribbon(data=x[x$variable!='observed',],
+                           ggplot2::aes(ymin=lower, ymax=upper
+                                        , group=genGroup), 
+                  fill="blue", alpha="0.2") +
+        ggplot2::facet_grid(.~ genGroup, scales = "free") +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
+      #ggplot2::coord_flip() +
+      ggplot2::scale_y_continuous("Fraction") +
+      ggplot2::scale_x_discrete("Age") +
+      ggplot2::scale_color_manual(values = c("royalblue4","red"),
+                                   guide = ggplot2::guide_legend(title = NULL),
+                                   labels = c("Expected", "Observed")) +
+      ggplot2::guides(linetype=FALSE)
+    
+    if (!is.null(fileName))
+      ggplot2::ggsave(fileName, plot, width = 7, height = 4.5, dpi = 400)
+    return(plot)
+  }
 }
 
 
