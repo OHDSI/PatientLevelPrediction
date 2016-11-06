@@ -1,6 +1,6 @@
 ---
 title: "Building patient-level predictive models"
-author: "Martijn J. Schuemie, Marc A. Suchard and Patrick Ryan"
+author: "Peter R Rijnbeek, Martijn J. Schuemie, Jenna Reps"
 date: "`r Sys.Date()`"
 output:
   pdf_document:
@@ -31,35 +31,34 @@ if (file.exists("s:/temp/PlpVignette")){
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
 ```
+\newpage
 # Introduction
 
-This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level prediction models. We will walk through all the steps needed to build an exemplar model, and we have selected the well-studied topic of predicting re-hospitalization. To reduce the scope a bit, we have limited ourselves to a diabetes type 2 population.
+This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the Observational Medical Outcomes Partnership Common Data Model (OMOP-CDM). 
 
-## Specifying the cohort of interest and outcomes
+![Figure 1. The prediction problem](Figure1.png)
 
-The `PatientLevelPrediction` package requires longitudinal observational healthcare data in the OMOP Common Data Model format. The user will need to specify two things: 
+Figure 1 illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
-1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
-2. Outcomes for which we wish to build a predictive model.
+To develop a model the user needs to take the following steps:
 
-The cohort and outcomes should be provided as data in a table on the server, where the table should have the same structure as the 'cohort' table in the OMOP CDM, meaning it should have the following columns:
+1. Create the at risk and outcome cohorts in the CDM.
+2. Extract the patient-level data from the server
+3. Define the population of interest (e.g., first time outcome)
+4. Define the time-at-risk (e.g., within 1 year)
+5. Pick a test/train split (e.g.  20% test:  80% train splitting by time)
+6. Create model settings
+7. Fit the model
+8. Evaluate the model
+9. Apply the model
 
-- `cohort_definition_id` (CDM v5+) or `cohort_concept_id` (CDM v4), a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
-- `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
-- `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
-- `cohort_end_date`, which can be used to determine the end of the prediction window. Can be NULL for outcomes.
-
-![Diagram showing patient time](Diagram.png)
-
-The prediction window always starts on the `cohort_start_date`. When the `useCohortEndDate` argument is set to `TRUE`, the prediction window will end on the `cohort_end_date` plus the number of days specified using the `windowPersistence` argument. If the `useCohortEndDate` argument is set to `FALSE`, the prediction window will end on the `cohort_start_date` plus the number of days specified using the `windowPersistence` argument.
-
-The package will use data from the time period preceding (and including) the `cohort_start_date` to build a large set of features that can be used to predict outcomes during the prediction window (including the first and last day of the prediction window). These features can include binary indicators for the occurrence of any individual drug, condition, procedures, as well as demographics and comorbidity indices. 
-
-**Important**: Since the `cohort_start_date` is included in both the time used to construct predictors, and the time when outcomes can occurr, it is up to the user to either remove outcomes occurring on the `cohort_start_date`, or to remove predictors that are in fact indicators of the occurrence of an outcome on the `cohort_start_date`.
+We have selected the well-studied topic of predicting re-hospitalization to walk you through these steps. To reduce the scope a bit, we have limited ourselves to a diabetes type 2 population.
 
 # Installation instructions
 
 Before installing the `PatientLevelPrediction` package make sure you have Java available.  Java can be downloaded from [www.java.com](http://www.java.com). For Windows users, RTools is also necessary.  RTools can be downloaded from [CRAN](http://cran.r-project.org/bin/windows/Rtools/).
+
+Furthermore, a python installation is required for some of the machine learning algorithms. We advise to install Python using Anaconda [from ]https://www.continuum.io/downloads](https://www.continuum.io/downloads)
 
 The `PatientLevelPrediction` package is currently maintained in a [Github repository](https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `devtools` package:
 
@@ -69,10 +68,40 @@ library(devtools)
 install_github("ohdsi/SqlRender") 
 install_github("ohdsi/DatabaseConnector") 
 install_github("ohdsi/Cyclops") 
+install_github("ohdsi/FeatureExtraction")
 install_github("ohdsi/PatientLevelPrediction") 
 ```
 
 Once installed, you can type `library(PatientLevelPrediction)` to load the package.
+
+# Specifying the cohort of interest and outcomes
+
+The `PatientLevelPrediction` package requires longitudinal observational healthcare data in the OMOP Common Data Model format. The user will need to specify two things: 
+
+1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
+2. Outcomes for which we wish to build a predictive model.
+
+The observational and health data sciences & informatics (OHDSI) community has developed a tool named Atlas which can be used to create cohorts based on user inclusion/exclusion criteria. However, occasionally you may need to create your own cohort definition using SQL. Both methods are described below.
+
+## Cohort creation using Atlas
+
+Atlas as shown in Figure 2 allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involce selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person's episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. More details on the use of Atlas can be found on the OHDSI wiki pages. 
+
+![Figure 2. Cohort creation using Atlas](Figure2.png)
+
+When a cohort is created in Atlas the cohortid, created by Atlas, is needed to extract the data in R. The cohortid can be found in the link as shown in Figure 2. 
+
+## Custom cohort creation
+
+It is also possible to create cohorts without the use of ATLAS. Using custom cohort code (SQL) you can make more advanced cohorts if needed. Furthremore, this allows you to create cohorts on the fly in R for example for a study in the OHDSI data network.  
+
+The cohort and outcomes should be provided as data in a table on the server, where the table should have the same structure as the 'cohort' table in the OMOP CDM, meaning it should have the following columns:
+
+- `cohort_definition_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
+- `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
+- `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
+- `cohort_end_date`, which can be used to determine the end of the prediction window. Can be set equal to the `cohort_start_date` for outcomes.
+
 
 # Data extraction
 
@@ -97,9 +126,11 @@ The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` 
 
 ## Preparing the cohort and outcome of interest
 
-Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. For CDM v5, this means it should have the fields `cohort_definition_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. For CDM v4, the `cohort_definition_id` field must be called `cohort_concept_id`. 
+Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. This means it should have the fields `cohort_definition_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. 
 
 For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to define re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
+
+These cohorts could be created using Atlas but here we describe how to do this using the custom cohort creation method. 
 
 For this purpose we have created a file called *HospitalizationCohorts.sql* with the following contents:
 
@@ -146,8 +177,6 @@ WHERE visit_concept_id IN (9201, 9203)
 	AND visit_start_date <= cohort_end_date
 	AND cohort_definition_id = 1;
 ```
-Note on CDM V4 `visit_concept_id` should be `place_of_service_concept_id`, and `cohort_definition_id` should be `cohort_concept_id`.
-
 This is parameterized SQL which can be used by the `SqlRender` package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
 
 
@@ -184,8 +213,7 @@ data.frame(cohort_definition_id = c(1, 2),count = c(446375, 186982))
 
 ## Extracting the data from the server
 
-Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis:
-
+Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the FeatureExtractionPackage available at https://github.com/OHDSI/FeatureExtration (see the vignette for more information). In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures.
 ```{r tidy=FALSE,eval=FALSE}		   
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateConditionOccurrence = TRUE,
@@ -230,6 +258,12 @@ covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              excludedCovariateConceptIds = c(),
                                              deleteCovariatesSmallCount = 100)
 
+
+```
+
+The final step for extracting the data is to run the `getPlpData` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the washoutPeriod which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings. 
+
+```{r tidy=FALSE,eval=FALSE}
 plpData <- getDbPlpData(connectionDetails = connectionDetails,
 			  cdmDatabaseSchema = cdmDatabaseSchema,
 			  oracleTempSchema = oracleTempSchema,
@@ -247,7 +281,7 @@ plpData <- getDbPlpData(connectionDetails = connectionDetails,
 			  cdmVersion = cdmVersion)
 ```
 
-There are many parameters, but they are all documented in the `PatientLevelPrediction` manual. In short, we are using the `getDbPlpData` to get all data on the cohort of interest, outcomes and covariates from the database. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
+Note that if the cohorts are created in Atlas the corresponding database schemas need to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
 
 We can get some overall statistics using the generic `summary()` method:
 
@@ -270,65 +304,113 @@ savePlpData(plpData, "rehosp_plp_data")
 
 We can use the `loadPlpData()` function to load the data in a future session.
 
+# Creating the study population
+
+To completely define the prediction problem the final study population is obtained by applying additional constraints on the two earlier defined cohorts, e.g., a minumim time at risk can be enforced (`requireTimeAtRisk, minTimeAtRisk`). In this step it is also possible to redefine the risk window based on the at-risk cohort. For example, if we like the risk window to start 30 days after the at-risk cohort start and end a year later we can set `riskWindowStart = 30` and `riskWindowEnd = 365`. In some cases the risk window needs to start at the cohort end date. This can be achieved by setting `addExposureToStart = TRUE` which adds the cohort (exposure) time to the start date.
+
+In the example below a final population is created using an additional constraint on the washout period, removal of patients with prior outcomes in the year before, and a time at risk definition.
+
+
+```{r tidy=TRUE,eval=FALSE}
+population <- createStudyPopulation(plpData, 
+                                    outcomeId = 2, 
+                                    includeAllOutcomes = TRUE, 
+                                    firstExposureOnly = TRUE, 
+                                    washoutPeriod = 365, 
+                                    removeSubjectsWithPriorOutcome = TRUE, 
+                                    priorOutcomeLookback = 365,
+                                    riskWindowStart = 1,
+                                    requireTimeAtRisk = FALSE,
+                                    riskWindowEnd = 365
+                                    )
+```
+
+Note that some of these constraints could also already be applied in the cohort creation step, however, the `createStudyPopulation` function allows you do sensitivity analyses more easily on the already extracted plpData from the database.
+
+
 # Fitting the model
 
-## Train-test split
+## Defining the model settings
 
-We typically not only want to build our model, we also want to know how good it is. Because evaluation using the same data on which the model was built can lead to overfitting, one  uses a train-test split of the data or cross-validation. We can use the `splitData()` function to split the data in a 75%-25% split:
+
+| Models                      | Python | Parameters                              |
+| ----------------------------| ------ | --------------------------------------- |
+| Logistic regression with regularization | No | var  (starting  variance)|
+| Gradient boosting machines              | No | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate |
+| Random forest                           | Yes | mtry  (number  of  features  in  each  tree),ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node),balance (balance class labels) | 
+| K-nearest neighbors                     | No | k (number   of   neighbours),weighted (weight by inverse frequency)  |   
+| Naive Bayes                             | Yes | none|
+
+
+The first step of developing the model is to specify the hyper-parameters for the chosen machine learning algorithm. The table shows the hyper-parameters for each currently supported machine learning algorithm. In the settings function of the algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
+
+For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), max depth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and max  depth=4    plus  the  default  settings  for  other  hyper-parameters  and  ntrees=200  and  max  depth=4  plus  the  default settings  for  other  hyper-parameters.  The  hyper-parameters  that lead  to  the  best  cross-validation  performance will then be chosen for the final  model.
 
 ```{r tidy=TRUE,eval=FALSE}
-parts <- splitData(plpData, c(0.75,0.25))
+gbm_model <- setGradientBoostingMachine(ntrees = c(100,200), max_depth=4)
+lr_model <- setLassoLogisticRegression()
+
 ```
 
-The `parts` variable is a list of `plpData` objects.
-
-We can now fit the model on the first part of the data (the training set):
-
-## Fitting the model on the training data
+## Run the model fitting
+The `runPlP` function uses the population, `plpData`, modelsettings to train and evaluate the model. Because evaluation using the same data on which the model was built can lead to overfitting, one  uses a train-test split of the data or cross-validation. We can use the `testSplit (person/time)` and `testFraction` to split the data in a 75%-25% split and run the patient-level prediction pipeline:
 
 ```{r tidy=TRUE,eval=FALSE}
-model <- fitPredictiveModel(parts[[1]], modelType = "logistic")
+lr_results <- RunPlp(population,plpData, modelSettings = lr_model, testSplit = 'person', testFraction = 0.25, nfold = 2)
+
+```
+Under the hood the package will now use the `Cyclops` package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned
+
+## Saving and loading results
+
+You can save and load the model using:
+
+```{r tidy=TRUE,eval=FALSE}
+savePlpModel(lr_results$model, dirPath = file.path(getwd(),'model'))
+plpModel <- loadPlpModel(getwd(),'model')
 ```
 
-The `fitPredictiveModel()` function uses the `Cyclops` package to fit a large-scale regularized regression. To fit the model, `Cyclops` needs to know the hyperparameter value which specifies the variance of the prior. By default `Cyclops` will use cross-validation to estimate the optimal hyperparameter. However, be aware that this can take a really long time. You can use the `prior` and `control` parameters of the `fitPredictiveModel()` to specify `Cyclops` behaviour, including using multiple CPUs to speed-up the cross-validation. 
+You can save the full results structure including the train and test performances using:
+
+```{r tidy=TRUE,eval=FALSE}
+savePlpResult(lr_results, location = file.path(getwd(),'lr'))
+lr_results <- loadPlpResult(getwd(),'lr')
+```
 
 ## Model evaluation
 
-We can evaluate how well the model is able to predict the outcome. For example on the test data, we can compute the area under the ROC curve:
+The RunPlp() function returns the trained model and the evaluation of the model on the train/test sets. To generate plots run the following code:
 
 ```{r tidy=TRUE,eval=FALSE}
-prediction <- predictProbabilities(model, parts[[2]])
-computeAuc(prediction, parts[[2]])
+plotPlp(lr_results, filename=file.path(getwd(),'plots')
 ```
 ```{r echo=FALSE,message=FALSE}
 if (file.exists("s:/temp/PlpVignette")){
   computeAuc(prediction, parts[[2]])
 }
 ```
+Several performance meaures are plotted these are described in the following paragraphs.
 
-And we can plot the ROC curve itself:
+### ROC plot
+The ROC plot plots the sensitivity against 1-specificity. This shows how well the model is able to discriminate between the people with the outcome and those without.  The plot is done by applying    th model to the test set (internal validation) and the diagonal dashed line shows the performance of a model that randomly assigns predictions. The area under the ROC plot is in blue.
 
-```{r tidy=TRUE,eval=FALSE}
-plotRoc(prediction, parts[[2]])
-```
-```{r echo=FALSE,message=FALSE}
-if (file.exists("s:/temp/PlpVignette")){
-  plotRoc(prediction, parts[[2]])
-}
-```
+### Calibration plot
+The calibration plot for the observed risk vs the predicted risk for the model’s predictions on the test set split into 10 quantiles. The dashed line is the x=y line which would indicate a perfectly calibrated model. The ten (or fewer) dots represent the mean predicted values for each quantile plotted against the observed fraction of people in that quantile who had the outcome (observed fraction) and the straight black line is the linear regression using these 10 plotted quantile mean predicted vs observed fraction points. The two blue straight lines represented the 95% lower and upper confidence intervals for the linear regression.
 
-We can also look at the calibration:
+### Preference distribution plots
+The preference distribution plots are the preference score distributions corresponding to i) people in the test set with the outcome (red) and ii) people in the test set without the outcome   (blue).
 
-```{r tidy=TRUE,eval=FALSE}
-plotCalibration(prediction, parts[[2]], numberOfStrata = 10)
-```
-```{r echo=FALSE,message=FALSE}
-if (file.exists("s:/temp/PlpVignette")){
-  plotCalibration(prediction, parts[[2]], numberOfStrata = 10)
-}
-```
+### Boxplots
+The predictionDistribution boxplots are box plots for the predicted risks of the people in the test set with the outcome (class 1: blue) and without the outcome (class 0: red).
+
+### Test/Train similarity plot
+The test train similarity is presented in the generalization plots where the mean covariate values are   plotted in the train set vs the test set for people with and without the outcome.
+
+### Variable scatterpliot
+The variable scatter plot plots the mean covariate value for the people with the outcome against the mean covariate value for the people without the outcome. The size and color of the dots corresponds to the importance of the covariates in the trained model.
 
 ## Inspecting the model
+
 
 Now that we have some idea of the operating characteristics of our predictive model, we can investigate the model itself: 
 
@@ -349,7 +431,32 @@ if (file.exists("s:/temp/PlpVignette")){
 }
 ```
 
-This shows the strongest predictors in the model with their corresponding betas.
+## Applying the model
+
+Once a model is trained you can apply the model to new data.
+
+```{r tidy=TRUE,eval=FALSE}
+# load the trained model
+plpModel <- loadPlpModel(getwd(),'model')
+
+#load the new plpData and create the population
+plpData <- loadPlpData(getwd(),'data')
+population <- createStudyPopulation(plpData, 
+                                    outcomeId = 2, 
+                                    includeAllOutcomes = TRUE, 
+                                    firstExposureOnly = TRUE, 
+                                    washoutPeriod = 365, 
+                                    removeSubjectsWithPriorOutcome = TRUE, 
+                                    priorOutcomeLookback = 365,
+                                    riskWindowStart = 1,
+                                    requireTimeAtRisk = FALSE,
+                                    riskWindowEnd = 365
+                                    )
+                       
+
+# apply the trained model on the new data
+validationResults <- applyModel(population,plpData,plpModel)
+```
 
 # Acknowledgments
 
