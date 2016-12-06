@@ -77,12 +77,10 @@ test_that("plots", {
   test <- plotPredictionDistribution(lr_results$performanceEvaluationTest)
   testthat::expect_s3_class(test, 'ggplot')
   
-  # covSum
   test <- plotVariableScatterplot(lr_results$covariateSummary)
   testthat::expect_s3_class(test, 'ggplot')
   
   test <- plotGeneralizability(lr_results$covariateSummary)
   testthat::expect_s3_class(test, 'grob')
 
-  
 })
