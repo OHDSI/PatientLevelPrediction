@@ -51,7 +51,7 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
 #xgboost
 fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                         outcomeId, cohortId, ...){
-  
+
   if(!quiet)
     writeLines('Training GBM model')
   
@@ -127,9 +127,9 @@ gbm_model2 <- function(data, population,
     index_vect <- unique(population$indexes)
     perform <- c()
     for(index in 1:length(index_vect )){
-      writeLines(paste('Fold ',index, ' -- with ', sum(population$index!=index),'train rows'))
-      train <- xgboost::xgb.DMatrix(data = data[population$index!=index,], label=population$outcomeCount[population$index!=index])
-      test <- xgboost::xgb.DMatrix(data = data[population$index==index,], label=population$outcomeCount[population$index==index])
+      writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
+      test <- xgboost::xgb.DMatrix(data = data[population$indexes==index,], label=population$outcomeCount[population$indexes==index])
       watchlist <- list(train=train, test=test)
       
       model <- xgboost::xgb.train(data = train, 
@@ -141,8 +141,8 @@ gbm_model2 <- function(data, population,
                                   eval.metric = "logloss", eval.metric = "auc",
                                   print.every.n=10)
       
-      pred <- xgboost::predict(model, data[population$index==index,])
-      prediction <- population[population$index==index,]
+      pred <- xgboost::predict(model, data[population$indexes==index,])
+      prediction <- population[population$indexes==index,]
       prediction$value <- pred
       attr(prediction, "metaData") <- list(predictionType = "binary") 
       perform <- c(perform,computeAuc(prediction))
