@@ -105,7 +105,9 @@ createStudyPopulation <- function(plpData,
   checkBoolean(firstExposureOnly)
   checkHigherEqual(washoutPeriod,0)
   checkBoolean(removeSubjectsWithPriorOutcome)
-  checkHigher(priorOutcomeLookback,0)
+  if (removeSubjectsWithPriorOutcome){
+    checkHigher(priorOutcomeLookback,0)
+  }
   checkBoolean(requireTimeAtRisk)
   checkHigherEqual(minTimeAtRisk,0)
   checkHigherEqual(riskWindowStart,0)
