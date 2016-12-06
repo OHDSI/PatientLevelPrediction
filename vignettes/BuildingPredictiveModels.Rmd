@@ -1,10 +1,14 @@
 ---
 title: "Building patient-level predictive models"
-author: "Peter R Rijnbeek, Martijn J. Schuemie, Jenna Reps"
-date: "`r Sys.Date()`"
+author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
+date: '`r Sys.Date()`'
 output:
   pdf_document:
+    includes:
+      in_header: preamble.tex
     number_sections: yes
+    toc: yes
+  word_document:
     toc: yes
   html_document:
     number_sections: yes
@@ -17,14 +21,11 @@ output:
 
 ```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
 library(PatientLevelPrediction)
+vignetteDataFolder <- "s:/temp/plpVignette"
 # Load all needed data if it exists on this computer:
-if (file.exists("s:/temp/PlpVignette")){
-  plpData <- loadPlpData("s:/temp/PlpVignette/plpData")
-  parts <- list()
-  parts[[2]] <- loadPlpData("s:/temp/PlpVignette/plpData_Test")
-  model <- readRDS("s:/temp/PlpVignette/model.rds")
-  prediction <- readRDS(file = "s:/temp/PlpVignette/prediction.rds")
-  means <- readRDS(file = "s:/temp/PlpVignette/means.rds")
+if (file.exists(vignetteDataFolder)){
+  plpModel <- loadPlpModel(vignetteDataFolder,'model')
+  lrResults <- loadPlpModel(file.path(vignetteDataFolder,'results'))
 } 
 ```
 
@@ -34,33 +35,33 @@ library(PatientLevelPrediction)
 \newpage
 # Introduction
 
-This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the Observational Medical Outcomes Partnership Common Data Model (OMOP-CDM). 
+This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the Observational Medical Outcomes Partnership Common Data Model (OMOP CDM). 
 
-![Figure 1. The prediction problem](Figure1.png)
+![The prediction problem](Figure1.png)
 
 Figure 1 illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
 To develop a model the user needs to take the following steps:
 
-1. Create the at risk and outcome cohorts in the CDM.
+1. Create the at risk and outcome cohorts
 2. Extract the patient-level data from the server
-3. Define the population of interest (e.g., first time outcome)
-4. Define the time-at-risk (e.g., within 1 year)
-5. Pick a test/train split (e.g.  20% test:  80% train splitting by time)
+3. Define the population of interest 
+4. Define the time-at-risk 
+5. Pick a test/train split 
 6. Create model settings
 7. Fit the model
 8. Evaluate the model
 9. Apply the model
 
-We have selected the well-studied topic of predicting re-hospitalization to walk you through these steps. To reduce the scope a bit, we have limited ourselves to a diabetes type 2 population.
+We have selected the well-studied topic of predicting re-hospitalization to walk you through these steps. The model will be developed for a diabetes type 2 population.
 
 # Installation instructions
 
 Before installing the `PatientLevelPrediction` package make sure you have Java available.  Java can be downloaded from [www.java.com](http://www.java.com). For Windows users, RTools is also necessary.  RTools can be downloaded from [CRAN](http://cran.r-project.org/bin/windows/Rtools/).
 
-Furthermore, a python installation is required for some of the machine learning algorithms. We advise to install Python using Anaconda [from ]https://www.continuum.io/downloads](https://www.continuum.io/downloads)
+Furthermore, a python installation is required for some of the machine learning algorithms. We advise to install Python using Anaconda (https://www.continuum.io/downloads)
 
-The `PatientLevelPrediction` package is currently maintained in a [Github repository](https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `devtools` package:
+The `PatientLevelPrediction` package is currently maintained in a GitHub repository (https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `devtools` package:
 
 ```{r tidy=TRUE,eval=FALSE}
 install.packages("devtools")
@@ -74,38 +75,15 @@ install_github("ohdsi/PatientLevelPrediction")
 
 Once installed, you can type `library(PatientLevelPrediction)` to load the package.
 
-# Specifying the cohort of interest and outcomes
+# Data extraction
 
 The `PatientLevelPrediction` package requires longitudinal observational healthcare data in the OMOP Common Data Model format. The user will need to specify two things: 
 
 1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
+
 2. Outcomes for which we wish to build a predictive model.
 
-The observational and health data sciences & informatics (OHDSI) community has developed a tool named Atlas which can be used to create cohorts based on user inclusion/exclusion criteria. However, occasionally you may need to create your own cohort definition using SQL. Both methods are described below.
-
-## Cohort creation using Atlas
-
-Atlas as shown in Figure 2 allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involce selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person's episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. More details on the use of Atlas can be found on the OHDSI wiki pages. 
-
-![Figure 2. Cohort creation using Atlas](Figure2.png)
-
-When a cohort is created in Atlas the cohortid, created by Atlas, is needed to extract the data in R. The cohortid can be found in the link as shown in Figure 2. 
-
-## Custom cohort creation
-
-It is also possible to create cohorts without the use of ATLAS. Using custom cohort code (SQL) you can make more advanced cohorts if needed. Furthremore, this allows you to create cohorts on the fly in R for example for a study in the OHDSI data network.  
-
-The cohort and outcomes should be provided as data in a table on the server, where the table should have the same structure as the 'cohort' table in the OMOP CDM, meaning it should have the following columns:
-
-- `cohort_definition_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
-- `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
-- `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
-- `cohort_end_date`, which can be used to determine the end of the prediction window. Can be set equal to the `cohort_start_date` for outcomes.
-
-
-# Data extraction
-
-The first step in running the `PatientLevelPrediction` is extracting all necessary data from the database server holding the data in the Common Data Model (CDM) format.
+The first step in running the `PatientLevelPrediction` is extracting all necessary data from the database server holding the data in the CDM.
 
 ## Configuring the connection to the server
 
@@ -122,15 +100,34 @@ cohortsDatabaseSchema <- "my_results"
 cdmVersion <- "5"
 ```
 
-The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` variables,as well as the CDM version. We'll use these later to tell R where the data in CDM format live, where we want to create the cohorts of interest, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
+The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` variables, as well as the CDM version. We will use these later to tell R where the data in CDM format live, where we want to create the cohorts of interest, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
 
 ## Preparing the cohort and outcome of interest
 
-Before we can start using the `PatientLevelPrediction` package itself, we need to construct a cohort of interest for which we want to perform the prediction, and the outcome, the event that we would like to predict. We do this by writing SQL statements against the CDM that populate a table containing the persons and events of interest. The resulting table should have the same structure as the `cohort` table in the CDM. This means it should have the fields `cohort_definition_id`, `cohort_start_date`, `cohort_end_date`,and `subject_id`. 
+First we need to define the cohort of persons for which we want to perform the prediction and we need to define the outcomes we want to predict.
+
+The cohort and outcomes are provided as data in a table on the server that has the same structure as the 'cohort' table in the OMOP CDM, meaning it should have the following columns:
+
+- `cohort_definition_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
+- `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
+- `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
+- `cohort_end_date`, which can be used to determine the end of the prediction window. Can be set equal to the `cohort_start_date` for outcomes.
+
+The observational and health data sciences & informatics (OHDSI) community has developed a tool named ATLAS which can be used to create cohorts based on inclusion criteria. We can also write custom SQL statements against the CDM. 
+
+### Cohort creation using ATLAS
+
+![Cohort creation using ATLAS](Figure2.png)
+
+ATLAS as shown in Figure 2 allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involce selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person's episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. More details on the use of ATLAS can be found on the OHDSI wiki pages. 
+
+When a cohort is created in ATLAS the cohortid is needed to extract the data in R. The cohortid can be found in the link as shown in Figure 2. 
+
+### Custom cohort creation
+
+It is also possible to create cohorts without the use of ATLAS. Using custom cohort code (SQL) you can make more advanced cohorts if needed.
 
 For our example study, we need to create the cohort of diabetics that have been hospitalized and have a minimum amount of observation time available before and after the hospitalization. We also need to define re-hospitalizations, which we define as any hospitalizations occurring after the original hospitalization. 
-
-These cohorts could be created using Atlas but here we describe how to do this using the custom cohort creation method. 
 
 For this purpose we have created a file called *HospitalizationCohorts.sql* with the following contents:
 
@@ -208,12 +205,13 @@ sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 querySql(connection, sql)
 ```
 ```{r echo=FALSE,message=FALSE}
-data.frame(cohort_definition_id = c(1, 2),count = c(446375, 186982))
+data.frame(cohort_definition_id = c(1, 2),count = c(527616, 221555))
 ```
 
 ## Extracting the data from the server
 
-Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the FeatureExtractionPackage available at https://github.com/OHDSI/FeatureExtration (see the vignette for more information). In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures.
+Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the `FeatureExtractionPackage` available at https://github.com/OHDSI/FeatureExtration. In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtractionPackage see its vignettes.
+
 ```{r tidy=FALSE,eval=FALSE}		   
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateConditionOccurrence = TRUE,
@@ -264,24 +262,21 @@ covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
 The final step for extracting the data is to run the `getPlpData` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the washoutPeriod which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings. 
 
 ```{r tidy=FALSE,eval=FALSE}
-plpData <- getDbPlpData(connectionDetails = connectionDetails,
-			  cdmDatabaseSchema = cdmDatabaseSchema,
-			  oracleTempSchema = oracleTempSchema,
-			  cohortDatabaseSchema = cohortsDatabaseSchema,
-			  cohortTable = "rehospitalization",
-			  cohortIds = 1,
-			  washoutWindow = 183,
-			  useCohortEndDate = TRUE,
-			  windowPersistence = 0,
-			  covariateSettings = covariateSettings,
-			  outcomeDatabaseSchema = cohortsDatabaseSchema,
-			  outcomeTable = "rehospitalization",
-			  outcomeIds = 2,
-			  firstOutcomeOnly = FALSE, 
-			  cdmVersion = cdmVersion)
+plpData <- getPlpData(connectionDetails = connectionDetails,
+                      cdmDatabaseSchema = cdmDatabaseSchema,
+                      oracleTempSchema = oracleTempSchema,
+                      cohortDatabaseSchema = cohortsDatabaseSchema,
+                      cohortTable = "rehospitalization",
+                      cohortId = 1,
+                      washoutWindow = 183,
+                      covariateSettings = covariateSettings,
+                      outcomeDatabaseSchema = cohortsDatabaseSchema,
+                      outcomeTable = "rehospitalization",
+                      outcomeIds = 2,
+                      cdmVersion = cdmVersion)
 ```
 
-Note that if the cohorts are created in Atlas the corresponding database schemas need to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
+Note that if the cohorts are created in ATLAS the corresponding database schemas need to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
 
 We can get some overall statistics using the generic `summary()` method:
 
@@ -289,12 +284,12 @@ We can get some overall statistics using the generic `summary()` method:
 summary(plpData)
 ```
 ```{r echo=FALSE,message=FALSE,eval=TRUE}
-if (file.exists("s:/temp/PlpVignette")){
+if (file.exists(vignetteDataFolder)){
   summary(plpData)
 }
 ```
 
-### Saving the data to file
+## Saving the data to file
 
 Creating the `plpData` object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because `plpData` uses `ff`, we cannot use R's regular save function. Instead, we'll have to use the `savePlpData()` function:
 
@@ -304,14 +299,14 @@ savePlpData(plpData, "rehosp_plp_data")
 
 We can use the `loadPlpData()` function to load the data in a future session.
 
-# Creating the study population
+# Applying additional inclusion criteria
 
 To completely define the prediction problem the final study population is obtained by applying additional constraints on the two earlier defined cohorts, e.g., a minumim time at risk can be enforced (`requireTimeAtRisk, minTimeAtRisk`). In this step it is also possible to redefine the risk window based on the at-risk cohort. For example, if we like the risk window to start 30 days after the at-risk cohort start and end a year later we can set `riskWindowStart = 30` and `riskWindowEnd = 365`. In some cases the risk window needs to start at the cohort end date. This can be achieved by setting `addExposureToStart = TRUE` which adds the cohort (exposure) time to the start date.
 
 In the example below a final population is created using an additional constraint on the washout period, removal of patients with prior outcomes in the year before, and a time at risk definition.
 
 
-```{r tidy=TRUE,eval=FALSE}
+```{r tidy=FALSE,eval=FALSE}
 population <- createStudyPopulation(plpData, 
                                     outcomeId = 2, 
                                     includeAllOutcomes = TRUE, 
@@ -321,14 +316,14 @@ population <- createStudyPopulation(plpData,
                                     priorOutcomeLookback = 365,
                                     riskWindowStart = 1,
                                     requireTimeAtRisk = FALSE,
-                                    riskWindowEnd = 365
-                                    )
+                                    riskWindowEnd = 365)
 ```
 
 Note that some of these constraints could also already be applied in the cohort creation step, however, the `createStudyPopulation` function allows you do sensitivity analyses more easily on the already extracted plpData from the database.
 
+\newpage
 
-# Fitting the model
+# Model Development
 
 ## Defining the model settings
 
@@ -342,98 +337,152 @@ Note that some of these constraints could also already be applied in the cohort 
 | Naive Bayes                             | Yes | none|
 
 
-The first step of developing the model is to specify the hyper-parameters for the chosen machine learning algorithm. The table shows the hyper-parameters for each currently supported machine learning algorithm. In the settings function of the algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
+The table shows the currently implemented algorithms and their hyper-parameters. Some of these algorithms are calling python.In the settings function of the algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
 
 For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), max depth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and max  depth=4    plus  the  default  settings  for  other  hyper-parameters  and  ntrees=200  and  max  depth=4  plus  the  default settings  for  other  hyper-parameters.  The  hyper-parameters  that lead  to  the  best  cross-validation  performance will then be chosen for the final  model.
 
 ```{r tidy=TRUE,eval=FALSE}
-gbm_model <- setGradientBoostingMachine(ntrees = c(100,200), max_depth=4)
-lr_model <- setLassoLogisticRegression()
+gbmModel <- setGradientBoostingMachine(ntrees = c(100,200), max_depth=4)
+lrModel <- setLassoLogisticRegression()
 
 ```
 
-## Run the model fitting
-The `runPlP` function uses the population, `plpData`, modelsettings to train and evaluate the model. Because evaluation using the same data on which the model was built can lead to overfitting, one  uses a train-test split of the data or cross-validation. We can use the `testSplit (person/time)` and `testFraction` to split the data in a 75%-25% split and run the patient-level prediction pipeline:
+## Model training 
+The `runPlP` function uses the population, `plpData`, and model settings to train and evaluate the model. Because evaluation using the same data on which the model was built can lead to overfitting, one  uses a train-test split of the data or cross-validation. This functionaity is build in the `runPlP` function. We can use the testSplit (person/time) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
 
-```{r tidy=TRUE,eval=FALSE}
-lr_results <- RunPlp(population,plpData, modelSettings = lr_model, testSplit = 'person', testFraction = 0.25, nfold = 2)
+```{r tidy=FALSE,eval=FALSE}
+lrResults <- runPlp(population,plpData, modelSettings = lrModel, testSplit = 'person',  
+                    testFraction = 0.25, nfold = 2)
 
 ```
-Under the hood the package will now use the `Cyclops` package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned
+Under the hood the package will now use the `Cyclops` package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.
 
-## Saving and loading results
+\newpage
+
+## Saving and loading 
 
 You can save and load the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpModel(lr_results$model, dirPath = file.path(getwd(),'model'))
+savePlpModel(lrResults$model, dirPath = file.path(getwd(),'model'))
 plpModel <- loadPlpModel(getwd(),'model')
 ```
 
-You can save the full results structure including the train and test performances using:
+You can save and load the full results structure using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpResult(lr_results, location = file.path(getwd(),'lr'))
-lr_results <- loadPlpResult(getwd(),'lr')
+savePlpResult(lrResults, location = file.path(getwd(),'lr'))
+lrResults <- loadPlpResult(file.path(getwd(),'lr'))
 ```
 
-## Model evaluation
+\newpage
 
-The RunPlp() function returns the trained model and the evaluation of the model on the train/test sets. To generate plots run the following code:
+# Model Evaluation
+
+The runPlp() function returns the trained model and the evaluation of the model on the train/test sets. To generate all the plots run the following code:
 
 ```{r tidy=TRUE,eval=FALSE}
-plotPlp(lr_results, filename=file.path(getwd(),'plots')
+plotPlp(lrResults, dirPath=getwd())
 ```
-```{r echo=FALSE,message=FALSE}
-if (file.exists("s:/temp/PlpVignette")){
-  computeAuc(prediction, parts[[2]])
-}
-```
-Several performance meaures are plotted these are described in the following paragraphs.
 
-### ROC plot
-The ROC plot plots the sensitivity against 1-specificity. This shows how well the model is able to discriminate between the people with the outcome and those without.  The plot is done by applying    th model to the test set (internal validation) and the diagonal dashed line shows the performance of a model that randomly assigns predictions. The area under the ROC plot is in blue.
-
-### Calibration plot
-The calibration plot for the observed risk vs the predicted risk for the model’s predictions on the test set split into 10 quantiles. The dashed line is the x=y line which would indicate a perfectly calibrated model. The ten (or fewer) dots represent the mean predicted values for each quantile plotted against the observed fraction of people in that quantile who had the outcome (observed fraction) and the straight black line is the linear regression using these 10 plotted quantile mean predicted vs observed fraction points. The two blue straight lines represented the 95% lower and upper confidence intervals for the linear regression.
-
-### Preference distribution plots
-The preference distribution plots are the preference score distributions corresponding to i) people in the test set with the outcome (red) and ii) people in the test set without the outcome   (blue).
-
-### Boxplots
-The predictionDistribution boxplots are box plots for the predicted risks of the people in the test set with the outcome (class 1: blue) and without the outcome (class 0: red).
-
-### Test/Train similarity plot
-The test train similarity is presented in the generalization plots where the mean covariate values are   plotted in the train set vs the test set for people with and without the outcome.
-
-### Variable scatterpliot
-The variable scatter plot plots the mean covariate value for the people with the outcome against the mean covariate value for the people without the outcome. The size and color of the dots corresponds to the importance of the covariates in the trained model.
-
-## Inspecting the model
-
-
-Now that we have some idea of the operating characteristics of our predictive model, we can investigate the model itself: 
+To run individual plots you can use the following functions:
 
 ```{r tidy=TRUE,eval=FALSE}
-modelDetails <- getModelDetails(model, plpData)
-head(modelDetails)
-```
-```{r echo=FALSE,message=FALSE}
-if (file.exists("s:/temp/PlpVignette")){
-  modelDetails <- getModelDetails(model, parts[[2]])
-  truncRight <- function(x, n){
-    nc <- nchar(x)
-    x[nc > (n-3)] <- paste('...',substr(x[nc > (n-3)], nc[nc > (n-3)]-n+1, nc[nc > (n-3)]),sep="")
-    x
-  }
-  modelDetails$covariateName <- truncRight(as.character(modelDetails$covariateName),35)
-  head(modelDetails)  
-}
+testResults <- lrResult$performanceEvaluationTest
+
+plotSparseRoc(testResults,'sparseROC.pdf')
+
+plotSparseCalibration(testResults,'sparseCalibration.pdf')
+
+plotPreferencePDF(testResults,'preferencePDF.pdf')
+
+plotPredictionDistribution(testResults,'predictionDistribution.pdf')
+
+plotGeneralizability(testResults,'generalizability.pdf')
+
+plotVariableScatterplot(testResults,'variableScatterplot.pdf')
+
+plotPrecisionRecall(testResults,'precisionRecall.pdf')
+
+plotDemographicSummary(testResults,'demographicSummary.pdf')
+
 ```
 
-## Applying the model
+These plots are described in more detail in the following paragraphs.
 
-Once a model is trained you can apply the model to new data.
+## ROC plot
+
+![Receiver Operator Plot](sparseRoc.png)
+
+The ROC plot plots the sensitivity against 1-specificity on the test set. The plot shows how well the model is able to discriminate between the people with the outcome and those without. The dashed diagonal line is the performance of a model that randomly assigns predictions. The higher the area under the ROC plot the better the discrimination of the model.  
+
+## Calibration plot
+
+![Calibration Plot](sparseCalibration.png)
+
+The calibration plot shows how close the predicted risk is to the observed risk. The diagonal dashed line thus indicates a perfectly calibrated model. The ten (or fewer) dots represent the mean predicted values for each quantile plotted against the observed fraction of people in that quantile who had the outcome (observed fraction). The straight black line is the linear regression using these 10 plotted quantile mean predicted vs observed fraction points. The two blue straight lines represented the 95% lower and upper confidence intervals of the slope of the fitted line.
+
+## Preference distribution plots
+
+![Preference Plot](preferencePDF.png)
+
+The preference distribution plots are the preference score distributions corresponding to i) people in the test set with the outcome (red) and ii) people in the test set without the outcome (blue).
+
+## Box plots
+
+![Prediction Distribution Box Plot](predictionDistribution.png)
+
+The prediction distribution boxplots are box plots for the predicted risks of the people in the test set with the outcome (class 1: blue) and without the outcome (class 0: red). 
+
+The box plots in the Figure above show that the predicted probability of the outcome is indeed higher for those with the outcome but there is also overlap between the two distribution which lead to an imperfect discrimination.
+
+## Test-Train similarity plot
+
+![Similarity plots of train and test set](generalizability.png)
+
+The test-train similarity is presented by plotting the mean covariate values in the train set against those in the test set for people with and without the outcome.
+
+The results for our example of re-hospitalization look very promising since the mean values of the covariates are on the diagonal.
+
+## Variable scatter plot
+
+![Variabel scatter Plot](variableScatterplot.png)
+
+The variable scatter plot shows the mean covariate value for the people with the outcome against the mean covariate value for the people without the outcome. The size and color of the dots correspond to the importance of the covariates in the trained model (size of beta) and its direction (sign of beta with green meaning positive and red meaning negative), respectivily.
+
+The plot shows that the mean of most of the covariates is higher for subjects with the outcome compared to those without. Also there seem to be a very predictive, but rare covariate with a high beta.
+
+## Plot Precision Recall
+
+![Precision Recall Plot](precisionRecall.png)
+Precision (P) is defined as the number of true positives (Tp) over the number of true positives plus the number of false positives (Fp).
+
+```{r tidy=TRUE,eval=FALSE}
+P <- Tp/(Tp+Fp)
+```
+Recall (R) is defined as the number of true positives (Tp) over the number of true positives plus the number of false negatives (Fn).
+```{r tidy=TRUE,eval=FALSE}
+R <- Tp/(Tp + Fn)
+```
+These quantities are also related to the (F1) score, which is defined as the harmonic mean of precision and recall.
+```{r tidy=TRUE,eval=FALSE}
+F1 <- 2*P*R/(P+R)
+```
+Note that the precision can either decrease or increase if the threshold is lowered.  Lowering the threshold of a classifier may increase the denominator, by increasing the number of results returned. If the threshold was previously set too high, the new results may all be true positives, which will increase precision. If the previous threshold was about right or too low, further lowering the threshold will introduce false positives, decreasing precision.
+
+For Recall the demoninator does not depend on the classifier threshold (Tp+Fn is a constant). This means that lowering the classifier threshold may increase recall, by increasing the number of true positive results. It is also possible that lowering the threshold may leave recall unchanged, while the precision fluctuates.
+
+## Demographic Summary plot
+
+![Demographic Summary Plot](demographicSummary.png)
+
+This plot shows for females and males the expected and observed risk in different age groups together with a confidence area.
+
+\newpage
+
+# External validation
+
+We recommend to always peform external validation, i.e. apply the final model on as much new datasets as feasible and evaluate its performance.
 
 ```{r tidy=TRUE,eval=FALSE}
 # load the trained model
@@ -453,10 +502,10 @@ population <- createStudyPopulation(plpData,
                                     riskWindowEnd = 365
                                     )
                        
-
 # apply the trained model on the new data
 validationResults <- applyModel(population,plpData,plpModel)
 ```
+\newpage
 
 # Acknowledgments
 

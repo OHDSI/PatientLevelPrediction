@@ -57,8 +57,8 @@ plotPlp <- function(result, filename){
   
   plotVariableScatterplot(result$covariateSummary, 
                           fileName=file.path(filename, 'plots','variableScatterplot.pdf'))
-  plotGenerlizability(result$covariateSummary, 
-                             fileName=file.path(filename, 'plots','generlizability.pdf'))
+  plotGeneralizability(result$covariateSummary, 
+                             fileName=file.path(filename, 'plots','generalizability.pdf'))
   
   return(TRUE)
 }
@@ -577,7 +577,7 @@ plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
 #' format.
 #'
 #' @export
-plotGenerlizability<- function(covariateSummary, fileName=NULL){
+plotGeneralizability<- function(covariateSummary, fileName=NULL){
   
   covariateSummary$TrainCovariateMeanWithOutcome[is.na(covariateSummary$TrainCovariateMeanWithOutcome)] <- 0
   covariateSummary$TestCovariateMeanWithOutcome[is.na(covariateSummary$TestCovariateMeanWithOutcome)] <- 0

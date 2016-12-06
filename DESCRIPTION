@@ -2,19 +2,19 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 1.1.1
-Date: 2016-04-18
-Author: Martijn J. Schuemie [aut, cre],
+Version: 1.2.0
+Date: 2016-11-17
+Author:  Jenna Reps [aut],
+    Martijn J. Schuemie [aut, cre],
     Marc A. Suchard [aut],
     Patrick B. Ryan [aut],
-    Jenna Reps [aut],
-    Peter Rijnbeek [aut]
-Maintainer: Martijn J. Schuemie <schuemie@ohdsi.org>
+    Peter R. Rijnbeek [aut]
+Maintainer: Jenna Reps <reps@ohdsi.org>
 Description: A package for creating patient level prediction models. Given a
     cohort of interest and an outcome of interest, the package can use data in the
-    Common Data Model to build a large set of features. These features can then
-    be used by the Cyclops package to fit a predictive model. Also included are
-    function for evaluating the predictive models.
+    OMOP Common Data Model to build a large set of features. These features can then
+    be assessed to fit a predictive model using a number of machine learning algorithms.
+    Several performance measures are implemented for model evaluation.
 License: Apache License 2.0
 Depends:
     R (>= 3.2.2),
