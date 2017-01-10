@@ -4,11 +4,13 @@
 \alias{plotSparseCalibration}
 \title{Plot the calibration}
 \usage{
-plotSparseCalibration(evaluation, fileName = NULL)
+plotSparseCalibration(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
 \code{\link{RunPlp}} function.}
+
+\item{type}{options: 'train' or test'}
 
 \item{fileName}{Name of the file where the plot should be saved, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for

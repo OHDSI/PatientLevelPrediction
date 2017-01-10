@@ -23,6 +23,7 @@
 #' @param max_depth  Maximum number of interactions - a large value will lead to slow model training
 #' @param min_rows   The minimum number of rows required at each end node of the tree
 #' @param learn_rate The boosting learn rate
+#' @param seed       An option to add a seed when training the final model
 #'
 #' @examples
 #' model.gbm <- setGradientBoostingMachine(ntrees=c(10,100), nthread=20,
@@ -30,7 +31,8 @@
 #'
 #' @export
 setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
-                                  max_depth=6, min_rows=20, learn_rate=0.1){
+                                  max_depth=6, min_rows=20, learn_rate=0.1,
+                                  seed= NULL){
   
   if(length(nthread)>1)
     stop(paste('nthreads must be length 1'))
@@ -38,7 +40,8 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
   result <- list(model='fitGradientBoostingMachine', 
                  param= split(expand.grid(nround=ntrees, 
                                           max.depth=max_depth, min_child_weight=min_rows, 
-                                          eta=learn_rate, nthread=nthread),
+                                          eta=learn_rate, nthread=nthread,
+                                          seed=ifelse(is.null(seed),'NULL', seed)),
                               1:(length(ntrees)*length(max_depth)*length(min_rows)*length(learn_rate)  )),
                  name='Gradient boosting machine'
   )
@@ -54,6 +57,9 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   
   if(!quiet)
     writeLines('Training GBM model')
+  
+  if(param[[1]]$seed!='NULL')
+    set.seed(param[[1]]$seed)
   
   # check plpData is coo format:
   if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm')
@@ -82,8 +88,9 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   datas <- list(population=population, data=data)
   param.sel <- lapply(param, function(x) do.call(gbm_model2, c(x,datas)  ))
   #writeLines('hyper')
-  param.sel <- unlist(lapply(param.sel, function(x) x$auc))
+  hyperSummary <- do.call(rbind, lapply(param.sel, function(x) x$hyperSum))
   
+  param.sel <- unlist(lapply(param.sel, function(x) x$auc))
   param <- param[[which.max(param.sel)]]
   param$final=T
   
@@ -95,15 +102,20 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
     writeLines(paste0('Model GBM trained - took:',  format(comp, digits=3)))
   
   varImp <- xgboost::xgb.importance(model =trainedModel)
-  varImp$Feature <- as.double(varImp$Feature)
-  varImp<- merge(ff::as.ram(result$covariateRef),varImp,  by.y='Feature', by.x='covariateId', all=T)
+  
+  # get the original feature names:
+  varImp$Feature <- as.numeric(varImp$Feature)
+  varImp <- merge(result$map, varImp, by.x='newIds', by.y='Feature')
+  
+  varImp<- merge(ff::as.ram(plpData$covariateRef),varImp,  by.y='oldIds', by.x='covariateId', all=T)
   varImp$Gain[is.na(varImp$Gain)] <- 0
   varImp <- varImp[order(-varImp$Gain),]
-  colnames(varImp)[colnames(varImp)=='Gain'] <- 'value'
+  colnames(varImp)[colnames(varImp)=='Gain'] <- 'covariateValue'
   
   result <- list(model = trainedModel,
                  modelSettings = list(model='gbm_xgboost', modelParameters=param), #todo get lambda as param
                  trainCVAuc = NULL,
+                 hyperParamSearch = hyperSummary,
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,# can use populationSettings$outcomeId?
@@ -127,9 +139,9 @@ gbm_model2 <- function(data, population,
     index_vect <- unique(population$indexes)
     perform <- c()
     for(index in 1:length(index_vect )){
-      writeLines(paste('Fold ',index, ' -- with ', sum(population$index!=index),'train rows'))
-      train <- xgboost::xgb.DMatrix(data = data[population$index!=index,], label=population$outcomeCount[population$index!=index])
-      test <- xgboost::xgb.DMatrix(data = data[population$index==index,], label=population$outcomeCount[population$index==index])
+      writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
+      test <- xgboost::xgb.DMatrix(data = data[population$indexes==index,], label=population$outcomeCount[population$indexes==index])
       watchlist <- list(train=train, test=test)
       
       model <- xgboost::xgb.train(data = train, 
@@ -139,16 +151,18 @@ gbm_model2 <- function(data, population,
                                   watchlist = watchlist,
                                   objective = "binary:logistic",
                                   eval.metric = "logloss", eval.metric = "auc",
-                                  print.every.n=10)
+                                  print_every_n=10)
       
-      pred <- xgboost::predict(model, data[population$index==index,])
-      prediction <- population[population$index==index,]
+      pred <- xgboost::predict(model, data[population$indexes==index,])
+      prediction <- population[population$indexes==index,]
       prediction$value <- pred
-      attr(prediction, "metaData") <- list(predictionType = "binary") 
-      perform <- c(perform,computeAuc(prediction))
-    }
+      attr(prediction, "metaData") <- list(predictionType = "binary")
+      aucVal <- computeAuc(prediction)
+      perform <- c(perform,aucVal)
+      
+     }
     auc <- mean(perform)
-    
+    hyperPerm <- perform
   } else {
     train <- xgboost::xgb.DMatrix(data = data, label=population$outcomeCount)
     model <- xgboost::xgb.train(data = train, 
@@ -157,13 +171,14 @@ gbm_model2 <- function(data, population,
                                 nround = nround,
                                 objective = "binary:logistic",
                                 eval.metric = "logloss", eval.metric = "auc",
-                                print.every.n=10)
+                                print_every_n=10)
     
     pred <- xgboost::predict(model, data)
     prediction <- population
     prediction$value <- pred
     attr(prediction, "metaData") <- list(predictionType = "binary") 
-    auc <-computeAuc(prediction)
+    auc <- computeAuc(prediction)
+    hyperPerm <- auc
   }
   param.val <- paste0('max depth: ',max.depth,'-- min_child_weight: ', min_child_weight, 
                       '-- nthread: ', nthread, ' nround: ',nround, '-- eta: ', eta)
@@ -172,6 +187,9 @@ gbm_model2 <- function(data, population,
   writeLines('==========================================')
   
   result <- list(model=model,
-                 auc=auc)
+                 auc=auc,
+                 hyperSum = unlist(list(max_depth = max.depth, eta = eta, nthread = nthread, 
+                                  min_child_weight = min_child_weight,nround = nround, fold_auc=hyperPerm))
+  )
   return(result)
 }

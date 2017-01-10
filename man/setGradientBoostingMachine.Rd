@@ -5,7 +5,7 @@
 \title{Create setting for gradient boosting machine model using gbm_xgboost implementation}
 \usage{
 setGradientBoostingMachine(ntrees = c(10, 100), nthread = 20,
-  max_depth = 6, min_rows = 20, learn_rate = 0.1)
+  max_depth = 6, min_rows = 20, learn_rate = 0.1, seed = NULL)
 }
 \arguments{
 \item{ntrees}{The number of trees to build}
@@ -17,6 +17,8 @@ setGradientBoostingMachine(ntrees = c(10, 100), nthread = 20,
 \item{min_rows}{The minimum number of rows required at each end node of the tree}
 
 \item{learn_rate}{The boosting learn rate}
+
+\item{seed}{An option to add a seed when training the final model}
 }
 \description{
 Create setting for gradient boosting machine model using gbm_xgboost implementation

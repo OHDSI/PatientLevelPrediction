@@ -4,11 +4,13 @@
 \alias{plotF1Measure}
 \title{Plot the F1 measure efficiency frontier using the sparse thresholdSummary data frame}
 \usage{
-plotF1Measure(evaluation, fileName = NULL)
+plotF1Measure(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
 \code{\link{RunPlp}} function.}
+
+\item{type}{options: 'train' or test'}
 
 \item{fileName}{Name of the file where the plot should be saved, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for

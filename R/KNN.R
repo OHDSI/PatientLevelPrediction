@@ -22,9 +22,12 @@
 #' @param indexFolder The directory where the results and intermediate steps are output
 #'
 #' @examples
-#' model.knn <- setKNN(k=c(3,100,1000))
+#' model.knn <- setKNN(k=10000)
 #' @export
 setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
+  
+  if(length(k)>1)
+    stop('k can only be a single value')
   
   result <- list(model='fitKNN', param=list(k=k, indexFolder=indexFolder),
                  name='KNN'
@@ -73,7 +76,7 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
     writeLines(paste0('Model knn trained - took:',  format(comp, digits=3)))
   
   varImp<- ff::as.ram(plpData$covariateRef)
-  varImp$value <- rep(0, nrow(varImp))
+  varImp$covariateValue <- rep(0, nrow(varImp))
   
   result <- list(model = indexFolder,
                  trainCVAuc = NULL,    # did I actually save this!?
@@ -81,6 +84,7 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
                                       modelParameters=list(k=k),
                                       indexFolder=indexFolder
                  ),
+                 hyperParamSearch = unlist(param),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,

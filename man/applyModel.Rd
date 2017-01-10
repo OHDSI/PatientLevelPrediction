@@ -2,7 +2,11 @@
 % Please edit documentation in R/ApplyPlp.R
 \name{applyModel}
 \alias{applyModel}
-\title{Apply train model on new data}
+\title{Apply train model on new data
+Apply a Patient Level Prediction model on Patient Level Prediction Data and get the predicted risk
+in [0,1] for each person in the population. If the user inputs a population with an outcomeCount
+column then the function also returns the evaluation of the prediction (AUC, brier score,
+calibration)}
 \usage{
 applyModel(population, plpData, plpModel, logConnection = NULL,
   databaseOutput = NULL, silent = F)
@@ -21,16 +25,17 @@ applyModel(population, plpData, plpModel, logConnection = NULL,
 \item{silent}{Whether to turn off progress reporting}
 }
 \description{
-Apply a Patient Level Prediction model on Patient Level Prediction Data
-and get the predicted risk in [0,1] for each person in the population.
-If the user inputs a population with an outcomeCount column then the 
-function also returns the evaluation of the prediction (AUC, brier score, calibration)
+Apply train model on new data
+Apply a Patient Level Prediction model on Patient Level Prediction Data and get the predicted risk
+in [0,1] for each person in the population. If the user inputs a population with an outcomeCount
+column then the function also returns the evaluation of the prediction (AUC, brier score,
+calibration)
 }
 \examples{
 \dontrun{
 # load the model and data
-plpData <- loadPlpData('C:/plpdata')
-plpModel <- loadPlpModel('C:/plpmodel')
+plpData <- loadPlpData("C:/plpdata")
+plpModel <- loadPlpModel("C:/plpmodel")
 
 # use the same population settings as the model:
 populationSettings <- plpModel$populationSettings

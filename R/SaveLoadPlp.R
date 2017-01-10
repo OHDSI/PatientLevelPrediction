@@ -545,6 +545,7 @@ savePlpModel <- function(plpModel, dirPath){
   saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
   saveRDS(plpModel$index, file = file.path(dirPath, "index.rds"))
   saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
+  saveRDS(plpModel$hyperParamSearch, file = file.path(dirPath, "hyperParamSearch.rds"))
   saveRDS(plpModel$modelSettings, file = file.path(dirPath,  "modelSettings.rds"))
   saveRDS(plpModel$metaData, file = file.path(dirPath, "metaData.rds"))
   saveRDS(plpModel$populationSettings, file = file.path(dirPath, "populationSettings.rds"))
@@ -573,8 +574,11 @@ loadPlpModel <- function(dirPath) {
   if (!file.info(dirPath)$isdir)
     stop(paste("Not a folder", dirPath))
   
+  hyperParamSearch <- tryCatch(readRDS(file.path(dirPath, "hyperParamSearch.rds")),
+                               error=function(e) NULL)
   
   result <- list(model = readRDS(file.path(dirPath, "model.rds")),
+                 hyperParamSearch = hyperParamSearch,
                  predict = readRDS(file.path(dirPath, "transform.rds")),
                  index = readRDS(file.path(dirPath, "index.rds")),
                  trainCVAuc = readRDS(file.path(dirPath, "trainCVAuc.rds")),
@@ -646,8 +650,8 @@ savePlpResult <- function(result, dirPath){
   saveRDS(result$inputSetting, file = file.path(dirPath, "inputSetting.rds"))
   saveRDS(result$executionSummary, file = file.path(dirPath, "executionSummary.rds"))
   saveRDS(result$prediction, file = file.path(dirPath, "prediction.rds"))
-  saveRDS(result$performanceEvaluationTest, file = file.path(dirPath, "performanceEvaluationTest.rds"))
-  saveRDS(result$performanceEvaluationTrain, file = file.path(dirPath, "performanceEvaluationTrain.rds"))
+  saveRDS(result$performanceEvaluation, file = file.path(dirPath, "performanceEvaluation.rds"))
+  #saveRDS(result$performanceEvaluationTrain, file = file.path(dirPath, "performanceEvaluationTrain.rds"))
   saveRDS(result$covariateSummary, file = file.path(dirPath, "covariateSummary.rds"))
   
   
@@ -673,8 +677,8 @@ loadPlpResult <- function(dirPath){
                  inputSetting = readRDS(file.path(dirPath, "inputSetting.rds")),
                  executionSummary = readRDS(file.path(dirPath, "executionSummary.rds")),
                  prediction = readRDS(file.path(dirPath, "prediction.rds")),
-                 performanceEvaluationTest = readRDS(file.path(dirPath, "performanceEvaluationTest.rds")),
-                 performanceEvaluationTrain= readRDS(file.path(dirPath, "performanceEvaluationTrain.rds")),
+                 performanceEvaluation = readRDS(file.path(dirPath, "performanceEvaluation.rds")),
+                 #performanceEvaluationTrain= readRDS(file.path(dirPath, "performanceEvaluationTrain.rds")),
                  covariateSummary = readRDS(file.path(dirPath, "covariateSummary.rds"))
   )
   class(result) <- "runPlp"

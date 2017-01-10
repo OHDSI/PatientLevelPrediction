@@ -18,14 +18,14 @@
 
 #' Create setting for lasso logistic regression
 #'
-#' @param variance   a single value or vector of values to be used to train multiple models and the model with the
-#'                   best performance on the cross validation set is choosen
+#' @param variance   a single value used as the starting value for the automatic lambda search
+#' @param seed       An option to add a seed when training the model
 #'
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setLassoLogisticRegression<- function(variance=0.01){
-  result <- list(model='fitLassoLogisticRegression', param=list(val=variance), name="Lasso Logistic Regression")
+setLassoLogisticRegression<- function(variance=0.01, seed=NULL){
+  result <- list(model='fitLassoLogisticRegression', param=list(val=variance, seed=seed), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -58,7 +58,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
                                                              selectorType = "byPid",
                                                              threads=-1,
-                                                             maxIterations = 3000))
+                                                             maxIterations = 3000,
+                                                             seed=param$seed))
   
   # TODO get optimal lambda value
   
@@ -74,10 +75,14 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                     by='covariateId',all=T)
     varImp$value[is.na(varImp$value)] <- 0
     varImp <- varImp[order(-abs(varImp$value)),]
+    colnames(varImp)[colnames(varImp)=='value'] <- 'covariateValue'
   }
   
   result <- list(model = modelTrained,
                  modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
+                 hyperParamSearch = c(priorVariance=modelTrained$priorVariance, 
+                                      seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
+                                      log_likelihood = modelTrained$log_likelihood),
                  trainCVAuc = NULL,
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),

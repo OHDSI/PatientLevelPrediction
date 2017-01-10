@@ -9,7 +9,7 @@ train_x = X[trainInd,:]
 train_y = y[trainInd]
 print "Training final user specified random forest..."
 start_time = timeit.default_timer()	
-rf = RandomForestClassifier(max_features=int(mtry), n_estimators=ntrees,max_depth=max_depth,min_samples_split=5,  n_jobs=-1, bootstrap=False)#, class_weight="balanced_subsample")
+rf = RandomForestClassifier(max_features=int(mtry), n_estimators=ntrees,max_depth=max_depth,min_samples_split=5,  n_jobs=-1, bootstrap=False, random_state=seed)#, class_weight="balanced_subsample")
 rf = rf.fit(train_x, train_y)
 end_time = timeit.default_timer()
 print "Training final took: %.2f s" %(end_time-start_time)

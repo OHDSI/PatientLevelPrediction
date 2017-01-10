@@ -5,7 +5,7 @@
 \title{Create setting for random forest model with python (very fast)}
 \usage{
 setRandomForest(mtries = -1, ntrees = c(10, 500), max_depth = 17,
-  varImp = T)
+  varImp = T, seed = NULL)
 }
 \arguments{
 \item{mtries}{The number of features to include in each tree (-1 defaults to square root of total features)}
@@ -15,6 +15,8 @@ setRandomForest(mtries = -1, ntrees = c(10, 500), max_depth = 17,
 \item{max_depth}{Maximum number of interactions - a large value will lead to slow model training}
 
 \item{varImp}{Perform an initial variable selection prior to fitting the model to select the useful variables}
+
+\item{seed}{An option to add a seed when training the final model}
 }
 \description{
 Create setting for random forest model with python (very fast)

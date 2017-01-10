@@ -116,7 +116,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   incs <- rep(0, nrow(covariateRef))
   incs[inc] <- 1
   covariateRef$included <- incs
-  covariateRef$value <- varImp
+  covariateRef$covariateValue <- varImp
   
   # select best model and remove the others
   modelTrained <- file.path(outLoc) 
@@ -128,6 +128,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   result <- list(model = modelTrained,
                  trainCVAuc = auc,
                  modelSettings = list(model='naiveBayes_python',modelParameters=param.best),
+                 hyperParamSearch = NULL,
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,

@@ -22,7 +22,8 @@ A dataframe containing the columns: rowId and index
 Split data into random subsets stratified by class
 }
 \details{
-Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId belongs to the test set and 
-a positive integer index value indicating the rowId's cross valiation fold within the train set.
+Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId belongs to the test
+set and a positive integer index value indicating the rowId's cross valiation fold within the train
+set.
 }
 

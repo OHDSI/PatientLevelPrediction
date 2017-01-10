@@ -19,7 +19,7 @@
 
 # This code should be used to create the simulation profile used in some of the unit tests
 library(PatientLevelPrediction)
-options('fftempdir' = 's:/fftemp')
+options(fftempdir = "s:/fftemp")
 
 pw <- NULL
 dbms <- "sql server"
@@ -48,31 +48,35 @@ conn <- connect(connectionDetails)
 sql <- "
   IF OBJECT_ID('@resultsDatabaseSchema.mschuemi_stroke', 'U') IS NOT NULL
   DROP TABLE @resultsDatabaseSchema.mschuemi_stroke;
-  
+
   SELECT temp.person_id AS subject_id,
-  cohort_start_date, 
-  DATEADD(DAY, 365, cohort_start_date) AS cohort_end_date,
+  cohort_start_date, DATEADD(DAY, 365, cohort_start_date) AS cohort_end_date,
   1 AS cohort_definition_id
   INTO @resultsDatabaseSchema.mschuemi_stroke
   FROM (
   SELECT person_id,
   MIN(condition_start_date) AS cohort_start_date
-  FROM @cdmDatabaseSchema.condition_occurrence 
+  FROM @cdmDatabaseSchema.condition_occurrence
   WHERE condition_concept_id = 313217 /* Atrial fibrillation */
   GROUP BY person_id
-  ) temp 
+  ) temp
   INNER JOIN @cdmDatabaseSchema.observation_period
   ON observation_period.person_id = temp.person_id
   WHERE DATEDIFF(DAY, observation_period_start_date, cohort_start_date) >= 365
   AND  DATEDIFF(DAY, cohort_start_date, observation_period_end_date ) >= 365;
-  
+
   INSERT INTO @resultsDatabaseSchema.mschuemi_stroke
   SELECT condition_occurrence.person_id AS subject_id,
   condition_start_date AS cohort_start_date,
   condition_end_date AS cohort_end_date,
   2 AS cohort_concept_id
   FROM  @cdmDatabaseSchema.condition_occurrence
-  WHERE condition_concept_id IN (4108356, 4110189, 4110190, 4110192, 45767658, 45772786) /* Cerebral infarct */
+  WHERE condition_concept_id IN (4108356,
+                                 4110189,
+                                 4110190,
+                                 4110192,
+                                 45767658,
+                                 45772786) /* Cerebral infarct */
   AND condition_type_concept_id  IN (38000183,38000199,44786627,38000184,38000200);
 
   INSERT INTO @resultsDatabaseSchema.mschuemi_stroke
@@ -81,10 +85,18 @@ sql <- "
   condition_end_date AS cohort_end_date,
   3 AS cohort_concept_id
   FROM  @cdmDatabaseSchema.condition_occurrence
-  WHERE condition_concept_id IN (312327, 434376, 436706, 438170, 438438, 438447, 439693, 441579, 444406) /* Myocardial infarction */
+  WHERE condition_concept_id IN (312327,
+                                 434376,
+                                 436706,
+                                 438170,
+                                 438438,
+                                 438447,
+                                 439693,
+                                 441579,
+                                 444406) /* Myocardial infarction */
   AND condition_type_concept_id IN (38000183,38000199,44786627,38000184,38000200);
   "
-sql <- SqlRender::renderSql(sql, 
+sql <- SqlRender::renderSql(sql,
                             cdmDatabaseSchema = cdmDatabaseSchema,
                             resultsDatabaseSchema = resultsDatabaseSchema)$sql
 
@@ -97,8 +109,8 @@ sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 DatabaseConnector::querySql(conn, sql)
 
-sql <- "SELECT COUNT(*) FROM @resultsDatabaseSchema.mschuemi_stroke afib 
-  INNER JOIN @resultsDatabaseSchema.mschuemi_stroke stroke ON afib.subject_id = stroke.subject_id 
+sql <- "SELECT COUNT(*) FROM @resultsDatabaseSchema.mschuemi_stroke afib
+  INNER JOIN @resultsDatabaseSchema.mschuemi_stroke stroke ON afib.subject_id = stroke.subject_id
   WHERE afib.cohort_definition_id = 1 and stroke.cohort_definition_id = 2
   AND stroke.cohort_start_date >= afib.cohort_start_date
   AND stroke.cohort_start_date >= afib.cohort_end_date"
@@ -170,28 +182,23 @@ plpData <- getDbPlpData(connectionDetails = connectionDetails,
                         covariateSettings = covariateSettings,
                         outcomeDatabaseSchema = resultsDatabaseSchema,
                         outcomeTable = "mschuemi_stroke",
-                        outcomeIds = c(2,3),
+                        outcomeIds = c(2, 3),
                         firstOutcomeOnly = TRUE,
                         cdmVersion = cdmVersion)
 summary(plpData)
 
 savePlpData(plpData, "s:/temp/plpStrokeData")
-#plpData <- loadPlpData("s:/temp/plpStrokeData")
-#plpData$outcomes
-# Delete all but first outcome for this example:
-#   plpData$metaData$outcomeIds <- c(10)
-#   t <- plpData$outcomes$outcomeId == 10
-#   plpData$outcomes <- plpData$outcomes[ffbase::ffwhich(t, t == TRUE),]
-#   t <- plpData$exclude$outcomeId == 10
-#   plpData$exclude <- plpData$exclude[ffbase::ffwhich(t, t == TRUE),]
-#   
+# plpData <- loadPlpData('s:/temp/plpStrokeData') plpData$outcomes Delete all but first outcome for
+# this example: plpData$metaData$outcomeIds <- c(10) t <- plpData$outcomes$outcomeId == 10
+# plpData$outcomes <- plpData$outcomes[ffbase::ffwhich(t, t == TRUE),] t <- plpData$exclude$outcomeId
+# == 10 plpData$exclude <- plpData$exclude[ffbase::ffwhich(t, t == TRUE),]
 
 plpDataSimulationProfile <- createPlpSimulationProfile(plpData)
 save(plpDataSimulationProfile,
      file = "C:/Users/mschuemi/git/PatientLevelPrediction/data/plpDataSimulationProfile.rda",
      compress = "xz")
 
-#plpDataSimulationProfile$outcomeModels[[]][1]
+# plpDataSimulationProfile$outcomeModels[[]][1]
 
 
 # load('C:/Users/mschuemi/git/PatientLevelPrediction/data/plpDataSimulationProfile.rda')

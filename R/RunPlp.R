@@ -48,6 +48,7 @@
 #'                                         train (validationFraction of the data) sets.  The split is stratified by the class label.
 #' @param testFraction                     The fraction of the data to be used as the test set in the patient
 #'                                         split evaluation.
+#' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #' @param indexes                          A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)
 #' @param save                             The path to the directory where the models will be saved (if NULL uses working directory)
@@ -128,7 +129,7 @@
 #' } 
 RunPlp <- function(population, plpData,
                    modelSettings,
-                   testSplit = 'time', testFraction=0.3, nfold=3, indexes=NULL,
+                   testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, indexes=NULL,
                    save=NULL, saveModel=T,
                    verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL
 ){
@@ -199,7 +200,7 @@ RunPlp <- function(population, plpData,
     }
     if(testSplit=='person'){
       flog.trace('Dataset person split starter')
-      indexes <- ftry(personSplitter(population, test=testFraction, nfold=nfold),
+      indexes <- ftry(personSplitter(population, test=testFraction, nfold=nfold, seed=splitSeed),
                       finally= flog.trace('Done.')
       )
     }
@@ -227,7 +228,7 @@ RunPlp <- function(population, plpData,
   flog.info(sprintf('Training %s model',settings$modelSettings$name))  
   # the call is sinked because of the external calls (Python etc)
   if (sink.number()>0){
-    flog.warn(paste0('sink had ',sink.number,' connections open!'))    
+    flog.warn(paste0('sink had ',sink.number(),' connections open!'))    
   }
   sink(logFileName, append = TRUE, split = TRUE)
   
@@ -263,39 +264,27 @@ RunPlp <- function(population, plpData,
     performance.test <- evaluatePlp(prediction[prediction$indexes<0,], plpData)
     flog.trace('Done.')
     
+    # now combine the test and train data and add analysisId
+    performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
+    
     if(!is.null(save)){
       flog.trace('Saving evaluation')
       if(!dir.exists( file.path(analysisPath, 'evaluation') ))
         dir.create(file.path(analysisPath, 'evaluation'))
-      ftry(utils::write.csv(performance.train$evaluationStatistics, file.path(analysisPath, 'evaluation', 'trainEvaluationStatistics.csv'), row.names=F ),
-           finally= flog.trace('Saved trainEvaluationStatistics.')
+      ftry(utils::write.csv(performance$evaluationStatistics, file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'), row.names=F ),
+           finally= flog.trace('Saved EvaluationStatistics.')
       )
-      ftry(utils::write.csv(performance.test$evaluationStatistics, file.path(analysisPath, 'evaluation', 'testEvaluationStatistics.csv'), row.names=F ),
-           finally= flog.trace('Saved testEvaluationStatistics.')
+      ftry(utils::write.csv(performance$thresholdSummary, file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'), row.names=F ),
+           finally= flog.trace('Saved ThresholdSummary.')
       )
-      ftry(utils::write.csv(performance.train$thresholdSummary, file.path(analysisPath, 'evaluation', 'trainThresholdSummary.csv'), row.names=F ),
-           finally= flog.trace('Saved trainThresholdSummary.')
+      ftry(utils::write.csv(performance$demographicSummary, file.path(analysisPath, 'evaluation', 'demographicSummary.csv'), row.names=F),
+           finally= flog.trace('Saved DemographicSummary.')
       )
-      ftry(utils::write.csv(performance.test$thresholdSummary, file.path(analysisPath, 'evaluation', 'testThresholdSummary.csv'), row.names=F ),
-           finally= flog.trace('Saved testThresholdSummary.')
+      ftry(utils::write.csv(performance$calibrationSummary, file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'), row.names=F),
+           finally= flog.trace('Saved CalibrationSummary.')
       )
-      ftry(utils::write.csv(performance.train$demographicSummary, file.path(analysisPath, 'evaluation', 'trainDemographicSummary.csv'), row.names=F),
-           finally= flog.trace('Saved trainDemographicSummary.')
-      )
-      ftry(utils::write.csv(performance.test$demographicSummary, file.path(analysisPath, 'evaluation', 'testDemographicSummary.csv'), row.names=F ),
-           finally= flog.trace('Saved testDemographicSummary.')
-      )
-      ftry(utils::write.csv(performance.train$calibrationSummary, file.path(analysisPath, 'evaluation', 'trainCalibrationSummary.csv'), row.names=F),
-           finally= flog.trace('Saved trainCalibrationSummary.')
-      )
-      ftry(utils::write.csv(performance.test$calibrationSummary, file.path(analysisPath, 'evaluation', 'testCalibrationSummary.csv'), row.names=F ),
-           finally= flog.trace('Saved testCalibrationSummary.')
-      )
-      ftry(utils::write.csv(performance.train$predictionDistribution, file.path(analysisPath, 'evaluation', 'trainPredictionDistribution.csv'), row.names=F),
-           finally= flog.trace('Saved trainPredictionDistribution.')
-      )
-      ftry(utils::write.csv(performance.test$predictionDistribution, file.path(analysisPath, 'evaluation', 'testPredictionDistribution.csv'), row.names=F ),
-           finally= flog.trace('Saved testPredictionDistribution.')
+      ftry(utils::write.csv(performance$predictionDistribution, file.path(analysisPath, 'evaluation', 'predictionDistribution.csv'), row.names=F),
+           finally= flog.trace('Saved PredictionDistribution.')
       )
     }
     flog.seperator()
@@ -354,8 +343,7 @@ RunPlp <- function(population, plpData,
                   executionSummary=executionSummary,
                   model=model,
                   prediction=prediction,
-                  performanceEvaluationTest=performance.test,
-                  performanceEvaluationTrain=performance.train,
+                  performanceEvaluation=performance,
                   covariateSummary=covSummary,
                   analysisRef=list(analysisId=analysisId,
                                    analysisName=NULL,#analysisName,

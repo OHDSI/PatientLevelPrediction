@@ -22,6 +22,7 @@
 #' @param ntrees     The number of trees to build 
 #' @param max_depth  Maximum number of interactions - a large value will lead to slow model training
 #' @param varImp     Perform an initial variable selection prior to fitting the model to select the useful variables
+#' @param seed       An option to add a seed when training the final model
 #'
 #' @examples
 #' \dontrun{
@@ -29,7 +30,10 @@
 #'                            max_depth=c(5,20))
 #' }                           
 #' @export
-setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
+setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T, seed=NULL){
+  # check seed is int
+  if(!class(seed)%in%c('numeric','NULL'))
+    stop('Invalid seed')
   
   # test python is available and the required dependancies are there:
   if ( !PythonInR::pyIsConnected() ){
@@ -40,7 +44,8 @@ setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T){
   }
   
   result <- list(model='fitRandomForest', param= expand.grid(ntrees=ntrees, mtries=mtries,
-                                                       max_depth=max_depth, varImp=varImp),
+                                                       max_depth=max_depth, varImp=varImp, 
+                                                       seed=ifelse(is.null(seed),'NULL', seed)),
                  name='Random forest')
   class(result) <- 'modelSettings' 
   
@@ -81,6 +86,15 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
   PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
   
+  
+  # set seed
+  if(param$seed[1] == 'NULL')
+    PythonInR::pyExec('seed = None')
+  if(param$seed[1]!='NULL'){
+    PythonInR::pySet('seed', as.matrix(param$seed[1]) )
+    PythonInR::pyExec('seed = int(seed)')
+  }
+
   # convert plpData in coo to python:
   x <- toSparsePython(plpData,population, map=NULL)
     
@@ -120,6 +134,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   # run rf_plp for each grid search:
   all_auc <- c()
+  
   for(i in 1:nrow(param)){
     
     # set variable params - do loop  
@@ -157,6 +172,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                       'mtry: ', param$mtry[i] , ' obtained AUC of ', auc))
   }
   
+  hyperSummary <- cbind(param, cv_auc=all_auc)
+  
   # now train the final model for the best hyper-parameters previously found
   PythonInR::pyExec(paste0("ntrees = int(",param$ntree[which.max(all_auc)],")"))
   PythonInR::pyExec(paste0("max_depth = int(",param$max_depth[which.max(all_auc)],")"))
@@ -174,7 +191,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   incs <- rep(0, nrow(covariateRef))
   incs[inc] <- 1
   covariateRef <- cbind(covariateRef, incs, variableImportance)
-  colnames(covariateRef) <- c('covariateId','covariateName','analysisId','conceptId','included','value')
+  colnames(covariateRef) <- c('covariateId','covariateName','analysisId','conceptId','included','covariateValue')
   ##write.table(covariateRef, file.path(outLoc, 'covs.txt'), row.names=F, col.names=T) # might not need?
   
   pred <- PythonInR::pyGet('prediction', simplify = F)
@@ -197,6 +214,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   result <- list(model = modelTrained,
                  trainCVAuc = all_auc[which.max(all_auc)],
                  modelSettings = list(model='randomForest_python',modelParameters=param.best),
+                 hyperParamSearch = hyperSummary,
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,

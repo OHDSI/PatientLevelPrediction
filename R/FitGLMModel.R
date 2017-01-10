@@ -111,6 +111,8 @@ fitGLMModel <- function(population,
   outcomeModel <- attr(population, "metaData")
   outcomeModel$coefficients <- coefficients
   #outcomeModel$outcomeModelPriorVariance <- priorVariance
+  outcomeModel$priorVariance <- fit$variance
+  outcomeModel$log_likelihood <- fit$log_likelihood
   outcomeModel$modelType <- modelType
   outcomeModel$modelStatus <- status
   outcomeModel$populationCounts <- getCounts(population, "Population count")

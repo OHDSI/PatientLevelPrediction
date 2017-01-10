@@ -2,7 +2,8 @@
 % Please edit documentation in R/DataSplitting.R
 \name{timeSplitter}
 \alias{timeSplitter}
-\title{Split test/train data by time and then partitions training set into random folds stratified by class}
+\title{Split test/train data by time and then partitions training set into random folds stratified by
+class}
 \usage{
 timeSplitter(population, test = 0.3, nfold = 3, seed = NULL)
 }
@@ -19,10 +20,12 @@ timeSplitter(population, test = 0.3, nfold = 3, seed = NULL)
 A dataframe containing the columns: rowId and index
 }
 \description{
-Split test/train data by time and then partitions training set into random folds stratified by class
+Split test/train data by time and then partitions training set into random folds stratified by
+class
 }
 \details{
-Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId belongs to the test set and 
-a positive integer index value indicating the rowId's cross valiation fold within the train set.
+Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId belongs to the test
+set and a positive integer index value indicating the rowId's cross valiation fold within the train
+set.
 }
 

@@ -4,11 +4,13 @@
 \alias{plotPrecisionRecall}
 \title{Plot the precision-recall curve using the sparse thresholdSummary data frame}
 \usage{
-plotPrecisionRecall(evaluation, fileName = NULL)
+plotPrecisionRecall(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
 \code{\link{RunPlp}} function.}
+
+\item{type}{options: 'train' or test'}
 
 \item{fileName}{Name of the file where the plot should be saved, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for

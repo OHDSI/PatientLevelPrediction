@@ -4,14 +4,21 @@
 \alias{setMLP}
 \title{Create setting for neural network model with python}
 \usage{
-setMLP()
+setMLP(size = 4, alpha = 1e-05, seed = NULL)
+}
+\arguments{
+\item{size}{The number of hidden nodes}
+
+\item{alpha}{The l2 regularisation}
+
+\item{seed}{A seed for the model}
 }
 \description{
 Create setting for neural network model with python
 }
 \examples{
 \dontrun{
-model.mlp <- setMLP()
+model.mlp <- setMLP(size=4, alpha=0.00001, seed=NULL)
 }
 }
 

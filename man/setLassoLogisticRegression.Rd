@@ -4,11 +4,12 @@
 \alias{setLassoLogisticRegression}
 \title{Create setting for lasso logistic regression}
 \usage{
-setLassoLogisticRegression(variance = 0.01)
+setLassoLogisticRegression(variance = 0.01, seed = NULL)
 }
 \arguments{
-\item{variance}{a single value or vector of values to be used to train multiple models and the model with the
-best performance on the cross validation set is choosen}
+\item{variance}{a single value used as the starting value for the automatic lambda search}
+
+\item{seed}{An option to add a seed when training the model}
 }
 \description{
 Create setting for lasso logistic regression

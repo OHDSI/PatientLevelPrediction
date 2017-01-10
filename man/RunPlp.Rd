@@ -5,9 +5,9 @@
 \title{RunPlp - Train and evaluate the model}
 \usage{
 RunPlp(population, plpData, modelSettings, testSplit = "time",
-  testFraction = 0.3, nfold = 3, indexes = NULL, save = NULL,
-  saveModel = T, verbosity = futile.logger::INFO, timeStamp = FALSE,
-  analysisId = NULL)
+  testFraction = 0.25, splitSeed = NULL, nfold = 3, indexes = NULL,
+  save = NULL, saveModel = T, verbosity = futile.logger::INFO,
+  timeStamp = FALSE, analysisId = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -31,6 +31,8 @@ train (validationFraction of the data) sets.  The split is stratified by the cla
 
 \item{testFraction}{The fraction of the data to be used as the test set in the patient
 split evaluation.}
+
+\item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
 
 \item{nfold}{The number of folds used in the cross validation (default 3)}
 

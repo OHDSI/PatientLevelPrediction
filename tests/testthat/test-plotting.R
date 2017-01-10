@@ -53,35 +53,34 @@ test_that("plots", {
   test <- plotRoc(lr_results$prediction)
   testthat::expect_s3_class(test, 'ggplot')
 
-  test <- plotSparseRoc(lr_results$performanceEvaluationTest)
+  test <- plotSparseRoc(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotPredictedPDF(lr_results$performanceEvaluationTest)
+  test <- plotPredictedPDF(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotPreferencePDF(lr_results$performanceEvaluationTest)
+  test <- plotPreferencePDF(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotPrecisionRecall(lr_results$performanceEvaluationTest)
+  test <- plotPrecisionRecall(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotF1Measure(lr_results$performanceEvaluationTest)
+  test <- plotF1Measure(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotDemographicSummary(lr_results$performanceEvaluationTest)
+  test <- plotDemographicSummary(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotSparseCalibration(lr_results$performanceEvaluationTest)
+  test <- plotSparseCalibration(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotPredictionDistribution(lr_results$performanceEvaluationTest)
+  test <- plotPredictionDistribution(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  # covSum
   test <- plotVariableScatterplot(lr_results$covariateSummary)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotGenerlizability(lr_results$covariateSummary)
+  test <- plotGeneralizability(lr_results$covariateSummary)
   testthat::expect_s3_class(test, 'grob')
 
   
