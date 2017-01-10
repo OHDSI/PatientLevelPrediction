@@ -1,0 +1,30 @@
+---
+title: "Custom patient-level prediction algorithms"
+author: "Peter R Rijnbeek, Martijn J. Schuemie, Jenna Reps"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Building patient-level predictive models}
+-->
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(PatientLevelPrediction)
+```
+\newpage
+# Introduction
+
+The `PatientLevelPrediction` package enables data extraction, model building, and model evaluation using data from databases that are translated into the Observational Medical Outcomes Partnership Common Data Model (OMOP CDM). 
+
+This vignette describes how you can add custom algorithms to the list of available algorithms in the `PatientLevelPrediction` package. This would allow you to fully leverage the standardize model development process with your own favourite algorithm.
+
+Of course, we invite you to share your new algorithms with the community through the GitHub repository.
+
+

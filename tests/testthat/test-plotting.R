@@ -83,5 +83,4 @@ test_that("plots", {
   test <- plotGeneralizability(lr_results$covariateSummary)
   testthat::expect_s3_class(test, 'grob')
 
-  
 })

@@ -54,7 +54,7 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
 #xgboost
 fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                         outcomeId, cohortId, ...){
-  
+
   if(!quiet)
     writeLines('Training GBM model')
   

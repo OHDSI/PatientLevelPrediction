@@ -60,7 +60,7 @@ plotPlp <- function(result, filename){
   plotVariableScatterplot(result$covariateSummary, 
                           fileName=file.path(filename, 'plots','variableScatterplot.pdf'))
   plotGeneralizability(result$covariateSummary, 
-                             fileName=file.path(filename, 'plots','generlizability.pdf'))
+                             fileName=file.path(filename, 'plots','generalizability.pdf'))
   
   return(TRUE)
 }
@@ -382,6 +382,7 @@ plotDemographicSummary <- function(evaluation, type='train', fileName=NULL){
     ind <- evaluation$demographicSummary$Eval==type
     x<- evaluation$demographicSummary[ind,c('ageGroup','genGroup','averagePredictedProbability',
                                             'PersonCountAtRisk', 'PersonCountWithOutcome')]
+
     x$observed <- x$PersonCountWithOutcome/x$PersonCountAtRisk
     x <- x[c('ageGroup','genGroup','averagePredictedProbability','observed')]
     x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
@@ -404,6 +405,7 @@ plotDemographicSummary <- function(evaluation, type='train', fileName=NULL){
     
     plot <- ggplot2::ggplot(data=x, 
                             ggplot2::aes(x=age, group=variable*genGroup)) +
+
       ggplot2::geom_line(ggplot2::aes(y=value, group=variable,
                                       color=variable,
                                       linetype = variable))+
@@ -419,13 +421,13 @@ plotDemographicSummary <- function(evaluation, type='train', fileName=NULL){
       ggplot2::scale_color_manual(values = c("royalblue4","red"),
                                   guide = ggplot2::guide_legend(title = NULL),
                                   labels = c("Expected", "Observed")) +
+
       ggplot2::guides(linetype=FALSE)
     
     if (!is.null(fileName))
       ggplot2::ggsave(fileName, plot, width = 7, height = 4.5, dpi = 400)
     return(plot)
   }
-  
 }
 
 
