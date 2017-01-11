@@ -78,7 +78,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
   data <- result$data[population$rowId,]
   prediction <- data.frame(rowId=population$rowId, 
-                           value=xgboost::predict(plpModel$model, data)
+                           value=stats::predict(plpModel$model, data)
                            )
   
   prediction <- merge(population, prediction, by='rowId')
