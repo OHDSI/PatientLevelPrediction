@@ -153,7 +153,7 @@ gbm_model2 <- function(data, population,
                                   eval.metric = "logloss", eval.metric = "auc",
                                   print_every_n=10)
       
-      pred <- xgboost::predict(model, data[population$indexes==index,])
+      pred <- stats::predict(model, data[population$indexes==index,])
       prediction <- population[population$indexes==index,]
       prediction$value <- pred
       attr(prediction, "metaData") <- list(predictionType = "binary")
@@ -173,7 +173,7 @@ gbm_model2 <- function(data, population,
                                 eval.metric = "logloss", eval.metric = "auc",
                                 print_every_n=10)
     
-    pred <- xgboost::predict(model, data)
+    pred <- stats::predict(model, data)
     prediction <- population
     prediction$value <- pred
     attr(prediction, "metaData") <- list(predictionType = "binary") 
