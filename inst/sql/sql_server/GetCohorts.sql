@@ -12,4 +12,4 @@ SELECT row_id,
 	days_to_cohort_end,
 	days_to_obs_end
 FROM #cohort_person cohort
-ORDER BY subject_id;
+ORDER BY subject_id
