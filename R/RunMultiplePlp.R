@@ -88,10 +88,8 @@
 #'                                         \item{ERROR}{Show error messages}
 #'                                         \item{FATAL}{Be silent except for fatal errors}
 #'                                         }                                             
-#' @examples
 #'
 #' @export
-#' 
 runPlpAnalyses <- function(outputFolder = getwd(),
                            connectionDetails=NULL, 
                            cdmDatabaseSchema=NULL,
