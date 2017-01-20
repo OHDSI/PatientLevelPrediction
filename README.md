@@ -57,13 +57,9 @@ Getting Started
 4. In R, use the following commands to download and install PatientLevelPrediction:
 
   ```r
-  install.packages("devtools")
-  library(devtools)
-  install_github("ohdsi/SqlRender") 
-  install_github("ohdsi/DatabaseConnector") 
-  install_github("ohdsi/Cyclops") 
-  install_github("ohdsi/FeatureExtraction")
-  install_github("ohdsi/PatientLevelPrediction") 
+  install.packages("drat")
+  drat::addRepo("OHDSI")
+  install.packages("PatientLevelPrediction")
   ```
 
 Getting Involved
