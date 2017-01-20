@@ -16,65 +16,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create simulation profile
-#'
-#' @description
-#' \code{createplpDataSimulationProfile} creates a profile based on the provided plpData object, which
-#' can be used to generate simulated data that has similar characteristics.
-#'
-#' @param plpData   An object of type \code{plpData} as generated using \code{getDbplpData}.
-#'
-#' @details
-#' The output of this function is an object that can be used by the \code{simulateplpData} function to
-#' generate a plpData object.
-#'
-#' @return
-#' An object of type \code{plpDataSimulationProfile}.
-#'
-#' @export
-createPlpSimulationProfile <- function(plpData) {
-  writeLines("Computing covariate prevalence")  # (Note: currently assuming binary covariates)
-  sums <- bySumFf(plpData$covariates$covariateValue, plpData$covariates$covariateId)
-  covariatePrevalence <- sums$sums/nrow(plpData$cohorts)
-  attr(covariatePrevalence, "names") <- sums$bins
-  
-  
-  writeLines("Fitting outcome model(s)")
-  outcomeModels <- vector("list", length(plpData$metaData$outcomeIds))
-  for (i in 1:length(plpData$metaData$outcomeIds)) {
-    outcomeId <- plpData$metaData$outcomeIds[i]
-    model <- fitPredictiveModel(plpData = plpData,
-                                outcomeId = outcomeId,
-                                modelType = "poisson",
-                                prior = Cyclops::createPrior("laplace",
-                                                             exclude = c(0),
-                                                             useCrossValidation = TRUE),
-                                control = Cyclops::createControl(noiseLevel = "quiet",
-                                                                 cvType = "auto",
-                                                                 startingVariance = 0.001,
-                                                                 threads = 10))
-    model$coefficients <- model$coefficients[model$coefficients != 0]
-    outcomeModels[[i]] <- model$coefficients
-  }
-  
-  writeLines("Computing time distribution")
-  timePrevalence <- table(ff::as.ram(plpData$cohorts$time))/nrow(plpData$cohorts)
-  
-  if (!is.null(plpData$exclude)) {
-    writeLines("Computing prevalence of exlusion")
-    exclusionPrevalence <- table(ff::as.ram(plpData$exclude$outcomeId))/nrow(plpData$cohorts)
-  } else {
-    exclusionPrevalence <- NULL
-  }
-  result <- list(covariatePrevalence = covariatePrevalence,
-                 outcomeModels = outcomeModels,
-                 metaData = plpData$metaData,
-                 covariateRef = ff::as.ram(plpData$covariateRef),
-                 timePrevalence = timePrevalence,
-                 exclusionPrevalence = exclusionPrevalence)
-  class(result) <- "plpDataSimulationProfile"
-  return(result)
-}
+# Create simulation profile
+#
+# @description
+# \code{createplpDataSimulationProfile} creates a profile based on the provided plpData object, which
+# can be used to generate simulated data that has similar characteristics.
+#
+# @param plpData   An object of type \code{plpData} as generated using \code{getDbplpData}.
+#
+# @details
+# The output of this function is an object that can be used by the \code{simulateplpData} function to
+# generate a plpData object.
+#
+# @return
+# An object of type \code{plpDataSimulationProfile}.
+#
+# @export
+##createPlpSimulationProfile <- function(plpData) {
+##  writeLines("Computing covariate prevalence")  # (Note: currently assuming binary covariates)
+##  sums <- bySumFf(plpData$covariates$covariateValue, plpData$covariates$covariateId)
+##  covariatePrevalence <- sums$sums/nrow(plpData$cohorts)
+##  attr(covariatePrevalence, "names") <- sums$bins
+##  
+##  
+##  writeLines("Fitting outcome model(s)")
+##  outcomeModels <- vector("list", length(plpData$metaData$outcomeIds))
+##  for (i in 1:length(plpData$metaData$outcomeIds)) {
+##    outcomeId <- plpData$metaData$outcomeIds[i]
+##    model <- fitPredictiveModel(plpData = plpData,
+##                                outcomeId = outcomeId,
+##                                modelType = "poisson",
+##                                prior = Cyclops::createPrior("laplace",
+##                                                             exclude = c(0),
+##                                                             useCrossValidation = TRUE),
+##                                control = Cyclops::createControl(noiseLevel = "quiet",
+##                                                                 cvType = "auto",
+##                                                                 startingVariance = 0.001,
+##                                                                 threads = 10))
+##    model$coefficients <- model$coefficients[model$coefficients != 0]
+##   outcomeModels[[i]] <- model$coefficients
+##  }
+##  
+##  writeLines("Computing time distribution")
+##  timePrevalence <- table(ff::as.ram(plpData$cohorts$time))/nrow(plpData$cohorts)
+##  
+##  if (!is.null(plpData$exclude)) {
+##    writeLines("Computing prevalence of exlusion")
+##    exclusionPrevalence <- table(ff::as.ram(plpData$exclude$outcomeId))/nrow(plpData$cohorts)
+##  } else {
+##    exclusionPrevalence <- NULL
+##  }
+##  result <- list(covariatePrevalence = covariatePrevalence,
+##                 outcomeModels = outcomeModels,
+##                 metaData = plpData$metaData,
+##                 covariateRef = ff::as.ram(plpData$covariateRef),
+##                 timePrevalence = timePrevalence,
+##                 exclusionPrevalence = exclusionPrevalence)
+##  class(result) <- "plpDataSimulationProfile"
+##  return(result)
+##}
 
 #' Generate simulated data
 #'
