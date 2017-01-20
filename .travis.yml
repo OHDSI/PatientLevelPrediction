@@ -1,93 +1,16 @@
-language: c
-
-# use containers
+language: R
+cache: packages
 sudo: false
 
-addons:
-  apt:
-    sources:
-    - r-packages-precise
-    packages:
-    - gdb
-    - apport
-    - r-base-dev
-    - r-recommended
-    - pandoc
-    - default-jdk
-    - default-jre
+r_github_packages:
+  - OHDSI/DatabaseConnector
+  - OHDSI/FeatureExtraction
+  - OHDSI/OhdsiRTools
+  - OHDSI/BigKnn
 
-# cache local R libraries directory:
-cache:
-  directories:
-    - ~/Rlib
-    
 before_install:
-- export LD_LIBRARY_PATH=$JAVA_HOME:$LD_LIBRARY_PATH
-
-# install the package and dependencies:
-install:
-  - mkdir -p ~/Rlib
-  - echo 'R_LIBS=~/Rlib' > .Renviron
-  - echo 'options(repos = "http://cran.rstudio.com")' > .Rprofile
-  - mkdir -p ~/.R
-  - Rscript -e 'if(!"devtools" %in% rownames(installed.packages())) { install.packages("devtools", dependencies = TRUE) }'
-  - Rscript -e 'if (!require("covr")) devtools::install_github("jimhester/covr")'
-  - Rscript -e 'if (!require("drat")) install.packages("drat")'     
-  - Rscript -e 'if(!"rJava" %in% rownames(installed.packages())) { install.packages("rJava", dependencies = TRUE) }'
-  - Rscript -e 'if(!"testthat" %in% rownames(installed.packages())) { install.packages("testthat", dependencies = TRUE) }'
-  - Rscript -e 'if(!"knitr" %in% rownames(installed.packages())) { install.packages("knitr", dependencies = TRUE) }'
-  - Rscript -e 'if(!"pROC" %in% rownames(installed.packages())) { install.packages("pROC", dependencies = TRUE) }'
-  - Rscript -e 'if(!"gnm" %in% rownames(installed.packages())) { install.packages("gnm", dependencies = TRUE) }'
-  - Rscript -e 'if(!"rmarkdown" %in% rownames(installed.packages())) { install.packages("rmarkdown", dependencies = TRUE) }'
-  - Rscript -e 'if(!"ggplot2" %in% rownames(installed.packages())) { install.packages("ggplot2", dependencies = TRUE) }'
-  - Rscript -e 'if(!"bit" %in% rownames(installed.packages())) { install.packages("bit", dependencies = TRUE) }'
-  - Rscript -e 'if(!"ff" %in% rownames(installed.packages())) { install.packages("ff", dependencies = TRUE) }'
-  - Rscript -e 'if(!"ffbase" %in% rownames(installed.packages())) { install.packages("ffbase", dependencies = TRUE) }'
-  - Rscript -e 'if(!"plyr" %in% rownames(installed.packages())) { install.packages("plyr", dependencies = TRUE) }'
-  - Rscript -e 'if(!"survAUC" %in% rownames(installed.packages())) { install.packages("survAUC", dependencies = TRUE) }'
-  - Rscript -e 'if(!"RJDBC" %in% rownames(installed.packages())) { install.packages("RJDBC", dependencies = TRUE) }'
-  - Rscript -e 'if(!"survival" %in% rownames(installed.packages())) { install.packages("survival", dependencies = TRUE) }'
-  - Rscript -e 'if(!"gridExtra" %in% rownames(installed.packages())) { install.packages("gridExtra", dependencies = TRUE) }'
-  - Rscript -e 'if(!"Rcpp" %in% rownames(installed.packages())) { install.packages("Rcpp", dependencies = TRUE) }'
-  - Rscript -e 'if(!"xgboost" %in% rownames(installed.packages())) { install.packages("xgboost", dependencies = TRUE) }'
-  - Rscript -e 'if(!"Matrix" %in% rownames(installed.packages())) { install.packages("Matrix", dependencies = TRUE) }'
-  - Rscript -e 'if(!"AUC" %in% rownames(installed.packages())) { install.packages("AUC", dependencies = TRUE) }'
-  - Rscript -e 'if(!"PythonInR" %in% rownames(installed.packages())) { install.packages("PythonInR", dependencies = TRUE) }'
-  - Rscript -e 'if(!"scoring" %in% rownames(installed.packages())) { install.packages("scoring", dependencies = TRUE) }'
-  - Rscript -e 'if(!"Metrics" %in% rownames(installed.packages())) { install.packages("Metrics", dependencies = TRUE) }'
-  - Rscript -e 'if(!"futile.logger" %in% rownames(installed.packages())) { install.packages("futile.logger", dependencies = TRUE) }'  
-  - Rscript -e 'if(!"utils" %in% rownames(installed.packages())) { install.packages("utils", dependencies = TRUE) }'  
-  - Rscript -e 'if(!"reshape2" %in% rownames(installed.packages())) { install.packages("reshape2", dependencies = TRUE) }'
-  - Rscript -e 'if(!"ResourceSelection" %in% rownames(installed.packages())) { install.packages("ResourceSelection", dependencies = TRUE) }'
-  - Rscript -e 'if(!"SparseM" %in% rownames(installed.packages())) { install.packages("SparseM", dependencies = TRUE) }'
-  - Rscript -e 'if(!"Cyclops" %in% rownames(installed.packages())) { install.packages("Cyclops", dependencies = TRUE) }'
-  - Rscript -e 'if(!"SqlRender" %in% rownames(installed.packages())) { install.packages("SqlRender", dependencies = TRUE) }'  
-  
-  # Install OHDSI dependencies
-  - Rscript -e 'devtools::install_github("OHDSI/DatabaseConnector")'
-  - Rscript -e 'devtools::install_github("OHDSI/FeatureExtraction")'
-  - Rscript -e 'devtools::install_github("OHDSI/OhdsiRTools")'
-  - Rscript -e 'devtools::install_github("OHDSI/BigKnn")'
-      
-  - Rscript -e 'update.packages(ask = FALSE, instlib = "~/Rlib")'
-  - Rscript -e 'devtools::install_deps(pkg = ".", dependencies = TRUE)'
-
-before_script:
-  - ulimit -c unlimited -S
-  - export PKG_NAME=$(Rscript -e 'cat(paste0(devtools::as.package(".")$package))')
-  - export PKG_TARBALL=$(Rscript -e 'pkg <- devtools::as.package("."); cat(paste0(pkg$package,"_",pkg$version,".tar.gz"))')
-
-# Build and check package
-script:
-  - R CMD build . --no-build-vignettes --no-manual
-  - PKG_FILE_NAME=$(ls -1t *.tar.gz | head -n 1)
-  - PKG_NAME=$(ls -1t *.tar.gz | head -n 1 | sed 's/_.*gz//')
-  - _R_CHECK_CRAN_INCOMING_=FALSE R CMD check "${PKG_FILE_NAME}" --no-build-vignettes --no-manual
-  - cat ${PKG_NAME}.Rcheck/00install.out # Print out install / compile log
-#  - cat ${PKG_NAME}.Rcheck/tests/testthat/hs_err*.log # Print out testthat crash information  
-#  - for i in $(find ./ -maxdepth 1 -name 'core*' -print); do gdb $(pwd)/test core* -ex "thread apply all bt" -ex "set pagination 0" -batch; done;  
-#  - gdb /usr/lib/R/bin/exec/R ${PKG_NAME}.Rcheck/tests/testthat/core* -ex "thread apply all bt" -ex "set pagination 0" -batch  
-  - cat ${PKG_NAME}.Rcheck/tests/*Rout* # Print out install / compile log
+  - Rscript -e 'update.packages(ask = FALSE)'
+  - export LD_LIBRARY_PATH=$JAVA_HOME:$LD_LIBRARY_PATH
 
 notifications:
   recipients:
@@ -98,10 +21,13 @@ notifications:
   email:
     on_success: change
     on_failure: change
+
 after_success:
-- Rscript -e 'library(covr);codecov()'
-- curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/broadsea-methodslibrary/trigger/f0b51cec-4027-4781-9383-4b38b42dd4f5/
-- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
+  - Rscript -e 'covr::codecov()'
+  - curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/broadsea-methodslibrary/trigger/f0b51cec-4027-4781-9383-4b38b42dd4f5/
+  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
+
 env:
   global:
     secure: pEhWT0SZmEpxcK0iclaqIro0HfU9gI555/dxaGm4h6lbJnZOJLTv19o65EV52HJRpTXtuv612bR7jf5+eOIqIkcrzO9XdbLMigp/R/YHkp22RFEZBnnGX9xH/3D6QbeeUaHn0h8goBildzX5q1ZyCVNBIpA7kP418b2pG3rWgaA=
+    
