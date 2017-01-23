@@ -61,6 +61,10 @@ Getting Started
   drat::addRepo("OHDSI")
   install.packages("PatientLevelPrediction")
   ```
+Video Vignette
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=BEukCbT8UoA
+" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
+alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
 Getting Involved
 ================
