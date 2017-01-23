@@ -48,7 +48,7 @@ if train:
     # train on fold
     print "Training fold %s" %(i)
     start_time = timeit.default_timer()	
-    mlp = MLPClassifier(algorithm='adam',activation='logistic', alpha=alpha, learning_rate='adaptive', hidden_layer_sizes=(size, 2), random_state=seed)
+    mlp = MLPClassifier(activation='logistic', alpha=alpha, learning_rate='adaptive', hidden_layer_sizes=(size, 2), random_state=seed)
     mlp = mlp.fit(train_x, train_y)
     end_time = timeit.default_timer()
     print "Training fold took: %.2f s" %(end_time-start_time)
@@ -70,7 +70,7 @@ else:
   print "X- %s rows and Y %s length" %(X[trainInds,:].shape[0], y[trainInds].shape[0])
 
   start_time = timeit.default_timer()	
-  mlp = MLPClassifier(algorithm='adam',activation='logistic', alpha=alpha,learning_rate='adaptive', hidden_layer_sizes=(size, 2), random_state=seed, tol=0.0000001)
+  mlp = MLPClassifier(activation='logistic', alpha=alpha,learning_rate='adaptive', hidden_layer_sizes=(size, 2), random_state=seed, tol=0.0000001)
   mlp = mlp.fit(X[trainInds,:], y[trainInds])
   end_time = timeit.default_timer()
   print "Training final took: %.2f s" %(end_time-start_time)
