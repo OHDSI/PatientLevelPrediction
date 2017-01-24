@@ -52,7 +52,7 @@ mtry = int(np.round(np.sqrt(train_x.shape[1])))
 print "Training random forest with mtry= %s" %(mtry)
 # feature selection
 print "Applying variable importance feature selection..."
-rf = RandomForestClassifier(max_features=mtry, n_estimators=ntrees,max_depth=max_depth,min_samples_split=1, random_state=0, n_jobs=-1, bootstrap=False)
+rf = RandomForestClassifier(max_features=mtry, n_estimators=ntrees,max_depth=max_depth,min_samples_split=2, random_state=0, n_jobs=-1, bootstrap=False)
 rf = rf.fit(train_x, train_y)
 feat_sel = SelectFromModel(rf,threshold='mean', prefit=True)
 train_x = feat_sel.transform(train_x)
