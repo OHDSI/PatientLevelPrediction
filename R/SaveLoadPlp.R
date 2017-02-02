@@ -532,7 +532,7 @@ savePlpModel <- function(plpModel, dirPath){
       dir.create(file.path(dirPath,'python_model'))
     for(file in dir(plpModel$model)){
       file.copy(file.path(plpModel$model,file), 
-                file.path(dirPath,'python_model'),  recursive = FALSE,
+                file.path(dirPath,'python_model'),  overwrite=TRUE, recursive = FALSE,
                 copy.mode = TRUE, copy.date = FALSE)
     }
     
