@@ -541,6 +541,23 @@ savePlpModel <- function(plpModel, dirPath){
   }
   #============================================================
     
+  #==================================================================
+  # if knn then move model
+  #==================================================================
+  if(attr(plpModel, 'type') =='knn'){
+    if(!dir.exists(file.path(dirPath,'knn_model')))
+      dir.create(file.path(dirPath,'knn_model'))
+    for(file in dir(plpModel$model)){
+      file.copy(file.path(plpModel$model,file), 
+                file.path(dirPath,'knn_model'), overwrite=TRUE,  recursive = FALSE,
+                copy.mode = TRUE, copy.date = FALSE)
+    }
+    
+    plpModel$model <- file.path(dirPath,'knn_model')
+    plpModel$predict <- createTransform(plpModel)
+  }
+  #============================================================
+    
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
   saveRDS(plpModel$index, file = file.path(dirPath, "index.rds"))
