@@ -37,6 +37,7 @@ Imports:
     Matrix,
     AUC,
     PythonInR,
+    futile.options,
     futile.logger,
     utils,
     methods,
