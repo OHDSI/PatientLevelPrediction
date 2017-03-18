@@ -26,7 +26,7 @@
 #' model.mlpTorch <- setMLPTorch()
 #' }
 #' @export
-setMLPTorch <- function(seed=NULL){
+setMLPTorch <- function(size=200, epochs=10, seed=0){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -38,7 +38,10 @@ setMLPTorch <- function(seed=NULL){
     )
   }
   result <- list(model='fitMLPTorch', 
-                 param= 'NULL',
+                 param= split(expand.grid(size=size, 
+                                          epochs=epochs,
+                                          seed=ifelse(is.null(seed),'NULL', seed)),
+                              1:(length(size)*length(alpha))  ),
                  name='MLP Torch')
   class(result) <- 'modelSettings' 
   
