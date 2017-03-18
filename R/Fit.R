@@ -55,6 +55,13 @@
 fitPlp <- function(population, data,   modelSettings,#featureSettings, 
                    cohortId, outcomeId){
   
+  if(is.null(population))
+    stop('Population is NULL')
+  if(is.null(data))
+    stop('plpData is NULL')
+  if(is.null(modelSettings$model))
+    stop('No model specified')
+  
   if('ffdf'%in%class(data$covariates)){
     plpData <- list(outcomes =data$outcomes,
                     cohorts = data$cohorts,

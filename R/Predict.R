@@ -36,6 +36,13 @@
 #' @export
 predictPlp <- function(plpModel, population, plpData,  index=NULL){
   
+  if(is.null(plpModel))
+    stop('No model input')
+  if(is.null(population))
+    stop('No population input')
+  if(is.null(plpData))
+    stop('No plpData input')
+  
   # apply the feature transformations
   if(!is.null(index)){
     flog.trace(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
@@ -78,7 +85,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
   data <- result$data[population$rowId,]
   prediction <- data.frame(rowId=population$rowId, 
-                           value=xgboost::predict(plpModel$model, data)
+                           value=stats::predict(plpModel$model, data)
                            )
   
   prediction <- merge(population, prediction, by='rowId')
@@ -159,7 +166,7 @@ predict.python <- function(plpModel, population, plpData){
 predict.knn <- function(plpData, population, plpModel, ...){
   covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
   prediction <- BigKnn::predictKnn(covariates = covariates,
-                                   cohorts=ff::as.ffdf(population),
+                                   cohorts=ff::as.ffdf(population[,!colnames(population)%in%'cohortStartDate']),
                                    indexFolder = plpModel$model,
                                    k = plpModel$modelSettings$modelParameters$k,
                                    weighted = TRUE)

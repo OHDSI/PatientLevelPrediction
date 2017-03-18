@@ -96,19 +96,103 @@ ApplyPlpPrediction <- function(plpModel, plpData, population) {
 
 }
 
-# use metadata in plpModel to extract similar data and population for new databases:
-similarPlpData <- function(plpModel,
-                           database,
-                           newCohortId = NULL,
-                           newOutcomeId = NULL,
+#' Extract new plpData using plpModel settings
+#' use metadata in plpModel to extract similar data and population for new databases:
+#'
+#' @param plpModel         The trained PatientLevelPrediction model or object returned by RunPlp()
+#' @param newConnectionDetails      The connectionDetails for the new database
+#' @param newCdmDatabaseSchema      The database schema for the new CDM database 
+#' @param newCohortDatabaseSchema   The database schema where the cohort table is stored
+#' @param newCohortTable            The table name of the cohort table
+#' @param newCohortId               The cohort_definition_id for the cohort of at risk people
+#' @param newOutcomeDatabaseSchema  The database schema where the outcome table is stored
+#' @param newOutcomeTable           The table name of the outcome table
+#' @param newOutcomeId              The cohort_definition_id for the outcome  
+#'
+#' @examples
+#' \dontrun{
+#' # set the connection
+#' connectionDetails <- DatabaseConnector::createConnectionDetails()
+#'    
+#' # load the model and data
+#' plpModel <- loadPlpModel("C:/plpmodel")
+#'
+#' # extract the new data in the 'newData.dbo' schema using the model settings 
+#' newDataList <- similarPlpData(plpModel=plpModel, 
+#'                               newConnectionDetails = connectionDetails,
+#'                               newCdmDatabaseSchema = 'newData.dbo',
+#'                               newCohortDatabaseSchema = 'newData.dbo',   
+#'                               newCohortTable = 'cohort', 
+#'                               newCohortId = 1, 
+#'                               newOutcomeDatabaseSchema = 'newData.dbo', 
+#'                               newOutcomeTable = 'outcome',     
+#'                               newOutcomeId = 2)    
+#'                
+#' # get the prediction:
+#' prediction <- applyModel(newDataList$population, newDataList$plpData, plpModel)$prediction
+#' }
+#' @export
+similarPlpData <- function(plpModel=NULL,
+                           newConnectionDetails = NULL,
+                           newCdmDatabaseSchema = NULL,
+                           newCohortDatabaseSchema = NULL,
                            newCohortTable = NULL,
+                           newCohortId = NULL,
+                           newOutcomeDatabaseSchema = NULL,
                            newOutcomeTable = NULL,
-                           newCohortCDMSchema = NULL,
-                           newOutcomeCDMSchema = NULL,
-                           ...) {
-  # todo
-
+                           newOutcomeId = NULL) {
+  
+  if(is.null(plpModel))
+    return(NULL)
+  if(!'plpModel'%in%class(plpModel))
+    return(NULL)
+  if(sum(class(plpModel)==c('list','plpModel'))==2)
+    plpModel <- plpModel$model 
+  
+  writeLines('Loading model data extraction settings')
+  dataOptions <- as.list(plpModel$metaData$call)
+  dataOptions[[1]] <- NULL
+  
+  writeLines('Adding new settings if set...')
+  if(is.null(newCdmDatabaseSchema))
+    return(NULL)
+  dataOptions$cdmDatabaseSchema <- newCdmDatabaseSchema
+  
+  if(!is.null(newConnectionDetails))
+    dataOptions$connectionDetails <- newConnectionDetails # check name
+  
+  if(!is.null(newCohortId))
+    dataOptions$cohortId <- newCohortId
+  if(!is.null(newOutcomeId))
+    dataOptions$outcomeIds <- newOutcomeId
+  plpData <- do.call(getPlpData, dataOptions)
+  
+  if(!is.null(newCohortDatabaseSchema))
+    dataOptions$cohortDatabaseSchema <- newCohortDatabaseSchema  # correct names?
+  if(!is.null(newCohortTable))
+    dataOptions$cohortTable <- newCohortTable
+  
+  if(!is.null(newOutcomeDatabaseSchema))
+    dataOptions$outcomeDatabaseSchema <- newOutcomeDatabaseSchema # correct names?
+  if(!is.null(newOutcomeTable))
+    dataOptions$outcomeTable <- newOutcomeTable
+  
+  
+  # get the popualtion
+  writeLines('Loading model population settings')
+  popOptions <- plpModel$populationSettings
+  popOptions$cohortId <- dataOptions$cohortId
+  popOptions$outcomeId <- dataOptions$outcomeIds
+  popOptions$plpData <- plpData
+  population <- do.call(PatientLevelPrediction::createStudyPopulation, popOptions)
+  
+  
+  # return the popualtion and plpData for the new database
+  writeLines('Returning population and plpData for new data using model settings')
+  return(list(population=population,
+              plpData=plpData))
 }
+
 
 
 

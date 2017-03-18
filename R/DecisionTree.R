@@ -1,4 +1,4 @@
-# @file MLP.R
+# @file DecisionTree.R
 #
 # Copyright 2016 Observational Health Data Sciences and Informatics
 #
@@ -16,51 +16,69 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create setting for neural network model with python 
-#' @param size       The number of hidden nodes
-#' @param alpha      The l2 regularisation
-#' @param seed       A seed for the model 
+#' Create setting for DecisionTree with python 
+#' @param max_depth    The maximum depth of the tree
+#' @param min_samples_split    The minimum samples per split
+#' @param min_samples_leaf    The minimum number of samples per leaf
+#' @param min_impurity_split  Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf. 
+#' @param class_weight        Balance or None
+#' @param seed                The random state seed
 #'
 #' @examples
 #' \dontrun{
-#' model.mlp <- setMLP(size=4, alpha=0.00001, seed=NULL)
+#' model.decisionTree <- setDecisionTree(max_depth=10,min_samples_leaf=10, seed=NULL )
 #' }
 #' @export
-setMLP <- function(size=4, alpha=0.00001, seed=NULL){
-  
+setDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=10,
+                            min_impurity_split=10^-7,seed =NULL, class_weight='None'  ){
   if(!class(seed)%in%c('numeric','NULL'))
     stop('Invalid seed')
-  if(class(size)!='numeric')
-    stop('size must be a numeric value >0 ')
-  if(size < 1)
-    stop('size must be greater that 0')
-  if(class(alpha)!='numeric')
-    stop('alpha must be a numeric value >0')
-  if(alpha <= 0)
-    stop('alpha must be greater that 0')
+  if(class(max_depth)!='numeric')
+    stop('max_depth must be a numeric value >0 ')
+  if(max_depth < 1)
+    stop('max_depth must be greater that 0 or -1')
+  if(class(min_samples_split)!='numeric')
+    stop('min_samples_split must be a numeric value >1')
+  if(min_samples_split < 2)
+    stop('min_samples_split must be greater that 1')
+  if(class(min_samples_leaf)!='numeric')
+    stop('min_samples_leaf must be a numeric value >0')
+  if(min_samples_leaf < 1)
+    stop('min_samples_leaf must be greater that 0')
+  if(class(min_impurity_split)!='numeric')
+    stop('min_impurity_split must be a numeric value >0 ')
+  if(min_impurity_split <= 0)
+    stop('min_impurity_split must be greater that 0')
+  if(class(class_weight) !='character')
+    stop('class_weight must be a character of either None or balanced')
+  if(!class_weight%in%c('None','balanced'))
+    stop('class_weight must be a character of either None or balanced')
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
     tryCatch({
       python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
     }, error = function(err){
-        stop('Python was not found on your system. See the vignette for instructions.')
-       }  
+      stop('Python was not found on your system. See the vignette for instructions.')
+    }  
     )
   }
-  result <- list(model='fitMLP', 
-                 param= split(expand.grid(size=size, 
-                                          alpha=alpha,
+  result <- list(model='fitDecisionTree', 
+                 param= split(expand.grid(max_depth=max_depth, 
+                                          min_samples_split=min_samples_split,
+                                          min_samples_leaf=min_samples_leaf,
+                                          min_impurity_split=min_impurity_split,
+                                          class_weight=class_weight,
                                           seed=ifelse(is.null(seed),'NULL', seed)),
-                              1:(length(size)*length(alpha))  ),
-                 name='Neural network')
+                              1:(length(class_weight)*length(max_depth)*length(min_samples_split)*length(min_samples_leaf)*length(min_impurity_split))  ),
+                 name='DecisionTree')
   class(result) <- 'modelSettings' 
   
   return(result)
 }
 
-fitMLP <- function(population, plpData, param, search='grid', quiet=F,
-                      outcomeId, cohortId, ...){
+fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
+                        outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
   if(!'ffdf'%in%class(plpData$covariates))
@@ -96,29 +114,27 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
-
+  
   # run model:
   outLoc <- file.path(getwd(),'python_models')
   PythonInR::pySet("modelOutput",outLoc)
   
-
+  
   # do cross validation to find hyperParameter
-  hyperParamSel <- lapply(param, function(x) do.call(trainMLP, c(x, train=TRUE)  ))
-
+  # do cross validation to find hyperParameter
+  hyperParamSel <- lapply(param, function(x) do.call(trainDecisionTree, c(x, train=TRUE)  ))
   
   hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
   
   #now train the final model and return coef
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
-  finalModel <- do.call(trainMLP, c(param[[bestInd]], train=FALSE))
+  finalModel <- do.call(trainDecisionTree, c(param[[bestInd]], train=FALSE))
   
+  #now train the final model and return coef
+
   # get the coefs and do a basic variable importance:
-  lev1 <- PythonInR::pyGet('mlp.coefs_[0]', simplify = F)
-  lev1 <- apply(lev1,2, unlist)
-  lev2 <- PythonInR::pyGet('mlp.coefs_[1]', simplify = F)
-  lev2 <- apply(lev2,2, unlist)
-  vals <- abs(lev1)%*%abs(lev2)
-  varImp <- apply(vals, 1, function(x) sum(abs(x)))
+  varImp <- PythonInR::pyGet('dt.feature_importances_', simplify = F)[,1]
+  varImp[is.na(varImp)] <- 0
   #varImp <- PythonInR::pyGet('mlp.coefs_[0]', simplify = F)[,1]
   #varImp[is.na(varImp)] <- 0
   
@@ -127,10 +143,10 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   covariateRef$included <- incs
   covariateRef$value <- unlist(varImp)
   
-    
+  
   # select best model and remove the others  (!!!NEED TO EDIT THIS)
   modelTrained <- file.path(outLoc) 
-  param.best <- param[[bestInd]]
+  param.best <- NULL
   
   comp <- start-Sys.time()
   
@@ -138,7 +154,7 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   result <- list(model = modelTrained,
                  trainCVAuc = hyperParamSel,
                  hyperParamSearch = hyperSummary,
-                 modelSettings = list(model='fitMLP',modelParameters=param.best),
+                 modelSettings = list(model='fitDecisionTree',modelParameters=param.best),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
@@ -156,11 +172,16 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
+trainDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=10,
+                              min_impurity_split=10^-7,class_weight='None',seed =NULL,
+                              train=TRUE){
   #PythonInR::pySet('size', as.matrix(size) )
   #PythonInR::pySet('alpha', as.matrix(alpha) )
-  PythonInR::pyExec(paste0("size = ", size))
-  PythonInR::pyExec(paste0("alpha = ", alpha))
+  PythonInR::pyExec(paste0("max_depth = ", max_depth))
+  PythonInR::pyExec(paste0("min_samples_split = ", min_samples_split))
+  PythonInR::pyExec(paste0("min_samples_leaf = ", min_samples_leaf))
+  PythonInR::pyExec(paste0("min_impurity_split = ", min_impurity_split))
+  PythonInR::pyExec(paste0("class_weight = ", class_weight))
   PythonInR::pyExec(paste0("seed = ", ifelse(is.null(seed),'None',seed)))
   if(train)
     PythonInR::pyExec("train = True")
@@ -168,7 +189,7 @@ trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','decisionTree.py '))
   
   if(train){
     # then get the prediction 
@@ -184,7 +205,5 @@ trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
     writeLines(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }
-  
-  return(T)
   
 }

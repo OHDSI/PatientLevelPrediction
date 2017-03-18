@@ -25,6 +25,13 @@
 #' model.lr <- setLassoLogisticRegression()
 #' @export
 setLassoLogisticRegression<- function(variance=0.01, seed=NULL){
+  if(!class(seed)%in%c('numeric','NULL'))
+    stop('Invalid seed')
+  if(class(variance)!='numeric')
+    stop('Variance must be numeric')
+  if(variance<0)
+    stop('Variance must be >= 0')
+  
   result <- list(model='fitLassoLogisticRegression', param=list(val=variance, seed=seed), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   
