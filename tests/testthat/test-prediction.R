@@ -90,7 +90,7 @@ test_that("prediction", {
   # checking Logistic Regression 
   #=====================================
   model_set <- setLassoLogisticRegression()
-  testthat::expect_that(model_set, is_a("modelSettings"))
+  testthat::expect_that(model_set, testthat::is_a("modelSettings"))
   testthat::expect_length(model_set,3)
   testthat::expect_error(PatientLevelPrediction::setLassoLogisticRegression(variance = -3))
   testthat::expect_error(PatientLevelPrediction::setLassoLogisticRegression(seed = 'F'))
@@ -114,7 +114,7 @@ test_that("prediction", {
   # checking Gradient Boosting Machine
   #=====================================
   gbm_set <- setGradientBoostingMachine(ntrees = 10)
-  testthat::expect_that(gbm_set, is_a("modelSettings"))
+  testthat::expect_that(gbm_set, testthat::is_a("modelSettings"))
   testthat::expect_length(gbm_set,3)
   testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(ntrees = -1))
   testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(min_rows = 1))
@@ -136,9 +136,9 @@ test_that("prediction", {
   #=====================================
   # checking Random forest
   #=====================================
-  rf_set <- PatientLevelPrediction::setRandomForest(ntrees=10)
-  testthat::expect_that(rf_set, is_a("modelSettings"))
-  testthat::expect_length(rf_set,3)
+  #rf_set <- PatientLevelPrediction::setRandomForest(ntrees=10)
+  #testthat::expect_that(rf_set, testthat::is_a("modelSettings"))
+  #testthat::expect_length(rf_set,3)
   testthat::expect_error(PatientLevelPrediction::setRandomForest(ntrees=-1))
   testthat::expect_error(PatientLevelPrediction::setRandomForest(mtries = -4))
   testthat::expect_error(PatientLevelPrediction::setRandomForest(max_depth = 0))
@@ -161,9 +161,9 @@ test_that("prediction", {
   #=====================================
   # checking Decision Tree
   #=====================================
-  dt_set <- PatientLevelPrediction::setDecisionTree()
-  testthat::expect_that(dt_set, is_a("modelSettings"))
-  testthat::expect_length(dt_set,3)
+  #dt_set <- PatientLevelPrediction::setDecisionTree()
+  #testthat::expect_that(dt_set, is_a("modelSettings"))
+  #testthat::expect_length(dt_set,3)
   testthat::expect_error(PatientLevelPrediction::setDecisionTree(max_depth = 0))
   testthat::expect_error(PatientLevelPrediction::setDecisionTree(min_samples_split = 1))
   testthat::expect_error(PatientLevelPrediction::setDecisionTree(min_samples_leaf = -1))
@@ -184,9 +184,9 @@ test_that("prediction", {
   #=====================================
   # checking Ada Boost
   #=====================================
-  dt_set <- PatientLevelPrediction::setAdaBoost()
-  testthat::expect_that(dt_set, is_a("modelSettings"))
-  testthat::expect_length(dt_set,3)
+  #dt_set <- PatientLevelPrediction::setAdaBoost()
+  #testthat::expect_that(dt_set, is_a("modelSettings"))
+  #testthat::expect_length(dt_set,3)
   testthat::expect_error(PatientLevelPrediction::setAdaBoost(n_estimators = 0))
   testthat::expect_error(PatientLevelPrediction::setAdaBoost(learning_rate = -1))
   testthat::expect_error(PatientLevelPrediction::setAdaBoost(learning_rate = 2))
@@ -219,9 +219,9 @@ test_that("prediction", {
   #=====================================
   # checking Naive Bayes
   #=====================================
-  model_set <- setNaiveBayes()
-  testthat::expect_that(model_set, is_a("modelSettings"))
-  testthat::expect_length(model_set,3)
+  #model_set <- setNaiveBayes()
+  #testthat::expect_that(model_set, is_a("modelSettings"))
+  #testthat::expect_length(model_set,3)
   testthat::expect_error(PatientLevelPrediction::fitNaiveBayes())
   testthat::expect_error(PatientLevelPrediction::fitNaiveBayes(population,plpData=list(), 
                                                         param=NULL, outcomeId = 1,
@@ -241,9 +241,9 @@ test_that("prediction", {
   #=====================================
   # checking MLP
   #=====================================
-  gbm_set <- setMLP()
-  testthat::expect_that(gbm_set, is_a("modelSettings"))
-  testthat::expect_length(gbm_set,3)
+  #gbm_set <- setMLP()
+  #testthat::expect_that(gbm_set, is_a("modelSettings"))
+  #testthat::expect_length(gbm_set,3)
   testthat::expect_error(PatientLevelPrediction::setMLP(size = -1))
   testthat::expect_error(PatientLevelPrediction::setMLP(alpha = -1))
   testthat::expect_error(PatientLevelPrediction::setMLP(seed = 'F'))
@@ -257,8 +257,6 @@ test_that("prediction", {
                                                                             cohortId = 2))
   ##model <- loadPlpModel('gbm_model')  # (NEEDED MODEL FOLDER)
   ##checkPrediction(model, plpData=plpData, population, index)
-  
-  
   
   # removing files created duirng the test:
   unlink('./plpmodels', recursive = T, force = T)
