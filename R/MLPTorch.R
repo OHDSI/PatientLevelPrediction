@@ -38,16 +38,14 @@ setMLPTorch <- function(size=200, epochs=10, seed=0){
     )
   }
   result <- list(model='fitMLPTorch', 
-                 param= split(expand.grid(size=size, 
-                                          epochs=epochs,
-                                          seed=ifelse(is.null(seed),'NULL', seed)),
-                              1:(length(size)*length(alpha))  ),
+                 param= c(size,epochs,seed),
                  name='MLP Torch')
   class(result) <- 'modelSettings' 
   
   return(result)
 }
 
+#' @export
 fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
                    outcomeId, cohortId, ...){
   
@@ -63,15 +61,16 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   # connect to python if not connected
   if ( !PythonInR::pyIsConnected() ){ 
     PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')}
+  }
   
   
   # return error if we can't connect to python
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
   
+  PythonInR::pyOptions("numpyAlias", "np")
+  PythonInR::pyOptions("useNumpy", TRUE)
+  PythonInR::pyImport("numpy", as='np')
   start <- Sys.time()
   
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
@@ -90,7 +89,8 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   outLoc <- file.path(getwd(),'python_models')
   PythonInR::pySet("modelOutput",outLoc)
 
-  finalModel <- do.call(trainMLPTorch, c(param[[bestInd]], train=FALSE))
+  # ToDo: I do not like this list creation
+  finalModel <- do.call(trainMLPTorch,list(size=as.character(param[1]), epochs=as.character(param[2]), seed = as.character(param[3]), train = FALSE))
   
   modelTrained <- file.path(outLoc) 
   param.best <- NULL
@@ -99,14 +99,14 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   
   # return model location 
   result <- list(model = modelTrained,
-                 trainCVAuc = hyperParamSel,
-                 hyperParamSearch = hyperSummary,
+                 trainCVAuc = -1, # ToDo decide on how to deal with this
+                 hyperParamSearch = -1,
                  modelSettings = list(model='fitMLPTorch',modelParameters=param.best),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
                  cohortId=cohortId,
-                 varImp = covariateRef,
+                 varImp = NULL, 
                  trainingTime =comp,
                  dense=0
   )
@@ -118,14 +118,17 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainMLPTorch <- function(train=TRUE){
+trainMLPTorch <- function(size=200, epochs=100, seed=0, train=TRUE){
+  PythonInR::pyExec(paste0("size = ",size))
+  PythonInR::pyExec(paste0("epochs = ",epochs))
+  PythonInR::pyExec(paste0("seed = ",seed))
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp_torch.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp_torch.py'))
   
   if(train){
     # then get the prediction 

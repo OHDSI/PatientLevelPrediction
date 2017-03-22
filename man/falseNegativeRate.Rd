@@ -24,4 +24,3 @@ Calculate the falseNegativeRate
 \details{
 Calculate the falseNegativeRate
 }
-

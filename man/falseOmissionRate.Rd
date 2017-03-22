@@ -24,4 +24,3 @@ Calculate the falseOmissionRate
 \details{
 Calculate the falseOmissionRate
 }
-

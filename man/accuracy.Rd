@@ -24,4 +24,3 @@ Calculate the accuracy
 \details{
 Calculate the accuracy
 }
-

@@ -14,4 +14,3 @@ Create setting for naive bayes model with python
 model.nb <- setNaiveBayes()
 }
 }
-

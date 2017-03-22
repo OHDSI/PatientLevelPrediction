@@ -26,4 +26,3 @@ Plot the Predicted probability density function, showing prediction overlap betw
 \details{
 Create a plot showing the predicted probability density function, showing prediction overlap between true and false cases
 }
-

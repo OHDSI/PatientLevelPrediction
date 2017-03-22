@@ -35,4 +35,3 @@ extracted.} \item{metaData}{Some information on how the plpData object was const
 exportPlpDataToCsv(plpData, "s:/temp/exportTest")
 }
 }
-

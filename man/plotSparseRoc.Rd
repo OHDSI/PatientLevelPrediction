@@ -26,4 +26,3 @@ Plot the ROC curve using the sparse thresholdSummary data frame
 \details{
 Create a plot showing the Receiver Operator Characteristics (ROC) curve.
 }
-

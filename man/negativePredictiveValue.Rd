@@ -24,4 +24,3 @@ Calculate the negativePredictiveValue
 \details{
 Calculate the negativePredictiveValue
 }
-

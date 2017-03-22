@@ -17,4 +17,3 @@ Create setting for lasso logistic regression
 \examples{
 model.lr <- setLassoLogisticRegression()
 }
-

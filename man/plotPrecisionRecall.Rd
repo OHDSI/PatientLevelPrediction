@@ -26,4 +26,3 @@ Plot the precision-recall curve using the sparse thresholdSummary data frame
 \details{
 Create a plot showing the precision-recall curve using the sparse thresholdSummary data frame
 }
-

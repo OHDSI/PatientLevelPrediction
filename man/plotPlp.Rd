@@ -22,4 +22,3 @@ Plot all the PatientLevelPrediction plots
 \details{
 Create a directory with all the plots
 }
-

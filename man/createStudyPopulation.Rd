@@ -81,4 +81,3 @@ Create a study population
 Create a study population by enforcing certain inclusion and exclusion criteria, defining
 a risk window, and determining which outcomes fall inside the risk window.
 }
-

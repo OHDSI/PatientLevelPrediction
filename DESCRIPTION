@@ -4,7 +4,7 @@ Title: Package for patient level prediction using data in the OMOP Common Data
     Model
 Version: 1.2.0
 Date: 2016-11-17
-Author:  Jenna Reps [aut],
+Author: Jenna Reps [aut],
     Martijn J. Schuemie [aut, cre],
     Marc A. Suchard [aut],
     Patrick B. Ryan [aut],
@@ -55,4 +55,4 @@ Suggests:
     ResourceSelection
 LinkingTo: Rcpp
 NeedsCompilation: yes
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
