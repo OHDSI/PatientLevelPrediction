@@ -19,4 +19,3 @@ brierScore
 \details{
 Calculates the brierScore from prediction object
 }
-

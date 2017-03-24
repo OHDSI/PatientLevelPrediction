@@ -24,4 +24,3 @@ Plot the ROC curve
 \details{
 Create a plot showing the Receiver Operator Characteristics (ROC) curve.
 }
-

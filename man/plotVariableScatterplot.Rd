@@ -25,4 +25,3 @@ Plot the variable importance scatterplot
 Create a plot showing the variable importance scatterplot
 #'
 }
-

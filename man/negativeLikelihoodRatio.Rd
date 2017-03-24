@@ -24,4 +24,3 @@ Calculate the negativeLikelihoodRatio
 \details{
 Calculate the negativeLikelihoodRatio
 }
-

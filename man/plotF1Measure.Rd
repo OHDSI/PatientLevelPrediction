@@ -26,4 +26,3 @@ Plot the F1 measure efficiency frontier using the sparse thresholdSummary data f
 \details{
 Create a plot showing the F1 measure efficiency frontier using the sparse thresholdSummary data frame
 }
-

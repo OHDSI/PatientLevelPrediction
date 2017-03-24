@@ -15,4 +15,3 @@ loads the plp model
 \details{
 Loads a plp model that was saved using \code{savePlpModel()}
 }
-

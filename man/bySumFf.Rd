@@ -20,4 +20,3 @@ bins <- ff::as.ff(c(1, 1, 1, 2, 2))
 bySumFf(values, bins)
 
 }
-

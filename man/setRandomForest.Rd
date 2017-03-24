@@ -27,4 +27,3 @@ model.rf <- setRandomForest(mtries=c(-1,5,20),  ntrees=c(10,100),
                            max_depth=c(5,20))
 }                           
 }
-

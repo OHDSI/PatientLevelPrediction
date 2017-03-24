@@ -27,4 +27,3 @@ Plot the side-by-side boxplots of prediction distribution, by class#'
 Create a plot showing the side-by-side boxplots of prediction distribution, by class
 #'
 }
-

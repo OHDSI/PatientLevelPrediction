@@ -157,7 +157,7 @@ trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp.py'))
   
   if(train){
     # then get the prediction 

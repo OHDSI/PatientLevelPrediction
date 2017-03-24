@@ -43,4 +43,3 @@ Train various models using a default parameter gird search or user specified par
 The user can define the machine learning model to train (regularised logistic regression, random forest,
 gradient boosting machine, neural network and )
 }
-

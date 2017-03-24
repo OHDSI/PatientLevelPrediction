@@ -17,4 +17,3 @@ Saves the result from runPlp into the location directory
 \details{
 Saves the result from runPlp into the location directory
 }
-

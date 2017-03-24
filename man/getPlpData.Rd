@@ -118,4 +118,3 @@ the drugs and their descendants will be excluded from the covariates. However, i
 manually add the concept_ids and descendants to the \code{excludedCovariateConceptIds} of the
 \code{covariateSettings} argument.
 }
-

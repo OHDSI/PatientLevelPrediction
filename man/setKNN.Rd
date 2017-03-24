@@ -17,4 +17,3 @@ Create setting for knn model
 \examples{
 model.knn <- setKNN(k=10000)
 }
-

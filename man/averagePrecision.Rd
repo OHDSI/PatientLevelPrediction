@@ -19,4 +19,3 @@ Calculate the average precision
 \details{
 Calculates the average precision from a predition object
 }
-

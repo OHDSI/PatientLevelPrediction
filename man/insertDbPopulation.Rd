@@ -39,4 +39,3 @@ Insert a population into a database
 Inserts a population table into a database. The table in the database will have the same structure as the
 'cohort' table in the Common Data Model.
 }
-

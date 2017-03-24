@@ -18,4 +18,3 @@ calibrationLine
 \details{
 Calculates the calibration from prediction object
 }
-

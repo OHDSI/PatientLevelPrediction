@@ -24,4 +24,3 @@ Calculate the sensitivity
 \details{
 Calculate the sensitivity
 }
-

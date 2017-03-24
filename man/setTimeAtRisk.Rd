@@ -37,4 +37,3 @@ setTimeAtRisk(includeAllOutcomes = T, firstExposureOnly = F,
 \description{
 create the timeAtRisks for the multiple analysis studies
 }
-

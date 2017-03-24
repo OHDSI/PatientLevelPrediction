@@ -27,4 +27,3 @@ Plot the Observed vs. expected incidence, by age and gender
 Create a plot showing the Observed vs. expected incidence, by age and gender
 #'
 }
-

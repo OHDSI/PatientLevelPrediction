@@ -57,4 +57,3 @@ newDataList <- similarPlpData(plpModel=plpModel,
 prediction <- applyModel(newDataList$population, newDataList$plpData, plpModel)$prediction
 }
 }
-

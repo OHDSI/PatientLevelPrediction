@@ -20,4 +20,3 @@ Calculates the prediction distribution
 \details{
 Calculates the quantiles from a predition object
 }
-

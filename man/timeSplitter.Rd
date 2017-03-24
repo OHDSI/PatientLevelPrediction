@@ -28,4 +28,3 @@ Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId b
 set and a positive integer index value indicating the rowId's cross valiation fold within the train
 set.
 }
-

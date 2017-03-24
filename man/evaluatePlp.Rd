@@ -20,4 +20,3 @@ Evaluates the performance of the patient level prediction model
 \details{
 The function calculates various metrics to measure the performance of the model
 }
-
