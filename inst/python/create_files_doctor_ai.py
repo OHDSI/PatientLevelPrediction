@@ -15,8 +15,12 @@ def get_key(key):
         return key
 covriate_ids = set()
 patient_dict = {}
+head = True
 with open(filename) as fp:
     for lines in fp:
+        if head:
+            head = False
+            continue
         lines = lines.strip('\n').strip('\r').split(',')
 #        print(lines, type(lines), lines[0])
           
