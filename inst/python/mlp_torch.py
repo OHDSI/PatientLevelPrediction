@@ -12,13 +12,19 @@ import numpy as np
 import os
 import timeit
 from sklearn.externals import joblib
-
+#import pdb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data import DataLoader, TensorDataset
 
+if torch.cuda.is_available():
+        cuda = True
+        print('===> Using GPU')
+else:
+        cuda = False
+        print('===> Using CPU')
 
 class MLP(nn.Module):
 	def __init__(self, input_dim, hidden_size):
@@ -33,27 +39,33 @@ class MLP(nn.Module):
 		return x
 
 	def predict_proba(self, x):
+		if type(x) is np.ndarray:
+			x = torch.from_numpy(x.astype(np.float32))
+		x = Variable(x)
+		if cuda:
+			x = x.cuda()
 		return self.forward(x)
 
 
 # ================================================================
 print "Training MLP with PyTorch"
 
-# population = joblib.load('population.pkl')
-# plpData = joblib.load('plpData.pkl')
-# train = True
-#
-# seed = 0
-# size = 200
-# epochs = 1
-
+#population = joblib.load('/data/plp/SYNPUF/population.pkl')
+#plpData = joblib.load('/data/plp/SYNPUF/plpData.pkl')
+#train = False 
+#modelOutput = '/data/home/xpan/PatientLevelPrediction/model/'
+#seed = 0
+#size = 200
+#epochs = 1
+'''
 if torch.cuda.is_available():
 	cuda = True
 	print('===> Using GPU')
 else:
 	cuda = False
 	print('===> Using CPU')
-
+#cuda = False
+'''
 np.random.seed(seed)
 torch.manual_seed(seed)
 if cuda:
@@ -88,7 +100,6 @@ if train:
 		model = MLP(train_x.shape[1], size)
 		if cuda:
 			model.cuda()
-
 		criterion = nn.BCELoss(size_average=True)
 		optimizer = torch.optim.Adam(model.parameters())
 
@@ -120,7 +131,7 @@ if train:
 
 		model.eval()
 
-		test_input_var = Variable(torch.from_numpy(test_x.toarray().astype(np.float32)))
+		test_input_var = torch.from_numpy(test_x.toarray().astype(np.float32))
 		if cuda:
 			test_input_var = test_input_var.cuda()
 
@@ -179,4 +190,4 @@ else:
 		os.makedirs(modelOutput)
 	print "Model saved to: %s" % (modelOutput)
 
-	joblib.dump(model, modelOutput + '\\model.pkl')
+	joblib.dump(model, modelOutput + '/model.pkl')
