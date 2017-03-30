@@ -132,8 +132,8 @@ if train:
 		model.eval()
 
 		test_input_var = torch.from_numpy(test_x.toarray().astype(np.float32))
-		if cuda:
-			test_input_var = test_input_var.cuda()
+		#if cuda:
+		#	test_input_var = test_input_var.cuda()
 
 		preds = model.predict_proba(test_input_var)
 		temp = preds.data.cpu().numpy().flatten()
