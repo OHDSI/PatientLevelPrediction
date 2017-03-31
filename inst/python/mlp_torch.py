@@ -44,7 +44,9 @@ class MLP(nn.Module):
 		x = Variable(x)
 		if cuda:
 			x = x.cuda()
-		return self.forward(x)
+		y = self.forward(x)
+		temp = y.data.cpu().numpy().flatten()
+                return temp
 
 
 # ================================================================

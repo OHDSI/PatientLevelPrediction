@@ -22,7 +22,6 @@ from sklearn.externals.joblib import Memory
 from sklearn.datasets import load_svmlight_file
 from sklearn.externals import joblib
 
-
 #================================================================
 
 
@@ -51,10 +50,14 @@ if dense==1:
 
 # load model
 print "Loading model..."
-modelTrained = joblib.load(model_loc+'\\model.pkl') 
+modelTrained = joblib.load(model_loc+'/model.pkl') 
 
 print "Calculating predictions on population..."
-test_pred = modelTrained.predict_proba(X)[:,1]
+test_pred = modelTrained.predict_proba(X)
+if test_pred.ndim != 1:
+    test_pred = test_pred[:,1]
+  
+
 print "Prediction complete: %s rows" %(np.shape(test_pred)[0])
 print "Mean: %s prediction value" %(np.mean(test_pred))
 
