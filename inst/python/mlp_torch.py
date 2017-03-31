@@ -137,8 +137,8 @@ if train:
 		#if cuda:
 		#	test_input_var = test_input_var.cuda()
 
-		preds = model.predict_proba(test_input_var)
-		temp = preds.data.cpu().numpy().flatten()
+		temp = model.predict_proba(test_input_var)
+		#temp = preds.data.cpu().numpy().flatten()
 
 		test_pred[ind] = temp
 		print "Prediction complete: %s rows " % (np.shape(test_pred[ind])[0])
