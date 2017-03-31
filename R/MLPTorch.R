@@ -71,6 +71,7 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   PythonInR::pyOptions("numpyAlias", "np")
   PythonInR::pyOptions("useNumpy", TRUE)
   PythonInR::pyImport("numpy", as='np')
+  
   start <- Sys.time()
   
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
@@ -84,6 +85,11 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
+
+  covariateRef <- ff::as.ram(plpData$covariateRef)
+  incs <- rep(1, nrow(covariateRef))
+  covariateRef$included <- incs
+  #covariateRef$value <- unlist(varImp)
   
   # run model:
   outLoc <- file.path(getwd(),'python_models')
@@ -91,6 +97,7 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
 
   # ToDo: I do not like this list creation
   finalModel <- do.call(trainMLPTorch,list(size=as.character(param[1]), epochs=as.character(param[2]), seed = as.character(param[3]), train = FALSE))
+  
   
   modelTrained <- file.path(outLoc) 
   param.best <- NULL
@@ -106,9 +113,9 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
                  cohortId=cohortId,
-                 varImp = NULL, 
+                 varImp = covariateRef, 
                  trainingTime =comp,
-                 dense=0
+                 dense=1
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'

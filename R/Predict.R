@@ -133,7 +133,7 @@ predict.python <- function(plpModel, population, plpData){
   
   # run the python predict code:
   flog.info('Executing prediction...')
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py'))
   
   #get the prediction from python and reformat:
   flog.info('Returning results...')
