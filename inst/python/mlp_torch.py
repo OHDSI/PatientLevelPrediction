@@ -192,4 +192,4 @@ else:
 		os.makedirs(modelOutput)
 	print "Model saved to: %s" % (modelOutput)
 
-	joblib.dump(model, modelOutput + '/model.pkl')
+	joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
