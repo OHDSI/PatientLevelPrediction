@@ -8,7 +8,7 @@ plotPredictedPDF(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
-\code{\link{RunPlp}} function.}
+\code{\link{runPlp}} function.}
 
 \item{type}{options: 'train' or test'}
 
@@ -26,4 +26,3 @@ Plot the Predicted probability density function, showing prediction overlap betw
 \details{
 Create a plot showing the predicted probability density function, showing prediction overlap between true and false cases
 }
-

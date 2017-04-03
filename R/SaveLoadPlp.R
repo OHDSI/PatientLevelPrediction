@@ -510,7 +510,7 @@ insertDbPopulation <- function(population,
 #' @details
 #' Saves the plp model to a user specificed folder
 #'
-#' @param plpModel                   A trained classifier returned by running \code{RunPlp()$model}
+#' @param plpModel                   A trained classifier returned by running \code{runPlp()$model}
 #' @param dirPath                  A location to save the model to
 #'
 #' @export
@@ -648,13 +648,13 @@ loadPrediction <- function(dirPath){
 #' @details
 #' Saves the result from runPlp into the location directory
 #'
-#' @param result                       The result of running RunPlp()
+#' @param result                      The result of running runPlp()
 #' @param dirPath                     The directory to save the csv
 #' 
 #' @export
 savePlpResult <- function(result, dirPath){
   if (missing(result))
-    stop("Must specify RunPlp output")
+    stop("Must specify runPlp output")
   if (missing(dirPath))
     stop("Must specify directory location")
   #if (class(plpModel) != "plpModel")

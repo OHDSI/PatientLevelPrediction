@@ -28,4 +28,3 @@ model.gbm <- setGradientBoostingMachine(ntrees=c(10,100), nthread=20,
                            max_depth=c(4,6), learn_rate=c(0.1,0.3))
 
 }
-

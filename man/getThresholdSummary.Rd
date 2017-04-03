@@ -20,4 +20,3 @@ Calculate all measures for sparse ROC
 Calculates the TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
 from a predition object
 }
-

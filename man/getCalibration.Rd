@@ -25,4 +25,3 @@ Get a sparse summary of the calibration
 Generates a sparse summary showing the predicted probabilities and the observed fractions. Predictions are
 stratefied into equally sized bins of predicted probabilities.
 }
-

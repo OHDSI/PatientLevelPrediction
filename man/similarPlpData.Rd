@@ -12,7 +12,7 @@ similarPlpData(plpModel = NULL, newConnectionDetails = NULL,
   newOutcomeId = NULL)
 }
 \arguments{
-\item{plpModel}{The trained PatientLevelPrediction model or object returned by RunPlp()}
+\item{plpModel}{The trained PatientLevelPrediction model or object returned by runPlp()}
 
 \item{newConnectionDetails}{The connectionDetails for the new database}
 
@@ -57,4 +57,3 @@ newDataList <- similarPlpData(plpModel=plpModel,
 prediction <- applyModel(newDataList$population, newDataList$plpData, plpModel)$prediction
 }
 }
-

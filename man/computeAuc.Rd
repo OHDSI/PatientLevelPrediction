@@ -19,4 +19,3 @@ Compute the area under the ROC curve
 Computes the area under the ROC curve for the predicted probabilities, given the true observed
 outcomes.
 }
-

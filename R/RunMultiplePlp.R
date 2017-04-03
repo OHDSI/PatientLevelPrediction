@@ -231,7 +231,7 @@ runPlpAnalyses <- function(outputFolder = getwd(),
                                 verbosity=verbosity, analysisId=analysisId)
             
             # runPlp
-            result <- do.call(RunPlp, plpSettings)
+            result <- do.call(runPlp, plpSettings)
             
             # save the results into suitable structure:
             flog.info("Saving result...")

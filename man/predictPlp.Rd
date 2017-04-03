@@ -25,4 +25,3 @@ Predict the risk of the outcome using the input plpModel for the input plpData
 \details{
 The function applied the trained model on the plpData to make predictions
 }
-

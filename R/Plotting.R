@@ -22,7 +22,7 @@
 #' @details
 #' Create a directory with all the plots
 #'
-#' @param result                Object returned by the RunPlp() function
+#' @param result                Object returned by the runPlp() function
 #' @param filename              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
@@ -123,7 +123,7 @@ plotRoc <- function(prediction, fileName = NULL) {
 #' Create a plot showing the Receiver Operator Characteristics (ROC) curve.
 #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -166,7 +166,7 @@ plotSparseRoc <- function(evaluation,type='train', fileName=NULL){
 #' Create a plot showing the predicted probability density function, showing prediction overlap between true and false cases
 #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -229,7 +229,7 @@ plotPredictedPDF <- function(evaluation, type='train', fileName=NULL){
 #' Create a plot showing the preference score probability density function, showing prediction overlap between true and false cases
 #' #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -292,7 +292,7 @@ plotPreferencePDF <- function(evaluation, type='train', fileName=NULL){
 #' Create a plot showing the precision-recall curve using the sparse thresholdSummary data frame
 #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -327,7 +327,7 @@ plotPrecisionRecall <- function(evaluation, type='train', fileName=NULL){
 #' Create a plot showing the F1 measure efficiency frontier using the sparse thresholdSummary data frame
 #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -366,7 +366,7 @@ plotF1Measure <- function(evaluation,type='train', fileName=NULL){
 #' Create a plot showing the Observed vs. expected incidence, by age and gender
 #' #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -440,7 +440,7 @@ plotDemographicSummary <- function(evaluation, type='train', fileName=NULL){
 #' Create a plot showing the calibration
 #' #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -501,7 +501,7 @@ plotSparseCalibration <- function(evaluation, type='train', fileName=NULL){
 #' Create a plot showing the calibration
 #' #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -555,7 +555,7 @@ plotSparseCalibration2 <- function(evaluation, type='train', fileName=NULL){
 #' Create a plot showing the side-by-side boxplots of prediction distribution, by class
 #' #'
 #' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param type                  options: 'train' or test'
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -611,7 +611,7 @@ plotPredictionDistribution <- function(evaluation, type='train', fileName=NULL){
 #' Create a plot showing the variable importance scatterplot
 #' #'
 #' @param covariateSummary      A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
@@ -645,7 +645,7 @@ plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
 #' Create a plot showing the train/test generalizability diagnostic
 #' #'
 #' @param covariateSummary      A prediction object as generated using the
-#'                              \code{\link{RunPlp}} function.
+#'                              \code{\link{runPlp}} function.
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.

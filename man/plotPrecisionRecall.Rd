@@ -8,7 +8,7 @@ plotPrecisionRecall(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
-\code{\link{RunPlp}} function.}
+\code{\link{runPlp}} function.}
 
 \item{type}{options: 'train' or test'}
 
@@ -26,4 +26,3 @@ Plot the precision-recall curve using the sparse thresholdSummary data frame
 \details{
 Create a plot showing the precision-recall curve using the sparse thresholdSummary data frame
 }
-

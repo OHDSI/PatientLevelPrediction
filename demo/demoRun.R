@@ -23,7 +23,7 @@ population <- PatientLevelPrediction::createStudyPopulation(plpData,
 
 ### Example 1: Regularised logistic regression
 lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
-lr_results <- PatientLevelPrediction::RunPlp(population,
+lr_results <- PatientLevelPrediction::runPlp(population,
                                              plpData,
                                              modelSettings = lr_model,
                                              testSplit = "time",
@@ -37,7 +37,7 @@ cat("Press a key to continue")
 invisible(readline())
 
 nb_model <- PatientLevelPrediction::setNaiveBayes()
-nb_results <- PatientLevelPrediction::RunPlp(population,
+nb_results <- PatientLevelPrediction::runPlp(population,
                                              plpData,
                                              modelSettings = nb_model,
                                              testSplit = "time",
@@ -53,7 +53,7 @@ invisible(readline())
 gbm_model <- PatientLevelPrediction::setGradientBoostingMachine(ntrees = c(10, 50, 100),
                                                                 max_depth = c(4, 16),
                                                                 min_rows = 2)
-gbm_results <- PatientLevelPrediction::RunPlp(population,
+gbm_results <- PatientLevelPrediction::runPlp(population,
                                               plpData,
                                               modelSettings = gbm_model,
                                               testSplit = "person",

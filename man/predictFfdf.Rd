@@ -29,4 +29,3 @@ Row ID is used to link multiple covariates (x) to a single outcome (y) \cr \verb
 (y) \cr \verb{covariateId} \tab(integer) \tab A numeric identifier of a covariate \cr
 \verb{covariateValue} \tab(real) \tab The value of the specified covariate \cr }
 }
-
