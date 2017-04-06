@@ -30,11 +30,19 @@ class MLP(nn.Module):
 	def __init__(self, input_dim, hidden_size):
 		super(MLP, self).__init__()
 		self.fc1 = nn.Linear(input_dim, hidden_size)
+                
+                #self.fc2 = = nn.BatchNorm1d(hidden_size)
 		self.fc2 = nn.Linear(hidden_size, 1)
 
 	def forward(self, x):
-		x = F.tanh(self.fc1(x))
-		x = F.tanh(self.fc2(x))
+		x = F.relu(self.fc1(x))
+                x = F.dropout(x, training=self.training)
+                #x = F.relu(self.fc2(x))
+                #x = F.dropout(x, p=0.2, training=self.training)
+
+                x = self.fc2(x)
+                #x = F.dropout(x, training=self.training)
+		#x = F.tanh(self.fc2(x))
 		x = F.sigmoid(x)
 		return x
 
