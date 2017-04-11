@@ -26,7 +26,7 @@
 #' model.mlpTorch <- setMLPTorch()
 #' }
 #' @export
-setMLPTorch <- function(size=200, epochs=10, seed=0){
+setMLPTorch <- function(size=(200, 500, 1000), w_decay=(0.001, 0.003, 0.005), epochs=(10, 20, 50), seed=0){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -37,9 +37,14 @@ setMLPTorch <- function(size=200, epochs=10, seed=0){
     }  
     )
   }
-  result <- list(model='fitMLPTorch', 
-                 param= c(size,epochs,seed),
+  result <- list(model='fitMLPTorch', param= expand.grid(size=size, w_decay=w_decay,
+                 epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed)),
                  name='MLP Torch')
+  
+  #result <- list(model='fitMLPTorch', 
+  #               param= c(size,epochs,seed),
+  #               name='MLP Torch')
+  
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -90,13 +95,53 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
   #covariateRef$value <- unlist(varImp)
+  all_auc <- c()
+  
+  for(i in 1:nrow(param)){
+    
+    # set variable params - do loop  
+    #PythonInR::pyExec(paste0("size = int(",param$size[i],")"))
+    #PythonInR::pyExec(paste0("w_decay = int(",param$w_decay[i],")"))
+    #PythonInR::pyExec(paste0("epochs = int(",param$epochs[i],")"))
+    #PythonInR::pySet("epochs",param$epochs[i])
+    #PythonInR::pySet("train", FALSE)
+    ##PythonInR::pySet("dataLocation" ,plpData$covariates)
+    
+    # do inc-1 to go to python index as python starts at 0, R starts at 1
+    ##PythonInR::pyImport("numpy", as="np")
+    PythonInR::pySet('included', as.matrix(inc-1), 
+                     namespace = "__main__", useNumpy = TRUE)
+    
+    #mapping = sys.argv[5] # this contains column selection/ordering 
+    #missing = sys.argv[6] # this contains missing
+    
+    # then run standard python code
+    #PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp_torch.py'))
+    auc <- do.call(trainMLPTorch,list(size=as.character(param$size[i], epochs=as.character(param$epochs[i]), w_decay = as.character(param$w_decay[i]), 
+                                                        seed = as.character(param$seed[i]), train = TRUE))
+
+    # close python
+    
+    ##pred <- read.csv(file.path(outLoc,i,'prediction.txt'), header=F)
+    ##colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
+    #auc <- PatientLevelPrediction::computeAuc(pred)
+    all_auc <- c(all_auc, auc)
+    writeLines(paste0('Model with settings: size:',param$size[i],' epochs: ',param$epochs[i], 
+                      'w_decay: ', param$w_decay[i], 'seed: ', param$seed[i], ' obtained AUC of ', auc))
+  }
+  
+  hyperSummary <- cbind(param, cv_auc=all_auc)
   
   # run model:
   outLoc <- file.path(getwd(),'python_models')
   PythonInR::pySet("modelOutput",outLoc)
 
+  
   # ToDo: I do not like this list creation
-  finalModel <- do.call(trainMLPTorch,list(size=as.character(param[1]), epochs=as.character(param[2]), seed = as.character(param[3]), train = FALSE))
+  finalModel <- do.call(trainMLPTorch,list(size=as.character(param$size[which.max(all_auc)]), 
+                                           epochs=as.character(param$epochs[which.max(all_auc)]), 
+                                           w_decay=as.character(param$w_decay[which.max(all_auc)]), 
+                                           seed = as.character(param$seed[which.max(all_auc)]), train = FALSE))
   
   
   modelTrained <- file.path(outLoc) 
@@ -125,9 +170,10 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainMLPTorch <- function(size=200, epochs=100, seed=0, train=TRUE){
+trainMLPTorch <- function(size=200, epochs=100, w_decay = 0.001, seed=0, train=TRUE){
   PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
+  PythonInR::pyExec(paste0("w_decay = ",w_decay))
   PythonInR::pyExec(paste0("seed = ",seed))
   if(train)
     PythonInR::pyExec("train = True")
