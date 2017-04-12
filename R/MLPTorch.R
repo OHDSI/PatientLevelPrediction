@@ -84,7 +84,8 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   
   # convert plpData in coo to python:
   x <- toSparsePython(plpData,population, map=NULL)
-  
+  covariateRef <- ff::as.ram(plpData$covariateRef)
+  inc <- 1:ncol(covariateRef)  
   # save the model to outLoc  TODO: make this an input or temp location?
   outLoc <- file.path(getwd(),'python_models')
   # clear the existing model pickles
@@ -98,7 +99,6 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   all_auc <- c()
   
   for(i in 1:nrow(param)){
-    
     # set variable params - do loop  
     #PythonInR::pyExec(paste0("size = int(",param$size[i],")"))
     #PythonInR::pyExec(paste0("w_decay = int(",param$w_decay[i],")"))

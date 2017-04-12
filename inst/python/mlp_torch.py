@@ -112,7 +112,8 @@ if train:
 		if cuda:
 			model.cuda()
 		criterion = nn.BCELoss(size_average=True)
-		optimizer = torch.optim.Adam(model.parameters(w_decay))
+                print 'w_decay', w_decay
+		optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
                 #optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
 		train_set = TensorDataset(torch.from_numpy(train_x.toarray().astype(np.float32)),
 								  torch.from_numpy(train_y.astype(np.float32)).view(-1, 1))
@@ -172,8 +173,8 @@ else:
 		model.cuda()
 
 	criterion = nn.BCELoss(size_average=True)
-        optimizer = torch.optim.Adam(model.parameters(w_decay))
-	#optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
+	optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
+        #optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
         #optimizer = torch.optim.Adam(model.parameters(), weight_decay = 0.003)
 
 	train_set = TensorDataset(torch.from_numpy(train_x.toarray().astype(np.float32)),
