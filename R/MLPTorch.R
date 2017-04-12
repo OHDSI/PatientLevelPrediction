@@ -26,7 +26,7 @@
 #' model.mlpTorch <- setMLPTorch()
 #' }
 #' @export
-setMLPTorch <- function(size=200, epochs=10, seed=0){
+setMLPTorch <- function(size=1000, epochs=20, seed=0){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
