@@ -82,7 +82,7 @@ Development
 ===========
 PatientLevelPrediction is being developed in R Studio.
 
-###Development status
+### Development status
 [![Build Status](https://travis-ci.org/OHDSI/PatientLevelPrediction.svg?branch=master)](https://travis-ci.org/OHDSI/PatientLevelPrediction)
 [![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=master)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=master)
 
