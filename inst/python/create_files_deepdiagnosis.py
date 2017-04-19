@@ -104,7 +104,9 @@ def read_data(filename):
 __name__ == "__main__":
     filename = sys.argv[1]
     population = joblib.load('/data/plp/SYNPUF/population.pkl')
-    Y = population[:, 1]
+    y = population[:, 1]
     covriate_ids, patient_dict = read_data(filename)
+    y_ids = np.array([int(val) for val in patient_dict.keys()])
+    Y = y[y_ids] 
     convert_format2(covriate_ids, patient_dict, Y)
 
