@@ -24,19 +24,7 @@ def usage():
 	print '--task  is either train|test|valid, corresponding to what x and y are refering to'
 	print '--ths  is optional. It refers to a thresold for standard deviation. If an input dimension has standard deviation above this threshold, we filter that dimension to avoid issues with Stochastic Gradient Descent later.'
 
-def create_torch_tensor(input_x, input_y, output_dir, task = 'train', threshold = 1000):
-	#args = sys.argv[:]
-	try: 
-		x = cPickle.load(open(input_x, 'rb'))
-		y = cPickle.load(open(input_y, 'rb'))		
-	except:
-		try:
-			x = np.load(input_x)
-			y = np.load(input_y)
-		except:
-			print 'error', input_x, ' could not be loaded either as pickle or numpy format'
-			exit()
-
+def create_torch_tensor(x, y, output_dir, task = 'train', threshold = 1000):
 	if not os.path.exists(output_dir):
 		os.makedirs(output_dir)
 	if not os.path.exists(output_dir+'/' + task ):
@@ -91,4 +79,15 @@ if __name__=='__main__':
                         task = args.pop(0)
                 elif arg=='--ths':
                         threshold = args.pop(0)
-	create_torch_tensor(input_x, input_y, output_dir, task , threshold)
+        try:
+                x = cPickle.load(open(input_x, 'rb'))
+                y = cPickle.load(open(input_y, 'rb'))
+        except:
+                try:
+                        x = np.load(input_x)
+                        y = np.load(input_y)
+                except:
+                        print 'error', input_x, ' could not be loaded either as pickle or numpy format'
+                        exit()
+
+	create_torch_tensor(x, y, output_dir, task , threshold)
