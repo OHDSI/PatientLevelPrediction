@@ -69,7 +69,7 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1):
     cPickle.dump(x[:, ix_test, :], open(output_dir+'/xtest.pkl', 'wb'), -1)
     #cPickle.dump(y[:, ix_test, :], open(output_dir+'/ytest.pkl', 'wb'), -1) 
     
-    if Y is not None:
+    if y_dict is not None:
         Y = []
         for p_id in p_ids:
             if p_id not in y_dict:
