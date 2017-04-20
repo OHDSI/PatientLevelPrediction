@@ -3,10 +3,11 @@ import os
 import cPickle
 import pdb
 import numpy as np
+from sklearn.externals import joblib
 
 output_dir = 'data'
 
-def convert_format2(covriate_ids, patient_dict, Y = None, time_window = 1):
+def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1):
     D = len(covriate_ids)
     N = len(patient_dict)
     T = 365
@@ -14,9 +15,11 @@ def convert_format2(covriate_ids, patient_dict, Y = None, time_window = 1):
     x_raw = np.zeros((D,N,T), dtype=float)
     #y = np.zeros((O,N,T), dtype=int)
     patient_ind = 0
+    p_ids = []
     for kk in patient_dict.keys():
         print('-------------------')
         vals = patient_dict[kk] 
+        p_ids.append(int(kk))
         for timeid, meas in vals.iteritems():
             int_time = int(timeid) - 1
             for val in meas:
@@ -67,6 +70,14 @@ def convert_format2(covriate_ids, patient_dict, Y = None, time_window = 1):
     #cPickle.dump(y[:, ix_test, :], open(output_dir+'/ytest.pkl', 'wb'), -1) 
     
     if Y is not None:
+        Y = []
+        for p_id in p_ids:
+            if p_id not in y_dict:
+                print 'patient id: ', p_id, 'not have label info, default 0'
+                Y.append(0)
+            else:
+                Y.append(y_dict[p_id])
+        Y = np.array(Y)
         cPickle.dump(Y[ix_train], open(output_dir+'/ytrain.pkl', 'wb'), -1)
         cPickle.dump(Y[ix_valid], open(output_dir+'/yvalid.pkl', 'wb'), -1)   
         cPickle.dump(Y[ix_test], open(output_dir+'/ytest.pkl', 'wb'), -1)
@@ -101,12 +112,15 @@ def read_data(filename):
     return covriate_ids, patient_dict
 
 
-__name__ == "__main__":
+if __name__ == "__main__":
     filename = sys.argv[1]
     population = joblib.load('/data/plp/SYNPUF/population.pkl')
-    y = population[:, 1]
+    #y = population[:, 1]
     covriate_ids, patient_dict = read_data(filename)
-    y_ids = np.array([int(val) for val in patient_dict.keys()])
-    Y = y[y_ids] 
-    convert_format2(covriate_ids, patient_dict, Y)
+    #y_ids = np.array([int(val) for val in patient_dict.keys()])
+    #Y = []
+    y_dict = dict(zip( population[:, 0],  population[:, 1]))
+    #for val in y_ids:
+    #    Y.append(y_dict[y_ids]) 
+    convert_format2(covriate_ids, patient_dict, y_dict)
 
