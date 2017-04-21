@@ -47,6 +47,7 @@ Dependencies
  * DatabaseConnector
  * SqlRender
  * FeatureExtraction
+ * BigKnn
 
 Getting Started
 ===============

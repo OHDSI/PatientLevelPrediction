@@ -61,16 +61,12 @@ Before installing the `PatientLevelPrediction` package make sure you have Java a
 
 Furthermore, a python installation is required for some of the machine learning algorithms. We advise to install Python using Anaconda (https://www.continuum.io/downloads)
 
-The `PatientLevelPrediction` package is currently maintained in a GitHub repository (https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `devtools` package:
+The `PatientLevelPrediction` package is currently maintained in a GitHub repository (https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `drat` package:
 
 ```{r tidy=TRUE,eval=FALSE}
-install.packages("devtools")
-library(devtools)
-install_github("ohdsi/SqlRender") 
-install_github("ohdsi/DatabaseConnector") 
-install_github("ohdsi/Cyclops") 
-install_github("ohdsi/FeatureExtraction")
-install_github("ohdsi/PatientLevelPrediction") 
+  install.packages("drat")
+  drat::addRepo("OHDSI")
+  install.packages("PatientLevelPrediction")
 ```
 
 Once installed, you can type `library(PatientLevelPrediction)` to load the package.
@@ -210,7 +206,7 @@ data.frame(cohort_definition_id = c(1, 2),count = c(527616, 221555))
 
 ## Extracting the data from the server
 
-Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the `FeatureExtractionPackage` available at https://github.com/OHDSI/FeatureExtration. In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtractionPackage see its vignettes.
+Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the `FeatureExtractionPackage` available at https://github.com/OHDSI/FeatureExtration. In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its vignettes.
 
 ```{r tidy=FALSE,eval=FALSE}		   
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
@@ -268,7 +264,7 @@ plpData <- getPlpData(connectionDetails = connectionDetails,
                       cohortDatabaseSchema = cohortsDatabaseSchema,
                       cohortTable = "rehospitalization",
                       cohortId = 1,
-                      washoutWindow = 183,
+                      washoutPeriod = 183,
                       covariateSettings = covariateSettings,
                       outcomeDatabaseSchema = cohortsDatabaseSchema,
                       outcomeTable = "rehospitalization",

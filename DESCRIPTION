@@ -20,7 +20,7 @@ Depends:
     R (>= 3.2.2),
     DatabaseConnector (>= 1.3.0),
     FeatureExtraction,
-    Cyclops (>= 1.2.1-2)
+    Cyclops (>= 1.2.2)
 Imports:
     ggplot2,
     gridExtra,
