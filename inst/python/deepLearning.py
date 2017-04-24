@@ -72,6 +72,26 @@ class CNN(nn.Module):
         out = out.data.cpu().numpy().flatten()
         return out
 
+class GRU(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(GRU, self).__init__()
+
+        self.hidden_size = hidden_size
+
+        self.gru = nn.GRU(input_size, hidden_size)
+        self.linear = nn.Linear(hidden_size, output_size)
+
+    def forward(self, input, hidden):
+        _, hn = self.gru(input, hidden)
+        ## from (1, N, hidden) to (N, hidden)
+        rearranged = hn.view(hn.size()[1], hn.size(2))
+        out = self.linear(rearranged)
+        out = out.data.cpu().numpy().flatten()
+        return out
+
+    def initHidden(self, N):
+        return Variable(torch.randn(1, N, self.hidden_size))
+
 class RNN(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes):
         super(RNN, self).__init__()
