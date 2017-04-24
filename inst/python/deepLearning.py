@@ -6,6 +6,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+if torch.cuda.is_available():
+        cuda = True
+        #torch.cuda.set_device(1)
+        print('===> Using GPU')
+else:
+        cuda = False
+        print('===> Using CPU')
+
 class MLP(nn.Module):
     def __init__(self, input_dim, hidden_size):
         super(MLP, self).__init__()
@@ -81,8 +89,14 @@ class GRU(nn.Module):
         self.gru = nn.GRU(input_size, hidden_size)
         self.linear = nn.Linear(hidden_size, output_size)
 
-    def forward(self, input, hidden):
-        _, hn = self.gru(input, hidden)
+    def forward(self, x, hidden):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+
+        _, hn = self.gru(x, hidden)
         ## from (1, N, hidden) to (N, hidden)
         rearranged = hn.view(hn.size()[1], hn.size(2))
         out = self.linear(rearranged)
@@ -101,6 +115,12 @@ class RNN(nn.Module):
         self.fc = nn.Linear(hidden_size, num_classes)
     
     def forward(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+
         # Set initial states 
         h0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)) 
         c0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size))
@@ -123,6 +143,12 @@ class BiRNN(nn.Module):
         self.fc = nn.Linear(hidden_size*2, num_classes)  # 2 for bidirection 
     
     def forward(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+
         # Set initial states
         h0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size)) # 2 for bidirection 
         c0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size))
