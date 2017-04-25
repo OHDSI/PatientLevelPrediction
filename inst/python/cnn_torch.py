@@ -34,14 +34,14 @@ class CNN(nn.Module):
             nn.Conv2d(1, nb_filter, kernel_size, padding),
             nn.BatchNorm1d(nb_filter),
             nn.ReLU(),
-            nn.MaxPool1d(pool_size))
+            nn.MaxPool2d(pool_size))
         out1_size = (window_size + 2*padding - (kernel_size[1] - 1) - 1)/stride + 1
         maxpool_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride + 1
         self.layer2 = nn.Sequential(
             nn.Conv2d(nb_filter, 2*nb_filter, kernel_size, padding),
             nn.BatchNorm1d(2*nb_filter),
             nn.ReLU(),
-            nn.MaxPool1d(pool_size))
+            nn.MaxPool2d(pool_size))
         out2_size = (maxpool_size + 2*padding - (kernel_size[1] - 1) - 1)/stride + 1
         maxpool2_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride + 1
         self.drop1 = nn.Dropout(p=0.5)
