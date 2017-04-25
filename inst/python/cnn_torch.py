@@ -68,7 +68,7 @@ class CNN(nn.Module):
         return out
 
 # ================================================================
-print "Training MLP with PyTorch"
+print "Training CNN with PyTorch"
 
 #population = joblib.load('/data/plp/SYNPUF/population.pkl')
 #plpData = joblib.load('/data/plp/SYNPUF/plpData.pkl')
@@ -77,7 +77,6 @@ print "Training MLP with PyTorch"
 #seed = 0
 #size = 200
 #epochs = 1
-#nbfilter = 12
 '''
 if torch.cuda.is_available():
 	cuda = True
