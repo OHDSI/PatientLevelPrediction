@@ -14,6 +14,22 @@ else:
         cuda = False
         print('===> Using CPU')
 
+
+class LogisticRegression(nn.Module):
+    def __init__(self, input_size, num_classes):
+        super(LogisticRegression, self).__init__()
+        self.linear = nn.Linear(input_size, num_classes)
+
+    def forward(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+        out = self.linear(x)
+        out = out.data.cpu().numpy().flatten()
+        return out
+
 class MLP(nn.Module):
     def __init__(self, input_dim, hidden_size):
         super(MLP, self).__init__()
