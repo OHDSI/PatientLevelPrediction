@@ -21,15 +21,19 @@ class LogisticRegression(nn.Module):
         self.linear = nn.Linear(input_size, num_classes)
 
     def forward(self, x):
+        out = self.linear(x)
+        return out
+    
+    def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x)
         if cuda:
             x = x.cuda()
-        out = self.linear(x)
-        out = out.data.cpu().numpy().flatten()
-        return out
-
+        y = self.forward(x)
+        temp = y.data.cpu().numpy().flatten()
+        return temp
+    
 class MLP(nn.Module):
     def __init__(self, input_dim, hidden_size):
         super(MLP, self).__init__()
@@ -84,11 +88,6 @@ class CNN(nn.Module):
         self.fc2 = nn.Linear(hidden_size, 2)
         
     def forward(self, x):
-        if type(x) is np.ndarray:
-            x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
-        if cuda:
-            x = x.cuda()
         out = self.layer1(x)
         out = self.layer2(out)
         out = out.view(out.size(0), -1)
@@ -97,9 +96,18 @@ class CNN(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
-        out = out.data.cpu().numpy().flatten()
         return out
-
+    
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy().flatten()
+        return temp
+    
 class GRU(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(GRU, self).__init__()
@@ -109,22 +117,32 @@ class GRU(nn.Module):
         self.gru = nn.GRU(input_size, hidden_size)
         self.linear = nn.Linear(hidden_size, output_size)
 
-    def forward(self, x, hidden):
+    def forward(self, x):
+        if cuda:
+            x = x.cuda()
+            h0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size)).cuda() # 2 for bidirection 
+            c0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size)).cuda()
+        else:
+            h0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size)) # 2 for bidirection 
+            c0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size))
+        _, hn = self.gru(x, h0)
+        ## from (1, N, hidden) to (N, hidden)
+        rearranged = hn.view(hn.size()[1], hn.size(2))
+        out = self.linear(rearranged)
+        return out
+
+    def initHidden(self, N):
+        return Variable(torch.randn(1, N, self.hidden_size))
+    
+    def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x)
         if cuda:
             x = x.cuda()
-
-        _, hn = self.gru(x, hidden)
-        ## from (1, N, hidden) to (N, hidden)
-        rearranged = hn.view(hn.size()[1], hn.size(2))
-        out = self.linear(rearranged)
-        out = out.data.cpu().numpy().flatten()
-        return out
-
-    def initHidden(self, N):
-        return Variable(torch.randn(1, N, self.hidden_size))
+        y = self.forward(x)
+        temp = y.data.cpu().numpy().flatten()
+        return temp
 
 class RNN(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes):
@@ -135,9 +153,6 @@ class RNN(nn.Module):
         self.fc = nn.Linear(hidden_size, num_classes)
     
     def forward(self, x):
-        if type(x) is np.ndarray:
-            x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
         if cuda:
             x = x.cuda()
             h0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)).cuda() 
@@ -151,8 +166,17 @@ class RNN(nn.Module):
         
         # Decode hidden state of last time step
         out = self.fc(out[:, -1, :])  
-        out = out.data.cpu().numpy().flatten()
         return out
+
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy().flatten()
+        return temp
 
 class BiRNN(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes):
@@ -164,9 +188,6 @@ class BiRNN(nn.Module):
         self.fc = nn.Linear(hidden_size*2, num_classes)  # 2 for bidirection 
     
     def forward(self, x):
-        if type(x) is np.ndarray:
-            x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
         if cuda:
             x = x.cuda()
             h0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size)).cuda() # 2 for bidirection 
@@ -179,8 +200,15 @@ class BiRNN(nn.Module):
         
         # Decode hidden state of last time step
         out = self.fc(out[:, -1, :])
-        out = out.data.cpu().numpy().flatten()
         return out
 
-
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy().flatten()
+        return temp
 
