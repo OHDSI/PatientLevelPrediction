@@ -123,8 +123,8 @@ if train:
 			model.cuda()
 		#criterion = nn.BCELoss(size_average=True)
 		#optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+		criterion = nn.CrossEntropyLoss()
+		optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
                 #optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
 		train_set = TensorDataset(torch.from_numpy(train_x.toarray().astype(np.float32)),
@@ -183,9 +183,10 @@ else:
 	model = CNN(nbfilter)
 	if cuda:
 		model.cuda()
-
-	criterion = nn.BCELoss(size_average=True)
-	optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
+	criterion = nn.CrossEntropyLoss()
+	optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+	#criterion = nn.BCELoss(size_average=True)
+	#optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
         #optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
         #optimizer = torch.optim.Adam(model.parameters(), weight_decay = 0.003)
 
