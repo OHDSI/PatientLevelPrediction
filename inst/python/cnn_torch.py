@@ -12,7 +12,8 @@ import numpy as np
 import os
 import timeit
 from sklearn.externals import joblib
-#import pdb
+import cPickle
+import pdb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -22,40 +23,36 @@ from torch.utils.data import DataLoader, TensorDataset
 if torch.cuda.is_available():
         cuda = True
         print('===> Using GPU')
+	torch.cuda.set_device(2)
 else:
         cuda = False
         print('===> Using CPU')
 
 
 class CNN(nn.Module):
-    def __init__(self, nb_filter, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_szie = 100, stride = 1, padding = 0):
+    def __init__(self, nb_filter, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = 1, padding = 0):
         super(CNN, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, nb_filter, kernel_size, padding),
-            nn.BatchNorm1d(nb_filter),
+            nn.BatchNorm2d(nb_filter),
             nn.ReLU(),
             nn.MaxPool2d(pool_size))
         out1_size = (window_size + 2*padding - (kernel_size[1] - 1) - 1)/stride + 1
         maxpool_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride + 1
         self.layer2 = nn.Sequential(
-            nn.Conv2d(nb_filter, 2*nb_filter, kernel_size, padding),
-            nn.BatchNorm1d(2*nb_filter),
+            nn.Conv2d(nb_filter, nb_filter, kernel_size, padding),
+            nn.BatchNorm2d(nb_filter),
             nn.ReLU(),
             nn.MaxPool2d(pool_size))
         out2_size = (maxpool_size + 2*padding - (kernel_size[1] - 1) - 1)/stride + 1
         maxpool2_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride + 1
         self.drop1 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(maxpool2_size*labcounts*2*nb_filter, hidden_szie)
+        self.fc1 = nn.Linear(maxpool2_size*labcounts*nb_filter, hidden_size)
         self.drop2 = nn.Dropout(p=0.5)
         self.relu1 = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_szie, 1)
+        self.fc2 = nn.Linear(hidden_size, 2)
         
     def forward(self, x):
-        if type(x) is np.ndarray:
-            x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
-        if cuda:
-            x = x.cuda()
         out = self.layer1(x)
         out = self.layer2(out)
         out = out.view(out.size(0), -1)
@@ -64,8 +61,17 @@ class CNN(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
-        out = out.data.cpu().numpy().flatten()
         return out
+    
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy().flatten()
+        return temp
 
 # ================================================================
 print "Training CNN with PyTorch"
@@ -75,23 +81,62 @@ print "Training CNN with PyTorch"
 #train = False 
 #modelOutput = '/data/home/xpan/PatientLevelPrediction/model/'
 #seed = 0
+#w_decay = 0.001
 #size = 200
 #epochs = 1
-'''
-if torch.cuda.is_available():
-	cuda = True
-	print('===> Using GPU')
-else:
-	cuda = False
-	print('===> Using CPU')
-#cuda = False
-'''
+#nbfilter = 12
+
 np.random.seed(seed)
 torch.manual_seed(seed)
 if cuda:
 	torch.cuda.manual_seed(seed)
+'''
+#the input matrix should be Patient X labs X time
+x = cPickle.load(open('data/xtrain.pkl', 'rb'))
+x = np.transpose(x, (1, 0, 2))
+y = cPickle.load(open('data/ytrain.pkl', 'rb'))
+#pdb.set_trace()
+x = np.expand_dims(x, axis=1)
+print x.shape
+model = CNN(nbfilter, labcounts = x.shape[2], window_size =x.shape[3]) 
+if cuda:
+    model.cuda()
 
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
 
+#optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
+train_set = TensorDataset(torch.from_numpy(x.astype(np.float32)),
+                          torch.from_numpy(y.astype(np.float32)).view(-1, 1))
+train_loader = DataLoader(dataset=train_set, batch_size=1, shuffle=True)
+
+model.train()
+#pdb.set_trace()
+for epoch in np.arange(epochs):
+    for idx, (input, target) in enumerate(train_loader):
+        input_var = Variable(input)
+        target_var = Variable(target)
+
+        if cuda:
+            input_var = input_var.cuda()
+            target_var = target_var.cuda()
+
+        optimizer.zero_grad()
+        pred = model(input_var)
+        loss = criterion(pred, target_var)
+        loss.backward()
+        optimizer.step()
+
+model.eval()
+
+test_x = cPickle.load(open('data/xtrain.pkl', 'rb'))
+test_x = np.transpose(test_x, (1, 0, 2))
+test_x = np.expand_dims(test_x, axis=1)
+test_input_var = torch.from_numpy(test_x.astype(np.float32))
+
+temp = model.predict_proba(test_input_var)
+print temp           
+'''
 y = population[:, 1]
 X = plpData[population[:, 0], :]
 trainInds = population[:, population.shape[1] - 1] > 0
@@ -118,15 +163,15 @@ if train:
 		print "Training fold %s" % (i)
 		start_time = timeit.default_timer()
 
-		model = CNN(nbfilter)
+		model = CNN(nbfilter, labcounts = train_x.shape[2], window_size = train_x.shape[3])
 		if cuda:
 			model.cuda()
 		#criterion = nn.BCELoss(size_average=True)
 		#optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
 		criterion = nn.CrossEntropyLoss()
-		optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+		optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
 
-                #optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
+        #optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
 		train_set = TensorDataset(torch.from_numpy(train_x.toarray().astype(np.float32)),
 								  torch.from_numpy(train_y.astype(np.float32)).view(-1, 1))
 		train_loader = DataLoader(dataset=train_set, batch_size=64, shuffle=True)
@@ -179,12 +224,12 @@ else:
 
 	train_x = X[trainInds, :]
 	train_y = y[trainInds]
-	print 'the final parameter size', size, 'epochs', epochs, 'weight_decay', w_decay
-	model = CNN(nbfilter)
+	#print 'the final parameter size', size, 'epochs', epochs, 'weight_decay', w_decay
+	model = CNN(nbfilter, labcounts = train_x.shape[2], window_size = train_x.shape[3])
 	if cuda:
 		model.cuda()
 	criterion = nn.CrossEntropyLoss()
-	optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+	optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
 	#criterion = nn.BCELoss(size_average=True)
 	#optimizer = torch.optim.Adam(model.parameters(), weight_decay = w_decay)
         #optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum = 0.9, weight_decay = 0.003)
