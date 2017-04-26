@@ -48,7 +48,7 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1):
                     end = end + time_window
                     win_vals = times[start:end]
                 nonzero = [val for val in  win_vals if val]
-                if len(nonzero):
+                if not nonzero:
                     nonzero = [0] 
                 x[lab][patient][ti] = np.mean(nonzero)
     
@@ -59,7 +59,7 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1):
     ix_test = ix_all[0:N/6]
     ix_valid = ix_all[N/6:(2*N)/6]
     ix_train = ix_all[(2*N)/6:]
-    
+    #pdb.set_trace() 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     cPickle.dump(x[:, ix_train , :], open(output_dir+'/xtrain.pkl', 'wb'), -1)
@@ -114,7 +114,7 @@ def read_data(filename):
 
 if __name__ == "__main__":
     filename = sys.argv[1]
-    population = joblib.load('/data/plp/SYNPUF/population.pkl')
+    population = joblib.load('/data/share/plp/SYNPUF/population.pkl')
     #y = population[:, 1]
     covriate_ids, patient_dict = read_data(filename)
     #y_ids = np.array([int(val) for val in patient_dict.keys()])
