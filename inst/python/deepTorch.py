@@ -112,7 +112,7 @@ class Estimator(object):
 
 
 class LogisticRegression(nn.Module):
-    def __init__(self, input_size, num_classes):
+    def __init__(self, input_size, num_classes = 2):
         super(LogisticRegression, self).__init__()
         self.linear = nn.Linear(input_size, num_classes)
 
@@ -131,12 +131,12 @@ class LogisticRegression(nn.Module):
         return temp
     
 class MLP(nn.Module):
-    def __init__(self, input_dim, hidden_size):
+    def __init__(self, input_dim, hidden_size, num_classes = 2):
         super(MLP, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_size)
                 
         #self.fc2 = = nn.BatchNorm1d(hidden_size)
-        self.fc2 = nn.Linear(hidden_size, 1)
+        self.fc2 = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
@@ -161,7 +161,7 @@ class MLP(nn.Module):
         return temp
             
 class CNN(nn.Module):
-    def __init__(self, nb_filter, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = 1, padding = 0):
+    def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = 1, padding = 0):
         super(CNN, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, nb_filter, kernel_size, padding),
@@ -181,7 +181,7 @@ class CNN(nn.Module):
         self.fc1 = nn.Linear(maxpool2_size*labcounts*2*nb_filter, hidden_size)
         self.drop2 = nn.Dropout(p=0.5)
         self.relu1 = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_size, 2)
+        self.fc2 = nn.Linear(hidden_size, num_classes)
         
     def forward(self, x):
         out = self.layer1(x)
@@ -205,13 +205,13 @@ class CNN(nn.Module):
         return temp
     
 class GRU(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, output_size):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2):
         super(GRU, self).__init__()
 
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first = True)
-        self.linear = nn.Linear(hidden_size, output_size)
+        self.linear = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
         #x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32)))
@@ -227,7 +227,7 @@ class GRU(nn.Module):
         else:
             x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32)))
         '''
-	out, hn = self.gru(x, h0)
+        out, hn = self.gru(x, h0)
         ## from (1, N, hidden) to (N, hidden)
         rearranged = out[:, -1, :]
         out = self.linear(rearranged)
@@ -247,7 +247,7 @@ class GRU(nn.Module):
         return temp
 
 class RNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2):
         super(RNN, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -288,7 +288,7 @@ class RNN(nn.Module):
         return temp
 
 class BiRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2):
         super(BiRNN, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -311,7 +311,7 @@ class BiRNN(nn.Module):
         else:
             x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32)))
         '''
-	out, _ = self.lstm(x, (h0, c0))
+        out, _ = self.lstm(x, (h0, c0))
         
         # Decode hidden state of last time step
         out = self.fc(out[:, -1, :])
@@ -337,7 +337,7 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
 
-    model = BiRNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
+    model = GRU(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
     if cuda:
         model = model.cuda()
     clf = Estimator(model)
