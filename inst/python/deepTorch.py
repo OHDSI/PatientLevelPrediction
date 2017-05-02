@@ -210,7 +210,7 @@ class GRU(nn.Module):
 
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.gru = nn.GRU(input_size, hidden_size, num_layers)
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first = True)
         self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
@@ -222,13 +222,14 @@ class GRU(nn.Module):
         else:
             h0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)) # 2 for bidirection 
             #c0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size))
-        if cuda:
+        '''if cuda:
             x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32))).cuda()
         else:
             x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32)))
-        out, hn = self.gru(x, h0)
+        '''
+	out, hn = self.gru(x, h0)
         ## from (1, N, hidden) to (N, hidden)
-        rearranged = out[-1, :, :]
+        rearranged = out[:, -1, :]
         out = self.linear(rearranged)
         return out
 
@@ -250,7 +251,7 @@ class RNN(nn.Module):
         super(RNN, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first = True)
         self.fc = nn.Linear(hidden_size, num_classes)
     
     def forward(self, x):
@@ -264,15 +265,16 @@ class RNN(nn.Module):
         
         # Forward propagate RNN
         #pdb.set_trace()
+	'''
         if cuda:
             x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32))).cuda()
         else:
             x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32)))
-            
+        '''    
         out, _ = self.lstm(x, (h0, c0))  
         
         # Decode hidden state of last time step
-        out = self.fc(out[-1, :, :])  
+        out = self.fc(out[:, -1, :])  
         return out
 
     def predict_proba(self, x):
@@ -291,7 +293,7 @@ class BiRNN(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, 
-                            bidirectional=True)
+                            batch_first = True, bidirectional=True)
         self.fc = nn.Linear(hidden_size*2, num_classes)  # 2 for bidirection 
     
     def forward(self, x):
@@ -303,14 +305,16 @@ class BiRNN(nn.Module):
             h0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size)) # 2 for bidirection 
             c0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size))
         # Forward propagate RNN
+	'''
         if cuda:
             x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32))).cuda()
         else:
             x = Variable(torch.from_numpy(np.swapaxes(x.data.cpu().numpy(),0,1).astype(np.float32)))
-        out, _ = self.lstm(x, (h0, c0))
+        '''
+	out, _ = self.lstm(x, (h0, c0))
         
         # Decode hidden state of last time step
-        out = self.fc(out[-1, :, :])
+        out = self.fc(out[:, -1, :])
         return out
 
     def predict_proba(self, x):
@@ -333,7 +337,7 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
 
-    model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
+    model = BiRNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
     if cuda:
         model = model.cuda()
     clf = Estimator(model)
