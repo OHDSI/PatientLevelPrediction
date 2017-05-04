@@ -209,12 +209,12 @@ class CNN(nn.Module):
         return temp
     
 class GRU(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
         super(GRU, self).__init__()
 
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first = True)
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first = True, dropout = dropout)
         self.linear = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
@@ -251,11 +251,11 @@ class GRU(nn.Module):
         return temp
 
 class RNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
         super(RNN, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first = True)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first = True, dropout = dropout)
         self.fc = nn.Linear(hidden_size, num_classes)
     
     def forward(self, x):
@@ -292,12 +292,12 @@ class RNN(nn.Module):
         return temp
 
 class BiRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
         super(BiRNN, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, 
-                            batch_first = True, bidirectional=True)
+                            batch_first = True, dropout = dropout, bidirectional=True)
         self.fc = nn.Linear(hidden_size*2, num_classes)  # 2 for bidirection 
     
     def forward(self, x):
@@ -340,8 +340,8 @@ if __name__ == "__main__":
     y = np.array([i for i in range(class_size) for _ in range(DATA_SIZE)])
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
-    model = CNN(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
-    #model = GRU(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
+    #model = CNN(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
+    model = BiRNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
     if cuda:
         model = model.cuda()
     clf = Estimator(model)
