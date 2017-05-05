@@ -168,15 +168,15 @@ class CNN(nn.Module):
             nn.BatchNorm2d(nb_filter),
             nn.ReLU(),
             nn.MaxPool2d(pool_size, stride = stride))
-        out1_size = (window_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[0] + 1
-        maxpool_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride[0] + 1
+        out1_size = (window_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
+        maxpool_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
         self.layer2 = nn.Sequential(
             nn.Conv2d(nb_filter, 2*nb_filter, kernel_size, stride = stride, padding = padding),
             nn.BatchNorm2d(2*nb_filter),
             nn.ReLU(),
             nn.MaxPool2d(pool_size, stride = stride))
-        out2_size = (maxpool_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[0] + 1
-        maxpool2_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride[0] + 1
+        out2_size = (maxpool_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
+        maxpool2_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
         self.drop1 = nn.Dropout(p=0.5)
         self.fc1 = nn.Linear(maxpool2_size*labcounts*2*nb_filter, hidden_size)
         self.drop2 = nn.Dropout(p=0.5)
@@ -232,7 +232,7 @@ class CNN_MIX(nn.Module):
             nn.BatchNorm2d(nb_filter),
             nn.ReLU())
         
-        out2_size = (out1_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[0] + 1
+        out2_size = (out1_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
         #print out2_size
         self.drop1 = nn.Dropout(p=0.5)
         self.fc1 = nn.Linear(out2_size*nb_filter*nb_filter, hidden_size)
@@ -268,7 +268,112 @@ class CNN_MIX(nn.Module):
         y = self.forward(x)
         temp = y.data.cpu().numpy().flatten()
         return temp
+'''
+class Net(nn.Module):
+def __init__(self):
+    super(Net, self).__init__()
+    self.embed = nn.Embedding(vocab.size(), 300)
+    #self.embed.weight = Parameter( torch.from_numpy(vocab.get_weights().astype(np.float32)))        
+    self.conv_3 = nn.Conv2d(1, 50, kernel_size=(3, 300),stride=(1,1))
+    self.conv_4 = nn.Conv2d(1, 50, kernel_size=(4, 300),stride=(1,1))
+    self.conv_5 = nn.Conv2d(1, 50, kernel_size=(5, 300),stride=(1,1))
+    self.decoder = nn.Linear(50 * 3, len(labels))
+
+
+def forward(self, x):
+    e1 = self.embed(x)
+    x = F.dropout(e1, p=0.2)
+    x = e1.view(x.size()[0], 1, 50, 300)
+    cnn_3 = F.relu(F.max_pool2d(self.conv_3(x), (maxlen - 3 + 1, 1)))
+    cnn_4 = F.relu(F.max_pool2d(self.conv_4(x), (maxlen - 4 + 1, 1)))
+    cnn_5 = F.relu(F.max_pool2d(self.conv_5(x), (maxlen - 5 + 1, 1)))
+    x = torch.cat([e.unsqueeze(0) for e in [cnn_3, cnn_4, cnn_5]]) 
+    x = x.view(-1, 50 * 3)
+    return F.log_softmax(self.decoder(F.dropout(x, p=0.2)))
+'''
+class CNN_MULTI(nn.Module):
+    def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 2), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
+        super(CNN_MULTI, self).__init__()
+        # resolution 1
+        self.pool1_1 = nn.MaxPool2d(pool_size, stride = pool_size)
+        maxpool_size = (window_size + 2*padding - (pool_size[1] - 1) - 1)/pool_size[1] + 1
+        self.pool1_2 = nn.MaxPool2d(pool_size, stride = pool_size)
+        maxpool1_2_size = (maxpool_size + 2*padding - (pool_size[1] - 1) - 1)/pool_size[1] + 1
+              
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(1, nb_filter, kernel_size = kernel_size, stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
+            nn.ReLU())
+        #self.reshape1 = nn.Reshape(1, nb_filter, window_size)
+        cnn1_size = (maxpool1_2_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
+        #maxpool_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride[0] + 1
+        #resolution 2
+        self.pool2_1 = nn.MaxPool2d(pool_size, stride = pool_size)
+        maxpool2_1_size = (window_size + 2*padding - (pool_size[1] - 1) - 1)/pool_size[1] + 1
+              
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(1, nb_filter, kernel_size = kernel_size, stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
+            nn.ReLU())
+        #self.reshape1 = nn.Reshape(1, nb_filter, window_size)
+        cnn2_size = (maxpool2_1_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
+        #maxpool_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride[0] + 1
+        #resolution 3
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(1, nb_filter, kernel_size = kernel_size, stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
+            nn.ReLU(),
+            nn.MaxPool2d(pool_size))
+        cnn3_size = (window_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
+        maxpool3_size = (cnn3_size + 2*padding - (pool_size[1] - 1) - 1)/pool_size[1] + 1
+        #print out1_size
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(nb_filter, nb_filter, kernel_size = kernel_size, stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
+            nn.ReLU())
+        cnn4_size = (maxpool3_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
+        #print out2_size
+        merge_size = cnn1_size + cnn2_size + cnn4_size
+        self.drop1 = nn.Dropout(p=0.5)
+        self.fc1 = nn.Linear(labcounts*nb_filter*merge_size, hidden_size)
+        self.drop2 = nn.Dropout(p=0.5)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, num_classes)
+        
+    def forward(self, x):
+        x = np.expand_dims(x.data.cpu().numpy(), axis=1)
+        if cuda:
+            x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
+        #pdb.set_trace()
+        out = self.pool1_1(x)
+        out = self.pool1_2(out)
+        out1 = self.layer1(out)
+        #pdb.set_trace()
+        out = self.pool2_1(x)
+        out2 = self.layer2(out)
+        #out = out.view(out.size(0), out.size(2), out.size(1), out.size(3))
+        out = self.layer3(x)
+        out3 = self.layer4(out)
+        out = torch.cat((out1.view(out1.size(0), -1), out2.view(out2.size(0), -1), out3.view(out3.size(0), -1)), 1) 
+        #x = x.view(-1, 50 * 3)
+        #out = out.view(out.size(0), -1)
+        out = self.drop1(out)
+        out = self.fc1(out)
+        out = self.drop2(out)
+        out = self.relu1(out)
+        out = self.fc2(out)
+        return out
     
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy().flatten()
+        return temp
+        
 class GRU(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
         super(GRU, self).__init__()
@@ -401,7 +506,7 @@ if __name__ == "__main__":
     y = np.array([i for i in range(class_size) for _ in range(DATA_SIZE)])
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
-    model = CNN_MIX(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
+    model = CNN_MULTI(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
     #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
     #pdb.set_trace()
     if cuda:
