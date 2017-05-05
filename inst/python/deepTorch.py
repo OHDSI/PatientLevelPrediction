@@ -268,29 +268,7 @@ class CNN_MIX(nn.Module):
         y = self.forward(x)
         temp = y.data.cpu().numpy().flatten()
         return temp
-'''
-class Net(nn.Module):
-def __init__(self):
-    super(Net, self).__init__()
-    self.embed = nn.Embedding(vocab.size(), 300)
-    #self.embed.weight = Parameter( torch.from_numpy(vocab.get_weights().astype(np.float32)))        
-    self.conv_3 = nn.Conv2d(1, 50, kernel_size=(3, 300),stride=(1,1))
-    self.conv_4 = nn.Conv2d(1, 50, kernel_size=(4, 300),stride=(1,1))
-    self.conv_5 = nn.Conv2d(1, 50, kernel_size=(5, 300),stride=(1,1))
-    self.decoder = nn.Linear(50 * 3, len(labels))
 
-
-def forward(self, x):
-    e1 = self.embed(x)
-    x = F.dropout(e1, p=0.2)
-    x = e1.view(x.size()[0], 1, 50, 300)
-    cnn_3 = F.relu(F.max_pool2d(self.conv_3(x), (maxlen - 3 + 1, 1)))
-    cnn_4 = F.relu(F.max_pool2d(self.conv_4(x), (maxlen - 4 + 1, 1)))
-    cnn_5 = F.relu(F.max_pool2d(self.conv_5(x), (maxlen - 5 + 1, 1)))
-    x = torch.cat([e.unsqueeze(0) for e in [cnn_3, cnn_4, cnn_5]]) 
-    x = x.view(-1, 50 * 3)
-    return F.log_softmax(self.decoder(F.dropout(x, p=0.2)))
-'''
 class CNN_MULTI(nn.Module):
     def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 2), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
         super(CNN_MULTI, self).__init__()
