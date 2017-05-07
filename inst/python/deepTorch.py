@@ -184,10 +184,10 @@ class CNN(nn.Module):
         self.fc2 = nn.Linear(hidden_size, num_classes)
         
     def forward(self, x):
-        x = np.expand_dims(x.data.cpu().numpy(), axis=1)
-        if cuda:
-            x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
-        #pdb.set_trace()
+        #x = np.expand_dims(x.data.cpu().numpy(), axis=1)
+        #if cuda:
+        #    x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
+        x = x.view(x.size(0), 1, x.size(1), x.size(2))
         out = self.layer1(x)
         out = self.layer2(out)
         out = out.view(out.size(0), -1)
@@ -241,11 +241,12 @@ class CNN_MIX(nn.Module):
         self.fc2 = nn.Linear(hidden_size, num_classes)
         
     def forward(self, x):
-        x = np.expand_dims(x.data.cpu().numpy(), axis=1)
-        if cuda:
-            x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
+        #x = np.expand_dims(x.data.cpu().numpy(), axis=1)
+        #if cuda:
+        #    x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
+	x = x.view(x.size(0), 1, x.size(1), x.size(2))
         out = self.layer1(x)
-        #pdb.set_trace()
+        #x = x.view(x.size(0), 1, x.size(1), x.size(2))
         out = out.view(out.size(0), out.size(2), out.size(1), out.size(3))
         out = self.layer2(out)
         out = out.view(out.size(0), out.size(2), out.size(1), out.size(3))
@@ -319,10 +320,11 @@ class CNN_MULTI(nn.Module):
         self.fc2 = nn.Linear(hidden_size, num_classes)
         
     def forward(self, x):
-        x = np.expand_dims(x.data.cpu().numpy(), axis=1)
-        if cuda:
-            x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
+        #x = np.expand_dims(x.data.cpu().numpy(), axis=1)
+        #if cuda:
+        #    x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
         #pdb.set_trace()
+        x = x.view(x.size(0), 1, x.size(1), x.size(2))
         out = self.pool1_1(x)
         out = self.pool1_2(out)
         out1 = self.layer1(out)
