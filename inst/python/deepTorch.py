@@ -127,7 +127,7 @@ class LogisticRegression(nn.Module):
         if cuda:
             x = x.cuda()
         y = self.forward(x)
-        temp = y.data.cpu().numpy().flatten()
+        temp = y.data.cpu().numpy()
         return temp
     
 class MLP(nn.Module):
@@ -157,7 +157,7 @@ class MLP(nn.Module):
         if cuda:
             x = x.cuda()
         y = self.forward(x)
-        temp = y.data.cpu().numpy().flatten()
+        temp = y.data.cpu().numpy()
         return temp
             
 class CNN(nn.Module):
@@ -205,7 +205,7 @@ class CNN(nn.Module):
         if cuda:
             x = x.cuda()
         y = self.forward(x)
-        temp = y.data.cpu().numpy().flatten()
+        temp = y.data.cpu().numpy()
         return temp
  
 class CNN_MIX(nn.Module):
@@ -267,7 +267,7 @@ class CNN_MIX(nn.Module):
         if cuda:
             x = x.cuda()
         y = self.forward(x)
-        temp = y.data.cpu().numpy().flatten()
+        temp = y.data.cpu().numpy()
         return temp
 
 class CNN_MULTI(nn.Module):
@@ -351,7 +351,7 @@ class CNN_MULTI(nn.Module):
         if cuda:
             x = x.cuda()
         y = self.forward(x)
-        temp = y.data.cpu().numpy().flatten()
+        temp = y.data.cpu().numpy()
         return temp
         
 class GRU(nn.Module):
@@ -393,7 +393,7 @@ class GRU(nn.Module):
         if cuda:
             x = x.cuda()
         y = self.forward(x)
-        temp = y.data.cpu().numpy().flatten()
+        temp = y.data.cpu().numpy()
         return temp
 
 class RNN(nn.Module):
@@ -434,7 +434,7 @@ class RNN(nn.Module):
         if cuda:
             x = x.cuda()
         y = self.forward(x)
-        temp = y.data.cpu().numpy().flatten()
+        temp = y.data.cpu().numpy()
         return temp
 
 class BiRNN(nn.Module):
@@ -474,7 +474,7 @@ class BiRNN(nn.Module):
         if cuda:
             x = x.cuda()
         y = self.forward(x)
-        temp = y.data.cpu().numpy().flatten()
+        temp = y.data.cpu().numpy()
         return temp
 
 if __name__ == "__main__":
