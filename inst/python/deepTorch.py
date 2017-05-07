@@ -73,7 +73,7 @@ class Estimator(object):
 		train_set = TensorDataset(torch.from_numpy(X.astype(np.float32)),
                               torch.from_numpy(y.astype(np.float32)).long().view(-1))
 		train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
-		model.train()
+		self.model.train()
 		for t in range(nb_epoch):
 			loss, acc = self._fit(train_loader)
 			val_log = ''
