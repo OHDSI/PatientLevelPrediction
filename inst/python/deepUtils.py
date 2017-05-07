@@ -129,6 +129,49 @@ def read_data(filename):
     return covriate_ids, patient_dict
 
 
+def split_training_validation(classes, validation_size = 0.2, shuffle = False):
+    """split sampels based on balnace classes"""
+    num_samples=len(classes)
+    classes=np.array(classes)
+    classes_unique=np.unique(classes)
+    num_classes=len(classes_unique)
+    indices=np.arange(num_samples)
+    #indices_folds=np.zeros([num_samples],dtype=int)
+    training_indice = []
+    training_label = []
+    validation_indice = []
+    validation_label = []
+    for cl in classes_unique:
+        indices_cl=indices[classes==cl]
+        num_samples_cl=len(indices_cl)
+
+        # split this class into k parts
+        if shuffle:
+            random.shuffle(indices_cl) # in-place shuffle
+        
+        # module and residual
+        num_samples_each_split=int(num_samples_cl*validation_size)
+        res=num_samples_cl - num_samples_each_split
+        
+        training_indice = training_indice + [val for val in indices_cl[num_samples_each_split:]]
+        training_label = training_label + [cl] * res
+        
+        validation_indice = validation_indice + [val for val in indices_cl[:num_samples_each_split]]
+        validation_label = validation_label + [cl]*num_samples_each_split
+
+    training_index = np.arange(len(training_label))
+    random.shuffle(training_index)
+    training_indice = np.array(training_indice)[training_index]
+    training_label = np.array(training_label)[training_index]
+    
+    validation_index = np.arange(len(validation_label))
+    random.shuffle(validation_index)
+    validation_indice = np.array(validation_indice)[validation_index]
+    validation_label = np.array(validation_label)[validation_index]    
+    
+            
+    return training_indice, training_label, validation_indice, validation_label  
+
 if __name__ == "__main__":
     filename = sys.argv[1]
     population = joblib.load('/data/share/plp/SYNPUF/population.pkl')

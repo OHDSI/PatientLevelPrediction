@@ -244,7 +244,7 @@ class CNN_MIX(nn.Module):
         #x = np.expand_dims(x.data.cpu().numpy(), axis=1)
         #if cuda:
         #    x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
-	x = x.view(x.size(0), 1, x.size(1), x.size(2))
+        x = x.view(x.size(0), 1, x.size(1), x.size(2))
         out = self.layer1(x)
         #x = x.view(x.size(0), 1, x.size(1), x.size(2))
         out = out.view(out.size(0), out.size(2), out.size(1), out.size(3))
