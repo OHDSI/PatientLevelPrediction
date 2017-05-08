@@ -207,6 +207,63 @@ class CNN(nn.Module):
         y = self.forward(x)
         temp = y.data.cpu().numpy()
         return temp
+
+class CNN_LSTM(nn.Module):
+    def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0, num_layers = 2):
+        super(CNN_LSTM, self).__init__()
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(1, nb_filter, kernel_size, stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
+            nn.ReLU(),
+            nn.MaxPool2d(pool_size, stride = stride))
+        self.num_layers = num_layers
+        self.hidden_size = hidden_size
+        out1_size = (window_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
+        maxpool_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
+        self.downsample = nn.Conv2d(nb_filter, 1, kernel_size, stride = stride, padding = padding)
+        input_size = (maxpool_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
+        self.layer2 = nn.LSTM(input_size, hidden_size, num_layers, batch_first = True)
+        self.drop1 = nn.Dropout(p=0.5)
+        self.fc1 = nn.Linear(hidden_size, hidden_size)
+        self.drop2 = nn.Dropout(p=0.5)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, num_classes)
+        
+    def forward(self, x):
+        #x = np.expand_dims(x.data.cpu().numpy(), axis=1)
+        #if cuda:
+        #    x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
+        x = x.view(x.size(0), 1, x.size(1), x.size(2))
+        out = self.layer1(x)
+        out = self.downsample(out)
+        out = torch.squeeze(out, 1)
+        #pdb.set_trace()
+        if cuda:
+            x = x.cuda()
+            h0 = Variable(torch.zeros(self.num_layers, out.size(0), self.hidden_size)).cuda() 
+            c0 = Variable(torch.zeros(self.num_layers, out.size(0), self.hidden_size)).cuda()
+        else:
+            h0 = Variable(torch.zeros(self.num_layers, out.size(0), self.hidden_size)) 
+            c0 = Variable(torch.zeros(self.num_layers, out.size(0), self.hidden_size))
+        out, _  = self.layer2(out, (h0, c0))
+        out = out[:, -1, :]
+        #pdb.set_trace()
+        out = self.drop1(out)
+        out = self.fc1(out)
+        out = self.drop2(out)
+        out = self.relu1(out)
+        out = self.fc2(out)
+        return out
+    
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy()
+        return temp
  
 class CNN_MIX(nn.Module):
     def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
@@ -354,7 +411,7 @@ class CNN_MULTI(nn.Module):
         temp = y.data.cpu().numpy()
         return temp
 
-# 3x3 Convolution
+# 1x3 Convolution
 def convR(in_channels, out_channels, kernel_size, stride=1, padding = (0, 1)):
     return nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, 
                      padding=padding, stride=stride, bias=False)
@@ -379,9 +436,6 @@ class ResidualBlock(nn.Module):
         out = self.bn2(out)
         if self.downsample:
             residual = self.downsample(x)
-        #pdb.set_trace()
-        #print out.data.cpu().numpy().shape
-        #print residual.data.cpu().numpy().shape
         out += residual
         out = self.relu(out)
         return out
@@ -417,7 +471,7 @@ class ResNet(nn.Module):
         for i in range(1, blocks):
             layers.append(block(out_channels, out_channels, kernel_size = kernel_size))
         return nn.Sequential(*layers)
-    
+     
     def forward(self, x):
         #print x.data.cpu().numpy().shape
         x = x.view(x.size(0), 1, x.size(1), x.size(2))
@@ -572,8 +626,8 @@ if __name__ == "__main__":
     y = np.array([i for i in range(class_size) for _ in range(DATA_SIZE)])
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
-    #model = CNN_MULTI(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
-    model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
+    model = CNN_LSTM(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
+    #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
     #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
     #pdb.set_trace()
     if cuda:
