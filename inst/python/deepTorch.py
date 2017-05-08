@@ -353,6 +353,92 @@ class CNN_MULTI(nn.Module):
         y = self.forward(x)
         temp = y.data.cpu().numpy()
         return temp
+
+# 3x3 Convolution
+def convR(in_channels, out_channels, kernel_size, stride=1, padding = (0, 1)):
+    return nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, 
+                     padding=padding, stride=stride, bias=False)
+
+# Residual Block
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channel, nb_filter = 16, kernel_size = (1, 3), stride=1, downsample=None):
+        super(ResidualBlock, self).__init__()
+        self.conv1 = convR(in_channel, nb_filter, kernel_size = kernel_size, stride = stride)
+        self.bn1 = nn.BatchNorm2d(nb_filter)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = convR(nb_filter, nb_filter, kernel_size = kernel_size, stride = stride)
+        self.bn2 = nn.BatchNorm2d(nb_filter)
+        self.downsample = downsample
+        
+    def forward(self, x):
+        residual = x
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
+        if self.downsample:
+            residual = self.downsample(x)
+        #pdb.set_trace()
+        #print out.data.cpu().numpy().shape
+        #print residual.data.cpu().numpy().shape
+        out += residual
+        out = self.relu(out)
+        return out
+
+# ResNet Module
+class ResNet(nn.Module):
+    def __init__(self, block, layers, nb_filter = 16, labcounts = 12, window_size = 36, kernel_size = (1, 3), pool_size = (1, 3), num_classes=2, hidden_size = 100):
+        super(ResNet, self).__init__()
+        self.in_channels = 1
+        self.conv = convR(self.in_channels, nb_filter, kernel_size = kernel_size)
+        self.bn = nn.BatchNorm2d(nb_filter)
+        self.relu = nn.ReLU(inplace=True)
+        self.layer1 = self.make_layer(block, nb_filter, layers[0],  kernel_size = kernel_size)
+        self.layer2 = self.make_layer(block, nb_filter*2, layers[1], 1, kernel_size = kernel_size, in_channels = nb_filter)
+        self.layer3 = self.make_layer(block, nb_filter*4, layers[2], 1, kernel_size = kernel_size, in_channels = 2*nb_filter)
+        self.avg_pool = nn.AvgPool2d(pool_size)
+        avgpool2_1_size = (window_size - (pool_size[1] - 1) - 1)/pool_size[1] + 1
+        last_layer_size = nb_filter*4*labcounts*avgpool2_1_size
+        self.fc = nn.Linear(last_layer_size, hidden_size)
+        self.drop2 = nn.Dropout(p=0.5)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, num_classes)
+        
+    def make_layer(self, block, out_channels, blocks, stride=1,  kernel_size = (1, 5), in_channels = 16):
+        downsample = None
+        if (stride != 1) or (self.in_channels != out_channels):
+            downsample = nn.Sequential(
+                convR(in_channels, out_channels, kernel_size = kernel_size, stride=stride),
+                nn.BatchNorm2d(out_channels))
+        layers = []
+        layers.append(block(in_channels, out_channels, kernel_size = kernel_size, stride = stride, downsample = downsample))
+        self.in_channels = out_channels
+        for i in range(1, blocks):
+            layers.append(block(out_channels, out_channels, kernel_size = kernel_size))
+        return nn.Sequential(*layers)
+    
+    def forward(self, x):
+        #print x.data.cpu().numpy().shape
+        x = x.view(x.size(0), 1, x.size(1), x.size(2))
+        out = self.conv(x)
+        out = self.bn(out)
+        out = self.relu(out)
+        out = self.layer1(out)
+        #pdb.set_trace()
+        #print self.layer2
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.avg_pool(out)
+        #pdb.set_trace()
+        out = out.view(out.size(0), -1)
+        out = self.fc(out)
+        out = self.drop2(out)
+        out = self.relu1(out)
+        out = self.fc2(out)
+        return out
+    
+#resnet = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16)
         
 class GRU(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
@@ -486,7 +572,8 @@ if __name__ == "__main__":
     y = np.array([i for i in range(class_size) for _ in range(DATA_SIZE)])
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
-    model = CNN_MULTI(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
+    #model = CNN_MULTI(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
+    model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
     #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
     #pdb.set_trace()
     if cuda:
