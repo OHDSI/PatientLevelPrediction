@@ -492,6 +492,15 @@ class ResNet(nn.Module):
         out = self.fc2(out)
         return out
     
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x)
+        if cuda:
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy()
+        return temp    
 #resnet = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16)
         
 class GRU(nn.Module):
