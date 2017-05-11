@@ -1,4 +1,5 @@
 import sys
+import os
 import pdb
 
 import torch
@@ -7,6 +8,8 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data import DataLoader, TensorDataset
 
+import timeit
+from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 import numpy as np
@@ -81,6 +84,7 @@ class Estimator(object):
 				val_loss, auc = self.evaluate(validation_data[0], validation_data[1], batch_size)
 				val_log = "- val_loss: %06.4f - auc: %6.4f" % (val_loss, auc)
 				print val_log
+		self.model.eval()
 			#rint("Epoch %s/%s loss: %06.4f - acc: %06.4f %s" % (t, nb_epoch, loss, acc, val_log))
 
 	def evaluate(self, X, y, batch_size=32):
@@ -459,7 +463,7 @@ class ResNet(nn.Module):
         self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(hidden_size, num_classes)
         
-    def make_layer(self, block, out_channels, blocks, stride=1,  kernel_size = (1, 5), in_channels = 16):
+    def make_layer(self, block, out_channels, blocks, stride=1,  kernel_size = (1, 3), in_channels = 16):
         downsample = None
         if (stride != 1) or (self.in_channels != out_channels):
             downsample = nn.Sequential(
@@ -625,6 +629,97 @@ class BiRNN(nn.Module):
         y = self.forward(x)
         temp = y.data.cpu().numpy()
         return temp
+
+
+# select model
+if model_type in ['LogisticRegression', 'MLP']:
+    y = population[:, 1]
+    X = plpData[population[:, 0], :]
+    trainInds = population[:, population.shape[1] - 1] > 0
+    
+    print "Dataset has %s rows and %s columns" % (X.shape[0], X.shape[1])
+    print "population loaded- %s rows and %s columns" % (np.shape(population)[0], np.shape(population)[1])
+    ###########################################################################
+    
+    if train:
+        pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
+        print "Calculating prediction for train set of size %s" % (pred_size)
+        test_pred = np.zeros(pred_size)  # zeros length sum(population[:,population.size[1]] ==i)
+        for i in range(1, int(np.max(population[:, population.shape[1] - 1]) + 1), 1):
+            testInd = population[population[:, population.shape[1] - 1] > 0, population.shape[1] - 1] == i
+            trainInd = (population[population[:, population.shape[1] - 1] > 0, population.shape[1] - 1] != i)
+            train_x = X[trainInds, :][trainInd, :]
+            train_y = y[trainInds][trainInd]
+    
+            test_x = X[trainInds, :][testInd, :]
+            print "Fold %s split %s in train set and %s in test set" % (i, train_x.shape[0], test_x.shape[0])
+            print "Train set contains %s outcomes " % (np.sum(train_y))
+    
+            # train on fold
+            print "Training fold %s" % (i)
+            start_time = timeit.default_timer()
+            if model_type == 'LogisticRegression':
+                model = LogisticRegression(train_x.shape[1])
+                
+            #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
+            #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
+            #pdb.set_trace()
+            if cuda:
+                model = model.cuda()
+            clf = Estimator(model)
+            clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
+                        loss=nn.CrossEntropyLoss())
+            clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs)
+            
+            ind = (population[:, population.shape[1] - 1] > 0)
+            ind = population[ind, population.shape[1] - 1] == i
+            
+            test_input_var = torch.from_numpy(test_x.toarray().astype(np.float32))
+            #if cuda:
+            #    test_input_var = test_input_var.cuda()
+    
+            temp = model.predict_proba(test_input_var)[:, 1]
+            #temp = preds.data.cpu().numpy().flatten()
+    
+            test_pred[ind] = temp
+            print "Prediction complete: %s rows " % (np.shape(test_pred[ind])[0])
+            print "Mean: %s prediction value" % (np.mean(test_pred[ind]))
+    
+        # merge pred with indexes[testInd,:]
+        test_pred.shape = (population[population[:, population.shape[1] - 1] > 0, :].shape[0], 1)
+        prediction = np.append(population[population[:, population.shape[1] - 1] > 0, :], test_pred, axis=1)
+    
+    # train final:
+    else:
+        print "Training final neural network model on all train data..."
+        print "X- %s rows and Y %s length" % (X[trainInds, :].shape[0], y[trainInds].shape[0])
+    
+        start_time = timeit.default_timer()
+    
+        train_x = X[trainInds, :]
+        train_y = y[trainInds]
+        print 'the final parameter epochs', epochs, 'weight_decay', w_decay
+        if model_type == 'LogisticRegression':
+            model = LogisticRegression(train_x.shape[1])
+        #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
+        #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
+        #pdb.set_trace()
+        if cuda:
+            model = model.cuda()
+        clf = Estimator(model)
+        clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
+                    loss=nn.CrossEntropyLoss())
+        clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs)
+
+        end_time = timeit.default_timer()
+        print "Training final took: %.2f s" % (end_time - start_time)
+    
+        # save the model:
+        if not os.path.exists(modelOutput):
+            os.makedirs(modelOutput)
+        print "Model saved to: %s" % (modelOutput)
+    
+        joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
 if __name__ == "__main__":
     DATA_SIZE = 1000
