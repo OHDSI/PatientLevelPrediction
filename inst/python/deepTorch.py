@@ -122,6 +122,7 @@ class LogisticRegression(nn.Module):
 
     def forward(self, x):
         out = self.linear(x)
+        out = F.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -660,6 +661,8 @@ if model_type in ['LogisticRegression', 'MLP']:
             start_time = timeit.default_timer()
             if model_type == 'LogisticRegression':
                 model = LogisticRegression(train_x.shape[1])
+            else:
+                model = MLP(train_x.shape[1], size)
                 
             #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
             #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
@@ -701,6 +704,8 @@ if model_type in ['LogisticRegression', 'MLP']:
         print 'the final parameter epochs', epochs, 'weight_decay', w_decay
         if model_type == 'LogisticRegression':
             model = LogisticRegression(train_x.shape[1])
+        else:
+            model = MLP(train_x.shape[1], size)
         #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
         #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
         #pdb.set_trace()
