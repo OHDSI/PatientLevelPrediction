@@ -26,7 +26,7 @@
 #' model.mlpTorch <- setMLPTorch()
 #' }
 #' @export
-setMLPTorch <- function(size=c(200, 500, 1000), w_decay=c(0.001, 0.003, 0.005), epochs=c(10, 20, 50), seed=0){
+setMLPTorch <- function(size=c(500, 1000, 1500), w_decay=c(0.003, 0.005, 0.007), epochs=c(20, 50, 100), seed=0){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -175,13 +175,14 @@ trainMLPTorch <- function(size=200, epochs=100, w_decay = 0.001, seed=0, train=T
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("w_decay = ",w_decay))
   PythonInR::pyExec(paste0("seed = ",seed))
+  PythonInR::pyExec("model_type = 'MLP'")
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp_torch.py'))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','deepTorch.py'))
   
   if(train){
     # then get the prediction 
