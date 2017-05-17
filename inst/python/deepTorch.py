@@ -42,7 +42,7 @@ class Estimator(object):
 		self.optimizer = optimizer
 		self.loss_f = loss
 
-	def _fit(self, train_loader):
+	def _fit(self, train_loader, l1regularization = False):
 		"""
 		train one epoch
 		"""
@@ -58,6 +58,18 @@ class Estimator(object):
 			self.optimizer.zero_grad()
 			y_pred = self.model(X_v)
 			loss = self.loss_f(y_pred, y_v)
+			if l1regularization:
+				l1_crit = nn.L1Loss(size_average=False)
+				reg_loss = 0
+				for param in self.model.parameters():
+					target = Variable(torch.from_numpy(np.zeros(param.size()).astype(np.float32)))
+					if cuda:
+						target = target.cuda()
+				reg_loss += l1_crit(param, target)
+                        
+				factor = 0.0005
+				loss += factor * reg_loss
+                
 			loss.backward()
 			self.optimizer.step()
 
@@ -69,7 +81,7 @@ class Estimator(object):
 
 		return sum(loss_list) / len(loss_list) , sum(acc_list) / len(acc_list)
 
-	def fit(self, X, y, batch_size=32, nb_epoch=10, validation_data=()):
+	def fit(self, X, y, batch_size=32, nb_epoch=10, validation_data=(), l1regularization = False):
 		#X_list = batch(X, batch_size)
 		#y_list = batch(y, batch_size)
 		#pdb.set_trace()
@@ -78,7 +90,7 @@ class Estimator(object):
 		train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
 		self.model.train()
 		for t in range(nb_epoch):
-			loss, acc = self._fit(train_loader)
+			loss, acc = self._fit(train_loader, l1regularization= l1regularization)
 			val_log = ''
 			if validation_data:
 				val_loss, auc = self.evaluate(validation_data[0], validation_data[1], batch_size)
@@ -123,6 +135,7 @@ class LogisticRegression(nn.Module):
     def forward(self, x):
         out = self.linear(x)
         out = F.sigmoid(out)
+        #out = F.softmax(out)
         return out
     
     def predict_proba(self, x):
@@ -641,7 +654,7 @@ if model_type in ['LogisticRegression', 'MLP']:
     print "Dataset has %s rows and %s columns" % (X.shape[0], X.shape[1])
     print "population loaded- %s rows and %s columns" % (np.shape(population)[0], np.shape(population)[1])
     ###########################################################################
-    
+    l1regularization = False
     if train:
         pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
         print "Calculating prediction for train set of size %s" % (pred_size)
@@ -661,6 +674,7 @@ if model_type in ['LogisticRegression', 'MLP']:
             start_time = timeit.default_timer()
             if model_type == 'LogisticRegression':
                 model = LogisticRegression(train_x.shape[1])
+                l1regularization = True
             else:
                 model = MLP(train_x.shape[1], size)
                 
@@ -672,7 +686,8 @@ if model_type in ['LogisticRegression', 'MLP']:
             clf = Estimator(model)
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
                         loss=nn.CrossEntropyLoss())
-            clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs)
+            
+            clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
             
             ind = (population[:, population.shape[1] - 1] > 0)
             ind = population[ind, population.shape[1] - 1] == i
@@ -704,6 +719,7 @@ if model_type in ['LogisticRegression', 'MLP']:
         print 'the final parameter epochs', epochs, 'weight_decay', w_decay
         if model_type == 'LogisticRegression':
             model = LogisticRegression(train_x.shape[1])
+            l1regularization = True
         else:
             model = MLP(train_x.shape[1], size)
         #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
@@ -714,7 +730,7 @@ if model_type in ['LogisticRegression', 'MLP']:
         clf = Estimator(model)
         clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
                     loss=nn.CrossEntropyLoss())
-        clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs)
+        clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
 
         end_time = timeit.default_timer()
         print "Training final took: %.2f s" % (end_time - start_time)
@@ -731,11 +747,14 @@ if __name__ == "__main__":
     INPUT_SIZE = 36
     HIDDEN_SIZE = 100
     class_size = 2
-    X = np.random.randn(DATA_SIZE * class_size, 18, INPUT_SIZE)
+    #X = np.random.randn(DATA_SIZE * class_size, 18, INPUT_SIZE)
+    X = np.random.randn(DATA_SIZE * class_size, INPUT_SIZE)
     y = np.array([i for i in range(class_size) for _ in range(DATA_SIZE)])
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
-    model = CNN_LSTM(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
+    model = LogisticRegression(X_train.shape[1])
+    l1regularization = True
+    #model = CNN_LSTM(nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2]) 
     #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
     #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
     #pdb.set_trace()
@@ -745,7 +764,7 @@ if __name__ == "__main__":
     clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4),
                 loss=nn.CrossEntropyLoss())
     clf.fit(X_train, y_train, batch_size=64, nb_epoch=10,
-            validation_data=(X_test, y_test))
+            validation_data=(X_test, y_test), l1regularization = l1regularization)
     score, auc = clf.evaluate(X_test, y_test)
     
     print('Test score:', auc)
