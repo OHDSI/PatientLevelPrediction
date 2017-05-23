@@ -52,7 +52,7 @@ install:
   - Rscript -e 'if(!"survival" %in% rownames(installed.packages())) { install.packages("survival", dependencies = TRUE) }'
   - Rscript -e 'if(!"gridExtra" %in% rownames(installed.packages())) { install.packages("gridExtra", dependencies = TRUE) }'
   - Rscript -e 'if(!"Rcpp" %in% rownames(installed.packages())) { install.packages("Rcpp", dependencies = TRUE) }'
-  - Rscript -e 'if(!"xgboost" %in% rownames(installed.packages())) { install.packages("xgboost", repos="https://dmlc.ml/drat/", type = "source", dependencies = TRUE) }'
+  - Rscript -e 'if(!"xgboost" %in% rownames(installed.packages())) { install.packages("xgboost", dependencies = TRUE) }'
   - Rscript -e 'if(!"Matrix" %in% rownames(installed.packages())) { install.packages("Matrix", dependencies = TRUE) }'
   - Rscript -e 'if(!"AUC" %in% rownames(installed.packages())) { install.packages("AUC", dependencies = TRUE) }'
   - Rscript -e 'if(!"PythonInR" %in% rownames(installed.packages())) { install.packages("PythonInR", dependencies = TRUE) }'
