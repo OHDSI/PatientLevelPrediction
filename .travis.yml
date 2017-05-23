@@ -33,7 +33,8 @@ install:
   - Rscript -e 'if(!"devtools" %in% rownames(installed.packages())) { install.packages("devtools", dependencies = TRUE) }'
   - Rscript -e 'if (!require("covr")) devtools::install_github("jimhester/covr")'
   - Rscript -e 'if (!require("drat")) install.packages("drat")'
-#  - echo 'drat::addRepo("OHDSI")' >> .Rprofile
+  - echo 'drat::addRepo("OHDSI")' >> .Rprofile
+  - echo 'drat::addRepo("dmlc")' >> .Rprofile
   - Rscript -e 'if(!"rJava" %in% rownames(installed.packages())) { install.packages("rJava", dependencies = TRUE) }'
   - Rscript -e 'if(!"testthat" %in% rownames(installed.packages())) { install.packages("testthat", dependencies = TRUE) }'
   - Rscript -e 'if(!"knitr" %in% rownames(installed.packages())) { install.packages("knitr", dependencies = TRUE) }'
@@ -50,7 +51,7 @@ install:
   - Rscript -e 'if(!"survival" %in% rownames(installed.packages())) { install.packages("survival", dependencies = TRUE) }'
   - Rscript -e 'if(!"gridExtra" %in% rownames(installed.packages())) { install.packages("gridExtra", dependencies = TRUE) }'
   - Rscript -e 'if(!"Rcpp" %in% rownames(installed.packages())) { install.packages("Rcpp", dependencies = TRUE) }'
-  - Rscript -e 'if(!"xgboost" %in% rownames(installed.packages())) { install.packages("xgboost", type = "source", dependencies = TRUE) }'
+  - Rscript -e 'if(!"xgboost" %in% rownames(installed.packages())) { install.packages("xgboost", repos="https://dmlc.ml/drat/", type = "source", dependencies = TRUE) }'
   - Rscript -e 'if(!"Matrix" %in% rownames(installed.packages())) { install.packages("Matrix", dependencies = TRUE) }'
   - Rscript -e 'if(!"AUC" %in% rownames(installed.packages())) { install.packages("AUC", dependencies = TRUE) }'
   - Rscript -e 'if(!"PythonInR" %in% rownames(installed.packages())) { install.packages("PythonInR", dependencies = TRUE) }'
