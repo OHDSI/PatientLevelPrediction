@@ -1,4 +1,4 @@
-language: c
+language: r
 
 # use containers
 sudo: false
