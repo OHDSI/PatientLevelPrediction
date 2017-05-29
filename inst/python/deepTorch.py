@@ -520,6 +520,28 @@ class ResNet(nn.Module):
         temp = y.data.cpu().numpy()
         return temp    
 #resnet = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16)
+
+
+def use_pretrained_embedding():
+    embed = nn.Embedding(num_embeddings, embedding_dim)
+    # pretrained_weight is a numpy matrix of shape (num_embeddings, embedding_dim)
+    embed.weight.data.copy_(torch.from_numpy(pretrained_weight))
+    return embed
+
+class EMBED(nn.Module):
+
+    def __init__(self, vocab_size, embedding_dim, context_size = 2):
+        super(NGramLanguageModeler, self).__init__()
+        self.embeddings = nn.Embedding(vocab_size, embedding_dim)
+        self.linear1 = nn.Linear(context_size * embedding_dim, 128)
+        self.linear2 = nn.Linear(128, vocab_size)
+
+    def forward(self, inputs):
+        embeds = self.embeddings(inputs).view((1, -1))
+        out = F.relu(self.linear1(embeds))
+        out = self.linear2(out)
+        log_probs = F.log_softmax(out)
+        return log_probs
         
 class GRU(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
