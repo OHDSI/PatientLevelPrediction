@@ -50,10 +50,10 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, 
                 nonzero = [val for val in  win_vals if val]
                 if not nonzero:
                     nonzero = [0] 
-                x[lab][patient][ti] = np.mean(nonzero)
+                x[patient][lab][ti] = np.mean(nonzero)
     
-    
-    
+    return x
+    '''
     ix_all = np.arange(N)
     np.random.shuffle(ix_all)
     ix_test = ix_all[0:N/6]
@@ -98,7 +98,8 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, 
         return x_train, x_valid, x_test, Y_train, Y_valid, Y_test  
     else:
         return x_train, x_valid, x_test, Y_train, Y_valid, Y_test  
-
+    '''
+                
 def read_data(filename):
     covriate_ids = set()
     patient_dict = {}
@@ -128,6 +129,26 @@ def read_data(filename):
     #(15, 2000, 60) 20000 patients, 15 lab tests, 
     return covriate_ids, patient_dict
 
+def convert_2_cnn_format(covariates):
+    covriate_ids = set()
+    patient_dict = {}
+    for row in covariates:
+        for columns in row:
+            p_id, cov_id, time_id, cov_val = columns[0], columns[1], columns[2], columns[3]
+            
+            if p_id not in patient_dict:
+                patient_dict[p_id] = {}
+            else:
+                if time_id not in patient_dict[p_id]:
+                    patient_dict[p_id][time_id] = []
+                else:
+                    patient_dict[p_id][time_id].append((cov_id, cov_val))
+            covriate_ids.add(cov_id)
+    
+    x = convert_format2(covriate_ids, patient_dict)
+    
+    return x
+    
 
 def split_training_validation(classes, validation_size = 0.2, shuffle = False):
     """split sampels based on balnace classes"""
