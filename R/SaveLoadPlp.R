@@ -252,11 +252,21 @@ getPlpData <- function(connectionDetails,
   metaData$call$washoutPeriod = washoutPeriod
   metaData$call$covariateSettings= covariateSettings
 
-  result <- list(cohorts = cohorts,
-                 outcomes = outcomes,
-                 covariates = covariateData$covariates,
-                 covariateRef = covariateData$covariateRef,
-                 metaData = metaData)
+  if (temporal) {
+    result <- list(cohorts = cohorts,
+                   outcomes = outcomes,
+                   covariates = covariateData$covariates,
+                   covariateRef = covariateData$covariateRef,
+                   timePeriods = covariateData$timePeriods,
+                   metaData = metaData)
+  } else {
+    result <- list(cohorts = cohorts,
+                   outcomes = outcomes,
+                   covariates = covariateData$covariates,
+                   covariateRef = covariateData$covariateRef,
+                   metaData = metaData)   
+  }
+
   
   class(result) <- "plpData"
   return(result)
