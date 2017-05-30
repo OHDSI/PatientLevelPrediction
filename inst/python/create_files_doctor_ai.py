@@ -26,7 +26,7 @@ with open(filename) as fp:
             continue
         lines = lines.strip('\n').strip('\r').split(',')
         p_id, cov_id, time_id =  lines[1], lines[2], lines[3]
-        print(p_id, cov_id, time_id)
+        #print(p_id, cov_id, time_id)
         #covriate_ids.add(cov_id)
         if p_id not in patient_dict:
             patient_dict[p_id] = {time_id: [cov_id]}
@@ -38,7 +38,7 @@ with open(filename) as fp:
         covriate_ids.add(cov_id)
 
 print('{} Patients'.format(len(patient_dict)))
-print(patient_dict)
+#print(patient_dict)
 
 #pdb.set_trace()
 
