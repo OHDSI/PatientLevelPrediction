@@ -764,6 +764,14 @@ if model_type in ['LogisticRegression', 'MLP']:
     
         joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
+elif model_type in ['CNN', 'RNN']:
+    y = population[:, 1]
+    print covariates
+    plpData = convert_2_cnn_format(covariates)
+    X = plpData[population[:, 0], :]
+    trainInds = population[:, population.shape[1] - 1] > 0    
+
+
 if __name__ == "__main__":
     DATA_SIZE = 1000
     INPUT_SIZE = 36

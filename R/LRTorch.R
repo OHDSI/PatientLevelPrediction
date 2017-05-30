@@ -17,9 +17,9 @@
 # limitations under the License.
 
 #' Create setting for logistics regression model with python 
-#' @param size       The number of hidden nodes
-#' @param alpha      The l2 regularisation
+#' @param w_decay      The l2 regularisation
 #' @param seed       A seed for the model 
+#' @param epochs     The number of epochs
 #'
 #' @examples
 #' \dontrun{

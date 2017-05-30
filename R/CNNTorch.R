@@ -17,7 +17,6 @@
 # limitations under the License.
 
 #' Create setting for CNN model with python 
-#' @param size       The number of hidden nodes
 #' @param nbfilters  The number of filters
 #' @param epochs     The number of epochs
 #' @param seed       A seed for the model 
@@ -27,7 +26,7 @@
 #' model.cnnTorch <- setCNNTorch()
 #' }
 #' @export
-setCNNTorch <- function(size=c(500, 1000, 1500), nbfilters=c(16, 32), epochs=c(20, 50, 100), seed=0){
+setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50, 100), seed=0){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -38,7 +37,7 @@ setCNNTorch <- function(size=c(500, 1000, 1500), nbfilters=c(16, 32), epochs=c(2
     }  
     )
   }
-  result <- list(model='fitCNNTorch', param= expand.grid(size=size, nbfilters=nbfilters,
+  result <- list(model='fitCNNTorch', param= expand.grid(nbfilters=nbfilters,
                                                          epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed)),
                  name='CNN Torch')
   
@@ -80,7 +79,7 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   
   # convert plpData in coo to python:
   #x <- toSparsePython(plpData,population, map=NULL) TO CHANGE!
-  covar <- plpData$covariates
+  covar <- ff::as.ram(plpData$covariates)
   covar$rowIdPython <- covar$rowId-1 # -1 to account for python/r index difference
   PythonInR::pySet('covariates', as.matrix(covar[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
   
@@ -105,11 +104,11 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                      namespace = "__main__", useNumpy = TRUE)
     
     # then run standard python code
-    auc <- do.call(trainCNNTorch,list(size=as.character(param$size[i]), epochs=as.character(param$epochs[i]), nbfilters = as.character(param$nbfilters[i]), 
+    auc <- do.call(trainCNNTorch,list(epochs=as.character(param$epochs[i]), nbfilters = as.character(param$nbfilters[i]), 
                                       seed = as.character(param$seed[i]), train = TRUE))
     
     all_auc <- c(all_auc, auc)
-    writeLines(paste0('Model with settings: size:',param$size[i],' epochs: ',param$epochs[i], 
+    writeLines(paste0('Model with settings: epochs: ',param$epochs[i], 
                       'nbfilters: ', param$nbfilters[i], 'seed: ', param$seed[i], ' obtained AUC of ', auc))
   }
   
@@ -121,8 +120,7 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   
   
   # ToDo: I do not like this list creation
-  finalModel <- do.call(trainCNNTorch,list(size=as.character(param$size[which.max(all_auc)]), 
-                                           epochs=as.character(param$epochs[which.max(all_auc)]), 
+  finalModel <- do.call(trainCNNTorch,list(epochs=as.character(param$epochs[which.max(all_auc)]), 
                                            nbfilters=as.character(param$nbfilters[which.max(all_auc)]), 
                                            seed = as.character(param$seed[which.max(all_auc)]), train = FALSE))
   
@@ -153,8 +151,8 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainCNNTorch <- function(size=200, epochs=100, nbfilters = 16, seed=0, train=TRUE){
-  PythonInR::pyExec(paste0("size = ",size))
+trainCNNTorch <- function(epochs=100, nbfilters = 16, seed=0, train=TRUE){
+  #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("nbfilters = ",nbfilters))
   PythonInR::pyExec(paste0("seed = ",seed))

@@ -18,8 +18,9 @@
 
 #' Create setting for neural network model with python 
 #' @param size       The number of hidden nodes
-#' @param alpha      The l2 regularisation
-#' @param seed       A seed for the model 
+#' @param w_decay      The l2 regularisation
+#' @param seed       A seed for the model
+#' @param epochs     The number of epochs 
 #'
 #' @examples
 #' \dontrun{
