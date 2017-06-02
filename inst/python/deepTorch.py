@@ -848,11 +848,11 @@ if model_type in ['LogisticRegression', 'MLP']:
 elif model_type in ['CNN', 'RNN']:
     y = population[:, 1]
     #print covariates
-    print 'time_window', time_window
+    #print 'time_window', time_window
     plpData, patient_keys = convert_2_cnn_format(covariates, time_window = time_window)
-    print plpData.shape
-    print population[:, 0]
-    print patient_keys
+    #print plpData.shape
+    #print population[:, 0]
+    #print patient_keys
     X = plpData[population[:, 0], :]
     trainInds = population[:, population.shape[1] - 1] > 0    
     if train:
