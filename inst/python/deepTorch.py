@@ -14,6 +14,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 import numpy as np
 
+#from inst.python.deepUtils import convert_2_cnn_format
+
 if torch.cuda.is_available():
         cuda = True
         #torch.cuda.set_device(1)
@@ -32,6 +34,83 @@ def batch(tensor, batch_size):
             return tensor_list
         tensor_list.append(tensor[i * batch_size: (i+1) * batch_size])
         i += 1
+
+def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, save = True):
+    D = len(covriate_ids)
+    N = len(patient_dict)
+    if 365%time_window == 0:
+        T = 365/time_window
+    else:
+        T = 365/time_window + 1
+        
+    print D,N,T
+    concept_list =list(covriate_ids)
+    x_raw = np.zeros((N, D, T), dtype=float)
+    #y = np.zeros((O,N,T), dtype=int)
+    patient_ind = 0
+    p_ids = []
+    patient_keys = patient_dict.keys()
+    for kk in patient_keys:
+        #print('-------------------')
+        vals = patient_dict[kk] 
+        p_ids.append(int(kk))
+        for timeid, meas in vals.iteritems():
+            int_time = int(timeid) - 1
+            for val in meas:
+                if not len(val):
+                    continue
+                cov_id, cov_val = val
+                lab_ind = concept_list.index(cov_id)
+                x_raw[patient_ind][lab_ind][int_time] = float(cov_val)
+    
+        patient_ind = patient_ind + 1
+    '''
+    if time_window == 1:
+        T = 365/time_window
+        extr = 365%time_window
+        print T, N, D
+        x = np.zeros((N, D, T), dtype=float)
+        #convert to time window
+        for patient in range(N):
+            for lab in range(D):
+                times =  x_raw[lab][patient]
+                for ti in range(T):
+                    if ti == 0:
+                        end = time_window + extr
+                        win_vals = times[:end]
+                    else:
+                        start = end
+                        end = end + time_window
+                        win_vals = times[start:end]
+                    nonzero = [val for val in  win_vals if val]
+                    if not nonzero:
+                        nonzero = [0] 
+                    x[patient][lab][ti] = np.mean(nonzero)
+    '''
+    
+    return x_raw, patient_keys
+
+def convert_2_cnn_format(covariates, time_window = 12):
+    covriate_ids = set()
+    patient_dict = {}
+    print covariates.shape
+    #pdb.set_trace()
+    for columns in covariates:
+        #print columns
+        p_id, cov_id, time_id, cov_val = columns[0], columns[1], columns[2], columns[3]
+        
+        if p_id not in patient_dict:
+            patient_dict[p_id] = {}
+        else:
+            if time_id not in patient_dict[p_id]:
+                patient_dict[p_id][time_id] = []
+            else:
+                patient_dict[p_id][time_id].append((cov_id, cov_val))
+        covriate_ids.add(cov_id)
+    #T = 365/time_window
+    x, patient_keys = convert_format2(covriate_ids, patient_dict, time_window = time_window)
+    
+    return x, patient_keys
 
 class Estimator(object):
 
@@ -669,6 +748,8 @@ class BiRNN(nn.Module):
 
 # select model
 if model_type in ['LogisticRegression', 'MLP']:
+    print plpData[:, 0]
+    print population[:, 0]
     y = population[:, 1]
     X = plpData[population[:, 0], :]
     trainInds = population[:, population.shape[1] - 1] > 0
@@ -766,11 +847,91 @@ if model_type in ['LogisticRegression', 'MLP']:
 
 elif model_type in ['CNN', 'RNN']:
     y = population[:, 1]
-    print covariates
-    plpData = convert_2_cnn_format(covariates)
+    #print covariates
+    print 'time_window', time_window
+    plpData, patient_keys = convert_2_cnn_format(covariates, time_window = time_window)
+    print plpData.shape
+    print population[:, 0]
+    print patient_keys
     X = plpData[population[:, 0], :]
     trainInds = population[:, population.shape[1] - 1] > 0    
+    if train:
+        pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
+        print "Calculating prediction for train set of size %s" % (pred_size)
+        test_pred = np.zeros(pred_size)  # zeros length sum(population[:,population.size[1]] ==i)
+        for i in range(1, int(np.max(population[:, population.shape[1] - 1]) + 1), 1):
+            testInd = population[population[:, population.shape[1] - 1] > 0, population.shape[1] - 1] == i
+            trainInd = (population[population[:, population.shape[1] - 1] > 0, population.shape[1] - 1] != i)
+            train_x = X[trainInds, :][trainInd, :]
+            train_y = y[trainInds][trainInd]
+    
+            test_x = X[trainInds, :][testInd, :]
+            print "Fold %s split %s in train set and %s in test set" % (i, train_x.shape[0], test_x.shape[0])
+            print "Train set contains %s outcomes " % (np.sum(train_y))
+    
+            # train on fold
+            print "Training fold %s" % (i)
+            start_time = timeit.default_timer()
+            if model_type == 'CNN':
+                model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
 
+            if cuda:
+                model = model.cuda()
+            clf = Estimator(model)
+            clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4),
+                        loss=nn.CrossEntropyLoss())
+            
+            clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs)
+            
+            ind = (population[:, population.shape[1] - 1] > 0)
+            ind = population[ind, population.shape[1] - 1] == i
+            
+            test_input_var = torch.from_numpy(test_x.toarray().astype(np.float32))
+            #if cuda:
+            #    test_input_var = test_input_var.cuda()
+    
+            temp = model.predict_proba(test_input_var)[:, 1]
+            #temp = preds.data.cpu().numpy().flatten()
+    
+            test_pred[ind] = temp
+            print "Prediction complete: %s rows " % (np.shape(test_pred[ind])[0])
+            print "Mean: %s prediction value" % (np.mean(test_pred[ind]))
+    
+        # merge pred with indexes[testInd,:]
+        test_pred.shape = (population[population[:, population.shape[1] - 1] > 0, :].shape[0], 1)
+        prediction = np.append(population[population[:, population.shape[1] - 1] > 0, :], test_pred, axis=1)
+    
+    # train final:
+    else:
+        print "Training final neural network model on all train data..."
+        print "X- %s rows and Y %s length" % (X[trainInds, :].shape[0], y[trainInds].shape[0])
+    
+        start_time = timeit.default_timer()
+    
+        train_x = X[trainInds, :]
+        train_y = y[trainInds]
+        print 'the final parameter epochs', epochs, 'weight_decay', w_decay
+        if model_type == 'CNN':
+                model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+        #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
+        #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
+        #pdb.set_trace()
+        if cuda:
+            model = model.cuda()
+        clf = Estimator(model)
+        clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4),
+                    loss=nn.CrossEntropyLoss())
+        clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs)
+
+        end_time = timeit.default_timer()
+        print "Training final took: %.2f s" % (end_time - start_time)
+    
+        # save the model:
+        if not os.path.exists(modelOutput):
+            os.makedirs(modelOutput)
+        print "Model saved to: %s" % (modelOutput)
+    
+        joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
 if __name__ == "__main__":
     DATA_SIZE = 1000

@@ -19,14 +19,15 @@
 #' Create setting for CNN model with python 
 #' @param nbfilters  The number of filters
 #' @param epochs     The number of epochs
-#' @param seed       A seed for the model 
+#' @param seed       A seed for the model
+#' @param time_window       A time window to get temporal data
 #'
 #' @examples
 #' \dontrun{
 #' model.cnnTorch <- setCNNTorch()
 #' }
 #' @export
-setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50, 100), seed=0){
+setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50, 100), seed=0, time_window = 12){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -38,7 +39,7 @@ setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50, 100), seed=0){
     )
   }
   result <- list(model='fitCNNTorch', param= expand.grid(nbfilters=nbfilters,
-                                                         epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed)),
+                                                         epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), time_window = time_window),
                  name='CNN Torch')
   
   class(result) <- 'modelSettings' 
@@ -78,10 +79,13 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
   
   # convert plpData in coo to python:
-  #x <- toSparsePython(plpData,population, map=NULL) TO CHANGE!
-  covar <- ff::as.ram(plpData$covariates)
-  covar$rowIdPython <- covar$rowId-1 # -1 to account for python/r index difference
-  PythonInR::pySet('covariates', as.matrix(covar[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
+  x <- totemporalPython(plpData,population, map=NULL) 
+  #covar <- ff::as.ram(plpData$covariates)
+  #covar$rowIdPython <- covar$rowId-1 # -1 to account for python/r index difference
+  #idx <- ffbase::ffmatch(x = covar$rowId, table = ff::as.ff(population$rowId))
+  #idx <- ffbase::ffwhich(idx, !is.na(idx))
+  #covariates <- covar[idx, ]
+  #PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
   
   covariateRef <- ff::as.ram(plpData$covariateRef)
   inc <- 1:ncol(covariateRef)  
@@ -105,7 +109,7 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
     
     # then run standard python code
     auc <- do.call(trainCNNTorch,list(epochs=as.character(param$epochs[i]), nbfilters = as.character(param$nbfilters[i]), 
-                                      seed = as.character(param$seed[i]), train = TRUE))
+                                      seed = as.character(param$seed[i]), time_window = as.character(param$time_window[i]), train = TRUE))
     
     all_auc <- c(all_auc, auc)
     writeLines(paste0('Model with settings: epochs: ',param$epochs[i], 
@@ -122,7 +126,9 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   # ToDo: I do not like this list creation
   finalModel <- do.call(trainCNNTorch,list(epochs=as.character(param$epochs[which.max(all_auc)]), 
                                            nbfilters=as.character(param$nbfilters[which.max(all_auc)]), 
-                                           seed = as.character(param$seed[which.max(all_auc)]), train = FALSE))
+                                           seed = as.character(param$seed[which.max(all_auc)]), 
+                                           time_window = as.character(param$time_window[which.max(all_auc)]),
+                                           train = FALSE))
   
   
   modelTrained <- file.path(outLoc) 
@@ -151,11 +157,12 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainCNNTorch <- function(epochs=100, nbfilters = 16, seed=0, train=TRUE){
+trainCNNTorch <- function(epochs=100, nbfilters = 16, seed=0, time_window = 12, train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("nbfilters = ",nbfilters))
   PythonInR::pyExec(paste0("seed = ",seed))
+  PythonInR::pyExec(paste0("time_window = ",time_window))
   PythonInR::pyExec("model_type = 'CNN'")
   if(train)
     PythonInR::pyExec("train = True")

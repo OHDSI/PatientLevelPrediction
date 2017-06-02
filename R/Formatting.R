@@ -219,7 +219,48 @@ toSparsePython <- function(plpData,population, map=NULL){
   
 }
 
-
+#' @export
+totemporalPython <- function(plpData,population, map=NULL){
+  # test python is available and the required dependancies are there:
+  if ( !PythonInR::pyIsConnected() ){
+    python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
+    
+    if(is.null(python.test$pythonExePath))
+      stop('You need to install python for this method - please see ...')
+  }
+  if ( !PythonInR::pyIsConnected() ){ 
+    PythonInR::pyConnect()
+    PythonInR::pyOptions("numpyAlias", "np")
+    PythonInR::pyOptions("useNumpy", TRUE)
+    PythonInR::pyImport("numpy", as='np')
+  }
+  
+  # return error if we can't connect to python
+  if ( !PythonInR::pyIsConnected() )
+    stop('Python not connect error')
+  
+  cov <- ff::clone(plpData$covariates)
+  covref <- ff::clone(plpData$covariateRef)
+  
+  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=covref, 
+                                  population, map=map)
+  
+  for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
+    ids <- plpData.mapped$covariateRef$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariateRef$covariateId[i[1]:i[2]] <- ids
+    # tested and working
+  }
+  for (i in bit::chunk(plpData.mapped$covariates$covariateId)) {
+    ids <- plpData.mapped$covariates$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
+  }
+  
+  covar <- ff::as.ram(plpData.mapped$covariates)
+  covar$rowIdPython <- covar$rowId-1 # -1 to account for python/r index difference
+  PythonInR::pySet('covariates', as.matrix(covar[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
+}
 
 # reformat the evaluation 
 reformatPerformance <- function(train, test, analysisId){
