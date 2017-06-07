@@ -75,17 +75,21 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   
   start <- Sys.time()
   
-  population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+  population$rowIdPython <- population$subjectId # -1 to account for python/r index difference #subjectId
+  #idx <- ffbase::ffmatch(x = population$subjectId, table = ff::as.ff(plpData$covariates$rowId))
+  #idx <- ffbase::ffwhich(idx, !is.na(idx))
+  #population <- population[idx, ]
+  
   PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
   
   # convert plpData in coo to python:
-  x <- totemporalPython(plpData,population, map=NULL) 
-  #covar <- ff::as.ram(plpData$covariates)
-  #covar$rowIdPython <- covar$rowId-1 # -1 to account for python/r index difference
-  #idx <- ffbase::ffmatch(x = covar$rowId, table = ff::as.ff(population$rowId))
-  #idx <- ffbase::ffwhich(idx, !is.na(idx))
-  #covariates <- covar[idx, ]
-  #PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
+  #x <- totemporalPython(plpData,population, map=NULL) 
+  covar <- plpData$covariates
+  #covar$rowIdPython <- covar$rowId # -1 to account for python/r index difference
+  idx <- ffbase::ffmatch(x = covar$rowId, table = ff::as.ff(population$rowIdPython))
+  idx <- ffbase::ffwhich(idx, !is.na(idx))
+  covariates <- covar[idx, ]
+  PythonInR::pySet('covariates', as.matrix(covariates[,c('rowId','covariateId','timeId', 'covariateValue')]))
   
   covariateRef <- ff::as.ram(plpData$covariateRef)
   inc <- 1:ncol(covariateRef)  

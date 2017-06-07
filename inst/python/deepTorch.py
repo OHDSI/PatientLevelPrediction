@@ -93,7 +93,7 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, 
 def convert_2_cnn_format(covariates, time_window = 12):
     covriate_ids = set()
     patient_dict = {}
-    print covariates.shape
+    #print covariates.shape
     #pdb.set_trace()
     for columns in covariates:
         #print columns
@@ -293,6 +293,7 @@ class CNN(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
+        out = F.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -350,6 +351,7 @@ class CNN_LSTM(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
+        out = F.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -412,6 +414,7 @@ class CNN_MIX(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
+        out = F.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -496,6 +499,7 @@ class CNN_MULTI(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
+        out = F.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -587,6 +591,7 @@ class ResNet(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
+        out = F.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -649,6 +654,7 @@ class GRU(nn.Module):
         ## from (1, N, hidden) to (N, hidden)
         rearranged = out[:, -1, :]
         out = self.linear(rearranged)
+        out = F.sigmoid(out)
         return out
 
     def initHidden(self, N):
@@ -692,7 +698,8 @@ class RNN(nn.Module):
         out, _ = self.lstm(x, (h0, c0))  
         
         # Decode hidden state of last time step
-        out = self.fc(out[:, -1, :])  
+        out = self.fc(out[:, -1, :])
+        out = F.sigmoid(out)
         return out
 
     def predict_proba(self, x):
@@ -733,6 +740,7 @@ class BiRNN(nn.Module):
         
         # Decode hidden state of last time step
         out = self.fc(out[:, -1, :])
+        out = F.sigmoid(out)
         return out
 
     def predict_proba(self, x):
@@ -748,8 +756,6 @@ class BiRNN(nn.Module):
 
 # select model
 if model_type in ['LogisticRegression', 'MLP']:
-    print plpData[:, 0]
-    print population[:, 0]
     y = population[:, 1]
     X = plpData[population[:, 0], :]
     trainInds = population[:, population.shape[1] - 1] > 0
@@ -801,7 +807,7 @@ if model_type in ['LogisticRegression', 'MLP']:
     
             temp = model.predict_proba(test_input_var)[:, 1]
             #temp = preds.data.cpu().numpy().flatten()
-    
+            #print temp
             test_pred[ind] = temp
             print "Prediction complete: %s rows " % (np.shape(test_pred[ind])[0])
             print "Mean: %s prediction value" % (np.mean(test_pred[ind]))
@@ -846,14 +852,23 @@ if model_type in ['LogisticRegression', 'MLP']:
         joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
 elif model_type in ['CNN', 'RNN']:
-    y = population[:, 1]
     #print covariates
-    #print 'time_window', time_window
+    print 'time_window', time_window
     plpData, patient_keys = convert_2_cnn_format(covariates, time_window = time_window)
-    #print plpData.shape
+    print 'total patient', plpData.shape
     #print population[:, 0]
     #print patient_keys
-    X = plpData[population[:, 0], :]
+    rowids = list(population[:, 0])
+    new_popu = []
+    for key in patient_keys:
+        posi = rowids.index(key)
+        #print key, posi
+        new_popu.append(population[posi])    
+    population = []
+    population = np.array(new_popu)    
+    X = plpData#[population[:, 0], :]
+    y = population[:, 1]
+    
     trainInds = population[:, population.shape[1] - 1] > 0    
     if train:
         pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
@@ -871,6 +886,7 @@ elif model_type in ['CNN', 'RNN']:
     
             # train on fold
             print "Training fold %s" % (i)
+            print train_x.shape
             start_time = timeit.default_timer()
             if model_type == 'CNN':
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
@@ -881,16 +897,26 @@ elif model_type in ['CNN', 'RNN']:
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4),
                         loss=nn.CrossEntropyLoss())
             
-            clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs)
+            clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
             
             ind = (population[:, population.shape[1] - 1] > 0)
             ind = population[ind, population.shape[1] - 1] == i
             
-            test_input_var = torch.from_numpy(test_x.toarray().astype(np.float32))
+            #ind = testInd
+            temp = []
+            N = test_x.shape[0]
+            split_num = 12
+            for ind_new in range(split_num):
+                start = ind_new*N/split_num
+                end = (ind_new + 1)*N/split_num
+                pred_test1 = model.predict_proba(test_x[start:end,:,:])[:, 1]
+                temp = np.concatenate((temp, pred_test1), axis = 0)
+            #print ind, N, temp.shape, test_pred.shape
+            #test_input_var = torch.from_numpy(test_x.astype(np.float32))
             #if cuda:
             #    test_input_var = test_input_var.cuda()
     
-            temp = model.predict_proba(test_input_var)[:, 1]
+            #temp = model.predict_proba(test_input_var)[:, 1]
             #temp = preds.data.cpu().numpy().flatten()
     
             test_pred[ind] = temp
@@ -921,7 +947,7 @@ elif model_type in ['CNN', 'RNN']:
         clf = Estimator(model)
         clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4),
                     loss=nn.CrossEntropyLoss())
-        clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs)
+        clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
 
         end_time = timeit.default_timer()
         print "Training final took: %.2f s" % (end_time - start_time)
