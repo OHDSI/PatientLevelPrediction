@@ -24,7 +24,7 @@ else:
         cuda = False
         print('===> Using CPU')
 
-def batch(tensor, batch_size):
+def batch(tensor, batch_size = 100):
     tensor_list = []
     length = tensor.shape[0]
     i = 0
@@ -220,7 +220,7 @@ class LogisticRegression(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -250,7 +250,7 @@ class MLP(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -299,7 +299,7 @@ class CNN(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -357,7 +357,7 @@ class CNN_LSTM(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -420,7 +420,7 @@ class CNN_MIX(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -505,7 +505,7 @@ class CNN_MULTI(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -597,7 +597,7 @@ class ResNet(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -663,7 +663,7 @@ class GRU(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -705,7 +705,7 @@ class RNN(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -746,7 +746,7 @@ class BiRNN(nn.Module):
     def predict_proba(self, x):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
-        x = Variable(x)
+        x = Variable(x, volatile=True)
         if cuda:
             x = x.cuda()
         y = self.forward(x)
@@ -903,13 +903,21 @@ elif model_type in ['CNN', 'RNN']:
             ind = population[ind, population.shape[1] - 1] == i
             
             #ind = testInd
-            temp = []
+            
+            
+            '''
             N = test_x.shape[0]
             split_num = 12
             for ind_new in range(split_num):
                 start = ind_new*N/split_num
                 end = (ind_new + 1)*N/split_num
                 pred_test1 = model.predict_proba(test_x[start:end,:,:])[:, 1]
+                temp = np.concatenate((temp, pred_test1), axis = 0)
+            '''
+            test_batch = batch(test_x)
+            temp = []
+            for test in test_batch:
+                pred_test1 = model.predict_proba(test)[:, 1]
                 temp = np.concatenate((temp, pred_test1), axis = 0)
             #print ind, N, temp.shape, test_pred.shape
             #test_input_var = torch.from_numpy(test_x.astype(np.float32))
@@ -920,6 +928,7 @@ elif model_type in ['CNN', 'RNN']:
             #temp = preds.data.cpu().numpy().flatten()
     
             test_pred[ind] = temp
+            del model
             print "Prediction complete: %s rows " % (np.shape(test_pred[ind])[0])
             print "Mean: %s prediction value" % (np.mean(test_pred[ind]))
     
