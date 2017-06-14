@@ -20,6 +20,8 @@ if torch.cuda.is_available():
         cuda = True
         #torch.cuda.set_device(1)
         print('===> Using GPU')
+        torch.backends.cudnn.enabled = True
+        torch.backends.cudnn.benchmark = True
 else:
         cuda = False
         print('===> Using CPU')
@@ -157,6 +159,8 @@ class Estimator(object):
 			classes = torch.topk(y_pred, 1)[1].data.cpu().numpy().flatten()
 			acc = self._accuracy(classes, y_v.data.cpu().numpy().flatten())
 			acc_list.append(acc)
+			del loss
+			del y_pred
 
 		return sum(loss_list) / len(loss_list) , sum(acc_list) / len(acc_list)
 
