@@ -24,7 +24,7 @@ else:
         cuda = False
         print('===> Using CPU')
 
-def batch(tensor, batch_size = 100):
+def batch(tensor, batch_size = 1000):
     tensor_list = []
     length = tensor.shape[0]
     i = 0
@@ -175,7 +175,7 @@ class Estimator(object):
 				val_loss, auc = self.evaluate(validation_data[0], validation_data[1], batch_size)
 				val_log = "- val_loss: %06.4f - auc: %6.4f" % (val_loss, auc)
 				print val_log
-		self.model.eval()
+		
 			#rint("Epoch %s/%s loss: %06.4f - acc: %06.4f %s" % (t, nb_epoch, loss, acc, val_log))
 
 	def evaluate(self, X, y, batch_size=32):
@@ -202,6 +202,7 @@ class Estimator(object):
 		return y_pred		
 
 	def predict_proba( X):
+		self.model.eval()
 		return self.model.predict_proba(X)
 		#eturn torch.topk(self.predict(X), 1)[1].data.numpy().flatten()
 
