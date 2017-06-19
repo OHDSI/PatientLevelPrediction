@@ -161,7 +161,7 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainCNNTorch <- function(epochs=100, nbfilters = 16, seed=0, time_window = 12, train=TRUE){
+trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, time_window = 12, train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("nbfilters = ",nbfilters))

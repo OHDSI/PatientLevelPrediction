@@ -161,7 +161,7 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainRNNTorch <- function(epochs=100, hidden_size = 100, seed=0, time_window = 12, train=TRUE){
+trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, time_window = 12, train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("hidden_size = ",hidden_size))
