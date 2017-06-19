@@ -1,4 +1,4 @@
-# @file CNNTorch.R
+# @file RNNTorch.R
 #
 # Copyright 2017 Observational Health Data Sciences and Informatics
 #
@@ -16,18 +16,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create setting for CNN model with python 
-#' @param nbfilters  The number of filters
+#' Create setting for RNN model with python 
+#' @param hidden_size  The hidden size
 #' @param epochs     The number of epochs
 #' @param seed       A seed for the model
 #' @param time_window       A time window to get temporal data
 #'
 #' @examples
 #' \dontrun{
-#' model.cnnTorch <- setCNNTorch()
+#' model.rnnTorch <- setRNNTorch()
 #' }
 #' @export
-setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, time_window = 12){
+setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_window = 12){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -38,9 +38,9 @@ setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, time_wind
     }  
     )
   }
-  result <- list(model='fitCNNTorch', param= expand.grid(nbfilters=nbfilters,
+  result <- list(model='fitRNNTorch', param= expand.grid(hidden_size=hidden_size,
                                                          epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), time_window = time_window),
-                 name='CNN Torch')
+                 name='RNN Torch')
   
   class(result) <- 'modelSettings' 
   
@@ -48,7 +48,7 @@ setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, time_wind
 }
 
 #' @export
-fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
+fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                         outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
@@ -64,7 +64,7 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   if ( !PythonInR::pyIsConnected() ){ 
     PythonInR::pyConnect()
   }
-
+  
   # return error if we can't connect to python
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
@@ -112,12 +112,12 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                      namespace = "__main__", useNumpy = TRUE)
     
     # then run standard python code
-    auc <- do.call(trainCNNTorch,list(epochs=as.character(param$epochs[i]), nbfilters = as.character(param$nbfilters[i]), 
+    auc <- do.call(trainRNNTorch,list(epochs=as.character(param$epochs[i]), hidden_size = as.character(param$hidden_size[i]), 
                                       seed = as.character(param$seed[i]), time_window = as.character(param$time_window[i]), train = TRUE))
     
     all_auc <- c(all_auc, auc)
     writeLines(paste0('Model with settings: epochs: ',param$epochs[i], 
-                      'nbfilters: ', param$nbfilters[i], 'seed: ', param$seed[i], ' obtained AUC of ', auc))
+                      'hidden_size: ', param$hidden_size[i], 'seed: ', param$seed[i], ' obtained AUC of ', auc))
   }
   
   hyperSummary <- cbind(param, cv_auc=all_auc)
@@ -128,8 +128,8 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   
   
   # ToDo: I do not like this list creation
-  finalModel <- do.call(trainCNNTorch,list(epochs=as.character(param$epochs[which.max(all_auc)]), 
-                                           nbfilters=as.character(param$nbfilters[which.max(all_auc)]), 
+  finalModel <- do.call(trainRNNTorch,list(epochs=as.character(param$epochs[which.max(all_auc)]), 
+                                           hidden_size=as.character(param$hidden_size[which.max(all_auc)]), 
                                            seed = as.character(param$seed[which.max(all_auc)]), 
                                            time_window = as.character(param$time_window[which.max(all_auc)]),
                                            train = FALSE))
@@ -144,7 +144,7 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   result <- list(model = modelTrained,
                  trainCVAuc = -1, # ToDo decide on how to deal with this
                  hyperParamSearch = hyperSummary,
-                 modelSettings = list(model='fitCNNTorch',modelParameters=param.best),
+                 modelSettings = list(model='fitRNNTorch',modelParameters=param.best),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
@@ -161,13 +161,13 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainCNNTorch <- function(epochs=100, nbfilters = 16, seed=0, time_window = 12, train=TRUE){
+trainRNNTorch <- function(epochs=100, hidden_size = 100, seed=0, time_window = 12, train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
-  PythonInR::pyExec(paste0("nbfilters = ",nbfilters))
+  PythonInR::pyExec(paste0("hidden_size = ",hidden_size))
   PythonInR::pyExec(paste0("seed = ",seed))
   PythonInR::pyExec(paste0("time_window = ",time_window))
-  PythonInR::pyExec("model_type = 'CNN'")
+  PythonInR::pyExec("model_type = 'RNN'")
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)

@@ -165,9 +165,6 @@ class Estimator(object):
 		return sum(loss_list) / len(loss_list) , sum(acc_list) / len(acc_list)
 
 	def fit(self, X, y, batch_size=32, nb_epoch=10, validation_data=(), l1regularization = False):
-		#X_list = batch(X, batch_size)
-		#y_list = batch(y, batch_size)
-		#pdb.set_trace()
 		train_set = TensorDataset(torch.from_numpy(X.astype(np.float32)),
                               torch.from_numpy(y.astype(np.float32)).long().view(-1))
 		train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
@@ -895,6 +892,8 @@ elif model_type in ['CNN', 'RNN']:
             start_time = timeit.default_timer()
             if model_type == 'CNN':
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+            elif model_type == 'RNN'::
+                model = RNN(train_x.shape[1], hidden_size, 2, 2)
 
             if cuda:
                 model = model.cuda()
@@ -953,6 +952,8 @@ elif model_type in ['CNN', 'RNN']:
         print 'the final parameter epochs', epochs, 'weight_decay', w_decay
         if model_type == 'CNN':
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+        elif model_type == 'RNN'::
+                model = RNN(train_x.shape[1], hidden_size, 2, 2)
         #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
         #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
         #pdb.set_trace()
