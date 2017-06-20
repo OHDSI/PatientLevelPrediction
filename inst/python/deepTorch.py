@@ -14,8 +14,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 import numpy as np
 
-#from inst.python.deepUtils import convert_2_cnn_format
-
 if torch.cuda.is_available():
         cuda = True
         #torch.cuda.set_device(1)
@@ -93,24 +91,24 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, 
     return x_raw, patient_keys
 
 def convert_2_cnn_format(covariates, time_window = 12):
-    covriate_ids = set()
+    covariate_ids = set()
     patient_dict = {}
     #print covariates.shape
     #pdb.set_trace()
-    for columns in covariates:
+    for row in covariates:
         #print columns
-        p_id, cov_id, time_id, cov_val = columns[0], columns[1], columns[2], columns[3]
+        p_id, cov_id, time_id, cov_val = row[0], row[1], row[2], row[3]
         
         if p_id not in patient_dict:
-            patient_dict[p_id] = {}
+            patient_dict[p_id] = {time_id: [(cov_id, cov_val)]}
         else:
             if time_id not in patient_dict[p_id]:
-                patient_dict[p_id][time_id] = []
+                patient_dict[p_id][time_id] = [(cov_id, cov_val)]
             else:
                 patient_dict[p_id][time_id].append((cov_id, cov_val))
-        covriate_ids.add(cov_id)
+        covariate_ids.add(cov_id)
     #T = 365/time_window
-    x, patient_keys = convert_format2(covriate_ids, patient_dict, time_window = time_window)
+    x, patient_keys = convert_format2(covariate_ids, patient_dict, time_window = time_window)
     
     return x, patient_keys
 
@@ -854,23 +852,27 @@ if model_type in ['LogisticRegression', 'MLP']:
         joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
 elif model_type in ['CNN', 'RNN']:
+    y = population[:, 1]
+    p_ids_in_cov = set(covariates[:, 0])
+    full_covariates = np.array([]).reshape(0,4)
+    default_covid = covariates[0, 1]
+    for p_id in  population[:, 0]:
+        if p_id not in p_ids_in_cov:
+            tmp_x = np.array([p_id, default_covid, 1, 0]).reshape(1,4) #default cov id, timeid=1
+            full_covariates = np.concatenate((full_covariates, tmp_x), axis=0)
+        else:
+            tmp_x = covariates[covariates[:, 0] == p_id, :]
+            #print tmp_x.shape, X.shape
+            full_covariates = np.concatenate((full_covariates, tmp_x), axis=0)
+
+    print full_covariates[:100], y[:100]
+    trainInds = population[:, population.shape[1] - 1] > 0
     #print covariates
     print 'time_window', time_window
-    plpData, patient_keys = convert_2_cnn_format(covariates, time_window = time_window)
-    print 'total patient', plpData.shape
-    #print population[:, 0]
-    #print patient_keys
-    rowids = list(population[:, 0])
-    new_popu = []
-    for key in patient_keys:
-        posi = rowids.index(key)
-        #print key, posi
-        new_popu.append(population[posi])    
-    population = []
-    population = np.array(new_popu)    
-    X = plpData#[population[:, 0], :]
-    y = population[:, 1]
-    
+    X, patient_keys = convert_2_cnn_format(full_covariates, time_window = time_window)
+    full_covariates = []
+    print 'total patient', X.shape
+
     trainInds = population[:, population.shape[1] - 1] > 0    
     if train:
         pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
@@ -892,7 +894,7 @@ elif model_type in ['CNN', 'RNN']:
             start_time = timeit.default_timer()
             if model_type == 'CNN':
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
-            elif model_type == 'RNN'::
+            elif model_type == 'RNN':
                 model = RNN(train_x.shape[1], hidden_size, 2, 2)
 
             if cuda:
@@ -906,18 +908,6 @@ elif model_type in ['CNN', 'RNN']:
             ind = (population[:, population.shape[1] - 1] > 0)
             ind = population[ind, population.shape[1] - 1] == i
             
-            #ind = testInd
-            
-            
-            '''
-            N = test_x.shape[0]
-            split_num = 12
-            for ind_new in range(split_num):
-                start = ind_new*N/split_num
-                end = (ind_new + 1)*N/split_num
-                pred_test1 = model.predict_proba(test_x[start:end,:,:])[:, 1]
-                temp = np.concatenate((temp, pred_test1), axis = 0)
-            '''
             test_batch = batch(test_x)
             temp = []
             for test in test_batch:
@@ -952,7 +942,7 @@ elif model_type in ['CNN', 'RNN']:
         print 'the final parameter epochs', epochs, 'weight_decay', w_decay
         if model_type == 'CNN':
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
-        elif model_type == 'RNN'::
+        elif model_type == 'RNN':
                 model = RNN(train_x.shape[1], hidden_size, 2, 2)
         #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
         #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
