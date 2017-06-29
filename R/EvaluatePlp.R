@@ -568,6 +568,9 @@ getDemographicSummary <- function(prediction, plpData){
     missingGender <- 8532
   }
   missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
+  if (length(missingAge) != 1) {
+    missingAge <- NA
+  }
   
   genderCovariates <- plpData$covariates[ffbase::`%in%`(plpData$covariates$covariateId, c(8507,8532)), ]
   genderCovariates <- genderCovariates[ffbase::`%in%`(genderCovariates$rowId, prediction$rowId), ]
