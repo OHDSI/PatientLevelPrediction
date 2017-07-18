@@ -80,9 +80,11 @@ personSplitter <- function(population, test = 0.3, train = 1 - test, nfold = 3, 
   if (leftOver > 0)
     nonPpl.group[train.ind] <- c(rep(1:nfold, each = reps), 1:leftOver)
   if (leftOver == 0)
+    nonPpl.group[train.ind] <- rep(1:nfold, each = reps)
+    
 
   outPpl.group <- rep(-1, length(outPpl))
-  train.ind <- round(length(outPpl) * test + length(nonPpl) * (1-train-test) + 1):length(outPpl)
+  train.ind <- round(length(outPpl) * test + length(outPpl) * (1-train-test) + 1):length(outPpl)
   reps <- floor(length(train.ind)/nfold)
   leftOver <- length(train.ind)%%nfold
 
