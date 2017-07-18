@@ -2,7 +2,7 @@ library(SqlRender)
 library(DatabaseConnector)
 library(FeatureExtraction)
 library(PatientLevelPrediction)
-options(fftempdir = "/Users/Shared/tempff")
+options(fftempdir = "C:/Users/prijnbee/tempff")
 
 # Azure 
 dbms <- "sql server"
@@ -128,10 +128,10 @@ plpData <- getPlpData(connectionDetails = connectionDetails,
 
 savePlpData(plpData, "~/Documents/temp/plpData")
 
-plpData <- loadPlpData("~/Documents/temp/plpData")
+plpData <- loadPlpData("h:/largeScalePredictionRun/data")
 
 population <- createStudyPopulation(plpData,
-                                    outcomeId = 1,
+                                    outcomeId = 2559,
                                     includeAllOutcomes = TRUE,
                                     firstExposureOnly = FALSE,
                                     washoutPeriod = 0,
@@ -143,14 +143,28 @@ population <- createStudyPopulation(plpData,
 
 lrModel <- setLassoLogisticRegression()
 
-learningCurve <- createLearningCurve(population, plpData,
+learningCurve <- PatientLevelPrediction::createLearningCurve(population, plpData,
                                 modelSettings = lrModel,
-                                testSplit = 'time', testFraction=0.25, trainFractions = c(0.25,0.50,0.75), splitSeed=NULL, nfold=3, indexes=NULL,
+                                testSplit = 'person', testFraction=0.30, trainFractions = c(0.10,0.20,0.30,0.40,0.50,0.60,0.70), splitSeed=NULL, nfold=3, indexes=NULL,
                                 verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL)
 
-# Test plot
-plot(log(learningCurve$trainAUC),type = "o",col = "red", xlab = "Training set size",
-     ylab = "AUC", main = "Learning Curve")
-lines(log(learningCurve$testAUC), type = "o", col = "blue")
-legend('topright', c("Train error", "Test error"), lty = c(1,1), lwd = c(2.5, 2.5),
-       col = c("red", "blue"))
+# Plot Learning Curve 
+ggplot(learningCurve, aes(x)) +
+    geom_line(aes(y=trainError),
+              colour="red") +
+    geom_line(aes(y=testError),
+              colour="green")+
+    xlab("Training Size") +
+    ylab("Error")
+
+
+# Test
+learningCurve <- data.frame(x = numeric(3),
+                            trainError = integer(3),
+                            testError = integer(3))
+learningCurve$x[0] = 0.10
+learningCurve$x[1] = 0.25
+learningCurve$trainError[0] = 0.7
+learningCurve$trainError[1] = 0.8
+learningCurve$testError[0] = 0.5
+learningCurve$testError[1] = 0.6

@@ -74,7 +74,7 @@
 createLearningCurve <- function(population, plpData,
                    modelSettings,
                    testSplit = 'time', testFraction=0.25, trainFractions = c(0.25,0.50,0.75), splitSeed=NULL, nfold=3, indexes=NULL,
-                   verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL){
+                   save=NULL, saveModel=T,verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL){
   
   nrRuns <- length(trainFractions);
   learningCurve <- data.frame(x = numeric(nrRuns),
@@ -171,7 +171,8 @@ createLearningCurve <- function(population, plpData,
     
     # save the original indexes to get test set
     indexesOriginal <- indexes
-    
+    populationOriginal <- population
+    indexes <- NULL
     # construct the settings for the model pipeline
     if (is.null(indexes)) {
       if (testSplit == 'time') {
@@ -247,6 +248,12 @@ createLearningCurve <- function(population, plpData,
       ftry(savePlpModel(model, modelLoc), finally = flog.trace('Done.'))
       flog.info(paste0('Model saved to ..\\', analysisId, '\\savedModel'))
     }
+    
+    # reset the population to get the original testset
+    tempmeta <- attr(populationOriginal, "metaData")
+    population <- merge(populationOriginal, indexesOriginal)
+    colnames(population)[colnames(population) == 'index'] <- 'indexes'
+    attr(population, "metaData") <- tempmeta
     
     # calculate metrics
     flog.seperator()
@@ -434,8 +441,8 @@ createLearningCurve <- function(population, plpData,
     
     # save the current trainFraction
     learningCurve$x[run]<-trainFraction
-    learningCurve$trainAUC[run] <- performance$
-    learningCurve$testAUC[run] <- performance$trainAuc
+    learningCurve$trainError[run] <- performance.train$BrierScore
+    learningCurve$testError[run] <- performance.test$BrierScore
     run <- run + 1
   }
   return(learningCurve)
