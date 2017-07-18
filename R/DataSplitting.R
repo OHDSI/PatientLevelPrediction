@@ -29,7 +29,7 @@
 #' @return
 #' A dataframe containing the columns: rowId and index
 #' @export
-personSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
+personSplitter <- function(population, test = 0.3, train = 1 - test, nfold = 3, seed = NULL) {
 
   # parameter checking
   if (!is.null(seed))
@@ -72,17 +72,17 @@ personSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
   nonPpl <- nonPpl[order(stats::runif(length(nonPpl)))]
   outPpl <- outPpl[order(stats::runif(length(outPpl)))]
 
+
   nonPpl.group <- rep(-1, length(nonPpl))
-  train.ind <- round(length(nonPpl) * test + 1):length(nonPpl)
+  train.ind <- round(length(nonPpl) * test + length(nonPpl) * (1-train-test) + 1):length(nonPpl) 
   reps <- floor(length(train.ind)/nfold)
   leftOver <- length(train.ind)%%nfold
   if (leftOver > 0)
     nonPpl.group[train.ind] <- c(rep(1:nfold, each = reps), 1:leftOver)
   if (leftOver == 0)
-    nonPpl.group[train.ind] <- rep(1:nfold, each = reps)
 
   outPpl.group <- rep(-1, length(outPpl))
-  train.ind <- round(length(outPpl) * test + 1):length(outPpl)
+  train.ind <- round(length(outPpl) * test + length(nonPpl) * (1-train-test) + 1):length(outPpl)
   reps <- floor(length(train.ind)/nfold)
   leftOver <- length(train.ind)%%nfold
 

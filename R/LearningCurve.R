@@ -169,12 +169,33 @@ createLearningCurve <- function(population, plpData,
       }
     }
     
-    # save the original indexes
-    indexesOrignal <- indexes
+    # save the original indexes to get test set
+    indexesOriginal <- indexes
     
-    # move some samples to test set TODO
-    
-    
+    # construct the settings for the model pipeline
+    if (is.null(indexes)) {
+      if (testSplit == 'time') {
+        flog.trace('Dataset time split starter')
+        indexes <-
+          ftry(timeSplitter(population, test = testFraction,train = trainFraction, nfold = nfold),
+               finally = flog.trace('Done.'))
+      }
+      if (testSplit == 'person') {
+        flog.trace('Dataset person split starter')
+        indexes <-
+          ftry(
+            personSplitter(
+              population,
+              test = testFraction,
+              train = trainFraction,
+              nfold = nfold,
+              seed = splitSeed
+            ),
+            finally = flog.trace('Done.')
+          )
+      }
+    }
+
     # TODO better to move this to the splitter if this is important?
     if (nrow(population) != nrow(indexes)) {
       flog.error(sprintf(
