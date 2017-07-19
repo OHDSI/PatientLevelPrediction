@@ -118,7 +118,7 @@ sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 DatabaseConnector::querySql(conn, sql)
 
-RJDBC::dbDisconnect(conn)
+DatabaseConnector::disconnect(conn)
 
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateDemographicsGender = TRUE,

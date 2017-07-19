@@ -4,7 +4,7 @@
 \alias{personSplitter}
 \title{Split data into random subsets stratified by class}
 \usage{
-personSplitter(population, test = 0.3, train = 1 - test, nfold = 3,
+personSplitter(population, test = 0.3, train = NULL, nfold = 3,
   seed = NULL)
 }
 \arguments{

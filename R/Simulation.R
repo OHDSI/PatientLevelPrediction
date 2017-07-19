@@ -54,7 +54,7 @@
 ##                                                                 startingVariance = 0.001,
 ##                                                                 threads = 10))
 ##    model$coefficients <- model$coefficients[model$coefficients != 0]
-##   outcomeModels[[i]] <- model$coefficients
+##    outcomeModels[[i]] <- model$coefficients
 ##  }
 ##  
 ##  writeLines("Computing time distribution")

@@ -216,7 +216,7 @@ getPlpData <- function(connectionDetails,
                                                    dbms = connectionDetails$dbms,
                                                    oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
-  RJDBC::dbDisconnect(connection)
+  DatabaseConnector::disconnect(connection)
   
   metaData <- covariateData$metaData
   metaData$call <- match.call()
@@ -498,7 +498,7 @@ insertDbPopulation <- function(population,
                                  createTable = createTable,
                                  tempTable = FALSE,
                                  oracleTempSchema = NULL)
-  RJDBC::dbDisconnect(connection)
+  DatabaseConnector::disconnect(connection)
   delta <- Sys.time() - start
   writeLines(paste("Inserting rows took", signif(delta, 3), attr(delta, "units")))
   invisible(TRUE)
@@ -532,11 +532,28 @@ savePlpModel <- function(plpModel, dirPath){
       dir.create(file.path(dirPath,'python_model'))
     for(file in dir(plpModel$model)){
       file.copy(file.path(plpModel$model,file), 
-                file.path(dirPath,'python_model'),  overwrite=TRUE, recursive = FALSE,
+                file.path(dirPath,'python_model'), overwrite=TRUE,  recursive = FALSE,
                 copy.mode = TRUE, copy.date = FALSE)
     }
     
     plpModel$model <- file.path(dirPath,'python_model')
+    plpModel$predict <- createTransform(plpModel)
+  }
+  #============================================================
+  
+  #==================================================================
+  # if knn then move model
+  #==================================================================
+  if(attr(plpModel, 'type') =='knn'){
+    if(!dir.exists(file.path(dirPath,'knn_model')))
+      dir.create(file.path(dirPath,'knn_model'))
+    for(file in dir(plpModel$model)){
+      file.copy(file.path(plpModel$model,file), 
+                file.path(dirPath,'knn_model'), overwrite=TRUE,  recursive = FALSE,
+                copy.mode = TRUE, copy.date = FALSE)
+    }
+    
+    plpModel$model <- file.path(dirPath,'knn_model')
     plpModel$predict <- createTransform(plpModel)
   }
   #============================================================

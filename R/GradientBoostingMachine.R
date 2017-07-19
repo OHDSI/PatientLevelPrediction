@@ -36,6 +36,26 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
   
   if(length(nthread)>1)
     stop(paste('nthreads must be length 1'))
+  if(!class(seed)%in%c('numeric','NULL'))
+    stop('Invalid seed')
+  if(class(ntrees)!='numeric')
+    stop('ntrees must be a numeric value >0 ')
+  if(ntrees < 1)
+    stop('ntrees must be greater that 0 or -1')
+  if(class(max_depth)!='numeric')
+    stop('max_depth must be a numeric value >0')
+  if(max_depth < 1)
+    stop('max_depth must be greater that 0')
+  if(class(min_rows)!='numeric')
+    stop('min_rows must be a numeric value >1')
+  if(min_rows < 2)
+    stop('min_rows must be greater that 1')
+  if(class(learn_rate)!='numeric')
+    stop('learn_rate must be a numeric value >0 and <= 1')
+  if(learn_rate <= 0)
+    stop('learn_rate must be greater that 0')
+  if(learn_rate > 1)
+    stop('learn_rate must be less that or equal to 1')
   
   result <- list(model='fitGradientBoostingMachine', 
                  param= split(expand.grid(nround=ntrees, 

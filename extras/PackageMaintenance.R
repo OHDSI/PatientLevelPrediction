@@ -22,23 +22,11 @@ OhdsiRTools::checkUsagePackage("PatientLevelPrediction")
 OhdsiRTools::updateCopyrightYearFolder()
 
 # Create manual and vignettes
-shell("rm extras/PatientLevelPrediction.pdf")
-shell("R CMD Rd2pdf ./ --output=extras/PatientLevelPrediction.pdf")
+system("rm extras/PatientLevelPrediction.pdf")
+system("R CMD Rd2pdf ./ --output=extras/PatientLevelPrediction.pdf")
 
 rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd",
                   output_file = "../inst/doc/BuildingPredictiveModels.pdf",
-                  rmarkdown::pdf_document(latex_engine = "pdflatex",
-                                          toc = TRUE,
-                                          number_sections = TRUE))
-
-rmarkdown::render("vignettes/CreatingCustomCovariateBuilders.Rmd",
-                  output_file = "../inst/doc/CreatingCustomCovariateBuilders.pdf",
-                  rmarkdown::pdf_document(latex_engine = "pdflatex",
-                                          toc = TRUE,
-                                          number_sections = TRUE))
-
-rmarkdown::render("vignettes/CreatingCovariatesUsingCohortAttributes.Rmd",
-                  output_file = "../inst/doc/CreatingCovariatesUsingCohortAttributes.pdf",
                   rmarkdown::pdf_document(latex_engine = "pdflatex",
                                           toc = TRUE,
                                           number_sections = TRUE))

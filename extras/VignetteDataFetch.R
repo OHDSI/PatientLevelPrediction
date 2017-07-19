@@ -69,7 +69,7 @@ sql <- "SELECT cohort_definition_id, COUNT(*) AS count FROM @resultsDatabaseSche
 sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 DatabaseConnector::querySql(connection, sql)
-dbDisconnect(connection)
+DatabaseConnector::disconnect(connection)
 
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateDemographicsGender = TRUE,

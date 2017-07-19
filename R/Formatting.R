@@ -167,6 +167,9 @@ toSparsePython <- function(plpData,population, map=NULL){
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
   
+  PythonInR::pyExec('import numpy as np')
+  PythonInR::pyOptions("useNumpy", TRUE)
+  
   cov <- ff::clone(plpData$covariates)
   covref <- ff::clone(plpData$covariateRef)
   

@@ -1,6 +1,6 @@
-# @file MLP.R
+# @file AdaBoost.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2016 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -16,28 +16,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create setting for neural network model with python 
-#' @param size       The number of hidden nodes
-#' @param alpha      The l2 regularisation
+#' Create setting for AdaBoost with python 
+#' @param n_estimators       The maximum number of estimators at which boosting is terminated
+#' @param learning_rate      Learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learning_rate and n_estimators.
 #' @param seed       A seed for the model 
 #'
 #' @examples
 #' \dontrun{
-#' model.mlp <- setMLP(size=4, alpha=0.00001, seed=NULL)
+#' model.adaBoost <- setAdaBoost(size=4, alpha=0.00001, seed=NULL)
 #' }
 #' @export
-setMLP <- function(size=4, alpha=0.00001, seed=NULL){
+setAdaBoost <- function(n_estimators=50, learning_rate=1, seed=NULL){
   
   if(!class(seed)%in%c('numeric','NULL'))
     stop('Invalid seed')
-  if(class(size)!='numeric')
-    stop('size must be a numeric value >0 ')
-  if(size < 1)
-    stop('size must be greater that 0')
-  if(class(alpha)!='numeric')
-    stop('alpha must be a numeric value >0')
-  if(alpha <= 0)
-    stop('alpha must be greater that 0')
+  if(class(n_estimators)!='numeric')
+    stop('n_estimators must be a numeric value >0 ')
+  if(n_estimators < 1)
+    stop('n_estimators must be greater that 0 or -1')
+  if(class(learning_rate)!='numeric')
+    stop('learning_rate must be a numeric value >0 and <=1')
+  if(learning_rate >1)
+    stop('learning_rate must be less that or equal to 1')
+  if(learning_rate<0)
+    stop('learning_rate must be a numeric value >0')
+  
+  
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -48,18 +52,18 @@ setMLP <- function(size=4, alpha=0.00001, seed=NULL){
        }  
     )
   }
-  result <- list(model='fitMLP', 
-                 param= split(expand.grid(size=size, 
-                                          alpha=alpha,
+  result <- list(model='fitAdaBoost', 
+                 param= split(expand.grid(n_estimators=n_estimators, 
+                                          learning_rate=learning_rate,
                                           seed=ifelse(is.null(seed),'NULL', seed)),
-                              1:(length(size)*length(alpha))  ),
-                 name='Neural network')
+                              1:(length(n_estimators)*length(learning_rate))  ),
+                 name='AdaBoost')
   class(result) <- 'modelSettings' 
   
   return(result)
 }
 
-fitMLP <- function(population, plpData, param, search='grid', quiet=F,
+fitAdaBoost <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
@@ -103,22 +107,18 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   
 
   # do cross validation to find hyperParameter
-  hyperParamSel <- lapply(param, function(x) do.call(trainMLP, c(x, train=TRUE)  ))
+  hyperParamSel <- lapply(param, function(x) do.call(trainAdaBoost, c(x, train=TRUE)  ))
 
   
   hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
   
   #now train the final model and return coef
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
-  finalModel <- do.call(trainMLP, c(param[[bestInd]], train=FALSE))
+  finalModel <- do.call(trainAdaBoost, c(param[[bestInd]], train=FALSE))
   
   # get the coefs and do a basic variable importance:
-  lev1 <- PythonInR::pyGet('mlp.coefs_[0]', simplify = F)
-  lev1 <- apply(lev1,2, unlist)
-  lev2 <- PythonInR::pyGet('mlp.coefs_[1]', simplify = F)
-  lev2 <- apply(lev2,2, unlist)
-  vals <- abs(lev1)%*%abs(lev2)
-  varImp <- apply(vals, 1, function(x) sum(abs(x)))
+  varImp <- PythonInR::pyGet('adab.feature_importances_', simplify = F)[,1]
+  varImp[is.na(varImp)] <- 0
   #varImp <- PythonInR::pyGet('mlp.coefs_[0]', simplify = F)[,1]
   #varImp[is.na(varImp)] <- 0
   
@@ -138,7 +138,7 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   result <- list(model = modelTrained,
                  trainCVAuc = hyperParamSel,
                  hyperParamSearch = hyperSummary,
-                 modelSettings = list(model='fitMLP',modelParameters=param.best),
+                 modelSettings = list(model='fitAdaBoost',modelParameters=param.best),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,
@@ -156,11 +156,11 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
+trainAdaBoost <- function(n_estimators=50, learning_rate=1, seed=NULL, train=TRUE){
   #PythonInR::pySet('size', as.matrix(size) )
   #PythonInR::pySet('alpha', as.matrix(alpha) )
-  PythonInR::pyExec(paste0("size = ", size))
-  PythonInR::pyExec(paste0("alpha = ", alpha))
+  PythonInR::pyExec(paste0("n_estimators = ", n_estimators))
+  PythonInR::pyExec(paste0("learning_rate = ", learning_rate))
   PythonInR::pyExec(paste0("seed = ", ifelse(is.null(seed),'None',seed)))
   if(train)
     PythonInR::pyExec("train = True")
@@ -168,7 +168,7 @@ trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','adaBoost.py '))
   
   if(train){
     # then get the prediction 

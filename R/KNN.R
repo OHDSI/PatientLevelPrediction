@@ -22,9 +22,18 @@
 #' @param indexFolder The directory where the results and intermediate steps are output
 #'
 #' @examples
+#' \dontrun{
 #' model.knn <- setKNN(k=10000)
+#' }
 #' @export
 setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
+  
+  if(class(indexFolder)!='character')
+    stop('IndexFolder must be a character')
+  if(class(k)!='numeric')
+    stop('k must be a numeric value >0 ')
+  if(k<1)
+    stop('k must be a numeric value >0 ')
   
   if(length(k)>1)
     stop('k can only be a single value')

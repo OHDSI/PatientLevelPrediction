@@ -190,9 +190,5 @@ similarPlpData <- function(plpModel=NULL,
   # return the popualtion and plpData for the new database
   writeLines('Returning population and plpData for new data using model settings')
   return(list(population=population,
-         plpData=plpData))
+              plpData=plpData))
 }
-
-
-
-

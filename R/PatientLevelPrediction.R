@@ -22,7 +22,6 @@
 #' @name PatientLevelPrediction
 #' @importFrom Rcpp evalCpp
 #' @importFrom SqlRender loadRenderTranslateSql translateSql
-#' @importFrom RJDBC dbDisconnect
 #' @importFrom plyr ddply
 #' @importFrom methods is
 #' @importFrom stats binom.test lm printCoefmat rpois runif sd

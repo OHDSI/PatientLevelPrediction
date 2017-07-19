@@ -36,6 +36,13 @@
 #' @export
 predictPlp <- function(plpModel, population, plpData,  index=NULL){
   
+  if(is.null(plpModel))
+    stop('No model input')
+  if(is.null(population))
+    stop('No population input')
+  if(is.null(plpData))
+    stop('No plpData input')
+  
   # apply the feature transformations
   if(!is.null(index)){
     flog.trace(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))

@@ -108,7 +108,7 @@ runPlpAnalyses <- function(outputFolder = getwd(),
                                                                                              useCovariateDemographicsYear = F,
                                                                                              useCovariateDemographicsMonth = T,
                                                                                              useCovariateConditionOccurrence=T,
-                                                                                             useCovariateConditionOccurrence365d=T),
+                                                                                             useCovariateConditionOccurrenceLongTerm=T),
                                                   FeatureExtraction::createCovariateSettings(useCovariateDemographics=T,
                                                                                              useCovariateDemographicsGender=T,
                                                                                              useCovariateDemographicsRace=T,
@@ -116,10 +116,10 @@ runPlpAnalyses <- function(outputFolder = getwd(),
                                                                                              useCovariateDemographicsYear = F,
                                                                                              useCovariateDemographicsMonth = T,
                                                                                              useCovariateDrugExposure=T,
-                                                                                             useCovariateDrugExposure365d=T)
-                                                  ),
-                           timeAtRisks=list(setTimeAtRisks(riskWindowEnd=365),
-                                            setTimeAtRisks(riskWindowEnd=365*2)), 
+                                                                                             useCovariateDrugExposureLongTerm=T)
+                           ),
+                           timeAtRisks=list(setTimeAtRisk(riskWindowEnd=365),
+                                            setTimeAtRisk(riskWindowEnd=365*2)), 
                            modelSettings=NULL,
                            internalValidation='time', testFraction=0.25, nfold=3,
                            splitSeed=NULL, indexes=NULL, # need to add these to into
@@ -139,7 +139,7 @@ runPlpAnalyses <- function(outputFolder = getwd(),
   # setting initial values:
   analysisId <- 0
   reference <- list()
-
+  
   flog.info("Running multiple prediction analyses")
   flog.seperator()
   
@@ -151,7 +151,7 @@ runPlpAnalyses <- function(outputFolder = getwd(),
   # for each Target popualtion
   for(atRiskCohort in atRiskCohortIds){
     reference$atRiskCohort <- atRiskCohort
-      
+    
     flog.info("Extracting data for at risk cohort %s", atRiskCohort)
     
     
@@ -240,20 +240,20 @@ runPlpAnalyses <- function(outputFolder = getwd(),
             # append the details to the referenceTable
             if(!file.exists(file.path(outputFolder, 'referenceTable.txt')))
               write.table(t(unlist(reference)), file.path(outputFolder, 'referenceTable.txt'), 
-                        row.names = F, col.names = T )
+                          row.names = F, col.names = T )
             if(file.exists(file.path(outputFolder, 'referenceTable.txt')))
               write.table(t(unlist(reference)), file.path(outputFolder, 'referenceTable.txt'), 
-                        row.names = F, col.names = F, append = T )
+                          row.names = F, col.names = F, append = T )
             
             # append the details to the summaryTable
             resultSum <- result$performanceEvaluation$evaluationStatistics[result$performanceEvaluation$evaluationStatistics[,2]=='test',]
             
             if(!file.exists(file.path(outputFolder, 'summaryTable.txt')))
               write.table(resultSum, file.path(outputFolder, 'summaryTable.txt'), 
-                        row.names = F, col.names = T )
+                          row.names = F, col.names = T )
             if(file.exists(file.path(outputFolder, 'summaryTable.txt')))
               write.table(resultSum, file.path(outputFolder, 'summaryTable.txt'), 
-                        row.names = F, col.names = F, append = T )
+                          row.names = F, col.names = F, append = T )
             
           } # end for models
           
@@ -265,7 +265,7 @@ runPlpAnalyses <- function(outputFolder = getwd(),
     
   } # end for T
   
-
+  
 }
 
 #' setTimeAtRisk
@@ -296,7 +296,7 @@ setTimeAtRisk <- function(includeAllOutcomes = T,
                           addExposureDaysToEnd = F,
                           requireTimeAtRisk = T,
                           minTimeAtRisk=riskWindowEnd-riskWindowStart 
-                         ){
+){
   
   return(list(includeAllOutcomes = includeAllOutcomes,
               firstExposureOnly = firstExposureOnly,
@@ -341,7 +341,7 @@ supersetCovariates <- function(covariateSettings){
         #if(sum(unlist(lapply(covariateSettings, function(x) !is.null(x$includedCovariateConceptIds))))==0){
         #  return(NULL)
         #} else {
-          return(Reduce(union,(lapply(covariateSettings, function(x) x$includedCovariateConceptIds)) ) )
+        return(Reduce(union,(lapply(covariateSettings, function(x) x$includedCovariateConceptIds)) ) )
         #}
       }
     }
@@ -350,7 +350,7 @@ supersetCovariates <- function(covariateSettings){
                                                                  useCovariateDemographicsGender = F,
                                                                  useCovariateDemographicsAge = F,
                                                                  useCovariateDrugExposure = T,
-                                                                 useCovariateDrugExposure30d = T, 
+                                                                 useCovariateDrugExposureShortTerm = T, 
                                                                  excludedCovariateConceptIds = c(13,20), 
                                                                  includedCovariateConceptIds = c(56),
                                                                  deleteCovariatesSmallCount = 10))
@@ -411,26 +411,26 @@ restrictCovariates <- function(plpData, covariateSetting){
     # get Ethnicity covariate indexes if selected
     if(covariateSetting$useCovariateDemographicsEthnicity==TRUE){
       covs <- ff::as.ram(plpData$covariateRef$covariateId)[ff::as.ram(plpData$covariateRef$analysisId)==4 &
-                                                            ff::as.ram(plpData$covariateRef$conceptId)!=0]
+                                                             ff::as.ram(plpData$covariateRef$conceptId)!=0]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       
       ind.all <- union(all.ind, ffbase::ffwhich(ind.x, !is.na(ind.x)))
       ind.covRef <- c(ind.covRef, 
                       which(ff::as.ram(plpData$covariateRef$analysisId)==4 &
-                        ff::as.ram(plpData$covariateRef$conceptId)!=0))
+                              ff::as.ram(plpData$covariateRef$conceptId)!=0))
       
     }  
-
+    
     # get Age covariate indexes if selected
     if(covariateSetting$useCovariateDemographicsAge==TRUE){
       covs <- ff::as.ram(plpData$covariateRef$covariateId)[ff::as.ram(plpData$covariateRef$analysisId)==4 &
-                                                 ff::as.ram(plpData$covariateRef$conceptId)==0]
+                                                             ff::as.ram(plpData$covariateRef$conceptId)==0]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       
       ind.all <- union(ind.all, ffbase::ffwhich(ind.x, !is.na(ind.x)))
       ind.covRef <- c(ind.covRef, 
                       which(ff::as.ram(plpData$covariateRef$analysisId)==4 &
-                        ff::as.ram(plpData$covariateRef$conceptId)==0))
+                              ff::as.ram(plpData$covariateRef$conceptId)==0))
     }  
     
     # get Year covariate indexes if selected
@@ -454,10 +454,10 @@ restrictCovariates <- function(plpData, covariateSetting){
       ind.covRef <- c(ind.covRef, 
                       which(ff::as.ram(plpData$covariateRef$analysisId)==6) )
     } 
- 
+    
     
   }
-
+  
   
   #=======================================
   #   CONDITIONS
@@ -467,9 +467,9 @@ restrictCovariates <- function(plpData, covariateSetting){
   
   if(covariateSetting$useCovariateConditionOccurrence == TRUE){
     
-  
-    # get useCovariateConditionOccurrence365d covariate indexes if selected
-    if(covariateSetting$useCovariateConditionOccurrence365d ==TRUE){
+    
+    # get useCovariateConditionOccurrenceLongTerm covariate indexes if selected
+    if(covariateSetting$useCovariateConditionOccurrenceLongTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==101)),
                                                        condGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -480,8 +480,8 @@ restrictCovariates <- function(plpData, covariateSetting){
                               condGroup) )
     } 
     
-    # get useCovariateConditionOccurrence30d covariate indexes if selected
-    if(covariateSetting$useCovariateConditionOccurrence30d ==TRUE){
+    # get useCovariateConditionOccurrenceShortTerm covariate indexes if selected
+    if(covariateSetting$useCovariateConditionOccurrenceShortTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==102)),
                                                        condGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -492,8 +492,8 @@ restrictCovariates <- function(plpData, covariateSetting){
                               condGroup) )
     } 
     
-    # get useCovariateConditionOccurrenceInpt180d covariate indexes if selected
-    if(covariateSetting$useCovariateConditionOccurrenceInpt180d ==TRUE){
+    # get useCovariateConditionOccurrenceInptMediumTerm covariate indexes if selected
+    if(covariateSetting$useCovariateConditionOccurrenceInptMediumTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==103)),
                                                        condGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -504,8 +504,8 @@ restrictCovariates <- function(plpData, covariateSetting){
                               condGroup) )
     } 
   }
-
-
+  
+  
   if(covariateSetting$useCovariateConditionEra == TRUE){
     
     # get useCovariateConditionEraEver covariate indexes if selected
@@ -532,12 +532,12 @@ restrictCovariates <- function(plpData, covariateSetting){
                               condGroup) )
     }
   } 
-
+  
   if(covariateSetting$useCovariateConditionGroup == TRUE){
     #useCovariateConditionGroupMeddra, (covariate name contains condition group),
     #useCovariateConditionGroupSnomed = FALSE,
   } 
-
+  
   
   #=======================================
   #   DRUGS
@@ -546,9 +546,9 @@ restrictCovariates <- function(plpData, covariateSetting){
   
   if(covariateSetting$useCovariateDrugExposure == TRUE){
     # find the condition group indexes:
-   
-    # get useCovariateDrugExposure365d covariate indexes if selected
-    if(covariateSetting$useCovariateDrugExposure365d ==TRUE){
+    
+    # get useCovariateDrugExposureLongTerm covariate indexes if selected
+    if(covariateSetting$useCovariateDrugExposureLongTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==401)),
                                                        drugGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -558,9 +558,9 @@ restrictCovariates <- function(plpData, covariateSetting){
                       setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==401)),
                               drugGroup) )
     } 
-
-    # get useCovariateDrugExposure30d covariate indexes if selected
-    if(covariateSetting$useCovariateDrugExposure30d ==TRUE){
+    
+    # get useCovariateDrugExposureShortTerm covariate indexes if selected
+    if(covariateSetting$useCovariateDrugExposureShortTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==402)),
                                                        drugGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -572,11 +572,11 @@ restrictCovariates <- function(plpData, covariateSetting){
     }     
     
   }
-
+  
   if(covariateSetting$useCovariateDrugEra == TRUE){
     
-    # get useCovariateDrugEra365d covariate indexes if selected
-    if(covariateSetting$useCovariateDrugEra365d ==TRUE){
+    # get useCovariateDrugEraLongTerm covariate indexes if selected
+    if(covariateSetting$useCovariateDrugEraLongTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==501)),
                                                        drugGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -586,8 +586,8 @@ restrictCovariates <- function(plpData, covariateSetting){
                       setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==501)),
                               drugGroup) )
     } 
-    # get useCovariateDrugEra30d covariate indexes if selected
-    if(covariateSetting$useCovariateDrugEra30d ==TRUE){
+    # get useCovariateDrugEraShortTerm covariate indexes if selected
+    if(covariateSetting$useCovariateDrugEraShortTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==502)),
                                                        drugGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -621,14 +621,14 @@ restrictCovariates <- function(plpData, covariateSetting){
     } 
   }
   
-
+  
   if(covariateSetting$useCovariateDrugGroup==TRUE){
     covs <- plpData$covariateRef$covariateId[drugGroup]
     ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
     
     ind.all <- union(ind.all, ffbase::ffwhich(ind.x, !is.na(ind.x)) )
     ind.covRef <- c(ind.covRef, 
-                   drugGroup )
+                    drugGroup )
   } 
   
   
@@ -639,8 +639,8 @@ restrictCovariates <- function(plpData, covariateSetting){
     # find the condition group indexes:
     procedureGroup <- grep('procedure group', as.character(ff::as.ram(plpData$covariateRef$covariateName)))
     
-    # get useCovariateProcedureOccurrence365d covariate indexes if selected
-    if(covariateSetting$useCovariateProcedureOccurrence365d ==TRUE){
+    # get useCovariateProcedureOccurrenceLongTerm covariate indexes if selected
+    if(covariateSetting$useCovariateProcedureOccurrenceLongTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==701)),
                                                        procedureGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -651,8 +651,8 @@ restrictCovariates <- function(plpData, covariateSetting){
                               procedureGroup) )
     } 
     
-    # get useCovariateProcedureOccurrence30d covariate indexes if selected
-    if(covariateSetting$useCovariateProcedureOccurrence30d ==TRUE){
+    # get useCovariateProcedureOccurrenceShortTerm covariate indexes if selected
+    if(covariateSetting$useCovariateProcedureOccurrenceShortTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[setdiff(which(ff::as.ram(plpData$covariateRef$analysisId==702)),
                                                        procedureGroup)]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
@@ -675,15 +675,15 @@ restrictCovariates <- function(plpData, covariateSetting){
     
   }
   
-
-
+  
+  
   #=======================================
   #   OBSERVATIONS
   #=======================================
   if(covariateSetting$useCovariateObservation ==TRUE){
     
-    # get useCovariateObservation365d covariate indexes if selected
-    if(covariateSetting$useCovariateObservation365d ==TRUE){
+    # get useCovariateObservationLongTerm covariate indexes if selected
+    if(covariateSetting$useCovariateObservationLongTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[plpData$covariateRef$analysisId==901]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       
@@ -691,8 +691,8 @@ restrictCovariates <- function(plpData, covariateSetting){
       ind.covRef <- c(ind.covRef,which(ff::as.ram(plpData$covariateRef$analysisId==901) ))
     } 
     
-    # get useCovariateObservation30d covariate indexes if selected
-    if(covariateSetting$useCovariateObservation30d ==TRUE){
+    # get useCovariateObservationShortTerm covariate indexes if selected
+    if(covariateSetting$useCovariateObservationShortTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[plpData$covariateRef$analysisId==902]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       
@@ -700,8 +700,8 @@ restrictCovariates <- function(plpData, covariateSetting){
       ind.covRef <- c(ind.covRef,which(ff::as.ram(plpData$covariateRef$analysisId==902) ))
     } 
     
-    # get useCovariateObservationCount365d covariate indexes if selected
-    if(covariateSetting$useCovariateObservationCount365d ==TRUE){
+    # get useCovariateObservationCountLongTerm covariate indexes if selected
+    if(covariateSetting$useCovariateObservationCountLongTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[plpData$covariateRef$analysisId==905]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       
@@ -710,13 +710,13 @@ restrictCovariates <- function(plpData, covariateSetting){
     } 
     
   }
-
+  
   #=======================================
   #   MEASUREMENTS
   #=======================================
   if(covariateSetting$useCovariateMeasurement == TRUE){
-    # get useCovariateMeasurement365d covariate indexes if selected
-    if(covariateSetting$useCovariateMeasurement365d ==TRUE){
+    # get useCovariateMeasurementLongTerm covariate indexes if selected
+    if(covariateSetting$useCovariateMeasurementLongTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[plpData$covariateRef$analysisId==901]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       
@@ -724,8 +724,8 @@ restrictCovariates <- function(plpData, covariateSetting){
       ind.covRef <- c(ind.covRef,which(ff::as.ram(plpData$covariateRef$analysisId==901) ))
     } 
     
-    # get useCovariateMeasurement30d covariate indexes if selected
-    if(covariateSetting$useCovariateMeasurement30d ==TRUE ){
+    # get useCovariateMeasurementShortTerm covariate indexes if selected
+    if(covariateSetting$useCovariateMeasurementShortTerm ==TRUE ){
       covs <- plpData$covariateRef$covariateId[plpData$covariateRef$analysisId==902]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       
@@ -733,8 +733,8 @@ restrictCovariates <- function(plpData, covariateSetting){
       ind.covRef <- c(ind.covRef,which(ff::as.ram(plpData$covariateRef$analysisId==902) ))
     } 
     
-    # get useCovariateMeasurementCount365d covariate indexes if selected
-    if(covariateSetting$useCovariateMeasurementCount365d ==TRUE){
+    # get useCovariateMeasurementCountLongTerm covariate indexes if selected
+    if(covariateSetting$useCovariateMeasurementCountLongTerm ==TRUE){
       covs <- plpData$covariateRef$covariateId[plpData$covariateRef$analysisId==905]
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       
@@ -756,13 +756,13 @@ restrictCovariates <- function(plpData, covariateSetting){
       
       ind <- ffbase::ffmatch(plpData$covariateRef$analysisId, table=ff::as.ff(1000:1007))
       covs <- plpData$covariateRef$covariateId[ffbase::ffwhich(ind, !is.na(ind))]
-
+      
       ind.x <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covs))
       ind.all <- union(ind.all, ffbase::ffwhich(ind.x, !is.na(ind.x)) )
       ind.covRef <- c(ind.covRef,ff::as.ram(ffbase::ffwhich(ind, !is.na(ind)) ) )
     }
   }
-
+  
   
   #=======================================
   #   RISKS
@@ -809,9 +809,9 @@ restrictCovariates <- function(plpData, covariateSetting){
       ind.covRef <- c(ind.covRef, 
                       which(ff::as.ram(plpData$covariateRef$analysisId)==1103) )
     } 
-   
+    
   }
-
+  
   # do the exclusions
   if(length(covariateSetting$excludedCovariateIds)!=0){
     ind.ex <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(covariateSetting$excludedCovariateIds))
@@ -838,7 +838,7 @@ restrictCovariates <- function(plpData, covariateSetting){
   
   metaDataTemp <- plpData$metaData
   metaDataTemp$call$covariateSettings <- covariateSetting
-
+  
   result <- list(outcomes = plpData$outcomes,
                  cohorts = plpData$cohorts,
                  covariates= ff::clone(plpData$covariates),

@@ -15,5 +15,7 @@ setKNN(k = 1000, indexFolder = file.path(getwd(), "knn"))
 Create setting for knn model
 }
 \examples{
+\dontrun{
 model.knn <- setKNN(k=10000)
+}
 }

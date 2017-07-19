@@ -34,6 +34,20 @@ setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T, se
   # check seed is int
   if(!class(seed)%in%c('numeric','NULL'))
     stop('Invalid seed')
+  if(class(ntrees)!='numeric')
+    stop('ntrees must be a numeric value >0')
+  if(ntrees < 0)
+    stop('mtries must be greater that 0')
+  if(class(mtries)!='numeric')
+    stop('mtries must be a numeric value >1 or -1')
+  if(mtries < -1)
+    stop('mtries must be greater that 0 or -1')
+  if(class(max_depth)!='numeric')
+    stop('max_depth must be a numeric value >0')
+  if(max_depth < 1)
+    stop('max_depth must be greater that 0')
+  if(class(varImp)!="logical")
+    stop('varImp must be boolean')
   
   # test python is available and the required dependancies are there:
   if ( !PythonInR::pyIsConnected() ){

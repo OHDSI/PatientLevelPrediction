@@ -224,7 +224,7 @@ test_that("diagnosticOddsRatio", {
 
 
 test_that("getDemographicSummary", {
-  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  prediction <- data.frame(rowId = 1:100, value= runif(100), outcomeCount =round(runif(100)))
   data(plpDataSimulationProfile)
   sampleSize <- 2000
   plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
