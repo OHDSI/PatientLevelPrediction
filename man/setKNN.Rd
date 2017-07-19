@@ -19,4 +19,3 @@ Create setting for knn model
 model.knn <- setKNN(k=10000)
 }
 }
-

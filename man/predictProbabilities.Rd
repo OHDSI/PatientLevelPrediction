@@ -24,4 +24,3 @@ Create predictive probabilities
 \details{
 Generates predictions for the population specified in plpData given the model.
 }
-

@@ -21,4 +21,3 @@ Create setting for neural network model with python
 model.mlp <- setMLP(size=4, alpha=0.00001, seed=NULL)
 }
 }
-

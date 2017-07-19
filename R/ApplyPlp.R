@@ -99,7 +99,7 @@ ApplyPlpPrediction <- function(plpModel, plpData, population) {
 #' Extract new plpData using plpModel settings
 #' use metadata in plpModel to extract similar data and population for new databases:
 #'
-#' @param plpModel         The trained PatientLevelPrediction model or object returned by RunPlp()
+#' @param plpModel         The trained PatientLevelPrediction model or object returned by runPlp()
 #' @param newConnectionDetails      The connectionDetails for the new database
 #' @param newCdmDatabaseSchema      The database schema for the new CDM database 
 #' @param newCohortDatabaseSchema   The database schema where the cohort table is stored
@@ -192,9 +192,3 @@ similarPlpData <- function(plpModel=NULL,
   return(list(population=population,
               plpData=plpData))
 }
-
-
-
-
-
-

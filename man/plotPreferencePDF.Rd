@@ -9,7 +9,7 @@ plotPreferencePDF(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
-\code{\link{RunPlp}} function.}
+\code{\link{runPlp}} function.}
 
 \item{type}{options: 'train' or test'}
 
@@ -29,4 +29,3 @@ Plot the preference score probability density function, showing prediction overl
 Create a plot showing the preference score probability density function, showing prediction overlap between true and false cases
 #'
 }
-

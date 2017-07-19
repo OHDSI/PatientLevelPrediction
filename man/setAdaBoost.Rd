@@ -21,4 +21,3 @@ Create setting for AdaBoost with python
 model.adaBoost <- setAdaBoost(size=4, alpha=0.00001, seed=NULL)
 }
 }
-

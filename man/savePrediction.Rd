@@ -17,4 +17,3 @@ Saves the prediction dataframe to csv
 \details{
 Saves the prediction data frame returned by predict.R to a csv file
 }
-

@@ -26,7 +26,7 @@ sql <- SqlRender::renderSql(sql, cdm_database_schema = cdmDatabaseSchema)$sql
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 celecoxibDrugs <- DatabaseConnector::querySql(conn, sql)
 celecoxibDrugs <- celecoxibDrugs[, 1]
-RJDBC::dbDisconnect(conn)
+DatabaseConnector::disconnect(conn)
 
 covariateSettings <- PatientLevelPrediction::createCovariateSettings(useCovariateDemographics = TRUE,
                                                                      useCovariateDemographicsGender = TRUE,

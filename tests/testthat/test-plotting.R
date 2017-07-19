@@ -1,4 +1,4 @@
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2017 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -43,7 +43,7 @@ test_that("plots", {
                                       #,verbosity=INFO
   )
   lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
-  lr_results <- RunPlp(population = population, plpData = plpData,
+  lr_results <- runPlp(population = population, plpData = plpData,
                        modelSettings = lr_model,
                        testSplit='person', # this splits by person
                        testFraction=0.25,

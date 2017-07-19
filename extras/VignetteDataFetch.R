@@ -1,6 +1,6 @@
 # @file VignetteDataFetch.R
 #
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2017 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -69,7 +69,7 @@ sql <- "SELECT cohort_definition_id, COUNT(*) AS count FROM @resultsDatabaseSche
 sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 DatabaseConnector::querySql(connection, sql)
-dbDisconnect(connection)
+DatabaseConnector::disconnect(connection)
 
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateDemographicsGender = TRUE,

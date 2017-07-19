@@ -15,14 +15,14 @@ runPlpAnalyses(outputFolder = getwd(), connectionDetails = NULL,
   = T, useCovariateDemographicsGender = T, useCovariateDemographicsRace = T,
   useCovariateDemographicsAge = T, useCovariateDemographicsYear = F,
   useCovariateDemographicsMonth = T, useCovariateConditionOccurrence = T,
-  useCovariateConditionOccurrence365d = T),
+  useCovariateConditionOccurrenceLongTerm = T),
   FeatureExtraction::createCovariateSettings(useCovariateDemographics = T,
   useCovariateDemographicsGender = T, useCovariateDemographicsRace = T,
   useCovariateDemographicsAge = T,      useCovariateDemographicsYear = F,
   useCovariateDemographicsMonth = T, useCovariateDrugExposure = T,
-  useCovariateDrugExposure365d = T)),
-  timeAtRisks = list(setTimeAtRisks(riskWindowEnd = 365),
-  setTimeAtRisks(riskWindowEnd = 365 * 2)), modelSettings = NULL,
+  useCovariateDrugExposureLongTerm = T)),
+  timeAtRisks = list(setTimeAtRisk(riskWindowEnd = 365),
+  setTimeAtRisk(riskWindowEnd = 365 * 2)), modelSettings = NULL,
   internalValidation = "time", testFraction = 0.25, nfold = 3,
   splitSeed = NULL, indexes = NULL, verbosity = futile.logger::INFO)
 }
@@ -121,7 +121,3 @@ test set.}
 Develop patient-level predcition  models for multiple outcomes, target popuations and 
 settings
 }
-\examples{
-
-}
-

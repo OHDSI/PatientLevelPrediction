@@ -7,7 +7,7 @@
 savePlpModel(plpModel, dirPath)
 }
 \arguments{
-\item{plpModel}{A trained classifier returned by running \code{RunPlp()$model}}
+\item{plpModel}{A trained classifier returned by running \code{runPlp()$model}}
 
 \item{dirPath}{A location to save the model to}
 }
@@ -17,4 +17,3 @@ Saves the plp model
 \details{
 Saves the plp model to a user specificed folder
 }
-

@@ -46,4 +46,3 @@ population <- do.call(createStudyPopulation, populationSettings)
 prediction <- applyModel(population, plpData, plpModel)$prediction
 }
 }
-

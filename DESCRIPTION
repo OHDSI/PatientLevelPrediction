@@ -2,9 +2,9 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 1.2.0
-Date: 2016-11-17
-Author:  Jenna Reps [aut],
+Version: 1.2.1
+Date: 2017-07-19
+Author: Jenna Reps [aut],
     Martijn J. Schuemie [aut, cre],
     Marc A. Suchard [aut],
     Patrick B. Ryan [aut],
@@ -18,8 +18,9 @@ Description: A package for creating patient level prediction models. Given a
 License: Apache License 2.0
 Depends:
     R (>= 3.2.2),
-    DatabaseConnector (>= 1.3.0),
-    Cyclops (>= 1.2.1-2)
+    DatabaseConnector (>= 1.11.4),
+    FeatureExtraction (>= 1.2.3),
+    Cyclops (>= 1.2.2)
 Imports:
     ggplot2,
     gridExtra,
@@ -29,14 +30,13 @@ Imports:
     plyr,
     survAUC,
     Rcpp (>= 0.11.2),
-    RJDBC,
     SqlRender (>= 1.1.3),
     survival,
-    FeatureExtraction,
     xgboost,
     Matrix,
     AUC,
     PythonInR,
+    futile.options,
     futile.logger,
     utils,
     methods,
@@ -54,4 +54,4 @@ Suggests:
     ResourceSelection
 LinkingTo: Rcpp
 NeedsCompilation: yes
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

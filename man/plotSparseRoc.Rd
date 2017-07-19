@@ -8,7 +8,7 @@ plotSparseRoc(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
-\code{\link{RunPlp}} function.}
+\code{\link{runPlp}} function.}
 
 \item{type}{options: 'train' or test'}
 
@@ -26,4 +26,3 @@ Plot the ROC curve using the sparse thresholdSummary data frame
 \details{
 Create a plot showing the Receiver Operator Characteristics (ROC) curve.
 }
-

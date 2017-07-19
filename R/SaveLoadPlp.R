@@ -1,6 +1,6 @@
 # @file PlpSaveLoad.R
 #
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2017 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -216,7 +216,7 @@ getPlpData <- function(connectionDetails,
                                                    dbms = connectionDetails$dbms,
                                                    oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
-  RJDBC::dbDisconnect(connection)
+  DatabaseConnector::disconnect(connection)
   
   metaData <- covariateData$metaData
   metaData$call <- match.call()
@@ -498,7 +498,7 @@ insertDbPopulation <- function(population,
                                  createTable = createTable,
                                  tempTable = FALSE,
                                  oracleTempSchema = NULL)
-  RJDBC::dbDisconnect(connection)
+  DatabaseConnector::disconnect(connection)
   delta <- Sys.time() - start
   writeLines(paste("Inserting rows took", signif(delta, 3), attr(delta, "units")))
   invisible(TRUE)
@@ -510,7 +510,7 @@ insertDbPopulation <- function(population,
 #' @details
 #' Saves the plp model to a user specificed folder
 #'
-#' @param plpModel                   A trained classifier returned by running \code{RunPlp()$model}
+#' @param plpModel                   A trained classifier returned by running \code{runPlp()$model}
 #' @param dirPath                  A location to save the model to
 #'
 #' @export
@@ -541,6 +541,23 @@ savePlpModel <- function(plpModel, dirPath){
   }
   #============================================================
   
+  #==================================================================
+  # if knn then move model
+  #==================================================================
+  if(attr(plpModel, 'type') =='knn'){
+    if(!dir.exists(file.path(dirPath,'knn_model')))
+      dir.create(file.path(dirPath,'knn_model'))
+    for(file in dir(plpModel$model)){
+      file.copy(file.path(plpModel$model,file), 
+                file.path(dirPath,'knn_model'), overwrite=TRUE,  recursive = FALSE,
+                copy.mode = TRUE, copy.date = FALSE)
+    }
+    
+    plpModel$model <- file.path(dirPath,'knn_model')
+    plpModel$predict <- createTransform(plpModel)
+  }
+  #============================================================
+    
   #==================================================================
   # if knn then move model
   #==================================================================
@@ -648,13 +665,13 @@ loadPrediction <- function(dirPath){
 #' @details
 #' Saves the result from runPlp into the location directory
 #'
-#' @param result                       The result of running RunPlp()
+#' @param result                      The result of running runPlp()
 #' @param dirPath                     The directory to save the csv
 #' 
 #' @export
 savePlpResult <- function(result, dirPath){
   if (missing(result))
-    stop("Must specify RunPlp output")
+    stop("Must specify runPlp output")
   if (missing(dirPath))
     stop("Must specify directory location")
   #if (class(plpModel) != "plpModel")

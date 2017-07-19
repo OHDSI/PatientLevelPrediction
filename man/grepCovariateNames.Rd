@@ -25,4 +25,3 @@ Extracts covariate names using a regular-expression.
 This function extracts covariate names that match a regular-expression for a
 \code{plpData} or \code{covariateData} object.
 }
-

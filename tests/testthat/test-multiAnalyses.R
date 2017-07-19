@@ -1,4 +1,4 @@
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2017 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -25,7 +25,7 @@ test_that("prediction", {
                                                                   useCovariateDemographicsGender = F,
                                                                   useCovariateDemographicsAge = F,
                                                                   useCovariateDrugExposure = T,
-                                                                  useCovariateDrugExposure30d = T, 
+                                                                  useCovariateDrugExposureShortTerm = T, 
                                                                   excludedCovariateConceptIds = c(13,20), 
                                                                   includedCovariateConceptIds = c(),
                                                                   deleteCovariatesSmallCount = 10)
@@ -35,9 +35,9 @@ test_that("prediction", {
                                                                   useCovariateDemographicsGender = F,
                                                                   useCovariateDemographicsAge = T,
                                                                   useCovariateDrugExposure = F,
-                                                                  useCovariateDrugExposure30d = F, 
+                                                                  useCovariateDrugExposureShortTerm = F, 
                                                                   useCovariateConditionOccurrence = T,
-                                                                  useCovariateConditionOccurrence365d = T,
+                                                                  useCovariateConditionOccurrenceLongTerm = T,
                                                                   excludedCovariateConceptIds = c(13,16), 
                                                                   includedCovariateConceptIds = c(19),
                                                                   deleteCovariatesSmallCount = 50)
@@ -47,16 +47,16 @@ test_that("prediction", {
                                                                   useCovariateDemographicsGender = F,
                                                                   useCovariateDemographicsAge = F,
                                                                   useCovariateDrugExposure = T,
-                                                                  useCovariateDrugExposure30d = T, 
+                                                                  useCovariateDrugExposureShortTerm = T, 
                                                                   useCovariateConditionOccurrence = T,
-                                                                  useCovariateConditionOccurrence365d = T,
+                                                                  useCovariateConditionOccurrenceLongTerm = T,
                                                                   excludedCovariateConceptIds = c(), 
                                                                   includedCovariateConceptIds = c(20,18),
                                                                   deleteCovariatesSmallCount = 5)
   
   #=================================
   # checking the superset covaraite function - takes list of covariateSettings
-  supCovSet <- supersetCovariates(list(covaraiteSetting1,covaraiteSetting2,covaraiteSetting3))
+  supCovSet <- PatientLevelPrediction:::supersetCovariates(list(covaraiteSetting1,covaraiteSetting2,covaraiteSetting3))
   
   # 1) check the minimum count is min of all - 5
   testthat::expect_that(supCovSet$deleteCovariatesSmallCount, is_equivalent_to(5))
@@ -67,14 +67,14 @@ test_that("prediction", {
   # 3) check the includedCovariateConceptIds is empty
   testthat::expect_that(sum(supCovSet$includedCovariateConceptIds%in%c(19,20,18)), is_equivalent_to(3))
   
-  # 4) check the useCovariateDrugExposure30d is T
-  testthat::expect_that(supCovSet$useCovariateDrugExposure30d, is_equivalent_to(T))
+  # 4) check the useCovariateDrugExposureShortTerm is T
+  testthat::expect_that(supCovSet$useCovariateDrugExposureShortTerm, is_equivalent_to(T))
   
-  # 5) check the useCovariateConditionOccurrence365d is T
-  testthat::expect_that(supCovSet$useCovariateConditionOccurrence365d, is_equivalent_to(T))
+  # 5) check the useCovariateConditionOccurrenceLongTerm is T
+  testthat::expect_that(supCovSet$useCovariateConditionOccurrenceLongTerm, is_equivalent_to(T))
   
-  # 5) check the useCovariateConditionOccurrence30d is F
-  testthat::expect_that(supCovSet$useCovariateConditionOccurrence30d, is_equivalent_to(F))
+  # 5) check the useCovariateConditionOccurrenceShortTerm is F
+  testthat::expect_that(supCovSet$useCovariateConditionOccurrenceShortTerm, is_equivalent_to(F))
   
   #=================================
   
@@ -104,7 +104,7 @@ test_that("prediction", {
   ind <- ff::as.ram(ffbase::ffwhich(idx, !is.na(idx)))
   testthat::expect_that( length(ind) , equals(0))
   
-  # check covariates: (ConditionOccurrence365d 101, Age 4)
+  # check covariates: (ConditionOccurrenceLongTerm 101, Age 4)
   idx <- ffbase::ffmatch(x = secCov$covariateRef$analysisId, table = ff::as.ff(c(101)))
   ind <- ff::as.ram(ffbase::ffwhich(idx, !is.na(idx)))
   testthat::expect_that( length(ind)>0 , equals(T))
@@ -118,7 +118,7 @@ test_that("prediction", {
   
   #==================================
   
- # checking the set tar parameters
+  # checking the set tar parameters
   tar <- setTimeAtRisk(includeAllOutcomes = T,
                        firstExposureOnly = F,
                        washoutPeriod = 365,
@@ -134,7 +134,7 @@ test_that("prediction", {
   testthat::expect_that( tar$washoutPeriod , equals(365))
   testthat::expect_that( tar$riskWindowStart , equals(1))
   testthat::expect_that( tar$riskWindowEnd , equals(366))
-
-  })
+  
+})
 
 

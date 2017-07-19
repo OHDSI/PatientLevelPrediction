@@ -34,4 +34,3 @@ determine the hyperparameters of the prior (if applicable). See
 \description{
 Fit a predictive model
 }
-

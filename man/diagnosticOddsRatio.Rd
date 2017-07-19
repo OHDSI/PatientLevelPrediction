@@ -24,4 +24,3 @@ Calculate the diagnostic odds ratio
 \details{
 Calculate the diagnostic odds ratio
 }
-

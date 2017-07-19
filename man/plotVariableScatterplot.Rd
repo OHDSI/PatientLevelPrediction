@@ -8,7 +8,7 @@ plotVariableScatterplot(covariateSummary, fileName = NULL)
 }
 \arguments{
 \item{covariateSummary}{A prediction object as generated using the
-\code{\link{RunPlp}} function.}
+\code{\link{runPlp}} function.}
 
 \item{fileName}{Name of the file where the plot should be saved, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -25,4 +25,3 @@ Plot the variable importance scatterplot
 Create a plot showing the variable importance scatterplot
 #'
 }
-

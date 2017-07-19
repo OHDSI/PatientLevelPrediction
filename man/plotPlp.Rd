@@ -7,7 +7,7 @@
 plotPlp(result, filename)
 }
 \arguments{
-\item{result}{Object returned by the RunPlp() function}
+\item{result}{Object returned by the runPlp() function}
 
 \item{filename}{Name of the file where the plot should be saved, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for
@@ -22,4 +22,3 @@ Plot all the PatientLevelPrediction plots
 \details{
 Create a directory with all the plots
 }
-

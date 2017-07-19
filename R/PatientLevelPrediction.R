@@ -1,6 +1,6 @@
 # @file PatientLevelPrediction.R
 #
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2017 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -22,8 +22,10 @@
 #' @name PatientLevelPrediction
 #' @importFrom Rcpp evalCpp
 #' @importFrom SqlRender loadRenderTranslateSql translateSql
-#' @importFrom RJDBC dbDisconnect
 #' @importFrom plyr ddply
+#' @importFrom methods is
+#' @importFrom stats binom.test lm printCoefmat rpois runif sd
+#' @importFrom utils write.csv write.table
 #' @import bit
 #' @import Cyclops
 #' @import DatabaseConnector

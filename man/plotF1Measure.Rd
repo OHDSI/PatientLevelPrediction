@@ -8,7 +8,7 @@ plotF1Measure(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
-\code{\link{RunPlp}} function.}
+\code{\link{runPlp}} function.}
 
 \item{type}{options: 'train' or test'}
 
@@ -26,4 +26,3 @@ Plot the F1 measure efficiency frontier using the sparse thresholdSummary data f
 \details{
 Create a plot showing the F1 measure efficiency frontier using the sparse thresholdSummary data frame
 }
-

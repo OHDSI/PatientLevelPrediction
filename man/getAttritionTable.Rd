@@ -16,4 +16,3 @@ A data frame specifying the number of people and exposures in the population aft
 \description{
 Get the attrition table for a population
 }
-

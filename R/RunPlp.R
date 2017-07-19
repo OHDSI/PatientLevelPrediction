@@ -1,6 +1,6 @@
 # @file RunPlp.R
 #
-# Copyright 2015 Observational Health Data Sciences and Informatics
+# Copyright 2017 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' RunPlp - Train and evaluate the model
+#' runPlp - Train and evaluate the model
 #'
 #' @description
 #' This provides a general framework for training patient level prediction models.  The user can select 
@@ -106,7 +106,7 @@
 #' #70% in train set where the model hyper-parameters are selected using 3-fold cross validation:
 #' #and results are saved to file.path('C:','User','home')
 #' model.lr <- lassoLogisticRegression.set()
-#' mod.lr <- RunPlp(population=population,
+#' mod.lr <- runPlp(population=population,
 #'                         plpData= plpData,
 #'                         modelSettings = model.lr ,
 #'                         testSplit = 'time', testFraction=0.3, 
@@ -120,14 +120,14 @@
 #' model.gbm <- gradientBoostingMachine.set(rsampRate=c(0.5,0.9,1),csampRate=1, 
 #'                            ntrees=c(10,100), bal=c(F,T),
 #'                            max_depth=c(4,5), learn_rate=c(0.1,0.01))
-#' mod.gbm <- RunPlp(population=population,
+#' mod.gbm <- runPlp(population=population,
 #'                         plpData= plpData,
 #'                         modelSettings = model.gbm,
 #'                         testSplit = 'time', testFraction=0.3, 
 #'                         nfold=3, indexes=mod.lr$indexes,
 #'                         save=file.path('C:','User','home'))
 #' } 
-RunPlp <- function(population, plpData,
+runPlp <- function(population, plpData,
                    modelSettings,
                    testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, indexes=NULL,
                    save=NULL, saveModel=T,

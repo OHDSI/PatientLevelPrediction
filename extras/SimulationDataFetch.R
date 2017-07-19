@@ -1,6 +1,6 @@
 # @file SimulationDataFetch.R
 #
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2017 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -118,7 +118,7 @@ sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 DatabaseConnector::querySql(conn, sql)
 
-RJDBC::dbDisconnect(conn)
+DatabaseConnector::disconnect(conn)
 
 covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                              useCovariateDemographicsGender = TRUE,

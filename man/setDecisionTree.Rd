@@ -29,4 +29,3 @@ Create setting for DecisionTree with python
 model.decisionTree <- setDecisionTree(max_depth=10,min_samples_leaf=10, seed=NULL )
 }
 }
-

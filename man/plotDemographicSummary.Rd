@@ -8,7 +8,7 @@ plotDemographicSummary(evaluation, type = "train", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the
-\code{\link{RunPlp}} function.}
+\code{\link{runPlp}} function.}
 
 \item{type}{options: 'train' or test'}
 
@@ -27,4 +27,3 @@ Plot the Observed vs. expected incidence, by age and gender
 Create a plot showing the Observed vs. expected incidence, by age and gender
 #'
 }
-

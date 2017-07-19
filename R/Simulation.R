@@ -1,6 +1,6 @@
 # @file simulation.R
 #
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2017 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -45,7 +45,7 @@
 ##    outcomeId <- plpData$metaData$outcomeIds[i]
 ##    model <- fitPredictiveModel(plpData = plpData,
 ##                                outcomeId = outcomeId,
-##                               modelType = "poisson",
+##                                modelType = "poisson",
 ##                                prior = Cyclops::createPrior("laplace",
 ##                                                             exclude = c(0),
 ##                                                             useCrossValidation = TRUE),
