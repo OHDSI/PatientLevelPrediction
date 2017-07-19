@@ -7,7 +7,7 @@ options(fftempdir = "C:/Users/prijnbee/tempff")
 # Azure 
 dbms <- "sql server"
 user <- "prijnbeek@emif"
-pw <- "pjotter1!"
+pw <- "secret"
 server <- "emif.database.windows.net"
 database <- "SYNPUF"
 extraSettings <- "database=SYNPUF;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;"
@@ -22,7 +22,7 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
 # Postgres local 
 dbms <- "postgresql"
 user <- "postgres"
-pw <- "pjotter1!"
+pw <- "secret"
 server <- "localhost/SYNPUF1000"
 port <- 5432
 connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
@@ -45,6 +45,7 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
 
 connection <- DatabaseConnector::connect(connectionDetails)
 
+cdmDatabaseSchema <- "dbo"
 cdmDatabaseSchema <- "cdm"
 workDatabaseSchema <- "scratch"
 resultsDatabaseSchema <-"results"
@@ -123,12 +124,13 @@ plpData <- getPlpData(connectionDetails = connectionDetails,
                       covariateSettings = settings,
                       outcomeDatabaseSchema = resultsDatabaseSchema,
                       outcomeTable = "coxibVsNonselVsGiBleed",
-                      outcomeIds = 3,
+                      outcomeIds = 2,
                       cdmVersion = 5)
 
 savePlpData(plpData, "~/Documents/temp/plpData")
 
 plpData <- loadPlpData("h:/largeScalePredictionRun/data")
+plpData <- loadPlpData("~/Documents/temp/plpData")
 
 population <- createStudyPopulation(plpData,
                                     outcomeId = 2559,

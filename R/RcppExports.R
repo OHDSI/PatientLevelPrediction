@@ -2,18 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 .aucWithCi <- function(propensityScores, treatment) {
-    .Call('_PatientLevelPrediction_aucWithCi', PACKAGE = 'PatientLevelPrediction', propensityScores, treatment)
+    .Call('PatientLevelPrediction_aucWithCi', PACKAGE = 'PatientLevelPrediction', propensityScores, treatment)
 }
 
 .auc <- function(propensityScores, treatment) {
-    .Call('_PatientLevelPrediction_auc', PACKAGE = 'PatientLevelPrediction', propensityScores, treatment)
+    .Call('PatientLevelPrediction_auc', PACKAGE = 'PatientLevelPrediction', propensityScores, treatment)
 }
 
 .bySum <- function(ffValues, ffBins) {
-    .Call('_PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
+    .Call('PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
 }
 
 .byMax <- function(ffValues, ffBins) {
-    .Call('_PatientLevelPrediction_byMax', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
+    .Call('PatientLevelPrediction_byMax', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
 }
 
