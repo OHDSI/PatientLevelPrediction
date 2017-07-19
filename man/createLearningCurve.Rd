@@ -33,6 +33,8 @@ train (validationFraction of the data) sets.  The split is stratified by the cla
 \item{testFraction}{The fraction of the data to be used as the test set in the patient
 split evaluation.}
 
+\item{trainFractions}{A list of trainFractions to try}
+
 \item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
 
 \item{nfold}{The number of folds used in the cross validation (default 3)}

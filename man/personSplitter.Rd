@@ -12,6 +12,9 @@ personSplitter(population, test = 0.3, train = NULL, nfold = 3,
 
 \item{test}{A real number between 0 and 1 indicating the test set fraction of the data}
 
+\item{train}{A real number between 0 and 1 indicating the train set fraction of the data.
+If not set train is equal to 1 - test}
+
 \item{nfold}{An integer >= 1 specifying the number of folds used in cross validation}
 
 \item{seed}{If set a fixed seed is used, otherwise a random split is performed}
