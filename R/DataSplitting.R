@@ -46,10 +46,10 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   }
   
   if (is.null(train)) {
-    train = 1 - test
+    train <- 1 - test
   }
   
-  if (class(train) != "numeric" | train <= 0 | train >= 1-test) {
+  if (class(train) != "numeric" | train <= 0 | train > 1-test) {
     flog.error("train must be between 0 and 1-test")
     stop()
   }
