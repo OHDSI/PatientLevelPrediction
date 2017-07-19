@@ -550,86 +550,41 @@ getPredictionDistribution <- function(prediction){
 }
 
 getDemographicSummary <- function(prediction, plpData){
-  # for each age covariate + gender covariate pair:
-  # speed test needed for this - probs slow!
+  demographicData <-  data.frame(demographicId=1:40,
+                                 ageId=rep(10:29,2),    
+                                 ageGroup = rep(c('Age group: 0-4','Age group: 5-9','Age group: 10-14','Age group: 15-19',
+                                                  'Age group: 20-24', 'Age group: 25-29', 'Age group: 30-34', 'Age group: 35-39',
+                                                  'Age group: 40-44', 'Age group: 45-49', 'Age group: 50-54', 'Age group: 55-59',
+                                                  'Age group: 60-64', 'Age group: 65-69', 'Age group: 70-74', 'Age group: 75-79',
+                                                  'Age group: 80-84', 'Age group: 85-89', 'Age group: 90-94', 'Age group: 95-99'),2),
+                                 genId = c(rep(8507,20), rep(8532,20)),
+                                 genGroup = c(rep('Male',20), rep('Female',20)))
   
-  demographicData <-  cbind(demographicId=1:40,
-                            ageId=rep(10:29,2),    
-                            ageGroup = rep(c('Age group: 0-4','Age group: 5-9','Age group: 10-14','Age group: 15-19',
-                                             'Age group: 20-24', 'Age group: 25-29', 'Age group: 30-34', 'Age group: 35-39',
-                                             'Age group: 40-44', 'Age group: 45-49', 'Age group: 50-54', 'Age group: 55-59',
-                                             'Age group: 60-64', 'Age group: 65-69', 'Age group: 70-74', 'Age group: 75-79',
-                                             'Age group: 80-84', 'Age group: 85-89', 'Age group: 90-94', 'Age group: 95-99'),2),
-                            genId = c(rep(8507,20), rep(8532,20)),
-                            genGroup = c(rep('Male',20), rep('Female',20)) )
-  
-  missGen <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
-  if(length(missGen)==1){
-    otherGen <- c(8507,8532)[!c(8507,8532)%in%missGen]} else
-    {otherGen <- 8507
-     missGen <- 8532}
-  missAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
-  
-  defaultVal <- 0
-  if(length(missAge)==1){
-    ind <- demographicData[,'genId']==missGen & demographicData[,'ageId']==missAge
-    defaultVal <- as.integer(demographicData[ind,'demographicId'])
+  missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
+  if(length(missingGender)==1){
+    otherGen <- c(8507,8532)[!c(8507,8532)%in%missingGender]
+  } else { 
+    otherGen <- 8507
+    missingGender <- 8532
+  }
+  missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
+  if (length(missingAge) != 1) {
+    missingAge <- NA
   }
   
-  prediction$demographicId <- defaultVal
-  for (i in 1:nrow(demographicData)){
-    #get age ppl
-    ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(demographicData[i,'ageId'])))
-    ind <- ffbase::ffwhich(ind, !is.na(ind))
-    if(length(ind)>0){
-      pplofintAge <- plpData$covariates$rowId[ind]
-      if(as.double(demographicData[i,'genId'])!=missGen){
-        ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(demographicData[i,'genId'])))
-        ind <- ffbase::ffwhich(ind, !is.na(ind)) 
-        if(length(ind)>0){
-          pplofintGen <- plpData$covariates$rowId[ind]
-          pplofint <- intersect(ff::as.ram(pplofintAge), ff::as.ram(pplofintGen))
-          prediction$demographicId[prediction$rowId%in%ff::as.ram(pplofint)] <- i
-        }
-        } else{
-          ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(otherGen)))
-          ind <- ffbase::ffwhich(ind, !is.na(ind)) 
-          if(length(ind)>0){
-            pplofintGen <- plpData$covariates$rowId[ind]
-            pplofintGen <-  prediction$rowId[!prediction$rowId%in%ff::as.ram(pplofintGen)]
-          } else {
-            pplofintGen <-  prediction$rowId
-          }
-          pplofint <- intersect(ff::as.ram(pplofintAge), ff::as.ram(pplofintGen))
-          prediction$demographicId[prediction$rowId%in%ff::as.ram(pplofint)] <- i
-          
-      }
-        
-      
-    }
-  }
-
-  #add missing age:
-  if(length(missAge)==1){
-    ind <- demographicData[,'genId']==otherGen & demographicData[,'ageId']==missAge
-    missingVal <- as.integer(demographicData[ind,'demographicId'])
-    
-    ind <- ffbase::ffmatch(plpData$covariates$covariateId, table=ff::as.ff(as.double(otherGen)))
-    ind <- ffbase::ffwhich(ind, !is.na(ind))
-    if(length(ind)>0){
-      pplofintGen <- plpData$covariates$rowId[ind]
-      pplmiss <- prediction$rowId[prediction$demographicId == defaultVal]
-      pplofint <- intersect(ff::as.ram(pplofintGen),pplmiss)
-      prediction$demographicId[prediction$rowId%in%pplofint] <- missingVal
-    }
-  }
-    
+  genderCovariates <- plpData$covariates[ffbase::`%in%`(plpData$covariates$covariateId, c(8507,8532)), ]
+  genderCovariates <- genderCovariates[ffbase::`%in%`(genderCovariates$rowId, prediction$rowId), ]
+  genderCovariates <- ff::as.ram(genderCovariates)
+  prediction$genId <- missingGender
+  prediction$genId[match(genderCovariates$rowId, prediction$rowId)] <- genderCovariates$covariateId
   
-  #calcualte PersonCountAtRisk	PersonCountWithOutcome	
-  #          averagePredictedProbability	StDevPredictedProbability	
-  #         MedianPredictedProbability	P25PredictedProbability	
-  #         P75PredictedProbability	MinPredictedProbability	
-  #         MaxPredictedProbability	observedIncidence
+  ageCovariates <- plpData$covariates[ffbase::`%in%`(plpData$covariates$covariateId, 10:29), ]
+  ageCovariates <- ageCovariates[ffbase::`%in%`(ageCovariates$rowId, prediction$rowId), ]
+  ageCovariates <- ff::as.ram(ageCovariates)
+  prediction$ageId <- missingAge
+  prediction$ageId[match(ageCovariates$rowId, prediction$rowId)] <- ageCovariates$covariateId
+  
+  prediction <- merge(prediction, demographicData[, c("demographicId", "ageId", "genId")], all.x = TRUE)
   
   val1 <- stats::aggregate(prediction$outcomeCount, list(prediction$demographicId), 
                            function(x) c(length(x), sum(x)))
@@ -653,7 +608,6 @@ getDemographicSummary <- function(prediction, plpData){
   demographicData <- merge(demographicData, val1, all.x=T)
   demographicData <- merge(demographicData, val2, all.x=T)
   demographicData <- merge(demographicData, val3, all.x=T)
-  
   return(demographicData)
 }
 
