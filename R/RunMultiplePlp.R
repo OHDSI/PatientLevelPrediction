@@ -118,8 +118,8 @@ runPlpAnalyses <- function(outputFolder = getwd(),
                                                                                              useCovariateDrugExposure=T,
                                                                                              useCovariateDrugExposureLongTerm=T)
                            ),
-                           timeAtRisks=list(setTimeAtRisks(riskWindowEnd=365),
-                                            setTimeAtRisks(riskWindowEnd=365*2)), 
+                           timeAtRisks=list(setTimeAtRisk(riskWindowEnd=365),
+                                            setTimeAtRisk(riskWindowEnd=365*2)), 
                            modelSettings=NULL,
                            internalValidation='time', testFraction=0.25, nfold=3,
                            splitSeed=NULL, indexes=NULL, # need to add these to into

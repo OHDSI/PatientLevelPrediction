@@ -21,8 +21,8 @@ runPlpAnalyses(outputFolder = getwd(), connectionDetails = NULL,
   useCovariateDemographicsAge = T,      useCovariateDemographicsYear = F,
   useCovariateDemographicsMonth = T, useCovariateDrugExposure = T,
   useCovariateDrugExposureLongTerm = T)),
-  timeAtRisks = list(setTimeAtRisks(riskWindowEnd = 365),
-  setTimeAtRisks(riskWindowEnd = 365 * 2)), modelSettings = NULL,
+  timeAtRisks = list(setTimeAtRisk(riskWindowEnd = 365),
+  setTimeAtRisk(riskWindowEnd = 365 * 2)), modelSettings = NULL,
   internalValidation = "time", testFraction = 0.25, nfold = 3,
   splitSeed = NULL, indexes = NULL, verbosity = futile.logger::INFO)
 }
