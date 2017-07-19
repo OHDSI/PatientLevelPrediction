@@ -23,6 +23,8 @@
 #'
 #' @param population   An object created using createStudyPopulation().
 #' @param test         A real number between 0 and 1 indicating the test set fraction of the data
+#' @param train        A real number between 0 and 1 indicating the train set fraction of the data.
+#'                     If not set train is equal to 1 - test
 #' @param nfold        An integer >= 1 specifying the number of folds used in cross validation
 #' @param seed         If set a fixed seed is used, otherwise a random split is performed
 #'
