@@ -7,12 +7,14 @@
 # OUTPUT:
 # it returns a file with indexes merged with prediction for test index  
 #================================================================
+import pydotplus  # this is for plotting the tree
 import numpy as np
 #from collections import OrderedDict
 import os
 import sys
 import timeit
 import math
+from sklearn import tree 
 from sklearn.tree import DecisionTreeClassifier
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.feature_selection import SelectFromModel
@@ -81,4 +83,13 @@ else:
   print "Model saved to: %s" %(modelOutput)	
 
   joblib.dump(dt, modelOutput+'\\model.pkl') 
+  
+  plotfile = modelOutput+"\\tree_plot.dot"
+  tree.export_graphviz(dt, out_file=plotfile, feature_names=varnames[:,0])#X.dtype.names ) #variables[:,0])
+  #graph = pydotplus.graph_from_dot_file(plotfile) 
+  #plotfile = modelOutput+"\\tree_plot.pdf"
+  #graph.write_pdf(plotfile ) 
 
+  # manually create the pdf 
+  ##commandLine = "dot -Tpdf "+inLoc +"-o"+ outLoc
+  ##os.system(commandLine)

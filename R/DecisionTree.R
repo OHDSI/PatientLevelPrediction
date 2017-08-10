@@ -30,7 +30,7 @@
 #' }
 #' @export
 setDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=10,
-                            min_impurity_split=10^-7,seed =NULL, class_weight='None'  ){
+                            min_impurity_split=10^-7,seed =NULL, class_weight='None', plot=NULL  ){
   if(!class(seed)%in%c('numeric','NULL'))
     stop('Invalid seed')
   if(class(max_depth)!='numeric')
@@ -53,6 +53,8 @@ setDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=
     stop('class_weight must be a character of either None or balanced')
   if(!class_weight%in%c('None','balanced'))
     stop('class_weight must be a character of either None or balanced')
+  if(class(plot) !='character')
+    stop('Plot must be a character refering to a directory to save the decision tree plot')
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -69,7 +71,8 @@ setDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=
                                           min_samples_leaf=min_samples_leaf,
                                           min_impurity_split=min_impurity_split,
                                           class_weight=class_weight,
-                                          seed=ifelse(is.null(seed),'NULL', seed)),
+                                          seed=ifelse(is.null(seed),'NULL', seed),
+                                          plot=ifelse(is.null(plot),'NULL', plot)),
                               1:(length(class_weight)*length(max_depth)*length(min_samples_split)*length(min_samples_leaf)*length(min_impurity_split))  ),
                  name='DecisionTree')
   class(result) <- 'modelSettings' 
@@ -119,6 +122,13 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   outLoc <- file.path(getwd(),'python_models')
   PythonInR::pySet("modelOutput",outLoc)
   
+  # feed into variable names for tree plot...
+  var <- suppressWarnings(ff::as.ram(plpData$covariateRef$covariateName))
+  PythonInR::pySet('varnames', as.matrix(as.character(var)  ))
+  
+  
+  # send the column names for the plot:
+  ##PythonInR::pySet('variables', as.matrix(ff::as.ram(plpData$covariateRef$covariateName)) )
   
   # do cross validation to find hyperParameter
   # do cross validation to find hyperParameter
@@ -174,15 +184,17 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
 
 trainDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=10,
                               min_impurity_split=10^-7,class_weight='None',seed =NULL,
-                              train=TRUE){
+                              train=TRUE, plot=getwd()){
   #PythonInR::pySet('size', as.matrix(size) )
   #PythonInR::pySet('alpha', as.matrix(alpha) )
   PythonInR::pyExec(paste0("max_depth = ", max_depth))
   PythonInR::pyExec(paste0("min_samples_split = ", min_samples_split))
   PythonInR::pyExec(paste0("min_samples_leaf = ", min_samples_leaf))
   PythonInR::pyExec(paste0("min_impurity_split = ", min_impurity_split))
-  PythonInR::pyExec(paste0("class_weight = ", class_weight))
+  ifelse(class_weight=='None', PythonInR::pyExec(paste0("class_weight = ", class_weight)), 
+         PythonInR::pyExec(paste0("class_weight = '", class_weight,"'")))
   PythonInR::pyExec(paste0("seed = ", ifelse(is.null(seed),'None',seed)))
+  PythonInR::pyExec(paste0("plot = ", ifelse(is.null(seed),getwd(),plot)))
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)

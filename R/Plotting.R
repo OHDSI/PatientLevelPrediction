@@ -522,6 +522,8 @@ plotSparseCalibration2 <- function(evaluation, type='train', fileName=NULL){
   x$lci <- cis[1,]  
   x$uci <- cis[2,]
   
+  maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence))*1.1
+  
   # TODO: CHECK INPUT
   limits <- ggplot2::aes(ymax = x$uci, ymin= x$lci)
   
@@ -529,13 +531,14 @@ plotSparseCalibration2 <- function(evaluation, type='train', fileName=NULL){
                           ggplot2::aes(x=averagePredictedProbability, y=observedIncidence
                           )) +
     ggplot2::geom_point(size=2, color='black') +
-    ggplot2::geom_errorbar(limits, width=0.005) +
-    ggplot2::geom_smooth(method=lm, se=F, colour='darkgrey') +
+    ggplot2::geom_errorbar(limits) +
+    #ggplot2::geom_smooth(method=lm, se=F, colour='darkgrey') +
+    ggplot2::geom_line(colour='darkgrey') +
     ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 5, size=0.4,
                          show.legend = TRUE) +
     ggplot2::scale_x_continuous("Average Predicted Probability") +
     ggplot2::scale_y_continuous("Observed Fraction With Outcome") +
-    ggplot2::coord_cartesian(xlim = c(0, 1), ylim=c(0,1)) 
+    ggplot2::coord_cartesian(xlim = c(0, maxes), ylim=c(0,maxes)) 
   
   
   if (!is.null(fileName))
