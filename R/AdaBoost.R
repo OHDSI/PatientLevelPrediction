@@ -168,7 +168,7 @@ trainAdaBoost <- function(n_estimators=50, learning_rate=1, seed=NULL, train=TRU
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','adaBoost.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','adaBoost.py'))
   
   if(train){
     # then get the prediction 

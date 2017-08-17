@@ -74,14 +74,16 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   # connect to python if not connected
   if ( !PythonInR::pyIsConnected() ){ 
     PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')}
+}
   
   
   # return error if we can't connect to python
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
+
+  PythonInR::pyOptions("numpyAlias", "np")
+  PythonInR::pyOptions("useNumpy", TRUE)
+  PythonInR::pyImport("numpy", as='np')
   
   start <- Sys.time()
   
@@ -168,7 +170,7 @@ trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp.py'))
   
   if(train){
     # then get the prediction 
