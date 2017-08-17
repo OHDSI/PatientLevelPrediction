@@ -1,8 +1,10 @@
 library(SqlRender)
 library(DatabaseConnector)
 library(FeatureExtraction)
+library(ggplot2)
 library(PatientLevelPrediction)
 options(fftempdir = "C:/Users/prijnbee/tempff")
+options(fftempdir = "~/tmp/tempff")
 
 # Azure 
 dbms <- "sql server"
@@ -50,6 +52,25 @@ cdmDatabaseSchema <- "cdm"
 workDatabaseSchema <- "scratch"
 resultsDatabaseSchema <-"results"
 
+
+dbms <- "postgresql"
+user <- "postgres"
+pw <- "secret"
+server <- "Res-Srv-Lin-01/IPCI-EEYORE_20170309"
+port <- 5432
+connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
+                                                                server = server,
+                                                                user = user,
+                                                                password = pw,
+                                                                port = port)
+
+connection <- DatabaseConnector::connect(connectionDetails)
+
+cdmDatabaseSchema <- "cdm"
+workDatabaseSchema <- "xpan"
+resultsDatabaseSchema <-"xpan"
+
+
 sql <- loadRenderTranslateSql("coxibVsNonselVsGiBleed.sql",
                               packageName = "CohortMethod",
                               dbms = dbms,
@@ -62,6 +83,19 @@ sql <- "SELECT cohort_definition_id, COUNT(*) AS count FROM results.coxibVsNonse
 sql <- SqlRender::renderSql(sql, resultsDatabaseSchema = resultsDatabaseSchema)$sql
 sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 DatabaseConnector::querySql(connection, sql)
+
+settings <- FeatureExtraction::createCovariateSettings( useCovariateDemographics = TRUE,
+                                                           useCovariateDemographicsGender = T,
+                                                           useCovariateDemographicsAge = T,
+                                                           useCovariateConditionEra = T,
+                                                           useCovariateConditionEraEver = T,
+                                                           useCovariateDrugEra = T,
+                                                           useCovariateDrugEraEver = T,
+                                                           useCovariateProcedureOccurrence = T,
+                                                           useCovariateMeasurement = T,
+                                                           useCovariateObservation = T,
+                                                           deleteCovariatesSmallCount = 50)
+
 
 settings <- createCovariateSettings(useCovariateDemographics = TRUE,
                                     useCovariateDemographicsGender = TRUE,
@@ -137,36 +171,42 @@ population <- createStudyPopulation(plpData,
                                     includeAllOutcomes = TRUE,
                                     firstExposureOnly = FALSE,
                                     washoutPeriod = 0,
-                                    removeSubjectsWithPriorOutcome = FALSE,
+                                    removeSubjectsWithPriorOutcome = TRUE,
                                     priorOutcomeLookback = 365,
                                     riskWindowStart = 1,
                                     requireTimeAtRisk = FALSE,
                                     riskWindowEnd = 365)
 
-lrModel <- setLassoLogisticRegression()
+plpData <- getPlpData(connectionDetails = connectionDetails,
+                      cdmDatabaseSchema = cdmDatabaseSchema,
+                      cohortDatabaseSchema = resultsDatabaseSchema,
+                      cohortTable = "coxibVsNonselVshypertension",
+                      cohortId = 1,
+                      covariateSettings = settings,
+                      outcomeDatabaseSchema = resultsDatabaseSchema,
+                      outcomeTable = "coxibVsNonselVshypertension",
+                      outcomeIds = 3,
+                      cdmVersion = 5,
+                      temporal = FALSE)
+
+population <- createStudyPopulation(plpData,
+                                    outcomeId = 3,
+                                    includeAllOutcomes = TRUE,
+                                    firstExposureOnly = FALSE,
+                                    washoutPeriod = 0,
+                                    removeSubjectsWithPriorOutcome = TRUE,
+                                    priorOutcomeLookback = 365,
+                                    riskWindowStart = 1,
+                                    requireTimeAtRisk = FALSE,
+                                    riskWindowEnd = 365)
+
+model <- setLassoLogisticRegression()
 
 learningCurve <- PatientLevelPrediction::createLearningCurve(population, plpData,
-                                modelSettings = lrModel,
-                                testSplit = 'person', testFraction=0.30, trainFractions = c(0.10,0.20,0.30,0.40,0.50,0.60,0.70), splitSeed=NULL, nfold=3, indexes=NULL,
-                                verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL)
+                                modelSettings = model,
+                                testSplit = 'person', testFraction=0.20, trainFractions = c(0.10,0.20,0.30,0.40,0.50,0.60,0.70, 0.80), nfold=3, indexes=NULL,
+                                verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL, splitSeed=1000)
+
 
 # Plot Learning Curve 
-ggplot(learningCurve, aes(x)) +
-    geom_line(aes(y=trainError),
-              colour="red") +
-    geom_line(aes(y=testError),
-              colour="green")+
-    xlab("Training Size") +
-    ylab("Error")
-
-
-# Test
-learningCurve <- data.frame(x = numeric(3),
-                            trainError = integer(3),
-                            testError = integer(3))
-learningCurve$x[0] = 0.10
-learningCurve$x[1] = 0.25
-learningCurve$trainError[0] = 0.7
-learningCurve$trainError[1] = 0.8
-learningCurve$testError[0] = 0.5
-learningCurve$testError[1] = 0.6
+plotLearningCurve(learningCurve = learningCurve, title = model$name)

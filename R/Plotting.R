@@ -689,3 +689,36 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
   return(plot)
 }
+
+#' Plot the plearning curve using the data frame
+#'
+#' @details
+#' Create a plot showing thelearnign curve using output from createLearningCurve
+#'
+#' @param learningcurve         A results object as generated using the
+#'                              \code{\link{createLearningCurve}} function.
+#' @param title                 plot title
+#' @param fileName              Name of the file where the plot should be saved, for example
+#'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
+#'                              supported file formats.
+#'
+#' @return
+#' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
+#' format.
+#'
+#' @export
+plotLearningCurve <- function(learningCurve, title=" ", xlabel="Training Size", fileName=NULL){
+  plot<- ggplot2::ggplot(learningCurve, aes(x)) +
+    ggplot2::geom_line(aes(y=trainAUC),
+              colour="red") +
+    ggplot2::geom_line(aes(y=testAUC),
+              colour="green")+
+    ggplot2::xlab(xlabel) +
+    ggplot2::ylab("AUC") +
+    ggplot2::ggtitle(title) + coord_cartesian(ylim=c(0.3, 1)) +
+    ggplot2::theme(plot.title = element_text(hjust = 0.5))
+  
+  if (!is.null(fileName))
+    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
+  return(plot)
+}

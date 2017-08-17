@@ -148,7 +148,6 @@ createLearningCurve <- function(population, plpData,
     
     # construct the train and test set.
     # note that index will be zero for rows not in train or test
-    if (is.null(indexes)) {
       if (testSplit == 'time') {
         flog.trace('Dataset time split starter')
         indexes <-
@@ -164,7 +163,6 @@ createLearningCurve <- function(population, plpData,
             finally = flog.trace('Done.')
           )
       }
-    }
 
     # TODO better to move this to the splitter if this is important?
     if (nrow(population) != nrow(indexes)) {
@@ -179,8 +177,12 @@ createLearningCurve <- function(population, plpData,
     # train the model
     flog.seperator()
     tempmeta <- attr(population, "metaData")
+    if (is.null(population$indexes)){
     population <- merge(population, indexes)
     colnames(population)[colnames(population) == 'index'] <- 'indexes'
+    } else{
+      attr(population, 'indexes') <- indexes
+    }
     attr(population, "metaData") <- tempmeta
     
     settings <- list(
@@ -403,9 +405,9 @@ createLearningCurve <- function(population, plpData,
     flog.info("Run finished successfully.")
     
     # save the current trainFraction
-    learningCurve$x[run]<-trainFraction
-    learningCurve$trainError[run] <- performance.train$BrierScore
-    learningCurve$testError[run] <- performance.test$BrierScore
+    learningCurve$x[run]<-trainFraction*100
+    learningCurve$trainError[run] <- performance.train$evaluationStatistics$AUC$auc
+    learningCurve$testError[run] <- performance.test$evaluationStatistics$AUC$auc
     run <- run + 1
   }
   return(learningCurve)
