@@ -79,6 +79,5 @@ else:
   if not os.path.exists(modelOutput):
     os.makedirs(modelOutput)
   print "Model saved to: %s" %(modelOutput)	
-
-  joblib.dump(dt, modelOutput+'\\model.pkl') 
+  joblib.dump(dt, os.path.join(modelOutput,'model.pkl'))
 

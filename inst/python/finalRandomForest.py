@@ -19,7 +19,7 @@ if not os.path.exists(modelOutput):
   os.makedirs(modelOutput)
 print "Model saved to: %s" %(modelOutput)	
 
-joblib.dump(rf, modelOutput+"\\model.pkl") 
+joblib.dump(rf, os.path.join(modelOutput,'model.pkl'))
 ##np.savetxt(output+'\\'+id+'\\varImp.txt',rf.feature_importances_, fmt='%.18e', delimiter=',', newline='\n')
 
 # merge pred with indexes[testInd,:]

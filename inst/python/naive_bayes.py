@@ -91,7 +91,7 @@ if not os.path.exists(modelOutput):
     os.makedirs(modelOutput)
 print "Model saved to: %s" %(modelOutput)	
 	
-joblib.dump(gnb, modelOutput+'\\model.pkl') 
+joblib.dump(gnb, os.path.join(modelOutput,'model.pkl'))
 
 # merge pred with indexes[testInd,:]
 test_pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
