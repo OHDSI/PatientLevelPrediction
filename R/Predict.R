@@ -122,8 +122,15 @@ predict.python <- function(plpModel, population, plpData){
   flog.info('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
+  if (plpModel$modelSettings$model == 'fitCNNTorch' | plpModel$modelSettings$model == 'fitRNNTorch'){
+	  covariates <- plpData$covariates
+  	  covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
+      PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
+	  PythonInR::pySet("modeltype", 'temporal')
+  } else{
   newData <- toSparsePython(plpData, population, map=plpModel$covariateMap)
-  
+  PythonInR::pySet("modeltype", 'normal')
+  }
   included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
   included <- newData$map$newIds[newData$map$oldIds%in%included]-1 # python starts at 0, r at 1
   PythonInR::pySet("included", as.matrix(sort(included)))
@@ -140,7 +147,7 @@ predict.python <- function(plpModel, population, plpData){
   
   # run the python predict code:
   flog.info('Executing prediction...')
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py'))
   
   #get the prediction from python and reformat:
   flog.info('Returning results...')
