@@ -10,7 +10,8 @@ getPlpData(connectionDetails, cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema, outcomeTable = "cohort",
   cdmVersion = "5", excludeDrugsFromCovariates = F,
-  firstExposureOnly = FALSE, washoutPeriod = 0, covariateSettings)
+  firstExposureOnly = FALSE, washoutPeriod = 0, temporal = F,
+  covariateSettings)
 }
 \arguments{
 \item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the

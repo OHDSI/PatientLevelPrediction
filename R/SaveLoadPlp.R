@@ -123,6 +123,7 @@ getPlpData <- function(connectionDetails,
                                   excludeDrugsFromCovariates = F, #ToDo: rename to excludeFromFeatures
                                   firstExposureOnly = FALSE,
                                   washoutPeriod = 0,
+                                  temporal = F,
                                   covariateSettings) {
   if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
     stop("Study start date must have format YYYYMMDD")
@@ -180,14 +181,28 @@ getPlpData <- function(connectionDetails,
   writeLines(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
   
   #covariateSettings$useCovariateCohortIdIs1 <- TRUE
-  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
-                                                         oracleTempSchema = oracleTempSchema,
-                                                         cdmDatabaseSchema = cdmDatabaseSchema,
-                                                         cdmVersion = cdmVersion,
-                                                         cohortTable = "#cohort_person",
-                                                         cohortTableIsTemp = TRUE,
-                                                         rowIdField = "row_id",
-                                                         covariateSettings = covariateSettings)
+  if (temporal) {
+    writeLines("Fetching temporal covariates from server")
+    covariateData <- FeatureExtraction::getDbTemporalCovariateData(connection = connection,
+                                                           oracleTempSchema = oracleTempSchema,
+                                                           cdmDatabaseSchema = cdmDatabaseSchema,
+                                                           cdmVersion = cdmVersion,
+                                                           cohortTempTable = "#cohort_person",
+                                                           rowIdField = "row_id",
+                                                           covariateSettings = covariateSettings)  
+    
+  } else {
+    writeLines("Fetching covariates from server")
+    covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
+                                                           oracleTempSchema = oracleTempSchema,
+                                                           cdmDatabaseSchema = cdmDatabaseSchema,
+                                                           cdmVersion = cdmVersion,
+                                                           cohortTable = "#cohort_person",
+                                                           cohortTableIsTemp = TRUE,
+                                                           rowIdField = "row_id",
+                                                           covariateSettings = covariateSettings)    
+  }
+
   writeLines("Fetching outcomes from server")
   start <- Sys.time()
   outcomeSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
@@ -237,11 +252,21 @@ getPlpData <- function(connectionDetails,
   metaData$call$washoutPeriod = washoutPeriod
   metaData$call$covariateSettings= covariateSettings
 
-  result <- list(cohorts = cohorts,
-                 outcomes = outcomes,
-                 covariates = covariateData$covariates,
-                 covariateRef = covariateData$covariateRef,
-                 metaData = metaData)
+  if (temporal) {
+    result <- list(cohorts = cohorts,
+                   outcomes = outcomes,
+                   covariates = covariateData$covariates,
+                   covariateRef = covariateData$covariateRef,
+                   timePeriods = covariateData$timePeriods,
+                   metaData = metaData)
+  } else {
+    result <- list(cohorts = cohorts,
+                   outcomes = outcomes,
+                   covariates = covariateData$covariates,
+                   covariateRef = covariateData$covariateRef,
+                   metaData = metaData)   
+  }
+
   
   class(result) <- "plpData"
   return(result)
