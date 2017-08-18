@@ -2,33 +2,42 @@
 % Please edit documentation in R/CostCurve.R
 \name{createCostCurve}
 \alias{createCostCurve}
-\title{Create setting for DecisionTree with python}
+\title{costCurve - Create a cost curve for weighting classes using different weights}
 \usage{
 createCostCurve(population, plpData, modeltype = "MLPTorch",
   testSplit = "time", testFraction = 0.25, factors = c(1, 2, 4, 6, 8, 10,
-  12, 14, 16, 20, 30, 40, 50), splitSeed = NULL, nfold = 3,
-  indexes = NULL, save = NULL, saveModel = T,
-  verbosity = futile.logger::INFO, timeStamp = FALSE, analysisId = NULL,
-  saveFig = FALSE)
+  12, 14, 16, 20, 30, 40, 50), splitSeed = NULL, nfold = 3)
 }
 \arguments{
-\item{max_depth}{The maximum depth of the tree}
+\item{population}{The population created using createStudyPopulation() who will be used to develop the model}
 
-\item{min_samples_split}{The minimum samples per split}
+\item{plpData}{An object of type \code{plpData} - the patient level prediction
+data extracted from the CDM.}
 
-\item{min_samples_leaf}{The minimum number of samples per leaf}
+\item{modeltype}{An type of model created using one of the function:
+\itemize{
+\item{LRTorch()}{ A logistic regression model}
+\item{MLPTorch()}{ A neural network model}
+\item{CNNTorch()}{ A convolutional neural network model}
+}}
 
-\item{min_impurity_split}{Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.}
+\item{testSplit}{Either 'person' or 'time' specifying the type of evaluation used.
+'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
+'person' splits the data into test (1-testFraction of the data) and
+train (validationFraction of the data) sets.  The split is stratified by the class label.}
 
-\item{class_weight}{Balance or None}
+\item{testFraction}{The fraction of the data to be used as the test set in the patient
+split evaluation.}
 
-\item{seed}{The random state seed}
+\item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
+
+\item{nfold}{The number of folds used in the cross validation (default 3)}
+
+\item{trainFractions}{A list of trainFractions to try}
 }
 \description{
-Create setting for DecisionTree with python
+#'
 }
-\examples{
-\dontrun{
-model.decisionTree <- setDecisionTree(max_depth=10,min_samples_leaf=10, seed=NULL )
-}
+\details{
+
 }
