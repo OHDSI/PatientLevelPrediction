@@ -79,8 +79,8 @@ createLearningCurve <- function(population, plpData,
   
   nrRuns <- length(trainFractions);
   learningCurve <- data.frame(x = numeric(nrRuns),
-                           trainError = integer(nrRuns),
-                           testError = integer(nrRuns))
+                           trainAUC = integer(nrRuns),
+                           testAUC = integer(nrRuns))
   
   # log the start time:
   ExecutionDateTime <- Sys.time()
@@ -91,9 +91,10 @@ createLearningCurve <- function(population, plpData,
     flog.layout(layout.format('~m'))
   }
   flog.threshold(verbosity)
-  
+  originalPopulation <- population
   run <- 1;
   for (trainFraction in trainFractions) {
+    population <- originalPopulation
     # create an analysisid and folder to save the results of this run
     start.all <- Sys.time()
     if (is.null(analysisId))
@@ -406,8 +407,8 @@ createLearningCurve <- function(population, plpData,
     
     # save the current trainFraction
     learningCurve$x[run]<-trainFraction*100
-    learningCurve$trainError[run] <- performance.train$evaluationStatistics$AUC$auc
-    learningCurve$testError[run] <- performance.test$evaluationStatistics$AUC$auc
+    learningCurve$trainAUC[run] <- performance.train$evaluationStatistics$AUC$auc
+    learningCurve$testAUC[run] <- performance.test$evaluationStatistics$AUC$auc
     run <- run + 1
   }
   return(learningCurve)
