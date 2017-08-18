@@ -20,3 +20,4 @@ standalone/build/*
 /plpmodels/*
 /python_models/*
 /mycache/*
+/temp/*
