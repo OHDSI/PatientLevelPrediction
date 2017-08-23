@@ -75,7 +75,7 @@
 createLearningCurve <- function(population, plpData,
                    modelSettings,
                    testSplit = 'time', testFraction=0.25, trainFractions = c(0.25,0.50,0.75), splitSeed=NULL, nfold=3, indexes=NULL,
-                   save=NULL, saveModel=T,verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL){
+                   save=NULL, saveModel=T,verbosity=futile.logger::INFO, timeStamp=TRUE, analysisId=NULL){
   
   nrRuns <- length(trainFractions);
   learningCurve <- data.frame(x = numeric(nrRuns),
@@ -207,33 +207,37 @@ createLearningCurve <- function(population, plpData,
         sink()
         flog.error(e)
         stop(e)
-      },
-      finally = {
-        flog.trace('Done.')
       }
     )
     sink()
-    
+    flog.trace('Done.')
+
     # save the model
     if (saveModel == T) {
       modelLoc <- file.path(save, analysisId, 'savedModel')
-      ftry(savePlpModel(model, modelLoc), finally = flog.trace('Done.'))
+      ftry(savePlpModel(model, modelLoc))
       flog.info(paste0('Model saved to ..\\', analysisId, '\\savedModel'))
     }
     
     # calculate metrics
     flog.seperator()
     flog.trace('Prediction')
+    flog.trace(paste0('Calculating prediction for ', sum(indexes$index !=0)))
+    ind <- population$rowId%in%indexes$rowId[indexes$index!=0]
     prediction <-
-      ftry(
-        predictPlp(
-          plpModel = model,
-          population = population,
-          plpData = plpData,
-          index = NULL
-        ),
-        finally = flog.trace('Done.')
-      )
+      model$predict(plpData = plpData, population = population[ind, ])
+    
+    metaData <- list(
+      predictionType = "binary",
+      cohortId = attr(population, 'metaData')$cohortId,
+      outcomeId = attr(population, 'metaData')$outcomeId
+    )
+    
+    attr(prediction, "metaData") <- metaData
+    
+    finally = flog.trace('Done.')
+    
+    
     if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
                1)) {
       # add analysisID
@@ -407,8 +411,11 @@ createLearningCurve <- function(population, plpData,
     
     # save the current trainFraction
     learningCurve$x[run]<-trainFraction*100
-    learningCurve$trainAUC[run] <- performance.train$evaluationStatistics$AUC$auc
-    learningCurve$testAUC[run] <- performance.test$evaluationStatistics$AUC$auc
+    learningCurve$popSizeTrain[run]<- sum(indexes$index !=0)
+    learningCurve$outcomeCountTrain[run]<- sum(population[population$index > 0, ]$outcomeCount)
+    learningCurve$trainAUC[run] <- performance.train$evaluationStatistics$AUC
+    learningCurve$testAUC[run] <- performance.test$evaluationStatistics$AUC
+    learningCurve$executionTime[run] <- TotalExecutionElapsedTime
     run <- run + 1
   }
   return(learningCurve)
