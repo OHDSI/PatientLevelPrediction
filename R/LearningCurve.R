@@ -73,14 +73,14 @@
 #' @export
 
 createLearningCurve <- function(population, plpData,
-                   modelSettings,
-                   testSplit = 'time', testFraction=0.25, trainFractions = c(0.25,0.50,0.75), splitSeed=NULL, nfold=3, indexes=NULL,
-                   save=NULL, saveModel=T,verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL){
+                                modelSettings,
+                                testSplit = 'time', testFraction=0.25, trainFractions = c(0.25,0.50,0.75), splitSeed=NULL, nfold=3, indexes=NULL,
+                                save=NULL, saveModel=T,verbosity=futile.logger::INFO, timeStamp=TRUE, analysisId=NULL){
   
   nrRuns <- length(trainFractions);
   learningCurve <- data.frame(x = numeric(nrRuns),
-                           trainAUC = integer(nrRuns),
-                           testAUC = integer(nrRuns))
+                              trainAUC = integer(nrRuns),
+                              testAUC = integer(nrRuns))
   
   # log the start time:
   ExecutionDateTime <- Sys.time()
@@ -149,22 +149,22 @@ createLearningCurve <- function(population, plpData,
     
     # construct the train and test set.
     # note that index will be zero for rows not in train or test
-      if (testSplit == 'time') {
-        flog.trace('Dataset time split starter')
-        indexes <-
-          ftry(timeSplitter(population, test = testFraction,train = trainFraction, nfold = nfold),
-               finally = flog.trace('Done.'))
-      }
-      if (testSplit == 'person') {
-        flog.trace('Dataset person split starter')
-        indexes <-
-          ftry(
-            personSplitter(population, test = testFraction, train = trainFraction, nfold = nfold, 
-                           seed = splitSeed),
-            finally = flog.trace('Done.')
-          )
-      }
-
+    if (testSplit == 'time') {
+      flog.trace('Dataset time split starter')
+      indexes <-
+        ftry(timeSplitter(population, test = testFraction,train = trainFraction, nfold = nfold),
+             finally = flog.trace('Done.'))
+    }
+    if (testSplit == 'person') {
+      flog.trace('Dataset person split starter')
+      indexes <-
+        ftry(
+          personSplitter(population, test = testFraction, train = trainFraction, nfold = nfold, 
+                         seed = splitSeed),
+          finally = flog.trace('Done.')
+        )
+    }
+    
     # TODO better to move this to the splitter if this is important?
     if (nrow(population) != nrow(indexes)) {
       flog.error(sprintf(
@@ -179,8 +179,8 @@ createLearningCurve <- function(population, plpData,
     flog.seperator()
     tempmeta <- attr(population, "metaData")
     if (is.null(population$indexes)){
-    population <- merge(population, indexes)
-    colnames(population)[colnames(population) == 'index'] <- 'indexes'
+      population <- merge(population, indexes)
+      colnames(population)[colnames(population) == 'index'] <- 'indexes'
     } else{
       attr(population, 'indexes') <- indexes
     }
@@ -207,33 +207,37 @@ createLearningCurve <- function(population, plpData,
         sink()
         flog.error(e)
         stop(e)
-      },
-      finally = {
-        flog.trace('Done.')
       }
     )
     sink()
+    flog.trace('Done.')
     
     # save the model
     if (saveModel == T) {
       modelLoc <- file.path(save, analysisId, 'savedModel')
-      ftry(savePlpModel(model, modelLoc), finally = flog.trace('Done.'))
+      ftry(savePlpModel(model, modelLoc))
       flog.info(paste0('Model saved to ..\\', analysisId, '\\savedModel'))
     }
     
     # calculate metrics
     flog.seperator()
     flog.trace('Prediction')
+    flog.trace(paste0('Calculating prediction for ', sum(indexes$index !=0)))
+    ind <- population$rowId%in%indexes$rowId[indexes$index!=0]
     prediction <-
-      ftry(
-        predictPlp(
-          plpModel = model,
-          population = population,
-          plpData = plpData,
-          index = NULL
-        ),
-        finally = flog.trace('Done.')
-      )
+      model$predict(plpData = plpData, population = population[ind, ])
+    
+    metaData <- list(
+      predictionType = "binary",
+      cohortId = attr(population, 'metaData')$cohortId,
+      outcomeId = attr(population, 'metaData')$outcomeId
+    )
+    
+    attr(prediction, "metaData") <- metaData
+    
+    finally = flog.trace('Done.')
+    
+    
     if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
                1)) {
       # add analysisID
@@ -407,10 +411,13 @@ createLearningCurve <- function(population, plpData,
     
     # save the current trainFraction
     learningCurve$x[run]<-trainFraction*100
-    learningCurve$trainAUC[run] <- performance.train$evaluationStatistics$AUC$auc
-    learningCurve$testAUC[run] <- performance.test$evaluationStatistics$AUC$auc
+    learningCurve$popSizeTrain[run]<- sum(indexes$index !=0)
+    learningCurve$outcomeCountTrain[run]<- sum(population[population$index > 0, ]$outcomeCount)
+    learningCurve$trainAUC[run] <- performance.train$evaluationStatistics$AUC
+    learningCurve$testAUC[run] <- performance.test$evaluationStatistics$AUC
+    learningCurve$executionTime[run] <- TotalExecutionElapsedTime
     run <- run + 1
   }
   return(learningCurve)
-
+  
 }

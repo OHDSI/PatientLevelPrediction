@@ -709,9 +709,9 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #' @export
 plotLearningCurve <- function(learningCurve, title=" ", xlabel="Training Size", fileName=NULL){
   plot<- ggplot2::ggplot(learningCurve, aes(x)) +
-    ggplot2::geom_line(aes(y=trainAUC),
+    ggplot2::geom_line(aes(y=as.numeric(trainAUC)),
               colour="red") +
-    ggplot2::geom_line(aes(y=testAUC),
+    ggplot2::geom_line(aes(y=as.numeric(testAUC)),
               colour="green")+
     ggplot2::xlab(xlabel) +
     ggplot2::ylab("AUC") +
