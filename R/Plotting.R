@@ -708,15 +708,15 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #'
 #' @export
 plotLearningCurve <- function(learningCurve, title=" ", xlabel="Training Size", fileName=NULL){
-  plot<- ggplot2::ggplot(learningCurve, aes(x)) +
-    ggplot2::geom_line(aes(y=as.numeric(trainAUC)),
+  plot<- ggplot2::ggplot(learningCurve, ggplot2::aes(x)) +
+    ggplot2::geom_line(ggplot2::aes(y=as.numeric(trainAUC)),
               colour="red") +
-    ggplot2::geom_line(aes(y=as.numeric(testAUC)),
+    ggplot2::geom_line(ggplot2::aes(y=as.numeric(testAUC)),
               colour="green")+
     ggplot2::xlab(xlabel) +
     ggplot2::ylab("AUC") +
-    ggplot2::ggtitle(title) + coord_cartesian(ylim=c(0.3, 1)) +
-    ggplot2::theme(plot.title = element_text(hjust = 0.5))
+    ggplot2::ggtitle(title) + ggplot2::coord_cartesian(ylim=c(0.5, 1)) +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
