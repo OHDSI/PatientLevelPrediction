@@ -73,7 +73,7 @@ applyModel <- function(population,
   if (!silent)
     writeLines(paste("Starting evaulation at ", Sys.time()))
 
-  performance <- evaluatePlp(prediction, plpData)
+  performance <- evaluatePlp(prediction, plpData, model = plpModel$modelSettings$model)
 
   if (!is.null(logConnection)) {
     cat("Evaluation completed at ", Sys.time(), file = logConnection)

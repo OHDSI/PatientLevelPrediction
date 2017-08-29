@@ -29,7 +29,7 @@
 #'
 
 #' @export
-evaluatePlp <- function(prediction, plpData){
+evaluatePlp <- function(prediction, plpData, model = NULL){
   
   # checking inputs
   #========================================
@@ -73,9 +73,14 @@ evaluatePlp <- function(prediction, plpData){
   flog.trace(paste0('Completed @ ',Sys.time()))
   
   # 3) demographicSummary
+  if (model == 'fitCNNTorch' | model == 'fitRNNTorch'){
+    demographicSummary <- NULL
+  } else {
   flog.trace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
   demographicSummary <- getDemographicSummary(prediction, plpData)
+  #demographicSummary <- NULL
   flog.trace(paste0('Completed @ ',Sys.time()))
+  }
   # need to edit covSettings to make age/gender always calculated!
   
   # calibration linear fit- returns gradient, intercept

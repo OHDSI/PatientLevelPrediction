@@ -25,7 +25,7 @@ else:
         print('===> Using CPU')
 print 'GPU id', torch.cuda.current_device()
 
-def batch(tensor, batch_size = 1000):
+def batch(tensor, batch_size = 50):
     tensor_list = []
     length = tensor.shape[0]
     i = 0
@@ -46,6 +46,7 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, 
         
     print D,N,T
     concept_list =list(covriate_ids)
+    concept_list.sort()
     x_raw = np.zeros((N, D, T), dtype=float)
     #y = np.zeros((O,N,T), dtype=int)
     patient_ind = 0
@@ -70,7 +71,7 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, 
 
 def convert_2_cnn_format(covariates, time_window = 12):
     covariate_ids = set()
-    patient_dict = {}
+    patient_dict = OrderedDict()
     #print covariates.shape
     #pdb.set_trace()
     for row in covariates:
@@ -896,15 +897,15 @@ elif model_type in ['CNN', 'RNN']:
             if cuda:
                 model = model.cuda()
             clf = Estimator(model)
-            clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.004),
+            clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.005),
                         loss=nn.CrossEntropyLoss(weight = class_weight))
             
-            clf.fit(train_x, train_y, batch_size=12, nb_epoch=epochs)
+            clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
             
             ind = (population[:, population.shape[1] - 1] > 0)
             ind = population[ind, population.shape[1] - 1] == i
             
-            test_batch = batch(test_x)
+            test_batch = batch(test_x, batch_size = 50)
             temp = []
             for test in test_batch:
                 pred_test1 = model.predict_proba(test)[:, 1]
@@ -946,9 +947,9 @@ elif model_type in ['CNN', 'RNN']:
         if cuda:
             model = model.cuda()
         clf = Estimator(model)
-        clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.004),
+        clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.005),
                     loss=nn.CrossEntropyLoss(weight = class_weight))
-        clf.fit(train_x, train_y, batch_size=12, nb_epoch=epochs)
+        clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
 
         end_time = timeit.default_timer()
         print "Training final took: %.2f s" % (end_time - start_time)

@@ -245,11 +245,11 @@ createLearningCurve <- function(population, plpData,
       
       flog.info('Train set evaluation')
       performance.train <-
-        evaluatePlp(prediction[prediction$indexes > 0, ], plpData)
+        evaluatePlp(prediction[prediction$indexes > 0, ], plpData, model = modelSettings$model)
       flog.trace('Done.')
       flog.info('Test set evaluation')
       performance.test <-
-        evaluatePlp(prediction[prediction$indexes < 0, ], plpData)
+        evaluatePlp(prediction[prediction$indexes < 0, ], plpData, model = modelSettings$model)
       flog.trace('Done.')
       
       # now combine the test and train data and add analysisId

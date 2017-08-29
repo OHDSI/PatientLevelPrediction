@@ -175,7 +175,7 @@ trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, time_window = 12, c
     PythonInR::pyExec("train = False")
   
   # then run standard python code #learningcurve.py #deepTorch.py
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','learningcurve.py'))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','deepTorch.py'))
   
   if(train){
     # then get the prediction 

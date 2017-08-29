@@ -38,6 +38,7 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, 
         
     print D,N,T
     concept_list =list(covriate_ids)
+    concept_list.sort()
     x_raw = np.zeros((N, D, T), dtype=float)
     #y = np.zeros((O,N,T), dtype=int)
     patient_ind = 0
@@ -63,7 +64,7 @@ def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1, 
 def convert_2_cnn_format(covariates, time_window = 12):
     covariate_ids = set()
     time_ids = set()
-    patient_dict = {}
+    patient_dict = OrderedDict()
     #print covariates.shape
     #pdb.set_trace()
     for row in covariates:
@@ -96,8 +97,8 @@ def get_temproal_data(covariates, population, time_window = 12):
             #print tmp_x.shape, X.shape
             full_covariates = np.concatenate((full_covariates, tmp_x), axis=0)
 
-	X, patient_keys = convert_2_cnn_format(full_covariates)
-	return X
+    X, patient_keys = convert_2_cnn_format(full_covariates)
+    return X
 
 def batch(tensor, batch_size = 100):
     tensor_list = []
@@ -114,8 +115,12 @@ print "Loading Data..."
 # load data + train,test indexes + validation index
 
 y=population[:,1]
+#print covariates.shape
+
+print 'population size', len(y)
 if modeltype == 'temporal':
 	X = get_temproal_data(covariates, population)
+	dense = 0
 else:
 	X = plpData[population[:,0],:]
 	X = X[:,included.flatten()]
@@ -139,7 +144,7 @@ modelTrained = joblib.load(os.path.join(model_loc,'model.pkl'))
 print X.shape
 print "Calculating predictions on population..."
 if modeltype == 'temporal':
-    test_batch = batch(X)
+    test_batch = batch(X, batch_size = 50)
     test_pred = []
     for test in test_batch:
         pred_test1 = model.predict_proba(test)[:, 1]

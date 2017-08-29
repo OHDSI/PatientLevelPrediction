@@ -258,14 +258,14 @@ runPlp <- function(population, plpData,
     attr(prediction, "metaData")$analysisId <- analysisId
     
     flog.info('Train set evaluation')
-    performance.train <- evaluatePlp(prediction[prediction$indexes>0,], plpData)
+    performance.train <- evaluatePlp(prediction[prediction$indexes>0,], plpData, model = modelSettings$model)
     flog.trace('Done.')
     flog.info('Test set evaluation')
-    performance.test <- evaluatePlp(prediction[prediction$indexes<0,], plpData)
+    performance.test <- evaluatePlp(prediction[prediction$indexes<0,], plpData, model = modelSettings$model)
     flog.trace('Done.')
     
     # now combine the test and train data and add analysisId
-    performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
+    performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId, model = modelSettings$model)
     
     if(!is.null(save)){
       flog.trace('Saving evaluation')
