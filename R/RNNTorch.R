@@ -27,7 +27,7 @@
 #' model.rnnTorch <- setRNNTorch()
 #' }
 #' @export
-setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_window = 12){
+setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_window = 12, class_weight = 0){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -39,7 +39,8 @@ setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_w
     )
   }
   result <- list(model='fitRNNTorch', param= expand.grid(hidden_size=hidden_size,
-                                                         epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), time_window = time_window),
+                                                         epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
+                                                         time_window = time_window, class_weight = class_weight),
                  name='RNN Torch')
   
   class(result) <- 'modelSettings' 
@@ -75,7 +76,7 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   
   start <- Sys.time()
   
-  population$rowIdPython <- population$subjectId # -1 to account for python/r index difference #subjectId
+  population$rowIdPython <- population$rowId-1  #to account for python/r index difference #subjectId
   #idx <- ffbase::ffmatch(x = population$subjectId, table = ff::as.ff(plpData$covariates$rowId))
   #idx <- ffbase::ffwhich(idx, !is.na(idx))
   #population <- population[idx, ]
@@ -83,13 +84,9 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
   
   # convert plpData in coo to python:
-  #x <- totemporalPython(plpData,population, map=NULL) 
-  covar <- plpData$covariates
-  #covar$rowIdPython <- covar$rowId # -1 to account for python/r index difference
-  idx <- ffbase::ffmatch(x = covar$rowId, table = ff::as.ff(population$rowIdPython))
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- covar[idx, ]
-  PythonInR::pySet('covariates', as.matrix(covariates[,c('rowId','covariateId','timeId', 'covariateValue')]))
+  covariates <- plpData$covariates
+  covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
+  PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
   
   covariateRef <- ff::as.ram(plpData$covariateRef)
   inc <- 1:ncol(covariateRef)  
@@ -113,7 +110,8 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
     
     # then run standard python code
     auc <- do.call(trainRNNTorch,list(epochs=as.character(param$epochs[i]), hidden_size = as.character(param$hidden_size[i]), 
-                                      seed = as.character(param$seed[i]), time_window = as.character(param$time_window[i]), train = TRUE))
+                                      seed = as.character(param$seed[i]), time_window = as.character(param$time_window[i]), 
+                                      class_weight = as.character(param$class_weight[i]), train = TRUE))
     
     all_auc <- c(all_auc, auc)
     writeLines(paste0('Model with settings: epochs: ',param$epochs[i], 
@@ -132,6 +130,7 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                                            hidden_size=as.character(param$hidden_size[which.max(all_auc)]), 
                                            seed = as.character(param$seed[which.max(all_auc)]), 
                                            time_window = as.character(param$time_window[which.max(all_auc)]),
+                                           class_weight = as.character(param$class_weight[which.max(all_auc)]),
                                            train = FALSE))
   
   
@@ -161,12 +160,13 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, time_window = 12, train=TRUE){
+trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, time_window = 12, class_weight= 0, train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("hidden_size = ",hidden_size))
   PythonInR::pyExec(paste0("seed = ",seed))
   PythonInR::pyExec(paste0("time_window = ",time_window))
+  PythonInR::pyExec(paste0("class_weight = ",class_weight))
   PythonInR::pyExec("model_type = 'RNN'")
   if(train)
     PythonInR::pyExec("train = True")
