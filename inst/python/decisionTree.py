@@ -23,14 +23,16 @@ from sklearn.datasets import load_svmlight_file
 from sklearn.externals import joblib
 
 #================================================================
-print "Training Decision Tree model " 
+if quiet=='FALSE':
+  print "Training Decision Tree model " 
 
 y = population[:,1]
 X = plpData[population[:,0],:]
 trainInds =population[:,population.shape[1]-1] >0
 
-print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
-print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
+if quiet=='FALSE':
+  print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
+  print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
 ###########################################################################
 
 if train:
@@ -44,22 +46,25 @@ if train:
     train_y = y[trainInds][trainInd]
 
     test_x = X[trainInds,:][testInd,:]	
-    print "Fold %s split %s in train set and %s in test set" %(i, train_x.shape[0], test_x.shape[0])
-    print "Train set contains %s outcomes " %(np.sum(train_y))
+    if quiet=='FALSE':
+      print "Fold %s split %s in train set and %s in test set" %(i, train_x.shape[0], test_x.shape[0])
+      print "Train set contains %s outcomes " %(np.sum(train_y))
 
-    # train on fold
-    print "Training fold %s" %(i)
+      # train on fold
+      print "Training fold %s" %(i)
     start_time = timeit.default_timer()	
     dt = DecisionTreeClassifier(criterion='gini', splitter='best', max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, min_weight_fraction_leaf=0.0, max_features=None, random_state=seed, max_leaf_nodes=None, min_impurity_split=min_impurity_split, class_weight=class_weight, presort=False)
     dt = dt.fit(train_x, train_y)
     end_time = timeit.default_timer()
-    print "Training fold took: %.2f s" %(end_time-start_time)
-    print "Calculating predictions on left out fold set..."
+    if quiet=='FALSE':
+      print "Training fold took: %.2f s" %(end_time-start_time)
+      print "Calculating predictions on left out fold set..."
     ind = (population[:,population.shape[1]-1] > 0)
     ind = population[ind,population.shape[1]-1]==i
     test_pred[ind] = dt.predict_proba(test_x)[:,1]
-    print "Prediction complete: %s rows " %(np.shape(test_pred[ind])[0])
-    print "Mean: %s prediction value" %(np.mean(test_pred[ind]))
+    if quiet=='FALSE':
+      print "Prediction complete: %s rows " %(np.shape(test_pred[ind])[0])
+      print "Mean: %s prediction value" %(np.mean(test_pred[ind]))
 
   # merge pred with indexes[testInd,:]
   test_pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
@@ -68,19 +73,22 @@ if train:
 
 # train final:
 else:
-  print "Training final decision tree model on all train data..."
-  print "X- %s rows and Y %s length" %(X[trainInds,:].shape[0], y[trainInds].shape[0])
+  if quiet=='FALSE':
+    print "Training final decision tree model on all train data..."
+    print "X- %s rows and Y %s length" %(X[trainInds,:].shape[0], y[trainInds].shape[0])
 
   start_time = timeit.default_timer()	
   dt = DecisionTreeClassifier(criterion='gini', splitter='best', max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, min_weight_fraction_leaf=0.0, max_features=None, random_state=seed, max_leaf_nodes=None, min_impurity_split=min_impurity_split, class_weight=class_weight, presort=False)
   dt = dt.fit(X[trainInds,:], y[trainInds])
   end_time = timeit.default_timer()
-  print "Training final took: %.2f s" %(end_time-start_time)
+  if quiet=='FALSE':
+    print "Training final took: %.2f s" %(end_time-start_time)
 
   # save the model:
   if not os.path.exists(modelOutput):
     os.makedirs(modelOutput)
-  print "Model saved to: %s" %(modelOutput)	
+  if quiet=='FALSE':
+    print "Model saved to: %s" %(modelOutput)	
 
   joblib.dump(dt, modelOutput+'\\model.pkl') 
   

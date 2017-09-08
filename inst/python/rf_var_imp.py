@@ -46,17 +46,22 @@ testInd = population[:,population.shape[1]-1] < 0
 ###########################################################################
 train_x = X[trainInd,:]
 train_y = y[trainInd]
-print "Train set contains %s outcomes " %(np.sum(train_y))
+
+if quiet=='FALSE':
+  print "Train set contains %s outcomes " %(np.sum(train_y))
 
 mtry = int(np.round(np.sqrt(train_x.shape[1])))
-print "Training random forest with mtry= %s" %(mtry)
-# feature selection
-print "Applying variable importance feature selection..."
+if quiet=='FALSE':
+  print "Training random forest with mtry= %s" %(mtry)
+  # feature selection
+  print "Applying variable importance feature selection..."
 rf = RandomForestClassifier(max_features=mtry, n_estimators=ntrees,max_depth=max_depth,min_samples_split=2, random_state=0, n_jobs=-1, bootstrap=False)
 rf = rf.fit(train_x, train_y)
 feat_sel = SelectFromModel(rf,threshold='mean', prefit=True)
 train_x = feat_sel.transform(train_x)
-print "Selected %s number of features" %(train_x.shape[1])
+
+if quiet=='FALSE':
+  print "Selected %s number of features" %(train_x.shape[1])
 	
 
 

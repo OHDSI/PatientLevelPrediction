@@ -36,15 +36,15 @@ setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T, se
     stop('Invalid seed')
   if(class(ntrees)!='numeric')
     stop('ntrees must be a numeric value >0')
-  if(ntrees < 0)
+  if(sum(ntrees < 0)>0)
     stop('mtries must be greater that 0')
   if(class(mtries)!='numeric')
     stop('mtries must be a numeric value >1 or -1')
-  if(mtries < -1)
+  if(sum(mtries < -1)>0)
     stop('mtries must be greater that 0 or -1')
   if(class(max_depth)!='numeric')
     stop('max_depth must be a numeric value >0')
-  if(max_depth < 1)
+  if(sum(max_depth < 1)>0)
     stop('max_depth must be greater that 0')
   if(class(varImp)!="logical")
     stop('varImp must be boolean')
@@ -91,9 +91,11 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
   
-  
-  if(!quiet)
+  PythonInR::pyExec('quiet = False')
+  if(!quiet){
     writeLines(paste0('Training random forest model...' ))
+    PythonInR::pyExec('quiet = True')
+  }
   start <- Sys.time()
   
   # make sure population is ordered?
@@ -122,7 +124,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     #load var imp and create mapping/missing
     varImp <-PythonInR::pyGet("rf.feature_importances_", simplify = FALSE)[,1]
     
-    writeLines('Variable importance completed')  
+    if(!quiet)
+      writeLines('Variable importance completed')  
     if(mean(varImp)==0)
       stop('No important variables - seems to be an issue with the data')
     
@@ -182,7 +185,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     ##colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
     auc <- PatientLevelPrediction::computeAuc(pred)
     all_auc <- c(all_auc, auc)
-    writeLines(paste0('Model with settings: ntrees:',param$ntrees[i],' max_depth: ',param$max_depth[i], 
+    if(!quiet)
+      writeLines(paste0('Model with settings: ntrees:',param$ntrees[i],' max_depth: ',param$max_depth[i], 
                       'mtry: ', param$mtry[i] , ' obtained AUC of ', auc))
   }
   

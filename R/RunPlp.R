@@ -304,7 +304,8 @@ runPlp <- function(population, plpData,
                        populationSettings=attr(population, "metaData"),
                        modelSettings = modelSettings,
                        testSplit = testSplit, 
-                       testFraction= testFraction)
+                       testFraction= testFraction,
+                       nfold=nfold)
   
   # 2) Executionsummary details:
   executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
@@ -446,5 +447,6 @@ covariateSummary <- function(plpData, population){
 }
 
 
-
-
+# for backwards compatability 
+#' @export
+RunPlp <- runPlp

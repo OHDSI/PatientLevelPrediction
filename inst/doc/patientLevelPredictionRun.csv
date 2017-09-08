@@ -1,0 +1,20 @@
+function,order,description,compulsory
+DatabaseConnector::createConnectionDetails,1,Specify the database connections for dataset creation,TRUE
+FeatureExtraction::createCovariateSettings,2,Pick the covariates to include into the model,TRUE
+PatientLevelPrediction::getPlpData,3,Extract the data,TRUE
+PatientLevelPrediction::savePlpData,3.5,Save the data,FALSE
+PatientLevelPrediction::loadPlpData,3.5,Load the data,FALSE
+PatientLevelPrediction::createStudyPopulation,4,Create the labelled dataset by specifying the outcome and time-at-risk plus optional exclusions,TRUE
+PatientLevelPrediction::setRandomForest,5,Set the random forest model training settings,TRUE
+PatientLevelPrediction::setNaiveBayes,5,Set the naive bayes model training settings,TRUE
+PatientLevelPrediction::setMLP,5,Set the multilayer perception model training settings,TRUE
+PatientLevelPrediction::setKNN,5,Set the k nearest neighbors model training settings,TRUE
+PatientLevelPrediction::setGradientBoostingMachine,5,Set the gradient boosting machine model training settings,TRUE
+PatientLevelPrediction::setDecisionTree,5,Set the decision tree model training settings,TRUE
+PatientLevelPrediction::setAdaBoost,5,Set the ada boost model training settings,TRUE
+PatientLevelPrediction::setLassoLogisticRegression,5,Set the lasso logistic regression model training settings,TRUE
+PatientLevelPrediction::runPlp,6,Run and internally validate the model,TRUE
+PatientLevelPrediction::savePlpResult,6.5,Save the model development ,FALSE
+PatientLevelPrediction::loadPlpResult,6.5,Load the model development ,FALSE
+PatientLevelPrediction::plotSparseCalibration2,7,Plot the calibration ,TRUE
+PatientLevelPrediction::plotSparseRoc,8,Plot the ROC,TRUE

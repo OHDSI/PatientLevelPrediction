@@ -75,6 +75,29 @@ applyModel <- function(population,
 
   performance <- evaluatePlp(prediction, plpData)
 
+  # reformatting the performance 
+  performance$evaluationStatistics <- cbind(analysisId=rep(performance$evaluationStatistics$analysisId,nrow(performance$evaluationStatistics)),
+                                               Eval=rep('validation', nrow(performance$evaluationStatistics)),
+                                               Metric = names(unlist(performance$evaluationStatistics[-1])),
+                                               Value = unlist(performance$evaluationStatistics[-1])
+                                               )
+  nr1 <- nrow(performance$thresholdSummary)
+  performance$thresholdSummary <- cbind(analysisId=rep(analysisId,nr1),
+                                              Eval=rep('validation', nr1),
+                                              performance$thresholdSummary)
+  nr1 <- nrow(performance$demographicSummary)
+  performance$demographicSummary <- cbind(analysisId=rep(analysisId,nr1),
+                                        Eval=rep('validation', nr1),
+                                        performance$demographicSummary)
+  nr1 <- nrow(performance$calibrationSummary)
+  performance$calibrationSummary <- cbind(analysisId=rep(analysisId,nr1),
+                                          Eval=rep('validation', nr1),
+                                          performance$calibrationSummary)
+  nr1 <- nrow(performance$predictionDistribution)
+  performance$predictionDistribution <- cbind(analysisId=rep(analysisId,nr1),
+                                          Eval=rep('validation', nr1),
+                                          performance$predictionDistribution)
+  
   if (!is.null(logConnection)) {
     cat("Evaluation completed at ", Sys.time(), file = logConnection)
     cat("Took: ", start.pred - Sys.time(), file = logConnection)
@@ -85,16 +108,6 @@ applyModel <- function(population,
   result <- list(prediction = prediction, performance = performance)
 }
 
-ApplyPlpPrediction <- function(plpModel, plpData, population) {
-  # TODO: input checks
-
-  prediction <- plpModel$predict(population = population, plpData = plpData)
-
-  # evaluation? - shall we add this? evaluatePlp(prediction)
-
-  return(prediction)
-
-}
 
 #' Extract new plpData using plpModel settings
 #' use metadata in plpModel to extract similar data and population for new databases:
@@ -153,6 +166,11 @@ similarPlpData <- function(plpModel=NULL,
   dataOptions <- as.list(plpModel$metaData$call)
   dataOptions[[1]] <- NULL
   
+  #restricting to model variables and setting min to 0
+  dataOptions$covariateSettings$deleteCovariatesSmallCount <- 0
+  dataOptions$covariateSettings$includedCovariateConceptIds <- plpModel$varImp$conceptId[plpModel$varImp$covariateValue!=0]
+  
+  
   writeLines('Adding new settings if set...')
   if(is.null(newCdmDatabaseSchema))
     return(NULL)
@@ -165,7 +183,6 @@ similarPlpData <- function(plpModel=NULL,
     dataOptions$cohortId <- newCohortId
   if(!is.null(newOutcomeId))
     dataOptions$outcomeIds <- newOutcomeId
-  plpData <- do.call(getPlpData, dataOptions)
   
   if(!is.null(newCohortDatabaseSchema))
     dataOptions$cohortDatabaseSchema <- newCohortDatabaseSchema  # correct names?
@@ -177,6 +194,7 @@ similarPlpData <- function(plpModel=NULL,
   if(!is.null(newOutcomeTable))
     dataOptions$outcomeTable <- newOutcomeTable
   
+  plpData <- do.call(getPlpData, dataOptions)
   
   # get the popualtion
   writeLines('Loading model population settings')

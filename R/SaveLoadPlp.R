@@ -89,6 +89,8 @@
 #'                                     date for a person to be included in the at risk cohort. Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
 #'                                     but can already be done here for efficiency reasons.
+#' @param sampleSize                   If not NULL, only this number of people will be sampled from the target population (Default NULL)
+#' 
 #' @param covariateSettings            An object of type \code{covariateSettings} as created using the
 #'                                     \code{createCovariateSettings} function in the
 #'                                     \code{FeatureExtraction} package.
@@ -109,25 +111,30 @@
 #'
 #' @export
 getPlpData <- function(connectionDetails,
-                                  cdmDatabaseSchema,
-                                  oracleTempSchema = cdmDatabaseSchema,
-                                  cohortId,
-                                  outcomeIds,
-                                  studyStartDate = "",
-                                  studyEndDate = "",
-                                  cohortDatabaseSchema = cdmDatabaseSchema,
-                                  cohortTable = "cohort",
-                                  outcomeDatabaseSchema = cdmDatabaseSchema,
-                                  outcomeTable = "cohort",
-                                  cdmVersion = "5",
-                                  excludeDrugsFromCovariates = F, #ToDo: rename to excludeFromFeatures
-                                  firstExposureOnly = FALSE,
-                                  washoutPeriod = 0,
-                                  covariateSettings) {
+                       cdmDatabaseSchema,
+                       oracleTempSchema = cdmDatabaseSchema,
+                       cohortId,
+                       outcomeIds,
+                       studyStartDate = "",
+                       studyEndDate = "",
+                       cohortDatabaseSchema = cdmDatabaseSchema,
+                       cohortTable = "cohort",
+                       outcomeDatabaseSchema = cdmDatabaseSchema,
+                       outcomeTable = "cohort",
+                       cdmVersion = "5",
+                       excludeDrugsFromCovariates = F, #ToDo: rename to excludeFromFeatures
+                       firstExposureOnly = FALSE,
+                       washoutPeriod = 0,
+                       sampleSize = NULL,
+                       covariateSettings) {
   if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
     stop("Study start date must have format YYYYMMDD")
   if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)
     stop("Study end date must have format YYYYMMDD")
+  if(!is.null(sampleSize)){
+    if(class(sampleSize)!='numeric')
+      stop("sampleSize must be numeric")
+  }
   #ToDo: add other checks the inputs are valid
   
   connection <- DatabaseConnector::connect(connectionDetails)
@@ -147,6 +154,7 @@ getPlpData <- function(connectionDetails,
   }
   
   writeLines("\nConstructing the at risk cohort")
+  if(!is.null(sampleSize))  writeLines(paste("\n Sampling ",sampleSize, " people"))
   renderedSql <- SqlRender::loadRenderTranslateSql("CreateCohorts.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = connectionDetails$dbms,
@@ -159,7 +167,10 @@ getPlpData <- function(connectionDetails,
                                                    study_start_date = studyStartDate,
                                                    study_end_date = studyEndDate,
                                                    first_only = firstExposureOnly,
-                                                   washout_period = washoutPeriod)
+                                                   washout_period = washoutPeriod,
+                                                   use_sample = !is.null(sampleSize),
+                                                   sample_number=sampleSize
+  )
   DatabaseConnector::executeSql(connection, renderedSql)
   
   writeLines("Fetching cohorts from server")
@@ -204,7 +215,7 @@ getPlpData <- function(connectionDetails,
   metaData.outcome <- data.frame(outcomeIds =outcomeIds)
   attr(outcomes, "metaData") <- metaData.outcome
   
-  metaData.cohort$attrition <- getCounts(cohorts,nrow(outcomes), "Original cohorts")
+  metaData.cohort$attrition <- getCounts2(cohorts,outcomes, "Original cohorts")
   attr(cohorts, "metaData") <- metaData.cohort
   
   delta <- Sys.time() - start

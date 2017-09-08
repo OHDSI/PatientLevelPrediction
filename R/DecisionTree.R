@@ -104,6 +104,10 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
   
+  PythonInR::pyExec('quiet = FALSE')
+  if(!quiet){
+    PythonInR::pyExec('quiet = TRUE')
+  }
   start <- Sys.time()
   
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
@@ -214,7 +218,8 @@ trainDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_lea
     
     pred$value <- 1-pred$value
     auc <- PatientLevelPrediction::computeAuc(pred)
-    writeLines(paste0('Model obtained CV AUC of ', auc))
+    if(!quiet)
+      writeLines(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }
   
