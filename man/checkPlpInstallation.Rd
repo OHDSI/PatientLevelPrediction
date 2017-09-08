@@ -2,6 +2,7 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{checkPlpInstallation}
 \alias{checkPlpInstallation}
+\title{Check PatientLevelPrediction and its dependencies are correctly installed}
 \usage{
 checkPlpInstallation(connectionDetails, python = T)
 }
@@ -10,6 +11,7 @@ checkPlpInstallation(connectionDetails, python = T)
 \code{createConnectionDetails} in the \code{DatabaseConnector} package.}
 }
 \description{
+Check PatientLevelPrediction and its dependencies are correctly installed
 }
 \details{
 This function checks whether PatientLevelPrediction and its dependencies are correctly installed. This will
