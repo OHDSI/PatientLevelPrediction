@@ -42,12 +42,12 @@ createPlpDocument <- function(plpResult=NULL,
                               targetName = '<target population>',
                               outcomeName = '<outcome>',
                               characterisationSettings=list(demo=T, utilization =T,
-                                                                            condition=T, conditionNumber=10,
-                                                                            drug=T, drugNumber=10,
-                                                                            observation=F, observationNumber=10,
-                                                                            procedure=F, procedureNumber=10,
-                                                                            measurement=F, measurementNumber=10,
-                                                                            include=NULL),
+                                                            condition=T, conditionNumber=10,
+                                                            drug=T, drugNumber=10,
+                                                            observation=F, observationNumber=10,
+                                                            procedure=F, procedureNumber=10,
+                                                            measurement=F, measurementNumber=10,
+                                                            include=NULL),
                               includeTrain=TRUE, includeTest=TRUE,
                               includePredictionPicture=TRUE, 
                               includeAttritionPlot=TRUE,
@@ -86,7 +86,7 @@ createPlpDocument <- function(plpResult=NULL,
   doc = ReporteRs::docx(title = paste0('<Add Paper Title (e.g., ',title,') Here>'))
   doc = ReporteRs::addTitle(doc, 'Background', level=1)
   doc = ReporteRs::addParagraph(doc, "<Add Background>" )
-
+  
   
   #=============== BACKGROUND: characterisation ==============
   if(!is.null(plpData)){
@@ -99,8 +99,8 @@ createPlpDocument <- function(plpResult=NULL,
     
     charactTab <- characteriszation(plpData, population, characterisationSettings)
     charactTab <- ReporteRs::FlexTable(charactTab[,c('covariateName','CovariateCount', 
-                  'CovariateCountWithOutcome', 'CovariateMeanWithOutcome',
-                  'CovariateCountWithNoOutcome', 'CovariateMeanWithNoOutcome')])
+                                                     'CovariateCountWithOutcome', 'CovariateMeanWithOutcome',
+                                                     'CovariateCountWithNoOutcome', 'CovariateMeanWithNoOutcome')])
     doc = ReporteRs::addFlexTable(doc, charactTab)
     
     # Tab1: Add paragraph describing data
@@ -150,7 +150,7 @@ createPlpDocument <- function(plpResult=NULL,
   # Pic2: add analysis details
   ##doc = ReporteRs::addFlexTable(plpResult$model$hyperParamSearch)
   doc = ReporteRs::addParagraph(doc, textPlpAnalysis(plpResult) )
-
+  
   
   #=============== RESULTS: attriction plot  ==============
   if(includeAttritionPlot){
@@ -174,7 +174,7 @@ createPlpDocument <- function(plpResult=NULL,
   
   if(includeTrain)
     ReporteRs::addPlot(doc, fun=print, x=trainROCPlot)
-    #doc = ReporteRs::addPlot(trainROCPlot)
+  #doc = ReporteRs::addPlot(trainROCPlot)
   
   # Pic4: Add comments
   doc = ReporteRs::addParagraph(doc, "< add comments about test/train discrimination results>" )
@@ -185,10 +185,10 @@ createPlpDocument <- function(plpResult=NULL,
   trainCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='train')
   if(includeTest)
     ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-    #doc = ReporteRs::addPlot(testCalPlot)
+  #doc = ReporteRs::addPlot(testCalPlot)
   if(includeTrain)
     ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
-    #doc = ReporteRs::addPlot(trainCalPlot)
+  #doc = ReporteRs::addPlot(trainCalPlot)
   # Pic5: Add comments
   doc = ReporteRs::addParagraph(doc, "< add comments about test/train calibration results>" )
   
@@ -216,7 +216,7 @@ characteriszation <- function(plpData, popualtion, characterisationSettings){
   if(characterisationSettings$utilization){
     # find top N covariates
     covs <- ff::as.ram(plpData$covariateRef$covariateId[plpData$covariateRef$analysisId>1000 &
-                                                         plpData$covariateRef$analysisId<1100])
+                                                          plpData$covariateRef$analysisId<1100])
     covs<- summary[summary$covariateId%in%covs,]
     utilizationRows <- covs[order(-covs$CovariateCount),]
   }
@@ -225,7 +225,7 @@ characteriszation <- function(plpData, popualtion, characterisationSettings){
   if(characterisationSettings$condition){
     # find top N covariates
     covs <- ff::as.ram(plpData$covariateRef$covariateId[ff::as.ram(plpData$covariateRef$analysisId>100 &                               
-                                                        plpData$covariateRef$analysisId<300)])
+                                                                     plpData$covariateRef$analysisId<300)])
     covs<- summary[summary$covariateId%in%covs,]
     conditionRows <- covs[order(-covs$CovariateCount),][1:characterisationSettings$conditionNumber,]
   }
@@ -308,7 +308,7 @@ plotPlpProblem <- function(plpResult){
   
   #diagram::straightarrow(from = c(0.2,0.5), to = c(1,0.5), lty = 3, lcol = 1)
   diagram::textrect(c(targetx,0.5), widthTargetx, 0.05,lab = paste0("Target:",target), box.col = "lightblue",
-                      shadow.col = "darkblue", shadow.size = 0.005, cex = 1.2)
+                    shadow.col = "darkblue", shadow.size = 0.005, cex = 1.2)
   
   lines(c(targetx+widthTargetx,1),c(0.5,0.5), type='l', lty = 3)
   diagram::straightarrow(from = c(0.95,0.5), to = c(1,0.5), lty = 3, lcol = 1)
@@ -323,7 +323,7 @@ plotPlpProblem <- function(plpResult){
   tarstart <- targetx-widthTargetx + 2*widthTargetx*(riskWindowStart/max(riskWindowStart,riskWindowEnd))#riskWindowStart 
   if(addExposureDaysToStart)
     tarstart <- targetx+widthTargetx +  2*widthTargetx*(riskWindowStart/max(riskWindowStart,riskWindowEnd)) 
-
+  
   tarend <- targetx-widthTargetx +  2*widthTargetx*(riskWindowEnd/max(riskWindowEnd,riskWindowEnd))
   if(addExposureDaysToEnd)
     tarend <- targetx+widthTargetx +  2*widthTargetx*(riskWindowEnd/max(riskWindowEnd,riskWindowEnd)) 
@@ -356,7 +356,7 @@ textPlpAnalysis <- function(plpResult){
   
   # r version
   rversion <- plpResult$executionSummary$PackageVersion$packageVersion
- 
+  
   # test fract
   testfrac <- plpResult$inputSetting$testFraction
   
@@ -370,9 +370,9 @@ textPlpAnalysis <- function(plpResult){
   execution <- plpResult$executionSummary$TotalExecutionElapsedTime
   
   result <- paste0("A ", name, " was trained using ",nfold, " cross-validation on a training dataset consisting of",
-         " ", (1-testfrac)*100,"% of the total dataset, with the remaining ",testfrac*100,"% of the dataset",
-         " held out to enable an internal validation of the model.  The PatientLevelPrediction R package version ",
-         rversion, " was used and the total training/valdiation time was ",execution,".")
+                   " ", (1-testfrac)*100,"% of the total dataset, with the remaining ",testfrac*100,"% of the dataset",
+                   " held out to enable an internal validation of the model.  The PatientLevelPrediction R package version ",
+                   rversion, " was used and the total training/valdiation time was ",execution,".")
   
   return(result)
   
@@ -402,20 +402,20 @@ textPlpAnalysis <- function(plpResult){
 #' A work document containing the selected outputs within the user's directory at location specified in outputLocation
 #' @export
 createPlpJournalDocument <- function(plpResult=NULL, 
-                              plpData = NULL,
-                              targetName = '<target population>',
-                              outcomeName = '<outcome>',
-                              characterisationSettings=list(demo=T, utilization =T,
-                                                            condition=T, conditionNumber=10,
-                                                            drug=T, drugNumber=10,
-                                                            observation=F, observationNumber=10,
-                                                            procedure=F, procedureNumber=10,
-                                                            measurement=F, measurementNumber=10,
-                                                            include=NULL),
-                              includeTrain=FALSE, includeTest=TRUE,
-                              includePredictionPicture=TRUE, 
-                              includeAttritionPlot=TRUE,
-                              outputLocation=file.path(getwd(), 'plp_journal_document.docx')){
+                                     plpData = NULL,
+                                     targetName = '<target population>',
+                                     outcomeName = '<outcome>',
+                                     characterisationSettings=list(demo=T, utilization =T,
+                                                                   condition=T, conditionNumber=10,
+                                                                   drug=T, drugNumber=10,
+                                                                   observation=F, observationNumber=10,
+                                                                   procedure=F, procedureNumber=10,
+                                                                   measurement=F, measurementNumber=10,
+                                                                   include=NULL),
+                                     includeTrain=FALSE, includeTest=TRUE,
+                                     includePredictionPicture=TRUE, 
+                                     includeAttritionPlot=TRUE,
+                                     outputLocation=file.path(getwd(), 'plp_journal_document.docx')){
   
   if(is.null(plpResult)){
     stop('plpResult needs to be input')
@@ -457,9 +457,9 @@ createPlpJournalDocument <- function(plpResult=NULL,
   outcome_size <- sum(population$outcomeCount==1)
   if(populationSet$addExposureDaysToEnd & 
      populationSet$addExposureDaysToStart){
-  time_at_risk <- paste0(populationSet$riskWindowStart,
-                         " day/s from target end date  to ", populationSet$riskWindowEnd,
-                         " days from target end date ")
+    time_at_risk <- paste0(populationSet$riskWindowStart,
+                           " day/s from target end date  to ", populationSet$riskWindowEnd,
+                           " days from target end date ")
   }
   if(!populationSet$addExposureDaysToEnd & 
      populationSet$addExposureDaysToStart){
@@ -490,50 +490,50 @@ createPlpJournalDocument <- function(plpResult=NULL,
   
   #============ ABSTRACT ==========================================
   abstract <- c(paste0("Objective: To develop a model to predict ", outcomeName, 
-                     " within a target population of ", targetName,
-                     " during ",time_at_risk," and evaluate the model performance using calibration ",
-                     "and discrimination performance measures."),
-                      
+                       " within a target population of ", targetName,
+                       " during ",time_at_risk," and evaluate the model performance using calibration ",
+                       "and discrimination performance measures."),
+                
                 paste0("Methods: In <add development database> mapped to the Observational Medical Outcome ",
-                     "Partnership (OMOP) common data model ",target_size," people satisfied the ",
-                     "atarget criteria and ",outcome_size," had the outcome during ",time_at_risk, 
-                     "A ",plpResult$inputSetting$modelSettings$name," was trained using the predictors <add predictor variables> and ",
-                     "externally validated by applying the model to <add external databases> mapped to",
-                     " the OMOP common data model with <target/outcome sizes> respectively. "),
+                       "Partnership (OMOP) common data model ",target_size," people satisfied the ",
+                       "atarget criteria and ",outcome_size," had the outcome during ",time_at_risk, 
+                       "A ",plpResult$inputSetting$modelSettings$name," was trained using the predictors <add predictor variables> and ",
+                       "externally validated by applying the model to <add external databases> mapped to",
+                       " the OMOP common data model with <target/outcome sizes> respectively. "),
                 
                 paste0(" Results: The internal validation showed the model achieved < good/excellent>", 
-                     " discrimination ability with an AUC of <auc value> and the calibration plots",
-                     " indicates a <fair/well> calibrated model.  The external validation showed",
-                     " the model <was/was not> transportable, with AUCs ranging between <auc range> on",
-                     " the <databases> databases. "),
+                       " discrimination ability with an AUC of <auc value> and the calibration plots",
+                       " indicates a <fair/well> calibrated model.  The external validation showed",
+                       " the model <was/was not> transportable, with AUCs ranging between <auc range> on",
+                       " the <databases> databases. "),
                 
                 paste0("Conclusions: This paper details the transparent development of a < good/excellent>",
-                     " discriminative model for predicting ", outcomeName, " in <target details or external target",
-                     " details>.  The model can be readily implemented to any observational healthcare",
-                     " database in the OMOP common data model/development code and is available from",
-                     " <add weblink>.")
+                       " discriminative model for predicting ", outcomeName, " in <target details or external target",
+                       " details>.  The model can be readily implemented to any observational healthcare",
+                       " database in the OMOP common data model/development code and is available from",
+                       " <add weblink>.")
   )
-
+  
   doc = ReporteRs::addTitle(doc, 'Abstract', level=2)
   doc = ReporteRs::addParagraph(doc, abstract )
   
   
   #============ BACKGROUND ==========================================
   background <- c(paste0("<background on outcome: motivation for model, list existing models",
-                      " (database developed on, external validation, performance)>"),
-                      
-                 paste0("The objective of this paper is to use the Observational Healthcare and Data Science",
-                      " Informatics (OHDSI) Patient Level Prediction software, an open source R package,",
-                      " to develope a <diagnostic/prognostic> model to predict ",outcomeName," within ",
-                      targetName,".  The software implements a framework for developing ",
-                      " diagnostic/prognostic models while addressing existing best practices towards ",
-                      " ensuring models are clinically useful and transparent.  The model will be develop ",
-                      " on <development database> and externally validated on <validation databases> to ",
-                      " determine the transportability and generalizability of the model when applied to ",
-                      " new data.  All the datasets will be in the Observational Medical Outcome ",
-                      " Partnership (OMOP) common data model as having the datasets in a homogeneous data ",
-                      " structure enables re-use of code between model development and validation to ensure ",
-                      " the model can be externally validated efficiently and reduce model reproducibility errors.")
+                         " (database developed on, external validation, performance)>"),
+                  
+                  paste0("The objective of this paper is to use the Observational Healthcare and Data Science",
+                         " Informatics (OHDSI) Patient Level Prediction software, an open source R package,",
+                         " to develope a <diagnostic/prognostic> model to predict ",outcomeName," within ",
+                         targetName,".  The software implements a framework for developing ",
+                         " diagnostic/prognostic models while addressing existing best practices towards ",
+                         " ensuring models are clinically useful and transparent.  The model will be develop ",
+                         " on <development database> and externally validated on <validation databases> to ",
+                         " determine the transportability and generalizability of the model when applied to ",
+                         " new data.  All the datasets will be in the Observational Medical Outcome ",
+                         " Partnership (OMOP) common data model as having the datasets in a homogeneous data ",
+                         " structure enables re-use of code between model development and validation to ensure ",
+                         " the model can be externally validated efficiently and reduce model reproducibility errors.")
   )
   doc = ReporteRs::addTitle(doc, 'Background', level=2)
   doc = ReporteRs::addParagraph(doc, background )
@@ -556,11 +556,11 @@ createPlpJournalDocument <- function(plpResult=NULL,
   ##doc = ReporteRs::addFlexTable(plpResult$model$hyperParamSearch)
   doc = ReporteRs::addTitle(doc, 'Method', level=2)
   doc = ReporteRs::addTitle(doc, 'Source of data:', level=3)
-  datasources <- c("<Truven MarketScan Medicare Supplemental Beneficiaries (MDCR) – this is a US insurance claims database containing 9,559,877 lives between the years 2000-01-01 to 2016-04-30>",
-                   "<Truven MarketScan Medicaid (MDCD)– this is a US insurance claims database containing 21,577,517 lives between the years 2006-01-01 to 2014-12-31>",
-                   "<OptumInsight’s de-identified ClinformaticsTM  Datamart (Optum) – this is a US electronic healthcare database containing 73,969,539 lives between the years 2000-05-01 to 2016-03-31>",
-                   "<Truven MarketScan Commercial Claims and Encounters (CCAE) – this is a US insurance claims database containing 131,533,722 lives between the years 2000-01-01 to 2016-04-30>"
-                   )
+  datasources <- c("<Truven MarketScan Medicare Supplemental Beneficiaries (MDCR)  this is a US insurance claims database containing 9,559,877 lives between the years 2000-01-01 to 2016-04-30>",
+                   "<Truven MarketScan Medicaid (MDCD) this is a US insurance claims database containing 21,577,517 lives between the years 2006-01-01 to 2014-12-31>",
+                   "<OptumInsights de-identified ClinformaticsTM  Datamart (Optum)  this is a US electronic healthcare database containing 73,969,539 lives between the years 2000-05-01 to 2016-03-31>",
+                   "<Truven MarketScan Commercial Claims and Encounters (CCAE)  this is a US insurance claims database containing 131,533,722 lives between the years 2000-01-01 to 2016-04-30>"
+  )
   doc <- ReporteRs::addParagraph( doc, value = datasources, stylename="BulletList" )
   
   doc = ReporteRs::addTitle(doc, 'Target population:', level=3)
@@ -577,25 +577,25 @@ createPlpJournalDocument <- function(plpResult=NULL,
                     "Mediumterm days:",covset$mediumDays, "-",
                     "Shortterm days:",covset$shortTermDays, "-",
                     "WindowEnd days:",covset$windowEndDays)
-
+  
   doc <- ReporteRs::addParagraph( doc, value = c(covs,timeset) , stylename="BulletList")
   doc <- ReporteRs::addParagraph( doc, value = "<!Clarify about missing data>")
   
   doc = ReporteRs::addTitle(doc, 'Statistical analysis methods', level=3)
   doc = ReporteRs::addParagraph(doc, textPlpAnalysis(plpResult) )
   evaltext <- paste0("To evaluate the models the model discrimination is assessed using the area under",
-                      " the receiver operating characteristic curve (AUC) and the model calibration is ",
-                      "assessed by inspecting a calibration plot.")
+                     " the receiver operating characteristic curve (AUC) and the model calibration is ",
+                     "assessed by inspecting a calibration plot.")
   doc = ReporteRs::addParagraph(doc, evaltext )
-    
+  
   
   #=============== RESULTS: attriction plot  ==============
   doc = ReporteRs::addTitle(doc, 'Results', level=2)
   doc = ReporteRs::addTitle(doc, 'Target population summary', level=3)
-
+  
   text <- paste0("The number of people eligible for inclusion into the target population, ",
                  "outcome count and the number of people lost due to each inclusion step are ",
-                 "presented in Figure … ")
+                 "presented in Figure  ")
   doc = ReporteRs::addParagraph(doc, text )
   
   if(includeAttritionPlot){
@@ -607,7 +607,7 @@ createPlpJournalDocument <- function(plpResult=NULL,
     # Pic3: Add comments
     doc = ReporteRs::addParagraph(doc, "The attrition table shows..." )
   }
-
+  
   #=============== characterisation ==============
   if(!is.null(plpData)){
     doc = ReporteRs::addTitle(doc, 'Characterisation', level=3)
@@ -699,7 +699,7 @@ createPlpJournalDocument <- function(plpResult=NULL,
                  "(<auc ci>).  [repeat for each dataset].  The external validation calibration plots ",
                  "can be found in Appendix 2.")
   doc = ReporteRs::addParagraph(doc, text )
-    
+  
   doc = ReporteRs::addTitle(doc, 'Discussion', level=2)
   doc = ReporteRs::addTitle(doc, 'Interpretation', level=3)
   text <-c(
@@ -707,28 +707,28 @@ createPlpJournalDocument <- function(plpResult=NULL,
            " indicating the model can distinguish between people who will develop the outcome and those ",
            "who are unlike to develop the outcome and <compare with existing models if possible>."),
     paste0("The results show the model is <reasonably/well> calibrated on the development dataset <but/and> ",
-           "is <not/is also> well calibrated on the validation datasets.  This shows …"),
-   paste0("The most predictive variables were <add interesting ones from top 20>.  The variables <add> ",
-          "are known or suspected to be risk factors of <add outcome> but the model has highlighted ",
-          "<add variables> as predictive but they have not been incorporated in previous models.  ",
-          "These variables could be studied using conventional population level estimation to determine ",
-          "whether they are causally related to the outcome.")
-    )
+           "is <not/is also> well calibrated on the validation datasets.  This shows "),
+    paste0("The most predictive variables were <add interesting ones from top 20>.  The variables <add> ",
+           "are known or suspected to be risk factors of <add outcome> but the model has highlighted ",
+           "<add variables> as predictive but they have not been incorporated in previous models.  ",
+           "These variables could be studied using conventional population level estimation to determine ",
+           "whether they are causally related to the outcome.")
+  )
   doc = ReporteRs::addParagraph(doc, text )
   
   doc = ReporteRs::addTitle(doc, 'Implications', level=3)
   text <-c(
     paste0("The results show that developing a model using <add database> data for the outcome ",outcomeName,
            " within ",targetName," resulted in a good discriminative ability and this model was validated ",
-          "across several datasets and showed a consistently high external validation AUC.  This suggests ",
-          "the model could be a useful tool to aid decision making for ..."),
+           "across several datasets and showed a consistently high external validation AUC.  This suggests ",
+           "the model could be a useful tool to aid decision making for ..."),
     paste0("Inspecting the model variable importance may help to gain new insight into the disease dynamics ",
            "into the development of <outcome>.  As the model highlighted <new predictors> as potential new ",
            "risk factors, it would be useful in future research to determine whether these variables do in fact have a ",
            "biological relationship to the outcome.")
-   )
+  )
   doc = ReporteRs::addParagraph(doc, text )
- 
+  
   doc = ReporteRs::addTitle(doc, 'Limitations', level=3)
   text <-c(
     paste0("In this study we have developed a model on one US observational healthcare database and ",
@@ -745,14 +745,14 @@ createPlpJournalDocument <- function(plpResult=NULL,
            "or lifestyle. However, observational datasets often contain thousands of variables that may be ",
            "used as proxies for genetic or lifestyle factors and observational data is often more readily ",
            "available.")
-    )
+  )
   doc = ReporteRs::addParagraph(doc, text )
-
+  
   doc = ReporteRs::addTitle(doc, 'Conclusion', level=2)
   test <- paste0("In this paper we developed a model for ",outcomeName," occurring within a target ",
                  "population consisting of ",targetName," during ",time_at_risk," on <development database> and ",
                  "externally validated the model on <validation datasets>.  The discriminative ability of ",
-                 "the model was … and the model was … calibrated. <talk about clinical usefulness>.  ",
+                 "the model was  and the model was  calibrated. <talk about clinical usefulness>.  ",
                  "In the future it would be useful to extend the external validation across the OHDS ",
                  "network and outside the OHDSI network and also determine the clinical usefulness of the ",
                  "model by implementing it retrospectively in a new dataset [ref].")
@@ -763,7 +763,7 @@ createPlpJournalDocument <- function(plpResult=NULL,
   
   doc = ReporteRs::addTitle(doc, 'Appendix A', level=2)
   doc = ReporteRs::addParagraph(doc, "<atlas cohorts + concept sets>" )
-
+  
   doc = ReporteRs::addTitle(doc, 'Appendix B', level=2)
   doc = ReporteRs::addParagraph(doc, "<calibration plots of external validation>" )
   
@@ -773,10 +773,3 @@ createPlpJournalDocument <- function(plpResult=NULL,
   return(TRUE)
   
 }
-
-
-
- 
-  
-  
-  
