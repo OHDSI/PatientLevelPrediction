@@ -71,8 +71,8 @@ alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
 Getting Involved
 ================
-* Vignette: [Building patient-level predictive models](https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.pdf)
-* Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
+* Vignette: [Building patient-level predictive models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf)
+* Developer questions/comments/feedback: <a href="http://forumBuildingPredictiveModels.pdfs.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="../../issues">GitHub issue tracker</a> for all bugs/issues/enhancements
  
 License
