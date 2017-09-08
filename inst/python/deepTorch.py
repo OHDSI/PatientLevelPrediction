@@ -114,7 +114,8 @@ class Estimator(object):
 				y_v = y_v.cuda()
                         #print 'GPU id', torch.cuda.current_device()
 			self.optimizer.zero_grad()
-			#net = torch.nn.DataParallel(self.model, device_ids = [2])
+			#if torch.cuda.device_count() > 1:
+			#net = torch.nn.DataParallel(self.model, device_ids = range(torch.cuda.device_count()))
 			#if cuda:
 			#	net = net.cuda()
 			#y_pred = net(X_v)

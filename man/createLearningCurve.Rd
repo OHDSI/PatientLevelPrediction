@@ -7,7 +7,7 @@
 createLearningCurve(population, plpData, modelSettings, testSplit = "time",
   testFraction = 0.25, trainFractions = c(0.25, 0.5, 0.75),
   splitSeed = NULL, nfold = 3, indexes = NULL, save = NULL,
-  saveModel = T, verbosity = futile.logger::INFO, timeStamp = FALSE,
+  saveModel = T, verbosity = futile.logger::INFO, timeStamp = TRUE,
   analysisId = NULL)
 }
 \arguments{
