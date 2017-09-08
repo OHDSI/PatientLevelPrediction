@@ -37,6 +37,11 @@ test_that("toSparseM", {
                         daysFromObsStart= c(500,50,500,500,500,500),
                         daysToCohortEnd= rep(200,6),
                         daysToObsEnd=rep(200,6))
+  
+  attr(cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
+                                                                  targetCount=6,uniquePeople=6,
+                                                                  outcomes=2))
+  
   outcomes <- data.frame(rowId=c(1,2), 
                          outcomeId=rep(2,2), 
                          daysToEvent=c(150,40))
@@ -78,6 +83,11 @@ test_that("toSparseM", {
                   outcomes=outcomes,
                   covariates=covs2,
                   covariateRef=covref)
+  attr(plpData2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
+                                                         targetCount=6,uniquePeople=6,
+                                                         outcomes=2))
+  
+  
   class(plpData2) <- 'plpData'
   population3 <- createStudyPopulation(plpData=plpData2,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
@@ -110,6 +120,9 @@ test_that("toSparseM", {
                                                            conceptId=rep(1,2)
                        ))
   )
+  attr(plpDataExact$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
+                                                                  targetCount=6,uniquePeople=6,
+                                                                  outcomes=2))
   class(plpDataExact) <- "plpData"
   populationExact <- createStudyPopulation(plpDataExact,
                                            outcomeId = 2,
@@ -148,6 +161,9 @@ test_that("toSparseM", {
                                                             conceptId=rep(1,2)
                         ))
   )
+  attr(plpDataExact2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
+                                                                  targetCount=20,uniquePeople=20,
+                                                                  outcomes=3))
   class(plpDataExact2) <- "plpData"
   populationExact2 <- createStudyPopulation(plpDataExact2,
                                             outcomeId = 2,
@@ -225,6 +241,10 @@ test_that("toSparsePython", {
                                                              conceptId=rep(1,2)
                          ))
     )
+    attr(plpDataExact$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
+                                                                         targetCount=20,uniquePeople=20,
+                                                                         outcomes=3))
+    
     class(plpDataExact) <- "plpData"
     populationExact <- createStudyPopulation(plpDataExact,
                                              outcomeId = 2,
@@ -263,6 +283,9 @@ test_that("toSparsePython", {
                                                               conceptId=rep(1,2)
                           ))
     )
+    attr(plpDataExact2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
+                                                                         targetCount=20,uniquePeople=20,
+                                                                         outcomes=3))
     class(plpDataExact2) <- "plpData"
     populationExact2 <- createStudyPopulation(plpDataExact2,
                                               outcomeId = 2,
