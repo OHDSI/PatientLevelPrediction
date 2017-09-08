@@ -7,6 +7,7 @@
 #'
 #' @param connectionDetails   An R object of type\cr\code{connectionDetails} created using the function
 #'                            \code{createConnectionDetails} in the \code{DatabaseConnector} package.
+#' @param python              Whether to test the python models                            
 #'
 #' @export
 checkPlpInstallation <- function(connectionDetails, python=T) {

@@ -17,11 +17,17 @@ folder does not yet exist it will be created.}
 
 \item{n}{The minimum number of people required for each result summary to be included}
 
-\item{includeEvaluationStatistics}{}
+\item{includeEvaluationStatistics}{Whether to include the evaluationStatistics}
 
-\item{includeDemographicSummary}{}
+\item{includeThresholdSummary}{Whether to include the thresholdSummary}
 
-\item{includePredictionDistribution}{}
+\item{includeDemographicSummary}{Whether to include the demographicSummary}
+
+\item{includeCalibrationSummary}{Whether to include the calibrationSummary}
+
+\item{includePredictionDistribution}{Whether to include the predictionDistribution}
+
+\item{includeCovariateSummary}{Whether to include the covariateSummary}
 }
 \description{
 Transports a plpResult to a new location and removed sensitive data

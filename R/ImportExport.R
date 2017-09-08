@@ -84,11 +84,12 @@ exportPlpDataToCsv <- function(plpData, outputFolder) {
 #' @param outputFolder   The folder on the file system where the CSV files will be created. If the
 #'                       folder does not yet exist it will be created.
 #' @param n              The minimum number of people required for each result summary to be included 
-#' @param includeEvaluationStatistics 
-#' @param includeThresholdSummary
-#' @param includeDemographicSummary  
-#' @param includeCalibrationSummary
-#' @param includePredictionDistribution                    
+#' @param includeEvaluationStatistics  Whether to include the evaluationStatistics
+#' @param includeThresholdSummary      Whether to include the thresholdSummary
+#' @param includeDemographicSummary    Whether to include the demographicSummary
+#' @param includeCalibrationSummary    Whether to include the calibrationSummary
+#' @param includePredictionDistribution  Whether to include the predictionDistribution  
+#' @param includeCovariateSummary      Whether to include the covariateSummary             
 #'
 #' @examples
 #' \dontrun{
