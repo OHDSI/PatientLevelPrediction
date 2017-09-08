@@ -9,6 +9,8 @@ checkPlpInstallation(connectionDetails, python = T)
 \arguments{
 \item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the function
 \code{createConnectionDetails} in the \code{DatabaseConnector} package.}
+
+\item{python}{Whether to test the python models}
 }
 \description{
 Check PatientLevelPrediction and its dependencies are correctly installed
