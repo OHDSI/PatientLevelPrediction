@@ -57,4 +57,4 @@ Suggests:
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 6.0.1
-VignetteBuilder: knitr
+VignetteBuilder: rmarkdown
