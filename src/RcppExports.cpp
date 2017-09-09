@@ -17,15 +17,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// auc
-double auc(std::vector<double> propensityScores, std::vector<int> treatment);
-RcppExport SEXP _PatientLevelPrediction_auc(SEXP propensityScoresSEXP, SEXP treatmentSEXP) {
+// aucWithoutCi
+double aucWithoutCi(std::vector<double> propensityScores, std::vector<int> treatment);
+RcppExport SEXP _PatientLevelPrediction_aucWithoutCi(SEXP propensityScoresSEXP, SEXP treatmentSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector<double> >::type propensityScores(propensityScoresSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type treatment(treatmentSEXP);
-    rcpp_result_gen = Rcpp::wrap(auc(propensityScores, treatment));
+    rcpp_result_gen = Rcpp::wrap(aucWithoutCi(propensityScores, treatment));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -56,7 +56,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_PatientLevelPrediction_aucWithCi", (DL_FUNC) &_PatientLevelPrediction_aucWithCi, 2},
-    {"_PatientLevelPrediction_auc", (DL_FUNC) &_PatientLevelPrediction_auc, 2},
+    {"_PatientLevelPrediction_aucWithoutCi", (DL_FUNC) &_PatientLevelPrediction_aucWithoutCi, 2},
     {"_PatientLevelPrediction_bySum", (DL_FUNC) &_PatientLevelPrediction_bySum, 2},
     {"_PatientLevelPrediction_byMax", (DL_FUNC) &_PatientLevelPrediction_byMax, 2},
     {NULL, NULL, 0}

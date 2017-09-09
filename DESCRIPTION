@@ -41,7 +41,9 @@ Imports:
     utils,
     methods,
     BigKnn,
-    reshape2
+    reshape2,
+    ReporteRs,
+    diagram
 Suggests:
     testthat,
     pROC,

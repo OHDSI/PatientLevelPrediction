@@ -29,6 +29,7 @@
 #' @import bit
 #' @import Cyclops
 #' @import DatabaseConnector
+#' @import FeatureExtraction
 #' @useDynLib PatientLevelPrediction
 NULL
 

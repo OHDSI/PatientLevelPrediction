@@ -137,17 +137,10 @@ computeAuc <- function(prediction,
     stop("Computing AUC is only implemented for binary classification models")
 
   if (confidenceInterval) {
-    auc <- .Call("_PatientLevelPrediction_aucWithCi",
-                 PACKAGE = "PatientLevelPrediction",
-                 prediction$value,
-                 prediction$outcomeCount)
-    #auc <- .PatientLevelPrediction_aucWithCi(prediction$value, prediction$outcomeCount)
+    auc <- aucWithCi(prediction$value, prediction$outcomeCount)
     return(data.frame(auc = auc[1], auc_lb95ci = auc[2], auc_lb95ci = auc[3]))
   } else {
-    auc <- .Call("_PatientLevelPrediction_auc",
-                 PACKAGE = "PatientLevelPrediction",
-                 prediction$value,
-                 prediction$outcomeCount)
+    auc <- aucWithoutCi(prediction$value, prediction$outcomeCount)
     return(auc)
   }
 }
@@ -185,16 +178,10 @@ computeAucFromDataFrames <- function(prediction,
     return(auc * auc)
   } else {
     if (confidenceInterval) {
-      auc <- .Call("PatientLevelPrediction_aucWithCi",
-                   PACKAGE = "PatientLevelPrediction",
-                   prediction,
-                   status)
+      auc <- aucWithCi(prediction, status)
       return(data.frame(auc = auc[1], auc_lb95ci = auc[2], auc_lb95ci = auc[3]))
     } else {
-      auc <- .Call("PatientLevelPrediction_auc",
-                   PACKAGE = "PatientLevelPrediction",
-                   prediction,
-                   status)
+      auc <- aucWithoutCi(prediction, status)
       return(auc)
     }
   }

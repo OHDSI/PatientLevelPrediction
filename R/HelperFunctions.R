@@ -12,8 +12,8 @@
 #' @export
 checkPlpInstallation <- function(connectionDetails, python=T) {
   writeLines("Checking database connectivity")
-  conn <- connect(connectionDetails)
-  dbDisconnect(conn)
+  conn <- DatabaseConnector::connect(connectionDetails)
+  DatabaseConnector::disconnect(conn)
   writeLines("- Ok")
   
   writeLines("\nChecking R population")
