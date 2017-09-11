@@ -72,8 +72,10 @@ evaluatePlp <- function(prediction, plpData, model = NULL){
   thresholdSummary <-getThresholdSummary(prediction) # rename and edit this
   flog.trace(paste0('Completed @ ',Sys.time()))
   
+  missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
+  missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
   # 3) demographicSummary
-  if (model == 'fitCNNTorch' | model == 'fitRNNTorch'){
+  if (length(missingGender) == 0 | length(missingAge) == 0){
     demographicSummary <- NULL
   } else {
   flog.trace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))

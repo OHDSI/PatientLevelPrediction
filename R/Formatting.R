@@ -266,7 +266,7 @@ totemporalPython <- function(plpData,population, map=NULL){
 }
 
 # reformat the evaluation 
-reformatPerformance <- function(train, test, analysisId, model = NULL){
+reformatPerformance <- function(train, test, analysisId, plpData){
   
   nr1 <- length(unlist(train$evaluationStatistics[-1]))
   nr2 <- length(unlist(test$evaluationStatistics[-1]))
@@ -284,7 +284,11 @@ reformatPerformance <- function(train, test, analysisId, model = NULL){
                                       train$thresholdSummary),
                                 cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
                                       test$thresholdSummary))
-  if (model == 'fitCNNTorch' | model == 'fitRNNTorch'){
+  missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
+  missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
+  # 3) demographicSummary
+  if (length(missingGender) == 0 | length(missingAge) == 0){
+  #if (model == 'fitCNNTorch' | model == 'fitRNNTorch'){
     demographicSummary <- NULL
   } else {
   nr1 <- nrow(train$demographicSummary)

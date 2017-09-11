@@ -45,10 +45,13 @@
 #'
 #' @export
 runEnsembleModel <- function(population, dataList, modelList,
-                                testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3){
+                                testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, analysisId=NULL){
   #nrRuns <- length(modelList);
   #costCurve <- data.frame(x = numeric(nrRuns))
-
+  start.all <- Sys.time()
+  if(is.null(analysisId))
+    analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
+  
   run<-1
   for (model in modelList) {
     results <- PatientLevelPrediction::runPlp(population, dataList[[run]], 
@@ -68,7 +71,8 @@ runEnsembleModel <- function(population, dataList, modelList,
 	
     run <- run + 1
   }
-  attr(prediction, 'value') <- pred_sum/(run -1)
+  prediction[ncol(prediction)] <- pred_sum/(run -1)
+  attr(prediction, "metaData")$analysisId <- analysisId
 	#pred_mean <- rowMeans(prediction[, 4: ncol(prediction)])
 	#prediction <- prediction[, 1:3]
 	#prediction$value <- pred_mean
@@ -83,6 +87,7 @@ runEnsembleModel <- function(population, dataList, modelList,
     flog.info('Test set evaluation')
     performance.test <- evaluatePlp(prediction[prediction$indexes<0,], dataList[[1]], model = modelList[[1]]$model)
     flog.trace('Done.')
-
+    performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId, dataList[[1]])
+    
   return(performance)
 }
