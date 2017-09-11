@@ -254,7 +254,7 @@ createLearningCurve <- function(population, plpData,
       
       # now combine the test and train data and add analysisId
       performance <-
-        reformatPerformance(train = performance.train, test = performance.test, analysisId)
+        reformatPerformance(train = performance.train, test = performance.test, analysisId, plpData)
       
       if (!is.null(save)) {
         flog.trace('Saving evaluation')

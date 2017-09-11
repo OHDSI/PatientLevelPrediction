@@ -265,7 +265,7 @@ runPlp <- function(population, plpData,
     flog.trace('Done.')
     
     # now combine the test and train data and add analysisId
-    performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId, model = modelSettings$model)
+    performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId, plpData)
     
     if(!is.null(save)){
       flog.trace('Saving evaluation')
