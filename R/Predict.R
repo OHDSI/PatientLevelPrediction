@@ -100,7 +100,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
 predict.python <- function(plpModel, population, plpData){
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() ){ 
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
@@ -140,7 +140,7 @@ predict.python <- function(plpModel, population, plpData){
   
   # run the python predict code:
   flog.info('Executing prediction...')
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py'))
   
   #get the prediction from python and reformat:
   flog.info('Returning results...')

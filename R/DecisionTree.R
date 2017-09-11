@@ -94,7 +94,7 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() ){ 
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
@@ -206,7 +206,7 @@ trainDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_lea
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','decisionTree.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','decisionTree.py'))
   
   if(train){
     # then get the prediction 

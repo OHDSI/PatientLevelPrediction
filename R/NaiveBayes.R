@@ -53,7 +53,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() ){ 
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
@@ -86,7 +86,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   
 
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','naive_bayes.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','naive_bayes.py'))
   
   # then get the prediction 
   pred <- PythonInR::pyGet('prediction', simplify = FALSE)

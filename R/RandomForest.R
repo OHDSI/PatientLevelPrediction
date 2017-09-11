@@ -81,7 +81,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() ){ 
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
@@ -118,7 +118,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   if(param$varImp[1]==T){
   
     # python checked in .set 
-    PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','rf_var_imp.py '))
+    PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','rf_var_imp.py'))
     
     
     #load var imp and create mapping/missing
@@ -170,7 +170,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     #missing = sys.argv[6] # this contains missing
     
     # then run standard python code
-    PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','randomForestCV.py '))
+    PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','randomForestCV.py'))
     
     # then get the prediction 
     pred <- PythonInR::pyGet('prediction', simplify = FALSE)
@@ -198,7 +198,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   PythonInR::pySet("mtry",param$mtries[which.max(all_auc)])
   PythonInR::pySet("modelOutput",outLoc)
   
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','finalRandomForest.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','finalRandomForest.py'))
   
   modelTrained <- file.path(outLoc) # location 
   param.best <- param[which.max(all_auc),]
