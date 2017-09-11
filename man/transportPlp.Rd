@@ -10,7 +10,7 @@ transportPlp(plpResult, outputFolder, n = NULL,
   includePredictionDistribution = T, includeCovariateSummary = T)
 }
 \arguments{
-\item{plpResult}{An object returned by running \code{RunPlp}.}
+\item{plpResult}{An object returned by running \code{runPlp}.}
 
 \item{outputFolder}{The folder on the file system where the CSV files will be created. If the
 folder does not yet exist it will be created.}

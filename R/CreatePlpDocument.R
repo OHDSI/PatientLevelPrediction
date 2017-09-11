@@ -30,8 +30,7 @@
 #' @param includeTrain                     Whether to include the train set performance
 #' @param includeTest                      Whether to include the test set performance
 #' @param includePredictionPicture         Whether to include a picture detailing the prediction problem
-#' @param includeAttrictionPlot            Whether to include the attriction plot
-#' @param includeAnalysisPlot              Whether to include the analysis flowchart plot 
+#' @param includeAttritionPlot             Whether to include the attrition plot
 #' @param outputLocation                   The location to write the document to  
 #' 
 #' @return
@@ -394,8 +393,7 @@ textPlpAnalysis <- function(plpResult){
 #' @param includeTrain                     Whether to include the train set performance
 #' @param includeTest                      Whether to include the test set performance
 #' @param includePredictionPicture         Whether to include a picture detailing the prediction problem
-#' @param includeAttrictionPlot            Whether to include the attriction plot
-#' @param includeAnalysisPlot              Whether to include the analysis flowchart plot 
+#' @param includeAttritionPlot            Whether to include the attriction plot
 #' @param outputLocation                   The location to write the document to  
 #' 
 #' @return

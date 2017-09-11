@@ -80,7 +80,7 @@ exportPlpDataToCsv <- function(plpData, outputFolder) {
 #' @details
 #' This function is used to 
 #'
-#' @param plpResult      An object returned by running \code{RunPlp}.
+#' @param plpResult      An object returned by running \code{runPlp}.
 #' @param outputFolder   The folder on the file system where the CSV files will be created. If the
 #'                       folder does not yet exist it will be created.
 #' @param n              The minimum number of people required for each result summary to be included 

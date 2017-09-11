@@ -31,11 +31,9 @@ createPlpJournalDocument(plpResult = NULL, plpData = NULL,
 
 \item{includePredictionPicture}{Whether to include a picture detailing the prediction problem}
 
+\item{includeAttritionPlot}{Whether to include the attriction plot}
+
 \item{outputLocation}{The location to write the document to}
-
-\item{includeAttrictionPlot}{Whether to include the attriction plot}
-
-\item{includeAnalysisPlot}{Whether to include the analysis flowchart plot}
 }
 \value{
 A work document containing the selected outputs within the user's directory at location specified in outputLocation

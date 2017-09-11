@@ -20,6 +20,8 @@ setDecisionTree(max_depth = 10, min_samples_split = 2,
 \item{seed}{The random state seed}
 
 \item{class_weight}{Balance or None}
+
+\item{plot}{A mysterious parameter}
 }
 \description{
 Create setting for DecisionTree with python

@@ -10,13 +10,13 @@ drawAttritionDiagramPlp(attrition, targetLabel = "Target Population",
 \arguments{
 \item{attrition}{The table of attrition details return from the population attr(popualtion, 'metaData')$attrition}
 
+\item{targetLabel}{A label to us for the treated cohort.}
+
+\item{outcomeLabel}{A label to us for the comparator cohort.}
+
 \item{fileName}{Name of the file where the plot should be saved, for example 'plot.png'.
 See the function \code{ggsave} in the ggplot2 package for supported file
 formats.}
-
-\item{treatmentLabel}{A label to us for the treated cohort.}
-
-\item{comparatorLabel}{A label to us for the comparator cohort.}
 }
 \value{
 A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different

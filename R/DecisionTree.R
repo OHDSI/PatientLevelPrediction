@@ -23,6 +23,7 @@
 #' @param min_impurity_split  Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf. 
 #' @param class_weight        Balance or None
 #' @param seed                The random state seed
+#' @param plot                A mysterious parameter
 #'
 #' @examples
 #' \dontrun{

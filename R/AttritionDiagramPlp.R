@@ -22,9 +22,9 @@
 #' \code{drawAttritionDiagramPlp} draws the attition diagram, showing how many people were excluded from
 #' the study population, and for what reasons.
 #'
-#' @param attrition            The table of attrition details return from the population attr(popualtion, 'metaData')$attrition
-#' @param treatmentLabel    A label to us for the treated cohort.
-#' @param comparatorLabel   A label to us for the comparator cohort.
+#' @param attrition         The table of attrition details return from the population attr(popualtion, 'metaData')$attrition
+#' @param targetLabel       A label to us for the treated cohort.
+#' @param outcomeLabel      A label to us for the comparator cohort.
 #' @param fileName          Name of the file where the plot should be saved, for example 'plot.png'.
 #'                          See the function \code{ggsave} in the ggplot2 package for supported file
 #'                          formats.

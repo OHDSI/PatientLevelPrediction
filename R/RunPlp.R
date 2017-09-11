@@ -445,8 +445,3 @@ covariateSummary <- function(plpData, population){
   return(prevs)
   
 }
-
-
-# for backwards compatability 
-#' @export
-RunPlp <- runPlp
