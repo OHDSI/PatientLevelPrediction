@@ -91,10 +91,10 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
   
-  PythonInR::pyExec('quiet = False')
-  if(!quiet){
+  PythonInR::pyExec('quiet = True')
+  if(quiet==F){
     writeLines(paste0('Training random forest model...' ))
-    PythonInR::pyExec('quiet = True')
+    PythonInR::pyExec('quiet = False')
   }
   start <- Sys.time()
   

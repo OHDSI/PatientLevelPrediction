@@ -105,9 +105,10 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
   
-  PythonInR::pyExec('quiet = FALSE')
-  if(!quiet){
-    PythonInR::pyExec('quiet = TRUE')
+  PythonInR::pyExec('quiet = True')
+  if(quiet==F){
+    writeLines(paste0('Training decision tree model...' ))
+    PythonInR::pyExec('quiet = False')
   }
   start <- Sys.time()
   
@@ -189,7 +190,7 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
 
 trainDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=10,
                               min_impurity_split=10^-7,class_weight='None',seed =NULL,
-                              train=TRUE, plot=getwd()){
+                              train=TRUE, plot=getwd(), quiet=F){
   #PythonInR::pySet('size', as.matrix(size) )
   #PythonInR::pySet('alpha', as.matrix(alpha) )
   PythonInR::pyExec(paste0("max_depth = ", max_depth))

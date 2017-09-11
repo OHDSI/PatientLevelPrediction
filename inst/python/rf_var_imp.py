@@ -47,11 +47,11 @@ testInd = population[:,population.shape[1]-1] < 0
 train_x = X[trainInd,:]
 train_y = y[trainInd]
 
-if quiet=='FALSE':
+if quiet==False:
   print "Train set contains %s outcomes " %(np.sum(train_y))
 
 mtry = int(np.round(np.sqrt(train_x.shape[1])))
-if quiet=='FALSE':
+if quiet==False:
   print "Training random forest with mtry= %s" %(mtry)
   # feature selection
   print "Applying variable importance feature selection..."
@@ -60,7 +60,7 @@ rf = rf.fit(train_x, train_y)
 feat_sel = SelectFromModel(rf,threshold='mean', prefit=True)
 train_x = feat_sel.transform(train_x)
 
-if quiet=='FALSE':
+if quiet==False:
   print "Selected %s number of features" %(train_x.shape[1])
 	
 
