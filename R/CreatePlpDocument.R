@@ -662,10 +662,10 @@ createPlpJournalDocument <- function(plpResult=NULL,
   
   doc = ReporteRs::addTitle(doc, 'Model Performance', level=3)
   eval <- plpResult$performanceEvaluation$evaluationStatistics
-  auc <- eval[eval[,'Eval']=='train' & eval[,'Metric']=='AUC.auc','Value']
-  if(length(eval[eval[,'Eval']=='train' & eval[,'Metric']=='AUC.auc_lb95ci','Value'])>0)
-    auc <- paste0(auc, '(',eval[eval[,'Eval']=='train' & eval[,'Metric']=='AUC.auc_lb95ci','Value'],
-                  '-',eval[eval[,'Eval']=='train' & eval[,'Metric']=='AUC.auc_lb95ci.1','Value'],')')
+  auc <- eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc','Value']
+  if(length(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_lb95ci','Value'])>0)
+    auc <- paste0(auc, '(',eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_lb95ci','Value'],
+                  '-',eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_lb95ci.1','Value'],')')
   text <- paste0(" The internal validation of the model obtained an AUC of ",auc,
                  " the ROC plot is presented in Figure 2.  The calibration plot for the internal validation ",
                  "of the model is presented in Figure 3.")
