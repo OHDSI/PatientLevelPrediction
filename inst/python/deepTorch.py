@@ -289,6 +289,66 @@ class CNN(nn.Module):
         y = self.forward(x)
         temp = y.data.cpu().numpy()
         return temp
+#allow multiple kernel with differnt kernel size
+class CNN_MLF(nn.Module):
+    def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
+        super(CNN_MLF, self).__init__()
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(1, nb_filter, kernel_size = (1, 3), stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
+            nn.ReLU(),
+            nn.MaxPool2d(pool_size, stride = stride))
+        out1_size = (window_size + 2*padding - (3 - 1) - 1)/stride[1] + 1
+        maxpool1_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(1, nb_filter, kernel_size = (1, 4), stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
+            nn.ReLU(),
+            nn.MaxPool2d(pool_size, stride = stride))
+        out2_size = (window_size + 2*padding - (4 - 1) - 1)/stride[1] + 1 #4 is the convolve filter size
+        maxpool2_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(1, nb_filter, kernel_size = (1, 5), stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
+            nn.ReLU(),
+            nn.MaxPool2d(pool_size, stride = stride))
+        out3_size = (window_size + 2*padding - (5 - 1) - 1)/stride[1] + 1
+        maxpool3_size = (out3_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
+    	conv_outsize = 	maxpool1_size + maxpool2_size +maxpool3_size	
+        self.drop1 = nn.Dropout(p=0.5)
+        self.fc1 = nn.Linear(conv_outsize*labcounts*nb_filter, hidden_size)
+        self.drop2 = nn.Dropout(p=0.5)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, num_classes)
+        
+    def forward(self, x):
+        #x = np.expand_dims(x.data.cpu().numpy(), axis=1)
+        #if cuda:
+        #    x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
+        x = x.view(x.size(0), 1, x.size(1), x.size(2))
+	#pdb.set_trace()
+        out1 = self.layer1(x)
+        out2 = self.layer2(x)
+        out3 = self.layer3(x)		
+    	out = torch.cat((out1.view(out1.size(0), -1), out2.view(out2.size(0), -1), out3.view(out2.size(0), -1)), 1) 
+        #out = out.view(out.size(0), -1)
+        out = self.drop1(out)
+        out = self.fc1(out)
+        out = self.drop2(out)
+        out = self.relu1(out)
+        out = self.fc2(out)
+        out = F.sigmoid(out)
+        return out
+    
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x, volatile=True)
+        if cuda:
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy()
+        return temp
 
 class CNN_LSTM(nn.Module):
     def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0, num_layers = 2):
@@ -842,7 +902,7 @@ if model_type in ['LogisticRegression', 'MLP']:
     
         joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
-elif model_type in ['CNN', 'RNN']:
+elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
     y = population[:, 1]
     p_ids_in_cov = set(covariates[:, 0])
     full_covariates = np.array([]).reshape(0,4)
@@ -892,6 +952,8 @@ elif model_type in ['CNN', 'RNN']:
             start_time = timeit.default_timer()
             if model_type == 'CNN':
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+    	    elif model_type == 'CNN_MLF': # multiple kernels with different size
+                model = CNN_MLF(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
             elif model_type == 'RNN':
                 model = RNN(train_x.shape[2], hidden_size, 2, 2)
 
@@ -940,6 +1002,8 @@ elif model_type in ['CNN', 'RNN']:
         #print 'the final parameter epochs', epochs, 'weight_decay', w_decay
         if model_type == 'CNN':
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+    	elif model_type == 'CNN_MLF': # multiple kernels with different size
+    		model = CNN_MLF(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
         elif model_type == 'RNN':
                 model = RNN(train_x.shape[2], hidden_size, 2, 2)
         #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
