@@ -60,6 +60,15 @@ evaluatePlp <- function(prediction, plpData, model = NULL){
     flog.info(sprintf('%-20s%.2f', 'AUC: ', auc*100))
   }
   
+  # auprc
+  flog.trace('Calculating AUPRC')
+  fg <- prediction$value[prediction$outcomeCount == 1]
+  bg <- prediction$value[prediction$outcomeCount == 0]
+  pr <- PRROC::pr.curve(scores.class0 = fg, scores.class1 = bg)
+  #auprc <- PRROC::pr.curve(prediction$value, prediction$outcomeCount)
+  auprc <- pr$auc.integral
+  flog.info(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
+
   
   # brier scores-returnss; brier, brierScaled
   flog.trace('Calculating Brier Score')
@@ -110,7 +119,8 @@ evaluatePlp <- function(prediction, plpData, model = NULL){
                                populationSize = nrow(prediction),
                                outcomeCount = sum(prediction$outcomeCount),
                                # need to add analysisId to metaData!
-                               AUC= auc,	
+                               AUC= auc,
+                               AUPRC = auprc,
                                BrierScore = brier$brier,	
                                BrierScaled= brier$brierScaled,	
                                CalibrationIntercept= calLine10$lm[1],	

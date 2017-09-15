@@ -126,8 +126,8 @@ predict.python <- function(plpModel, population, plpData){
   missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
   missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
   # 3) demographicSummary
-  if (length(missingGender) == 0 | length(missingAge) == 0) {
-  #if (plpModel$modelSettings$model == 'fitCNNTorch' | plpModel$modelSettings$model == 'fitRNNTorch'){
+  #if (length(missingGender) == 0 | length(missingAge) == 0) {
+  if (plpModel$modelSettings$model == 'fitCNNTorch' | plpModel$modelSettings$model == 'fitRNNTorch'){
 	  covariates <- plpData$covariates
   	  covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
       PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))

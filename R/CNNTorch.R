@@ -22,13 +22,14 @@
 #' @param seed       A seed for the model
 #' @param time_window       A time window to get temporal data
 #' @param class_weight      weight the class in imblanced data
+#' @param cnn_type      It can be normal 'CNN', 'CNN_MLF' with multiple kernels with different kernel size
 #' 
 #' @examples
 #' \dontrun{
 #' model.cnnTorch <- setCNNTorch()
 #' }
 #' @export
-setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, time_window = 12, class_weight = 0){
+setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, time_window = 12, class_weight = 0, cnn_type = 'CNN'){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -41,7 +42,7 @@ setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, time_wind
   }
   result <- list(model='fitCNNTorch', param= expand.grid(nbfilters=nbfilters,
                                                          epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
-											time_window = time_window, class_weight = class_weight),
+											time_window = time_window, class_weight = class_weight, cnn_type = cnn_type),
                  name='CNN Torch')
   
   class(result) <- 'modelSettings' 
@@ -112,7 +113,8 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
     # then run standard python code
     auc <- do.call(trainCNNTorch,list(epochs=as.character(param$epochs[i]), nbfilters = as.character(param$nbfilters[i]), 
                                       seed = as.character(param$seed[i]), time_window = as.character(param$time_window[i]), 
-									  class_weight = as.character(param$class_weight[i]), train = TRUE))
+									  class_weight = as.character(param$class_weight[i]), cnn_type = as.character(param$cnn_type[i]),
+									  train = TRUE))
     
     all_auc <- c(all_auc, auc)
     writeLines(paste0('Model with settings: epochs: ',param$epochs[i], 
@@ -132,6 +134,7 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                                            seed = as.character(param$seed[which.max(all_auc)]), 
                                            time_window = as.character(param$time_window[which.max(all_auc)]),
 										                       class_weight = as.character(param$class_weight[which.max(all_auc)]),
+										                       cnn_type = as.character(param$cnn_type[which.max(all_auc)]),
                                            train = FALSE))
   
   
@@ -161,14 +164,19 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, time_window = 12, class_weight= 0, train=TRUE){
+trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, time_window = 12, class_weight= 0, cnn_type = 'CNN', train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("nbfilters = ",nbfilters))
   PythonInR::pyExec(paste0("seed = ",seed))
   PythonInR::pyExec(paste0("time_window = ",time_window))
   PythonInR::pyExec(paste0("class_weight = ",class_weight))
-  PythonInR::pyExec("model_type = 'CNN'")
+  if (cnn_type == 'CNN'){
+    PythonInR::pyExec("model_type = 'CNN'")
+  } else if (cnn_type == 'CNN_MLF'){
+    PythonInR::pyExec("model_type = 'CNN_NLF'")
+  }
+  #PythonInR::pyExec(paste0("model_type = ",cnn_type))
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)
