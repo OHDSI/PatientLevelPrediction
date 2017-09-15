@@ -8,8 +8,8 @@ in [0,1] for each person in the population. If the user inputs a population with
 column then the function also returns the evaluation of the prediction (AUC, brier score,
 calibration)}
 \usage{
-applyModel(population, plpData, plpModel, logConnection = NULL,
-  databaseOutput = NULL, silent = F)
+applyModel(population, plpData, plpModel, calculatePerformance = T,
+  logConnection = NULL, databaseOutput = NULL, silent = F)
 }
 \arguments{
 \item{population}{The population of people who you want to predict the risk for}
@@ -17,6 +17,8 @@ applyModel(population, plpData, plpModel, logConnection = NULL,
 \item{plpData}{The plpData for the population}
 
 \item{plpModel}{The trained PatientLevelPrediction model}
+
+\item{calculatePerformance}{Whether to also calculate the performance metrics [default TRUE]}
 
 \item{logConnection}{A connection to output any logging during the process}
 

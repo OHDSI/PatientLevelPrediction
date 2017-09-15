@@ -8,6 +8,7 @@
 #' @param population       The population of people who you want to predict the risk for
 #' @param plpData          The plpData for the population
 #' @param plpModel         The trained PatientLevelPrediction model
+#' @param calculatePerformance  Whether to also calculate the performance metrics [default TRUE]
 #' @param logConnection    A connection to output any logging during the process
 #' @param databaseOutput   Whether to save the details into the prediction database
 #' @param silent           Whether to turn off progress reporting
@@ -30,6 +31,7 @@
 applyModel <- function(population,
                        plpData,
                        plpModel,
+                       calculatePerformance=T,
                        logConnection = NULL,
                        databaseOutput = NULL,
                        silent = F) {
@@ -66,6 +68,9 @@ applyModel <- function(population,
 
   if (!"outcomeCount" %in% colnames(prediction))
     return(list(prediction = prediction))
+  
+  if(!calculatePerformance || nrow(prediction) == 1)
+    return(prediction)
 
   if (!is.null(logConnection)) {
     cat("Starting evaluation at ", Sys.time(), file = logConnection)
@@ -76,8 +81,10 @@ applyModel <- function(population,
   performance <- evaluatePlp(prediction, plpData)
 
   # reformatting the performance 
-  performance$evaluationStatistics <- cbind(analysisId=rep(performance$evaluationStatistics$analysisId,nrow(performance$evaluationStatistics)),
-                                               Eval=rep('validation', nrow(performance$evaluationStatistics)),
+  analysisId <-   '000000'
+  nr1 <- length(performance$evaluationStatistics)
+  performance$evaluationStatistics <- cbind(analysisId= rep(analysisId,nr1),
+                                               Eval=rep('validation', nr1),
                                                Metric = names(unlist(performance$evaluationStatistics[-1])),
                                                Value = unlist(performance$evaluationStatistics[-1])
                                                )
@@ -106,6 +113,7 @@ applyModel <- function(population,
     writeLines(paste("Evaluation completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
 
   result <- list(prediction = prediction, performance = performance)
+  return(result)
 }
 
 
