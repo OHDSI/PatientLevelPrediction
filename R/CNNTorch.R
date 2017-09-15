@@ -174,7 +174,7 @@ trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, time_window = 12, c
   if (cnn_type == 'CNN'){
     PythonInR::pyExec("model_type = 'CNN'")
   } else if (cnn_type == 'CNN_MLF'){
-    PythonInR::pyExec("model_type = 'CNN_NLF'")
+    PythonInR::pyExec("model_type = 'CNN_MLF'")
   }
   #PythonInR::pyExec(paste0("model_type = ",cnn_type))
   if(train)
