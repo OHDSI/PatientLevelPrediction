@@ -135,6 +135,11 @@ getPlpData <- function(connectionDetails,
     if(class(sampleSize)!='numeric')
       stop("sampleSize must be numeric")
   }
+  
+  if(is.null(cohortId))
+    stop('User must input cohortId')
+  if(is.null(outcomeIds))
+    stop('User must input outcomeIds')
   #ToDo: add other checks the inputs are valid
   
   connection <- DatabaseConnector::connect(connectionDetails)
@@ -186,6 +191,8 @@ getPlpData <- function(connectionDetails,
                    studyStartDate = studyStartDate,
                    studyEndDate = studyEndDate)
   
+  if(nrow(cohorts)==0)
+    stop('Target population is empty')
 
   delta <- Sys.time() - start
   writeLines(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
@@ -214,6 +221,8 @@ getPlpData <- function(connectionDetails,
   colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
   metaData.outcome <- data.frame(outcomeIds =outcomeIds)
   attr(outcomes, "metaData") <- metaData.outcome
+  if(nrow(outcomes)==0)
+    stop('No Outcomes')
   
   metaData.cohort$attrition <- getCounts2(cohorts,outcomes, "Original cohorts")
   attr(cohorts, "metaData") <- metaData.cohort

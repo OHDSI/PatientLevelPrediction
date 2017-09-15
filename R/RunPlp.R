@@ -184,9 +184,10 @@ runPlp <- function(population, plpData,
   flog.trace('Parameter Check Started')
   checkInStringVector(testSplit, c('person','time'))
   checkHigherEqual(sum(population[,'outcomeCount']>0), 25)
-  checkIsClass(plpData, c('plpData.coo','plpData'))
+  checkIsClass(plpData, c('plpData'))
   checkIsClass(testFraction, 'numeric')
   checkHigher(testFraction,0)
+  checkHigher(-1*testFraction,-1)
   checkIsClass(nfold, 'numeric')
   checkHigher(nfold, 0)
   

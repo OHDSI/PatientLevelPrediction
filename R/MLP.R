@@ -125,7 +125,7 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
-  covariateRef$value <- unlist(varImp)
+  covariateRef$covariateValue <- unlist(varImp)
   
     
   # select best model and remove the others  (!!!NEED TO EDIT THIS)
