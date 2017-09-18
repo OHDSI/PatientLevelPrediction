@@ -5,7 +5,7 @@
 \title{Create setting for CNN model with python}
 \usage{
 setCNNTorch(nbfilters = c(16, 32), epochs = c(20, 50), seed = 0,
-  time_window = 12, class_weight = 0)
+  time_window = 12, class_weight = 0, cnn_type = "CNN")
 }
 \arguments{
 \item{nbfilters}{The number of filters}
@@ -17,6 +17,8 @@ setCNNTorch(nbfilters = c(16, 32), epochs = c(20, 50), seed = 0,
 \item{time_window}{A time window to get temporal data}
 
 \item{class_weight}{weight the class in imblanced data}
+
+\item{cnn_type}{It can be normal 'CNN', 'CNN_MLF' with multiple kernels with different kernel size}
 }
 \description{
 Create setting for CNN model with python
