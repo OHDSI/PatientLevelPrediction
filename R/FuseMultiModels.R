@@ -46,12 +46,10 @@
 #' @export
 runEnsembleModel <- function(population, dataList, modelList,
                     testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, analysisId=NULL, ensembleStrategy = 'mean'){
-  #nrRuns <- length(modelList);
-  #costCurve <- data.frame(x = numeric(nrRuns))
   start.all <- Sys.time()
   if(is.null(analysisId))
     analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
-  #pred_probas <- c()
+
   run<-1
   for (model in modelList) {
     results <- PatientLevelPrediction::runPlp(population, dataList[[run]], 
@@ -67,9 +65,6 @@ runEnsembleModel <- function(population, dataList, modelList,
     } else 
 	{
 	  pred_probas <- cbind(pred_probas, prob[ncol(prob)]) 
-	  #pred_probas[[run]] <- prob[ncol(prob)] 
-	  #pred_sum <- pred_sum + prob[ncol(prob)]
-	  #attr(prediction, 'value') <- pred_mean
 	}
 	
     run <- run + 1
@@ -82,12 +77,9 @@ runEnsembleModel <- function(population, dataList, modelList,
     ensem_proba = apply(pred_probas, 1, prod)
     ensem_proba <- ensem_proba^(1/length(modelList))
   }
-  #pred_probas <- do.call(cbind, pred_probas)
+
   prediction[ncol(prediction)] <- ensem_proba
   attr(prediction, "metaData")$analysisId <- analysisId
-	#pred_mean <- rowMeans(prediction[, 4: ncol(prediction)])
-	#prediction <- prediction[, 1:3]
-	#prediction$value <- pred_mean
 	#rowId outcomeCount indexes        value
     #1            0       1 2.569176e-01
     #2            0       3 6.693462e-01
