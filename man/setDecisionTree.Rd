@@ -6,7 +6,7 @@
 \usage{
 setDecisionTree(max_depth = 10, min_samples_split = 2,
   min_samples_leaf = 10, min_impurity_split = 10^-7, seed = NULL,
-  class_weight = "None", plot = NULL)
+  class_weight = "None", plot = F)
 }
 \arguments{
 \item{max_depth}{The maximum depth of the tree}
@@ -21,7 +21,7 @@ setDecisionTree(max_depth = 10, min_samples_split = 2,
 
 \item{class_weight}{Balance or None}
 
-\item{plot}{A mysterious parameter}
+\item{plot}{Boolean whether to plot the tree (requires python pydotplus module)}
 }
 \description{
 Create setting for DecisionTree with python

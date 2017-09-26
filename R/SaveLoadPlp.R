@@ -605,6 +605,9 @@ savePlpModel <- function(plpModel, dirPath){
   saveRDS(plpModel$populationSettings, file = file.path(dirPath, "populationSettings.rds"))
   saveRDS(plpModel$trainingTime, file = file.path(dirPath,  "trainingTime.rds"))
   saveRDS(plpModel$varImp, file = file.path(dirPath,  "varImp.rds"))
+  saveRDS(plpModel$dense, file = file.path(dirPath,  "dense.rds"))
+  saveRDS(plpModel$cohortId, file = file.path(dirPath,  "cohortId.rds"))
+  saveRDS(plpModel$outcomeId, file = file.path(dirPath,  "outcomeId.rds"))
   
   
   attributes <- list(type=attr(plpModel, 'type'), predictionType=attr(plpModel, 'predictionType') )
@@ -630,6 +633,14 @@ loadPlpModel <- function(dirPath) {
   
   hyperParamSearch <- tryCatch(readRDS(file.path(dirPath, "hyperParamSearch.rds")),
                                error=function(e) NULL)
+  # add in these as they got dropped
+  outcomeId <- tryCatch(readRDS(file.path(dirPath, "outcomeId.rds")),
+                        error=function(e) NULL)
+  cohortId <- tryCatch(readRDS(file.path(dirPath, "cohortId.rds")),
+                        error=function(e) NULL)  
+  dense <- tryCatch(readRDS(file.path(dirPath, "dense.rds")),
+                        error=function(e) NULL)  
+  
   
   result <- list(model = readRDS(file.path(dirPath, "model.rds")),
                  hyperParamSearch = hyperParamSearch,
@@ -640,13 +651,24 @@ loadPlpModel <- function(dirPath) {
                  metaData = readRDS(file.path(dirPath, "metaData.rds")),
                  populationSettings= readRDS(file.path(dirPath, "populationSettings.rds")),
                  trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
-                 varImp = readRDS(file.path(dirPath, "varImp.rds"))
-                 
-  )
+                 varImp = readRDS(file.path(dirPath, "varImp.rds")),
+                 dense = dense,
+                 cohortId= cohortId,
+                 outcomeId = outcomeId)
+
+  #attributes <- readRDS(file.path(dirPath, "attributes.rds"))
   attributes <- readRDS(file.path(dirPath, "attributes.rds"))
   attr(result, 'type') <- attributes$type
   attr(result, 'predictionType') <- attributes$predictionType
   class(result) <- "plpModel"
+  
+  # if python update the location
+  if(attributes$type=='python'){
+    result$model <- file.path(dirPath,'python_model')
+    result$predict <- createTransform(result)
+  }
+  # if knn update the locaiton - TODO !!!!!!!!!!!!!!
+  
   
   return(result)
 }

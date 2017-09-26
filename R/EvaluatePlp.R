@@ -138,7 +138,7 @@ computeAuc <- function(prediction,
 
   if (confidenceInterval) {
     auc <- aucWithCi(prediction$value, prediction$outcomeCount)
-    return(data.frame(auc = auc[1], auc_lb95ci = auc[2], auc_lb95ci = auc[3]))
+    return(data.frame(auc = auc[1], auc_lb95ci = auc[2], auc_ub95ci = auc[3])) # edited 3rd to be ub?
   } else {
     auc <- aucWithoutCi(prediction$value, prediction$outcomeCount)
     return(auc)
@@ -419,8 +419,12 @@ getThresholdSummary <- function(prediction){
 
   # get 100 points of distribution:
   # get the predictionThreshold and preferenceThreshold
-  predictionThreshold <- stats::quantile(prediction$value, seq(0,0.99,0.01))
+  predictionThreshold <- stats::quantile(prediction$value, probs=seq(0,0.99,0.01))
   preferenceThreshold <- stats::quantile(prediction$preferenceScore, seq(0,0.99,0.01))
+  
+  # fix quantile bug when not enought unique values - this seems to get rid of issue
+  for (val in names(table(predictionThreshold))[table(predictionThreshold)>1])
+    predictionThreshold[predictionThreshold==val] <- as.double(val)
 
   # get the outcomeCount ordered by predicted value
   lab.order <- prediction$outcomeCount[order(-prediction$value)]
@@ -545,9 +549,110 @@ getDemographicSummary <- function(prediction, plpData){
 
   if(sum(ffbase::`%in%`(plpData$covariates$covariateId, c(8507,8532)))==0  |
      sum(ffbase::`%in%`(plpData$covariates$covariateId, 10:29))==0){
+    
+    # check for gender
+    if(sum(ffbase::`%in%`(plpData$covariates$covariateId, c(8507,8532)))!=0 ){
+      #run without age
+      demographicData <-  data.frame(demographicId=1:2,
+                                     genId = c(rep(8507,1), rep(8532,1)),
+                                     genGroup = c(rep('Male',1), rep('Female',1)))
+      
+      missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
+      if(length(missingGender)==1){
+        otherGen <- c(8507,8532)[!c(8507,8532)%in%missingGender]
+      } else {
+        otherGen <- 8507
+        missingGender <- 8532
+      }
+      
+      genderCovariates <- plpData$covariates[ffbase::`%in%`(plpData$covariates$covariateId, c(8507,8532)), ]
+      genderCovariates <- genderCovariates[ffbase::`%in%`(genderCovariates$rowId, prediction$rowId), ]
+      genderCovariates <- ff::as.ram(genderCovariates)
+      prediction$genId <- missingGender
+      prediction$genId[match(genderCovariates$rowId, prediction$rowId)] <- genderCovariates$covariateId
+      
+      prediction <- merge(prediction, demographicData[, c("demographicId", "genId")], all.x = TRUE)
+      
+      val1 <- stats::aggregate(prediction$outcomeCount, list(prediction$demographicId),
+                               function(x) c(length(x), sum(x)))
+      val1 <- as.matrix(val1)
+      colnames(val1) <- c('demographicId','PersonCountAtRisk','PersonCountWithOutcome')
+      
+      val2 <- stats::aggregate(prediction$value, list(prediction$demographicId),
+                               function(x) c(mean(x), sd(x)))
+      val2 <- as.matrix(val2)
+      colnames(val2) <- c('demographicId','averagePredictedProbability',
+                          'StDevPredictedProbability')
+      
+      val3 <- stats::aggregate(prediction$value, list(prediction$demographicId),
+                               function(x) stats::quantile(x, probs = c(0,0.25,0.5,0.75,1))
+      )
+      val3 <- as.matrix(val3)
+      colnames(val3) <- c('demographicId','MinPredictedProbability',
+                          'P25PredictedProbability','MedianPredictedProbability',
+                          'P75PredictedProbability','MaxPredictedProbability')
+      
+      demographicData <- merge(demographicData, val1, all.x=T)
+      demographicData <- merge(demographicData, val2, all.x=T)
+      demographicData <- merge(demographicData, val3, all.x=T)
+      return(demographicData)
+      
+    }
+    
+    # check for age
+    if(sum(ffbase::`%in%`(plpData$covariates$covariateId, 10:29))!=0 ){
+      # run for age only
+      demographicData <-  data.frame(demographicId=1:20,
+                                     ageId=10:29,
+                                     ageGroup = c('Age group: 0-4','Age group: 5-9','Age group: 10-14','Age group: 15-19',
+                                                      'Age group: 20-24', 'Age group: 25-29', 'Age group: 30-34', 'Age group: 35-39',
+                                                      'Age group: 40-44', 'Age group: 45-49', 'Age group: 50-54', 'Age group: 55-59',
+                                                      'Age group: 60-64', 'Age group: 65-69', 'Age group: 70-74', 'Age group: 75-79',
+                                                      'Age group: 80-84', 'Age group: 85-89', 'Age group: 90-94', 'Age group: 95-99')
+                                     )
+      
+      missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
+      if (length(missingAge) != 1) {
+        missingAge <- NA
+      }
+      
+      ageCovariates <- plpData$covariates[ffbase::`%in%`(plpData$covariates$covariateId, 10:29), ]
+      ageCovariates <- ageCovariates[ffbase::`%in%`(ageCovariates$rowId, prediction$rowId), ]
+      ageCovariates <- ff::as.ram(ageCovariates)
+      prediction$ageId <- missingAge
+      prediction$ageId[match(ageCovariates$rowId, prediction$rowId)] <- ageCovariates$covariateId
+      
+      
+      prediction <- merge(prediction, demographicData[, c("demographicId", "ageId")], all.x = TRUE)
+      
+      val1 <- stats::aggregate(prediction$outcomeCount, list(prediction$demographicId),
+                               function(x) c(length(x), sum(x)))
+      val1 <- as.matrix(val1)
+      colnames(val1) <- c('demographicId','PersonCountAtRisk','PersonCountWithOutcome')
+      
+      val2 <- stats::aggregate(prediction$value, list(prediction$demographicId),
+                               function(x) c(mean(x), sd(x)))
+      val2 <- as.matrix(val2)
+      colnames(val2) <- c('demographicId','averagePredictedProbability',
+                          'StDevPredictedProbability')
+      
+      val3 <- stats::aggregate(prediction$value, list(prediction$demographicId),
+                               function(x) stats::quantile(x, probs = c(0,0.25,0.5,0.75,1))
+      )
+      val3 <- as.matrix(val3)
+      colnames(val3) <- c('demographicId','MinPredictedProbability',
+                          'P25PredictedProbability','MedianPredictedProbability',
+                          'P75PredictedProbability','MaxPredictedProbability')
+      
+      demographicData <- merge(demographicData, val1, all.x=T)
+      demographicData <- merge(demographicData, val2, all.x=T)
+      demographicData <- merge(demographicData, val3, all.x=T)
+      return(demographicData)
+    }
 
     return(NULL)
   } else {
+    # run for age and gender
 
     demographicData <-  data.frame(demographicId=1:40,
                                    ageId=rep(10:29,2),

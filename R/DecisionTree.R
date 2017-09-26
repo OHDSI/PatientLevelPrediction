@@ -23,7 +23,7 @@
 #' @param min_impurity_split  Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf. 
 #' @param class_weight        Balance or None
 #' @param seed                The random state seed
-#' @param plot                A mysterious parameter
+#' @param plot                Boolean whether to plot the tree (requires python pydotplus module)
 #'
 #' @examples
 #' \dontrun{
@@ -31,7 +31,8 @@
 #' }
 #' @export
 setDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=10,
-                            min_impurity_split=10^-7,seed =NULL, class_weight='None', plot=NULL  ){
+                            min_impurity_split=10^-7,seed =NULL, class_weight='None', 
+                            plot=F  ){
   if(!class(seed)%in%c('numeric','NULL'))
     stop('Invalid seed')
   if(class(max_depth)!='numeric')
@@ -54,9 +55,9 @@ setDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=
     stop('class_weight must be a character of either None or balanced')
   if(!class_weight%in%c('None','balanced'))
     stop('class_weight must be a character of either None or balanced')
-  if(class(plot) !='character')
-    stop('Plot must be a character refering to a directory to save the decision tree plot')
-  
+  if(class(plot) !='logical')
+    stop('Plot must be logical')
+
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
     tryCatch({
@@ -73,8 +74,9 @@ setDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=
                                           min_impurity_split=min_impurity_split,
                                           class_weight=class_weight,
                                           seed=ifelse(is.null(seed),'NULL', seed),
-                                          plot=ifelse(is.null(plot),'NULL', plot)),
-                              1:(length(class_weight)*length(max_depth)*length(min_samples_split)*length(min_samples_leaf)*length(min_impurity_split))  ),
+                                          plot=plot[1]),
+                              1:(length(class_weight)*length(max_depth)*length(min_samples_split)*length(min_samples_leaf)*length(min_impurity_split))  )
+                              ,
                  name='DecisionTree')
   class(result) <- 'modelSettings' 
   
@@ -82,7 +84,7 @@ setDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=
 }
 
 fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
-                        outcomeId, cohortId, ...){
+                        outcomeId, cohortId , ...){
   
   # check plpData is libsvm format or convert if needed
   if(!'ffdf'%in%class(plpData$covariates))
@@ -190,7 +192,7 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
 
 trainDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_leaf=10,
                               min_impurity_split=10^-7,class_weight='None',seed =NULL,
-                              train=TRUE, plot=getwd(), quiet=F){
+                              train=TRUE, plot=F,quiet=F){
   #PythonInR::pySet('size', as.matrix(size) )
   #PythonInR::pySet('alpha', as.matrix(alpha) )
   PythonInR::pyExec(paste0("max_depth = ", max_depth))
@@ -200,7 +202,12 @@ trainDecisionTree <- function(max_depth=10 ,min_samples_split=2 ,min_samples_lea
   ifelse(class_weight=='None', PythonInR::pyExec(paste0("class_weight = ", class_weight)), 
          PythonInR::pyExec(paste0("class_weight = '", class_weight,"'")))
   PythonInR::pyExec(paste0("seed = ", ifelse(is.null(seed),'None',seed)))
-  PythonInR::pyExec(paste0("plot = ", ifelse(is.null(seed),getwd(),plot)))
+  #==== editied
+  # set the plotting variable
+  PythonInR::pyExec("plot= False")
+  if(plot)
+    PythonInR::pyExec("plot= True")
+  #=========
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)

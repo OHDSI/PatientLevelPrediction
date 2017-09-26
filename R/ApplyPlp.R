@@ -165,9 +165,9 @@ similarPlpData <- function(plpModel=NULL,
   
   if(is.null(plpModel))
     return(NULL)
-  if(!'plpModel'%in%class(plpModel))
+  if(class(plpModel)!='plpModel' && class(plpModel)!='runPlp' )
     return(NULL)
-  if(sum(class(plpModel)==c('list','plpModel'))==2)
+  if(class(plpModel)=='runPlp')
     plpModel <- plpModel$model 
   
   writeLines('Loading model data extraction settings')

@@ -134,7 +134,7 @@ plotRoc <- function(prediction, fileName = NULL) {
 #' format.
 #'
 #' @export
-plotSparseRoc <- function(evaluation,type='train', fileName=NULL){
+plotSparseRoc <- function(evaluation,type='test', fileName=NULL){
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('falsePositiveRate','sensitivity')]
@@ -177,7 +177,7 @@ plotSparseRoc <- function(evaluation,type='train', fileName=NULL){
 #' format.
 #'
 #' @export
-plotPredictedPDF <- function(evaluation, type='train', fileName=NULL){
+plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('predictionThreshold','truePositiveCount','trueNegativeCount',
@@ -240,7 +240,7 @@ plotPredictedPDF <- function(evaluation, type='train', fileName=NULL){
 #' format.
 #'
 #' @export
-plotPreferencePDF <- function(evaluation, type='train', fileName=NULL){
+plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('preferenceThreshold','truePositiveCount','trueNegativeCount',
@@ -303,7 +303,7 @@ plotPreferencePDF <- function(evaluation, type='train', fileName=NULL){
 #' format.
 #'
 #' @export
-plotPrecisionRecall <- function(evaluation, type='train', fileName=NULL){
+plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('positivePredictiveValue', 'sensitivity')]
@@ -338,7 +338,7 @@ plotPrecisionRecall <- function(evaluation, type='train', fileName=NULL){
 #' format.
 #'
 #' @export
-plotF1Measure <- function(evaluation,type='train', fileName=NULL){
+plotF1Measure <- function(evaluation,type='test', fileName=NULL){
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('predictionThreshold', 'f1Score')]
@@ -377,18 +377,32 @@ plotF1Measure <- function(evaluation,type='train', fileName=NULL){
 #' format.
 #'
 #' @export
-plotDemographicSummary <- function(evaluation, type='train', fileName=NULL){
+plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
   if (!all(is.na(evaluation$demographicSummary$averagePredictedProbability))){
     ind <- evaluation$demographicSummary$Eval==type
-    x<- evaluation$demographicSummary[ind,c('ageGroup','genGroup','averagePredictedProbability',
+    x<- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability',
                                             'PersonCountAtRisk', 'PersonCountWithOutcome')]
 
     x$observed <- x$PersonCountWithOutcome/x$PersonCountAtRisk
-    x <- x[c('ageGroup','genGroup','averagePredictedProbability','observed')]
+    
+    
+    x <- x[,colnames(x)%in%c('ageGroup','genGroup','averagePredictedProbability','observed')]
+    
+    # if age or gender missing add 
+    if(sum(colnames(x)=='ageGroup')==1 && sum(colnames(x)=='genGroup')==0  ){
+      x$genGroup = rep('Non', nrow(x))
+      evaluation$demographicSummary$genGroup = rep('Non', nrow(evaluation$demographicSummary))
+    } 
+    if(sum(colnames(x)=='ageGroup')==0 && sum(colnames(x)=='genGroup')==1  ){
+      x$ageGroup = rep('-1', nrow(x))
+      evaluation$demographicSummary$ageGroup = rep('-1', nrow(evaluation$demographicSummary))
+      
+    }
+
     x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
     
     # 1.96*StDevPredictedProbability
-    ci <- evaluation$demographicSummary[,c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
+    ci <- evaluation$demographicSummary[,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
     ci$StDevPredictedProbability[is.na(ci$StDevPredictedProbability)] <- 1
     ci$lower <- ci$averagePredictedProbability-1.96*ci$StDevPredictedProbability
     ci$lower[ci$lower <0] <- 0
@@ -399,7 +413,7 @@ plotDemographicSummary <- function(evaluation, type='train', fileName=NULL){
     x$age <- factor(x$age,levels=c(" 0-4"," 5-9"," 10-14",
                                    " 15-19"," 20-24"," 25-29"," 30-34"," 35-39"," 40-44",
                                    " 45-49"," 50-54"," 55-59"," 60-64"," 65-69"," 70-74",
-                                   " 75-79"," 80-84"," 85-89"," 90-94"," 95-99"),ordered=TRUE)
+                                   " 75-79"," 80-84"," 85-89"," 90-94"," 95-99","-1"),ordered=TRUE)
     
     x <- merge(x, ci[,c('ageGroup','genGroup','lower','upper')], by=c('ageGroup','genGroup'))
     
@@ -451,7 +465,7 @@ plotDemographicSummary <- function(evaluation, type='train', fileName=NULL){
 #' format.
 #'
 #' @export
-plotSparseCalibration <- function(evaluation, type='train', fileName=NULL){
+plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
   ind <- evaluation$calibrationSummary$Eval==type
   
   x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence')]
@@ -512,7 +526,7 @@ plotSparseCalibration <- function(evaluation, type='train', fileName=NULL){
 #' format.
 #'
 #' @export
-plotSparseCalibration2 <- function(evaluation, type='train', fileName=NULL){
+plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
   ind <- evaluation$calibrationSummary$Eval==type
   
   x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence', 'PersonCountAtRisk')]
@@ -569,7 +583,7 @@ plotSparseCalibration2 <- function(evaluation, type='train', fileName=NULL){
 #' format.
 #'
 #' @export
-plotPredictionDistribution <- function(evaluation, type='train', fileName=NULL){
+plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
   ind <- evaluation$predictionDistribution$Eval==type
   x<- evaluation$predictionDistribution[ind,]
 
@@ -625,12 +639,17 @@ plotPredictionDistribution <- function(evaluation, type='train', fileName=NULL){
 #'
 #' @export
 plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
+  
+  covariateSummary$size <- rep(0.1, nrow(covariateSummary))
+  covariateSummary$size[covariateSummary$covariateValue!=0] <- 0.5
  
   plot <- ggplot2::ggplot(covariateSummary, ggplot2::aes(y=CovariateMeanWithOutcome, 
                                                          x=CovariateMeanWithNoOutcome,
-                                                         size=abs(covariateValue)+0.1)) +
-          ggplot2::geom_point(ggplot2::aes(color = covariateValue)) +
-          ggplot2::scale_size(range = c(0, 5)) +
+                                                         #size=abs(covariateValue)+0.1
+                                                         size=size
+                                                         )) +
+          ggplot2::geom_point(ggplot2::aes(color = size)) +
+          ggplot2::scale_size(range = c(0, 1)) +
           ggplot2::scale_colour_gradient2(low = "red",mid = "blue", high="green") +
     ggplot2::scale_y_continuous("Outcome Covariate Mean") +
     ggplot2::scale_x_continuous("Non-outcome Covariate Mean") + 

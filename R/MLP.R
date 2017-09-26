@@ -48,6 +48,15 @@ setMLP <- function(size=4, alpha=0.00001, seed=NULL){
        }  
     )
   }
+  
+  # test to make sure you have the version required for MLP
+  PythonInR::pyExec("import sklearn")
+  PythonInR::pyExec("ver = sklearn.__version__")
+  version <- PythonInR::pyGet("ver")
+  if (version < '0.18.2')
+    stop(paste0('You need sklearn version 0.18.2 or greater for MLP - please update by',
+                ' typing: "conda update scikit-learn" into windows command prompt'))
+  
   result <- list(model='fitMLP', 
                  param= split(expand.grid(size=size, 
                                           alpha=alpha,

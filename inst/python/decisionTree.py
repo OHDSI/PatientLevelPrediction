@@ -7,7 +7,8 @@
 # OUTPUT:
 # it returns a file with indexes merged with prediction for test index  
 #================================================================
-import pydotplus  # this is for plotting the tree
+if plot:
+  import pydotplus  # this is for plotting the tree (make optional)
 import numpy as np
 #from collections import OrderedDict
 import os
@@ -92,8 +93,9 @@ else:
 
   joblib.dump(dt, modelOutput+'\\model.pkl') 
   
-  plotfile = modelOutput+"\\tree_plot.dot"
-  tree.export_graphviz(dt, out_file=plotfile, feature_names=varnames[:,0])#X.dtype.names ) #variables[:,0])
+  if plot:
+    plotfile = modelOutput+"\\tree_plot.dot"
+    tree.export_graphviz(dt, out_file=plotfile, feature_names=varnames[:,0])#X.dtype.names ) #variables[:,0])
   #graph = pydotplus.graph_from_dot_file(plotfile) 
   #plotfile = modelOutput+"\\tree_plot.pdf"
   #graph.write_pdf(plotfile ) 

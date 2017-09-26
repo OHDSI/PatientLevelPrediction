@@ -107,7 +107,7 @@ createTransform <- function(plpModel){
       flog.warn('cohortId of new data does not match training data')
     if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
       flog.warn('outcomeId of new data does not match training data or does not exist')
-    
+
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData, 
                                                                     population=population))
