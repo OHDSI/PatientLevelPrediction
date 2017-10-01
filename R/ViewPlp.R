@@ -30,7 +30,7 @@
 
 viewPlp <- function(runPlp) {
   #require(shiny)
-  require(plotly)
+  #require(plotly)
   shiny::shinyApp(
     # ui code =================================================================
     #==============================================================================  
