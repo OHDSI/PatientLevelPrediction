@@ -429,7 +429,9 @@ getThresholdSummary <- function(prediction){
   # get the outcomeCount ordered by predicted value
   lab.order <- prediction$outcomeCount[order(-prediction$value)]
   valueOrdered <- prediction$value[order(-prediction$value)]
-
+  # fix some rounding issue bug
+  valueOrdered <-round(valueOrdered, digits = 10)
+  predictionThreshold <- round(predictionThreshold, digits=10)
   # get the indexes for the predictionThreshold
   indexesOfInt <- sapply(predictionThreshold, function(x) min(which(valueOrdered<=x)))
 

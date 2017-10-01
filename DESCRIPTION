@@ -43,7 +43,9 @@ Imports:
     BigKnn,
     reshape2,
     ReporteRs,
-    diagram
+    diagram,
+    shiny,
+    plotly
 Suggests:
     testthat,
     pROC,

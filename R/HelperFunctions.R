@@ -11,10 +11,22 @@
 #'
 #' @export
 checkPlpInstallation <- function(connectionDetails, python=T) {
+  outCode <- 1
   writeLines("Checking database connectivity")
-  conn <- DatabaseConnector::connect(connectionDetails)
-  DatabaseConnector::disconnect(conn)
-  writeLines("- Ok")
+  conn <- tryCatch({DatabaseConnector::connect(connectionDetails)},
+                   error = function(e) {
+                     return(0)
+                   })
+  if(conn==0)
+    outCode <- outCode*3
+  
+  discon <- tryCatch({DatabaseConnector::disconnect(conn)},
+                     error = function(e) {
+                       return(0)
+                     })
+  if(conn==0)
+    outCode <- outCode*5
+  writeLines("- Done")
   
   writeLines("\nChecking R population")
   set.seed(1234)
@@ -23,47 +35,164 @@ checkPlpInstallation <- function(connectionDetails, python=T) {
   plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
   
   # create popualtion for outcome 2
-  population <- createStudyPopulation(plpData,
-                                      outcomeId = 2,
-                                      firstExposureOnly = FALSE,
-                                      washoutPeriod = 0,
-                                      removeSubjectsWithPriorOutcome = FALSE,
-                                      priorOutcomeLookback = 99999,
-                                      requireTimeAtRisk = FALSE,
-                                      minTimeAtRisk=0,
-                                      riskWindowStart = 0,
-                                      addExposureDaysToStart = FALSE,
-                                      riskWindowEnd = 365,
-                                      addExposureDaysToEnd = FALSE
-                                      #,verbosity=INFO
-  )
-  if (length(dim(population)) != 2)
-    stop("Error creating population")
-  writeLines("- Ok")
+  population <- tryCatch({createStudyPopulation(plpData,
+                                                outcomeId = 2,
+                                                firstExposureOnly = FALSE,
+                                                washoutPeriod = 0,
+                                                removeSubjectsWithPriorOutcome = FALSE,
+                                                priorOutcomeLookback = 99999,
+                                                requireTimeAtRisk = FALSE,
+                                                minTimeAtRisk=0,
+                                                riskWindowStart = 0,
+                                                addExposureDaysToStart = FALSE,
+                                                riskWindowEnd = 365,
+                                                addExposureDaysToEnd = FALSE
+                                                #,verbosity=INFO
+  )},
+  error = function(e) {
+    return(0)
+  })
   
-  modset <- PatientLevelPrediction::setLassoLogisticRegression()
-  model <- PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
-                                          testFraction = 0.5)
+  if (length(dim(population)) != 2)
+    outCode <- outCode*7
+  writeLines("- Done")
+  
+  
+  writeLines("\nChecking Models")
+  modset <- tryCatch({PatientLevelPrediction::setLassoLogisticRegression()},
+                     error = function(e) {
+                       return(NULL)
+                     })
+  if(!is.null(modset)){
+    model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+                                                      testFraction = 0.5)},
+                      error = function(e) {
+                        return(NULL)
+                      })} else {
+                        model <- NULL
+                      }
+  if(is.null(model) || !"runPlp"%in%class(model))
+    outCode <- outCode*11
     
-  if (!"plpModel"%in%class(model))
-    stop("Error running logistic regression")
   writeLines("- Ok")
   
   if(python){
-    modset <- PatientLevelPrediction::setRandomForest()
-    model <- PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
-                                            testFraction = 0.5) 
-    if (!"plpModel"%in%class(model))
-      stop("Error running gradient boosting machine")
-    writeLines("- Ok")
+    modset <- tryCatch({PatientLevelPrediction::setRandomForest()},
+                       error = function(e) {
+                         return(NULL)
+                       })
+    if(!is.null(modset)){
+      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+                                                        testFraction = 0.5)},
+                        error = function(e) {
+                          return(NULL)
+                        })} else {
+                          model <- NULL
+                        }
+    if(is.null(model) || !"runPlp"%in%class(model))
+      outCode <- outCode*13
+    
+    modset <- tryCatch({PatientLevelPrediction::setMLP()},
+                       error = function(e) {
+                         return(NULL)
+                       })
+    if(!is.null(modset)){
+      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+                                                        testFraction = 0.5)},
+                        error = function(e) {
+                          return(NULL)
+                        })} else {
+                          model <- NULL
+                        }
+    if(is.null(model) || !"runPlp"%in%class(model))
+      outCode <- outCode*17
+    
+    modset <- tryCatch({PatientLevelPrediction::setAdaBoost()},
+                       error = function(e) {
+                         return(NULL)
+                       })
+    if(!is.null(modset)){
+      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+                                                        testFraction = 0.5)},
+                        error = function(e) {
+                          return(NULL)
+                        })} else {
+                          model <- NULL
+                        }
+    if(is.null(model) || !"runPlp"%in%class(model))
+      outCode <- outCode*19
+    
+    modset <- tryCatch({PatientLevelPrediction::setDecisionTree()},
+                       error = function(e) {
+                         return(NULL)
+                       })
+    if(!is.null(modset)){
+      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+                                                        testFraction = 0.5)},
+                        error = function(e) {
+                          return(NULL)
+                        })} else {
+                          model <- NULL
+                        }
+    if(is.null(model) || !"runPlp"%in%class(model))
+      outCode <- outCode*23
+    
+    modset <- tryCatch({PatientLevelPrediction::setNaiveBayes()},
+                       error = function(e) {
+                         return(NULL)
+                       })
+    if(!is.null(modset)){
+      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+                                                        testFraction = 0.5)},
+                        error = function(e) {
+                          return(NULL)
+                        })} else {
+                          model <- NULL
+                        }
+    if(is.null(model) || !"runPlp"%in%class(model))
+      outCode <- outCode*29
+    
   }
+  
+  
+  modset <- tryCatch({PatientLevelPrediction::setKNN()},
+                     error = function(e) {
+                       return(NULL)
+                     })
+  if(!is.null(modset)){
+    model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+                                                      testFraction = 0.5)},
+                      error = function(e) {
+                        return(NULL)
+                      })} else {
+                        model <- NULL
+                      }
+  if(is.null(model) || !"runPlp"%in%class(model))
+    outCode <- outCode*31
+  
+  modset <- tryCatch({PatientLevelPrediction::setGradientBoostingMachine()},
+                     error = function(e) {
+                       return(NULL)
+                     })
+  if(!is.null(modset)){
+    model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+                                                      testFraction = 0.5)},
+                      error = function(e) {
+                        return(NULL)
+                      })} else {
+                        model <- NULL
+                      }
+  if(is.null(model) || !"runPlp"%in%class(model))
+    outCode <- outCode*37
+  
+  writeLines("- Done")
   
   writeLines("\nChecking support for large data objects")
   x <- ff::as.ffdf(data.frame(a = 1:100, b = "test"))
   if (nrow(x) != 100)
-    stop("Error creating large data object")
-  writeLines("- Ok")
+    outCode <- outCode*43
+  writeLines("- Done")
   
-  writeLines("\nPatientLevelPrediction is correctly installed")
-  writeLines(paste0("\nResponse code: ", round(pi * 365*7)))
+  writeLines("\nPatientLevelPrediction installation check completed...")
+  writeLines(paste0("\nResponse code: ", outCode))
 }

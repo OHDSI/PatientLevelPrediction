@@ -295,6 +295,9 @@ savePlpData <- function(plpData, file, envir=NULL) {
   
   # save the actual values in the metaData
   # TODO - only do this if exists in parent or environ
+  if(is.null(plpData$metaData$call$sampleSize)){  # fixed a bug when sampleSize is NULL
+    plpData$metaData$call$sampleSize <- 'NULL'
+  }
   for(i in 2:length(plpData$metaData$call)){
     plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
   }
