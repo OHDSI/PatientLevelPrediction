@@ -45,7 +45,8 @@ Imports:
     ReporteRs,
     diagram,
     shiny,
-    plotly
+    plotly,
+    DT
 Suggests:
     testthat,
     pROC,
