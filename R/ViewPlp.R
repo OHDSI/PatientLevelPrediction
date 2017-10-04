@@ -645,6 +645,9 @@ plotCovSummary <- function(reactVars){
       plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
                         line = list(dash = "dash"), color = I('black'),
                         type='scatter') %>%
+      layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+             xaxis = list(title = "Prevalance in persons without outcome"),
+             yaxis = list(title = "Prevalance in persons with outcome"),
              showlegend = FALSE)} else{
                plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
                  plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
@@ -653,6 +656,9 @@ plotCovSummary <- function(reactVars){
                  plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
                                    line = list(dash = "dash"), color = I('black'),
                                    type='scatter') %>%
+                 layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+                        xaxis = list(title = "Prevalance in persons without outcome"),
+                        yaxis = list(title = "Prevalance in persons with outcome"),
                         showlegend = FALSE)
              }
   } else if(reactVars$covSumColor=='type'){
@@ -673,6 +679,9 @@ plotCovSummary <- function(reactVars){
       plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
                         line = list(dash = "dash"), color = I('black'),
                         type='scatter') %>%
+      layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+             xaxis = list(title = "Prevalance in persons without outcome"),
+             yaxis = list(title = "Prevalance in persons with outcome"),
              showlegend = FALSE)} else {
                plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
                  plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
@@ -681,6 +690,9 @@ plotCovSummary <- function(reactVars){
                  plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
                                    line = list(dash = "dash"), color = I('black'),
                                    type='scatter') %>%
+                 layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+                        xaxis = list(title = "Prevalance in persons without outcome"),
+                        yaxis = list(title = "Prevalance in persons with outcome"),
                         showlegend = FALSE) 
                
              }
@@ -698,6 +710,9 @@ plotCovSummary <- function(reactVars){
       plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
                         line = list(dash = "dash"), color = I('black'),
                         type='scatter') %>%
+      layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+             xaxis = list(title = "Prevalance in persons without outcome"),
+             yaxis = list(title = "Prevalance in persons with outcome"),
              showlegend = FALSE)} else {
                plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
                  plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
@@ -706,6 +721,9 @@ plotCovSummary <- function(reactVars){
                  plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
                                    line = list(dash = "dash"), color = I('black'),
                                    type='scatter') %>%
+                 layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+                        xaxis = list(title = "Prevalance in persons without outcome"),
+                        yaxis = list(title = "Prevalance in persons with outcome"),
                         showlegend = FALSE)
              }
     
