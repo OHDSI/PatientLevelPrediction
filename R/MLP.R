@@ -50,9 +50,20 @@ setMLP <- function(size=4, alpha=0.00001, seed=NULL){
   }
   
   # test to make sure you have the version required for MLP
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
+    PythonInR::pyConnect()
+    PythonInR::pyOptions("numpyAlias", "np")
+    PythonInR::pyOptions("useNumpy", TRUE)
+    PythonInR::pyImport("numpy", as='np')}
+  
+  # return error if we can't connect to python
+  if ( !PythonInR::pyIsConnected() )
+    stop('Python not connect error')
   PythonInR::pyExec("import sklearn")
   PythonInR::pyExec("ver = sklearn.__version__")
   version <- PythonInR::pyGet("ver")
+  if(length(version)==0)
+    stop(paste0('You need sklearn for MLP - please add'))
   if (version < '0.18.2')
     stop(paste0('You need sklearn version 0.18.2 or greater for MLP - please update by',
                 ' typing: "conda update scikit-learn" into windows command prompt'))
