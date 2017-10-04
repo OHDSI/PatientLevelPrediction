@@ -56,6 +56,13 @@ viewPlp <- function(runPlp) {
                                                              shiny::tabPanel(title = "Characterization", 
                                                                              value="panel_characterization",
                                                                              shiny::h4("Characterization"),
+                                                                             shiny::selectInput("covSumCol", "Color:", choices=c("Included into model"='binary',
+                                                                                                                                 "Record type"='type',
+                                                                                                                                 "No color"='none'),
+                                                                                                selected='binary'),
+                                                                             shiny::selectInput("covSumSize", "Size:", choices=c("Included into model"='binary',
+                                                                                                                                 "No size"='none'),
+                                                                                                selected='binary'),
                                                                              plotly::plotlyOutput("characterization")),
                                                              shiny:: tabPanel(title = "ROC", value="panel_roc",
                                                                               shiny::h4("Test"),
@@ -134,7 +141,32 @@ viewPlp <- function(runPlp) {
       # reactive values - contains the location of the plpResult
       ##reactVars <- shiny::reactiveValues(resultLocation=NULL,
       ##                                   plpResult= NULL)
-      reactVars <- list(plpResult=runPlp)
+      reactVars <- list(plpResult=runPlp,
+                        covSumColor='binary',
+                        covSumSize='binary')
+      
+      # reaction events
+      shiny::observeEvent(input$covSumCol, {
+        reactVars$covSumColor <- input$covSumCol
+        reactVars$covSumSize <- input$covSumSize
+        output$characterization <- plotly::renderPlotly({
+          if(is.null(reactVars$plpResult))
+            return(NULL)
+          
+          plotCovSummary(reactVars)
+          })
+      }
+      )
+      shiny::observeEvent(input$covSumSize, {
+        reactVars$covSumSize <- input$covSumSize
+        reactVars$covSumColor <- input$covSumCol
+        output$characterization <- plotly::renderPlotly({
+          if(is.null(reactVars$plpResult))
+            return(NULL)
+          plotCovSummary(reactVars)
+        })
+      }
+      )
       
       # create ui for selecting result location
       #output$resultSelect <- shiny::renderUI(
@@ -146,6 +178,7 @@ viewPlp <- function(runPlp) {
       #      #column(2, textInput())
       #    )
       #  ))
+    
       
       # when resultEnter clicked -> check file location is plpResult -> set reactVars$resultLocation
       ##shiny::observeEvent(input$resultEnter, {
@@ -181,28 +214,14 @@ viewPlp <- function(runPlp) {
         #,initComplete = I("function(settings, json) {alert('Done.');}")
       ))
       
-      # Covariate summary
+      # Covariate summary - add buttons to color by type
       output$characterization <- plotly::renderPlotly({
         if(is.null(reactVars$plpResult))
           return(NULL)
-        #PatientLevelPrediction::plotVariableScatterplot(reactVars$plpResult$covariateSummary)
-        dataVal <- reactVars$plpResult$covariateSummary
-        inc <- dataVal$covariateValue!=0
-        plot_ly(x = dataVal$CovariateMeanWithOutcome[inc]) %>%
-          plotly::add_markers(y = dataVal$CovariateMeanWithNoOutcome[inc],
-                              marker = list(size = 8, color='blue'),
-                              text = paste(dataVal$covariateName[inc])) %>%
-          plotly::add_markers(x = dataVal$CovariateMeanWithOutcome[!inc],
-                              y = dataVal$CovariateMeanWithNoOutcome[!inc],
-                              marker = list(size = 4, color='red'),
-                              text = paste(dataVal$covariateName[!inc])) %>%
-          plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
-                            line = list(dash = "dash"), color = I('black'),
-                            type='scatter') %>%
-          layout(title = 'Cohort Characterisation',
-                 yaxis = list(title = "Non-outcome Incidence"),
-                 xaxis = list(title = "Outcome Incidence"),
-                 showlegend = FALSE)
+        
+        plotCovSummary(reactVars)
+        
+        
       })
       
       # ROCs
@@ -593,4 +612,103 @@ viewPlp <- function(runPlp) {
       
     })
   )
+}
+
+
+plotCovSummary <- function(reactVars){
+  if(is.null(reactVars$plpResult))
+    return(NULL)
+  
+  #PatientLevelPrediction::plotVariableScatterplot(reactVars$plpResult$covariateSummary)
+  dataVal <- reactVars$plpResult$covariateSummary
+  inc <- dataVal$covariateValue!=0 
+  
+  if(reactVars$covSumSize=='binary'){
+    sizeBig=8
+    sizeSmall=4
+  }
+  if(reactVars$covSumSize=='none'){
+    sizeBig=6
+    sizeSmall=6
+  }
+  
+  if(reactVars$covSumColor=='binary'){
+    if(sum(!inc)>0 && sum(inc)>0){
+    plot_ly(x = dataVal$CovariateMeanWithNoOutcome[inc] ) %>%
+      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[inc],
+                          marker = list(size = sizeBig, color='blue'),
+                          text = paste(dataVal$covariateName[inc])) %>%
+      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[!inc],
+                          x = dataVal$CovariateMeanWithNoOutcome[!inc],
+                          marker = list(size = sizeSmall, color='red'),
+                          text = paste(dataVal$covariateName[!inc])) %>%
+      plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                        line = list(dash = "dash"), color = I('black'),
+                        type='scatter') %>%
+             showlegend = FALSE)} else{
+               plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
+                 plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
+                                     marker = list(size = sizeBig, color='blue'),
+                                     text = paste(dataVal$covariateName)) %>%
+                 plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                                   line = list(dash = "dash"), color = I('black'),
+                                   type='scatter') %>%
+                        showlegend = FALSE)
+             }
+  } else if(reactVars$covSumColor=='type'){
+    dataVal$color <- rep('other', length(dataVal$covariateName))
+    for( value in c('condition','drug','measure','observation','procedure','age', 'gender')){
+      cond <- grep(value, tolower(dataVal$covariateName))
+      if(length(cond)>0) dataVal$color[cond] <- value
+    }
+    if(sum(!inc)>0 && sum(inc)>0){
+    plot_ly(x = dataVal$CovariateMeanWithNoOutcome[inc] ) %>%
+      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[inc],
+                          marker = list(size = sizeBig, color=dataVal$color[inc]),
+                          text = paste(dataVal$covariateName[inc])) %>%
+      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[!inc],
+                          x = dataVal$CovariateMeanWithNoOutcome[!inc],
+                          marker = list(size = sizeSmall, color=dataVal$color[!inc]),
+                          text = paste(dataVal$covariateName[!inc])) %>%
+      plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                        line = list(dash = "dash"), color = I('black'),
+                        type='scatter') %>%
+             showlegend = FALSE)} else {
+               plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
+                 plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
+                                     marker = list(size = sizeBig, color=dataVal$color),
+                                     text = paste(dataVal$covariateName)) %>%
+                 plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                                   line = list(dash = "dash"), color = I('black'),
+                                   type='scatter') %>%
+                        showlegend = FALSE) 
+               
+             }
+    
+  }else if(reactVars$covSumColor=='none'){
+    if(sum(!inc)>0 && sum(inc)>0){
+    plot_ly(x = dataVal$CovariateMeanWithNoOutcome[inc] ) %>%
+      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[inc],
+                          marker = list(size = sizeBig, color='blue'),
+                          text = paste(dataVal$covariateName[inc])) %>%
+      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[!inc],
+                          x = dataVal$CovariateMeanWithNoOutcome[!inc],
+                          marker = list(size = sizeSmall, color='blue'),
+                          text = paste(dataVal$covariateName[!inc])) %>%
+      plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                        line = list(dash = "dash"), color = I('black'),
+                        type='scatter') %>%
+             showlegend = FALSE)} else {
+               plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
+                 plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
+                                     marker = list(size = sizeBig, color='blue'),
+                                     text = paste(dataVal$covariateName)) %>%
+                 plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                                   line = list(dash = "dash"), color = I('black'),
+                                   type='scatter') %>%
+                        showlegend = FALSE)
+             }
+    
+  }
+  
 }

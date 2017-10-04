@@ -44,7 +44,7 @@ createPlpReport <- function(plpResult=NULL,
   if(is.null(plpResult)){
     stop('plpResult needs to be input')
   }
-  if(sum('plpModel'%in%class(plpResult))==0){
+  if(sum('runPlp'%in%class(plpResult))==0){
     stop('Incorrect plpResult class')
   }
   if(class(targetName)!='character'){
@@ -598,7 +598,7 @@ createPlpJournalDocument <- function(plpResult=NULL,
   if(is.null(plpResult)){
     stop('plpResult needs to be input')
   }
-  if(sum('plpModel'%in%class(plpResult))==0){
+  if(sum('runPlp'%in%class(plpResult))==0){
     stop('Incorrect plpResult class')
   }
   if(class(targetName)!='character'){
