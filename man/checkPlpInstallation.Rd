@@ -4,7 +4,7 @@
 \alias{checkPlpInstallation}
 \title{Check PatientLevelPrediction and its dependencies are correctly installed}
 \usage{
-checkPlpInstallation(connectionDetails, python = T)
+checkPlpInstallation(connectionDetails = NULL, python = T)
 }
 \arguments{
 \item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the function

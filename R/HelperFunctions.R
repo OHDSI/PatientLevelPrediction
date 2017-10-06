@@ -10,23 +10,25 @@
 #' @param python              Whether to test the python models                            
 #'
 #' @export
-checkPlpInstallation <- function(connectionDetails, python=T) {
+checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   outCode <- 1
-  writeLines("Checking database connectivity")
-  conn <- tryCatch({DatabaseConnector::connect(connectionDetails)},
-                   error = function(e) {
-                     return(0)
-                   })
-  if(conn==0)
-    outCode <- outCode*3
-  
-  discon <- tryCatch({DatabaseConnector::disconnect(conn)},
+  if(!is.null(connectionDetails)){
+    writeLines("Checking database connectivity")
+    conn <- tryCatch({DatabaseConnector::connect(connectionDetails)},
                      error = function(e) {
                        return(0)
                      })
-  if(conn==0)
-    outCode <- outCode*5
-  writeLines("- Done")
+    if(conn==0)
+      outCode <- outCode*3
+    
+    discon <- tryCatch({DatabaseConnector::disconnect(conn)},
+                       error = function(e) {
+                         return(0)
+                       })
+    if(conn==0)
+      outCode <- outCode*5
+    writeLines("- Done")
+  }
   
   writeLines("\nChecking R population")
   set.seed(1234)

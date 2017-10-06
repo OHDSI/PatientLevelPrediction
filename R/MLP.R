@@ -66,7 +66,7 @@ setMLP <- function(size=4, alpha=0.00001, seed=NULL){
     stop(paste0('You need sklearn for MLP - please add'))
   if (version < '0.18.2')
     stop(paste0('You need sklearn version 0.18.2 or greater for MLP - please update by',
-                ' typing: "conda update scikit-learn" into windows command prompt'))
+                ' typing: "conda update scikit-learn" into windows command prompt (make sure to restart R afterwards)'))
   
   result <- list(model='fitMLP', 
                  param= split(expand.grid(size=size, 

@@ -199,7 +199,7 @@ createPlpReport <- function(plpResult=NULL,
   
   # hyper-parameters other than default searched and performance
   doc = ReporteRs::addParagraph( doc, value = paste("The hyper-parameters searched and the performance:"))
-  hyparamSet <- results$model$hyperParamSearch
+  hyparamSet <-as.data.frame(plpResult$model$hyperParamSearch)
   hyparamTab <- ReporteRs::FlexTable(hyparamSet)
   doc = ReporteRs::addFlexTable(doc, hyparamTab)
   
