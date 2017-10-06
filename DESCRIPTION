@@ -46,7 +46,10 @@ Imports:
     diagram,
     shiny,
     plotly,
-    DT
+    DT,
+    htmlwidgets (> 0.8),
+    tidyr,
+    viridisLite
 Suggests:
     testthat,
     pROC,
