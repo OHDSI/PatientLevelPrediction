@@ -78,15 +78,16 @@ fitAdaBoost <- function(population, plpData, param, search='grid', quiet=F,
   # connect to python if not connected
   if ( !PythonInR::pyIsConnected() ){ 
     PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')}
+   }
   
   
   # return error if we can't connect to python
   if ( !PythonInR::pyIsConnected() )
     stop('Python not connect error')
-  
+
+  PythonInR::pyOptions("numpyAlias", "np")
+  PythonInR::pyOptions("useNumpy", TRUE)
+  PythonInR::pyImport("numpy", as='np')
   start <- Sys.time()
   
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference

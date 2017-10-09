@@ -21,13 +21,15 @@
 #' @param epochs     The number of epochs
 #' @param seed       A seed for the model
 #' @param time_window       A time window to get temporal data
+#' @param class_weight      weight the class in imblanced data
+#' @param Rnn_type      It can be normal 'RNN'and 'GRU'
 #'
 #' @examples
 #' \dontrun{
 #' model.rnnTorch <- setRNNTorch()
 #' }
 #' @export
-setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_window = 12, class_weight = 0){
+setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_window = 12, class_weight = 0, rnn_type = 'RNN'){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -40,7 +42,7 @@ setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_w
   }
   result <- list(model='fitRNNTorch', param= expand.grid(hidden_size=hidden_size,
                                                          epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
-                                                         time_window = time_window, class_weight = class_weight),
+                                                         time_window = time_window, class_weight = class_weight, rnn_type = rnn_type),
                  name='RNN Torch')
   
   class(result) <- 'modelSettings' 
@@ -111,7 +113,7 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
     # then run standard python code
     auc <- do.call(trainRNNTorch,list(epochs=as.character(param$epochs[i]), hidden_size = as.character(param$hidden_size[i]), 
                                       seed = as.character(param$seed[i]), time_window = as.character(param$time_window[i]), 
-                                      class_weight = as.character(param$class_weight[i]), train = TRUE))
+                                      class_weight = as.character(param$class_weight[i]), rnn_type = as.character(param$rnn_type[i]), train = TRUE))
     
     all_auc <- c(all_auc, auc)
     writeLines(paste0('Model with settings: epochs: ',param$epochs[i], 
@@ -131,6 +133,7 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                                            seed = as.character(param$seed[which.max(all_auc)]), 
                                            time_window = as.character(param$time_window[which.max(all_auc)]),
                                            class_weight = as.character(param$class_weight[which.max(all_auc)]),
+										   rnn_type = as.character(param$rnn_type[which.max(all_auc)]),
                                            train = FALSE))
   
   
@@ -160,14 +163,18 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, time_window = 12, class_weight= 0, train=TRUE){
+trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, time_window = 12, class_weight= 0, rnn_type = 'RNN', train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("hidden_size = ",hidden_size))
   PythonInR::pyExec(paste0("seed = ",seed))
   PythonInR::pyExec(paste0("time_window = ",time_window))
   PythonInR::pyExec(paste0("class_weight = ",class_weight))
-  PythonInR::pyExec("model_type = 'RNN'")
+    if (rnn_type == 'RNN'){
+    PythonInR::pyExec("model_type = 'RNN'")
+  } else if (rnn_type == 'GRU'){
+    PythonInR::pyExec("model_type = 'GRU'")
+  }
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)

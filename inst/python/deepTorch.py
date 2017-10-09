@@ -240,6 +240,37 @@ class MLP(nn.Module):
         y = self.forward(x)
         temp = y.data.cpu().numpy()
         return temp
+
+class AutoEncoder(nn.Module):
+    def __init__(self, labcounts =  24, windows = 31):
+        super(AutoEncoder, self).__init__()
+
+        self.encoder = nn.Sequential(
+            nn.Linear(labcounts*windows, 256),
+            nn.Tanh(),
+            nn.Linear(256, 128),
+            nn.Tanh(),
+            nn.Linear(128, 64),
+            nn.Tanh(),
+            nn.Linear(64, 32),  
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(32, 64),
+            nn.Tanh(),
+            nn.Linear(64, 128),
+            nn.Tanh(),
+            nn.Linear(128, 256),
+            nn.Tanh(),
+            nn.Linear(256, labcounts*windows),
+            nn.Sigmoid(),      
+        )
+
+    def forward(self, x):
+        if cuda:
+            x = x.cuda()
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return encoded, decoded
             
 class CNN(nn.Module):
     def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
@@ -954,8 +985,14 @@ elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
     	    elif model_type == 'CNN_MLF': # multiple kernels with different size
                 model = CNN_MLF(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+    	    elif model_type == 'CNN_MIX': # mixed model from deepDiagnosis
+                model = CNN_MIX(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+    	    elif model_type == 'CNN_MULTI': # multiple resolution model from deepDiagnosis 
+                model = CNN_MULTI(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
             elif model_type == 'RNN':
                 model = RNN(train_x.shape[2], hidden_size, 2, 2)
+            elif model_type == 'GRU':
+                model = GRU(train_x.shape[2], hidden_size, 2, 2)
 
             if cuda:
                 model = model.cuda()
@@ -1004,8 +1041,14 @@ elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
                 model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
     	elif model_type == 'CNN_MLF': # multiple kernels with different size
     		model = CNN_MLF(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+    	elif model_type == 'CNN_MIX': #mixed model from deepDiagnosis 
+                model = CNN_MIX(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+    	elif model_type == 'CNN_MULTI': # multi resolution model from deepDiagnosis
+                model = CNN_MULTI(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
         elif model_type == 'RNN':
                 model = RNN(train_x.shape[2], hidden_size, 2, 2)
+        elif model_type == 'GRU':
+                model = GRU(train_x.shape[2], hidden_size, 2, 2)
         #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
         #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
         #pdb.set_trace()

@@ -18,7 +18,7 @@ setCNNTorch(nbfilters = c(16, 32), epochs = c(20, 50), seed = 0,
 
 \item{class_weight}{weight the class in imblanced data}
 
-\item{cnn_type}{It can be normal 'CNN', 'CNN_MLF' with multiple kernels with different kernel size}
+\item{cnn_type}{It can be normal 'CNN', 'CNN_MLF' with multiple kernels with different kernel size, 'CNN_MIX' and 'CNN_MULTI'}
 }
 \description{
 Create setting for CNN model with python

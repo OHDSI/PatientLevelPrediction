@@ -22,7 +22,7 @@
 #' @param seed       A seed for the model
 #' @param time_window       A time window to get temporal data
 #' @param class_weight      weight the class in imblanced data
-#' @param cnn_type      It can be normal 'CNN', 'CNN_MLF' with multiple kernels with different kernel size
+#' @param cnn_type      It can be normal 'CNN', 'CNN_MLF' with multiple kernels with different kernel size, 'CNN_MIX' and 'CNN_MULTI'
 #' 
 #' @examples
 #' \dontrun{
@@ -175,6 +175,12 @@ trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, time_window = 12, c
     PythonInR::pyExec("model_type = 'CNN'")
   } else if (cnn_type == 'CNN_MLF'){
     PythonInR::pyExec("model_type = 'CNN_MLF'")
+  }
+  } else if (cnn_type == 'CNN_MIX'){
+    PythonInR::pyExec("model_type = 'CNN_MIX'")
+  }
+  } else if (cnn_type == 'CNN_MULTI'){
+    PythonInR::pyExec("model_type = 'CNN_MULTI'")
   }
   #PythonInR::pyExec(paste0("model_type = ",cnn_type))
   if(train)
