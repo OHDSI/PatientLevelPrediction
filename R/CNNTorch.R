@@ -176,9 +176,8 @@ trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, time_window = 12, c
   } else if (cnn_type == 'CNN_MLF'){
     PythonInR::pyExec("model_type = 'CNN_MLF'")
   }
-  } else if (cnn_type == 'CNN_MIX'){
+  else if (cnn_type == 'CNN_MIX'){
     PythonInR::pyExec("model_type = 'CNN_MIX'")
-  }
   } else if (cnn_type == 'CNN_MULTI'){
     PythonInR::pyExec("model_type = 'CNN_MULTI'")
   }
