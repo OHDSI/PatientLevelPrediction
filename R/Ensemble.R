@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' costCurve - Create a cost curve for weighting classes using different weights
+#' ensemble - Create a cost curve for weighting classes using different weights
 #'
 #' @description
 #' #' 
@@ -41,7 +41,7 @@
 #' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #'@param ensembleStrategy                  The strategy used for ensembling the outputs from different models, it can be 'mean', 'product' 
-#'                                         and 'linear'(default mean)
+#'                                         and 'weighted'(default mean)
 #'
 #'
 #' @export
@@ -52,25 +52,25 @@ runEnsembleModel <- function(population, dataList, modelList,
     analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
 
   trainAUCs <- c()
-  run<-1
+  modelIndex<-1
   for (model in modelList) {
-    results <- PatientLevelPrediction::runPlp(population, dataList[[run]], 
+    results <- PatientLevelPrediction::runPlp(population, dataList[[modelIndex]], 
                                               modelSettings = model,
                                               testSplit=testSplit,
                                               testFraction=testFraction,
                                               nfold=nfold, splitSeed = splitSeed)
-  trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4])) 
-	prob <- results$prediction
-	if (run == 1){
-    prediction <- prob
-    pred_probas <- matrix(nrow=length(population$subjectId), ncol =0)
-    pred_probas <- cbind(pred_probas, prob[ncol(prob)]) 
-    } else 
-	{
-	  pred_probas <- cbind(pred_probas, prob[ncol(prob)]) 
-	}
-	
-    run <- run + 1
+    trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4])) 
+  	prob <- results$prediction
+  	if (modelIndex == 1){
+      prediction <- prob
+      pred_probas <- matrix(nrow=length(population$subjectId), ncol =0)
+      pred_probas <- cbind(pred_probas, prob[ncol(prob)]) 
+      } else 
+  	{
+  	  pred_probas <- cbind(pred_probas, prob[ncol(prob)]) 
+  	}
+  	
+  	modelIndex <- modelIndex + 1
   }
   if (ensembleStrategy == 'mean') 
   {
@@ -79,7 +79,7 @@ runEnsembleModel <- function(population, dataList, modelList,
   {
     ensem_proba = apply(pred_probas, 1, prod)
     ensem_proba <- ensem_proba^(1/length(modelList))
-  } else if (ensembleStrategy == 'linear') 
+  } else if (ensembleStrategy == 'weighted') 
   {
     trainAUCs <- trainAUCs/sum(trainAUCs) 
     ensem_proba = rowSums(t(t(as.matrix(pred_probas)) * trainAUCs))
