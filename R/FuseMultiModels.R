@@ -40,7 +40,8 @@
 #' @param trainFractions                   A list of trainFractions to try 
 #' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
-#'
+#'@param ensembleStrategy                  The strategy used for ensembling the outputs from different models, it can be 'mean', 'product' 
+#'                                         and 'linear'(default mean)
 #'
 #'
 #' @export
@@ -85,17 +86,14 @@ runEnsembleModel <- function(population, dataList, modelList,
   }
   prediction[ncol(prediction)] <- ensem_proba
   attr(prediction, "metaData")$analysisId <- analysisId
-	#rowId outcomeCount indexes        value
-    #1            0       1 2.569176e-01
-    #2            0       3 6.693462e-01
-	#attr(prediction, 'value') <- meanprob
-    flog.info('Train set evaluation')
-    performance.train <- evaluatePlp(prediction[prediction$indexes>0,], dataList[[1]], model = modelList[[1]]$model)
-    flog.trace('Done.')
-    flog.info('Test set evaluation')
-    performance.test <- evaluatePlp(prediction[prediction$indexes<0,], dataList[[1]], model = modelList[[1]]$model)
-    flog.trace('Done.')
-    performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId, dataList[[1]])
+
+  flog.info('Train set evaluation')
+  performance.train <- evaluatePlp(prediction[prediction$indexes>0,], dataList[[1]], model = modelList[[1]]$model)
+  flog.trace('Done.')
+  flog.info('Test set evaluation')
+  performance.test <- evaluatePlp(prediction[prediction$indexes<0,], dataList[[1]], model = modelList[[1]]$model)
+  flog.trace('Done.')
+  performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId, dataList[[1]])
     
   return(performance)
 }
