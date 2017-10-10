@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' ensemble - Create a cost curve for weighting classes using different weights
+#' ensemble - Create an ensembling model using different models
 #'
 #' @description
 #' #' 
