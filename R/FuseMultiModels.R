@@ -49,7 +49,9 @@ runEnsembleModel <- function(population, dataList, modelList,
   start.all <- Sys.time()
   if(is.null(analysisId))
     analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
-
+  #nrRuns <- length(modelList);
+  #trainAUCs <- data.frame(x = numeric(nrRuns))
+  trainAUCs <- c()
   run<-1
   for (model in modelList) {
     results <- PatientLevelPrediction::runPlp(population, dataList[[run]], 
@@ -57,6 +59,8 @@ runEnsembleModel <- function(population, dataList, modelList,
                                               testSplit=testSplit,
                                               testFraction=testFraction,
                                               nfold=nfold, splitSeed = splitSeed)
+    trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4])) 
+  #trainAUCs[run] <- as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4])
 	prob <- results$prediction
 	if (run == 1){
     prediction <- prob
@@ -76,15 +80,17 @@ runEnsembleModel <- function(population, dataList, modelList,
   {
     ensem_proba = apply(pred_probas, 1, prod)
     ensem_proba <- ensem_proba^(1/length(modelList))
+  } else if (ensembleStrategy == 'linear') 
+  {
+    trainAUCs <- trainAUCs/sum(trainAUCs) 
+    ensem_proba = rowSums(t(t(as.matrix(pred_probas)) * trainAUCs))
   }
-
   prediction[ncol(prediction)] <- ensem_proba
   attr(prediction, "metaData")$analysisId <- analysisId
 	#rowId outcomeCount indexes        value
     #1            0       1 2.569176e-01
     #2            0       3 6.693462e-01
 	#attr(prediction, 'value') <- meanprob
-	
     flog.info('Train set evaluation')
     performance.train <- evaluatePlp(prediction[prediction$indexes>0,], dataList[[1]], model = modelList[[1]]$model)
     flog.trace('Done.')
