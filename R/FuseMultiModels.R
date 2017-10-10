@@ -49,8 +49,7 @@ runEnsembleModel <- function(population, dataList, modelList,
   start.all <- Sys.time()
   if(is.null(analysisId))
     analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
-  #nrRuns <- length(modelList);
-  #trainAUCs <- data.frame(x = numeric(nrRuns))
+
   trainAUCs <- c()
   run<-1
   for (model in modelList) {
@@ -59,8 +58,7 @@ runEnsembleModel <- function(population, dataList, modelList,
                                               testSplit=testSplit,
                                               testFraction=testFraction,
                                               nfold=nfold, splitSeed = splitSeed)
-    trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4])) 
-  #trainAUCs[run] <- as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4])
+  trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4])) 
 	prob <- results$prediction
 	if (run == 1){
     prediction <- prob
