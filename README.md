@@ -62,8 +62,16 @@ Getting Started
   drat::addRepo("OHDSI")
   install.packages("PatientLevelPrediction")
   ```
+Note that for testing you can simulate a random plpData object using the following code:
 
-Have a look at the video below for a demo of the package.
+  ```r
+  set.seed(1234)
+  data(plpDataSimulationProfile)
+  sampleSize <- 2000
+  plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+  ```
+  
+Have a look at the video below for an extensive demo of the package.
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=BEukCbT8UoA
 " target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
