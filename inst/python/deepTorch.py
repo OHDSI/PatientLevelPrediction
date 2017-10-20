@@ -91,6 +91,86 @@ def convert_2_cnn_format(covariates, time_window = 12):
     
     return x, patient_keys
 
+class FocalLoss1(nn.Module):
+    def __init__(self, class_num = 2, alpha=None, gamma=2, size_average=True):
+        super(FocalLoss1, self).__init__()
+        if alpha is None:
+            self.alpha = Variable(torch.ones(class_num, 1))
+        else:
+            if isinstance(alpha, Variable):
+                self.alpha = alpha
+            else:
+                self.alpha = Variable(alpha)
+        self.gamma = gamma
+        self.class_num = class_num
+        self.size_average = size_average
+
+    def forward(self, inputs, targets):
+        N = inputs.size(0)
+        print(N)
+        C = inputs.size(1)
+        P = F.softmax(inputs)
+
+        class_mask = inputs.data.new(N, C).fill_(0)
+        class_mask = Variable(class_mask)
+        ones = Variable(torch.Tensor(targets.size()).fill_(1))
+        if cuda:
+            class_mask = class_mask.cuda()
+            ones = ones.cuda()
+        ids = targets.view(-1, 1)
+        class_mask.scatter_(1, ids, ones)
+
+        if cuda:
+            self.alpha = self.alpha.cuda()
+        alpha = self.alpha[ids.data.view(-1)]
+        
+        probs = (P*class_mask).sum(1).view(-1,1)
+
+        log_p = probs.log()
+
+        batch_loss = -alpha*(torch.pow((1-probs), self.gamma))*log_p 
+       
+        if self.size_average:
+            loss = batch_loss.mean()
+        else:
+            loss = batch_loss.sum()
+        return loss
+
+def one_hot(index, classes):
+    size = index.size() + (classes,)
+    view = index.size() + (1,)
+
+    mask = torch.Tensor(*size).fill_(0)
+    index = index.view(*view)
+    ones = 1.
+
+    if isinstance(index, Variable):
+        ones = Variable(torch.Tensor(index.size()).fill_(1))
+        mask = Variable(mask, volatile=index.volatile)
+        if cuda:
+               ones = ones.cuda()
+               mask = mask.cuda()
+
+    return mask.scatter_(1, index, ones)
+
+
+class FocalLoss(nn.Module):
+
+    def __init__(self, gamma=2, eps=1e-7):
+        super(FocalLoss, self).__init__()
+        self.gamma = gamma
+        self.eps = eps
+
+    def forward(self, input, target):
+        y = one_hot(target, input.size(-1))
+        logit = F.softmax(input)
+        logit = logit.clamp(self.eps, 1. - self.eps)
+
+        loss = -1 * y * torch.log(logit) # cross entropy
+        loss = loss * (1 - logit) ** self.gamma # focal loss
+
+        return loss.sum()  
+
 class Estimator(object):
 
 	def __init__(self, model):
@@ -419,7 +499,7 @@ class CNN_LSTM(nn.Module):
             h0 = Variable(torch.zeros(self.num_layers, out.size(0), self.hidden_size)) 
             c0 = Variable(torch.zeros(self.num_layers, out.size(0), self.hidden_size))
         out, _  = self.layer2(out, (h0, c0))
-        out = out[:, -1, :]
+        out = out[:, -1, :].squeeze()
         #pdb.set_trace()
         out = self.drop1(out)
         out = self.fc1(out)
@@ -727,7 +807,7 @@ class GRU(nn.Module):
         '''
         out, hn = self.gru(x, h0)
         ## from (1, N, hidden) to (N, hidden)
-        rearranged = out[:, -1, :]
+        rearranged = out[:, -1, :].squeeze()
         out = self.linear(rearranged)
         out = F.sigmoid(out)
         return out
@@ -773,7 +853,7 @@ class RNN(nn.Module):
         out, _ = self.lstm(x, (h0, c0))  
         
         # Decode hidden state of last time step
-        out = self.fc(out[:, -1, :])
+        out = self.fc(out[:, -1, :].squeeze())
         out = F.sigmoid(out)
         return out
 
@@ -814,7 +894,7 @@ class BiRNN(nn.Module):
         out, _ = self.lstm(x, (h0, c0))
         
         # Decode hidden state of last time step
-        out = self.fc(out[:, -1, :])
+        out = self.fc(out[:, -1, :].squeeze())
         out = F.sigmoid(out)
         return out
 
@@ -842,6 +922,9 @@ if model_type in ['LogisticRegression', 'MLP']:
     class_weight = 1/torch.Tensor(class_weight)
     if cuda:
     	class_weight = class_weight.cuda()
+    loss=nn.CrossEntropyLoss(weight = class_weight)
+    if class_weight == -1:
+    	loss = FocalLoss(gamma = 2)
     print "Dataset has %s rows and %s columns" % (X.shape[0], X.shape[1])
     print "population loaded- %s rows and %s columns" % (np.shape(population)[0], np.shape(population)[1])
     ###########################################################################
@@ -876,7 +959,7 @@ if model_type in ['LogisticRegression', 'MLP']:
                 model = model.cuda()
             clf = Estimator(model)
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
-                        loss=nn.CrossEntropyLoss(weight = class_weight))
+                        loss=loss)
             
             clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
             
@@ -920,7 +1003,7 @@ if model_type in ['LogisticRegression', 'MLP']:
             model = model.cuda()
         clf = Estimator(model)
         clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
-                    loss=nn.CrossEntropyLoss(weight = class_weight))
+                    loss=loss)
         clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
 
         end_time = timeit.default_timer()
@@ -962,6 +1045,9 @@ elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
     class_weight = 1/torch.Tensor(class_weight)
     if cuda:
     	class_weight = class_weight.cuda()
+    loss=nn.CrossEntropyLoss(weight = class_weight)
+    if class_weight == -1:
+    	loss = FocalLoss(gamma = 2)
     trainInds = population[:, population.shape[1] - 1] > 0    
     if train:
         pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
@@ -998,7 +1084,7 @@ elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
                 model = model.cuda()
             clf = Estimator(model)
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.005),
-                        loss=nn.CrossEntropyLoss(weight = class_weight))
+                        loss=loss)
             
             clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
             
@@ -1056,7 +1142,7 @@ elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
             model = model.cuda()
         clf = Estimator(model)
         clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.005),
-                    loss=nn.CrossEntropyLoss(weight = class_weight))
+                    loss=loss)
         clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
 
         end_time = timeit.default_timer()

@@ -83,6 +83,20 @@ runEnsembleModel <- function(population, dataList, modelList,
   {
     trainAUCs <- trainAUCs/sum(trainAUCs) 
     ensem_proba = rowSums(t(t(as.matrix(pred_probas)) * trainAUCs))
+  } else if (ensembleStrategy == 'stacked') 
+  {
+    train_index = prediction$indexes>0
+	  test_index = prediction$indexes<0
+	  for (ind in seq(1, modelIndex - 1))
+	  {
+	    colnames(pred_probas)[ind] <- paste('col', ind, sep="")
+	  }
+	  train_prob = pred_probas[train_index,]
+	  #test_prob = pred_probas[test_index,]
+	  train_y = as.matrix(prediction$outcomeCount)[train_index]
+	  lr_model <- glm(train_y ~. , data = train_prob, family = binomial(link = "logit"))
+	  #cyclopsFit <- Cyclops::fitCyclopsModel(cyclopsData, modelType = "lr")
+	  ensem_proba <- predict(lr_model, newdata = pred_probas, type= "response")
   }
   prediction[ncol(prediction)] <- ensem_proba
   attr(prediction, "metaData")$analysisId <- analysisId
