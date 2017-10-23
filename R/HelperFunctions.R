@@ -10,23 +10,25 @@
 #' @param python              Whether to test the python models                            
 #'
 #' @export
-checkPlpInstallation <- function(connectionDetails, python=T) {
+checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   outCode <- 1
-  writeLines("Checking database connectivity")
-  conn <- tryCatch({DatabaseConnector::connect(connectionDetails)},
-                   error = function(e) {
-                     return(0)
-                   })
-  if(conn==0)
-    outCode <- outCode*3
-  
-  discon <- tryCatch({DatabaseConnector::disconnect(conn)},
+  if(!is.null(connectionDetails)){
+    writeLines("Checking database connectivity")
+    conn <- tryCatch({DatabaseConnector::connect(connectionDetails)},
                      error = function(e) {
                        return(0)
                      })
-  if(conn==0)
-    outCode <- outCode*5
-  writeLines("- Done")
+    if(conn==0)
+      outCode <- outCode*3
+    
+    discon <- tryCatch({DatabaseConnector::disconnect(conn)},
+                       error = function(e) {
+                         return(0)
+                       })
+    if(conn==0)
+      outCode <- outCode*5
+    writeLines("- Done")
+  }
   
   writeLines("\nChecking R population")
   set.seed(1234)
@@ -196,3 +198,46 @@ checkPlpInstallation <- function(connectionDetails, python=T) {
   writeLines("\nPatientLevelPrediction installation check completed...")
   writeLines(paste0("\nResponse code: ", outCode))
 }
+
+
+#' Tells you the package issue 
+#'
+#' @details
+#' This function prints any issues found during the checkPlpInstallation() call
+#'
+#' @param response   The response code from checkPlpInstallation()                          
+#'
+#' @export
+interpretInstallCode <- function(response){
+  if(response==1){
+    writeLines('Package working...')
+  } else {
+    if(response%%3==0)
+      writeLines('Issue with database connection - did not connect')
+    if(response%%5==0)
+      writeLines('Issue with database connection - did not disconnect')
+    if(response%%7==0)
+      writeLines('Issue with createStudyPopulation()')
+    if(response%%11==0)
+      writeLines('Issue with lasso logistic regression')
+    if(response%%13==0)
+      writeLines('Issue with random forest')
+    if(response%%17==0)
+      writeLines('Issue with mlp')
+    if(response%%19==0)
+      writeLines('Issue with ada boost')
+    if(response%%23==0)
+      writeLines('Issue with decison tree')
+    if(response%%29==0)
+      writeLines('Issue with naive bayes')
+    if(response%%31==0)
+      writeLines('Issue with knn')
+    if(response%%37==0)
+      writeLines('Issue with gradient boosting machine')
+    if(response%%43==0)
+      writeLines('Issue with ffdf')
+    
+  }
+    return(NULL)
+}
+  
