@@ -914,17 +914,19 @@ if model_type in ['LogisticRegression', 'MLP']:
     y = population[:, 1]
     X = plpData[population[:, 0], :]
     trainInds = population[:, population.shape[1] - 1] > 0
-    if class_weight == 0:
-    	weights = float(np.count_nonzero(y))/y.shape[0]
-    	class_weight = [1 - weights, weights]
-    else:
-    	class_weight = [class_weight, 1]
-    class_weight = 1/torch.Tensor(class_weight)
-    if cuda:
-    	class_weight = class_weight.cuda()
-    loss=nn.CrossEntropyLoss(weight = class_weight)
     if class_weight == -1:
     	loss = FocalLoss(gamma = 2)
+    else:
+        if class_weight == 0:
+    		weights = float(np.count_nonzero(y))/y.shape[0]
+    		class_weight = [1 - weights, weights]
+    	else:
+    		class_weight = [class_weight, 1]
+    	class_weight = 1/torch.Tensor(class_weight)
+    	if cuda:
+    		class_weight = class_weight.cuda()
+    	loss=nn.CrossEntropyLoss(weight = class_weight)
+
     print "Dataset has %s rows and %s columns" % (X.shape[0], X.shape[1])
     print "population loaded- %s rows and %s columns" % (np.shape(population)[0], np.shape(population)[1])
     ###########################################################################
@@ -1037,17 +1039,18 @@ elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
     X, patient_keys = convert_2_cnn_format(full_covariates, time_window = time_window)
     full_covariates = []
     print 'total patient', X.shape
-    if class_weight == 0:
-        weights = float(np.count_nonzero(y))/y.shape[0]
-        class_weight = [1 - weights, weights]
-    else:
-        class_weight = [class_weight, 1]
-    class_weight = 1/torch.Tensor(class_weight)
-    if cuda:
-    	class_weight = class_weight.cuda()
-    loss=nn.CrossEntropyLoss(weight = class_weight)
     if class_weight == -1:
     	loss = FocalLoss(gamma = 2)
+    else:
+        if class_weight == 0:
+    		weights = float(np.count_nonzero(y))/y.shape[0]
+    		class_weight = [1 - weights, weights]
+    	else:
+    		class_weight = [class_weight, 1]
+    	class_weight = 1/torch.Tensor(class_weight)
+    	if cuda:
+    		class_weight = class_weight.cuda()
+    	loss=nn.CrossEntropyLoss(weight = class_weight)
     trainInds = population[:, population.shape[1] - 1] > 0    
     if train:
         pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
