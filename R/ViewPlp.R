@@ -63,7 +63,8 @@ viewPlp <- function(runPlp) {
                                                                              shiny::selectInput("covSumSize", "Size:", choices=c("Included into model"='binary',
                                                                                                                                  "No size"='none'),
                                                                                                 selected='binary'),
-                                                                             plotly::plotlyOutput("characterization")),
+                                                                             plotly::plotlyOutput("characterization"),
+                                                                             DT::dataTableOutput("characterizationTab")),
                                                              shiny:: tabPanel(title = "ROC", value="panel_roc",
                                                                               shiny::h4("Test"),
                                                                               plotly::plotlyOutput("rocPlotTest"),
@@ -223,6 +224,17 @@ viewPlp <- function(runPlp) {
         
         
       })
+      
+      output$characterizationTab <- DT::renderDataTable({
+        if(is.null(reactVars$plpResult))
+          return(NULL)
+        
+        returnTab <- as.data.frame(reactVars$plpResult$covariateSummary[,c('covariateName','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome')])
+        
+      },     escape = FALSE, selection = 'none',
+      options = list(
+        pageLength = 25
+      ))
       
       # ROCs
       output$rocPlotTest <- plotly::renderPlotly({
@@ -621,6 +633,10 @@ plotCovSummary <- function(reactVars){
   
   #PatientLevelPrediction::plotVariableScatterplot(reactVars$plpResult$covariateSummary)
   dataVal <- reactVars$plpResult$covariateSummary
+  # remove large values...
+  dataVal$CovariateCountWithOutcome[is.na(dataVal$CovariateMeanWithOutcome)] <- 0
+  dataVal <- dataVal[dataVal$CovariateMeanWithOutcome<=1,]
+  dataVal$covariateValue[is.na(dataVal$covariateValue)] <- 0
   inc <- dataVal$covariateValue!=0 
   
   if(reactVars$covSumSize=='binary'){

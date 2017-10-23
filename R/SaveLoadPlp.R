@@ -94,6 +94,7 @@
 #' @param covariateSettings            An object of type \code{covariateSettings} as created using the
 #'                                     \code{createCovariateSettings} function in the
 #'                                     \code{FeatureExtraction} package.
+#' @param baseUrl                      If extracting cohorts from atlas enter atlas url to extract cohort creation details
 #'
 #' @return
 #' Returns an object of type \code{plpData}, containing information on the cohorts, their
@@ -126,7 +127,8 @@ getPlpData <- function(connectionDetails,
                        firstExposureOnly = FALSE,
                        washoutPeriod = 0,
                        sampleSize = NULL,
-                       covariateSettings) {
+                       covariateSettings,
+                       baseUrl = NULL) {
   if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
     stop("Study start date must have format YYYYMMDD")
   if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)
@@ -256,6 +258,21 @@ getPlpData <- function(connectionDetails,
   metaData$call$firstExposureOnly = firstExposureOnly
   metaData$call$washoutPeriod = washoutPeriod
   metaData$call$covariateSettings= covariateSettings
+  
+  
+  # code to extract cohort if selected
+  if(!is.null(baseUrl)){
+    cohortCode <- saveCirceDefinition(cohortId, 'Target Cohort', baseUrl)
+    outcomeCode <- list()
+    length(outcomeCode) <- length(outcomeIds)
+    i <- 0
+    for(outcomeId in outcomeIds){
+      i <- i+1
+      outcomeCode[[i]] <- saveCirceDefinition(outcomeId, paste0('Outcome ',i, ' Cohort'), baseUrl)
+    }
+    metaData$cohortCreate <- list(targetCohort = cohortCode ,
+                         outcomeCohorts = outcomeCode)
+  }
 
   result <- list(cohorts = cohorts,
                  outcomes = outcomes,
@@ -876,3 +893,31 @@ writeOutput <- function(prediction,
   
   
 }
+
+# Insert cohort definitions into package
+saveCirceDefinition <- function (definitionId, name = NULL,
+                                            baseUrl = "https://enter_address")
+{
+  url <- paste(baseUrl, "cohortdefinition", definitionId, sep = "/")
+  json <- RCurl::getURL(url, .opts = list(ssl.verifypeer=FALSE))
+  parsedJson <- RJSONIO::fromJSON(json)
+  if (is.null(name)) {
+    name <- parsedJson$name
+  }
+  expression <- parsedJson$expression
+  parsedExpression <- RJSONIO::fromJSON(parsedJson$expression)
+  jsonBody <- RJSONIO::toJSON(list(expression = parsedExpression),
+                              digits = 23)
+  httpheader <- c(Accept = "application/json; charset=UTF-8",
+                  `Content-Type` = "application/json")
+  url <- paste(baseUrl, "cohortdefinition", "sql", sep = "/")
+  cohortSqlJson <- RCurl::postForm(url, .opts = list(httpheader = httpheader,
+                                                     postfields = jsonBody,
+                                                     ssl.verifypeer=FALSE))
+  sql <- RJSONIO::fromJSON(cohortSqlJson)
+
+  return(list(json=expression,
+              sql=sql))
+}
+
+
