@@ -17,13 +17,19 @@
 # limitations under the License.
 
 #' Create setting for naive bayes model with python 
+#' @param variableNumber   The number of variables selected by feature selection prior to training the model (this is required due to Naive Bayes requring a non sparse matrix)
 #'
 #' @examples
 #' \dontrun{
 #' model.nb <- setNaiveBayes()
 #' }
 #' @export
-setNaiveBayes <- function(){
+setNaiveBayes <- function(variableNumber=2000){
+  
+  if(length(variableNumber)!=1)
+    stop('Can only currently enter a single value for variableNumber')
+  if(class(variableNumber)!="numeric")
+    stop('Can incorrect class for variableNumber - must be numeric')
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -34,7 +40,7 @@ setNaiveBayes <- function(){
        }  
     )
   }
-  result <- list(model='fitNaiveBayes', name='Naive Bayes', param= '')
+  result <- list(model='fitNaiveBayes', name='Naive Bayes', param= list('variableNumber'=variableNumber))
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -69,6 +75,9 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   # make sure population is ordered?
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
   PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
+  
+  # set variableNumber (number of features to use)
+  PythonInR::pyExec(paste0('variableNumber = ',param$variableNumber, ';'))
   
   # convert plpData in coo to python:
   x <- toSparsePython(plpData,population, map=NULL)
@@ -110,8 +119,8 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   if(mean(varImp)==0)
     stop('No important variables - seems to be an issue with the data')
   
-  top2000 <- varImp[order(-varImp)][2000]
-  inc <- which(varImp>=top2000, arr.ind=T)
+  topN <- varImp[order(-varImp)][param$variableNumber]
+  inc <- which(varImp>=topN, arr.ind=T)
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(0, nrow(covariateRef))
   incs[inc] <- 1

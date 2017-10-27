@@ -76,11 +76,28 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   #=========================================================
   # run through pipeline list and apply:
   #=========================================================
+  
+  # normalise the data:
+  class(plpData) <- c(class(plpData), 'covariateData')
+  plpData <- tidyCovariateData(covariateData=plpData, 
+                                minFraction = 0.001,
+                                normalize = TRUE,
+                                removeRedundancy = TRUE)
+  plpData$covariateRef <- plpData$covariateRef[!ffbase::`%in%`(plpData$covariateRef$covariateId, plpData$metaData$deletedInfrequentCovariateIds), ]
+  
+  
+  # get the pre-processing settings
+  ##preprocessSettings <- plpData$metaData  #normFactors, deletedRedundantCovariateIds
+  
   # Now apply the classifier:
   fun <- modelSettings$model
   args <- list(plpData =plpData,param =modelSettings$param, 
                population=population, cohortId=cohortId, outcomeId=outcomeId)
   plpModel <- do.call(fun, args)
+  # add pre-processing details
+  plpModel$metaData$preprocessSettings <- list(normFactors=plpData$metaData$normFactors,
+                                               deletedRedundantCovariateIds=plpData$metaData$deletedRedundantCovariateIds,
+                                               deletedInfrequentCovariateIds=plpData$metaData$deletedInfrequentCovariateIds)
   
   plpModel$predict <- createTransform(plpModel)
   plpModel$index <- population$indexes  ##?- dont think we need this, just the seed instead
@@ -90,6 +107,61 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   
 }
 
+
+# fucntion for implementing the pre-processing (normalisation and redundant features removal)
+applyTidyCovariateData <- function(plpData,preprocessSettings){
+  processedData <- list(cohorts=plpData$cohorts,
+                        outcomes = plpData$outcomes,
+                        covariates = ff::clone.ffdf(plpData$covariates),
+                        covariateRef = plpData$covariateRef,
+                        metaData = plpData$metaData)
+                        
+  # clone covariate stuff so it doesnt overwrite
+  covariates <- processedData$covariates
+  
+  maxs <- preprocessSettings$normFactors
+  deleteCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
+  deletedInfrequentCovariateIds <- preprocessSettings$deletedInfrequentCovariateIds
+  
+  
+  # remove infreq
+  writeLines("Removing infrequent covariates")
+  start <- Sys.time()
+  if (length(deleteCovariateIds) != 0) {
+    covariates <- covariates[!ffbase::`%in%`(covariates$covariateId, deletedInfrequentCovariateIds), ]
+     }
+  delta <- Sys.time() - start
+  writeLines(paste("Removing infrequent covariates took", signif(delta, 3), attr(delta, "units")))
+  
+  
+  # do normalisation... preprocessSettings$normFactors 
+  writeLines("Normalizing covariates")
+  start <- Sys.time()
+  ffdfMaxs <- ff::as.ffdf(maxs)
+  names(ffdfMaxs)[names(ffdfMaxs) == "bins"] <- "covariateId"
+  covariates <- ffbase::merge.ffdf(covariates, ffdfMaxs)
+  for (i in bit::chunk(covariates)) {
+    covariates$covariateValue[i] <- covariates$covariateValue[i]/covariates$maxs[i]
+  }
+  covariates$maxs <- NULL
+  delta <- Sys.time() - start
+  writeLines(paste("Normalizing covariates took", signif(delta, 3), attr(delta, "units")))
+  
+  
+  # remove redundant... preprocessSettings$deletedRedundantCovariateIds
+  writeLines("Removing redundant covariates")
+  start <- Sys.time()
+  if (length(deleteCovariateIds) != 0) {
+    covariates <- covariates[!ffbase::`%in%`(covariates$covariateId, deleteCovariateIds), ]
+  }
+  delta <- Sys.time() - start
+  writeLines(paste("Removing redundant covariates took", signif(delta, 3), attr(delta, "units")))
+  
+  processedData$covariates <- covariates
+  
+  # return processed data
+  return(processedData)
+}
 
 # create transformation function
 createTransform <- function(plpModel){
@@ -107,6 +179,9 @@ createTransform <- function(plpModel){
       flog.warn('cohortId of new data does not match training data')
     if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
       flog.warn('outcomeId of new data does not match training data or does not exist')
+    
+    # apply normalsation to new data
+    plpData <- applyTidyCovariateData(plpData,plpModel$metaData$preprocessSettings)
 
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData, 

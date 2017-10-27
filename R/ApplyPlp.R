@@ -83,8 +83,8 @@ applyModel <- function(population,
   # reformatting the performance 
   analysisId <-   '000000'
   nr1 <- length(performance$evaluationStatistics)
-  performance$evaluationStatistics <- cbind(analysisId= rep(analysisId,nr1),
-                                               Eval=rep('validation', nr1),
+  performance$evaluationStatistics <- cbind(analysisId= rep(analysisId,nr1-1),
+                                               Eval=rep('validation', nr1-1),
                                                Metric = names(unlist(performance$evaluationStatistics[-1])),
                                                Value = unlist(performance$evaluationStatistics[-1])
                                                )
@@ -129,6 +129,7 @@ applyModel <- function(population,
 #' @param newOutcomeDatabaseSchema  The database schema where the outcome table is stored
 #' @param newOutcomeTable           The table name of the outcome table
 #' @param newOutcomeId              The cohort_definition_id for the outcome  
+#' @param sample                    The number of people to sample (default is NULL meaning use all data)
 #'
 #' @examples
 #' \dontrun{
@@ -161,7 +162,8 @@ similarPlpData <- function(plpModel=NULL,
                            newCohortId = NULL,
                            newOutcomeDatabaseSchema = NULL,
                            newOutcomeTable = NULL,
-                           newOutcomeId = NULL) {
+                           newOutcomeId = NULL,
+                           sample=NULL) {
   
   if(is.null(plpModel))
     return(NULL)
@@ -173,9 +175,10 @@ similarPlpData <- function(plpModel=NULL,
   writeLines('Loading model data extraction settings')
   dataOptions <- as.list(plpModel$metaData$call)
   dataOptions[[1]] <- NULL
+  dataOptions$sampleSize <- sample
   
   #restricting to model variables and setting min to 0
-  dataOptions$covariateSettings$deleteCovariatesSmallCount <- 0
+  #dataOptions$covariateSettings$deleteCovariatesSmallCount <- 0
   dataOptions$covariateSettings$includedCovariateConceptIds <- plpModel$varImp$conceptId[plpModel$varImp$covariateValue!=0]
   
   

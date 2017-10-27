@@ -20,17 +20,17 @@
 #'
 #' @param mtries     The number of features to include in each tree (-1 defaults to square root of total features)
 #' @param ntrees     The number of trees to build 
-#' @param max_depth  Maximum number of interactions - a large value will lead to slow model training
+#' @param maxDepth  Maximum number of interactions - a large value will lead to slow model training
 #' @param varImp     Perform an initial variable selection prior to fitting the model to select the useful variables
 #' @param seed       An option to add a seed when training the final model
 #'
 #' @examples
 #' \dontrun{
 #' model.rf <- setRandomForest(mtries=c(-1,5,20),  ntrees=c(10,100), 
-#'                            max_depth=c(5,20))
+#'                            maxDepth=c(5,20))
 #' }                           
 #' @export
-setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T, seed=NULL){
+setRandomForest<- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, seed=NULL){
   # check seed is int
   if(!class(seed)%in%c('numeric','NULL'))
     stop('Invalid seed')
@@ -42,10 +42,10 @@ setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T, se
     stop('mtries must be a numeric value >1 or -1')
   if(sum(mtries < -1)>0)
     stop('mtries must be greater that 0 or -1')
-  if(class(max_depth)!='numeric')
-    stop('max_depth must be a numeric value >0')
-  if(sum(max_depth < 1)>0)
-    stop('max_depth must be greater that 0')
+  if(class(maxDepth)!='numeric')
+    stop('maxDepth must be a numeric value >0')
+  if(sum(maxDepth < 1)>0)
+    stop('maxDepth must be greater that 0')
   if(class(varImp)!="logical")
     stop('varImp must be boolean')
   
@@ -58,7 +58,7 @@ setRandomForest<- function(mtries=-1,ntrees=c(10,500),max_depth=17, varImp=T, se
   }
   
   result <- list(model='fitRandomForest', param= expand.grid(ntrees=ntrees, mtries=mtries,
-                                                       max_depth=max_depth, varImp=varImp, 
+                                                       maxDepth=maxDepth, varImp=varImp, 
                                                        seed=ifelse(is.null(seed),'NULL', seed)),
                  name='Random forest')
   class(result) <- 'modelSettings' 
@@ -156,7 +156,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     
     # set variable params - do loop  
     PythonInR::pyExec(paste0("ntrees = int(",param$ntree[i],")"))
-    PythonInR::pyExec(paste0("max_depth = int(",param$max_depth[i],")"))
+    PythonInR::pyExec(paste0("max_depth = int(",param$maxDepth[i],")"))
     PythonInR::pySet("mtry",param$mtries[i])
     
     ##PythonInR::pySet("dataLocation" ,plpData$covariates)
@@ -186,7 +186,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     auc <- PatientLevelPrediction::computeAuc(pred)
     all_auc <- c(all_auc, auc)
     if(!quiet)
-      writeLines(paste0('Model with settings: ntrees:',param$ntrees[i],' max_depth: ',param$max_depth[i], 
+      writeLines(paste0('Model with settings: ntrees:',param$ntrees[i],' maxDepth: ',param$maxDepth[i], 
                       'mtry: ', param$mtry[i] , ' obtained AUC of ', auc))
   }
   
@@ -194,7 +194,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   # now train the final model for the best hyper-parameters previously found
   PythonInR::pyExec(paste0("ntrees = int(",param$ntree[which.max(all_auc)],")"))
-  PythonInR::pyExec(paste0("max_depth = int(",param$max_depth[which.max(all_auc)],")"))
+  PythonInR::pyExec(paste0("max_depth = int(",param$maxDepth[which.max(all_auc)],")"))
   PythonInR::pySet("mtry",param$mtries[which.max(all_auc)])
   PythonInR::pySet("modelOutput",outLoc)
   
@@ -220,7 +220,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   attr(pred, "metaData") <- list(predictionType="binary")
   
   auc <- PatientLevelPrediction::computeAuc(pred)
-  writeLines(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' max_depth: ',param$max_depth[which.max(all_auc)], 
+  writeLines(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' maxDepth: ',param$maxDepth[which.max(all_auc)], 
                     'mtry: ', param$mtry[which.max(all_auc)] , ' obtained AUC of ', auc))
   
   # close python:

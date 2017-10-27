@@ -20,18 +20,18 @@
 #'
 #' @param ntrees     The number of trees to build 
 #' @param nthread   The number of computer threads to (how many cores do you have?)
-#' @param max_depth  Maximum number of interactions - a large value will lead to slow model training
-#' @param min_rows   The minimum number of rows required at each end node of the tree
-#' @param learn_rate The boosting learn rate
+#' @param maxDepth  Maximum number of interactions - a large value will lead to slow model training
+#' @param minRows   The minimum number of rows required at each end node of the tree
+#' @param learnRate The boosting learn rate
 #' @param seed       An option to add a seed when training the final model
 #'
 #' @examples
 #' model.gbm <- setGradientBoostingMachine(ntrees=c(10,100), nthread=20,
-#'                            max_depth=c(4,6), learn_rate=c(0.1,0.3))
+#'                            maxDepth=c(4,6), learnRate=c(0.1,0.3))
 #'
 #' @export
 setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
-                                  max_depth=6, min_rows=20, learn_rate=0.1,
+                                  maxDepth=c(4,6,17), minRows=20, learnRate=c(0.01,0.1),
                                   seed= NULL){
   
   if(length(nthread)>1)
@@ -42,27 +42,27 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
     stop('ntrees must be a numeric value >0 ')
   if(sum(ntrees < 1)>0)
     stop('ntrees must be greater that 0 or -1')
-  if(class(max_depth)!='numeric')
-    stop('max_depth must be a numeric value >0')
-  if(sum(max_depth < 1)>0)
-    stop('max_depth must be greater that 0')
-  if(class(min_rows)!='numeric')
-    stop('min_rows must be a numeric value >1')
-  if(sum(min_rows < 2)>0)
-    stop('min_rows must be greater that 1')
-  if(class(learn_rate)!='numeric')
-    stop('learn_rate must be a numeric value >0 and <= 1')
-  if(sum(learn_rate <= 0)>0)
-    stop('learn_rate must be greater that 0')
-  if(sum(learn_rate > 1)>0)
-    stop('learn_rate must be less that or equal to 1')
+  if(class(maxDepth)!='numeric')
+    stop('maxDepth must be a numeric value >0')
+  if(sum(maxDepth < 1)>0)
+    stop('maxDepth must be greater that 0')
+  if(class(minRows)!='numeric')
+    stop('minRows must be a numeric value >1')
+  if(sum(minRows < 2)>0)
+    stop('minRows must be greater that 1')
+  if(class(learnRate)!='numeric')
+    stop('learnRate must be a numeric value >0 and <= 1')
+  if(sum(learnRate <= 0)>0)
+    stop('learnRate must be greater that 0')
+  if(sum(learnRate > 1)>0)
+    stop('learnRate must be less that or equal to 1')
   
   result <- list(model='fitGradientBoostingMachine', 
                  param= split(expand.grid(nround=ntrees, 
-                                          max.depth=max_depth, min_child_weight=min_rows, 
-                                          eta=learn_rate, nthread=nthread,
+                                          max.depth=maxDepth, min_child_weight=minRows, 
+                                          eta=learnRate, nthread=nthread,
                                           seed=ifelse(is.null(seed),'NULL', seed)),
-                              1:(length(ntrees)*length(max_depth)*length(min_rows)*length(learn_rate)  )),
+                              1:(length(ntrees)*length(maxDepth)*length(minRows)*length(learnRate)  )),
                  name='Gradient boosting machine'
   )
   class(result) <- 'modelSettings' 
@@ -208,7 +208,7 @@ gbm_model2 <- function(data, population,
   
   result <- list(model=model,
                  auc=auc,
-                 hyperSum = unlist(list(max_depth = max.depth, eta = eta, nthread = nthread, 
+                 hyperSum = unlist(list(maxDepth = max.depth, eta = eta, nthread = nthread, 
                                   min_child_weight = min_child_weight,nround = nround, fold_auc=hyperPerm))
   )
   return(result)
