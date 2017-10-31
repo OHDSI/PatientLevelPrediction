@@ -59,7 +59,7 @@ evaluatePlp <- function(prediction, plpData, model = NULL){
     auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
     flog.info(sprintf('%-20s%.2f', 'AUC: ', auc*100))
   }
-  
+  #write.csv(prediction, paste(model, 'prediction.csv'))
   # auprc
   flog.trace('Calculating AUPRC')
   fg <- prediction$value[prediction$outcomeCount == 1]
