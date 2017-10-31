@@ -41,7 +41,7 @@
 #' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #'@param ensembleStrategy                  The strategy used for ensembling the outputs from different models, it can be 'mean', 'product' 
-#'                                         and 'weighted'(default mean)
+#'                                         and 'weighted'(default mean) and 'stacked'
 #'
 #'
 #' @export
@@ -95,7 +95,11 @@ runEnsembleModel <- function(population, dataList, modelList,
 	  #test_prob = pred_probas[test_index,]
 	  train_y = as.matrix(prediction$outcomeCount)[train_index]
 	  lr_model <- glm(train_y ~. , data = train_prob, family = binomial(link = "logit"))
-	  #cyclopsFit <- Cyclops::fitCyclopsModel(cyclopsData, modelType = "lr")
+	  #prior = createPrior("laplace", exclude = 0, useCrossValidation = TRUE)
+	  #control = createControl(cvType= "auto", noiseLevel = "quiet")
+      #cyclopsData = convertToCyclopsData(train_y, train_prob, modelType = 'lr', addIntercept = TRUE, quiet = TRUE, normalize = NULL, checkSorting = TRUE)
+	  #cyclopsFit <- Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)
+	  #ensem_proba <- predict(cyclopsFit, newCovariates = pred_probas)
 	  ensem_proba <- predict(lr_model, newdata = pred_probas, type= "response")
   }
   prediction[ncol(prediction)] <- ensem_proba

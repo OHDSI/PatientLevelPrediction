@@ -92,7 +92,7 @@ def convert_2_cnn_format(covariates, time_window = 12):
     return x, patient_keys
 
 class FocalLoss1(nn.Module):
-    def __init__(self, class_num = 2, alpha=None, gamma=2, size_average=True):
+    def __init__(self, class_num = 2, alpha=None, gamma=5, size_average=True):
         super(FocalLoss1, self).__init__()
         if alpha is None:
             self.alpha = Variable(torch.ones(class_num, 1))
@@ -156,7 +156,7 @@ def one_hot(index, classes):
 
 class FocalLoss(nn.Module):
 
-    def __init__(self, gamma=2, eps=1e-7):
+    def __init__(self, gamma=5, eps=1e-7):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.eps = eps
@@ -915,7 +915,7 @@ if model_type in ['LogisticRegression', 'MLP']:
     X = plpData[population[:, 0], :]
     trainInds = population[:, population.shape[1] - 1] > 0
     if class_weight == -1:
-    	loss = FocalLoss(gamma = 2)
+    	loss = FocalLoss(gamma = 5)
     else:
         if class_weight == 0:
     		weights = float(np.count_nonzero(y))/y.shape[0]
@@ -1040,7 +1040,7 @@ elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
     full_covariates = []
     print 'total patient', X.shape
     if class_weight == -1:
-    	loss = FocalLoss(gamma = 2)
+    	loss = FocalLoss(gamma = 3)
     else:
         if class_weight == 0:
     		weights = float(np.count_nonzero(y))/y.shape[0]
