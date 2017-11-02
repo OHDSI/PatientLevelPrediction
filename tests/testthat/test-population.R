@@ -190,6 +190,10 @@ test_that("population creation parameters", {
   plpData2$outcomes <- outcomes
   plpData2$cohorts <- cohorts
   
+  attr(plpData2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
+                                                                  targetCount=20,uniquePeople=20,
+                                                                  outcomes=3))
+  
   pop <- createStudyPopulation(plpData2,
                         population = NULL,
                         outcomeId = 1,

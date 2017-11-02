@@ -24,8 +24,6 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
 #================================================================
-featnum = 2000
-
 print "Training Naive Bayes model " 
 
 
@@ -36,8 +34,9 @@ print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.
 print "Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1])
 ###########################################################################
 
+featnum = min(variableNumber,X.shape[1])
 print "Applying univariate feature selection to select %s features as naive bayes reqires non-sparse data " %(featnum)
-kbest = SelectKBest(chi2, k=2000).fit(X[population[:,population.shape[1]-1] > 0,:], y[population[:,population.shape[1]-1] > 0])
+kbest = SelectKBest(chi2, k=featnum).fit(X[population[:,population.shape[1]-1] > 0,:], y[population[:,population.shape[1]-1] > 0])
 kbest.scores_ = np.nan_to_num(kbest.scores_)
 print "Test kbest length: %s non-zero: %s" %(kbest.scores_.shape[0], np.sum(kbest.scores_!=0))
 threshold = -np.sort(-kbest.scores_)[featnum-1]

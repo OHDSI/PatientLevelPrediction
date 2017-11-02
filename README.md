@@ -62,8 +62,16 @@ Getting Started
   drat::addRepo("OHDSI")
   install.packages("PatientLevelPrediction")
   ```
+Note that for testing you can simulate a random plpData object using the following code:
 
-Have a look at the video below for a demo of the package.
+  ```r
+  set.seed(1234)
+  data(plpDataSimulationProfile)
+  sampleSize <- 2000
+  plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+  ```
+  
+Have a look at the video below for an extensive demo of the package.
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=BEukCbT8UoA
 " target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
@@ -71,8 +79,8 @@ alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
 Getting Involved
 ================
-* Vignette: [Building patient-level predictive models](https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.pdf)
-* Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
+* Vignette: [Building patient-level predictive models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf)
+* Developer questions/comments/feedback: <a href="http://forumBuildingPredictiveModels.pdfs.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="../../issues">GitHub issue tracker</a> for all bugs/issues/enhancements
  
 License

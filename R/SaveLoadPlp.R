@@ -89,9 +89,12 @@
 #'                                     date for a person to be included in the at risk cohort. Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
 #'                                     but can already be done here for efficiency reasons.
+#' @param sampleSize                   If not NULL, only this number of people will be sampled from the target population (Default NULL)
+#' 
 #' @param covariateSettings            An object of type \code{covariateSettings} as created using the
 #'                                     \code{createCovariateSettings} function in the
 #'                                     \code{FeatureExtraction} package.
+#' @param baseUrl                      If extracting cohorts from atlas enter atlas url to extract cohort creation details
 #'
 #' @return
 #' Returns an object of type \code{plpData}, containing information on the cohorts, their
@@ -109,26 +112,36 @@
 #'
 #' @export
 getPlpData <- function(connectionDetails,
-                                  cdmDatabaseSchema,
-                                  oracleTempSchema = cdmDatabaseSchema,
-                                  cohortId,
-                                  outcomeIds,
-                                  studyStartDate = "",
-                                  studyEndDate = "",
-                                  cohortDatabaseSchema = cdmDatabaseSchema,
-                                  cohortTable = "cohort",
-                                  outcomeDatabaseSchema = cdmDatabaseSchema,
-                                  outcomeTable = "cohort",
-                                  cdmVersion = "5",
-                                  excludeDrugsFromCovariates = F, #ToDo: rename to excludeFromFeatures
-                                  firstExposureOnly = FALSE,
-                                  washoutPeriod = 0,
-                                  temporal = F,
-                                  covariateSettings) {
+                       cdmDatabaseSchema,
+                       oracleTempSchema = cdmDatabaseSchema,
+                       cohortId,
+                       outcomeIds,
+                       studyStartDate = "",
+                       studyEndDate = "",
+                       cohortDatabaseSchema = cdmDatabaseSchema,
+                       cohortTable = "cohort",
+                       outcomeDatabaseSchema = cdmDatabaseSchema,
+                       outcomeTable = "cohort",
+                       cdmVersion = "5",
+                       excludeDrugsFromCovariates = F, #ToDo: rename to excludeFromFeatures
+                       firstExposureOnly = FALSE,
+                       washoutPeriod = 0,
+                       sampleSize = NULL,
+                       covariateSettings,
+                       baseUrl = NULL) {
   if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
     stop("Study start date must have format YYYYMMDD")
   if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)
     stop("Study end date must have format YYYYMMDD")
+  if(!is.null(sampleSize)){
+    if(class(sampleSize)!='numeric')
+      stop("sampleSize must be numeric")
+  }
+  
+  if(is.null(cohortId))
+    stop('User must input cohortId')
+  if(is.null(outcomeIds))
+    stop('User must input outcomeIds')
   #ToDo: add other checks the inputs are valid
   
   connection <- DatabaseConnector::connect(connectionDetails)
@@ -148,6 +161,7 @@ getPlpData <- function(connectionDetails,
   }
   
   writeLines("\nConstructing the at risk cohort")
+  if(!is.null(sampleSize))  writeLines(paste("\n Sampling ",sampleSize, " people"))
   renderedSql <- SqlRender::loadRenderTranslateSql("CreateCohorts.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = connectionDetails$dbms,
@@ -160,7 +174,10 @@ getPlpData <- function(connectionDetails,
                                                    study_start_date = studyStartDate,
                                                    study_end_date = studyEndDate,
                                                    first_only = firstExposureOnly,
-                                                   washout_period = washoutPeriod)
+                                                   washout_period = washoutPeriod,
+                                                   use_sample = !is.null(sampleSize),
+                                                   sample_number=sampleSize
+  )
   DatabaseConnector::executeSql(connection, renderedSql)
   
   writeLines("Fetching cohorts from server")
@@ -176,6 +193,8 @@ getPlpData <- function(connectionDetails,
                    studyStartDate = studyStartDate,
                    studyEndDate = studyEndDate)
   
+  if(nrow(cohorts)==0)
+    stop('Target population is empty')
 
   delta <- Sys.time() - start
   writeLines(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
@@ -218,8 +237,10 @@ getPlpData <- function(connectionDetails,
   colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
   metaData.outcome <- data.frame(outcomeIds =outcomeIds)
   attr(outcomes, "metaData") <- metaData.outcome
+  if(nrow(outcomes)==0)
+    stop('No Outcomes')
   
-  metaData.cohort$attrition <- getCounts(cohorts,nrow(outcomes), "Original cohorts")
+  metaData.cohort$attrition <- getCounts2(cohorts,outcomes, "Original cohorts")
   attr(cohorts, "metaData") <- metaData.cohort
   
   delta <- Sys.time() - start
@@ -251,6 +272,21 @@ getPlpData <- function(connectionDetails,
   metaData$call$firstExposureOnly = firstExposureOnly
   metaData$call$washoutPeriod = washoutPeriod
   metaData$call$covariateSettings= covariateSettings
+  
+  
+  # code to extract cohort if selected
+  if(!is.null(baseUrl)){
+    cohortCode <- saveCirceDefinition(cohortId, 'Target Cohort', baseUrl)
+    outcomeCode <- list()
+    length(outcomeCode) <- length(outcomeIds)
+    i <- 0
+    for(outcomeId in outcomeIds){
+      i <- i+1
+      outcomeCode[[i]] <- saveCirceDefinition(outcomeId, paste0('Outcome ',i, ' Cohort'), baseUrl)
+    }
+    metaData$cohortCreate <- list(targetCohort = cohortCode ,
+                         outcomeCohorts = outcomeCode)
+  }
 
   if (temporal) {
     result <- list(cohorts = cohorts,
@@ -300,6 +336,9 @@ savePlpData <- function(plpData, file, envir=NULL) {
   
   # save the actual values in the metaData
   # TODO - only do this if exists in parent or environ
+  if(is.null(plpData$metaData$call$sampleSize)){  # fixed a bug when sampleSize is NULL
+    plpData$metaData$call$sampleSize <- 'NULL'
+  }
   for(i in 2:length(plpData$metaData$call)){
     plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
   }
@@ -610,6 +649,9 @@ savePlpModel <- function(plpModel, dirPath){
   saveRDS(plpModel$populationSettings, file = file.path(dirPath, "populationSettings.rds"))
   saveRDS(plpModel$trainingTime, file = file.path(dirPath,  "trainingTime.rds"))
   saveRDS(plpModel$varImp, file = file.path(dirPath,  "varImp.rds"))
+  saveRDS(plpModel$dense, file = file.path(dirPath,  "dense.rds"))
+  saveRDS(plpModel$cohortId, file = file.path(dirPath,  "cohortId.rds"))
+  saveRDS(plpModel$outcomeId, file = file.path(dirPath,  "outcomeId.rds"))
   
   
   attributes <- list(type=attr(plpModel, 'type'), predictionType=attr(plpModel, 'predictionType') )
@@ -635,6 +677,14 @@ loadPlpModel <- function(dirPath) {
   
   hyperParamSearch <- tryCatch(readRDS(file.path(dirPath, "hyperParamSearch.rds")),
                                error=function(e) NULL)
+  # add in these as they got dropped
+  outcomeId <- tryCatch(readRDS(file.path(dirPath, "outcomeId.rds")),
+                        error=function(e) NULL)
+  cohortId <- tryCatch(readRDS(file.path(dirPath, "cohortId.rds")),
+                        error=function(e) NULL)  
+  dense <- tryCatch(readRDS(file.path(dirPath, "dense.rds")),
+                        error=function(e) NULL)  
+  
   
   result <- list(model = readRDS(file.path(dirPath, "model.rds")),
                  hyperParamSearch = hyperParamSearch,
@@ -645,13 +695,24 @@ loadPlpModel <- function(dirPath) {
                  metaData = readRDS(file.path(dirPath, "metaData.rds")),
                  populationSettings= readRDS(file.path(dirPath, "populationSettings.rds")),
                  trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
-                 varImp = readRDS(file.path(dirPath, "varImp.rds"))
-                 
-  )
+                 varImp = readRDS(file.path(dirPath, "varImp.rds")),
+                 dense = dense,
+                 cohortId= cohortId,
+                 outcomeId = outcomeId)
+
+  #attributes <- readRDS(file.path(dirPath, "attributes.rds"))
   attributes <- readRDS(file.path(dirPath, "attributes.rds"))
   attr(result, 'type') <- attributes$type
   attr(result, 'predictionType') <- attributes$predictionType
   class(result) <- "plpModel"
+  
+  # if python update the location
+  if(attributes$type=='python'){
+    result$model <- file.path(dirPath,'python_model')
+    result$predict <- createTransform(result)
+  }
+  # if knn update the locaiton - TODO !!!!!!!!!!!!!!
+  
   
   return(result)
 }
@@ -856,3 +917,31 @@ writeOutput <- function(prediction,
   
   
 }
+
+# Insert cohort definitions into package
+saveCirceDefinition <- function (definitionId, name = NULL,
+                                            baseUrl = "https://enter_address")
+{
+  url <- paste(baseUrl, "cohortdefinition", definitionId, sep = "/")
+  json <- RCurl::getURL(url, .opts = list(ssl.verifypeer=FALSE))
+  parsedJson <- RJSONIO::fromJSON(json)
+  if (is.null(name)) {
+    name <- parsedJson$name
+  }
+  expression <- parsedJson$expression
+  parsedExpression <- RJSONIO::fromJSON(parsedJson$expression)
+  jsonBody <- RJSONIO::toJSON(list(expression = parsedExpression),
+                              digits = 23)
+  httpheader <- c(Accept = "application/json; charset=UTF-8",
+                  `Content-Type` = "application/json")
+  url <- paste(baseUrl, "cohortdefinition", "sql", sep = "/")
+  cohortSqlJson <- RCurl::postForm(url, .opts = list(httpheader = httpheader,
+                                                     postfields = jsonBody,
+                                                     ssl.verifypeer=FALSE))
+  sql <- RJSONIO::fromJSON(cohortSqlJson)
+
+  return(list(json=expression,
+              sql=sql))
+}
+
+

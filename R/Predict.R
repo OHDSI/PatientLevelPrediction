@@ -100,7 +100,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
 predict.python <- function(plpModel, population, plpData){
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() ){ 
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
@@ -296,7 +296,6 @@ predictFfdf <- function(coefficients, population, covariates, modelType = "logis
 #'
 #' @export
 bySumFf <- function(values, bins) {
-  .bySum(values, bins)
-  # .Call('PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', values, bins)
+  bySum(values, bins)
 }
 

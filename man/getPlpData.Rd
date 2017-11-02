@@ -10,7 +10,7 @@ getPlpData(connectionDetails, cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema, outcomeTable = "cohort",
   cdmVersion = "5", excludeDrugsFromCovariates = F,
-  firstExposureOnly = FALSE, washoutPeriod = 0, temporal = F,
+  firstExposureOnly = FALSE, washoutPeriod = 0, sampleSize = NULL,
   covariateSettings)
 }
 \arguments{
@@ -81,6 +81,8 @@ but can already be done here for efficiency reasons.}
 date for a person to be included in the at risk cohort. Note that
 this is typically done in the \code{createStudyPopulation} function,
 but can already be done here for efficiency reasons.}
+
+\item{sampleSize}{If not NULL, only this number of people will be sampled from the target population (Default NULL)}
 
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
 \code{createCovariateSettings} function in the

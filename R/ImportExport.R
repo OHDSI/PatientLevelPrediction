@@ -71,3 +71,114 @@ exportPlpDataToCsv <- function(plpData, outputFolder) {
   delta <- Sys.time() - start
   writeLines(paste("Exporting data to CSV took", signif(delta, 3), attr(delta, "units")))
 }
+
+
+
+
+#'Transports a plpResult to a new location and removed sensitive data
+#'
+#' @details
+#' This function is used to 
+#'
+#' @param plpResult      An object returned by running \code{runPlp}.
+#' @param outputFolder   The folder on the file system where the CSV files will be created. If the
+#'                       folder does not yet exist it will be created.
+#' @param n              The minimum number of people required for each result summary to be included 
+#' @param includeEvaluationStatistics  Whether to include the evaluationStatistics
+#' @param includeThresholdSummary      Whether to include the thresholdSummary
+#' @param includeDemographicSummary    Whether to include the demographicSummary
+#' @param includeCalibrationSummary    Whether to include the calibrationSummary
+#' @param includePredictionDistribution  Whether to include the predictionDistribution  
+#' @param includeCovariateSummary      Whether to include the covariateSummary             
+#'
+#' @examples
+#' \dontrun{
+#' transportPlp(plpResult, "s:/temp/exportTest", n=10)
+#' }
+#' @export
+#' 
+#' 
+transportPlp <- function(plpResult,outputFolder, n=NULL,includeEvaluationStatistics=T,
+                         includeThresholdSummary=T, includeDemographicSummary=T, 
+                         includeCalibrationSummary =T, includePredictionDistribution=T,
+                         includeCovariateSummary=T){
+  
+  # remove any sensitive data:
+  plpResult$inputSetting$dataExtrractionSettings$connectionDetails <- NULL
+  plpResult$model$metaData$call$connectionDetails <- NULL
+  plpResult$model$metaData$call$cdmDatabaseSchema <- NULL
+  plpResult$model$metaData$call$cohortDatabaseSchema <- NULL
+  plpResult$model$metaData$call$outcomeDatabaseSchema <- NULL
+  plpResult$model$index <- NULL
+  plpResult$prediction <- NULL
+  mod <- get("plpModel", envir = environment(plpResult$model$predict))
+  mod$index <- NULL
+  mod$metaData$call$connectionDetails <- NULL
+  assign("plpModel", mod, envir = environment(plpResult$model$predict))
+  
+  if(!includeEvaluationStatistics)
+   plpResult$performanceEvaluation$evaluationStatistics <- NULL
+  if(!includeThresholdSummary)
+    plpResult$performanceEvaluation$thresholdSummary <- NULL  
+  if(!includeDemographicSummary)
+    plpResult$performanceEvaluation$demographicSummary <- NULL 
+  if(!includeCalibrationSummary)
+    plpResult$performanceEvaluation$calibrationSummary <- NULL 
+  if(!includePredictionDistribution)
+    plpResult$performanceEvaluation$predictionDistribution <- NULL  
+  if(!includeCovariateSummary)
+    plpResult$covariateSummary <- NULL
+  
+  # remove things less than n
+  if(!is.null(n)){
+    # remove less than n counts from demographicSummary
+    
+    includeInd <- plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk>=n &
+                  plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome >= n
+    plpResult$performanceEvaluation$demographicSummary <- plpResult$performanceEvaluation$demographicSummary[includeInd,]
+   
+    plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId', 'covariateValue')]  
+    
+    }
+  
+  #save to the output location
+  PatientLevelPrediction::savePlpResult(plpResult, outputFolder)
+  
+}
+
+
+#'Transports a plpModel to a new location and removes sensitive data
+#'
+#' @details
+#' This function is used to 
+#'
+#' @param plpModel      A trianed model.
+#' @param outputFolder   The folder on the file system where the CSV files will be created. If the
+#'                       folder does not yet exist it will be created.
+#'
+#' @examples
+#' \dontrun{
+#' transportModel(plpModel, "s:/temp/exportTest")
+#' }
+#' @export
+#' 
+#' 
+transportModel <- function(plpModel,outputFolder){
+  
+  plpModel$index <- NULL
+  plpModel$metaData$call$connectionDetails <- NULL
+  plpModel$metaData$call$cdmDatabaseSchema <- NULL
+  plpModel$metaData$call$cohortDatabaseSchema <- NULL
+  plpModel$metaData$call$outcomeDatabaseSchema <- NULL
+  
+  # remove any sensitive data:
+  mod <- get("plpModel", envir = environment(plpModel$predict))
+  mod$index <- NULL
+  mod$metaData$call$connectionDetails <- NULL
+  assign("plpModel", mod, envir = environment(plpModel$predict))
+  
+  
+  #save to the output location
+  PatientLevelPrediction::savePlpModel(plpModel, outputFolder)
+  
+}

@@ -274,16 +274,6 @@ plpData <- getPlpData(connectionDetails = connectionDetails,
 
 Note that if the cohorts are created in ATLAS the corresponding database schemas need to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
 
-We can get some overall statistics using the generic `summary()` method:
-
-```{r tidy=FALSE,eval=FALSE}
-summary(plpData)
-```
-```{r echo=FALSE,message=FALSE,eval=TRUE}
-if (file.exists(vignetteDataFolder)){
-  summary(plpData)
-}
-```
 
 ## Saving the data to file
 
@@ -326,12 +316,14 @@ Note that some of these constraints could also already be applied in the cohort 
 
 | Models                      | Python | Parameters                              |
 | ----------------------------| ------ | --------------------------------------- |
-| Logistic regression with regularization | No | var  (starting  variance)|
-| Gradient boosting machines              | No | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate |
-| Random forest                           | Yes | mtry  (number  of  features  in  each  tree),ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node),balance (balance class labels) | 
+| Logistic regression with regularization | No | var  (starting  variance), seed |
+| Gradient boosting machines              | No | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, seed  |
+| Random forest                           | Yes | mtry  (number  of  features  in  each  tree),ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node),balance (balance class labels), seed  | 
 | K-nearest neighbors                     | No | k (number   of   neighbours),weighted (weight by inverse frequency)  |   
 | Naive Bayes                             | Yes | none|
-
+| AdaBoost           | Yes                      | n_estimators (the maximum number of estimators at which boosting is terminated), learning_rate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learning_rate and n_estimators)|
+|Decision Tree | Yes | max_depth (the maximum depth of the tree), min_samples_split,min_samples_leaf, min_impurity_split (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,class_weight ("Balance"" or "None") |
+| Multilayer Perception | Yes | size (the number of hidden nodes), alpha (the l2 regularisation), seed |
 
 The table shows the currently implemented algorithms and their hyper-parameters. Some of these algorithms are calling python.In the settings function of the algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
 

@@ -5,7 +5,7 @@
 \title{Plot the preference score probability density function, showing prediction overlap between true and false cases
 #'}
 \usage{
-plotPreferencePDF(evaluation, type = "train", fileName = NULL)
+plotPreferencePDF(evaluation, type = "test", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the

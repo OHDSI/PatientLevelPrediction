@@ -184,9 +184,10 @@ runPlp <- function(population, plpData,
   flog.trace('Parameter Check Started')
   checkInStringVector(testSplit, c('person','time'))
   checkHigherEqual(sum(population[,'outcomeCount']>0), 25)
-  checkIsClass(plpData, c('plpData.coo','plpData'))
+  checkIsClass(plpData, c('plpData'))
   checkIsClass(testFraction, 'numeric')
   checkHigher(testFraction,0)
+  checkHigher(-1*testFraction,-1)
   checkIsClass(nfold, 'numeric')
   checkHigher(nfold, 0)
   
@@ -245,6 +246,12 @@ runPlp <- function(population, plpData,
     modelLoc <- file.path(save,analysisId, 'savedModel' )
     ftry(savePlpModel(model, modelLoc),finally= flog.trace('Done.'))
     flog.info(paste0('Model saved to ..\\',analysisId,'\\savedModel'))
+    
+    #update the python saved location
+    if(attr(model, 'type')=='python'){
+      model$model <- file.path(modelLoc,'python_model')
+      model$predict <- createTransform(model)
+    }
   }
   
   # calculate metrics
@@ -304,7 +311,8 @@ runPlp <- function(population, plpData,
                        populationSettings=attr(population, "metaData"),
                        modelSettings = modelSettings,
                        testSplit = testSplit, 
-                       testFraction= testFraction)
+                       testFraction= testFraction,
+                       nfold=nfold)
   
   # 2) Executionsummary details:
   executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
@@ -348,7 +356,7 @@ runPlp <- function(population, plpData,
                   analysisRef=list(analysisId=analysisId,
                                    analysisName=NULL,#analysisName,
                                    analysisSettings= NULL))
-  class(results) <- c('list','plpModel')
+  class(results) <- c('runPlp')
   
   flog.info(paste0('Log saved to ',logFileName))  
   flog.info("Run finished successfully.")
@@ -360,16 +368,48 @@ runPlp <- function(population, plpData,
 #' @export
 summary.plpModel <- function(object, ...) {
   
+  if(object$model$modelSettings$model=="lr_lasso")
+    hyper <-  paste0("The final model hyper-parameters were - variance: ",format(as.double(object$model$hyperParamSearch['priorVariance']), digits = 5))
+  if(is.null(object$model$hyperParamSearch)){
+    hyper <- 'No hyper-parameters...'
+  } else {
+    finalmod <- object$model$hyperParamSearch[which.max(object$model$hyperParamSearch$cv_auc),]
+    finalmod <- finalmod[,!colnames(finalmod)%in%c('seed','cv_auc')]
+    hyper <- paste0("The final model hyper-parameters were -", 
+                    paste(colnames(finalmod), finalmod, collapse='; ', sep=': ')
+    )
+  }
+  
+  writeLines(paste0("The study was started at: ", object$executionSummary$ExecutionDateTime, 
+                   " and took at total of ", as.double(object$executionSummary$TotalExecutionElapsedTime, unit='mins'),
+                   " minutes.  ", hyper))
+  
+  aucInd <- object$performanceEvaluation$evaluationStatistics[,'Eval']=='test' & 
+            object$performanceEvaluation$evaluationStatistics[,'Metric']%in%c('auc','AUC.auc')
+  
+  brierScoreInd <- object$performanceEvaluation$evaluationStatistics[,'Eval']=='test' & 
+    object$performanceEvaluation$evaluationStatistics[,'Metric']%in%c('BrierScore')
+  
+  brierScaledInd <- object$performanceEvaluation$evaluationStatistics[,'Eval']=='test' & 
+    object$performanceEvaluation$evaluationStatistics[,'Metric']%in%c('BrierScaled')
+  
+  calibrationSlopeInd <- object$performanceEvaluation$evaluationStatistics[,'Eval']=='test' & 
+    object$performanceEvaluation$evaluationStatistics[,'Metric']%in%c('CalibrationSlope.Gradient')
+  
+  calibrationInterceptInd <- object$performanceEvaluation$evaluationStatistics[,'Eval']=='test' & 
+    object$performanceEvaluation$evaluationStatistics[,'Metric']%in%c('CalibrationIntercept.Intercept')
+  
   result <- list(cohortId=attr(object$prediction, "metaData")$cohortId,
                  outcomeId=attr(object$prediction, "metaData")$outcomeId,
                  model= object$model$modelSettings$model,
                  parameters = object$model$modelSettings$param,
+                 hyperParamsearch = object$model$hyperParamSearch,
                  elaspsedTime = object$executionSummary$TotalExecutionElapsedTime,
-                 AUC = object$performanceEvaluationTest$evaluationStatistics$AUC,
-                 BrierScore = object$performanceEvaluationTest$evaluationStatistics$BrierScore,
-                 BrierScaled = object$performanceEvaluationTest$evaluationStatistics$BrierScaled,
-                 calibrationIntercept = object$performanceEvaluationTest$evaluationStatistics$calibrationIntercept,
-                 CalibrationSlope = object$performanceEvaluationTest$evaluationStatistics$CalibrationSlope
+                 AUC = object$performanceEvaluation$evaluationStatistics[aucInd,'Value'],
+                 BrierScore = object$performanceEvaluation$evaluationStatistics[brierScoreInd,'Value'],
+                 BrierScaled = object$performanceEvaluation$evaluationStatistics[brierScaledInd,'Value'],
+                 CalibrationIntercept = object$performanceEvaluation$evaluationStatistics[calibrationInterceptInd,'Value'],
+                 CalibrationSlope = object$performanceEvaluation$evaluationStatistics[calibrationSlope,'Value']
                  
   )
   class(result) <- "summary.plpModel"
@@ -444,7 +484,3 @@ covariateSummary <- function(plpData, population){
   return(prevs)
   
 }
-
-
-
-

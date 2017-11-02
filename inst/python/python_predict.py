@@ -13,13 +13,13 @@ import os
 import sys
 import timeit
 import math
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import GaussianNB
+#from sklearn.ensemble import RandomForestClassifier
+#from sklearn.naive_bayes import GaussianNB
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
-from sklearn.feature_selection import SelectFromModel
+#from sklearn.feature_selection import SelectFromModel
 #from sklearn.cross_validation import PredefinedSplit
 from sklearn.externals.joblib import Memory
-from sklearn.datasets import load_svmlight_file
+#from sklearn.datasets import load_svmlight_file
 from sklearn.externals import joblib
 
 #================================================================

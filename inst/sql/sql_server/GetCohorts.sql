@@ -13,4 +13,3 @@ SELECT row_id,
 	days_to_obs_end
 FROM #cohort_person cohort
 ORDER BY subject_id
-

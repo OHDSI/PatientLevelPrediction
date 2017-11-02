@@ -8,6 +8,7 @@
 #' @param population       The population of people who you want to predict the risk for
 #' @param plpData          The plpData for the population
 #' @param plpModel         The trained PatientLevelPrediction model
+#' @param calculatePerformance  Whether to also calculate the performance metrics [default TRUE]
 #' @param logConnection    A connection to output any logging during the process
 #' @param databaseOutput   Whether to save the details into the prediction database
 #' @param silent           Whether to turn off progress reporting
@@ -30,6 +31,7 @@
 applyModel <- function(population,
                        plpData,
                        plpModel,
+                       calculatePerformance=T,
                        logConnection = NULL,
                        databaseOutput = NULL,
                        silent = F) {
@@ -66,6 +68,9 @@ applyModel <- function(population,
 
   if (!"outcomeCount" %in% colnames(prediction))
     return(list(prediction = prediction))
+  
+  if(!calculatePerformance || nrow(prediction) == 1)
+    return(prediction)
 
   if (!is.null(logConnection)) {
     cat("Starting evaluation at ", Sys.time(), file = logConnection)
@@ -75,6 +80,31 @@ applyModel <- function(population,
 
   performance <- evaluatePlp(prediction, plpData, model = plpModel$modelSettings$model)
 
+  # reformatting the performance 
+  analysisId <-   '000000'
+  nr1 <- length(performance$evaluationStatistics)
+  performance$evaluationStatistics <- cbind(analysisId= rep(analysisId,nr1-1),
+                                               Eval=rep('validation', nr1-1),
+                                               Metric = names(unlist(performance$evaluationStatistics[-1])),
+                                               Value = unlist(performance$evaluationStatistics[-1])
+                                               )
+  nr1 <- nrow(performance$thresholdSummary)
+  performance$thresholdSummary <- cbind(analysisId=rep(analysisId,nr1),
+                                              Eval=rep('validation', nr1),
+                                              performance$thresholdSummary)
+  nr1 <- nrow(performance$demographicSummary)
+  performance$demographicSummary <- cbind(analysisId=rep(analysisId,nr1),
+                                        Eval=rep('validation', nr1),
+                                        performance$demographicSummary)
+  nr1 <- nrow(performance$calibrationSummary)
+  performance$calibrationSummary <- cbind(analysisId=rep(analysisId,nr1),
+                                          Eval=rep('validation', nr1),
+                                          performance$calibrationSummary)
+  nr1 <- nrow(performance$predictionDistribution)
+  performance$predictionDistribution <- cbind(analysisId=rep(analysisId,nr1),
+                                          Eval=rep('validation', nr1),
+                                          performance$predictionDistribution)
+  
   if (!is.null(logConnection)) {
     cat("Evaluation completed at ", Sys.time(), file = logConnection)
     cat("Took: ", start.pred - Sys.time(), file = logConnection)
@@ -83,18 +113,9 @@ applyModel <- function(population,
     writeLines(paste("Evaluation completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
 
   result <- list(prediction = prediction, performance = performance)
+  return(result)
 }
 
-ApplyPlpPrediction <- function(plpModel, plpData, population) {
-  # TODO: input checks
-
-  prediction <- plpModel$predict(population = population, plpData = plpData)
-
-  # evaluation? - shall we add this? evaluatePlp(prediction)
-
-  return(prediction)
-
-}
 
 #' Extract new plpData using plpModel settings
 #' use metadata in plpModel to extract similar data and population for new databases:
@@ -108,6 +129,7 @@ ApplyPlpPrediction <- function(plpModel, plpData, population) {
 #' @param newOutcomeDatabaseSchema  The database schema where the outcome table is stored
 #' @param newOutcomeTable           The table name of the outcome table
 #' @param newOutcomeId              The cohort_definition_id for the outcome  
+#' @param sample                    The number of people to sample (default is NULL meaning use all data)
 #'
 #' @examples
 #' \dontrun{
@@ -140,18 +162,25 @@ similarPlpData <- function(plpModel=NULL,
                            newCohortId = NULL,
                            newOutcomeDatabaseSchema = NULL,
                            newOutcomeTable = NULL,
-                           newOutcomeId = NULL) {
+                           newOutcomeId = NULL,
+                           sample=NULL) {
   
   if(is.null(plpModel))
     return(NULL)
-  if(!'plpModel'%in%class(plpModel))
+  if(class(plpModel)!='plpModel' && class(plpModel)!='runPlp' )
     return(NULL)
-  if(sum(class(plpModel)==c('list','plpModel'))==2)
+  if(class(plpModel)=='runPlp')
     plpModel <- plpModel$model 
   
   writeLines('Loading model data extraction settings')
   dataOptions <- as.list(plpModel$metaData$call)
   dataOptions[[1]] <- NULL
+  dataOptions$sampleSize <- sample
+  
+  #restricting to model variables and setting min to 0
+  #dataOptions$covariateSettings$deleteCovariatesSmallCount <- 0
+  dataOptions$covariateSettings$includedCovariateConceptIds <- plpModel$varImp$conceptId[plpModel$varImp$covariateValue!=0]
+  
   
   writeLines('Adding new settings if set...')
   if(is.null(newCdmDatabaseSchema))
@@ -165,7 +194,6 @@ similarPlpData <- function(plpModel=NULL,
     dataOptions$cohortId <- newCohortId
   if(!is.null(newOutcomeId))
     dataOptions$outcomeIds <- newOutcomeId
-  plpData <- do.call(getPlpData, dataOptions)
   
   if(!is.null(newCohortDatabaseSchema))
     dataOptions$cohortDatabaseSchema <- newCohortDatabaseSchema  # correct names?
@@ -177,6 +205,7 @@ similarPlpData <- function(plpModel=NULL,
   if(!is.null(newOutcomeTable))
     dataOptions$outcomeTable <- newOutcomeTable
   
+  plpData <- do.call(getPlpData, dataOptions)
   
   # get the popualtion
   writeLines('Loading model population settings')
