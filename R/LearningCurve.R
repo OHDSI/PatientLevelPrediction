@@ -211,7 +211,7 @@ createLearningCurve <- function(population, plpData,
     )
     sink()
     flog.trace('Done.')
-    
+
     # save the model
     if (saveModel == T) {
       modelLoc <- file.path(save, analysisId, 'savedModel')
