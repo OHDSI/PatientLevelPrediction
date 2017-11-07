@@ -200,28 +200,14 @@ getPlpData <- function(connectionDetails,
   writeLines(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
   
   #covariateSettings$useCovariateCohortIdIs1 <- TRUE
-  if (temporal) {
-    writeLines("Fetching temporal covariates from server")
-    covariateData <- FeatureExtraction::getDbTemporalCovariateData(connection = connection,
-                                                           oracleTempSchema = oracleTempSchema,
-                                                           cdmDatabaseSchema = cdmDatabaseSchema,
-                                                           cdmVersion = cdmVersion,
-                                                           cohortTempTable = "#cohort_person",
-                                                           rowIdField = "row_id",
-                                                           covariateSettings = covariateSettings)  
-    
-  } else {
-    writeLines("Fetching covariates from server")
-    covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
-                                                           oracleTempSchema = oracleTempSchema,
-                                                           cdmDatabaseSchema = cdmDatabaseSchema,
-                                                           cdmVersion = cdmVersion,
-                                                           cohortTable = "#cohort_person",
-                                                           cohortTableIsTemp = TRUE,
-                                                           rowIdField = "row_id",
-                                                           covariateSettings = covariateSettings)    
-  }
-
+  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
+                                                         oracleTempSchema = oracleTempSchema,
+                                                         cdmDatabaseSchema = cdmDatabaseSchema,
+                                                         cdmVersion = cdmVersion,
+                                                         cohortTable = "#cohort_person",
+                                                         cohortTableIsTemp = TRUE,
+                                                         rowIdField = "row_id",
+                                                         covariateSettings = covariateSettings)
   writeLines("Fetching outcomes from server")
   start <- Sys.time()
   outcomeSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
@@ -288,21 +274,11 @@ getPlpData <- function(connectionDetails,
                          outcomeCohorts = outcomeCode)
   }
 
-  if (temporal) {
-    result <- list(cohorts = cohorts,
-                   outcomes = outcomes,
-                   covariates = covariateData$covariates,
-                   covariateRef = covariateData$covariateRef,
-                   timePeriods = covariateData$timePeriods,
-                   metaData = metaData)
-  } else {
-    result <- list(cohorts = cohorts,
-                   outcomes = outcomes,
-                   covariates = covariateData$covariates,
-                   covariateRef = covariateData$covariateRef,
-                   metaData = metaData)   
-  }
-
+  result <- list(cohorts = cohorts,
+                 outcomes = outcomes,
+                 covariates = covariateData$covariates,
+                 covariateRef = covariateData$covariateRef,
+                 metaData = metaData)
   
   class(result) <- "plpData"
   return(result)
