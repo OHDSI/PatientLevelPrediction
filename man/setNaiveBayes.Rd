@@ -4,7 +4,10 @@
 \alias{setNaiveBayes}
 \title{Create setting for naive bayes model with python}
 \usage{
-setNaiveBayes()
+setNaiveBayes(variableNumber = 2000)
+}
+\arguments{
+\item{variableNumber}{The number of variables selected by feature selection prior to training the model (this is required due to Naive Bayes requring a non sparse matrix)}
 }
 \description{
 Create setting for naive bayes model with python

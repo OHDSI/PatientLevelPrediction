@@ -110,14 +110,9 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
 
 # fucntion for implementing the pre-processing (normalisation and redundant features removal)
 applyTidyCovariateData <- function(plpData,preprocessSettings){
-  processedData <- list(cohorts=plpData$cohorts,
-                        outcomes = plpData$outcomes,
-                        covariates = ff::clone.ffdf(plpData$covariates),
-                        covariateRef = plpData$covariateRef,
-                        metaData = plpData$metaData)
-                        
+
   # clone covariate stuff so it doesnt overwrite
-  covariates <- processedData$covariates
+  covariates <- plpData$covariates
   
   maxs <- preprocessSettings$normFactors
   deleteCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
@@ -157,10 +152,10 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
   delta <- Sys.time() - start
   writeLines(paste("Removing redundant covariates took", signif(delta, 3), attr(delta, "units")))
   
-  processedData$covariates <- covariates
+  plpData$covariates <- covariates
   
   # return processed data
-  return(processedData)
+  return(plpData)
 }
 
 # create transformation function
@@ -181,10 +176,15 @@ createTransform <- function(plpModel){
       flog.warn('outcomeId of new data does not match training data or does not exist')
     
     # apply normalsation to new data
-    plpData <- applyTidyCovariateData(plpData,plpModel$metaData$preprocessSettings)
+    plpData2 <- list(outcomes =plpData$outcomes,
+                    cohorts = plpData$cohorts,
+                    covariates =ff::clone(plpData$covariates),
+                    covariateRef=plpData $covariateRef,
+                    metaData=plpData$metaData)
+    plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
 
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
-                                                                    plpData=plpData, 
+                                                                    plpData=plpData2, 
                                                                     population=population))
     metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
                      testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
