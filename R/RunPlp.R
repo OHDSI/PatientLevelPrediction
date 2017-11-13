@@ -331,10 +331,12 @@ runPlp <- function(population, plpData,
   flog.info(paste0('Calculating covariate summary @ ', Sys.time()))
   flog.info('This can take a while...')
   covSummary <- covariateSummary(plpData, population)
-  covSummary <- merge(model$varImp, covSummary, by='covariateId', all=T)
+  covSummary <- merge(model$varImp[,colnames(model$varImp)!='covariateName'], covSummary, by='covariateId', all=T)
   trainCovariateSummary <- covariateSummary(plpData, population[population$index>0,])
+  trainCovariateSummary <- trainCovariateSummary[,colnames(trainCovariateSummary)!='covariateName']
   colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'] <- paste0('Train',colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'])
   testCovariateSummary <- covariateSummary(plpData, population[population$index<0,])
+  testCovariateSummary <- testCovariateSummary[,colnames(testCovariateSummary)!='covariateName']
   colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'] <- paste0('Test',colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'])
   covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
   covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
@@ -481,6 +483,33 @@ covariateSummary <- function(plpData, population){
   prevs <- merge(merge(allPeople,outPeople, all=T), noOutPeople, all=T)
   prevs[is.na(prevs)] <- 0
   
+  prevs <- merge(ff::as.ram(plpData$covariateRef[,c('covariateName','covariateId')]), prevs, by='covariateId')
+  
   return(prevs)
   
+}
+
+characterize <- function(plpData, population, N=1){
+  #===========================
+  # all 
+  #===========================
+  popCount <- nrow(plpData$cohorts)
+  if(!missing(population)){
+    ppl <- ff::as.ff(population$rowId)
+    idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
+    idx <- ffbase::ffwhich(idx, !is.na(idx))
+    covariates <- plpData$covariates[idx, ]
+    popCount <- nrow(population)
+  }
+  
+  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
+  grp_qty <- bySumFf(covariates$ones, covariates$covariateId)
+  
+  ind <- ff::as.ram(grp_qty)>=N
+  
+  allPeople <- data.frame(covariateId=ff::as.ram(grp_qty$bins)[ind], 
+                          CovariateCount=ff::as.ram(grp_qty$sums)[ind],
+                          CovariateFraction = ff::as.ram(grp_qty$sums)[ind]/popCount)
+  
+  return(allPeople)
 }

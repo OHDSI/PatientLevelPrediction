@@ -640,6 +640,9 @@ plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
 #' @export
 plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
   
+  # remove the non-incidence variables from the plot
+  covariateSummary <- covariateSummary[covariateSummary$CovariateMeanWithNoOutcome <= 1,]
+  
   covariateSummary$size <- rep(0.1, nrow(covariateSummary))
   covariateSummary$size[covariateSummary$covariateValue!=0] <- 0.5
  
@@ -681,6 +684,8 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
   
   covariateSummary$TrainCovariateMeanWithOutcome[is.na(covariateSummary$TrainCovariateMeanWithOutcome)] <- 0
   covariateSummary$TestCovariateMeanWithOutcome[is.na(covariateSummary$TestCovariateMeanWithOutcome)] <- 0
+  
+  covariateSummary <- covariateSummary[covariateSummary$TrainCovariateMeanWithOutcome <= 1,]
   
   plot1 <- ggplot2::ggplot(covariateSummary, 
                           ggplot2::aes(TrainCovariateMeanWithOutcome, 

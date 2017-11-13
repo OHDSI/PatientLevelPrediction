@@ -104,7 +104,7 @@ transportPlp <- function(plpResult,outputFolder, n=NULL,includeEvaluationStatist
                          includeCovariateSummary=T){
   
   # remove any sensitive data:
-  plpResult$inputSetting$dataExtrractionSettings$connectionDetails <- NULL
+  plpResult$inputSetting$dataExtrractionSettings <- NULL
   plpResult$model$metaData$call$connectionDetails <- NULL
   plpResult$model$metaData$call$cdmDatabaseSchema <- NULL
   plpResult$model$metaData$call$cohortDatabaseSchema <- NULL
@@ -137,15 +137,15 @@ transportPlp <- function(plpResult,outputFolder, n=NULL,includeEvaluationStatist
                   plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome >= n
     plpResult$performanceEvaluation$demographicSummary <- plpResult$performanceEvaluation$demographicSummary[includeInd,]
    
-    plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId', 'covariateValue')]  
-    
+    plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue')]  
+    plpResult$covariateSummary <- plpResult$covariateSummary[plpResult$covariateSummary$CovariateCount>=n,]
+      
     }
   
   #save to the output location
   PatientLevelPrediction::savePlpResult(plpResult, outputFolder)
   
 }
-
 
 #'Transports a plpModel to a new location and removes sensitive data
 #'
