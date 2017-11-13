@@ -181,6 +181,7 @@ createTransform <- function(plpModel){
                     covariates =ff::clone(plpData$covariates),
                     covariateRef=plpData $covariateRef,
                     metaData=plpData$metaData)
+    plpData2$covariates <- limitCovariatesToPopulation(plpData2$covariates, ff::as.ff(population$rowId))
     plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
 
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,

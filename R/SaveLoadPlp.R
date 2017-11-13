@@ -145,13 +145,15 @@ getPlpData <- function(connectionDetails,
   #ToDo: add other checks the inputs are valid
   
   connection <- DatabaseConnector::connect(connectionDetails)
+  dbms <- connectionDetails$dbms
+
   
   if (excludeDrugsFromCovariates) { #ToDo: rename to excludeFromFeatures
     sql <- "SELECT descendant_concept_id FROM @cdm_database_schema.concept_ancestor WHERE ancestor_concept_id IN (@cohort_id)"
     sql <- SqlRender::renderSql(sql,
                                 cdm_database_schema = cdmDatabaseSchema,
                                 cohort_id = cohortId)$sql
-    sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+    sql <- SqlRender::translateSql(sql, targetDialect = dbms)$sql
     conceptIds <- DatabaseConnector::querySql(connection, sql)
     names(conceptIds) <- SqlRender::snakeCaseToCamelCase(names(conceptIds))
     conceptIds <- conceptIds$descendantConceptId
@@ -164,7 +166,7 @@ getPlpData <- function(connectionDetails,
   if(!is.null(sampleSize))  writeLines(paste("\n Sampling ",sampleSize, " people"))
   renderedSql <- SqlRender::loadRenderTranslateSql("CreateCohorts.sql",
                                                    packageName = "PatientLevelPrediction",
-                                                   dbms = connectionDetails$dbms,
+                                                   dbms = dbms,
                                                    oracleTempSchema = oracleTempSchema,
                                                    cdm_database_schema = cdmDatabaseSchema,
                                                    cohort_database_schema = cohortDatabaseSchema,
@@ -184,7 +186,7 @@ getPlpData <- function(connectionDetails,
   start <- Sys.time()
   cohortSql <- SqlRender::loadRenderTranslateSql("GetCohorts.sql",
                                                  packageName = "PatientLevelPrediction",
-                                                 dbms = connectionDetails$dbms,
+                                                 dbms = dbms,
                                                  oracleTempSchema = oracleTempSchema,
                                                  cdm_version = cdmVersion)
   cohorts <- DatabaseConnector::querySql(connection, cohortSql)
@@ -212,7 +214,7 @@ getPlpData <- function(connectionDetails,
   start <- Sys.time()
   outcomeSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
                                                   packageName = "PatientLevelPrediction",
-                                                  dbms = connectionDetails$dbms,
+                                                  dbms = dbms,
                                                   oracleTempSchema = oracleTempSchema,
                                                   cdm_database_schema = cdmDatabaseSchema,
                                                   outcome_database_schema = outcomeDatabaseSchema,
@@ -235,7 +237,7 @@ getPlpData <- function(connectionDetails,
   # Remove temp tables:
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
                                                    packageName = "PatientLevelPrediction",
-                                                   dbms = connectionDetails$dbms,
+                                                   dbms = dbms,
                                                    oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
   DatabaseConnector::disconnect(connection)
@@ -243,6 +245,7 @@ getPlpData <- function(connectionDetails,
   metaData <- covariateData$metaData
   metaData$call <- match.call()
   metaData$call$connectionDetails = connectionDetails
+  metaData$call$connection = NULL
   metaData$call$cdmDatabaseSchema = cdmDatabaseSchema
   metaData$call$oracleTempSchema = oracleTempSchema
   metaData$call$cohortId = cohortId
@@ -284,6 +287,56 @@ getPlpData <- function(connectionDetails,
   return(result)
 }
 
+
+
+
+#' Get the covaridate data for a cohort table
+#' @description
+#' This function executes some SQL to extract covaraite data for a cohort table
+#'
+#' @details
+#'
+#' @param connection                   Can also use an existing connection rather than the connectionDetails
+#' @param cdmDatabaseSchema            The name of the database schema that contains the OMOP CDM
+#'                                     instance.  Requires read permissions to this database. On SQL
+#'                                     Server, this should specifiy both the database and the schema,
+#'                                     so for example 'cdm_instance.dbo'.
+#' @param oracleTempSchema             For Oracle only: the name of the database schema where you want
+#'                                     all temporary tables to be managed. Requires create/insert
+#'                                     permissions to this database.
+#' @param cohortTable                  The temp table containing the cohort of people
+#' @param cdmVersion                   The version of the CDM (default 5)
+#' @param covariateSettings            An object of type \code{covariateSettings} as created using the
+#'                                     \code{createCovariateSettings} function in the
+#'                                     \code{FeatureExtraction} package.
+#'
+#' @return
+#' Returns the covariates for the people in the temp table
+#' @export
+getCovariateData <- function(connection,
+                       cdmDatabaseSchema,
+                       oracleTempSchema = cdmDatabaseSchema,
+                       cohortTable = "#cohort_person",
+                       cdmVersion = 5,
+                       covariateSettings) {
+  
+  if(missing(connection)){
+    stop('Need to enter an existing connection')
+  } 
+  
+  writeLines("Extracting covariate data")
+  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
+                                                         oracleTempSchema = oracleTempSchema,
+                                                         cdmDatabaseSchema = cdmDatabaseSchema,
+                                                         cdmVersion = cdmVersion,
+                                                         cohortTable = cohortTable,
+                                                         cohortTableIsTemp = TRUE,
+                                                         rowIdField = "row_id",
+                                                         covariateSettings = covariateSettings)
+  return(covariateData$covariates)
+}
+
+
 #' Save the cohort data to folder
 #'
 #' @description
@@ -316,7 +369,8 @@ savePlpData <- function(plpData, file, envir=NULL) {
     plpData$metaData$call$sampleSize <- 'NULL'
   }
   for(i in 2:length(plpData$metaData$call)){
-    plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
+    if(!is.null(plpData$metaData$call[[i]]))
+      plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
   }
   
   if('ffdf'%in%class(plpData$covariates)){
@@ -528,7 +582,7 @@ insertDbPopulation <- function(population,
     sql <- SqlRender::renderSql(sql,
                                 table = paste(cohortDatabaseSchema, cohortTable, sep = "."),
                                 cohort_ids = cohortIds)$sql
-    sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+    sql <- SqlRender::translateSql(sql, targetDialect = dbms)$sql
     DatabaseConnector::executeSql(connection = connection, sql = sql, progressBar = FALSE, reportOverallTime = FALSE)
   }
   DatabaseConnector::insertTable(connection = connection,
