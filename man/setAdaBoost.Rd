@@ -4,12 +4,12 @@
 \alias{setAdaBoost}
 \title{Create setting for AdaBoost with python}
 \usage{
-setAdaBoost(n_estimators = 50, learning_rate = 1, seed = NULL)
+setAdaBoost(nEstimators = 50, learningRate = 1, seed = NULL)
 }
 \arguments{
-\item{n_estimators}{The maximum number of estimators at which boosting is terminated}
+\item{nEstimators}{The maximum number of estimators at which boosting is terminated}
 
-\item{learning_rate}{Learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learning_rate and n_estimators.}
+\item{learningRate}{Learning rate shrinks the contribution of each classifier by learningRate. There is a trade-off between learningRate and nEstimators .}
 
 \item{seed}{A seed for the model}
 }

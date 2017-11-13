@@ -166,7 +166,7 @@ createPlpReport <- function(plpResult=NULL,
   doc = ReporteRs::addTitle(doc, 'Covariate Settings:', level=3)
   
   # add table of covariate settings
-  covSet <- data.frame(setting=names(plpResult$model$metaData$call$covariateSettings), 
+  covSet <- data.frame(setting=names(unlist(plpResult$model$metaData$call$covariateSettings)), 
                        choice = unlist(plpResult$model$metaData$call$covariateSettings))
   rownames(covSet) <- NULL
   covTab <- ReporteRs::FlexTable(covSet)
@@ -324,6 +324,7 @@ createPlpReport <- function(plpResult=NULL,
   doc = ReporteRs::addParagraph( doc, value = paste("The model covariates are listed below."))
   
   modelCov <- plpResult$covariateSummary
+  modelCov$covariateValue[is.na(modelCov$covariateValue)] <- 0
   modelCov <- modelCov[modelCov$covariateValue!=0,c('covariateName','covariateValue')]
   modelCov <- modelCov[order(-abs(modelCov$covariateValue)),]
   modelTab <- ReporteRs::FlexTable(modelCov)
@@ -356,7 +357,7 @@ createPlpReport <- function(plpResult=NULL,
 
 
 
-characteriszation <- function(plpData, popualtion, characterisationSettings){
+characteriszation <- function(plpData, population, characterisationSettings){
   summary <- covariateSummary(plpData, population)
   
   if(characterisationSettings$demo){
@@ -447,7 +448,7 @@ characteriszation <- function(plpData, popualtion, characterisationSettings){
   result <- rbind(demoRows, utilizationRows,
                   conditionRows, drugRows, observationRows, procedureRows, measurementRows, 
                   includeRows)
-  result <- merge(ff::as.ram(plpData$covariateRef), result, by='covariateId')
+  #result <- merge(ff::as.ram(plpData$covariateRef), result, by='covariateId')
   return(result)
 }
 

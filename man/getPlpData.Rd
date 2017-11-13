@@ -11,7 +11,7 @@ getPlpData(connectionDetails, cdmDatabaseSchema,
   outcomeDatabaseSchema = cdmDatabaseSchema, outcomeTable = "cohort",
   cdmVersion = "5", excludeDrugsFromCovariates = F,
   firstExposureOnly = FALSE, washoutPeriod = 0, sampleSize = NULL,
-  covariateSettings)
+  covariateSettings, baseUrl = NULL)
 }
 \arguments{
 \item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the
@@ -87,6 +87,8 @@ but can already be done here for efficiency reasons.}
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
 \code{createCovariateSettings} function in the
 \code{FeatureExtraction} package.}
+
+\item{baseUrl}{If extracting cohorts from atlas enter atlas url to extract cohort creation details}
 }
 \value{
 Returns an object of type \code{plpData}, containing information on the cohorts, their

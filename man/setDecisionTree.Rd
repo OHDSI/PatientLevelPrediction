@@ -4,22 +4,21 @@
 \alias{setDecisionTree}
 \title{Create setting for DecisionTree with python}
 \usage{
-setDecisionTree(max_depth = 10, min_samples_split = 2,
-  min_samples_leaf = 10, min_impurity_split = 10^-7, seed = NULL,
-  class_weight = "None", plot = F)
+setDecisionTree(maxDepth = 10, minSamplesSplit = 2, minSamplesLeaf = 10,
+  minImpuritySplit = 10^-7, seed = NULL, classWeight = "None", plot = F)
 }
 \arguments{
-\item{max_depth}{The maximum depth of the tree}
+\item{maxDepth}{The maximum depth of the tree}
 
-\item{min_samples_split}{The minimum samples per split}
+\item{minSamplesSplit}{The minimum samples per split}
 
-\item{min_samples_leaf}{The minimum number of samples per leaf}
+\item{minSamplesLeaf}{The minimum number of samples per leaf}
 
-\item{min_impurity_split}{Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.}
+\item{minImpuritySplit}{Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.}
 
 \item{seed}{The random state seed}
 
-\item{class_weight}{Balance or None}
+\item{classWeight}{Balance or None}
 
 \item{plot}{Boolean whether to plot the tree (requires python pydotplus module)}
 }
@@ -28,6 +27,6 @@ Create setting for DecisionTree with python
 }
 \examples{
 \dontrun{
-model.decisionTree <- setDecisionTree(max_depth=10,min_samples_leaf=10, seed=NULL )
+model.decisionTree <- setDecisionTree(maxDepth=10,minSamplesLeaf=10, seed=NULL )
 }
 }
