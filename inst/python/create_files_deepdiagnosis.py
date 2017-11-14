@@ -114,7 +114,9 @@ def read_data(filename):
 
 if __name__ == "__main__":
     filename = sys.argv[1]
-    population = joblib.load('/data/share/plp/SYNPUF/population.pkl')
+    label_file = sys.argv[2]
+    population = joblib.load(label_file)
+
     #y = population[:, 1]
     covriate_ids, patient_dict = read_data(filename)
     #y_ids = np.array([int(val) for val in patient_dict.keys()])
