@@ -6,7 +6,7 @@
 \usage{
 getCovariateData(connection, cdmDatabaseSchema,
   oracleTempSchema = cdmDatabaseSchema, cohortTable = "#cohort_person",
-  covariateSettings)
+  cdmVersion = 5, covariateSettings)
 }
 \arguments{
 \item{connection}{Can also use an existing connection rather than the connectionDetails}
@@ -21,6 +21,8 @@ all temporary tables to be managed. Requires create/insert
 permissions to this database.}
 
 \item{cohortTable}{The temp table containing the cohort of people}
+
+\item{cdmVersion}{The version of the CDM (default 5)}
 
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
 \code{createCovariateSettings} function in the
