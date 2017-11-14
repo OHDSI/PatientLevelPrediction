@@ -183,7 +183,8 @@ createTransform <- function(plpModel){
                     metaData=plpData$metaData)
     plpData2$covariates <- limitCovariatesToPopulation(plpData2$covariates, ff::as.ff(population$rowId))
     plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
-
+    plpData2$covariateRef <- plpData2$covariateRef[!ffbase::`%in%`(plpData2$covariateRef$covariateId, plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds), ]
+    
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData2, 
                                                                     population=population))
