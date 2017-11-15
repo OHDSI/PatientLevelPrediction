@@ -53,7 +53,7 @@
 
 #' @export
 fitPlp <- function(population, data,   modelSettings,#featureSettings, 
-                   cohortId, outcomeId){
+                   cohortId, outcomeId, minCovariateFraction){
   
   if(is.null(population))
     stop('Population is NULL')
@@ -80,7 +80,7 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   # normalise the data:
   class(plpData) <- c(class(plpData), 'covariateData')
   plpData <- tidyCovariateData(covariateData=plpData, 
-                                minFraction = 0.001,
+                                minFraction = minCovariateFraction,
                                 normalize = TRUE,
                                 removeRedundancy = TRUE)
   if(length(plpData$metaData$deletedInfrequentCovariateIds)>0){
@@ -180,7 +180,7 @@ createTransform <- function(plpModel){
     plpData2 <- list(outcomes =plpData$outcomes,
                     cohorts = plpData$cohorts,
                     covariates =ff::clone(plpData$covariates),
-                    covariateRef=plpData $covariateRef,
+                    covariateRef=ff::clone(plpData $covariateRef),
                     metaData=plpData$metaData)
     plpData2$covariates <- limitCovariatesToPopulation(plpData2$covariates, ff::as.ff(population$rowId))
     plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)

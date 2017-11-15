@@ -42,10 +42,10 @@
 #'
 #' @export
 toSparseM <- function(plpData,population, map=NULL){
-  cov <- ff::clone(plpData$covariates)
-  covref <- ff::clone(plpData$covariateRef)
+  cov <- plpData$covariates #ff::clone(plpData$covariates)
+  covref <- plpData$covariateRef#ff::clone(plpData$covariateRef)
 
-  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=covref,
+  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=ff::clone(covref),
                                   population, map)
 
   for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
@@ -170,10 +170,10 @@ toSparsePython <- function(plpData,population, map=NULL){
   PythonInR::pyExec('import numpy as np')
   PythonInR::pyOptions("useNumpy", TRUE)
 
-  cov <- ff::clone(plpData$covariates)
-  covref <- ff::clone(plpData$covariateRef)
+  cov <- plpData$covariates #ff::clone(plpData$covariates)
+  covref <- plpData$covariateRef #ff::clone(plpData$covariateRef)
 
-  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=covref,
+  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=ff::clone(covref),
                                   population, map=map)
 
   for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
@@ -190,7 +190,7 @@ toSparsePython <- function(plpData,population, map=NULL){
   futile.logger::flog.debug(paste0('Converting data into python sparse matrix...'))
 
   #convert into sparseM
-  futile.logger::flog.debug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
+  futile.logger::flog.debug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
   futile.logger::flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
 
   # chunk then add
