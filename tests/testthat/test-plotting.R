@@ -68,8 +68,10 @@ test_that("plots", {
   test <- plotF1Measure(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotDemographicSummary(lr_results$performanceEvaluation)
-  testthat::expect_s3_class(test, 'ggplot')
+  if(!is.null(lr_results$performanceEvaluation$demographicSummary)){
+    test <- plotDemographicSummary(lr_results$performanceEvaluation)
+    testthat::expect_s3_class(test, 'ggplot')
+  }
   
   test <- plotSparseCalibration(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')

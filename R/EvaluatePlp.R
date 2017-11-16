@@ -641,6 +641,8 @@ getDemographicSummary <- function(prediction, plpData){
       val1 <- stats::aggregate(prediction$outcomeCount, list(prediction$demographicId),
                                function(x) c(length(x), sum(x)))
       val1 <- as.matrix(val1)
+      if(nrow(val1)==0)
+        return(NULL)
       colnames(val1) <- c('demographicId','PersonCountAtRisk','PersonCountWithOutcome')
       
       val2 <- stats::aggregate(prediction$value, list(prediction$demographicId),
