@@ -229,7 +229,9 @@ viewPlp <- function(runPlp) {
         if(is.null(reactVars$plpResult))
           return(NULL)
         
-        returnTab <- as.data.frame(reactVars$plpResult$covariateSummary[,c('covariateName','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome')])
+        returnTab <- as.data.frame(reactVars$plpResult$covariateSummary)
+        returnTab$meanDifference <-returnTab$CovariateMeanWithOutcome- returnTab$CovariateMeanWithNoOutcome
+        returnTab <- returnTab[,c('covariateName','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','meanDifference')]
         
       },     escape = FALSE, selection = 'none',
       options = list(
