@@ -131,6 +131,7 @@ applyModel <- function(population,
 #' @param newOutcomeTable           The table name of the outcome table
 #' @param newOutcomeId              The cohort_definition_id for the outcome  
 #' @param sample                    The number of people to sample (default is NULL meaning use all data)
+#' @param createPopulation          Whether to create the study population as well
 #'
 #' @examples
 #' \dontrun{
@@ -157,7 +158,7 @@ applyModel <- function(population,
 #' @export
 similarPlpData <- function(plpModel=NULL,
                            createCohorts = T,
-                           newConnectionDetails = NULL,
+                           newConnectionDetails,
                            newCdmDatabaseSchema = NULL,
                            newCohortDatabaseSchema = NULL,
                            newCohortTable = NULL,
@@ -165,7 +166,8 @@ similarPlpData <- function(plpModel=NULL,
                            newOutcomeDatabaseSchema = NULL,
                            newOutcomeTable = NULL,
                            newOutcomeId = NULL,
-                           sample=NULL) {
+                           sample=NULL, 
+                           createPopulation= T) {
   
   if(is.null(plpModel))
     return(NULL)
@@ -174,14 +176,19 @@ similarPlpData <- function(plpModel=NULL,
   if(class(plpModel)=='runPlp')
     plpModel <- plpModel$model 
   
+  if(missing(newConnectionDetails)){
+   stop('connection details not entered')
+  } else {
+  connection <- DatabaseConnector::connect(newConnectionDetails)
+  }
+  
   if(createCohorts){
     if(is.null(plpModel$metaData$cohortCreate$targetCohort$sql))
       stop('No target cohort code')
     if(is.null(plpModel$metaData$cohortCreate$outcomeCohorts[[1]]$sql))
       stop('No outcome cohort code')
     
-    connection <- DatabaseConnector::connect(connectionDetails)
-    
+ 
     exists <- toupper(newCohortTable)%in%DatabaseConnector::getTableNames(connection , newCohortDatabaseSchema)
     if(!exists){
     flog.info('Creating temp cohort table')
@@ -241,8 +248,9 @@ similarPlpData <- function(plpModel=NULL,
   
   #restricting to model variables and setting min to 0
   #dataOptions$covariateSettings$deleteCovariatesSmallCount <- 0
-  dataOptions$covariateSettings$includedCovariateConceptIds <- plpModel$varImp$conceptId[plpModel$varImp$covariateValue!=0]
-  
+  #dataOptions$covariateSettings$includedCovariateConceptIds <- plpModel$varImp$conceptId[plpModel$varImp$covariateValue!=0]
+  #dataOptions$covariateSettings$addDescendantsToInclude <- T
+  dataOptions$covariateSettings$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
   
   writeLines('Adding new settings if set...')
   if(is.null(newCdmDatabaseSchema))
@@ -251,7 +259,7 @@ similarPlpData <- function(plpModel=NULL,
   
   if(!is.null(newConnectionDetails))
     dataOptions$connectionDetails <- newConnectionDetails # check name
-  
+
   if(!is.null(newCohortId))
     dataOptions$cohortId <- newCohortId
   if(!is.null(newOutcomeId))
@@ -270,6 +278,8 @@ similarPlpData <- function(plpModel=NULL,
   dataOptions$baseUrl <- NULL
   
   plpData <- do.call(getPlpData, dataOptions)
+  
+  if(!createPopulation) return(plpData)
   
   # get the popualtion
   writeLines('Loading model population settings')

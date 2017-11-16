@@ -34,6 +34,7 @@
 #' @param population                       The population created using createStudyPopulation() who will be used to develop the model
 #' @param plpData                          An object of type \code{plpData} - the patient level prediction
 #'                                         data extracted from the CDM.
+#' @param minCovariateFraction             The minimum fraction of target population who must have a covariate for it to be included in the model training                            
 #' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
 #'                                         \item{logisticRegressionModel()}{ A lasso logistic regression model}
@@ -107,7 +108,7 @@
 #' #and results are saved to file.path('C:','User','home')
 #' model.lr <- lassoLogisticRegression.set()
 #' mod.lr <- runPlp(population=population,
-#'                         plpData= plpData,
+#'                         plpData= plpData, minCovariateFraction = 0.001,
 #'                         modelSettings = model.lr ,
 #'                         testSplit = 'time', testFraction=0.3, 
 #'                         nfold=3, indexes=NULL,
@@ -127,7 +128,7 @@
 #'                         nfold=3, indexes=mod.lr$indexes,
 #'                         save=file.path('C:','User','home'))
 #' } 
-runPlp <- function(population, plpData,
+runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
                    modelSettings,
                    testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, indexes=NULL,
                    save=NULL, saveModel=T,
@@ -220,7 +221,7 @@ runPlp <- function(population, plpData,
   colnames(population)[colnames(population)=='index'] <- 'indexes'
   attr(population, "metaData") <- tempmeta
   
-  settings <- list(data=plpData,
+  settings <- list(data=plpData, minCovariateFraction=minCovariateFraction,
                    modelSettings = modelSettings,
                    population=population,
                    cohortId=cohortId,
