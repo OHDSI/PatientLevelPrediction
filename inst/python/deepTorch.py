@@ -773,7 +773,7 @@ if __name__ == "__main__":
 
             joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
-    elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
+    elif model_type in ['CNN', 'RNN', 'CNN_MLF', 'CNN_MIX', 'GRU', 'CNN_MULTI']:
         #print 'running model', model_type
         y = population[:, 1]
         p_ids_in_cov = set(covariates[:, 0])

@@ -23,7 +23,7 @@
 #' @param class_weight   The class weight used for imbalanced data: 
 #'                           0: Inverse ratio between positives and negatives
 #'                          -1: Focal loss
-#' @param Rnn_type      It can be normal 'RNN'and 'GRU'
+#' @param rnn_type      It can be normal 'RNN'and 'GRU'
 #'
 #' @examples
 #' \dontrun{

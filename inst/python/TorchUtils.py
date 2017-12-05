@@ -211,7 +211,7 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
     :param timeid_len: the total number time window gaps when extracting temporal data
     :return: return the raw data in 3-D format, patients x covariates x number of windows, and the patients ids
     """
-    D = len(covriate_ids)
+    D = len(covariate_ids)
     N = len(patient_dict)
     #if 365%time_window == 0:
     #    T = 365/time_window
