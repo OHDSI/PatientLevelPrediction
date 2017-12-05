@@ -21,7 +21,6 @@
 import sys
 import os
 import pdb
-#os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -33,260 +32,11 @@ from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 import numpy as np
+if "python_dir" in globals():
+    #print python_dir
+    sys.path.insert(0, python_dir)
 
-if torch.cuda.is_available():
-        cuda = True
-        torch.cuda.set_device(0)
-        print('===> Using GPU')
-        torch.backends.cudnn.enabled = True
-        torch.backends.cudnn.benchmark = True
-else:
-        cuda = False
-        print('===> Using CPU')
-print 'GPU id', torch.cuda.current_device()
-
-
-def batch(tensor, batch_size = 50):
-    """ It is used to create batch samples, each batch has batch_size samples"""
-    tensor_list = []
-    length = tensor.shape[0]
-    i = 0
-    while True:
-        if (i+1) * batch_size >= length:
-            tensor_list.append(tensor[i * batch_size: length])
-            return tensor_list
-        tensor_list.append(tensor[i * batch_size: (i+1) * batch_size])
-        i += 1
-
-
-def convert_format2(covriate_ids, patient_dict, y_dict = None, time_window = 1):
-    """
-    create matrix for temporal models.
-
-    :param covriate_ids: the covariate ids in the whole data
-    :param patient_dict: the dictionary contains the data for each patient
-    :param y_dict: if the output labels is known, it contains the labels for patients
-    :param time_window: the number of days as a window when extracting temporal data
-    :return: return the raw data in 3-D format, patients x covariates x number of windows, and the patients ids
-    """
-    D = len(covriate_ids)
-    N = len(patient_dict)
-    if 365%time_window == 0:
-        T = 365/time_window
-    else:
-        T = 365/time_window + 1
-        
-    print D,N,T
-    concept_list =list(covriate_ids)
-    concept_list.sort()
-    x_raw = np.zeros((N, D, T), dtype=float)
-    #y = np.zeros((O,N,T), dtype=int)
-    patient_ind = 0
-    p_ids = []
-    patient_keys = patient_dict.keys()
-    for kk in patient_keys:
-        #print('-------------------')
-        vals = patient_dict[kk] 
-        p_ids.append(int(kk))
-        for timeid, meas in vals.iteritems():
-            int_time = int(timeid) - 1
-            for val in meas:
-                if not len(val):
-                    continue
-                cov_id, cov_val = val
-                lab_ind = concept_list.index(cov_id)
-                x_raw[patient_ind][lab_ind][int_time] = float(cov_val)
-    
-        patient_ind = patient_ind + 1
-    
-    return x_raw, patient_keys
-
-def convert_2_cnn_format(covariates, time_window = 12):
-    """
-    It reads the data from covariates extracted by FeatureExtraction package and convert it to temporal data matrix
-
-    :param covariates: covariates extracted by FeatureExtraction package
-    :param time_window: the number of days as a window when extracting temporal data
-    :return: return the raw data in 3-D format, patients x covariates x number of windows, and the patients ids
-    """
-    covariate_ids = set()
-    patient_dict = OrderedDict()
-    #print covariates.shape
-    #pdb.set_trace()
-    for row in covariates:
-        #print columns
-        p_id, cov_id, time_id, cov_val = row[0], row[1], row[2], row[3]
-        
-        if p_id not in patient_dict:
-            patient_dict[p_id] = {time_id: [(cov_id, cov_val)]}
-        else:
-            if time_id not in patient_dict[p_id]:
-                patient_dict[p_id][time_id] = [(cov_id, cov_val)]
-            else:
-                patient_dict[p_id][time_id].append((cov_id, cov_val))
-        covariate_ids.add(cov_id)
-    #T = 365/time_window
-    x, patient_keys = convert_format2(covariate_ids, patient_dict, time_window = time_window)
-    
-    return x, patient_keys
-
-
-def one_hot(index, classes):
-    """
-
-    :param index:
-    :param classes:
-    :return:
-    """
-    size = index.size() + (classes,)
-    view = index.size() + (1,)
-
-    mask = torch.Tensor(*size).fill_(0)
-    index = index.view(*view)
-    ones = 1.
-
-    if isinstance(index, Variable):
-        ones = Variable(torch.Tensor(index.size()).fill_(1))
-        mask = Variable(mask, volatile=index.volatile)
-        if cuda:
-               ones = ones.cuda()
-               mask = mask.cuda()
-
-    return mask.scatter_(1, index, ones)
-
-
-class FocalLoss(nn.Module):
-    """
-    Implement focal loss to handle with data imbalance based on paper enetitled Focal loss for dense object detection.
-    Loss(x, class) = - (1-softmax(x)[class])^gamma \log(softmax(x)[class])
-
-    """
-    def __init__(self, gamma=5, eps=1e-7, size_average=False):
-        """
-
-        :param gamma: gamma > 0; reduces the relative loss for well-classiﬁed examples (p > .5),
-                                   putting more focus on hard, misclassiﬁed examples
-        :param eps: the allowed error
-        :param size_average: By default, the losses are averaged over observations for each minibatch.
-                                However, if the field size_average is set to False, the losses are
-                                instead summed for each minibatch.
-        """
-        super(FocalLoss, self).__init__()
-        self.gamma = gamma
-        self.eps = eps
-        self.size_average = size_average
-
-    def forward(self, input, target):
-        y = one_hot(target, input.size(-1))
-        logit = F.softmax(input)
-        logit = logit.clamp(self.eps, 1. - self.eps)
-
-        loss = -1 * y * torch.log(logit) # cross entropy
-        loss = loss * (1 - logit) ** self.gamma # focal loss
-
-        if self.size_average:
-            loss = loss.mean()
-        else:
-            loss = loss.sum()
-        return loss
-
-
-class Estimator(object):
-
-    def __init__(self, model):
-        self.model = model
-
-    def compile(self, optimizer, loss):
-        self.optimizer = optimizer
-        self.loss_f = loss
-
-    def _fit(self, train_loader, l1regularization = False):
-        """
-        train one epoch
-
-        :param train_loader: The data loaded using DataLoader
-        :param l1regularization: default False
-        :return: the return fitted loss and accuracy
-        """
-        loss_list = []
-        acc_list = []
-        for idx, (X, y) in enumerate(train_loader):
-            X_v = Variable(X)
-            y_v = Variable(y)
-            if cuda:
-                X_v = X_v.cuda()
-                y_v = y_v.cuda()
-                #print 'GPU id', torch.cuda.current_device()
-            self.optimizer.zero_grad()
-            #if torch.cuda.device_count() > 1:
-            #net = torch.nn.DataParallel(self.model, device_ids = range(torch.cuda.device_count()))
-            #if cuda:
-            #	net = net.cuda()
-            # y_pred = net(X_v)
-            y_pred = self.model(X_v)
-            loss = self.loss_f(y_pred, y_v)
-            if l1regularization:
-                l1_crit = nn.L1Loss(size_average=False)
-                reg_loss = 0
-                for param in self.model.parameters():
-                    target = Variable(torch.from_numpy(np.zeros(param.size()).astype(np.float32)))
-                    if cuda:
-                        target = target.cuda()
-                    reg_loss += l1_crit(param, target)
-
-                factor = 0.0005
-                loss += factor * reg_loss
-
-            loss.backward()
-            self.optimizer.step()
-            loss_list.append(loss.data[0])
-            classes = torch.topk(y_pred, 1)[1].data.cpu().numpy().flatten()
-            acc = self._accuracy(classes, y_v.data.cpu().numpy().flatten())
-            acc_list.append(acc)
-            del loss
-            del y_pred
-
-        return sum(loss_list) / len(loss_list) , sum(acc_list) / len(acc_list)
-
-    def fit(self, X, y, batch_size=32, nb_epoch=10, validation_data=(), l1regularization = False):
-        train_set = TensorDataset(torch.from_numpy(X.astype(np.float32)),
-                              torch.from_numpy(y.astype(np.float32)).long().view(-1))
-        train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
-        self.model.train()
-        for t in range(nb_epoch):
-            loss, acc = self._fit(train_loader, l1regularization= l1regularization)
-            val_log = ''
-            if validation_data:
-                val_loss, auc = self.evaluate(validation_data[0], validation_data[1], batch_size)
-                val_log = "- val_loss: %06.4f - auc: %6.4f" % (val_loss, auc)
-                print val_log
-            #print("Epoch %s/%s loss: %06.4f - acc: %06.4f %s" % (t, nb_epoch, loss, acc, val_log))
-
-    def evaluate(self, X, y, batch_size=32):
-        y_pred = self.predict(X)
-        y_v = Variable(torch.from_numpy(y).long(), requires_grad=False)
-        if cuda:
-            y_v = y_v.cuda()
-        loss = self.loss_f(y_pred, y_v)
-        predict = y_pred.data.cpu().numpy()[:, 1].flatten()
-        auc = roc_auc_score(y, predict)
-        #lasses = torch.topk(y_pred, 1)[1].data.numpy().flatten()
-        # #cc = self._accuracy(classes, y)
-        return loss.data[0], auc
-
-    def _accuracy(self, y_pred, y):
-        return float(sum(y_pred == y)) / y.shape[0]
-
-    def predict(self, X):
-        X = Variable(torch.from_numpy(X.astype(np.float32)))
-        if cuda:
-            X= X.cuda()
-        y_pred = self.model(X)
-        return y_pred
-
-    def predict_proba(self, X):
-        self.model.eval()
-        return self.model.predict_proba(X)
+import TorchUtils as tu
 
 
 class LogisticRegression(nn.Module):
@@ -307,7 +57,7 @@ class LogisticRegression(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -341,7 +91,7 @@ class MLP(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -350,7 +100,7 @@ class MLP(nn.Module):
 
 class AutoEncoder(nn.Module):
     """
-    A stacked autoencoder with 2 hiddden layers.
+    A stacked autoencoder with 2 hiddden layers and need be adapted for EHR data.
     """
     def __init__(self, labcounts =  24, windows = 31):
         super(AutoEncoder, self).__init__()
@@ -376,11 +126,12 @@ class AutoEncoder(nn.Module):
         )
 
     def forward(self, x):
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
         return encoded, decoded
+
             
 class CNN(nn.Module):
     def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
@@ -422,7 +173,7 @@ class CNN(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -431,6 +182,9 @@ class CNN(nn.Module):
 
 #allow multiple kernel with differnt kernel size
 class CNN_MLF(nn.Module):
+    """
+    It is a deep CNNs with three different kernel size, the outputs from the three CNNs are concatenated to fed into two fully connected layers.
+    """
     def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
         super(CNN_MLF, self).__init__()
         self.layer1 = nn.Sequential(
@@ -480,7 +234,7 @@ class CNN_MLF(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -512,15 +266,12 @@ class CNN_LSTM(nn.Module):
         self.fc2 = nn.Linear(hidden_size, num_classes)
         
     def forward(self, x):
-        #x = np.expand_dims(x.data.cpu().numpy(), axis=1)
-        #if cuda:
-        #    x= Variable(torch.from_numpy(x.astype(np.float32))).cuda()
         x = x.view(x.size(0), 1, x.size(1), x.size(2))
         out = self.layer1(x)
         out = self.downsample(out)
         out = torch.squeeze(out, 1)
         #pdb.set_trace()
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
             h0 = Variable(torch.zeros(self.num_layers, out.size(0), self.hidden_size)).cuda() 
             c0 = Variable(torch.zeros(self.num_layers, out.size(0), self.hidden_size)).cuda()
@@ -541,7 +292,7 @@ class CNN_LSTM(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -602,7 +353,7 @@ class CNN_MIX(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -680,7 +431,7 @@ class CNN_MULTI(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -771,7 +522,7 @@ class ResNet(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -779,6 +530,9 @@ class ResNet(nn.Module):
 
         
 class GRU(nn.Module):
+    """
+    It is a deep network with one GRU layer, which are further fed into one fully connected layers.
+    """
     def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
         super(GRU, self).__init__()
 
@@ -788,7 +542,7 @@ class GRU(nn.Module):
         self.linear = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
             h0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)).cuda() # 2 for bidirection
         else:
@@ -807,7 +561,7 @@ class GRU(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -815,6 +569,9 @@ class GRU(nn.Module):
 
 
 class RNN(nn.Module):
+    """
+    It is a deep network with one LSTM layer, which are further fed into one fully connected layer.
+    """
     def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
         super(RNN, self).__init__()
         self.hidden_size = hidden_size
@@ -823,7 +580,7 @@ class RNN(nn.Module):
         self.fc = nn.Linear(hidden_size, num_classes)
     
     def forward(self, x):
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
             h0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)).cuda() 
             c0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)).cuda()
@@ -842,7 +599,7 @@ class RNN(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -850,6 +607,9 @@ class RNN(nn.Module):
 
 
 class BiRNN(nn.Module):
+    """
+    It is a deep network with one bidirectional LSTM layer, which are further fed into one fully connected layer.
+    """
     def __init__(self, input_size, hidden_size, num_layers, num_classes = 2, dropout = 0.5):
         super(BiRNN, self).__init__()
         self.hidden_size = hidden_size
@@ -859,7 +619,7 @@ class BiRNN(nn.Module):
         self.fc = nn.Linear(hidden_size*2, num_classes)  # 2 for bidirection 
     
     def forward(self, x):
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
             h0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size)).cuda() # 2 for bidirection 
             c0 = Variable(torch.zeros(self.num_layers*2, x.size(0), self.hidden_size)).cuda()
@@ -878,7 +638,7 @@ class BiRNN(nn.Module):
         if type(x) is np.ndarray:
             x = torch.from_numpy(x.astype(np.float32))
         x = Variable(x, volatile=True)
-        if cuda:
+        if torch.cuda.is_available():
             x = x.cuda()
         y = self.forward(x)
         temp = y.data.cpu().numpy()
@@ -887,7 +647,7 @@ class BiRNN(nn.Module):
 
 # select model
 if __name__ == "__main__":
-    if 'model_type' not in globals():
+    '''if 'model_type' not in globals():
         model_type = sys.argv[1]
         popu_file =  sys.argv[2]
         population = joblib.load(popu_file)
@@ -906,13 +666,13 @@ if __name__ == "__main__":
             
         if not train:
             modelOutput = sys.argv[9]
-
+    '''
     if model_type in ['LogisticRegression', 'MLP']:
         y = population[:, 1]
         X = plpData[population[:, 0], :]
         trainInds = population[:, population.shape[1] - 1] > 0
         if class_weight == -1:
-            loss = FocalLoss(gamma = 5)
+            loss = tu.FocalLoss(gamma = 5)
         else:
             if class_weight == 0:
                 weights = float(np.count_nonzero(y))/y.shape[0]
@@ -920,7 +680,7 @@ if __name__ == "__main__":
             else:
                 class_weight = [class_weight, 1]
             class_weight = 1/torch.Tensor(class_weight)
-            if cuda:
+            if torch.cuda.is_available():
                 class_weight = class_weight.cuda()
             loss=nn.CrossEntropyLoss(weight = class_weight)
 
@@ -954,9 +714,9 @@ if __name__ == "__main__":
                 #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
                 #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
                 #pdb.set_trace()
-                if cuda:
+                if torch.cuda.is_available():
                     model = model.cuda()
-                clf = Estimator(model)
+                clf = tu.Estimator(model)
                 clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
                             loss=loss)
 
@@ -966,8 +726,6 @@ if __name__ == "__main__":
                 ind = population[ind, population.shape[1] - 1] == i
 
                 test_input_var = torch.from_numpy(test_x.toarray().astype(np.float32))
-                #if cuda:
-                #    test_input_var = test_input_var.cuda()
 
                 temp = model.predict_proba(test_input_var)[:, 1]
                 #temp = preds.data.cpu().numpy().flatten()
@@ -998,9 +756,9 @@ if __name__ == "__main__":
             #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
             #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
             #pdb.set_trace()
-            if cuda:
+            if torch.cuda.is_available():
                 model = model.cuda()
-            clf = Estimator(model)
+            clf = tu.Estimator(model)
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
                         loss=loss)
             clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
@@ -1016,10 +774,13 @@ if __name__ == "__main__":
             joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
     elif model_type in ['CNN', 'RNN', 'CNN_MLF']:
+        #print 'running model', model_type
         y = population[:, 1]
         p_ids_in_cov = set(covariates[:, 0])
         full_covariates = np.array([]).reshape(0,4)
         default_covid = covariates[0, 1]
+        timeid_len = len(set(covariates[:, -2]))
+        print timeid_len, covariates.shape
         for p_id in  population[:, 0]:
             if p_id not in p_ids_in_cov:
                 tmp_x = np.array([p_id, default_covid, 1, 0]).reshape(1,4) #default cov id, timeid=1
@@ -1032,12 +793,12 @@ if __name__ == "__main__":
         #print full_covariates[:100], y[:100]
         trainInds = population[:, population.shape[1] - 1] > 0
         #print covariates
-        print 'time_window', time_window
-        X, patient_keys = convert_2_cnn_format(full_covariates, time_window = time_window)
+        #print 'time_window', time_window
+        X, patient_keys = tu.convert_to_temporal_format(full_covariates, timeid_len= timeid_len)
         full_covariates = []
         print 'total patient', X.shape
         if class_weight == -1:
-            loss = FocalLoss(gamma = 3)
+            loss = tu.FocalLoss(gamma = 3)
         else:
             if class_weight == 0:
                 weights = float(np.count_nonzero(y))/y.shape[0]
@@ -1045,7 +806,7 @@ if __name__ == "__main__":
             else:
                 class_weight = [class_weight, 1]
             class_weight = 1/torch.Tensor(class_weight)
-            if cuda:
+            if torch.cuda.is_available():
                 class_weight = class_weight.cuda()
             loss=nn.CrossEntropyLoss(weight = class_weight)
         trainInds = population[:, population.shape[1] - 1] > 0
@@ -1080,9 +841,9 @@ if __name__ == "__main__":
                 elif model_type == 'GRU':
                     model = GRU(train_x.shape[2], hidden_size, 2, 2)
 
-                if cuda:
+                if torch.cuda.is_available():
                     model = model.cuda()
-                clf = Estimator(model)
+                clf = tu.Estimator(model)
                 clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.005),
                             loss=loss)
 
@@ -1091,18 +852,11 @@ if __name__ == "__main__":
                 ind = (population[:, population.shape[1] - 1] > 0)
                 ind = population[ind, population.shape[1] - 1] == i
 
-                test_batch = batch(test_x, batch_size = 50)
+                test_batch = tu.batch(test_x, batch_size = 50)
                 temp = []
                 for test in test_batch:
                     pred_test1 = model.predict_proba(test)[:, 1]
                     temp = np.concatenate((temp, pred_test1), axis = 0)
-                #print ind, N, temp.shape, test_pred.shape
-                #test_input_var = torch.from_numpy(test_x.astype(np.float32))
-                #if cuda:
-                #    test_input_var = test_input_var.cuda()
-
-                #temp = model.predict_proba(test_input_var)[:, 1]
-                #temp = preds.data.cpu().numpy().flatten()
 
                 test_pred[ind] = temp
                 del model
@@ -1138,9 +892,9 @@ if __name__ == "__main__":
             #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
             #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
             #pdb.set_trace()
-            if cuda:
+            if torch.cuda.is_available():
                 model = model.cuda()
-            clf = Estimator(model)
+            clf = tu.Estimator(model)
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.005),
                         loss=loss)
             clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)

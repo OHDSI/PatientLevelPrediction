@@ -123,8 +123,8 @@ predict.python <- function(plpModel, population, plpData){
   flog.info('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
-  missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
-  missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
+  #missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507,8532)]
+  #missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%(11:29)]
   # 3) demographicSummary
   #if (length(missingGender) == 0 | length(missingAge) == 0) {
   if (plpModel$modelSettings$model == 'fitCNNTorch' | plpModel$modelSettings$model == 'fitRNNTorch'){
@@ -132,6 +132,8 @@ predict.python <- function(plpModel, population, plpData){
   	  covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
       PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
 	    PythonInR::pySet("modeltype", 'temporal')
+	    python_dir <- system.file(package='PatientLevelPrediction','python')
+	    PythonInR::pySet("python_dir", python_dir)
   } else{
   newData <- toSparsePython(plpData, population, map=plpModel$covariateMap)
   PythonInR::pySet("modeltype", 'normal')
@@ -140,6 +142,7 @@ predict.python <- function(plpModel, population, plpData){
   included <- newData$map$newIds[newData$map$oldIds%in%included]-1 # python starts at 0, r at 1
   PythonInR::pySet("included", as.matrix(sort(included)))
   }
+
   # save population
   if('indexes'%in%colnames(population)){
     population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference

@@ -220,12 +220,16 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
   population <- merge(population, indexes)
   colnames(population)[colnames(population)=='index'] <- 'indexes'
   attr(population, "metaData") <- tempmeta
+  cleanData =  TRUE
+  if (modelSettings$model == 'fitCNNTorch' | modelSettings$model == 'fitRNNTorch'){
+    cleanData = FALSE
+  }
   
   settings <- list(data=plpData, minCovariateFraction=minCovariateFraction,
                    modelSettings = modelSettings,
                    population=population,
                    cohortId=cohortId,
-                   outcomeId=outcomeId)
+                   outcomeId=outcomeId, cleanData = cleanData)
   
   flog.info(sprintf('Training %s model',settings$modelSettings$name))  
   # the call is sinked because of the external calls (Python etc)
@@ -249,9 +253,9 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
     flog.info(paste0('Model saved to ..\\',analysisId,'\\savedModel'))
     
     #update the python saved location
-    if(attr(model, 'type')=='python'){
+    if(attr(model, 'type')=='python' ){
       model$model <- file.path(modelLoc,'python_model')
-      model$predict <- createTransform(model)
+      model$predict <- createTransform(model, cleanData = cleanData)
     }
   }
   

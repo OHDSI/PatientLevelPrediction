@@ -24,7 +24,7 @@ split evaluation.}
 \item{nfold}{The number of folds used in the cross validation (default 3)}
 
 \item{ensembleStrategy}{The strategy used for ensembling the outputs from different models, it can be 'mean', 'product' 
-and 'weighted'(default mean)}
+and 'weighted'(default mean) and 'stacked'}
 
 \item{plpData}{An list of object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}

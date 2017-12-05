@@ -4,7 +4,7 @@
 \alias{setMLPTorch}
 \title{Create setting for neural network model with python}
 \usage{
-setMLPTorch(size = c(500, 1000), w_decay = c(0.005, 0.007), epochs = c(20,
+setMLPTorch(size = c(500, 1000), w_decay = c(5e-04, 0.005), epochs = c(20,
   50), seed = 0, class_weight = 0)
 }
 \arguments{
@@ -16,7 +16,9 @@ setMLPTorch(size = c(500, 1000), w_decay = c(0.005, 0.007), epochs = c(20,
 
 \item{seed}{A seed for the model}
 
-\item{class_weight}{weight the class in imblanced data}
+\item{class_weight}{The class weight used for imbalanced data: 
+ 0: Inverse ratio between positives and negatives
+-1: Focal loss}
 }
 \description{
 Create setting for neural network model with python

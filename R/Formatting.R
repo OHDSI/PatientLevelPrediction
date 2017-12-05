@@ -198,8 +198,8 @@ toSparsePython <- function(plpData,population, map=NULL){
   # now load each part of the coo data into python as 3 vectors
   # containing row, column and value
   # create the sparse python matrix and then add to it
-  PythonInR::pySet('xmax',as.double(max(population$rowId)))
-  PythonInR::pySet('ymax',as.double(max(plpData.mapped$map$newIds)))
+  PythonInR::pySet('xmax',as.integer(max(population$rowId)))
+  PythonInR::pySet('ymax',as.integer(max(plpData.mapped$map$newIds)))
   PythonInR::pyExec('from scipy.sparse import coo_matrix')
   PythonInR::pyExec("plpData = coo_matrix((np.array([0]), (np.array([0]), np.array([0]) )), shape=(xmax, ymax))")
   for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {

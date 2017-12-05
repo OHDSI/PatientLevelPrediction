@@ -4,7 +4,8 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(population, data, modelSettings, cohortId, outcomeId)
+fitPlp(population, data, modelSettings, cohortId, outcomeId,
+  minCovariateFraction, cleanData = TRUE)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted}

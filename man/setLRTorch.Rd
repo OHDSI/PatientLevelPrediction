@@ -4,17 +4,19 @@
 \alias{setLRTorch}
 \title{Create setting for logistics regression model with python}
 \usage{
-setLRTorch(w_decay = c(0.003, 0.005, 0.007), epochs = c(20, 50, 100),
-  class_weight = 0)
+setLRTorch(w_decay = c(5e-04, 0.005), epochs = c(20, 50, 100),
+  seed = NULL, class_weight = 0)
 }
 \arguments{
 \item{w_decay}{The l2 regularisation}
 
 \item{epochs}{The number of epochs}
 
-\item{class_weight}{weight the class in imblanced data}
-
 \item{seed}{A seed for the model}
+
+\item{class_weight}{The class weight used for imbalanced data: 
+ 0: Inverse ratio between positives and negatives
+-1: Focal loss}
 }
 \description{
 Create setting for logistics regression model with python

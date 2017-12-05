@@ -20,8 +20,9 @@
 #' @param hidden_size  The hidden size
 #' @param epochs     The number of epochs
 #' @param seed       A seed for the model
-#' @param time_window       A time window to get temporal data
-#' @param class_weight      weight the class in imblanced data
+#' @param class_weight   The class weight used for imbalanced data: 
+#'                           0: Inverse ratio between positives and negatives
+#'                          -1: Focal loss
 #' @param Rnn_type      It can be normal 'RNN'and 'GRU'
 #'
 #' @examples
@@ -29,7 +30,7 @@
 #' model.rnnTorch <- setRNNTorch()
 #' }
 #' @export
-setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_window = 12, class_weight = 0, rnn_type = 'RNN'){
+setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, class_weight = 0, rnn_type = 'RNN'){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -40,10 +41,11 @@ setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, time_w
     }  
     )
   }
-  result <- list(model='fitRNNTorch', param= expand.grid(hidden_size=hidden_size,
-                                                         epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
-                                                         time_window = time_window, class_weight = class_weight, rnn_type = rnn_type),
-                 name='RNN Torch')
+  result <- list(model='fitRNNTorch', param=split(expand.grid(hidden_size=hidden_size,
+                                            epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
+                                            class_weight = class_weight, rnn_type = rnn_type),
+									        1:(length(hidden_size)*length(epochs)) ),
+                                      name='RNN Torch')
   
   class(result) <- 'modelSettings' 
   
@@ -64,7 +66,7 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() ){ 
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
     PythonInR::pyConnect()
   }
   
@@ -90,55 +92,32 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
   PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
   
-  covariateRef <- ff::as.ram(plpData$covariateRef)
-  inc <- 1:ncol(covariateRef)  
   # save the model to outLoc  TODO: make this an input or temp location?
   outLoc <- file.path(getwd(),'python_models')
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
-  
-  covariateRef <- ff::as.ram(plpData$covariateRef)
-  incs <- rep(1, nrow(covariateRef))
-  covariateRef$included <- incs
+
   #covariateRef$value <- unlist(varImp)
-  all_auc <- c()
-  
-  for(i in 1:nrow(param)){
-    
-    # do inc-1 to go to python index as python starts at 0, R starts at 1
-    PythonInR::pySet('included', as.matrix(inc-1), 
-                     namespace = "__main__", useNumpy = TRUE)
-    
-    # then run standard python code
-    auc <- do.call(trainRNNTorch,list(epochs=as.character(param$epochs[i]), hidden_size = as.character(param$hidden_size[i]), 
-                                      seed = as.character(param$seed[i]), time_window = as.character(param$time_window[i]), 
-                                      class_weight = as.character(param$class_weight[i]), rnn_type = as.character(param$rnn_type[i]), train = TRUE))
-    
-    all_auc <- c(all_auc, auc)
-    writeLines(paste0('Model with settings: epochs: ',param$epochs[i], 
-                      'hidden_size: ', param$hidden_size[i], 'seed: ', param$seed[i], 'time_window:', param$time_window[i], ' obtained AUC of ', auc))
-  }
-  
-  hyperSummary <- cbind(param, cv_auc=all_auc)
-  
-  # run model:
+
   outLoc <- file.path(getwd(),'python_models')
   PythonInR::pySet("modelOutput",outLoc)
+
+  # do cross validation to find hyperParameter
+  hyperParamSel <- lapply(param, function(x) do.call(trainRNNTorch, c(x, train=TRUE)  ))
+ 
+  hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
   
-  
-  # ToDo: I do not like this list creation
-  finalModel <- do.call(trainRNNTorch,list(epochs=as.character(param$epochs[which.max(all_auc)]), 
-                                           hidden_size=as.character(param$hidden_size[which.max(all_auc)]), 
-                                           seed = as.character(param$seed[which.max(all_auc)]), 
-                                           time_window = as.character(param$time_window[which.max(all_auc)]),
-                                           class_weight = as.character(param$class_weight[which.max(all_auc)]),
-										   rnn_type = as.character(param$rnn_type[which.max(all_auc)]),
-                                           train = FALSE))
-  
+  #now train the final model and return coef
+  bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
+  finalModel <- do.call(trainRNNTorch, c(param[[bestInd]], train=FALSE))
+
+  covariateRef <- ff::as.ram(plpData$covariateRef)
+  incs <- rep(1, nrow(covariateRef)) 
+  covariateRef$included <- incs
   
   modelTrained <- file.path(outLoc) 
-  param.best <- NULL
+  param.best <- param[[bestInd]]
   
   comp <- start-Sys.time()
   
@@ -163,12 +142,12 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, time_window = 12, class_weight= 0, rnn_type = 'RNN', train=TRUE){
+trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, class_weight= 0, rnn_type = 'RNN', train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("hidden_size = ",hidden_size))
   PythonInR::pyExec(paste0("seed = ",seed))
-  PythonInR::pyExec(paste0("time_window = ",time_window))
+  #PythonInR::pyExec(paste0("time_window = ",time_window))
   PythonInR::pyExec(paste0("class_weight = ",class_weight))
     if (rnn_type == 'RNN'){
     PythonInR::pyExec("model_type = 'RNN'")
@@ -179,7 +158,8 @@ trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, time_window = 12
     PythonInR::pyExec("train = True")
   if(!train)
     PythonInR::pyExec("train = False")
-  
+  python_dir <- system.file(package='PatientLevelPrediction','python')
+  PythonInR::pySet("python_dir", python_dir)  
   # then run standard python code
   PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','deepTorch.py'))
   

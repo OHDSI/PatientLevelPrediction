@@ -5,7 +5,7 @@
 \title{Create setting for RNN model with python}
 \usage{
 setRNNTorch(hidden_size = c(50, 100), epochs = c(20, 50), seed = 0,
-  time_window = 12, class_weight = 0, rnn_type = "RNN")
+  class_weight = 0, rnn_type = "RNN")
 }
 \arguments{
 \item{hidden_size}{The hidden size}
@@ -14,9 +14,9 @@ setRNNTorch(hidden_size = c(50, 100), epochs = c(20, 50), seed = 0,
 
 \item{seed}{A seed for the model}
 
-\item{time_window}{A time window to get temporal data}
-
-\item{class_weight}{weight the class in imblanced data}
+\item{class_weight}{The class weight used for imbalanced data: 
+ 0: Inverse ratio between positives and negatives
+-1: Focal loss}
 
 \item{Rnn_type}{It can be normal 'RNN'and 'GRU'}
 }

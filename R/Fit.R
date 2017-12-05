@@ -53,7 +53,7 @@
 
 #' @export
 fitPlp <- function(population, data,   modelSettings,#featureSettings, 
-                   cohortId, outcomeId, minCovariateFraction){
+                   cohortId, outcomeId, minCovariateFraction, cleanData = TRUE){
   
   if(is.null(population))
     stop('Population is NULL')
@@ -79,14 +79,15 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   
   # normalise the data:
   class(plpData) <- c(class(plpData), 'covariateData')
-  plpData <- tidyCovariateData(covariateData=plpData, 
-                                minFraction = minCovariateFraction,
-                                normalize = TRUE,
-                                removeRedundancy = TRUE)
-  if(length(plpData$metaData$deletedInfrequentCovariateIds)>0){
-    plpData$covariateRef <- plpData$covariateRef[!ffbase::`%in%`(plpData$covariateRef$covariateId, plpData$metaData$deletedInfrequentCovariateIds), ]
+  if (cleanData){
+    plpData <- tidyCovariateData(covariateData=plpData, 
+                                  minFraction = minCovariateFraction,
+                                  normalize = TRUE,
+                                  removeRedundancy = TRUE)
+    if(length(plpData$metaData$deletedInfrequentCovariateIds)>0){
+      plpData$covariateRef <- plpData$covariateRef[!ffbase::`%in%`(plpData$covariateRef$covariateId, plpData$metaData$deletedInfrequentCovariateIds), ]
+    }
   }
-  
   # get the pre-processing settings
   ##preprocessSettings <- plpData$metaData  #normFactors, deletedRedundantCovariateIds
   
@@ -160,7 +161,7 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
 }
 
 # create transformation function
-createTransform <- function(plpModel){
+createTransform <- function(plpModel, cleanData = TRUE){
   #=============== edited this in last run
   # remove index to save space 
   plpModel$index <- NULL
@@ -183,9 +184,11 @@ createTransform <- function(plpModel){
                     covariateRef=ff::clone(plpData $covariateRef),
                     metaData=plpData$metaData)
     plpData2$covariates <- limitCovariatesToPopulation(plpData2$covariates, ff::as.ff(population$rowId))
+    if (cleanData){
     plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
     if(length(plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)>0){
       plpData2$covariateRef <- plpData2$covariateRef[!ffbase::`%in%`(plpData2$covariateRef$covariateId, plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds), ]
+    }
     }
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData2, 
