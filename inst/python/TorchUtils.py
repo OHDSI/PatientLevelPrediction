@@ -63,7 +63,7 @@ class FocalLoss(nn.Module):
             loss = loss.sum()
         return loss
 
-    def one_hot(index, classes):
+    def one_hot(self, index, classes):
         """
 
         :param index: is the labels
