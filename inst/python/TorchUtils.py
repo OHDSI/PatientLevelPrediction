@@ -236,15 +236,18 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
                 if not len(val):
                     continue
                 cov_id, cov_val = val
-                mean_std = cov_mean_dict[cov_id]
                 lab_ind = concept_list.index(cov_id)
-                x_raw[patient_ind][lab_ind][int_time] = (float(cov_val) - mean_std[0])/mean_std[1]
+                if cov_mean_dict is None:
+                    x_raw[patient_ind][lab_ind][int_time] = float(cov_val)
+                else:
+                    mean_std = cov_mean_dict[cov_id]
+                    x_raw[patient_ind][lab_ind][int_time] = (float(cov_val) - mean_std[0])/mean_std[1]
     
         patient_ind = patient_ind + 1
     
     return x_raw, patient_keys
 
-def convert_to_temporal_format(covariates, timeid_len= 31):
+def convert_to_temporal_format(covariates, timeid_len= 31, normalize = False):
     """
     It reads the data from covariates extracted by FeatureExtraction package and convert it to temporal data matrix
 
@@ -276,7 +279,10 @@ def convert_to_temporal_format(covariates, timeid_len= 31):
         std_val = np.std(val)
         cov_mean_dict[key] = (mean_val, std_val)
 
-    x, patient_keys = convert_to_3d_matrix(covariate_ids, patient_dict, timeid_len = timeid_len, cov_mean_dict = cov_mean_dict)
+    if normalize:
+        x, patient_keys = convert_to_3d_matrix(covariate_ids, patient_dict, timeid_len = timeid_len, cov_mean_dict = cov_mean_dict)
+    else:
+        x, patient_keys = convert_to_3d_matrix(covariate_ids, patient_dict, timeid_len=timeid_len)
     
     return x, patient_keys
 
