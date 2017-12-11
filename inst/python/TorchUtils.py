@@ -201,7 +201,7 @@ def batch(tensor, batch_size = 50):
         i += 1
 
 
-def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len = 31):
+def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len = 31, cov_mean_dict = None):
     """
     create matrix for temporal models.
 
@@ -236,8 +236,9 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
                 if not len(val):
                     continue
                 cov_id, cov_val = val
+                mean_std = cov_mean_dict[cov_id]
                 lab_ind = concept_list.index(cov_id)
-                x_raw[patient_ind][lab_ind][int_time] = float(cov_val)
+                x_raw[patient_ind][lab_ind][int_time] = (float(cov_val) - mean_std[0])/mean_std[1]
     
         patient_ind = patient_ind + 1
     
@@ -255,10 +256,11 @@ def convert_to_temporal_format(covariates, timeid_len= 31):
     patient_dict = OrderedDict()
     print 'Loading temporal data'
     #pdb.set_trace()
+    cov_vals_dict = {}
     for row in covariates:
         #print columns
         p_id, cov_id, time_id, cov_val = row[0], row[1], row[2], row[3]
-        
+        cov_vals_dict.setdefault(cov_id, []).append(float(cov_val))
         if p_id not in patient_dict:
             patient_dict[p_id] = {time_id: [(cov_id, cov_val)]}
         else:
@@ -268,7 +270,13 @@ def convert_to_temporal_format(covariates, timeid_len= 31):
                 patient_dict[p_id][time_id].append((cov_id, cov_val))
         covariate_ids.add(cov_id)
     #T = 365/time_window
-    x, patient_keys = convert_to_3d_matrix(covariate_ids, patient_dict, timeid_len = timeid_len)
+    cov_mean_dict = {}
+    for key, val in cov_vals_dict.iteritems():
+        mean_val = np.mean(val)
+        std_val = np.std(val)
+        cov_mean_dict[key] = (mean_val, std_val)
+
+    x, patient_keys = convert_to_3d_matrix(covariate_ids, patient_dict, timeid_len = timeid_len, cov_mean_dict = cov_mean_dict)
     
     return x, patient_keys
 

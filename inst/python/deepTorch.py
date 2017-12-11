@@ -72,15 +72,15 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_size)
                 
-        #self.fc2 = = nn.BatchNorm1d(hidden_size)
+        self.bn = nn.BatchNorm1d(hidden_size)
         self.fc2 = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
+        x = F.relu(self.bn(self.fc1(x)))
         x = F.dropout(x, training=self.training)
         #x = F.relu(self.fc2(x))
         #x = F.dropout(x, p=0.2, training=self.training)
-
+        #x = self.bn2(x)
         x = self.fc2(x)
                 #x = F.dropout(x, training=self.training)
         #x = F.tanh(self.fc2(x))
@@ -152,6 +152,7 @@ class CNN(nn.Module):
         maxpool2_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
         self.drop1 = nn.Dropout(p=0.5)
         self.fc1 = nn.Linear(maxpool2_size*labcounts*2*nb_filter, hidden_size)
+        self.bn = nn.BatchNorm1d(hidden_size)
         self.drop2 = nn.Dropout(p=0.5)
         self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(hidden_size, num_classes)
@@ -164,6 +165,7 @@ class CNN(nn.Module):
         out = self.drop1(out)
         out = self.fc1(out)
         out = self.drop2(out)
+        out = self.bn(out)
         out = self.relu1(out)
         out = self.fc2(out)
         out = F.sigmoid(out)
@@ -549,7 +551,7 @@ class GRU(nn.Module):
             h0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size)) # 2 for bidirection
 
         out, hn = self.gru(x, h0)
-        rearranged = out[:, -1, :].squeeze()
+        rearranged = out[:, -1, :]#.squeeze()
         out = self.linear(rearranged)
         out = F.sigmoid(out)
         return out
@@ -591,7 +593,7 @@ class RNN(nn.Module):
         out, _ = self.lstm(x, (h0, c0))  
         
         # Decode hidden state of last time step
-        out = self.fc(out[:, -1, :].squeeze())
+        out = self.fc(out[:, -1, :])#.squeeze())
         out = F.sigmoid(out)
         return out
 
@@ -630,7 +632,7 @@ class BiRNN(nn.Module):
         out, _ = self.lstm(x, (h0, c0))
         
         # Decode hidden state of last time step
-        out = self.fc(out[:, -1, :].squeeze())
+        out = self.fc(out[:, -1, :])#.squeeze())
         out = F.sigmoid(out)
         return out
 
@@ -773,7 +775,7 @@ if __name__ == "__main__":
 
             joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
-    elif model_type in ['CNN', 'RNN', 'CNN_MLF', 'CNN_MIX', 'GRU', 'CNN_MULTI']:
+    elif model_type in ['CNN', 'RNN', 'CNN_LSTM', 'CNN_MLF', 'CNN_MIX', 'GRU', 'CNN_MULTI']:
         #print 'running model', model_type
         y = population[:, 1]
         p_ids_in_cov = set(covariates[:, 0])
@@ -830,6 +832,8 @@ if __name__ == "__main__":
                 start_time = timeit.default_timer()
                 if model_type == 'CNN':
                     model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+                elif model_type == 'CNN_LSTM':
+                    model = CNN_LSTM(nb_filter=nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
                 elif model_type == 'CNN_MLF': # multiple kernels with different size
                     model = CNN_MLF(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
                 elif model_type == 'CNN_MIX': # mixed model from deepDiagnosis
@@ -879,6 +883,8 @@ if __name__ == "__main__":
             #print 'the final parameter epochs', epochs, 'weight_decay', w_decay
             if model_type == 'CNN':
                     model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+            elif model_type == 'CNN_LSTM':
+                model = CNN_LSTM(nb_filter=nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
             elif model_type == 'CNN_MLF': # multiple kernels with different size
                 model = CNN_MLF(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
             elif model_type == 'CNN_MIX': #mixed model from deepDiagnosis

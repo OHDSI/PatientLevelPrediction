@@ -23,7 +23,7 @@
 #' @param class_weight   The class weight used for imbalanced data: 
 #'                           0: Inverse ratio between positives and negatives
 #'                          -1: Focal loss
-#' @param cnn_type      It can be normal 'CNN', 'CNN_MLF' with multiple kernels with different kernel size, 'CNN_MIX' and 'CNN_MULTI'
+#' @param cnn_type      It can be normal 'CNN', 'CNN_LSTM', CNN_MLF' with multiple kernels with different kernel size, 'CNN_MIX' and 'CNN_MULTI'
 #' 
 #' @examples
 #' \dontrun{
@@ -148,7 +148,10 @@ trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, class_weight= 0, cn
   PythonInR::pyExec(paste0("class_weight = ",class_weight))
   if (cnn_type == 'CNN'){
     PythonInR::pyExec("model_type = 'CNN'")
-  } else if (cnn_type == 'CNN_MLF'){
+  } else if (cnn_type == 'CNN_LSTM'){
+    PythonInR::pyExec("model_type = 'CNN_LSTM'")
+  }
+  else if (cnn_type == 'CNN_MLF'){
     PythonInR::pyExec("model_type = 'CNN_MLF'")
   }
   else if (cnn_type == 'CNN_MIX'){
