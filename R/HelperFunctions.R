@@ -18,14 +18,14 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
                      error = function(e) {
                        return(0)
                      })
-    if(conn==0)
+    if(length(conn)==1)
       outCode <- outCode*3
     
     discon <- tryCatch({DatabaseConnector::disconnect(conn)},
                        error = function(e) {
                          return(0)
                        })
-    if(conn==0)
+    if(discon==0)
       outCode <- outCode*5
     writeLines("- Done")
   }

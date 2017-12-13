@@ -93,9 +93,11 @@ applyModel <- function(population,
                                               Eval=rep('validation', nr1),
                                               performance$thresholdSummary)
   nr1 <- nrow(performance$demographicSummary)
+  if(!is.null(performance$demographicSummary)){
   performance$demographicSummary <- cbind(analysisId=rep(analysisId,nr1),
                                         Eval=rep('validation', nr1),
                                         performance$demographicSummary)
+  }
   nr1 <- nrow(performance$calibrationSummary)
   performance$calibrationSummary <- cbind(analysisId=rep(analysisId,nr1),
                                           Eval=rep('validation', nr1),
@@ -112,7 +114,18 @@ applyModel <- function(population,
   if (!silent)
     writeLines(paste("Evaluation completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
 
-  result <- list(prediction = prediction, performance = performance)
+  if (!silent)
+    writeLines(paste("Starting covariate summary at ", Sys.time()))
+  start.pred  <- Sys.time()
+  covSum <- covariateSummary(plpData, population)
+  
+  if (!silent)
+    writeLines(paste("Covariate summary completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+  
+  
+  
+  result <- list(prediction = prediction, performance = performance,
+                 covariateSummary=covSum)
   return(result)
 }
 

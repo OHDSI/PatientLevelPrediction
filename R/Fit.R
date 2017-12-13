@@ -38,6 +38,7 @@
 #'                                         }
 #' @param cohortId                         Id of study cohort
 #' @param outcomeId                        Id of outcome cohort
+#' @param minCovariateFraction             The minimum fraction of the target popualtion who have a variable for it to be included in the model training 
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
@@ -53,7 +54,7 @@
 
 #' @export
 fitPlp <- function(population, data,   modelSettings,#featureSettings, 
-                   cohortId, outcomeId, minCovariateFraction){
+                   cohortId, outcomeId, minCovariateFraction=0.001){
   
   if(is.null(population))
     stop('Population is NULL')

@@ -198,8 +198,8 @@ toSparsePython <- function(plpData,population, map=NULL){
   # now load each part of the coo data into python as 3 vectors
   # containing row, column and value
   # create the sparse python matrix and then add to it
-  PythonInR::pySet('xmax',as.double(max(population$rowId)))
-  PythonInR::pySet('ymax',as.double(max(plpData.mapped$map$newIds)))
+  PythonInR::pySet('xmax',as.integer(max(population$rowId)))
+  PythonInR::pySet('ymax',as.integer(max(plpData.mapped$map$newIds)))
   PythonInR::pyExec('from scipy.sparse import coo_matrix')
   PythonInR::pyExec("plpData = coo_matrix((np.array([0]), (np.array([0]), np.array([0]) )), shape=(xmax, ymax))")
   for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
@@ -277,4 +277,90 @@ reformatPerformance <- function(train, test, analysisId){
                  predictionDistribution=predictionDistribution)
 
   return(result)
+}
+
+
+#' Convert matrix into plpData
+#'
+#' @description
+#' Converts a matrix (rows = people, columns=variables) into the standard plpData
+#'
+#' @details
+#' This function converts matrix into plpData
+#' 
+#' @param data                          An data.frame with column names or matrix.
+#' @param columnNames                   A dataframe with two columns, column 1 contains column ids and column 2 contains names for each column id 
+#' @param columnTimes                   A dataframe with two columns, column 1 contains column ids and column 2 specifies the time prior to index the variables was recorded 
+#' @param outcomeId                     The column id containing the outcome
+#' @param indexTime                     The time defining the index date
+#' @param includeIndexDay               Boolean - whether to include variables recorded on index date
+#' @examples
+#' #TODO
+#'
+#' @return
+#' Returns an object of class plpData
+#' @export
+toPlpData <- function(data, columnNames, columnTimes=NULL, outcomeId, 
+                      indexTime =0, includeIndexDay=T ){
+  
+  if(!class(data)%in%c("data.frame","matrix"))
+    stop('data needs to be matrix of data.frame')
+  
+  if(nrow(columnNames)!=ncol(data))
+    stop('Column Names missing')
+  
+  if(missing(outcomeId))
+    stop('outcomeId not entered')
+  
+  
+  if(is.null(columnTimes)){
+    # create dummy times of 0
+    columnTimes <- data.frame(id = 1:ncol(data),
+                              time = rep(0, ncol(data))
+    )
+  }
+  
+  plpData <- list()
+  
+  meltData <- function(i, data, columnTimes, includeIndexDay,indexTime){
+    ind <- columnTimes$id[columnTimes$time<=indexTime + ifelse(includeIndexDay,0,-1)]
+    return(data.frame(rowId=rep(i, sum(columnNames$id%in%ind)), 
+                      covariateId=columnNames$id[columnNames$id%in%ind],
+                      covariateValue = data[i,columnNames$id[columnNames$id%in%ind]]))
+  }
+  
+  melted <- sapply(1:nrow(data), function(x) meltData(x, data, 
+                                                      columnTimes[columnTimes$id!=outcomeId,], 
+                                                      includeIndexDay, indexTime ), simplify = F )
+  melted <- do.call(rbind, melted)
+  
+  plpData$covariates <- ff::as.ffdf(melted)
+  plpData$coviateRef <-   ff::as.ffdf(data.frame(covariateId = columnNames$id, 
+                                                 covariateName = columnNames$name, 
+                                                 analysisId = rep(0, nrow(columnNames)), 
+                                                 conceptId = rep(0, nrow(columnNames))
+  ))
+  
+  plpData$cohorts <- data.frame(rowId = 1:nrow(data), 
+                                subjectId = rownames(data),
+                                cohortId = rep(1, nrow(data)),
+                                cohortStartDate = indexTime ,
+                                daysFromObsStart = rep(9999, nrow(data)) ,
+                                daysToCohortEnd = rep(9999, nrow(data)) ,
+                                daysToObsEnd = rep(9999, nrow(data)) )
+  
+  plpData$outcomes <-  data.frame(rowId = 1:nrow(data[,data[,outcomeId]>0]),
+                                  outcomeId = rep(2, nrow(data[,data[,outcomeId]>0])), 
+                                  daysToEvent = rep(columnTimes[outcomeId]-indexTime,
+                                                    nrow(data[,data[,outcomeId]>0]))
+  )
+  
+  plpData$metaData <- list(columnNames=columnName, 
+                           columnTimes=columnTimes, 
+                           cohortId=2,
+                           outcomeId=2, 
+                           indexTime =indexTime, 
+                           includeIndexDay=includeIndexDay)
+  
+  return(plpData) 
 }

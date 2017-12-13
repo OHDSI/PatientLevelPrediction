@@ -682,7 +682,8 @@ savePlpModel <- function(plpModel, dirPath){
   saveRDS(plpModel$dense, file = file.path(dirPath,  "dense.rds"))
   saveRDS(plpModel$cohortId, file = file.path(dirPath,  "cohortId.rds"))
   saveRDS(plpModel$outcomeId, file = file.path(dirPath,  "outcomeId.rds"))
-  
+  if(!is.null(plpModel$covariateMap))
+  saveRDS(plpModel$covariateMap, file = file.path(dirPath,  "covariateMap.rds"))
   
   attributes <- list(type=attr(plpModel, 'type'), predictionType=attr(plpModel, 'predictionType') )
   saveRDS(attributes, file = file.path(dirPath,  "attributes.rds"))
@@ -714,7 +715,8 @@ loadPlpModel <- function(dirPath) {
                         error=function(e) NULL)  
   dense <- tryCatch(readRDS(file.path(dirPath, "dense.rds")),
                         error=function(e) NULL)  
-  
+  covariateMap <- tryCatch(readRDS(file.path(dirPath, "covariateMap.rds")),
+                    error=function(e) NULL) 
   
   result <- list(model = readRDS(file.path(dirPath, "model.rds")),
                  hyperParamSearch = hyperParamSearch,
@@ -728,7 +730,8 @@ loadPlpModel <- function(dirPath) {
                  varImp = readRDS(file.path(dirPath, "varImp.rds")),
                  dense = dense,
                  cohortId= cohortId,
-                 outcomeId = outcomeId)
+                 outcomeId = outcomeId,
+                 covariateMap=covariateMap)
 
   #attributes <- readRDS(file.path(dirPath, "attributes.rds"))
   attributes <- readRDS(file.path(dirPath, "attributes.rds"))

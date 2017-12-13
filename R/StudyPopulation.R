@@ -139,9 +139,13 @@ createStudyPopulation <- function(plpData,
   if(!is.null(metaData$attrition$uniquePeople)){
     metaData$attrition <- metaData$attrition[metaData$attrition$outcomeId==outcomeId,c('description', 'targetCount', 'uniquePeople', 'outcomes')]
   } else {
+    if(!is.null(attr(plpData$cohorts,  'metaData')$attrition)){
     metaData$attrition <- data.frame(outcomeId=outcomeId,description=metaData$attrition$description, 
                                      targetCount=attr(plpData$cohorts,  'metaData')$attrition$persons, uniquePeople=0,
                                      outcomes= metaData$attrition$outcomes)
+    } else {
+      metaData$attrition <- c()
+    }
 
   }
   
