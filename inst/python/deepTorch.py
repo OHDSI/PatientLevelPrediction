@@ -72,17 +72,17 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_size)
                 
-        self.bn = nn.BatchNorm1d(hidden_size)
+        #self.bn = nn.BatchNorm1d(hidden_size)
         self.fc2 = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
-        x = F.relu(self.bn(self.fc1(x)))
-        x = F.dropout(x, training=self.training)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, p =0.5, training=self.training)
         #x = F.relu(self.fc2(x))
         #x = F.dropout(x, p=0.2, training=self.training)
         #x = self.bn2(x)
         x = self.fc2(x)
-                #x = F.dropout(x, training=self.training)
+        #x = F.dropout(x, training=self.training)
         #x = F.tanh(self.fc2(x))
         x = F.sigmoid(x)
         return x
@@ -134,7 +134,7 @@ class AutoEncoder(nn.Module):
 
             
 class CNN(nn.Module):
-    def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
+    def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 200, stride = (1, 1), padding = 0):
         super(CNN, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, nb_filter, kernel_size, stride = stride, padding = padding),
@@ -187,7 +187,7 @@ class CNN_MLF(nn.Module):
     """
     It is a deep CNNs with three different kernel size, the outputs from the three CNNs are concatenated to fed into two fully connected layers.
     """
-    def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 100, stride = (1, 1), padding = 0):
+    def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 200, stride = (1, 1), padding = 0):
         super(CNN_MLF, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, nb_filter, kernel_size = (1, 3), stride = stride, padding = padding),
@@ -800,7 +800,7 @@ if __name__ == "__main__":
         full_covariates = []
         print 'total patient', X.shape
         if class_weight == -1:
-            loss = tu.FocalLoss(gamma = 2)
+            loss = tu.FocalLoss(gamma = 3)
         else:
             if class_weight == 0:
                 weights = float(np.count_nonzero(y))/y.shape[0]
