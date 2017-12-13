@@ -5,7 +5,7 @@
 \title{fitPlp}
 \usage{
 fitPlp(population, data, modelSettings, cohortId, outcomeId,
-  minCovariateFraction)
+  minCovariateFraction = 0.001)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted}
