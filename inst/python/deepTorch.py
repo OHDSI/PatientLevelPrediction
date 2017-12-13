@@ -800,7 +800,7 @@ if __name__ == "__main__":
         full_covariates = []
         print 'total patient', X.shape
         if class_weight == -1:
-            loss = tu.FocalLoss(gamma = 3)
+            loss = tu.FocalLoss(gamma = 2)
         else:
             if class_weight == 0:
                 weights = float(np.count_nonzero(y))/y.shape[0]
@@ -833,7 +833,7 @@ if __name__ == "__main__":
                 if model_type == 'CNN':
                     model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
                 elif model_type == 'CNN_LSTM':
-                    model = CNN_LSTM(nb_filter=nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
+                    model = CNN_LSTM(nb_filter = nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
                 elif model_type == 'CNN_MLF': # multiple kernels with different size
                     model = CNN_MLF(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
                 elif model_type == 'CNN_MIX': # mixed model from deepDiagnosis
