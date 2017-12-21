@@ -108,8 +108,8 @@ class SNN(nn.Module):
         self.fc1 = nn.Linear(input_dim, hidden_size)
         self.fc2 = tu.selu()
         self.ad1 = tu.alpha_drop()
-        self.fc3 = tu.selu()
-        self.ad2 = tu.alpha_drop()
+        #self.fc3 = tu.selu()
+        #self.ad2 = tu.alpha_drop()
         # self.bn = nn.BatchNorm1d(hidden_size)
         self.fc4 = nn.Linear(hidden_size, num_classes)
 
@@ -118,8 +118,8 @@ class SNN(nn.Module):
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)
         x = self.ad1(x)
-        x = self.fc3(x)
-        x = self.ad2(x)
+        #x = self.fc3(x)
+        #x = self.ad2(x)
         x = self.fc4(x)
         x = F.sigmoid(x)
         return x
