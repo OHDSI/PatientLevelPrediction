@@ -98,6 +98,42 @@ class MLP(nn.Module):
         return temp
 
 
+class SNN(nn.Module):
+    """
+    Train a multiple-layer self normalizing neural network, ref arXiv:1706.02515
+    """
+
+    def __init__(self, input_dim, hidden_size, num_classes=2):
+        super(SNN, self).__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_size)
+        self.fc2 = tu.selu()
+        self.ad1 = tu.alpha_drop()
+        self.fc3 = tu.selu()
+        self.ad2 = tu.alpha_drop()
+        # self.bn = nn.BatchNorm1d(hidden_size)
+        self.fc4 = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.fc2(x)
+        x = self.ad1(x)
+        x = self.fc3(x)
+        x = self.ad2(x)
+        x = self.fc4(x)
+        x = F.sigmoid(x)
+        return x
+
+    def predict_proba(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x, volatile=True)
+        if torch.cuda.is_available():
+            x = x.cuda()
+        y = self.forward(x)
+        temp = y.data.cpu().numpy()
+        return temp
+
 class AutoEncoder(nn.Module):
     """
     A stacked autoencoder with 2 hiddden layers and need be adapted for EHR data.
@@ -669,7 +705,7 @@ if __name__ == "__main__":
         if not train:
             modelOutput = sys.argv[9]
     '''
-    if model_type in ['LogisticRegression', 'MLP']:
+    if model_type in ['LogisticRegression', 'MLP', 'SNN']:
         y = population[:, 1]
         X = plpData[population[:, 0], :]
         trainInds = population[:, population.shape[1] - 1] > 0
@@ -710,6 +746,8 @@ if __name__ == "__main__":
                 if model_type == 'LogisticRegression':
                     model = LogisticRegression(train_x.shape[1])
                     l1regularization = True
+                elif model_type == 'SNN':
+                    model = SNN(train_x.shape[1], size)
                 else:
                     model = MLP(train_x.shape[1], size)
 
@@ -719,7 +757,7 @@ if __name__ == "__main__":
                 if torch.cuda.is_available():
                     model = model.cuda()
                 clf = tu.Estimator(model)
-                clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
+                clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay = w_decay),
                             loss=loss)
 
                 clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
@@ -753,6 +791,8 @@ if __name__ == "__main__":
             if model_type == 'LogisticRegression':
                 model = LogisticRegression(train_x.shape[1])
                 l1regularization = True
+            elif model_type == 'SNN':
+                model = SNN(train_x.shape[1], size)
             else:
                 model = MLP(train_x.shape[1], size)
             #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
@@ -761,7 +801,7 @@ if __name__ == "__main__":
             if torch.cuda.is_available():
                 model = model.cuda()
             clf = tu.Estimator(model)
-            clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = w_decay),
+            clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay = w_decay),
                         loss=loss)
             clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
 
