@@ -180,14 +180,14 @@ class CNN(nn.Module):
         out1_size = (window_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
         maxpool_size = (out1_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
         self.layer2 = nn.Sequential(
-            nn.Conv2d(nb_filter, 2*nb_filter, kernel_size, stride = stride, padding = padding),
-            nn.BatchNorm2d(2*nb_filter),
+            nn.Conv2d(nb_filter, nb_filter, kernel_size, stride = stride, padding = padding),
+            nn.BatchNorm2d(nb_filter),
             nn.ReLU(),
             nn.MaxPool2d(pool_size, stride = stride))
         out2_size = (maxpool_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
-        maxpool2_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
+        maxpool_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
         self.drop1 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(maxpool2_size*labcounts*2*nb_filter, hidden_size)
+        self.fc1 = nn.Linear(maxpool_size*labcounts*nb_filter, hidden_size)
         self.bn = nn.BatchNorm1d(hidden_size)
         self.drop2 = nn.Dropout(p=0.5)
         self.relu1 = nn.ReLU()
@@ -888,7 +888,7 @@ if __name__ == "__main__":
                 if torch.cuda.is_available():
                     model = model.cuda()
                 clf = tu.Estimator(model)
-                clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.005),
+                clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay = 0.001),
                             loss=loss)
 
                 clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
@@ -941,7 +941,7 @@ if __name__ == "__main__":
             if torch.cuda.is_available():
                 model = model.cuda()
             clf = tu.Estimator(model)
-            clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay = 0.005),
+            clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay = 0.001),
                         loss=loss)
             clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
 
