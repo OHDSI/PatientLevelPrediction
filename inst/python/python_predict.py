@@ -91,6 +91,9 @@ if modeltype == 'temporal':
         pred_test1 = modelTrained.predict_proba(test)[:, 1]
         test_pred = np.concatenate((test_pred , pred_test1), axis = 0)
 else:
+    if autoencoder:
+        autoencoder_model = joblib.load(os.path.join(model_loc, 'autoencoder_model.pkl'))
+        X = autoencoder_model.get_encode_features(X)
     test_pred = modelTrained.predict_proba(X)
 
 if test_pred.ndim != 1:
