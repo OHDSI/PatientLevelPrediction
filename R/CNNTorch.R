@@ -159,6 +159,9 @@ trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, class_weight= 0, cn
   } else if (cnn_type == 'CNN_MULTI'){
     PythonInR::pyExec("model_type = 'CNN_MULTI'")
   }
+else if (cnn_type == 'ResNet'){
+    PythonInR::pyExec("model_type = 'ResNet'")
+  }
   #PythonInR::pyExec(paste0("model_type = ",cnn_type))
   if(train)
     PythonInR::pyExec("train = True")
