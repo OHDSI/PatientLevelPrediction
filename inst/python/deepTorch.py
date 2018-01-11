@@ -853,7 +853,7 @@ if __name__ == "__main__":
             joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
 
-    elif model_type in ['CNN', 'RNN', 'CNN_LSTM', 'CNN_MLF', 'CNN_MIX', 'GRU', 'CNN_MULTI']:
+    elif model_type in ['CNN', 'RNN', 'CNN_LSTM', 'CNN_MLF', 'CNN_MIX', 'GRU', 'CNN_MULTI', 'ResNet']:
         #print 'running model', model_type
         y = population[:, 1]
         p_ids_in_cov = set(covariates[:, 0])
@@ -919,6 +919,7 @@ if __name__ == "__main__":
                 elif model_type == 'CNN_MULTI': # multiple resolution model from deepDiagnosis
                     model = CNN_MULTI(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
                 elif model_type == 'ResNet':
+                    print 'train ResNet'
                     model = ResNet(ResidualBlock, [3, 3, 3], nb_filter=nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
                 elif model_type == 'RNN':
                     model = RNN(train_x.shape[2], hidden_size, 2, 2)
