@@ -137,7 +137,12 @@ predict.python <- function(plpModel, population, plpData){
   } else{
   newData <- toSparsePython(plpData, population, map=plpModel$covariateMap)
   PythonInR::pySet("modeltype", 'normal')
-  
+  PythonInR::pySet("autoencoder", 0)
+  if (plpModel$modelSettings$model == 'fitLRTorch' | plpModel$modelSettings$model == 'fitMLPTorch'){
+    if (plpModel$modelSettings$modelParameters$autoencoder){
+      PythonInR::pySet("autoencoder", 1)
+    }
+  }
   included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
   included <- newData$map$newIds[newData$map$oldIds%in%included]-1 # python starts at 0, r at 1
   PythonInR::pySet("included", as.matrix(sort(included)))

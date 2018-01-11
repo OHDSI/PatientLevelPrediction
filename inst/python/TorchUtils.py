@@ -99,7 +99,7 @@ class Estimator(object):
         self.optimizer = optimizer
         self.loss_f = loss
 
-    def _fit(self, train_loader, l1regularization=False):
+    def _fit(self, train_loader, l1regularization=False, autoencoder=False):
         """
         train one epoch
 
@@ -124,7 +124,10 @@ class Estimator(object):
             #	net = net.cuda()
             # y_pred = net(X_v)
             y_pred = self.model(X_v)
-            loss = self.loss_f(y_pred, y_v)
+            if autoencoder:
+                loss = self.loss_f(y_pred, X_v)
+            else:
+                loss = self.loss_f(y_pred, y_v)
             if l1regularization:
                 l1_crit = nn.L1Loss(size_average=False)
                 reg_loss = 0
@@ -140,23 +143,26 @@ class Estimator(object):
             loss.backward()
             self.optimizer.step()
             loss_list.append(loss.data[0])
-            classes = torch.topk(y_pred, 1)[1].data.cpu().numpy().flatten()
-            acc = self._accuracy(classes, y_v.data.cpu().numpy().flatten())
-            acc_list.append(acc)
+            if autoencoder:
+                acc_list.append(0)
+            else:
+                classes = torch.topk(y_pred, 1)[1].data.cpu().numpy().flatten()
+                acc = self._accuracy(classes, y_v.data.cpu().numpy().flatten())
+                acc_list.append(acc)
             del loss
             del y_pred
 
         return sum(loss_list) / len(loss_list), sum(acc_list) / len(acc_list)
 
-    def fit(self, X, y, batch_size=32, nb_epoch=10, validation_data=(), l1regularization=False):
+    def fit(self, X, y, batch_size=32, nb_epoch=10, validation_data=(), l1regularization=False, autoencoder =False):
         train_set = TensorDataset(torch.from_numpy(X.astype(np.float32)),
                                   torch.from_numpy(y.astype(np.float32)).long().view(-1))
         train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
         self.model.train()
         for t in range(nb_epoch):
-            loss, acc = self._fit(train_loader, l1regularization=l1regularization)
+            loss, acc = self._fit(train_loader, l1regularization=l1regularization, autoencoder = autoencoder)
             val_log = ''
-            if validation_data:
+            if validation_data and not autoencoder:
                 val_loss, auc = self.evaluate(validation_data[0], validation_data[1], batch_size)
                 val_log = "- val_loss: %06.4f - auc: %6.4f" % (val_loss, auc)
                 print val_log
@@ -276,6 +282,8 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
                 if not len(val):
                     continue
                 cov_id, cov_val = val
+                if cov_id not in covariate_ids:
+                    continue
                 lab_ind = concept_list.index(cov_id)
                 if cov_mean_dict is None:
                     x_raw[patient_ind][lab_ind][int_time] = float(cov_val)
@@ -284,7 +292,7 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
                     x_raw[patient_ind][lab_ind][int_time] = (float(cov_val) - mean_std[0])/mean_std[1]
     
         patient_ind = patient_ind + 1
-    
+
     return x_raw, patient_keys
 
 def convert_to_temporal_format(covariates, timeid_len= 31, normalize = False):
@@ -311,14 +319,18 @@ def convert_to_temporal_format(covariates, timeid_len= 31, normalize = False):
                 patient_dict[p_id][time_id] = [(cov_id, cov_val)]
             else:
                 patient_dict[p_id][time_id].append((cov_id, cov_val))
-        covariate_ids.add(cov_id)
+        #covariate_ids.add(cov_id)
     #T = 365/time_window
     cov_mean_dict = {}
+
     for key, val in cov_vals_dict.iteritems():
         mean_val = np.mean(val)
         std_val = np.std(val)
-        cov_mean_dict[key] = (mean_val, std_val)
+        # Remove those covariates with few occurrence (<5)
+        if len(val) >= 5:
+            covariate_ids.add(key)
 
+        cov_mean_dict[key] = (mean_val, std_val)
     if normalize:
         x, patient_keys = convert_to_3d_matrix(covariate_ids, patient_dict, timeid_len = timeid_len, cov_mean_dict = cov_mean_dict)
     else:

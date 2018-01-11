@@ -23,12 +23,13 @@
 #' @param class_weight   The class weight used for imbalanced data: 
 #'                           0: Inverse ratio between positives and negatives
 #'                          -1: Focal loss
+#' @param autoencoder     First learn stakced autoencoder for input features, then train MLP on the encoded features.
 #' @examples
 #' \dontrun{
 #' model.lrTorch <- setLRTorch()
 #' }
 #' @export
-setLRTorch <- function(w_decay=c(0.0005, 0.005), epochs=c(20, 50, 100), seed=NULL, class_weight = 0){
+setLRTorch <- function(w_decay=c(0.0005, 0.005), epochs=c(20, 50, 100), seed=NULL, class_weight = 0, autoencoder = FALSE){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -40,7 +41,7 @@ setLRTorch <- function(w_decay=c(0.0005, 0.005), epochs=c(20, 50, 100), seed=NUL
     )
   }
   result <- list(model='fitLRTorch', param=split(expand.grid(w_decay=w_decay, epochs=epochs, 
-                                           seed=ifelse(is.null(seed),'NULL', seed),  class_weight = class_weight),
+                                           seed=ifelse(is.null(seed),'NULL', seed),  class_weight = class_weight, autoencoder = autoencoder),
 									       1:(length(w_decay)*length(epochs)) ),
                                      name='LR Torch')
   
@@ -138,7 +139,7 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainLRTorch <- function(epochs=100, w_decay = 0.001, seed=0, class_weight = 0, train=TRUE){
+trainLRTorch <- function(epochs=100, w_decay = 0.001, seed=0, class_weight = 0, train=TRUE, autoencoder = FALSE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("w_decay = ",w_decay))
@@ -146,6 +147,11 @@ trainLRTorch <- function(epochs=100, w_decay = 0.001, seed=0, class_weight = 0, 
   PythonInR::pyExec("model_type = 'LogisticRegression'")
   python_dir <- system.file(package='PatientLevelPrediction','python')
   PythonInR::pySet("python_dir", python_dir)
+  if (autoencoder){
+    PythonInR::pyExec("autoencoder = True")
+    } else {
+    PythonInR::pyExec("autoencoder = False")
+    }
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)

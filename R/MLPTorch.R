@@ -24,14 +24,15 @@
 #' @param class_weight   The class weight used for imbalanced data: 
 #'                           0: Inverse ratio between positives and negatives
 #'                          -1: Focal loss
-#' @param mlp_type         The type of multiple layer network, inlcuding MLP and SNN (self-normalizing neural network) 
+#' @param mlp_type        The type of multiple layer network, inlcuding MLP and SNN (self-normalizing neural network) 
+#' @param autoencoder     First learn stakced autoencoder for input features, then train MLP on the encoded features.
 #' @examples
 #' \dontrun{
 #' model.mlpTorch <- setMLPTorch()
 #' }
 #' @export
 setMLPTorch <- function(size=c(500, 1000), w_decay=c(0.0005, 0.005), 
-                        epochs=c(20, 50), seed=0, class_weight = 0, mlp_type = 'MLP'){
+                        epochs=c(20, 50), seed=0, class_weight = 0, mlp_type = 'MLP', autoencoder = FALSE){
   
   # test python is available and the required dependancies are there:
   if (!PythonInR::pyIsConnected()){
@@ -44,7 +45,7 @@ setMLPTorch <- function(size=c(500, 1000), w_decay=c(0.0005, 0.005),
   }
   result <- list(model='fitMLPTorch', param=split(expand.grid(size=size, w_decay=w_decay,
                                             epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
-											class_weight = class_weight, mlp_type = mlp_type),
+											class_weight = class_weight, mlp_type = mlp_type, autoencoder = autoencoder),
 				                            1:(length(size)*length(w_decay)*length(epochs)) ),
                                       name='MLP Torch')
   
@@ -140,7 +141,8 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainMLPTorch <- function(size=200, epochs=100, w_decay = 0.001, seed=0, class_weight = 0, train=TRUE, mlp_type = 'MLP'){
+trainMLPTorch <- function(size=200, epochs=100, w_decay = 0.001, seed=0, class_weight = 0, train=TRUE, 
+                          mlp_type = 'MLP', autoencoder = FALSE){
   PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("w_decay = ",w_decay))
@@ -153,6 +155,12 @@ trainMLPTorch <- function(size=200, epochs=100, w_decay = 0.001, seed=0, class_w
   }
   python_dir <- system.file(package='PatientLevelPrediction','python')
   PythonInR::pySet("python_dir", python_dir)
+  if (autoencoder){
+    PythonInR::pyExec("autoencoder = True")
+    } else {
+    PythonInR::pyExec("autoencoder = False")
+    }
+  
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)

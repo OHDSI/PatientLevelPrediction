@@ -138,27 +138,23 @@ class AutoEncoder(nn.Module):
     """
     A stacked autoencoder with 2 hiddden layers and need be adapted for EHR data.
     """
-    def __init__(self, labcounts =  24, windows = 31):
+    def __init__(self, input_size, encoding_size):
         super(AutoEncoder, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Linear(labcounts*windows, 256),
-            nn.Tanh(),
-            nn.Linear(256, 128),
-            nn.Tanh(),
-            nn.Linear(128, 64),
-            nn.Tanh(),
-            nn.Linear(64, 32),  
+            nn.Linear(input_size, 512),
+            nn.ReLU(True),
+            nn.Linear(512, 256),
+            nn.ReLU(True),
+            nn.Linear(256, encoding_size),
+            nn.ReLU(True)
         )
         self.decoder = nn.Sequential(
-            nn.Linear(32, 64),
-            nn.Tanh(),
-            nn.Linear(64, 128),
-            nn.Tanh(),
-            nn.Linear(128, 256),
-            nn.Tanh(),
-            nn.Linear(256, labcounts*windows),
-            nn.Sigmoid(),      
+            nn.Linear(encoding_size, 256),
+            nn.ReLU(True),
+            nn.Linear(256, 512),
+            nn.ReLU(True),
+            nn.Linear(512, input_size)
         )
 
     def forward(self, x):
@@ -166,8 +162,17 @@ class AutoEncoder(nn.Module):
             x = x.cuda()
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
-        return encoded, decoded
+        return decoded
 
+    def get_encode_features(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        x = Variable(x, volatile=True)
+        if torch.cuda.is_available():
+            x = x.cuda()
+        encoded = self.encoder(x)
+        encoded = encoded.data.cpu().numpy()
+        return encoded
             
 class CNN(nn.Module):
     def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 200, stride = (1, 1), padding = 0):
@@ -740,6 +745,19 @@ if __name__ == "__main__":
                 print "Fold %s split %s in train set and %s in test set" % (i, train_x.shape[0], test_x.shape[0])
                 print "Train set contains %s outcomes " % (np.sum(train_y))
 
+                if autoencoder:
+                    print 'first train stakced autoencoder'
+                    auto_model = AutoEncoder(input_size=train_x.shape[1], encoding_size=256)
+                    if torch.cuda.is_available():
+                        auto_model = auto_model.cuda()
+                    clf = tu.Estimator(auto_model)
+                    clf.compile(optimizer=torch.optim.Adam(auto_model.parameters(), lr=1e-3, weight_decay = w_decay),
+                                loss=nn.MSELoss())
+                    clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, autoencoder = autoencoder)
+                    train_x = auto_model.get_encode_features(train_x.toarray())
+                    test_x = auto_model.get_encode_features(test_x.toarray())
+                    del auto_model
+                    del clf
                 # train on fold
                 print "Training fold %s" % (i)
                 start_time = timeit.default_timer()
@@ -759,13 +777,16 @@ if __name__ == "__main__":
                 clf = tu.Estimator(model)
                 clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay = w_decay),
                             loss=loss)
+                if not autoencoder:
+                    train_x = train_x.toarray()
+                    test_x = test_x.toarray()
 
-                clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
+                clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
 
                 ind = (population[:, population.shape[1] - 1] > 0)
                 ind = population[ind, population.shape[1] - 1] == i
 
-                test_input_var = torch.from_numpy(test_x.toarray().astype(np.float32))
+                test_input_var = torch.from_numpy(test_x.astype(np.float32))
 
                 temp = model.predict_proba(test_input_var)[:, 1]
                 #temp = preds.data.cpu().numpy().flatten()
@@ -787,6 +808,21 @@ if __name__ == "__main__":
 
             train_x = X[trainInds, :]
             train_y = y[trainInds]
+            if not os.path.exists(modelOutput):
+                os.makedirs(modelOutput)
+            if autoencoder:
+                auto_model = AutoEncoder(input_size=train_x.shape[1], encoding_size=256)
+                if torch.cuda.is_available():
+                    auto_model = auto_model.cuda()
+                clf = tu.Estimator(auto_model)
+                clf.compile(optimizer=torch.optim.Adam(auto_model.parameters(), lr=1e-3, weight_decay=w_decay),
+                            loss=nn.MSELoss())
+                clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, autoencoder=autoencoder)
+                train_x = auto_model.get_encode_features(train_x.toarray())
+                joblib.dump(auto_model, os.path.join(modelOutput, 'autoencoder_model.pkl'))
+                del auto_model
+                del clf
+
             print 'the final parameter epochs', epochs, 'weight_decay', w_decay
             if model_type == 'LogisticRegression':
                 model = LogisticRegression(train_x.shape[1])
@@ -798,22 +834,24 @@ if __name__ == "__main__":
             #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
             #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
             #pdb.set_trace()
+            if not autoencoder:
+                train_x = train_x.toarray()
+
             if torch.cuda.is_available():
                 model = model.cuda()
             clf = tu.Estimator(model)
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay = w_decay),
                         loss=loss)
-            clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
+            clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
 
             end_time = timeit.default_timer()
             print "Training final took: %.2f s" % (end_time - start_time)
 
             # save the model:
-            if not os.path.exists(modelOutput):
-                os.makedirs(modelOutput)
             print "Model saved to: %s" % (modelOutput)
 
             joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
+
 
     elif model_type in ['CNN', 'RNN', 'CNN_LSTM', 'CNN_MLF', 'CNN_MIX', 'GRU', 'CNN_MULTI']:
         #print 'running model', model_type
@@ -880,10 +918,14 @@ if __name__ == "__main__":
                     model = CNN_MIX(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
                 elif model_type == 'CNN_MULTI': # multiple resolution model from deepDiagnosis
                     model = CNN_MULTI(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+                elif model_type == 'ResNet':
+                    model = ResNet(ResidualBlock, [3, 3, 3], nb_filter=nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
                 elif model_type == 'RNN':
                     model = RNN(train_x.shape[2], hidden_size, 2, 2)
                 elif model_type == 'GRU':
                     model = GRU(train_x.shape[2], hidden_size, 2, 2)
+                else:
+                    print 'temproal data do not support this model'
 
                 if torch.cuda.is_available():
                     model = model.cuda()
@@ -922,19 +964,23 @@ if __name__ == "__main__":
             train_y = y[trainInds]
             #print 'the final parameter epochs', epochs, 'weight_decay', w_decay
             if model_type == 'CNN':
-                    model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+                model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
             elif model_type == 'CNN_LSTM':
                 model = CNN_LSTM(nb_filter=nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
             elif model_type == 'CNN_MLF': # multiple kernels with different size
                 model = CNN_MLF(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
             elif model_type == 'CNN_MIX': #mixed model from deepDiagnosis
-                    model = CNN_MIX(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+                model = CNN_MIX(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
             elif model_type == 'CNN_MULTI': # multi resolution model from deepDiagnosis
-                    model = CNN_MULTI(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+                model = CNN_MULTI(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
+            elif model_type == 'ResNet':
+                model = ResNet(ResidualBlock, [3, 3, 3], nb_filter=nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
             elif model_type == 'RNN':
-                    model = RNN(train_x.shape[2], hidden_size, 2, 2)
+                model = RNN(train_x.shape[2], hidden_size, 2, 2)
             elif model_type == 'GRU':
-                    model = GRU(train_x.shape[2], hidden_size, 2, 2)
+                model = GRU(train_x.shape[2], hidden_size, 2, 2)
+            else:
+                print 'temproal data do not support this model'
             #model = ResNet(ResidualBlock, [3, 3, 3], nb_filter = 16, labcounts = X.shape[1], window_size = X.shape[2])
             #model = RNN(INPUT_SIZE, HIDDEN_SIZE, 2, class_size)
             #pdb.set_trace()
