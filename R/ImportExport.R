@@ -190,6 +190,7 @@ transportModel <- function(plpModel,outputFolder){
 #' This function is used to create custom covariates for a logistic regression model
 #' (currently only supports, demographics/conditions/drug/procedures/observations and measurement concepts)
 #'
+#' @param models          A trianed plp model.
 #' @param modelNames      A name used in the covariate function names (no spaces)
 #' @param covariateConstructionName     the name used to for the create covariate function
 #' @param model_table     The temporary table name storing the model details

@@ -8,11 +8,17 @@ createLrSql(models, modelNames, covariateConstructionName = "prediction",
   model_table = "#model_table", analysis_id = 111, e = environment())
 }
 \arguments{
+\item{models}{A trianed plp model.}
 
+\item{modelNames}{A name used in the covariate function names (no spaces)}
 
+\item{covariateConstructionName}{the name used to for the create covariate function}
 
+\item{model_table}{The temporary table name storing the model details}
 
+\item{analysis_id}{The covariate analysis_id}
 
+\item{e}{The environment to output the covariate setting functions to}
 }
 \description{
 Convert logistic regression model to sql code...
