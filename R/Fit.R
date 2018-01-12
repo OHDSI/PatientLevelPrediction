@@ -124,7 +124,7 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
   # remove infreq
   writeLines("Removing infrequent covariates")
   start <- Sys.time()
-  if (length(deleteCovariateIds) != 0) {
+  if (length(deletedInfrequentCovariateIds) != 0) {
     covariates <- covariates[!ffbase::`%in%`(covariates$covariateId, deletedInfrequentCovariateIds), ]
      }
   delta <- Sys.time() - start
