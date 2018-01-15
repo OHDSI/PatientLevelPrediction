@@ -59,13 +59,12 @@ evaluatePlp <- function(prediction, plpData, model = NULL){
     auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
     flog.info(sprintf('%-20s%.2f', 'AUC: ', auc*100))
   }
-  #write.csv(prediction, paste(model, 'prediction.csv'))
+
   # auprc
   flog.trace('Calculating AUPRC')
   fg <- prediction$value[prediction$outcomeCount == 1]
   bg <- prediction$value[prediction$outcomeCount == 0]
   pr <- PRROC::pr.curve(scores.class0 = fg, scores.class1 = bg)
-  #auprc <- PRROC::pr.curve(prediction$value, prediction$outcomeCount)
   auprc <- pr$auc.integral
   flog.info(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
 
