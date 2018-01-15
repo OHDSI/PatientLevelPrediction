@@ -18,7 +18,8 @@ setCNNTorch(nbfilters = c(16, 32), epochs = c(20, 50), seed = 0,
  0: Inverse ratio between positives and negatives
 -1: Focal loss}
 
-\item{cnn_type}{It can be normal 'CNN', 'CNN_MLF' with multiple kernels with different kernel size, 'CNN_MIX' and 'CNN_MULTI'}
+\item{cnn_type}{It can be normal 'CNN', 'CNN_LSTM', CNN_MLF' with multiple kernels with different kernel size, 
+'CNN_MIX', 'ResNet' and 'CNN_MULTI'}
 }
 \description{
 Create setting for CNN model with python

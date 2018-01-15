@@ -53,6 +53,7 @@ Imports:
 Suggests:
     testthat,
     pROC,
+    PRROC,
     gnm,
     knitr,
     rmarkdown,

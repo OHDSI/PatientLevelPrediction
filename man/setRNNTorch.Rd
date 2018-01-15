@@ -18,7 +18,7 @@ setRNNTorch(hidden_size = c(50, 100), epochs = c(20, 50), seed = 0,
  0: Inverse ratio between positives and negatives
 -1: Focal loss}
 
-\item{Rnn_type}{It can be normal 'RNN'and 'GRU'}
+\item{rnn_type}{It can be normal 'RNN'and 'GRU'}
 }
 \description{
 Create setting for RNN model with python
