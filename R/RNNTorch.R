@@ -52,7 +52,6 @@ setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, class_
   return(result)
 }
 
-#' @export
 fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                         outcomeId, cohortId, ...){
   

@@ -53,7 +53,7 @@ setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, class_wei
   return(result)
 }
 
-#' @export
+
 fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                         outcomeId, cohortId, ...){
   
