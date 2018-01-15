@@ -49,11 +49,11 @@ Imports:
     DT,
     htmlwidgets (> 0.8),
     tidyr,
-    viridisLite
+    viridisLite,
+    PRROC
 Suggests:
     testthat,
     pROC,
-    PRROC,
     gnm,
     knitr,
     rmarkdown,
