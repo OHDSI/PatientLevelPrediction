@@ -25,6 +25,10 @@ data extracted from the CDM.}
 \item{cohortId}{Id of study cohort}
 
 \item{outcomeId}{Id of outcome cohort}
+
+\item{minCovariateFraction}{the min fraction for covariates that will not removed during preprocssing}
+
+\item{cleanData}{preprocessing the data to renmove rerundant covariates}
 }
 \value{
 An object of class \code{plpModel} containing:

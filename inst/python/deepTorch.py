@@ -142,19 +142,19 @@ class AutoEncoder(nn.Module):
         super(AutoEncoder, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Linear(input_size, 512),
+            nn.Linear(input_size, input_size/2),
             nn.ReLU(True),
-            nn.Linear(512, 256),
+            nn.Linear(input_size/2, input_size/4),
             nn.ReLU(True),
-            nn.Linear(256, encoding_size),
+            nn.Linear(input_size/4, encoding_size),
             nn.ReLU(True)
         )
         self.decoder = nn.Sequential(
-            nn.Linear(encoding_size, 256),
+            nn.Linear(encoding_size, input_size/4),
             nn.ReLU(True),
-            nn.Linear(256, 512),
+            nn.Linear(input_size/4, input_size/2),
             nn.ReLU(True),
-            nn.Linear(512, input_size)
+            nn.Linear(input_size/2, input_size)
         )
 
     def forward(self, x):

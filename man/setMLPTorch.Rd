@@ -5,7 +5,8 @@
 \title{Create setting for neural network model with python}
 \usage{
 setMLPTorch(size = c(500, 1000), w_decay = c(5e-04, 0.005), epochs = c(20,
-  50), seed = 0, class_weight = 0)
+  50), seed = 0, class_weight = 0, mlp_type = "MLP",
+  autoencoder = FALSE)
 }
 \arguments{
 \item{size}{The number of hidden nodes}
@@ -19,6 +20,10 @@ setMLPTorch(size = c(500, 1000), w_decay = c(5e-04, 0.005), epochs = c(20,
 \item{class_weight}{The class weight used for imbalanced data: 
  0: Inverse ratio between positives and negatives
 -1: Focal loss}
+
+\item{mlp_type}{The type of multiple layer network, inlcuding MLP and SNN (self-normalizing neural network)}
+
+\item{autoencoder}{First learn stakced autoencoder for input features, then train MLP on the encoded features.}
 }
 \description{
 Create setting for neural network model with python

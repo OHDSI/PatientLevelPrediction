@@ -23,9 +23,9 @@
 #' 
 #' 
 #' @param population                       The population created using createStudyPopulation() who will be used to develop the model
-#' @param plpData                          An list of object of type \code{plpData} - the patient level prediction
+#' @param dataList                          An list of object of type \code{plpData} - the patient level prediction
 #'                                         data extracted from the CDM.
-#' @param models                           An list of type of base model created using one of the function in final ensembling model:
+#' @param modelList                           An list of type of base model created using one of the function in final ensembling model:
 #'                                         \itemize{
 #'                                         \item{LRTorch()}{ A logistic regression model}
 #'                                         \item{MLPTorch()}{ A neural network model}
@@ -37,10 +37,10 @@
 #'                                         train (validationFraction of the data) sets.  The split is stratified by the class label.
 #' @param testFraction                     The fraction of the data to be used as the test set in the patient
 #'                                         split evaluation.
-#' @param trainFractions                   A list of trainFractions to try 
 #' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
-#'@param ensembleStrategy                  The strategy used for ensembling the outputs from different models, it can be 'mean', 'product' 
+#' @param analysisId                       The analysis ID
+#' @param ensembleStrategy                  The strategy used for ensembling the outputs from different models, it can be 'mean', 'product' 
 #'                                         and 'weighted'(default mean) and 'stacked'
 #'
 #'

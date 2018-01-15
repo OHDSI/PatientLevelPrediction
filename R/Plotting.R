@@ -722,13 +722,13 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #' @details
 #' Create a plot showing thelearnign curve using output from createLearningCurve
 #'
-#' @param learningcurve         A results object as generated using the
+#' @param learningCurve         A results object as generated using the
 #'                              \code{\link{createLearningCurve}} function.
 #' @param title                 plot title
 #' @param fileName              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
-#'
+#' @param xlabel                 The label informaiton of plot x-axis
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.

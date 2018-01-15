@@ -37,9 +37,9 @@
 #'                                         train (validationFraction of the data) sets.  The split is stratified by the class label.
 #' @param testFraction                     The fraction of the data to be used as the test set in the patient
 #'                                         split evaluation.
-#' @param trainFractions                   A list of trainFractions to try 
 #' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
+#' @param factors                          The list of ratios between positive and negative samples
 #'
 #'
 #'

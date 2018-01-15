@@ -331,6 +331,7 @@ def convert_to_temporal_format(covariates, timeid_len= 31, normalize = False):
             covariate_ids.add(key)
 
         cov_mean_dict[key] = (mean_val, std_val)
+
     if normalize:
         x, patient_keys = convert_to_3d_matrix(covariate_ids, patient_dict, timeid_len = timeid_len, cov_mean_dict = cov_mean_dict)
     else:

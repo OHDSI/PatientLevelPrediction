@@ -11,6 +11,16 @@ runEnsembleModel(population, dataList, modelList, testSplit = "time",
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
 
+\item{dataList}{An list of object of type \code{plpData} - the patient level prediction
+data extracted from the CDM.}
+
+\item{modelList}{An list of type of base model created using one of the function in final ensembling model:
+\itemize{
+\item{LRTorch()}{ A logistic regression model}
+\item{MLPTorch()}{ A neural network model}
+\item{CNNTorch()}{ A convolutional neural network model}
+}}
+
 \item{testSplit}{Either 'person' or 'time' specifying the type of evaluation used.
 'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
 'person' splits the data into test (1-testFraction of the data) and
@@ -23,20 +33,10 @@ split evaluation.}
 
 \item{nfold}{The number of folds used in the cross validation (default 3)}
 
+\item{analysisId}{The analysis ID}
+
 \item{ensembleStrategy}{The strategy used for ensembling the outputs from different models, it can be 'mean', 'product' 
 and 'weighted'(default mean) and 'stacked'}
-
-\item{plpData}{An list of object of type \code{plpData} - the patient level prediction
-data extracted from the CDM.}
-
-\item{models}{An list of type of base model created using one of the function in final ensembling model:
-\itemize{
-\item{LRTorch()}{ A logistic regression model}
-\item{MLPTorch()}{ A neural network model}
-\item{CNNTorch()}{ A convolutional neural network model}
-}}
-
-\item{trainFractions}{A list of trainFractions to try}
 }
 \description{
 #'

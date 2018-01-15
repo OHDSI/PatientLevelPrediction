@@ -10,6 +10,8 @@ evaluatePlp(prediction, plpData, model = NULL)
 \item{prediction}{The patient level prediction model's prediction}
 
 \item{plpData}{The patient level prediction data}
+
+\item{model}{The trained prediction model}
 }
 \value{
 A list containing the performance values

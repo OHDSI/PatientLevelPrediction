@@ -24,6 +24,7 @@
 #' The function calculates various metrics to measure the performance of the model
 #' @param prediction                         The patient level prediction model's prediction
 #' @param plpData                            The patient level prediction data
+#' @param model                              The trained prediction model
 #' @return
 #' A list containing the performance values
 #'

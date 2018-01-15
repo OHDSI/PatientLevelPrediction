@@ -38,6 +38,8 @@
 #'                                         }
 #' @param cohortId                         Id of study cohort
 #' @param outcomeId                        Id of outcome cohort
+#' @param cleanData                        preprocessing the data to renmove rerundant covariates
+#' @param minCovariateFraction             the min fraction for covariates that will not removed during preprocssing 
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
