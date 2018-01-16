@@ -62,9 +62,9 @@ evaluatePlp <- function(prediction, plpData, model = NULL){
 
   # auprc
   flog.trace('Calculating AUPRC')
-  fg <- prediction$value[prediction$outcomeCount == 1]
-  bg <- prediction$value[prediction$outcomeCount == 0]
-  pr <- PRROC::pr.curve(scores.class0 = fg, scores.class1 = bg)
+  positive <- prediction$value[prediction$outcomeCount == 1]
+  negative <- prediction$value[prediction$outcomeCount == 0]
+  pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
   auprc <- pr$auc.integral
   flog.info(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
 
