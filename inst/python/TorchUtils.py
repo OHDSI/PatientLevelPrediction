@@ -274,7 +274,8 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
     patient_keys = patient_dict.keys()
     for kk in patient_keys:
         #print('-------------------')
-        vals = patient_dict[kk] 
+        vals = patient_dict[kk]
+        #sorted(vals)
         p_ids.append(int(kk))
         for timeid, meas in vals.iteritems():
             int_time = int(timeid) - 1
@@ -289,13 +290,39 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
                     x_raw[patient_ind][lab_ind][int_time] = float(cov_val)
                 else:
                     mean_std = cov_mean_dict[cov_id]
-                    x_raw[patient_ind][lab_ind][int_time] = (float(cov_val) - mean_std[0])/mean_std[1]
+                    if mean_std[1]:
+                        x_raw[patient_ind][lab_ind][int_time] = (float(cov_val) - mean_std[0])/mean_std[1]
+                    else:
+                        x_raw[patient_ind][lab_ind][int_time] = float(cov_val)
+
     
         patient_ind = patient_ind + 1
 
+    #impute the data using the value of previous timestamp
+    #fw = open('patient_var.txt', 'w')
+    for i in xrange(N):
+        for j in xrange(D):
+            temp = x_raw[i][j]
+            nonzero_inds = np.nonzero(temp)[0]
+            count_nonzeros =  len(nonzero_inds)
+            #fw.write(str(i) + '\t' + str(count_nonzeros) + '\n')
+            if count_nonzeros == 1:
+                ind = nonzero_inds[0]
+                for k in xrange(ind + 1, T):
+                    x_raw[i][j][k] = x_raw[i][j][ind]
+            elif count_nonzeros > 1:
+                for ind in xrange(1, count_nonzeros):
+                    for k in xrange(nonzero_inds[ind -1] + 1, nonzero_inds[ind]):
+                        x_raw[i][j][k] = x_raw[i][j][nonzero_inds[ind - 1]]
+                # For last nonzeros.
+                for k in xrange(nonzero_inds[-1] + 1, T):
+                    x_raw[i][j][k] = x_raw[i][j][nonzero_inds[-1]]
+
+    #fw.close()
+
     return x_raw, patient_keys
 
-def convert_to_temporal_format(covariates, timeid_len= 31, normalize = False):
+def convert_to_temporal_format(covariates, timeid_len= 31, normalize = True):
     """
     It reads the data from covariates extracted by FeatureExtraction package and convert it to temporal data matrix
 
@@ -311,6 +338,7 @@ def convert_to_temporal_format(covariates, timeid_len= 31, normalize = False):
     for row in covariates:
         #print columns
         p_id, cov_id, time_id, cov_val = row[0], row[1], row[2], row[3]
+        #time_id = int(time_id)
         cov_vals_dict.setdefault(cov_id, []).append(float(cov_val))
         if p_id not in patient_dict:
             patient_dict[p_id] = {time_id: [(cov_id, cov_val)]}
@@ -326,6 +354,7 @@ def convert_to_temporal_format(covariates, timeid_len= 31, normalize = False):
     for key, val in cov_vals_dict.iteritems():
         mean_val = np.mean(val)
         std_val = np.std(val)
+
         # Remove those covariates with few occurrence (<5)
         if len(val) >= 5:
             covariate_ids.add(key)
