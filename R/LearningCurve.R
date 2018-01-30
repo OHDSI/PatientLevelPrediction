@@ -56,7 +56,7 @@
 #'                                         }
 #' @param timeStamp                        If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.
 #' @param analysisId                       Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
-#'
+#' @param minCovariateFraction             the min fraction for covariates that will not removed during preprocssing 
 #' @return
 #' An object containing the model or location where the model is save, the data selection settings, the preprocessing
 #' and training settings as well as various performance measures obtained by the model.
@@ -72,10 +72,10 @@
 #'
 #' @export
 
-createLearningCurve <- function(population, plpData,
+createLearningCurve <- function(population, plpData, 
                                 modelSettings,
                                 testSplit = 'time', testFraction=0.25, trainFractions = c(0.25,0.50,0.75), splitSeed=NULL, nfold=3, indexes=NULL,
-                                save=NULL, saveModel=T,verbosity=futile.logger::INFO, timeStamp=TRUE, analysisId=NULL){
+                                save=NULL, saveModel=T,verbosity=futile.logger::INFO, timeStamp=TRUE, analysisId=NULL,  minCovariateFraction = 0.001){
   
   nrRuns <- length(trainFractions);
   learningCurve <- data.frame(x = numeric(nrRuns),
@@ -187,7 +187,7 @@ createLearningCurve <- function(population, plpData,
     attr(population, "metaData") <- tempmeta
     
     settings <- list(
-      data = plpData,
+      data = plpData, minCovariateFraction=minCovariateFraction,
       modelSettings = modelSettings,
       population = population,
       cohortId = cohortId,
