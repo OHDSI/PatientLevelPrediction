@@ -8,7 +8,7 @@ createLearningCurve(population, plpData, modelSettings, testSplit = "time",
   testFraction = 0.25, trainFractions = c(0.25, 0.5, 0.75),
   splitSeed = NULL, nfold = 3, indexes = NULL, save = NULL,
   saveModel = T, verbosity = futile.logger::INFO, timeStamp = TRUE,
-  analysisId = NULL)
+  analysisId = NULL, minCovariateFraction = 0.001)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -58,6 +58,8 @@ split evaluation.}
 \item{timeStamp}{If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.}
 
 \item{analysisId}{Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
+
+\item{minCovariateFraction}{the min fraction for covariates that will not removed during preprocssing}
 }
 \value{
 An object containing the model or location where the model is save, the data selection settings, the preprocessing

@@ -94,13 +94,11 @@ runEnsembleModel <- function(population, dataList, modelList,
 	  train_prob = pred_probas[train_index,]
 	  #test_prob = pred_probas[test_index,]
 	  train_y = as.matrix(prediction$outcomeCount)[train_index]
+	  
 	  lr_model <- glm(train_y ~. , data = train_prob, family = binomial(link = "logit"))
-	  #prior = createPrior("laplace", exclude = 0, useCrossValidation = TRUE)
-	  #control = createControl(cvType= "auto", noiseLevel = "quiet")
-      #cyclopsData = convertToCyclopsData(train_y, train_prob, modelType = 'lr', addIntercept = TRUE, quiet = TRUE, normalize = NULL, checkSorting = TRUE)
-	  #cyclopsFit <- Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)
-	  #ensem_proba <- predict(cyclopsFit, newCovariates = pred_probas)
 	  ensem_proba <- predict(lr_model, newdata = pred_probas, type= "response")
+	  #lr_model <- glmnet::glmnet(x = as.matrix(train_prob), y = train_y)
+	  #ensem_proba <- predict(lr_model, newx = as.matrix(pred_probas))
   }
   prediction[ncol(prediction)] <- ensem_proba
   attr(prediction, "metaData")$analysisId <- analysisId
