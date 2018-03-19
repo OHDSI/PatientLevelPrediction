@@ -10,3 +10,4 @@ deploy.sh
 extras
 man-roxygen
 xgboost
+compare_versions
