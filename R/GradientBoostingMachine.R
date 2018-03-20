@@ -109,7 +109,9 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   param.sel <- lapply(param, function(x) do.call(gbm_model2, c(x,datas)  ))
   #writeLines('hyper')
   hyperSummary <- do.call(rbind, lapply(param.sel, function(x) x$hyperSum))
-  
+  hyperSummary <- as.data.frame(hyperSummary)
+  hyperSummary$auc <- unlist(lapply(param.sel, function(x) x$auc)) # new edit
+    
   param.sel <- unlist(lapply(param.sel, function(x) x$auc))
   param <- param[[which.max(param.sel)]]
   param$final=T
@@ -158,6 +160,12 @@ gbm_model2 <- function(data, population,
   if(!is.null(population$indexes) && final==F){
     index_vect <- unique(population$indexes)
     perform <- c()
+    
+    # create prediction matrix to store all predictions
+    predictionMat <- population
+    predictionMat$value <- 0
+    attr(predictionMat, "metaData") <- list(predictionType = "binary")
+    
     for(index in 1:length(index_vect )){
       writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
@@ -180,9 +188,14 @@ gbm_model2 <- function(data, population,
       aucVal <- computeAuc(prediction)
       perform <- c(perform,aucVal)
       
+      # add the fold predictions and compute AUC after loop
+      predictionMat$value[population$indexes==index] <- pred
+      
      }
-    auc <- mean(perform)
-    hyperPerm <- perform
+    ##auc <- mean(perform) # want overal rather than mean
+    auc <- computeAuc(predictionMat)
+    
+    foldPerm <- perform
   } else {
     train <- xgboost::xgb.DMatrix(data = data, label=population$outcomeCount)
     model <- xgboost::xgb.train(data = train, 
@@ -198,7 +211,7 @@ gbm_model2 <- function(data, population,
     prediction$value <- pred
     attr(prediction, "metaData") <- list(predictionType = "binary") 
     auc <- computeAuc(prediction)
-    hyperPerm <- auc
+    foldPerm <- auc
   }
   param.val <- paste0('max depth: ',max.depth,'-- min_child_weight: ', min_child_weight, 
                       '-- nthread: ', nthread, ' nround: ',nround, '-- eta: ', eta)
@@ -209,7 +222,7 @@ gbm_model2 <- function(data, population,
   result <- list(model=model,
                  auc=auc,
                  hyperSum = unlist(list(maxDepth = max.depth, eta = eta, nthread = nthread, 
-                                  min_child_weight = min_child_weight,nround = nround, fold_auc=hyperPerm))
+                                  min_child_weight = min_child_weight,nround = nround, fold_auc=foldPerm))
   )
   return(result)
 }

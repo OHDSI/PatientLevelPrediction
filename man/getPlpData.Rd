@@ -9,9 +9,9 @@ getPlpData(connectionDetails, cdmDatabaseSchema,
   studyStartDate = "", studyEndDate = "",
   cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema, outcomeTable = "cohort",
-  cdmVersion = "5", excludeDrugsFromCovariates = F,
-  firstExposureOnly = FALSE, washoutPeriod = 0, sampleSize = NULL,
-  covariateSettings, baseUrl = NULL)
+  cdmVersion = "5", firstExposureOnly = FALSE, washoutPeriod = 0,
+  sampleSize = NULL, covariateSettings, excludeDrugsFromCovariates = FALSE,
+  baseUrl = NULL)
 }
 \arguments{
 \item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the
@@ -68,11 +68,6 @@ COHORT_END_DATE.}
 
 \item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
 
-\item{excludeDrugsFromCovariates}{Should the target and comparator drugs (and their descendant
-concepts) be excluded from the covariates? Note that this will
-work if the drugs are actualy drug concept IDs (and not cohort
-IDs).}
-
 \item{firstExposureOnly}{Should only the first exposure per subject be included? Note that
 this is typically done in the \code{createStudyPopulation} function,
 but can already be done here for efficiency reasons.}
@@ -87,6 +82,8 @@ but can already be done here for efficiency reasons.}
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
 \code{createCovariateSettings} function in the
 \code{FeatureExtraction} package.}
+
+\item{excludeDrugsFromCovariates}{A redundant option}
 
 \item{baseUrl}{If extracting cohorts from atlas enter atlas url to extract cohort creation details}
 }
@@ -110,16 +107,12 @@ extract the data needed to perform the analysis.
 }
 \details{
 Based on the arguments, the at risk cohort data is retrieved, as well as outcomes
-occurring in these subjects. The at risk cohort can be identified using the drug_era table, or through
+occurring in these subjects. The at risk cohort is identified  through
 user-defined cohorts in a cohort table either inside the CDM instance or in a separate schema.
-Similarly, outcomes are identified using the condition_era table or
+Similarly, outcomes are identified 
 through user-defined cohorts in a cohort table either inside the CDM instance or in a separate
 schema. Covariates are automatically extracted from the appropriate tables within the CDM.
-Important: The concepts used to define the at risk cohort must not be included in the covariates, including any
-descendant concepts. If the \code{cohortId} arguments represent real
-concept IDs, you can set the \code{excludeDrugsFromCovariates} argument to TRUE and automatically
-the drugs and their descendants will be excluded from the covariates. However, if the
-\code{cohortId} argument does not represent concept IDs, you will need to
+If you wish to exclude concepts from covariates you will need to
 manually add the concept_ids and descendants to the \code{excludedCovariateConceptIds} of the
 \code{covariateSettings} argument.
 }

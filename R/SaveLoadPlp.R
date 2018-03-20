@@ -23,16 +23,12 @@
 #'
 #' @details
 #' Based on the arguments, the at risk cohort data is retrieved, as well as outcomes
-#' occurring in these subjects. The at risk cohort can be identified using the drug_era table, or through
+#' occurring in these subjects. The at risk cohort is identified  through
 #' user-defined cohorts in a cohort table either inside the CDM instance or in a separate schema.
-#' Similarly, outcomes are identified using the condition_era table or
+#' Similarly, outcomes are identified 
 #' through user-defined cohorts in a cohort table either inside the CDM instance or in a separate
 #' schema. Covariates are automatically extracted from the appropriate tables within the CDM.
-#' Important: The concepts used to define the at risk cohort must not be included in the covariates, including any
-#' descendant concepts. If the \code{cohortId} arguments represent real
-#' concept IDs, you can set the \code{excludeDrugsFromCovariates} argument to TRUE and automatically
-#' the drugs and their descendants will be excluded from the covariates. However, if the
-#' \code{cohortId} argument does not represent concept IDs, you will need to
+#' If you wish to exclude concepts from covariates you will need to
 #' manually add the concept_ids and descendants to the \code{excludedCovariateConceptIds} of the
 #' \code{covariateSettings} argument.
 #'
@@ -78,10 +74,6 @@
 #'                                         COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
 #'                                         COHORT_END_DATE.
 #' @param cdmVersion                   Define the OMOP CDM version used: currently support "4" and "5".
-#' @param excludeDrugsFromCovariates   Should the target and comparator drugs (and their descendant
-#'                                     concepts) be excluded from the covariates? Note that this will
-#'                                     work if the drugs are actualy drug concept IDs (and not cohort
-#'                                     IDs).
 #' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
 #'                                     but can already be done here for efficiency reasons.
@@ -94,6 +86,7 @@
 #' @param covariateSettings            An object of type \code{covariateSettings} as created using the
 #'                                     \code{createCovariateSettings} function in the
 #'                                     \code{FeatureExtraction} package.
+#' @param excludeDrugsFromCovariates   A redundant option                                     
 #' @param baseUrl                      If extracting cohorts from atlas enter atlas url to extract cohort creation details
 #'
 #' @return
@@ -123,11 +116,11 @@ getPlpData <- function(connectionDetails,
                        outcomeDatabaseSchema = cdmDatabaseSchema,
                        outcomeTable = "cohort",
                        cdmVersion = "5",
-                       excludeDrugsFromCovariates = F, #ToDo: rename to excludeFromFeatures
                        firstExposureOnly = FALSE,
                        washoutPeriod = 0,
                        sampleSize = NULL,
                        covariateSettings,
+                       excludeDrugsFromCovariates = FALSE,
                        baseUrl = NULL) {
   if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
     stop("Study start date must have format YYYYMMDD")
@@ -140,27 +133,14 @@ getPlpData <- function(connectionDetails,
   
   if(is.null(cohortId))
     stop('User must input cohortId')
+  if(length(cohortId)>1)
+    stop('Currently only supports one cohortId at a time')
   if(is.null(outcomeIds))
     stop('User must input outcomeIds')
   #ToDo: add other checks the inputs are valid
   
   connection <- DatabaseConnector::connect(connectionDetails)
   dbms <- connectionDetails$dbms
-
-  
-  if (excludeDrugsFromCovariates) { #ToDo: rename to excludeFromFeatures
-    sql <- "SELECT descendant_concept_id FROM @cdm_database_schema.concept_ancestor WHERE ancestor_concept_id IN (@cohort_id)"
-    sql <- SqlRender::renderSql(sql,
-                                cdm_database_schema = cdmDatabaseSchema,
-                                cohort_id = cohortId)$sql
-    sql <- SqlRender::translateSql(sql, targetDialect = dbms)$sql
-    conceptIds <- DatabaseConnector::querySql(connection, sql)
-    names(conceptIds) <- SqlRender::snakeCaseToCamelCase(names(conceptIds))
-    conceptIds <- conceptIds$descendantConceptId
-    # TODO this needs to be edited for multi coariate setting
-    covariateSettings$excludedCovariateConceptIds <- c(covariateSettings$excludedCovariateConceptIds,
-                                                       conceptIds)
-  }
   
   writeLines("\nConstructing the at risk cohort")
   if(!is.null(sampleSize))  writeLines(paste("\n Sampling ",sampleSize, " people"))
@@ -257,10 +237,21 @@ getPlpData <- function(connectionDetails,
   metaData$call$outcomeDatabaseSchema = outcomeDatabaseSchema
   metaData$call$outcomeTable = outcomeTable
   metaData$call$cdmVersion = cdmVersion
-  metaData$call$excludeDrugsFromCovariates = excludeDrugsFromCovariates
   metaData$call$firstExposureOnly = firstExposureOnly
   metaData$call$washoutPeriod = washoutPeriod
   metaData$call$covariateSettings= covariateSettings
+  
+  # create the temporal settings (if temporal use)
+  timeReference <- NULL
+  if(!is.null(covariateSettings$temporal)){
+    if(covariateSettings$temporal){
+      # make sure time days populated
+      if(length(covariateSettings$temporalStartDays)>0){
+        timeReference = ff::as.ffdf(data.frame(timeId=1:length(covariateSettings$temporalStartDays),
+                                               startDay = covariateSettings$temporalStartDays, 
+                                               endDay = covariateSettings$temporalEndDays))
+      }
+    }}
   
   
   # code to extract cohort if selected
@@ -281,6 +272,8 @@ getPlpData <- function(connectionDetails,
                  outcomes = outcomes,
                  covariates = covariateData$covariates,
                  covariateRef = covariateData$covariateRef,
+                 timeRef = timeReference,#covariateData$covariatesContinuous,
+                 analysisRef = covariateData$analysisRef,
                  metaData = metaData)
   
   class(result) <- "plpData"
@@ -376,10 +369,25 @@ savePlpData <- function(plpData, file, envir=NULL) {
   if('ffdf'%in%class(plpData$covariates)){
     covariates <- plpData$covariates
     covariateRef <- plpData$covariateRef
-    ffbase::save.ffdf(covariates, covariateRef, dir = file, clone = TRUE)
+    
+    if(!is.null(plpData$analysisRef)){
+      if(!is.null(plpData$timeRef)){
+        analysisRef <- plpData$analysisRef
+        timeRef <- plpData$timeRef
+        ffbase::save.ffdf(covariates, covariateRef,analysisRef,timeRef, dir = file, clone = TRUE)
+      } else {
+        analysisRef <- plpData$analysisRef
+        ffbase::save.ffdf(covariates, covariateRef,analysisRef, dir = file, clone = TRUE)
+      }
+    } else {
+      ffbase::save.ffdf(covariates, covariateRef, dir = file, clone = TRUE)
+    }
+    
   } else{
     covariateRef <- plpData$covariateRef
-    ffbase::save.ffdf(covariateRef, dir = file, clone = TRUE)
+    analysisRef <- plpData$analysisRef
+    timeRef <- plpData$timeRef
+    ffbase::save.ffdf(covariateRef,analysisRef,timeRef, dir = file, clone = TRUE)
     saveRDS(plpData$covariates, file = file.path(file, "covariates.rds"))
   }
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
@@ -420,23 +428,31 @@ loadPlpData <- function(file, readOnly = TRUE) {
   ffbase::load.ffdf(absolutePath, e)
   result <- list(covariates = get("covariates", envir = e),
                  covariateRef = get("covariateRef", envir = e),
+                 timeRef = get0("timeRef", envir = e,ifnotfound = NULL),
+                 analysisRef = get0("analysisRef", envir = e,ifnotfound = NULL),
                  cohorts = readRDS(file.path(file, "cohorts.rds")),
                  outcomes = readRDS(file.path(file, "outcomes.rds")),
                  metaData = readRDS(file.path(file, "metaData.rds")))
   # Open all ffdfs to prevent annoying messages later:
   open(result$covariates, readonly = readOnly)
   open(result$covariateRef, readonly = readOnly)
+  if(!is.null(result$timeRef)){open(result$timeRef, readonly = readOnly)}
+  if(!is.null(result$analysisRef)){open(result$analysisRef, readonly = readOnly)}
   class(result) <- "plpData"
   } else{
     e <- new.env()
     ffbase::load.ffdf(absolutePath, e)
     result <- list(covariates = readRDS(file.path(file, "covariates.rds")),
                    covariateRef = get("covariateRef", envir = e),
+                   timeRef = get0("timeRef", envir = e,ifnotfound = NULL),
+                   analysisRef = get0("analysisRef", envir = e,ifnotfound = NULL),
                    cohorts = readRDS(file.path(file, "cohorts.rds")),
                    outcomes = readRDS(file.path(file, "outcomes.rds")),
                    metaData = readRDS(file.path(file, "metaData.rds")))
     # Open all ffdfs to prevent annoying messages later:
     open(result$covariateRef, readonly = readOnly)
+    if(!is.null(result$timeRef)){open(result$timeRef, readonly = readOnly)}
+    if(!is.null(result$analysisRef)){open(result$analysisRef, readonly = readOnly)}
     class(result) <- "plpData.libsvm"
   }
 

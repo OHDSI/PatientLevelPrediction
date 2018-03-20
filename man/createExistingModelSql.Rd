@@ -5,11 +5,11 @@
 \title{Apply an existing logistic regression prediction model}
 \usage{
 createExistingModelSql(modelTable, modelNames, interceptTable, covariateTable,
-  type = "logistic", analysisId = 112, covariateSettings,
+  type = "logistic", analysisId = 112, covariateSettings, asFunctions = F,
   e = environment())
 }
 \arguments{
-\item{modelTable}{A dataframe or list of dataframes with columns: modelId, modelCovariate_id, coefficientValue all doubles}
+\item{modelTable}{A dataframe or list of dataframes with columns: modelId, modelCovariateId, coefficientValue all doubles}
 
 \item{modelNames}{A name used in the covariate function names (no spaces)}
 
@@ -22,6 +22,8 @@ createExistingModelSql(modelTable, modelNames, interceptTable, covariateTable,
 \item{analysisId}{The covariate analysis_id (default 112)}
 
 \item{covariateSettings}{The settings for the standard covariates (needs for temporal settings)}
+
+\item{asFunctions}{If T then return two functions}
 
 \item{e}{The environment to output the covariate setting functions to}
 }

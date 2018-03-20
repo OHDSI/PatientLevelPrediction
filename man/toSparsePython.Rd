@@ -4,7 +4,8 @@
 \alias{toSparsePython}
 \title{Convert the plpData in COO format into a sparse python matrix}
 \usage{
-toSparsePython(plpData, population, map = NULL)
+toSparsePython(plpData, population, map = NULL, temporal = F,
+  pythonExePath = NULL)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} with covariate in coo format - the patient level prediction
@@ -13,6 +14,10 @@ data extracted from the CDM.}
 \item{population}{The population to include in the matrix}
 
 \item{map}{A covariate map (telling us the column number for covariates)}
+
+\item{temporal}{Whether to include timeId into tensor}
+
+\item{pythonExePath}{Location of python exe you want to use}
 }
 \value{
 Returns a list, containing the python object name of the sparse matrix, the plpData covariateRef

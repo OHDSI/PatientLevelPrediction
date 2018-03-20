@@ -2,12 +2,14 @@
 % Please edit documentation in R/ViewPlp.R
 \name{viewPlp}
 \alias{viewPlp}
-\title{vunPlp - Interactively view the performance and model settings}
+\title{viewPlp - Interactively view the performance and model settings}
 \usage{
-viewPlp(runPlp)
+viewPlp(runPlp, validatePlp = NULL)
 }
 \arguments{
 \item{runPlp}{The output of runPlp() (an object of class 'runPlp')}
+
+\item{validatePlp}{The output of externalValidatePlp (on object of class 'validatePlp')}
 }
 \value{
 Opens a shiny app for interactively viewing the results

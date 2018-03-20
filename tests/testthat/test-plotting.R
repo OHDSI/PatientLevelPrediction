@@ -17,38 +17,36 @@
 library("testthat")
 
 context("Plotting")
+#TODO: add input checks and test these...
+#options(fftempdir = getwd())
+set.seed(1234)
+data(plpDataSimulationProfile)
+sampleSize <- 2000
+plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+# create popualtion for outcome 2
+population <- createStudyPopulation(plpData,
+                                    outcomeId = 2,
+                                    firstExposureOnly = FALSE,
+                                    washoutPeriod = 0,
+                                    removeSubjectsWithPriorOutcome = FALSE,
+                                    priorOutcomeLookback = 99999,
+                                    requireTimeAtRisk = FALSE,
+                                    minTimeAtRisk=0,
+                                    riskWindowStart = 0,
+                                    addExposureDaysToStart = FALSE,
+                                    riskWindowEnd = 365,
+                                    addExposureDaysToEnd = FALSE
+                                    #,verbosity=INFO
+)
+lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
+lr_results <- tryCatch(runPlp(population = population, plpData = plpData,
+                              modelSettings = lr_model,
+                              testSplit='person', # this splits by person
+                              testFraction=0.25,
+                              nfold=2))
 
 test_that("plots", {
-  
-  #TODO: add input checks and test these...
-  
-  set.seed(1234)
-  data(plpDataSimulationProfile)
-  sampleSize <- 2000
-  plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-  
-  # create popualtion for outcome 2
-  population <- createStudyPopulation(plpData,
-                                      outcomeId = 2,
-                                      firstExposureOnly = FALSE,
-                                      washoutPeriod = 0,
-                                      removeSubjectsWithPriorOutcome = FALSE,
-                                      priorOutcomeLookback = 99999,
-                                      requireTimeAtRisk = FALSE,
-                                      minTimeAtRisk=0,
-                                      riskWindowStart = 0,
-                                      addExposureDaysToStart = FALSE,
-                                      riskWindowEnd = 365,
-                                      addExposureDaysToEnd = FALSE
-                                      #,verbosity=INFO
-  )
-  lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
-  lr_results <- runPlp(population = population, plpData = plpData,
-                       modelSettings = lr_model,
-                       testSplit='person', # this splits by person
-                       testFraction=0.25,
-                       nfold=2)
-  
+
   # test all the outputs are ggplots
   test <- plotRoc(lr_results$prediction)
   testthat::expect_s3_class(test, 'ggplot')

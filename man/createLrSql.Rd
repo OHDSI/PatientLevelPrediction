@@ -5,7 +5,8 @@
 \title{Convert logistic regression model to sql code...}
 \usage{
 createLrSql(models, modelNames, covariateConstructionName = "prediction",
-  model_table = "#model_table", analysis_id = 111, e = environment())
+  model_table = "#model_table", analysis_id = 111, e = environment(),
+  databaseOutput = NULL)
 }
 \arguments{
 \item{models}{A trianed plp model.}
@@ -19,6 +20,8 @@ createLrSql(models, modelNames, covariateConstructionName = "prediction",
 \item{analysis_id}{The covariate analysis_id}
 
 \item{e}{The environment to output the covariate setting functions to}
+
+\item{databaseOutput}{If you want to output to go inot a cohort table add the "database.schema.tablename" here}
 }
 \description{
 Convert logistic regression model to sql code...

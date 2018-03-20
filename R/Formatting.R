@@ -135,6 +135,8 @@ MapCovariates <- function(covariates, covariateRef, population, map){
 #'                                      data extracted from the CDM.
 #' @param population                    The population to include in the matrix
 #' @param map                           A covariate map (telling us the column number for covariates)
+#' @param temporal                      Whether to include timeId into tensor
+#' @param pythonExePath                 Location of python exe you want to use
 #' @examples
 #' #TODO
 #'
@@ -148,20 +150,24 @@ MapCovariates <- function(covariates, covariateRef, population, map){
 #' }
 #'
 #' @export
-toSparsePython <- function(plpData,population, map=NULL){
+toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
   # test python is available and the required dependancies are there:
   if ( !PythonInR::pyIsConnected() ){
-    python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
+    python.test <- PythonInR::autodetectPython(pythonExePath = pythonExePath)
 
     if(is.null(python.test$pythonExePath))
       stop('You need to install python for this method - please see ...')
   }
   if ( !PythonInR::pyIsConnected() ){
-    PythonInR::pyConnect()
+    PythonInR::pyConnect(pythonExePath = pythonExePath)
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
     PythonInR::pyImport("numpy", as='np')
-    }
+  }
+  
+  if(temporal){
+    PythonInR::pyExec("import tensorflow as tf")
+  }
 
   # return error if we can't connect to python
   if ( !PythonInR::pyIsConnected() )
@@ -193,6 +199,10 @@ toSparsePython <- function(plpData,population, map=NULL){
   futile.logger::flog.debug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
   futile.logger::flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
 
+  if(temporal){
+    futile.logger::flog.debug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
+  }
+  
   # chunk then add
 
   # now load each part of the coo data into python as 3 vectors
@@ -200,21 +210,49 @@ toSparsePython <- function(plpData,population, map=NULL){
   # create the sparse python matrix and then add to it
   PythonInR::pySet('xmax',as.integer(max(population$rowId)))
   PythonInR::pySet('ymax',as.integer(max(plpData.mapped$map$newIds)))
+  if(temporal){
+    PythonInR::pySet('tmax',as.integer(max(plpData.mapped$covariates$timeId)))
+  }
+  
+  if(!temporal){
   PythonInR::pyExec('from scipy.sparse import coo_matrix')
   PythonInR::pyExec("plpData = coo_matrix((np.array([0]), (np.array([0]), np.array([0]) )), shape=(xmax, ymax))")
-  for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
+  ##for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
+  for (ind in bit::chunk(plpData.mapped$covariates)) {
     futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
     # then load in the three vectors based on ram limits and add to the current matrix
-    PythonInR::pySet('data', as.matrix(ff::as.ram(plpData.mapped$covariates$covariateValue[ind])))
-    PythonInR::pySet('x', as.matrix(ff::as.ram(plpData.mapped$covariates$rowId[ind])-1))
-    PythonInR::pySet('y', as.matrix(ff::as.ram(plpData.mapped$covariates$covariateId[ind])-1))
-
-    PythonInR::pyExec("tempData = coo_matrix((data[:,0], (x[:,0], y[:,0])), shape=(xmax, ymax))")
+    ## old slower code =====
+    ##PythonInR::pySet('data', as.matrix(ff::as.ram(plpData.mapped$covariates$covariateValue[ind])))
+    ##PythonInR::pySet('x', as.matrix(ff::as.ram(plpData.mapped$covariates$rowId[ind])-1))
+    ##PythonInR::pySet('y', as.matrix(ff::as.ram(plpData.mapped$covariates$covariateId[ind])-1))
+    ##PythonInR::pyExec("tempData = coo_matrix((data[:,0], (x[:,0], y[:,0])), shape=(xmax, ymax))")
+    ##======
+    PythonInR::pySet('dataall', as.matrix(ff::as.ram(plpData.mapped$covariates[ind,c('rowId','covariateId','covariateValue')])))
+    PythonInR::pyExec("tempData = coo_matrix((dataall[:,2], (dataall[:,0]-1, dataall[:,1]-1)), shape=(xmax, ymax))")
     PythonInR::pyExec("plpData = plpData+tempData")
   }
   futile.logger::flog.debug(paste0('Sparse python matrix done '))
   futile.logger::flog.debug(PythonInR::pyExec("print  'dataset has %s rows and %s columns' %(plpData.shape[0],plpData.shape[1])")
   )
+  } else{
+    # do the sparse tensor in tensorflow
+    # initiate empty sparsetensor:
+    PythonInR::pyExec("plpData = tf.SparseTensor(indices=[[0,0,0]], 
+                  values=np.float64([0]), dense_shape=[xmax, ymax, tmax])")
+    
+    for (ind in bit::chunk(plpData.mapped$covariates)) {
+      futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
+      # subtract 1 as python index starts at 0:
+      PythonInR::pySet('datas', as.matrix(ff::as.ram(plpData.mapped$covariates[ind,c('rowId','covariateId','timeId', 'covariateValue')])))
+      PythonInR::pyExec("indexes= tf.convert_to_tensor(datas[:,0:3]-1, dtype=tf.int64)")
+      PythonInR::pyExec("tempData = tf.SparseTensor(indices=indexes, 
+                  values=datas[:,3], dense_shape=[xmax, ymax, tmax])")
+      # add tensors:
+      PythonInR::pyExec("plpData = tf.sparse_add(plpData, tempData)")
+    }
+   
+    futile.logger::flog.debug(paste0('Sparse python tensor converted'))                            
+  }
   result <- list(data='plpData',
                  covariateRef=plpData.mapped$covariateRef,
                  map=plpData.mapped$map)
@@ -279,88 +317,3 @@ reformatPerformance <- function(train, test, analysisId){
   return(result)
 }
 
-
-#' Convert matrix into plpData
-#'
-#' @description
-#' Converts a matrix (rows = people, columns=variables) into the standard plpData
-#'
-#' @details
-#' This function converts matrix into plpData
-#' 
-#' @param data                          An data.frame with column names or matrix.
-#' @param columnNames                   A dataframe with two columns, column 1 contains column ids and column 2 contains names for each column id 
-#' @param columnTimes                   A dataframe with two columns, column 1 contains column ids and column 2 specifies the time prior to index the variables was recorded 
-#' @param outcomeId                     The column id containing the outcome
-#' @param indexTime                     The time defining the index date
-#' @param includeIndexDay               Boolean - whether to include variables recorded on index date
-#' @examples
-#' #TODO
-#'
-#' @return
-#' Returns an object of class plpData
-#' @export
-toPlpData <- function(data, columnNames, columnTimes=NULL, outcomeId, 
-                      indexTime =0, includeIndexDay=T ){
-  
-  if(!class(data)%in%c("data.frame","matrix"))
-    stop('data needs to be matrix of data.frame')
-  
-  if(nrow(columnNames)!=ncol(data))
-    stop('Column Names missing')
-  
-  if(missing(outcomeId))
-    stop('outcomeId not entered')
-  
-  
-  if(is.null(columnTimes)){
-    # create dummy times of 0
-    columnTimes <- data.frame(id = 1:ncol(data),
-                              time = rep(0, ncol(data))
-    )
-  }
-  
-  plpData <- list()
-  
-  meltData <- function(i, data, columnTimes, includeIndexDay,indexTime){
-    ind <- columnTimes$id[columnTimes$time<=indexTime + ifelse(includeIndexDay,0,-1)]
-    return(data.frame(rowId=rep(i, sum(columnNames$id%in%ind)), 
-                      covariateId=columnNames$id[columnNames$id%in%ind],
-                      covariateValue = data[i,columnNames$id[columnNames$id%in%ind]]))
-  }
-  
-  melted <- sapply(1:nrow(data), function(x) meltData(x, data, 
-                                                      columnTimes[columnTimes$id!=outcomeId,], 
-                                                      includeIndexDay, indexTime ), simplify = F )
-  melted <- do.call(rbind, melted)
-  
-  plpData$covariates <- ff::as.ffdf(melted)
-  plpData$coviateRef <-   ff::as.ffdf(data.frame(covariateId = columnNames$id, 
-                                                 covariateName = columnNames$name, 
-                                                 analysisId = rep(0, nrow(columnNames)), 
-                                                 conceptId = rep(0, nrow(columnNames))
-  ))
-  
-  plpData$cohorts <- data.frame(rowId = 1:nrow(data), 
-                                subjectId = rownames(data),
-                                cohortId = rep(1, nrow(data)),
-                                cohortStartDate = indexTime ,
-                                daysFromObsStart = rep(9999, nrow(data)) ,
-                                daysToCohortEnd = rep(9999, nrow(data)) ,
-                                daysToObsEnd = rep(9999, nrow(data)) )
-  
-  plpData$outcomes <-  data.frame(rowId = 1:nrow(data[,data[,outcomeId]>0]),
-                                  outcomeId = rep(2, nrow(data[,data[,outcomeId]>0])), 
-                                  daysToEvent = rep(columnTimes[outcomeId]-indexTime,
-                                                    nrow(data[,data[,outcomeId]>0]))
-  )
-  
-  plpData$metaData <- list(columnNames=columnName, 
-                           columnTimes=columnTimes, 
-                           cohortId=2,
-                           outcomeId=2, 
-                           indexTime =indexTime, 
-                           includeIndexDay=includeIndexDay)
-  
-  return(plpData) 
-}

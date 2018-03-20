@@ -5,7 +5,8 @@
 \title{Create setting for DecisionTree with python}
 \usage{
 setDecisionTree(maxDepth = 10, minSamplesSplit = 2, minSamplesLeaf = 10,
-  minImpuritySplit = 10^-7, seed = NULL, classWeight = "None", plot = F)
+  minImpurityDecrease = 10^-7, seed = NULL, classWeight = "None",
+  plot = F)
 }
 \arguments{
 \item{maxDepth}{The maximum depth of the tree}
@@ -14,7 +15,7 @@ setDecisionTree(maxDepth = 10, minSamplesSplit = 2, minSamplesLeaf = 10,
 
 \item{minSamplesLeaf}{The minimum number of samples per leaf}
 
-\item{minImpuritySplit}{Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.}
+\item{minImpurityDecrease}{Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.}
 
 \item{seed}{The random state seed}
 

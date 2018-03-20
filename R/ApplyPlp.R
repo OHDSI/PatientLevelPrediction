@@ -82,9 +82,9 @@ applyModel <- function(population,
 
   # reformatting the performance 
   analysisId <-   '000000'
-  nr1 <- length(unlist(performance$evaluationStatistics))
-  performance$evaluationStatistics <- cbind(analysisId= rep(analysisId,nr1-1),
-                                               Eval=rep('validation', nr1-1),
+  nr1 <- length(unlist(performance$evaluationStatistics[-1]))
+  performance$evaluationStatistics <- cbind(analysisId= rep(analysisId,nr1),
+                                               Eval=rep('validation', nr1),
                                                Metric = names(unlist(performance$evaluationStatistics[-1])),
                                                Value = unlist(performance$evaluationStatistics[-1])
                                                )

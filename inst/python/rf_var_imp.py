@@ -22,7 +22,7 @@ from sklearn.datasets import load_svmlight_file
 ntrees = 2000
 max_depth = 17
 
-print "Using Random Forest to select features" 
+print("Using Random Forest to select features") 
 
 ##print "Loading Data..."
 # load data + train,test indexes + validation index
@@ -38,7 +38,7 @@ print "Using Random Forest to select features"
 # load index file
 y = population[:,1]
 X = plpData[population[:,0],:]
-print "population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1])
+print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
 
 trainInd =population[:,population.shape[1]-1] >0
 testInd = population[:,population.shape[1]-1] < 0
@@ -48,20 +48,20 @@ train_x = X[trainInd,:]
 train_y = y[trainInd]
 
 if quiet==False:
-  print "Train set contains %s outcomes " %(np.sum(train_y))
+  print("Train set contains %s outcomes " %(np.sum(train_y)))
 
 mtry = int(np.round(np.sqrt(train_x.shape[1])))
 if quiet==False:
-  print "Training random forest with mtry= %s" %(mtry)
+  print("Training random forest with mtry= %s" %(mtry))
   # feature selection
-  print "Applying variable importance feature selection..."
+  print("Applying variable importance feature selection...")
 rf = RandomForestClassifier(max_features=mtry, n_estimators=ntrees,max_depth=max_depth,min_samples_split=2, random_state=0, n_jobs=-1, bootstrap=False)
 rf = rf.fit(train_x, train_y)
 feat_sel = SelectFromModel(rf,threshold='mean', prefit=True)
 train_x = feat_sel.transform(train_x)
 
 if quiet==False:
-  print "Selected %s number of features" %(train_x.shape[1])
+  print("Selected %s number of features" %(train_x.shape[1]))
 	
 
 

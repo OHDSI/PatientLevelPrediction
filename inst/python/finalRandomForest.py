@@ -1,5 +1,5 @@
 if quiet==False:
-  print "Training final model with best investigated hyper-parameters..." 
+  print("Training final model with best investigated hyper-parameters..." )
 
 if (mtry==-1):
   mtry =int(np.round(np.sqrt(X.shape[1])))
@@ -14,13 +14,13 @@ rf = RandomForestClassifier(max_features=int(mtry), n_estimators=ntrees,max_dept
 rf = rf.fit(train_x, train_y)
 end_time = timeit.default_timer()
 if quiet==False:
-  print "Training final took: %.2f s" %(end_time-start_time)
+  print("Training final took: %.2f s" %(end_time-start_time))
 
 # save the model:
 if not os.path.exists(modelOutput):
   os.makedirs(modelOutput)
 if quiet==False:  
-  print "Model saved to: %s" %(modelOutput)	
+  print("Model saved to: %s" %(modelOutput)	)
 
 joblib.dump(rf, modelOutput+"\\model.pkl") 
 ##np.savetxt(output+'\\'+id+'\\varImp.txt',rf.feature_importances_, fmt='%.18e', delimiter=',', newline='\n')

@@ -76,7 +76,7 @@ To create the tables in R you need to make datafames:
 ```{r tidy=TRUE,eval=FALSE}
 model_table <- data.frame(modelId=c(1,1,1,1,1),
                           modelCovariateId= 1:5, 
-                          covariateValue = c(1, 1, 1, 1, 2)
+                          coefficientValue = c(1, 1, 1, 1, 2)
                           )
 
 covariate_table <- data.frame(modelCovariateId= c(1,2,3,3,3,3,3,4,5),
@@ -96,7 +96,7 @@ PatientLevelPrediction::createExistingModelSql(modelTable= model_table,
                        interceptTable =data.frame(modelId=1, interceptValue=0),
                        covariateTable=covariate_table, 
                        type='score',
-                       analysisId=112, covariateSettings=covSet, e=e)
+                       analysisId=112, covariateSettings=covSettings, e=e)
 ```
 
 Once run you will find two functions in your environment:

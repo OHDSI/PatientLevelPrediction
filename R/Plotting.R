@@ -309,7 +309,7 @@ plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
   x<- evaluation$thresholdSummary[ind,c('positivePredictiveValue', 'sensitivity')]
   #x <- rbind(c(0,1), x, c(1,0))
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x$positivePredictiveValue, x$sensitivity)) +
+  plot <- ggplot2::ggplot(x, ggplot2::aes(x$sensitivity, x$positivePredictiveValue)) +
     ggplot2::geom_line(size=1) +
     ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("Precision")#, limits=c(0,1))

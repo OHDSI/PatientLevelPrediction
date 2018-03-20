@@ -16,19 +16,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' vunPlp - Interactively view the performance and model settings
+#' viewPlp - Interactively view the performance and model settings
 #'
 #' @description
 #' This is a shiny app for viewing interactive plots of the performance and the settings
 #' @details
 #' Either the result of runPlp and view the plots
 #' @param runPlp             The output of runPlp() (an object of class 'runPlp')
+#' @param validatePlp  The output of externalValidatePlp (on object of class 'validatePlp')
 #' @return
 #' Opens a shiny app for interactively viewing the results
 #'
 #' @export
 
-viewPlp <- function(runPlp) {
+viewPlp <- function(runPlp, validatePlp = NULL) {
+  if(missing(runPlp))
+    stop('Need to input runPlp object')
+  if(class(runPlp)!='runPlp'){
+      stop('runPlp is not of class runPlp')
+  }
+  
+  if(!is.null(validatePlp)){
+    if(class(validatePlp)!='validatePlp')
+      stop('validatePlp is not of class validatePlp')
+  }
   #require(shiny)
   #require(plotly)
   shiny::shinyApp(
@@ -123,8 +134,34 @@ viewPlp <- function(runPlp) {
                                           )
                           ),
                           
-                          shiny::tabPanel(title = "External Validation", value="external"
-                                          
+                          shiny::tabPanel(title = "External Validation", value="external",
+                                          shiny::tabsetPanel(id ="valTabs",
+                                                             shiny::tabPanel(title = "Evaluation Summary", 
+                                                                             value="panel_evalSum2",
+                                                                             shiny::h4("Evaluation Summary"),
+                                                                             DT::dataTableOutput("evalSummaryVal")),
+                                                             shiny::tabPanel(title = "Characterization", 
+                                                                             value="panel_characterization2",
+                                                                             shiny::h4("Characterization"),
+                                                                             DT::dataTableOutput("characterizationTabVal")
+                                                                             ),
+                                                             shiny:: tabPanel(title = "ROC", value="panel_roc2",
+                                                                              #shiny::h4("Internal validation"),
+                                                                              #plotly::plotlyOutput("rocPlotTest"),
+                                                                              shiny::h4("External Validation"),
+                                                                              plotly::plotlyOutput("rocPlotVal")
+                                                                              
+                                                                               ),
+                                                             
+                                                             shiny::tabPanel(title = "Calibration", value="panel_cal2",
+                                                                             #shiny::h4("Internal validation"),
+                                                                             #plotly::plotlyOutput("calPlotTest"),
+                                                                             shiny::h4("External validation"),
+                                                                             plotly::plotlyOutput("calPlotVal")
+                                                                             )
+                                                             
+                                                             
+                                          )         
                           ) # add select validation location with plots...
                           
                           
@@ -623,9 +660,118 @@ viewPlp <- function(runPlp) {
         #,initComplete = I("function(settings, json) {alert('Done.');}")
       ))
       
+      # here 
+      ## =================================================================================
+      ##    EXTERNAL VALIDATION PLOTS
+      ## =================================================================================
+      output$characterizationTabVal <- DT::renderDataTable({
+        if(is.null(validatePlp))
+          return(NULL)
+        
+        voi <- list()
+        voi <- length(validatePlp$validation)
+        for(i in 1:length(validatePlp$validation)){
+        validatePlp$validation[[i]]$covariateSummary$meanRatio <- validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithOutcome/
+          min(validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithNoOutcome,0.00001)
+        voi[[i]] <- validatePlp$validation[[i]]$covariateSummary[,c('covariateName','meanRatio')]
+        colnames(voi[[i]])[2] <- paste0(names(validatePlp$validation)[i],'_meanRatio') 
+        }
+        
+        do.call(function(x) merge(x, by='covariateName', all=T), voi)
+      },     escape = FALSE, selection = 'none',
+      options = list(
+        pageLength = 25
+      ))
+      
+      output$evalSummaryVal <- DT::renderDataTable({
+        if(is.null(validatePlp))
+          return(NULL)
+        
+        # format to 3dp
+        for(col in colnames(validatePlp$summary)[!colnames(validatePlp$summary)%in%c('Database','outcomeCount','populationSize')])
+          class(validatePlp$summary[,col]) <- 'numeric'
+        is.num <- sapply(validatePlp$summary, is.numeric)
+        validatePlp$summary[is.num] <- apply(validatePlp$summary[is.num],2,  round, 3)
+        
+        returnTab <- t(as.data.frame(validatePlp$summary))
+      },     escape = FALSE, selection = 'none',
+      options = list(
+        pageLength = 25
+        #,initComplete = I("function(settings, json) {alert('Done.');}")
+      ))
+      
+      output$rocPlotVal <- plotly::renderPlotly({
+        if(is.null(validatePlp))
+          return(NULL)
+        #PatientLevelPrediction::plotSparseRoc(reactVars$plpResult$performanceEvaluation, 
+        #                                      type='train')
+        rocPlotVal <- list()
+        length(rocPlotVal) <- length(validatePlp$validation)
+        for(i in 1:length(validatePlp$validation)){
+        data <- validatePlp$validation[[i]]$performance$thresholdSummary
+        rocPlotVal[[i]] <- plotly::plot_ly(x = 1-c(0,data$specificity,1)) %>%
+          plotly::add_lines(y = c(1,data$sensitivity,0),name = "hv", 
+                            text = paste('Risk Threshold:',c(0,data$predictionThreshold,1)),
+                            line = list(shape = "hv",
+                                        color = 'rgb(22, 96, 167)'),
+                            fill = 'tozeroy') %>%
+          plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                            line = list(dash = "dash"), color = I('black'),
+                            type='scatter') %>%
+          plotly::layout(annotations = list(text = names(validatePlp$validation)[i],
+            xref = "paper", yref = "paper", yanchor = "bottom",xanchor = "center",
+            align = "center",x = 0.5,y = 1,showarrow = FALSE))
+
+        }
+        p <- do.call(plotly::subplot, rocPlotVal)
+        p %>% plotly::layout(xaxis = list(title = "1-specificity"),
+                             yaxis = list (title = "Sensitivity"),
+                             showlegend = FALSE)
+      })
+      
+      output$calPlotVal <- plotly::renderPlotly({
+        if(is.null(validatePlp))
+          return(NULL)
+        
+        calPlotVal <- list()
+        length(calPlotVal) <- length(validatePlp$validation)
+        for(i in 1:length(validatePlp$validation)){
+          data <- validatePlp$validation[[i]]$performance$calibrationSummary
+          data <- data[, c('averagePredictedProbability','observedIncidence', 'PersonCountAtRisk')]
+          cis <- apply(data, 1, function(x) binom.test(x[2]*x[3], x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
+        data$lci <- cis[1,]  
+        data$uci <- cis[2,]
+        data$ci <- data$observedIncidence-data$lci
+        
+        calPlotVal[[i]] <- plotly::plot_ly(x = data$averagePredictedProbability) %>%
+          plotly::add_markers(y = data$observedIncidence,
+                              error_y = list(type = "data",
+                                             array = data$ci,
+                                             color = '#000000')) %>%
+          plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                            line = list(dash = "dash"), color = I('black'),
+                            type='scatter') %>%
+          plotly::layout(annotations = list(text = names(validatePlp$validation)[i],
+                                            xref = "paper", yref = "paper", yanchor = "bottom",xanchor = "center",
+                                            align = "center",x = 0.5,y = 1,showarrow = FALSE),
+                         yaxis = list(range = c(0, 1.1*max(c(data$averagePredictedProbability,data$observedIncidence)))),
+                         xaxis = list (range = c(0, 1.1*max(c(data$averagePredictedProbability,data$observedIncidence))))
+          )
+          
+        }
+        p <- do.call(plotly::subplot, calPlotVal)
+        
+        p %>% plotly::layout(yaxis = list(title = "Observed Incidence"),
+                             xaxis = list (title = "Mean Predicted Risk"),
+                             showlegend = FALSE)
+        
+      })
       
     })
   )
+  
+  
+  
 }
 
 
@@ -746,5 +892,6 @@ plotCovSummary <- function(reactVars){
              }
     
   }
+
   
 }

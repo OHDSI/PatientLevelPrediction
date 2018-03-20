@@ -20,7 +20,7 @@
 #' @param maxDepth    The maximum depth of the tree
 #' @param minSamplesSplit    The minimum samples per split
 #' @param minSamplesLeaf    The minimum number of samples per leaf
-#' @param minImpuritySplit  Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf. 
+#' @param minImpurityDecrease  Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf. 
 #' @param classWeight        Balance or None
 #' @param seed                The random state seed
 #' @param plot                Boolean whether to plot the tree (requires python pydotplus module)
@@ -31,7 +31,7 @@
 #' }
 #' @export
 setDecisionTree <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
-                            minImpuritySplit=10^-7,seed =NULL, classWeight='None', 
+                            minImpurityDecrease=10^-7,seed =NULL, classWeight='None', 
                             plot=F  ){
   if(!class(seed)%in%c('numeric','NULL'))
     stop('Invalid seed')
@@ -41,16 +41,16 @@ setDecisionTree <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
     stop('maxDepth must be greater that 0 or -1')
   if(class(minSamplesSplit)!='numeric')
     stop('minSamplesSplit must be a numeric value >1')
-  if(minSamplesSplit < 2)
+  if(min(minSamplesSplit) < 2)
     stop('minSamplesSplit must be greater that 1')
   if(class(minSamplesLeaf)!='numeric')
     stop('minSamplesLeaf must be a numeric value >0')
-  if(minSamplesLeaf < 1)
+  if(min(minSamplesLeaf) < 1)
     stop('minSamplesLeaf must be greater that 0')
-  if(class(minImpuritySplit)!='numeric')
-    stop('minImpuritySplit must be a numeric value >0 ')
-  if(minImpuritySplit <= 0)
-    stop('minImpuritySplit must be greater that 0')
+  if(class(minImpurityDecrease)!='numeric')
+    stop('minImpurityDecrease must be a numeric value >0 ')
+  if(min(minImpurityDecrease) <= 0)
+    stop('minImpurityDecrease must be greater that 0')
   if(class(classWeight) !='character')
     stop('classWeight must be a character of either None or balanced')
   if(!classWeight%in%c('None','balanced'))
@@ -71,11 +71,11 @@ setDecisionTree <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
                  param= split(expand.grid(maxDepth=maxDepth, 
                                           minSamplesSplit=minSamplesSplit,
                                           minSamplesLeaf=minSamplesLeaf,
-                                          minImpuritySplit=minImpuritySplit,
+                                          minImpurityDecrease=minImpurityDecrease,
                                           classWeight=classWeight,
                                           seed=ifelse(is.null(seed),'NULL', seed),
                                           plot=plot[1]),
-                              1:(length(classWeight)*length(maxDepth)*length(minSamplesSplit)*length(minSamplesLeaf)*length(minImpuritySplit))  )
+                              1:(length(classWeight)*length(maxDepth)*length(minSamplesSplit)*length(minSamplesLeaf)*length(minImpurityDecrease))  )
                               ,
                  name='DecisionTree')
   class(result) <- 'modelSettings' 
@@ -191,14 +191,14 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
 
 
 trainDecisionTree <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
-                              minImpuritySplit=10^-7,classWeight='None',seed =NULL,
+                              minImpurityDecrease=10^-7,classWeight='None',seed =NULL,
                               train=TRUE, plot=F,quiet=F){
   #PythonInR::pySet('size', as.matrix(size) )
   #PythonInR::pySet('alpha', as.matrix(alpha) )
   PythonInR::pyExec(paste0("max_depth = ", maxDepth))
   PythonInR::pyExec(paste0("min_samples_split = ", minSamplesSplit))
   PythonInR::pyExec(paste0("min_samples_leaf = ", minSamplesLeaf))
-  PythonInR::pyExec(paste0("min_impurity_split = ", minImpuritySplit))
+  PythonInR::pyExec(paste0("min_impurity_decrease = ", minImpurityDecrease))
   ifelse(classWeight=='None', PythonInR::pyExec(paste0("class_weight = ", classWeight)), 
          PythonInR::pyExec(paste0("class_weight = '", classWeight,"'")))
   PythonInR::pyExec(paste0("seed = ", ifelse(is.null(seed),'None',seed)))
