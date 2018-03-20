@@ -36,7 +36,7 @@ test_that("Brierscore", {
   prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
 
   prediction$dummy <- 1
-  brier.scoring <- scoring::brierscore(outcomeCount ~ value, data=prediction, group='dummy')$mnbrier
+  brier.scoring <- scoring::brierscore(outcomeCount ~ value, data=prediction, group='dummy')$brieravg
   brier.plp <- brierScore(prediction)$brier
   expect_that(as.double(brier.scoring), equals(brier.plp))
 })
