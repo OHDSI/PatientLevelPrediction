@@ -669,7 +669,7 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
           return(NULL)
         
         voi <- list()
-        voi <- length(validatePlp$validation)
+        length(voi) <- length(validatePlp$validation)
         for(i in 1:length(validatePlp$validation)){
         validatePlp$validation[[i]]$covariateSummary$meanRatio <- validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithOutcome/
           min(validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithNoOutcome,0.00001)
