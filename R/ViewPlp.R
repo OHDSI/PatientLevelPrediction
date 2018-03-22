@@ -671,13 +671,14 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
         voi <- list()
         length(voi) <- length(validatePlp$validation)
         for(i in 1:length(validatePlp$validation)){
-        validatePlp$validation[[i]]$covariateSummary$meanRatio <- validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithOutcome/
-          min(validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithNoOutcome,0.00001)
-        voi[[i]] <- validatePlp$validation[[i]]$covariateSummary[,c('covariateName','meanRatio')]
-        colnames(voi[[i]])[2] <- paste0(names(validatePlp$validation)[i],'_meanRatio') 
+        validatePlp$validation[[i]]$covariateSummary$meanDiff <- validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithOutcome-
+          validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithNoOutcome
+        voi[[i]] <- validatePlp$validation[[i]]$covariateSummary[,c('covariateName','meanDiff')]
+        colnames(voi[[i]])[2] <- paste0(names(validatePlp$validation)[i],'_meanDiff') 
         }
         
-        do.call(function(x) merge(x, by='covariateName', all=T), voi)
+        ##do.call(function(x) merge(x, by='covariateName', all=T), voi)
+        do.call(merge, c(voi,all=T))
       },     escape = FALSE, selection = 'none',
       options = list(
         pageLength = 25
