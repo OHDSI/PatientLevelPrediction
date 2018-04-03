@@ -190,6 +190,7 @@ summariseVal <- function(result, database){
 #' @param interceptTable                   The model intercepts
 #' @param type                             Model type (score or logistic)
 #' @param covariateSettings                The standard covariate settings (specify covariate lookback time)
+#' @param customCovariates                 A table of covariateId, sql (sql creates the custom covariate)
 #' @param riskWindowStart                  The day after index to start predicting the outcome
 #' @param riskWindowEnd                    The day after index to stop predicting the outcome
 #' @param requireTimeAtRisk                Do you want to ignore people who leave the database some point between the riskWindowStart and riskWindowEnd 
@@ -213,6 +214,7 @@ evaluateExistingModel <- function(modelTable,
                                    interceptTable=NULL, 
                                    type='score',
                                    covariateSettings,
+                                  customCovariates=NULL,
                                   riskWindowStart = 1, 
                                   riskWindowEnd = 365,
                                    requireTimeAtRisk = T, 
@@ -275,6 +277,7 @@ evaluateExistingModel <- function(modelTable,
                                                  type='score',
                                                  analysisId=919, 
                                                  covariateSettings=covariateSettings, 
+                                                 customCovariates=customCovariates,
                                                  asFunctions=T)
   
   createExistingmodelsCovariateSettings <- custCovs$createExistingmodelsCovariateSettings

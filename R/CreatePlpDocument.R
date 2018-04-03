@@ -356,103 +356,6 @@ createPlpReport <- function(plpResult=NULL,
 }
 
 
-
-characteriszation <- function(plpData, population, characterisationSettings){
-  summary <- covariateSummary(plpData, population)
-  
-  if(characterisationSettings$demo){
-    # find demo covariates
-    covs <- ff::as.ram(plpData$covariateRef$covariateId[plpData$covariateRef$analysisId<100])
-    covs<- summary[summary$CovariateId%in%covs,]
-    demoRows <- covs[order(-covs$CovariateCount),]
-  }
-  
-  # add utlisation stuff?
-  utilizationRows <- c()
-  if(characterisationSettings$utilization){
-    # find top N covariates
-    covs <- ff::as.ram(plpData$covariateRef$covariateId[plpData$covariateRef$analysisId>1000 &
-                                                          plpData$covariateRef$analysisId<1100])
-    covs<- summary[summary$covariateId%in%covs,]
-    utilizationRows <- NULL
-    if(nrow(covs)!=0)
-      utilizationRows <- covs[order(-covs$CovariateCount),]
-  }
-  
-  conditionRows <- c()
-  if(characterisationSettings$condition){
-    # find top N covariates
-    covs <- ff::as.ram(plpData$covariateRef$covariateId[ff::as.ram(plpData$covariateRef$analysisId>100 &                               
-                                                                     plpData$covariateRef$analysisId<300)])
-    covs<- summary[summary$covariateId%in%covs,]
-    conditionRows <- NULL
-    if(nrow(covs)!=0)
-      conditionRows <- covs[order(-covs$CovariateCount),][1:characterisationSettings$conditionNumber,]
-  }
-  
-  drugRows <- c()
-  if(characterisationSettings$drug){
-    # find top N covariates
-    covs <- ff::as.ram(plpData$covariateRef$covariateId[plpData$covariateRef$analysisId>400 &
-                                                          plpData$covariateRef$analysisId<600])
-    covs<- summary[summary$covariateId%in%covs,]
-    
-    drugRows <- NULL
-    if(nrow(covs)!=0)
-      drugRows <- covs[order(-covs$CovariateCount),][1:characterisationSettings$drugNumber,]
-  }
-  
-  observationRows <- c()
-  if(characterisationSettings$observation){
-    # find top N covariates
-    covs <- ff::as.ram(plpData$covariateRef$covariateId[plpData$covariateRef$analysisId>900 &
-                                                          plpData$covariateRef$analysisId<1000])
-    covs<- summary[summary$covariateId%in%covs,]
-    
-    observationRows <- NULL
-    if(nrow(covs)!=0)
-      observationRows <- covs[order(-covs$CovariateCount),][1:characterisationSettings$observationNumber,]
-  }
-  
-  procedureRows <- c()
-  if(characterisationSettings$procedure){
-    # find top N covariates
-    covs <- ff::as.ram(plpData$covariateRef$covariateId[plpData$covariateRef$analysisId>700 &
-                                                          plpData$covariateRef$analysisId<800])
-    covs<- summary[summary$covariateId%in%covs,]
-    
-    procedureRows <- NULL
-    if(nrow(covs)!=0)
-      procedureRows <- covs[order(-covs$CovariateCount),][1:characterisationSettings$procedureNumber,]
-  }
-  
-  measurementRows <- c()
-  if(characterisationSettings$measurement){
-    # find top N covariates
-    covs <- ff::as.ram(plpData$covariateRef$covariateId[plpData$covariateRef$analysisId>900 &
-                                                          plpData$covariateRef$analysisId<1000])
-    covs<- summary[summary$covariateId%in%covs,]
-    measurementRows <- NULL
-    if(nrow(covs)!=0)
-      measurementRows <- covs[order(-covs$CovariateCount),][1:characterisationSettings$measurementNumber,]
-  }  
-  
-  includeRows <- c()
-  if(length(characterisationSettings$includes)>0){
-    # find top N covariates
-    covs <- characterisationSettings$includes
-    covs<- summary[summary$covariateId%in%covs,]
-    includeRows <- covs[order(-covs$CovariateCount),]
-  }  
-  
-  result <- rbind(demoRows, utilizationRows,
-                  conditionRows, drugRows, observationRows, procedureRows, measurementRows, 
-                  includeRows)
-  #result <- merge(ff::as.ram(plpData$covariateRef), result, by='covariateId')
-  return(result)
-}
-
-
 # this function plots a visulisation of the prediction problem using the outcome/target population
 # and the tar information extracted from the population 
 plotPlpProblem <- function(plpResult){
@@ -570,7 +473,8 @@ formatDocNumbers <- function(x, dp=3){
 #' @param plpData                          The plpData
 #' @param targetName                       A string with the target description name
 #' @param outcomeName                      A string with the outcome description name
-#' @param characterisationSettings         A list containing the settings to determine what covariates are included into the data summary table
+#' @param table1                           Whether to include table1 (characteristics)
+#' @param connectionDetails                The connection required to calcualte the characteristics 
 #' @param includeTrain                     Whether to include the train set performance
 #' @param includeTest                      Whether to include the test set performance
 #' @param includePredictionPicture         Whether to include a picture detailing the prediction problem
@@ -584,13 +488,8 @@ createPlpJournalDocument <- function(plpResult=NULL,
                                      plpData = NULL,
                                      targetName = '<target population>',
                                      outcomeName = '<outcome>',
-                                     characterisationSettings=list(demo=T, utilization =T,
-                                                                   condition=T, conditionNumber=10,
-                                                                   drug=T, drugNumber=10,
-                                                                   observation=F, observationNumber=10,
-                                                                   procedure=F, procedureNumber=10,
-                                                                   measurement=F, measurementNumber=10,
-                                                                   include=NULL),
+                                     table1=T,
+                                     connectionDetails=NULL,
                                      includeTrain=FALSE, includeTest=TRUE,
                                      includePredictionPicture=TRUE, 
                                      includeAttritionPlot=TRUE,
@@ -608,9 +507,6 @@ createPlpJournalDocument <- function(plpResult=NULL,
   if(class(outcomeName)!='character'){
     stop('Incorrect outcomeName')
   }
-  if(class(characterisationSettings)!='list'){
-    stop('Incorrect characterisationSettings')
-  }
   if(class(includeTrain)!="logical"){
     stop("Incorrect includeTrain")
   }
@@ -623,6 +519,17 @@ createPlpJournalDocument <- function(plpResult=NULL,
   if(class(includeAttritionPlot)!="logical"){
     stop("Incorrect includeAttritionPlot")
   }  
+  if(class(table1)!='logical'){
+    stop('Incorrect table1 class')
+  }
+  if(table1){
+    if(is.null(connectionDetails)){
+      stop('Need to enter connection details for table 1')
+    }
+    if(is.null(plpData)){
+      stop('Need to enter plpdata for table 1')
+    }
+  }
   
   #!!================
   # TODO: add check to make sure the characterisation stuff is in data - otherwise add warning 
@@ -801,37 +708,18 @@ createPlpJournalDocument <- function(plpResult=NULL,
   }
   
   #=============== characterisation ==============
-  if(!is.null(plpData)){
+
+  if(table1){
     doc = ReporteRs::addTitle(doc, 'Characterisation', level=3)
     
-    # Tab1: do characteristion and create/add table 
-    charactTab <- characteriszation(plpData, population, characterisationSettings)
-    charactTab <- ReporteRs::FlexTable(charactTab[,c('covariateName','CovariateCount', 
-                                                     'CovariateCountWithOutcome', 'CovariateMeanWithOutcome',
-                                                     'CovariateCountWithNoOutcome', 'CovariateMeanWithNoOutcome')])
-    doc = ReporteRs::addFlexTable(doc, charactTab)
+    tab1 <- getPlpTable(plpData, population, connectionDetails,
+                            cohortTable='#temp_person')
+    
+    charactTab1 <- ReporteRs::FlexTable(tab1)
+    doc = ReporteRs::addFlexTable(doc, charactTab1)
     
     # Tab1: Add paragraph describing data
-    characterisationText <- paste0('Table 1 shows the key characteristic differences between',
-                                   ' those with the outcome and those without the outcome for')
-    if(characterisationSettings$demo)
-      characterisationText <- paste0(characterisationText, '  the demographics,')
-    if(characterisationSettings$utilization)
-      characterisationText <- paste0(characterisationText, ' the patient medical utilization,')
-    if(characterisationSettings$condition)
-      characterisationText <- paste0(characterisationText, ' the top ',characterisationSettings$conditionNumber, ' conditions based on mean difference,')
-    if(characterisationSettings$drug)
-      characterisationText <- paste0(characterisationText, ' the top ',characterisationSettings$drugNumber, ' drugs based on mean difference,')
-    if(characterisationSettings$observation)
-      characterisationText <- paste0(characterisationText, ' the top ',characterisationSettings$observationNumber, ' observations based on mean difference,')
-    if(characterisationSettings$procedure)
-      characterisationText <- paste0(characterisationText, ' the top ',characterisationSettings$procedureNumber, ' procedures based on mean difference,')
-    if(characterisationSettings$measurement)
-      characterisationText <- paste0(characterisationText, ' the top ',characterisationSettings$measurementNumber, ' measurements based on mean difference,')
-    
-    #remove the last ,
-    splitCharacterisationText <- strsplit(characterisationText,'')[[1]]
-    characterisationText <- paste0(splitCharacterisationText[1:(length(splitCharacterisationText)-1)], collapse='')
+    characterisationText <- paste0('Table 1a shows the key characteristic for people with and without the outcome')
     
     doc = ReporteRs::addParagraph(doc, characterisationText )
     
@@ -960,3 +848,99 @@ createPlpJournalDocument <- function(plpResult=NULL,
   return(TRUE)
   
 }
+
+
+
+#' Create a dataframe with the summary details of the population cohort for publications
+#'
+#' @details
+#' This function is used to create a summary table for population to be inserted into publications
+#'
+#' @param plpData        An object returned by running \code{getPlpData}.
+#' @param population     The population you want the summary table for
+#' @param connectionDetails  The connection details used to connect to the CDM database
+#' @param cohortTable     The name of the temp table that will store the popualtion cohort             
+#'
+#' @examples
+#' \dontrun{
+#' getTable1 (plpData, population, connectionDetails)
+#' }
+#' @export
+#' 
+getPlpTable <- function(plpData, population, connectionDetails,
+                        cohortTable='#temp_person'){
+  if(missing(plpData))
+    stop('Need to enter plpData')
+  if(missing(population))
+    stop('Need to enter population')
+  if(missing(connectionDetails))
+    stop('Need to enter connectionDetails')
+  
+  if(class(plpData)!='plpData')
+    stop('Wrong class for plpData')
+  if(class(population)!='data.frame')
+    stop('wrong population class')
+  if(sum(c('cohortId','subjectId','cohortStartDate')%in%colnames(population))!=3)  # need to remember column names
+    stop('population missing required column')
+  
+  if(sum(population$outcomeCount>0)==0)
+    stop('No outcomes')
+  if(sum(population$outcomeCount==0)==0)
+    stop('No non-outcomes')
+  
+  # add population to database in cohort table format
+  connection <- DatabaseConnector::connect(connectionDetails)
+  #insert pop table into '#temp_person'
+  
+  
+  # create table of non-outcomes
+  popCohort <- population[population$outcomeCount==0,c('cohortId','subjectId','cohortStartDate','cohortStartDate')]
+  colnames(popCohort)[4] <- 'cohortEndDate'
+  colnames(popCohort) <- SqlRender::camelCaseToSnakeCase(colnames(popCohort))
+  DatabaseConnector::insertTable(connection = connection,
+                                 tableName = cohortTable, 
+                                 data = popCohort, 
+                                 tempTable = T)
+  
+  settings <- plpData$metaData$call
+  settings[[1]] <- NULL # remove function
+  settings$connection <- connection
+  if(!is.null(settings$baseUrl)){
+    settings$baseUrl <- NULL
+    }
+  settings$cohortTableIsTemp <- T
+  class(settings) <- 'list'
+  for(val in c("outcomeIds","studyStartDate","studyEndDate",
+               "outcomeDatabaseSchema", "outcomeTable","firstExposureOnly",
+               "washoutPeriod","sampleSize", "connectionDetails")){
+    ind <- which(names(settings)==val)
+    settings[[val]] <- NULL
+  }
+  settings$aggregated <- T
+  # need to update below with the population cohort...
+  settings$cohortTable <- cohortTable
+  settings$cohortId <- -1
+  covariateData1 <- do.call(FeatureExtraction::getDbCovariateData, settings)
+  
+  popCohort <- population[population$outcomeCount>0,c('cohortId','subjectId','cohortStartDate','cohortStartDate')]
+  colnames(popCohort)[4] <- 'cohortEndDate'
+  colnames(popCohort) <- SqlRender::camelCaseToSnakeCase(colnames(popCohort))
+  DatabaseConnector::insertTable(connection = connection,
+                                 tableName = cohortTable, 
+                                 data = popCohort, 
+                                 tempTable = T)
+  covariateData2 <- do.call(FeatureExtraction::getDbCovariateData, settings)
+  
+  #FeatureExtraction::getDbCovariateData()
+  
+  ##label, analysisId, covariateIds
+  tabSpec <- FeatureExtraction::getDefaultTable1Specifications()
+  tabSpec <- rbind(tabSpec, c(label='Age in years', analysisId=2, covariateIds=1002))
+  tab1 <- FeatureExtraction::createTable1(covariateData1 = covariateData1, 
+                                          covariateData2 = covariateData2, 
+                                          specifications = tabSpec)
+  
+  return(tab1)
+}
+
+

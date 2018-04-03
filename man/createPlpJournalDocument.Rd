@@ -6,10 +6,7 @@
 \usage{
 createPlpJournalDocument(plpResult = NULL, plpData = NULL,
   targetName = "<target population>", outcomeName = "<outcome>",
-  characterisationSettings = list(demo = T, utilization = T, condition = T,
-  conditionNumber = 10, drug = T, drugNumber = 10, observation = F,
-  observationNumber = 10, procedure = F, procedureNumber = 10, measurement = F,
-  measurementNumber = 10, include = NULL), includeTrain = FALSE,
+  table1 = T, connectionDetails = NULL, includeTrain = FALSE,
   includeTest = TRUE, includePredictionPicture = TRUE,
   includeAttritionPlot = TRUE, outputLocation = file.path(getwd(),
   "plp_journal_document.docx"))
@@ -23,7 +20,9 @@ createPlpJournalDocument(plpResult = NULL, plpData = NULL,
 
 \item{outcomeName}{A string with the outcome description name}
 
-\item{characterisationSettings}{A list containing the settings to determine what covariates are included into the data summary table}
+\item{table1}{Whether to include table1 (characteristics)}
+
+\item{connectionDetails}{The connection required to calcualte the characteristics}
 
 \item{includeTrain}{Whether to include the train set performance}
 

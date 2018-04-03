@@ -5,11 +5,11 @@
 \title{evaluateExistingModel}
 \usage{
 evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
-  type = "score", covariateSettings, riskWindowStart = 1,
-  riskWindowEnd = 365, requireTimeAtRisk = T, minTimeAtRisk = 364,
-  includeAllOutcomes = T, connectionDetails, cdmDatabaseSchema,
-  cohortDatabaseSchema, cohortTable, cohortId, outcomeDatabaseSchema,
-  outcomeTable, outcomeId)
+  type = "score", covariateSettings, customCovariates = NULL,
+  riskWindowStart = 1, riskWindowEnd = 365, requireTimeAtRisk = T,
+  minTimeAtRisk = 364, includeAllOutcomes = T, connectionDetails,
+  cdmDatabaseSchema, cohortDatabaseSchema, cohortTable, cohortId,
+  outcomeDatabaseSchema, outcomeTable, outcomeId)
 }
 \arguments{
 \item{modelTable}{The model covariates and scores}
@@ -21,6 +21,8 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 \item{type}{Model type (score or logistic)}
 
 \item{covariateSettings}{The standard covariate settings (specify covariate lookback time)}
+
+\item{customCovariates}{A table of covariateId, sql (sql creates the custom covariate)}
 
 \item{riskWindowStart}{The day after index to start predicting the outcome}
 

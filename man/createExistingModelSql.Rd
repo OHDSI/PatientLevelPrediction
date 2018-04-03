@@ -6,7 +6,7 @@
 \usage{
 createExistingModelSql(modelTable, modelNames, interceptTable, covariateTable,
   type = "logistic", analysisId = 112, covariateSettings, asFunctions = F,
-  e = environment())
+  customCovariates = NULL, e = environment())
 }
 \arguments{
 \item{modelTable}{A dataframe or list of dataframes with columns: modelId, modelCovariateId, coefficientValue all doubles}
@@ -24,6 +24,8 @@ createExistingModelSql(modelTable, modelNames, interceptTable, covariateTable,
 \item{covariateSettings}{The settings for the standard covariates (needs for temporal settings)}
 
 \item{asFunctions}{If T then return two functions}
+
+\item{customCovariates}{enables custome SQL to be used to create custom covariates}
 
 \item{e}{The environment to output the covariate setting functions to}
 }
