@@ -91,7 +91,7 @@ else:
   if quiet==False:
     print("Model saved to: %s" %(modelOutput)	)
 
-  joblib.dump(dt, modelOutput+'\\model.pkl') 
+  joblib.dump(dt, os.path.join(modelOutput,"model.pkl"))
   
   if plot:
     plotfile = modelOutput+"\\tree_plot.dot"
