@@ -1,25 +1,25 @@
 ---
-title: "Building patient-level predictive models"
+  title: "Building patient-level predictive models"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
 output:
   pdf_document:
-    includes:
-      in_header: preamble.tex
-    number_sections: yes
-    toc: yes
-  word_document:
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+  includes:
+  in_header: preamble.tex
+number_sections: yes
+toc: yes
+word_document:
+  toc: yes
+html_document:
+  number_sections: yes
+toc: yes
 ---
-<!--
-%\VignetteEngine{knitr}
+  <!--
+  %\VignetteEngine{knitr}
 %\VignetteIndexEntry{Building patient-level predictive models}
 -->
-
-```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
+  
+  ```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
 library(PatientLevelPrediction)
 vignetteDataFolder <- "s:/temp/plpVignette"
 # Load all needed data if it exists on this computer:
@@ -42,8 +42,8 @@ This vignette describes how you can use the `PatientLevelPrediction` package to 
 Figure 1 illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
 To develop a model the user needs to take the following steps:
-
-1. Create the at risk and outcome cohorts
+  
+  1. Create the at risk and outcome cohorts
 2. Extract the patient-level data from the server
 3. Define the population of interest 
 4. Define the time-at-risk 
@@ -62,11 +62,11 @@ Before installing the `PatientLevelPrediction` package make sure you have Java a
 Furthermore, a python installation is required for some of the machine learning algorithms. We advise to install Python using Anaconda (https://www.continuum.io/downloads)
 
 The `PatientLevelPrediction` package is currently maintained in a GitHub repository (https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `drat` package:
-
-```{r tidy=TRUE,eval=FALSE}
-  install.packages("drat")
-  drat::addRepo("OHDSI")
-  install.packages("PatientLevelPrediction")
+  
+  ```{r tidy=TRUE,eval=FALSE}
+install.packages("drat")
+drat::addRepo("OHDSI")
+install.packages("PatientLevelPrediction")
 ```
 
 Once installed, you can type `library(PatientLevelPrediction)` to load the package.
@@ -74,8 +74,8 @@ Once installed, you can type `library(PatientLevelPrediction)` to load the packa
 # Data extraction
 
 The `PatientLevelPrediction` package requires longitudinal observational healthcare data in the OMOP Common Data Model format. The user will need to specify two things: 
-
-1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
+  
+  1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
 
 2. Outcomes for which we wish to build a predictive model.
 
@@ -84,8 +84,8 @@ The first step in running the `PatientLevelPrediction` is extracting all necessa
 ## Configuring the connection to the server
 
 We need to tell R how to connect to the server where the data are. `PatientLevelPrediction` uses the `DatabaseConnector` package, which provides the `createConnectionDetails` function. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
-
-```{r tidy=FALSE,eval=FALSE}
+  
+  ```{r tidy=FALSE,eval=FALSE}
 connectionDetails <- createConnectionDetails(dbms = "postgresql", 
                                              server = "localhost/ohdsi", 
                                              user = "joe", 
@@ -103,8 +103,8 @@ The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` 
 First we need to define the cohort of persons for which we want to perform the prediction and we need to define the outcomes we want to predict.
 
 The cohort and outcomes are provided as data in a table on the server that has the same structure as the 'cohort' table in the OMOP CDM, meaning it should have the following columns:
-
-- `cohort_definition_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
+  
+  - `cohort_definition_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
 - `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
 - `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
 - `cohort_end_date`, which can be used to determine the end of the prediction window. Can be set equal to the `cohort_start_date` for outcomes.
@@ -132,43 +132,43 @@ For this purpose we have created a file called *HospitalizationCohorts.sql* with
 File HospitalizationCohorts.sql 
 ***********************************/
 IF OBJECT_ID('@resultsDatabaseSchema.rehospitalization', 'U') IS NOT NULL
-	DROP TABLE @resultsDatabaseSchema.rehospitalization;
-	
+DROP TABLE @resultsDatabaseSchema.rehospitalization;
+
 SELECT visit_occurrence.person_id AS subject_id,
-	MIN(visit_start_date) AS cohort_start_date,
-	DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
-	1 AS cohort_definition_id
+MIN(visit_start_date) AS cohort_start_date,
+DATEADD(DAY, @post_time, MIN(visit_start_date)) AS cohort_end_date,
+1 AS cohort_definition_id
 INTO @resultsDatabaseSchema.rehospitalization
 FROM @cdmDatabaseSchema.visit_occurrence
 INNER JOIN @cdmDatabaseSchema.observation_period
-	ON visit_occurrence.person_id = observation_period.person_id
+ON visit_occurrence.person_id = observation_period.person_id
 INNER JOIN @cdmDatabaseSchema.condition_occurrence
 ON condition_occurrence.person_id = visit_occurrence.person_id 
 WHERE visit_concept_id IN (9201, 9203)
-	AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
-	AND visit_start_date > observation_period_start_date
-	AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
-	AND visit_start_date < observation_period_end_date
-  AND DATEDIFF(DAY, condition_start_date, visit_start_date) > @pre_time
-  AND condition_start_date <= visit_start_date
-  AND condition_concept_id IN (
-    SELECT descendant_concept_id 
-    FROM @cdmDatabaseSchema.concept_ancestor 
-    WHERE ancestor_concept_id = 201826) /* Type 2 DM */
+AND DATEDIFF(DAY, observation_period_start_date, visit_start_date) > @pre_time
+AND visit_start_date > observation_period_start_date
+AND DATEDIFF(DAY, visit_start_date, observation_period_end_date) > @post_time
+AND visit_start_date < observation_period_end_date
+AND DATEDIFF(DAY, condition_start_date, visit_start_date) > @pre_time
+AND condition_start_date <= visit_start_date
+AND condition_concept_id IN (
+SELECT descendant_concept_id 
+FROM @cdmDatabaseSchema.concept_ancestor 
+WHERE ancestor_concept_id = 201826) /* Type 2 DM */
 GROUP BY visit_occurrence.person_id;
 
 INSERT INTO @resultsDatabaseSchema.rehospitalization
 SELECT visit_occurrence.person_id AS subject_id,
-	visit_start_date AS cohort_start_date,
-	visit_end_date AS cohort_end_date,
-	2 AS cohort_definition_id
+visit_start_date AS cohort_start_date,
+visit_end_date AS cohort_end_date,
+2 AS cohort_definition_id
 FROM @resultsDatabaseSchema.rehospitalization
 INNER JOIN @cdmDatabaseSchema.visit_occurrence
-	ON visit_occurrence.person_id = rehospitalization.subject_id
+ON visit_occurrence.person_id = rehospitalization.subject_id
 WHERE visit_concept_id IN (9201, 9203)
-	AND visit_start_date > cohort_start_date
-	AND visit_start_date <= cohort_end_date
-	AND cohort_definition_id = 1;
+AND visit_start_date > cohort_start_date
+AND visit_start_date <= cohort_end_date
+AND cohort_definition_id = 1;
 ```
 This is parameterized SQL which can be used by the `SqlRender` package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
 
@@ -177,10 +177,10 @@ This is parameterized SQL which can be used by the `SqlRender` package. We use p
 library(SqlRender)
 sql <- readSql("HospitalizationCohorts.sql")
 sql <- renderSql(sql,
-                 cdmDatabaseSchema = cdmDatabaseSchema,
-                 cohortsDatabaseSchema = cohortsDatabaseSchema,
-                 post_time = 30,
-                 pre_time = 365)$sql
+cdmDatabaseSchema = cdmDatabaseSchema,
+cohortsDatabaseSchema = cohortsDatabaseSchema,
+post_time = 30,
+pre_time = 365)$sql
 sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 
 connection <- connect(connectionDetails)
@@ -193,8 +193,8 @@ If all went well, we now have a table with the events of interest. We can see ho
 
 ```{r tidy=FALSE,eval=FALSE}
 sql <- paste("SELECT cohort_definition_id, COUNT(*) AS count",
-             "FROM @cohortsDatabaseSchema.rehospitalization",
-             "GROUP BY cohort_definition_id")
+"FROM @cohortsDatabaseSchema.rehospitalization",
+"GROUP BY cohort_definition_id")
 sql <- renderSql(sql, cohortsDatabaseSchema = cohortsDatabaseSchema)$sql
 sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
 
@@ -209,48 +209,18 @@ data.frame(cohort_definition_id = c(1, 2),count = c(527616, 221555))
 Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the `FeatureExtractionPackage` available at https://github.com/OHDSI/FeatureExtration. In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its vignettes.
 
 ```{r tidy=FALSE,eval=FALSE}		   
-covariateSettings <- createCovariateSettings(useCovariateDemographics = TRUE,
-                                             useCovariateConditionOccurrence = TRUE,
-                                             useCovariateConditionOccurrenceLongTerm = TRUE,
-                                             useCovariateConditionOccurrenceShortTerm = TRUE,
-                                             useCovariateConditionOccurrenceMediumTerm = TRUE,
-                                             useCovariateConditionEra = TRUE,
-                                             useCovariateConditionEraEver = TRUE,
-                                             useCovariateConditionEraOverlap = TRUE,
-                                             useCovariateConditionGroup = TRUE,
-                                             useCovariateDrugExposure = TRUE,
-                                             useCovariateDrugExposureLongTerm = TRUE,
-                                             useCovariateDrugExposureShortTerm = TRUE,
-                                             useCovariateDrugEra = TRUE,
-                                             useCovariateDrugEraLongTerm = TRUE,
-                                             useCovariateDrugEraShortTerm = TRUE,
-                                             useCovariateDrugEraOverlap = TRUE,
-                                             useCovariateDrugEraEver = TRUE,
-                                             useCovariateDrugGroup = TRUE,
-                                             useCovariateProcedureOccurrence = TRUE,
-                                             useCovariateProcedureOccurrenceLongTerm = TRUE,
-                                             useCovariateProcedureOccurrenceShortTerm = TRUE,
-                                             useCovariateProcedureGroup = TRUE,
-                                             useCovariateObservation = TRUE,
-                                             useCovariateObservationLongTerm = TRUE,
-                                             useCovariateObservationShortTerm = TRUE,
-                                             useCovariateObservationCountLongTerm = TRUE,
-                                             useCovariateMeasurement = TRUE,
-                                             useCovariateMeasurementLongTerm = TRUE,
-                                             useCovariateMeasurementShortTerm = TRUE,
-                                             useCovariateMeasurementCountLongTerm = TRUE,
-                                             useCovariateMeasurementBelow = TRUE,
-                                             useCovariateMeasurementAbove = TRUE,
-                                             useCovariateConceptCounts = TRUE,
-                                             useCovariateRiskScores = TRUE,
-                                             useCovariateRiskScoresCharlson = TRUE,
-                                             useCovariateRiskScoresDCSI = TRUE,
-                                             useCovariateRiskScoresCHADS2 = TRUE,
-                                             useCovariateRiskScoresCHADS2VASc = TRUE,
-                                             useCovariateInteractionYear = FALSE,
-                                             useCovariateInteractionMonth = FALSE,
-                                             excludedCovariateConceptIds = c(),
-                                             deleteCovariatesSmallCount = 100)
+covariateSettings <- createCovariateSettings(useDemographicsGender = TRUE,
+useDemographicsAge = TRUE, useDemographicsAgeGroup = TRUE,
+useDemographicsRace = TRUE, useDemographicsEthnicity = TRUE,
+useConditionOccurrenceLongTerm = TRUE,
+useDrugExposureLongTerm = TRUE,
+useProcedureOccurrenceLongTerm = TRUE,
+useMeasurementLongTerm = TRUE,
+useObservationLongTerm = TRUE,
+useDistinctConditionCountLongTerm =TRUE,
+useVisitCountLongTerm = TRUE, 
+longTermStartDays = -365,
+endDays = -1)
 
 
 ```
@@ -259,31 +229,21 @@ The final step for extracting the data is to run the `getPlpData` function and i
 
 ```{r tidy=FALSE,eval=FALSE}
 plpData <- getPlpData(connectionDetails = connectionDetails,
-                      cdmDatabaseSchema = cdmDatabaseSchema,
-                      oracleTempSchema = oracleTempSchema,
-                      cohortDatabaseSchema = cohortsDatabaseSchema,
-                      cohortTable = "rehospitalization",
-                      cohortId = 1,
-                      washoutPeriod = 183,
-                      covariateSettings = covariateSettings,
-                      outcomeDatabaseSchema = cohortsDatabaseSchema,
-                      outcomeTable = "rehospitalization",
-                      outcomeIds = 2,
-                      cdmVersion = cdmVersion)
+cdmDatabaseSchema = cdmDatabaseSchema,
+oracleTempSchema = oracleTempSchema,
+cohortDatabaseSchema = cohortsDatabaseSchema,
+cohortTable = "rehospitalization",
+cohortId = 1,
+washoutPeriod = 183,
+covariateSettings = covariateSettings,
+outcomeDatabaseSchema = cohortsDatabaseSchema,
+outcomeTable = "rehospitalization",
+outcomeIds = 2,
+cdmVersion = cdmVersion)
 ```
 
 Note that if the cohorts are created in ATLAS the corresponding database schemas need to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
 
-We can get some overall statistics using the generic `summary()` method:
-
-```{r tidy=FALSE,eval=FALSE}
-summary(plpData)
-```
-```{r echo=FALSE,message=FALSE,eval=TRUE}
-if (file.exists(vignetteDataFolder)){
-  summary(plpData)
-}
-```
 
 ## Saving the data to file
 
@@ -304,15 +264,15 @@ In the example below a final population is created using an additional constrain
 
 ```{r tidy=FALSE,eval=FALSE}
 population <- createStudyPopulation(plpData, 
-                                    outcomeId = 2, 
-                                    includeAllOutcomes = TRUE, 
-                                    firstExposureOnly = TRUE, 
-                                    washoutPeriod = 365, 
-                                    removeSubjectsWithPriorOutcome = TRUE, 
-                                    priorOutcomeLookback = 365,
-                                    riskWindowStart = 1,
-                                    requireTimeAtRisk = FALSE,
-                                    riskWindowEnd = 365)
+outcomeId = 2, 
+includeAllOutcomes = TRUE, 
+firstExposureOnly = TRUE, 
+washoutPeriod = 365, 
+removeSubjectsWithPriorOutcome = TRUE, 
+priorOutcomeLookback = 365,
+riskWindowStart = 1,
+requireTimeAtRisk = FALSE,
+riskWindowEnd = 365)
 ```
 
 Note that some of these constraints could also already be applied in the cohort creation step, however, the `createStudyPopulation` function allows you do sensitivity analyses more easily on the already extracted plpData from the database.
@@ -326,12 +286,14 @@ Note that some of these constraints could also already be applied in the cohort 
 
 | Models                      | Python | Parameters                              |
 | ----------------------------| ------ | --------------------------------------- |
-| Logistic regression with regularization | No | var  (starting  variance)|
-| Gradient boosting machines              | No | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate |
-| Random forest                           | Yes | mtry  (number  of  features  in  each  tree),ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node),balance (balance class labels) | 
+| Logistic regression with regularization | No | var  (starting  variance), seed |
+| Gradient boosting machines              | No | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, seed  |
+| Random forest                           | Yes | mtry  (number  of  features  in  each  tree),ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node),balance (balance class labels), seed  | 
 | K-nearest neighbors                     | No | k (number   of   neighbours),weighted (weight by inverse frequency)  |   
 | Naive Bayes                             | Yes | none|
-
+| AdaBoost           | Yes                      | n_estimators (the maximum number of estimators at which boosting is terminated), learning_rate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learning_rate and n_estimators)|
+|Decision Tree | Yes | max_depth (the maximum depth of the tree), min_samples_split,min_samples_leaf, min_impurity_split (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,class_weight ("Balance"" or "None") |
+| Multilayer Perception | Yes | size (the number of hidden nodes), alpha (the l2 regularisation), seed |
 
 The table shows the currently implemented algorithms and their hyper-parameters. Some of these algorithms are calling python.In the settings function of the algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
 
@@ -348,7 +310,7 @@ The `runPlP` function uses the population, `plpData`, and model settings to trai
 
 ```{r tidy=FALSE,eval=FALSE}
 lrResults <- runPlp(population,plpData, modelSettings = lrModel, testSplit = 'person',  
-                    testFraction = 0.25, nfold = 2)
+testFraction = 0.25, nfold = 2)
 
 ```
 Under the hood the package will now use the `Cyclops` package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.
@@ -487,17 +449,17 @@ plpModel <- loadPlpModel(getwd(),'model')
 #load the new plpData and create the population
 plpData <- loadPlpData(getwd(),'data')
 population <- createStudyPopulation(plpData, 
-                                    outcomeId = 2, 
-                                    includeAllOutcomes = TRUE, 
-                                    firstExposureOnly = TRUE, 
-                                    washoutPeriod = 365, 
-                                    removeSubjectsWithPriorOutcome = TRUE, 
-                                    priorOutcomeLookback = 365,
-                                    riskWindowStart = 1,
-                                    requireTimeAtRisk = FALSE,
-                                    riskWindowEnd = 365
-                                    )
-                       
+outcomeId = 2, 
+includeAllOutcomes = TRUE, 
+firstExposureOnly = TRUE, 
+washoutPeriod = 365, 
+removeSubjectsWithPriorOutcome = TRUE, 
+priorOutcomeLookback = 365,
+riskWindowStart = 1,
+requireTimeAtRisk = FALSE,
+riskWindowEnd = 365
+)
+
 # apply the trained model on the new data
 validationResults <- applyModel(population,plpData,plpModel)
 ```
@@ -518,6 +480,3 @@ citation("Cyclops")
 ```
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.
-
-
-

@@ -5,14 +5,16 @@
 \title{Extract new plpData using plpModel settings
 use metadata in plpModel to extract similar data and population for new databases:}
 \usage{
-similarPlpData(plpModel = NULL, newConnectionDetails = NULL,
+similarPlpData(plpModel = NULL, createCohorts = T, newConnectionDetails,
   newCdmDatabaseSchema = NULL, newCohortDatabaseSchema = NULL,
   newCohortTable = NULL, newCohortId = NULL,
   newOutcomeDatabaseSchema = NULL, newOutcomeTable = NULL,
-  newOutcomeId = NULL)
+  newOutcomeId = NULL, sample = NULL, createPopulation = T)
 }
 \arguments{
 \item{plpModel}{The trained PatientLevelPrediction model or object returned by runPlp()}
+
+\item{createCohorts}{Create the tables for the target and outcome - requires sql in the plpModel object}
 
 \item{newConnectionDetails}{The connectionDetails for the new database}
 
@@ -29,6 +31,10 @@ similarPlpData(plpModel = NULL, newConnectionDetails = NULL,
 \item{newOutcomeTable}{The table name of the outcome table}
 
 \item{newOutcomeId}{The cohort_definition_id for the outcome}
+
+\item{sample}{The number of people to sample (default is NULL meaning use all data)}
+
+\item{createPopulation}{Whether to create the study population as well}
 }
 \description{
 Extract new plpData using plpModel settings

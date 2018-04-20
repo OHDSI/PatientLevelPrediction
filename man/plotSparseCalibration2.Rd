@@ -4,7 +4,7 @@
 \alias{plotSparseCalibration2}
 \title{Plot the conventional calibration}
 \usage{
-plotSparseCalibration2(evaluation, type = "train", fileName = NULL)
+plotSparseCalibration2(evaluation, type = "test", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the

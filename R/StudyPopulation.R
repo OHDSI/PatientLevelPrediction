@@ -135,6 +135,20 @@ createStudyPopulation <- function(plpData,
   metaData$riskWindowEnd = riskWindowEnd
   metaData$addExposureDaysToEnd = addExposureDaysToEnd
   
+  # get attriction for outcomeId
+  if(!is.null(metaData$attrition$uniquePeople)){
+    metaData$attrition <- metaData$attrition[metaData$attrition$outcomeId==outcomeId,c('description', 'targetCount', 'uniquePeople', 'outcomes')]
+  } else {
+    if(!is.null(attr(plpData$cohorts,  'metaData')$attrition)){
+    metaData$attrition <- data.frame(outcomeId=outcomeId,description=metaData$attrition$description, 
+                                     targetCount=attr(plpData$cohorts,  'metaData')$attrition$persons, uniquePeople=0,
+                                     outcomes= metaData$attrition$outcomes)
+    } else {
+      metaData$attrition <- c()
+    }
+
+  }
+  
   if (firstExposureOnly) {
     futile.logger::flog.trace("Keeping only first exposure per subject")
     population <- population[order(population$subjectId, as.Date(population$cohortStartDate)), ]
@@ -256,7 +270,11 @@ createStudyPopulation <- function(plpData,
 
 limitCovariatesToPopulation <- function(covariates, rowIds) {
   idx <- !is.na(ffbase::ffmatch(covariates$rowId, rowIds))
-  covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
+  if(sum(idx)!=0){
+    covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
+  }else{
+    stop('No covariates')
+  }
   return(covariates)
 }
 
@@ -283,9 +301,27 @@ getAttritionTable <- function(object) {
 
 getCounts <- function(population,outCount, description = "") {
   persons <- length(unique(population$subjectId))
-
+  targets <- nrow(population)
+  
   counts <- data.frame(description = description,
-                       persons = persons,
+                       targetCount= targets,
+                       uniquePeople = persons,
                        outcomes = outCount)
+  return(counts)
+}
+
+getCounts2 <- function(cohort,outcomes, description = "") {
+  persons <- length(unique(cohort$subjectId))
+  targets <- nrow(cohort)
+  
+  outcomes <- aggregate(cbind(count = outcomeId) ~ outcomeId, 
+                        data = outcomes, 
+                        FUN = function(x){NROW(x)})
+  
+  counts <- data.frame(outcomeId = outcomes$outcomeId,
+                       description = description,
+                       targetCount= targets,
+                       uniquePeople = persons,
+                       outcomes = outcomes$count)
   return(counts)
 }

@@ -4,7 +4,7 @@
 \alias{setRandomForest}
 \title{Create setting for random forest model with python (very fast)}
 \usage{
-setRandomForest(mtries = -1, ntrees = c(10, 500), max_depth = 17,
+setRandomForest(mtries = -1, ntrees = 500, maxDepth = c(4, 10, 17),
   varImp = T, seed = NULL)
 }
 \arguments{
@@ -12,7 +12,7 @@ setRandomForest(mtries = -1, ntrees = c(10, 500), max_depth = 17,
 
 \item{ntrees}{The number of trees to build}
 
-\item{max_depth}{Maximum number of interactions - a large value will lead to slow model training}
+\item{maxDepth}{Maximum number of interactions - a large value will lead to slow model training}
 
 \item{varImp}{Perform an initial variable selection prior to fitting the model to select the useful variables}
 
@@ -24,6 +24,6 @@ Create setting for random forest model with python (very fast)
 \examples{
 \dontrun{
 model.rf <- setRandomForest(mtries=c(-1,5,20),  ntrees=c(10,100), 
-                           max_depth=c(5,20))
+                           maxDepth=c(5,20))
 }                           
 }

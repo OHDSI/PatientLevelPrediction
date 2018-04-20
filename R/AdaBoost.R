@@ -17,8 +17,8 @@
 # limitations under the License.
 
 #' Create setting for AdaBoost with python 
-#' @param n_estimators       The maximum number of estimators at which boosting is terminated
-#' @param learning_rate      Learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learning_rate and n_estimators.
+#' @param nEstimators       The maximum number of estimators at which boosting is terminated
+#' @param learningRate      Learning rate shrinks the contribution of each classifier by learningRate. There is a trade-off between learningRate and nEstimators .
 #' @param seed       A seed for the model 
 #'
 #' @examples
@@ -26,25 +26,25 @@
 #' model.adaBoost <- setAdaBoost(size=4, alpha=0.00001, seed=NULL)
 #' }
 #' @export
-setAdaBoost <- function(n_estimators=50, learning_rate=1, seed=NULL){
+setAdaBoost <- function(nEstimators =50, learningRate=1, seed=NULL){
   
   if(!class(seed)%in%c('numeric','NULL'))
     stop('Invalid seed')
-  if(class(n_estimators)!='numeric')
-    stop('n_estimators must be a numeric value >0 ')
-  if(n_estimators < 1)
-    stop('n_estimators must be greater that 0 or -1')
-  if(class(learning_rate)!='numeric')
-    stop('learning_rate must be a numeric value >0 and <=1')
-  if(learning_rate >1)
-    stop('learning_rate must be less that or equal to 1')
-  if(learning_rate<0)
-    stop('learning_rate must be a numeric value >0')
+  if(class(nEstimators )!='numeric')
+    stop('nEstimators must be a numeric value >0 ')
+  if(nEstimators < 1)
+    stop('nEstimators must be greater that 0 or -1')
+  if(class(learningRate)!='numeric')
+    stop('learningRate must be a numeric value >0 and <=1')
+  if(learningRate > 1)
+    stop('learningRate must be less that or equal to 1')
+  if(learningRate < 0)
+    stop('learningRate must be a numeric value >0')
   
   
   
   # test python is available and the required dependancies are there:
-  if (!PythonInR::pyIsConnected()){
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
     tryCatch({
       python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
     }, error = function(err){
@@ -53,10 +53,10 @@ setAdaBoost <- function(n_estimators=50, learning_rate=1, seed=NULL){
     )
   }
   result <- list(model='fitAdaBoost', 
-                 param= split(expand.grid(n_estimators=n_estimators, 
-                                          learning_rate=learning_rate,
+                 param= split(expand.grid(nEstimators =nEstimators , 
+                                          learningRate=learningRate,
                                           seed=ifelse(is.null(seed),'NULL', seed)),
-                              1:(length(n_estimators)*length(learning_rate))  ),
+                              1:(length(nEstimators )*length(learningRate))  ),
                  name='AdaBoost')
   class(result) <- 'modelSettings' 
   
@@ -156,11 +156,11 @@ fitAdaBoost <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainAdaBoost <- function(n_estimators=50, learning_rate=1, seed=NULL, train=TRUE){
+trainAdaBoost <- function(nEstimators =50, learningRate=1, seed=NULL, train=TRUE){
   #PythonInR::pySet('size', as.matrix(size) )
   #PythonInR::pySet('alpha', as.matrix(alpha) )
-  PythonInR::pyExec(paste0("n_estimators = ", n_estimators))
-  PythonInR::pyExec(paste0("learning_rate = ", learning_rate))
+  PythonInR::pyExec(paste0("n_estimators = ", nEstimators ))
+  PythonInR::pyExec(paste0("learning_rate = ", learningRate))
   PythonInR::pyExec(paste0("seed = ", ifelse(is.null(seed),'None',seed)))
   if(train)
     PythonInR::pyExec("train = True")
@@ -168,7 +168,7 @@ trainAdaBoost <- function(n_estimators=50, learning_rate=1, seed=NULL, train=TRU
     PythonInR::pyExec("train = False")
   
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','adaBoost.py '))
+  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','adaBoost.py'))
   
   if(train){
     # then get the prediction 

@@ -39,7 +39,7 @@ System Requirements
 Requires R (version 3.3.0 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java and Python.
 
 The python installation is required for some of the machine learning algorithms. We advise to
-install Python 2.7 using Anaconda (https://www.continuum.io/downloads)
+install Python 3.6 using Anaconda (https://www.continuum.io/downloads)
 
 Dependencies
 ============
@@ -54,7 +54,7 @@ Getting Started
 1. On Windows, make sure [RTools](http://cran.r-project.org/bin/windows/Rtools/) is installed.
 2. The DatabaseConnector and SqlRender packages require Java. Java can be downloaded from
 <a href="http://www.java.com" target="_blank">http://www.java.com</a>.
-3. Random forest, Naive Bayes and MLP require python 2.7.  Python 2.7 can be downloaded from: <a href="https://www.continuum.io/downloads" target="_blank">https://www.continuum.io/downloads</a>.
+3. Random forest, Naive Bayes and MLP require python 3.6.  Python 3.6 can be downloaded from: <a href="https://www.continuum.io/downloads" target="_blank">https://www.continuum.io/downloads</a>.
 4. In R, use the following commands to download and install PatientLevelPrediction:
 
   ```r
@@ -62,8 +62,29 @@ Getting Started
   drat::addRepo("OHDSI")
   install.packages("PatientLevelPrediction")
   ```
+5. We recommend testing your instalation by running:
+  ```r
+  PatientLevelPrediction::checkPlpInstallation()
+  
+  ```
+  If you have a response other than 1 (indicating everything works), enter the response number in:
+  ```r
+  PatientLevelPrediction::interpretInstallCode()
+  
+  ```
+Non-windows users: Please note that the package uses python to implement some of the classifiers.  The package pythonInR is used as the interface, and in Linux or Mac OS it uses the same python specified in path (the python that loads when you type the command python).  Please make sure the anaconda python is specified in your path rather than any default python (unless it is set up with the following packages), as the packages: numpy, scikit-learn and tensorFlow are required to run the patient level prediciton python code.  
 
-Have a look at the video below for a demo of the package.
+
+Note that for testing you can simulate a random plpData object using the following code:
+
+  ```r
+  set.seed(1234)
+  data(plpDataSimulationProfile)
+  sampleSize <- 2000
+  plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+  ```
+  
+Have a look at the video below for an extensive demo of the package.
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=BEukCbT8UoA
 " target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
@@ -71,8 +92,9 @@ alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
 Getting Involved
 ================
-* Vignette: [Building patient-level predictive models](https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.pdf)
-* Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
+* Vignette: [Building patient-level predictive models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf)
+* Vignette: [Adding existing models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingExistingModels.pdf)
+* Developer questions/comments/feedback: <a href="http://forumBuildingPredictiveModels.pdfs.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="../../issues">GitHub issue tracker</a> for all bugs/issues/enhancements
  
 License

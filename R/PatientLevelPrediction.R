@@ -24,11 +24,13 @@
 #' @importFrom SqlRender loadRenderTranslateSql translateSql
 #' @importFrom plyr ddply
 #' @importFrom methods is
-#' @importFrom stats binom.test lm printCoefmat rpois runif sd
-#' @importFrom utils write.csv write.table
+#' @importFrom stats binom.test lm printCoefmat rpois runif sd aggregate
+#' @importFrom utils write.csv write.table data
+#' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
 #' @import bit
 #' @import Cyclops
 #' @import DatabaseConnector
+#' @import FeatureExtraction
 #' @useDynLib PatientLevelPrediction
 NULL
 

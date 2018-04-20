@@ -4,7 +4,7 @@
 \alias{plotPrecisionRecall}
 \title{Plot the precision-recall curve using the sparse thresholdSummary data frame}
 \usage{
-plotPrecisionRecall(evaluation, type = "train", fileName = NULL)
+plotPrecisionRecall(evaluation, type = "test", fileName = NULL)
 }
 \arguments{
 \item{evaluation}{A prediction object as generated using the

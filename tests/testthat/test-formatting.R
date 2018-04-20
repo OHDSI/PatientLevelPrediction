@@ -37,6 +37,11 @@ test_that("toSparseM", {
                         daysFromObsStart= c(500,50,500,500,500,500),
                         daysToCohortEnd= rep(200,6),
                         daysToObsEnd=rep(200,6))
+  
+  attr(cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
+                                                                  targetCount=6,uniquePeople=6,
+                                                                  outcomes=2))
+  
   outcomes <- data.frame(rowId=c(1,2), 
                          outcomeId=rep(2,2), 
                          daysToEvent=c(150,40))
@@ -78,6 +83,11 @@ test_that("toSparseM", {
                   outcomes=outcomes,
                   covariates=covs2,
                   covariateRef=covref)
+  attr(plpData2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
+                                                         targetCount=6,uniquePeople=6,
+                                                         outcomes=2))
+  
+  
   class(plpData2) <- 'plpData'
   population3 <- createStudyPopulation(plpData=plpData2,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
@@ -110,6 +120,9 @@ test_that("toSparseM", {
                                                            conceptId=rep(1,2)
                        ))
   )
+  attr(plpDataExact$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
+                                                                  targetCount=6,uniquePeople=6,
+                                                                  outcomes=2))
   class(plpDataExact) <- "plpData"
   populationExact <- createStudyPopulation(plpDataExact,
                                            outcomeId = 2,
@@ -148,6 +161,9 @@ test_that("toSparseM", {
                                                             conceptId=rep(1,2)
                         ))
   )
+  attr(plpDataExact2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
+                                                                  targetCount=20,uniquePeople=20,
+                                                                  outcomes=3))
   class(plpDataExact2) <- "plpData"
   populationExact2 <- createStudyPopulation(plpDataExact2,
                                             outcomeId = 2,
@@ -225,6 +241,10 @@ test_that("toSparsePython", {
                                                              conceptId=rep(1,2)
                          ))
     )
+    attr(plpDataExact$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
+                                                                         targetCount=20,uniquePeople=20,
+                                                                         outcomes=3))
+    
     class(plpDataExact) <- "plpData"
     populationExact <- createStudyPopulation(plpDataExact,
                                              outcomeId = 2,
@@ -263,6 +283,9 @@ test_that("toSparsePython", {
                                                               conceptId=rep(1,2)
                           ))
     )
+    attr(plpDataExact2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
+                                                                         targetCount=20,uniquePeople=20,
+                                                                         outcomes=3))
     class(plpDataExact2) <- "plpData"
     populationExact2 <- createStudyPopulation(plpDataExact2,
                                               outcomeId = 2,
@@ -316,4 +339,40 @@ test_that("toSparsePython", {
                            length(unique(ff::as.ram(plpData$covariateRef$covariateId))))
     testthat::expect_equal(ncol(compTest), nrow(test$map))
   }
+  
+  
 })
+
+
+test_that("mappingMatrixPlpData", {
+ 
+  # CHeCKING THE CONVERSION FROM MATRIX TO PLPDATA
+  
+  nppl <- 10
+  ncov <- 10
+  data <- matrix(runif(nppl*ncov), ncol=ncov)
+  
+  columnInfo <- data.frame(columnId=1:ncov, 
+                           columnName = paste0('column',1:ncov), 
+                           columnTime = c(rep(-1, ncov-1),0)
+                           )
+  outcomeId <- ncov
+  
+  # check input fails
+  options(fftempdir = getwd())
+  testData <- PatientLevelPrediction::toPlpData(data, columnInfo, outcomeId, outcomeThreshold=0.5,
+                        indexTime =0, includeIndexDay=T )
+  
+  # should convert all the entries 10 variables per 10 people = 100 rows
+  testthat::expect_equal(nrow(ff::as.ram(testData$covariates)), nppl*(ncov-1))
+  testthat::expect_equal(nrow(ff::as.ram(testData$covariateRef)), nrow(columnInfo))
+  testthat::expect_equal(nrow(testData$cohorts), nppl)
+  testthat::expect_equal(nrow(testData$outcomes), sum(data[,ncov]>=0.5))
+  
+  ## Now test the failed inputs...
+  # [TODO]
+  
+})
+
+##[TODO] - ADD TESTS FOR SQL CREATION EXISTING AND PLP LOG REG MODELS...
+
