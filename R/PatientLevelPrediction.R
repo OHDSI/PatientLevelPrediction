@@ -27,6 +27,9 @@
 #' @importFrom stats binom.test lm printCoefmat rpois runif sd aggregate
 #' @importFrom utils write.csv write.table data
 #' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
+#' @importFrom magrittr %>%
+#' @importFrom foreach %dopar%
+#' @importFrom foreach %do%
 #' @import bit
 #' @import Cyclops
 #' @import DatabaseConnector

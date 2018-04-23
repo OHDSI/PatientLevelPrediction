@@ -24,13 +24,13 @@
 #' The function calculates various metrics to measure the performance of the model
 #' @param prediction                         The patient level prediction model's prediction
 #' @param plpData                            The patient level prediction data
+#' @param model                              The trained prediction model
 #' @return
 #' A list containing the performance values
 #'
 
 #' @export
-evaluatePlp <- function(prediction, plpData){
-
+evaluatePlp <- function(prediction, plpData, model = NULL){
   # checking inputs
   #========================================
   type <- attr(prediction, "metaData")$predictionType
@@ -60,7 +60,15 @@ evaluatePlp <- function(prediction, plpData){
     flog.info(sprintf('%-20s%.2f', 'AUC: ', auc*100))
   }
 
+  # auprc
+  flog.trace('Calculating AUPRC')
+  positive <- prediction$value[prediction$outcomeCount == 1]
+  negative <- prediction$value[prediction$outcomeCount == 0]
+  pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
+  auprc <- pr$auc.integral
+  flog.info(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
 
+  
   # brier scores-returnss; brier, brierScaled
   flog.trace('Calculating Brier Score')
   brier <- brierScore(prediction)
@@ -71,11 +79,18 @@ evaluatePlp <- function(prediction, plpData){
   flog.trace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
   thresholdSummary <-getThresholdSummary(prediction) # rename and edit this
   flog.trace(paste0('Completed @ ',Sys.time()))
-
+  
+  missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507001,8532001)]
+  missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%paste0(0:19, '003')]
   # 3) demographicSummary
+  if (length(missingGender) == 0 | length(missingAge) == 0){
+    demographicSummary <- NULL
+  } else {
   flog.trace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
   demographicSummary <- getDemographicSummary(prediction, plpData)
+  #demographicSummary <- NULL
   flog.trace(paste0('Completed @ ',Sys.time()))
+  }
   # need to edit covSettings to make age/gender always calculated!
 
   # calibration linear fit- returns gradient, intercept
@@ -104,9 +119,10 @@ evaluatePlp <- function(prediction, plpData){
                                outcomeCount = sum(prediction$outcomeCount),
                                # need to add analysisId to metaData!
                                AUC= auc,
-                               BrierScore = brier$brier,
-                               BrierScaled= brier$brierScaled,
-                               CalibrationIntercept= calLine10$lm[1],
+                               AUPRC = auprc,
+                               BrierScore = brier$brier,	
+                               BrierScaled= brier$brierScaled,	
+                               CalibrationIntercept= calLine10$lm[1],	
                                CalibrationSlope = calLine10$lm[2])
 
   result <- list(evaluationStatistics= evaluationStatistics,
@@ -615,9 +631,8 @@ getDemographicSummary <- function(prediction, plpData){
       
       ageCovariates <- plpData$covariates[ffbase::`%in%`(plpData$covariates$covariateId, 
                                                          plpData$covariateRef$covariateId[plpData$covariateRef$analysisId==3]), ]
-      #ageCovariates <- ageCovariates[ffbase::`%in%`(ageCovariates$rowId, prediction$rowId), ]
-      #ageCovariates <- ff::as.ram(ageCovariates)
-      ageCovariates <- ff::as.ram(ageCovariates)[ff::as.ram(ageCovariates$rowId%in%prediction$rowId),]
+      ageCovariates <- ageCovariates[ffbase::`%in%`(ageCovariates$rowId, prediction$rowId), ]
+      ageCovariates <- ff::as.ram(ageCovariates)
       prediction$ageId <- 0
       prediction$ageId[match(ageCovariates$rowId, prediction$rowId)] <- ageCovariates$covariateId
       

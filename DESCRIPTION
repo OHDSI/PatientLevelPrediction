@@ -24,6 +24,9 @@ Depends:
 Imports:
     ggplot2,
     gridExtra,
+    magrittr,
+    doParallel,
+    dplyr,
     bit,
     ff,
     ffbase (>= 0.12.1),

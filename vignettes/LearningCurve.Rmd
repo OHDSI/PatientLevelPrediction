@@ -1,0 +1,159 @@
+---
+title: "Learning Curve"
+author: "Jenna Reps, Xiaoyong Pan, Luis H. John, Peter R. Rijnbeek,"
+date: "April 20, 2018"
+output:   
+  html_document:
+    number_sections: yes
+    toc: yes
+  pdf_document:
+    includes:
+      in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(PatientLevelPrediction)
+vignetteDataFolder <- "s:/temp/plpVignette"
+# Load all needed data if it exists on this computer:
+if (file.exists(vignetteDataFolder)){
+  plpModel <- loadPlpModel(vignetteDataFolder,'model')
+  lrResults <- loadPlpModel(file.path(vignetteDataFolder,'results'))
+}
+```
+
+\newpage
+# Introduction
+
+The Learning Curve feature of the `PatientLevelPrediction` package can be used to fit a sequence of hyper-parameter reduced prediction models to successively larger subsets of a training data set. The resulting learning curves object can be plotted and inform about a model's bias and variance.
+
+## Background
+
+A prediction model will show overly-optimistic performance when making predictions on the same data is has been trained on. Therefore, we generally partition our data into a training set and testing set. We then train our model on the training set portion and asses its ability to generalize to unseen data by measuring its performance on the testing set. Learning curves visualize the performance on testing set and training set and can help in diagnosing a bias or variance problem.
+
+Figure 1 shows a commonly observed learning curve plot, where model performance is mapped to the vertical axis and training set size is mapped to the horizontal axis. If training set size is small, the performance on the training set is high, because a model can generally be fitted well to a limited number of training examples. At the same time, the performance on the testing set will be poor, because the model trained on such a limited number of training examples will not generalize well to unseen data in the testing set. As the training set size increases, the performance of the model on the training set will decrease. It becomes more difficult for the model to find a good fit through all the training examples. Also, the model will be trained on a more representative portion of training examples, making it generalize better to unseen data. This can be observed by the testing set performance increasing.
+
+![Figure 1. Learning curve plot with model performance mapped to the vertical axis and training set size mapped to the horizontal axis.](learningCurve.png)
+
+
+## Bias and Variance
+
+We can observe high variance (overfitting) in a prediction model if it performs well on the training set, but poorly on the testing set (Figure 2). Adding additional data is a common approach to counteract high variance. From the learning curve is becomes apparent, that adding additional data may improve performance on the testing set a little further, as the learning curve has not plateaued yet and, thus, the model is not saturated yet. Therefore, adding more data will decrease the gap between training set and testing set, which is the main indicator for a high variance problem. 
+
+![Figure 2. Prediction model suffering from high variance.](learningCurveVariance.png)
+
+Furthermore, we can observe high bias (underfitting) if a prediction model performs poorly on the training set as well as on the testing set (Figure 3). In this case the learning curves of training set and testing set are going to flatten out on a low performance with only a small gap in between them. Adding additional data will in this case have little to no impact on the model performance. Choosing another prediction algorithm that can find more complex (non-linear) relationships in the data may be an option to try.
+
+![Figure 3. Prediction model suffering from high bias.](learningCurveBias.png)
+
+# Usage
+
+Use the OHDSI tool ecosystem to generate a `population` and `plpData` object. Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.
+
+```{r eval=FALSE}
+set.seed(1000)
+data(plpDataSimulationProfile)
+sampleSize <- 12000
+plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile,
+                                                   n = sampleSize)
+
+population <- PatientLevelPrediction::createStudyPopulation(plpData,
+                                                            outcomeId = 2,
+                                                            binary = TRUE,
+                                                            firstExposureOnly = FALSE,
+                                                            washoutPeriod = 0,
+                                                            removeSubjectsWithPriorOutcome = FALSE,
+                                                            priorOutcomeLookback = 99999,
+                                                            requireTimeAtRisk = FALSE,
+                                                            minTimeAtRisk = 0,
+                                                            riskWindowStart = 0,
+                                                            addExposureDaysToStart = FALSE,
+                                                            riskWindowEnd = 365,
+                                                            addExposureDaysToEnd = FALSE,
+                                                            verbosity = futile.logger::INFO)
+```
+
+Specify a test fraction and a sequence of training set fractions.
+
+```{r eval = FALSE}
+testFraction <- 0.2
+trainFractions <- seq(0.1, 0.8, 0.05)
+
+```
+
+Specify the prediction algorithm to be used.
+
+```{r eval=FALSE}
+# Use LASSO logistic regression
+modelSettings = PatientLevelPrediction::setLassoLogisticRegression()
+
+```
+
+Specify the test split to be used.
+
+```{r}
+# Use a split by person, alterantively a time split is possible
+testSplit <- 'person'
+```
+
+Create the learning curve object.
+
+```{r eval=FALSE}
+learningCurve <- PatientLevelPrediction::createLearningCurve(population,
+                                                             plpData =  plpData,
+                                                             modelSettings = modelSettings,
+                                                             testSplit = testSplit,
+                                                             testFraction = testFraction,
+                                                             trainFractions = trainFractions,
+                                                             splitSeed = 1000)
+
+```
+
+Plot the learning curve object (Figure 4).
+
+```{r eval=FALSE}
+PatientLevelPrediction::plotLearningCurve(learningCurve,
+                                          metric='AUROC',
+                                          plotTitle = 'Learning Curve',
+                                          plotSubtitle = 'AUROC performance')
+```
+
+![Figure 4. Learning curve plot.](learningCurvePlot.png)
+
+
+## Parallel processing
+
+The learning curve object can be created in parallel. Currently this functionality is only available for LASSO logistic regression. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis. Logging and saving functionality is unavailable.
+
+Before using the parallelized learning curve function a parallel backend needs to be registered. If you are unsure about the number of cores of your machine, you can let R find this information automatically by providing no parameters to the function.
+
+```{r eval=FALSE}
+PatientLevelPrediction::registerParallelBackend(cores = 8, logical = FALSE)
+```
+
+Use the parallelized version of the learning curve function to create the learning curve object in parallel.
+
+```{r eval=FALSE}
+learningCurve <- PatientLevelPrediction::createLearningCurvePar(population,
+                                                             plpData =  plpData,
+                                                             modelSettings = modelSettings,
+                                                             testSplit = testSplit,
+                                                             testFraction = testFraction,
+                                                             trainFractions = trainFractions,
+                                                             splitSeed = 1000)
+
+```
+
+If you intend to keep working, it may be useful to de-register the parallel backend by registering a sequential backend.
+
+```{r eval=FALSE}
+PatientLevelPrediction::registerSequentialBackend()
+```
+

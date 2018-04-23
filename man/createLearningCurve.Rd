@@ -2,78 +2,117 @@
 % Please edit documentation in R/LearningCurve.R
 \name{createLearningCurve}
 \alias{createLearningCurve}
-\title{learningCurve - Create a learning curve}
+\title{createLearningCurve - Creates a learning curve object}
 \usage{
-createLearningCurve(population, plpData, modelSettings, testSplit = "time",
+createLearningCurve(population, plpData, modelSettings, testSplit = "person",
   testFraction = 0.25, trainFractions = c(0.25, 0.5, 0.75),
   splitSeed = NULL, nfold = 3, indexes = NULL, save = NULL,
-  saveModel = T, verbosity = futile.logger::INFO, timeStamp = FALSE,
-  analysisId = NULL)
+  saveModel = TRUE, verbosity = futile.logger::INFO, timeStamp = TRUE,
+  analysisId = NULL, clearffTemp = FALSE, minCovariateFraction = 0.001)
 }
 \arguments{
-\item{population}{The population created using createStudyPopulation() who will be used to develop the model}
+\item{population}{The population created using \code{createStudyPopulation()}
+that will be used to develop the model.}
 
-\item{plpData}{An object of type \code{plpData} - the patient level prediction
-data extracted from the CDM.}
+\item{plpData}{An object of type \code{plpData} - the patient level
+prediction data extracted from the CDM.}
 
-\item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
+\item{modelSettings}{An object of class \code{modelSettings} created using
+one of the function:
 \itemize{
-\item{logisticRegressionModel()}{ A lasso logistic regression model}
-\item{GBMclassifier()}{ A gradient boosting machine}
-\item{RFclassifier()}{ A random forest model}
-\item{GLMclassifier ()}{ A generalised linear model}
-\item{KNNclassifier()}{ A KNN model}
+  \item{{setLassoLogisticRegression} - a lasso logistic regression
+    model}
+  \item{\code{setGradientBoostingMachine} - a gradient boosting machine}
+  \item{\code{setRandomForest} - a random forest model}
+  \item{\code{setKNN} - a k-nearest neighbour model}
 }}
 
-\item{testSplit}{Either 'person' or 'time' specifying the type of evaluation used.
-'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
-'person' splits the data into test (1-testFraction of the data) and
-train (validationFraction of the data) sets.  The split is stratified by the class label.}
+\item{testSplit}{Specifies the type of evaluation used. Can be either 
+\code{'person'} or \code{'time'}. The value \code{'time'} finds the date
+that splots the population into the testing and training fractions
+provided. Patients with an index after this date are assigned to the test
+set and patients with an index prior to this date are assigned to the
+training set. The value \code{'person'} splits the data randomly into
+testing and training sets according to fractions provided. The split is
+stratified by the class label.}
 
-\item{testFraction}{The fraction of the data to be used as the test set in the patient
-split evaluation.}
+\item{testFraction}{The fraction of the data, which will be used as the 
+testing set in the patient split evaluation.}
 
-\item{trainFractions}{A list of trainFractions to try}
+\item{trainFractions}{A list of training fractions to create models for.}
 
-\item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
+\item{splitSeed}{The seed used to split the testing and training set when
+using a 'person' type split}
 
-\item{nfold}{The number of folds used in the cross validation (default 3)}
+\item{nfold}{The number of folds used in the cross validation (default = 
+\code{3}).}
 
-\item{indexes}{A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)}
+\item{indexes}{A dataframe containing a rowId and index column where the 
+index value of -1 means in the test set, and positive integer represents
+the cross validation fold (default is \code{NULL}).}
 
-\item{save}{The path to the directory where the models will be saved (if NULL uses working directory)}
+\item{save}{The path to the directory where the models will be saved
+(if \code{NULL}, uses working directory).}
 
-\item{saveModel}{Binary indicating whether to save the model once it is trained (default is T)}
+\item{saveModel}{Logical indicating whether to save the model once it has
+been trained (default is \code{TRUE}).}
 
-\item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
+\item{verbosity}{Sets the level of the verbosity. If the log level is at or
+higher in priority than the logger threshold, a message will print. The 
+levels are:
 \itemize{
-\item{DEBUG}{Highest verbosity showing all debug statements}
-\item{TRACE}{Showing information about start and end of steps}
-\item{INFO}{Show informative information (Default)}
-\item{WARN}{Show warning messages}
-\item{ERROR}{Show error messages}
-\item{FATAL}{Be silent except for fatal errors}
+  \item{\code{DEBUG} - highest verbosity showing all debug statements}
+  \item{\code{TRACE} - showing information about start and end of steps}
+  \item{\code{INFO} - show informative messages (default)}
+  \item{\code{WARN} - show warning messages}
+  \item{\code{ERROR} - show error messages}
+  \item{\code{FATAL} - be silent except for fatal errors}
 }}
 
-\item{timeStamp}{If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.}
+\item{timeStamp}{If \code{TRUE} a timestamp will be added to each logging 
+statement. Automatically switched on for \code{TRACE} level.}
 
-\item{analysisId}{Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
+\item{analysisId}{Identifier for the analysis. It is used for example used in 
+naming the result folder. The default is a timestamp.}
+
+\item{clearffTemp}{Clears the temporary ff-directory after each iteration. 
+This can be useful, if the fitted models are large.}
+
+\item{minCovariateFraction}{Minimum covariate prevalence in population to
+avoid removal during preprocssing.}
 }
 \value{
-An object containing the model or location where the model is save, the data selection settings, the preprocessing
-and training settings as well as various performance measures obtained by the model.
-
-\item{predict}{A function that can be applied to new data to apply the trained model and make predictions}
-\item{model}{A list of class \code{plpModel} containing the model, training metrics and model metadata}
-\item{prediction}{A dataframe containing the prediction for each person in the test set }
-\item{evalType}{The type of evaluation that was performed ('person' or 'time')}
-\item{performanceTest}{A list detailing the size of the test sets}
-\item{performanceTrain}{A list detailing the size of the train sets}
-\item{time}{The complete time taken to do the model framework}
+An object containing the model or location where the model is save, the data 
+selection settings, the preprocessing and training settings as well as
+various performance measures obtained by the model.
+\itemize{
+  \item{\code{predict} - a function that can be applied to new data to apply
+    the trained model and make predictions}
+  \item{\code{model} - a list of class \code{plpModel} containing the model,
+    training metrics and model metadata}
+  \item{\code{prediction} - a dataframe containing the prediction for each 
+    person in the test set }
+  \item{\code{evalType} - the type of evaluation that was performed ('person'
+    or time')}
+  \item{\code{performanceTest} - a list detailing the size of the test sets}
+  \item{\code{performanceTrain} - a list detailing the size of the train 
+    sets}
+  \item{\code{time} - the complete time taken to fit the model framework}
+}
 }
 \description{
-#'
+Creates a learning curve object, which can be plotted using the 
+\code{plotLearningCurve()} function.
 }
-\details{
+\examples{
+# define model
+modelSettings = PatientLevelPrediction::setLassoLogisticRegression()
+
+# create learning curve
+learningCurve <- PatientLevelPrediction::createLearningCurve(population,
+                                                             plpData,
+                                                             modelSettings)
+# plot learning curve
+PatientLevelPrediction::plotLearningCurve(learningCurve)
 
 }

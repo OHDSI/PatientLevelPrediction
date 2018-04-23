@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -15,85 +15,137 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' learningCurve - Create a learning curve
+#' createLearningCurve - Creates a learning curve object
 #'
 #' @description
-#' #' 
-#' @details
+#' Creates a learning curve object, which can be plotted using the 
+#' \code{plotLearningCurve()} function.
 #' 
-#' 
-#' @param population                       The population created using createStudyPopulation() who will be used to develop the model
-#' @param plpData                          An object of type \code{plpData} - the patient level prediction
-#'                                         data extracted from the CDM.
-#' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
-#'                                         \itemize{
-#'                                         \item{logisticRegressionModel()}{ A lasso logistic regression model}
-#'                                         \item{GBMclassifier()}{ A gradient boosting machine}
-#'                                         \item{RFclassifier()}{ A random forest model}
-#'                                         \item{GLMclassifier ()}{ A generalised linear model}
-#'                                         \item{KNNclassifier()}{ A KNN model}
-#'                                         }
-#' @param testSplit                        Either 'person' or 'time' specifying the type of evaluation used.
-#'                                         'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
-#'                                         'person' splits the data into test (1-testFraction of the data) and
-#'                                         train (validationFraction of the data) sets.  The split is stratified by the class label.
-#' @param testFraction                     The fraction of the data to be used as the test set in the patient
-#'                                         split evaluation.
-#' @param trainFractions                   A list of trainFractions to try 
-#' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
-#' @param nfold                            The number of folds used in the cross validation (default 3)
-#' @param indexes                          A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)
-#' @param save                             The path to the directory where the models will be saved (if NULL uses working directory)
-#' @param saveModel                        Binary indicating whether to save the model once it is trained (default is T)
-#' @param verbosity                        Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
-#'                                         \itemize{
-#'                                         \item{DEBUG}{Highest verbosity showing all debug statements}
-#'                                         \item{TRACE}{Showing information about start and end of steps}
-#'                                         \item{INFO}{Show informative information (Default)}
-#'                                         \item{WARN}{Show warning messages}
-#'                                         \item{ERROR}{Show error messages}
-#'                                         \item{FATAL}{Be silent except for fatal errors}
-#'                                         }
-#' @param timeStamp                        If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.
-#' @param analysisId                       Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
+#' @param population The population created using \code{createStudyPopulation()}
+#'   that will be used to develop the model.
+#' @param plpData An object of type \code{plpData} - the patient level
+#'   prediction data extracted from the CDM.
+#' @param modelSettings An object of class \code{modelSettings} created using
+#'   one of the function:
+#'   \itemize{
+#'     \item{{setLassoLogisticRegression} - a lasso logistic regression
+#'       model}
+#'     \item{\code{setGradientBoostingMachine} - a gradient boosting machine}
+#'     \item{\code{setRandomForest} - a random forest model}
+#'     \item{\code{setKNN} - a k-nearest neighbour model}
+#'   }
+#' @param testSplit Specifies the type of evaluation used. Can be either 
+#'   \code{'person'} or \code{'time'}. The value \code{'time'} finds the date
+#'   that splots the population into the testing and training fractions
+#'   provided. Patients with an index after this date are assigned to the test
+#'   set and patients with an index prior to this date are assigned to the
+#'   training set. The value \code{'person'} splits the data randomly into
+#'   testing and training sets according to fractions provided. The split is
+#'   stratified by the class label.
+#' @param testFraction The fraction of the data, which will be used as the 
+#'   testing set in the patient split evaluation.
+#' @param trainFractions A list of training fractions to create models for.
+#' @param splitSeed The seed used to split the testing and training set when
+#'   using a 'person' type split                  
+#' @param nfold The number of folds used in the cross validation (default = 
+#'   \code{3}).
+#' @param indexes A dataframe containing a rowId and index column where the 
+#'   index value of -1 means in the test set, and positive integer represents
+#'   the cross validation fold (default is \code{NULL}).
+#' @param save The path to the directory where the models will be saved
+#'   (if \code{NULL}, uses working directory).
+#' @param saveModel Logical indicating whether to save the model once it has
+#'   been trained (default is \code{TRUE}).
+#' @param verbosity Sets the level of the verbosity. If the log level is at or
+#'   higher in priority than the logger threshold, a message will print. The 
+#'   levels are:
+#'   \itemize{
+#'     \item{\code{DEBUG} - highest verbosity showing all debug statements}
+#'     \item{\code{TRACE} - showing information about start and end of steps}
+#'     \item{\code{INFO} - show informative messages (default)}
+#'     \item{\code{WARN} - show warning messages}
+#'     \item{\code{ERROR} - show error messages}
+#'     \item{\code{FATAL} - be silent except for fatal errors}
+#'   }
+#' @param timeStamp If \code{TRUE} a timestamp will be added to each logging 
+#'   statement. Automatically switched on for \code{TRACE} level.
+#' @param analysisId Identifier for the analysis. It is used for example used in 
+#'   naming the result folder. The default is a timestamp.
+#' @param clearffTemp Clears the temporary ff-directory after each iteration. 
+#'   This can be useful, if the fitted models are large.
+#' @param minCovariateFraction Minimum covariate prevalence in population to
+#'   avoid removal during preprocssing.
 #'
 #' @return
-#' An object containing the model or location where the model is save, the data selection settings, the preprocessing
-#' and training settings as well as various performance measures obtained by the model.
-#'
-#' \item{predict}{A function that can be applied to new data to apply the trained model and make predictions}
-#' \item{model}{A list of class \code{plpModel} containing the model, training metrics and model metadata}
-#' \item{prediction}{A dataframe containing the prediction for each person in the test set }
-#' \item{evalType}{The type of evaluation that was performed ('person' or 'time')}
-#' \item{performanceTest}{A list detailing the size of the test sets}
-#' \item{performanceTrain}{A list detailing the size of the train sets}
-#' \item{time}{The complete time taken to do the model framework}
-#'
+#' An object containing the model or location where the model is save, the data 
+#' selection settings, the preprocessing and training settings as well as
+#' various performance measures obtained by the model.
+#' \itemize{
+#'   \item{\code{predict} - a function that can be applied to new data to apply
+#'     the trained model and make predictions}
+#'   \item{\code{model} - a list of class \code{plpModel} containing the model,
+#'     training metrics and model metadata}
+#'   \item{\code{prediction} - a dataframe containing the prediction for each 
+#'     person in the test set }
+#'   \item{\code{evalType} - the type of evaluation that was performed ('person'
+#'     or time')}
+#'   \item{\code{performanceTest} - a list detailing the size of the test sets}
+#'   \item{\code{performanceTrain} - a list detailing the size of the train 
+#'     sets}
+#'   \item{\code{time} - the complete time taken to fit the model framework}
+#' }
 #'
 #' @export
-
-createLearningCurve <- function(population, plpData,
-                   modelSettings,
-                   testSplit = 'time', testFraction=0.25, trainFractions = c(0.25,0.50,0.75), splitSeed=NULL, nfold=3, indexes=NULL,
-                   save=NULL, saveModel=T,verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL){
+#' 
+#' @examples
+#' # define model
+#' modelSettings = PatientLevelPrediction::setLassoLogisticRegression()
+#' 
+#' # create learning curve
+#' learningCurve <- PatientLevelPrediction::createLearningCurve(population,
+#'                                                              plpData,
+#'                                                              modelSettings)
+#' # plot learning curve
+#' PatientLevelPrediction::plotLearningCurve(learningCurve)
+#' 
+createLearningCurve <- function(population,
+                                plpData,
+                                modelSettings,
+                                testSplit = 'person',
+                                testFraction = 0.25,
+                                trainFractions = c(0.25, 0.50, 0.75),
+                                splitSeed = NULL,
+                                nfold = 3,
+                                indexes = NULL,
+                                save = NULL,
+                                saveModel = TRUE,
+                                verbosity = futile.logger::INFO,
+                                timeStamp = TRUE,
+                                analysisId = NULL,
+                                clearffTemp = FALSE,
+                                minCovariateFraction = 0.001) {
   
-  nrRuns <- length(trainFractions);
-  learningCurve <- data.frame(x = numeric(nrRuns),
-                           trainError = integer(nrRuns),
-                           testError = integer(nrRuns))
+  nrRuns <- length(trainFractions)
   
   # log the start time:
   ExecutionDateTime <- Sys.time()
   
-  if (timeStamp | verbosity == TRACE){
+  if (timeStamp | verbosity == TRACE) {
     flog.layout(layout.format('[~l]\t[~t]\t~m'))
   } else {
     flog.layout(layout.format('~m'))
   }
   flog.threshold(verbosity)
+  originalPopulation <- population
   
-  run <- 1;
-  for (trainFraction in trainFractions) {
+  learningCurve <- foreach::foreach(i = 1:nrRuns,
+                                    .combine = rbind,
+                                    .errorhandling = "remove") %do% {
+                                      
+    # record start time
+    startTime <- Sys.time()
+    
+    population <- originalPopulation
     # create an analysisid and folder to save the results of this run
     start.all <- Sys.time()
     if (is.null(analysisId))
@@ -125,7 +177,7 @@ createLearningCurve <- function(population, plpData,
     
     # add header to analysis log
     flog.seperator()
-    flog.info(sprintf('%-20s%s', 'Training Size: ', trainFraction))
+    flog.info(sprintf('%-20s%s', 'Training Size: ', trainFractions[i]))
     flog.info(sprintf('%-20s%s', 'AnalysisID: ', analysisId))
     flog.info(sprintf('%-20s%s', 'CohortID: ', cohortId))
     flog.info(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
@@ -148,24 +200,35 @@ createLearningCurve <- function(population, plpData,
     
     # construct the train and test set.
     # note that index will be zero for rows not in train or test
-    if (is.null(indexes)) {
-      if (testSplit == 'time') {
-        flog.trace('Dataset time split starter')
-        indexes <-
-          ftry(timeSplitter(population, test = testFraction,train = trainFraction, nfold = nfold),
-               finally = flog.trace('Done.'))
-      }
-      if (testSplit == 'person') {
-        flog.trace('Dataset person split starter')
-        indexes <-
-          ftry(
-            personSplitter(population, test = testFraction, train = trainFraction, nfold = nfold, 
-                           seed = splitSeed),
-            finally = flog.trace('Done.')
-          )
-      }
+    if (testSplit == 'time') {
+      flog.trace('Dataset time split starter')
+      indexes <-
+        ftry(
+          timeSplitter(
+            population,
+            test = testFraction,
+            train = trainFractions[i],
+            nfold = nfold,
+            seed = splitSeed
+          ),
+          finally = flog.trace('Done.')
+        )
     }
-
+    if (testSplit == 'person') {
+      flog.trace('Dataset person split starter')
+      indexes <-
+        ftry(
+          personSplitter(
+            population,
+            test = testFraction,
+            train = trainFractions[i],
+            nfold = nfold,
+            seed = splitSeed
+          ),
+          finally = flog.trace('Done.')
+        )
+    }
+    
     # TODO better to move this to the splitter if this is important?
     if (nrow(population) != nrow(indexes)) {
       flog.error(sprintf(
@@ -179,12 +242,18 @@ createLearningCurve <- function(population, plpData,
     # train the model
     flog.seperator()
     tempmeta <- attr(population, "metaData")
-    population <- merge(population, indexes)
-    colnames(population)[colnames(population) == 'index'] <- 'indexes'
+    if (is.null(population$indexes)) {
+      population <- merge(population, indexes)
+      colnames(population)[colnames(population) == 'index'] <-
+        'indexes'
+    } else{
+      attr(population, 'indexes') <- indexes
+    }
     attr(population, "metaData") <- tempmeta
     
     settings <- list(
       data = plpData,
+      minCovariateFraction = minCovariateFraction,
       modelSettings = modelSettings,
       population = population,
       cohortId = cohortId,
@@ -204,33 +273,37 @@ createLearningCurve <- function(population, plpData,
         sink()
         flog.error(e)
         stop(e)
-      },
-      finally = {
-        flog.trace('Done.')
       }
     )
     sink()
+    flog.trace('Done.')
     
     # save the model
     if (saveModel == T) {
       modelLoc <- file.path(save, analysisId, 'savedModel')
-      ftry(savePlpModel(model, modelLoc), finally = flog.trace('Done.'))
+      ftry(savePlpModel(model, modelLoc))
       flog.info(paste0('Model saved to ..\\', analysisId, '\\savedModel'))
     }
     
     # calculate metrics
     flog.seperator()
     flog.trace('Prediction')
+    flog.trace(paste0('Calculating prediction for ', sum(indexes$index !=
+                                                           0)))
+    ind <- population$rowId %in% indexes$rowId[indexes$index != 0]
     prediction <-
-      ftry(
-        predictPlp(
-          plpModel = model,
-          population = population,
-          plpData = plpData,
-          index = NULL
-        ),
-        finally = flog.trace('Done.')
-      )
+      model$predict(plpData = plpData, population = population[ind,])
+    
+    metaData <- list(
+      predictionType = "binary",
+      cohortId = attr(population, 'metaData')$cohortId,
+      outcomeId = attr(population, 'metaData')$outcomeId
+    )
+    
+    attr(prediction, "metaData") <- metaData
+    
+    finally = flog.trace('Done.')
+    
     if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
                1)) {
       # add analysisID
@@ -238,16 +311,19 @@ createLearningCurve <- function(population, plpData,
       
       flog.info('Train set evaluation')
       performance.train <-
-        evaluatePlp(prediction[prediction$indexes > 0, ], plpData)
+        evaluatePlp(prediction[prediction$indexes > 0,], plpData,
+                    model = modelSettings$model)
       flog.trace('Done.')
       flog.info('Test set evaluation')
       performance.test <-
-        evaluatePlp(prediction[prediction$indexes < 0, ], plpData)
+        evaluatePlp(prediction[prediction$indexes < 0,], plpData,
+                    model = modelSettings$model)
       flog.trace('Done.')
       
       # now combine the test and train data and add analysisId
       performance <-
-        reformatPerformance(train = performance.train, test = performance.test, analysisId)
+        reformatPerformance(train = performance.train, test = performance.test,
+                            analysisId, plpData)
       
       if (!is.null(save)) {
         flog.trace('Saving evaluation')
@@ -288,11 +364,9 @@ createLearningCurve <- function(population, plpData,
         ftry(
           utils::write.csv(
             performance$predictionDistribution,
-            file.path(
-              analysisPath,
-              'evaluation',
-              'predictionDistribution.csv'
-            ),
+            file.path(analysisPath,
+                      'evaluation',
+                      'predictionDistribution.csv'),
             row.names = F
           ),
           finally = flog.trace('Saved PredictionDistribution.')
@@ -310,7 +384,12 @@ createLearningCurve <- function(population, plpData,
     
     # log the end time:
     endTime <- Sys.time()
-    TotalExecutionElapsedTime <- endTime - ExecutionDateTime
+    TotalExecutionElapsedTime <-
+      as.numeric(difftime(endTime, ExecutionDateTime,
+                          units = "secs"))
+    
+    timeDiff <-
+      as.numeric(difftime(endTime, startTime, units = "secs"))
     
     # 1) input settings:
     inputSetting <-
@@ -339,7 +418,8 @@ createLearningCurve <- function(population, plpData,
         TotalExecutionElapsedTime = TotalExecutionElapsedTime,
         ExecutionDateTime = ExecutionDateTime,
         Log = logFileName # location for now
-        #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
+        # Not available at the moment: CDM_SOURCE - meta-data containing CDM
+        # version, release date, vocabulary version
       )
     
     flog.seperator()
@@ -349,12 +429,12 @@ createLearningCurve <- function(population, plpData,
     covSummary <-
       merge(model$varImp, covSummary, by = 'covariateId', all = T)
     trainCovariateSummary <-
-      covariateSummary(plpData, population[population$index > 0, ])
+      covariateSummary(plpData, population[population$index > 0,])
     colnames(trainCovariateSummary)[colnames(trainCovariateSummary) != 'covariateId'] <-
       paste0('Train', colnames(trainCovariateSummary)[colnames(trainCovariateSummary) !=
                                                         'covariateId'])
     testCovariateSummary <-
-      covariateSummary(plpData, population[population$index < 0, ])
+      covariateSummary(plpData, population[population$index < 0,])
     colnames(testCovariateSummary)[colnames(testCovariateSummary) != 'covariateId'] <-
       paste0('Test', colnames(testCovariateSummary)[colnames(testCovariateSummary) !=
                                                       'covariateId'])
@@ -402,12 +482,258 @@ createLearningCurve <- function(population, plpData,
     flog.info(paste0('Log saved to ', logFileName))
     flog.info("Run finished successfully.")
     
-    # save the current trainFraction
-    learningCurve$x[run]<-trainFraction
-    learningCurve$trainError[run] <- performance.train$BrierScore
-    learningCurve$testError[run] <- performance.test$BrierScore
-    run <- run + 1
+    df <- data.frame(
+      x = trainFractions[i] * 100,
+      popSizeTrain = nrow(population[population$index > 0,]),
+      outcomeCountTrain = sum(population[population$index > 0,]$outcomeCount),
+      executionTime = TotalExecutionElapsedTime,
+      trainAUCROC = performance.train$evaluationStatistics$AUC[[1]],
+      testAUCROC = performance.test$evaluationStatistics$AUC[[1]],
+      trainAUCPR = performance.train$evaluationStatistics$AUPRC[[1]],
+      testAUCPR = performance.test$evaluationStatistics$AUPRC[[1]],
+      trainBrierScore = performance.train$evaluationStatistics$BrierScore,
+      testBrierScore = performance.test$evaluationStatistics$BrierScore,
+      trainBrierScaled = performance.train$evaluationStatistics$BrierScaled,
+      testBrierScaled = performance.test$evaluationStatistics$BrierScaled,
+      trainCalibrationIntercept = performance.train$evaluationStatistics$CalibrationIntercept,
+      testCalibrationIntercept = performance.test$evaluationStatistics$CalibrationIntercept,
+      trainCalibrationSlope = performance.train$evaluationStatistics$CalibrationSlope,
+      testCalibrationSlope = performance.test$evaluationStatistics$CalibrationSlope
+    )
+    
+    if (clearffTemp) {
+      # Remove temporary files
+      file.remove(dir(getOption("fftempdir"), full.names = TRUE))
+    }
+    
+    # return data frame row for each process
+    return(df)
   }
-  return(learningCurve)
 
+  names(learningCurve) <- c("x", "popSizeTrain", "outcomeCountTrain",
+                          "executionTime", "trainAUCROC", "testAUCROC",
+                          "trainAUCPR", "testAUCPR", "trainBrierScore",
+                          "testBrierScore", "trainBrierScaled",
+                          "testBrierScaled", "trainCalibrationIntercept",
+                          "testCalibrationIntercept", "trainCalibrationSlope",
+                          "testCalibrationSlope")
+  
+  return(learningCurve)
+}
+
+#' createLearningCurvePar - Creates a learning curve object in parallel
+#' 
+#' @description 
+#' Creates a learning curve in parallel, which can be plotted using the 
+#' \code{plotLearningCurve()} function. Currently this functionality is only 
+#' supported by Lasso Logistic Regression.
+#' 
+#' @param population The population created using \code{createStudyPopulation()}
+#'   that will be used to develop the model.
+#' @param plpData An object of type \code{plpData} - the patient level
+#'   prediction data extracted from the CDM.
+#' @param modelSettings An object of class \code{modelSettings} created using
+#'   one of the function. Currently only one model is supported:
+#'   \itemize{
+#'     \item{\code{setLassoLogisticRegression} - a lasso logistic regression
+#'       model}
+#'   }
+#' @param testSplit Specifies the type of evaluation used. Can be either 
+#'   \code{'person'} or \code{'time'}. The value \code{'time'} finds the date
+#'   that splots the population into the testing and training fractions
+#'   provided. Patients with an index after this date are assigned to the test
+#'   set and patients with an index prior to this date are assigned to the
+#'   training set. The value \code{'person'} splits the data randomly into
+#'   testing and training sets according to fractions provided. The split is
+#'   stratified by the class label.
+#' @param testFraction The fraction of the data, which will be used as the 
+#'   testing set in the patient split evaluation.
+#' @param trainFractions A list of training fractions to create models for.
+#' @param splitSeed The seed used to split the testing and training set when
+#'   using a 'person' type split                  
+#' @param nfold The number of folds used in the cross validation (default = 
+#'   \code{3}).
+#' @param indexes A dataframe containing a rowId and index column where the 
+#'   index value of -1 means in the test set, and positive integer represents
+#'   the cross validation fold (default is \code{NULL}).
+#' @param analysisId Identifier for the analysis. It is used for example used in 
+#'   naming the result folder. The default is a timestamp.
+#' @param minCovariateFraction Minimum covariate prevalence in population to
+#'   avoid removal during preprocssing.
+#'
+#' @return
+#' An object containing the various performance measures obtained by the model.
+#'
+#' @export
+#' 
+#' @examples
+#' # define model
+#' modelSettings = setLassoLogisticRegression()
+#' 
+#' # register parallel backend
+#' registerParallelBackend()
+#' 
+#' # create learning curve
+#' learningCurve <- createLearningCurvePar(population,
+#'                                         plpData,
+#'                                         modelSettings)
+#' # plot learning curve
+#' plotLearningCurve(learningCurve)
+#' 
+createLearningCurvePar <- function(population,
+                                   plpData,
+                                   modelSettings,
+                                   testSplit = 'person',
+                                   testFraction = 0.25,
+                                   trainFractions = c(0.25, 0.50, 0.75),
+                                   splitSeed = NULL,
+                                   nfold = 3,
+                                   indexes = NULL,
+                                   analysisId = NULL,
+                                   minCovariateFraction = 0.001) {
+  
+  # verify that a parallel backend has been registered
+  setup_parallel()
+  
+  ExecutionDateTime <- Sys.time()
+  
+  originalPopulation <- population
+  
+  learningCurve <- foreach::foreach(
+    i = 1:length(trainFractions),
+    .combine = rbind,
+    .errorhandling = "remove",
+    .packages = c("doParallel",
+                  "PatientLevelPrediction")
+  ) %dopar% {
+    
+    # reset population
+    population <- originalPopulation
+    
+    # create an analysisid of this run
+    start.all <- Sys.time()
+    if (is.null(analysisId))
+      analysisId <-
+      gsub(':', '', gsub('-', '', gsub(' ', '', start.all)))
+    
+    cohortId <- attr(population, "metaData")$cohortId
+    outcomeId <- attr(population, "metaData")$outcomeId
+    
+    # construct the train and test set.
+    # note that index will be zero for rows not in train or test
+    # errors are handled by the foreach construct
+    if (testSplit == 'time') {
+      indexes <- PatientLevelPrediction::timeSplitter(
+        population,
+        test = testFraction,
+        train = trainFractions[i],
+        nfold = nfold,
+        seed = splitSeed
+      )
+    }
+    
+    if (testSplit == 'person') {
+      indexes <- PatientLevelPrediction::personSplitter(
+        population,
+        test = testFraction,
+        train = trainFractions[i],
+        nfold = nfold,
+        seed = splitSeed
+      )
+    }
+    
+    # train the model
+    tempmeta <- attr(population, "metaData")
+    if (is.null(population$indexes)) {
+      population <- merge(population, indexes)
+      colnames(population)[colnames(population) == 'index'] <-
+        'indexes'
+    } else{
+      attr(population, 'indexes') <- indexes
+    }
+    attr(population, "metaData") <- tempmeta
+    
+    settings <- list(
+      data = plpData,
+      minCovariateFraction = minCovariateFraction,
+      modelSettings = modelSettings,
+      population = population,
+      cohortId = cohortId,
+      outcomeId = outcomeId
+    )
+    
+    model <- do.call(PatientLevelPrediction::fitPlp, settings)
+    
+    ind <- population$rowId %in% indexes$rowId[indexes$index != 0]
+    prediction <-
+      model$predict(plpData = plpData, population = population[ind,])
+    
+    metaData <- list(
+      predictionType = "binary",
+      cohortId = attr(population, 'metaData')$cohortId,
+      outcomeId = attr(population, 'metaData')$outcomeId
+    )
+    
+    attr(prediction, "metaData") <- metaData
+    
+    if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
+               1)) {
+      # add analysisID
+      attr(prediction, "metaData")$analysisId <- analysisId
+      
+      performance.train <-
+        PatientLevelPrediction::evaluatePlp(prediction[prediction$indexes > 0,],
+                                            plpData, model = modelSettings$model)
+      
+      performance.test <-
+        PatientLevelPrediction::evaluatePlp(prediction[prediction$indexes < 0,],
+                                            plpData, model = modelSettings$model)
+    }
+    
+    # log the end time:
+    endTime <- Sys.time()
+    TotalExecutionElapsedTime <- endTime - ExecutionDateTime
+    
+    # return data frame row for each process
+    return(
+      data.frame(
+        x = trainFractions[i] * 100,
+        popSizeTrain = nrow(population[population$index > 0,]),
+        outcomeCountTrain = sum(population[population$index > 0,]$outcomeCount),
+        executionTime = TotalExecutionElapsedTime,
+        trainAUCROC = performance.train$evaluationStatistics$AUC[[1]],
+        testAUCROC = performance.test$evaluationStatistics$AUC[[1]],
+        trainAUCPR = performance.train$evaluationStatistics$AUPRC[[1]],
+        testAUCPR = performance.test$evaluationStatistics$AUPRC[[1]],
+        trainBrierScore = performance.train$evaluationStatistics$BrierScore,
+        testBrierScore = performance.test$evaluationStatistics$BrierScore,
+        trainBrierScaled = performance.train$evaluationStatistics$BrierScaled,
+        testBrierScaled = performance.test$evaluationStatistics$BrierScaled,
+        trainCalibrationIntercept = performance.train$evaluationStatistics$CalibrationIntercept,
+        testCalibrationIntercept = performance.test$evaluationStatistics$CalibrationIntercept,
+        trainCalibrationSlope = performance.train$evaluationStatistics$CalibrationSlope,
+        testCalibrationSlope = performance.test$evaluationStatistics$CalibrationSlope
+      )
+    )
+
+  }
+  names(learningCurve) <- c(
+    "x",
+    "popSizeTrain",
+    "outcomeCountTrain",
+    "executionTime",
+    "trainAUCROC",
+    "testAUCROC",
+    "trainAUCPR",
+    "testAUCPR",
+    "trainBrierScore",
+    "testBrierScore",
+    "trainBrierScaled",
+    "testBrierScaled",
+    "trainCalibrationIntercept",
+    "testCalibrationIntercept",
+    "trainCalibrationSlope",
+    "testCalibrationSlope"
+  )
+  return(learningCurve)
 }

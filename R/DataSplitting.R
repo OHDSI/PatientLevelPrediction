@@ -143,13 +143,14 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
 #'
 #' @param population   An object created using createStudyPopulation().
 #' @param test         A real number between 0 and 1 indicating the test set fraction of the data
+#' @param train        A real number between 0 and 1 indicating the training set fraction of the data
 #' @param nfold        An integer >= 1 specifying the number of folds used in cross validation
 #' @param seed         If set a fixed seed is used, otherwise a random split is performed
 #'
 #' @return
 #' A dataframe containing the columns: rowId and index
 #' @export
-timeSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
+timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
 
   # parameter checking
   if (!is.null(seed))
@@ -162,6 +163,11 @@ timeSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
     flog.error("test must be between 0 and ")
     stop()
   }
+  
+  if (is.null(train)) {
+    train <- 1 - test
+  }
+  
   dates <- as.Date(population$cohortStartDate, format = "%Y-%m-%d")
   # find date that test frac have greater than - set dates older than this to this date
   dates.ord <- dates[order(dates)]
@@ -177,7 +183,7 @@ timeSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
   flog.info(paste0("Creating ",
                    test * 100,
                    "% test and ",
-                   (1 - test) * 100,
+                   train * 100,
                    "% train (into ",
                    nfold,
                    " folds) stratified split at ",
@@ -188,13 +194,19 @@ timeSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
 
   nonPpl.group <- rep(-1, nrow(nonPpl))
   nonPpl.group[nonPpl$date <= testDate] <- rep(1:nfold,
-                                               each = ceiling(sum(nonPpl$date <= testDate)/nfold))[1:sum(nonPpl$date <=
+                                               each = ceiling(sum(nonPpl$date <= testDate)*(train/(1-test))/nfold))[1:sum(nonPpl$date <=
     testDate)]
-
+  
+  # Fill NA values with 0 
+  nonPpl.group[is.na(nonPpl.group)] <- 0
+  
   outPpl.group <- rep(-1, nrow(outPpl))
   outPpl.group[outPpl$date <= testDate] <- rep(1:nfold,
-                                               each = ceiling(sum(outPpl$date <= testDate)/nfold))[1:sum(outPpl$date <=
+                                               each = ceiling(sum(outPpl$date <= testDate)*(train/(1-test))/nfold))[1:sum(outPpl$date <=
     testDate)]
+  
+  # Fill NA values with 0 
+  outPpl.group[is.na(outPpl.group)] <- 0
 
   split <- data.frame(rowId = c(nonPpl$rowId, outPpl$rowId), index = c(nonPpl.group, outPpl.group))
   split <- split[order(split$rowId), ]
