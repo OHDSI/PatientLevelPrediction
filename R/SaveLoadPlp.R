@@ -649,6 +649,7 @@ savePlpModel <- function(plpModel, dirPath){
     plpModel$model <- file.path(dirPath,'python_model')
     plpModel$predict <- createTransform(plpModel)
   }
+  
   #============================================================
   
   #==================================================================
@@ -684,8 +685,13 @@ savePlpModel <- function(plpModel, dirPath){
     plpModel$predict <- createTransform(plpModel)
   }
   #============================================================
-    
+  
+  # if deep (keras) then save hdfs
+  if(attr(plpModel, 'type') =='deep'){
+    keras::save_model_hdf5(plpModel$model, filepath = file.path(dirPath, "keras_model"))
+  } else {  
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
+  }
   saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
   saveRDS(plpModel$index, file = file.path(dirPath, "index.rds"))
   saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
@@ -734,7 +740,13 @@ loadPlpModel <- function(dirPath) {
   covariateMap <- tryCatch(readRDS(file.path(dirPath, "covariateMap.rds")),
                     error=function(e) NULL) 
   
-  result <- list(model = readRDS(file.path(dirPath, "model.rds")),
+  if(file.exists(file.path(dirPath, "keras_model"))){
+    model <- keras::load_model_hdf5(file.path(dirPath, "keras_model"))
+  } else {  
+    model <- readRDS(file.path(dirPath, "model.rds"))
+  }
+  
+  result <- list(model = model,
                  hyperParamSearch = hyperParamSearch,
                  predict = readRDS(file.path(dirPath, "transform.rds")),
                  index = readRDS(file.path(dirPath, "index.rds")),

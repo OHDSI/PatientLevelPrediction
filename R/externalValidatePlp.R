@@ -192,10 +192,12 @@ summariseVal <- function(result, database){
 #' @param covariateSettings                The standard covariate settings (specify covariate lookback time)
 #' @param customCovariates                 A table of covariateId, sql (sql creates the custom covariate)
 #' @param riskWindowStart                  The day after index to start predicting the outcome
+#' @param addExposureDaysToEnd             riskWindomEnd relative to the cohort end date instead of the cohort start date?
 #' @param riskWindowEnd                    The day after index to stop predicting the outcome
 #' @param requireTimeAtRisk                Do you want to ignore people who leave the database some point between the riskWindowStart and riskWindowEnd 
 #' @param minTimeAtRisk                    If requireTimeAtRisk is TRUE, how many days must they be observed before leaving to get included (default recommendation is all risk period: riskWindowEnd-riskWindowStart)    
 #' @param includeAllOutcomes               Setting this to TRUE means people with the outcome who leave the data during the risk period are still included, so only non-outcome people who leave during the risk period are removed 
+#' @param removeSubjectsWithPriorOutcome   Remove people from the target population if they have the outcome prior to target cohort start date
 #' @param connectionDetails                The details to connect to the CDM
 #' @param cohortDatabaseSchema             A string specifying the database containing the target cohorts
 #' @param outcomeDatabaseSchema            A string specifying the database containing the outcome cohorts
@@ -216,10 +218,12 @@ evaluateExistingModel <- function(modelTable,
                                    covariateSettings,
                                   customCovariates=NULL,
                                   riskWindowStart = 1, 
+                                  addExposureDaysToEnd = F,
                                   riskWindowEnd = 365,
                                    requireTimeAtRisk = T, 
                                   minTimeAtRisk = 364,
                                   includeAllOutcomes = T,
+                                  removeSubjectsWithPriorOutcome=T,
                                    connectionDetails,
                                    cdmDatabaseSchema,
                                    cohortDatabaseSchema, cohortTable, cohortId,
@@ -297,9 +301,13 @@ evaluateExistingModel <- function(modelTable,
                                                 sampleSize = NULL)
   
   population <- PatientLevelPrediction::createStudyPopulation(plpData = plpData, outcomeId = outcomeId,
-                                                              includeAllOutcomes = includeAllOutcomes, requireTimeAtRisk = requireTimeAtRisk, 
-                                                              minTimeAtRisk = minTimeAtRisk, riskWindowStart = riskWindowStart, 
-                                                              riskWindowEnd = riskWindowEnd
+                                                              includeAllOutcomes = includeAllOutcomes, 
+                                                              requireTimeAtRisk = requireTimeAtRisk, 
+                                                              minTimeAtRisk = minTimeAtRisk, 
+                                                              riskWindowStart = riskWindowStart,
+                                                              addExposureDaysToEnd = addExposureDaysToEnd,
+                                                              riskWindowEnd = riskWindowEnd, 
+                                                              removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome
                                                               )
   prediction <- merge(population, ff::as.ram(plpData$covariates), by='rowId', all.x=T)
   colnames(prediction)[colnames(prediction)=='covariateValue'] <- 'value'

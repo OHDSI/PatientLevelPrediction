@@ -6,10 +6,11 @@
 \usage{
 evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
   type = "score", covariateSettings, customCovariates = NULL,
-  riskWindowStart = 1, riskWindowEnd = 365, requireTimeAtRisk = T,
-  minTimeAtRisk = 364, includeAllOutcomes = T, connectionDetails,
-  cdmDatabaseSchema, cohortDatabaseSchema, cohortTable, cohortId,
-  outcomeDatabaseSchema, outcomeTable, outcomeId)
+  riskWindowStart = 1, addExposureDaysToEnd = F, riskWindowEnd = 365,
+  requireTimeAtRisk = T, minTimeAtRisk = 364, includeAllOutcomes = T,
+  removeSubjectsWithPriorOutcome = T, connectionDetails, cdmDatabaseSchema,
+  cohortDatabaseSchema, cohortTable, cohortId, outcomeDatabaseSchema,
+  outcomeTable, outcomeId)
 }
 \arguments{
 \item{modelTable}{The model covariates and scores}
@@ -26,6 +27,8 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 
 \item{riskWindowStart}{The day after index to start predicting the outcome}
 
+\item{addExposureDaysToEnd}{riskWindomEnd relative to the cohort end date instead of the cohort start date?}
+
 \item{riskWindowEnd}{The day after index to stop predicting the outcome}
 
 \item{requireTimeAtRisk}{Do you want to ignore people who leave the database some point between the riskWindowStart and riskWindowEnd}
@@ -33,6 +36,8 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 \item{minTimeAtRisk}{If requireTimeAtRisk is TRUE, how many days must they be observed before leaving to get included (default recommendation is all risk period: riskWindowEnd-riskWindowStart)}
 
 \item{includeAllOutcomes}{Setting this to TRUE means people with the outcome who leave the data during the risk period are still included, so only non-outcome people who leave during the risk period are removed}
+
+\item{removeSubjectsWithPriorOutcome}{Remove people from the target population if they have the outcome prior to target cohort start date}
 
 \item{connectionDetails}{The details to connect to the CDM}
 

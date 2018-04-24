@@ -28,6 +28,7 @@
 #'                                      data extracted from the CDM.
 #' @param population                    The population to include in the matrix
 #' @param map                           A covariate map (telling us the column number for covariates)
+#' @param temporal                      Whether you want to convert temporal data
 #' @examples
 #' #TODO
 #'
@@ -41,7 +42,7 @@
 #' }
 #'
 #' @export
-toSparseM <- function(plpData,population, map=NULL){
+toSparseM <- function(plpData,population, map=NULL, temporal=F){
   cov <- plpData$covariates #ff::clone(plpData$covariates)
   covref <- plpData$covariateRef#ff::clone(plpData$covariateRef)
 
@@ -66,7 +67,7 @@ toSparseM <- function(plpData,population, map=NULL){
   futile.logger::flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
 
   # chunk then add
-
+  if(!temporal){
   data <- Matrix::sparseMatrix(i=1,
                                j=1,
                                x=0,
@@ -80,6 +81,34 @@ toSparseM <- function(plpData,population, map=NULL){
     )
     data <- data+ temp
   }
+  } else {
+    for(i in min(cov$timeId):max(cov$timeId)){
+      plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
+      data <- Matrix::sparseMatrix(i=1,
+                                   j=1,
+                                   x=0,
+                                   dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
+      for (ind in bit::chunk(plpData.mapped$temp_covariates$covariateId)) {
+        futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
+        temp <- futile.logger::ftry(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$temp_covariates$rowId[ind]),
+                                                         j=ff::as.ram(plpData.mapped$temp_covariates$covariateId[ind]),
+                                                         x=ff::as.ram(plpData.mapped$temp_covariates$covariateValue[ind]),
+                                                         dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
+        )
+        data <- data+temp
+      }
+      data_array<-slam::as.simple_sparse_array(data)
+      #extending one more dimesion to the array
+      data_array<-slam::extend_simple_sparse_array(data_array,c(1L))
+      #binding arrays along the dimesion
+      if(i==min(cov$timeId)) {result_array<-data_array
+      }else{
+        result_array<-slam::abind_simple_sparse_array(result_array,data_array,MARGIN=2L)
+      }
+    }
+    data <- result_array
+  }
+  
   futile.logger::flog.debug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
 
   result <- list(data=data,

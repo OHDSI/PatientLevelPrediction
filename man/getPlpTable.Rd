@@ -4,11 +4,13 @@
 \alias{getPlpTable}
 \title{Create a dataframe with the summary details of the population cohort for publications}
 \usage{
-getPlpTable(plpData, population, connectionDetails,
+getPlpTable(plpData, covariateSettings, population, connectionDetails,
   cohortTable = "#temp_person")
 }
 \arguments{
 \item{plpData}{An object returned by running \code{getPlpData}.}
+
+\item{covariateSettings}{If plpData is missing then covariatesettings is needed (with aggregated=T)}
 
 \item{population}{The population you want the summary table for}
 

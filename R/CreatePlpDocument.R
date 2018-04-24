@@ -712,7 +712,7 @@ createPlpJournalDocument <- function(plpResult=NULL,
   if(table1){
     doc = ReporteRs::addTitle(doc, 'Characterisation', level=3)
     
-    tab1 <- getPlpTable(plpData, population, connectionDetails,
+    tab1 <- getPlpTable(plpData, covariateSettings=NULL, population, connectionDetails,
                             cohortTable='#temp_person')
     
     charactTab1 <- ReporteRs::FlexTable(tab1)
@@ -857,6 +857,7 @@ createPlpJournalDocument <- function(plpResult=NULL,
 #' This function is used to create a summary table for population to be inserted into publications
 #'
 #' @param plpData        An object returned by running \code{getPlpData}.
+#' @param covariateSettings  If plpData is missing then covariatesettings is needed (with aggregated=T)
 #' @param population     The population you want the summary table for
 #' @param connectionDetails  The connection details used to connect to the CDM database
 #' @param cohortTable     The name of the temp table that will store the popualtion cohort             
@@ -867,17 +868,23 @@ createPlpJournalDocument <- function(plpResult=NULL,
 #' }
 #' @export
 #' 
-getPlpTable <- function(plpData, population, connectionDetails,
+getPlpTable <- function(plpData, covariateSettings, 
+                        population, connectionDetails,
                         cohortTable='#temp_person'){
-  if(missing(plpData))
-    stop('Need to enter plpData')
+  if(missing(plpData)){
+    if(missing(covariateSettings)){
+      stop('Need to enter plpData or covariateSettings')
+    }}
+  if(!missing(plpData) & !missing(covariateSettings)){
+    if(class(plpData)!='plpData')
+      stop('Wrong class for plpData')
+    warning('plpData and covariatesrttings input - using plpData covariate settings...')
+  }
   if(missing(population))
     stop('Need to enter population')
   if(missing(connectionDetails))
     stop('Need to enter connectionDetails')
   
-  if(class(plpData)!='plpData')
-    stop('Wrong class for plpData')
   if(class(population)!='data.frame')
     stop('wrong population class')
   if(sum(c('cohortId','subjectId','cohortStartDate')%in%colnames(population))!=3)  # need to remember column names
@@ -902,24 +909,33 @@ getPlpTable <- function(plpData, population, connectionDetails,
                                  data = popCohort, 
                                  tempTable = T)
   
-  settings <- plpData$metaData$call
-  settings[[1]] <- NULL # remove function
-  settings$connection <- connection
-  if(!is.null(settings$baseUrl)){
-    settings$baseUrl <- NULL
+  if(!missing(plpData)){
+    settings <- plpData$metaData$call
+    settings[[1]] <- NULL # remove function
+    settings$connection <- connection
+    if(!is.null(settings$baseUrl)){
+      settings$baseUrl <- NULL
     }
-  settings$cohortTableIsTemp <- T
-  class(settings) <- 'list'
-  for(val in c("outcomeIds","studyStartDate","studyEndDate",
-               "outcomeDatabaseSchema", "outcomeTable","firstExposureOnly",
-               "washoutPeriod","sampleSize", "connectionDetails")){
-    ind <- which(names(settings)==val)
-    settings[[val]] <- NULL
+    settings$cohortTableIsTemp <- T
+    class(settings) <- 'list'
+    for(val in c("outcomeIds","studyStartDate","studyEndDate",
+                 "outcomeDatabaseSchema", "outcomeTable","firstExposureOnly",
+                 "washoutPeriod","sampleSize", "connectionDetails")){
+      ind <- which(names(settings)==val)
+      settings[[val]] <- NULL
+    }
+    settings$aggregated <- T
+    # need to update below with the population cohort...
+    settings$cohortTable <- cohortTable
+    settings$cohortId <- -1
+  } else {
+    settings <- covariateSettings
+    settings$aggregated <- T
+    settings$cohortTable <- cohortTable
+    settings$cohortId <- -1
+    settings$cohortTableIsTemp <- T
+    settings$connection <- connection
   }
-  settings$aggregated <- T
-  # need to update below with the population cohort...
-  settings$cohortTable <- cohortTable
-  settings$cohortId <- -1
   covariateData1 <- do.call(FeatureExtraction::getDbCovariateData, settings)
   
   popCohort <- population[population$outcomeCount>0,c('cohortId','subjectId','cohortStartDate','cohortStartDate')]
