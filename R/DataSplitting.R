@@ -214,7 +214,8 @@ timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed =
   foldSizesTrain <- utils::tail(table(split$index), nfold)
   flog.info(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
     0), " train samples", " (", toString(foldSizesTrain), ")"))
-
+  if (test+train<1)
+    flog.info(paste0(sum(split$index == 0), " were not used for training or testing"))
   # return index vector
   return(split)
 }

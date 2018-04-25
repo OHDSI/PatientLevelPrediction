@@ -263,7 +263,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
 
 
 # reformat the evaluation 
-reformatPerformance <- function(train, test, analysisId, plpData){
+reformatPerformance <- function(train, test, analysisId){
   nr1 <- length(unlist(train$evaluationStatistics[-1]))
   nr2 <- length(unlist(test$evaluationStatistics[-1]))
   evaluationStatistics <- cbind(analysisId=rep(analysisId,nr1+nr2),
@@ -280,9 +280,7 @@ reformatPerformance <- function(train, test, analysisId, plpData){
                                   train$thresholdSummary),
                             cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
                                   test$thresholdSummary))
-  #missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507001,8532001)]
-  #missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%paste0(0:19, '003')]
-  # 3) demographicSummary
+  
   if(!is.null(train$demographicSummary)){
     nr1 <- nrow(train$demographicSummary)
     nr2 <- nrow(test$demographicSummary)

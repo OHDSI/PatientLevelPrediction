@@ -25,6 +25,7 @@ Imports:
     ggplot2,
     gridExtra,
     magrittr,
+    foreach,
     doParallel,
     dplyr,
     bit,

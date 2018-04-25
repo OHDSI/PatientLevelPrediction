@@ -4,14 +4,12 @@
 \alias{evaluatePlp}
 \title{evaluatePlp}
 \usage{
-evaluatePlp(prediction, plpData, model = NULL)
+evaluatePlp(prediction, plpData)
 }
 \arguments{
 \item{prediction}{The patient level prediction model's prediction}
 
 \item{plpData}{The patient level prediction data}
-
-\item{model}{The trained prediction model}
 }
 \value{
 A list containing the performance values

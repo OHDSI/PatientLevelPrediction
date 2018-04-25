@@ -311,19 +311,17 @@ createLearningCurve <- function(population,
       
       flog.info('Train set evaluation')
       performance.train <-
-        evaluatePlp(prediction[prediction$indexes > 0,], plpData,
-                    model = modelSettings$model)
+        evaluatePlp(prediction[prediction$indexes > 0,], plpData)
       flog.trace('Done.')
       flog.info('Test set evaluation')
       performance.test <-
-        evaluatePlp(prediction[prediction$indexes < 0,], plpData,
-                    model = modelSettings$model)
+        evaluatePlp(prediction[prediction$indexes < 0,], plpData)
       flog.trace('Done.')
       
       # now combine the test and train data and add analysisId
       performance <-
         reformatPerformance(train = performance.train, test = performance.test,
-                            analysisId, plpData)
+                            analysisId)
       
       if (!is.null(save)) {
         flog.trace('Saving evaluation')
@@ -592,6 +590,9 @@ createLearningCurvePar <- function(population,
                                    analysisId = NULL,
                                    minCovariateFraction = 0.001) {
   
+  # register a parallel backend
+  registerParallelBackend()
+  
   # verify that a parallel backend has been registered
   setup_parallel()
   
@@ -683,11 +684,11 @@ createLearningCurvePar <- function(population,
       
       performance.train <-
         PatientLevelPrediction::evaluatePlp(prediction[prediction$indexes > 0,],
-                                            plpData, model = modelSettings$model)
+                                            plpData)
       
       performance.test <-
         PatientLevelPrediction::evaluatePlp(prediction[prediction$indexes < 0,],
-                                            plpData, model = modelSettings$model)
+                                            plpData)
     }
     
     # log the end time:
@@ -735,5 +736,9 @@ createLearningCurvePar <- function(population,
     "trainCalibrationSlope",
     "testCalibrationSlope"
   )
+  
+  # de-register parallel backend by registering sequential backend
+  registerSequentialBackend()
+  
   return(learningCurve)
 }

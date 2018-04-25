@@ -13,10 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-
 context("Plotting")
+
 #TODO: add input checks and test these...
 #options(fftempdir = getwd())
 set.seed(1234)

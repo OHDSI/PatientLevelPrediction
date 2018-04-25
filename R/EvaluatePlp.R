@@ -24,13 +24,12 @@
 #' The function calculates various metrics to measure the performance of the model
 #' @param prediction                         The patient level prediction model's prediction
 #' @param plpData                            The patient level prediction data
-#' @param model                              The trained prediction model
 #' @return
 #' A list containing the performance values
 #'
 
 #' @export
-evaluatePlp <- function(prediction, plpData, model = NULL){
+evaluatePlp <- function(prediction, plpData){
   # checking inputs
   #========================================
   type <- attr(prediction, "metaData")$predictionType
@@ -67,7 +66,6 @@ evaluatePlp <- function(prediction, plpData, model = NULL){
   pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
   auprc <- pr$auc.integral
   flog.info(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
-
   
   # brier scores-returnss; brier, brierScaled
   flog.trace('Calculating Brier Score')

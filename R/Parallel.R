@@ -24,8 +24,6 @@
 #' @param cores the number of cores to use for multi core operations
 #' @param logical whether to consider logical or physical cores
 #'
-#' @export
-#'
 #' @examples
 #' # detect logical cores automatically
 #' registerParallelBackend()
@@ -57,8 +55,6 @@ registerParallelBackend <- function(cores = NULL, logical = TRUE) {
 #'
 #' registerSequentialBackend registers a sequential backend for single core
 #' processing.
-#'
-#' @export
 #'
 #' @examples
 #' # register a sequential backend
