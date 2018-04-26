@@ -53,7 +53,8 @@ Imports:
     RCurl,
     RJSONIO,
     keras,
-    slam
+    slam,
+    magrittr
 Suggests:
     testthat,
     pROC,
