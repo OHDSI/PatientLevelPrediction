@@ -27,10 +27,12 @@
 #' @importFrom stats binom.test lm printCoefmat rpois runif sd aggregate
 #' @importFrom utils write.csv write.table data
 #' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
+#' @importFrom magrittr %>%
 #' @import bit
 #' @import Cyclops
 #' @import DatabaseConnector
 #' @import FeatureExtraction
+#' @import plotly
 #' @useDynLib PatientLevelPrediction
 NULL
 
