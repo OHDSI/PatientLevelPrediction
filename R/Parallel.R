@@ -25,13 +25,14 @@
 #' @param logical whether to consider logical or physical cores
 #'
 #' @examples
+#' \dontrun{
 #' # detect logical cores automatically
 #' registerParallelBackend()
 #'
 #' # use four physical cores
 #' numCores <- 4
 #' registerParallelBackend(numCores, logical = FALSE)
-#'
+#' }
 registerParallelBackend <- function(cores = NULL, logical = TRUE) {
   # detect number of logical or physical cores
   numCores <- parallel::detectCores(logical = logical)
@@ -57,8 +58,10 @@ registerParallelBackend <- function(cores = NULL, logical = TRUE) {
 #' processing.
 #'
 #' @examples
+#' \dontrun{
 #' # register a sequential backend
 #' registerSequentialBackend()
+#' }
 registerSequentialBackend <- function() {
   # register a sequential backend
   foreach::registerDoSEQ()

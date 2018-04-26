@@ -11,6 +11,8 @@ registerSequentialBackend registers a sequential backend for single core
 processing.
 }
 \examples{
+\dontrun{
 # register a sequential backend
 registerSequentialBackend()
+}
 }

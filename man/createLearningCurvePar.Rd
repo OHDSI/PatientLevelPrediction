@@ -62,6 +62,7 @@ Creates a learning curve in parallel, which can be plotted using the
 supported by Lasso Logistic Regression.
 }
 \examples{
+\dontrun{
 # define model
 modelSettings = setLassoLogisticRegression()
 
@@ -74,5 +75,5 @@ learningCurve <- createLearningCurvePar(population,
                                         modelSettings)
 # plot learning curve
 plotLearningCurve(learningCurve)
-
+}
 }

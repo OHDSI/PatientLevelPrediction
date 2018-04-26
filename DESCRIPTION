@@ -24,6 +24,7 @@ Depends:
 Imports:
     ggplot2,
     gridExtra,
+    PRROC,
     magrittr,
     foreach,
     doParallel,

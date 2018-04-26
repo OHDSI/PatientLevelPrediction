@@ -105,6 +105,7 @@ Creates a learning curve object, which can be plotted using the
 \code{plotLearningCurve()} function.
 }
 \examples{
+\dontrun{
 # define model
 modelSettings = PatientLevelPrediction::setLassoLogisticRegression()
 
@@ -114,5 +115,5 @@ learningCurve <- PatientLevelPrediction::createLearningCurve(population,
                                                              modelSettings)
 # plot learning curve
 PatientLevelPrediction::plotLearningCurve(learningCurve)
-
+}
 }

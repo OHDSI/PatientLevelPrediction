@@ -94,10 +94,9 @@
 #'     sets}
 #'   \item{\code{time} - the complete time taken to fit the model framework}
 #' }
-#'
-#' @export
 #' 
 #' @examples
+#' \dontrun{
 #' # define model
 #' modelSettings = PatientLevelPrediction::setLassoLogisticRegression()
 #' 
@@ -107,7 +106,8 @@
 #'                                                              modelSettings)
 #' # plot learning curve
 #' PatientLevelPrediction::plotLearningCurve(learningCurve)
-#' 
+#' }
+#' @export
 createLearningCurve <- function(population,
                                 plpData,
                                 modelSettings,
@@ -561,10 +561,9 @@ createLearningCurve <- function(population,
 #'
 #' @return
 #' An object containing the various performance measures obtained by the model.
-#'
-#' @export
 #' 
 #' @examples
+#' \dontrun{
 #' # define model
 #' modelSettings = setLassoLogisticRegression()
 #' 
@@ -577,7 +576,8 @@ createLearningCurve <- function(population,
 #'                                         modelSettings)
 #' # plot learning curve
 #' plotLearningCurve(learningCurve)
-#' 
+#' }
+#' @export
 createLearningCurvePar <- function(population,
                                    plpData,
                                    modelSettings,

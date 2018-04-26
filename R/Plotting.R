@@ -741,17 +741,17 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to 
 #' file in a different format.
-#'
-#' @export
 #' 
-#' @examples 
+#' @examples
+#' \dontrun{
 #' # create learning curve object
 #' learningCurve <- createLearningCurve(population,
 #'                                      plpData,
 #'                                      modelSettings)
 #' # plot the learning curve
 #' plotLearningCurve(learningCurve)
-#' 
+#' }
+#' @export
 plotLearningCurve <- function(learningCurve,
                               metric = "AUROC",
                               plotTitle = "Learning Curve", 

@@ -17,11 +17,12 @@ processing It will detect the number of cores available automatically unless
 specified.
 }
 \examples{
+\dontrun{
 # detect logical cores automatically
 registerParallelBackend()
 
 # use four physical cores
 numCores <- 4
 registerParallelBackend(numCores, logical = FALSE)
-
+}
 }
