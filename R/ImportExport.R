@@ -1,6 +1,6 @@
 # @file ImportExport.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -104,17 +104,20 @@ transportPlp <- function(plpResult,outputFolder, n=NULL,includeEvaluationStatist
                          includeCovariateSummary=T){
 
   # remove any sensitive data:
-  plpResult$inputSetting$dataExtrractionSettings <- NULL
+  plpResult$inputSetting$dataExtrractionSettings <- NULL 
+  plpResult$executionSummary$Log <- NULL
   plpResult$model$metaData$call$connectionDetails <- NULL
   plpResult$model$metaData$call$cdmDatabaseSchema <- NULL
   plpResult$model$metaData$call$cohortDatabaseSchema <- NULL
   plpResult$model$metaData$call$outcomeDatabaseSchema <- NULL
   plpResult$model$index <- NULL
   plpResult$prediction <- NULL
-  mod <- get("plpModel", envir = environment(plpResult$model$predict))
-  mod$index <- NULL
-  mod$metaData$call$connectionDetails <- NULL
-  assign("plpModel", mod, envir = environment(plpResult$model$predict))
+  if(!is.null(plpResult$model$predict)){
+    mod <- get("plpModel", envir = environment(plpResult$model$predict))
+    mod$index <- NULL
+    mod$metaData$call$connectionDetails <- NULL
+    assign("plpModel", mod, envir = environment(plpResult$model$predict))
+  }
 
   if(!includeEvaluationStatistics)
    plpResult$performanceEvaluation$evaluationStatistics <- NULL
@@ -192,16 +195,17 @@ transportModel <- function(plpModel,outputFolder){
 #'
 #' @param models          A trianed plp model.
 #' @param modelNames      A name used in the covariate function names (no spaces)
-#' @param covariateConstructionName     the name used to for the create covariate function
-#' @param model_table     The temporary table name storing the model details
-#' @param analysis_id    The covariate analysis_id
+#' @param covariateConstructionName     the name used for the create covariate function
+#' @param modelTable     The temporary table name storing the model details
+#' @param analysisId    The covariate analysis_id
 #' @param e              The environment to output the covariate setting functions to
 #' @param databaseOutput  If you want to output to go inot a cohort table add the "database.schema.tablename" here
 
 #' @export
 #'
-createLrSql <- function(models, modelNames, covariateConstructionName='prediction', model_table='#model_table',
-                         analysis_id=111, e=environment(),
+createLrSql <- function(models, modelNames, covariateConstructionName='prediction', 
+                        modelTable='#model_table',
+                         analysisId=111, e=environment(),
                         databaseOutput=NULL){
 
   # test model inputs
@@ -221,9 +225,9 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
   # create the settings function
   #====================================
   createCovs <- function() {
-    covariateSettings <- list(model_table=model_table, modelNames=modelNames,
+    covariateSettings <- list(modelTable=modelTable, modelNames=modelNames,
                               covariateConstructionName = covariateConstructionName,
-                              analysis_id=analysis_id, databaseOutput=databaseOutput)
+                              analysisId=analysisId, databaseOutput=databaseOutput)
     attr(covariateSettings, "fun") <- paste0('get',covariateConstructionName,'CovariateSettings')
     class(covariateSettings) <- "covariateSettings"
     return(covariateSettings)
@@ -243,13 +247,13 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
     if (aggregated)
       stop("Aggregation not supported")
 
-    if(!is.null(covariateSettings$model_table)){
-      model_table = covariateSettings$model_table} else{
-        model_table='#model_table'
+    if(!is.null(covariateSettings$modelTable)){
+      modelTable = covariateSettings$modelTable} else{
+        modelTable='#model_table'
       }
 
-    if(is.null(covariateSettings$analysis_id)){
-      analysis_id <- 111
+    if(is.null(covariateSettings$analysisId)){
+      analysisId <- 111
     }
 
     # test the covariates use the same time settings so we can do call at the same time
@@ -306,7 +310,7 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
 
     # insert the model table
     colnames(allVars) <- SqlRender::camelCaseToSnakeCase(colnames(allVars))
-    DatabaseConnector::insertTable(connection, tableName=model_table, data = allVars, tempTable = T)
+    DatabaseConnector::insertTable(connection, tableName=modelTable, data = allVars, tempTable = T)
 
     # =================================
     #==================================
@@ -326,17 +330,17 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
                                                 cdmVersion = cdmVersion,
                                                 rowIdField = "row_id",
                                                 covariateSettings = covSettings,
-                                             analysisId = covariateSettings$analysis_id,
+                                             analysisId = covariateSettings$analysisId,
                                              databaseOutput= covariateSettings$databaseOutput)
 
     # clean the model_table... [TODO]
-    covariateRef <- data.frame(covariateId = 1000*(1:length(covariateSettings$modelNames))+covariateSettings$analysis_id,
+    covariateRef <- data.frame(covariateId = 1000*(1:length(covariateSettings$modelNames))+covariateSettings$analysisId,
                                covariateName = covariateSettings$modelNames,
-                               analysisId = rep(covariateSettings$analysis_id,length(covariateSettings$modelNames)),
+                               analysisId = rep(covariateSettings$analysisId,length(covariateSettings$modelNames)),
                                conceptId = rep(0, length(covariateSettings$modelNames)))
     covariateRef <- ff::as.ffdf(covariateRef)
     # Construct analysis reference:
-    analysisRef <- data.frame(analysisId = covariateSettings$analysis_id,
+    analysisRef <- data.frame(analysisId = covariateSettings$analysisId,
                               analysisName = "Prediction Models",
                               domainId = "Demographics",
                               startDay = 0,
@@ -345,8 +349,8 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
                               missingMeansZero = "N")
     analysisRef <- ff::as.ffdf(analysisRef)
     # Construct analysis reference:
-    metaData <- list(sql = sql, call = match.call())
-    result <- list(covariates = covariates,
+    metaData <- list(sql = covariates$sql, call = match.call())
+    result <- list(covariates = covariates$covariates,
                    covariateRef = covariateRef,
                    analysisRef = analysisRef,
                    metaData = metaData)
@@ -447,7 +451,9 @@ getPredictionCovariateData <- function(connection,
   DatabaseConnector::executeSql(connection, sql)
 }
 
-  return(covariates)
+  result <- list(covariates=covariates, 
+                 sql=sql)
+  return(result)
 }
 
 #' Apply an existing logistic regression prediction model

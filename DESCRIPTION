@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 2.0.2
-Date: 2018-04-24
+Version: 2.0.3
+Date: 2018-05-10
 Author: Jenna Reps [aut],
     Martijn J. Schuemie [aut, cre],
     Marc A. Suchard [aut],
@@ -54,7 +54,8 @@ Imports:
     RJSONIO,
     keras,
     slam,
-    magrittr
+    magrittr,
+    OhdsiSharing
 Suggests:
     testthat,
     pROC,

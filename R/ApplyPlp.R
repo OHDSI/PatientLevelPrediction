@@ -1,4 +1,21 @@
-#TODO
+# @file packagePlp.R
+#
+# Copyright 2018 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #' Apply train model on new data
 #' Apply a Patient Level Prediction model on Patient Level Prediction Data and get the predicted risk
 #' in [0,1] for each person in the population. If the user inputs a population with an outcomeCount
@@ -125,6 +142,9 @@ applyModel <- function(population,
   
   
   result <- list(prediction = prediction, performance = performance,
+                 inputSetting = list(outcomeId=plpModel$populationSettings$outcomeId, 
+                                 cohortId=plpModel$populationSettings$cohortId,
+                                 database = plpData$metaData$call$cdmDatabaseSchema),
                  covariateSummary=covSum)
   return(result)
 }
@@ -143,6 +163,7 @@ applyModel <- function(population,
 #' @param newOutcomeDatabaseSchema  The database schema where the outcome table is stored
 #' @param newOutcomeTable           The table name of the outcome table
 #' @param newOutcomeId              The cohort_definition_id for the outcome  
+#' @param newOracleTempSchema       The temp coracle schema
 #' @param sample                    The number of people to sample (default is NULL meaning use all data)
 #' @param createPopulation          Whether to create the study population as well
 #'
@@ -179,6 +200,7 @@ similarPlpData <- function(plpModel=NULL,
                            newOutcomeDatabaseSchema = NULL,
                            newOutcomeTable = NULL,
                            newOutcomeId = NULL,
+                           newOracleTempSchema = newCdmDatabaseSchema,
                            sample=NULL, 
                            createPopulation= T) {
   
@@ -287,6 +309,9 @@ similarPlpData <- function(plpModel=NULL,
     dataOptions$outcomeDatabaseSchema <- newOutcomeDatabaseSchema # correct names?
   if(!is.null(newOutcomeTable))
     dataOptions$outcomeTable <- newOutcomeTable
+  if(!is.null(newOracleTempSchema))
+    dataOptions$oracleTempSchema <- newOracleTempSchema # check name
+  
   
   dataOptions$baseUrl <- NULL
   

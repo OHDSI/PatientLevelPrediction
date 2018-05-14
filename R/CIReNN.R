@@ -1,7 +1,7 @@
 # @file CIReNN.R
 # Code edited from OHDSI contributor @chandryou CIReNN branch
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
