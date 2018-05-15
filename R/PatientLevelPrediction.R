@@ -29,6 +29,7 @@
 #' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
 #' @importFrom magrittr %>%
 #' @import bit
+#' @import ffbase
 #' @import Cyclops
 #' @import DatabaseConnector
 #' @import FeatureExtraction
