@@ -543,7 +543,7 @@ createExistingModelSql <- function(modelTable, modelNames, interceptTable,
     }
 
     colnames(intercepts) <- SqlRender::camelCaseToSnakeCase(colnames(intercepts))
-    DatabaseConnector::insertTable(connection, tableName='#intercepts', data = intercepts, tempTable = T)
+    DatabaseConnector::insertTable(connection, tableName='intercepts', data = intercepts, tempTable = T)
 
 
     # =================================
@@ -691,7 +691,7 @@ getExistingmodelsCovariateData <- function(connection,
                                   rowIdField = rowIdField,
                                   targetCovariateTable = "#cov_temp"
       )$sql
-      sql <- SqlRender::translateSql(sql, targetDialect ='pdw')$sql
+      sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"))$sql
       DatabaseConnector::executeSql(connection, sql)
     }
 
@@ -738,7 +738,7 @@ getExistingmodelsCovariateData <- function(connection,
   sql <- SqlRender::renderSql(sql,
                               analysis_id = analysisId
   )$sql
-  sql <- SqlRender::translateSql(sql, targetDialect ='pdw')$sql
+  sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"))$sql
 
   # Retrieve the covariate:
   covariates <- DatabaseConnector::querySql.ffdf(connection, sql)
