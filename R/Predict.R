@@ -183,8 +183,9 @@ predict.knn <- function(plpData, population, plpModel, ...){
 
 predict.deep <- function(plpModel, population, plpData,   ...){
   temporal <- !is.null(plpData$timeRef)
-  
+  writeLines(paste0(is.null(plpData$timeRef)))
   if(temporal){
+    writeLines('temporal')
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
     data <-result$data[population$rowId,,]
     
@@ -195,7 +196,11 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     prediction$value <- 0
     for(batch in batches){
       pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,,]))
-      prediction$value[batch] <- pred
+      if(is.null(dim(pred))){
+        prediction$value[batch] <- pred
+      } else{
+        prediction$value[batch] <- pred[,2]
+      }
     }
     
     prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
@@ -211,6 +216,62 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     prediction$value <- 0
     for(batch in batches){
       pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,]))
+      prediction$value[batch] <- pred
+    }
+    
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    return(prediction)
+    
+  }
+}
+
+
+predict.deepMulti <- function(plpModel, population, plpData,   ...){
+  
+  repeats <- attr(plpModel, 'inputs')
+  
+  temporal <- !is.null(plpData$timeRef)
+  writeLines(paste0(is.null(plpData$timeRef)))
+  if(temporal){
+    writeLines('temporal')
+    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
+    data <-result$data[population$rowId,,]
+    
+    batch_size <- min(2000, length(population$rowId))
+    maxVal <- length(population$rowId)
+    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+    prediction <- population
+    prediction$value <- 0
+    for(batch in batches){
+      dat <- list()
+      length(dat) <- repeats
+      for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
+
+      pred <- keras::predict_on_batch(plpModel$model, dat)
+      if(is.null(dim(pred))){
+        prediction$value[batch] <- pred
+      } else{
+        prediction$value[batch] <- pred[,2]
+      }
+    }
+    
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    return(prediction)
+  } else{
+    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
+    data <-result$data[population$rowId,]
+    
+    batch_size <- min(2000, length(population$rowId))
+    maxVal <- length(population$rowId)
+    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+    prediction <- population
+    prediction$value <- 0
+    for(batch in batches){
+      dat <- list()
+      length(dat) <- repeats
+      for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
+      
+      pred <- keras::predict_on_batch(plpModel$model, dat)
       prediction$value[batch] <- pred
     }
     

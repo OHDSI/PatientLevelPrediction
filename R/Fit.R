@@ -68,6 +68,7 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
                     cohorts = data$cohorts,
                     covariates =ff::clone(data$covariates),
                     covariateRef=ff::clone(data$covariateRef),
+                    timeRef=ff::clone(data$timeRef),
                     metaData=data$metaData
     )} else{
       plpData <- data
@@ -191,6 +192,7 @@ createTransform <- function(plpModel){
                     cohorts = plpData$cohorts,
                     covariates =ff::clone(plpData$covariates),
                     covariateRef=ff::clone(plpData $covariateRef),
+                    timeRef=ff::clone(plpData $timeRef),
                     metaData=plpData$metaData)
     plpData2$covariates <- limitCovariatesToPopulation(plpData2$covariates, ff::as.ff(population$rowId))
     plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
