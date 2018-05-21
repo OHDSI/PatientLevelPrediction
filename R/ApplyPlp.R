@@ -139,12 +139,26 @@ applyModel <- function(population,
   if (!silent)
     writeLines(paste("Covariate summary completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
   
+  executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                 packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                           PlatformDetails= list(platform= R.Version()$platform,
+                                                 cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                 RAM=utils::memory.size()), #  test for non-windows needed
+                           # Sys.info()
+                           TotalExecutionElapsedTime = NULL,
+                           ExecutionDateTime = Sys.Date())
   
-  
-  result <- list(prediction = prediction, performance = performance,
-                 inputSetting = list(outcomeId=plpModel$populationSettings$outcomeId, 
-                                 cohortId=plpModel$populationSettings$cohortId,
+  result <- list(prediction = prediction, 
+                 performanceEvaluation = performance,
+                 inputSetting = list(outcomeId=attr(population, "metaData")$outcomeId,
+                                 cohortId= plpData$metaData$call$cohortId,
                                  database = plpData$metaData$call$cdmDatabaseSchema),
+                 executionSummary = executionSummary,
+                 model = list(model='applying plp model',
+                              modelSettings = plpModel$modelSettings),
+                 analysisRef=list(analysisId=NULL,
+                                  analysisName=NULL,
+                                  analysisSettings= NULL),
                  covariateSummary=covSum)
   return(result)
 }

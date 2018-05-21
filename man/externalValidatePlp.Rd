@@ -8,7 +8,7 @@ externalValidatePlp(plpResult, connectionDetails, validationSchemaTarget,
   validationSchemaOutcome, validationSchemaCdm,
   validationTableTarget = "cohort", validationTableOutcome = "cohort",
   validationIdTarget = NULL, validationIdOutcome = NULL,
-  oracleTempSchema = validationSchemaCdm, verbosity = futile.logger::INFO,
+  oracleTempSchema = NULL, verbosity = futile.logger::INFO,
   keepPrediction = F)
 }
 \arguments{

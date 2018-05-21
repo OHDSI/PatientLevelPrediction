@@ -297,6 +297,14 @@ standardOutput <- function(result, table1,
                              fileName=file.path(mainFolder, 'plots',type,'sparseCal.pdf'), type = type)
       plotPrecisionRecall(result$performanceEvaluation, 
                           fileName=file.path(mainFolder, 'plots',type,'precisionRecall.pdf'), type = type)
+      plotDemographicSummary(evaluation = result$performanceEvaluation, type = type, 
+                             fileName=file.path(mainFolder, 'plots',type,'demographicSummary.pdf'))
+      plotF1Measure(evaluation = result$performanceEvaluation, type = type, 
+                             fileName=file.path(mainFolder, 'plots',type,'F1Measure.pdf'))
+      plotPredictionDistribution(evaluation = result$performanceEvaluation, type = type, 
+                    fileName=file.path(mainFolder, 'plots',type,'boxplot.pdf'))
+      plotPreferencePDF(evaluation = result$performanceEvaluation, type = type, 
+                                 fileName=file.path(mainFolder, 'plots',type,'preferencePDF.pdf'))
     }
     
     # database, type (Eval), Tn, On, O%, AUC, ci, ...?
@@ -320,16 +328,16 @@ standardOutput <- function(result, table1,
     
     if(class(result)=='validatePlp'){ result <- result$validation}
     
-    tempResult <- list()
+    tempResult <- result# list()
     tempResult$model <- list()
     tempResult$model$model <- 'none - validation'
     attr(tempResult$model, "type") <- 'validation'
     class(tempResult$model) <- 'plpModel'
-    tempResult$performanceEvaluation <- result$performance
-    tempResult$prediction <- result$prediction
+    #tempResult$performanceEvaluation <- result$performanceEvaluation
+    #tempResult$prediction <- result$prediction
     
     # add inputsetting info like cohortId and outcomeId? 
-    tempResult$inputSetting <- result$inputSetting
+    #tempResult$inputSetting <- result$inputSetting
 
     
       
@@ -345,7 +353,14 @@ standardOutput <- function(result, table1,
                            fileName=file.path(mainFolder, 'plots','validation','sparseCal.pdf'), type = 'validation')
     plotPrecisionRecall(tempResult$performanceEvaluation, 
                         fileName=file.path(mainFolder, 'plots','validation','precisionRecall.pdf'), type = 'validation')
-    
+    plotDemographicSummary(evaluation = tempResult$performanceEvaluation, type = 'validation', 
+                           fileName=file.path(mainFolder, 'plots','validation','demographicSummary.pdf'))
+    plotF1Measure(evaluation = tempResult$performanceEvaluation, type = 'validation', 
+                  fileName=file.path(mainFolder, 'plots','validation','F1Measure.pdf'))
+    plotPredictionDistribution(evaluation = tempResult$performanceEvaluation, type = 'validation', 
+                               fileName=file.path(mainFolder, 'plots','validation','boxplot.pdf'))
+    plotPreferencePDF(evaluation = tempResult$performanceEvaluation, type = 'validation', 
+                      fileName=file.path(mainFolder, 'plots','validation','preferencePDF.pdf'))
     summary <- as.data.frame(tempResult$performanceEvaluation$evaluationStatistics)[,c('Eval','Metric','Value')]
     if(sum(summary$Metric=='AUV.auc_lb95ci')==0){
       extra <- data.frame(Eval=c('validation','validation'), 
@@ -400,9 +415,9 @@ packageResults <- function(mainFolder,
                            includeDemographicSummary = T,
                            includeCalibrationSummary = T,
                            includePredictionDistribution =T,
-                           includeCovariateSummary = F,
-                           removeLessThanN = F,
-                           N = 10
+                           includeCovariateSummary = T,
+                           removeLessThanN = T,
+                           N = 5
                            ) {
   if(missing(mainFolder)){
     stop('Missing mainFolder...')

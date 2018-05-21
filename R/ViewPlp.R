@@ -668,17 +668,21 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
         if(is.null(validatePlp))
           return(NULL)
         
-        voi <- list()
-        length(voi) <- length(validatePlp$validation)
-        for(i in 1:length(validatePlp$validation)){
-        validatePlp$validation[[i]]$covariateSummary$meanDiff <- validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithOutcome-
-          validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithNoOutcome
-        voi[[i]] <- validatePlp$validation[[i]]$covariateSummary[,c('covariateName','meanDiff')]
-        colnames(voi[[i]])[2] <- paste0(names(validatePlp$validation)[i],'_meanDiff') 
+        if(length(validatePlp$validation)>1){
+          voi <- list()
+          length(voi) <- length(validatePlp$validation)
+          for(i in 1:length(validatePlp$validation)){
+            validatePlp$validation[[i]]$covariateSummary$meanDiff <- validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithOutcome-
+              validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithNoOutcome
+            voi[[i]] <- validatePlp$validation[[i]]$covariateSummary[,c('covariateName','meanDiff')]
+            colnames(voi[[i]])[2] <- paste0(names(validatePlp$validation)[i],'_meanDiff') 
+          }
+          
+          ##do.call(function(x) merge(x, by='covariateName', all=T), voi)
+          do.call(merge, c(voi,all=T))
+        } else {
+          validatePlp$validation[[1]]$covariateSummary
         }
-        
-        ##do.call(function(x) merge(x, by='covariateName', all=T), voi)
-        do.call(merge, c(voi,all=T))
       },     escape = FALSE, selection = 'none',
       options = list(
         pageLength = 25
@@ -709,7 +713,7 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
         rocPlotVal <- list()
         length(rocPlotVal) <- length(validatePlp$validation)
         for(i in 1:length(validatePlp$validation)){
-        data <- validatePlp$validation[[i]]$performance$thresholdSummary
+        data <- validatePlp$validation[[i]]$performanceEvaluation$thresholdSummary
         rocPlotVal[[i]] <- plotly::plot_ly(x = 1-c(0,data$specificity,1)) %>%
           plotly::add_lines(y = c(1,data$sensitivity,0),name = "hv", 
                             text = paste('Risk Threshold:',c(0,data$predictionThreshold,1)),
@@ -737,7 +741,7 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
         calPlotVal <- list()
         length(calPlotVal) <- length(validatePlp$validation)
         for(i in 1:length(validatePlp$validation)){
-          data <- validatePlp$validation[[i]]$performance$calibrationSummary
+          data <- validatePlp$validation[[i]]$performanceEvaluation$calibrationSummary
           data <- data[, c('averagePredictedProbability','observedIncidence', 'PersonCountAtRisk')]
           cis <- apply(data, 1, function(x) binom.test(x[2]*x[3], x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
         data$lci <- cis[1,]  

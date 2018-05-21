@@ -81,6 +81,8 @@ exportPlpDataToCsv <- function(plpData, outputFolder) {
 #' This function is used to
 #'
 #' @param plpResult      An object returned by running \code{runPlp}.
+#' @param modelName      A string of the name of the model
+#' @param dataName       A string of the name of the data
 #' @param outputFolder   The folder on the file system where the CSV files will be created. If the
 #'                       folder does not yet exist it will be created.
 #' @param n              The minimum number of people required for each result summary to be included
@@ -90,6 +92,7 @@ exportPlpDataToCsv <- function(plpData, outputFolder) {
 #' @param includeCalibrationSummary    Whether to include the calibrationSummary
 #' @param includePredictionDistribution  Whether to include the predictionDistribution
 #' @param includeCovariateSummary      Whether to include the covariateSummary
+#' @param save                         Whether to save the result or just return the transportable object
 #'
 #' @examples
 #' \dontrun{
@@ -98,18 +101,20 @@ exportPlpDataToCsv <- function(plpData, outputFolder) {
 #' @export
 #'
 #'
-transportPlp <- function(plpResult,outputFolder, n=NULL,includeEvaluationStatistics=T,
+transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
+                         outputFolder, n=NULL,includeEvaluationStatistics=T,
                          includeThresholdSummary=T, includeDemographicSummary=T,
                          includeCalibrationSummary =T, includePredictionDistribution=T,
-                         includeCovariateSummary=T){
+                         includeCovariateSummary=T, save=T){
 
   # remove any sensitive data:
   plpResult$inputSetting$dataExtrractionSettings <- NULL 
   plpResult$executionSummary$Log <- NULL
   plpResult$model$metaData$call$connectionDetails <- NULL
-  plpResult$model$metaData$call$cdmDatabaseSchema <- NULL
+  plpResult$model$metaData$call$cdmDatabaseSchema <- dataName
   plpResult$model$metaData$call$cohortDatabaseSchema <- NULL
   plpResult$model$metaData$call$outcomeDatabaseSchema <- NULL
+  plpResult$model$metaData$modelName <- modelName
   plpResult$model$index <- NULL
   plpResult$prediction <- NULL
   if(!is.null(plpResult$model$predict)){
@@ -136,17 +141,34 @@ transportPlp <- function(plpResult,outputFolder, n=NULL,includeEvaluationStatist
   if(!is.null(n)){
     # remove less than n counts from demographicSummary
 
-    includeInd <- plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk>=n &
-                  plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome >= n
-    plpResult$performanceEvaluation$demographicSummary <- plpResult$performanceEvaluation$demographicSummary[includeInd,]
-
-    plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue')]
-    plpResult$covariateSummary <- plpResult$covariateSummary[plpResult$covariateSummary$CovariateCount>=n,]
-
+    if(!is.null(plpResult$performanceEvaluation$demographicSummary)){
+      removeInd <- plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk< n |
+        plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome < n |
+        plpResult$performanceEvaluation$demographicSummary$PersonCountWithNoOutcome < n
+      plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk[removeInd] <- -1
+      plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome[removeInd] <- -1
+      plpResult$performanceEvaluation$demographicSummary$PersonCountWithNoOutcome[removeInd] <- -1
+    }
+    
+    if(!is.null(plpResult$covariateSummary)){
+      plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','CovariateCountWithOutcome','CovariateCountWithNoOutcome')]
+      removeInd <- plpResult$covariateSummary$CovariateCount < n |
+        plpResult$covariateSummary$CovariateCountWithOutcome < n | 
+        plpResult$covariateSummary$CovariateCountWithNoOutcome < n 
+      plpResult$covariateSummary$CovariateCount[removeInd] <- -1
+      plpResult$covariateSummary$CovariateCountWithOutcome[removeInd] <- -1
+      plpResult$covariateSummary$CovariateCountWithNoOutcome[removeInd] <- -1
+    }
+    
     }
 
   #save to the output location
-  PatientLevelPrediction::savePlpResult(plpResult, outputFolder)
+  if(save){
+    PatientLevelPrediction::savePlpResult(plpResult, outputFolder)
+    return(NULL)
+  }
+  
+  return(plpResult)
 
 }
 

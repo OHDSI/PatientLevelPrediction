@@ -55,7 +55,7 @@ externalValidatePlp <- function(plpResult,
                                 validationSchemaOutcome, validationSchemaCdm,
                                 validationTableTarget='cohort', validationTableOutcome='cohort',
                                 validationIdTarget = NULL, validationIdOutcome = NULL,
-                                oracleTempSchema=validationSchemaCdm,
+                                oracleTempSchema=NULL,#validationSchemaCdm,
                                 verbosity=futile.logger::INFO, keepPrediction=F){
   
   # TODO:: ADD LOGGING, MORE INOUT TESTS, ADD TEST CASE IN PACKAGE... 
@@ -184,8 +184,8 @@ externalValidatePlp <- function(plpResult,
 
 
 summariseVal <- function(result, database){
-  row.names(result$performance$evaluationStatistics) <- NULL
-  result <- as.data.frame(result$performance$evaluationStatistics)
+  row.names(result$performanceEvaluation$evaluationStatistics) <- NULL
+  result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
   result$Database <- database
   return(result)
 }
@@ -367,12 +367,14 @@ evaluateExistingModel <- function(modelTable,
                            TotalExecutionElapsedTime = NULL,
                            ExecutionDateTime = Sys.Date())
   
-  return(list(performance=performance, prediction=prediction,
+  return(list(performanceEvaluation=performance, 
+              prediction=prediction,
               inputSetting = list(outcomeId=outcomeId, 
                                   cohortId=cohortId,
                                   database = cdmDatabaseSchema),
               executionSummary = executionSummary,
-              model = list(model='existing model', 
+              model = list(model='existing model',
+                           modelName=modelNames,
                            modelTable=modelTable, 
                            covariateTable=covariateTable, 
                            interceptTable=interceptTable),

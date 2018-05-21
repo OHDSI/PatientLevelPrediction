@@ -7,8 +7,8 @@
 packageResults(mainFolder, includeROCplot = T, includeCalibrationPlot = T,
   includePRPlot = T, includeTable1 = T, includeThresholdSummary = T,
   includeDemographicSummary = T, includeCalibrationSummary = T,
-  includePredictionDistribution = T, includeCovariateSummary = F,
-  removeLessThanN = F, N = 10)
+  includePredictionDistribution = T, includeCovariateSummary = T,
+  removeLessThanN = T, N = 5)
 }
 \arguments{
 \item{mainFolder}{The location of the folder with the standard output}
