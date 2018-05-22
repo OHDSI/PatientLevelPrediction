@@ -35,8 +35,12 @@ split evaluation.}
 
 \item{analysisId}{The analysis ID}
 
-\item{ensembleStrategy}{The strategy used for ensembling the outputs from different models, it can be 'mean', 'product' 
-and 'weighted'(default mean) and 'stacked'}
+\item{ensembleStrategy}{The strategy used for ensembling the outputs from different models, it can be 'mean', 'product',
+'weighted' and 'stacked'
+ 'mean'     the average probability from differnt models
+ 'product'  the product rule
+ 'weighted' the weighted average probability from different models using train AUC as weights.
+ 'stacked'  the stakced ensemble trains a logistics regression on different models.}
 }
 \description{
 #'
