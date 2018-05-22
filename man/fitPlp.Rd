@@ -5,7 +5,7 @@
 \title{fitPlp}
 \usage{
 fitPlp(population, data, modelSettings, cohortId, outcomeId,
-  minCovariateFraction = 0.001)
+  minCovariateFraction = 0.001, cleanData = TRUE)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted}
@@ -27,6 +27,8 @@ data extracted from the CDM.}
 \item{outcomeId}{Id of outcome cohort}
 
 \item{minCovariateFraction}{The minimum fraction of the target popualtion who have a variable for it to be included in the model training}
+
+\item{cleanData}{preprocessing the data to renmove rerundant covariates}
 }
 \value{
 An object of class \code{plpModel} containing:

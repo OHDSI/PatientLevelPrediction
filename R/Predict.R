@@ -122,11 +122,26 @@ predict.python <- function(plpModel, population, plpData){
   flog.info('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
-  newData <- toSparsePython(plpData, population, map=plpModel$covariateMap)
-  
-  included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
-  included <- newData$map$newIds[newData$map$oldIds%in%included]-1 # python starts at 0, r at 1
-  PythonInR::pySet("included", as.matrix(sort(included)))
+  if (plpModel$modelSettings$model == 'fitCNNTorch' | plpModel$modelSettings$model == 'fitRNNTorch'){
+    covariates <- plpData$covariates
+    covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
+    PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
+    PythonInR::pySet("modeltype", 'temporal')
+    python_dir <- system.file(package='PatientLevelPrediction','python')
+    PythonInR::pySet("python_dir", python_dir)
+  } else{
+    newData <- toSparsePython(plpData, population, map=plpModel$covariateMap)
+    PythonInR::pySet("modeltype", 'normal')
+    PythonInR::pySet("autoencoder", 0)
+    if (plpModel$modelSettings$model == 'fitLRTorch' | plpModel$modelSettings$model == 'fitMLPTorch'){
+      if (plpModel$modelSettings$modelParameters$autoencoder | plpModel$modelSettings$modelParameters$vae){
+        PythonInR::pySet("autoencoder", 1)
+      }
+    }
+    included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
+    included <- newData$map$newIds[newData$map$oldIds%in%included]-1 # python starts at 0, r at 1
+    PythonInR::pySet("included", as.matrix(sort(included)))
+  } 
 
   # save population
   if('indexes'%in%colnames(population)){
