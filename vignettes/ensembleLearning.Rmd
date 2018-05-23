@@ -1,0 +1,115 @@
+---
+title: "Learning Curve"
+author: " Xiaoyong Pan, Peter R. Rijnbeek,"
+date: "April 20, 2018"
+output:   
+  html_document:
+    number_sections: yes
+    toc: yes
+  pdf_document:
+    includes:
+      in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(PatientLevelPrediction)
+vignetteDataFolder <- "s:/temp/plpVignette"
+# Load all needed data if it exists on this computer:
+if (file.exists(vignetteDataFolder)){
+  plpModel <- loadPlpModel(vignetteDataFolder,'model')
+  lrResults <- loadPlpModel(file.path(vignetteDataFolder,'results'))
+}
+```
+
+\newpage
+# Introduction
+
+In general, different machine learning models will perform differently on the same dataset, and they can complement each other. Thus, different mdoels can be combined to improve prediction performance.
+In the `PatientLevelPrediction` package, we implemented different ensemble strategies for combining different models.
+
+# Usage
+
+Use the [OHDSI tool ecosystem](https://github.com/OHDSI) to generate a `population` and `plpData` object. Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.
+
+```{r eval=FALSE}
+set.seed(1234)
+data(plpDataSimulationProfile)
+sampleSize <- 12000
+plpData <- simulatePlpData(
+  plpDataSimulationProfile,
+  n = sampleSize
+)
+
+population <- createStudyPopulation(
+  plpData,
+  outcomeId = 2,
+  binary = TRUE,
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  removeSubjectsWithPriorOutcome = FALSE,
+  priorOutcomeLookback = 99999,
+  requireTimeAtRisk = FALSE,
+  minTimeAtRisk = 0,
+  riskWindowStart = 0,
+  addExposureDaysToStart = FALSE,
+  riskWindowEnd = 365,
+  addExposureDaysToEnd = FALSE,
+  verbosity = futile.logger::INFO
+)
+```
+
+Specify the prediction algorithms to be combined.
+
+```{r eval=FALSE}
+# Use LASSO logistic regression and Random Forest as base predictors
+model1 <- setLassoLogisticRegression()
+model2 <- setRandomForest()
+```
+
+Specify a test fraction and a sequence of training set fractions.
+
+```{r eval = FALSE}
+testFraction <- 0.2
+
+```
+
+Specify an ensembleStrategy to combine multiple predictors. 
+The strategy used for ensembling the outputs from different models, 
+it can be 'mean', 'product',  'weighted' and 'stacked':
+'mean'     the average probability from differnt models
+'product'  the product rule
+'weighted' the weighted average probability from different models using train AUC as weights.
+'stacked'  the stakced ensemble trains a logistics regression on different models.
+
+```{r eval = FALSE}
+ensembleStrategy <- 'stacked'
+
+```
+
+Specify the test split to be used.
+
+```{r}
+# Use a split by person, alterantively a time split is possible
+testSplit <- 'person'
+```
+
+Run the ensemble learning to combine model1 and model2. You can also use different plpData for different models.
+
+```{r eval=FALSE}
+results <- PatientLevelPrediction::runEnsembleModel(population, dataList = list(plpData, plpData), 
+                                                    modelList = list(model1, model2),
+                                                    testSplit=testSplit,
+                                                    testFraction=testFraction,
+                                                    nfold=3, splitSeed=1000, ensembleStrategy = ensembleStrategy) 
+```
+
+
+
