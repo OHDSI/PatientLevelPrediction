@@ -1,14 +1,14 @@
 ---
-title: "Learning Curve"
-author: "Jenna Reps, Xiaoyong Pan, Luis H. John, Peter R. Rijnbeek,"
-date: "April 20, 2018"
+title: "Plotting learning curves"
+author: "Peter R. Rijnbeek, Xiaoyong Pan, Luis H. John, Jenna Reps"
+date: "May 22, 2018"
 output:   
-  html_document:
-    number_sections: yes
-    toc: yes
   pdf_document:
     includes:
       in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  html_document:
     number_sections: yes
     toc: yes
   word_document:
@@ -19,7 +19,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
+```{r, eval=FALSE, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
 vignetteDataFolder <- "s:/temp/plpVignette"
 # Load all needed data if it exists on this computer:
@@ -43,7 +43,7 @@ Figure 1 shows a commonly observed learning curve plot, where model performance 
 ![Figure 1. Learning curve plot with model performance mapped to the vertical axis and training set size mapped to the horizontal axis.](learningCurve.png)
 
 
-## Bias and Variance
+## Bias and variance
 
 We can observe high variance (overfitting) in a prediction model if it performs well on the training set, but poorly on the testing set (Figure 2). Adding additional data is a common approach to counteract high variance. From the learning curve it becomes apparent, that adding additional data may improve performance on the testing set a little further, as the learning curve has not yet plateaued and, thus, the model is not saturated yet. Therefore, adding more data will decrease the gap between training set and testing set, which is the main indicator for a high variance problem. 
 

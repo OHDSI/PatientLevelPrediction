@@ -2,19 +2,18 @@
 % Please edit documentation in R/Parallel.R
 \name{registerParallelBackend}
 \alias{registerParallelBackend}
-\title{registerParallelBackend - Registers a parallel backend}
+\title{registerParallelBackend}
 \usage{
 registerParallelBackend(cores = NULL, logical = TRUE)
 }
 \arguments{
-\item{cores}{the number of cores to use for multi core operations}
+\item{cores}{the number of cores to use for multi core processing}
 
 \item{logical}{whether to consider logical or physical cores}
 }
 \description{
-registerParallelBackend registers a parallel backend for multi core
-processing It will detect the number of cores available automatically unless
-specified.
+Registers a parallel backend for multi core processing. The
+number of cores will be detected automatically, unless specified otherwise.
 }
 \examples{
 \dontrun{

@@ -1,3 +1,4 @@
+# @file Parallel.R
 #
 # Copyright 2018 Observational Health Data Sciences and Informatics
 #
@@ -15,13 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' registerParallelBackend - Registers a parallel backend
+#' @title registerParallelBackend
 #'
-#' registerParallelBackend registers a parallel backend for multi core
-#' processing It will detect the number of cores available automatically unless
-#' specified.
+#' @description Registers a parallel backend for multi core processing. The
+#' number of cores will be detected automatically, unless specified otherwise.
 #'
-#' @param cores the number of cores to use for multi core operations
+#' @param cores the number of cores to use for multi core processing
 #' @param logical whether to consider logical or physical cores
 #'
 #' @examples
@@ -52,10 +52,10 @@ registerParallelBackend <- function(cores = NULL, logical = TRUE) {
   doParallel::registerDoParallel(cores = numCores)
 }
 
-#' registerSequentialBackend - Registers a sequential backend
+#' @title registerSequentialBackend
 #'
-#' registerSequentialBackend registers a sequential backend for single core
-#' processing.
+#' @description registerSequentialBackend registers a sequential backend for
+#' single core processing.
 #'
 #' @examples
 #' \dontrun{
@@ -70,10 +70,10 @@ registerSequentialBackend <- function() {
 setup_parallel <- function() {
   if (!requireNamespace("foreach", quietly = TRUE)) {
     # throw error if package is not in namespace
-    stop("foreach package required for parallel operation.", call. = FALSE)
+    stop("foreach package is required for parallel processing.")
   }
   if (foreach::getDoParWorkers() == 1) {
     # throw warning if no parallel backend is registered
-    warning("No parallel backend registered.")
+    warning("No parallel backend is registered.")
   }
 }

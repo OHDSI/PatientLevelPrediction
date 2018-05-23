@@ -2,7 +2,7 @@
 % Please edit documentation in R/Plotting.R
 \name{plotLearningCurve}
 \alias{plotLearningCurve}
-\title{plotLearningCurve - Plots a learning curve}
+\title{plotLearningCurve}
 \usage{
 plotLearningCurve(learningCurve, metric = "AUROC",
   plotTitle = "Learning Curve", plotSubtitle = NULL, fileName = NULL)
@@ -19,9 +19,9 @@ function.}
   \item{\code{'sBrier'} - use the scaled Brier score}
 }}
 
-\item{plotTitle}{A title for the learning curve plot.}
+\item{plotTitle}{Title of the learning curve plot.}
 
-\item{plotSubtitle}{A subtitle for the learning curve plot.}
+\item{plotSubtitle}{Subtitle of the learning curve plot.}
 
 \item{fileName}{Filename of plot to be saved, for example \code{'plot.png'}.
 See the function \code{ggsave} in the ggplot2 package for supported file 
@@ -32,8 +32,8 @@ A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to
 file in a different format.
 }
 \description{
-Create a plot of the learning curve using the object returned from
-\code{createLearningCurve}.
+Create a plot of the learning curve using the object returned
+from \code{createLearningCurve}.
 }
 \examples{
 \dontrun{
@@ -44,4 +44,5 @@ learningCurve <- createLearningCurve(population,
 # plot the learning curve
 plotLearningCurve(learningCurve)
 }
+
 }

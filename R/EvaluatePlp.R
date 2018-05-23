@@ -629,8 +629,8 @@ getDemographicSummary <- function(prediction, plpData){
       
       ageCovariates <- plpData$covariates[ffbase::`%in%`(plpData$covariates$covariateId, 
                                                          plpData$covariateRef$covariateId[plpData$covariateRef$analysisId==3]), ]
-      ageCovariates <- ageCovariates[ffbase::`%in%`(ageCovariates$rowId, prediction$rowId), ]
-      ageCovariates <- ff::as.ram(ageCovariates)
+      ageCovariates <- ff::as.ram(ageCovariates)[ff::as.ram(ageCovariates$rowId%in%prediction$rowId),]
+      
       prediction$ageId <- 0
       prediction$ageId[match(ageCovariates$rowId, prediction$rowId)] <- ageCovariates$covariateId
       

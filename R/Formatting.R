@@ -262,8 +262,9 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
 
 
 
-# reformat the evaluation 
+# reformat the evaluation
 reformatPerformance <- function(train, test, analysisId){
+
   nr1 <- length(unlist(train$evaluationStatistics[-1]))
   nr2 <- length(unlist(test$evaluationStatistics[-1]))
   evaluationStatistics <- cbind(analysisId=rep(analysisId,nr1+nr2),
@@ -271,16 +272,16 @@ reformatPerformance <- function(train, test, analysisId){
                                 Metric = names(c(unlist(train$evaluationStatistics[-1]),
                                                  unlist(test$evaluationStatistics[-1]))),
                                 Value = c(unlist(train$evaluationStatistics[-1]),
-                                          unlist(test$evaluationStatistics[-1]))
-  )
-  
+                                      unlist(test$evaluationStatistics[-1]))
+                                )
+
   nr1 <- nrow(train$thresholdSummary)
   nr2 <- nrow(test$thresholdSummary)
   thresholdSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
-                                  train$thresholdSummary),
-                            cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
-                                  test$thresholdSummary))
-  
+                                      train$thresholdSummary),
+                                cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
+                                      test$thresholdSummary))
+
   if(!is.null(train$demographicSummary)){
     nr1 <- nrow(train$demographicSummary)
     nr2 <- nrow(test$demographicSummary)
@@ -291,27 +292,28 @@ reformatPerformance <- function(train, test, analysisId){
   } else{
     demographicSummary <- NULL
   }
-  
+
   nr1 <- nrow(train$calibrationSummary)
   nr2 <- nrow(test$calibrationSummary)
   calibrationSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
                                     train$calibrationSummary),
                               cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
                                     test$calibrationSummary))
-  
+
   nr1 <- nrow(train$predictionDistribution)
   nr2 <- nrow(test$predictionDistribution)
   predictionDistribution <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
-                                        train$predictionDistribution),
-                                  cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
-                                        test$predictionDistribution))
-  
-  
+                                    train$predictionDistribution),
+                              cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
+                                    test$predictionDistribution))
+
+
   result <- list(evaluationStatistics=evaluationStatistics,
                  thresholdSummary=thresholdSummary,
                  demographicSummary =demographicSummary,
                  calibrationSummary=calibrationSummary,
                  predictionDistribution=predictionDistribution)
-  
+
   return(result)
 }
+

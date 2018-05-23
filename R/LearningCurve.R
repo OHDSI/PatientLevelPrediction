@@ -1,3 +1,4 @@
+# @file LearningCurve.R
 #
 # Copyright 2018 Observational Health Data Sciences and Informatics
 #
@@ -15,11 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' createLearningCurve - Creates a learning curve object
+#' @title createLearningCurve
 #'
-#' @description
-#' Creates a learning curve object, which can be plotted using the 
-#' \code{plotLearningCurve()} function.
+#' @description Creates a learning curve object, which can be plotted using the
+#'  \code{plotLearningCurve()} function.
 #' 
 #' @param population The population created using \code{createStudyPopulation()}
 #'   that will be used to develop the model.
@@ -107,6 +107,7 @@
 #' # plot learning curve
 #' PatientLevelPrediction::plotLearningCurve(learningCurve)
 #' }
+#' 
 #' @export
 createLearningCurve <- function(population,
                                 plpData,
@@ -125,9 +126,10 @@ createLearningCurve <- function(population,
                                 clearffTemp = FALSE,
                                 minCovariateFraction = 0.001) {
   
-  nrRuns <- length(trainFractions)
+  # number of training set fractions
+  nRuns <- length(trainFractions)
   
-  # log the start time:
+  # record global start time
   ExecutionDateTime <- Sys.time()
   
   if (timeStamp | verbosity == TRACE) {
@@ -136,23 +138,30 @@ createLearningCurve <- function(population,
     flog.layout(layout.format('~m'))
   }
   flog.threshold(verbosity)
+  
+  # store a copy of the original population
   originalPopulation <- population
   
-  learningCurve <- foreach::foreach(i = 1:nrRuns,
+  learningCurve <- foreach::foreach(i = 1:nRuns,
                                     .combine = rbind,
                                     .errorhandling = "remove") %do% {
                                       
     # record start time
     startTime <- Sys.time()
     
+    # restore the original population
     population <- originalPopulation
-    # create an analysisid and folder to save the results of this run
-    start.all <- Sys.time()
-    if (is.null(analysisId))
-      analysisId <- gsub(':', '', gsub('-', '', gsub(' ', '', start.all)))
     
-    if (is.null(save))
-      save <- file.path(getwd(), 'plpmodels') #if NULL save to wd
+    # create an analysis id and folder to save the results of each run
+    start.all <- Sys.time()
+    if (is.null(analysisId)) {
+      analysisId <- gsub(':', '', gsub('-', '', gsub(' ', '', start.all)))
+    }
+    
+    # if no path is provided, save to working directory
+    if (is.null(save)) {
+      save <- file.path(getwd(), 'plpmodels')
+    }
     
     analysisPath = file.path(save, analysisId)
     if (!dir.exists(analysisPath)) {
@@ -160,9 +169,8 @@ createLearningCurve <- function(population,
     }
     logFileName = paste0(analysisPath, '/plplog.txt')
     
-    # write log to both console and file (tee).
-    # note other appenders can be created, e.g., to webservice or database!
-    
+    # write log to both, console and file
+    # other appenders can be created, e.g. to a web service or database
     flog.appender(appender.tee(logFileName))
     
     flog.seperator()
@@ -171,7 +179,7 @@ createLearningCurve <- function(population,
       utils::packageVersion("PatientLevelPrediction")
     ))
     
-    # get ids
+    # get target and outcome cohort ids
     cohortId <- attr(population, "metaData")$cohortId
     outcomeId <- attr(population, "metaData")$outcomeId
     
@@ -184,8 +192,7 @@ createLearningCurve <- function(population,
     flog.info(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
     flog.info(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
     flog.info(sprintf('%-20s%s', 'Population size: ', nrow(population)))
-    flog.info(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount >
-                                                  0)))
+    flog.info(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount > 0)))
     flog.seperator()
     
     # check parameters
@@ -198,8 +205,8 @@ createLearningCurve <- function(population,
     checkIsClass(nfold, 'numeric')
     checkHigher(nfold, 0)
     
-    # construct the train and test set.
-    # note that index will be zero for rows not in train or test
+    # construct the training and testing set according to split type
+    # indices will be non-zero for rows in training and testing set
     if (testSplit == 'time') {
       flog.trace('Dataset time split starter')
       indexes <-
@@ -229,7 +236,7 @@ createLearningCurve <- function(population,
         )
     }
     
-    # TODO better to move this to the splitter if this is important?
+    # check if population count is equal to the number of indices returned
     if (nrow(population) != nrow(indexes)) {
       flog.error(sprintf(
         'Population dimension not compatible with indexes: %d <-> %d',
@@ -239,8 +246,9 @@ createLearningCurve <- function(population,
       stop('Population dimension not compatible with indexes')
     }
     
-    # train the model
     flog.seperator()
+    
+    # concatenate indices to population dataframe
     tempmeta <- attr(population, "metaData")
     if (is.null(population$indexes)) {
       population <- merge(population, indexes)
@@ -251,6 +259,7 @@ createLearningCurve <- function(population,
     }
     attr(population, "metaData") <- tempmeta
     
+    # create settings object
     settings <- list(
       data = plpData,
       minCovariateFraction = minCovariateFraction,
@@ -267,6 +276,7 @@ createLearningCurve <- function(population,
     }
     sink(logFileName, append = TRUE, split = TRUE)
     
+    # fit the model
     model <- ftry(
       do.call(fitPlp, settings),
       error = function(e) {
@@ -288,8 +298,7 @@ createLearningCurve <- function(population,
     # calculate metrics
     flog.seperator()
     flog.trace('Prediction')
-    flog.trace(paste0('Calculating prediction for ', sum(indexes$index !=
-                                                           0)))
+    flog.trace(paste0('Calculating prediction for ', sum(indexes$index != 0)))
     ind <- population$rowId %in% indexes$rowId[indexes$index != 0]
     prediction <-
       model$predict(plpData = plpData, population = population[ind,])
@@ -304,6 +313,7 @@ createLearningCurve <- function(population,
     
     finally = flog.trace('Done.')
     
+    # measure model performance
     if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
                1)) {
       # add analysisID
@@ -318,7 +328,7 @@ createLearningCurve <- function(population,
         evaluatePlp(prediction[prediction$indexes < 0,], plpData)
       flog.trace('Done.')
       
-      # now combine the test and train data and add analysisId
+      # combine the test and train data and add analysisId
       performance <-
         reformatPerformance(train = performance.train, test = performance.test,
                             analysisId)
@@ -380,16 +390,16 @@ createLearningCurve <- function(population,
       performance.train <- NULL
     }
     
-    # log the end time:
+    # record end time
     endTime <- Sys.time()
     TotalExecutionElapsedTime <-
       as.numeric(difftime(endTime, ExecutionDateTime,
                           units = "secs"))
     
-    timeDiff <-
-      as.numeric(difftime(endTime, startTime, units = "secs"))
+    # compute execution time for each run
+    timeDiff <- as.numeric(difftime(endTime, startTime, units = "secs"))
     
-    # 1) input settings:
+    # input settings
     inputSetting <-
       list(
         dataExtrractionSettings = plpData$metaData$call,
@@ -399,7 +409,7 @@ createLearningCurve <- function(population,
         testFraction = testFraction
       )
     
-    # 2) Executionsummary details:
+    # execution summary
     executionSummary <-
       list(
         PackageVersion = list(
@@ -412,7 +422,6 @@ createLearningCurve <- function(population,
           RAM = utils::memory.size()
         ),
         #  test for non-windows needed
-        # Sys.info()
         TotalExecutionElapsedTime = TotalExecutionElapsedTime,
         ExecutionDateTime = ExecutionDateTime,
         Log = logFileName # location for now
@@ -461,6 +470,7 @@ createLearningCurve <- function(population,
     }
     flog.info(paste0('Finished covariate summary @ ', Sys.time()))
     
+    # create result object
     result <- list(
       inputSetting = inputSetting,
       executionSummary = executionSummary,
@@ -471,7 +481,6 @@ createLearningCurve <- function(population,
       analysisRef = list(
         analysisId = analysisId,
         analysisName = NULL,
-        #analysisName,
         analysisSettings = NULL
       )
     )
@@ -480,6 +489,7 @@ createLearningCurve <- function(population,
     flog.info(paste0('Log saved to ', logFileName))
     flog.info("Run finished successfully.")
     
+    # combine performance metrics
     df <- data.frame(
       x = trainFractions[i] * 100,
       popSizeTrain = nrow(population[population$index > 0,]),
@@ -498,33 +508,43 @@ createLearningCurve <- function(population,
       trainCalibrationSlope = performance.train$evaluationStatistics$CalibrationSlope,
       testCalibrationSlope = performance.test$evaluationStatistics$CalibrationSlope
     )
-    
+
+    # remove temporary files after each run
     if (clearffTemp) {
-      # Remove temporary files
-      file.remove(dir(getOption("fftempdir"), full.names = TRUE))
+      clearffTempDir()
     }
     
-    # return data frame row for each process
+    # return data frame row for each run
     return(df)
   }
 
-  names(learningCurve) <- c("x", "popSizeTrain", "outcomeCountTrain",
-                          "executionTime", "trainAUCROC", "testAUCROC",
-                          "trainAUCPR", "testAUCPR", "trainBrierScore",
-                          "testBrierScore", "trainBrierScaled",
-                          "testBrierScaled", "trainCalibrationIntercept",
-                          "testCalibrationIntercept", "trainCalibrationSlope",
-                          "testCalibrationSlope")
+  names(learningCurve) <- c(
+    "x",
+    "popSizeTrain",
+    "outcomeCountTrain",
+    "executionTime",
+    "trainAUCROC",
+    "testAUCROC",
+    "trainAUCPR",
+    "testAUCPR",
+    "trainBrierScore",
+    "testBrierScore",
+    "trainBrierScaled",
+    "testBrierScaled",
+    "trainCalibrationIntercept",
+    "testCalibrationIntercept",
+    "trainCalibrationSlope",
+    "testCalibrationSlope"
+  )
   
   return(learningCurve)
 }
 
-#' createLearningCurvePar - Creates a learning curve object in parallel
+#' @title createLearningCurvePar
 #' 
-#' @description 
-#' Creates a learning curve in parallel, which can be plotted using the 
-#' \code{plotLearningCurve()} function. Currently this functionality is only 
-#' supported by Lasso Logistic Regression.
+#' @description Creates a learning curve in parallel, which can be plotted using
+#'  the \code{plotLearningCurve()} function. Currently this functionality is
+#'  only supported by Lasso Logistic Regression.
 #' 
 #' @param population The population created using \code{createStudyPopulation()}
 #'   that will be used to develop the model.
@@ -577,6 +597,7 @@ createLearningCurve <- function(population,
 #' # plot learning curve
 #' plotLearningCurve(learningCurve)
 #' }
+#' 
 #' @export
 createLearningCurvePar <- function(population,
                                    plpData,
@@ -596,8 +617,10 @@ createLearningCurvePar <- function(population,
   # verify that a parallel backend has been registered
   setup_parallel()
   
+  # record global start time
   ExecutionDateTime <- Sys.time()
   
+  # store a copy of the original population
   originalPopulation <- population
   
   learningCurve <- foreach::foreach(
@@ -608,10 +631,10 @@ createLearningCurvePar <- function(population,
                   "PatientLevelPrediction")
   ) %dopar% {
     
-    # reset population
+    # restore original population
     population <- originalPopulation
     
-    # create an analysisid of this run
+    # create an analysisid for this run
     start.all <- Sys.time()
     if (is.null(analysisId))
       analysisId <-
@@ -620,9 +643,8 @@ createLearningCurvePar <- function(population,
     cohortId <- attr(population, "metaData")$cohortId
     outcomeId <- attr(population, "metaData")$outcomeId
     
-    # construct the train and test set.
-    # note that index will be zero for rows not in train or test
-    # errors are handled by the foreach construct
+    # construct the training and testing set according to split type
+    # indices will be non-zero for rows in training and testing set
     if (testSplit == 'time') {
       indexes <- PatientLevelPrediction::timeSplitter(
         population,
@@ -643,7 +665,7 @@ createLearningCurvePar <- function(population,
       )
     }
     
-    # train the model
+    # concatenate indices to population dataframe
     tempmeta <- attr(population, "metaData")
     if (is.null(population$indexes)) {
       population <- merge(population, indexes)
@@ -654,6 +676,7 @@ createLearningCurvePar <- function(population,
     }
     attr(population, "metaData") <- tempmeta
     
+    # create settings object
     settings <- list(
       data = plpData,
       minCovariateFraction = minCovariateFraction,
@@ -663,6 +686,7 @@ createLearningCurvePar <- function(population,
       outcomeId = outcomeId
     )
     
+    # fit the model
     model <- do.call(PatientLevelPrediction::fitPlp, settings)
     
     ind <- population$rowId %in% indexes$rowId[indexes$index != 0]
@@ -677,6 +701,7 @@ createLearningCurvePar <- function(population,
     
     attr(prediction, "metaData") <- metaData
     
+    # measure model performance
     if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
                1)) {
       # add analysisID
@@ -691,11 +716,11 @@ createLearningCurvePar <- function(population,
                                             plpData)
     }
     
-    # log the end time:
+    # record end time
     endTime <- Sys.time()
     TotalExecutionElapsedTime <- endTime - ExecutionDateTime
     
-    # return data frame row for each process
+    # return data frame row for each run
     return(
       data.frame(
         x = trainFractions[i] * 100,
@@ -737,7 +762,7 @@ createLearningCurvePar <- function(population,
     "testCalibrationSlope"
   )
   
-  # de-register parallel backend by registering sequential backend
+  # de-register the parallel backend by registering a sequential backend
   registerSequentialBackend()
   
   return(learningCurve)

@@ -1,6 +1,6 @@
 # @file Plotting.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -717,11 +717,10 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
   return(plot)
 }
 
-#' plotLearningCurve - Plots a learning curve
+#' @title plotLearningCurve
 #'
-#' @description
-#' Create a plot of the learning curve using the object returned from
-#' \code{createLearningCurve}.
+#' @description Create a plot of the learning curve using the object returned
+#' from \code{createLearningCurve}.
 #'
 #' @param learningCurve An object returned by \code{\link{createLearningCurve}}
 #'   function.
@@ -732,8 +731,8 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #'     \item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
 #'     \item{\code{'sBrier'} - use the scaled Brier score}
 #'   }
-#' @param plotTitle A title for the learning curve plot.
-#' @param plotSubtitle A subtitle for the learning curve plot.
+#' @param plotTitle Title of the learning curve plot.
+#' @param plotSubtitle Subtitle of the learning curve plot.
 #' @param fileName Filename of plot to be saved, for example \code{'plot.png'}.
 #'   See the function \code{ggsave} in the ggplot2 package for supported file 
 #'   formats.
@@ -751,6 +750,7 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #' # plot the learning curve
 #' plotLearningCurve(learningCurve)
 #' }
+#' 
 #' @export
 plotLearningCurve <- function(learningCurve,
                               metric = "AUROC",
@@ -770,6 +770,7 @@ plotLearningCurve <- function(learningCurve,
   yAxisRsnge <- NULL
   y <- NULL
   
+  # check for performance metric to plot
   if(metric == "AUROC") {
     # tidy up dataframe
     tidyLearningCurve <- learningCurve %>%
@@ -817,5 +818,6 @@ plotLearningCurve <- function(learningCurve,
   if ((!is.null(fileName)) & (is.character(fileName))) {
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
   }
+  
   return(plot)
 }

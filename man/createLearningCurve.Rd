@@ -2,7 +2,7 @@
 % Please edit documentation in R/LearningCurve.R
 \name{createLearningCurve}
 \alias{createLearningCurve}
-\title{createLearningCurve - Creates a learning curve object}
+\title{createLearningCurve}
 \usage{
 createLearningCurve(population, plpData, modelSettings, testSplit = "person",
   testFraction = 0.25, trainFractions = c(0.25, 0.5, 0.75),
@@ -101,8 +101,8 @@ various performance measures obtained by the model.
 }
 }
 \description{
-Creates a learning curve object, which can be plotted using the 
-\code{plotLearningCurve()} function.
+Creates a learning curve object, which can be plotted using the
+ \code{plotLearningCurve()} function.
 }
 \examples{
 \dontrun{
@@ -116,4 +116,5 @@ learningCurve <- PatientLevelPrediction::createLearningCurve(population,
 # plot learning curve
 PatientLevelPrediction::plotLearningCurve(learningCurve)
 }
+
 }

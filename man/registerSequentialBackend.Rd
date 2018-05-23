@@ -2,13 +2,13 @@
 % Please edit documentation in R/Parallel.R
 \name{registerSequentialBackend}
 \alias{registerSequentialBackend}
-\title{registerSequentialBackend - Registers a sequential backend}
+\title{registerSequentialBackend}
 \usage{
 registerSequentialBackend()
 }
 \description{
-registerSequentialBackend registers a sequential backend for single core
-processing.
+registerSequentialBackend registers a sequential backend for
+single core processing.
 }
 \examples{
 \dontrun{

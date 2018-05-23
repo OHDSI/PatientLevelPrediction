@@ -2,7 +2,7 @@
 % Please edit documentation in R/LearningCurve.R
 \name{createLearningCurvePar}
 \alias{createLearningCurvePar}
-\title{createLearningCurvePar - Creates a learning curve object in parallel}
+\title{createLearningCurvePar}
 \usage{
 createLearningCurvePar(population, plpData, modelSettings,
   testSplit = "person", testFraction = 0.25, trainFractions = c(0.25, 0.5,
@@ -57,9 +57,9 @@ avoid removal during preprocssing.}
 An object containing the various performance measures obtained by the model.
 }
 \description{
-Creates a learning curve in parallel, which can be plotted using the 
-\code{plotLearningCurve()} function. Currently this functionality is only 
-supported by Lasso Logistic Regression.
+Creates a learning curve in parallel, which can be plotted using
+ the \code{plotLearningCurve()} function. Currently this functionality is
+ only supported by Lasso Logistic Regression.
 }
 \examples{
 \dontrun{
@@ -76,4 +76,5 @@ learningCurve <- createLearningCurvePar(population,
 # plot learning curve
 plotLearningCurve(learningCurve)
 }
+
 }
