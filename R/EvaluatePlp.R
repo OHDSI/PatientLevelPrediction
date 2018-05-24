@@ -30,73 +30,77 @@
 
 #' @export
 evaluatePlp <- function(prediction, plpData){
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
 
   # checking inputs
   #========================================
   type <- attr(prediction, "metaData")$predictionType
   if (type != "binary") {
-    flog.fatal('Currently only support binary classification models')
-    stop()
+    stop('Currently only support binary classification models')
   }
 
   if(is.null(prediction$outcomeCount)){
-    flog.fatal('No outcomeCount column present')
-    stop()
+    stop('No outcomeCount column present')
   }
   if(length(unique(prediction$value))==1){
-    flog.fatal('Cannot evaluate as predictions all the same value')
-    stop()
+    stop('Cannot evaluate as predictions all the same value')
   }
   #============================
 
   # auc
-  flog.trace('Calculating AUC')
+  OhdsiRTools::logTrace('Calculating AUC')
   if(nrow(prediction) < 100000){
     auc <- computeAuc(prediction, confidenceInterval = T)
-    flog.info(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
+    OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
   } else{
     # speed issues with big data so using AUC package
     auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
-    flog.info(sprintf('%-20s%.2f', 'AUC: ', auc*100))
+    OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc*100))
   }
 
 
   # brier scores-returnss; brier, brierScaled
-  flog.trace('Calculating Brier Score')
+  OhdsiRTools::logTrace('Calculating Brier Score')
   brier <- brierScore(prediction)
-  flog.info(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
+  OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
 
   # 2) thresholdSummary
   # need to update thresholdSummary this with all the requested values
-  flog.trace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
+  OhdsiRTools::logTrace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
   thresholdSummary <-getThresholdSummary(prediction) # rename and edit this
-  flog.trace(paste0('Completed @ ',Sys.time()))
+  OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
 
   # 3) demographicSummary
-  flog.trace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
+  OhdsiRTools::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
   demographicSummary <- getDemographicSummary(prediction, plpData)
-  flog.trace(paste0('Completed @ ',Sys.time()))
+  OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
   # need to edit covSettings to make age/gender always calculated!
 
   # calibration linear fit- returns gradient, intercept
-  flog.trace('Calculating Calibration Line')
+  OhdsiRTools::logTrace('Calculating Calibration Line')
   calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
-  flog.info(sprintf('%-20s%.2f%-20s%.2f', 'Calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
+  OhdsiRTools::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
   # 4) calibrationSummary
-  flog.trace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
+  OhdsiRTools::logTrace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
   calibrationSummary <- getCalibration(prediction,
                                        numberOfStrata = 10,
                                        truncateFraction = 0.01)
-  flog.trace(paste0('Completed @ ',Sys.time()))
+  OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
 
   # 5) predictionDistribution - done
-  flog.trace(paste0('Calculating Quantiles Started @ ',Sys.time()))
+  OhdsiRTools::logTrace(paste0('Calculating Quantiles Started @ ',Sys.time()))
   predictionDistribution <- getPredictionDistribution(prediction)
-  flog.trace(paste0('Completed @ ',Sys.time()))
+  OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
 
   # Extra: Average Precision
   aveP.val <- averagePrecision(prediction)
-  flog.info(sprintf('%-20s%.2f', 'Average Precision: ', aveP.val))
+  OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'Average Precision: ', aveP.val))
 
   # evaluationStatistics:
   evaluationStatistics <- list(analysisId= attr(prediction, "metaData")$analysisId,

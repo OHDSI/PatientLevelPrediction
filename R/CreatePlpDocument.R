@@ -23,6 +23,7 @@
 #' @details
 #' The function creates a word document containing the analysis details, data summary and prediction model results.
 #' @param plpResult                        An object of type \code{plpResult} returned by running runPlp()
+#' @param plpValidation                    An object of type \code{validatePlp} returned by running externalValidatePlp()
 #' @param plpData                          The plpData
 #' @param targetName                       A string with the target description name
 #' @param outcomeName                      A string with the outcome description name
@@ -33,7 +34,7 @@
 #' @return
 #' A work document containing the selected outputs within the user's directory at location specified in outputLocation
 #' @export
-createPlpReport <- function(plpResult=NULL,
+createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
                               plpData = NULL,
                               targetName = '<target population>',
                               outcomeName = '<outcome>',
@@ -54,6 +55,11 @@ createPlpReport <- function(plpResult=NULL,
     stop('Incorrect outcomeName')
   }
 
+  if(!is.null(plpValidation)){
+    if(class(plpValidation)!="validatePlp"){
+      stop('Incorrect plpValidation')
+    }
+  }
 
   #================ CALCULATE KEY VARIABLES =========================
   # calcualte the auc
@@ -317,6 +323,34 @@ createPlpReport <- function(plpResult=NULL,
 
   #------------------------------------------------
 
+  if(!is.null(plpValidation)){
+    doc = ReporteRs::addTitle(doc, 'External Validation:', level=3)
+    doc = ReporteRs::addParagraph( doc, value = paste("The external validation performance is sumamried in the table below:"))
+    
+    exSum <-  plpValidation$summary
+    exSum <- exSum[,c('Database','populationSize','outcomeCount', colnames(exSum)[grep('auc', tolower(colnames(exSum)))])]
+    exSum[,4:ncol(exSum)] <- round(apply(exSum[,4:ncol(exSum)], 2, function(x) as.numeric(x)), digits = 3)
+    exSumTab <- ReporteRs::FlexTable(exSum)
+    doc = ReporteRs::addFlexTable(doc, exSumTab)
+    
+    doc = ReporteRs::addParagraph( doc, value = paste("The roc plots are:"))
+    for(i in 1:length(plpValidation$validation)){
+      valPlot <- PatientLevelPrediction::plotSparseRoc(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
+      valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
+      ReporteRs::addPlot(doc, fun=print, x=valPlot)
+    }
+    
+    doc = ReporteRs::addParagraph( doc, value = paste("The calibration plots are:"))
+    for(i in 1:length(plpValidation$validation)){
+      valPlot <- PatientLevelPrediction::plotSparseCalibration2(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
+      valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
+      ReporteRs::addPlot(doc, fun=print, x=valPlot)
+    }
+    
+    
+  }
+  
+  
 
   #============ MODEL  ==========================================
   #  The non-zero covariates or variable importance
@@ -470,6 +504,7 @@ formatDocNumbers <- function(x, dp=3){
 #' @details
 #' The function creates a word document containing the analysis details, data summary and prediction model results.
 #' @param plpResult                        An object of type \code{plpResult} returned by running runPlp()
+#' @param plpValidation                    An object of type \code{validatePlp} returned by running externalValidatePlp()
 #' @param plpData                          The plpData
 #' @param targetName                       A string with the target description name
 #' @param outcomeName                      A string with the outcome description name
@@ -484,7 +519,7 @@ formatDocNumbers <- function(x, dp=3){
 #' @return
 #' A work document containing the selected outputs within the user's directory at location specified in outputLocation
 #' @export
-createPlpJournalDocument <- function(plpResult=NULL,
+createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                                      plpData = NULL,
                                      targetName = '<target population>',
                                      outcomeName = '<outcome>',
@@ -531,6 +566,12 @@ createPlpJournalDocument <- function(plpResult=NULL,
     }
   }
 
+  if(!is.null(plpValidation)){
+    if(class(plpValidation)!="validatePlp"){
+      stop('Incorrect plpValidation')
+    }
+  }
+  
   #!!================
   # TODO: add check to make sure the characterisation stuff is in data - otherwise add warning
 
@@ -771,11 +812,62 @@ createPlpJournalDocument <- function(plpResult=NULL,
   if(includeTrain)
     ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
 
-  text <- paste0(" The external validation on <dataset 1> consisting of a target population of ",
-                 "<target count> and outcome count of <outcome count> obtained an AUC of <add auc> ",
-                 "(<auc ci>).  [repeat for each dataset].  The external validation calibration plots ",
-                 "can be found in Appendix 2.")
-  doc = ReporteRs::addParagraph(doc, text )
+  
+  if(!is.null(plpValidation)){
+    if(length(plpValidation$summary$Database)>2){
+      datasets <- paste0(paste0(plpValidation$summary$Database[-length(plpValidation$summary$Database)], collapse=', '), 
+                         ' and ',
+                         plpValidation$summary$Database[length(plpValidation$summary$Database)]
+      )
+      targetCounts <- paste0(paste0(plpValidation$summary$populationSize[-length(plpValidation$summary$populationSize)], collapse=', '), 
+                             ' and ',
+                             plpValidation$summary$populationSize[length(plpValidation$summary$populationSize)]
+      )
+      outcomeCounts <- paste0(paste0(plpValidation$summary$outcomeCount[-length(plpValidation$summary$outcomeCount)], collapse=', '), 
+                              ' and ',
+                              plpValidation$summary$outcomeCount[length(plpValidation$summary$outcomeCount)]
+      )
+ 
+      aucInd <- grep('auc',tolower(colnames(plpValidation$summary)))
+      ciInd <- grep('95ci',tolower(colnames(plpValidation$summary)))
+      aucInd <- aucInd[!aucInd%in%ciInd]
+      
+      auc <- paste0(round(as.numeric(plpValidation$summary[,aucInd]), digits=3), 
+                     ' (', round(as.numeric(plpValidation$summary[,ciInd[1]]), digits=3) ,
+                     '-',round(as.numeric(plpValidation$summary[,ciInd[2]]), digits = 3) , 
+                     ')')
+      aucs <- paste0(paste0(auc[-length(auc)],collapse = ', '), ' and ', auc[length(auc)])
+      
+    } else {
+      datasets <- paste0(plpValidation$summary$Database, collapse=' and ')
+      targetCounts <- paste0(plpValidation$summary$populationSize, collapse=' and ')
+      outcomeCounts <- paste0(plpValidation$summary$outcomeCount, collapse=' and ')
+      
+      aucInd <- grep('auc',tolower(colnames(plpValidation$summary)))
+      ciInd <- grep('95ci',tolower(colnames(plpValidation$summary)))
+      aucInd <- aucInd[!aucInd%in%ciInd]
+      auc <- paste0(round(as.numeric(plpValidation$summary[,aucInd]), digits=3), 
+                     ' (', round(as.numeric(plpValidation$summary[,ciInd[1]]), digits=3) ,
+                     '-',round(as.numeric(plpValidation$summary[,ciInd[2]]), digits = 3) , 
+                     ')')
+      aucs <- paste0(auc, collapse = ' and ')
+    }
+    text <- paste0(" The external validation on ",datasets," consisting of target population sizes of ",
+                   targetCounts,
+                   " and outcome counts of ",outcomeCounts," obtained an AUC of ",
+                   aucs,
+                   " respectively.  The external validation roc and calibration plots ",
+                   "can be found in Appendix B.")
+    doc = ReporteRs::addParagraph(doc, text )
+    
+  } else {
+    text <- paste0(" The external validation on <dataset 1> consisting of a target population of ",
+                   "<target count> and outcome count of <outcome count> obtained an AUC of <add auc> ",
+                   "(<auc ci>).  [repeat for each dataset].  The external validation calibration plots ",
+                   "can be found in Appendix 2.")
+    doc = ReporteRs::addParagraph(doc, text )
+  }
+  
 
   doc = ReporteRs::addTitle(doc, 'Discussion', level=2)
   doc = ReporteRs::addTitle(doc, 'Interpretation', level=3)
@@ -842,7 +934,24 @@ createPlpJournalDocument <- function(plpResult=NULL,
   doc = ReporteRs::addParagraph(doc, "<atlas cohorts + concept sets>" )
 
   doc = ReporteRs::addTitle(doc, 'Appendix B', level=2)
-  doc = ReporteRs::addParagraph(doc, "<calibration plots of external validation>" )
+  doc = ReporteRs::addParagraph(doc, "<Plots of external validation>" )
+  if(!is.null(plpValidation)){
+    doc = ReporteRs::addParagraph( doc, value = paste("The roc plots are:"))
+    for(i in 1:length(plpValidation$validation)){
+      valPlot <- PatientLevelPrediction::plotSparseRoc(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
+      valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
+      ReporteRs::addPlot(doc, fun=print, x=valPlot)
+    }
+    
+    doc = ReporteRs::addParagraph( doc, value = paste("The calibration plots are:"))
+    for(i in 1:length(plpValidation$validation)){
+      valPlot <- PatientLevelPrediction::plotSparseCalibration2(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
+      valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
+      ReporteRs::addPlot(doc, fun=print, x=valPlot)
+    }
+    
+    
+  }
 
   # write the document to file location
   ReporteRs::writeDoc( doc, file = file.path(outputLocation))

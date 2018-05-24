@@ -74,9 +74,16 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
 #xgboost
 fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                         outcomeId, cohortId, ...){
-
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   if(!quiet)
-    writeLines('Training GBM model')
+    OhdsiRTools::logTrace('Training GBM model')
   
   if(param[[1]]$seed!='NULL')
     set.seed(param[[1]]$seed)
@@ -92,22 +99,17 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   #TODO - how to incorporate indexes?
   
   # convert data into sparse Matrix:
-  result <- toSparseM(plpData,population,map=NULL)
+  result <- toSparseM(plpData,population,map=NULL, temporal = F)
   data <- result$data
   
   # now get population of interest
   data <- data[population$rowId,]
   
   # set test/train sets (for printing performance as it trains)
-  if(!quiet)
-    writeLines(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
+  OhdsiRTools::logInfo(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
   start <- Sys.time()
   
   # pick the best hyper-params and then do final training on all data...
-  writeLines('train')
-  datas <- list(population=population, data=data)
-  param.sel <- lapply(param, function(x) do.call(gbm_model2, c(x,datas)  ))
-  #writeLines('hyper')
   hyperSummary <- do.call(rbind, lapply(param.sel, function(x) x$hyperSum))
   hyperSummary <- as.data.frame(hyperSummary)
   hyperSummary$auc <- unlist(lapply(param.sel, function(x) x$auc)) # new edit
@@ -215,9 +217,6 @@ gbm_model2 <- function(data, population,
   }
   param.val <- paste0('max depth: ',max.depth,'-- min_child_weight: ', min_child_weight, 
                       '-- nthread: ', nthread, ' nround: ',nround, '-- eta: ', eta)
-  writeLines('==========================================')
-  writeLines(paste0('GMB with parameters:', param.val,' obtained an AUC of ',auc))
-  writeLines('==========================================')
   
   result <- list(model=model,
                  auc=auc,
