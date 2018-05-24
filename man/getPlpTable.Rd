@@ -4,13 +4,18 @@
 \alias{getPlpTable}
 \title{Create a dataframe with the summary details of the population cohort for publications}
 \usage{
-getPlpTable(plpData, covariateSettings, population, connectionDetails,
+getPlpTable(cdmDatabaseSchema, oracleTempSchema, covariateSettings,
+  longTermStartDays = -365, population, connectionDetails,
   cohortTable = "#temp_person")
 }
 \arguments{
-\item{plpData}{An object returned by running \code{getPlpData}.}
+\item{cdmDatabaseSchema}{The schema containing the OMOP CDM data}
 
-\item{covariateSettings}{If plpData is missing then covariatesettings is needed (with aggregated=T)}
+\item{oracleTempSchema}{The oracle schema if needed}
+
+\item{covariateSettings}{The covariateSettings if different from default}
+
+\item{longTermStartDays}{How far to look back when looking for the variables in the data}
 
 \item{population}{The population you want the summary table for}
 

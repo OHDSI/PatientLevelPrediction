@@ -1,5 +1,5 @@
 ---
-title: "Adding existing patient-level predictive models"
+title: "Adding existing prediction models into the OHDSI PatientLevelPrediction framework"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
 output:
@@ -55,7 +55,7 @@ The analysisid depends on the domain for the concept and the lookback time (prio
 
 ```{r tidy=TRUE,eval=FALSE}
 library(PatientLevelPrediction)
-covSettings <- FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T, #0003: 0-5, 1003: 5-10,..., 19003:95-100
+covSettings <- FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T, 
                                                      useConditionOccurrenceLongTerm = T,
                                                      includedCovariateIds = c(),
                                                      longTermStartDays = -9999, 
@@ -65,8 +65,10 @@ Here we stated that we want to use the useConditionOccurrenceLongTerm (these hav
 
 ```{r tidy=TRUE,results='axis', echo = FALSE,}
 data.frame(modelCovariateId= c(1,2,3,3,3,3,3,4,5),
-                              covariateId=c(319835102, 316866102, 15003, 16003, 
-                                            17003, 18003, 19003, 201820102, 381591102)
+                              covariateId=c(319835102, 316866102, 
+                                            15003, 16003, 
+                                            17003, 18003, 19003, 
+                                            201820102, 381591102)
                               )
 ```
 
@@ -79,9 +81,12 @@ model_table <- data.frame(modelId=c(1,1,1,1,1),
                           coefficientValue = c(1, 1, 1, 1, 2)
                           )
 
-covariate_table <- data.frame(modelCovariateId= c(1,2,3,3,3,3,3,4,5),
-                              covariateId=c(319835102, 316866102, 15003, 16003, 
-                                            17003, 18003, 19003, 201820102, 381591102)
+covariate_table <- data.frame(modelCovariateId= c(1,2,3,3,3,
+                                                  3,3,4,5),
+                              covariateId=c(319835102, 316866102, 
+                                            15003, 16003, 
+                                            17003, 18003, 19003, 
+                                            201820102, 381591102)
                               )
 ```
 
@@ -108,19 +113,75 @@ Once run you will find two functions in your environment:
 # Extracting the existing model risk for a target cohort
 Now you can use the functions you previously created to extract the existing model risk scores for a target population:
 ```{r tidy=TRUE,eval=FALSE}
-plpData <- PatientLevelPrediction::getPlpData(connectionDetails, 
-                                              cdmDatabaseSchema = 'databasename.dbo',
-                                              cohortId = 1,
-                                              outcomeIds = 2, 
-                                              cohortDatabaseSchema = 'databasename.dbo', 
-                                              cohortTable =  'cohort' , 
-                                              outcomeDatabaseSchema = 'databasename.dbo', 
-                                              outcomeTable = 'cohort', 
-                                              covariateSettings =  createExistingmodelsCovariateSettings(),
-                                              sampleSize = 20000
-                                              )
+plpData <- getPlpData(connectionDetails, 
+                      cdmDatabaseSchema = 'databasename.dbo',
+                      cohortId = 1,
+                      outcomeIds = 2, 
+                      cohortDatabaseSchema = 'databasename.dbo', 
+                      cohortTable =  'cohort' , 
+                      outcomeDatabaseSchema = 'databasename.dbo', 
+                      outcomeTable = 'cohort', 
+                      covariateSettings =  createExistingmodelsCovariateSettings(),
+                      sampleSize = 20000
+                      )
 ```
 
+To implement and evaluate an existing model you can use the function `PatientLevelPrediction::evaluateExistingModel()` where you need to input: 
+* modelTable - a data.frame containing the columns: modelId, covariateId and coefficientValue
+* covaraiteTable - a data.frame containing the columns: covariateId and standardCovariateId - this provides a set of standardCovariateId to define each model covariate.
+* interceptTable - a data.frame containing the columns modelId and interceptValue or NULL if the model doesn't  have an intercept.
+* type - the type of model (either: score or logistic)
+* covariateSettings - this is used to determine the startDay and endDay for the standard covariates
+* customCovariates - a data.frame with the covariateId and sql to generate the covariate value.
+* riskWindowStart - the time at risk starts at target cohort start date + riskWindowStart
+* addExposureDaysToEnd - if true then the time at risk window ends a the cohort end date + riskWindowEnd rather than cohort start date + riskWindowEnd
+* riskWindowEnd - the time at risk ends at target cohort start/end date + riskWindowStart
+* requireTimeAtRisk - whether to add a constraint to the number of days observed during the time at risk period in including people into the study
+* minTimeAtRisk - the minimum number of days observation during the time at risk a target population person needs to be included
+* includeAllOutcomes - Include outcomes even if they do not satisfy the minTimeAtRisk?  (useful if the outcome is associated to death or rare)
+* removeSubjectsWithPriorOutcome - remove target population people who have the outcome prior to the time at tisk period?
+* connectionDetails - the connection to the CDM database
+* Then the settings for downloading the new data:
+  * cdmDatabaseSchema
+  * cohortDatabaseSchema
+  * cohortTable
+  * cohortId
+  * outcomeDatabaseSchema
+  * outcomeTable
+  * outcomeId
+  * oracleTempSchema
+  
+To run the external validation of an existing model where the target population are those in the cohort table with id 1 and the outcome is those in the cohort table with id 2 and we are looking to predict first tinme occurrance of the outcome 1 day to 365 days after the target cohort start date (asusming you have the modelTable, covariateTable and interceptTable in the format explained above):
+```{r tidy=TRUE,eval=FALSE}
+
+# if the existing model uses gender and condition groups looking back 200 days:
+covSet <- FeatureExtraction::createCovariateSettings(useDemographicsGender = T,
+                                                     useConditionGroupEraMediumTerm = T, 
+                                                     mediumTermStartDays = -200)
+result <- evaluateExistingModel(modelTable=modelTable,
+                                covariateTable=covariateTable,
+                                interceptTable=NULL,
+                                type = 'score', 
+                                covariateSettings =  covSet
+                                riskWindowStart = 1, 
+                                addExposureDaysToEnd = F, 
+                                riskWindowEnd = 365, 
+                                requireTimeAtRisk = T, 
+                                minTimeAtRisk = 364, 
+                                includeAllOutcomes = T, 
+                                removeSubjectsWithPriorOutcome = T, 
+                                connectionDetails = connectionDetails, 
+                                cdmDatabaseSchema = 'databasename.dbo',
+                                cohortId = 1,
+                                outcomeId = 2, 
+                                cohortDatabaseSchema = 'databasename.dbo', 
+                                cohortTable =  'cohort' , 
+                                outcomeDatabaseSchema = 'databasename.dbo', 
+                                outcomeTable = 'cohort'
+                      )
+
+
+```
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.
 

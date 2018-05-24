@@ -1,6 +1,6 @@
 # @file PatientLevelPrediction.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -27,10 +27,14 @@
 #' @importFrom stats binom.test lm printCoefmat rpois runif sd aggregate
 #' @importFrom utils write.csv write.table data
 #' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
+#' @importFrom magrittr %>%
 #' @import bit
+#' @import ffbase
 #' @import Cyclops
 #' @import DatabaseConnector
 #' @import FeatureExtraction
+#' @import plotly
+#' @import OhdsiSharing
 #' @useDynLib PatientLevelPrediction
 NULL
 

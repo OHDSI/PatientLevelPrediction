@@ -1,6 +1,6 @@
 # @file RunPlp.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -202,6 +202,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
     }
     if(testSplit=='person'){
       flog.trace('Dataset person split starter')
+      if(is.null(splitSeed)){ splitSeed <- sample(20000000,1)-10000000} #keep record of splitSeed
       indexes <- ftry(personSplitter(population, test=testFraction, nfold=nfold, seed=splitSeed),
                       finally= flog.trace('Done.')
       )
@@ -313,7 +314,8 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
                        modelSettings = modelSettings,
                        testSplit = testSplit, 
                        testFraction= testFraction,
-                       nfold=nfold)
+                       nfold=nfold,
+                       splitSeed = splitSeed)
   
   # 2) Executionsummary details:
   executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,

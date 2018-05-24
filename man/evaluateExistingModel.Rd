@@ -10,7 +10,7 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
   requireTimeAtRisk = T, minTimeAtRisk = 364, includeAllOutcomes = T,
   removeSubjectsWithPriorOutcome = T, connectionDetails, cdmDatabaseSchema,
   cohortDatabaseSchema, cohortTable, cohortId, outcomeDatabaseSchema,
-  outcomeTable, outcomeId)
+  outcomeTable, outcomeId, oracleTempSchema = cdmDatabaseSchema)
 }
 \arguments{
 \item{modelTable}{The model covariates and scores}
@@ -54,6 +54,8 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 \item{outcomeTable}{A string specifying the table containing the outcome cohorts}
 
 \item{outcomeId}{An iteger specifying the cohort id for the outcome cohorts}
+
+\item{oracleTempSchema}{The temp oracle schema}
 }
 \value{
 The performance of the existing model and prediction

@@ -1,6 +1,6 @@
 # @file gradientBoostingMachine.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -82,7 +82,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
     set.seed(param[[1]]$seed)
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm')
+  if(!'ffdf'%in%class(plpData$covariates) )
     stop('This algorithm requires plpData in coo format')
   
   metaData <- attr(population, 'metaData')

@@ -5,7 +5,7 @@
 \title{Convert logistic regression model to sql code...}
 \usage{
 createLrSql(models, modelNames, covariateConstructionName = "prediction",
-  model_table = "#model_table", analysis_id = 111, e = environment(),
+  modelTable = "#model_table", analysisId = 111, e = environment(),
   databaseOutput = NULL)
 }
 \arguments{
@@ -13,11 +13,11 @@ createLrSql(models, modelNames, covariateConstructionName = "prediction",
 
 \item{modelNames}{A name used in the covariate function names (no spaces)}
 
-\item{covariateConstructionName}{the name used to for the create covariate function}
+\item{covariateConstructionName}{the name used for the create covariate function}
 
-\item{model_table}{The temporary table name storing the model details}
+\item{modelTable}{The temporary table name storing the model details}
 
-\item{analysis_id}{The covariate analysis_id}
+\item{analysisId}{The covariate analysis_id}
 
 \item{e}{The environment to output the covariate setting functions to}
 

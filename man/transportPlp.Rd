@@ -4,13 +4,18 @@
 \alias{transportPlp}
 \title{Transports a plpResult to a new location and removed sensitive data}
 \usage{
-transportPlp(plpResult, outputFolder, n = NULL,
-  includeEvaluationStatistics = T, includeThresholdSummary = T,
+transportPlp(plpResult, modelName = NULL, dataName = NULL, outputFolder,
+  n = NULL, includeEvaluationStatistics = T, includeThresholdSummary = T,
   includeDemographicSummary = T, includeCalibrationSummary = T,
-  includePredictionDistribution = T, includeCovariateSummary = T)
+  includePredictionDistribution = T, includeCovariateSummary = T,
+  save = T)
 }
 \arguments{
 \item{plpResult}{An object returned by running \code{runPlp}.}
+
+\item{modelName}{A string of the name of the model}
+
+\item{dataName}{A string of the name of the data}
 
 \item{outputFolder}{The folder on the file system where the CSV files will be created. If the
 folder does not yet exist it will be created.}
@@ -28,6 +33,8 @@ folder does not yet exist it will be created.}
 \item{includePredictionDistribution}{Whether to include the predictionDistribution}
 
 \item{includeCovariateSummary}{Whether to include the covariateSummary}
+
+\item{save}{Whether to save the result or just return the transportable object}
 }
 \description{
 Transports a plpResult to a new location and removed sensitive data

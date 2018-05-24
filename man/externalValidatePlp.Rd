@@ -4,30 +4,33 @@
 \alias{externalValidatePlp}
 \title{externalValidatePlp - Validate a model on new databases}
 \usage{
-externalValidatePlp(plpResult, connectionDetails, validation_schema_target,
-  validation_schema_outcome, validation_schema_cdm,
-  validation_table_target = "cohort", validation_table_outcome = "cohort",
-  validation_id_target = NULL, validation_id_outcome = NULL,
-  verbosity = futile.logger::INFO, keepPrediction = F)
+externalValidatePlp(plpResult, connectionDetails, validationSchemaTarget,
+  validationSchemaOutcome, validationSchemaCdm,
+  validationTableTarget = "cohort", validationTableOutcome = "cohort",
+  validationIdTarget = NULL, validationIdOutcome = NULL,
+  oracleTempSchema = NULL, verbosity = futile.logger::INFO,
+  keepPrediction = F)
 }
 \arguments{
 \item{plpResult}{The object returned by runPlp() containing the trained model}
 
 \item{connectionDetails}{The connection details for extracting the new data}
 
-\item{validation_schema_target}{A string or list of strings specifying the database containing the target cohorts}
+\item{validationSchemaTarget}{A string or list of strings specifying the database containing the target cohorts}
 
-\item{validation_schema_outcome}{A string or list of strings specifying the database containing the outcome cohorts}
+\item{validationSchemaOutcome}{A string or list of strings specifying the database containing the outcome cohorts}
 
-\item{validation_schema_cdm}{A string or list of strings specifying the database containing the cdm}
+\item{validationSchemaCdm}{A string or list of strings specifying the database containing the cdm}
 
-\item{validation_table_target}{A string or list of strings specifying the table containing the target cohorts}
+\item{validationTableTarget}{A string or list of strings specifying the table containing the target cohorts}
 
-\item{validation_table_outcome}{A string or list of strings specifying the table containing the outcome cohorts}
+\item{validationTableOutcome}{A string or list of strings specifying the table containing the outcome cohorts}
 
-\item{validation_id_target}{An iteger or list of integers specifying the cohort id for the target cohorts}
+\item{validationIdTarget}{An iteger or list of integers specifying the cohort id for the target cohorts}
 
-\item{validation_id_outcome}{An iteger or list of integers specifying the cohort id for the outcome cohorts}
+\item{validationIdOutcome}{An iteger or list of integers specifying the cohort id for the outcome cohorts}
+
+\item{oracleTempSchema}{The temp oracle schema requires read/write}
 
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 \itemize{

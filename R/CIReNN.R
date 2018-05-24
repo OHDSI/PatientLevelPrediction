@@ -1,7 +1,7 @@
 # @file CIReNN.R
 # Code edited from OHDSI contributor @chandryou CIReNN branch
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -26,12 +26,12 @@
 #' Create setting for CIReNN model
 #'
 #' @param units         The number of units of RNN layer - as a list of vectors
-#' @param recurrent_dropout  The reccurrent dropout rate (regularisation)
-#' @param layer_dropout      The layer dropout rate (regularisation)
+#' @param recurrentDropout  The reccurrent dropout rate (regularisation)
+#' @param layerDropout      The layer dropout rate (regularisation)
 #' @param lr                 Learning rate
 #' @param decay              Learning rate decay over each update.
-#' @param outcome_weight      The weight of the outcome class in the loss function
-#' @param batch_size          The number of data points to use per training batch
+#' @param outcomeWeight      The weight of the outcome class in the loss function
+#' @param batchSize          The number of data points to use per training batch
 #' @param epochs          Number of times to iterate over dataset
 #' @param seed            Random seed used by deep learning model
 #'
@@ -40,8 +40,8 @@
 #' model.CIReNN <- setCIReNN()
 #' }
 #' @export
-setCIReNN <- function(units=c(128, 64), recurrent_dropout=c(0.2), layer_dropout=c(0.2),
-                      lr =c(1e-4), decay=c(1e-5), outcome_weight = c(1.0), batch_size = c(100), 
+setCIReNN <- function(units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
+                      lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(1.0), batchSize = c(100), 
                       epochs= c(100),  seed=NULL  ){
   
   # if(class(indexFolder)!='character')
@@ -91,11 +91,11 @@ setCIReNN <- function(units=c(128, 64), recurrent_dropout=c(0.2), layer_dropout=
   #    stop('UsetidyCovariateData must be an TRUE or FALSE')
   
   result <- list(model='fitCIReNN', param=split(expand.grid(
-    units=units, recurrent_dropout=recurrent_dropout, 
-    layer_dropout=layer_dropout,
-    lr =lr, decay=decay, outcome_weight=outcome_weight,epochs= epochs,
+    units=units, recurrentDropout=recurrentDropout, 
+    layerDropout=layerDropout,
+    lr =lr, decay=decay, outcomeWeight=outcomeWeight,epochs= epochs,
     seed=ifelse(is.null(seed),'NULL', seed)),
-    1:(length(units)*length(recurrent_dropout)*length(layer_dropout)*length(lr)*length(decay)*length(outcome_weight)*length(epochs)*max(1,length(seed)))),
+    1:(length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(epochs)*max(1,length(seed)))),
     name='CIReNN'
   )
 
@@ -121,7 +121,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   data <- result$data
   
   #one-hot encoding
-  population$y <- population$outcomeCount#keras::to_categorical(population$outcomeCount, length(unique(population$outcomeCount)))
+  population$y <- keras::to_categorical(population$outcomeCount, 2)#[,2] #population$outcomeCount
 
   # do cross validation to find hyperParameter
   datas <- list(population=population, plpData=data)
@@ -166,12 +166,13 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
 }
 
 trainCIReNN<-function(plpData, population,
-                      units=128, recurrent_dropout=0.2, layer_dropout=0.2,
-                      lr =1e-4, decay=1e-5, outcome_weight = 1.0, batch_size = 100, 
+                      units=128, recurrentDropout=0.2, layerDropout=0.2,
+                      lr =1e-4, decay=1e-5, outcomeWeight = 1.0, batchSize = 100, 
                       epochs= 100, seed=NULL, train=TRUE){
   
- writeLines(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))
   if(!is.null(population$indexes) && train==T){
+    writeLines(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))
+    
     index_vect <- unique(population$indexes)
     perform <- c()
     
@@ -186,45 +187,62 @@ trainCIReNN<-function(plpData, population,
       ##single-layer gru
       model <- keras::keras_model_sequential()
       model %>%
-        keras::layer_gru(units=units, recurrent_dropout = recurrent_dropout,
+        keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
                          input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
                          return_sequences=FALSE#,stateful=TRUE
         ) %>%
-        keras::layer_dropout(layer_dropout) %>%
-        keras::layer_dense(units=1, activation='softmax')
+        keras::layer_dropout(layerDropout) %>%
+        keras::layer_dense(units=2, activation='softmax')
       
       model %>% keras::compile(
         loss = 'binary_crossentropy',
         metrics = c('accuracy'),
         optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
       )
+      
       earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=10,mode="auto",min_delta = 1e-4)
       reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
-                                                    patience = 5,mode = "auto", epsilon = 1e-5, cooldown = 0, min_lr = 0)
+                                                    patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
       
-      class_weight=list("0"=1,"1"=outcome_weight)
-      maxVal <- sum(population$indexes!=index)
-      batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+      class_weight=list("0"=1,"1"=outcomeWeight)
       
-      for(e in 1:epochs){
-        for(batch in batches){
-          model %>%keras::train_on_batch(x=as.array(plpData[population$rowId[population$indexes!=index],,][batch,,]),
-                                         y=population$y[population$indexes!=index][batch]
-            #,callbacks=list(earlyStopping,reduceLr)
-            ,class_weight=class_weight
-          )
-             }
+      data <- plpData[population$rowId[population$indexes!=index],,]
+      
+      #Extract validation set first - 10k people or 5%
+      valN <- min(10000,sum(population$indexes!=index)*0.05)
+      val_rows<-sample(1:sum(population$indexes!=index), valN, replace=FALSE)
+      train_rows <- c(1:sum(population$indexes!=index))[-val_rows]
+        
+      sampling_generator<-function(data, population, batchSize, train_rows, index){
+        function(){
+          gc()
+          rows<-sample(train_rows, batchSize, replace=FALSE)
+          
+          list(as.array(data[rows,,]), population$y[population$indexes!=index,][rows,])
+        }
       }
       
+ 
+      #print(table(population$y))
+      
+        history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
+                                       steps_per_epoch = sum(population$indexes!=index)/batchSize,
+                                       epochs=epochs,
+                                       validation_data=list(as.array(data[val_rows,,]), 
+                                                            population$y[population$indexes!=index,][val_rows,]),
+                                       callbacks=list(earlyStopping,reduceLr),
+                                       class_weight=class_weight)
       
       # batch prediciton 
       maxVal <- sum(population$indexes==index)
-      batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+      batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
       prediction <- population[population$indexes==index,]
       prediction$value <- 0
       for(batch in batches){
-        pred <- keras::predict_on_batch(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
-        prediction$value[batch] <- pred
+        pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+        prediction$value[batch] <- pred[,2]
+        #writeLines(paste0(dim(pred[,2]), collapse='-'))
+        #writeLines(paste0(pred[1,2], collapse='-'))
       }
       
       attr(prediction, "metaData") <- list(predictionType = "binary")
@@ -240,9 +258,9 @@ trainCIReNN<-function(plpData, population,
     foldPerm <- perform
     
     # Output  ----------------------------------------------------------------
-    param.val <- paste0('units: ',units,'-- recurrent_dropout: ', recurrent_dropout,
-                        'layer_dropout: ',layer_dropout,'-- lr: ', lr,
-                        '-- decay: ', decay, '-- batch_size: ',batch_size, '-- epochs: ', epochs)
+    param.val <- paste0('units: ',units,'-- recurrentDropout: ', recurrentDropout,
+                        'layerDropout: ',layerDropout,'-- lr: ', lr,
+                        '-- decay: ', decay, '-- batchSize: ',batchSize, '-- epochs: ', epochs)
     writeLines('==========================================')
     writeLines(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
     writeLines('==========================================')
@@ -251,12 +269,12 @@ trainCIReNN<-function(plpData, population,
         ##single-layer gru
         model <- keras::keras_model_sequential()
         model %>%
-          keras::layer_gru(units=units, recurrent_dropout = recurrent_dropout,
+          keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
                            input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
                            return_sequences=FALSE#,stateful=TRUE
           ) %>%
-          keras::layer_dropout(layer_dropout) %>%
-          keras::layer_dense(units=1, activation='softmax')
+          keras::layer_dropout(layerDropout) %>%
+          keras::layer_dense(units=2, activation='softmax')
         
         model %>% keras::compile(
           loss = 'binary_crossentropy',
@@ -265,29 +283,46 @@ trainCIReNN<-function(plpData, population,
         )
         earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=10,mode="auto",min_delta = 1e-4)
         reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
-                                                      patience = 5,mode = "auto", epsilon = 1e-5, cooldown = 0, min_lr = 0)
+                                                      patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
         
         
-    class_weight=list("0"=1,"1"=outcome_weight)
-  
-    maxVal <- length(population$indexes)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+    class_weight=list("0"=1,"1"=outcomeWeight)
     
-    for(e in 1:epochs){
-      for(batch in batches){
-        model %>% keras::train_on_batch(x=as.array(plpData[batch,,]),
-                                        y=population$y[batch]
-                                        ,class_weight=class_weight
-        )
+    data <- plpData[population$rowId,,]
+    
+    #Extract validation set first - 10k people or 5%
+    valN <- min(10000,length(population$indexes)*0.05)
+    val_rows<-sample(1:length(population$indexes), valN, replace=FALSE)
+    train_rows <- c(1:length(population$indexes))[-val_rows]
+
+    
+    sampling_generator<-function(data, population, batchSize, train_rows){
+      function(){
+        gc()
+        rows<-sample(train_rows, batchSize, replace=FALSE)
+        list(as.array(data[rows,,]), population$y[rows,])
       }
     }
-    
+      
+      
+      history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
+                                     steps_per_epoch = nrow(population[-val_rows,])/batchSize,
+                                     epochs=epochs,
+                                     validation_data=list(as.array(data[val_rows,,]), 
+                                                         population$y[val_rows,]),
+                                     callbacks=list(earlyStopping,reduceLr),
+                                     class_weight=class_weight,
+                                     view_metrics=F)
+  
+
     # batched prediciton 
+      maxVal <- nrow(population)
+      batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
     prediction <- population
     prediction$value <- 0
     for(batch in batches){
       pred <- keras::predict_on_batch(model, as.array(plpData[batch,,]))
-      prediction$value[batch] <- pred
+      prediction$value[batch] <- pred[,2]
     }
     
     attr(prediction, "metaData") <- list(predictionType = "binary")
@@ -295,11 +330,12 @@ trainCIReNN<-function(plpData, population,
     foldPerm <- auc
   }
   
+  
   result <- list(model=model,
                  auc=auc,
-                 hyperSum = unlist(list(units=units, recurrent_dropout=recurrent_dropout, 
-                                        layer_dropout=layer_dropout,lr =lr, decay=decay,
-                                        batch_size = batch_size, epochs= epochs))
+                 hyperSum = unlist(list(units=units, recurrentDropout=recurrentDropout, 
+                                        layerDropout=layerDropout,lr =lr, decay=decay,
+                                        batchSize = batchSize, epochs= epochs))
   )
   return(result)
   

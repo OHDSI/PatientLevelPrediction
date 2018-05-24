@@ -1,6 +1,6 @@
 # @file DecisionTree.R
 #
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
