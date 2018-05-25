@@ -92,12 +92,12 @@ predict.plp <- function(plpModel,population, plpData, ...){
 predict.xgboost <- function(plpModel,population, plpData, ...){ 
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
   data <- result$data[population$rowId,]
-  prediction <- data.frame(rowId=population$rowId, 
+  prediction <- data.frame(rowId=population$rowId,
                            value=stats::predict(plpModel$model, data)
                            )
   
   prediction <- merge(population, prediction, by='rowId')
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
   attr(prediction, "metaData") <- list(predictionType = "binary") 
   return(prediction)
   
@@ -166,6 +166,11 @@ predict.python <- function(plpModel, population, plpData){
   # add 1 to rowId from python:
   prediction$rowId <- prediction$rowId+1
   
+  # add subjectId and date:
+  prediction <- merge(prediction,
+                      population[,c('rowId','subjectId','cohortStartDate')], 
+                      by='rowId')
+  
   # TODO delete results
   
   return(prediction)
@@ -211,7 +216,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
       }
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
     return(prediction)
   } else{
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
@@ -227,7 +232,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
       prediction$value[batch] <- pred
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
     return(prediction)
     
   }
@@ -263,7 +268,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       }
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
     return(prediction)
   } else{
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
@@ -283,7 +288,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       prediction$value[batch] <- pred
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
     return(prediction)
     
   }

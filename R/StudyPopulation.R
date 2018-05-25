@@ -84,6 +84,7 @@ createStudyPopulation <- function(plpData,
                                   addExposureDaysToStart = FALSE,
                                   riskWindowEnd = 365,
                                   addExposureDaysToEnd = F,
+                                  verbosity = "INFO",
                                   ...) {
   
   if(missing(verbosity)){

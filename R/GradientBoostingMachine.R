@@ -110,7 +110,9 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   start <- Sys.time()
   
   # pick the best hyper-params and then do final training on all data...
-  hyperSummary <- do.call(rbind, lapply(param.sel, function(x) x$hyperSum))
+  datas <- list(data=data, population=population)
+  param.sel <- lapply(param, function(x) do.call("gbm_model2", c(datas,x)  ))
+  hyperSummary <- do.call("rbind", lapply(param.sel, function(x) x$hyperSum))
   hyperSummary <- as.data.frame(hyperSummary)
   hyperSummary$auc <- unlist(lapply(param.sel, function(x) x$auc)) # new edit
     
@@ -118,12 +120,12 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   param <- param[[which.max(param.sel)]]
   param$final=T
   
-  writeLines('final train')
-  trainedModel <- do.call(gbm_model2, c(param,datas)  )$model
+  #OhdsiRTools::logTrace("Final train")
+  trainedModel <- do.call("gbm_model2", c(param,datas)  )$model
   
   comp <- Sys.time() - start
   if(!quiet)
-    writeLines(paste0('Model GBM trained - took:',  format(comp, digits=3)))
+    OhdsiRTools::logInfo(paste0('Model GBM trained - took:',  format(comp, digits=3)))
   
   varImp <- xgboost::xgb.importance(model =trainedModel)
   
@@ -157,19 +159,27 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
 gbm_model2 <- function(data, population,
                        max.depth=6, min_child_weight=20, nthread=20,
                        nround=100, eta=0.1, final=F, ...){
-  
-  writeLines(paste('Training GBM with ',length(unique(population$indexes)),' fold CV'))
+  if(missing(final)){
+    final <- F
+  }
+  if(missing(population)){
+    stop('No population')
+  }
   if(!is.null(population$indexes) && final==F){
+    OhdsiRTools::logInfo(paste0("Training GBM with ",length(unique(population$indexes))," fold CV"))
     index_vect <- unique(population$indexes)
+    OhdsiRTools::logDebug(paste0('index vect: ', paste0(index_vect, collapse='-')))
     perform <- c()
     
     # create prediction matrix to store all predictions
     predictionMat <- population
+    OhdsiRTools::logDebug(paste0('population nrow: ', nrow(population)))
+    
     predictionMat$value <- 0
     attr(predictionMat, "metaData") <- list(predictionType = "binary")
     
     for(index in 1:length(index_vect )){
-      writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      OhdsiRTools::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
       test <- xgboost::xgb.DMatrix(data = data[population$indexes==index,], label=population$outcomeCount[population$indexes==index])
       watchlist <- list(train=train, test=test)
@@ -217,6 +227,9 @@ gbm_model2 <- function(data, population,
   }
   param.val <- paste0('max depth: ',max.depth,'-- min_child_weight: ', min_child_weight, 
                       '-- nthread: ', nthread, ' nround: ',nround, '-- eta: ', eta)
+  OhdsiRTools::logInfo("==========================================")
+  OhdsiRTools::logInfo(paste0("GMB with parameters: ", param.val," obtained an AUC of ",auc))
+  OhdsiRTools::logInfo("==========================================")
   
   result <- list(model=model,
                  auc=auc,
