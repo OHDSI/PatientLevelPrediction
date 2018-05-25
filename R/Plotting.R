@@ -769,23 +769,6 @@ plotSmoothCalibration <- function(result,
 }
 
 
-plot2 <- ggplot2::ggplot(covariateSummary,
-                         ggplot2::aes(TrainCovariateMeanWithNoOutcome,
-                                      TestCovariateMeanWithNoOutcome)) +
-  ggplot2::geom_point() +
-  ggplot2::scale_x_continuous("Train set Mean") +
-  ggplot2::scale_y_continuous("Test Set Mean") +
-  ggplot2::theme(legend.position="none") +
-  ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
-  ggplot2::ggtitle("No Outcome")
-
-plot <- gridExtra::grid.arrange(plot1, plot2, ncol=2)
-if (!is.null(fileName))
-  ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
-return(plot)
-}
-
-
 
 #=============
 # PREDICTIONSUMMARY PLOTS 
