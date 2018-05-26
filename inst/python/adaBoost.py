@@ -80,5 +80,5 @@ else:
     os.makedirs(modelOutput)
   print("Model saved to: %s" %(modelOutput)	)
 
-  joblib.dump(adab, modelOutput+'\\model.pkl') 
+  joblib.dump(adab, os.path.join(modelOutput,"model.pkl")) 
 
