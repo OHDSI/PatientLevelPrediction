@@ -121,7 +121,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
   r <- runif(n)
   cohorts$time <- as.numeric(as.character(cut(r, breaks = c(0, breaks), labels = names(breaks))))
-  cohorts$cohortStartDates <- sample(-1000:1000,n,replace=TRUE) + as.Date("2010-01-01")
+  cohorts$cohortStartDate <- sample(-1000:1000,n,replace=TRUE) + as.Date("2010-01-01")
   cohorts$daysFromObsStart <- sample(1:1000,n,replace=TRUE)
   cohorts$daysToCohortEnd <- sample(1:1000,n,replace=TRUE)
   cohorts$daysToObsEnd <- cohorts$daysToCohortEnd + sample(1:1000,n,replace=TRUE)
