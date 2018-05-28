@@ -304,6 +304,10 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
 #'
 #' @export
 plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
+  N <- sum(evaluation$calibrationSummary$PersonCountAtRisk, na.rm = T)
+  O <- sum(evaluation$calibrationSummary$PersonCountWithOutcome, na.rm=T)
+  inc <- O/N
+  
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('positivePredictiveValue', 'sensitivity')]
@@ -312,7 +316,9 @@ plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
   plot <- ggplot2::ggplot(x, ggplot2::aes(x$sensitivity, x$positivePredictiveValue)) +
     ggplot2::geom_line(size=1) +
     ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
-    ggplot2::scale_y_continuous("Precision")#, limits=c(0,1))
+    ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
+    ggplot2::geom_hline(yintercept = inc, linetype="dashed", 
+                        color = "red", size=1) 
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)

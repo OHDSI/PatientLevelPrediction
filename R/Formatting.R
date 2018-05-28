@@ -1,6 +1,6 @@
 # @file formatting.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -28,6 +28,7 @@
 #'                                      data extracted from the CDM.
 #' @param population                    The population to include in the matrix
 #' @param map                           A covariate map (telling us the column number for covariates)
+#' @param temporal                      Whether you want to convert temporal data
 #' @examples
 #' #TODO
 #'
@@ -41,8 +42,18 @@
 #' }
 #'
 #' @export
-toSparseM <- function(plpData,population, map=NULL){
+toSparseM <- function(plpData,population, map=NULL, temporal=F){
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
+  OhdsiRTools::logDebug(paste0('covariates nrow: ', nrow(plpData$covariates)))
   cov <- plpData$covariates #ff::clone(plpData$covariates)
+  OhdsiRTools::logDebug(paste0('covariateRef nrow: ', nrow(plpData$covariateRef)))
   covref <- plpData$covariateRef#ff::clone(plpData$covariateRef)
 
   plpData.mapped <- MapCovariates(covariates=cov, covariateRef=ff::clone(covref),
@@ -59,28 +70,56 @@ toSparseM <- function(plpData,population, map=NULL){
     ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
     plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  futile.logger::flog.debug(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
+  OhdsiRTools::logDebug(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
 
     #convert into sparseM
-  futile.logger::flog.debug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
-  futile.logger::flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  OhdsiRTools::logDebug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
+  OhdsiRTools::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
 
   # chunk then add
-
+  if(!temporal){
   data <- Matrix::sparseMatrix(i=1,
                                j=1,
                                x=0,
                                dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
   for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
-    futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
-    temp <- ftry(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
+    OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+    temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
                                           j=ff::as.ram(plpData.mapped$covariates$covariateId[ind]),
                                           x=ff::as.ram(plpData.mapped$covariates$covariateValue[ind]),
                                           dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
     )
     data <- data+ temp
   }
-  futile.logger::flog.debug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
+  } else {
+    for(i in min(cov$timeId):max(cov$timeId)){
+      plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
+      data <- Matrix::sparseMatrix(i=1,
+                                   j=1,
+                                   x=0,
+                                   dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
+      for (ind in bit::chunk(plpData.mapped$temp_covariates$covariateId)) {
+        OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+        temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$temp_covariates$rowId[ind]),
+                                                         j=ff::as.ram(plpData.mapped$temp_covariates$covariateId[ind]),
+                                                         x=ff::as.ram(plpData.mapped$temp_covariates$covariateValue[ind]),
+                                                         dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
+        )
+        data <- data+temp
+      }
+      data_array<-slam::as.simple_sparse_array(data)
+      #extending one more dimesion to the array
+      data_array<-slam::extend_simple_sparse_array(data_array,c(1L))
+      #binding arrays along the dimesion
+      if(i==min(cov$timeId)) {result_array<-data_array
+      }else{
+        result_array<-slam::abind_simple_sparse_array(result_array,data_array,MARGIN=2L)
+      }
+    }
+    data <- result_array
+  }
+  
+  OhdsiRTools::logDebug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
 
   result <- list(data=data,
                  covariateRef=plpData.mapped$covariateRef,
@@ -93,19 +132,19 @@ toSparseM <- function(plpData,population, map=NULL){
 MapCovariates <- function(covariates, covariateRef, population, map){
 
   # restrict to population for speed
-  futile.logger::flog.trace('restricting to population for speed...')
+  OhdsiRTools::logTrace('restricting to population for speed...')
   idx <- ffbase::ffmatch(x = covariates$rowId, table = ff::as.ff(population$rowId))
   idx <- ffbase::ffwhich(idx, !is.na(idx))
   covariates <- covariates[idx, ]
 
-  futile.logger::flog.trace('Now converting covariateId...')
+  OhdsiRTools::logTrace('Now converting covariateId...')
   oldIds <- as.double(ff::as.ram(covariateRef$covariateId))
   newIds <- 1:nrow(covariateRef)
 
   if(!is.null(map)){
-    futile.logger::flog.trace('restricting to model variables...')
-    futile.logger::flog.trace(paste0('oldIds: ',length(map[,'oldIds'])))
-    futile.logger::flog.trace(paste0('newIds:', max(as.double(map[,'newIds']))))
+    OhdsiRTools::logTrace('restricting to model variables...')
+    OhdsiRTools::logTrace(paste0('oldIds: ',length(map[,'oldIds'])))
+    OhdsiRTools::logTrace(paste0('newIds:', max(as.double(map[,'newIds']))))
     ind <- ffbase::ffmatch(x=covariateRef$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
     ind <- ffbase::ffwhich(ind, !is.na(ind))
     covariateRef <- covariateRef[ind,]
@@ -151,6 +190,14 @@ MapCovariates <- function(covariates, covariateRef, population, map){
 #'
 #' @export
 toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = 'layoutTimestamp')))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   # test python is available and the required dependancies are there:
   if ( !PythonInR::pyIsConnected() ){
     python.test <- PythonInR::autodetectPython(pythonExePath = pythonExePath)
@@ -193,14 +240,14 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
     ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
     plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  futile.logger::flog.debug(paste0('Converting data into python sparse matrix...'))
+  OhdsiRTools::logTrace(paste0('Converting data into python sparse matrix...'))
 
   #convert into sparseM
-  futile.logger::flog.debug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
-  futile.logger::flog.debug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  OhdsiRTools::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
+  OhdsiRTools::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
 
   if(temporal){
-    futile.logger::flog.debug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
+    OhdsiRTools::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
   }
   
   # chunk then add
@@ -219,7 +266,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
   PythonInR::pyExec("plpData = coo_matrix((np.array([0]), (np.array([0]), np.array([0]) )), shape=(xmax, ymax))")
   ##for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
   for (ind in bit::chunk(plpData.mapped$covariates)) {
-    futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
+    OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
     # then load in the three vectors based on ram limits and add to the current matrix
     ## old slower code =====
     ##PythonInR::pySet('data', as.matrix(ff::as.ram(plpData.mapped$covariates$covariateValue[ind])))
@@ -231,9 +278,8 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
     PythonInR::pyExec("tempData = coo_matrix((dataall[:,2], (dataall[:,0]-1, dataall[:,1]-1)), shape=(xmax, ymax))")
     PythonInR::pyExec("plpData = plpData+tempData")
   }
-  futile.logger::flog.debug(paste0('Sparse python matrix done '))
-  futile.logger::flog.debug(PythonInR::pyExec("print  'dataset has %s rows and %s columns' %(plpData.shape[0],plpData.shape[1])")
-  )
+  OhdsiRTools::logTrace(paste0('Sparse python matrix done '))
+  OhdsiRTools::logDebug(PythonInR::pyExec("print('dataset has %s rows and %s columns' %(plpData.shape[0],plpData.shape[1]))"))
   } else{
     # do the sparse tensor in tensorflow
     # initiate empty sparsetensor:
@@ -241,7 +287,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
                   values=np.float64([0]), dense_shape=[xmax, ymax, tmax])")
     
     for (ind in bit::chunk(plpData.mapped$covariates)) {
-      futile.logger::flog.debug(paste0('start:', ind[1],'- end:',ind[2]))
+      OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
       # subtract 1 as python index starts at 0:
       PythonInR::pySet('datas', as.matrix(ff::as.ram(plpData.mapped$covariates[ind,c('rowId','covariateId','timeId', 'covariateValue')])))
       PythonInR::pyExec("indexes= tf.convert_to_tensor(datas[:,0:3]-1, dtype=tf.int64)")
@@ -251,7 +297,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
       PythonInR::pyExec("plpData = tf.sparse_add(plpData, tempData)")
     }
    
-    futile.logger::flog.debug(paste0('Sparse python tensor converted'))                            
+    OhdsiRTools::logTrace(paste0('Sparse python tensor converted'))                            
   }
   result <- list(data='plpData',
                  covariateRef=plpData.mapped$covariateRef,

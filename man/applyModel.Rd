@@ -9,7 +9,7 @@ column then the function also returns the evaluation of the prediction (AUC, bri
 calibration)}
 \usage{
 applyModel(population, plpData, plpModel, calculatePerformance = T,
-  logConnection = NULL, databaseOutput = NULL, silent = F)
+  databaseOutput = NULL, silent = F)
 }
 \arguments{
 \item{population}{The population of people who you want to predict the risk for}
@@ -19,8 +19,6 @@ applyModel(population, plpData, plpModel, calculatePerformance = T,
 \item{plpModel}{The trained PatientLevelPrediction model}
 
 \item{calculatePerformance}{Whether to also calculate the performance metrics [default TRUE]}
-
-\item{logConnection}{A connection to output any logging during the process}
 
 \item{databaseOutput}{Whether to save the details into the prediction database}
 

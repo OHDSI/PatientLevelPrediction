@@ -1,6 +1,6 @@
 # @file AdaBoost.R
 #
-# Copyright 2016 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -44,7 +44,7 @@ setAdaBoost <- function(nEstimators =50, learningRate=1, seed=NULL){
   
   
   # test python is available and the required dependancies are there:
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
+  if ( !PythonInR::pyIsConnected()){ 
     tryCatch({
       python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
     }, error = function(err){

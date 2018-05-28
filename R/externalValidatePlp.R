@@ -1,6 +1,6 @@
-# @file externalValidatePlp.R
+# @file ExternalValidatePlp.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -26,13 +26,15 @@
 #' 
 #' @param plpResult                        The object returned by runPlp() containing the trained model
 #' @param connectionDetails                The connection details for extracting the new data 
-#' @param validation_schema_target         A string or list of strings specifying the database containing the target cohorts
-#' @param validation_schema_outcome       A string or list of strings specifying the database containing the outcome cohorts
-#' @param validation_schema_cdm            A string or list of strings specifying the database containing the cdm
-#' @param validation_table_target          A string or list of strings specifying the table containing the target cohorts
-#' @param validation_table_outcome        A string or list of strings specifying the table containing the outcome cohorts
-#' @param validation_id_target             An iteger or list of integers specifying the cohort id for the target cohorts
-#' @param validation_id_outcome           An iteger or list of integers specifying the cohort id for the outcome cohorts
+#' @param validationSchemaTarget         A string or list of strings specifying the database containing the target cohorts
+#' @param validationSchemaOutcome       A string or list of strings specifying the database containing the outcome cohorts
+#' @param validationSchemaCdm            A string or list of strings specifying the database containing the cdm
+#' @param databaseNames                  A string of lift of strings specifying sharing friendly database names corresponding to validationSchemaCdm
+#' @param validationTableTarget          A string or list of strings specifying the table containing the target cohorts
+#' @param validationTableOutcome        A string or list of strings specifying the table containing the outcome cohorts
+#' @param validationIdTarget             An iteger or list of integers specifying the cohort id for the target cohorts
+#' @param validationIdOutcome           An iteger or list of integers specifying the cohort id for the outcome cohorts
+#' @param oracleTempSchema                 The temp oracle schema requires read/write 
 #' @param verbosity                        Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 #'                                         \itemize{
 #'                                         \item{DEBUG}{Highest verbosity showing all debug statements}
@@ -50,10 +52,12 @@
 #' @export
 externalValidatePlp <- function(plpResult,
                                 connectionDetails, 
-                                validation_schema_target,
-                                validation_schema_outcome, validation_schema_cdm,
-                                validation_table_target='cohort', validation_table_outcome='cohort',
-                                validation_id_target = NULL, validation_id_outcome = NULL,
+                                validationSchemaTarget,
+                                validationSchemaOutcome, 
+                                validationSchemaCdm, databaseNames,
+                                validationTableTarget='cohort', validationTableOutcome='cohort',
+                                validationIdTarget = NULL, validationIdOutcome = NULL,
+                                oracleTempSchema=NULL,#validationSchemaCdm,
                                 verbosity=futile.logger::INFO, keepPrediction=F){
   
   # TODO:: ADD LOGGING, MORE INOUT TESTS, ADD TEST CASE IN PACKAGE... 
@@ -65,60 +69,67 @@ externalValidatePlp <- function(plpResult,
   if(missing(connectionDetails))
     stop('Need to enter connection details')
   
-  if(missing(validation_schema_target))
-    stop('Need to enter alidation_schema_target ')
-  if(missing(validation_schema_outcome))
-    stop('Need to enter alidation_schema_outcome ')
-  if(missing(validation_schema_cdm))
-    stop('Need to enter alidation_schema_cdm ')
+  if(missing(validationSchemaTarget))
+    stop('Need to enter validationSchemaTarget ')
+  if(missing(validationSchemaOutcome))
+    stop('Need to enter validationSchemaOutcome ')
+  if(missing(validationSchemaCdm))
+    stop('Need to enter validationSchemaCdm ')
   
-  if(class(validation_schema_target)=='list'){
-    if(class(validation_schema_outcome)!='list')
+  if(class(validationSchemaTarget)=='list'){
+    if(class(validationSchemaOutcome)!='list')
       stop('If target schema is list outcomes must be list...')
-    if(class(validation_schema_cdm)!='list')
+    if(class(validationSchemaCdm)!='list')
       stop('If target schema is list cdm must be list...')    
     
-    if(length(validation_schema_target)!=length(validation_schema_outcome))
+    if(length(validationSchemaTarget)!=length(validationSchemaOutcome))
       stop('Length of database schemas not matching...')
-    if(length(validation_schema_target)!=length(validation_schema_cdm))
+    if(length(validationSchemaTarget)!=length(validationSchemaCdm))
       stop('Length of database schemas not matching...')
   }
   
-  if(class(validation_schema_target)!=class(validation_schema_outcome))
-    stop('validation_schema_target and validation_schema_outcome not same class')
-  if(class(validation_schema_target)!=class(validation_schema_cdm))
-    stop('validation_schema_target and validation_schema_cdm not same class')
+  if(class(validationSchemaTarget)!=class(validationSchemaOutcome))
+    stop('validationSchemaTarget and validationSchemaOutcome not same class')
+  if(class(validationSchemaTarget)!=class(validationSchemaCdm))
+    stop('validationSchemaTarget and validationSchemaCdm not same class')
+  
+  if(!missing(databaseNames)){
+    if(length(validationSchemaCdm)!=length(databaseNames)){
+      stop('DatabaseNames not same length as validationSchemaCdm')
+    }
+  }
   
   
   # add lots of test for tables and ids :(
   
   
-  if(is.null(validation_id_target))
-    validation_id_target <- plpResult$inputSetting$populationSettings$cohortId# set the model ids
-  if(is.null(validation_id_outcome))
-    validation_id_outcome <- plpResult$inputSetting$populationSettings$outcomeId# set the model ids
+  if(is.null(validationIdTarget))
+    validationIdTarget <- plpResult$inputSetting$populationSettings$cohortId# set the model ids
+  if(is.null(validationIdOutcome))
+    validationIdOutcome <- plpResult$inputSetting$populationSettings$outcomeId# set the model ids
   
   
   results <- list()
-  length(results) <- length(validation_schema_cdm)
-  for(i in 1:length(validation_schema_cdm)){
+  length(results) <- length(validationSchemaCdm)
+  for(i in 1:length(validationSchemaCdm)){
     # Now extract the data:
-    target_table <- validation_table_target
-    outcome_table <- validation_table_outcome
+    targetTable <- validationTableTarget
+    outcomeTable <- validationTableOutcome
     
-    if(length(validation_table_target)>1)
-      target_table <- validation_table_target[i]
-    if(length(validation_table_outcome)>1)
-      outcome_table <- validation_table_outcome[i]
+    if(length(validationTableTarget)>1)
+      targetTable <- validationTableTarget[i]
+    if(length(validationTableOutcome)>1)
+      outcomeTable <- validationTableOutcome[i]
     newData <- PatientLevelPrediction::similarPlpData(plpModel= plpResult$model, createCohorts = F, 
                                                       newConnectionDetails = connectionDetails, 
-                                                      newCdmDatabaseSchema = validation_schema_cdm[[i]], 
-                                                      newCohortDatabaseSchema = validation_schema_target[[i]], 
-                                                      newCohortTable = target_table, 
-                                                      newCohortId = validation_id_target, 
-                                                      newOutcomeDatabaseSchema = validation_schema_outcome[[i]], 
-                                                      newOutcomeTable = outcome_table, 
-                                                      newOutcomeId = validation_id_outcome, 
+                                                      newCdmDatabaseSchema = validationSchemaCdm[[i]], 
+                                                      newCohortDatabaseSchema = validationSchemaTarget[[i]], 
+                                                      newCohortTable = targetTable, 
+                                                      newCohortId = validationIdTarget, 
+                                                      newOutcomeDatabaseSchema = validationSchemaOutcome[[i]], 
+                                                      newOutcomeTable = outcomeTable, 
+                                                      newOutcomeId = validationIdOutcome, 
+                                                      newOracleTempSchema = oracleTempSchema,
                                                       sample = NULL, 
                                                       createPopulation = T )
     
@@ -138,23 +149,47 @@ externalValidatePlp <- function(plpResult,
         results[[i]]$prediction <- NULL
       }
       
-      results[[i]]$settings <- list(newCdmDatabaseSchema = validation_schema_cdm[i], 
-                                    newCohortDatabaseSchema = validation_schema_target[i], 
-                                    newCohortTable = target_table, 
-                                    newCohortId = validation_id_target, 
-                                    newOutcomeDatabaseSchema = validation_schema_outcome[i], 
-                                    newOutcomeTable = outcome_table, 
-                                    newOutcomeId = validation_id_outcome)
+      if(missing(databaseNames)){
+        niceName <-   rep('Not Entered', length(validationSchemaCdm))
+      } else{
+        niceName <-   databaseNames
+      }
+      results[[i]]$inputSetting<- list(newCdmDatabaseSchema = validationSchemaCdm[[i]],
+                                       databaseNames = niceName, 
+                                    newCohortDatabaseSchema = validationSchemaTarget[[i]], 
+                                    newCohortTable = targetTable, 
+                                    cohortId = validationIdTarget, 
+                                    newOutcomeDatabaseSchema = validationSchemaOutcome[[i]], 
+                                    newOutcomeTable = outcomeTable, 
+                                    outcomeId = validationIdOutcome,
+                                    newOracleTempSchema = oracleTempSchema)
+      
+      results[[i]]$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                                  packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                                            PlatformDetails= list(platform= R.Version()$platform,
+                                                                  cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                                  RAM=utils::memory.size()), #  test for non-windows needed
+                                            # Sys.info()
+                                            TotalExecutionElapsedTime = NULL,
+                                            ExecutionDateTime = Sys.Date())
       
     }
     
   }
   
-  names(results) <- validation_schema_cdm # do I want to paste ids onto this?
+  if(!missing(databaseNames)){
+    names(results) <- databaseNames
+    # do summary
+    summary <- do.call(rbind, lapply(1:length(results), function(i) summariseVal(results[[i]], 
+                                                                                 database=databaseNames[[i]])))
+  } else{
+    names(results) <- validationSchemaCdm # do I want to paste ids onto this?
+    # do summary
+    summary <- do.call(rbind, lapply(1:length(results), function(i) summariseVal(results[[i]], 
+                                                                                 database=validationSchemaCdm[[i]])))
+  }
   
-  # do summary
-  summary <- do.call(rbind, lapply(1:length(results), function(i) summariseVal(results[[i]], 
-                                                                    database=validation_schema_cdm[[i]])))
+  
   summary <- reshape2::dcast(summary, Database ~ Metric, value.var="Value" )
   
   
@@ -171,8 +206,8 @@ externalValidatePlp <- function(plpResult,
 
 
 summariseVal <- function(result, database){
-  row.names(result$performance$evaluationStatistics) <- NULL
-  result <- as.data.frame(result$performance$evaluationStatistics)
+  row.names(result$performanceEvaluation$evaluationStatistics) <- NULL
+  result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
   result$Database <- database
   return(result)
 }
@@ -192,10 +227,12 @@ summariseVal <- function(result, database){
 #' @param covariateSettings                The standard covariate settings (specify covariate lookback time)
 #' @param customCovariates                 A table of covariateId, sql (sql creates the custom covariate)
 #' @param riskWindowStart                  The day after index to start predicting the outcome
+#' @param addExposureDaysToEnd             riskWindomEnd relative to the cohort end date instead of the cohort start date?
 #' @param riskWindowEnd                    The day after index to stop predicting the outcome
 #' @param requireTimeAtRisk                Do you want to ignore people who leave the database some point between the riskWindowStart and riskWindowEnd 
 #' @param minTimeAtRisk                    If requireTimeAtRisk is TRUE, how many days must they be observed before leaving to get included (default recommendation is all risk period: riskWindowEnd-riskWindowStart)    
 #' @param includeAllOutcomes               Setting this to TRUE means people with the outcome who leave the data during the risk period are still included, so only non-outcome people who leave during the risk period are removed 
+#' @param removeSubjectsWithPriorOutcome   Remove people from the target population if they have the outcome prior to target cohort start date
 #' @param connectionDetails                The details to connect to the CDM
 #' @param cohortDatabaseSchema             A string specifying the database containing the target cohorts
 #' @param outcomeDatabaseSchema            A string specifying the database containing the outcome cohorts
@@ -204,6 +241,8 @@ summariseVal <- function(result, database){
 #' @param outcomeTable                     A string specifying the table containing the outcome cohorts
 #' @param cohortId                         An iteger specifying the cohort id for the target cohorts
 #' @param outcomeId                        An iteger specifying the cohort id for the outcome cohorts
+#' @param oracleTempSchema                 The temp oracle schema 
+#' @param modelName                        The name of the model
 #' @return
 #' The performance of the existing model and prediction
 #'
@@ -216,14 +255,18 @@ evaluateExistingModel <- function(modelTable,
                                    covariateSettings,
                                   customCovariates=NULL,
                                   riskWindowStart = 1, 
+                                  addExposureDaysToEnd = F,
                                   riskWindowEnd = 365,
                                    requireTimeAtRisk = T, 
                                   minTimeAtRisk = 364,
                                   includeAllOutcomes = T,
+                                  removeSubjectsWithPriorOutcome=T,
                                    connectionDetails,
                                    cdmDatabaseSchema,
                                    cohortDatabaseSchema, cohortTable, cohortId,
-                                   outcomeDatabaseSchema, outcomeTable, outcomeId
+                                   outcomeDatabaseSchema, outcomeTable, outcomeId,
+                                   oracleTempSchema = cdmDatabaseSchema,
+                                  modelName='existingModel'
                                 
                                    ){
   
@@ -271,7 +314,7 @@ evaluateExistingModel <- function(modelTable,
     warning('minTimeAtRisk is greater than time at risk - is this correct?')
   
   custCovs <- PatientLevelPrediction::createExistingModelSql(modelTable= modelTable, 
-                                                 modelNames ='existingModel', 
+                                                 modelNames = modelName, 
                                                  interceptTable = interceptTable,
                                                  covariateTable=covariateTable, 
                                                  type='score',
@@ -287,6 +330,7 @@ evaluateExistingModel <- function(modelTable,
   
   plpData <- PatientLevelPrediction::getPlpData(connectionDetails, 
                                                 cdmDatabaseSchema = cdmDatabaseSchema,
+                                                oracleTempSchema=oracleTempSchema,
                                                 cohortId = cohortId ,
                                                 outcomeIds = outcomeId, 
                                                 cohortDatabaseSchema = cohortDatabaseSchema, 
@@ -297,9 +341,13 @@ evaluateExistingModel <- function(modelTable,
                                                 sampleSize = NULL)
   
   population <- PatientLevelPrediction::createStudyPopulation(plpData = plpData, outcomeId = outcomeId,
-                                                              includeAllOutcomes = includeAllOutcomes, requireTimeAtRisk = requireTimeAtRisk, 
-                                                              minTimeAtRisk = minTimeAtRisk, riskWindowStart = riskWindowStart, 
-                                                              riskWindowEnd = riskWindowEnd
+                                                              includeAllOutcomes = includeAllOutcomes, 
+                                                              requireTimeAtRisk = requireTimeAtRisk, 
+                                                              minTimeAtRisk = minTimeAtRisk, 
+                                                              riskWindowStart = riskWindowStart,
+                                                              addExposureDaysToEnd = addExposureDaysToEnd,
+                                                              riskWindowEnd = riskWindowEnd, 
+                                                              removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome
                                                               )
   prediction <- merge(population, ff::as.ram(plpData$covariates), by='rowId', all.x=T)
   colnames(prediction)[colnames(prediction)=='covariateValue'] <- 'value'
@@ -334,5 +382,29 @@ evaluateExistingModel <- function(modelTable,
                                               Eval=rep('validation', nr1),
                                               performance$predictionDistribution)
   
-  return(list(performance=performance, prediction=prediction))
+  executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                 packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                           PlatformDetails= list(platform= R.Version()$platform,
+                                                 cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                 RAM=utils::memory.size()), #  test for non-windows needed
+                           # Sys.info()
+                           TotalExecutionElapsedTime = NULL,
+                           ExecutionDateTime = Sys.Date())
+  
+  return(list(performanceEvaluation=performance, 
+              prediction=prediction,
+              inputSetting = list(outcomeId=outcomeId, 
+                                  cohortId=cohortId,
+                                  database = cdmDatabaseSchema),
+              executionSummary = executionSummary,
+              model = list(model='existing model',
+                           modelName=modelName,
+                           modelTable=modelTable, 
+                           covariateTable=covariateTable, 
+                           interceptTable=interceptTable),
+              analysisRef=list(analysisId=NULL,
+                               analysisName=NULL,
+                               analysisSettings= NULL),
+              covariateSummary = NULL
+              ))
 }

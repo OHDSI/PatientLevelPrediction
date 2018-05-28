@@ -1,6 +1,6 @@
 # @file randomForest.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -71,17 +71,29 @@ setRandomForest<- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, s
 fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   # check plpData is libsvm format:
-  if(!'ffdf'%in%class(plpData$covariates))
+  if(!'ffdf'%in%class(plpData$covariates)){
+    OhdsiRTools::logError('class plpData$covariates: ', class(plpData$covariates))
     stop('Random forest requires plpData')
+  }
   
   if(colnames(population)[ncol(population)]!='indexes'){
+    OhdsiRTools::logWarn(paste0('population columns: ', paste0(colnames(population), collapse='-')))
     warning('indexes column not present as last column - setting all index to 1')
     population$indexes <- rep(1, nrow(population))
   }
   
   # connect to python if not connected
   if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
+    OhdsiRTools::logTrace('Connecting to python')
     PythonInR::pyConnect()
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)
@@ -93,7 +105,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   PythonInR::pyExec('quiet = True')
   if(quiet==F){
-    writeLines(paste0('Training random forest model...' ))
+    OhdsiRTools::logTrace(paste0('Training random forest model...' ))
     PythonInR::pyExec('quiet = False')
   }
   start <- Sys.time()
@@ -112,6 +124,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   }
 
   # convert plpData in coo to python:
+  OhdsiRTools::logTrace('Mapping R data to python')
   x <- toSparsePython(plpData,population, map=NULL)
     
   #do var imp
@@ -125,7 +138,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     varImp <-PythonInR::pyGet("rf.feature_importances_", simplify = FALSE)[,1]
     
     if(!quiet)
-      writeLines('Variable importance completed')  
+      OhdsiRTools::logTrace('Variable importance completed')  
     if(mean(varImp)==0)
       stop('No important variables - seems to be an issue with the data')
     
@@ -186,7 +199,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     auc <- PatientLevelPrediction::computeAuc(pred)
     all_auc <- c(all_auc, auc)
     if(!quiet)
-      writeLines(paste0('Model with settings: ntrees:',param$ntrees[i],' maxDepth: ',param$maxDepth[i], 
+      OhdsiRTools::logInfo(paste0('Model with settings: ntrees:',param$ntrees[i],' maxDepth: ',param$maxDepth[i], 
                       'mtry: ', param$mtry[i] , ' obtained AUC of ', auc))
   }
   
@@ -220,11 +233,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   attr(pred, "metaData") <- list(predictionType="binary")
   
   auc <- PatientLevelPrediction::computeAuc(pred)
-  writeLines(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' maxDepth: ',param$maxDepth[which.max(all_auc)], 
+  OhdsiRTools::logInfo(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' maxDepth: ',param$maxDepth[which.max(all_auc)], 
                     'mtry: ', param$mtry[which.max(all_auc)] , ' obtained AUC of ', auc))
-  
-  # close python:
-  ##PythonInR::pyExit()
   
   comp <- start-Sys.time()
   

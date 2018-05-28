@@ -1,6 +1,6 @@
 # @file gradientBoostingMachine.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -74,15 +74,22 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
 #xgboost
 fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                         outcomeId, cohortId, ...){
-
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   if(!quiet)
-    writeLines('Training GBM model')
+    OhdsiRTools::logTrace('Training GBM model')
   
   if(param[[1]]$seed!='NULL')
     set.seed(param[[1]]$seed)
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm')
+  if(!'ffdf'%in%class(plpData$covariates) )
     stop('This algorithm requires plpData in coo format')
   
   metaData <- attr(population, 'metaData')
@@ -92,23 +99,20 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   #TODO - how to incorporate indexes?
   
   # convert data into sparse Matrix:
-  result <- toSparseM(plpData,population,map=NULL)
+  result <- toSparseM(plpData,population,map=NULL, temporal = F)
   data <- result$data
   
   # now get population of interest
   data <- data[population$rowId,]
   
   # set test/train sets (for printing performance as it trains)
-  if(!quiet)
-    writeLines(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
+  OhdsiRTools::logInfo(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
   start <- Sys.time()
   
   # pick the best hyper-params and then do final training on all data...
-  writeLines('train')
-  datas <- list(population=population, data=data)
-  param.sel <- lapply(param, function(x) do.call(gbm_model2, c(x,datas)  ))
-  #writeLines('hyper')
-  hyperSummary <- do.call(rbind, lapply(param.sel, function(x) x$hyperSum))
+  datas <- list(data=data, population=population)
+  param.sel <- lapply(param, function(x) do.call("gbm_model2", c(datas,x)  ))
+  hyperSummary <- do.call("rbind", lapply(param.sel, function(x) x$hyperSum))
   hyperSummary <- as.data.frame(hyperSummary)
   hyperSummary$auc <- unlist(lapply(param.sel, function(x) x$auc)) # new edit
     
@@ -116,12 +120,12 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   param <- param[[which.max(param.sel)]]
   param$final=T
   
-  writeLines('final train')
-  trainedModel <- do.call(gbm_model2, c(param,datas)  )$model
+  #OhdsiRTools::logTrace("Final train")
+  trainedModel <- do.call("gbm_model2", c(param,datas)  )$model
   
   comp <- Sys.time() - start
   if(!quiet)
-    writeLines(paste0('Model GBM trained - took:',  format(comp, digits=3)))
+    OhdsiRTools::logInfo(paste0('Model GBM trained - took:',  format(comp, digits=3)))
   
   varImp <- xgboost::xgb.importance(model =trainedModel)
   
@@ -155,19 +159,27 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
 gbm_model2 <- function(data, population,
                        max.depth=6, min_child_weight=20, nthread=20,
                        nround=100, eta=0.1, final=F, ...){
-  
-  writeLines(paste('Training GBM with ',length(unique(population$indexes)),' fold CV'))
+  if(missing(final)){
+    final <- F
+  }
+  if(missing(population)){
+    stop('No population')
+  }
   if(!is.null(population$indexes) && final==F){
+    OhdsiRTools::logInfo(paste0("Training GBM with ",length(unique(population$indexes))," fold CV"))
     index_vect <- unique(population$indexes)
+    OhdsiRTools::logDebug(paste0('index vect: ', paste0(index_vect, collapse='-')))
     perform <- c()
     
     # create prediction matrix to store all predictions
     predictionMat <- population
+    OhdsiRTools::logDebug(paste0('population nrow: ', nrow(population)))
+    
     predictionMat$value <- 0
     attr(predictionMat, "metaData") <- list(predictionType = "binary")
     
     for(index in 1:length(index_vect )){
-      writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      OhdsiRTools::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
       test <- xgboost::xgb.DMatrix(data = data[population$indexes==index,], label=population$outcomeCount[population$indexes==index])
       watchlist <- list(train=train, test=test)
@@ -215,9 +227,9 @@ gbm_model2 <- function(data, population,
   }
   param.val <- paste0('max depth: ',max.depth,'-- min_child_weight: ', min_child_weight, 
                       '-- nthread: ', nthread, ' nround: ',nround, '-- eta: ', eta)
-  writeLines('==========================================')
-  writeLines(paste0('GMB with parameters:', param.val,' obtained an AUC of ',auc))
-  writeLines('==========================================')
+  OhdsiRTools::logInfo("==========================================")
+  OhdsiRTools::logInfo(paste0("GMB with parameters: ", param.val," obtained an AUC of ",auc))
+  OhdsiRTools::logInfo("==========================================")
   
   result <- list(model=model,
                  auc=auc,

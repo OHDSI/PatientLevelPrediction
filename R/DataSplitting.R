@@ -1,5 +1,5 @@
 # @file dataSplitting.R
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -32,19 +32,25 @@
 #' A dataframe containing the columns: rowId and index
 #' @export
 personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
-  
+
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+
   # parameter checking
   if (!is.null(seed))
     set.seed(seed)
 
   if (class(nfold) != "numeric" | nfold < 1) {
-    flog.error("nfold must be an integer 1 or greater")
-    stop()
+    stop("nfold must be an integer 1 or greater")
   }
 
   if (class(test) != "numeric" | test <= 0 | test >= 1) {
-    flog.error("test must be between 0 and 1")
-    stop()
+    stop("test must be between 0 and 1")
   }
   
   if (is.null(train)) {
@@ -52,22 +58,19 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   }
   
   if (class(train) != "numeric" | train <= 0 | train > 1-test) {
-    flog.error("train must be between 0 and 1-test")
-    stop()
+    stop("train must be between 0 and 1-test")
   }
 
   if (length(table(population$outcomeCount)) <= 1 | sum(population$outcomeCount > 0) < 10) {
-    flog.error("nfold must be an integer 1 or greater")
-    stop()
+    stop("nfold must be an integer 1 or greater")
   }
 
   if (floor(sum(population$outcomeCount > 0) * test/nfold) == 0) {
-    flog.error("Insufficient outcomes for choosen nfold value, please reduce")
-    stop()
+    stop("Insufficient outcomes for choosen nfold value, please reduce")
   }
   
 
-  flog.info(paste0("Creating a ",
+  OhdsiRTools::logInfo(paste0("Creating a ",
                    test * 100,
                    "% test and ",
                    train * 100,
@@ -116,10 +119,10 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   split <- split[order(-split$rowId), ]
 
   foldSizesTrain <- utils::tail(table(split$index), nfold)
-  flog.info(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
+  OhdsiRTools::logInfo(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
     0), " train cases", " (", toString(foldSizesTrain), ")"))
   if (test+train<1)
-    flog.info(paste0(sum(split$index == 0), " were not used for training or testing"))
+    OhdsiRTools::logInfo(paste0(sum(split$index == 0), " were not used for training or testing"))
   
   # return index vector
   return(split)
@@ -152,16 +155,21 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
 #' @export
 timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
 
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   # parameter checking
   if (!is.null(seed))
     set.seed(seed)
   if (class(nfold) != "numeric" | nfold < 1) {
-    flog.error("nfold must be an integer 1 or greater")
-    stop()
+    stop("nfold must be an integer 1 or greater")
   }
   if (class(test) != "numeric" | test <= 0 | test >= 1) {
-    flog.error("test must be between 0 and ")
-    stop()
+    stop("test must be between 0 and ")
   }
   
   if (is.null(train)) {
@@ -180,7 +188,7 @@ timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed =
                        date = dates[population$outcomeCount ==
     0])
 
-  flog.info(paste0("Creating ",
+  OhdsiRTools::logInfo(paste0("Creating ",
                    test * 100,
                    "% test and ",
                    train * 100,
@@ -212,10 +220,10 @@ timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed =
   split <- split[order(split$rowId), ]
 
   foldSizesTrain <- utils::tail(table(split$index), nfold)
-  flog.info(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
+  OhdsiRTools::logInfo(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
     0), " train samples", " (", toString(foldSizesTrain), ")"))
   if (test+train<1)
-    flog.info(paste0(sum(split$index == 0), " were not used for training or testing"))
+    OhdsiRTools::logInfo(paste0(sum(split$index == 0), " were not used for training or testing"))
   # return index vector
   return(split)
 }

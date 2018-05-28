@@ -1,6 +1,6 @@
 # @file PatientLevelPrediction.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -30,9 +30,12 @@
 #' @importFrom magrittr %>%
 #' @importFrom foreach %dopar% %do%
 #' @import bit
+#' @import ffbase
 #' @import Cyclops
 #' @import DatabaseConnector
 #' @import FeatureExtraction
+#' @import plotly
+#' @import OhdsiSharing
 #' @useDynLib PatientLevelPrediction
 NULL
 

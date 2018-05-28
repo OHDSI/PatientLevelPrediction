@@ -1,18 +1,18 @@
 ---
-  title: "Building patient-level predictive models"
+title: "Building patient-level predictive models"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
 output:
   pdf_document:
-  includes:
-  in_header: preamble.tex
-number_sections: yes
-toc: yes
-word_document:
-  toc: yes
-html_document:
-  number_sections: yes
-toc: yes
+    includes:
+      in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
 ---
   <!--
   %\VignetteEngine{knitr}
@@ -43,10 +43,10 @@ Figure 1 illustrates the prediction problem we address. Among a population at ri
 
 To develop a model the user needs to take the following steps:
   
-  1. Create the at risk and outcome cohorts
-2. Extract the patient-level data from the server
-3. Define the population of interest 
-4. Define the time-at-risk 
+  1. Create the target population and outcome cohorts
+  2. Define the covariates (aka features/independant variables) to use in the model
+3. Extract the patient-level data from the server
+4. Define the population of interest (this defines the time-at-risk period to create the class labels)
 5. Pick a test/train split 
 6. Create model settings
 7. Fit the model
@@ -59,7 +59,7 @@ We have selected the well-studied topic of predicting re-hospitalization to walk
 
 Before installing the `PatientLevelPrediction` package make sure you have Java available.  Java can be downloaded from [www.java.com](http://www.java.com). For Windows users, RTools is also necessary.  RTools can be downloaded from [CRAN](http://cran.r-project.org/bin/windows/Rtools/).
 
-Furthermore, a python installation is required for some of the machine learning algorithms. We advise to install Python using Anaconda (https://www.continuum.io/downloads)
+Furthermore, a python installation is required for some of the machine learning algorithms. We advise to install Python 3 using Anaconda (https://www.continuum.io/downloads).  If you are using Mac or Linux make sure the anaconda python is your default python (the python that runs then you type python in the command line) - you may need to add it to your path before the default python.  If you edit the path, close and restart R as the updated path will not happen until you re-open R.
 
 The `PatientLevelPrediction` package is currently maintained in a GitHub repository (https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `drat` package:
   
@@ -71,11 +71,14 @@ install.packages("PatientLevelPrediction")
 
 Once installed, you can type `library(PatientLevelPrediction)` to load the package.
 
+We recomment testing the installation by running: `checkPlpInstallation()`
+
+
 # Data extraction
 
 The `PatientLevelPrediction` package requires longitudinal observational healthcare data in the OMOP Common Data Model format. The user will need to specify two things: 
   
-  1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
+  1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **target population cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
 
 2. Outcomes for which we wish to build a predictive model.
 
@@ -288,19 +291,19 @@ Note that some of these constraints could also already be applied in the cohort 
 | ----------------------------| ------ | --------------------------------------- |
 | Logistic regression with regularization | No | var  (starting  variance), seed |
 | Gradient boosting machines              | No | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, seed  |
-| Random forest                           | Yes | mtry  (number  of  features  in  each  tree),ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node),balance (balance class labels), seed  | 
+| Random forest                           | Yes | mtry  (number  of  features  in  each  tree),ntree (number of trees), maxDepth (max levels in tree), minRows (minimum data points in in node),balance (balance class labels), seed  | 
 | K-nearest neighbors                     | No | k (number   of   neighbours),weighted (weight by inverse frequency)  |   
 | Naive Bayes                             | Yes | none|
-| AdaBoost           | Yes                      | n_estimators (the maximum number of estimators at which boosting is terminated), learning_rate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learning_rate and n_estimators)|
-|Decision Tree | Yes | max_depth (the maximum depth of the tree), min_samples_split,min_samples_leaf, min_impurity_split (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,class_weight ("Balance"" or "None") |
+| AdaBoost           | Yes                      | nEstimators (the maximum number of estimators at which boosting is terminated), learningRate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learningRate and nEstimators)|
+|Decision Tree | Yes | maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight ("Balance"" or "None") |
 | Multilayer Perception | Yes | size (the number of hidden nodes), alpha (the l2 regularisation), seed |
 
 The table shows the currently implemented algorithms and their hyper-parameters. Some of these algorithms are calling python.In the settings function of the algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
 
-For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), max depth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and max  depth=4    plus  the  default  settings  for  other  hyper-parameters  and  ntrees=200  and  max  depth=4  plus  the  default settings  for  other  hyper-parameters.  The  hyper-parameters  that lead  to  the  best  cross-validation  performance will then be chosen for the final  model.
+For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and maxDepth=4    plus  the  default  settings  for  other  hyper-parameters  and  ntrees=200  and  maxDepth=4  plus  the  default settings  for  other  hyper-parameters.  The  hyper-parameters  that lead  to  the  best  cross-validation  performance will then be chosen for the final  model.
 
 ```{r tidy=TRUE,eval=FALSE}
-gbmModel <- setGradientBoostingMachine(ntrees = c(100,200), max_depth=4)
+gbmModel <- setGradientBoostingMachine(ntrees = c(100,200), maxDepth=4)
 lrModel <- setLassoLogisticRegression()
 
 ```
@@ -333,6 +336,7 @@ savePlpResult(lrResults, location = file.path(getwd(),'lr'))
 lrResults <- loadPlpResult(file.path(getwd(),'lr'))
 ```
 
+you can interactively view the results by running: `viewPlp(runPlp=lrResults)`.
 \newpage
 
 # Model Evaluation
@@ -463,6 +467,66 @@ riskWindowEnd = 365
 # apply the trained model on the new data
 validationResults <- applyModel(population,plpData,plpModel)
 ```
+
+
+To make things easier we also provide a function for performing external validation of a model across one or multiple datasets:
+```{r tidy=TRUE,eval=FALSE}
+# load the trained model
+plpResult <- loadPlpResult(getwd(),'plpResult')
+
+connectionDetails <- createConnectionDetails(dbms = "postgresql", 
+                                             server = "localhost/ohdsi", 
+                                             user = "joe", 
+                                             password = "supersecret")
+
+validation <- externalValidatePlp(plpResult = plpResult, 
+                                  connectionDetails = connectionDetails,
+                                  validationSchemaTarget = 'new_cohort_schema',
+                                  validationSchemaOutcome = 'new_cohort_schema',
+                                  validationSchemaCdm = 'new_cdm_schema', 
+                                  validationTableTarget = 'cohort_table',
+                                  validationTableOutcome = 'cohort_table', 
+                                  validationIdTarget = 'cohort_id', 
+                                  validationIdOutcome = 'outcome_id', 
+                                  keepPrediction = T
+                                  )
+
+```
+This will run extract the new plpData from the specified schemas and cohort tables with the target cohort id of cohort id and outcome cohort id of outcome id.  It will then apply the same population settings and the trained plp model.  Finally, it will evaluate the performance and return the standard output as 
+`validation$performance` and if keepPrediction is TRUE then it will also return the prediction on the population as `validation$prediction`.  The can be inserted into the shiny app for viewing the model and validation by running: `viewPlp(runPlp=plpResult, validatePlp=validation )`.
+
+If you want to validate on multiple databases available you can insert the new schemas and cohort tables as a list:
+```{r tidy=TRUE,eval=FALSE}
+# load the trained model
+plpResult <- loadPlpResult(getwd(),'plpResult')
+
+connectionDetails <- createConnectionDetails(dbms = "postgresql", 
+                                             server = "localhost/ohdsi", 
+                                             user = "joe", 
+                                             password = "supersecret")
+
+validation <- externalValidatePlp(plpResult = plpResult, 
+                                  connectionDetails = connectionDetails,
+                                  validationSchemaTarget = list('new_cohort_schema1',
+                                                                'new_cohort_schema2'),
+                                  validationSchemaOutcome = list('new_cohort_schema1',
+                                                                 'new_cohort_schema2'),
+                                  validationSchemaCdm = list('new_cdm_schema1',
+                                                             'new_cdm_schema2'), 
+                                  validationTableTarget = list('new_cohort_table1',
+                                                               'new_cohort_table2'),
+                                  validationTableOutcome = list('new_cohort_table1',
+                                                                'new_cohort_table2'),
+                                  validationIdTarget = 'cohort_id', 
+                                  validationIdOutcome = 'outcome_id', 
+                                  keepPrediction = T
+                                  )
+
+```
+
+
+
+
 \newpage
 
 # Acknowledgments

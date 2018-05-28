@@ -1,4 +1,21 @@
-#TODO
+# @file packagePlp.R
+#
+# Copyright 2018 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #' Apply train model on new data
 #' Apply a Patient Level Prediction model on Patient Level Prediction Data and get the predicted risk
 #' in [0,1] for each person in the population. If the user inputs a population with an outcomeCount
@@ -9,7 +26,6 @@
 #' @param plpData          The plpData for the population
 #' @param plpModel         The trained PatientLevelPrediction model
 #' @param calculatePerformance  Whether to also calculate the performance metrics [default TRUE]
-#' @param logConnection    A connection to output any logging during the process
 #' @param databaseOutput   Whether to save the details into the prediction database
 #' @param silent           Whether to turn off progress reporting
 #'
@@ -32,9 +48,17 @@ applyModel <- function(population,
                        plpData,
                        plpModel,
                        calculatePerformance=T,
-                       logConnection = NULL,
                        databaseOutput = NULL,
                        silent = F) {
+  
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = 'layoutTimestamp')))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   # check input:
   if (is.null(population))
     stop("NULL population")
@@ -42,8 +66,6 @@ applyModel <- function(population,
     stop("Incorrect plpData class")
   if (class(plpModel) != "plpModel")
     stop("Incorrect plpModel class")
-  if (!ifelse(is.null(logConnection), TRUE, "connection" %in% class(logConnection)))
-    stop("logConnection not NULL or a connection")
 
   # log the trained model details TODO
 
@@ -51,19 +73,14 @@ applyModel <- function(population,
   peopleCount <- nrow(population)
 
   start.pred <- Sys.time()
-  if (!is.null(logConnection))
-    cat("Starting Prediction at ", Sys.time(), "for ", peopleCount, " people", file = logConnection)
   if (!silent)
-    writeLines(paste("Starting Prediction ", Sys.time(), "for ", peopleCount, " people"))
+    OhdsiRTools::logInfo(paste("Starting Prediction ", Sys.time(), "for ", peopleCount, " people"))
 
   prediction <- plpModel$predict(plpData = plpData, population = population)
 
-  if (!is.null(logConnection)) {
-    cat("Prediction completed at ", Sys.time(), file = logConnection)
-    cat("Took: ", start.pred - Sys.time(), file = logConnection)
-  }
+  
   if (!silent)
-    writeLines(paste("Prediction completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+    OhdsiRTools::logInfo(paste("Prediction completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
 
 
   if (!"outcomeCount" %in% colnames(prediction))
@@ -72,11 +89,8 @@ applyModel <- function(population,
   if(!calculatePerformance || nrow(prediction) == 1)
     return(prediction)
 
-  if (!is.null(logConnection)) {
-    cat("Starting evaluation at ", Sys.time(), file = logConnection)
-  }
   if (!silent)
-    writeLines(paste("Starting evaulation at ", Sys.time()))
+    OhdsiRTools::logInfo(paste("Starting evaulation at ", Sys.time()))
 
   performance <- evaluatePlp(prediction, plpData)
 
@@ -107,24 +121,38 @@ applyModel <- function(population,
                                           Eval=rep('validation', nr1),
                                           performance$predictionDistribution)
   
-  if (!is.null(logConnection)) {
-    cat("Evaluation completed at ", Sys.time(), file = logConnection)
-    cat("Took: ", start.pred - Sys.time(), file = logConnection)
-  }
-  if (!silent)
-    writeLines(paste("Evaluation completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
 
   if (!silent)
-    writeLines(paste("Starting covariate summary at ", Sys.time()))
+    OhdsiRTools::logInfo(paste("Evaluation completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+
+  if (!silent)
+    OhdsiRTools::logInfo(paste("Starting covariate summary at ", Sys.time()))
   start.pred  <- Sys.time()
   covSum <- covariateSummary(plpData, population)
   
   if (!silent)
-    writeLines(paste("Covariate summary completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+    OhdsiRTools::logInfo(paste("Covariate summary completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
   
+  executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                 packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                           PlatformDetails= list(platform= R.Version()$platform,
+                                                 cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                 RAM=utils::memory.size()), #  test for non-windows needed
+                           # Sys.info()
+                           TotalExecutionElapsedTime = NULL,
+                           ExecutionDateTime = Sys.Date())
   
-  
-  result <- list(prediction = prediction, performance = performance,
+  result <- list(prediction = prediction, 
+                 performanceEvaluation = performance,
+                 inputSetting = list(outcomeId=attr(population, "metaData")$outcomeId,
+                                 cohortId= plpData$metaData$call$cohortId,
+                                 database = plpData$metaData$call$cdmDatabaseSchema),
+                 executionSummary = executionSummary,
+                 model = list(model='applying plp model',
+                              modelSettings = plpModel$modelSettings),
+                 analysisRef=list(analysisId=NULL,
+                                  analysisName=NULL,
+                                  analysisSettings= NULL),
                  covariateSummary=covSum)
   return(result)
 }
@@ -143,6 +171,7 @@ applyModel <- function(population,
 #' @param newOutcomeDatabaseSchema  The database schema where the outcome table is stored
 #' @param newOutcomeTable           The table name of the outcome table
 #' @param newOutcomeId              The cohort_definition_id for the outcome  
+#' @param newOracleTempSchema       The temp coracle schema
 #' @param sample                    The number of people to sample (default is NULL meaning use all data)
 #' @param createPopulation          Whether to create the study population as well
 #'
@@ -179,8 +208,17 @@ similarPlpData <- function(plpModel=NULL,
                            newOutcomeDatabaseSchema = NULL,
                            newOutcomeTable = NULL,
                            newOutcomeId = NULL,
+                           newOracleTempSchema = newCdmDatabaseSchema,
                            sample=NULL, 
                            createPopulation= T) {
+  
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
   
   if(is.null(plpModel))
     return(NULL)
@@ -204,14 +242,14 @@ similarPlpData <- function(plpModel=NULL,
  
     exists <- toupper(newCohortTable)%in%DatabaseConnector::getTableNames(connection , newCohortDatabaseSchema)
     if(!exists){
-    flog.info('Creating temp cohort table')
+      OhdsiRTools::logTrace('Creating temp cohort table')
     sql <- "create table @target_cohort_schema.@target_cohort_table(cohort_definition_id bigint, subject_id bigint, cohort_start_date datetime, cohort_end_date datetime)"
     sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
     sql <- SqlRender::renderSql(sql,
                                 target_cohort_schema = newCohortDatabaseSchema,
                                 target_cohort_table= newCohortTable)$sql
-    ftry(DatabaseConnector::executeSql(connection,sql),
-         error = stop, finally = flog.info('Cohort table created'))
+    tryCatch(DatabaseConnector::executeSql(connection,sql),
+         error = stop, finally = OhdsiRTools::logTrace('Cohort table created'))
     }
     
     exists <- toupper(newOutcomeTable)%in%DatabaseConnector::getTableNames(connection , newOutcomeDatabaseSchema)
@@ -221,12 +259,12 @@ similarPlpData <- function(plpModel=NULL,
       sql <- SqlRender::renderSql(sql,
                                   target_cohort_schema = newOutcomeDatabaseSchema,
                                   target_cohort_table= newOutcomeTable)$sql
-      ftry(DatabaseConnector::executeSql(connection,sql),
-           error = stop, finally = flog.info('outcome table created'))
+      tryCatch(DatabaseConnector::executeSql(connection,sql),
+           error = stop, finally = OhdsiRTools::logTrace('outcome table created'))
       
     }
     
-    flog.info('Populating cohort tables')
+    OhdsiRTools::logTrace('Populating cohort tables')
     targetSql <- plpModel$metaData$cohortCreate$targetCohort$sql
     targetSql <- SqlRender::renderSql(targetSql, 
                                       cdm_database_schema=ifelse(is.null(newCdmDatabaseSchema),plpModel$metaData$call$cdmDatabaseSchema,newCdmDatabaseSchema),
@@ -254,18 +292,14 @@ similarPlpData <- function(plpModel=NULL,
     
   }
   
-  writeLines('Loading model data extraction settings')
+  OhdsiRTools::logTrace('Loading model data extraction settings')
   dataOptions <- as.list(plpModel$metaData$call)
   dataOptions[[1]] <- NULL
   dataOptions$sampleSize <- sample
   
-  #restricting to model variables and setting min to 0
-  #dataOptions$covariateSettings$deleteCovariatesSmallCount <- 0
-  #dataOptions$covariateSettings$includedCovariateConceptIds <- plpModel$varImp$conceptId[plpModel$varImp$covariateValue!=0]
-  #dataOptions$covariateSettings$addDescendantsToInclude <- T
   dataOptions$covariateSettings$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
   
-  writeLines('Adding new settings if set...')
+  OhdsiRTools::logTrace('Adding new settings if set...')
   if(is.null(newCdmDatabaseSchema))
     return(NULL)
   dataOptions$cdmDatabaseSchema <- newCdmDatabaseSchema
@@ -287,6 +321,9 @@ similarPlpData <- function(plpModel=NULL,
     dataOptions$outcomeDatabaseSchema <- newOutcomeDatabaseSchema # correct names?
   if(!is.null(newOutcomeTable))
     dataOptions$outcomeTable <- newOutcomeTable
+  if(!is.null(newOracleTempSchema))
+    dataOptions$oracleTempSchema <- newOracleTempSchema # check name
+  
   
   dataOptions$baseUrl <- NULL
   
@@ -295,7 +332,7 @@ similarPlpData <- function(plpModel=NULL,
   if(!createPopulation) return(plpData)
   
   # get the popualtion
-  writeLines('Loading model population settings')
+  OhdsiRTools::logTrace('Loading model population settings')
   popOptions <- plpModel$populationSettings
   popOptions$cohortId <- dataOptions$cohortId
   popOptions$outcomeId <- dataOptions$outcomeIds
@@ -304,7 +341,7 @@ similarPlpData <- function(plpModel=NULL,
   
   
   # return the popualtion and plpData for the new database
-  writeLines('Returning population and plpData for new data using model settings')
+  OhdsiRTools::logTrace('Returning population and plpData for new data using model settings')
   return(list(population=population,
               plpData=plpData))
 }

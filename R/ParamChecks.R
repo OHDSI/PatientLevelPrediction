@@ -1,6 +1,6 @@
 # @file Utilities.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -21,7 +21,7 @@
 checkBoolean <- function(parameter) {
   name = deparse(substitute(parameter))
   if (!is.logical(parameter)) {
-    flog.error(paste0(name, ' needs to be a boolean'))      
+    OhdsiRTools::logError(paste0(name, ' needs to be a boolean'))      
     stop(paste0(name, ' not defined correctly'))
   }
   return(TRUE)
@@ -30,7 +30,7 @@ checkBoolean <- function(parameter) {
 checkHigherEqual <- function(parameter,value) {
   name = deparse(substitute(parameter))
   if (!is.numeric(parameter) | parameter<value) {
-    flog.error(paste0(name, ' needs to be >= ',value))      
+    OhdsiRTools::logError(paste0(name, ' needs to be >= ',value))      
     stop(paste0(name, ' needs to be >= ', value))
   }
   return(TRUE)
@@ -39,7 +39,7 @@ checkHigherEqual <- function(parameter,value) {
 checkLowerEqual <- function(parameter,value) {
   name = deparse(substitute(parameter))
   if (!is.numeric(parameter) | parameter>value) {
-    flog.error(paste0(name, ' needs to be <= ',value))      
+    OhdsiRTools::logError(paste0(name, ' needs to be <= ',value))      
     stop(paste0(name, ' needs to be <= ', value))
   }
   return(TRUE)
@@ -48,7 +48,7 @@ checkLowerEqual <- function(parameter,value) {
 checkHigher <- function(parameter,value) {
   name = deparse(substitute(parameter))
   if (!is.numeric(parameter) | parameter<=value) {
-    flog.error(paste0(name, ' needs to be > ',value))      
+    OhdsiRTools::logError(paste0(name, ' needs to be > ',value))      
     stop(paste0(name, ' needs to be > ', value))
   }
   return(TRUE)
@@ -57,7 +57,7 @@ checkHigher <- function(parameter,value) {
 checkLower <- function(parameter,value) {
   name = deparse(substitute(parameter))
   if (!is.numeric(parameter) | parameter>=value) {
-    flog.error(paste0(name, ' needs to be < ',value))      
+    OhdsiRTools::logError(paste0(name, ' needs to be < ',value))      
     stop(paste0(name, ' needs to be < ', value))
   }
   return(TRUE)
@@ -66,7 +66,7 @@ checkLower <- function(parameter,value) {
 checkNotNull <- function(parameter) {
   name = deparse(substitute(parameter))
   if (is.null(parameter)) {
-    flog.error(paste0(name, ' cannot be empty'))      
+    OhdsiRTools::logError(paste0(name, ' cannot be empty'))      
     stop(paste0(name, ' cannot be empty'))
   }
   return(TRUE)
@@ -75,7 +75,7 @@ checkNotNull <- function(parameter) {
 checkIsClass<- function(parameter,classes) {
   name = deparse(substitute(parameter))
   if (!class(parameter)%in%classes) {
-    flog.error(paste0(name, ' should be of class:', classes))      
+    OhdsiRTools::logError(paste0(name, ' should be of class:', classes))      
     stop(paste0(name, ' is wrong class'))
   }
   return(TRUE)
@@ -84,7 +84,7 @@ checkIsClass<- function(parameter,classes) {
 checkInStringVector<- function(parameter,values) {
   name = deparse(substitute(parameter))
   if (!parameter%in%values) {
-    flog.error(paste0(name, ' should be ', paste0(as.character(values), collapse="or ")))      
+    OhdsiRTools::logError(paste0(name, ' should be ', paste0(as.character(values), collapse="or ")))      
     stop(paste0(name, ' has incorrect value'))
   }
   return(TRUE)

@@ -1,6 +1,6 @@
 # @file knn.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -65,13 +65,6 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
   covariates <- ff::clone(plpData$covariates)
   covariates <- limitCovariatesToPopulation(covariates, ff::as.ff(population$rowId))
   
-  # format of knn
-  #outcomes$y <- ff::as.ff(rep(1, length(unique(ff::as.ram(outcomes$rowId)))))
-  # add 0 outcome:
-  #ppl <- cohorts$rowId
-  #new <- ppl[!ppl%in%unique(outcomes$rowId)]
-  #newOut <- data.frame(rowId=new, outcomeId=-1,outcomeCount=1,timeToEvent=0,y=0)
-  #outcomes <- as.ffdf(rbind(plpData$outcomes,newOut))
   population$y <- population$outcomeCount
   population$y[population$y>0] <- 1
   

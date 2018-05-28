@@ -9,7 +9,8 @@ similarPlpData(plpModel = NULL, createCohorts = T, newConnectionDetails,
   newCdmDatabaseSchema = NULL, newCohortDatabaseSchema = NULL,
   newCohortTable = NULL, newCohortId = NULL,
   newOutcomeDatabaseSchema = NULL, newOutcomeTable = NULL,
-  newOutcomeId = NULL, sample = NULL, createPopulation = T)
+  newOutcomeId = NULL, newOracleTempSchema = newCdmDatabaseSchema,
+  sample = NULL, createPopulation = T)
 }
 \arguments{
 \item{plpModel}{The trained PatientLevelPrediction model or object returned by runPlp()}
@@ -31,6 +32,8 @@ similarPlpData(plpModel = NULL, createCohorts = T, newConnectionDetails,
 \item{newOutcomeTable}{The table name of the outcome table}
 
 \item{newOutcomeId}{The cohort_definition_id for the outcome}
+
+\item{newOracleTempSchema}{The temp coracle schema}
 
 \item{sample}{The number of people to sample (default is NULL meaning use all data)}
 

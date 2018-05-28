@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 2.0.1
-Date: 2017-11-08
+Version: 2.0.4
+Date: 2018-05-10
 Author: Jenna Reps [aut],
     Martijn J. Schuemie [aut, cre],
     Marc A. Suchard [aut],
@@ -41,8 +41,6 @@ Imports:
     Matrix,
     AUC,
     PythonInR,
-    futile.options,
-    futile.logger,
     utils,
     methods,
     BigKnn,
@@ -56,7 +54,12 @@ Imports:
     tidyr,
     viridisLite,
     RCurl,
-    RJSONIO
+    RJSONIO,
+    keras,
+    slam,
+    magrittr,
+    OhdsiSharing,
+    OhdsiRTools
 Suggests:
     testthat,
     pROC,
