@@ -27,7 +27,7 @@ population <- createStudyPopulation(
   addExposureDaysToStart = FALSE,
   riskWindowEnd = 365,
   addExposureDaysToEnd = FALSE,
-  verbosity = futile.logger::INFO
+  verbosity = "INFO"
 )
 
 # define the prediction algorithm, for example LASSO logistic regression
@@ -38,7 +38,7 @@ testFraction <- 0.2
 trainFractions <- seq(0.1, 0.8, 0.1)
 
 # Use a split by person, alterantively a time split is possible
-testSplit <- 'person'
+testSplit <- 'time'
 
 # create a learning curve object
 learningCurve <- createLearningCurve(
@@ -46,10 +46,11 @@ learningCurve <- createLearningCurve(
   plpData = plpData,
   modelSettings = modelSettings,
   testFraction = 0.2,
+  verbosity = 'TRACE',
   trainFractions = trainFractions,
   splitSeed = 1000,
-  saveModel = FALSE,
-  timeStamp = FALSE
+  saveModel = TRUE,
+  timeStamp = TRUE
 )
 
 # plot the learning curve by specify one of the available metrics: 'AUROC', 

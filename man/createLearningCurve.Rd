@@ -7,8 +7,8 @@
 createLearningCurve(population, plpData, modelSettings, testSplit = "person",
   testFraction = 0.25, trainFractions = c(0.25, 0.5, 0.75),
   splitSeed = NULL, nfold = 3, indexes = NULL, save = NULL,
-  saveModel = TRUE, verbosity = futile.logger::INFO, timeStamp = TRUE,
-  analysisId = NULL, clearffTemp = FALSE, minCovariateFraction = 0.001)
+  saveModel = TRUE, verbosity = "INFO", clearffTemp = FALSE,
+  minCovariateFraction = 0.001)
 }
 \arguments{
 \item{population}{The population created using \code{createStudyPopulation()}
@@ -69,12 +69,6 @@ levels are:
   \item{\code{FATAL} - be silent except for fatal errors}
 }}
 
-\item{timeStamp}{If \code{TRUE} a timestamp will be added to each logging 
-statement. Automatically switched on for \code{TRACE} level.}
-
-\item{analysisId}{Identifier for the analysis. It is used for example used in 
-naming the result folder. The default is a timestamp.}
-
 \item{clearffTemp}{Clears the temporary ff-directory after each iteration. 
 This can be useful, if the fitted models are large.}
 
@@ -82,23 +76,9 @@ This can be useful, if the fitted models are large.}
 avoid removal during preprocssing.}
 }
 \value{
-An object containing the model or location where the model is save, the data 
-selection settings, the preprocessing and training settings as well as
-various performance measures obtained by the model.
-\itemize{
-  \item{\code{predict} - a function that can be applied to new data to apply
-    the trained model and make predictions}
-  \item{\code{model} - a list of class \code{plpModel} containing the model,
-    training metrics and model metadata}
-  \item{\code{prediction} - a dataframe containing the prediction for each 
-    person in the test set }
-  \item{\code{evalType} - the type of evaluation that was performed ('person'
-    or time')}
-  \item{\code{performanceTest} - a list detailing the size of the test sets}
-  \item{\code{performanceTrain} - a list detailing the size of the train 
-    sets}
-  \item{\code{time} - the complete time taken to fit the model framework}
-}
+A learning curve object containing the various performance measures
+ obtained by the model for each training set fraction. It can be plotted
+ using \code{plotLearningCurve}.
 }
 \description{
 Creates a learning curve object, which can be plotted using the

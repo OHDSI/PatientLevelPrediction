@@ -6,7 +6,7 @@
 \usage{
 createLearningCurvePar(population, plpData, modelSettings,
   testSplit = "person", testFraction = 0.25, trainFractions = c(0.25, 0.5,
-  0.75), splitSeed = NULL, nfold = 3, indexes = NULL, analysisId = NULL,
+  0.75), splitSeed = NULL, nfold = 3, indexes = NULL,
   minCovariateFraction = 0.001)
 }
 \arguments{
@@ -47,14 +47,13 @@ using a 'person' type split}
 index value of -1 means in the test set, and positive integer represents
 the cross validation fold (default is \code{NULL}).}
 
-\item{analysisId}{Identifier for the analysis. It is used for example used in 
-naming the result folder. The default is a timestamp.}
-
 \item{minCovariateFraction}{Minimum covariate prevalence in population to
 avoid removal during preprocssing.}
 }
 \value{
-An object containing the various performance measures obtained by the model.
+A learning curve object containing the various performance measures
+ obtained by the model for each training set fraction. It can be plotted
+ using \code{plotLearningCurve}.
 }
 \description{
 Creates a learning curve in parallel, which can be plotted using

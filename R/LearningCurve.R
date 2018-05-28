@@ -67,33 +67,14 @@
 #'     \item{\code{ERROR} - show error messages}
 #'     \item{\code{FATAL} - be silent except for fatal errors}
 #'   }
-#' @param timeStamp If \code{TRUE} a timestamp will be added to each logging 
-#'   statement. Automatically switched on for \code{TRACE} level.
-#' @param analysisId Identifier for the analysis. It is used for example used in 
-#'   naming the result folder. The default is a timestamp.
 #' @param clearffTemp Clears the temporary ff-directory after each iteration. 
 #'   This can be useful, if the fitted models are large.
 #' @param minCovariateFraction Minimum covariate prevalence in population to
 #'   avoid removal during preprocssing.
 #'
-#' @return
-#' An object containing the model or location where the model is save, the data 
-#' selection settings, the preprocessing and training settings as well as
-#' various performance measures obtained by the model.
-#' \itemize{
-#'   \item{\code{predict} - a function that can be applied to new data to apply
-#'     the trained model and make predictions}
-#'   \item{\code{model} - a list of class \code{plpModel} containing the model,
-#'     training metrics and model metadata}
-#'   \item{\code{prediction} - a dataframe containing the prediction for each 
-#'     person in the test set }
-#'   \item{\code{evalType} - the type of evaluation that was performed ('person'
-#'     or time')}
-#'   \item{\code{performanceTest} - a list detailing the size of the test sets}
-#'   \item{\code{performanceTrain} - a list detailing the size of the train 
-#'     sets}
-#'   \item{\code{time} - the complete time taken to fit the model framework}
-#' }
+#' @return A learning curve object containing the various performance measures
+#'  obtained by the model for each training set fraction. It can be plotted
+#'  using \code{plotLearningCurve}.
 #' 
 #' @examples
 #' \dontrun{
@@ -120,24 +101,30 @@ createLearningCurve <- function(population,
                                 indexes = NULL,
                                 save = NULL,
                                 saveModel = TRUE,
-                                verbosity = futile.logger::INFO,
-                                timeStamp = TRUE,
-                                analysisId = NULL,
+                                verbosity = 'INFO',
                                 clearffTemp = FALSE,
                                 minCovariateFraction = 0.001) {
+  
+  # the analysis id will always be generated automatically
+  analysisId <- NULL
+  
+  # check logger
+  if (length(OhdsiRTools::getLoggers()) == 0) {
+    logger <- OhdsiRTools::createLogger(
+      name = "SIMPLE",
+      threshold = verbosity,
+      appenders = list(
+        OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)
+      )
+    )
+    OhdsiRTools::registerLogger(logger)
+  }
   
   # number of training set fractions
   nRuns <- length(trainFractions)
   
   # record global start time
   ExecutionDateTime <- Sys.time()
-  
-  if (timeStamp | verbosity == TRACE) {
-    flog.layout(layout.format('[~l]\t[~t]\t~m'))
-  } else {
-    flog.layout(layout.format('~m'))
-  }
-  flog.threshold(verbosity)
   
   # store a copy of the original population
   originalPopulation <- population
@@ -171,10 +158,9 @@ createLearningCurve <- function(population,
     
     # write log to both, console and file
     # other appenders can be created, e.g. to a web service or database
-    flog.appender(appender.tee(logFileName))
+    # flog.appender(appender.tee(logFileName))
     
-    flog.seperator()
-    flog.info(paste0(
+    OhdsiRTools::logInfo(paste0(
       'Patient-Level Prediction Package version ',
       utils::packageVersion("PatientLevelPrediction")
     ))
@@ -184,19 +170,17 @@ createLearningCurve <- function(population,
     outcomeId <- attr(population, "metaData")$outcomeId
     
     # add header to analysis log
-    flog.seperator()
-    flog.info(sprintf('%-20s%s', 'Training Size: ', trainFractions[i]))
-    flog.info(sprintf('%-20s%s', 'AnalysisID: ', analysisId))
-    flog.info(sprintf('%-20s%s', 'CohortID: ', cohortId))
-    flog.info(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
-    flog.info(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
-    flog.info(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
-    flog.info(sprintf('%-20s%s', 'Population size: ', nrow(population)))
-    flog.info(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount > 0)))
-    flog.seperator()
-    
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Training Size: ', trainFractions[i]))
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'AnalysisID: ', analysisId))
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount > 0)))
+
     # check parameters
-    flog.trace('Parameter Check Started')
+    OhdsiRTools::logTrace('Parameter Check Started')
     checkInStringVector(testSplit, c('person', 'time'))
     checkHigherEqual(sum(population[, 'outcomeCount'] > 0), 25)
     checkIsClass(plpData, c('plpData.coo', 'plpData'))
@@ -208,45 +192,41 @@ createLearningCurve <- function(population,
     # construct the training and testing set according to split type
     # indices will be non-zero for rows in training and testing set
     if (testSplit == 'time') {
-      flog.trace('Dataset time split starter')
-      indexes <-
-        ftry(
-          timeSplitter(
-            population,
-            test = testFraction,
-            train = trainFractions[i],
-            nfold = nfold,
-            seed = splitSeed
-          ),
-          finally = flog.trace('Done.')
+      OhdsiRTools::logTrace('Dataset time split starter')
+      indexes <- tryCatch({
+        timeSplitter(
+          population,
+          test = testFraction,
+          train = trainFractions[i],
+          nfold = nfold,
+          seed = splitSeed
         )
+      },
+      finally = OhdsiRTools::logTrace('Done.'))
     }
     if (testSplit == 'person') {
-      flog.trace('Dataset person split starter')
-      indexes <-
-        ftry(
-          personSplitter(
-            population,
-            test = testFraction,
-            train = trainFractions[i],
-            nfold = nfold,
-            seed = splitSeed
-          ),
-          finally = flog.trace('Done.')
+      OhdsiRTools::logTrace('Dataset person split starter')
+      indexes <- tryCatch({
+        personSplitter(
+          population,
+          test = testFraction,
+          train = trainFractions[i],
+          nfold = nfold,
+          seed = splitSeed
         )
+      },
+      finally = OhdsiRTools::logTrace('Done.'))
     }
     
     # check if population count is equal to the number of indices returned
     if (nrow(population) != nrow(indexes)) {
-      flog.error(sprintf(
+      OhdsiRTools::logError(sprintf(
         'Population dimension not compatible with indexes: %d <-> %d',
         nrow(population),
         nrow(indexes)
       ))
       stop('Population dimension not compatible with indexes')
     }
-    
-    flog.seperator()
     
     # concatenate indices to population dataframe
     tempmeta <- attr(population, "metaData")
@@ -269,36 +249,39 @@ createLearningCurve <- function(population,
       outcomeId = outcomeId
     )
     
-    flog.info(sprintf('Training %s model', settings$modelSettings$name))
+    OhdsiRTools::logInfo(sprintf('Training %s model', settings$modelSettings$name))
     # the call is sinked because of the external calls (Python etc)
     if (sink.number() > 0) {
-      flog.warn(paste0('sink had ', sink.number(), ' connections open!'))
+      OhdsiRTools::logWarn(paste0('sink had ', sink.number(), ' connections open!'))
     }
-    sink(logFileName, append = TRUE, split = TRUE)
+    # sink(logFileName, append = TRUE, split = TRUE)
     
     # fit the model
-    model <- ftry(
-      do.call(fitPlp, settings),
-      error = function(e) {
-        sink()
-        flog.error(e)
-        stop(e)
-      }
-    )
-    sink()
-    flog.trace('Done.')
+    model <- tryCatch({
+      do.call(fitPlp, settings)
+    },
+    error = function(e) {
+      OhdsiRTools::logError(e)
+      stop(paste0(e))
+    },
+    finally = {
+      OhdsiRTools::logTrace('Done.')
+    })
     
     # save the model
-    if (saveModel == T) {
+    if (saveModel == TRUE) {
       modelLoc <- file.path(save, analysisId, 'savedModel')
-      ftry(savePlpModel(model, modelLoc))
-      flog.info(paste0('Model saved to ..\\', analysisId, '\\savedModel'))
+      tryCatch({
+        savePlpModel(model, modelLoc)},
+        finally = OhdsiRTools::logInfo(paste0(
+          'Model saved to ..\\', analysisId, '\\savedModel'
+        ))
+      )
     }
     
     # calculate metrics
-    flog.seperator()
-    flog.trace('Prediction')
-    flog.trace(paste0('Calculating prediction for ', sum(indexes$index != 0)))
+    OhdsiRTools::logTrace('Prediction')
+    OhdsiRTools::logTrace(paste0('Calculating prediction for ', sum(indexes$index != 0)))
     ind <- population$rowId %in% indexes$rowId[indexes$index != 0]
     prediction <-
       model$predict(plpData = plpData, population = population[ind,])
@@ -311,7 +294,7 @@ createLearningCurve <- function(population,
     
     attr(prediction, "metaData") <- metaData
     
-    finally = flog.trace('Done.')
+    finally = OhdsiRTools::logTrace('Done.')
     
     # measure model performance
     if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
@@ -319,14 +302,14 @@ createLearningCurve <- function(population,
       # add analysisID
       attr(prediction, "metaData")$analysisId <- analysisId
       
-      flog.info('Train set evaluation')
+      OhdsiRTools::logInfo('Train set evaluation')
       performance.train <-
         evaluatePlp(prediction[prediction$indexes > 0,], plpData)
-      flog.trace('Done.')
-      flog.info('Test set evaluation')
+      OhdsiRTools::logTrace('Done.')
+      OhdsiRTools::logInfo('Test set evaluation')
       performance.test <-
         evaluatePlp(prediction[prediction$indexes < 0,], plpData)
-      flog.trace('Done.')
+      OhdsiRTools::logTrace('Done.')
       
       # combine the test and train data and add analysisId
       performance <-
@@ -334,42 +317,42 @@ createLearningCurve <- function(population,
                             analysisId)
       
       if (!is.null(save)) {
-        flog.trace('Saving evaluation')
+        OhdsiRTools::logTrace('Saving evaluation')
         if (!dir.exists(file.path(analysisPath, 'evaluation')))
           dir.create(file.path(analysisPath, 'evaluation'))
-        ftry(
+        tryCatch(
           utils::write.csv(
             performance$evaluationStatistics,
             file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'),
             row.names = F
           ),
-          finally = flog.trace('Saved EvaluationStatistics.')
+          finally = OhdsiRTools::logTrace('Saved EvaluationStatistics.')
         )
-        ftry(
+        tryCatch(
           utils::write.csv(
             performance$thresholdSummary,
             file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'),
             row.names = F
           ),
-          finally = flog.trace('Saved ThresholdSummary.')
+          finally = OhdsiRTools::logTrace('Saved ThresholdSummary.')
         )
-        ftry(
+        tryCatch(
           utils::write.csv(
             performance$demographicSummary,
             file.path(analysisPath, 'evaluation', 'demographicSummary.csv'),
             row.names = F
           ),
-          finally = flog.trace('Saved DemographicSummary.')
+          finally = OhdsiRTools::logTrace('Saved DemographicSummary.')
         )
-        ftry(
+        tryCatch(
           utils::write.csv(
             performance$calibrationSummary,
             file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'),
             row.names = F
           ),
-          finally = flog.trace('Saved CalibrationSummary.')
+          finally = OhdsiRTools::logTrace('Saved CalibrationSummary.')
         )
-        ftry(
+        tryCatch(
           utils::write.csv(
             performance$predictionDistribution,
             file.path(analysisPath,
@@ -377,13 +360,12 @@ createLearningCurve <- function(population,
                       'predictionDistribution.csv'),
             row.names = F
           ),
-          finally = flog.trace('Saved PredictionDistribution.')
+          finally = OhdsiRTools::logTrace('Saved PredictionDistribution.')
         )
       }
-      flog.seperator()
-      
+
     } else{
-      flog.warn(paste0(
+      OhdsiRTools::logWarn(paste0(
         'Evaluation not possible as prediciton NULL or all the same values'
       ))
       performance.test <- NULL
@@ -429,9 +411,8 @@ createLearningCurve <- function(population,
         # version, release date, vocabulary version
       )
     
-    flog.seperator()
-    flog.info(paste0('Calculating covariate summary @ ', Sys.time()))
-    flog.info('This can take a while...')
+    OhdsiRTools::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
+    OhdsiRTools::logInfo('This can take a while...')
     covSummary <- covariateSummary(plpData, population)
     covSummary <-
       merge(model$varImp, covSummary, by = 'covariateId', all = T)
@@ -456,19 +437,19 @@ createLearningCurve <- function(population,
             by = 'covariateId',
             all = T)
     if (!is.null(save)) {
-      flog.trace('Saving covariate summary')
+      OhdsiRTools::logTrace('Saving covariate summary')
       if (!dir.exists(file.path(analysisPath, 'evaluation')))
         dir.create(file.path(analysisPath, 'evaluation'))
-      ftry(
+      tryCatch({
         utils::write.csv(
           covSummary,
           file.path(analysisPath, 'evaluation', 'covariateSummary.csv'),
           row.names = F
-        ),
-        finally = flog.trace('Saved covariate summary.')
+        )},
+        finally = OhdsiRTools::logTrace('Saved covariate summary.')
       )
     }
-    flog.info(paste0('Finished covariate summary @ ', Sys.time()))
+    OhdsiRTools::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
     
     # create result object
     result <- list(
@@ -486,8 +467,9 @@ createLearningCurve <- function(population,
     )
     class(result) <- c('list', 'plpModel')
     
-    flog.info(paste0('Log saved to ', logFileName))
-    flog.info("Run finished successfully.")
+    OhdsiRTools::logInfo(paste0('Log saved to ', logFileName))
+    OhdsiRTools::logInfo("Run finished successfully.")
+    OhdsiRTools::logInfo()
     
     # combine performance metrics
     df <- data.frame(
@@ -513,6 +495,9 @@ createLearningCurve <- function(population,
     if (clearffTemp) {
       clearffTempDir()
     }
+    
+    # reset analysis id
+    analysisId <- NULL
     
     # return data frame row for each run
     return(df)
@@ -574,13 +559,12 @@ createLearningCurve <- function(population,
 #' @param indexes A dataframe containing a rowId and index column where the 
 #'   index value of -1 means in the test set, and positive integer represents
 #'   the cross validation fold (default is \code{NULL}).
-#' @param analysisId Identifier for the analysis. It is used for example used in 
-#'   naming the result folder. The default is a timestamp.
 #' @param minCovariateFraction Minimum covariate prevalence in population to
 #'   avoid removal during preprocssing.
 #'
-#' @return
-#' An object containing the various performance measures obtained by the model.
+#' @return A learning curve object containing the various performance measures
+#'  obtained by the model for each training set fraction. It can be plotted
+#'  using \code{plotLearningCurve}.
 #' 
 #' @examples
 #' \dontrun{
@@ -608,7 +592,6 @@ createLearningCurvePar <- function(population,
                                    splitSeed = NULL,
                                    nfold = 3,
                                    indexes = NULL,
-                                   analysisId = NULL,
                                    minCovariateFraction = 0.001) {
   
   # register a parallel backend
@@ -633,12 +616,6 @@ createLearningCurvePar <- function(population,
     
     # restore original population
     population <- originalPopulation
-    
-    # create an analysisid for this run
-    start.all <- Sys.time()
-    if (is.null(analysisId))
-      analysisId <-
-      gsub(':', '', gsub('-', '', gsub(' ', '', start.all)))
     
     cohortId <- attr(population, "metaData")$cohortId
     outcomeId <- attr(population, "metaData")$outcomeId
@@ -705,7 +682,7 @@ createLearningCurvePar <- function(population,
     if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
                1)) {
       # add analysisID
-      attr(prediction, "metaData")$analysisId <- analysisId
+      attr(prediction, "metaData")$analysisId <- NULL
       
       performance.train <-
         PatientLevelPrediction::evaluatePlp(prediction[prediction$indexes > 0,],
