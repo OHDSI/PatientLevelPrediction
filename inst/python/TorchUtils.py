@@ -119,6 +119,14 @@ def mixup_data(x, y, alpha=1.0):
 def mixup_criterion(y_a, y_b, lam):
     return lambda criterion, pred: lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
 
+def early_stop(metrics_hist, patience = 3):
+    if not np.all(np.isnan(metrics_hist)):
+        return np.nanargmin(metrics_hist) > len(metrics_hist) - patience
+    else:
+        #keep training if criterion results have all been nan so far
+        return False
+
+
 class Estimator(object):
     """
     It is used for training different deep models in the same interface.
@@ -213,6 +221,7 @@ class Estimator(object):
             val_log = ''
             if validation_data and not autoencoder:
                 val_loss, auc = self.evaluate(validation_data[0], validation_data[1], batch_size)
+
                 val_log = "- val_loss: %06.4f - auc: %6.4f" % (val_loss, auc)
                 print val_log
                 # print("Epoch %s/%s loss: %06.4f - acc: %06.4f %s" % (t, nb_epoch, loss, acc, val_log))
@@ -225,7 +234,7 @@ class Estimator(object):
         loss = self.loss_f(y_pred, y_v)
         predict = y_pred.data.cpu().numpy()[:, 1].flatten()
         auc = roc_auc_score(y, predict)
-        return loss.data[0], auc
+        return loss.item(), auc
 
     def _accuracy(self, y_pred, y):
         return float(sum(y_pred == y)) / y.shape[0]
@@ -430,6 +439,7 @@ def convert_to_temporal_format(covariates, timeid_len= 31, normalize = True, pre
     
     return x, patient_keys
 
+
 def read_covariates(covariate_file):
     patient_dict = {}
     head = True
@@ -441,16 +451,16 @@ def read_covariates(covariate_file):
             values = line.rstrip().split(',')
             patient_id = values[1]
             cov_id = values[2]
-            time_id = int(values[-1])
+            #time_id = int(values[-1])
             # covariates in one patient has time order
-            patient_dict.setdefault(patient_id, []).append((time_id, cov_id))
+            patient_dict.setdefault(patient_id, []).append((cov_id))
     new_patient = []
     for key in patient_dict.keys():
-        patient_dict[key].sort()
+        #patient_dict[key].sort()
         sort_vals = []
         for val in patient_dict[key]:
             if val[1] not in sort_vals:
-                sort_vals.append(val[1])
+                sort_vals.append(val)
         new_patient.append(sort_vals)
 
     return new_patient
@@ -543,6 +553,8 @@ def split_training_validation(classes, validation_size=0.2, shuffle=False):
 
 if __name__ == "__main__":
     filename = sys.argv[1]
+    word_embeddings(filename)
+    '''
     population = joblib.load('/data/share/plp/SYNPUF/population.pkl')
     # y = population[:, 1]
     covriate_ids, patient_dict = read_data(filename)
@@ -553,3 +565,4 @@ if __name__ == "__main__":
     # for val in y_ids:
     #    Y.append(y_dict[y_ids]) 
     x_train, x_valid, x_test, Y_train, Y_valid, Y_test = convert_to_temporal_format(covriate_ids, patient_dict, y_dict)
+    '''
