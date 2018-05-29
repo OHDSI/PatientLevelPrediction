@@ -102,12 +102,12 @@ runEnsembleModel <- function(population, dataList, modelList,
   attr(prediction, "metaData")$analysisId <- analysisId
 
   flog.info('Train set evaluation')
-  performance.train <- evaluatePlp(prediction[prediction$indexes>0,], dataList[[1]], model = modelList[[1]]$model)
+  performance.train <- evaluatePlp(prediction[prediction$indexes>0,], dataList[[1]])
   flog.trace('Done.')
   flog.info('Test set evaluation')
-  performance.test <- evaluatePlp(prediction[prediction$indexes<0,], dataList[[1]], model = modelList[[1]]$model)
+  performance.test <- evaluatePlp(prediction[prediction$indexes<0,], dataList[[1]])
   flog.trace('Done.')
-  performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId, dataList[[1]])
+  performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
     
   return(performance)
 }
@@ -162,7 +162,8 @@ applyEnsembleModel <- function(population,
     stop("Incorrect plpModel class")
   if (ensembleStrategy == 'weighted' | ensembleStrategy == 'stacked') {
     if(is.null(analysisId)) 
-      stop("Please give analysisId associated saved dir for weights and logistics regression model for combining difgferent models.") 
+      stop("Please give analysisId, which provides saved dir for weights and logistics regression model 
+           for combining different models.") 
     
     if(is.null(save)) save <- file.path(getwd(),'plpmodels')
       dirPath <- file.path(save, paste0(analysisId, '-', 1), 'savedModel')
