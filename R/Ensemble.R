@@ -35,6 +35,7 @@
 #'                                         split evaluation.
 #' @param splitSeed                       The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                           The number of folds used in the cross validation (default 3)
+#' @param save                             The path to the directory where the models will be saved (if NULL uses working directory)
 #' @param analysisId                      The analysis ID
 #' @param ensembleStrategy                The strategy used for ensembling the outputs from different models, it can be 'mean', 'product',  
 #'                                        'weighted' and 'stacked'
@@ -92,7 +93,7 @@ runEnsembleModel <- function(population, dataList, modelList,
 	train_prob = pred_probas[train_index,]
 	train_y = as.matrix(prediction$outcomeCount)[train_index]  
 	lr_model <- glm(train_y ~. , data = train_prob, family = binomial(link = "logit"))
-	saveRDS(trainAUCs, file = file.path(modelLoc, "lrModel.rds"))
+	saveRDS(lr_model, file = file.path(modelLoc, "lrModel.rds"))
 	ensem_proba <- predict(lr_model, newdata = pred_probas, type= "response")
   } else {
 	  stop('ensembleStrategy must be mean, product, weighted and stacked')
@@ -134,8 +135,13 @@ runEnsembleModel <- function(population, dataList, modelList,
 #' # load the model and data
 #' plpData <- loadPlpData("plpdata/")
 #' The trained base models are saved under dir analysisId + '-' + index of trained models when training ensemble models.
-#' plpModel1 <- loadPlpModel("plpmodel1/")
-#' plpModel2 <- loadPlpModel("plpmodel2/")
+#' results <- PatientLevelPrediction::runEnsembleModel(population, dataList = list(plpData, plpData), 
+#'                                                     modelList = list(model, model),
+#'                                                     testSplit='person',
+#'                                                     testFraction=0.20,
+#'                                                     nfold=3, splitSeed=1000, ensembleStrategy = 'stacked') 
+#' model1 <- loadPlpModel('/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180529112405-1/savedModel')
+#' model2 <- loadPlpModel('/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180529112405-2/savedModel')
 #'
 #' # use the same population settings as the model:
 #' populationSettings <- plpModel$populationSettings
@@ -143,7 +149,12 @@ runEnsembleModel <- function(population, dataList, modelList,
 #' population <- do.call(createStudyPopulation, populationSettings)
 #'
 #' # get the prediction:
-#' prediction <- applyEnsembleModel(population, list(plpData, plpData), list(plpModel1, plpModel2))$prediction
+#' prediction <- applyEnsembleModel(population,
+#'                               dataList= list(plpData, plpData),
+#'                               modelList= list(model1, model1),
+#'                               analysisId = '20180529112405',
+#'                               save=NULL,
+#'                               ensembleStrategy = 'stacked')$prediction
 #' }
 #' @export
 applyEnsembleModel <- function(population,
@@ -156,9 +167,9 @@ applyEnsembleModel <- function(population,
   # check input:
   if (is.null(population))
     stop("NULL population")
-  if (class(plpData) != "plpData")
+  if (class(dataList[[1]]) != "plpData")
     stop("Incorrect plpData class")
-  if (class(plpModel) != "plpModel")
+  if (class(modelList[[1]]) != "plpModel")
     stop("Incorrect plpModel class")
   if (ensembleStrategy == 'weighted' | ensembleStrategy == 'stacked') {
     if(is.null(analysisId)) 
@@ -191,6 +202,9 @@ applyEnsembleModel <- function(population,
     weights = readRDS(file.path(dirPath, "weights.rds"))
     ensem_proba = rowSums(t(t(as.matrix(pred_probas)) * weights))
   } else if (ensembleStrategy == 'stacked') {
+    for (ind in seq(1, Index)){
+      colnames(pred_probas)[ind] <- paste('col', ind, sep="")
+    }
     lr_model = readRDS(file.path(dirPath, "lrModel.rds"))
     ensem_proba <- predict(lr_model, newdata = pred_probas, type= "response")
   } else {

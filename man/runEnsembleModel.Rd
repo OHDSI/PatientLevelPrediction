@@ -5,8 +5,8 @@
 \title{ensemble - Create an ensembling model using different models}
 \usage{
 runEnsembleModel(population, dataList, modelList, testSplit = "time",
-  testFraction = 0.25, splitSeed = NULL, nfold = 3, analysisId = NULL,
-  ensembleStrategy = "mean")
+  testFraction = 0.25, splitSeed = NULL, nfold = 3, save = NULL,
+  analysisId = NULL, ensembleStrategy = "mean")
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -14,12 +14,8 @@ runEnsembleModel(population, dataList, modelList, testSplit = "time",
 \item{dataList}{An list of object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
 
-\item{modelList}{An list of type of base model created using one of the function in final ensembling model:
-\itemize{
-\item{LRTorch()}{ A logistic regression model}
-\item{MLPTorch()}{ A neural network model}
-\item{CNNTorch()}{ A convolutional neural network model}
-}}
+\item{modelList}{An list of type of base model created using one of the function in final ensembling model,
+the base model can be any model implemented in this package.}
 
 \item{testSplit}{Either 'person' or 'time' specifying the type of evaluation used.
 'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
@@ -32,6 +28,8 @@ split evaluation.}
 \item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
 
 \item{nfold}{The number of folds used in the cross validation (default 3)}
+
+\item{save}{The path to the directory where the models will be saved (if NULL uses working directory)}
 
 \item{analysisId}{The analysis ID}
 
