@@ -238,7 +238,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                    modelSettings = modelSettings,
                    population=population,
                    cohortId=cohortId,
-                   outcomeId=outcomeId, cleanData = cleanData)
+                   outcomeId=outcomeId)
   
   OhdsiRTools::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
   # the call is sinked because of the external calls (Python etc)
