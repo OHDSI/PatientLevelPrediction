@@ -18,8 +18,6 @@ library("testthat")
 context("Formatting")
 
 # switch of all messages
-futile.logger::flog.threshold(FATAL) ## <- this caused an error when using testthat::test_file()
-
 test_that("toSparseM", {
   
   # testing manually constructed data...
@@ -53,7 +51,7 @@ test_that("toSparseM", {
   class(plpData) <- 'plpData'
   population <- createStudyPopulation(plpData=plpData,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
-                                      riskWindowEnd = 365, verbosity = FATAL)
+                                      riskWindowEnd = 365)
   # test gbm coo to sparse matrix 
   sparseMat.test <- toSparseM(plpData,population, map=NULL)
   matrix.real <- matrix(rep(0, 6*10), ncol=10)
@@ -66,7 +64,7 @@ test_that("toSparseM", {
   population2 <- createStudyPopulation(plpData=plpData,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
                                       riskWindowEnd = 365,
-                                      washoutPeriod = 100,verbosity = FATAL
+                                      washoutPeriod = 100
                                       )
   sparseMat.test2 <- toSparseM(plpData,population2, map=NULL)
   matrix.real2 <- matrix(rep(0, 6*10), ncol=10)
@@ -91,7 +89,7 @@ test_that("toSparseM", {
   class(plpData2) <- 'plpData'
   population3 <- createStudyPopulation(plpData=plpData2,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
-                                      riskWindowEnd = 365,verbosity = FATAL
+                                      riskWindowEnd = 365
                                       )
   sparseMat.test3 <- toSparseM(plpData2,population3, map=sparseMat.test$map)
   matrix.real3 <- matrix(rep(0, 6*10), ncol=10)
