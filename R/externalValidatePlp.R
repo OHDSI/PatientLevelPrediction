@@ -1,4 +1,4 @@
-# @file externalValidatePlp.R
+# @file ExternalValidatePlp.R
 #
 # Copyright 2018 Observational Health Data Sciences and Informatics
 #
@@ -29,6 +29,7 @@
 #' @param validationSchemaTarget         A string or list of strings specifying the database containing the target cohorts
 #' @param validationSchemaOutcome       A string or list of strings specifying the database containing the outcome cohorts
 #' @param validationSchemaCdm            A string or list of strings specifying the database containing the cdm
+#' @param databaseNames                  A string of lift of strings specifying sharing friendly database names corresponding to validationSchemaCdm
 #' @param validationTableTarget          A string or list of strings specifying the table containing the target cohorts
 #' @param validationTableOutcome        A string or list of strings specifying the table containing the outcome cohorts
 #' @param validationIdTarget             An iteger or list of integers specifying the cohort id for the target cohorts
@@ -52,7 +53,8 @@
 externalValidatePlp <- function(plpResult,
                                 connectionDetails, 
                                 validationSchemaTarget,
-                                validationSchemaOutcome, validationSchemaCdm,
+                                validationSchemaOutcome, 
+                                validationSchemaCdm, databaseNames,
                                 validationTableTarget='cohort', validationTableOutcome='cohort',
                                 validationIdTarget = NULL, validationIdOutcome = NULL,
                                 oracleTempSchema=NULL,#validationSchemaCdm,
@@ -90,6 +92,12 @@ externalValidatePlp <- function(plpResult,
     stop('validationSchemaTarget and validationSchemaOutcome not same class')
   if(class(validationSchemaTarget)!=class(validationSchemaCdm))
     stop('validationSchemaTarget and validationSchemaCdm not same class')
+  
+  if(!missing(databaseNames)){
+    if(length(validationSchemaCdm)!=length(databaseNames)){
+      stop('DatabaseNames not same length as validationSchemaCdm')
+    }
+  }
   
   
   # add lots of test for tables and ids :(
@@ -141,11 +149,17 @@ externalValidatePlp <- function(plpResult,
         results[[i]]$prediction <- NULL
       }
       
-      results[[i]]$inputSetting<- list(newCdmDatabaseSchema = validationSchemaCdm[i], 
-                                    newCohortDatabaseSchema = validationSchemaTarget[i], 
+      if(missing(databaseNames)){
+        niceName <-   rep('Not Entered', length(validationSchemaCdm))
+      } else{
+        niceName <-   databaseNames
+      }
+      results[[i]]$inputSetting<- list(newCdmDatabaseSchema = validationSchemaCdm[[i]],
+                                       databaseNames = niceName, 
+                                    newCohortDatabaseSchema = validationSchemaTarget[[i]], 
                                     newCohortTable = targetTable, 
                                     cohortId = validationIdTarget, 
-                                    newOutcomeDatabaseSchema = validationSchemaOutcome[i], 
+                                    newOutcomeDatabaseSchema = validationSchemaOutcome[[i]], 
                                     newOutcomeTable = outcomeTable, 
                                     outcomeId = validationIdOutcome,
                                     newOracleTempSchema = oracleTempSchema)
@@ -163,11 +177,19 @@ externalValidatePlp <- function(plpResult,
     
   }
   
-  names(results) <- validationSchemaCdm # do I want to paste ids onto this?
+  if(!missing(databaseNames)){
+    names(results) <- databaseNames
+    # do summary
+    summary <- do.call(rbind, lapply(1:length(results), function(i) summariseVal(results[[i]], 
+                                                                                 database=databaseNames[[i]])))
+  } else{
+    names(results) <- validationSchemaCdm # do I want to paste ids onto this?
+    # do summary
+    summary <- do.call(rbind, lapply(1:length(results), function(i) summariseVal(results[[i]], 
+                                                                                 database=validationSchemaCdm[[i]])))
+  }
   
-  # do summary
-  summary <- do.call(rbind, lapply(1:length(results), function(i) summariseVal(results[[i]], 
-                                                                    database=validationSchemaCdm[[i]])))
+  
   summary <- reshape2::dcast(summary, Database ~ Metric, value.var="Value" )
   
   
@@ -220,6 +242,7 @@ summariseVal <- function(result, database){
 #' @param cohortId                         An iteger specifying the cohort id for the target cohorts
 #' @param outcomeId                        An iteger specifying the cohort id for the outcome cohorts
 #' @param oracleTempSchema                 The temp oracle schema 
+#' @param modelName                        The name of the model
 #' @return
 #' The performance of the existing model and prediction
 #'
@@ -242,7 +265,8 @@ evaluateExistingModel <- function(modelTable,
                                    cdmDatabaseSchema,
                                    cohortDatabaseSchema, cohortTable, cohortId,
                                    outcomeDatabaseSchema, outcomeTable, outcomeId,
-                                   oracleTempSchema = cdmDatabaseSchema
+                                   oracleTempSchema = cdmDatabaseSchema,
+                                  modelName='existingModel'
                                 
                                    ){
   
@@ -290,7 +314,7 @@ evaluateExistingModel <- function(modelTable,
     warning('minTimeAtRisk is greater than time at risk - is this correct?')
   
   custCovs <- PatientLevelPrediction::createExistingModelSql(modelTable= modelTable, 
-                                                 modelNames ='existingModel', 
+                                                 modelNames = modelName, 
                                                  interceptTable = interceptTable,
                                                  covariateTable=covariateTable, 
                                                  type='score',
@@ -374,7 +398,7 @@ evaluateExistingModel <- function(modelTable,
                                   database = cdmDatabaseSchema),
               executionSummary = executionSummary,
               model = list(model='existing model',
-                           modelName=modelNames,
+                           modelName=modelName,
                            modelTable=modelTable, 
                            covariateTable=covariateTable, 
                            interceptTable=interceptTable),

@@ -4,13 +4,15 @@
 \alias{createPlpReport}
 \title{createPlpReport}
 \usage{
-createPlpReport(plpResult = NULL, plpData = NULL,
+createPlpReport(plpResult = NULL, plpValidation = NULL, plpData = NULL,
   targetName = "<target population>", outcomeName = "<outcome>",
   targetDefinition = NULL, outcomeDefinition = NULL,
   outputLocation = file.path(getwd(), "plp_report.docx"))
 }
 \arguments{
 \item{plpResult}{An object of type \code{plpResult} returned by running runPlp()}
+
+\item{plpValidation}{An object of type \code{validatePlp} returned by running externalValidatePlp()}
 
 \item{plpData}{The plpData}
 

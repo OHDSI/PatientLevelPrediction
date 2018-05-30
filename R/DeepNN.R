@@ -170,7 +170,7 @@ trainDeepNN<-function(plpData, population,
                       lr =1e-4, decay=1e-5, outcome_weight = 1.0, batch_size = 100, 
                       epochs= 100, seed=NULL, train=TRUE, ...){
   
-  writeLines(paste('Training deep neural network with ',length(unique(population$indexes)),' fold CV'))
+  OhdsiRTools::logInfo(paste('Training deep neural network with ',length(unique(population$indexes)),' fold CV'))
   if(!is.null(population$indexes) && train==T){
     index_vect <- unique(population$indexes)
     perform <- c()
@@ -181,7 +181,7 @@ trainDeepNN<-function(plpData, population,
     attr(predictionMat, "metaData") <- list(predictionType = "binary")
     
     for(index in 1:length(index_vect )){
-      writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      OhdsiRTools::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       
       model <- keras::keras_model_sequential()
       
@@ -262,9 +262,9 @@ trainDeepNN<-function(plpData, population,
     param.val <- paste0('units1: ',units1,'units2: ',units2,'units3: ',units3,
                         'layer_dropout: ',layer_dropout,'-- lr: ', lr,
                         '-- decay: ', decay, '-- batch_size: ',batch_size, '-- epochs: ', epochs)
-    writeLines('==========================================')
-    writeLines(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
-    writeLines('==========================================')
+    OhdsiRTools::logInfo('==========================================')
+    OhdsiRTools::logInfo(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
+    OhdsiRTools::logInfo('==========================================')
     
   } else {
     

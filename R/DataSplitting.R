@@ -31,31 +31,34 @@
 #' @export
 personSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
 
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
   # parameter checking
   if (!is.null(seed))
     set.seed(seed)
 
   if (class(nfold) != "numeric" | nfold < 1) {
-    flog.error("nfold must be an integer 1 or greater")
-    stop()
+    stop("nfold must be an integer 1 or greater")
   }
 
   if (class(test) != "numeric" | test <= 0 | test >= 1) {
-    flog.error("test must be between 0 and ")
-    stop()
+    stop("test must be between 0 and ")
   }
 
   if (length(table(population$outcomeCount)) <= 1 | sum(population$outcomeCount > 0) < 10) {
-    flog.error("nfold must be an integer 1 or greater")
-    stop()
+    stop("nfold must be an integer 1 or greater")
   }
 
   if (floor(sum(population$outcomeCount > 0) * test/nfold) == 0) {
-    flog.error("Insufficient outcomes for choosen nfold value, please reduce")
-    stop()
+    stop("Insufficient outcomes for choosen nfold value, please reduce")
   }
 
-  flog.info(paste0("Creating a ",
+  OhdsiRTools::logInfo(paste0("Creating a ",
                    test * 100,
                    "% test and ",
                    (1 - test) * 100,
@@ -96,7 +99,7 @@ personSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
   split <- split[order(-split$rowId), ]
 
   foldSizesTrain <- utils::tail(table(split$index), nfold)
-  flog.info(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
+  OhdsiRTools::logInfo(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
     0), " train cases", " (", toString(foldSizesTrain), ")"))
 
   # return index vector
@@ -128,17 +131,21 @@ personSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
 #' A dataframe containing the columns: rowId and index
 #' @export
 timeSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
-
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   # parameter checking
   if (!is.null(seed))
     set.seed(seed)
   if (class(nfold) != "numeric" | nfold < 1) {
-    flog.error("nfold must be an integer 1 or greater")
-    stop()
+    stop("nfold must be an integer 1 or greater")
   }
   if (class(test) != "numeric" | test <= 0 | test >= 1) {
-    flog.error("test must be between 0 and ")
-    stop()
+    stop("test must be between 0 and ")
   }
   dates <- as.Date(population$cohortStartDate, format = "%Y-%m-%d")
   # find date that test frac have greater than - set dates older than this to this date
@@ -152,7 +159,7 @@ timeSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
                        date = dates[population$outcomeCount ==
     0])
 
-  flog.info(paste0("Creating ",
+  OhdsiRTools::logInfo(paste0("Creating ",
                    test * 100,
                    "% test and ",
                    (1 - test) * 100,
@@ -178,7 +185,7 @@ timeSplitter <- function(population, test = 0.3, nfold = 3, seed = NULL) {
   split <- split[order(split$rowId), ]
 
   foldSizesTrain <- utils::tail(table(split$index), nfold)
-  flog.info(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
+  OhdsiRTools::logInfo(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
     0), " train samples", " (", toString(foldSizesTrain), ")"))
 
   # return index vector

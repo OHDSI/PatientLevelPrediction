@@ -35,6 +35,7 @@
 #' @param plpData                          An object of type \code{plpData} - the patient level prediction
 #'                                         data extracted from the CDM.
 #' @param minCovariateFraction             The minimum fraction of target population who must have a covariate for it to be included in the model training                            
+#' @param normalizeData                    Whether to normalise the covariates before training (Default: TRUE)      
 #' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
 #'                                         \item{logisticRegressionModel()}{ A lasso logistic regression model}
@@ -128,23 +129,24 @@
 #'                         nfold=3, indexes=mod.lr$indexes,
 #'                         save=file.path('C:','User','home'))
 #' } 
-runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
+runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalizeData=T,
                    modelSettings,
                    testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, indexes=NULL,
                    save=NULL, saveModel=T,
-                   verbosity=futile.logger::INFO, timeStamp=FALSE, analysisId=NULL
+                   verbosity="INFO", timeStamp=FALSE, analysisId=NULL
 ){
   
+  if(missing(verbosity)){
+    verbosity <- "INFO"
+  } else{
+    if(!verbosity%in%c("DEBUG","TRACE","INFO","WARN","FATAL","ERROR")){
+      stop('Incorrect verbosity string')
+    }
+  }
+
   # log the start time:
   ExecutionDateTime <- Sys.time()
-  
-  if (timeStamp | verbosity == TRACE){
-    flog.layout(layout.format('[~l]\t[~t]\t~m'))
-  } else {
-    flog.layout(layout.format('~m'))
-  }
-  flog.threshold(verbosity)
-  
+
   # create an analysisid and folder to save the results
   start.all <- Sys.time()
   if(is.null(analysisId))
@@ -160,35 +162,41 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
   
   # write log to both console and file (tee). 
   # note other appenders can be created, e.g., to webservice or database!
+  logger <- OhdsiRTools::createLogger(name = "Main Log",
+                                      threshold = verbosity,
+                                      appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutParallel,
+                                                                          fileName = logFileName)))
+  OhdsiRTools::registerLogger(logger)
   
-  flog.appender(appender.tee(logFileName))
-  
-  flog.seperator()
-  flog.info(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
+  OhdsiRTools::logInfo(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
   
   # get ids
   cohortId <- attr(population, "metaData")$cohortId
   outcomeId <- attr(population, "metaData")$outcomeId
   
   # add header to analysis log
-  flog.seperator()
-  flog.info(sprintf('%-20s%s', 'AnalysisID: ',analysisId))
-  flog.info(sprintf('%-20s%s', 'CohortID: ', cohortId))
-  flog.info(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
-  flog.info(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
-  flog.info(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
-  flog.info(sprintf('%-20s%s', 'Population size: ', nrow(population)))
-  flog.info(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))
-  flog.seperator()
+  OhdsiRTools::logInfo(sprintf('%-20s%s', 'AnalysisID: ',analysisId))
+  OhdsiRTools::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
+  OhdsiRTools::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
+  OhdsiRTools::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
+  OhdsiRTools::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
+  OhdsiRTools::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
+  OhdsiRTools::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))
   
   # check parameters
-  flog.trace('Parameter Check Started')
+  OhdsiRTools::logTrace('Parameter Check Started')
+  OhdsiRTools::logDebug(paste0('testSplit: ', testSplit))
   checkInStringVector(testSplit, c('person','time'))
+  OhdsiRTools::logDebug(paste0('outcomeCount: ', sum(population[,'outcomeCount']>0)))
   checkHigherEqual(sum(population[,'outcomeCount']>0), 25)
+  OhdsiRTools::logDebug(paste0('plpData class: ', class(plpData)))
   checkIsClass(plpData, c('plpData'))
+  OhdsiRTools::logDebug(paste0('testfraction: ', testFraction))
   checkIsClass(testFraction, 'numeric')
   checkHigher(testFraction,0)
   checkHigher(-1*testFraction,-1)
+  OhdsiRTools::logDebug(paste0('nfold class: ', class(nfold)))
+  OhdsiRTools::logDebug(paste0('nfold: ', nfold))
   checkIsClass(nfold, 'numeric')
   checkHigher(nfold, 0)
   
@@ -196,27 +204,26 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
   # construct the settings for the model pipeline
   if(is.null(indexes)){
     if(testSplit=='time'){
-      flog.trace('Dataset time split starter')
-      indexes <-ftry(timeSplitter(population, test=testFraction, nfold=nfold),
-                     finally=flog.trace('Done.'))
+      OhdsiRTools::logTrace('Dataset time split starter')
+      indexes <-tryCatch(timeSplitter(population, test=testFraction, nfold=nfold),
+                     finally=OhdsiRTools::logTrace('Done.'))
     }
     if(testSplit=='person'){
-      flog.trace('Dataset person split starter')
+      OhdsiRTools::logTrace('Dataset person split starter')
       if(is.null(splitSeed)){ splitSeed <- sample(20000000,1)-10000000} #keep record of splitSeed
-      indexes <- ftry(personSplitter(population, test=testFraction, nfold=nfold, seed=splitSeed),
-                      finally= flog.trace('Done.')
+      indexes <- tryCatch(personSplitter(population, test=testFraction, nfold=nfold, seed=splitSeed),
+                      finally= OhdsiRTools::logTrace('Done.')
       )
     }
   }
   
   # TODO better to move this to the splitter if this is important?
   if(nrow(population)!=nrow(indexes)){
-    flog.error(sprintf('Population dimension not compatible with indexes: %d <-> %d', nrow(population), nrow(indexes)))
+    OhdsiRTools::logError(sprintf('Population dimension not compatible with indexes: %d <-> %d', nrow(population), nrow(indexes)))
     stop('Population dimension not compatible with indexes')
   }
   
   # train the model
-  flog.seperator()
   tempmeta <- attr(population, "metaData")
   population <- merge(population, indexes)
   colnames(population)[colnames(population)=='index'] <- 'indexes'
@@ -227,31 +234,30 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
   }
   
   settings <- list(data=plpData, minCovariateFraction=minCovariateFraction,
+                   normalizeData = normalizeData,
                    modelSettings = modelSettings,
                    population=population,
                    cohortId=cohortId,
                    outcomeId=outcomeId, cleanData = cleanData)
   
-  flog.info(sprintf('Training %s model',settings$modelSettings$name))  
+  OhdsiRTools::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
   # the call is sinked because of the external calls (Python etc)
   if (sink.number()>0){
-    flog.warn(paste0('sink had ',sink.number(),' connections open!'))
+    OhdsiRTools::logWarn(paste0('sink had ',sink.number(),' connections open!'))
   }
-  sink(logFileName, append = TRUE, split = TRUE)
+  #sink(logFileName, append = TRUE, split = TRUE)
   
-  model <- ftry(do.call(fitPlp, settings),
-                error = function(e) {sink()
-                  flog.error(e)
-                  stop(e)},
+  model <- tryCatch(do.call(fitPlp, settings),
+                error = function(e) {
+                  stop(paste0(e))},
                 finally = {
-                  flog.trace('Done.')})
-  sink()
+                  OhdsiRTools::logTrace('Done.')})
   
   # save the model
   if(saveModel==T){
     modelLoc <- file.path(save,analysisId, 'savedModel' )
-    ftry(savePlpModel(model, modelLoc),finally= flog.trace('Done.'))
-    flog.info(paste0('Model saved to ..\\',analysisId,'\\savedModel'))
+    tryCatch(savePlpModel(model, modelLoc),finally= OhdsiRTools::logTrace('Done.'))
+    OhdsiRTools::logInfo(paste0('Model saved to ..\\',analysisId,'\\savedModel'))
     
     #update the python saved location
     if(attr(model, 'type')=='python'){
@@ -261,49 +267,50 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
   }
   
   # calculate metrics
-  flog.seperator()
-  flog.trace('Prediction')
-  prediction <- ftry(predictPlp(plpModel = model, population = population, plpData = plpData, index = NULL), 
-                     finally = flog.trace('Done.'))
+  OhdsiRTools::logTrace('Prediction')
+  prediction <- tryCatch(predictPlp(plpModel = model, population = population, plpData = plpData, index = NULL), 
+                     finally = OhdsiRTools::logTrace('Done.'))
+  
+  OhdsiRTools::logDebug(paste0('prediction null: ', is.null(prediction)))
+  OhdsiRTools::logDebug(paste0('prediction unique values: ', length(unique(prediction$value))))
   if(ifelse(is.null(prediction), FALSE, length(unique(prediction$value))>1)){
     
     # add analysisID
     attr(prediction, "metaData")$analysisId <- analysisId
     
-    flog.info('Train set evaluation')
+    OhdsiRTools::logInfo('Train set evaluation')
     performance.train <- evaluatePlp(prediction[prediction$indexes>0,], plpData)
-    flog.trace('Done.')
-    flog.info('Test set evaluation')
+    OhdsiRTools::logTrace('Done.')
+    OhdsiRTools::logInfo('Test set evaluation')
     performance.test <- evaluatePlp(prediction[prediction$indexes<0,], plpData)
-    flog.trace('Done.')
+    OhdsiRTools::logTrace('Done.')
     
     # now combine the test and train data and add analysisId
     performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
     
     if(!is.null(save)){
-      flog.trace('Saving evaluation')
+      OhdsiRTools::logTrace('Saving evaluation')
       if(!dir.exists( file.path(analysisPath, 'evaluation') ))
         dir.create(file.path(analysisPath, 'evaluation'))
-      ftry(utils::write.csv(performance$evaluationStatistics, file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'), row.names=F ),
-           finally= flog.trace('Saved EvaluationStatistics.')
+      tryCatch(utils::write.csv(performance$evaluationStatistics, file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'), row.names=F ),
+           finally= OhdsiRTools::logTrace('Saved EvaluationStatistics.')
       )
-      ftry(utils::write.csv(performance$thresholdSummary, file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'), row.names=F ),
-           finally= flog.trace('Saved ThresholdSummary.')
+      tryCatch(utils::write.csv(performance$thresholdSummary, file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'), row.names=F ),
+           finally= OhdsiRTools::logTrace('Saved ThresholdSummary.')
       )
-      ftry(utils::write.csv(performance$demographicSummary, file.path(analysisPath, 'evaluation', 'demographicSummary.csv'), row.names=F),
-           finally= flog.trace('Saved DemographicSummary.')
+      tryCatch(utils::write.csv(performance$demographicSummary, file.path(analysisPath, 'evaluation', 'demographicSummary.csv'), row.names=F),
+           finally= OhdsiRTools::logTrace('Saved DemographicSummary.')
       )
-      ftry(utils::write.csv(performance$calibrationSummary, file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'), row.names=F),
-           finally= flog.trace('Saved CalibrationSummary.')
+      tryCatch(utils::write.csv(performance$calibrationSummary, file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'), row.names=F),
+           finally= OhdsiRTools::logTrace('Saved CalibrationSummary.')
       )
-      ftry(utils::write.csv(performance$predictionDistribution, file.path(analysisPath, 'evaluation', 'predictionDistribution.csv'), row.names=F),
-           finally= flog.trace('Saved PredictionDistribution.')
+      tryCatch(utils::write.csv(performance$predictionDistribution, file.path(analysisPath, 'evaluation', 'predictionDistribution.csv'), row.names=F),
+           finally= OhdsiRTools::logTrace('Saved PredictionDistribution.')
       )
     }
-    flog.seperator()
     
   }else{
-    flog.warn(paste0('Evaluation not possible as prediciton NULL or all the same values'))
+    OhdsiRTools::logWarn(paste0('Evaluation not possible as prediciton NULL or all the same values'))
     performance.test <- NULL
     performance.train <- NULL
   }
@@ -334,9 +341,8 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
                            #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )
   
-  flog.seperator()
-  flog.info(paste0('Calculating covariate summary @ ', Sys.time()))
-  flog.info('This can take a while...')
+  OhdsiRTools::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
+  OhdsiRTools::logInfo('This can take a while...')
   covSummary <- covariateSummary(plpData, population)
   covSummary <- merge(model$varImp[,colnames(model$varImp)!='covariateName'], covSummary, by='covariateId', all=T)
   trainCovariateSummary <- covariateSummary(plpData, population[population$index>0,])
@@ -348,13 +354,13 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
   covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
   covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
   if(!is.null(save)){
-    flog.trace('Saving covariate summary')
+    OhdsiRTools::logTrace('Saving covariate summary')
     if(!dir.exists( file.path(analysisPath, 'evaluation') ))
       dir.create(file.path(analysisPath, 'evaluation'))
-    ftry(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
-         finally= flog.trace('Saved covariate summary.')
+    tryCatch(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
+         finally= OhdsiRTools::logTrace('Saved covariate summary.')
     )}
-  flog.info(paste0('Finished covariate summary @ ', Sys.time()))
+  OhdsiRTools::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
   
   results <- list(inputSetting=inputSetting,
                   executionSummary=executionSummary,
@@ -367,8 +373,16 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001,
                                    analysisSettings= NULL))
   class(results) <- c('runPlp')
   
-  flog.info(paste0('Log saved to ',logFileName))  
-  flog.info("Run finished successfully.")
+  OhdsiRTools::logInfo(paste0('Log saved to ',logFileName))  
+  OhdsiRTools::logInfo("Run finished successfully.")
+  
+  # stop logger
+  OhdsiRTools::clearLoggers()
+  logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                         threshold = "INFO",
+                         appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+  OhdsiRTools::registerLogger(logger)
+  
   return(results)
   
 }

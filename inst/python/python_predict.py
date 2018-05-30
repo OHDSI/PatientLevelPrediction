@@ -79,7 +79,8 @@ if dense==1:
 
 # load model
 print("Loading model...")
-modelTrained = joblib.load(os.path.join(model_loc,'model.pkl')) 
+
+modelTrained = joblib.load(os.path.join(modelOutput,"model.pkl")) 
 
 print(X.shape)
 print("Calculating predictions on population...")
@@ -91,7 +92,7 @@ if modeltype == 'temporal':
         test_pred = np.concatenate((test_pred , pred_test1), axis = 0)
 else:
     if autoencoder:
-        autoencoder_model = joblib.load(os.path.join(model_loc, 'autoencoder_model.pkl'))
+        autoencoder_model = joblib.load(os.path.join(modelOutput, 'autoencoder_model.pkl'))
         X = autoencoder_model.get_encode_features(X)
     test_pred = modelTrained.predict_proba(X)
 

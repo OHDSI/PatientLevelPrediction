@@ -36,8 +36,6 @@ Imports:
     Matrix,
     AUC,
     PythonInR,
-    futile.options,
-    futile.logger,
     utils,
     methods,
     BigKnn,
@@ -55,7 +53,8 @@ Imports:
     keras,
     slam,
     magrittr,
-    OhdsiSharing
+    OhdsiSharing,
+    OhdsiRTools
 Suggests:
     testthat,
     pROC,

@@ -4,10 +4,11 @@
 \alias{runPlp}
 \title{runPlp - Train and evaluate the model}
 \usage{
-runPlp(population, plpData, minCovariateFraction = 0.001, modelSettings,
-  testSplit = "time", testFraction = 0.25, splitSeed = NULL, nfold = 3,
-  indexes = NULL, save = NULL, saveModel = T,
-  verbosity = futile.logger::INFO, timeStamp = FALSE, analysisId = NULL)
+runPlp(population, plpData, minCovariateFraction = 0.001, normalizeData = T,
+  modelSettings, testSplit = "time", testFraction = 0.25,
+  splitSeed = NULL, nfold = 3, indexes = NULL, save = NULL,
+  saveModel = T, verbosity = "INFO", timeStamp = FALSE,
+  analysisId = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -16,6 +17,8 @@ runPlp(population, plpData, minCovariateFraction = 0.001, modelSettings,
 data extracted from the CDM.}
 
 \item{minCovariateFraction}{The minimum fraction of target population who must have a covariate for it to be included in the model training}
+
+\item{normalizeData}{Whether to normalise the covariates before training (Default: TRUE)}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
