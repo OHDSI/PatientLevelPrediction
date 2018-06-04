@@ -35,6 +35,18 @@ if (file.exists(vignetteDataFolder)){
 In general, different machine learning models will perform differently on the same dataset, and they can complement each other. Thus, different mdoels can be combined to improve prediction performance.
 In the `PatientLevelPrediction` package, we implemented different ensemble strategies for combining different models.
 
+#Background
+
+Supervised learning algorithms try to find a good hypothesis space well-suited for a particular problem, but it is very diffcult to find it. Ensmeble models combine different hypothesis 
+to form a better but not optimum one.
+
+Ensemble models yield better results for multiple models with signficant diversity, and also ensemble strategies can also paly a curical role. Currently, many ensemble strategies have been proposed.
+In PatientLevelPrediction package, four ensmeble strategies have been implemented, they are average ensembble, ensmeble with product rule, weighted ensemble and stakced ensemble.
+1. average ensembble: Calculate the average probability from differnt models
+2. ensemble with product rule: Claculate the product of probabilites from different models.
+3. weighted ensmeble: Calculate the weighted average probability from different models using train AUC as weights.
+4. stacked ensemble:   Train a logistics regression on outputs from different models, and then the trained logitstics regression is used to combine different models. 
+
 # Usage
 
 Use the [OHDSI tool ecosystem](https://github.com/OHDSI) to generate a `population` and `plpData` object. Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.
