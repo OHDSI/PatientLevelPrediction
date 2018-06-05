@@ -37,6 +37,15 @@
 #' @param nfold                           The number of folds used in the cross validation (default 3)
 #' @param save                             The path to the directory where the models will be saved (if NULL uses working directory)
 #' @param analysisId                      The analysis ID
+#' @param verbosity                       Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
+#'                                         \itemize{
+#'                                         \item{DEBUG}{Highest verbosity showing all debug statements}
+#'                                         \item{TRACE}{Showing information about start and end of steps}
+#'                                         \item{INFO}{Show informative information (Default)}
+#'                                         \item{WARN}{Show warning messages}
+#'                                         \item{ERROR}{Show error messages}
+#'                                         \item{FATAL}{Be silent except for fatal errors}
+#'                                         }
 #' @param ensembleStrategy                The strategy used for ensembling the outputs from different models, it can be 'mean', 'product',  
 #'                                        'weighted' and 'stacked'
 #'                                         'mean'     the average probability from differnt models
@@ -46,11 +55,25 @@
 #'
 #' @export
 runEnsembleModel <- function(population, dataList, modelList,
-                    testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, save=NULL, analysisId=NULL,ensembleStrategy = 'mean'){
+                    testSplit = 'time', testFraction=0.20, trainFraction = 0.70, splitSeed=NULL, nfold=3, 
+                    save=NULL, analysisId=NULL, verbosity ='INFO', ensembleStrategy = 'mean'){
   start.all <- Sys.time()
   if(is.null(analysisId))
     analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
-
+  
+  #check logger
+  if (length(OhdsiRTools::getLoggers()) == 0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = verbosity,
+                                        appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
+  if (ensembleStrategy == 'stacked' & testFraction + trainFraction >= 1) {
+    OhdsiRTools::logError('The sum of trainFraction and testFraction muse be < 1, 
+                          and 1 - trainFraction - testFraction is validation set for training logistics regression!')
+    stop('The sum of trainFraction and testFraction muse be <= 1')
+  }
   trainAUCs <- c()
   pred_probas <- matrix(nrow=length(population$subjectId), ncol =0)
   #run the models in list one by one.
@@ -59,7 +82,7 @@ runEnsembleModel <- function(population, dataList, modelList,
     results <- PatientLevelPrediction::runPlp(population, dataList[[Index]], 
                                               modelSettings = modelList[[Index]],
                                               testSplit=testSplit,
-                                              testFraction=testFraction,
+                                              testFraction=testFraction, trainFraction = trainFraction,
                                               nfold=nfold, splitSeed = splitSeed, analysisId = saveanalysisId)
     trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4])) 
   	prob <- results$prediction
@@ -84,8 +107,7 @@ runEnsembleModel <- function(population, dataList, modelList,
     saveRDS(trainAUCs, file = file.path(modelLoc, "weights.rds"))
     ensem_proba = rowSums(t(t(as.matrix(pred_probas)) * trainAUCs))
   } else if (ensembleStrategy == 'stacked') {
-    train_index = prediction$indexes>0
-	  test_index = prediction$indexes<0
+    train_index = prediction$indexes==0
 	  #add columne name to the matrix.
     for (ind in seq(1, Index)){
       colnames(pred_probas)[ind] <- paste('col', ind, sep="")
@@ -102,12 +124,12 @@ runEnsembleModel <- function(population, dataList, modelList,
   prediction[ncol(prediction)] <- ensem_proba
   attr(prediction, "metaData")$analysisId <- analysisId
 
-  flog.info('Train set evaluation')
-  performance.train <- evaluatePlp(prediction[prediction$indexes>0,], dataList[[1]])
-  flog.trace('Done.')
-  flog.info('Test set evaluation')
+  OhdsiRTools::logInfo('Train set evaluation')
+  performance.train <- evaluatePlp(prediction[prediction$indexes>=0,], dataList[[1]])
+  OhdsiRTools::logTrace('Done.')
+  OhdsiRTools::logInfo('Test set evaluation')
   performance.test <- evaluatePlp(prediction[prediction$indexes<0,], dataList[[1]])
-  flog.trace('Done.')
+  OhdsiRTools::logTrace('Done.')
   performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
     
   return(performance)
