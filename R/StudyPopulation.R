@@ -84,35 +84,57 @@ createStudyPopulation <- function(plpData,
                                   addExposureDaysToStart = FALSE,
                                   riskWindowEnd = 365,
                                   addExposureDaysToEnd = F,
-                                  verbosity = futile.logger::INFO,
+                                  verbosity = "INFO",
                                   ...) {
   
-  if (verbosity == TRACE){
-    futile.logger::flog.layout(layout.format('[~l]\t[~t]\t~m'))
-  } else {
-    futile.logger::flog.layout(layout.format('~m'))
+  if(missing(verbosity)){
+    verbosity <- "INFO"
+  } else{
+    if(!verbosity%in%c("DEBUG","TRACE","INFO","WARN","FATAL","ERROR")){
+      stop('Incorrect verbosity string')
+    }
   }
-  futile.logger::flog.threshold(verbosity)
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   
   # parameter checks
   if(!class(plpData)%in%c('plpData.libsvm','plpData.coo','plpData')){
-    futile.logger::flog.error('Check plpData format')
+    OhdsiRTools::logError('Check plpData format')
     stop('Wrong plpData input')
   }
+  OhdsiRTools::logDebug(paste0('outcomeId: ', outcomeId))
   checkNotNull(outcomeId)
+  OhdsiRTools::logDebug(paste0('binary: ', binary))
   checkBoolean(binary)
+  OhdsiRTools::logDebug(paste0('includeAllOutcomes: ', includeAllOutcomes))
   checkBoolean(includeAllOutcomes)
+  OhdsiRTools::logDebug(paste0('firstExposureOnly: ', firstExposureOnly))
   checkBoolean(firstExposureOnly)
+  OhdsiRTools::logDebug(paste0('washoutPeriod: ', washoutPeriod))
   checkHigherEqual(washoutPeriod,0)
+  OhdsiRTools::logDebug(paste0('removeSubjectsWithPriorOutcome: ', removeSubjectsWithPriorOutcome))
   checkBoolean(removeSubjectsWithPriorOutcome)
   if (removeSubjectsWithPriorOutcome){
+    OhdsiRTools::logDebug(paste0('priorOutcomeLookback: ', priorOutcomeLookback))
     checkHigher(priorOutcomeLookback,0)
   }
+  OhdsiRTools::logDebug(paste0('requireTimeAtRisk: ', requireTimeAtRisk))
   checkBoolean(requireTimeAtRisk)
+  OhdsiRTools::logDebug(paste0('minTimeAtRisk: ', minTimeAtRisk))
   checkHigherEqual(minTimeAtRisk,0)
+  OhdsiRTools::logDebug(paste0('riskWindowStart: ', riskWindowStart))
   checkHigherEqual(riskWindowStart,0)
+  OhdsiRTools::logDebug(paste0('addExposureDaysToStart: ', addExposureDaysToStart))
   checkBoolean(addExposureDaysToStart)
+  OhdsiRTools::logDebug(paste0('riskWindowEnd: ', riskWindowEnd))
   checkHigherEqual(riskWindowEnd,0)
+  OhdsiRTools::logDebug(paste0('addExposureDaysToEnd: ', addExposureDaysToEnd))
   checkBoolean(addExposureDaysToEnd)
   
   if (is.null(population)) {
@@ -150,7 +172,7 @@ createStudyPopulation <- function(plpData,
   }
   
   if (firstExposureOnly) {
-    futile.logger::flog.trace("Keeping only first exposure per subject")
+    OhdsiRTools::logTrace("Keeping only first exposure per subject")
     population <- population[order(population$subjectId, as.Date(population$cohortStartDate)), ]
     idx <- duplicated(population[, c("subjectId", "cohortId")])
     population <- population[!idx, ]
@@ -162,7 +184,7 @@ createStudyPopulation <- function(plpData,
     metaData$attrition <- rbind(metaData$attrition, getCounts(population,outCount, "First exposure only"))
   }
   if (washoutPeriod) {
-    futile.logger::flog.trace(paste("Requiring", washoutPeriod, "days of observation prior index date"))
+    OhdsiRTools::logTrace(paste("Requiring", washoutPeriod, "days of observation prior index date"))
     population <- population[population$daysFromObsStart >= washoutPeriod,]
     outCount <- 0
     if(!missing(outcomeId) && !is.null(outcomeId))
@@ -171,9 +193,9 @@ createStudyPopulation <- function(plpData,
   }
   if (removeSubjectsWithPriorOutcome) {
     if (missing(outcomeId) || is.null(outcomeId)){
-      futile.logger::flog.trace("No outcome specified so skipping removing people with prior outcomes")
+      OhdsiRTools::logTrace("No outcome specified so skipping removing people with prior outcomes")
     } else {
-      futile.logger::flog.trace("Removing subjects with prior outcomes (if any)")
+      OhdsiRTools::logTrace("Removing subjects with prior outcomes (if any)")
       outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
       if (addExposureDaysToStart) {
         outcomes <- merge(outcomes, population[, c("rowId","daysToCohortEnd")])
@@ -202,7 +224,7 @@ createStudyPopulation <- function(plpData,
   
   if (requireTimeAtRisk) {
     if(includeAllOutcomes){
-      futile.logger::flog.trace("Removing non outcome subjects with insufficient time at risk (if any)")
+      OhdsiRTools::logTrace("Removing non outcome subjects with insufficient time at risk (if any)")
       
       #people with the outcome:
       outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
@@ -215,7 +237,7 @@ createStudyPopulation <- function(plpData,
       population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
     }
     else {
-      futile.logger::flog.trace("Removing subjects with insufficient time at risk (if any)")
+      OhdsiRTools::logTrace("Removing subjects with insufficient time at risk (if any)")
       noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart + minTimeAtRisk ]
       population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
     }
@@ -225,7 +247,7 @@ createStudyPopulation <- function(plpData,
     metaData$attrition <- rbind(metaData$attrition, getCounts(population, outCount, paste("Have time at risk")))
   }
   if (missing(outcomeId) || is.null(outcomeId)){
-    futile.logger::flog.trace("No outcome specified so not creating outcome and time variables")
+    OhdsiRTools::logTrace("No outcome specified so not creating outcome and time variables")
   } else {
     # Select outcomes during time at risk
     outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
@@ -235,17 +257,17 @@ createStudyPopulation <- function(plpData,
     # check outcome still there
     if(nrow(outcomes)==0){
       population <- NULL
-      futile.logger::flog.warn('No outcomes left...')
+      OhdsiRTools::logWarn('No outcomes left...')
       return(population)
     }
     
     # Create outcome count column
     if(binary){
-      futile.logger::flog.info("Outcome is 0 or 1")
+      OhdsiRTools::logInfo("Outcome is 0 or 1")
       one <- function(x) return(1)
       outcomeCount <- stats::aggregate(outcomeId ~ rowId, data = outcomes, one)
     } else {
-      futile.logger::flog.trace("Outcome is count")
+      OhdsiRTools::logTrace("Outcome is count")
       outcomeCount <- stats::aggregate(outcomeId ~ rowId, data = outcomes, length)
     }
     colnames(outcomeCount)[colnames(outcomeCount) == "outcomeId"] <- "outcomeCount"

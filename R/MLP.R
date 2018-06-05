@@ -177,8 +177,6 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
 
 
 trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
-  #PythonInR::pySet('size', as.matrix(size) )
-  #PythonInR::pySet('alpha', as.matrix(alpha) )
   PythonInR::pyExec(paste0("size = ", size))
   PythonInR::pyExec(paste0("alpha = ", alpha))
   PythonInR::pyExec(paste0("seed = ", ifelse(is.null(seed),'None',seed)))

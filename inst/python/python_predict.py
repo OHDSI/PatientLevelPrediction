@@ -51,7 +51,7 @@ if dense==1:
 
 # load model
 print("Loading model...")
-modelTrained = joblib.load(model_loc+'\\model.pkl') 
+modelTrained = joblib.load(os.path.join(model_loc,"model.pkl")) 
 
 print("Calculating predictions on population...")
 test_pred = modelTrained.predict_proba(X)[:,1]

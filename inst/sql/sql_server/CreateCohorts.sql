@@ -61,7 +61,7 @@ INTO #cohort_person
 
 {@use_sample}?{From ( select * 
                 from ( select *, 
-                row_number() over (order by ((person_id*month(cohort_start_date)) % 123)*((year(cohort_start_date)*day(cohort_start_date)) % 123)) rn 
+                row_number() over (order by (CAST(person_id*month(cohort_start_date) AS BIGINT) % 123)*(CAST(year(cohort_start_date)*day(cohort_start_date) AS BIGINT) % 123)) rn
   } 
 
 FROM (

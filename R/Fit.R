@@ -39,6 +39,7 @@
 #' @param cohortId                         Id of study cohort
 #' @param outcomeId                        Id of outcome cohort
 #' @param minCovariateFraction             The minimum fraction of the target popualtion who have a variable for it to be included in the model training 
+#' @param normalizeData                    Whether to normalise the data before model fitting
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
@@ -54,7 +55,7 @@
 
 #' @export
 fitPlp <- function(population, data,   modelSettings,#featureSettings, 
-                   cohortId, outcomeId, minCovariateFraction=0.001){
+                   cohortId, outcomeId, minCovariateFraction=0.001, normalizeData=T){
   
   if(is.null(population))
     stop('Population is NULL')
@@ -83,7 +84,7 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   class(plpData) <- c(class(plpData), 'covariateData')
   plpData <- FeatureExtraction::tidyCovariateData(covariateData=plpData, 
                                 minFraction = minCovariateFraction,
-                                normalize = TRUE,
+                                normalize = normalizeData,
                                 removeRedundancy = TRUE)
   if(length(plpData$metaData$deletedInfrequentCovariateIds)>0){
     plpData$covariateRef <- plpData$covariateRef[!ffbase::`%in%`(plpData$covariateRef$covariateId, plpData$metaData$deletedInfrequentCovariateIds), ]
@@ -137,17 +138,19 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
   
   
   # do normalisation... preprocessSettings$normFactors 
-  writeLines("Normalizing covariates")
-  start <- Sys.time()
-  ffdfMaxs <- ff::as.ffdf(maxs)
-  names(ffdfMaxs)[names(ffdfMaxs) == "bins"] <- "covariateId"
-  covariates <- ffbase::merge.ffdf(covariates, ffdfMaxs)
-  for (i in bit::chunk(covariates)) {
-    covariates$covariateValue[i] <- covariates$covariateValue[i]/covariates$maxs[i]
+  if(!is.null(maxs)){
+    writeLines("Normalizing covariates")
+    start <- Sys.time()
+    ffdfMaxs <- ff::as.ffdf(maxs)
+    names(ffdfMaxs)[names(ffdfMaxs) == "bins"] <- "covariateId"
+    covariates <- ffbase::merge.ffdf(covariates, ffdfMaxs)
+    for (i in bit::chunk(covariates)) {
+      covariates$covariateValue[i] <- covariates$covariateValue[i]/covariates$maxs[i]
+    }
+    covariates$maxs <- NULL
+    delta <- Sys.time() - start
+    writeLines(paste("Normalizing covariates took", signif(delta, 3), attr(delta, "units")))
   }
-  covariates$maxs <- NULL
-  delta <- Sys.time() - start
-  writeLines(paste("Normalizing covariates took", signif(delta, 3), attr(delta, "units")))
   
   
   # remove redundant... preprocessSettings$deletedRedundantCovariateIds
@@ -183,9 +186,9 @@ createTransform <- function(plpModel){
   transform <- function(plpData=NULL, population=NULL){
     #check model fitting makes sense:
     if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$cohortId)
-      flog.warn('cohortId of new data does not match training data')
+      warning('cohortId of new data does not match training data')
     if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
-      flog.warn('outcomeId of new data does not match training data or does not exist')
+      warning('outcomeId of new data does not match training data or does not exist')
     
     # apply normalsation to new data
     plpData2 <- list(outcomes =plpData$outcomes,

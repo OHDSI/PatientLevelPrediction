@@ -43,12 +43,20 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
   if(is.null(plpData))
     stop('No plpData input')
   
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                           threshold = "INFO",
+                           appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
   # apply the feature transformations
   if(!is.null(index)){
-    flog.trace(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
+    OhdsiRTools::logTrace(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
     ind <- population$rowId%in%index$rowId[index$index<0]
   } else{
-    flog.trace(paste0('Calculating prediction for ',nrow(population),' in dataset'))
+    OhdsiRTools::logTrace(paste0('Calculating prediction for ',nrow(population),' in dataset'))
     ind <- rep(T, nrow(population))
   }
   
@@ -58,9 +66,9 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
     prediction <- plpModel$predict(plpData=plpData,population=population[ind,])
     
     if(nrow(prediction)!=nrow(population[ind,]))
-      flog.warn(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
+      OhdsiRTools::logWarn(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
   } else{
-    flog.error('Non plpModel input')
+    OhdsiRTools::logError('Non plpModel input')
     stop()
   }
   
@@ -84,12 +92,12 @@ predict.plp <- function(plpModel,population, plpData, ...){
 predict.xgboost <- function(plpModel,population, plpData, ...){ 
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
   data <- result$data[population$rowId,]
-  prediction <- data.frame(rowId=population$rowId, 
+  prediction <- data.frame(rowId=population$rowId,
                            value=stats::predict(plpModel$model, data)
                            )
   
   prediction <- merge(population, prediction, by='rowId')
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
   attr(prediction, "metaData") <- list(predictionType = "binary") 
   return(prediction)
   
@@ -109,17 +117,17 @@ predict.python <- function(plpModel, population, plpData){
   
   # return error if we can't connect to python
   if ( !PythonInR::pyIsConnected() ){
-    flog.error('Python not connect error')
+    OhdsiRTools::logError('Python not connect error')
     stop()
   }
   
   ##PythonInR::pyImport("numpy", as="np") #crashing R
   
-  flog.info('Setting inputs...')
+  OhdsiRTools::logInfo('Setting inputs...')
   PythonInR::pySet("dense", plpModel$dense)
   PythonInR::pySet("model_loc", plpModel$model)
   
-  flog.info('Mapping covariates...')
+  OhdsiRTools::logInfo('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
   newData <- toSparsePython(plpData, population, map=plpModel$covariateMap)
@@ -139,11 +147,11 @@ predict.python <- function(plpModel, population, plpData){
   }
   
   # run the python predict code:
-  flog.info('Executing prediction...')
+  OhdsiRTools::logInfo('Executing prediction...')
   PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py'))
   
   #get the prediction from python and reformat:
-  flog.info('Returning results...')
+  OhdsiRTools::logInfo('Returning results...')
   prediction <- PythonInR::pyGet('prediction', simplify = F)
   prediction <-  apply(prediction,1, unlist)
   prediction <- t(prediction)
@@ -157,6 +165,11 @@ predict.python <- function(plpModel, population, plpData){
   
   # add 1 to rowId from python:
   prediction$rowId <- prediction$rowId+1
+  
+  # add subjectId and date:
+  prediction <- merge(prediction,
+                      population[,c('rowId','subjectId','cohortStartDate')], 
+                      by='rowId')
   
   # TODO delete results
   
@@ -183,9 +196,9 @@ predict.knn <- function(plpData, population, plpModel, ...){
 
 predict.deep <- function(plpModel, population, plpData,   ...){
   temporal <- !is.null(plpData$timeRef)
-  writeLines(paste0(is.null(plpData$timeRef)))
+  OhdsiRTools::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
   if(temporal){
-    writeLines('temporal')
+    OhdsiRTools::logTrace('temporal')
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
     data <-result$data[population$rowId,,]
     
@@ -203,7 +216,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
       }
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
     return(prediction)
   } else{
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
@@ -219,7 +232,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
       prediction$value[batch] <- pred
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
     return(prediction)
     
   }
@@ -231,9 +244,9 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
   repeats <- attr(plpModel, 'inputs')
   
   temporal <- !is.null(plpData$timeRef)
-  writeLines(paste0(is.null(plpData$timeRef)))
+  OhdsiRTools::logDebug('timeRef null: ',paste0(is.null(plpData$timeRef)))
   if(temporal){
-    writeLines('temporal')
+    OhdsiRTools::logTrace('temporal')
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
     data <-result$data[population$rowId,,]
     
@@ -255,7 +268,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       }
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
     return(prediction)
   } else{
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
@@ -275,7 +288,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       prediction$value[batch] <- pred
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
     return(prediction)
     
   }
@@ -309,7 +322,7 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
   attr(prediction, "outcomeId") <- attr(population, "metadata")$outcomeId
 
   delta <- Sys.time() - start
-  flog.info("Prediction took", signif(delta, 3), attr(delta, "units"))
+  OhdsiRTools::logInfo("Prediction took", signif(delta, 3), attr(delta, "units"))
   return(prediction)
 }
 

@@ -4,15 +4,17 @@
 \alias{createPlpJournalDocument}
 \title{createPlpJournalDocument}
 \usage{
-createPlpJournalDocument(plpResult = NULL, plpData = NULL,
-  targetName = "<target population>", outcomeName = "<outcome>",
-  table1 = T, connectionDetails = NULL, includeTrain = FALSE,
-  includeTest = TRUE, includePredictionPicture = TRUE,
-  includeAttritionPlot = TRUE, outputLocation = file.path(getwd(),
-  "plp_journal_document.docx"))
+createPlpJournalDocument(plpResult = NULL, plpValidation = NULL,
+  plpData = NULL, targetName = "<target population>",
+  outcomeName = "<outcome>", table1 = T, connectionDetails = NULL,
+  includeTrain = FALSE, includeTest = TRUE,
+  includePredictionPicture = TRUE, includeAttritionPlot = TRUE,
+  outputLocation = file.path(getwd(), "plp_journal_document.docx"))
 }
 \arguments{
 \item{plpResult}{An object of type \code{plpResult} returned by running runPlp()}
+
+\item{plpValidation}{An object of type \code{validatePlp} returned by running externalValidatePlp()}
 
 \item{plpData}{The plpData}
 

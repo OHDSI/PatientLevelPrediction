@@ -45,7 +45,7 @@ setCovNN <- function(batchSize = 1000,
                      seed=NULL  ){
   #[TODO: add input checks...]
   
-  if(!null(seed)){
+  if(!is.null(seed)){
     warning('seed currently not implemented in CovNN')
   }
   

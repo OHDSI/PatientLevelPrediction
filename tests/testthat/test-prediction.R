@@ -19,50 +19,51 @@ library("testthat")
 context("Prediction")
 
 # this no longer checks predictions as models don't exist and take too long to train during test
+# generate simulated data:
+set.seed(1234)
+data(plpDataSimulationProfile)
+sampleSize <- 2000
+plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+
+# create popualtion for outcome 2
+population <- createStudyPopulation(plpData,
+                                    outcomeId = 2,
+                                    firstExposureOnly = FALSE,
+                                    washoutPeriod = 0,
+                                    removeSubjectsWithPriorOutcome = FALSE,
+                                    priorOutcomeLookback = 99999,
+                                    requireTimeAtRisk = FALSE,
+                                    minTimeAtRisk=0,
+                                    riskWindowStart = 0,
+                                    addExposureDaysToStart = FALSE,
+                                    riskWindowEnd = 365,
+                                    addExposureDaysToEnd = FALSE
+                                    #,verbosity=INFO
+)
+
+index <- PatientLevelPrediction::personSplitter(population, test=0.2, seed=1)
+population <- merge(population, index)
+colnames(population)[colnames(population)=='index'] <- 'indexes'
 
 test_that("prediction", {
   # function for testing each model:
-  checkPrediction <- function(model, plpData, population, index){
-    
-    # model class is correct
-    testthat::expect_that(model, is_a("plpModel"))
-    prediction <- PatientLevelPrediction::predictPlp(model, population, plpData, index)
-    # prediction size is correct
-    testthat::expect_that(length(population$rowId[population$indexes<0]), 
-                          is_equivalent_to(nrow(prediction)))
-    testthat::expect_that(sum(population$rowId[population$indexes<0]%in%prediction$rowId), 
-                          is_equivalent_to(sum(population$indexes<0)))
-    
-    # varImp contains all variables
-    testthat::expect_that(nrow(ff::as.ram(plpData$covariateRef)), 
-                          testthat::is_equivalent_to(nrow(model$varImp)))
-    
-  }
-  # generate simulated data:
-  set.seed(1234)
-  data(plpDataSimulationProfile)
-  sampleSize <- 2000
-  plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+  #checkPrediction <- function(model, plpData, population, index){
+  #  
+  #  # model class is correct
+  #  testthat::expect_that(model, is_a("plpModel"))
+  #  prediction <- PatientLevelPrediction::predictPlp(model, population, plpData, index)
+  #  # prediction size is correct
+  #  testthat::expect_that(length(population$rowId[population$indexes<0]), 
+  #                        is_equivalent_to(nrow(prediction)))
+  #  testthat::expect_that(sum(population$rowId[population$indexes<0]%in%prediction$rowId), 
+  #                        is_equivalent_to(sum(population$indexes<0)))
+  #  
+  #  # varImp contains all variables
+  #  testthat::expect_that(nrow(ff::as.ram(plpData$covariateRef)), 
+  #                        testthat::is_equivalent_to(nrow(model$varImp)))
+  #  
+  #}
   
-  # create popualtion for outcome 2
-  population <- createStudyPopulation(plpData,
-                                      outcomeId = 2,
-                                      firstExposureOnly = FALSE,
-                                      washoutPeriod = 0,
-                                      removeSubjectsWithPriorOutcome = FALSE,
-                                      priorOutcomeLookback = 99999,
-                                      requireTimeAtRisk = FALSE,
-                                      minTimeAtRisk=0,
-                                      riskWindowStart = 0,
-                                      addExposureDaysToStart = FALSE,
-                                      riskWindowEnd = 365,
-                                      addExposureDaysToEnd = FALSE
-                                      #,verbosity=INFO
-  )
-  
-  index <- PatientLevelPrediction::personSplitter(population, test=0.2, seed=1)
-  population <- merge(population, index)
-  colnames(population)[colnames(population)=='index'] <- 'indexes'
   
   #=====================================
   # check fitPlp
