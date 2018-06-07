@@ -5,40 +5,57 @@
 \title{ensemble - Create an ensembling model using different models}
 \usage{
 runEnsembleModel(population, dataList, modelList, testSplit = "time",
-  testFraction = 0.25, splitSeed = NULL, nfold = 3, save = NULL,
-  analysisId = NULL, ensembleStrategy = "mean")
+  testFraction = 0.2, splitSeed = NULL, nfold = 3, save = NULL,
+  analysisId = NULL, verbosity = "INFO", ensembleStrategy = "mean")
 }
 \arguments{
-\item{population}{The population created using createStudyPopulation() who will be used to develop the model}
+\item{population}{The population created using createStudyPopulation() who will be used to
+develop the model}
 
 \item{dataList}{An list of object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
 
-\item{modelList}{An list of type of base model created using one of the function in final ensembling model,
-the base model can be any model implemented in this package.}
+\item{modelList}{An list of type of base model created using one of the function in final
+ensembling model, the base model can be any model implemented in this
+package.}
 
-\item{testSplit}{Either 'person' or 'time' specifying the type of evaluation used.
-'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
-'person' splits the data into test (1-testFraction of the data) and
-train (validationFraction of the data) sets.  The split is stratified by the class label.}
+\item{testSplit}{Either 'person' or 'time' specifying the type of evaluation used. 'time'
+find the date where testFraction of patients had an index after the date
+and assigns patients with an index prior to this date into the training
+set and post the date into the test set 'person' splits the data into test
+(1-testFraction of the data) and train (validationFraction of the data)
+sets.  The split is stratified by the class label.}
 
-\item{testFraction}{The fraction of the data to be used as the test set in the patient
-split evaluation.}
+\item{testFraction}{The fraction of the data to be used as the test set in the patient split
+evaluation.}
 
-\item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
+\item{splitSeed}{The seed used to split the test/train set when using a person type
+testSplit}
 
 \item{nfold}{The number of folds used in the cross validation (default 3)}
 
-\item{save}{The path to the directory where the models will be saved (if NULL uses working directory)}
+\item{save}{The path to the directory where the models will be saved (if NULL uses
+working directory)}
 
 \item{analysisId}{The analysis ID}
 
-\item{ensembleStrategy}{The strategy used for ensembling the outputs from different models, it can be 'mean', 'product',
-'weighted' and 'stacked'
- 'mean'     the average probability from differnt models
- 'product'  the product rule
- 'weighted' the weighted average probability from different models using train AUC as weights.
- 'stacked'  the stakced ensemble trains a logistics regression on different models.}
+\item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in
+priority than the logger threshold, a message will print. The levels are:
+\itemize{
+  \item {DEBUG}{Highest verbosity showing all debug statements}
+  \item {TRACE}{Showing information about start and end of steps}
+  \item {INFO}{Show informative information (Default)}
+  \item {WARN}{Show warning messages}
+  \item {ERROR}{Show error messages}
+  \item {FATAL}{Be silent except for fatal errors}
+}}
+
+\item{ensembleStrategy}{The strategy used for ensembling the outputs from different models, it can
+be 'mean', 'product', 'weighted' and 'stacked' 'mean' the average
+probability from differnt models 'product' the product rule 'weighted' the
+weighted average probability from different models using train AUC as
+weights. 'stacked' the stakced ensemble trains a logistics regression on
+different models.}
 }
 \description{
 #'

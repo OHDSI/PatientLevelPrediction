@@ -1,5 +1,5 @@
 ---
-title: "Learning Curve"
+title: "Ensmeble Training"
 author: " Xiaoyong Pan, Peter R. Rijnbeek,"
 date: "April 20, 2018"
 output:   
@@ -32,7 +32,7 @@ if (file.exists(vignetteDataFolder)){
 \newpage
 # Introduction
 
-In general, different machine learning models will perform differently on the same dataset, and they can complement each other. Thus, different mdoels can be combined to improve prediction performance.
+In general, different machine learning models will perform differently on the same dataset, and they can complement each other. Thus, different models can be combined to improve prediction performance.
 In the `PatientLevelPrediction` package, we implemented different ensemble strategies for combining different models.
 
 #Background
@@ -126,4 +126,18 @@ results <- PatientLevelPrediction::runEnsembleModel(population, dataList = list(
 ```
 
 
+# Apply Ensemble model
+plpData <- loadPlpData("plpdata/")
+modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180607153811")  #the last model is combination model
+use the same population settings as the model:
+populationSettings <- plpModel$populationSettings
+populationSettings$plpData <- plpData
+population <- do.call(createStudyPopulation, populationSettings)
+# get the prediction, please make sure the ensemble strategy for training and applying is the same:
+prediction <- applyEnsembleModel(population,
+                                  dataList = list(plpData, plpData),
+                                  modelList = modelList,
+                                  analysisId = NULL,
+                                  save = NULL,
+                                  ensembleStrategy = "stacked")$prediction
 

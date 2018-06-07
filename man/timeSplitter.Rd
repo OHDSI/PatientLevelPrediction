@@ -5,12 +5,15 @@
 \title{Split test/train data by time and then partitions training set into random folds stratified by
 class}
 \usage{
-timeSplitter(population, test = 0.3, nfold = 3, seed = NULL)
+timeSplitter(population, test = 0.3, train = NULL, nfold = 3,
+  seed = NULL)
 }
 \arguments{
 \item{population}{An object created using createStudyPopulation().}
 
 \item{test}{A real number between 0 and 1 indicating the test set fraction of the data}
+
+\item{train}{A real number between 0 and 1 indicating the training set fraction of the data}
 
 \item{nfold}{An integer >= 1 specifying the number of folds used in cross validation}
 
