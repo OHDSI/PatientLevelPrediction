@@ -227,6 +227,7 @@ applyEnsembleModel <- function(population,
       stop("The ensmeble model is trained using mean or product strategy , please change the ensembleStrategy to mean or product!")
     }
   }
+  # The last model in modelList is the combinator for different models.
   if (ensembleStrategy == "weighted" | ensembleStrategy == "stacked") {
     combinator <- modelList[[length(modelList)]]
     modelList[[length(modelList)]] <- NULL
@@ -236,7 +237,6 @@ applyEnsembleModel <- function(population,
   peopleCount <- nrow(population)
 
   pred_probas <- matrix(nrow = length(population$subjectId), ncol = 0)
-  # prediction <- plpModel$predict(plpData = plpData, population = population)
   for (Index in seq_along(modelList)) {
     prob <- modelList[[Index]]$predict(plpData = dataList[[Index]], population = population)
     if (Index == 1) {
