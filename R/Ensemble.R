@@ -217,9 +217,14 @@ applyEnsembleModel <- function(population,
     stop("Incorrect plpData class")
   if (class(modelList[[1]]) != "plpModel")
     stop("Incorrect plpModel class")
-  if (length(dataList) <- length(modelList)) {
+  if (length(dataList) < length(modelList)) {
     if (ensembleStrategy == "mean" | ensembleStrategy == "product") {
-      stop("The input is for weighted and stacked ensmemble, please change the ensembleStrategy to weighted or stacked!")
+      stop("The ensmeble model is trained using weighted or stacked ensmemble, please change the ensembleStrategy to weighted or stacked!")
+    }
+  }
+  if (length(dataList) == length(modelList)) {
+    if (ensembleStrategy == "weighted" | ensembleStrategy == "stacked") {
+      stop("The ensmeble model is trained using mean or product strategy , please change the ensembleStrategy to mean or product!")
     }
   }
   if (ensembleStrategy == "weighted" | ensembleStrategy == "stacked") {
