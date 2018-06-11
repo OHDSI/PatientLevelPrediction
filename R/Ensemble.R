@@ -87,7 +87,7 @@ runEnsembleModel <- function(population,
   trainFraction <- NULL
   if (ensembleStrategy == "stacked") {
     trainFraction <- 0.8 * (1 - testFraction)
-    OhdsiRTools::logInfo("0.2 * (1 - testFraction) is validation set for training logistics regression!")
+    OhdsiRTools::logInfo("0.2 * (1 - testFraction) is validation set for training logistics regression as the combinator for stacked ensemble!")
   }
   trainAUCs <- c()
   pred_probas <- matrix(nrow = length(population$subjectId), ncol = 0)
@@ -109,7 +109,7 @@ runEnsembleModel <- function(population,
     if (Index == 1) {
       prediction <- prob
     }
-    pred_probas <- cbind(pred_probas, prob[ncol(prob)])
+    pred_probas <- cbind(pred_probas, prob$value)
   }
   # save models for glm for stacked ensemble and weights for weighted ensemble.
   if (ensembleStrategy == "weighted" | ensembleStrategy == "stacked") {
