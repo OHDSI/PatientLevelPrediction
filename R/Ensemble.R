@@ -86,7 +86,7 @@ runEnsembleModel <- function(population,
   }
   trainFraction <- NULL
   if (ensembleStrategy == "stacked") {
-    trainFraction <- 0.2 * (1 - testFraction)
+    trainFraction <- 0.8 * (1 - testFraction)
     OhdsiRTools::logInfo("0.2 * (1 - testFraction) is validation set for training logistics regression!")
   }
   trainAUCs <- c()
