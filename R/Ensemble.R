@@ -132,15 +132,11 @@ runEnsembleModel <- function(population,
     ensem_proba <- rowSums(t(t(as.matrix(pred_probas)) * trainAUCs))
   } else if (ensembleStrategy == "stacked") {
     train_index <- prediction$indexes == 0
-    # add columne name to the matrix.
-    for (ind in seq(1, Index)) {
-      colnames(pred_probas)[ind] <- paste("col", ind, sep = "")
-    }
     train_prob <- pred_probas[train_index, ]
     train_y <- as.matrix(prediction$outcomeCount)[train_index]
-    lr_model <- glm(train_y ~ ., data = train_prob, family = binomial(link = "logit"))
+    lr_model <- glm(train_y ~ ., data = data.frame(train_prob), family = binomial(link = "logit"))
     saveRDS(lr_model, file = file.path(modelLoc, "combinator.rds"))
-    ensem_proba <- predict(lr_model, newdata = pred_probas, type = "response")
+    ensem_proba <- predict(lr_model, newdata = data.frame(pred_probas), type = "response")
   } else {
     stop("ensembleStrategy must be mean, product, weighted and stacked")
   }
@@ -187,7 +183,7 @@ runEnsembleModel <- function(population,
 #'                                                     nfold = 3,
 #'                                                     splitSeed = 1000,
 #'                                                     ensembleStrategy = "stacked")
-#' modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180607153811")  #the last model is combination model
+#' modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180612093745")  #the last model is combination model
 #'
 #' # use the same population settings as the model:
 #' populationSettings <- plpModel$populationSettings
@@ -242,7 +238,7 @@ applyEnsembleModel <- function(population,
     if (Index == 1) {
       prediction <- prob
     }
-    pred_probas <- cbind(pred_probas, prob[ncol(prob)])
+    pred_probas <- cbind(pred_probas, prob$value)
   }
 
   if (ensembleStrategy == "mean") {
@@ -253,10 +249,7 @@ applyEnsembleModel <- function(population,
   } else if (ensembleStrategy == "weighted") {
     ensem_proba <- rowSums(t(t(as.matrix(pred_probas)) * combinator))
   } else if (ensembleStrategy == "stacked") {
-    for (ind in seq(1, Index)) {
-      colnames(pred_probas)[ind] <- paste("col", ind, sep = "")
-    }
-    ensem_proba <- predict(combinator, newdata = pred_probas, type = "response")
+    ensem_proba <- predict(combinator, newdata = data.frame(pred_probas), type = "response")
   } else {
     stop("ensembleStrategy must be mean, product, weighted and stacked")
   }
