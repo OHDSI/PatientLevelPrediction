@@ -143,11 +143,9 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
 
     if(!is.null(plpResult$performanceEvaluation$demographicSummary)){
       removeInd <- plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk< n |
-        plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome < n |
-        plpResult$performanceEvaluation$demographicSummary$PersonCountWithNoOutcome < n
+        plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome < n 
       plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk[removeInd] <- -1
       plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome[removeInd] <- -1
-      plpResult$performanceEvaluation$demographicSummary$PersonCountWithNoOutcome[removeInd] <- -1
     }
     
     if(!is.null(plpResult$covariateSummary)){
