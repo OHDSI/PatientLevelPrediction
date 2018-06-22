@@ -243,6 +243,8 @@ summariseVal <- function(result, database){
 #' @param outcomeId                        An iteger specifying the cohort id for the outcome cohorts
 #' @param oracleTempSchema                 The temp oracle schema 
 #' @param modelName                        The name of the model
+#' @param calibrationPopulation            A data.frame of subjectId, cohortStartDate, indexes used to recalibrate the model on new data
+#' 
 #' @return
 #' The performance of the existing model and prediction
 #'
@@ -266,7 +268,8 @@ evaluateExistingModel <- function(modelTable,
                                    cohortDatabaseSchema, cohortTable, cohortId,
                                    outcomeDatabaseSchema, outcomeTable, outcomeId,
                                    oracleTempSchema = cdmDatabaseSchema,
-                                  modelName='existingModel'
+                                  modelName='existingModel',
+                                  calibrationPopulation=NULL
                                 
                                    ){
   
@@ -313,6 +316,13 @@ evaluateExistingModel <- function(modelTable,
   if(minTimeAtRisk > riskWindowEnd - riskWindowStart)
     warning('minTimeAtRisk is greater than time at risk - is this correct?')
   
+  if(!is.null(calibrationPopulation)){
+    if(sum(c('subjectId','cohortStartDate','indexes')%in%colnames(calibrationPopulation))!=3){
+      stop("Need 'subjectId','cohortStartDate','indexes' in data.frame")
+    }
+    calibrationPopulation <- calibrationPopulation[,c('subjectId','cohortStartDate','indexes')]
+  }
+  
   custCovs <- PatientLevelPrediction::createExistingModelSql(modelTable= modelTable, 
                                                  modelNames = modelName, 
                                                  interceptTable = interceptTable,
@@ -350,8 +360,22 @@ evaluateExistingModel <- function(modelTable,
                                                               removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome
                                                               )
   prediction <- merge(population, ff::as.ram(plpData$covariates), by='rowId', all.x=T)
-  colnames(prediction)[colnames(prediction)=='covariateValue'] <- 'value'
-  prediction$value <- prediction$value/max(prediction$value)
+  
+  if(!is.null(calibrationPopulation)){
+    #re-calibrate model:
+    prediction <- base::merge(calibrationPopulation, prediction, by=c('subjectId','cohortStartDate'))
+    recalModel <- stats::glm(y ~ x,
+                             family=stats::binomial(link='logit'),
+                             data=data.frame(x=prediction$covariateValue, 
+                                             y=as.factor(prediction$outcomeCount))[prediction$indexes>0,])
+    value <- stats::predict(recalModel, data.frame(x=prediction$covariateValue),
+                            type = "response")
+    prediction$value <- value
+  } else {
+    colnames(prediction)[colnames(prediction)=='covariateValue'] <- 'value'
+    prediction$value <- prediction$value/max(prediction$value)
+  }
+  
   attr(prediction, "metaData")$predictionType <- "binary"
   performance <- PatientLevelPrediction::evaluatePlp(prediction, plpData)
   
