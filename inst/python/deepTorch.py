@@ -770,6 +770,8 @@ if __name__ == "__main__":
                 test_x = X[trainInds, :][testInd, :]
                 print "Fold %s split %s in train set and %s in test set" % (i, train_x.shape[0], test_x.shape[0])
                 print "Train set contains %s outcomes " % (np.sum(train_y))
+                train_x = train_x.toarray()
+                test_x = test_x.toarray()
 
                 if autoencoder:
                     print 'first train stakced autoencoder'
@@ -782,9 +784,20 @@ if __name__ == "__main__":
                     clf = tu.Estimator(auto_model)
                     clf.compile(optimizer=torch.optim.Adam(auto_model.parameters(), lr=1e-3, weight_decay = w_decay),
                                 loss=nn.MSELoss())
-                    clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, autoencoder = autoencoder, vae = vae)
-                    train_x = auto_model.get_encode_features(train_x.toarray())
-                    test_x = auto_model.get_encode_features(test_x.toarray())
+                    clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs, autoencoder = autoencoder, vae = vae)
+                    #split to batch for large dataset
+                    train_batch = tu.batch(train_x, batch_size=32)
+                    train_x = []
+                    for train in train_batch:
+                        encode_train = auto_model.get_encode_features(train)
+                        train_x = np.concatenate((train_x, encode_train), axis=0)
+                    #train_x = auto_model.get_encode_features(train_x.toarray())
+                    #test_x = auto_model.get_encode_features(test_x.toarray())
+                    test_batch = tu.batch(test_x, batch_size=32)
+                    test_x = []
+                    for test in test_batch:
+                        encode_Test = auto_model.get_encode_features(test)
+                        test_x = np.concatenate((test_x, encode_Test), axis=0)
                     del auto_model
                     del clf
                 # train on fold
@@ -803,18 +816,18 @@ if __name__ == "__main__":
                 clf = tu.Estimator(model)
                 clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay = w_decay),
                             loss=loss)
-                if not autoencoder:
-                    train_x = train_x.toarray()
-                    test_x = test_x.toarray()
+                #if not autoencoder:
+                #    train_x = train_x.toarray()
+                #    test_x = test_x.toarray()
 
-                clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
+                clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs, l1regularization = l1regularization)
 
                 ind = (population[:, population.shape[1] - 1] > 0)
                 ind = population[ind, population.shape[1] - 1] == i
 
                 test_input_var = torch.from_numpy(test_x.astype(np.float32))
 
-                test_batch = tu.batch(test_x, batch_size = 64)
+                test_batch = tu.batch(test_x, batch_size = 32)
                 temp = []
                 for test in test_batch:
                     pred_test1 = model.predict_proba(test)[:, 1]
@@ -838,6 +851,7 @@ if __name__ == "__main__":
             start_time = timeit.default_timer()
 
             train_x = X[trainInds, :]
+            train_x = train_x.toarray()
             train_y = y[trainInds]
             if not os.path.exists(modelOutput):
                 os.makedirs(modelOutput)
@@ -851,8 +865,14 @@ if __name__ == "__main__":
                 clf = tu.Estimator(auto_model)
                 clf.compile(optimizer=torch.optim.Adam(auto_model.parameters(), lr=1e-3, weight_decay=w_decay),
                             loss=nn.MSELoss())
-                clf.fit(train_x.toarray(), train_y, batch_size=64, nb_epoch=epochs, autoencoder=autoencoder, vae = vae)
-                train_x = auto_model.get_encode_features(train_x.toarray())
+
+                clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs, autoencoder=autoencoder, vae = vae)
+                #train_x = auto_model.get_encode_features(train_x.toarray())
+                train_batch = tu.batch(train_x, batch_size=32)
+                train_x = []
+                for train in train_batch:
+                    encode_train = auto_model.get_encode_features(train)
+                    train_x = np.concatenate((train_x, encode_train), axis=0)
                 joblib.dump(auto_model, os.path.join(modelOutput, 'autoencoder_model.pkl'))
                 del auto_model
                 del clf
@@ -866,15 +886,15 @@ if __name__ == "__main__":
             else:
                 model = MLP(train_x.shape[1], size)
 
-            if not autoencoder:
-                train_x = train_x.toarray()
+            #if not autoencoder:
+            #    train_x = train_x.toarray()
 
             if torch.cuda.is_available():
                 model = model.cuda()
             clf = tu.Estimator(model)
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay = w_decay),
                         loss=loss)
-            clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs, l1regularization = l1regularization)
+            clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs, l1regularization = l1regularization)
 
             end_time = timeit.default_timer()
             print "Training final took: %.2f s" % (end_time - start_time)
@@ -888,9 +908,12 @@ if __name__ == "__main__":
     elif model_type in ['CNN', 'RNN', 'CNN_LSTM', 'CNN_MLF', 'CNN_MIX', 'GRU', 'BiRNN', 'CNN_MULTI', 'ResNet']:
         #print 'running model', model_type
         y = population[:, 1]
-        #with tf.Session() as sess:
-        #    dense = tf.sparse_tensor_to_dense(plpData)
-        #    X = sess.run(dense)
+        '''
+        with tf.Session() as sess:
+            plpData = tf.sparse_reorder(plpData)
+            plpData = tf.sparse_tensor_to_dense(plpData)
+            X = sess.run(plpData)
+        '''
         p_ids_in_cov = set(covariates[:, 0])
         full_covariates = np.array([]).reshape(0,4)
         default_covid = covariates[0, 1]
@@ -907,6 +930,7 @@ if __name__ == "__main__":
         trainInds = population[:, population.shape[1] - 1] > 0
         X, patient_keys = tu.convert_to_temporal_format(full_covariates, timeid_len= timeid_len)
         full_covariates = []
+
         print 'total patient', X.shape
         if class_weight == -1:
             loss = tu.FocalLoss(gamma = 3)
@@ -968,12 +992,12 @@ if __name__ == "__main__":
                 clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay = 0.0001),
                             loss=loss)
 
-                clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
+                clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs)
 
                 ind = (population[:, population.shape[1] - 1] > 0)
                 ind = population[ind, population.shape[1] - 1] == i
 
-                test_batch = tu.batch(test_x, batch_size = 64)
+                test_batch = tu.batch(test_x, batch_size = 32)
                 temp = []
                 for test in test_batch:
                     pred_test1 = model.predict_proba(test)[:, 1]
@@ -1025,7 +1049,7 @@ if __name__ == "__main__":
             clf = tu.Estimator(model)
             clf.compile(optimizer=torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay = 0.0001),
                         loss=loss)
-            clf.fit(train_x, train_y, batch_size=64, nb_epoch=epochs)
+            clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs)
 
             end_time = timeit.default_timer()
             print "Training final took: %.2f s" % (end_time - start_time)

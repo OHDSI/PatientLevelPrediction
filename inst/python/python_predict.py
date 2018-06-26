@@ -89,7 +89,7 @@ if autoencoder:
     autoencoder_model = joblib.load(os.path.join(model_loc, 'autoencoder_model.pkl'))
     X = autoencoder_model.get_encode_features(X)
 
-test_batch = tu.batch(X, batch_size = 64)
+test_batch = tu.batch(X, batch_size = 32)
 test_pred = []
 for test in test_batch:
     pred_test1 = modelTrained.predict_proba(test)[:, 1]
