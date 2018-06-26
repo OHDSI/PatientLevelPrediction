@@ -814,7 +814,12 @@ if __name__ == "__main__":
 
                 test_input_var = torch.from_numpy(test_x.astype(np.float32))
 
-                temp = model.predict_proba(test_input_var)[:, 1]
+                test_batch = tu.batch(test_x, batch_size = 64)
+                temp = []
+                for test in test_batch:
+                    pred_test1 = model.predict_proba(test)[:, 1]
+                    temp = np.concatenate((temp, pred_test1), axis = 0)
+                #temp = model.predict_proba(test_input_var)[:, 1]
                 #temp = preds.data.cpu().numpy().flatten()
                 #print temp
                 test_pred[ind] = temp
@@ -883,6 +888,9 @@ if __name__ == "__main__":
     elif model_type in ['CNN', 'RNN', 'CNN_LSTM', 'CNN_MLF', 'CNN_MIX', 'GRU', 'BiRNN', 'CNN_MULTI', 'ResNet']:
         #print 'running model', model_type
         y = population[:, 1]
+        #with tf.Session() as sess:
+        #    dense = tf.sparse_tensor_to_dense(plpData)
+        #    X = sess.run(dense)
         p_ids_in_cov = set(covariates[:, 0])
         full_covariates = np.array([]).reshape(0,4)
         default_covid = covariates[0, 1]
@@ -965,7 +973,7 @@ if __name__ == "__main__":
                 ind = (population[:, population.shape[1] - 1] > 0)
                 ind = population[ind, population.shape[1] - 1] == i
 
-                test_batch = tu.batch(test_x, batch_size = 50)
+                test_batch = tu.batch(test_x, batch_size = 64)
                 temp = []
                 for test in test_batch:
                     pred_test1 = model.predict_proba(test)[:, 1]

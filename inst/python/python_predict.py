@@ -84,17 +84,17 @@ modelTrained = joblib.load(os.path.join(model_loc,"model.pkl"))
 
 print(X.shape)
 print("Calculating predictions on population...")
-if modeltype == 'temporal':
-    test_batch = tu.batch(X, batch_size = 50)
-    test_pred = []
-    for test in test_batch:
-        pred_test1 = modelTrained.predict_proba(test)[:, 1]
-        test_pred = np.concatenate((test_pred , pred_test1), axis = 0)
-else:
-    if autoencoder:
-        autoencoder_model = joblib.load(os.path.join(model_loc, 'autoencoder_model.pkl'))
-        X = autoencoder_model.get_encode_features(X)
-    test_pred = modelTrained.predict_proba(X)
+
+if autoencoder:
+    autoencoder_model = joblib.load(os.path.join(model_loc, 'autoencoder_model.pkl'))
+    X = autoencoder_model.get_encode_features(X)
+
+test_batch = tu.batch(X, batch_size = 64)
+test_pred = []
+for test in test_batch:
+    pred_test1 = modelTrained.predict_proba(test)[:, 1]
+    test_pred = np.concatenate((test_pred , pred_test1), axis = 0)
+
 
 if test_pred.ndim != 1:
     test_pred = test_pred[:,1]
