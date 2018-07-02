@@ -250,6 +250,104 @@ class Estimator(object):
         self.model.eval()
         return self.model.predict_proba(X)
 
+class EarlyStopping(object): # pylint: disable=R0902
+    """
+    Gives a criterion to stop training when a given metric is not
+    improving anymore
+    Args:
+        mode (str): One of `min`, `max`. In `min` mode, training will
+            be stopped when the quantity monitored has stopped
+            decreasing; in `max` mode it will be stopped when the
+            quantity monitored has stopped increasing. Default: 'min'.
+        patience (int): Number of epochs with no improvement after
+            which training is stopped. For example, if
+            `patience = 2`, then we will ignore the first 2 epochs
+            with no improvement, and will only stop learning after the
+            3rd epoch if the loss still hasn't improved then.
+            Default: 10.
+        threshold (float): Threshold for measuring the new optimum,
+            to only focus on significant changes. Default: 1e-4.
+        threshold_mode (str): One of `rel`, `abs`. In `rel` mode,
+            dynamic_threshold = best * ( 1 + threshold ) in 'max'
+            mode or best * ( 1 - threshold ) in `min` mode.
+            In `abs` mode, dynamic_threshold = best + threshold in
+            `max` mode or best - threshold in `min` mode. Default: 'rel'.
+    """
+
+    def __init__(self, mode='min', patience=3, threshold=1e-4, threshold_mode='rel'):
+        self.patience = patience
+        self.mode = mode
+        self.threshold = threshold
+        self.threshold_mode = threshold_mode
+        self.best = None
+        self.num_bad_epochs = None
+        self.mode_worse = None  # the worse value for the chosen mode
+        self.is_better = None
+        self.last_epoch = -1
+        self._init_is_better(mode=mode, threshold=threshold,
+                             threshold_mode=threshold_mode)
+        self._reset()
+
+    def _reset(self):
+        """Resets num_bad_epochs counter and cooldown counter."""
+        self.best = self.mode_worse
+        self.num_bad_epochs = 0
+
+    def step(self, metrics, epoch=None):
+        """ Updates early stopping state """
+        current = metrics
+        if epoch is None:
+            epoch = self.last_epoch = self.last_epoch + 1
+        self.last_epoch = epoch
+
+        if self.is_better(current, self.best):
+            self.best = current
+            self.num_bad_epochs = 0
+        else:
+            self.num_bad_epochs += 1
+
+    @property
+    def stop(self):
+        """ Should we stop learning? """
+        return self.num_bad_epochs > self.patience
+
+    def _cmp(self, mode, threshold_mode, threshold, a, best): # pylint: disable=R0913, R0201
+        if mode == 'min' and threshold_mode == 'rel':
+            rel_epsilon = 1. - threshold
+            return a < best * rel_epsilon
+
+        elif mode == 'min' and threshold_mode == 'abs':
+            return a < best - threshold
+
+        elif mode == 'max' and threshold_mode == 'rel':
+            rel_epsilon = threshold + 1.
+            return a > best * rel_epsilon
+
+        return a > best + threshold
+
+    def _init_is_better(self, mode, threshold, threshold_mode):
+        if mode not in {'min', 'max'}:
+            raise ValueError('mode ' + mode + ' is unknown!')
+        if threshold_mode not in {'rel', 'abs'}:
+            raise ValueError('threshold mode ' + threshold_mode + ' is unknown!')
+
+        if mode == 'min':
+            self.mode_worse = float('inf')
+        else:  # mode == 'max':
+            self.mode_worse = (-float('inf'))
+
+        self.is_better = partial(self._cmp, mode, threshold_mode, threshold)
+
+    def state_dict(self):
+        """ Returns early stopping state """
+        return {key: value for key, value in self.__dict__.items() if key != 'is_better'}
+
+    def load_state_dict(self, state_dict):
+        """ Loads early stopping state """
+        self.__dict__.update(state_dict)
+        self._init_is_better(mode=self.mode, threshold=self.threshold,
+                             threshold_mode=self.threshold_mode)
+
 def adjust_learning_rate(learning_rate, optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
 
@@ -382,6 +480,30 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
     #fw.close()
 
     return x_raw, patient_keys
+
+def forward_impute_missing_value(x_raw):
+    N = x_raw.shape[0]
+    D = x_raw.shape[1]
+    T = x_raw.shape[2]
+    for i in xrange(N):
+        for j in xrange(D):
+            temp = x_raw[i][j]
+            nonzero_inds = np.nonzero(temp)[0]
+            count_nonzeros =  len(nonzero_inds)
+            #fw.write(str(i) + '\t' + str(count_nonzeros) + '\n')
+            if count_nonzeros == 1:
+                ind = nonzero_inds[0]
+                for k in xrange(ind + 1, T):
+                    x_raw[i][j][k] = x_raw[i][j][ind]
+            elif count_nonzeros > 1:
+                for ind in xrange(1, count_nonzeros):
+                    for k in xrange(nonzero_inds[ind -1] + 1, nonzero_inds[ind]):
+                        x_raw[i][j][k] = x_raw[i][j][nonzero_inds[ind - 1]]
+                # For last nonzeros.
+                for k in xrange(nonzero_inds[-1] + 1, T):
+                    x_raw[i][j][k] = x_raw[i][j][nonzero_inds[-1]]
+
+
 
 def convert_to_temporal_format(covariates, timeid_len= 31, normalize = True, predict = False):
     """
@@ -552,8 +674,16 @@ def split_training_validation(classes, validation_size=0.2, shuffle=False):
 
 
 if __name__ == "__main__":
-    filename = sys.argv[1]
-    word_embeddings(filename)
+    x_raw = np.array([[1, 1, 0], [0,1,0]])
+    x = []
+    x.append(x_raw)
+    x.append(x_raw)
+    x = np.array(x)
+    #pdb.set_trace()
+    forward_impute_missing_value(x)
+    print x
+    #filename = sys.argv[1]
+    #word_embeddings(filename)
     '''
     population = joblib.load('/data/share/plp/SYNPUF/population.pkl')
     # y = population[:, 1]

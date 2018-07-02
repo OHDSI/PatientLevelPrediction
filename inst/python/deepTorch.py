@@ -218,6 +218,84 @@ class VAE(nn.Module):
             encoded = encoded.data.cpu().numpy()
             return encoded
 
+class Decoder(nn.Module):
+    """ VAE decoder input_size = original inputsize/16*256"""
+    def __init__(self, latent_size, input_size, img_channels = 1, kernel_size=(1, 4), stride=(1, 2), padding=(0, 1)):
+        super(Decoder, self).__init__()
+        self.latent_size = latent_size
+        self.img_channels = img_channels
+
+        self.fc1 = nn.Linear(latent_size, input_size)
+        self.deconv1 = nn.ConvTranspose2d(input_size, 128, kernel_size, stride=stride, padding = padding)
+        self.deconv2 = nn.ConvTranspose2d(128, 64, kernel_size, stride=stride, padding = padding)
+        self.deconv3 = nn.ConvTranspose2d(64, 32, kernel_size, stride=stride, padding = padding)
+        self.deconv4 = nn.ConvTranspose2d(32, img_channels, kernel_size, stride=stride, padding = padding)
+
+    def forward(self, x): # pylint: disable=arguments-differ
+        x = F.relu(self.fc1(x))
+        x = x.unsqueeze(-1).unsqueeze(-1)
+        x = F.relu(self.deconv1(x))
+        x = F.relu(self.deconv2(x))
+        x = F.relu(self.deconv3(x))
+        reconstruction = F.sigmoid(self.deconv4(x))
+        return reconstruction
+
+class Encoder(nn.Module): # pylint: disable=too-many-instance-attributes
+    """ VAE encoder """
+    def __init__(self, latent_size, input_size, img_channels = 1, kernel_size=(1, 4), stride=(1, 2), padding=(0, 1)):
+        super(Encoder, self).__init__()
+        self.latent_size = latent_size
+        #self.img_size = img_size
+        self.img_channels = img_channels
+
+        self.conv1 = nn.Conv2d(img_channels, 32, kernel_size, stride=stride, padding = padding)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size, stride=stride, padding = padding)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size, stride=stride, padding = padding)
+        self.conv4 = nn.Conv2d(128, 256, kernel_size, stride=stride, padding = padding)
+        out_size = input_size / 16
+        self.fc_mu = nn.Linear(out_size, latent_size)
+        self.fc_logsigma = nn.Linear(out_size, latent_size)
+
+
+    def forward(self, x): # pylint: disable=arguments-differ
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv4(x))
+        x = x.view(x.size(0), -1)
+
+        mu = self.fc_mu(x)
+        logsigma = self.fc_logsigma(x)
+
+        return mu, logsigma
+
+class VAE_CNN(nn.Module):
+    """ Variational Autoencoder """
+    def __init__(self, latent_size, input_size):
+        super(VAE, self).__init__()
+        self.encoder = Encoder(latent_size, input_size)
+        input_size = input_size/16
+        self.decoder = Decoder(latent_size, input_size)
+
+    def forward(self, x): # pylint: disable=arguments-differ
+        mu, logsigma = self.encoder(x)
+        sigma = logsigma.exp()
+        eps = torch.randn_like(sigma)
+        z = eps.mul(sigma).add_(mu)
+
+        recon_x = self.decoder(z)
+        return recon_x, mu, logsigma
+
+    def get_encode_features(self, x):
+        if type(x) is np.ndarray:
+            x = torch.from_numpy(x.astype(np.float32))
+        with torch.no_grad():
+            x = Variable(x)
+            if torch.cuda.is_available():
+                x = x.cuda()
+            mu, logvar = self.encoder(x)
+            encoded = mu.data.cpu().numpy()
+            return encoded
 
 class CNN(nn.Module):
     def __init__(self, nb_filter, num_classes = 2, kernel_size = (1, 5), pool_size = (1, 3), labcounts = 32, window_size = 12, hidden_size = 200, stride = (1, 1), padding = 0):
@@ -775,10 +853,11 @@ if __name__ == "__main__":
 
                 if autoencoder:
                     print 'first train stakced autoencoder'
+                    encoding_size = 256
                     if vae:
-                        auto_model = VAE(input_size=train_x.shape[1], encoding_size=256)
+                        auto_model = VAE(input_size=train_x.shape[1], encoding_size=encoding_size)
                     else:
-                        auto_model = AutoEncoder(input_size=train_x.shape[1], encoding_size=256)
+                        auto_model = AutoEncoder(input_size=train_x.shape[1], encoding_size=encoding_size)
                     if torch.cuda.is_available():
                         auto_model = auto_model.cuda()
                     clf = tu.Estimator(auto_model)
@@ -787,14 +866,14 @@ if __name__ == "__main__":
                     clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs, autoencoder = autoencoder, vae = vae)
                     #split to batch for large dataset
                     train_batch = tu.batch(train_x, batch_size=32)
-                    train_x = []
+                    train_x = np.array([]).reshape(0, encoding_size)
                     for train in train_batch:
                         encode_train = auto_model.get_encode_features(train)
                         train_x = np.concatenate((train_x, encode_train), axis=0)
                     #train_x = auto_model.get_encode_features(train_x.toarray())
                     #test_x = auto_model.get_encode_features(test_x.toarray())
                     test_batch = tu.batch(test_x, batch_size=32)
-                    test_x = []
+                    test_x = np.array([]).reshape(0, encoding_size)
                     for test in test_batch:
                         encode_Test = auto_model.get_encode_features(test)
                         test_x = np.concatenate((test_x, encode_Test), axis=0)
@@ -856,10 +935,11 @@ if __name__ == "__main__":
             if not os.path.exists(modelOutput):
                 os.makedirs(modelOutput)
             if autoencoder:
+                encoding_size = 256
                 if vae:
-                    auto_model = VAE(input_size=train_x.shape[1], encoding_size=256)
+                    auto_model = VAE(input_size=train_x.shape[1], encoding_size=encoding_size)
                 else:
-                    auto_model = AutoEncoder(input_size=train_x.shape[1], encoding_size=256)
+                    auto_model = AutoEncoder(input_size=train_x.shape[1], encoding_size=encoding_size)
                 if torch.cuda.is_available():
                     auto_model = auto_model.cuda()
                 clf = tu.Estimator(auto_model)
@@ -869,7 +949,7 @@ if __name__ == "__main__":
                 clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs, autoencoder=autoencoder, vae = vae)
                 #train_x = auto_model.get_encode_features(train_x.toarray())
                 train_batch = tu.batch(train_x, batch_size=32)
-                train_x = []
+                train_x = np.array([]).reshape(0, encoding_size)
                 for train in train_batch:
                     encode_train = auto_model.get_encode_features(train)
                     train_x = np.concatenate((train_x, encode_train), axis=0)
@@ -908,6 +988,7 @@ if __name__ == "__main__":
     elif model_type in ['CNN', 'RNN', 'CNN_LSTM', 'CNN_MLF', 'CNN_MIX', 'GRU', 'BiRNN', 'CNN_MULTI', 'ResNet']:
         #print 'running model', model_type
         y = population[:, 1]
+        plpData = plpData[population[:, 0], :]
         '''
         with tf.Session() as sess:
             plpData = tf.sparse_reorder(plpData)
