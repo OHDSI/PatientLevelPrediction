@@ -294,7 +294,7 @@ class VAE_CNN(nn.Module):
             if torch.cuda.is_available():
                 x = x.cuda()
             mu, logvar = self.encoder(x)
-            encoded = mu.data.cpu().numpy()
+            encoded = mu .data.cpu().numpy()
             return encoded
 
 class CNN(nn.Module):
@@ -988,7 +988,7 @@ if __name__ == "__main__":
     elif model_type in ['CNN', 'RNN', 'CNN_LSTM', 'CNN_MLF', 'CNN_MIX', 'GRU', 'BiRNN', 'CNN_MULTI', 'ResNet']:
         #print 'running model', model_type
         y = population[:, 1]
-        plpData = plpData[population[:, 0], :]
+        #plpData = plpData[population[:, 0], :]
         '''
         with tf.Session() as sess:
             plpData = tf.sparse_reorder(plpData)
