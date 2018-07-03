@@ -11,7 +11,7 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
   removeSubjectsWithPriorOutcome = T, connectionDetails, cdmDatabaseSchema,
   cohortDatabaseSchema, cohortTable, cohortId, outcomeDatabaseSchema,
   outcomeTable, outcomeId, oracleTempSchema = cdmDatabaseSchema,
-  modelName = "existingModel")
+  modelName = "existingModel", calibrationPopulation = NULL)
 }
 \arguments{
 \item{modelTable}{The model covariates and scores}
@@ -59,6 +59,8 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 \item{oracleTempSchema}{The temp oracle schema}
 
 \item{modelName}{The name of the model}
+
+\item{calibrationPopulation}{A data.frame of subjectId, cohortStartDate, indexes used to recalibrate the model on new data}
 }
 \value{
 The performance of the existing model and prediction
