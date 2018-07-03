@@ -104,10 +104,37 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                  outcomeId=outcomeId,# can use populationSettings$outcomeId?
                  cohortId=cohortId,
                  varImp = varImp,
-                 trainingTime=comp
+                 trainingTime=comp,
+                 covariateMap = NULL
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'plp'
   attr(result, 'predictionType') <- 'binary'
   return(result)
+}
+
+
+
+# Code to do variable importance by looking at AUC decrease when the variable is removed from model
+inverseLog <- function(x){
+  return(-log(1/x-1))
+}
+revisedAUC <- function(i, coefficients, prediction, mat){
+  if(names(coefficients)[i]=='(Intercept)'){
+    return(AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount))))
+  }
+  if(coefficients[i]==0){
+    return(AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount))))
+  }
+  ind <- mat$data[prediction$rowId,mat$map$newIds[mat$map$oldIds==as.double(names(coefficients)[i])]]
+  revisedPred <- inverseLog(prediction$value)-coefficients[i]*ind
+  auc <- AUC::auc(AUC::roc(revisedPred, factor(prediction$outcomeCount)))
+  return(auc)
+}
+
+variableImportanceLR <- function(coefficients, prediction, plpData){
+  mat <- PatientLevelPrediction::toSparseM(plpData, prediction)
+  auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
+  
+  return(auc-sapply(1:length(coefficients), function(i) revisedAUC(i,coefficients, prediction, mat)))
 }
