@@ -127,17 +127,20 @@ results <- PatientLevelPrediction::runEnsembleModel(population, dataList = list(
 
 
 # Apply Ensemble model
+```{r eval=FALSE}
 plpData <- loadPlpData("plpdata/")
 modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180607153811")  #the last model is combination model
 use the same population settings as the model:
 populationSettings <- plpModel$populationSettings
 populationSettings$plpData <- plpData
 population <- do.call(createStudyPopulation, populationSettings)
-# get the prediction, please make sure the ensemble strategy for training and applying is the same:
+```
+Get the prediction, please make sure the ensemble strategy for training and applying is the same:
+```{r eval=FALSE}
 prediction <- applyEnsembleModel(population,
                                   dataList = list(plpData, plpData),
                                   modelList = modelList,
                                   analysisId = NULL,
                                   save = NULL,
                                   ensembleStrategy = "stacked")$prediction
-
+```
