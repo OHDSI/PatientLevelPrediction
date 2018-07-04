@@ -1,14 +1,14 @@
 ---
 title: "Ensmeble Training"
-author: " Xiaoyong Pan, Peter R. Rijnbeek,"
+author: ' Xiaoyong Pan, Peter R. Rijnbeek,'
 date: "April 20, 2018"
-output:   
-  html_document:
-    number_sections: yes
-    toc: yes
+output:
   pdf_document:
     includes:
       in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  html_document:
     number_sections: yes
     toc: yes
   word_document:
