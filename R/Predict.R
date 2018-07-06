@@ -131,10 +131,12 @@ predict.python <- function(plpModel, population, plpData){
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
   if (plpModel$modelSettings$model == 'fitCNNTorch' | plpModel$modelSettings$model == 'fitRNNTorch'){
-    covariates <- plpData$covariates
-    covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
-    PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
+    #covariates <- plpData$covariates
+    #covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
+    #PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
+    result<- toSparsePython(plpData,population,map=NULL, temporal=T)
     PythonInR::pySet("modeltype", 'temporal')
+    PythonInR::pySet("autoencoder", 0)
     python_dir <- system.file(package='PatientLevelPrediction','python')
     PythonInR::pySet("python_dir", python_dir)
   } else{

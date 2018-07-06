@@ -504,7 +504,6 @@ def forward_impute_missing_value(x_raw):
                     x_raw[i][j][k] = x_raw[i][j][nonzero_inds[-1]]
 
 
-
 def convert_to_temporal_format(covariates, timeid_len= 31, normalize = True, predict = False):
     """
     It reads the data from covariates extracted by FeatureExtraction package and convert it to temporal data matrix

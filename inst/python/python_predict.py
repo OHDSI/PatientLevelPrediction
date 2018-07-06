@@ -58,8 +58,16 @@ y=population[:,1]
 #print covariates.shape
 
 if modeltype == 'temporal':
-	X = get_temproal_data(covariates, population)
-	dense = 0
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
+        X = tf.sparse_reorder(plpData)
+        X = tf.sparse_tensor_to_dense(X)
+        X = sess.run(X)
+        tu.forward_impute_missing_value(X)
+    X = X[np.int64(population[:, 0]), :]
+	#X = get_temproal_data(covariates, population)
+    dense = 0
 else:
     #print included
 	X = plpData[population[:,0],:]

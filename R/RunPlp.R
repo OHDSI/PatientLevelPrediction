@@ -228,10 +228,6 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   population <- merge(population, indexes)
   colnames(population)[colnames(population)=='index'] <- 'indexes'
   attr(population, "metaData") <- tempmeta
-  cleanData =  TRUE
-  if (modelSettings$model == 'fitCNNTorch' | modelSettings$model == 'fitRNNTorch'){
-    cleanData = FALSE
-  }
   
   settings <- list(data=plpData, minCovariateFraction=minCovariateFraction,
                    normalizeData = normalizeData,
@@ -262,7 +258,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     #update the python saved location
     if(attr(model, 'type')=='python'){
       model$model <- file.path(modelLoc,'python_model')
-      model$predict <- createTransform(model, cleanData = cleanData)
+      model$predict <- createTransform(model)
     }
   }
   

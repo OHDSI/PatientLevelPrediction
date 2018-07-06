@@ -989,11 +989,14 @@ if __name__ == "__main__":
         #print 'running model', model_type
         y = population[:, 1]
         #plpData = plpData[population[:, 0], :]
-        '''
-        with tf.Session() as sess:
-            plpData = tf.sparse_reorder(plpData)
-            plpData = tf.sparse_tensor_to_dense(plpData)
-            X = sess.run(plpData)
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        with tf.Session(config=config) as sess:
+            X = tf.sparse_reorder(plpData)
+            X = tf.sparse_tensor_to_dense(X)
+            X = sess.run(X)
+            tu.forward_impute_missing_value(X)
+        X = X[np.int64(population[:, 0]), :]
         '''
         p_ids_in_cov = set(covariates[:, 0])
         full_covariates = np.array([]).reshape(0,4)
@@ -1011,8 +1014,8 @@ if __name__ == "__main__":
         trainInds = population[:, population.shape[1] - 1] > 0
         X, patient_keys = tu.convert_to_temporal_format(full_covariates, timeid_len= timeid_len)
         full_covariates = []
-
-        print 'total patient', X.shape
+        '''
+        print 'total patient', X.shape, y.shape
         if class_weight == -1:
             loss = tu.FocalLoss(gamma = 3)
         else:
