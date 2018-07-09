@@ -149,13 +149,15 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
     }
     
     if(!is.null(plpResult$covariateSummary)){
-      plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','CovariateCountWithOutcome','CovariateCountWithNoOutcome')]
+      plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','CovariateCountWithOutcome','CovariateCountWithNoOutcome','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome')]
       removeInd <- plpResult$covariateSummary$CovariateCount < n |
         plpResult$covariateSummary$CovariateCountWithOutcome < n | 
         plpResult$covariateSummary$CovariateCountWithNoOutcome < n 
       plpResult$covariateSummary$CovariateCount[removeInd] <- -1
       plpResult$covariateSummary$CovariateCountWithOutcome[removeInd] <- -1
       plpResult$covariateSummary$CovariateCountWithNoOutcome[removeInd] <- -1
+      plpResult$covariateSummary$CovariateMeanWithOutcome[removeInd] <- -1
+      plpResult$covariateSummary$CovariateMeanWithNoOutcome[removeInd] <- -1
     }
     
     }

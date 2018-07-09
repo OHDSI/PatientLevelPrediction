@@ -208,6 +208,7 @@ externalValidatePlp <- function(plpResult,
 summariseVal <- function(result, database){
   row.names(result$performanceEvaluation$evaluationStatistics) <- NULL
   result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
+  result$performanceEvaluation$evaluationStatistics$Metric <- gsub('.auc','',result$performanceEvaluation$evaluationStatistics$Metric)
   result$Database <- database
   return(result)
 }

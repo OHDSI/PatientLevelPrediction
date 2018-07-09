@@ -132,7 +132,8 @@ revisedAUC <- function(i, coefficients, prediction, mat){
   return(auc)
 }
 
-variableImportanceLR <- function(coefficients, prediction, plpData){
+variableImportanceLR <- function(coefficients, prediction, plpData,preprocessSettings){
+  plpData <- PatientLevelPrediction:::applyTidyCovariateData(plpData,preprocessSettings)
   mat <- PatientLevelPrediction::toSparseM(plpData, prediction)
   auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
   
