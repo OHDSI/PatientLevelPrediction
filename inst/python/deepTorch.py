@@ -995,7 +995,7 @@ if __name__ == "__main__":
             X = tf.sparse_reorder(plpData)
             X = tf.sparse_tensor_to_dense(X)
             X = sess.run(X)
-            tu.forward_impute_missing_value(X)
+            #tu.forward_impute_missing_value(X)
         X = X[np.int64(population[:, 0]), :]
         '''
         p_ids_in_cov = set(covariates[:, 0])

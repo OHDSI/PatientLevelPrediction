@@ -64,7 +64,7 @@ if modeltype == 'temporal':
         X = tf.sparse_reorder(plpData)
         X = tf.sparse_tensor_to_dense(X)
         X = sess.run(X)
-        tu.forward_impute_missing_value(X)
+        #tu.forward_impute_missing_value(X)
     X = X[np.int64(population[:, 0]), :]
 	#X = get_temproal_data(covariates, population)
     dense = 0
