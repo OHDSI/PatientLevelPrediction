@@ -83,3 +83,9 @@ calculatePrevs <- function(plpData, population){
   return(prevs)
 }
 
+#' @title clearffTempDir
+#' 
+#' @description Clears the temporary ff directory to free up disk space.
+clearffTempDir <- function(){
+  file.remove(dir(getOption("fftempdir"), full.names = TRUE))
+}
