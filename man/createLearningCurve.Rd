@@ -6,8 +6,8 @@
 \usage{
 createLearningCurve(population, plpData, modelSettings, testSplit = "person",
   testFraction = 0.25, trainFractions = c(0.25, 0.5, 0.75),
-  splitSeed = NULL, nfold = 3, indexes = NULL, save = NULL,
-  saveModel = TRUE, verbosity = "INFO", clearffTemp = FALSE,
+  splitSeed = NULL, nfold = 3, indexes = NULL, saveDir = NULL,
+  saveModel = TRUE, verbosity = "TRACE", clearffTemp = FALSE,
   minCovariateFraction = 0.001)
 }
 \arguments{
@@ -51,7 +51,7 @@ using a 'person' type split}
 index value of -1 means in the test set, and positive integer represents
 the cross validation fold (default is \code{NULL}).}
 
-\item{save}{The path to the directory where the models will be saved
+\item{saveDir}{The path to the directory where the models will be saved
 (if \code{NULL}, uses working directory).}
 
 \item{saveModel}{Logical indicating whether to save the model once it has

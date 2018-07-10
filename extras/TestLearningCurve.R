@@ -38,7 +38,7 @@ testFraction <- 0.2
 trainFractions <- seq(0.1, 0.8, 0.1)
 
 # Use a split by person, alterantively a time split is possible
-testSplit <- 'time'
+testSplit <- 'person'
 
 # create a learning curve object
 learningCurve <- createLearningCurve(
@@ -49,8 +49,7 @@ learningCurve <- createLearningCurve(
   verbosity = 'TRACE',
   trainFractions = trainFractions,
   splitSeed = 1000,
-  saveModel = TRUE,
-  timeStamp = TRUE
+  saveModel = TRUE
 )
 
 # plot the learning curve by specify one of the available metrics: 'AUROC', 

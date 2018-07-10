@@ -52,7 +52,7 @@
 #' @param indexes A dataframe containing a rowId and index column where the 
 #'   index value of -1 means in the test set, and positive integer represents
 #'   the cross validation fold (default is \code{NULL}).
-#' @param save The path to the directory where the models will be saved
+#' @param saveDir The path to the directory where the models will be saved
 #'   (if \code{NULL}, uses working directory).
 #' @param saveModel Logical indicating whether to save the model once it has
 #'   been trained (default is \code{TRUE}).
@@ -99,14 +99,25 @@ createLearningCurve <- function(population,
                                 splitSeed = NULL,
                                 nfold = 3,
                                 indexes = NULL,
-                                save = NULL,
+                                saveDir = NULL,
                                 saveModel = TRUE,
-                                verbosity = 'INFO',
+                                verbosity = 'TRACE',
                                 clearffTemp = FALSE,
                                 minCovariateFraction = 0.001) {
   
   # the analysis id will always be generated automatically
   analysisId <- NULL
+  
+  # if no path is provided, save to working directory
+  if (is.null(saveDir)) {
+    saveDir <- file.path(getwd(), 'plpmodels')
+  }
+  
+  logPath = file.path(saveDir, "plplog.txt")
+  
+  
+  # remove all registered loggers
+  OhdsiRTools::clearLoggers()
   
   # check logger
   if (length(OhdsiRTools::getLoggers()) == 0) {
@@ -114,7 +125,9 @@ createLearningCurve <- function(population,
       name = "SIMPLE",
       threshold = verbosity,
       appenders = list(
-        OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)
+        OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutSimple),
+        OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutTimestamp,
+                                        fileName = logPath)
       )
     )
     OhdsiRTools::registerLogger(logger)
@@ -145,21 +158,14 @@ createLearningCurve <- function(population,
       analysisId <- gsub(':', '', gsub('-', '', gsub(' ', '', start.all)))
     }
     
-    # if no path is provided, save to working directory
-    if (is.null(save)) {
-      save <- file.path(getwd(), 'plpmodels')
-    }
-    
-    analysisPath = file.path(save, analysisId)
+    analysisPath = file.path(saveDir, analysisId)
     if (!dir.exists(analysisPath)) {
       dir.create(analysisPath, recursive = T)
     }
-    logFileName = paste0(analysisPath, '/plplog.txt')
-    
+
     # write log to both, console and file
     # other appenders can be created, e.g. to a web service or database
-    # flog.appender(appender.tee(logFileName))
-    
+
     OhdsiRTools::logInfo(paste0(
       'Patient-Level Prediction Package version ',
       utils::packageVersion("PatientLevelPrediction")
@@ -254,8 +260,7 @@ createLearningCurve <- function(population,
     if (sink.number() > 0) {
       OhdsiRTools::logWarn(paste0('sink had ', sink.number(), ' connections open!'))
     }
-    # sink(logFileName, append = TRUE, split = TRUE)
-    
+
     # fit the model
     model <- tryCatch({
       do.call(fitPlp, settings)
@@ -270,7 +275,7 @@ createLearningCurve <- function(population,
     
     # save the model
     if (saveModel == TRUE) {
-      modelLoc <- file.path(save, analysisId, 'savedModel')
+      modelLoc <- file.path(saveDir, analysisId, 'savedModel')
       tryCatch({
         savePlpModel(model, modelLoc)},
         finally = OhdsiRTools::logInfo(paste0(
@@ -316,7 +321,7 @@ createLearningCurve <- function(population,
         reformatPerformance(train = performance.train, test = performance.test,
                             analysisId)
       
-      if (!is.null(save)) {
+      if (!is.null(saveDir)) {
         OhdsiRTools::logTrace('Saving evaluation')
         if (!dir.exists(file.path(analysisPath, 'evaluation')))
           dir.create(file.path(analysisPath, 'evaluation'))
@@ -406,7 +411,7 @@ createLearningCurve <- function(population,
         #  test for non-windows needed
         TotalExecutionElapsedTime = TotalExecutionElapsedTime,
         ExecutionDateTime = ExecutionDateTime,
-        Log = logFileName # location for now
+        Log = logPath # location for now
         # Not available at the moment: CDM_SOURCE - meta-data containing CDM
         # version, release date, vocabulary version
       )
@@ -436,7 +441,7 @@ createLearningCurve <- function(population,
             testCovariateSummary,
             by = 'covariateId',
             all = T)
-    if (!is.null(save)) {
+    if (!is.null(saveDir)) {
       OhdsiRTools::logTrace('Saving covariate summary')
       if (!dir.exists(file.path(analysisPath, 'evaluation')))
         dir.create(file.path(analysisPath, 'evaluation'))
@@ -467,7 +472,6 @@ createLearningCurve <- function(population,
     )
     class(result) <- c('list', 'plpModel')
     
-    OhdsiRTools::logInfo(paste0('Log saved to ', logFileName))
     OhdsiRTools::logInfo("Run finished successfully.")
     OhdsiRTools::logInfo()
     
@@ -503,6 +507,8 @@ createLearningCurve <- function(population,
     return(df)
   }
 
+  OhdsiRTools::clearLoggers()
+  
   names(learningCurve) <- c(
     "x",
     "popSizeTrain",

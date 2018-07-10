@@ -5,7 +5,8 @@
 \title{plotLearningCurve}
 \usage{
 plotLearningCurve(learningCurve, metric = "AUROC",
-  plotTitle = "Learning Curve", plotSubtitle = NULL, fileName = NULL)
+  abscissa = "observations", plotTitle = "Learning Curve",
+  plotSubtitle = NULL, fileName = NULL)
 }
 \arguments{
 \item{learningCurve}{An object returned by \code{\link{createLearningCurve}}
@@ -17,6 +18,12 @@ function.}
     Characteristic curve}
   \item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
   \item{\code{'sBrier'} - use the scaled Brier score}
+}}
+
+\item{abscissa}{Specify the abscissa metric to be plotted:
+\itemize{
+  \item{\code{'observations'} - use number of observations}
+  \item{\code{'outcomes'} - use number of positive outcomes}
 }}
 
 \item{plotTitle}{Title of the learning curve plot.}
