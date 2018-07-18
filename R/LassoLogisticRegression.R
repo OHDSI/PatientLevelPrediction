@@ -128,13 +128,15 @@ revisedAUC <- function(i, coefficients, prediction, mat){
   }
   ind <- mat$data[prediction$rowId,mat$map$newIds[mat$map$oldIds==as.double(names(coefficients)[i])]]
   revisedPred <- inverseLog(prediction$value)-coefficients[i]*ind
-  auc <- AUC::auc(AUC::roc(revisedPred, factor(prediction$outcomeCount)))
+  
+  auc <- tryCatch({AUC::auc(AUC::roc(revisedPred, factor(prediction$outcomeCount)))}, 
+                  error = function(e){return(-1)}, warning = function(w){return(-1)})
   return(auc)
 }
 
 variableImportanceLR <- function(coefficients, prediction, plpData,preprocessSettings){
-  plpData <- PatientLevelPrediction:::applyTidyCovariateData(plpData,preprocessSettings)
-  mat <- PatientLevelPrediction::toSparseM(plpData, prediction)
+  plpData <- applyTidyCovariateData(plpData,preprocessSettings)
+  mat <- toSparseM(plpData, prediction)
   auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
   
   return(auc-sapply(1:length(coefficients), function(i) revisedAUC(i,coefficients, prediction, mat)))

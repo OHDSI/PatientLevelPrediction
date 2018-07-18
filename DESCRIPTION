@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 2.0.4
-Date: 2018-05-10
+Version: 2.0.5
+Date: 2018-07-10
 Author: Jenna Reps [aut],
     Martijn J. Schuemie [aut, cre],
     Marc A. Suchard [aut],
@@ -40,7 +40,7 @@ Imports:
     methods,
     BigKnn,
     reshape2,
-    ReporteRs,
+    officer,
     diagram,
     shiny,
     plotly,

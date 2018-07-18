@@ -53,8 +53,11 @@
 #' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #' @param indexes                          A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)
-#' @param save                             The path to the directory where the models will be saved (if NULL uses working directory)
-#' @param saveModel                        Binary indicating whether to save the model once it is trained (default is T)
+#' @param saveDirectory                    The path to the directory where the results will be saved (if NULL uses working directory)
+#' @param savePlpData                      Binary indicating whether to save the plpData object (default is T)
+#' @param savePlpResult                    Binary indicating whether to save the object returned by runPlp (default is T)
+#' @param savePlpPlots                     Binary indicating whether to save the performance plots as pdf files (default is T)
+#' @param saveEvaluation                   Binary indicating whether to save the oerformance as csv files (default is T)
 #' @param verbosity                        Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 #'                                         \itemize{
 #'                                         \item{DEBUG}{Highest verbosity showing all debug statements}
@@ -66,7 +69,7 @@
 #'                                         }
 #' @param timeStamp                        If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.
 #' @param analysisId                       Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
-#'
+#' @param save                             Old input - please now use saveDirectory
 #' @return
 #' An object containing the model or location where the model is save, the data selection settings, the preprocessing
 #' and training settings as well as various performance measures obtained by the model.
@@ -113,7 +116,7 @@
 #'                         modelSettings = model.lr ,
 #'                         testSplit = 'time', testFraction=0.3, 
 #'                         nfold=3, indexes=NULL,
-#'                         save=file.path('C:','User','home'),
+#'                         saveDirectory =file.path('C:','User','myPredictionName'),
 #'                         verbosity='INFO')
 #'  
 #' #******** EXAMPLE 2 *********                                               
@@ -127,14 +130,21 @@
 #'                         modelSettings = model.gbm,
 #'                         testSplit = 'time', testFraction=0.3, 
 #'                         nfold=3, indexes=mod.lr$indexes,
-#'                         save=file.path('C:','User','home'))
+#'                         saveDirectory =file.path('C:','User','myPredictionName2'))
 #' } 
 runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalizeData=T,
                    modelSettings,
                    testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, indexes=NULL,
-                   save=NULL, saveModel=T,
-                   verbosity="INFO", timeStamp=FALSE, analysisId=NULL
+                   saveDirectory=NULL, savePlpData=T,
+                   savePlpResult=T, savePlpPlots = T, saveEvaluation = T,
+                   verbosity="INFO", timeStamp=FALSE, analysisId=NULL, 
+                   save
 ){
+
+  if(!missing(save)){
+    warning('save has been repleased with saveDirectory - please use this input from now on')
+    if(NULL(saveDirectory)){saveDirectory <- save}
+  }
   
   if(missing(verbosity)){
     verbosity <- "INFO"
@@ -152,11 +162,12 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   if(is.null(analysisId))
     analysisId <- gsub(':','',gsub('-','',gsub(' ','',start.all)))
   
-  if(is.null(save)) save <- file.path(getwd(),'plpmodels') #if NULL save to wd
+  if(is.null(saveDirectory)){
+    analysisPath <- file.path(getwd(),analysisId)
+  } else {
+    analysisPath <- file.path(saveDirectory,analysisId) 
+    }
   
-  # TODO: This will not work for example if libsvm conversion is needed and no Save is filled in.
-  
-  analysisPath = file.path(save,analysisId)
   if(!dir.exists(analysisPath)){dir.create(analysisPath,recursive=T)}
   logFileName = paste0(analysisPath,'/plplog.txt')
   
@@ -200,6 +211,11 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   checkIsClass(nfold, 'numeric')
   checkHigher(nfold, 0)
   
+  # if savePlpData
+  if(savePlpData){
+    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Saving plpData to ', file.path(analysisPath,'plpData')))
+    savePlpData(plpData, file.path(analysisPath,'plpData'))
+  }
 
   # construct the settings for the model pipeline
   if(is.null(indexes)){
@@ -210,14 +226,16 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     }
     if(testSplit=='person'){
       OhdsiRTools::logTrace('Dataset person split starter')
-      if(is.null(splitSeed)){ splitSeed <- sample(20000000,1)-10000000} #keep record of splitSeed
+      if(is.null(splitSeed)){ #keep record of splitSeed
+        splitSeed <- sample(20000000,1)-10000000
+        OhdsiRTools::logInfo(paste0('splitSeed: ', splitSeed))
+        } 
       indexes <- tryCatch(personSplitter(population, test=testFraction, nfold=nfold, seed=splitSeed),
                       finally= OhdsiRTools::logTrace('Done.')
       )
     }
   }
   
-  # TODO better to move this to the splitter if this is important?
   if(nrow(population)!=nrow(indexes)){
     OhdsiRTools::logError(sprintf('Population dimension not compatible with indexes: %d <-> %d', nrow(population), nrow(indexes)))
     stop('Population dimension not compatible with indexes')
@@ -249,19 +267,6 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                 finally = {
                   OhdsiRTools::logTrace('Done.')})
   
-  # save the model
-  if(saveModel==T){
-    modelLoc <- file.path(save,analysisId, 'savedModel' )
-    tryCatch(savePlpModel(model, modelLoc),finally= OhdsiRTools::logTrace('Done.'))
-    OhdsiRTools::logInfo(paste0('Model saved to ..\\',analysisId,'\\savedModel'))
-    
-    #update the python saved location
-    if(attr(model, 'type')=='python'){
-      model$model <- file.path(modelLoc,'python_model')
-      model$predict <- createTransform(model)
-    }
-  }
-  
   # calculate metrics
   OhdsiRTools::logTrace('Prediction')
   prediction <- tryCatch(predictPlp(plpModel = model, population = population, plpData = plpData, index = NULL), 
@@ -284,8 +289,8 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     # now combine the test and train data and add analysisId
     performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
     
-    if(!is.null(save)){
-      OhdsiRTools::logTrace('Saving evaluation')
+    if(saveEvaluation){
+      OhdsiRTools::logTrace('Saving evaluation csv files')
       if(!dir.exists( file.path(analysisPath, 'evaluation') ))
         dir.create(file.path(analysisPath, 'evaluation'))
       tryCatch(utils::write.csv(performance$evaluationStatistics, file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'), row.names=F ),
@@ -349,13 +354,14 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'] <- paste0('Test',colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'])
   covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
   covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
-  if(!is.null(save)){
-    OhdsiRTools::logTrace('Saving covariate summary')
+  if(saveEvaluation){
+    OhdsiRTools::logTrace('Saving covariate summary as csv')
     if(!dir.exists( file.path(analysisPath, 'evaluation') ))
       dir.create(file.path(analysisPath, 'evaluation'))
     tryCatch(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
          finally= OhdsiRTools::logTrace('Saved covariate summary.')
-    )}
+    )
+    }
   OhdsiRTools::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
   
   results <- list(inputSetting=inputSetting,
@@ -368,6 +374,35 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                                    analysisName=NULL,#analysisName,
                                    analysisSettings= NULL))
   class(results) <- c('runPlp')
+  
+  # save the plots?
+  if(savePlpPlots){
+    plotPlp(result = results, filename = file.path(analysisPath))
+  }
+  
+  # save the results
+  if(savePlpResult){
+    OhdsiRTools::logInfo(paste0('Saving PlpResult'))
+    tryCatch(savePlpResult(result, file.path(analysisPath,'plpResult')),
+             finally= OhdsiRTools::logTrace('Done.'))
+    OhdsiRTools::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
+    
+    #update the python saved location
+    if(attr(result$model, 'type')=='python'){
+      result$model$model <- file.path(analysisPath,'plpResult','model','python_model')
+      result$model$predict <- createTransform(result$model)
+    }
+    
+    # update knn and keras?
+    if(attr(result$model, 'type')=='knn'){
+      result$model$model <- file.path(analysisPath,'plpResult','model','knn_model')
+      result$model$predict <- createTransform(result$model)
+    }
+    if(attr(result$model, 'type')=='deep'){
+      result$model$model <- file.path(analysisPath,'plpResult','model','keras_model')
+      result$model$predict <- createTransform(result$model)
+    }
+  }
   
   OhdsiRTools::logInfo(paste0('Log saved to ',logFileName))  
   OhdsiRTools::logInfo("Run finished successfully.")

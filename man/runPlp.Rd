@@ -6,9 +6,10 @@
 \usage{
 runPlp(population, plpData, minCovariateFraction = 0.001, normalizeData = T,
   modelSettings, testSplit = "time", testFraction = 0.25,
-  splitSeed = NULL, nfold = 3, indexes = NULL, save = NULL,
-  saveModel = T, verbosity = "INFO", timeStamp = FALSE,
-  analysisId = NULL)
+  splitSeed = NULL, nfold = 3, indexes = NULL, saveDirectory = NULL,
+  savePlpData = T, savePlpResult = T, savePlpPlots = T,
+  saveEvaluation = T, verbosity = "INFO", timeStamp = FALSE,
+  analysisId = NULL, save)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -43,9 +44,15 @@ split evaluation.}
 
 \item{indexes}{A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)}
 
-\item{save}{The path to the directory where the models will be saved (if NULL uses working directory)}
+\item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
 
-\item{saveModel}{Binary indicating whether to save the model once it is trained (default is T)}
+\item{savePlpData}{Binary indicating whether to save the plpData object (default is T)}
+
+\item{savePlpResult}{Binary indicating whether to save the object returned by runPlp (default is T)}
+
+\item{savePlpPlots}{Binary indicating whether to save the performance plots as pdf files (default is T)}
+
+\item{saveEvaluation}{Binary indicating whether to save the oerformance as csv files (default is T)}
 
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 \itemize{
@@ -60,6 +67,8 @@ split evaluation.}
 \item{timeStamp}{If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.}
 
 \item{analysisId}{Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
+
+\item{save}{Old input - please now use saveDirectory}
 }
 \value{
 An object containing the model or location where the model is save, the data selection settings, the preprocessing
@@ -118,7 +127,7 @@ mod.lr <- runPlp(population=population,
                         modelSettings = model.lr ,
                         testSplit = 'time', testFraction=0.3, 
                         nfold=3, indexes=NULL,
-                        save=file.path('C:','User','home'),
+                        saveDirectory =file.path('C:','User','myPredictionName'),
                         verbosity='INFO')
  
 #******** EXAMPLE 2 *********                                               
@@ -132,6 +141,6 @@ mod.gbm <- runPlp(population=population,
                         modelSettings = model.gbm,
                         testSplit = 'time', testFraction=0.3, 
                         nfold=3, indexes=mod.lr$indexes,
-                        save=file.path('C:','User','home'))
+                        saveDirectory =file.path('C:','User','myPredictionName2'))
 } 
 }

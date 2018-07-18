@@ -557,12 +557,18 @@ createExistingModelSql <- function(modelTable, modelNames, interceptTable,
 
     # =================================
     #==================================
+    
+    if(is.null(interceptTable)){
+      interceptTable <- data.frame(modelId=unique(modelTable$modelId), 
+                                   interceptValue=rep(0, length(unique(modelTable$modelId))))
+    }
     #  INSERT THE INTERCEPTS FOR THE MODELS: MODEL_ID, INTERCEPT_VALUE
     if(class(interceptTable)=='data.frame'){
       intercepts <- interceptTable
     } else{
       intercepts <- do.call(rbind, interceptTable)
     }
+
 
     colnames(intercepts) <- SqlRender::camelCaseToSnakeCase(colnames(intercepts))
     DatabaseConnector::insertTable(connection, tableName='intercepts', data = intercepts, tempTable = T)
