@@ -95,12 +95,9 @@ test_that("prediction", {
   testthat::expect_length(model_set,3)
   testthat::expect_error(PatientLevelPrediction::setLassoLogisticRegression(variance = -3))
   testthat::expect_error(PatientLevelPrediction::setLassoLogisticRegression(seed = 'F'))
-  testthat::expect_error(PatientLevelPrediction::fitLassoLogisticRegression())
-  testthat::expect_error(PatientLevelPrediction::fitLassoLogisticRegression(population,plpData=list(), 
+  testthat::expect_error(PatientLevelPrediction:::fitLassoLogisticRegression())
+  testthat::expect_error(PatientLevelPrediction:::fitLassoLogisticRegression(population,plpData=list(), 
                                                                             param=NULL, outcomeId = 1,
-                                                                            cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction::fitLassoLogisticRegression(population,plpData=plpData, 
-                                                                            param=NULL, outcomeId = NULL,
                                                                             cohortId = 2))
   
   #checkPrediction(model_set=lr_set, plpData=plpData, population, index)
@@ -118,16 +115,16 @@ test_that("prediction", {
   testthat::expect_that(gbm_set, testthat::is_a("modelSettings"))
   testthat::expect_length(gbm_set,3)
   testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(ntrees = -1))
-  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(min_rows = 1))
-  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(max_depth = 0))
-  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(learn_rate = -2))
+  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(minRows = 1))
+  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(maxDepth = 0))
+  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(learnRate = -2))
   testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(seed = 'F'))
   
-  testthat::expect_error(PatientLevelPrediction::fitGradientBoostingMachine())
-  testthat::expect_error(PatientLevelPrediction::fitGradientBoostingMachine(population,plpData=list(), 
+  testthat::expect_error(PatientLevelPrediction:::fitGradientBoostingMachine())
+  testthat::expect_error(PatientLevelPrediction:::fitGradientBoostingMachine(population,plpData=list(), 
                                                                  param=NULL, outcomeId = 1,
                                                                  cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction::fitGradientBoostingMachine(population,plpData=plpData, 
+  testthat::expect_error(PatientLevelPrediction:::fitGradientBoostingMachine(population,plpData=plpData, 
                                                                  param=NULL, outcomeId = NULL,
                                                                  cohortId = 2))
   ##model <- loadPlpModel('gbm_model')  # (NEEDED MODEL FOLDER)
@@ -142,15 +139,15 @@ test_that("prediction", {
   #testthat::expect_length(rf_set,3)
   testthat::expect_error(PatientLevelPrediction::setRandomForest(ntrees=-1))
   testthat::expect_error(PatientLevelPrediction::setRandomForest(mtries = -4))
-  testthat::expect_error(PatientLevelPrediction::setRandomForest(max_depth = 0))
+  testthat::expect_error(PatientLevelPrediction::setRandomForest(maxDepth = 0))
   testthat::expect_error(PatientLevelPrediction::setRandomForest(varImp = 3))
   testthat::expect_error(PatientLevelPrediction::setRandomForest(seed = 'F'))
   
-  testthat::expect_error(PatientLevelPrediction::fitRandomForest())
-  testthat::expect_error(PatientLevelPrediction::fitRandomForest(population,plpData=list(), 
+  testthat::expect_error(PatientLevelPrediction:::fitRandomForest())
+  testthat::expect_error(PatientLevelPrediction:::fitRandomForest(population,plpData=list(), 
                                                                  param=NULL, outcomeId = 1,
                                                                  cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction::fitRandomForest(population,plpData=plpData, 
+  testthat::expect_error(PatientLevelPrediction:::fitRandomForest(population,plpData=plpData, 
                                                                  param=NULL, outcomeId = NULL,
                                                                  cohortId = 2))
   
@@ -165,19 +162,19 @@ test_that("prediction", {
   #dt_set <- PatientLevelPrediction::setDecisionTree()
   #testthat::expect_that(dt_set, is_a("modelSettings"))
   #testthat::expect_length(dt_set,3)
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(max_depth = 0))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(min_samples_split = 1))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(min_samples_leaf = -1))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(min_impurity_split = -1))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(class_weight = 'dfds'))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(class_weight = 4))
+  testthat::expect_error(PatientLevelPrediction::setDecisionTree(maxDepth = 0))
+  testthat::expect_error(PatientLevelPrediction::setDecisionTree(minSamplesSplit = 1))
+  testthat::expect_error(PatientLevelPrediction::setDecisionTree(minSamplesLeaf = -1))
+  testthat::expect_error(PatientLevelPrediction::setDecisionTree(minImpuritySplit = -1))
+  testthat::expect_error(PatientLevelPrediction::setDecisionTree(classWeight = 'dfds'))
+  testthat::expect_error(PatientLevelPrediction::setDecisionTree(classWeight = 4))
   testthat::expect_error(PatientLevelPrediction::setDecisionTree(seed = 'F'))
   
-  testthat::expect_error(PatientLevelPrediction::fitDecisionTree())
-  testthat::expect_error(PatientLevelPrediction::fitDecisionTree(population,plpData=list(), 
+  testthat::expect_error(PatientLevelPrediction:::fitDecisionTree())
+  testthat::expect_error(PatientLevelPrediction:::fitDecisionTree(population,plpData=list(), 
                                                                  param=NULL, outcomeId = 1,
                                                                  cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction::fitDecisionTree(population,plpData=plpData, 
+  testthat::expect_error(PatientLevelPrediction:::fitDecisionTree(population,plpData=plpData, 
                                                                  param=NULL, outcomeId = NULL,
                                                                  cohortId = 2))
   
@@ -188,16 +185,16 @@ test_that("prediction", {
   #dt_set <- PatientLevelPrediction::setAdaBoost()
   #testthat::expect_that(dt_set, is_a("modelSettings"))
   #testthat::expect_length(dt_set,3)
-  testthat::expect_error(PatientLevelPrediction::setAdaBoost(n_estimators = 0))
-  testthat::expect_error(PatientLevelPrediction::setAdaBoost(learning_rate = -1))
-  testthat::expect_error(PatientLevelPrediction::setAdaBoost(learning_rate = 2))
+  testthat::expect_error(PatientLevelPrediction::setAdaBoost(nEstimators = 0))
+  testthat::expect_error(PatientLevelPrediction::setAdaBoost(learningRate = -1))
+  testthat::expect_error(PatientLevelPrediction::setAdaBoost(learningRate = 2))
   testthat::expect_error(PatientLevelPrediction::setAdaBoost(seed = 'F'))
   
-  testthat::expect_error(PatientLevelPrediction::fitAdaBoost())
-  testthat::expect_error(PatientLevelPrediction::fitAdaBoost(population,plpData=list(), 
+  testthat::expect_error(PatientLevelPrediction:::fitAdaBoost())
+  testthat::expect_error(PatientLevelPrediction:::fitAdaBoost(population,plpData=list(), 
                                                                  param=NULL, outcomeId = 1,
                                                                  cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction::fitAdaBoost(population,plpData=plpData, 
+  testthat::expect_error(PatientLevelPrediction:::fitAdaBoost(population,plpData=plpData, 
                                                                  param=NULL, outcomeId = NULL,
                                                                  cohortId = 2))
   
@@ -209,11 +206,11 @@ test_that("prediction", {
   testthat::expect_length(model_set,3)
   testthat::expect_error(PatientLevelPrediction::setKNN(k = 0))
   testthat::expect_error(PatientLevelPrediction::setKNN(indexFolder = 2372))
-  testthat::expect_error(PatientLevelPrediction::fitKNN())
-  testthat::expect_error(PatientLevelPrediction::fitKNN(population,plpData=list(), 
+  testthat::expect_error(PatientLevelPrediction:::fitKNN())
+  testthat::expect_error(PatientLevelPrediction:::fitKNN(population,plpData=list(), 
                                                                             param=NULL, outcomeId = 1,
                                                                             cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction::fitKNN(population,plpData=plpData, 
+  testthat::expect_error(PatientLevelPrediction:::fitKNN(population,plpData=plpData, 
                                                                             param=NULL, outcomeId = NULL,
                                                                             cohortId = 2))
   
@@ -223,11 +220,11 @@ test_that("prediction", {
   #model_set <- setNaiveBayes()
   #testthat::expect_that(model_set, is_a("modelSettings"))
   #testthat::expect_length(model_set,3)
-  testthat::expect_error(PatientLevelPrediction::fitNaiveBayes())
-  testthat::expect_error(PatientLevelPrediction::fitNaiveBayes(population,plpData=list(), 
+  testthat::expect_error(PatientLevelPrediction:::fitNaiveBayes())
+  testthat::expect_error(PatientLevelPrediction:::fitNaiveBayes(population,plpData=list(), 
                                                         param=NULL, outcomeId = 1,
                                                         cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction::fitNaiveBayes(population,plpData=plpData, 
+  testthat::expect_error(PatientLevelPrediction:::fitNaiveBayes(population,plpData=plpData, 
                                                         param=NULL, outcomeId = NULL,
                                                         cohortId = 2))
   
@@ -249,11 +246,11 @@ test_that("prediction", {
   testthat::expect_error(PatientLevelPrediction::setMLP(alpha = -1))
   testthat::expect_error(PatientLevelPrediction::setMLP(seed = 'F'))
   
-  testthat::expect_error(PatientLevelPrediction::fitMLP())
-  testthat::expect_error(PatientLevelPrediction::fitMLP(population,plpData=list(), 
+  testthat::expect_error(PatientLevelPrediction:::fitMLP())
+  testthat::expect_error(PatientLevelPrediction:::fitMLP(population,plpData=list(), 
                                                                             param=NULL, outcomeId = 1,
                                                                             cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction::fitMLP(population,plpData=plpData, 
+  testthat::expect_error(PatientLevelPrediction:::fitMLP(population,plpData=plpData, 
                                                                             param=NULL, outcomeId = NULL,
                                                                             cohortId = 2))
   ##model <- loadPlpModel('gbm_model')  # (NEEDED MODEL FOLDER)
