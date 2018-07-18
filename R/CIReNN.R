@@ -171,7 +171,7 @@ trainCIReNN<-function(plpData, population,
                       epochs= 100, seed=NULL, train=TRUE){
   
   if(!is.null(population$indexes) && train==T){
-    writeLines(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))
+    ParallelLogger::logInfo(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))
     
     index_vect <- unique(population$indexes)
     perform <- c()
@@ -182,7 +182,7 @@ trainCIReNN<-function(plpData, population,
     attr(predictionMat, "metaData") <- list(predictionType = "binary")
     
     for(index in 1:length(index_vect )){
-      writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      ParallelLogger::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       
       ##single-layer gru
       model <- keras::keras_model_sequential()
@@ -261,9 +261,9 @@ trainCIReNN<-function(plpData, population,
     param.val <- paste0('units: ',units,'-- recurrentDropout: ', recurrentDropout,
                         'layerDropout: ',layerDropout,'-- lr: ', lr,
                         '-- decay: ', decay, '-- batchSize: ',batchSize, '-- epochs: ', epochs)
-    writeLines('==========================================')
-    writeLines(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
-    writeLines('==========================================')
+    ParallelLogger::logInfo('==========================================')
+    ParallelLogger::logInfo(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
+    ParallelLogger::logInfo('==========================================')
     
       } else {
         ##single-layer gru

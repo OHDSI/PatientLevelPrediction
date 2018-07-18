@@ -239,7 +239,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   OhdsiRTools::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
   # the call is sinked because of the external calls (Python etc)
   if (sink.number()>0){
-    OhdsiRTools::logWarn(paste0('sink had ',sink.number(),' connections open!'))
+    warning(paste0('sink had ',sink.number(),' connections open!'))
   }
   #sink(logFileName, append = TRUE, split = TRUE)
   
@@ -306,7 +306,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     }
     
   }else{
-    OhdsiRTools::logWarn(paste0('Evaluation not possible as prediciton NULL or all the same values'))
+    warning(paste0('Evaluation not possible as prediciton NULL or all the same values'))
     performance.test <- NULL
     performance.train <- NULL
   }
@@ -399,7 +399,7 @@ summary.plpModel <- function(object, ...) {
     )
   }
   
-  writeLines(paste0("The study was started at: ", object$executionSummary$ExecutionDateTime, 
+  ParallelLogger::logInfo(paste0("The study was started at: ", object$executionSummary$ExecutionDateTime, 
                    " and took at total of ", as.double(object$executionSummary$TotalExecutionElapsedTime, unit='mins'),
                    " minutes.  ", hyper))
   

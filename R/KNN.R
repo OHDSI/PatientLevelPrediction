@@ -75,7 +75,7 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
   
   comp <- Sys.time() - start
   if(!quiet)
-    writeLines(paste0('Model knn trained - took:',  format(comp, digits=3)))
+    ParallelLogger::logInfo(paste0('Model knn trained - took:',  format(comp, digits=3)))
   
   varImp<- ff::as.ram(plpData$covariateRef)
   varImp$covariateValue <- rep(0, nrow(varImp))

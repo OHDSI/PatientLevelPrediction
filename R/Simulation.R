@@ -33,13 +33,13 @@
 #
 # @export
 ##createPlpSimulationProfile <- function(plpData) {
-##  writeLines("Computing covariate prevalence")  # (Note: currently assuming binary covariates)
+##  ParallelLogger::logInfo("Computing covariate prevalence")  # (Note: currently assuming binary covariates)
 ##  sums <- bySumFf(plpData$covariates$covariateValue, plpData$covariates$covariateId)
 ##  covariatePrevalence <- sums$sums/nrow(plpData$cohorts)
 ##  attr(covariatePrevalence, "names") <- sums$bins
 ##  
 ##  
-##  writeLines("Fitting outcome model(s)")
+##  ParallelLogger::logInfo("Fitting outcome model(s)")
 ##  outcomeModels <- vector("list", length(plpData$metaData$outcomeIds))
 ##  for (i in 1:length(plpData$metaData$outcomeIds)) {
 ##    outcomeId <- plpData$metaData$outcomeIds[i]
@@ -57,11 +57,11 @@
 ##    outcomeModels[[i]] <- model$coefficients
 ##  }
 ##  
-##  writeLines("Computing time distribution")
+##  ParallelLogger::logInfo("Computing time distribution")
 ##  timePrevalence <- table(ff::as.ram(plpData$cohorts$time))/nrow(plpData$cohorts)
 ##  
 ##  if (!is.null(plpData$exclude)) {
-##    writeLines("Computing prevalence of exlusion")
+##    ParallelLogger::logInfo("Computing prevalence of exlusion")
 ##    exclusionPrevalence <- table(ff::as.ram(plpData$exclude$outcomeId))/nrow(plpData$cohorts)
 ##  } else {
 ##    exclusionPrevalence <- NULL
@@ -97,7 +97,7 @@
 simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise, storing in
   # ffdf
-  writeLines("Generating covariates")
+  ParallelLogger::logInfo("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariatePrevalence
   
   personsPerCov <- rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
@@ -116,7 +116,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                                        covariateId = covariateId,
                                        covariateValue = covariateValue))
   
-  writeLines("Generating cohorts")
+  ParallelLogger::logInfo("Generating cohorts")
   cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), cohortId = 1)
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
   r <- runif(n)
@@ -128,7 +128,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   
   cohorts <- ff::as.ffdf(cohorts)
   
-  writeLines("Generating outcomes")
+  ParallelLogger::logInfo("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
     prediction <- predictFfdf(plpDataSimulationProfile$outcomeModels[[i]],
@@ -146,7 +146,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   }
   
   if (!is.null(plpDataSimulationProfile$exclusionPrevalence)) {
-    writeLines("Generating exclusion")
+    ParallelLogger::logInfo("Generating exclusion")
     exclude <- data.frame()
     for (i in 1:nrow(plpDataSimulationProfile$exclusionPrevalence)) {
       sampleSize <- plpDataSimulationProfile$exclusionPrevalence[i] * nrow(cohorts)

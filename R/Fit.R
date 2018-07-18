@@ -123,7 +123,7 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
   deletedInfrequentCovariateIds <- preprocessSettings$deletedInfrequentCovariateIds
              
   # remove infreq
-  writeLines("Removing infrequent covariates")
+  ParallelLogger::logInfo("Removing infrequent covariates")
   start <- Sys.time()
   if (length(deletedInfrequentCovariateIds) != 0) {
     idx <- !ffbase::`%in%`(covariates$covariateId, deletedInfrequentCovariateIds)
@@ -134,12 +134,12 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
     }
   }
   delta <- Sys.time() - start
-  writeLines(paste("Removing infrequent covariates took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logInfo(paste("Removing infrequent covariates took", signif(delta, 3), attr(delta, "units")))
   
   
   # do normalisation... preprocessSettings$normFactors 
   if(!is.null(maxs)){
-    writeLines("Normalizing covariates")
+    ParallelLogger::logInfo("Normalizing covariates")
     start <- Sys.time()
     ffdfMaxs <- ff::as.ffdf(maxs)
     names(ffdfMaxs)[names(ffdfMaxs) == "bins"] <- "covariateId"
@@ -149,12 +149,12 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
     }
     covariates$maxs <- NULL
     delta <- Sys.time() - start
-    writeLines(paste("Normalizing covariates took", signif(delta, 3), attr(delta, "units")))
+    ParallelLogger::logInfo(paste("Normalizing covariates took", signif(delta, 3), attr(delta, "units")))
   }
   
   
   # remove redundant... preprocessSettings$deletedRedundantCovariateIds
-  writeLines("Removing redundant covariates")
+  ParallelLogger::logInfo("Removing redundant covariates")
   start <- Sys.time()
   if (length(deleteCovariateIds) != 0) {
     idx <- !ffbase::`%in%`(covariates$covariateId, deleteCovariateIds)
@@ -165,7 +165,7 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
     }
   }
   delta <- Sys.time() - start
-  writeLines(paste("Removing redundant covariates took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logInfo(paste("Removing redundant covariates took", signif(delta, 3), attr(delta, "units")))
   
   plpData$covariates <- covariates
   

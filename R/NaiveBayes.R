@@ -110,7 +110,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   
   pred$value <- 1-pred$value
   auc <- PatientLevelPrediction::computeAuc(pred)
-  writeLines(paste0('Model obtained CV AUC of ', auc))
+  ParallelLogger::logInfo(paste0('Model obtained CV AUC of ', auc))
   
   # get the univeriate selected features (nb requires dense so need feat sel)
   #varImp <- read.csv(file.path(outLoc,1, 'varImp.txt'), header=F)[,1]

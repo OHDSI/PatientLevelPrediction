@@ -92,9 +92,9 @@ fitGLMModel <- function(population,
                                                  normalize = NULL,
                                                  quiet = TRUE)
     fit <- tryCatch({
-      OhdsiRTools::logInfo('Running Cyclops')
+      ParallelLogger::logInfo('Running Cyclops')
       Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)}, 
-      finally = OhdsiRTools::logInfo('Done.'))
+      finally = ParallelLogger::logInfo('Done.'))
     if (is.character(fit)) {
       coefficients <- c(0)
        status <- fit
@@ -123,7 +123,7 @@ fitGLMModel <- function(population,
   }
   class(outcomeModel) <- "plpModel"
   delta <- Sys.time() - start
-  OhdsiRTools::logInfo(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logInfo(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))
   return(outcomeModel)
 }
 
@@ -141,8 +141,7 @@ modelTypeToCyclopsModelType <- function(modelType, stratified=F) {
   } else if (modelType == "cox") {
     return("cox")
   } else {
-    OhdsiRTools::logError(paste("Unknown model type:", modelType))
-    stop()
+    stop(paste("Unknown model type:", modelType))
   }
 
 }

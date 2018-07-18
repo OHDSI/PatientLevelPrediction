@@ -66,7 +66,7 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
     prediction <- plpModel$predict(plpData=plpData,population=population[ind,])
     
     if(nrow(prediction)!=nrow(population[ind,]))
-      OhdsiRTools::logWarn(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
+      warning(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
   } else{
     OhdsiRTools::logError('Non plpModel input')
     stop()

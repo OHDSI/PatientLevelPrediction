@@ -86,8 +86,10 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   if(colnames(population)[ncol(population)]!='indexes'){
-    OhdsiRTools::logWarn(paste0('population columns: ', paste0(colnames(population), collapse='-')))
-    warning('indexes column not present as last column - setting all index to 1')
+    warning(
+      paste(
+        paste0('population columns: ', paste0(colnames(population), collapse='-')),
+        '\nIndexes column not present as last column - setting all index to 1')
     population$indexes <- rep(1, nrow(population))
   }
   

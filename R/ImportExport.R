@@ -49,27 +49,27 @@ exportPlpDataToCsv <- function(plpData, outputFolder) {
   if (!file.exists(outputFolder)) {
     dir.create(outputFolder)
   }
-  writeLines("Exporting cohorts.csv")
+  ParallelLogger::logInfo("Exporting cohorts.csv")
   ff::write.csv.ffdf(plpData$cohorts, file = file.path(outputFolder, "cohorts.csv"))
-  writeLines("Exporting outcomes.csv")
+  ParallelLogger::logInfo("Exporting outcomes.csv")
   ff::write.csv.ffdf(plpData$outcomes, file = file.path(outputFolder, "outcomes.csv"))
   if (!is.null(plpData$exclude)) {
-    writeLines("Exporting exclude.csv")
+    ParallelLogger::logInfo("Exporting exclude.csv")
     ff::write.csv.ffdf(plpData$exclude, file = file.path(outputFolder, "exclude.csv"))
   }
-  writeLines("Exporting covariates.csv")
+  ParallelLogger::logInfo("Exporting covariates.csv")
   ff::write.csv.ffdf(plpData$covariates, file = file.path(outputFolder, "covariates.csv"))
-  writeLines("Exporting covariateRef.csv")
+  ParallelLogger::logInfo("Exporting covariateRef.csv")
   ff::write.csv.ffdf(plpData$covariateRef, file = file.path(outputFolder, "covariateRef.csv"))
-  writeLines("Exporting metaData.csv")
+  ParallelLogger::logInfo("Exporting metaData.csv")
   metaData <- data.frame(cohortIds = paste(plpData$metaData$cohortIds, collapse = ","),
                          outcomeIds = paste(plpData$metaData$outcomeIds, collapse = ","),
                          useCohortEndDate = plpData$metaData$useCohortEndDate,
                          windowPersistence = plpData$metaData$windowPersistence)
   write.csv(metaData, file = file.path(outputFolder, "metaData.csv"), row.names = FALSE)
-  writeLines("Done exporting")
+  ParallelLogger::logInfo("Done exporting")
   delta <- Sys.time() - start
-  writeLines(paste("Exporting data to CSV took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logInfo(paste("Exporting data to CSV took", signif(delta, 3), attr(delta, "units")))
 }
 
 
@@ -433,7 +433,7 @@ getPredictionCovariateData <- function(connection,
   # =================================
   #==================================
   #  CALCULATE THE RISK
-  writeLines("Calculating the risk scores...")
+  ParallelLogger::logInfo("Calculating the risk scores...")
 
   if(is.null(databaseOutput)){
   # now sum the temp_covariates table t get val and then 1/(1+exp(-val))
@@ -723,7 +723,7 @@ getExistingmodelsCovariateData <- function(connection,
   # =================================
   #==================================
   #  CALCULATE THE RISK
-  writeLines("Calculating the risk scores...")
+  ParallelLogger::logInfo("Calculating the risk scores...")
 
   if(type=='logistic'){
     # now sum the temp_covariates table t get val and then 1/(1+exp(-val))

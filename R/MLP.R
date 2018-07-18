@@ -199,7 +199,7 @@ trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
     
     pred$value <- 1-pred$value
     auc <- PatientLevelPrediction::computeAuc(pred)
-    writeLines(paste0('Model obtained CV AUC of ', auc))
+    ParallelLogger::infoLog(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }
   

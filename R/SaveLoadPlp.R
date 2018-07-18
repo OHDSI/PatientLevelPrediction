@@ -142,8 +142,8 @@ getPlpData <- function(connectionDetails,
   connection <- DatabaseConnector::connect(connectionDetails)
   dbms <- connectionDetails$dbms
   
-  writeLines("\nConstructing the at risk cohort")
-  if(!is.null(sampleSize))  writeLines(paste("\n Sampling ",sampleSize, " people"))
+  ParallelLogger::logInfo("\nConstructing the at risk cohort")
+  if(!is.null(sampleSize))  ParallelLogger::logInfo(paste("\n Sampling ",sampleSize, " people"))
   renderedSql <- SqlRender::loadRenderTranslateSql("CreateCohorts.sql",
                                                    packageName = "PatientLevelPrediction",
                                                    dbms = dbms,
@@ -162,7 +162,7 @@ getPlpData <- function(connectionDetails,
   )
   DatabaseConnector::executeSql(connection, renderedSql)
   
-  writeLines("Fetching cohorts from server")
+  ParallelLogger::logInfo("Fetching cohorts from server")
   start <- Sys.time()
   cohortSql <- SqlRender::loadRenderTranslateSql("GetCohorts.sql",
                                                  packageName = "PatientLevelPrediction",
@@ -179,7 +179,7 @@ getPlpData <- function(connectionDetails,
     stop('Target population is empty')
 
   delta <- Sys.time() - start
-  writeLines(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logInfo(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
   
   #covariateSettings$useCovariateCohortIdIs1 <- TRUE
   covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
@@ -191,7 +191,7 @@ getPlpData <- function(connectionDetails,
                                                          rowIdField = "row_id",
                                                          covariateSettings = covariateSettings)
   if(outcomeIds!=-999){
-  writeLines("Fetching outcomes from server")
+  ParallelLogger::logInfo("Fetching outcomes from server")
   start <- Sys.time()
   outcomeSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
                                                   packageName = "PatientLevelPrediction",
@@ -213,7 +213,7 @@ getPlpData <- function(connectionDetails,
   attr(cohorts, "metaData") <- metaData.cohort
   
   delta <- Sys.time() - start
-  writeLines(paste("Loading outcomes took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logInfo(paste("Loading outcomes took", signif(delta, 3), attr(delta, "units")))
   } else {
     outcomes <- NULL
   }
@@ -321,7 +321,7 @@ getCovariateData <- function(connection,
     stop('Need to enter an existing connection')
   } 
   
-  writeLines("Extracting covariate data")
+  ParallelLogger::logInfo("Extracting covariate data")
   covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
                                                          oracleTempSchema = oracleTempSchema,
                                                          cdmDatabaseSchema = cdmDatabaseSchema,
@@ -591,7 +591,7 @@ insertDbPopulation <- function(population,
   population$cohortEndDate <- NA
   colnames(population) <- SqlRender::camelCaseToSnakeCase(colnames(population))
   connection <- DatabaseConnector::connect(connectionDetails)
-  writeLines(paste("Writing", nrow(population), "rows to", paste(cohortDatabaseSchema, cohortTable, sep = ".")))
+  ParallelLogger::logInfo(paste("Writing", nrow(population), "rows to", paste(cohortDatabaseSchema, cohortTable, sep = ".")))
   start <- Sys.time()
   if (!createTable) {
     if (cdmVersion == "4") {
@@ -614,7 +614,7 @@ insertDbPopulation <- function(population,
                                  oracleTempSchema = NULL)
   DatabaseConnector::disconnect(connection)
   delta <- Sys.time() - start
-  writeLines(paste("Inserting rows took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logInfo(paste("Inserting rows took", signif(delta, 3), attr(delta, "units")))
   invisible(TRUE)
 }
 
@@ -929,7 +929,7 @@ writeOutput <- function(prediction,
                             parameters = paste(names(plpModel$modelSettings$modelParameters), unlist(plpModel$modelSettings$modelParameters), sep=':', collapse=','),
                             modelTime = comp)
   }, error= function(err){print(paste("MY_ERROR:  ",err))
-    writeLines(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, plpModel$modelSettings$model, sep='-'))
+    ParallelLogger::logInfo(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, plpModel$modelSettings$model, sep='-'))
     
   })
   performanceInfoTest <- data.frame(modelId =analysisId,

@@ -168,12 +168,12 @@ createCohort <- function(cohortDetails,
   
   sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
   
-  writeLines(paste0('Inserting cohort ', cohortName, ' with cohort id: ', cohortId))
+  ParallelLogger::logInfo(paste0('Inserting cohort ', cohortName, ' with cohort id: ', cohortId))
   DatabaseConnector::executeSql(connection, sql)
   }
   
   # get the final sumamry of the cohorts
-  writeLines('Extracting cohort counts for each inserted cohort')
+  ParallelLogger::logInfo('Extracting cohort counts for each inserted cohort')
   sql <- "select cohort_definition_id as cohort_id, count(*) size from @cohortDatabaseSchema.@cohortTable where cohort_definition_id in (@cohortIds) group by cohort_definition_id"
   sql <- SqlRender::renderSql(sql, cohortDatabaseSchema = cohortDatabaseSchema, cohortTable=cohortTable,
                    cohortIds = paste(cohortDetails$cohortId, collapse=','))$sql
@@ -485,7 +485,7 @@ packageResults <- function(mainFolder,
   # delete temp folder
   unlink(exportFolder, recursive = T)
   
-  writeLines(paste("\nStudy results are compressed and ready for sharing at:", zipName))
+  ParallelLogger::logInfo(paste("\nStudy results are compressed and ready for sharing at:", zipName))
   return(zipName)
 }
 
@@ -510,16 +510,17 @@ submitResults <- function(exportFolder, key, secret) {
   if (!file.exists(zipName)) {
     stop(paste("Cannot find file", zipName))
   }
-  writeLines(paste0("Uploading file '", zipName, "' to study coordinating center"))
+  ParallelLogger::logInfo(paste0("Uploading file '", zipName, "' to study coordinating center"))
   result <- OhdsiSharing::putS3File(file = zipName,
                                     bucket = "ohdsi-study-plp",
                                     key = key,
                                     secret = secret,
                                     region = "us-east-1")
   if (result) {
-    writeLines("Upload complete")
+    ParallelLogger::logInfo("Upload complete")
   } else {
-    writeLines("Upload failed. Please contact the study coordinator")
+    # Used log fatal to preserve output
+    ParallelLogger::logFatal("Upload failed. Please contact the study coordinator")
   }
   invisible(result)
 }

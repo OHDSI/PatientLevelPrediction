@@ -109,7 +109,7 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   
   PythonInR::pyExec('quiet = True')
   if(quiet==F){
-    writeLines(paste0('Training decision tree model...' ))
+    ParallelLogger::logInfo(paste0('Training decision tree model...' ))
     PythonInR::pyExec('quiet = False')
   }
   start <- Sys.time()
@@ -228,7 +228,7 @@ trainDecisionTree <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
     pred$value <- 1-pred$value
     auc <- PatientLevelPrediction::computeAuc(pred)
     if(!quiet)
-      writeLines(paste0('Model obtained CV AUC of ', auc))
+      ParallelLogger::logInfo(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }
   

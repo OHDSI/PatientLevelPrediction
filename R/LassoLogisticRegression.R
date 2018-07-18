@@ -82,7 +82,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   varImp <- data.frame(covariateId=names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'], 
                        value=modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
   if(sum(abs(varImp$value)>0)==0){
-    OhdsiRTools::logWarn('No non-zero coefficients')
+    warning('No non-zero coefficients')
     varImp <- NULL
   } else {
     #varImp <- varImp[abs(varImp$value)>0,]

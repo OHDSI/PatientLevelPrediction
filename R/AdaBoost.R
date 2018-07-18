@@ -181,7 +181,7 @@ trainAdaBoost <- function(nEstimators =50, learningRate=1, seed=NULL, train=TRUE
     
     pred$value <- 1-pred$value
     auc <- PatientLevelPrediction::computeAuc(pred)
-    writeLines(paste0('Model obtained CV AUC of ', auc))
+    ParallelLogger::logInfo(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }
   

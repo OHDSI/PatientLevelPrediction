@@ -257,7 +257,7 @@ createStudyPopulation <- function(plpData,
     # check outcome still there
     if(nrow(outcomes)==0){
       population <- NULL
-      OhdsiRTools::logWarn('No outcomes left...')
+      warning('No outcomes left...')
       return(population)
     }
     

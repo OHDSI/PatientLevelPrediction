@@ -144,7 +144,7 @@ trainCovNN2<-function(plpData, population,
                      seed=NULL, train=TRUE){
   
   if(!is.null(population$indexes) && train==T){
-    writeLines(paste('Training covolutional neural network (input and time) with ',length(unique(population$indexes)),' fold CV'))
+    ParallelLogger::logInfo(paste('Training covolutional neural network (input and time) with ',length(unique(population$indexes)),' fold CV'))
     
     index_vect <- unique(population$indexes)
     perform <- c()
@@ -155,7 +155,7 @@ trainCovNN2<-function(plpData, population,
     attr(predictionMat, "metaData") <- list(predictionType = "binary")
     
     for(index in 1:length(index_vect )){
-      writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      ParallelLogger::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       
       model <- keras::keras_model_sequential()
       
@@ -292,9 +292,9 @@ trainCovNN2<-function(plpData, population,
                         '-- kernelSize: ',paste0(kernelSize,collapse ='-'),
                         '-- filters: ', filters, '--loss: ', loss, '-- lr: ', lr, '-- decay: ', decay,
                         '-- dropout: ', dropout, '-- batchSize: ',batchSize, '-- epochs: ', epochs)
-    writeLines('==========================================')
-    writeLines(paste0('CovNN with parameters:', param.val,' obtained an AUC of ',auc))
-    writeLines('==========================================')
+    ParallelLogger::logInfo('==========================================')
+    ParallelLogger::logInfo(paste0('CovNN with parameters:', param.val,' obtained an AUC of ',auc))
+    ParallelLogger::logInfo('==========================================')
   } else {
     
     model <- keras::keras_model_sequential()

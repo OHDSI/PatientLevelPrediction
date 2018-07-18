@@ -808,7 +808,7 @@ plotCovSummary <- function(reactVars,input){
   if(length(input$characterizationTab_rows_selected)>0){
     inc <- input$characterizationTab_rows_selected
     incAnnotations <- T
-    writeLines(paste0(inc, collapse='-'))
+    ParallelLogger::logInfo(paste0(inc, collapse='-'))
   }
   
   #get the color
