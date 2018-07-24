@@ -42,12 +42,12 @@ to form a better but not optimum one. How to combine different models is a impor
 
 ![The ensemble training](ensemble.png)
 
-Ensemble models train multiple models, Figure 1 illustrates the ensmenle training. Ensemble models yield better results for multiple models with signficant diversity, and also ensemble strategies can paly a curical role in final prediction performance. Currently, many ensemble strategies have been proposed.
-In PatientLevelPrediction package, four ensmeble strategies have been implemented, they are average ensembble, ensmeble with product rule, weighted ensemble and stakced ensemble.
-1. average ensembble: Calculate the average probability from differnt models
-2. product ensemble:  Claculate the product of probabilites from different models.
-3. weighted ensmeble: Calculate the weighted average probability from different models using train AUC as weights.
-4. stacked ensemble:  Train a logistics regression on outputs from different models, and then the trained logitstics regression is used to combine different models. 
+Ensemble models train multiple models, Figure 1 illustrates the ensemble training. Ensemble models yield better results for multiple models with significant diversity, and also ensemble strategies can play a curical role in final prediction performance. Currently, many ensemble strategies have been proposed.
+In PatientLevelPrediction package, four ensemble strategies have been implemented, they are average ensemble, ensmeble with product rule, weighted ensemble and stakced ensemble.
+1. average ensemble: Calculate the average probability from different models
+2. product ensemble:  Calculate the product of probabilites from different models.
+3. weighted ensemble: Calculate the weighted average probability from different models using train AUC as weights.
+4. stacked ensemble:  Train a logistics regression on outputs from different models, and then the trained logistics regression is used to combine different models. 
 
 # Usage
 
