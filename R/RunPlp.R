@@ -383,24 +383,24 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   # save the results
   if(savePlpResult){
     OhdsiRTools::logInfo(paste0('Saving PlpResult'))
-    tryCatch(savePlpResult(result, file.path(analysisPath,'plpResult')),
+    tryCatch(savePlpResult(results, file.path(analysisPath,'plpResult')),
              finally= OhdsiRTools::logTrace('Done.'))
     OhdsiRTools::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
     
     #update the python saved location
-    if(attr(result$model, 'type')=='python'){
-      result$model$model <- file.path(analysisPath,'plpResult','model','python_model')
-      result$model$predict <- createTransform(result$model)
+    if(attr(results$model, 'type')=='python'){
+      results$model$model <- file.path(analysisPath,'plpResult','model','python_model')
+      results$model$predict <- createTransform(results$model)
     }
     
     # update knn and keras?
-    if(attr(result$model, 'type')=='knn'){
-      result$model$model <- file.path(analysisPath,'plpResult','model','knn_model')
-      result$model$predict <- createTransform(result$model)
+    if(attr(results$model, 'type')=='knn'){
+      results$model$model <- file.path(analysisPath,'plpResult','model','knn_model')
+      results$model$predict <- createTransform(results$model)
     }
-    if(attr(result$model, 'type')=='deep'){
-      result$model$model <- file.path(analysisPath,'plpResult','model','keras_model')
-      result$model$predict <- createTransform(result$model)
+    if(attr(results$model, 'type')=='deep'){
+      result$models$model <- file.path(analysisPath,'plpResult','model','keras_model')
+      result$models$predict <- createTransform(results$model)
     }
   }
   
