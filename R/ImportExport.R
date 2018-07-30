@@ -143,21 +143,21 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
 
     if(!is.null(plpResult$performanceEvaluation$demographicSummary)){
       removeInd <- plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk< n |
-        plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome < n |
-        plpResult$performanceEvaluation$demographicSummary$PersonCountWithNoOutcome < n
+        plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome < n 
       plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk[removeInd] <- -1
       plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome[removeInd] <- -1
-      plpResult$performanceEvaluation$demographicSummary$PersonCountWithNoOutcome[removeInd] <- -1
     }
     
     if(!is.null(plpResult$covariateSummary)){
-      plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','CovariateCountWithOutcome','CovariateCountWithNoOutcome')]
+      plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','CovariateCountWithOutcome','CovariateCountWithNoOutcome','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome')]
       removeInd <- plpResult$covariateSummary$CovariateCount < n |
         plpResult$covariateSummary$CovariateCountWithOutcome < n | 
         plpResult$covariateSummary$CovariateCountWithNoOutcome < n 
       plpResult$covariateSummary$CovariateCount[removeInd] <- -1
       plpResult$covariateSummary$CovariateCountWithOutcome[removeInd] <- -1
       plpResult$covariateSummary$CovariateCountWithNoOutcome[removeInd] <- -1
+      plpResult$covariateSummary$CovariateMeanWithOutcome[removeInd] <- -1
+      plpResult$covariateSummary$CovariateMeanWithNoOutcome[removeInd] <- -1
     }
     
     }
@@ -557,12 +557,18 @@ createExistingModelSql <- function(modelTable, modelNames, interceptTable,
 
     # =================================
     #==================================
+    
+    if(is.null(interceptTable)){
+      interceptTable <- data.frame(modelId=unique(modelTable$modelId), 
+                                   interceptValue=rep(0, length(unique(modelTable$modelId))))
+    }
     #  INSERT THE INTERCEPTS FOR THE MODELS: MODEL_ID, INTERCEPT_VALUE
     if(class(interceptTable)=='data.frame'){
       intercepts <- interceptTable
     } else{
       intercepts <- do.call(rbind, interceptTable)
     }
+
 
     colnames(intercepts) <- SqlRender::camelCaseToSnakeCase(colnames(intercepts))
     DatabaseConnector::insertTable(connection, tableName='intercepts', data = intercepts, tempTable = T)

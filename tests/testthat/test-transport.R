@@ -15,6 +15,7 @@
 # limitations under the License.
 
 library("testthat")
+context("Transport")
 
 # Test unit for the creation of the study externalValidatePlp
 model <- list(model='none - validation',

@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+library("testthat")
 context("Population")
 
 # Test unit for the creation of the study population. The firstExposureOnly, 
@@ -38,8 +39,7 @@ test_that("population creation parameters", {
                         riskWindowStart = 0,
                         addExposureDaysToStart = FALSE,
                         riskWindowEnd = 365,
-                        addExposureDaysToEnd = FALSE,
-                        verbosity = FATAL)
+                        addExposureDaysToEnd = FALSE)
 
   #plpData = plpData
   expect_is(studyPopulation, "data.frame")
@@ -61,8 +61,7 @@ test_that("population creation parameters", {
                                            riskWindowStart = 0,
                                            addExposureDaysToStart = FALSE,
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE,
-                                           verbosity = FATAL)
+                                           addExposureDaysToEnd = FALSE)
   
   nrOutcomes2 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes2,0)
@@ -82,8 +81,7 @@ test_that("population creation parameters", {
                                            riskWindowStart = 0,
                                            addExposureDaysToStart = FALSE,
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE,
-                                           verbosity = FATAL)
+                                           addExposureDaysToEnd = FALSE)
   nrOutcomes3 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes3,0)
   expect_false(nrOutcomes3 == nrOutcomes1) 
@@ -102,8 +100,7 @@ test_that("population creation parameters", {
                                            riskWindowStart = 0,
                                            addExposureDaysToStart = FALSE,
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE,
-                                           verbosity = FATAL)
+                                           addExposureDaysToEnd = FALSE)
   nrOutcomes4 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes4,0)
   expect_false(nrOutcomes4 == nrOutcomes1) 
@@ -124,8 +121,7 @@ test_that("population creation parameters", {
                                 riskWindowStart = 0,
                                 addExposureDaysToStart = FALSE,
                                 riskWindowEnd = 365,
-                                addExposureDaysToEnd = FALSE,
-                                verbosity = FATAL)
+                                addExposureDaysToEnd = FALSE)
   )
   
   #priorOutcomeLookback >=0
@@ -144,8 +140,7 @@ test_that("population creation parameters", {
                           riskWindowStart = 0,
                           addExposureDaysToStart = FALSE,
                           riskWindowEnd = 365,
-                          addExposureDaysToEnd = F,
-                          verbosity = FATAL)
+                          addExposureDaysToEnd = F)
   )
   
   #minTimeAtRisk >=0
@@ -164,8 +159,7 @@ test_that("population creation parameters", {
                           riskWindowStart = 0,
                           addExposureDaysToStart = FALSE,
                           riskWindowEnd = 365,
-                          addExposureDaysToEnd = F,
-                          verbosity = FATAL)
+                          addExposureDaysToEnd = F)
   )
   
   
@@ -207,8 +201,7 @@ test_that("population creation parameters", {
                         riskWindowStart = 0,
                         addExposureDaysToStart = F,
                         riskWindowEnd = 365,
-                        addExposureDaysToEnd = F,
-                        verbosity = futile.logger::FATAL)
+                        addExposureDaysToEnd = F)
   
   # person 1 and 4 should be retruned
   expect_equal(pop$rowId[pop$outcomeCount>0], c(1,4))
@@ -227,8 +220,7 @@ test_that("population creation parameters", {
                                riskWindowStart = 0,
                                addExposureDaysToStart = F,
                                riskWindowEnd = 365,
-                               addExposureDaysToEnd = F,
-                               verbosity = futile.logger::FATAL)
+                               addExposureDaysToEnd = F)
   
   # person 4 only as person 1 has it before
   expect_equal(pop2$rowId[pop2$outcomeCount>0], c(4))
@@ -247,8 +239,7 @@ test_that("population creation parameters", {
                                riskWindowStart = 0,
                                addExposureDaysToStart = F,
                                riskWindowEnd = 365,
-                               addExposureDaysToEnd = F,
-                               verbosity = futile.logger::FATAL)
+                               addExposureDaysToEnd = F)
   
   # 4 only should be retruned
   expect_equal(pop3$rowId[pop3$outcomeCount>0], c(4))

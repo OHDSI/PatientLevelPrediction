@@ -14,11 +14,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+library("testthat")
 context("Data splitting")
 
 test_that("Data splitting by person", {
 
-  flog.threshold(FATAL)
   # error message checks
   population1 <- data.frame(rowId=1:20, outcomeCount=c(1,1,1,1,rep(0,16))) 
   expect_error(personSplitter(population1, test=0.3, nfold=3))

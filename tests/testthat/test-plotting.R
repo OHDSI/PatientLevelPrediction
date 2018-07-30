@@ -38,7 +38,9 @@ population <- createStudyPopulation(plpData,
 )
 lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
 lr_results <- tryCatch(runPlp(population = population, plpData = plpData,
-                              modelSettings = lr_model,
+                              modelSettings = lr_model, savePlpData = F,
+                              savePlpResult = F, savePlpPlots =  F, 
+                              saveEvaluation = F,
                               testSplit='person', # this splits by person
                               testFraction=0.25,
                               nfold=2))

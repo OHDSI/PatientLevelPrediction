@@ -16,8 +16,6 @@
 context("Formatting")
 
 # switch of all messages
-futile.logger::flog.threshold(FATAL) ## <- this caused an error when using testthat::test_file()
-
 test_that("toSparseM", {
   
   # testing manually constructed data...
@@ -51,7 +49,7 @@ test_that("toSparseM", {
   class(plpData) <- 'plpData'
   population <- createStudyPopulation(plpData=plpData,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
-                                      riskWindowEnd = 365, verbosity = FATAL)
+                                      riskWindowEnd = 365)
   # test gbm coo to sparse matrix 
   sparseMat.test <- toSparseM(plpData,population, map=NULL)
   matrix.real <- matrix(rep(0, 6*10), ncol=10)
@@ -64,7 +62,7 @@ test_that("toSparseM", {
   population2 <- createStudyPopulation(plpData=plpData,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
                                       riskWindowEnd = 365,
-                                      washoutPeriod = 100,verbosity = FATAL
+                                      washoutPeriod = 100
                                       )
   sparseMat.test2 <- toSparseM(plpData,population2, map=NULL)
   matrix.real2 <- matrix(rep(0, 6*10), ncol=10)
@@ -89,7 +87,7 @@ test_that("toSparseM", {
   class(plpData2) <- 'plpData'
   population3 <- createStudyPopulation(plpData=plpData2,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
-                                      riskWindowEnd = 365,verbosity = FATAL
+                                      riskWindowEnd = 365
                                       )
   sparseMat.test3 <- toSparseM(plpData2,population3, map=sparseMat.test$map)
   matrix.real3 <- matrix(rep(0, 6*10), ncol=10)
@@ -214,130 +212,6 @@ test_that("toSparseM", {
   testthat::expect_equal(ncol(compTest), 
                          length(unique(ff::as.ram(plpData$covariateRef$covariateId))))
   testthat::expect_equal(ncol(compTest), nrow(test$map))
-  
-})
-
-
-test_that("toSparsePython", {
-  if(FALSE) {
-    #=====================================
-    # checking mapping
-    #=====================================
-    # test mapping with no existing map
-    # make small dataset to test exact 
-    plpDataExact <- list(cohorts=data.frame(rowId=c(100,2,40), cohortId=rep(1,3), 
-                                            time=rep(700,3), daysFromObsStart=rep(700,3),
-                                            daysToCohortEnd=rep(700,3), daysToObsEnd=rep(700,3)),
-                         outcomes =data.frame(rowId=c(100), outcomeId=c(2), outcomeCount=c(1),
-                                              daysToEvent=c(50)),
-                         covariates=ff::as.ffdf(data.frame(rowId=c(40,40,2),
-                                                           covariateId=c(34,21,21),
-                                                           covariateValue=rep(1,3))),
-                         covariateRef=ff::as.ffdf(data.frame(covariateId=c(21,34),
-                                                             covariateName=c('test1','test2'),
-                                                             analysisId=rep(1,2),
-                                                             conceptId=rep(1,2)
-                         ))
-    )
-    attr(plpDataExact$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
-                                                                         targetCount=20,uniquePeople=20,
-                                                                         outcomes=3))
-    
-    class(plpDataExact) <- "plpData"
-    populationExact <- createStudyPopulation(plpDataExact,
-                                             outcomeId = 2,
-                                             firstExposureOnly = FALSE,
-                                             washoutPeriod = 0,
-                                             removeSubjectsWithPriorOutcome = FALSE,
-                                             priorOutcomeLookback = 99999,
-                                             requireTimeAtRisk = FALSE,
-                                             minTimeAtRisk=0,
-                                             riskWindowStart = 0,
-                                             addExposureDaysToStart = FALSE,
-                                             riskWindowEnd = 365,
-                                             addExposureDaysToEnd = FALSE
-                                             #,verbosity=INFO
-    )
-    test <- toSparsePython(plpDataExact,populationExact, map=NULL)
-    compTest <- PythonInR::pyGet('plpData.toarray()')
-    compReal <- matrix(rep(0, 100*2), ncol=2)
-    compReal[40,1:2] <- 1
-    compReal[2,1] <- 1
-    
-    testthat::expect_equal(compTest, compReal)
-    
-    # test on new data with old map:
-    plpDataExact2 <- list(cohorts=data.frame(rowId=c(1,26,47), cohortId=rep(1,3), 
-                                             time=rep(700,3), daysFromObsStart=rep(700,3),
-                                             daysToCohortEnd=rep(700,3), daysToObsEnd=rep(700,3)),
-                          outcomes =data.frame(rowId=c(1), outcomeId=c(2), outcomeCount=c(1),
-                                               daysToEvent=c(50)),
-                          covariates=ff::as.ffdf(data.frame(rowId=c(47,26,26),
-                                                            covariateId=c(21,21,36),
-                                                            covariateValue=rep(1,3))),
-                          covariateRef=ff::as.ffdf(data.frame(covariateId=c(21,36),
-                                                              covariateName=c('test1','test3'),
-                                                              analysisId=rep(1,2),
-                                                              conceptId=rep(1,2)
-                          ))
-    )
-    attr(plpDataExact2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
-                                                                         targetCount=20,uniquePeople=20,
-                                                                         outcomes=3))
-    class(plpDataExact2) <- "plpData"
-    populationExact2 <- createStudyPopulation(plpDataExact2,
-                                              outcomeId = 2,
-                                              firstExposureOnly = FALSE,
-                                              washoutPeriod = 0,
-                                              removeSubjectsWithPriorOutcome = FALSE,
-                                              priorOutcomeLookback = 99999,
-                                              requireTimeAtRisk = FALSE,
-                                              minTimeAtRisk=0,
-                                              riskWindowStart = 0,
-                                              addExposureDaysToStart = FALSE,
-                                              riskWindowEnd = 365,
-                                              addExposureDaysToEnd = FALSE
-                                              #,verbosity=INFO
-    )
-    
-    test2 <- toSparsePython(plpDataExact2,populationExact2, map=test$map)
-    compTest2 <- PythonInR::pyGet('plpData.toarray()')
-    compReal2 <- matrix(rep(0, 47*2), ncol=2)
-    compReal2[c(26,47),1] <- 1
-    testthat::expect_equal(compTest2, compReal2)
-    
-    #==================================
-    # check sizes using simulated data
-    #==================================
-    # generate simulated data:
-    set.seed(1234)
-    data(plpDataSimulationProfile)
-    sampleSize <- 200
-    plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-    
-    # create popualtion for outcome 2
-    population <- createStudyPopulation(plpData,
-                                        outcomeId = 2,
-                                        firstExposureOnly = FALSE,
-                                        washoutPeriod = 0,
-                                        removeSubjectsWithPriorOutcome = FALSE,
-                                        priorOutcomeLookback = 99999,
-                                        requireTimeAtRisk = FALSE,
-                                        minTimeAtRisk=0,
-                                        riskWindowStart = 0,
-                                        addExposureDaysToStart = FALSE,
-                                        riskWindowEnd = 365,
-                                        addExposureDaysToEnd = FALSE
-                                        #,verbosity=INFO
-    )
-    test <- toSparsePython(plpData,population, map=NULL)
-    compTest <- PythonInR::pyGet('plpData.toarray()')
-    testthat::expect_equal(nrow(compTest), max(population$rowId))
-    testthat::expect_equal(ncol(compTest), 
-                           length(unique(ff::as.ram(plpData$covariateRef$covariateId))))
-    testthat::expect_equal(ncol(compTest), nrow(test$map))
-  }
-  
   
 })
 

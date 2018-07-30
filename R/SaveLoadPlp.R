@@ -47,7 +47,7 @@
 #'                                     descendant concepts within that CONCEPT_ID will be used to
 #'                                     define the cohort.  If cohortTable <> DRUG_ERA, cohortId is
 #'                                     used to select the cohort_concept_id in the cohort-like table.
-#' @param outcomeIds                   A list of cohort_definition_ids used to define outcomes.
+#' @param outcomeIds                   A list of cohort_definition_ids used to define outcomes (-999 mean no outcome gets downloaded).
 #' @param studyStartDate               A calendar date specifying the minimum date that a cohort index
 #'                                     date can appear. Date format is 'yyyymmdd'.
 #' @param studyEndDate                 A calendar date specifying the maximum date that a cohort index
@@ -190,6 +190,7 @@ getPlpData <- function(connectionDetails,
                                                          cohortTableIsTemp = TRUE,
                                                          rowIdField = "row_id",
                                                          covariateSettings = covariateSettings)
+  if(outcomeIds!=-999){
   writeLines("Fetching outcomes from server")
   start <- Sys.time()
   outcomeSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
@@ -207,12 +208,15 @@ getPlpData <- function(connectionDetails,
   attr(outcomes, "metaData") <- metaData.outcome
   if(nrow(outcomes)==0)
     stop('No Outcomes')
-  
+
   metaData.cohort$attrition <- getCounts2(cohorts,outcomes, "Original cohorts")
   attr(cohorts, "metaData") <- metaData.cohort
   
   delta <- Sys.time() - start
   writeLines(paste("Loading outcomes took", signif(delta, 3), attr(delta, "units")))
+  } else {
+    outcomes <- NULL
+  }
   
   # Remove temp tables:
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
