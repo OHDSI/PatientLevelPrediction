@@ -701,7 +701,9 @@ createLearningCurvePar <- function(population,
     
     # record end time
     endTime <- Sys.time()
-    TotalExecutionElapsedTime <- endTime - ExecutionDateTime
+    TotalExecutionElapsedTime <-
+      as.numeric(difftime(endTime, ExecutionDateTime,
+                          units = "secs"))    
     
     # return data frame row for each run
     return(
