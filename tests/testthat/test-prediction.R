@@ -13,6 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+library("testthat")
+
 context("Prediction")
 
 # this no longer checks predictions as models don't exist and take too long to train during test

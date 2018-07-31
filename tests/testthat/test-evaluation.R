@@ -15,6 +15,7 @@
 # limitations under the License.
 context("Evaluation")
 
+library("testthat")
 library("pROC")
 library("AUC")
 library("scoring")
