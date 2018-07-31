@@ -106,7 +106,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
 
   #============== CREATE DOCUMENT =================
   # create new word document
-  doc = ReporteRs::docx()
+  doc = officer::read_docx()
   #------------------------------------------------
 
   #============ TITLE ==========================================
@@ -114,100 +114,96 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
                   " in a target population of ",targetName," during ",time_at_risk," using observational data")
 
   #title <- paste0('Predicting the outcome of ', outcomeName ,' in a target population of ', targetName)
-  doc <- ReporteRs::addTitle( doc, title, level = 1 )
+  doc <- doc %>% officer::body_add_par(value = title, style = "heading 1")
   #------------------------------------------------
 
 
   #============ AIM ==========================================
   #  Add the aim of the prediction
-  doc = ReporteRs::addTitle(doc, 'Aim', level=2)
+  doc <- doc %>% officer::body_add_par(value = 'Aim', style = "heading 2")
+  
 
   text <- paste0("Within the target popualtion of ",targetName," predict ", outcomeName,
                  " during ", time_at_risk,". See Appendix 1 for target popualtion and outcome ",
                  " cohort definitions."
                  )
-  doc = ReporteRs::addParagraph(doc, text )
+  doc <- doc %>% officer::body_add_par(value = text, style = "Normal")
+  
   #------------------------------------------------
 
 
   #============ Data ==========================================
   #  The data source used to develop the model and
-  doc = ReporteRs::addTitle(doc, 'Data', level=2)
+  doc <- doc %>% officer::body_add_par(value = 'Data', style = "heading 2")
+  
 
-  doc = ReporteRs::addTitle(doc, 'Source of data:', level=3)
-  if(length(grep('mdcr',tolower(plpResult$inputSetting$dataExtrractionSettings$cdmDatabaseSchema)))==1)
-    datasource <- "Truven MarketScan Medicare Supplemental Beneficiaries (MDCR)  this is a US insurance claims database containing 9,559,877 lives between the years 2000-01-01 to 2016-04-30"
-  if(length(grep('mdcd',tolower(plpResult$inputSetting$dataExtrractionSettings$cdmDatabaseSchema)))==1)
-    datasource <- "Truven MarketScan Medicaid (MDCD) this is a US insurance claims database containing 21,577,517 lives between the years 2006-01-01 to 2014-12-31"
-  if(length(grep('ccae',tolower(plpResult$inputSetting$dataExtrractionSettings$cdmDatabaseSchema)))==1)
-    datasource <- "Truven MarketScan Commercial Claims and Encounters (CCAE)  this is a US insurance claims database containing 131,533,722 lives between the years 2000-01-01 to 2016-04-30"
-  if(length(grep('optum',tolower(plpResult$inputSetting$dataExtrractionSettings$cdmDatabaseSchema)))==1)
-    datasource <- "OptumInsights de-identified ClinformaticsTM  Datamart (Optum)  this is a US electronic healthcare database containing 73,969,539 lives between the years 2000-05-01 to 2016-03-31"
-  doc = ReporteRs::addParagraph( doc, value = datasource, stylename="BulletList" )
-
+  doc <- doc %>% officer::body_add_par(value = 'Source of data', style = "heading 3")
+  
+  datasource <- "Add text about the database used to develop the model including the number of people and database date range"
+  doc <- doc %>% officer::body_add_par(value = datasource, style = "Normal")
+  
   # characterisation
-  doc = ReporteRs::addTitle(doc, 'Data characterisation:', level=3)
-
+  doc <- doc %>% officer::body_add_par(value = 'Data characterisation:', style = "heading 3")
+  
   covSum <- PatientLevelPrediction::plotVariableScatterplot(plpResult$covariateSummary)
-  ReporteRs::addPlot(doc, fun=print, x=covSum)
-  doc = ReporteRs::addParagraph(doc, 'Figure 1 shows the scatter plot of the prevalence of each variable in the outcome vs non-outcome groups.' )
-
+  doc <- doc %>% officer::body_add_gg(value = covSum)
+  doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the scatter plot of the prevalence of each variable in the outcome vs non-outcome groups.', style = "Normal")
+  
   textPar <- "The covariateSummary.csv contains the prevalance for each covariate overall, in the outcome group and in the non-outcome group."
-  doc = ReporteRs::addParagraph( doc, value = textPar)
-
-
-  doc = ReporteRs::addTitle(doc, 'Attrition:', level=3)
+  doc <- doc %>% officer::body_add_par(value = textPar, style = "Normal")
+  
+  doc <- doc %>% officer::body_add_par(value = 'Attrition:', style = "heading 3")
+  
   # add table of attrition...
-  attrTab <- ReporteRs::FlexTable(plpResult$model$populationSettings$attrition)
-  doc = ReporteRs::addFlexTable(doc, attrTab)
+  doc <- doc %>% officer::body_add_table(value=plpResult$model$populationSettings$attrition)
 
   #------------------------------------------------
 
   #============ Settings  ==========================================
   #  The data source used to develop the model and
-  doc = ReporteRs::addTitle(doc, 'Settings', level=2)
+  doc <- doc %>% officer::body_add_par(value = 'Settings', style = "heading 2")
+  
   textPar <- "This section contains all the settings used in the analysis"
-  doc = ReporteRs::addParagraph( doc, value = textPar)
-
-  doc = ReporteRs::addTitle(doc, 'Covariate Settings:', level=3)
-
+  doc <- doc %>% officer::body_add_par(value = textPar, style = "Normal")
+  
+  doc <- doc %>% officer::body_add_par(value = 'Covariate Settings:', style = "heading 3")
+  
   # add table of covariate settings
   covSet <- data.frame(setting=names(unlist(plpResult$model$metaData$call$covariateSettings)),
                        choice = unlist(plpResult$model$metaData$call$covariateSettings))
   rownames(covSet) <- NULL
-  covTab <- ReporteRs::FlexTable(covSet)
-  doc = ReporteRs::addFlexTable(doc, covTab)
-
-  doc = ReporteRs::addTitle(doc, 'Population Settings:', level=3)
+  doc <- doc %>% officer::body_add_table(value = covSet)
+  
+  doc <- doc %>% officer::body_add_par(value = 'Population Settings:', style = "heading 3")
+  
   # add table of population settings
   plpResult$inputSetting$populationSettings$attrition <- NULL
   popSet <- data.frame(setting=names(plpResult$inputSetting$populationSettings),
                        choice = unlist(plpResult$inputSetting$populationSettings))
   rownames(popSet) <- NULL
-  popTab <- ReporteRs::FlexTable(popSet)
-  doc = ReporteRs::addFlexTable(doc, popTab)
+  doc <- doc %>% officer::body_add_table(value = popSet)
 
-
-  doc = ReporteRs::addTitle(doc, 'Model Settings:', level=3)
+  doc <- doc %>% officer::body_add_par(value = 'Model Settings:', style = "heading 3")
+  
   # add table of model settings
   #!!!!!!!!!=========== TODO - add model name and hyper-param search to doc
   modelName <- plpResult$inputSetting$modelSettings$name
-  doc = ReporteRs::addParagraph( doc, value = paste("Trained a ",modelName, "with default values and ",
-                                                    "hyper-parameters in table below."))
-
+  doc <- doc %>% officer::body_add_par(value = paste("Trained a ",modelName, "with default values and ",
+                                                     "hyper-parameters in table below."), style = "Normal")
+  
   # default parameters of model
-  doc = ReporteRs::addParagraph( doc, value = paste("The default model parameters:"))
+  doc <- doc %>% officer::body_add_par(value = paste("The default model parameters:"), style = "Normal")
+  
   defaultSet <- unlist(lapply((formals(get(gsub('fit','set',plpResult$inputSetting$modelSettings$model)))), function(x) paste(x, collapse=',', sep=',')))
   defaultSet <- data.frame(names(defaultSet), defaultSet)
   row.names(defaultSet) <- NULL
-  defaultTab <- ReporteRs::FlexTable(defaultSet)
-  doc = ReporteRs::addFlexTable(doc, defaultTab)
-
+  doc <- doc %>% officer::body_add_table(value = defaultSet)
+  
   # hyper-parameters other than default searched and performance
-  doc = ReporteRs::addParagraph( doc, value = paste("The hyper-parameters searched and the performance:"))
+  doc <- doc %>% officer::body_add_par(value = paste("The hyper-parameters searched and the performance:"), style = "Normal")
+  
   hyparamSet <-as.data.frame(plpResult$model$hyperParamSearch)
-  hyparamTab <- ReporteRs::FlexTable(hyparamSet)
-  doc = ReporteRs::addFlexTable(doc, hyparamTab)
+  doc <- doc %>% officer::body_add_table(value = hyparamSet)
 
   #------------------------------------------------
 
@@ -215,136 +211,135 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
 
   #============ Results  ==========================================
   #  All the results
-  doc = ReporteRs::addTitle(doc, 'Results', level=2)
-
-  doc = ReporteRs::addTitle(doc, 'Evaluation Summary:', level=3)
-  doc = ReporteRs::addParagraph( doc, value = paste("The summary performance table:"))
-
+  doc <- doc %>% officer::body_add_par(value = 'Results', style = "heading 2")
+  
+  doc <- doc %>% officer::body_add_par(value = 'Evaluation Summary:', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par(value = paste("The summary performance table:"), style = "Normal")
+  
   evalSet <- plpResult$performanceEvaluation$evaluationStatistics
   rownames(evalSet) <- NULL
-  evalTab <- ReporteRs::FlexTable(evalSet[,-1])
-  doc = ReporteRs::addFlexTable(doc, evalTab)
+  evalSet <- as.data.frame(evalSet)
+  doc <- doc %>% officer::body_add_table(value = evalSet)
 
-  # this doesnt work right now as cant plot grobs?
-  ##doc = ReporteRs::addTitle(doc, 'Test/Train Split:', level=3)
-  ##doc = ReporteRs::addParagraph( doc, value = paste("The test/train similarities (if the test/train split was equal allpoints should be on the diagonal):"))
-  ##addPlot <- PatientLevelPrediction::plotGeneralizability(covariateSummary = plpResult$covariateSummary)
-  ##ReporteRs::addPlot(doc, fun=print, x=addPlot)
-
-  doc = ReporteRs::addTitle(doc, 'ROC Plots:', level=3)
+  doc <- doc %>% officer::body_add_par(value = 'ROC Plots', style = "heading 3")
+  
   # add test/train ROC plots
-  doc = ReporteRs::addParagraph( doc, value = paste("The overal discriminative performance:"))
+  doc <- doc %>% officer::body_add_par(value = paste("The overal discriminative performance:"), style = "Normal")
+  
   testCalPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  #addPlot <- gridExtra::arrangeGrob(testCalPlot, trainCalPlot, ncol=2)
-  ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
-
-  doc = ReporteRs::addTitle(doc, 'Calibration Plots:', level=3)
+  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  
+  doc <- doc %>% officer::body_add_par(value = 'Calibration Plots:', style = "heading 3")
+  
   # add test/train calibration plots
-  doc = ReporteRs::addParagraph( doc, value = paste("The model calibration (how well the predicted risk matches the true risk):."))
+  doc <- doc %>% officer::body_add_par(value = paste("The model calibration (how well the predicted risk matches the true risk):."), style = "Normal")
+  
   testCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  #addPlot <- gridExtra::grid.arrange(testCalPlot, trainCalPlot, ncol=2)
-  #ReporteRs::addPlot(doc, fun=print, x=addPlot)
-  ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
-
-  doc = ReporteRs::addTitle(doc, 'Demographic Summary Plots:', level=3)
-  doc = ReporteRs::addParagraph( doc, value = paste("The calibration across age/gender groups:"))
+  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  
+  doc <- doc %>% officer::body_add_par(value = 'Demographic Summary Plots:', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par(value = paste("The calibration across age/gender groups:"), style = "Normal")
+  
   testCalPlot <- PatientLevelPrediction::plotDemographicSummary(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotDemographicSummary(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  #addPlot <- gridExtra::grid.arrange(testCalPlot, trainCalPlot, ncol=2)
-  #ReporteRs::addPlot(doc, fun=print, x=addPlot)
-  ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  
 
-
-  doc = ReporteRs::addTitle(doc, 'Preference PDF Plots:', level=3)
-  doc = ReporteRs::addParagraph( doc, value = paste("Scaled predicted risk distributions for the outcome and non-outcome people:"))
+  doc <- doc %>% officer::body_add_par(value =  'Preference PDF Plots:', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par(value =  paste("Scaled predicted risk distributions for the outcome and non-outcome people:"), style = "Normal")
+  
   testCalPlot <- PatientLevelPrediction::plotPreferencePDF(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotPreferencePDF(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  #addPlot <- gridExtra::grid.arrange(testCalPlot, trainCalPlot, ncol=2)
-  #ReporteRs::addPlot(doc, fun=print, x=addPlot)
-  ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
-
-  doc = ReporteRs::addTitle(doc, 'Predicted PDF Plots:', level=3)
-  doc = ReporteRs::addParagraph( doc, value = paste("Predicted risk distributions for the outcome and non-outcome people:"))
+  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  
+  doc <- doc %>% officer::body_add_par(value =  'Predicted PDF Plots:', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par(value =  paste("Predicted risk distributions for the outcome and non-outcome people:"))
+  
   testCalPlot <- PatientLevelPrediction::plotPredictedPDF(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotPredictedPDF(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  #addPlot <- gridExtra::grid.arrange(testCalPlot, trainCalPlot, ncol=2)
-  #ReporteRs::addPlot(doc, fun=print, x=addPlot)
-  ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
-
-  doc = ReporteRs::addTitle(doc, 'Prediction Distribution Plots:', level=3)
-  doc = ReporteRs::addParagraph( doc, value = paste("Box plots summarising the predicted risk distributions for the outcome and non-outcome people:"))
+  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  
+  
+  doc <- doc %>% officer::body_add_par(value =  'Predicted Distribution Plots:', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par(value =  paste("Box plots summarising the predicted risk distributions for the outcome and non-outcome people:"))
+  
   testCalPlot <- PatientLevelPrediction::plotPredictionDistribution(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotPredictionDistribution(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  #addPlot <- gridExtra::grid.arrange(testCalPlot, trainCalPlot, ncol=2)
-  #ReporteRs::addPlot(doc, fun=print, x=addPlot)
-  ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
-
-  doc = ReporteRs::addTitle(doc, 'Precision Recall Plots:', level=3)
-  doc = ReporteRs::addParagraph( doc, value = paste("Precision vs recall plots:"))
+  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  
+  doc <- doc %>% officer::body_add_par(value =  'Precision Recall Plots:', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par(value =   paste("Precision vs recall plots:"))
+  
   testCalPlot <- PatientLevelPrediction::plotPrecisionRecall(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotPrecisionRecall(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  #addPlot <- gridExtra::grid.arrange(testCalPlot, trainCalPlot, ncol=2)
-  #ReporteRs::addPlot(doc, fun=print, x=addPlot)
-  ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
-
-  doc = ReporteRs::addTitle(doc, 'F1 Measure Plots:', level=3)
-  doc = ReporteRs::addParagraph( doc, value = paste("A measure combining sensitivity and specificity at each prediction threshold:"))
+  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  
+  doc <- doc %>% officer::body_add_par(value =  'F1 Measure Plots:', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par(value =   paste("A measure combining sensitivity and specificity at each prediction threshold:"))
+  
   testCalPlot <- PatientLevelPrediction::plotF1Measure(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotF1Measure(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  #addPlot <- gridExtra::grid.arrange(testCalPlot, trainCalPlot, ncol=2)
-  #ReporteRs::addPlot(doc, fun=print, x=addPlot)
-  ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
-
+  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  
   #------------------------------------------------
 
   if(!is.null(plpValidation)){
-    doc = ReporteRs::addTitle(doc, 'External Validation:', level=3)
-    doc = ReporteRs::addParagraph( doc, value = paste("The external validation performance is sumamried in the table below:"))
+    doc <- doc %>% officer::body_add_par(value =  'External Validation:', style = "heading 3")
+    
+    doc <- doc %>% officer::body_add_par(value = paste("The external validation performance is sumamried in the table below:"))
     
     exSum <-  plpValidation$summary
     exSum <- exSum[,c('Database','populationSize','outcomeCount', colnames(exSum)[grep('auc', tolower(colnames(exSum)))])]
     exSum[,4:ncol(exSum)] <- round(apply(exSum[,4:ncol(exSum)], 2, function(x) as.numeric(x)), digits = 3)
-    exSumTab <- ReporteRs::FlexTable(exSum)
-    doc = ReporteRs::addFlexTable(doc, exSumTab)
+    doc <- doc %>% officer::body_add_table(value=exSum)
     
-    doc = ReporteRs::addParagraph( doc, value = paste("The roc plots are:"))
+    doc <- doc %>% officer::body_add_par(value = paste("The roc plots are:"))
+    
     for(i in 1:length(plpValidation$validation)){
       valPlot <- PatientLevelPrediction::plotSparseRoc(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
       valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
-      ReporteRs::addPlot(doc, fun=print, x=valPlot)
+      doc <- doc %>% officer::body_add_gg(value = valPlot)
     }
     
-    doc = ReporteRs::addParagraph( doc, value = paste("The calibration plots are:"))
+    doc <- doc %>% officer::body_add_par(value = paste("The calibration plots are:"))
+    
     for(i in 1:length(plpValidation$validation)){
       valPlot <- PatientLevelPrediction::plotSparseCalibration2(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
       valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
-      ReporteRs::addPlot(doc, fun=print, x=valPlot)
+      doc <- doc %>% officer::body_add_gg(value = valPlot)
     }
     
     
@@ -354,37 +349,38 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
 
   #============ MODEL  ==========================================
   #  The non-zero covariates or variable importance
-  doc = ReporteRs::addTitle(doc, 'Model', level=2)
-  doc = ReporteRs::addParagraph( doc, value = paste("The model covariates are listed below."))
-
+  doc <- doc %>% officer::body_add_par(value =  'Model', style = "heading 2")
+  
+  doc <- doc %>% officer::body_add_par(value = paste("The model covariates are listed below."))
+  
   modelCov <- plpResult$covariateSummary
   modelCov$covariateValue[is.na(modelCov$covariateValue)] <- 0
   modelCov <- modelCov[modelCov$covariateValue!=0,c('covariateName','covariateValue')]
   modelCov <- modelCov[order(-abs(modelCov$covariateValue)),]
-  modelTab <- ReporteRs::FlexTable(modelCov)
-  doc = ReporteRs::addFlexTable(doc, modelTab)
+  doc <- doc %>% officer::body_add_table(value = modelCov)
 
   #------------------------------------------------
 
 
   # add appendix with cohort details...
-  doc = ReporteRs::addTitle(doc, 'Appendix', level=2)
+  doc <- doc %>% officer::body_add_par(value =  'Appendix', style = "heading 2")
+  
 
-  doc = ReporteRs::addTitle(doc, 'Cohort Definitions', level=3)
+  doc <- doc %>% officer::body_add_par(value =  'Cohort Definitions', style = "heading 3")
+  
   if(!is.null(targetDefinition)){
-    doc = ReporteRs::addParagraph( doc, value = paste("The target cohort definition:."))
-    doc = ReporteRs::addParagraph( doc, value = targetDefinition)
+    doc <- doc %>% officer::body_add_par(value = paste("The target cohort definition:."))
+    doc <- doc %>% officer::body_add_par(value = targetDefinition)
   }
   if(!is.null(targetDefinition)){
-    doc = ReporteRs::addParagraph( doc, value = paste("The outcome cohort definition:."))
-    doc = ReporteRs::addParagraph( doc, value = outcomeDefinition)
+    doc <- doc %>% officer::body_add_par(value = paste("The outcome cohort definition:."))
+    doc <- doc %>% officer::body_add_par(value = outcomeDefinition)
   }
 
 
   #======================= FINAL OUTPUT ========================
   # write the document to file location
-  ReporteRs::writeDoc( doc, file = file.path(outputLocation))
-
+  print(doc, target = file.path(outputLocation))
   return(TRUE)
 
 }
@@ -485,7 +481,7 @@ textPlpAnalysis <- function(plpResult){
   result <- paste0("A ", name, " was trained using ",nfold, " cross-validation on a training dataset consisting of",
                    " ", (1-testfrac)*100,"% of the total dataset, with the remaining ",testfrac*100,"% of the dataset",
                    " held out to enable an internal validation of the model.  The PatientLevelPrediction R package version ",
-                   rversion, " was used and the total training/valdiation time was ",execution," minutes.")
+                   rversion, " was used and the total training/valdiation time was ",format(as.double(execution), digits=3)," minutes.")
 
   return(result)
 
@@ -589,8 +585,15 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   population <- do.call('createStudyPopulation', populationSet)
 
   # create new word document
-  doc = ReporteRs::docx()
-
+  ###doc = ReporteRs::docx()
+  doc = officer::read_docx() 
+  
+  doc <- doc %>% officer::set_doc_properties(title = 'Plp journal document', 
+                                             subject = NULL, 
+                                             creator = 'Plp OHDSI package',
+                                             description = 'created using the runPlp resulting object')
+  
+  
   target_size <- nrow(population)
   outcome_size <- sum(population$outcomeCount==1)
   if(populationSet$addExposureDaysToEnd &
@@ -623,8 +626,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                   " in a target population of ",targetName," during ",time_at_risk," using observational data")
 
   #title <- paste0('Predicting the outcome of ', outcomeName ,' in a target population of ', targetName)
-  doc <- ReporteRs::addTitle( doc, title, level = 1 )
-
+  doc <- doc %>% officer::body_add_par(value = title, style = "heading 1")
 
   #============ ABSTRACT ==========================================
   abstract <- c(paste0("Objective: To develop a model to predict ", outcomeName,
@@ -652,10 +654,11 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                        " <add weblink>.")
   )
 
-  doc = ReporteRs::addTitle(doc, 'Abstract', level=2)
-  doc = ReporteRs::addParagraph(doc, abstract )
-
-
+  doc <- doc %>% officer::body_add_par(value = 'Abstract', style = "heading 2")
+  for(i in 1:length(abstract)){
+    doc <- doc %>% officer::body_add_par(value =  abstract[i] )
+  }
+  
   #============ BACKGROUND ==========================================
   background <- c(paste0("<background on outcome: motivation for model, list existing models",
                          " (database developed on, external validation, performance)>"),
@@ -673,144 +676,172 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                          " structure enables re-use of code between model development and validation to ensure ",
                          " the model can be externally validated efficiently and reduce model reproducibility errors.")
   )
-  doc = ReporteRs::addTitle(doc, 'Background', level=2)
-  doc = ReporteRs::addParagraph(doc, background )
-
+  doc <- doc %>% officer::body_add_par(value = 'Background', style = "heading 2")
+  for(i in 1:length(background)){
+    doc <- doc %>% officer::body_add_par(value =  background[i] )
+  }
   #=============== METHOD: Prediction plot  ==============
   if(includePredictionPicture){
     # Pic1: add prediction plot
     predictionPlot <- plotPlpProblem(plpResult)
-    ReporteRs::addPlot(doc, fun=print, x=predictionPlot)
+    ##ReporteRs::addPlot(doc, fun=print, x=predictionPlot)
+    # how to add non-gg plot??
+    # save predictionPlot?
+    grDevices::png(filename='temp.png')
+    print(predictionPlot)
+    dev.off()
+    doc <- doc %>% officer::body_add_img(src = 'temp.png', width = 4.5, height = 4)
+    unlink('temp.png')
+    
     #doc = ReporteRs::addPlot(predictionPlot)
 
     # Pic1: Add standardise paragraph describing prediction - use name inputs
-    doc = ReporteRs::addParagraph(doc, 'Figure 2 shows the prediction visulisation...' )
-  }
+    doc <- doc %>% officer::body_add_par(value =  'Figure 2 shows the prediction visulisation...' )
+    
+    }
 
 
 
   #=============== METHOD: Analysis Information  ==============
   # Pic2: add analysis details
   ##doc = ReporteRs::addFlexTable(plpResult$model$hyperParamSearch)
-  doc = ReporteRs::addTitle(doc, 'Method', level=2)
-  doc = ReporteRs::addTitle(doc, 'Source of data:', level=3)
-  datasources <- c("<Truven MarketScan Medicare Supplemental Beneficiaries (MDCR)  this is a US insurance claims database containing 9,559,877 lives between the years 2000-01-01 to 2016-04-30>",
-                   "<Truven MarketScan Medicaid (MDCD) this is a US insurance claims database containing 21,577,517 lives between the years 2006-01-01 to 2014-12-31>",
-                   "<OptumInsights de-identified ClinformaticsTM  Datamart (Optum)  this is a US electronic healthcare database containing 73,969,539 lives between the years 2000-05-01 to 2016-03-31>",
-                   "<Truven MarketScan Commercial Claims and Encounters (CCAE)  this is a US insurance claims database containing 131,533,722 lives between the years 2000-01-01 to 2016-04-30>"
-  )
-  doc <- ReporteRs::addParagraph( doc, value = datasources, stylename="BulletList" )
+  doc <- doc %>% officer::body_add_par(value = 'Method', style = "heading 2")
+  
+  doc <- doc %>% officer::body_add_par(value = 'Source of data:', style = "heading 3")
+  
+  datasources <- "ADD DATASOURCE FOR DEVELOPMENT AND VALIDATION HERE..."
+  doc <- doc %>% officer::body_add_par(value = datasources, style = "Normal")
+  
+  doc <- doc %>% officer::body_add_par(value = 'Target population:', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par( value = "<target definition>")
+  
+  doc <- doc %>% officer::body_add_par(value = 'Outcome:', style = "heading 3")
+  doc <- doc %>% officer::body_add_par( value = "<outcome definition>")
 
-  doc = ReporteRs::addTitle(doc, 'Target population:', level=3)
-  doc <- ReporteRs::addParagraph( doc, value = "<target definition>")
-
-  doc = ReporteRs::addTitle(doc, 'Outcome:', level=3)
-  doc <- ReporteRs::addParagraph( doc, value = "<outcome definition>")
-
-  doc = ReporteRs::addTitle(doc, 'Predictors:', level=3)
+  doc <- doc %>% officer::body_add_par(value = 'Predictors:', style = "heading 3")
   covset <- plpResult$inputSetting$dataExtrractionSettings$covariateSettings
-  if(class(plpResult$inputSetting$dataExtrractionSettings$covariateSettings)=='list'){
+  if(class(plpResult$inputSetting$dataExtrractionSettings$covariateSettings)=="list"){
     covs <- unlist(covset)[grep('use',names(unlist(covset)))]
     covs <- gsub('useCovariate','',names(covs)[covs==1])
+    covs <- as.data.frame(covs)
+    colnames(covs) <- 'Predictor'
     timeset <- paste0("Longterm days:",covset$longTermDays, "-",
                       "Mediumterm days:",covset$mediumDays, "-",
                       "Shortterm days:",covset$shortTermDays, "-",
                       "WindowEnd days:",covset$windowEndDays)
 
-    doc <- ReporteRs::addParagraph( doc, value = c(covs,timeset) , stylename="BulletList")
-    doc <- ReporteRs::addParagraph( doc, value = "<!Clarify about missing data>")
-  }
+    doc <- doc %>% officer::body_add_table(value = covs)
+    doc <- doc %>% officer::body_add_par(value = timeset)
+    
+    doc <- doc %>% officer::body_add_par( value = "<!Clarify about missing data>")
+  } else {
+    covs <- as.data.frame(unlist(covset)) #collapse covset values if vectors?
+    covs <- data.frame(Covariate = row.names(covs), Value = covs)
+    colnames(covs) <- c('Covariate','Value')
+    doc <- doc %>% officer::body_add_table(value = covs)
+    doc <- doc %>% officer::body_add_par( value = "<!Clarify about missing data>")
+    
+     }
 
-  doc = ReporteRs::addTitle(doc, 'Statistical analysis methods', level=3)
-  doc = ReporteRs::addParagraph(doc, textPlpAnalysis(plpResult) )
+  doc <- doc %>% officer::body_add_par(value = 'Statistical analysis methods', style = "heading 3")
+  
+  doc <- doc %>% officer::body_add_par(value =textPlpAnalysis(plpResult) )
+  
   evaltext <- paste0("To evaluate the models the model discrimination is assessed using the area under",
                      " the receiver operating characteristic curve (AUC) and the model calibration is ",
                      "assessed by inspecting a calibration plot.")
-  doc = ReporteRs::addParagraph(doc, evaltext )
+  doc <- doc %>% officer::body_add_par(value = evaltext )
+  
 
 
   #=============== RESULTS: attriction plot  ==============
-  doc = ReporteRs::addTitle(doc, 'Results', level=2)
-  doc = ReporteRs::addTitle(doc, 'Target population summary', level=3)
+  doc <- doc %>% officer::body_add_par(value = 'Results', style = "heading 2")
+  
+  doc <- doc %>% officer::body_add_par(value = 'Target population summary', 
+                                       style = "heading 3")
+  
 
   text <- paste0("The number of people eligible for inclusion into the target population, ",
                  "outcome count and the number of people lost due to each inclusion step are ",
                  "presented in Figure  ")
-  doc = ReporteRs::addParagraph(doc, text )
+  doc <- doc %>% officer::body_add_par(value = text )
 
   if(includeAttritionPlot){
     # Pic3: add attriction plot
     attrPlot <- PatientLevelPrediction::drawAttritionDiagramPlp(attr(population,'metaData')$attrition)
     #doc = ReporteRs::addPlot(attrPlot)
-    ReporteRs::addPlot(doc, fun=print, x=attrPlot)
+    doc <- doc %>% officer::body_add_gg(value = attrPlot)  # IS THIS GG??
+    
+    
 
     # Pic3: Add comments
-    doc = ReporteRs::addParagraph(doc, "The attrition table shows..." )
+    doc <- doc %>% officer::body_add_par(value = "The attrition table shows..." )
   }
 
   #=============== characterisation ==============
 
   if(table1){
-    doc = ReporteRs::addTitle(doc, 'Characterisation', level=3)
-
+    doc <- doc %>% officer::body_add_par(value = 'Characterisation' , style = 'heading 3')
     tab1 <- getPlpTable(cdmDatabaseSchema=plpData$metaData$call$cdmDatabaseSchema,
                         longTermStartDays = -9999, population=population, 
                         connectionDetails=connectionDetails,
                         cohortTable='#temp_person')
 
-    charactTab1 <- ReporteRs::FlexTable(tab1)
-    doc = ReporteRs::addFlexTable(doc, charactTab1)
+    #charactTab1 <- ReporteRs::FlexTable(tab1)
+    #doc = ReporteRs::addFlexTable(doc, charactTab1)
+    doc <- doc %>% officer::body_add_table(value = tab1)
 
     # Tab1: Add paragraph describing data
     characterisationText <- paste0('Table 1a shows the key characteristic for people with and without the outcome')
 
-    doc = ReporteRs::addParagraph(doc, characterisationText )
-
-    doc = ReporteRs::addParagraph(doc, '<add comment of differences>' )
+    doc <- doc %>% officer::body_add_par(value = characterisationText)
+    
+    doc <- doc %>% officer::body_add_par(value = '<add comment of differences>')
+    
   }
 
   # Add plot of outcome vs non-outcome
   covSum <- PatientLevelPrediction::plotVariableScatterplot(plpResult$covariateSummary)
-  ReporteRs::addPlot(doc, fun=print, x=covSum)
-  doc = ReporteRs::addParagraph(doc, 'Figure 1 shows the scatter plot of the prevalence of each variable in the outcome vs non-outcome groups.' )
-
+  doc <- doc %>% officer::body_add_gg(value = covSum)
+  doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the scatter plot of the prevalence of each variable in the outcome vs non-outcome groups.' )
+  
 
   text <- paste0("Table 1 presents the baseline characteristics of the development datasets and validation ",
                  " datasets <add text describing key features> ")
-  doc = ReporteRs::addParagraph(doc, text )
+  doc <- doc %>% officer::body_add_par(value = text )
 
-  doc = ReporteRs::addTitle(doc, 'Model Specification', level=3)
+  doc <- doc %>% officer::body_add_par(value = 'Model Specification', style='heading 3')
   text <- paste0("The model developed on <database> with a target size of <target count> and outcome count ",
                  " of <outcome count> is available from <add link>.  The <coefficients/variable importance> ",
                  "for each predictor is available as a supplement.")
-  doc = ReporteRs::addParagraph(doc, text )
+  doc <- doc %>% officer::body_add_par(value = text )
 
-  doc = ReporteRs::addTitle(doc, 'Model Performance', level=3)
+  doc <- doc %>% officer::body_add_par(value = 'Model Performance', style='heading 3')
+  
   text <- paste0(" The internal validation of the model obtained an AUC of ",auc,
                  " the ROC plot is presented in Figure 2.  The calibration plot for the internal validation ",
                  "of the model is presented in Figure 3.")
-  doc = ReporteRs::addParagraph(doc, text )
+  doc <- doc %>% officer::body_add_par(value =  text )
 
   #=============== RESULTS: ROC plot  ==============
   # Pic4: add test/train ROC plots
   testROCPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='test')
   trainROCPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='train')
   if(includeTest)
-    ReporteRs::addPlot(doc, fun=print, x=testROCPlot)
+     doc <- doc %>% officer::body_add_gg(value = testROCPlot)
   #doc = ReporteRs::addPlot(testROCPlot)
 
   if(includeTrain)
-    ReporteRs::addPlot(doc, fun=print, x=trainROCPlot)
-  #doc = ReporteRs::addPlot(trainROCPlot)
+     doc <- doc %>% officer::body_add_gg(value = trainROCPlot)
   #=============== RESULTS: calibration plot  ==============
   # Pic5: add test/train calibration plots
   testCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='train')
   if(includeTest)
-    ReporteRs::addPlot(doc, fun=print, x=testCalPlot)
-  #doc = ReporteRs::addPlot(testCalPlot)
+    doc <- doc %>% officer::body_add_gg(value = testCalPlot)
   if(includeTrain)
-    ReporteRs::addPlot(doc, fun=print, x=trainCalPlot)
+    doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
 
   
   if(!is.null(plpValidation)){
@@ -858,19 +889,20 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                    aucs,
                    " respectively.  The external validation roc and calibration plots ",
                    "can be found in Appendix B.")
-    doc = ReporteRs::addParagraph(doc, text )
+    doc <- doc %>% officer::body_add_par(value = text )
     
   } else {
     text <- paste0(" The external validation on <dataset 1> consisting of a target population of ",
                    "<target count> and outcome count of <outcome count> obtained an AUC of <add auc> ",
                    "(<auc ci>).  [repeat for each dataset].  The external validation calibration plots ",
                    "can be found in Appendix 2.")
-    doc = ReporteRs::addParagraph(doc, text )
+    doc <- doc %>% officer::body_add_par(value = text )
   }
   
 
-  doc = ReporteRs::addTitle(doc, 'Discussion', level=2)
-  doc = ReporteRs::addTitle(doc, 'Interpretation', level=3)
+  doc <- doc %>% officer::body_add_par(value = 'Discussion', style = 'heading 2' )
+  
+  doc <- doc %>% officer::body_add_par(value = 'Interpretation', style = 'heading 3' )
   text <-c(
     paste0("The discriminative ability of the model was <average/good/excellent>, obtaining an AUC of ",auc,
            " indicating the model can distinguish between people who will develop the outcome and those ",
@@ -883,9 +915,11 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
            "These variables could be studied using conventional population level estimation to determine ",
            "whether they are causally related to the outcome.")
   )
-  doc = ReporteRs::addParagraph(doc, text )
+  doc <- doc %>% officer::body_add_par(value = text )
+  
 
-  doc = ReporteRs::addTitle(doc, 'Implications', level=3)
+  doc <- doc %>% officer::body_add_par(value = 'Implications', style = 'heading 3')
+  
   text <-c(
     paste0("The results show that developing a model using <add database> data for the outcome ",outcomeName,
            " within ",targetName," resulted in a good discriminative ability and this model was validated ",
@@ -896,10 +930,12 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
            "risk factors, it would be useful in future research to determine whether these variables do in fact have a ",
            "biological relationship to the outcome.")
   )
-  doc = ReporteRs::addParagraph(doc, text )
-
-  doc = ReporteRs::addTitle(doc, 'Limitations', level=3)
-  text <-c(
+  for(i in 1:length(text)){
+    doc <- doc %>% officer::body_add_par(value =  text[i] )
+  }
+  doc <- doc %>% officer::body_add_par(value = 'Limitations', style = 'heading 3')
+  
+  text <- c(
     paste0("In this study we have developed a model on one US observational healthcare database and ",
            "externally validated it across several other US databases to aim to determine the ",
            "generalizability of the model.  However, each database only includes a sample of the whole ",
@@ -915,47 +951,51 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
            "used as proxies for genetic or lifestyle factors and observational data is often more readily ",
            "available.")
   )
-  doc = ReporteRs::addParagraph(doc, text )
-
-  doc = ReporteRs::addTitle(doc, 'Conclusion', level=2)
-  test <- paste0("In this paper we developed a model for ",outcomeName," occurring within a target ",
+  for(i in 1:length(text)){
+    doc <- doc %>% officer::body_add_par(value =  text[i] )
+  }
+  doc <- doc %>% officer::body_add_par(value = 'Conclusion', style = 'heading 2')
+  
+  text <- paste0("In this paper we developed a model for ",outcomeName," occurring within a target ",
                  "population consisting of ",targetName," during ",time_at_risk," on <development database> and ",
                  "externally validated the model on <validation datasets>.  The discriminative ability of ",
                  "the model was  and the model was  calibrated. <talk about clinical usefulness>.  ",
                  "In the future it would be useful to extend the external validation across the OHDS ",
                  "network and outside the OHDSI network and also determine the clinical usefulness of the ",
                  "model by implementing it retrospectively in a new dataset [ref].")
-  doc = ReporteRs::addParagraph(doc, text )
+  doc <- doc %>% officer::body_add_par(value = text )
 
-  doc = ReporteRs::addTitle(doc, 'References', level=2)
-  doc = ReporteRs::addParagraph(doc, "<add references>" )
+  doc <- doc %>% officer::body_add_par(value = 'References', style = 'heading 2')
+  
+  doc <- doc %>% officer::body_add_par(value = "<add references>" )
 
-  doc = ReporteRs::addTitle(doc, 'Appendix A', level=2)
-  doc = ReporteRs::addParagraph(doc, "<atlas cohorts + concept sets>" )
+  doc <- doc %>% officer::body_add_par(value = 'Appendix A', style = 'heading 2')
+  
+  doc <- doc %>% officer::body_add_par(value = "<atlas cohorts + concept sets>" )
 
-  doc = ReporteRs::addTitle(doc, 'Appendix B', level=2)
-  doc = ReporteRs::addParagraph(doc, "<Plots of external validation>" )
+  doc <- doc %>% officer::body_add_par(value = 'Appendix B', style = 'heading 2')
+  
+  doc <- doc %>% officer::body_add_par(value = "<Plots of external validation>" )
   if(!is.null(plpValidation)){
-    doc = ReporteRs::addParagraph( doc, value = paste("The roc plots are:"))
+    doc <- doc %>% officer::body_add_par(value = paste("The roc plots are:"))
     for(i in 1:length(plpValidation$validation)){
       valPlot <- PatientLevelPrediction::plotSparseRoc(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
       valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
-      ReporteRs::addPlot(doc, fun=print, x=valPlot)
+      doc <- doc %>% officer::body_add_gg(value = valPlot)
     }
     
-    doc = ReporteRs::addParagraph( doc, value = paste("The calibration plots are:"))
+    doc <- doc %>% officer::body_add_par(value = paste("The calibration plots are:"))
     for(i in 1:length(plpValidation$validation)){
       valPlot <- PatientLevelPrediction::plotSparseCalibration2(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
       valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
-      ReporteRs::addPlot(doc, fun=print, x=valPlot)
+      doc <- doc %>% officer::body_add_gg(value = valPlot)
     }
     
     
   }
 
   # write the document to file location
-  ReporteRs::writeDoc( doc, file = file.path(outputLocation))
-
+  print(doc, target = file.path(outputLocation))
   return(TRUE)
 
 }

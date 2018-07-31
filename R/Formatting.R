@@ -205,7 +205,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
     if(is.null(python.test$pythonExePath))
       stop('You need to install python for this method - please see ...')
   }
-  if ( !PythonInR::pyIsConnected() ){
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix" ){
     PythonInR::pyConnect(pythonExePath = pythonExePath)
     PythonInR::pyOptions("numpyAlias", "np")
     PythonInR::pyOptions("useNumpy", TRUE)

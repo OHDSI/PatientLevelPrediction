@@ -15,6 +15,7 @@
 # limitations under the License.
 
 library("testthat")
+context("Validation")
 
 # Test unit for the creation of the study externalValidatePlp
 

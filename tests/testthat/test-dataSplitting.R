@@ -16,6 +16,7 @@
 # limitations under the License.
 
 library("testthat")
+context("Data splitting")
 
 test_that("Data splitting by person", {
 
