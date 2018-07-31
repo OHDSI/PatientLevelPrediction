@@ -799,7 +799,7 @@ loadEnsemblePlpModel <- function(dirPath) {
   dirList <- list.dirs(file.path(dirPath, 'level1'), recursive = FALSE)
   index <- 1
   for (subdir in dirList){
-    modelPath <- file.path(subdir, 'savedModel')
+    modelPath <- file.path(subdir, 'plpResult/model')
     model <- loadPlpModel(modelPath)
     modelList[[index]] <- model
     index <- index + 1

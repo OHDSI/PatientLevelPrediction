@@ -8,7 +8,7 @@ inputs a population with an outcomeCount column then the function also returns t
 the prediction (AUC, brier score, calibration)}
 \usage{
 applyEnsembleModel(population, dataList, modelList, analysisId = NULL,
-  save = NULL, calculatePerformance = T, ensembleStrategy = "mean")
+  calculatePerformance = T, ensembleStrategy = "mean")
 }
 \arguments{
 \item{population}{The population of people who you want to predict the risk for}
@@ -46,7 +46,8 @@ results <- PatientLevelPrediction::runEnsembleModel(population,
                                                     nfold = 3,
                                                     splitSeed = 1000,
                                                     ensembleStrategy = "stacked")
-modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180607153811")  #the last model is combination model
+The default dir is plpmodels under working dir, or you can specify saveDirectory during model training
+modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180612093745")  #the last model is combination model
 
 # use the same population settings as the model:
 populationSettings <- plpModel$populationSettings
@@ -58,7 +59,6 @@ prediction <- applyEnsembleModel(population,
                                  dataList = list(plpData, plpData),
                                  modelList = modelList,
                                  analysisId = NULL,
-                                 save = NULL,
                                  ensembleStrategy = "stacked")$prediction
 }
 }

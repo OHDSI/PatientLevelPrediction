@@ -5,8 +5,10 @@
 \title{ensemble - Create an ensembling model using different models}
 \usage{
 runEnsembleModel(population, dataList, modelList, testSplit = "time",
-  testFraction = 0.2, splitSeed = NULL, nfold = 3, save = NULL,
-  analysisId = NULL, verbosity = "INFO", ensembleStrategy = "mean")
+  testFraction = 0.2, splitSeed = NULL, nfold = 3, saveDirectory = NULL,
+  savePlpData = F, savePlpResult = T, savePlpPlots = F,
+  saveEvaluation = T, analysisId = NULL, verbosity = "INFO",
+  ensembleStrategy = "mean")
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to
@@ -34,8 +36,15 @@ testSplit}
 
 \item{nfold}{The number of folds used in the cross validation (default 3)}
 
-\item{save}{The path to the directory where the models will be saved (if NULL uses
-working directory)}
+\item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
+
+\item{savePlpData}{Binary indicating whether to save the plpData object (default is F)}
+
+\item{savePlpResult}{Binary indicating whether to save the object returned by runPlp (default is F)}
+
+\item{savePlpPlots}{Binary indicating whether to save the performance plots as pdf files (default is F)}
+
+\item{saveEvaluation}{Binary indicating whether to save the oerformance as csv files (default is T)}
 
 \item{analysisId}{The analysis ID}
 

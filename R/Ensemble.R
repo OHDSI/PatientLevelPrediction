@@ -40,8 +40,11 @@
 #' @param splitSeed          The seed used to split the test/train set when using a person type
 #'                           testSplit
 #' @param nfold              The number of folds used in the cross validation (default 3)
-#' @param save               The path to the directory where the models will be saved (if NULL uses
-#'                           working directory)
+#' @param saveDirectory      The path to the directory where the results will be saved (if NULL uses working directory)
+#' @param savePlpData        Binary indicating whether to save the plpData object (default is F)
+#' @param savePlpResult      Binary indicating whether to save the object returned by runPlp (default is F)
+#' @param savePlpPlots       Binary indicating whether to save the performance plots as pdf files (default is F)
+#' @param saveEvaluation     Binary indicating whether to save the oerformance as csv files (default is T)
 #' @param analysisId         The analysis ID
 #' @param verbosity          Sets the level of the verbosity. If the log level is at or higher in
 #'                           priority than the logger threshold, a message will print. The levels are:
@@ -69,7 +72,11 @@ runEnsembleModel <- function(population,
                              testFraction = 0.2,
                              splitSeed = NULL,
                              nfold = 3,
-                             save = NULL,
+                             saveDirectory=NULL, 
+                             savePlpData=F, 
+                             savePlpResult=T, 
+                             savePlpPlots = F, 
+                             saveEvaluation = T,
                              analysisId = NULL,
                              verbosity = "INFO",
                              ensembleStrategy = "mean") {
@@ -89,6 +96,11 @@ runEnsembleModel <- function(population,
     trainFraction <- 0.8 * (1 - testFraction)
     OhdsiRTools::logInfo("0.2 * (1 - testFraction) is validation set for training logistics regression as the combinator for stacked ensemble!")
   }
+  
+  if(is.null(saveDirectory)){
+    saveDirectory <- file.path(getwd(), 'plpmodels')
+  }
+  
   trainAUCs <- c()
   pred_probas <- matrix(nrow = length(population$subjectId), ncol = 0)
   # run the models in list one by one.
@@ -102,6 +114,11 @@ runEnsembleModel <- function(population,
                                               testFraction = testFraction,
                                               trainFraction = trainFraction,
                                               nfold = nfold,
+                                              saveDirectory=saveDirectory, 
+                                              savePlpData=savePlpData, 
+                                              savePlpResult=savePlpResult, 
+                                              savePlpPlots = savePlpPlots, 
+                                              saveEvaluation = saveEvaluation,
                                               splitSeed = splitSeed,
                                               analysisId = saveanalysisId)
     trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4]))
@@ -113,9 +130,9 @@ runEnsembleModel <- function(population,
   }
   # save models for glm for stacked ensemble and weights for weighted ensemble.
   if (ensembleStrategy == "weighted" | ensembleStrategy == "stacked") {
-    if (is.null(save))
-      save <- file.path(getwd(), "plpmodels")
-    modelLoc <- file.path(save, analysisId, "level2")  #always save them in the first model dir
+    #if (is.null(save))
+      #save <- file.path(getwd(), "plpmodels")
+    modelLoc <- file.path(saveDirectory, analysisId, "level2")  #always save them in the first model dir
     if (!dir.exists(modelLoc)) {
       dir.create(modelLoc)
     }
@@ -183,6 +200,7 @@ runEnsembleModel <- function(population,
 #'                                                     nfold = 3,
 #'                                                     splitSeed = 1000,
 #'                                                     ensembleStrategy = "stacked")
+#' The default dir is plpmodels under working dir, or you can specify saveDirectory during model training
 #' modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180612093745")  #the last model is combination model
 #'
 #' # use the same population settings as the model:
@@ -195,7 +213,6 @@ runEnsembleModel <- function(population,
 #'                                  dataList = list(plpData, plpData),
 #'                                  modelList = modelList,
 #'                                  analysisId = NULL,
-#'                                  save = NULL,
 #'                                  ensembleStrategy = "stacked")$prediction
 #' }
 #' @export
@@ -203,7 +220,6 @@ applyEnsembleModel <- function(population,
                                dataList,
                                modelList,
                                analysisId = NULL,
-                               save = NULL,
                                calculatePerformance = T,
                                ensembleStrategy = "mean") {
   # check input:
@@ -261,7 +277,7 @@ applyEnsembleModel <- function(population,
   if (!calculatePerformance || nrow(prediction) == 1)
     return(prediction)
 
-  performance <- evaluatePlp(prediction, plpData)
+  performance <- evaluatePlp(prediction, dataList[[0]])
 
 
   result <- list(prediction = prediction, performanceEvaluation = performance)
