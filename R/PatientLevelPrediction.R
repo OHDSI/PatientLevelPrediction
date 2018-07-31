@@ -28,6 +28,7 @@
 #' @importFrom utils write.csv write.table data
 #' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
 #' @importFrom magrittr %>%
+#' @importFrom foreach %dopar% %do%
 #' @import bit
 #' @import ffbase
 #' @import Cyclops
