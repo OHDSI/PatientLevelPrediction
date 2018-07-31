@@ -1,4 +1,4 @@
-# @file packagePlp.R
+# @file PackagePlp.R
 #
 # Copyright 2018 Observational Health Data Sciences and Informatics
 #
