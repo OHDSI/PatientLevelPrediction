@@ -33,7 +33,7 @@ descendant concepts within that CONCEPT_ID will be used to
 define the cohort.  If cohortTable <> DRUG_ERA, cohortId is
 used to select the cohort_concept_id in the cohort-like table.}
 
-\item{outcomeIds}{A list of cohort_definition_ids used to define outcomes.}
+\item{outcomeIds}{A list of cohort_definition_ids used to define outcomes (-999 mean no outcome gets downloaded).}
 
 \item{studyStartDate}{A calendar date specifying the minimum date that a cohort index
 date can appear. Date format is 'yyyymmdd'.}

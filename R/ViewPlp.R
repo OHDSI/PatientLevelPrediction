@@ -64,18 +64,40 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
                                                                              value="panel_evalSum",
                                                                              shiny::h4("Evaluation Summary"),
                                                                              DT::dataTableOutput("evalSummary")),
-                                                             shiny::tabPanel(title = "Characterization", 
+                                                             
+                                                             shiny::tabPanel(title = "Characterization",
                                                                              value="panel_characterization",
                                                                              shiny::h4("Characterization"),
-                                                                             shiny::selectInput("covSumCol", "Color:", choices=c("Included into model"='binary',
-                                                                                                                                 "Record type"='type',
-                                                                                                                                 "No color"='none'),
-                                                                                                selected='binary'),
-                                                                             shiny::selectInput("covSumSize", "Size:", choices=c("Included into model"='binary',
-                                                                                                                                 "No size"='none'),
-                                                                                                selected='binary'),
-                                                                             plotly::plotlyOutput("characterization"),
-                                                                             DT::dataTableOutput("characterizationTab")),
+                                                                             
+                                                               shiny::sidebarLayout(
+                                                                 shiny::sidebarPanel(width=2,
+                                                                                     shiny::actionButton(inputId = 'resetCharacter', 
+                                                                                                         label = 'Unselect All'#, 
+                                                                                                         #width = 'auto'
+                                                                                                         ),
+                                                                                     shiny::radioButtons(inputId = "covSumCol",
+                                                                                                         label = "Color:",
+                                                                                                         choiceNames = c('None','Included','Analysis'),  
+                                                                                                         choiceValues = c('none','binary','type'),
+                                                                                                         selected='binary'),
+                                                                                     shiny::radioButtons(inputId = "covSumSize",
+                                                                                                         label = "Size:",
+                                                                                                         choiceNames = c('None','Included','Coefficient'),  
+                                                                                                         choiceValues = c('none','binary','coef'),
+                                                                                                         selected='binary')
+                                                                 ),
+                                                                 shiny::mainPanel(
+                                                                   shiny::tabsetPanel(id ="characterisation",
+                                                                                      shiny::tabPanel(
+                                                                                        title = "Plot", value="character_plot",
+                                                                             plotly::plotlyOutput("characterization")),
+                                                                             shiny::tabPanel(
+                                                                               title = "Table", value="character_table",
+                                                                             DT::dataTableOutput("characterizationTab")
+                                                                             )
+                                                                   )
+                                                                 )
+                                                                 )),
                                                              shiny:: tabPanel(title = "ROC", value="panel_roc",
                                                                               shiny::h4("Test"),
                                                                               plotly::plotlyOutput("rocPlotTest"),
@@ -179,70 +201,35 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
       # reactive values - contains the location of the plpResult
       ##reactVars <- shiny::reactiveValues(resultLocation=NULL,
       ##                                   plpResult= NULL)
-      reactVars <- list(plpResult=runPlp,
-                        covSumColor='binary',
-                        covSumSize='binary')
+      reactVars <- list(plpResult=runPlp)
       
-      # reaction events
-      shiny::observeEvent(input$covSumCol, {
-        reactVars$covSumColor <- input$covSumCol
-        reactVars$covSumSize <- input$covSumSize
-        output$characterization <- plotly::renderPlotly({
-          if(is.null(reactVars$plpResult))
-            return(NULL)
-          
-          plotCovSummary(reactVars)
-          })
-      }
-      )
-      shiny::observeEvent(input$covSumSize, {
-        reactVars$covSumSize <- input$covSumSize
-        reactVars$covSumColor <- input$covSumCol
-        output$characterization <- plotly::renderPlotly({
-          if(is.null(reactVars$plpResult))
-            return(NULL)
-          plotCovSummary(reactVars)
-        })
-      }
+      # reset the row selection
+      shiny::observeEvent(input$resetCharacter,
+        {DT::selectRows(proxy=DT::dataTableProxy(outputId='characterizationTab', 
+                                                deferUntilFlush=F), 
+                       selected=NULL)}
       )
       
-      # create ui for selecting result location
-      #output$resultSelect <- shiny::renderUI(
-      #  shiny::wellPanel(
-      #    
-      #    shiny::fluidRow(
-      #      shiny::column(10, shiny::textInput("resultLocation", label ='',placeholder = 'Enter plp result directory location... (e.g.,  C:/Documents/plpResult)', width = '100%')),
-      #      shiny::column(1, shiny::actionButton("resultEnter", "Select"))#,
-      #      #column(2, textInput())
-      #    )
-      #  ))
+  
     
-      
-      # when resultEnter clicked -> check file location is plpResult -> set reactVars$resultLocation
-      ##shiny::observeEvent(input$resultEnter, {
-      ##  reactVars$resultLocation <- input$resultLocation
-      
-      ##  if(dir.exists(input$resultLocation))
-      ##    plpResult <- PatientLevelPrediction::loadPlpResult(input$resultLocation)
-      
-      ##  if('runPlp'%in%class(plpResult)){
-      ##    reactVars$plpResult <- plpResult
-      ##  }
-      ##})
-      
-      
-      
       # create outputs 
       output$evalSummary <- DT::renderDataTable({
         if(is.null(reactVars$plpResult))
           return(NULL)
         
         returnTab <- as.data.frame(reactVars$plpResult$performanceEvaluation$evaluationStatistics)
+        returnTab$Metric <- gsub('.auc','',returnTab$Metric)
         returnTab <- reshape2::dcast(returnTab[,-1], Metric ~ Eval, value.var = 'Value')
         
+        # adding incidence
+        oc <- returnTab[returnTab[,colnames(returnTab)=='Metric']=='outcomeCount',colnames(returnTab)!='Metric']
+        pop <- returnTab[returnTab[,colnames(returnTab)=='Metric']=='populationSize',colnames(returnTab)!='Metric']
+        inc <- c('Incidence',as.double(oc)/as.double(pop)*100)
+        returnTab <- rbind(returnTab, inc)
+        
         returnTab <-data.frame(Metric=returnTab[,colnames(returnTab)=='Metric'],
-                               test=format(as.double(unlist(returnTab[,colnames(returnTab)=='test'])), digits=3, nsmall=2),
-                               train=format(as.double(unlist(returnTab[,colnames(returnTab)=='train'])), digits=3, nsmall=2))
+                               test=format(as.double(unlist(returnTab[,colnames(returnTab)=='test'])), digits=3, nsmall=2,scientific=F),
+                               train=format(as.double(unlist(returnTab[,colnames(returnTab)=='train'])), digits=3, nsmall=2,scientific=F))
         
         #rownames(returnTab) <- 1:length(returnTab)
         
@@ -256,10 +243,7 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
       output$characterization <- plotly::renderPlotly({
         if(is.null(reactVars$plpResult))
           return(NULL)
-        
-        plotCovSummary(reactVars)
-        
-        
+        plotCovSummary(reactVars,input)
       })
       
       output$characterizationTab <- DT::renderDataTable({
@@ -267,10 +251,16 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
           return(NULL)
         
         returnTab <- as.data.frame(reactVars$plpResult$covariateSummary)
-        returnTab$meanDifference <-returnTab$CovariateMeanWithOutcome- returnTab$CovariateMeanWithNoOutcome
-        returnTab <- returnTab[,c('covariateName','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','meanDifference')]
+        if(!is.null(returnTab$CovariateMeanWithOutcome)){
+          returnTab$meanDifference <-returnTab$CovariateMeanWithOutcome- returnTab$CovariateMeanWithNoOutcome
+          returnTab <- returnTab[,c('covariateName','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','meanDifference')]
+        } else {
+          returnTab <- returnTab[,c('covariateName','CovariateCountWithOutcome','CovariateCountWithNoOutcome')]
+        }
+        returnTab[,-1] <- formatC(as.double(unlist(returnTab[,-1])), digits=4,format = "f")
+        returnTab
         
-      },     escape = FALSE, selection = 'none',
+      },     escape = FALSE, #selection = 'none',
       options = list(
         pageLength = 25
       ))
@@ -669,19 +659,22 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
           return(NULL)
         
         if(length(validatePlp$validation)>1){
-          voi <- list()
-          length(voi) <- length(validatePlp$validation)
+          valSummary <- c()
           for(i in 1:length(validatePlp$validation)){
             validatePlp$validation[[i]]$covariateSummary$meanDiff <- validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithOutcome-
               validatePlp$validation[[i]]$covariateSummary$CovariateMeanWithNoOutcome
-            voi[[i]] <- validatePlp$validation[[i]]$covariateSummary[,c('covariateName','meanDiff')]
-            colnames(voi[[i]])[2] <- paste0(names(validatePlp$validation)[i],'_meanDiff') 
+            voi <- validatePlp$validation[[i]]$covariateSummary[,c('covariateId','covariateName','meanDiff')]
+            voi$database <- names(validatePlp$validation)[i]
+            valSummary <- rbind(voi, valSummary)
           }
-          
-          ##do.call(function(x) merge(x, by='covariateName', all=T), voi)
-          do.call(merge, c(voi,all=T))
+          valSummary$covariateName <- as.character(valSummary$covariateName)
+          valSummary <- reshape2::dcast(valSummary, covariateId+covariateName~database, value.var = 'meanDiff')
+          valSummary[,-c(1,2)] <- formatC(as.double(unlist(valSummary[,-c(1,2)])), digits=4,format = "f")
+          #valSummary
+          merge(reactVars$plpResult$covariateSummary[,c('covariateId','covariateValue')],valSummary, by='covariateId')
         } else {
-          validatePlp$validation[[1]]$covariateSummary
+          merge(reactVars$plpResult$covariateSummary[,c('covariateId','covariateValue')],validatePlp$validation[[1]]$covariateSummary, by='covariateId')
+          
         }
       },     escape = FALSE, selection = 'none',
       options = list(
@@ -692,6 +685,8 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
         if(is.null(validatePlp))
           return(NULL)
         
+       
+        validatePlp$summary$Incidence <- as.double(as.character(validatePlp$summary$outcomeCount))/as.double(as.character(validatePlp$summary$populationSize))
         # format to 3dp
         for(col in colnames(validatePlp$summary)[!colnames(validatePlp$summary)%in%c('Database','outcomeCount','populationSize')])
           class(validatePlp$summary[,col]) <- 'numeric'
@@ -780,123 +775,115 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
 }
 
 
-plotCovSummary <- function(reactVars){
+plotCovSummary <- function(reactVars,input){
   if(is.null(reactVars$plpResult))
     return(NULL)
   
-  #PatientLevelPrediction::plotVariableScatterplot(reactVars$plpResult$covariateSummary)
   dataVal <- reactVars$plpResult$covariateSummary
   # remove large values...
   dataVal$CovariateCountWithOutcome[is.na(dataVal$CovariateMeanWithOutcome)] <- 0
-  dataVal <- dataVal[dataVal$CovariateMeanWithOutcome<=1,]
+  dataVal$CovariateMeanWithOutcome[dataVal$CovariateMeanWithOutcome>1] <- 1
+  dataVal$CovariateMeanWithNoOutcome[dataVal$CovariateMeanWithNoOutcome>1] <- 1
   dataVal$covariateValue[is.na(dataVal$covariateValue)] <- 0
+  
+
+  #get the size
+  #====================================
+  if(input$covSumSize=='binary'){
+    dataVal$size <- rep(4, length(dataVal$covariateValue))
+    dataVal$size[dataVal$covariateValue!=0] <- 8
+  }else if(input$covSumSize=='none'){
+     dataVal$size <- rep(6, length(dataVal$covariateValue))
+  } else if(input$covSumSize=='coef'){
+    dataVal$size <- abs(dataVal$covariateValue)
+    dataVal$size[is.na(dataVal$size)] <- 0
+    dataVal$size <- 10*dataVal$size/max(dataVal$size)
+  }
+  
+  #get the included
+  #====================================
   inc <- dataVal$covariateValue!=0 
-  
-  if(reactVars$covSumSize=='binary'){
-    sizeBig=8
-    sizeSmall=4
-  }
-  if(reactVars$covSumSize=='none'){
-    sizeBig=6
-    sizeSmall=6
+  nonInc <- dataVal$covariateValue==0 
+  incAnnotations <- F
+  if(length(input$characterizationTab_rows_selected)>0){
+    inc <- input$characterizationTab_rows_selected
+    incAnnotations <- T
+    writeLines(paste0(inc, collapse='-'))
   }
   
-  if(reactVars$covSumColor=='binary'){
-    if(sum(!inc)>0 && sum(inc)>0){
-    plot_ly(x = dataVal$CovariateMeanWithNoOutcome[inc] ) %>%
-      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[inc],
-                          marker = list(size = sizeBig, color='blue'),
-                          text = paste(dataVal$covariateName[inc])) %>%
-      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[!inc],
-                          x = dataVal$CovariateMeanWithNoOutcome[!inc],
-                          marker = list(size = sizeSmall, color='red'),
-                          text = paste(dataVal$covariateName[!inc])) %>%
-      plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
-                        line = list(dash = "dash"), color = I('black'),
-                        type='scatter') %>%
-      layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
-             xaxis = list(title = "Prevalance in persons without outcome"),
-             yaxis = list(title = "Prevalance in persons with outcome"),
-             showlegend = FALSE)} else{
-               plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
-                 plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
-                                     marker = list(size = sizeBig, color='blue'),
-                                     text = paste(dataVal$covariateName)) %>%
-                 plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
-                                   line = list(dash = "dash"), color = I('black'),
-                                   type='scatter') %>%
-                 layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
-                        xaxis = list(title = "Prevalance in persons without outcome"),
-                        yaxis = list(title = "Prevalance in persons with outcome"),
-                        showlegend = FALSE)
-             }
-  } else if(reactVars$covSumColor=='type'){
-    dataVal$color <- rep('other', length(dataVal$covariateName))
-    for( value in c('condition','drug','measure','observation','procedure','age', 'gender')){
-      cond <- grep(value, tolower(dataVal$covariateName))
-      if(length(cond)>0) dataVal$color[cond] <- value
-    }
-    if(sum(!inc)>0 && sum(inc)>0){
-    plot_ly(x = dataVal$CovariateMeanWithNoOutcome[inc] ) %>%
-      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[inc],
-                          marker = list(size = sizeBig, color=dataVal$color[inc]),
-                          text = paste(dataVal$covariateName[inc])) %>%
-      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[!inc],
-                          x = dataVal$CovariateMeanWithNoOutcome[!inc],
-                          marker = list(size = sizeSmall, color=dataVal$color[!inc]),
-                          text = paste(dataVal$covariateName[!inc])) %>%
-      plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
-                        line = list(dash = "dash"), color = I('black'),
-                        type='scatter') %>%
-      layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
-             xaxis = list(title = "Prevalance in persons without outcome"),
-             yaxis = list(title = "Prevalance in persons with outcome"),
-             showlegend = FALSE)} else {
-               plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
-                 plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
-                                     marker = list(size = sizeBig, color=dataVal$color),
-                                     text = paste(dataVal$covariateName)) %>%
-                 plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
-                                   line = list(dash = "dash"), color = I('black'),
-                                   type='scatter') %>%
-                 layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
-                        xaxis = list(title = "Prevalance in persons without outcome"),
-                        yaxis = list(title = "Prevalance in persons with outcome"),
-                        showlegend = FALSE) 
-               
-             }
+  #get the color
+  #=====================================
+  if(input$covSumCol=='binary'){
+  dataVal$color <- rep('blue', length(dataVal$covariateName))
+  dataVal$color[nonInc] <- 'red'
+  } else if(input$covSumCol=='type'){
+    dataVal$color <- as.factor(dataVal$analysisId)
+    #rep('purple', length(dataVal$covariateName)) # need to do this...
+  } else if(input$covSumCol=='none'){
+    dataVal$color <- rep('black', length(dataVal$covariateName))
+  }
+  
+  # do annotations
+  dataVal$annotation <- sapply(dataVal$covariateName, getName)
     
-  }else if(reactVars$covSumColor=='none'){
-    if(sum(!inc)>0 && sum(inc)>0){
+   
+  if(incAnnotations){
     plot_ly(x = dataVal$CovariateMeanWithNoOutcome[inc] ) %>%
       plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[inc],
-                          marker = list(size = sizeBig, color='blue'),
+                          marker = list(size = dataVal$size[inc],#sizeBig, 
+                                        color=dataVal$color[inc]),
                           text = paste(dataVal$covariateName[inc])) %>%
-      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[!inc],
-                          x = dataVal$CovariateMeanWithNoOutcome[!inc],
-                          marker = list(size = sizeSmall, color='blue'),
-                          text = paste(dataVal$covariateName[!inc])) %>%
+      plotly::add_annotations(x=dataVal$CovariateMeanWithNoOutcome[inc],
+                              y=dataVal$CovariateMeanWithOutcome[inc],
+                              text=paste(dataVal$annotation[inc]),
+                              xref='x', yref='y', showarrow=T,arrowhead=4,
+                              arrowsize=.5, ax=20,ay=-40) %>%
       plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
                         line = list(dash = "dash"), color = I('black'),
                         type='scatter') %>%
       layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
              xaxis = list(title = "Prevalance in persons without outcome"),
              yaxis = list(title = "Prevalance in persons with outcome"),
-             showlegend = FALSE)} else {
-               plot_ly(x = dataVal$CovariateMeanWithNoOutcome ) %>%
-                 plotly::add_markers(y = dataVal$CovariateMeanWithOutcome,
-                                     marker = list(size = sizeBig, color='blue'),
-                                     text = paste(dataVal$covariateName)) %>%
-                 plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
-                                   line = list(dash = "dash"), color = I('black'),
-                                   type='scatter') %>%
-                 layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
-                        xaxis = list(title = "Prevalance in persons without outcome"),
-                        yaxis = list(title = "Prevalance in persons with outcome"),
-                        showlegend = FALSE)
-             }
-    
+             showlegend = FALSE)
+  } else{
+    plot_ly(x = dataVal$CovariateMeanWithNoOutcome[inc] ) %>%
+      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[inc],
+                          marker = list(size = dataVal$size[inc],#sizeBig, 
+                                        color=dataVal$color[inc]),
+                          text = paste(dataVal$covariateName[inc])) %>%
+      plotly::add_markers(y = dataVal$CovariateMeanWithOutcome[nonInc],
+                          x = dataVal$CovariateMeanWithNoOutcome[nonInc],
+                          marker = list(size = dataVal$size[nonInc],#sizeSmall, 
+                                        color = dataVal$color[nonInc]),
+                          text = paste(dataVal$covariateName[nonInc])) %>% 
+      plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                        line = list(dash = "dash"), color = I('black'),
+                        type='scatter') %>%
+      layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+             xaxis = list(title = "Prevalance in persons without outcome"),
+             yaxis = list(title = "Prevalance in persons with outcome"),
+             showlegend = FALSE)      
   }
 
   
+}
+
+
+getName <- function(x){  
+  x <- as.character(x)
+  if(length(grep('index month:', x))>0){
+    return(x)
+  } else if(length(grep('age group:', x))>0){
+    return(x)
+  } else if(length(grep('Concept set:', x))>0){
+    x <- strsplit(paste0(x), split=':')[[1]][2]
+    #x <- gsub(' ','',x)
+    return(x)
+  }else if(length(grep('index:', x))>0){
+    x <- strsplit(paste0(x), split='index:')[[1]][2]
+    #x <- gsub(' ','',x)
+    return(x)
+  } else {
+    return(x)
+  }
 }
