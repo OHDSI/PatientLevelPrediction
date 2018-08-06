@@ -87,10 +87,11 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
   
   # convert plpData in coo to python:
-  covariates <- plpData$covariates
-  covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
-  PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
+  #covariates <- plpData$covariates
+  #covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
+  #PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
   
+  result <- toSparseTorchPython(plpData,population,map=NULL, temporal=T)
   # save the model to outLoc  TODO: make this an input or temp location?
   outLoc <- file.path(getwd(),'python_models')
   # clear the existing model pickles

@@ -989,13 +989,14 @@ if __name__ == "__main__":
         #print 'running model', model_type
         y = population[:, 1]
         #plpData = plpData[population[:, 0], :]
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        with tf.Session(config=config) as sess:
-            X = tf.sparse_reorder(plpData)
-            X = tf.sparse_tensor_to_dense(X)
-            X = sess.run(X)
+        #config = tf.ConfigProto()
+        #config.gpu_options.allow_growth = True
+        #with tf.Session(config=config) as sess:
+        #    X = tf.sparse_reorder(plpData)
+        #    X = tf.sparse_tensor_to_dense(X)
+        #    X = sess.run(X)
             #tu.forward_impute_missing_value(X)
+        X = plpData.to_dense().numpy()
         X = X[np.int64(population[:, 0]), :]
         '''
         p_ids_in_cov = set(covariates[:, 0])

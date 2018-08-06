@@ -306,7 +306,130 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
 
 }
 
+#' Convert the plpData in COO format into a sparse python matrix using torch.sparse
+#'
+#' @description
+#' Converts the standard plpData to a sparse matrix firectly into python
+#'
+#' @details
+#' This function converts the covariate file from ffdf in COO format into a sparse matrix from
+#' the package Matrix
+#' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction
+#'                                      data extracted from the CDM.
+#' @param population                    The population to include in the matrix
+#' @param map                           A covariate map (telling us the column number for covariates)
+#' @param temporal                      Whether to include timeId into tensor
+#' @param pythonExePath                 Location of python exe you want to use
+#' @examples
+#' #TODO
+#'
+#' @return
+#' Returns a list, containing the python object name of the sparse matrix, the plpData covariateRef
+#' and a data.frame named map that tells us what covariate corresponds to each column
+#' This object is a list with the following components: \describe{
+#' \item{data}{The python object name containing a sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.}
+#' \item{covariateRef}{The plpData covariateRef.}
+#' \item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.}
+#' }
+#'
+#' @export
+toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = 'layoutTimestamp')))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
+  # test python is available and the required dependancies are there:
+  if ( !PythonInR::pyIsConnected() ){
+    python.test <- PythonInR::autodetectPython(pythonExePath = pythonExePath)
+    
+    if(is.null(python.test$pythonExePath))
+      stop('You need to install python for this method - please see ...')
+  }
+  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix" ){
+    PythonInR::pyConnect(pythonExePath = pythonExePath)
+    PythonInR::pyOptions("numpyAlias", "np")
+    PythonInR::pyOptions("useNumpy", TRUE)
+    PythonInR::pyImport("numpy", as='np')
+  }
+  
+  if(temporal){
+    PythonInR::pyExec("import torch")
+  }
+  
+  # return error if we can't connect to python
+  if ( !PythonInR::pyIsConnected() )
+    stop('Python not connect error')
+  
+  PythonInR::pyExec('import numpy as np')
+  PythonInR::pyOptions("useNumpy", TRUE)
+  
+  cov <- plpData$covariates #ff::clone(plpData$covariates)
+  covref <- plpData$covariateRef #ff::clone(plpData$covariateRef)
+  
+  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=ff::clone(covref),
+                                  population, map=map)
+  
+  for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
+    ids <- plpData.mapped$covariateRef$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariateRef$covariateId[i[1]:i[2]] <- ids
+    # tested and working
+  }
+  for (i in bit::chunk(plpData.mapped$covariates$covariateId)) {
+    ids <- plpData.mapped$covariates$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
+  }
+  OhdsiRTools::logTrace(paste0('Converting data into python sparse matrix...'))
+  
+  #convert into sparseM
+  OhdsiRTools::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
+  OhdsiRTools::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  
+  if(temporal){
+    OhdsiRTools::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
+  }
+  
+  # chunk then add
+  
+  # now load each part of the coo data into python as 3 vectors
+  # containing row, column and value
+  # create the sparse python matrix and then add to it
+  PythonInR::pySet('xmax',as.integer(max(population$rowId)))
+  PythonInR::pySet('ymax',as.integer(max(plpData.mapped$map$newIds)))
+  if(temporal){
+    PythonInR::pySet('tmax',as.integer(max(plpData.mapped$covariates$timeId)))
+  }
+  
+    # do the sparse tensor in tensorflow
+    # initiate empty sparsetensor:
+    PythonInR::pyExec("plpData = torch.sparse.FloatTensor(xmax, ymax, tmax)")
+    PythonInR::pyExec("sz = torch.Size([xmax, ymax, tmax])")
+    for (ind in bit::chunk(plpData.mapped$covariates)) {
+      OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+      # subtract 1 as python index starts at 0:
+      PythonInR::pySet('datas', as.matrix(ff::as.ram(plpData.mapped$covariates[ind,c('rowId','covariateId','timeId', 'covariateValue')])))
+      #PythonInR::pyExec("indexes= tf.convert_to_tensor(datas[:,0:3]-1, dtype=tf.int64)")
+      PythonInR::pyExec("indexes= datas[:,0:3]-1")
+      PythonInR::pyExec("indexes= torch.LongTensor(indexes.T)")
+      PythonInR::pyExec("tempData = torch.sparse.FloatTensor(indexes, 
+                  torch.FloatTensor(datas[:,3]), sz)")
+      # add tensors:
+      PythonInR::pyExec("plpData = plpData.add(tempData)")
+    }
+    
+    OhdsiRTools::logTrace(paste0('Sparse python tensor converted'))                            
 
+  result <- list(data='plpData',
+                 covariateRef=plpData.mapped$covariateRef,
+                 map=plpData.mapped$map)
+  return(result)
+  
+}
 
 # reformat the evaluation
 reformatPerformance <- function(train, test, analysisId){
