@@ -50,6 +50,8 @@
 #'                                         train (validationFraction of the data) sets.  The split is stratified by the class label.
 #' @param testFraction                     The fraction of the data to be used as the test set in the patient
 #'                                         split evaluation.
+#' @param trainFraction                    A real number between 0 and 1 indicating the train set fraction of the data.
+#'                                         If not set trainFraction is equal to 1 - test
 #' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #' @param indexes                          A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)
@@ -134,11 +136,11 @@
 #' } 
 runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalizeData=T,
                    modelSettings,
-                   testSplit = 'time', testFraction=0.25, splitSeed=NULL, nfold=3, indexes=NULL,
+                   testSplit = 'time', testFraction=0.25, trainFraction = NULL, splitSeed=NULL, nfold=3, indexes=NULL,
                    saveDirectory=NULL, savePlpData=T,
                    savePlpResult=T, savePlpPlots = T, saveEvaluation = T,
                    verbosity="INFO", timeStamp=FALSE, analysisId=NULL, 
-                   save
+                   save=NULL
 ){
 
   if(!missing(save)){
@@ -221,7 +223,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   if(is.null(indexes)){
     if(testSplit=='time'){
       OhdsiRTools::logTrace('Dataset time split starter')
-      indexes <-tryCatch(timeSplitter(population, test=testFraction, nfold=nfold),
+      indexes <-tryCatch(timeSplitter(population, test=testFraction, train = trainFraction, nfold=nfold),
                      finally=OhdsiRTools::logTrace('Done.'))
     }
     if(testSplit=='person'){
@@ -230,7 +232,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
         splitSeed <- sample(20000000,1)-10000000
         OhdsiRTools::logInfo(paste0('splitSeed: ', splitSeed))
         } 
-      indexes <- tryCatch(personSplitter(population, test=testFraction, nfold=nfold, seed=splitSeed),
+      indexes <- tryCatch(personSplitter(population, test=testFraction, train = trainFraction, nfold=nfold, seed=splitSeed),
                       finally= OhdsiRTools::logTrace('Done.')
       )
     }

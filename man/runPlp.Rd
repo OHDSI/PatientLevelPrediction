@@ -6,10 +6,10 @@
 \usage{
 runPlp(population, plpData, minCovariateFraction = 0.001, normalizeData = T,
   modelSettings, testSplit = "time", testFraction = 0.25,
-  splitSeed = NULL, nfold = 3, indexes = NULL, saveDirectory = NULL,
-  savePlpData = T, savePlpResult = T, savePlpPlots = T,
-  saveEvaluation = T, verbosity = "INFO", timeStamp = FALSE,
-  analysisId = NULL, save)
+  trainFraction = NULL, splitSeed = NULL, nfold = 3, indexes = NULL,
+  saveDirectory = NULL, savePlpData = T, savePlpResult = T,
+  savePlpPlots = T, saveEvaluation = T, verbosity = "INFO",
+  timeStamp = FALSE, analysisId = NULL, save = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -37,6 +37,9 @@ train (validationFraction of the data) sets.  The split is stratified by the cla
 
 \item{testFraction}{The fraction of the data to be used as the test set in the patient
 split evaluation.}
+
+\item{trainFraction}{A real number between 0 and 1 indicating the train set fraction of the data.
+If not set trainFraction is equal to 1 - test}
 
 \item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
 
