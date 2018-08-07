@@ -22,20 +22,56 @@ from sklearn.externals.joblib import Memory
 #from sklearn.datasets import load_svmlight_file
 from sklearn.externals import joblib
 
-
+if "python_dir" in globals():
+    sys.path.insert(0, python_dir)
+    import TorchUtils as tu
 #================================================================
 
 
-print("Applying Python Model" )
+print("Applying Python Model") 
 
-###########################################################################	
+###########################################################################
+	
+def get_temproal_data(covariates, population):
+    p_ids_in_cov = set(covariates[:, 0])
+    timeid_len = len(set(covariates[:, -2]))
+    print timeid_len
+    full_covariates = np.array([]).reshape(0,4)
+    default_covid = covariates[0, 1]
+    for p_id in  population[:, 0]:
+        if p_id not in p_ids_in_cov:
+            tmp_x = np.array([p_id, default_covid, 1, 0]).reshape(1,4) #default cov id, timeid=1
+            full_covariates = np.concatenate((full_covariates, tmp_x), axis=0)
+        else:
+            tmp_x = covariates[covariates[:, 0] == p_id, :]
+            #print tmp_x.shape, X.shape
+            full_covariates = np.concatenate((full_covariates, tmp_x), axis=0)
+
+    X, patient_keys = tu.convert_to_temporal_format(full_covariates, timeid_len  = timeid_len, predict = True)
+    return X
+
 
 print("Loading Data...")
 # load data + train,test indexes + validation index
 
 y=population[:,1]
-X = plpData[population[:,0],:]
-X = X[:,included.flatten()]
+#print covariates.shape
+
+if modeltype == 'temporal':
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
+        X = tf.sparse_reorder(plpData)
+        X = tf.sparse_tensor_to_dense(X)
+        X = sess.run(X)
+        #tu.forward_impute_missing_value(X)
+    X = X[np.int64(population[:, 0]), :]
+	#X = get_temproal_data(covariates, population)
+    dense = 0
+else:
+    #print included
+	X = plpData[population[:,0],:]
+	X = X[:,included.flatten()]
 
 # load index file
 print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
@@ -45,16 +81,33 @@ print("Data ready for model has %s features" %(np.shape(X)[1]))
 ###########################################################################	
 # uf dense convert 
 if dense==1:
-  print("converting to dense data...")
+  print "converting to dense data..."
   X=X.toarray()
 ###########################################################################	
 
 # load model
 print("Loading model...")
+
 modelTrained = joblib.load(os.path.join(model_loc,"model.pkl")) 
 
+print(X.shape)
 print("Calculating predictions on population...")
-test_pred = modelTrained.predict_proba(X)[:,1]
+
+if autoencoder:
+    autoencoder_model = joblib.load(os.path.join(model_loc, 'autoencoder_model.pkl'))
+    X = autoencoder_model.get_encode_features(X)
+
+test_batch = tu.batch(X, batch_size = 32)
+test_pred = []
+for test in test_batch:
+    pred_test1 = modelTrained.predict_proba(test)[:, 1]
+    test_pred = np.concatenate((test_pred , pred_test1), axis = 0)
+
+
+if test_pred.ndim != 1:
+    test_pred = test_pred[:,1]
+  
+
 print("Prediction complete: %s rows" %(np.shape(test_pred)[0]))
 print("Mean: %s prediction value" %(np.mean(test_pred)))
 

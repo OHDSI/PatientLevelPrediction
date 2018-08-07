@@ -30,6 +30,8 @@ The OHDSI Patient Level Prediction (PLP) package requires installing:
 * Java (http://www.java.com )
 * RTools (https://cran.r-project.org/bin/windows/Rtools/) 
 * Anaconda 3.6 (https://www.continuum.io/downloads) \- this will require checking your path variable to ensure the correct python is used by R \- more instructions below
+* If you have Anaconda and want to use PyTorch v0.4 (https://pytorch.org) as the backend of deep learning, you can directly use command "conda install pytorch torchvision -c pytorch" for Linux. 
+  Please refers to commands for installing PyTorch (https://pytorch.org) on other develop enviroments.
 
 ## Mac/Linux Users
 The OHDSI Patient Level Prediction (PLP) package requires installing:
