@@ -9,8 +9,7 @@ setAdaBoost(nEstimators = 50, learningRate = 1, seed = NULL)
 \arguments{
 \item{nEstimators}{The maximum number of estimators at which boosting is terminated}
 
-\item{learningRate}{Learning rate shrinks the contribution of each classifier by learningRate.
-There is a trade-off between learningRate and nEstimators .}
+\item{learningRate}{Learning rate shrinks the contribution of each classifier by learningRate. There is a trade-off between learningRate and nEstimators .}
 
 \item{seed}{A seed for the model}
 }
@@ -19,6 +18,6 @@ Create setting for AdaBoost with python
 }
 \examples{
 \dontrun{
-model.adaBoost <- setAdaBoost(size = 4, alpha = 1e-05, seed = NULL)
+model.adaBoost <- setAdaBoost(size=4, alpha=0.00001, seed=NULL)
 }
 }
