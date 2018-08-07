@@ -82,7 +82,6 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   
   # normalise the data:
   class(plpData) <- c(class(plpData), 'covariateData')
-
   plpData <- FeatureExtraction::tidyCovariateData(covariateData=plpData, 
                                 minFraction = minCovariateFraction,
                                 normalize = normalizeData,
@@ -175,7 +174,7 @@ applyTidyCovariateData <- function(plpData,preprocessSettings){
 }
 
 # create transformation function
-createTransform <- function(plpModel, cleanData = TRUE){
+createTransform <- function(plpModel){
   #=============== edited this in last run
   # remove index to save space 
   plpModel$index <- NULL
@@ -199,14 +198,12 @@ createTransform <- function(plpModel, cleanData = TRUE){
                     timeRef=ff::clone(plpData $timeRef),
                     metaData=plpData$metaData)
     plpData2$covariates <- limitCovariatesToPopulation(plpData2$covariates, ff::as.ff(population$rowId))
-    if (cleanData){
-      plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
-      if(length(plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)>0){
-        idx <- !ffbase::`%in%`(plpData2$covariateRef$covariateId, plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)
-        if(sum(idx)!=0){
-          plpData2$covariateRef <- plpData2$covariateRef[idx, ]
-        } else{warning('All covariateRef removed by deletedInfrequentCovariateIds')}
-      }
+    plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
+    if(length(plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)>0){
+      idx <- !ffbase::`%in%`(plpData2$covariateRef$covariateId, plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)
+      if(sum(idx)!=0){
+        plpData2$covariateRef <- plpData2$covariateRef[idx, ]
+      } else{warning('All covariateRef removed by deletedInfrequentCovariateIds')}
     }
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData2, 
