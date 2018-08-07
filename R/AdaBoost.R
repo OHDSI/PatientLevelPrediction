@@ -32,13 +32,13 @@ setAdaBoost <- function(nEstimators =50, learningRate=1, seed=NULL){
     stop('Invalid seed')
   if(class(nEstimators )!='numeric')
     stop('nEstimators must be a numeric value >0 ')
-  if(nEstimators < 1)
+  if(min(nEstimators) < 1)
     stop('nEstimators must be greater that 0 or -1')
   if(class(learningRate)!='numeric')
     stop('learningRate must be a numeric value >0 and <=1')
-  if(learningRate > 1)
+  if(max(learningRate) > 1)
     stop('learningRate must be less that or equal to 1')
-  if(learningRate < 0)
+  if(min(learningRate) < 0)
     stop('learningRate must be a numeric value >0')
   
   
@@ -145,7 +145,8 @@ fitAdaBoost <- function(population, plpData, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef,
                  trainingTime =comp,
-                 dense=0
+                 dense=0,
+                 covariateMap=x$map
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'
