@@ -134,7 +134,7 @@ predict.python <- function(plpModel, population, plpData){
     #covariates <- plpData$covariates
     #covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
     #PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
-    result<- toSparseTorchPython(plpData,population,map=NULL, temporal=T)
+    result<- toSparseTorchPython(plpData,population,map=plpModel$covariateMap, temporal=T)
     PythonInR::pySet("modeltype", 'temporal')
     PythonInR::pySet("autoencoder", 0)
     python_dir <- system.file(package='PatientLevelPrediction','python')
