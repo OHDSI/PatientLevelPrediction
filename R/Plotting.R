@@ -961,3 +961,124 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
     ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
   return(plot)
 }
+
+#' @title plotLearningCurve
+#'
+#' @description Create a plot of the learning curve using the object returned
+#' from \code{createLearningCurve}.
+#'
+#' @param learningCurve An object returned by \code{\link{createLearningCurve}}
+#'   function.
+#' @param metric Specifies the metric to be plotted:
+#'   \itemize{
+#'     \item{\code{'AUROC'} - use the area under the Receiver Operating
+#'       Characteristic curve}
+#'     \item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
+#'     \item{\code{'sBrier'} - use the scaled Brier score}
+#'   }
+#' @param abscissa Specify the abscissa metric to be plotted:
+#'   \itemize{
+#'     \item{\code{'observations'} - use number of observations}
+#'     \item{\code{'outcomes'} - use number of positive outcomes}
+#'   }
+#' @param plotTitle Title of the learning curve plot.
+#' @param plotSubtitle Subtitle of the learning curve plot.
+#' @param fileName Filename of plot to be saved, for example \code{'plot.png'}.
+#'   See the function \code{ggsave} in the ggplot2 package for supported file 
+#'   formats.
+#'
+#' @return
+#' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to 
+#' file in a different format.
+#' 
+#' @examples
+#' \dontrun{
+#' # create learning curve object
+#' learningCurve <- createLearningCurve(population,
+#'                                      plpData,
+#'                                      modelSettings)
+#' # plot the learning curve
+#' plotLearningCurve(learningCurve)
+#' }
+#' 
+#' @export
+plotLearningCurve <- function(learningCurve,
+                              metric = "AUROC",
+                              abscissa = "observations",
+                              plotTitle = "Learning Curve", 
+                              plotSubtitle = NULL,
+                              fileName = NULL){
+  
+  # rename dataframe columns
+  colnames(learningCurve) <- c("Fraction", "Observations", "Occurrences",
+                               "Time", "TrainROC", "TestROC", "TrainPR",
+                               "TestPR", "TrainBrierScore", "TestBrierScore",
+                               "TrainBrierScaled", "TestBrierScaled",
+                               "TrainCalibrationIntercept",
+                               "TestCalibrationIntercept",
+                               "TrainCalibrationSlope", "TestCalibrationSlope")
+  tidyLearningCurve <- NULL
+  yAxisRsnge <- NULL
+  y <- NULL
+  
+  # check for performance metric to plot
+  if(metric == "AUROC") {
+    # tidy up dataframe
+    tidyLearningCurve <- learningCurve %>%
+      dplyr::rename(Training = TrainROC, Testing = TestROC) %>%
+      tidyr::gather(Dataset, AUROC, c(Training, Testing), factor_key = FALSE)
+    
+    # define plot properties
+    yAxisRange <- c(0.5, 1.0)
+    y <- "AUROC"
+    
+  } else if (metric == "AUPRC") {
+    # tidy up dataframe
+    tidyLearningCurve <- learningCurve %>%
+      dplyr::rename(Training = TrainPR, Testing = TestPR) %>%
+      tidyr::gather(Dataset, AUPRC, c(Training, Testing), factor_key = FALSE)
+    
+    # define plot properties
+    yAxisRange <- c(0.0, 1.0)
+    y <- "AUPRC"
+    
+  } else if (metric == "sBrier") {
+    # tidy up dataframe
+    tidyLearningCurve <- learningCurve %>%
+      dplyr::rename(Training = TrainBrierScaled, Testing = TestBrierScaled) %>%
+      tidyr::gather(Dataset, sBrier, c(Training, Testing), factor_key = FALSE)
+    
+    # define plot properties
+    yAxisRange <- c(0.0, 1.0)
+    y <- "sBrier"
+  } else {
+    stop("An incorrect metric has been specified.")
+  }
+  
+  if (abscissa == "observations") {
+    abscissa <- "Observations"
+    abscissaLabel <- "Training set size"
+  } else if (abscissa == "outcomes") {
+    abscissa <- "Occurrences"
+    abscissaLabel <- "Positive outcomes"
+  } else {
+    stop("An incorrect abscissa has been specified.")
+  }
+  
+  # create plot object
+  plot <- tidyLearningCurve %>%
+    ggplot2::ggplot(ggplot2::aes_string(x = abscissa, y = y,
+                                        col = "Dataset")) +
+    ggplot2::geom_line() +
+    ggplot2::coord_cartesian(ylim = yAxisRange, expand = FALSE) +
+    ggplot2::labs(title = plotTitle, subtitle = plotSubtitle, 
+                  x = abscissaLabel) +
+    ggplot2::theme_light()
+  
+  # save plot, if fucntion call provides a file name
+  if ((!is.null(fileName)) & (is.character(fileName))) {
+    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
+  }
+  
+  return(plot)
+}
