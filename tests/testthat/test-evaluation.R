@@ -13,17 +13,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+context("Evaluation")
 
 library("testthat")
 library("pROC")
 library("AUC")
 library("scoring")
 library("Metrics")
+library("PRROC")
 
-context("Performance Measures")
-
-test_that("AUC", {
-  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+test_that("AUROC", {
+  prediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
   
   proc.auc <- pROC::roc(prediction$outcomeCount, prediction$value, algorithm = 3,
                         direction="<")
@@ -32,8 +32,21 @@ test_that("AUC", {
   expect_equal(as.numeric(proc.auc$auc), auc.auc, tolerance = tolerance)
 })
 
+test_that("AUPRC", {
+  prediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
+  
+  positive <- prediction$value[prediction$outcomeCount == 1]
+  negative <- prediction$value[prediction$outcomeCount == 0]
+  pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
+  auprc <- pr$auc.integral
+  
+  # area under precision-recall curve must be between 0 and 1
+  expect_gte(auprc, 0)
+  expect_lte(auprc, 1)
+})
+
 test_that("Brierscore", {
-  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  prediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
 
   prediction$dummy <- 1
   brier.scoring <- scoring::brierscore(outcomeCount ~ value, data=prediction, group='dummy')$brieravg
@@ -42,7 +55,7 @@ test_that("Brierscore", {
 })
 
 test_that("Average precision", {
-  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  prediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
   
   aveP.metrics <- Metrics::apk(nrow(prediction), 
                                which(prediction$outcomeCount==1), (1:nrow(prediction))[order(-prediction$value)])
@@ -221,7 +234,6 @@ test_that("diagnosticOddsRatio", {
   expect_that(diagnosticOddsRatio(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
   expect_that(diagnosticOddsRatio(TP=10,TN=3,FN=5,FP=5), equals(((10/(10+5))/(5/(5+3)))/((5/(10+5))/(3/(5+3))), tolerance  = 0.0001))
 })
-
 
 #test_that("getDemographicSummary", {
 #  prediction <- data.frame(rowId = 1:100, value= runif(100), outcomeCount =round(runif(100)))

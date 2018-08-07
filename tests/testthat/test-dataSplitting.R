@@ -14,7 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 library("testthat")
 context("Data splitting")
 
@@ -45,6 +44,28 @@ test_that("Data splitting by person", {
   test <- table(test$outcomeCount, test$index)
   expect_that(sum(test), equals(size))
   
+  # test the training fraction parameter for learning curves
+  size = 500
+  population4 <- data.frame(rowId=1:size,
+                            outcomeCount=c(rep(1,floor(size/3)),
+                                           rep(0,size-floor(size/3)))) 
+  test <- personSplitter(population4, test = 0.2, train = 0.4, nfold = 4)
+
+  tolerance = 5
+  excludedPatients = 200
+  # test, if the number of patients in each fold are roughly the same
+  expect_equal(length(test$index[test$index == 1]),
+               length(test$index[test$index == 3]),
+               tolerance = tolerance)
+  expect_equal(length(test$index[test$index == 2]),
+               length(test$index[test$index == 4]),
+               tolerance = tolerance)
+  expect_equal(length(test$index[test$index == 1]),
+               length(test$index[test$index == 4]),
+               tolerance = tolerance)
+  # test, if patients were excluded according to the training fraction
+  expect_equal(length(test$index[test$index == 0]),
+               excludedPatients)
 })
 
 test_that("Data splitting by time", {
@@ -64,5 +85,29 @@ test_that("Data splitting by time", {
   test <- merge(population2, test)
   test <- table(test$outcomeCount, test$index)
   expect_that(sum(test), equals(size))
+  
+  # test the training fraction parameter for learning curves
+  size <- 500
+  set.seed(1)
+  population3 <- data.frame(rowId=1:size,
+                            outcomeCount=sample(0:1,size,replace=TRUE),
+                            cohortStartDate = as.Date("2010-01-01") + c(1:size))
+  test <- timeSplitter(population3, test = 0.2, train = 0.4, nfold = 4)
+  
+  tolerance = 5
+  excludedPatients = 196
+  # test, if the number of patients in each fold are roughly the same
+  expect_equal(length(test$index[test$index == 1]),
+               length(test$index[test$index == 3]),
+               tolerance = tolerance)
+  expect_equal(length(test$index[test$index == 2]),
+               length(test$index[test$index == 4]),
+               tolerance = tolerance)
+  expect_equal(length(test$index[test$index == 1]),
+               length(test$index[test$index == 4]),
+               tolerance = tolerance)
+  # test, if patients were excluded according to the training fraction
+  expect_equal(length(test$index[test$index == 0]),
+               excludedPatients)
   
 })

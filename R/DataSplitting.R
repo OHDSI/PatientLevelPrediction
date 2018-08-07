@@ -41,13 +41,6 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
     OhdsiRTools::registerLogger(logger)
   }
 
-  # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
-                                        threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
-  }
   # parameter checking
   if (!is.null(seed))
     set.seed(seed)
@@ -161,6 +154,7 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
 #' A dataframe containing the columns: rowId and index
 #' @export
 timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
+
   if(length(OhdsiRTools::getLoggers())==0){
     logger <- OhdsiRTools::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
