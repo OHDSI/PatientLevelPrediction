@@ -33,14 +33,8 @@
 setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, class_weight = 0, rnn_type = 'RNN'){
   
   # test python is available and the required dependancies are there:
-  if (!PythonInR::pyIsConnected()){
-    tryCatch({
-      python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    }, error = function(err){
-      stop('Python was not found on your system. See the vignette for instructions.')
-    }  
-    )
-  }
+  checkPython()
+  
   result <- list(model='fitRNNTorch', param=split(expand.grid(hidden_size=hidden_size,
                                             epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
                                             class_weight = class_weight, rnn_type = rnn_type),
@@ -65,17 +59,7 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
-    PythonInR::pyConnect()
-  }
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
-  
-  PythonInR::pyOptions("numpyAlias", "np")
-  PythonInR::pyOptions("useNumpy", TRUE)
-  PythonInR::pyImport("numpy", as='np')
+  initiatePython()
   
   start <- Sys.time()
   

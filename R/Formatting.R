@@ -199,29 +199,13 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
   }
   
   # test python is available and the required dependancies are there:
-  if ( !PythonInR::pyIsConnected() ){
-    python.test <- PythonInR::autodetectPython(pythonExePath = pythonExePath)
-
-    if(is.null(python.test$pythonExePath))
-      stop('You need to install python for this method - please see ...')
-  }
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix" ){
-    PythonInR::pyConnect(pythonExePath = pythonExePath)
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')
-  }
+  checkPython()
+  
+  initiatePython()
   
   if(temporal){
     PythonInR::pyExec("import tensorflow as tf")
   }
-
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
-
-  PythonInR::pyExec('import numpy as np')
-  PythonInR::pyOptions("useNumpy", TRUE)
 
   cov <- plpData$covariates #ff::clone(plpData$covariates)
   covref <- plpData$covariateRef #ff::clone(plpData$covariateRef)
@@ -343,29 +327,13 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
   }
   
   # test python is available and the required dependancies are there:
-  if ( !PythonInR::pyIsConnected() ){
-    python.test <- PythonInR::autodetectPython(pythonExePath = pythonExePath)
-    
-    if(is.null(python.test$pythonExePath))
-      stop('You need to install python for this method - please see ...')
-  }
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix" ){
-    PythonInR::pyConnect(pythonExePath = pythonExePath)
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')
-  }
+  checkPython()
+  
+  initiatePython()
   
   if(temporal){
     PythonInR::pyExec("import torch")
   }
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
-  
-  PythonInR::pyExec('import numpy as np')
-  PythonInR::pyOptions("useNumpy", TRUE)
   
   cov <- plpData$covariates #ff::clone(plpData$covariates)
   covref <- plpData$covariateRef #ff::clone(plpData$covariateRef)

@@ -36,14 +36,8 @@ setMLPTorch <- function(size=c(500, 1000), w_decay=c(0.0005, 0.005),
                         epochs=c(20, 50), seed=0, class_weight = 0, mlp_type = 'MLP', autoencoder = FALSE, vae = FALSE){
   
   # test python is available and the required dependancies are there:
-  if (!PythonInR::pyIsConnected()){
-    tryCatch({
-      python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    }, error = function(err){
-      stop('Python was not found on your system. See the vignette for instructions.')
-    }  
-    )
-  }
+  checkPython()
+  
   result <- list(model='fitMLPTorch', param=split(expand.grid(size=size, w_decay=w_decay,
                                             epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
 											class_weight = class_weight, mlp_type = mlp_type, autoencoder = autoencoder, vae = vae),
@@ -69,17 +63,7 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
-    PythonInR::pyConnect()
-  }
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
-  
-  PythonInR::pyOptions("numpyAlias", "np")  #NEEDED?
-  PythonInR::pyOptions("useNumpy", TRUE) #NEEDED?
-  PythonInR::pyImport("numpy", as='np')
+  initiatePython()
   
   start <- Sys.time()
   
