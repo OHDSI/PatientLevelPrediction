@@ -50,12 +50,7 @@ setRandomForest<- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, s
     stop('varImp must be boolean')
   
   # test python is available and the required dependancies are there:
-  if ( !PythonInR::pyIsConnected() ){
-    python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    
-    if(is.null(python.test$pythonExePath))
-      stop('You need to install python for this method - please see ...')
-  }
+  checkPython()
   
   result <- list(model='fitRandomForest', param= expand.grid(ntrees=ntrees, mtries=mtries,
                                                        maxDepth=maxDepth, varImp=varImp, 
@@ -92,16 +87,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
-    OhdsiRTools::logTrace('Connecting to python')
-    PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')}
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
+  initiatePython()
   
   PythonInR::pyExec('quiet = True')
   if(quiet==F){

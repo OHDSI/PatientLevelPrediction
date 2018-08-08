@@ -108,21 +108,8 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
 predict.python <- function(plpModel, population, plpData){
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
-    PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np') # issues with this using as np
-    }
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() ){
-    OhdsiRTools::logError('Python not connect error')
-    stop()
-  }
-  
-  ##PythonInR::pyImport("numpy", as="np") #crashing R
-  
+  #initiatePython()
+
   OhdsiRTools::logInfo('Setting inputs...')
   PythonInR::pySet("dense", plpModel$dense)
   PythonInR::pySet("model_loc", plpModel$model)

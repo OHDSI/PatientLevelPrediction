@@ -32,14 +32,8 @@ setNaiveBayes <- function(variableNumber=2000){
     stop('Can incorrect class for variableNumber - must be numeric')
   
   # test python is available and the required dependancies are there:
-  if (!PythonInR::pyIsConnected()){
-    tryCatch({
-      python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    }, error = function(err){
-        stop('Python was not found on your system. See the vignette for instructions.')
-       }  
-    )
-  }
+  checkPython()
+  
   result <- list(model='fitNaiveBayes', name='Naive Bayes', param= list('variableNumber'=variableNumber))
   class(result) <- 'modelSettings' 
   
@@ -59,16 +53,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
-    PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')}
-  
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
+  initiatePython()
   
   start <- Sys.time()
   

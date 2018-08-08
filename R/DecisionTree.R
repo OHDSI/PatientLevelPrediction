@@ -59,14 +59,8 @@ setDecisionTree <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
     stop('Plot must be logical')
 
   # test python is available and the required dependancies are there:
-  if (!PythonInR::pyIsConnected()){
-    tryCatch({
-      python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    }, error = function(err){
-      stop('Python was not found on your system. See the vignette for instructions.')
-    }  
-    )
-  }
+  checkPython()
+  
   result <- list(model='fitDecisionTree', 
                  param= split(expand.grid(maxDepth=maxDepth, 
                                           minSamplesSplit=minSamplesSplit,
@@ -96,16 +90,7 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
-    PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')}
-  
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
+  initiatePython()
   
   PythonInR::pyExec('quiet = True')
   if(quiet==F){
