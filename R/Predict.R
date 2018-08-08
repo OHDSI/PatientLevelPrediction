@@ -144,6 +144,8 @@ predict.python <- function(plpModel, population, plpData){
     PythonInR::pySet("modeltype", 'normal')
     PythonInR::pySet("autoencoder", 0)
     if (plpModel$modelSettings$model == 'fitLRTorch' | plpModel$modelSettings$model == 'fitMLPTorch'){
+      python_dir <- system.file(package='PatientLevelPrediction','python')
+      PythonInR::pySet("python_dir", python_dir)      
       if (plpModel$modelSettings$modelParameters$autoencoder | plpModel$modelSettings$modelParameters$vae){
         PythonInR::pySet("autoencoder", 1)
       }

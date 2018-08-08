@@ -58,13 +58,7 @@ y=population[:,1]
 #print covariates.shape
 
 if modeltype == 'temporal':
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    with tf.Session(config=config) as sess:
-        X = tf.sparse_reorder(plpData)
-        X = tf.sparse_tensor_to_dense(X)
-        X = sess.run(X)
-        #tu.forward_impute_missing_value(X)
+    X = plpData.to_dense().numpy()
     X = X[np.int64(population[:, 0]), :]
 	#X = get_temproal_data(covariates, population)
     dense = 0
@@ -97,11 +91,14 @@ if autoencoder:
     autoencoder_model = joblib.load(os.path.join(model_loc, 'autoencoder_model.pkl'))
     X = autoencoder_model.get_encode_features(X)
 
-test_batch = tu.batch(X, batch_size = 32)
-test_pred = []
-for test in test_batch:
-    pred_test1 = modelTrained.predict_proba(test)[:, 1]
-    test_pred = np.concatenate((test_pred , pred_test1), axis = 0)
+if modeltype == 'temporal':
+    test_batch = tu.batch(X, batch_size = 32)
+    test_pred = []
+    for test in test_batch:
+        pred_test1 = modelTrained.predict_proba(test)[:, 1]
+        test_pred = np.concatenate((test_pred , pred_test1), axis = 0)
+else:
+    test_pred = modelTrained.predict_proba(X)[:, 1]
 
 
 if test_pred.ndim != 1:
