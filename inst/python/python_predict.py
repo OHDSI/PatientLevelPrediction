@@ -21,7 +21,6 @@ from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 from sklearn.externals.joblib import Memory
 #from sklearn.datasets import load_svmlight_file
 from sklearn.externals import joblib
-
 if "python_dir" in globals():
     sys.path.insert(0, python_dir)
     import TorchUtils as tu
@@ -35,7 +34,6 @@ print("Applying Python Model")
 def get_temproal_data(covariates, population):
     p_ids_in_cov = set(covariates[:, 0])
     timeid_len = len(set(covariates[:, -2]))
-    print timeid_len
     full_covariates = np.array([]).reshape(0,4)
     default_covid = covariates[0, 1]
     for p_id in  population[:, 0]:
@@ -75,7 +73,7 @@ print("Data ready for model has %s features" %(np.shape(X)[1]))
 ###########################################################################	
 # uf dense convert 
 if dense==1:
-  print "converting to dense data..."
+  print("converting to dense data...")
   X=X.toarray()
 ###########################################################################	
 

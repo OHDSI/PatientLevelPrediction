@@ -164,7 +164,8 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef,
                  trainingTime =comp,
-                 dense=0
+                 dense=0,
+                 covariateMap=x$map
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'

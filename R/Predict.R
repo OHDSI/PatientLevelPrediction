@@ -108,7 +108,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
 predict.python <- function(plpModel, population, plpData){
   
   # connect to python if not connected
-  #initiatePython()
+  initiatePython()
 
   OhdsiRTools::logInfo('Setting inputs...')
   PythonInR::pySet("dense", plpModel$dense)
