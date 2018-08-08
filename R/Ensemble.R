@@ -277,7 +277,7 @@ applyEnsembleModel <- function(population,
   if (!calculatePerformance || nrow(prediction) == 1)
     return(prediction)
 
-  performance <- evaluatePlp(prediction, dataList[[0]])
+  performance <- evaluatePlp(prediction, dataList[[1]])
 
 
   result <- list(prediction = prediction, performanceEvaluation = performance)
