@@ -244,6 +244,7 @@ getPlpData <- function(connectionDetails,
   metaData$call$firstExposureOnly = firstExposureOnly
   metaData$call$washoutPeriod = washoutPeriod
   metaData$call$covariateSettings= covariateSettings
+  metaData$call$sampleSize = sampleSize
   
   # create the temporal settings (if temporal use)
   timeReference <- NULL
