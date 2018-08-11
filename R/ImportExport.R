@@ -114,6 +114,7 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
   plpResult$model$metaData$call$cdmDatabaseSchema <- dataName
   plpResult$model$metaData$call$cohortDatabaseSchema <- NULL
   plpResult$model$metaData$call$outcomeDatabaseSchema <- NULL
+  plpResult$model$metaData$call$oracleTempSchema <- NULL
   plpResult$model$metaData$modelName <- modelName
   plpResult$model$index <- NULL
   plpResult$prediction <- NULL
@@ -121,6 +122,11 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
     mod <- get("plpModel", envir = environment(plpResult$model$predict))
     mod$index <- NULL
     mod$metaData$call$connectionDetails <- NULL
+    mod$metaData$call$oracleTempSchema <- NULL
+    mod$metaData$call$outcomeDatabaseSchema <- NULL
+    mod$metaData$call$cdmDatabaseSchema <- NULL
+    mod$metaData$call$cohortDatabaseSchema <- NULL
+    
     assign("plpModel", mod, envir = environment(plpResult$model$predict))
   }
 

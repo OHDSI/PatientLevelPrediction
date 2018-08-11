@@ -674,23 +674,7 @@ savePlpModel <- function(plpModel, dirPath){
   }
   #============================================================
     
-  #==================================================================
-  # if knn then move model
-  #==================================================================
-  if(attr(plpModel, 'type') =='knn'){
-    if(!dir.exists(file.path(dirPath,'knn_model')))
-      dir.create(file.path(dirPath,'knn_model'))
-    for(file in dir(plpModel$model)){
-      file.copy(file.path(plpModel$model,file), 
-                file.path(dirPath,'knn_model'), overwrite=TRUE,  recursive = FALSE,
-                copy.mode = TRUE, copy.date = FALSE)
-    }
-    
-    plpModel$model <- file.path(dirPath,'knn_model')
-    plpModel$predict <- createTransform(plpModel)
-  }
-  #============================================================
-  
+
   # if deep (keras) then save hdfs
   if(attr(plpModel, 'type') =='deep'){
     keras::save_model_hdf5(plpModel$model, filepath = file.path(dirPath, "keras_model"))
@@ -709,7 +693,7 @@ savePlpModel <- function(plpModel, dirPath){
   saveRDS(plpModel$dense, file = file.path(dirPath,  "dense.rds"))
   saveRDS(plpModel$cohortId, file = file.path(dirPath,  "cohortId.rds"))
   saveRDS(plpModel$outcomeId, file = file.path(dirPath,  "outcomeId.rds"))
-  if(!is.null(plpModel$covariateMap))
+  #if(!is.null(plpModel$covariateMap))
   saveRDS(plpModel$covariateMap, file = file.path(dirPath,  "covariateMap.rds"))
   
   attributes <- list(type=attr(plpModel, 'type'), predictionType=attr(plpModel, 'predictionType') )
@@ -777,7 +761,10 @@ loadPlpModel <- function(dirPath) {
     result$predict <- createTransform(result)
   }
   # if knn update the locaiton - TODO !!!!!!!!!!!!!!
-  
+  if(attributes$type=='knn'){
+    result$model <- file.path(dirPath,'knn_model')
+    result$predict <- createTransform(result)
+  }
   
   return(result)
 }

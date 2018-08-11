@@ -20,7 +20,7 @@
 
 import sys
 import os
-import cPickle
+import _pickle as cPickle
 import pdb
 import random
 import numpy as np
@@ -223,7 +223,7 @@ class Estimator(object):
                 val_loss, auc = self.evaluate(validation_data[0], validation_data[1], batch_size)
 
                 val_log = "- val_loss: %06.4f - auc: %6.4f" % (val_loss, auc)
-                print val_log
+                print(val_log)
                 # print("Epoch %s/%s loss: %06.4f - acc: %06.4f %s" % (t, nb_epoch, loss, acc, val_log))
 
     def evaluate(self, X, y, batch_size=32):
@@ -423,7 +423,6 @@ def convert_to_3d_matrix(covariate_ids, patient_dict, y_dict = None, timeid_len 
     D = len(covariate_ids)
     N = len(patient_dict)
     T = timeid_len   
-    print D,N,T
     concept_list =list(covariate_ids)
     concept_list.sort()
     x_raw = np.zeros((N, D, T), dtype=float)
@@ -513,7 +512,7 @@ def convert_to_temporal_format(covariates, timeid_len= 31, normalize = True, pre
     :return: return the raw data in 3-D format, patients x covariates x number of windows, and the patients ids
     """
     patient_dict = OrderedDict()
-    print 'Loading temporal data'
+    print('Loading temporal data')
     cov_vals_dict = {}
     for row in covariates:
         p_id, cov_id, time_id, cov_val = row[0], row[1], row[2], row[3]
@@ -680,7 +679,6 @@ if __name__ == "__main__":
     x = np.array(x)
     #pdb.set_trace()
     forward_impute_missing_value(x)
-    print x
     #filename = sys.argv[1]
     #word_embeddings(filename)
     '''

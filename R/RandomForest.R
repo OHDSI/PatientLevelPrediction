@@ -143,7 +143,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   
   # save the model to outLoc
-  outLoc <- file.path(getwd(),'python_models')
+  ##outLoc <- file.path(getwd(),'python_models')
+  outLoc <- createTempModelLoc()
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))

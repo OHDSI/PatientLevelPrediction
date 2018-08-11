@@ -34,6 +34,10 @@ from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 import numpy as np
+
+import warnings
+warnings.filterwarnings("ignore")
+
 if "python_dir" in globals():
     #print python_dir
     sys.path.insert(0, python_dir)
@@ -51,7 +55,7 @@ class LogisticRegression(nn.Module):
 
     def forward(self, x):
         out = self.linear(x)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -79,7 +83,7 @@ class MLP(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.dropout(x, p =0.5, training=self.training)
         x = self.fc2(x)
-        x = F.sigmoid(x)
+        x = torch.sigmoid(x)
         return x
 
     def predict_proba(self, x):
@@ -112,7 +116,7 @@ class SNN(nn.Module):
         x = self.fc2(x)
         x = self.ad1(x)
         x = self.fc4(x)
-        x = F.sigmoid(x)
+        x = torch.sigmoid(x)
         return x
 
     def predict_proba(self, x):
@@ -237,7 +241,7 @@ class Decoder(nn.Module):
         x = F.relu(self.deconv1(x))
         x = F.relu(self.deconv2(x))
         x = F.relu(self.deconv3(x))
-        reconstruction = F.sigmoid(self.deconv4(x))
+        reconstruction = torch.sigmoid(self.deconv4(x))
         return reconstruction
 
 class Encoder(nn.Module): # pylint: disable=too-many-instance-attributes
@@ -332,7 +336,7 @@ class CNN(nn.Module):
         out = self.bn(out)
         out = self.relu1(out)
         out = self.fc2(out)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -393,7 +397,7 @@ class CNN_MLF(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -451,7 +455,7 @@ class CNN_LSTM(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -507,7 +511,7 @@ class CNN_MIX(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -582,7 +586,7 @@ class CNN_MULTI(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -674,7 +678,7 @@ class ResNet(nn.Module):
         out = self.drop2(out)
         out = self.relu1(out)
         out = self.fc2(out)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
     
     def predict_proba(self, x):
@@ -712,7 +716,7 @@ class GRU(nn.Module):
 
         rearranged = hn[-1]
         out = self.linear(rearranged)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
 
     def initHidden(self, N):
@@ -754,7 +758,7 @@ class RNN(nn.Module):
         rearranged = hn[0][-1]
         # Decode hidden state of last time step
         out = self.fc(rearranged)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
 
     def predict_proba(self, x):
@@ -796,7 +800,7 @@ class BiRNN(nn.Module):
         rearranged = hn[-2:].view(x.size(0), -1)
         # Decode hidden state of last time step
         out = self.fc(rearranged)
-        out = F.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
 
     def predict_proba(self, x):
@@ -830,14 +834,14 @@ if __name__ == "__main__":
                 class_weight = class_weight.cuda()
             loss=nn.CrossEntropyLoss(weight = class_weight)
 
-        print "Dataset has %s rows and %s columns" % (X.shape[0], X.shape[1])
-        print "population loaded- %s rows and %s columns" % (np.shape(population)[0], np.shape(population)[1])
+        print("Dataset has %s rows and %s columns" % (X.shape[0], X.shape[1]))
+        print("population loaded- %s rows and %s columns" % (np.shape(population)[0], np.shape(population)[1]))
         ###########################################################################
         l1regularization = False
 
         if train:
             pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
-            print "Calculating prediction for train set of size %s" % (pred_size)
+            print("Calculating prediction for train set of size %s" % (pred_size))
             test_pred = np.zeros(pred_size)  # zeros length sum(population[:,population.size[1]] ==i)
             for i in range(1, int(np.max(population[:, population.shape[1] - 1]) + 1), 1):
                 testInd = population[population[:, population.shape[1] - 1] > 0, population.shape[1] - 1] == i
@@ -846,13 +850,13 @@ if __name__ == "__main__":
                 train_y = y[trainInds][trainInd]
 
                 test_x = X[trainInds, :][testInd, :]
-                print "Fold %s split %s in train set and %s in test set" % (i, train_x.shape[0], test_x.shape[0])
-                print "Train set contains %s outcomes " % (np.sum(train_y))
+                print("Fold %s split %s in train set and %s in test set" % (i, train_x.shape[0], test_x.shape[0]))
+                print("Train set contains %s outcomes " % (np.sum(train_y)))
                 train_x = train_x.toarray()
                 test_x = test_x.toarray()
 
                 if autoencoder:
-                    print 'first train stakced autoencoder'
+                    print('first train stakced autoencoder')
                     encoding_size = 256
                     if vae:
                         auto_model = VAE(input_size=train_x.shape[1], encoding_size=encoding_size)
@@ -880,7 +884,7 @@ if __name__ == "__main__":
                     del auto_model
                     del clf
                 # train on fold
-                print "Training fold %s" % (i)
+                print("Training fold %s" % (i))
                 start_time = timeit.default_timer()
                 if model_type == 'LogisticRegression':
                     model = LogisticRegression(train_x.shape[1])
@@ -915,8 +919,8 @@ if __name__ == "__main__":
                 #temp = preds.data.cpu().numpy().flatten()
                 #print temp
                 test_pred[ind] = temp
-                print "Prediction complete: %s rows " % (np.shape(test_pred[ind])[0])
-                print "Mean: %s prediction value" % (np.mean(test_pred[ind]))
+                print("Prediction complete: %s rows " % (np.shape(test_pred[ind])[0]))
+                print("Mean: %s prediction value" % (np.mean(test_pred[ind])))
 
             # merge pred with indexes[testInd,:]
             test_pred.shape = (population[population[:, population.shape[1] - 1] > 0, :].shape[0], 1)
@@ -924,8 +928,8 @@ if __name__ == "__main__":
 
         # train final:
         else:
-            print "Training final neural network model on all train data..."
-            print "X- %s rows and Y %s length" % (X[trainInds, :].shape[0], y[trainInds].shape[0])
+            print("Training final neural network model on all train data...")
+            print("X- %s rows and Y %s length" % (X[trainInds, :].shape[0], y[trainInds].shape[0]))
 
             start_time = timeit.default_timer()
 
@@ -957,7 +961,7 @@ if __name__ == "__main__":
                 del auto_model
                 del clf
 
-            print 'the final parameter epochs', epochs, 'weight_decay', w_decay
+            print('the final parameter epochs %.2f weight_decay %.2f' %(epochs,w_decay))
             if model_type == 'LogisticRegression':
                 model = LogisticRegression(train_x.shape[1])
                 l1regularization = True
@@ -977,10 +981,10 @@ if __name__ == "__main__":
             clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs, l1regularization = l1regularization)
 
             end_time = timeit.default_timer()
-            print "Training final took: %.2f s" % (end_time - start_time)
+            print("Training final took: %.2f s" % (end_time - start_time))
 
             # save the model:
-            print "Model saved to: %s" % (modelOutput)
+            print("Model saved to: %s" % (modelOutput))
 
             joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 
@@ -1003,7 +1007,6 @@ if __name__ == "__main__":
         full_covariates = np.array([]).reshape(0,4)
         default_covid = covariates[0, 1]
         timeid_len = len(set(covariates[:, -2]))
-        print timeid_len, covariates.shape
         for p_id in  population[:, 0]:
             if p_id not in p_ids_in_cov:
                 tmp_x = np.array([p_id, default_covid, 1, 0]).reshape(1,4) #default cov id, timeid=1
@@ -1016,7 +1019,7 @@ if __name__ == "__main__":
         X, patient_keys = tu.convert_to_temporal_format(full_covariates, timeid_len= timeid_len)
         full_covariates = []
         '''
-        print 'total patient', X.shape, y.shape
+        print('total patient %.2f , %.2f' %(X.shape, y.shape))
         if class_weight == -1:
             loss = tu.FocalLoss(gamma = 3)
         else:
@@ -1032,7 +1035,7 @@ if __name__ == "__main__":
         trainInds = population[:, population.shape[1] - 1] > 0
         if train:
             pred_size = int(np.sum(population[:, population.shape[1] - 1] > 0))
-            print "Calculating prediction for train set of size %s" % (pred_size)
+            print("Calculating prediction for train set of size %s" % (pred_size))
             test_pred = np.zeros(pred_size)  # zeros length sum(population[:,population.size[1]] ==i)
             for i in range(1, int(np.max(population[:, population.shape[1] - 1]) + 1), 1):
                 testInd = population[population[:, population.shape[1] - 1] > 0, population.shape[1] - 1] == i
@@ -1041,13 +1044,12 @@ if __name__ == "__main__":
                 train_y = y[trainInds][trainInd]
 
                 test_x = X[trainInds, :][testInd, :]
-                print "Fold %s split %s in train set and %s in test set" % (i, train_x.shape[0], test_x.shape[0])
-                print "Train set contains %s outcomes " % (np.sum(train_y))
+                print("Fold %s split %s in train set and %s in test set" % (i, train_x.shape[0], test_x.shape[0]))
+                print("Train set contains %s outcomes " % (np.sum(train_y)))
 
                 # train on fold
                 learning_rate = 0.001
-                print "Training fold %s" % (i)
-                print train_x.shape
+                print("Training fold %s" % (i))
                 start_time = timeit.default_timer()
                 if model_type == 'CNN':
                     model = CNN(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
@@ -1060,7 +1062,7 @@ if __name__ == "__main__":
                 elif model_type == 'CNN_MULTI': # multiple resolution model from deepDiagnosis
                     model = CNN_MULTI(nb_filter = nbfilters, labcounts = train_x.shape[1], window_size = train_x.shape[2])
                 elif model_type == 'ResNet':
-                    print 'train ResNet'
+                    print('train ResNet')
                     model = ResNet(ResidualBlock, [3, 3, 3], nb_filter=nbfilters, labcounts=train_x.shape[1], window_size=train_x.shape[2])
                 elif model_type == 'RNN':
                     model = RNN(train_x.shape[2], hidden_size, 2, 2)
@@ -1069,7 +1071,7 @@ if __name__ == "__main__":
                 elif model_type == 'GRU':
                     model = GRU(train_x.shape[2], hidden_size, 2, 2)
                 else:
-                    print 'temproal data do not support this model'
+                    print('temproal data not supported by this model')
 
                 if torch.cuda.is_available():
                     model = model.cuda()
@@ -1090,8 +1092,8 @@ if __name__ == "__main__":
 
                 test_pred[ind] = temp
                 del model
-                print "Prediction complete: %s rows " % (np.shape(test_pred[ind])[0])
-                print "Mean: %s prediction value" % (np.mean(test_pred[ind]))
+                print("Prediction complete: %s rows " % (np.shape(test_pred[ind])[0]))
+                print("Mean: %s prediction value" % (np.mean(test_pred[ind])))
 
             # merge pred with indexes[testInd,:]
             test_pred.shape = (population[population[:, population.shape[1] - 1] > 0, :].shape[0], 1)
@@ -1099,8 +1101,8 @@ if __name__ == "__main__":
 
         # train final:
         else:
-            print "Training final neural network model on all train data..."
-            print "X- %s rows and Y %s length" % (X[trainInds, :].shape[0], y[trainInds].shape[0])
+            print("Training final neural network model on all train data...")
+            print("X- %s rows and Y %s length" % (X[trainInds, :].shape[0], y[trainInds].shape[0]))
 
             start_time = timeit.default_timer()
 
@@ -1127,7 +1129,7 @@ if __name__ == "__main__":
             elif model_type == 'GRU':
                 model = GRU(train_x.shape[2], hidden_size, 2, 2)
             else:
-                print 'temproal data do not support this model'
+                print('temproal data not supported by this model')
 
             if torch.cuda.is_available():
                 model = model.cuda()
@@ -1137,12 +1139,12 @@ if __name__ == "__main__":
             clf.fit(train_x, train_y, batch_size=32, nb_epoch=epochs)
 
             end_time = timeit.default_timer()
-            print "Training final took: %.2f s" % (end_time - start_time)
+            print("Training final took: %.2f s" % (end_time - start_time))
 
             # save the model:
             if not os.path.exists(modelOutput):
                 os.makedirs(modelOutput)
-            print "Model saved to: %s" % (modelOutput)
+            print("Model saved to: %s" % (modelOutput))
 
             joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
 '''
@@ -1171,5 +1173,5 @@ if __name__ == "__main__":
             validation_data=(X_test, y_test), l1regularization = l1regularization)
     score, auc = clf.evaluate(X_test, y_test)
     
-    print('Test score:', auc)
+    print('Test score: %s' %(auc))
 '''

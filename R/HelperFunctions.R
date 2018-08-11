@@ -306,3 +306,13 @@ initiatePython <- function(){
   PythonInR::pyImport("numpy", as='np')
   return(NULL) 
 }
+
+createTempModelLoc <- function(){
+  repeat{
+  loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
+  if(!dir.exists(loc)){
+    return(loc)
+  }
+  }
+}
+

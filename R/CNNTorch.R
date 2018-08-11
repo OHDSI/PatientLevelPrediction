@@ -117,7 +117,8 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef, 
                  trainingTime =comp,
-                 dense=1
+                 dense=1,
+                 covariateMap=result$map # I think this is need for new data to map the same?
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'
