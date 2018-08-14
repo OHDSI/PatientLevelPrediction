@@ -218,7 +218,7 @@ runEnsembleModel <- function(population,
 #' @export
 applyEnsembleModel <- function(population,
                                dataList,
-                               modelList,
+                               modelList, # or file location?
                                analysisId = NULL,
                                calculatePerformance = T,
                                ensembleStrategy = "mean") {

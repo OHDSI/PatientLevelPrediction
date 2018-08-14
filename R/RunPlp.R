@@ -401,8 +401,8 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
       results$model$predict <- createTransform(results$model)
     }
     if(attr(results$model, 'type')=='deep'){
-      result$models$model <- file.path(analysisPath,'plpResult','model','keras_model')
-      result$models$predict <- createTransform(results$model)
+      results$models$model <- file.path(analysisPath,'plpResult','model','keras_model')
+      results$models$predict <- createTransform(results$model)
     }
   }
   

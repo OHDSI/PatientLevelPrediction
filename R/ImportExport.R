@@ -123,9 +123,9 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
     mod$index <- NULL
     mod$metaData$call$connectionDetails <- NULL
     mod$metaData$call$oracleTempSchema <- NULL
-    mod$metaData$call$outcomeDatabaseSchema <- NULL
-    mod$metaData$call$cdmDatabaseSchema <- NULL
-    mod$metaData$call$cohortDatabaseSchema <- NULL
+    mod$metaData$call$outcomeDatabaseSchema <-'Missing'
+    mod$metaData$call$cdmDatabaseSchema <- 'Missing'
+    mod$metaData$call$cohortDatabaseSchema <- 'Missing'
     
     assign("plpModel", mod, envir = environment(plpResult$model$predict))
   }

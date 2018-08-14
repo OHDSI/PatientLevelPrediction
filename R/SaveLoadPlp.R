@@ -676,8 +676,11 @@ savePlpModel <- function(plpModel, dirPath){
     
 
   # if deep (keras) then save hdfs
-  if(attr(plpModel, 'type') =='deep'){
+  if(attr(plpModel, 'type')%in%c('deep', 'deepMulti')){
     keras::save_model_hdf5(plpModel$model, filepath = file.path(dirPath, "keras_model"))
+    if(attr(plpModel, 'type')=='deepMulti'){
+      saveRDS(attr(plpModel, 'inputs'), file = file.path(dirPath,  "inputs_attr.rds"))
+    }
   } else {  
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   }
@@ -764,6 +767,14 @@ loadPlpModel <- function(dirPath) {
   if(attributes$type=='knn'){
     result$model <- file.path(dirPath,'knn_model')
     result$predict <- createTransform(result)
+  }
+  if(attributes$type=='deep' ){
+    result$predict <- createTransform(result)
+  }
+  if(attributes$type=='deepMulti'){
+    result$predict <- createTransform(result)
+    attr(result, 'inputs') <- tryCatch(readRDS(file.path(dirPath, "inputs_attr.rds")),
+                                       error=function(e) NULL) 
   }
   
   return(result)

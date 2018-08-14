@@ -208,6 +208,7 @@ createTransform <- function(plpModel){
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData2, 
                                                                     population=population))
+
     metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
                      testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
                      studyStartDate = do.call(paste,list(plpModel$metaData$call$studyStartDate)), 

@@ -92,7 +92,8 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     data <- data+ temp
   }
   } else {
-    for(i in min(cov$timeId):max(cov$timeId)){
+    for(i in min(plpData$timeRef$timeId):max(plpData$timeRef$timeId)){
+      if(sum(plpData.mapped$covariates$timeId==i)!=0){
       plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
       data <- Matrix::sparseMatrix(i=1,
                                    j=1,
@@ -106,12 +107,22 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
                                                          dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
         )
         data <- data+temp
-      }
+      } 
       data_array<-slam::as.simple_sparse_array(data)
       #extending one more dimesion to the array
       data_array<-slam::extend_simple_sparse_array(data_array,c(1L))
+      } else {
+        data <- Matrix::sparseMatrix(i=1,
+                                     j=1,
+                                     x=0,
+                                     dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) 
+        data_array<-slam::as.simple_sparse_array(data)
+        data_array<-slam::extend_simple_sparse_array(data_array,c(1L))
+        
+      }
       #binding arrays along the dimesion
-      if(i==min(cov$timeId)) {result_array<-data_array
+      if(i==min(plpData$timeRef$timeId)) {
+        result_array<-data_array
       }else{
         result_array<-slam::abind_simple_sparse_array(result_array,data_array,MARGIN=2L)
       }
