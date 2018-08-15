@@ -319,7 +319,7 @@ class CNN(nn.Module):
         out2_size = (maxpool_size + 2*padding - (kernel_size[1] - 1) - 1)/stride[1] + 1
         maxpool_size = (out2_size + 2*padding - (pool_size[1] - 1) - 1)/stride[1] + 1
         self.drop1 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(maxpool_size*labcounts*nb_filter, hidden_size)
+        self.fc1 = nn.Linear(int(maxpool_size*labcounts*nb_filter), hidden_size)
         self.bn = nn.BatchNorm1d(hidden_size)
         self.drop2 = nn.Dropout(p=0.5)
         self.relu1 = nn.ReLU()
@@ -1019,7 +1019,6 @@ if __name__ == "__main__":
         X, patient_keys = tu.convert_to_temporal_format(full_covariates, timeid_len= timeid_len)
         full_covariates = []
         '''
-        print('total patient %.2f , %.2f' %(X.shape, y.shape))
         if class_weight == -1:
             loss = tu.FocalLoss(gamma = 3)
         else:

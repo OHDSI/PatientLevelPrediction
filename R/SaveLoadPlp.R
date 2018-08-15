@@ -772,9 +772,10 @@ loadPlpModel <- function(dirPath) {
     result$predict <- createTransform(result)
   }
   if(attributes$type=='deepMulti'){
-    result$predict <- createTransform(result)
     attr(result, 'inputs') <- tryCatch(readRDS(file.path(dirPath, "inputs_attr.rds")),
                                        error=function(e) NULL) 
+    result$predict <- createTransform(result)
+   
   }
   
   return(result)

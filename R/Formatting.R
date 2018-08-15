@@ -92,32 +92,32 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     data <- data+ temp
   }
   } else {
+    OhdsiRTools::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
+    OhdsiRTools::logTrace(paste0('Max time:', max(plpData$timeRef$timeId)))
     for(i in min(plpData$timeRef$timeId):max(plpData$timeRef$timeId)){
       if(sum(plpData.mapped$covariates$timeId==i)!=0){
-      plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
-      data <- Matrix::sparseMatrix(i=1,
-                                   j=1,
-                                   x=0,
-                                   dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
-      for (ind in bit::chunk(plpData.mapped$temp_covariates$covariateId)) {
-        OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
-        temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$temp_covariates$rowId[ind]),
-                                                         j=ff::as.ram(plpData.mapped$temp_covariates$covariateId[ind]),
-                                                         x=ff::as.ram(plpData.mapped$temp_covariates$covariateValue[ind]),
-                                                         dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
-        )
-        data <- data+temp
-      } 
-      data_array<-slam::as.simple_sparse_array(data)
-      #extending one more dimesion to the array
-      data_array<-slam::extend_simple_sparse_array(data_array,c(1L))
-      } else {
+        plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
         data <- Matrix::sparseMatrix(i=1,
                                      j=1,
                                      x=0,
-                                     dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) 
+                                     dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
+        for (ind in bit::chunk(plpData.mapped$temp_covariates$covariateId)) {
+          OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+          temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$temp_covariates$rowId[ind]),
+                                                j=ff::as.ram(plpData.mapped$temp_covariates$covariateId[ind]),
+                                                x=ff::as.ram(plpData.mapped$temp_covariates$covariateValue[ind]),
+                                                dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
+          )
+          data <- data+temp
+        } 
         data_array<-slam::as.simple_sparse_array(data)
+        #extending one more dimesion to the array
         data_array<-slam::extend_simple_sparse_array(data_array,c(1L))
+      } else {
+        data_array <- tryCatch(slam::simple_sparse_array(i=matrix(c(1,1,1), ncol = 3), 
+                                                   v=0,
+                                                   dim=c(max(population$rowId),1, max(plpData.mapped$map$newIds)))
+        )
         
       }
       #binding arrays along the dimesion
