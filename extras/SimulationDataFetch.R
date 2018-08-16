@@ -1,6 +1,6 @@
 # @file SimulationDataFetch.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -72,11 +72,11 @@ sql <- "
   2 AS cohort_concept_id
   FROM  @cdmDatabaseSchema.condition_occurrence
   WHERE condition_concept_id IN (4108356,
-                 4110189,
-                 4110190,
-                 4110192,
-                 45767658,
-                 45772786) /* Cerebral infarct */
+         4110189,
+         4110190,
+         4110192,
+         45767658,
+         45772786) /* Cerebral infarct */
   AND condition_type_concept_id  IN (38000183,38000199,44786627,38000184,38000200);
 
   INSERT INTO @resultsDatabaseSchema.mschuemi_stroke
@@ -86,14 +86,14 @@ sql <- "
   3 AS cohort_concept_id
   FROM  @cdmDatabaseSchema.condition_occurrence
   WHERE condition_concept_id IN (312327,
-                 434376,
-                 436706,
-                 438170,
-                 438438,
-                 438447,
-                 439693,
-                 441579,
-                 444406) /* Myocardial infarction */
+         434376,
+         436706,
+         438170,
+         438438,
+         438447,
+         439693,
+         441579,
+         444406) /* Myocardial infarction */
   AND condition_type_concept_id IN (38000183,38000199,44786627,38000184,38000200);
   "
 sql <- SqlRender::renderSql(sql,

@@ -6,7 +6,7 @@
 \usage{
 createPlpJournalDocument(plpResult = NULL, plpValidation = NULL,
   plpData = NULL, targetName = "<target population>",
-  outcomeName = "<outcome>", table1 = T, connectionDetails = NULL,
+  outcomeName = "<outcome>", table1 = F, connectionDetails = NULL,
   includeTrain = FALSE, includeTest = TRUE,
   includePredictionPicture = TRUE, includeAttritionPlot = TRUE,
   outputLocation = file.path(getwd(), "plp_journal_document.docx"))

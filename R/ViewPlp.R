@@ -627,7 +627,9 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
         
         
         returnTab <- data.frame(Input= names(reactVars$plpResult$inputSetting$dataExtrractionSettings$covariateSettings),
-                                Value = unlist(reactVars$plpResult$inputSetting$dataExtrractionSettings$covariateSettings))
+                                Value = unlist(lapply(reactVars$plpResult$inputSetting$dataExtrractionSettings$covariateSettings, function(x) paste(x, collapse='-')))
+                                  
+                                  )
         
         #rownames(returnTab) <- 1:length(returnTab)
         

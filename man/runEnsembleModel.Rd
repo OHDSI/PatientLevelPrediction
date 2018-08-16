@@ -6,9 +6,9 @@
 \usage{
 runEnsembleModel(population, dataList, modelList, testSplit = "time",
   testFraction = 0.2, splitSeed = NULL, nfold = 3, saveDirectory = NULL,
-  savePlpData = F, savePlpResult = T, savePlpPlots = F,
-  saveEvaluation = T, analysisId = NULL, verbosity = "INFO",
-  ensembleStrategy = "mean")
+  saveEnsemble = F, savePlpData = F, savePlpResult = F,
+  savePlpPlots = F, saveEvaluation = F, analysisId = NULL,
+  verbosity = "INFO", ensembleStrategy = "mean")
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to
@@ -37,6 +37,8 @@ testSplit}
 \item{nfold}{The number of folds used in the cross validation (default 3)}
 
 \item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
+
+\item{saveEnsemble}{Binary indicating whether to save the ensemble}
 
 \item{savePlpData}{Binary indicating whether to save the plpData object (default is F)}
 

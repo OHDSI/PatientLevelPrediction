@@ -250,12 +250,14 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   
   doc <- doc %>% officer::body_add_par(value = paste("The calibration across age/gender groups:"), style = "Normal")
   
-  testCalPlot <- PatientLevelPrediction::plotDemographicSummary(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotDemographicSummary(plpResult$performanceEvaluation, type='train')
-  testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
-  trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
-  doc <- doc %>% officer::body_add_gg(value = testCalPlot)
-  doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  if(!is.null(plpResult$performanceEvaluation$demographicSummary)){
+    testCalPlot <- PatientLevelPrediction::plotDemographicSummary(plpResult$performanceEvaluation, type='test')
+    trainCalPlot <- PatientLevelPrediction::plotDemographicSummary(plpResult$performanceEvaluation, type='train')
+    testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
+    trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
+    doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+    doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
+  }
   
 
   doc <- doc %>% officer::body_add_par(value =  'Preference PDF Plots:', style = "heading 3")
@@ -519,7 +521,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                                      plpData = NULL,
                                      targetName = '<target population>',
                                      outcomeName = '<outcome>',
-                                     table1=T,
+                                     table1=F,
                                      connectionDetails=NULL,
                                      includeTrain=FALSE, includeTest=TRUE,
                                      includePredictionPicture=TRUE,
@@ -636,8 +638,8 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
                 paste0("Methods: In <add development database> mapped to the Observational Medical Outcome ",
                        "Partnership (OMOP) common data model ",target_size," people satisfied the ",
-                       "atarget criteria and ",outcome_size," had the outcome during ",time_at_risk,
-                       "A ",plpResult$inputSetting$modelSettings$name," was trained using the predictors <add predictor variables> and ",
+                       "target criteria and ",outcome_size," had the outcome during ",time_at_risk,
+                       ". A ",plpResult$inputSetting$modelSettings$name," was trained using the predictors <add predictor variables> and ",
                        "externally validated by applying the model to <add external databases> mapped to",
                        " the OMOP common data model with <target/outcome sizes> respectively. "),
 

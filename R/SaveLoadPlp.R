@@ -782,38 +782,6 @@ loadPlpModel <- function(dirPath) {
 }
 
 
-#' loads the Ensmeble plp model and return a model list
-#'
-#' @details
-#' Loads a plp model list that was saved using \code{savePlpModel()}
-#'
-#' @param dirPath                  The location of the model
-#'
-#' @export
-loadEnsemblePlpModel <- function(dirPath) {
-  if (!file.exists(dirPath))
-    stop(paste("Cannot find folder", dirPath))
-  if (!file.info(dirPath)$isdir)
-    stop(paste("Not a folder", dirPath))
-  modelList <- list()
-  dirList <- list.dirs(file.path(dirPath, 'level1'), recursive = FALSE)
-  index <- 1
-  for (subdir in dirList){
-    modelPath <- file.path(subdir, 'plpResult/model')
-    model <- loadPlpModel(modelPath)
-    modelList[[index]] <- model
-    index <- index + 1
-  }
-  # save last layer to combine different models
-  com_dir <- paste0(dirPath, "/level2/combinator.rds")
-  if (file.exists(com_dir)){
-    level2Model <- readRDS(com_dir)
-    modelList[[index]] <- level2Model
-  }
-
-  return(modelList)
-}
-
 #' Saves the prediction dataframe to csv
 #'
 #' @details

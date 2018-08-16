@@ -7,26 +7,19 @@ Prediction Data and get the predicted risk in [0,1] for each person in the popul
 inputs a population with an outcomeCount column then the function also returns the evaluation of
 the prediction (AUC, brier score, calibration)}
 \usage{
-applyEnsembleModel(population, dataList, modelList, analysisId = NULL,
-  calculatePerformance = T, ensembleStrategy = "mean")
+applyEnsembleModel(population, dataList, ensembleModel, analysisId = NULL,
+  calculatePerformance = T)
 }
 \arguments{
 \item{population}{The population of people who you want to predict the risk for}
 
 \item{dataList}{The plpData list for the population}
 
-\item{modelList}{The trained PatientLevelPrediction model list for ensemble model}
+\item{ensembleModel}{The trained ensemble model returned by running runEnsembleModel}
 
 \item{analysisId}{The analysis ID, which is the ID of running ensemble model training.}
 
 \item{calculatePerformance}{Whether to also calculate the performance metrics [default TRUE]}
-
-\item{ensembleStrategy}{The strategy used for ensembling the outputs from different models, it
-can be 'mean', 'product', 'weighted' and 'stacked' 'mean' the average
-probability from differnt models 'product' the product rule 'weighted'
-the weighted average probability from different models using train AUC
-as weights. 'stacked' the stakced ensemble trains a logistics
-regression on different models.}
 }
 \description{
 Apply trained ensemble model on new data Apply a Patient Level Prediction model on Patient Level
@@ -46,9 +39,6 @@ results <- PatientLevelPrediction::runEnsembleModel(population,
                                                     nfold = 3,
                                                     splitSeed = 1000,
                                                     ensembleStrategy = "stacked")
-The default dir is plpmodels under working dir, or you can specify saveDirectory during model training
-modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180612093745")  #the last model is combination model
-
 # use the same population settings as the model:
 populationSettings <- plpModel$populationSettings
 populationSettings$plpData <- plpData
@@ -57,8 +47,7 @@ population <- do.call(createStudyPopulation, populationSettings)
 # get the prediction, please make sure the ensemble strategy for training and apply is the same:
 prediction <- applyEnsembleModel(population,
                                  dataList = list(plpData, plpData),
-                                 modelList = modelList,
-                                 analysisId = NULL,
-                                 ensembleStrategy = "stacked")$prediction
+                                 ensembleModel = results,
+                                 analysisId = NULL)$prediction
 }
 }

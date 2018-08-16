@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2018 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -41,6 +41,7 @@
 #'                           testSplit
 #' @param nfold              The number of folds used in the cross validation (default 3)
 #' @param saveDirectory      The path to the directory where the results will be saved (if NULL uses working directory)
+#' @param saveEnsemble       Binary indicating whether to save the ensemble 
 #' @param savePlpData        Binary indicating whether to save the plpData object (default is F)
 #' @param savePlpResult      Binary indicating whether to save the object returned by runPlp (default is F)
 #' @param savePlpPlots       Binary indicating whether to save the performance plots as pdf files (default is F)
@@ -72,17 +73,18 @@ runEnsembleModel <- function(population,
                              testFraction = 0.2,
                              splitSeed = NULL,
                              nfold = 3,
-                             saveDirectory=NULL, 
+                             saveDirectory=NULL,
+                             saveEnsemble = F,
                              savePlpData=F, 
-                             savePlpResult=T, 
+                             savePlpResult=F, 
                              savePlpPlots = F, 
-                             saveEvaluation = T,
+                             saveEvaluation = F,
                              analysisId = NULL,
                              verbosity = "INFO",
                              ensembleStrategy = "mean") {
-  start.all <- Sys.time()
+  ExecutionDateTime <- Sys.time()
   if (is.null(analysisId))
-    analysisId <- gsub(":", "", gsub("-", "", gsub(" ", "", start.all)))
+    analysisId <- gsub(":", "", gsub("-", "", gsub(" ", "", ExecutionDateTime)))
 
   # check logger
   if (length(OhdsiRTools::getLoggers()) == 0) {
@@ -98,15 +100,15 @@ runEnsembleModel <- function(population,
   }
   
   if(is.null(saveDirectory)){
-    saveDirectory <- file.path(getwd(), 'plpmodels')
+    saveDirectory <- file.path(getwd(), 'ensemble_models')
   }
   
   trainAUCs <- c()
   pred_probas <- matrix(nrow = length(population$subjectId), ncol = 0)
-  # run the models in list one by one.
+  # run the models in list one by one.#
+  level1 <- list()
+  length(level1) <- length(modelList)
   for (Index in seq_along(modelList)) {
-    # save model under plpmodels/analysisId/level1/
-    saveanalysisId <- paste0(analysisId, "/level1/model", Index)
     results <- PatientLevelPrediction::runPlp(population,
                                               dataList[[Index]],
                                               modelSettings = modelList[[Index]],
@@ -114,13 +116,15 @@ runEnsembleModel <- function(population,
                                               testFraction = testFraction,
                                               trainFraction = trainFraction,
                                               nfold = nfold,
-                                              saveDirectory=saveDirectory, 
+                                              saveDirectory=file.path(saveDirectory,Index), 
                                               savePlpData=savePlpData, 
                                               savePlpResult=savePlpResult, 
                                               savePlpPlots = savePlpPlots, 
                                               saveEvaluation = saveEvaluation,
                                               splitSeed = splitSeed,
-                                              analysisId = saveanalysisId)
+                                              analysisId = analysisId)
+    
+    level1[[Index]] <- results$model
     trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4]))
     prob <- results$prediction
     if (Index == 1) {
@@ -128,32 +132,43 @@ runEnsembleModel <- function(population,
     }
     pred_probas <- cbind(pred_probas, prob$value)
   }
-  # save models for glm for stacked ensemble and weights for weighted ensemble.
-  if (ensembleStrategy == "weighted" | ensembleStrategy == "stacked") {
-    #if (is.null(save))
-      #save <- file.path(getwd(), "plpmodels")
-    modelLoc <- file.path(saveDirectory, analysisId, "level2")  #always save them in the first model dir
-    if (!dir.exists(modelLoc)) {
-      dir.create(modelLoc)
-    }
-  }
+  names(level1) <- paste0('model_',1:length(level1))
 
   if (ensembleStrategy == "mean") {
     ensem_proba <- rowMeans(pred_probas)
+    level2 <- list(ensembleStrategy = "mean",
+                   pfunction = rowMeans)
   } else if (ensembleStrategy == "product") {
     ensem_proba <- apply(pred_probas, 1, prod)
     ensem_proba <- ensem_proba^(1/length(modelList))
+    pfunction <- function(x){
+      x <- apply(x,1,prod)^(1/length(modelList))
+      return(x)
+    }
+    level2 <- list(ensembleStrategy = "product",
+                   pfunction = pfunction)
   } else if (ensembleStrategy == "weighted") {
     trainAUCs <- trainAUCs/sum(trainAUCs)
-    saveRDS(trainAUCs, file = file.path(modelLoc, "combinator.rds"))
     ensem_proba <- rowSums(t(t(as.matrix(pred_probas)) * trainAUCs))
+    pfunction <- function(x){
+      x <- rowSums(t(t(as.matrix(x)) * trainAUCs))
+      return(x)
+    }
+    level2 <- list(ensembleStrategy = "weighted",
+    pfunction = pfunction)
+    
   } else if (ensembleStrategy == "stacked") {
     train_index <- prediction$indexes == 0
     train_prob <- pred_probas[train_index, ]
     train_y <- as.matrix(prediction$outcomeCount)[train_index]
     lr_model <- glm(train_y ~ ., data = data.frame(train_prob), family = binomial(link = "logit"))
-    saveRDS(lr_model, file = file.path(modelLoc, "combinator.rds"))
     ensem_proba <- predict(lr_model, newdata = data.frame(pred_probas), type = "response")
+    pfunction <- function(x){
+      x <- predict(lr_model, newdata = data.frame(x), type = "response")
+      return(x)
+    }
+    level2 <- list(ensembleStrategy = "stacked",
+                   pfunction = pfunction)
   } else {
     stop("ensembleStrategy must be mean, product, weighted and stacked")
   }
@@ -169,7 +184,43 @@ runEnsembleModel <- function(population,
   OhdsiRTools::logTrace("Done.")
   performance <- reformatPerformance(train = performance.train, test = performance.test, analysisId)
 
-  return(performance)
+  
+  endTime <- Sys.time()
+  TotalExecutionElapsedTime <- endTime-ExecutionDateTime
+  
+  executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                 packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                           PlatformDetails= list(platform= R.Version()$platform,
+                                                 cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                 RAM=utils::memory.size()), #  test for non-windows needed
+                           # Sys.info()
+                           TotalExecutionElapsedTime = TotalExecutionElapsedTime,
+                           ExecutionDateTime = ExecutionDateTime,
+                           Log = NULL #logFileName # location for now
+                           #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
+  )
+  results <- list(inputSetting=list(modelList=modelList,
+                                    testSplit = testSplit,
+                                    testFraction = testFraction,
+                                    splitSeed = splitSeed,
+                                    nfold =  nfold, 
+                                    ensembleStrategy=ensembleStrategy),
+                  executionSummary=executionSummary,
+                  model=list(level1=level1,
+                             level2=level2),
+                  prediction=prediction,
+                  performanceEvaluation=performance,
+                  covariateSummary=results$covariateSummary,
+                  analysisRef=list(analysisId=analysisId,
+                                   analysisName=NULL,#analysisName,
+                                   analysisSettings= NULL))
+  class(results) <- c('ensemblePlp')
+  
+  if(saveEnsemble==T){
+    saveEnsemblePlpResult(results, saveDirectory)
+  } else{
+    return(results)
+  }
 }
 
 #' Apply trained ensemble model on new data Apply a Patient Level Prediction model on Patient Level
@@ -179,15 +230,9 @@ runEnsembleModel <- function(population,
 #'
 #' @param population             The population of people who you want to predict the risk for
 #' @param dataList               The plpData list for the population
-#' @param modelList              The trained PatientLevelPrediction model list for ensemble model
+#' @param ensembleModel          The trained ensemble model returned by running runEnsembleModel
 #' @param calculatePerformance   Whether to also calculate the performance metrics [default TRUE]
 #' @param analysisId             The analysis ID, which is the ID of running ensemble model training.
-#' @param ensembleStrategy       The strategy used for ensembling the outputs from different models, it
-#'                               can be 'mean', 'product', 'weighted' and 'stacked' 'mean' the average
-#'                               probability from differnt models 'product' the product rule 'weighted'
-#'                               the weighted average probability from different models using train AUC
-#'                               as weights. 'stacked' the stakced ensemble trains a logistics
-#'                               regression on different models.
 #' @examples
 #' \dontrun{
 #' # load the model and data
@@ -200,9 +245,6 @@ runEnsembleModel <- function(population,
 #'                                                     nfold = 3,
 #'                                                     splitSeed = 1000,
 #'                                                     ensembleStrategy = "stacked")
-#' The default dir is plpmodels under working dir, or you can specify saveDirectory during model training
-#' modelList <- loadEnsemblePlpModel("/data/home/xpan/git/PatientLevelPrediction/plpmodels/20180612093745")  #the last model is combination model
-#'
 #' # use the same population settings as the model:
 #' populationSettings <- plpModel$populationSettings
 #' populationSettings$plpData <- plpData
@@ -211,39 +253,28 @@ runEnsembleModel <- function(population,
 #' # get the prediction, please make sure the ensemble strategy for training and apply is the same:
 #' prediction <- applyEnsembleModel(population,
 #'                                  dataList = list(plpData, plpData),
-#'                                  modelList = modelList,
-#'                                  analysisId = NULL,
-#'                                  ensembleStrategy = "stacked")$prediction
+#'                                  ensembleModel = results,
+#'                                  analysisId = NULL)$prediction
 #' }
 #' @export
 applyEnsembleModel <- function(population,
                                dataList,
-                               modelList, # or file location?
+                               ensembleModel, # contains modelList
                                analysisId = NULL,
-                               calculatePerformance = T,
-                               ensembleStrategy = "mean") {
+                               calculatePerformance = T) {
   # check input:
   if (is.null(population))
     stop("NULL population")
   if (class(dataList[[1]]) != "plpData")
     stop("Incorrect plpData class")
-  if (class(modelList[[1]]) != "plpModel")
-    stop("Incorrect plpModel class")
-  if (length(dataList) < length(modelList)) {
-    if (ensembleStrategy == "mean" | ensembleStrategy == "product") {
-      stop("The ensmeble model is trained using weighted or stacked ensmemble, please change the ensembleStrategy to weighted or stacked!")
-    }
+  if (class(ensembleModel) != "ensemblePlp")
+    stop("Incorrect ensembleModel")
+  if (length(dataList) != length(ensembleModel$model$level1)) {
+    stop("Data list wrong size")
   }
-  if (length(dataList) == length(modelList)) {
-    if (ensembleStrategy == "weighted" | ensembleStrategy == "stacked") {
-      stop("The ensmeble model is trained using mean or product strategy , please change the ensembleStrategy to mean or product!")
-    }
-  }
-  # The last model in modelList is the combinator for different models.
-  if (ensembleStrategy == "weighted" | ensembleStrategy == "stacked") {
-    combinator <- modelList[[length(modelList)]]
-    modelList[[length(modelList)]] <- NULL
-  }
+  
+  combinator <- ensembleModel$model$level2
+  modelList <- ensembleModel$model$level1
 
   # get prediction counts:
   peopleCount <- nrow(population)
@@ -251,26 +282,14 @@ applyEnsembleModel <- function(population,
   pred_probas <- matrix(nrow = length(population$subjectId), ncol = 0)
   for (Index in seq_along(modelList)) {
     prob <- modelList[[Index]]$predict(plpData = dataList[[Index]], population = population)
-    if (Index == 1) {
-      prediction <- prob
-    }
     pred_probas <- cbind(pred_probas, prob$value)
   }
-
-  if (ensembleStrategy == "mean") {
-    ensem_proba <- rowMeans(pred_probas)
-  } else if (ensembleStrategy == "product") {
-    ensem_proba <- apply(pred_probas, 1, prod)
-    ensem_proba <- ensem_proba^(1/length(modelList))
-  } else if (ensembleStrategy == "weighted") {
-    ensem_proba <- rowSums(t(t(as.matrix(pred_probas)) * combinator))
-  } else if (ensembleStrategy == "stacked") {
-    ensem_proba <- predict(combinator, newdata = data.frame(pred_probas), type = "response")
-  } else {
-    stop("ensembleStrategy must be mean, product, weighted and stacked")
-  }
-  prediction[ncol(prediction)] <- ensem_proba
-
+  value <- combinator$pfunction(pred_probas)
+  ensem_proba <- data.frame(rowId=prob$rowId,
+                            value= value)
+  
+  prediction <- merge(population, ensem_proba, by='rowId')
+  attr(prediction, "metaData") <- list(predictionType="binary")
   if (!"outcomeCount" %in% colnames(prediction))
     return(list(prediction = prediction))
 
@@ -284,3 +303,113 @@ applyEnsembleModel <- function(population,
   return(result)
 }
 
+
+#' saves the Ensmeble plp model 
+#'
+#' @details
+#' Saves a plp ensemble model 
+#'
+#' @param ensembleModel            The ensemble model to save
+#' @param dirPath                  The location to save the model
+#'
+#' @export
+saveEnsemblePlpModel <- function(ensembleModel, dirPath) {
+  if (!file.exists(file.path(dirPath,'level1')))
+    dir.create(file.path(dirPath,'level1'), recursive = T)
+  if (!file.exists(file.path(dirPath,'level2')))
+    dir.create(file.path(dirPath,'level2'), recursive = T)
+  
+  for (i in 1:length(ensembleModel$level1)){
+    modelPath <- file.path(dirPath,'level1', paste0('model_',i))
+    savePlpModel(ensembleModel$level1[[i]], modelPath)
+  }
+  saveRDS(ensembleModel$level2, file.path(dirPath, "level2/combinator.rds"))
+
+}
+
+#' loads the Ensmeble plp model and return a model list
+#'
+#' @details
+#' Loads a plp model list that was saved using \code{savePlpModel()}
+#'
+#' @param dirPath                  The location of the model
+#'
+#' @export
+loadEnsemblePlpModel <- function(dirPath) {
+  if (!file.exists(dirPath))
+    stop(paste("Cannot find folder", dirPath))
+  if (!file.info(dirPath)$isdir)
+    stop(paste("Not a folder", dirPath))
+  level1 <- list()
+  dirList <- list.dirs(file.path(dirPath, 'level1'), recursive = FALSE)
+  index <- 1
+  for (subdir in dirList){
+    model <- loadPlpModel(subdir)
+    level1[[index]] <- model
+    index <- index + 1
+  }
+  names(level1) <- paste0('model_',1:length(level1))
+  level2 <- readRDS(file.path(dirPath, 'level2/combinator.rds'))
+  
+  model <- list(level1= level1,
+                level2 = level2)
+  
+  return(model)
+}
+
+#' saves the Ensemble plp results 
+#'
+#' @details
+#' Saves a plp ensemble results
+#'
+#' @param ensembleResult           The ensemble result
+#' @param dirPath                  The location to save the ensemble results
+#'
+#' @export
+saveEnsemblePlpResult <- function(ensembleResult, dirPath) {
+  if (!file.exists(file.path(dirPath)))
+    dir.create(file.path(dirPath))
+
+  saveRDS(ensembleResult$inputSetting, file.path(dirPath,'inputSetting.rds'))
+  saveRDS(ensembleResult$executionSummary, file.path(dirPath,'executionSummary.rds'))
+  saveRDS(ensembleResult$prediction, file.path(dirPath,'prediction.rds'))
+  saveRDS(ensembleResult$performanceEvaluation, file.path(dirPath,'performanceEvaluation.rds'))
+  saveRDS(ensembleResult$covariateSummary, file.path(dirPath,'covariateSummary.rds'))
+  saveRDS(ensembleResult$analysisRef, file.path(dirPath,'analysisRef.rds'))
+  
+  saveEnsemblePlpModel(ensembleResult$model, file.path(dirPath,'ensemble_model'))
+
+}
+
+#' loads the Ensemble plp results 
+#'
+#' @details
+#' Loads a plp model list that was saved using \code{saveEnsemblePlpResults()}
+#'
+#' @param dirPath                  The location of the model
+#'
+#' @export
+loadEnsemblePlpResult <- function(dirPath) {
+  if (!file.exists(dirPath))
+    stop(paste("Cannot find folder", dirPath))
+  if (!file.info(dirPath)$isdir)
+    stop(paste("Not a folder", dirPath))
+  
+  inputSetting <- readRDS(file.path(dirPath,'inputSetting.rds'))
+  executionSummary <- readRDS(file.path(dirPath,'executionSummary.rds'))
+  model <- loadEnsemblePlpModel(file.path(dirPath,'ensemble_model'))
+  prediction <- readRDS(file.path(dirPath,'prediction.rds'))
+  performanceEvaluation <- readRDS(file.path(dirPath,'performanceEvaluation.rds'))
+  covariateSummary <- readRDS(file.path(dirPath,'covariateSummary.rds'))
+  analysisRef <- readRDS(file.path(dirPath,'analysisRef.rds'))
+  
+  results <- list(inputSetting = inputSetting,
+                  executionSummary = executionSummary,
+                  model = model,
+                  prediction = prediction,
+                  performanceEvaluation = performanceEvaluation,
+                  covariateSummary = covariateSummary,
+                  analysisRef = analysisRef)
+  class(results) <- c('ensemblePlp')
+  return(results)
+}

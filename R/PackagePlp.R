@@ -77,7 +77,7 @@ exportPlpResult <- function(plpResult, modelName,
                n = n, 
                includeEvaluationStatistics = includeEvaluationStatistics, 
                includeThresholdSummary = includeThresholdSummary, 
-               includeDemographicSummary = ncludeDemographicSummary, 
+               includeDemographicSummary = includeDemographicSummary, 
                includeCalibrationSummary = includeCalibrationSummary, 
                includePredictionDistribution = includePredictionDistribution, 
                includeCovariateSummary = includeCovariateSummary)

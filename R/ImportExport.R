@@ -242,8 +242,10 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
     stop('Need to input models')
   if(!exists("modelNames"))
     stop('Need to input model names')
-  if(length(models)!=length(modelNames) & class(models)!='plpModel')
-    stop('model names not same length as models')
+  if(class(models)!='plpModel'){
+    if(length(models)!=length(modelNames))
+      stop('model names not same length as models')
+  }
   if(class(models)!='list' & class(models)!='plpModel')
     stop('wrong models class')
   if(class(modelNames)!='character')
