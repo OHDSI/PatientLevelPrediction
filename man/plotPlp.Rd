@@ -4,7 +4,7 @@
 \alias{plotPlp}
 \title{Plot all the PatientLevelPrediction plots}
 \usage{
-plotPlp(result, filename)
+plotPlp(result, filename, type = "test")
 }
 \arguments{
 \item{result}{Object returned by the runPlp() function}

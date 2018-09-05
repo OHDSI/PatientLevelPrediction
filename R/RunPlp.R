@@ -268,6 +268,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                   stop(paste0(e))},
                 finally = {
                   OhdsiRTools::logTrace('Done.')})
+  model$analysisId <- analysisId # adding this so we can link validation to models
   
   # calculate metrics
   OhdsiRTools::logTrace('Prediction')
@@ -316,6 +317,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     OhdsiRTools::logWarn(paste0('Evaluation not possible as prediciton NULL or all the same values'))
     performance.test <- NULL
     performance.train <- NULL
+    performance <- NULL
   }
   
   # log the end time:
@@ -347,7 +349,11 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   OhdsiRTools::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
   OhdsiRTools::logInfo('This can take a while...')
   covSummary <- covariateSummary(plpData, population)
-  covSummary <- merge(model$varImp[,colnames(model$varImp)!='covariateName'], covSummary, by='covariateId', all=T)
+  if(exists("model")){
+    if(!is.null(model$varImp)){
+      covSummary <- merge(model$varImp[,colnames(model$varImp)!='covariateName'], covSummary, by='covariateId', all=T)
+    }
+  }
   trainCovariateSummary <- covariateSummary(plpData, population[population$index>0,])
   trainCovariateSummary <- trainCovariateSummary[,colnames(trainCovariateSummary)!='covariateName']
   colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'] <- paste0('Train',colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'])
@@ -378,7 +384,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   class(results) <- c('runPlp')
   
   # save the plots?
-  if(savePlpPlots){
+  if(savePlpPlots & !is.null(performance)){
     plotPlp(result = results, filename = file.path(analysisPath))
   }
   

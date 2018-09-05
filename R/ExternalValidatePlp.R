@@ -58,7 +58,7 @@ externalValidatePlp <- function(plpResult,
                                 validationTableTarget='cohort', validationTableOutcome='cohort',
                                 validationIdTarget = NULL, validationIdOutcome = NULL,
                                 oracleTempSchema=NULL,#validationSchemaCdm,
-                                verbosity=futile.logger::INFO, keepPrediction=F){
+                                verbosity="INFO", keepPrediction=F){
   
   # TODO:: ADD LOGGING, MORE INOUT TESTS, ADD TEST CASE IN PACKAGE... 
   if(missing(plpResult))
@@ -155,14 +155,18 @@ externalValidatePlp <- function(plpResult,
         niceName <-   databaseNames
       }
       results[[i]]$inputSetting<- list(newCdmDatabaseSchema = validationSchemaCdm[[i]],
-                                       databaseNames = niceName, 
+                                       databaseNames = niceName[i], #added [i]
                                     newCohortDatabaseSchema = validationSchemaTarget[[i]], 
                                     newCohortTable = targetTable, 
                                     cohortId = validationIdTarget, 
                                     newOutcomeDatabaseSchema = validationSchemaOutcome[[i]], 
                                     newOutcomeTable = outcomeTable, 
                                     outcomeId = validationIdOutcome,
-                                    newOracleTempSchema = oracleTempSchema)
+                                    newOracleTempSchema = oracleTempSchema,
+                                    # added the below
+                                    populationSettings = plpResult$inputSetting$populationSettings,
+                                    dataExtrractionSettings = list(covariateSettings = plpResult$inputSetting$dataExtrractionSettings$covariateSettings)
+                                    )
       
       results[[i]]$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
                                                                   packageVersion = utils::packageVersion("PatientLevelPrediction")),

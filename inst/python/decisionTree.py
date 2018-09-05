@@ -96,9 +96,9 @@ else:
   if plot:
     plotfile = modelOutput+"\\tree_plot.dot"
     tree.export_graphviz(dt, out_file=plotfile, feature_names=varnames[:,0])#X.dtype.names ) #variables[:,0])
-  #graph = pydotplus.graph_from_dot_file(plotfile) 
-  #plotfile = modelOutput+"\\tree_plot.pdf"
-  #graph.write_pdf(plotfile ) 
+    #graph = pydotplus.graph_from_dot_file(plotfile) 
+    #plotfile = modelOutput+"\\tree_plot.pdf"
+    #graph.write_pdf(plotfile ) 
 
   # manually create the pdf 
   ##commandLine = "dot -Tpdf "+inLoc +"-o"+ outLoc

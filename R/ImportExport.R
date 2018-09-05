@@ -356,9 +356,9 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
     covariates <- getPredictionCovariateData(connection = connection,
                                                 oracleTempSchema = oracleTempSchema,
                                                 cdmDatabaseSchema = cdmDatabaseSchema,
-                                                cohortTable = "#cohort_person",
+                                                cohortTable = cohortTable,#"#cohort_person",
                                                 cdmVersion = cdmVersion,
-                                                rowIdField = "row_id",
+                                                rowIdField = rowIdField,#"row_id",
                                                 covariateSettings = covSettings,
                                              analysisId = covariateSettings$analysisId,
                                              databaseOutput= covariateSettings$databaseOutput)
@@ -462,18 +462,20 @@ getPredictionCovariateData <- function(connection,
 } else {
   # TO ADD TO A COHORT TABLE
   covariates <- NULL
-  sql <- " select a.subject_id, a.cohort_start_date, a.cohort_start_date as cohort_end_date,
+  sql <- " select a.@rowIdField as subject_id, a.cohort_start_date, a.cohort_start_date as cohort_end_date,
   b.covariate_id cohort_definition_id, b.covariate_value as risk
   into @databaseOutput
-  from #cohort_person a inner join
+  from @cohortTable a inner join
 
   (select #cov_temp.row_id, #model_table.model_id*1000+@analysis_id as covariate_id,
   1/(1+exp(-1.0*(max(#intercepts.intercept)+sum(#cov_temp.covariate_value*#model_table.covariate_value)))) covariate_value
   from #cov_temp inner join #model_table on #cov_temp.covariate_id=#model_table.covariate_id
   inner join #intercepts on #intercepts.model_id=#model_table.model_id
-  group by #cov_temp.row_id,  #model_table.model_id) b on a.row_id=b.row_id"
+  group by #cov_temp.row_id,  #model_table.model_id) b on a.@rowIdField=b.row_id"
 
-  sql <- SqlRender::renderSql(sql,
+  sql <- SqlRender::renderSql(sql, 
+                              rowIdField = rowIdField,
+                              cohortTable =cohortTable,
                               analysis_id = analysisId,
                               databaseOutput=databaseOutput
   )$sql
