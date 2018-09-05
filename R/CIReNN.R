@@ -33,6 +33,8 @@
 #' @param outcomeWeight      The weight of the outcome class in the loss function
 #' @param batchSize          The number of data points to use per training batch
 #' @param epochs          Number of times to iterate over dataset
+#' @param earlyStoppingMinDelta         minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.
+#' @param earlyStoppingPatience         Number of epochs with no improvement after which training will be stopped.
 #' @param seed            Random seed used by deep learning model
 #'
 #' @examples
@@ -42,7 +44,8 @@
 #' @export
 setCIReNN <- function(units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(1.0), batchSize = c(100), 
-                      epochs= c(100),  seed=NULL  ){
+                      epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10),
+                      seed=NULL  ){
   
   # if(class(indexFolder)!='character')
   #     stop('IndexFolder must be a character')
@@ -168,7 +171,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
 trainCIReNN<-function(plpData, population,
                       units=128, recurrentDropout=0.2, layerDropout=0.2,
                       lr =1e-4, decay=1e-5, outcomeWeight = 1.0, batchSize = 100, 
-                      epochs= 100, seed=NULL, train=TRUE){
+                      epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), seed=NULL, train=TRUE){
   
   if(!is.null(population$indexes) && train==T){
     writeLines(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))
@@ -200,7 +203,8 @@ trainCIReNN<-function(plpData, population,
         optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
       )
       
-      earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=10,mode="auto",min_delta = 1e-4)
+      earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
+                                                   mode="auto",min_delta = earlyStoppingMinDelta)
       reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
                                                     patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
       
@@ -335,7 +339,8 @@ trainCIReNN<-function(plpData, population,
                  auc=auc,
                  hyperSum = unlist(list(units=units, recurrentDropout=recurrentDropout, 
                                         layerDropout=layerDropout,lr =lr, decay=decay,
-                                        batchSize = batchSize, epochs= epochs))
+                                        batchSize = batchSize, epochs= epochs, earlyStoppingMinDelta = earlyStoppingMinDelta, 
+                                        earlyStoppingPatience=earlyStoppingPatience))
   )
   return(result)
   
