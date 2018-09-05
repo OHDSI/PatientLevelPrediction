@@ -123,7 +123,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   
   result<- toSparseM(plpData,population,map=NULL, temporal=T)
   data <- result$data
-
+  covariateMap <- result$map
   #remove result to save memory
   rm(result)
   
@@ -163,7 +163,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef, 
                  trainingTime =comp,
-                 covariateMap=result$map
+                 covariateMap=covariateMap
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'deep'
