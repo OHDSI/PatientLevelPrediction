@@ -1,7 +1,7 @@
 ---
 title: "Building multiple patient-level predictive models"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
-date: '2018-08-21'
+date: '2018-09-05'
 output:
   pdf_document:
     includes:
@@ -64,9 +64,6 @@ studyPop3 <- createStudyPopulationSettings(binary = T,
                                            verbosity = "INFO")
                                            
 populationSettingList <- list(studyPop1,studyPop2,studyPop3)
-populationSettingNames <- c('all outcomes but only non-outcomes with complete TAR',
-                            'only include people who are observed for all TAR',
-                            'including people who leave during TAR')
 ```
 # Covariate Settings   
 The covariate settings are created using `createCovariateSettings`.  We create seperate covariate settings and then combine them into a list:
@@ -82,7 +79,6 @@ covSet2 <- createCovariateSettings(useDemographicsGender = T,
                                    useConditionGroupEraAnyTimePrior = T,
                                    useDrugGroupEraAnyTimePrior = F)
 covariateSettingList <- list(covSet1, covSet2)
-covariateSettingNames < c('all demo, condition/drug groups','all demo, condition groups')
 ```
 # Model Settings                                    
 The model settings requires running the setModel functions for the machine learning models of interest and specifying the hyper-parameter search and then combining these into a list.  For example, if we wanted to try a logistic regression, gradient boosting machine and ada boost model then:
@@ -94,7 +90,6 @@ lr <- setLassoLogisticRegression()
 ada <- setAdaBoost()
 
 modelList <- list(gbm, lr, ada)
-modelSettingNames < c('default gradient boosting','default lasso lr', 'default ada boost')
 ```
 
 # Creating the model analysis list   
@@ -104,10 +99,7 @@ To create the complete plp model settings use `createPlpModelSettings` to combin
 ```r
 modelAnalysisList <- createPlpModelSettings(modelList = modelList, 
                                    covariateSettingList = covariateSettingList,
-                                   populationSettingList = populationSettingList,
-                                   modelSettingNames = modelSettingNames,
-                                   covariateSettingNames = covariateSettingNames, 
-                                   populationSettingNames = populationSettingNames)
+                                   populationSettingList = populationSettingList)
 ```
 
 # Running the multiple prediction patient-level-prediction
@@ -168,8 +160,29 @@ allresults <- runPlpAnalyses(connectionDetails = connectionDetails,
 ```
 This will then save all the plpData objects from the study into "./PlpMultiOutput/plpData", the populations for the analysis into "./PlpMultiOutput/population" and the results into "./PlpMultiOutput/Result".  The csv named settings.csv found in "./PlpMultiOutput" has a row for each prediction model developed and points to the plpData and popualtion used for the model development, it also has descriptions of the cohorts and settings if these are input by the user.
 
-# Loading the multiple prediction patient-level-prediction results
-ToDo
+# Validating the multiple prediction patient-level-prediction results
+To validate all the models on new data and cohorts run (where analysesLocation is the output location you input for runPlpAnalyses() and the suggested outputLocation is the subdirectory 'validation' in this location):
+
+```r
+val <- evaluateMultiplePlp(analysesLocation = "./PlpMultiOutput",
+                                outputLocation = "./PlpMultiOutput/validation",
+                                connectionDetails = connectionDetails, 
+                                validationSchemaTarget = list('new_database_1.dbo',
+                                                              'new_database_2.dbo'),
+                                validationSchemaOutcome = list('new_database_1.dbo',
+                                                              'new_database_2.dbo'),
+                                validationSchemaCdm = list('new_database_1.dbo',
+                                                              'new_database_2.dbo'), 
+                                databaseNames = c('database1','database2'),
+                                validationTableTarget = 'your new cohort table',
+                                validationTableOutcome = 'your new cohort table')
+```
+This then saves the external validation results in the validation folder of the main study (the outputLocation you used in runPlpAnalyses).
 
 # Viewing the multiple prediction patient-level-prediction results
-To view the results for the multiple prediction analysis, load the results and then run...
+To view the results for the multiple prediction analysis:
+
+```r
+viewMultiplePlp(analysesLocation="./PlpMultiOutput")
+```
+If the validation directory in "./PlpMultiOutput" has results, the external validation will also be displayed.

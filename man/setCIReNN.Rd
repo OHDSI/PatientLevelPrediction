@@ -7,7 +7,7 @@
 setCIReNN(units = c(128, 64), recurrentDropout = c(0.2),
   layerDropout = c(0.2), lr = c(1e-04), decay = c(1e-05),
   outcomeWeight = c(1), batchSize = c(100), epochs = c(100),
-  earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10),
+  earlyStoppingMinDelta = c(1e-04), earlyStoppingPatience = c(10),
   seed = NULL)
 }
 \arguments{

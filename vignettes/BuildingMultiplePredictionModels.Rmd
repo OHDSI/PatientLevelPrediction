@@ -63,9 +63,6 @@ studyPop3 <- createStudyPopulationSettings(binary = T,
                                            verbosity = "INFO")
                                            
 populationSettingList <- list(studyPop1,studyPop2,studyPop3)
-populationSettingNames <- c('all outcomes but only non-outcomes with complete TAR',
-                            'only include people who are observed for all TAR',
-                            'including people who leave during TAR')
 ```
 # Covariate Settings   
 The covariate settings are created using `createCovariateSettings`.  We create seperate covariate settings and then combine them into a list:
@@ -80,7 +77,6 @@ covSet2 <- createCovariateSettings(useDemographicsGender = T,
                                    useConditionGroupEraAnyTimePrior = T,
                                    useDrugGroupEraAnyTimePrior = F)
 covariateSettingList <- list(covSet1, covSet2)
-covariateSettingNames < c('all demo, condition/drug groups','all demo, condition groups')
 ```                                   
 # Model Settings                                    
 The model settings requires running the setModel functions for the machine learning models of interest and specifying the hyper-parameter search and then combining these into a list.  For example, if we wanted to try a logistic regression, gradient boosting machine and ada boost model then:
@@ -91,7 +87,6 @@ lr <- setLassoLogisticRegression()
 ada <- setAdaBoost()
 
 modelList <- list(gbm, lr, ada)
-modelSettingNames < c('default gradient boosting','default lasso lr', 'default ada boost')
 ```   
 
 # Creating the model analysis list   
@@ -100,10 +95,7 @@ To create the complete plp model settings use `createPlpModelSettings` to combin
 ```{r tidy=FALSE,eval=FALSE}
 modelAnalysisList <- createPlpModelSettings(modelList = modelList, 
                                    covariateSettingList = covariateSettingList,
-                                   populationSettingList = populationSettingList,
-                                   modelSettingNames = modelSettingNames,
-                                   covariateSettingNames = covariateSettingNames, 
-                                   populationSettingNames = populationSettingNames)
+                                   populationSettingList = populationSettingList)
 ```  
 
 # Running the multiple prediction patient-level-prediction
