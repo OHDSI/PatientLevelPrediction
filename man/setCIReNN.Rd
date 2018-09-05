@@ -7,6 +7,7 @@
 setCIReNN(units = c(128, 64), recurrentDropout = c(0.2),
   layerDropout = c(0.2), lr = c(1e-04), decay = c(1e-05),
   outcomeWeight = c(1), batchSize = c(100), epochs = c(100),
+  earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10),
   seed = NULL)
 }
 \arguments{
@@ -25,6 +26,10 @@ setCIReNN(units = c(128, 64), recurrentDropout = c(0.2),
 \item{batchSize}{The number of data points to use per training batch}
 
 \item{epochs}{Number of times to iterate over dataset}
+
+\item{earlyStoppingMinDelta}{minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.}
+
+\item{earlyStoppingPatience}{Number of epochs with no improvement after which training will be stopped.}
 
 \item{seed}{Random seed used by deep learning model}
 }
