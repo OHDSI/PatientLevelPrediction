@@ -97,8 +97,9 @@ setCIReNN <- function(units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(
     units=units, recurrentDropout=recurrentDropout, 
     layerDropout=layerDropout,
     lr =lr, decay=decay, outcomeWeight=outcomeWeight,epochs= epochs,
+    earlyStoppingMinDelta = earlyStoppingMinDelta, earlyStoppingPatience = earlyStoppingPatience,
     seed=ifelse(is.null(seed),'NULL', seed)),
-    1:(length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(epochs)*max(1,length(seed)))),
+    1:(length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(earlyStoppingMinDelta)*length(earlyStoppingPatience)*length(epochs)*max(1,length(seed)))),
     name='CIReNN'
   )
 
@@ -122,6 +123,9 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   
   result<- toSparseM(plpData,population,map=NULL, temporal=T)
   data <- result$data
+
+  #remove result to save memory
+  #rm(result)
   
   #one-hot encoding
   population$y <- keras::to_categorical(population$outcomeCount, 2)#[,2] #population$outcomeCount
