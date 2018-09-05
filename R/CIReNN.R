@@ -125,7 +125,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   data <- result$data
 
   #remove result to save memory
-  #rm(result)
+  rm(result)
   
   #one-hot encoding
   population$y <- keras::to_categorical(population$outcomeCount, 2)#[,2] #population$outcomeCount
