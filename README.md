@@ -3,17 +3,20 @@ PatientLevelPrediction
 
 Introduction
 ============
-An R package for building patient level predictive models using data in Common Data Model format.
+An R package for building and validating patient level predictive models using data in the OMOP Common Data Model format.  Please see our [JAMIA paper](https://academic.oup.com/jamia/article/25/8/969/4989437) for more details.
 
 Features
 ========
-- Takes a cohort and outcome of interest as input.
-- Extracts the necessary data from a database in OMOP Common Data Model format.
-- Uses a large set of covariates including for example all drugs, diagnoses, procedures, as well as age, comorbidity indexes, etc.
-- Various machine learning algorithms can be used to develop predictive models.
+- Takes one or more target cohorts (Ts) and one or more outcome cohorts (Os) and develops models for all T and O combinations.
+- Takes multiple prediction design options.
+- Extracts the necessary data from a database in OMOP Common Data Model format for multiple covariate settings.
+- Uses a large set of covariates including for example all drugs, diagnoses, procedures, as well as age, comorbidity indexes, etc.  Also enables you to use custom covariates.
+- Includes a library of state-of-the-art machine learning algorithms that can be used to develop predictive models or add custom machine learning algorithms.
+- Supported machine learning models are: Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural network and Deep learning (Convolutional neural networks, Recurrent neural network and Deep nets).
 - Includes function for evaluating predictive models
 - Includes functions to plot and explore model performance (ROC + Calibration)
-- Supported outcome models are l1 logistic regression, Random forest, Gradient boosting machines, Naive Bayes, KNN and MLP.
+- Includes a shiny app to interactively view and explore results
+
 
 Screenshots
 ===========
@@ -39,7 +42,7 @@ System Requirements
 Requires R (version 3.3.0 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java and Python.
 
 The python installation is required for some of the machine learning algorithms. We advise to
-install Python 3.6 using Anaconda (https://www.continuum.io/downloads)
+install Python 3.6 using Anaconda (https://www.continuum.io/downloads) when using Windows operating system or Python 3.6 (https://www.python.org/downloads/release/python-360/)  when using Linux or a Mac. 
 
 Dependencies
 ============
@@ -92,10 +95,10 @@ alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
 Getting Involved
 ================
-* Vignette: [Installation guide](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf)
-* Vignette: [Building patient-level predictive models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf)
-* Vignette: [Adding existing models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingExistingModels.pdf)
-* Vignette: [Adding custom models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/CustomPredictionAlgorithms.pdf)
+* Vignette: [Package Installation guide](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf)
+* Vignette: [Building Single Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf)
+* Vignette: [Adding Existing Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingExistingModels.pdf)
+* Vignette: [Adding Custom Machine Learning  Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/CustomPredictionAlgorithms.pdf)
 * Developer questions/comments/feedback: <a href="http://forumBuildingPredictiveModels.pdfs.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="../../issues">GitHub issue tracker</a> for all bugs/issues/enhancements
  
