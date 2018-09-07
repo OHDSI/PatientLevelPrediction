@@ -143,72 +143,6 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   #remove result to save memory
   rm(result)
   
-  #function for building vae
-  buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
-                     vaeEpoch = 100L, vaeEpislonStd = 1.0, temporal = TRUE){
-    if (temporal) dataSample <- data %>% apply(3, as.numeric) else dataSample <- data
-    originalDim<-dim(dataSample)[2]
-    K <- keras::backend()
-    x <- keras::layer_input (shape =originalDim)
-    h <- keras::layer_dense (x, vaeIntermediateDim, activation = 'relu')
-    z_mean <- keras::layer_dense(h, vaeLatentDim)
-    z_log_var <- keras::layer_dense(h, vaeLatentDim)
-    
-    sampling<- function(arg){
-      z_mean <- arg[,1:vaeLatentDim]
-      z_log_var <- arg[, (vaeLatentDim+1):(2*vaeLatentDim)]
-      
-      epsilon <- keras::k_random_normal(
-        shape = c(keras::k_shape(z_mean)[[1]]),
-        mean = 0.,
-        stddev = vaeEpislonStd
-      )
-      
-      z_mean + keras::k_exp(z_log_var/2)*epsilon
-    }
-    
-    z <- keras::layer_concatenate(list(z_mean, z_log_var)) %>% 
-      keras::layer_lambda(sampling)
-    
-    #we instantiate these layers separately so as to reuse them later
-    decoder_h <- keras::layer_dense(units = vaeIntermediateDim, activation = 'relu')
-    decoder_mean <- keras::layer_dense (units = originalDim, activation = 'sigmoid')
-    h_decoded <- decoder_h (z)
-    x_decoded_mean <- decoder_mean(h_decoded)
-    
-    #end-to-end autoencoder
-    vae <- keras::keras_model (x,x_decoded_mean)
-    #encoder, from inputs to latent space
-    encoder <- keras::keras_model(x, z_mean)
-    
-    #generator, from latent space to reconstruted inputs
-    decoder_input <- keras::layer_input (shape = vaeLatentDim)
-    h_decoded_2 <- decoder_h(decoder_input)
-    x_decoded_mean_2 <- decoder_mean(h_decoded_2)
-    generator <- keras::keras_model (decoder_input, x_decoded_mean_2)
-    
-    vae_loss <- function(x, x_decoded_mean){
-      xent_loss <- (originalDim/1.0)* keras::loss_binary_crossentropy(x, x_decoded_mean)
-      k1_loss <- -0.5 * keras::k_mean(1 + z_log_var - keras::k_square(z_mean) - keras::k_exp(z_log_var), axis = -1L)
-      xent_loss + k1_loss
-    }
-    
-    vae %>% keras::compile (optimizer = "rmsprop", loss = vae_loss)
-    #if (!is.null(dataValidation)) dataValidation<-list(dataValidation,dataValidation)
-    vaeEarlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=5,mode="auto",min_delta = 1e-3)
-    
-    vae %>% keras::fit (
-      dataSample,dataSample
-      ,shuffle = TRUE
-      ,epochs = vaeEpoch
-      ,batch_size = vaeBatchSize
-      #,validation_data = dataValidation
-      ,validation_split = vaeValidationSplit
-      ,callbacks = list(vaeEarlyStopping)
-    )
-    return (list (vae,encoder))
-  }
-  
   if(param[[1]]$useVae){
     #Sampling the data for bulding VAE
     vaeSampleData<-data[sample(seq(dim(data)[1]), floor(dim(data)[1]*param[[1]]$vaeDataSamplingProportion),replace=FALSE),,]
@@ -470,4 +404,70 @@ trainCIReNN<-function(plpData, population,
   )
   return(result)
   
+}
+
+#function for building vae
+buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
+                   vaeEpoch = 100L, vaeEpislonStd = 1.0, temporal = TRUE){
+  if (temporal) dataSample <- data %>% apply(3, as.numeric) else dataSample <- data
+  originalDim<-dim(dataSample)[2]
+  K <- keras::backend()
+  x <- keras::layer_input (shape =originalDim)
+  h <- keras::layer_dense (x, vaeIntermediateDim, activation = 'relu')
+  z_mean <- keras::layer_dense(h, vaeLatentDim)
+  z_log_var <- keras::layer_dense(h, vaeLatentDim)
+  
+  sampling<- function(arg){
+    z_mean <- arg[,1:vaeLatentDim]
+    z_log_var <- arg[, (vaeLatentDim+1):(2*vaeLatentDim)]
+    
+    epsilon <- keras::k_random_normal(
+      shape = c(keras::k_shape(z_mean)[[1]]),
+      mean = 0.,
+      stddev = vaeEpislonStd
+    )
+    
+    z_mean + keras::k_exp(z_log_var/2)*epsilon
+  }
+  
+  z <- keras::layer_concatenate(list(z_mean, z_log_var)) %>% 
+    keras::layer_lambda(sampling)
+  
+  #we instantiate these layers separately so as to reuse them later
+  decoder_h <- keras::layer_dense(units = vaeIntermediateDim, activation = 'relu')
+  decoder_mean <- keras::layer_dense (units = originalDim, activation = 'sigmoid')
+  h_decoded <- decoder_h (z)
+  x_decoded_mean <- decoder_mean(h_decoded)
+  
+  #end-to-end autoencoder
+  vae <- keras::keras_model (x,x_decoded_mean)
+  #encoder, from inputs to latent space
+  encoder <- keras::keras_model(x, z_mean)
+  
+  #generator, from latent space to reconstruted inputs
+  decoder_input <- keras::layer_input (shape = vaeLatentDim)
+  h_decoded_2 <- decoder_h(decoder_input)
+  x_decoded_mean_2 <- decoder_mean(h_decoded_2)
+  generator <- keras::keras_model (decoder_input, x_decoded_mean_2)
+  
+  vae_loss <- function(x, x_decoded_mean){
+    xent_loss <- (originalDim/1.0)* keras::loss_binary_crossentropy(x, x_decoded_mean)
+    k1_loss <- -0.5 * keras::k_mean(1 + z_log_var - keras::k_square(z_mean) - keras::k_exp(z_log_var), axis = -1L)
+    xent_loss + k1_loss
+  }
+  
+  vae %>% keras::compile (optimizer = "rmsprop", loss = vae_loss)
+  #if (!is.null(dataValidation)) dataValidation<-list(dataValidation,dataValidation)
+  vaeEarlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=5,mode="auto",min_delta = 1e-3)
+  
+  vae %>% keras::fit (
+    dataSample,dataSample
+    ,shuffle = TRUE
+    ,epochs = vaeEpoch
+    ,batch_size = vaeBatchSize
+    #,validation_data = dataValidation
+    ,validation_split = vaeValidationSplit
+    ,callbacks = list(vaeEarlyStopping)
+  )
+  return (list (vae,encoder))
 }
