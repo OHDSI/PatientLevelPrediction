@@ -35,7 +35,8 @@
 #' @param epochs          Number of times to iterate over dataset
 #' @param earlyStoppingMinDelta         minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.
 #' @param earlyStoppingPatience         Number of epochs with no improvement after which training will be stopped.
-#' @param vaeDataSamplingProportion
+#' @param useVae                        logical (either TRUE or FALSE) value for using Variational AutoEncoder before RNN
+#' @param vaeDataSamplingProportion     Data sampling proportion for VAE
 #' @param vaeValidationSplit
 #' @param vaeBatchSize
 #' @param vaeLatentDim
@@ -273,7 +274,11 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef, 
                  trainingTime =comp,
-                 covariateMap=covariateMap
+                 covariateMap=covariateMap,
+                 useVae = param[[1]]$useVae,
+                 vaeBatchSize = param[[1]]$vaeBatchSize,
+                 vaeEnDecoder = vaeEnDecoder,
+                 vaeEncoder = vaeEncoder
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'deep'
@@ -285,7 +290,11 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
 trainCIReNN<-function(plpData, population,
                       units=128, recurrentDropout=0.2, layerDropout=0.2,
                       lr =1e-4, decay=1e-5, outcomeWeight = 1.0, batchSize = 100, 
-                      epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), seed=NULL, train=TRUE){
+                      epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
+                      useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
+                      vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
+                      vaeEpoch = 100L, vaeEpislonStd = 1.0,
+                      seed=NULL, train=TRUE){
   
   if(!is.null(population$indexes) && train==T){
     writeLines(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))

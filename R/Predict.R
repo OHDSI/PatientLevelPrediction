@@ -206,7 +206,12 @@ predict.deep <- function(plpModel, population, plpData,   ...){
   if(temporal){
     OhdsiRTools::logTrace('temporal')
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
+    
     data <-result$data[population$rowId,,]
+    if(plpModel$useVae==TRUE){
+      data<- plyr::aaply(as.array(result$data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
+      data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
+    }
     
     batch_size <- min(2000, length(population$rowId))
     maxVal <- length(population$rowId)
