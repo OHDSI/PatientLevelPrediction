@@ -7,8 +7,10 @@
 setCIReNN(units = c(128, 64), recurrentDropout = c(0.2),
   layerDropout = c(0.2), lr = c(1e-04), decay = c(1e-05),
   outcomeWeight = c(1), batchSize = c(100), epochs = c(100),
-  earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10),
-  seed = NULL)
+  earlyStoppingMinDelta = c(1e-04), earlyStoppingPatience = c(10),
+  useVae = T, vaeDataSamplingProportion = 0.1, vaeValidationSplit = 0.2,
+  vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
+  vaeEpoch = 100L, vaeEpislonStd = 1, seed = NULL)
 }
 \arguments{
 \item{units}{The number of units of RNN layer - as a list of vectors}
@@ -30,6 +32,22 @@ setCIReNN(units = c(128, 64), recurrentDropout = c(0.2),
 \item{earlyStoppingMinDelta}{minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.}
 
 \item{earlyStoppingPatience}{Number of epochs with no improvement after which training will be stopped.}
+
+\item{useVae}{logical (either TRUE or FALSE) value for using Variational AutoEncoder before RNN}
+
+\item{vaeDataSamplingProportion}{Data sampling proportion for VAE}
+
+\item{vaeValidationSplit}{Validation split proportion for VAE}
+
+\item{vaeBatchSize}{batch size for VAE}
+
+\item{vaeLatentDim}{Number of latent dimesion for VAE}
+
+\item{vaeIntermediateDim}{Number of intermediate dimesion for VAE}
+
+\item{vaeEpoch}{Number of times to interate over dataset for VAE}
+
+\item{vaeEpislonStd}{Epsilon}
 
 \item{seed}{Random seed used by deep learning model}
 }

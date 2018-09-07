@@ -37,12 +37,12 @@
 #' @param earlyStoppingPatience         Number of epochs with no improvement after which training will be stopped.
 #' @param useVae                        logical (either TRUE or FALSE) value for using Variational AutoEncoder before RNN
 #' @param vaeDataSamplingProportion     Data sampling proportion for VAE
-#' @param vaeValidationSplit
-#' @param vaeBatchSize
-#' @param vaeLatentDim
-#' @param vaeIntermediateDim
-#' @param vaeEpoch
-#' @param vaeEpislonStd
+#' @param vaeValidationSplit            Validation split proportion for VAE
+#' @param vaeBatchSize                  batch size for VAE
+#' @param vaeLatentDim                  Number of latent dimesion for VAE
+#' @param vaeIntermediateDim            Number of intermediate dimesion for VAE
+#' @param vaeEpoch                      Number of times to interate over dataset for VAE
+#' @param vaeEpislonStd                 Epsilon
 #' @param seed            Random seed used by deep learning model
 #'
 #' @examples
@@ -232,6 +232,9 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
     # decodedVaeData<-aperm(decodedVaeData, c(2,1,3))
     # a1=Epi::ROC(form=as.factor(as.vector(data))~as.vector(decodedVaeData),plot="ROC")
     
+  }else {
+    vaeEnDecoder <- NULL
+    vaeEncoder <- NULL
   }
   
   #one-hot encoding
