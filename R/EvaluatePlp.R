@@ -85,19 +85,12 @@ evaluatePlp <- function(prediction, plpData){
 
   OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
   
-  missingGender <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%c(8507001,8532001)]
-  missingAge <- plpData$metaData$deletedCovariateIds[plpData$metaData$deletedCovariateIds%in%paste0(0:19, '003')]
   # 3) demographicSummary
-  if (length(missingGender) == 0 | length(missingAge) == 0){
-    demographicSummary <- NULL
-  } else {
   OhdsiRTools::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
-  demographicSummary <- getDemographicSummary(prediction, plpData)
-  #demographicSummary <- NULL
+  demographicSummary <- tryCatch(getDemographicSummary(prediction, plpData),
+                                 error= function(cond){return(NULL)})
   OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
-  }
 
-  # need to edit covSettings to make age/gender always calculated!
 
   # calibration linear fit- returns gradient, intercept
   OhdsiRTools::logTrace('Calculating Calibration Line')
