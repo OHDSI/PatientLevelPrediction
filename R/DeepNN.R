@@ -106,7 +106,7 @@ fitDeepNN <- function(plpData,population, param, search='grid', quiet=F,
   if(!'ffdf'%in%class(plpData$covariates) )
     stop('DeepNN requires plpData in coo format')
   if(!is.null(plpData$timeRef)){
-    Warning('Data temporal but deepNN uses non-temporal data...')
+    warning('Data temporal but deepNN uses non-temporal data...')
   }
   
   metaData <- attr(population, 'metaData')

@@ -11,6 +11,7 @@ setCIReNN(units = c(128, 64), recurrentDropout = c(0.2),
   useVae = T, vaeDataSamplingProportion = 0.1, vaeValidationSplit = 0.2,
   vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
   vaeEpoch = 100L, vaeEpislonStd = 1, seed = NULL)
+  seed = NULL)
 }
 \arguments{
 \item{units}{The number of units of RNN layer - as a list of vectors}

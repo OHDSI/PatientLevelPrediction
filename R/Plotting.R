@@ -31,7 +31,7 @@
 #' TRUE if it ran 
 #'
 #' @export
-plotPlp <- function(result, filename){
+plotPlp <- function(result, filename, type='test'){
   
   # check inputs
   
@@ -39,28 +39,39 @@ plotPlp <- function(result, filename){
   
   # run each of the plots:
   plotSparseRoc(result$performanceEvaluation, 
-                fileName=file.path(filename, 'plots','sparseROC.pdf'))
+                fileName=file.path(filename, 'plots','sparseROC.pdf'), 
+                type = type)
   plotPredictedPDF(result$performanceEvaluation, 
-                   fileName=file.path(filename, 'plots','predictedPDF.pdf'))
+                   fileName=file.path(filename, 'plots','predictedPDF.pdf'),
+                   type = type)
   plotPreferencePDF(result$performanceEvaluation, 
-                    fileName=file.path(filename, 'plots','preferencePDF.pdf'))
+                    fileName=file.path(filename, 'plots','preferencePDF.pdf'), 
+                    type = type)
   plotPrecisionRecall(result$performanceEvaluation, 
-                      fileName=file.path(filename, 'plots','precisionRecall.pdf'))
+                      fileName=file.path(filename, 'plots','precisionRecall.pdf'), 
+                      type = type)
   plotF1Measure(result$performanceEvaluation, 
-                fileName=file.path(filename, 'plots','f1Measure.pdf'))
+                fileName=file.path(filename, 'plots','f1Measure.pdf'), 
+                type = type)
   plotDemographicSummary(result$performanceEvaluation, 
-                         fileName=file.path(filename, 'plots','demographicSummary.pdf'))
+                         fileName=file.path(filename, 'plots','demographicSummary.pdf'),
+                         type = type)
   plotSparseCalibration(result$performanceEvaluation, 
-                        fileName=file.path(filename, 'plots','sparseCalibration.pdf'))
+                        fileName=file.path(filename, 'plots','sparseCalibration.pdf'), 
+                        type = type)
   plotSparseCalibration2(result$performanceEvaluation, 
-                        fileName=file.path(filename, 'plots','sparseCalibrationConventional.pdf'))
+                        fileName=file.path(filename, 'plots','sparseCalibrationConventional.pdf'), 
+                        type = type)
   plotPredictionDistribution(result$performanceEvaluation, 
-                             fileName=file.path(filename, 'plots','predictionDistribution.pdf'))
+                             fileName=file.path(filename, 'plots','predictionDistribution.pdf'), 
+                             type = type)
   
   plotVariableScatterplot(result$covariateSummary, 
                           fileName=file.path(filename, 'plots','variableScatterplot.pdf'))
-  plotGeneralizability(result$covariateSummary, 
-                             fileName=file.path(filename, 'plots','generalizability.pdf'))
+  if(type%in%c('test','train')){
+    plotGeneralizability(result$covariateSummary, 
+                               fileName=file.path(filename, 'plots','generalizability.pdf'))
+  }
   
   return(TRUE)
 }
