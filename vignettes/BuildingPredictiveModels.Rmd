@@ -2,6 +2,15 @@
 title: "Building patient-level predictive models"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead{}
+    - \fancyhead[CO,CE]{Installation Guide}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[LE,RO]{\thepage}
+    - \renewcommand{\headrulewidth}{0.4pt}
+    - \renewcommand{\footrulewidth}{0.4pt}
 output:
   pdf_document:
     includes:
@@ -32,7 +41,6 @@ if (file.exists(vignetteDataFolder)){
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
 ```
-\newpage
 # Introduction
 
 This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the Observational Medical Outcomes Partnership Common Data Model (OMOP CDM). 
@@ -43,8 +51,8 @@ Figure 1 illustrates the prediction problem we address. Among a population at ri
 
 To develop a model the user needs to take the following steps:
   
-  1. Create the target population and outcome cohorts
-  2. Define the covariates (aka features/independant variables) to use in the model
+1. Create the target population and outcome cohorts
+2. Define the covariates (aka features/independant variables) to use in the model
 3. Extract the patient-level data from the server
 4. Define the population of interest (this defines the time-at-risk period to create the class labels)
 5. Pick a test/train split 
@@ -550,5 +558,9 @@ Further, `PatientLevelPrediction` makes extensive use of the `Cyclops` package.
 ```{r tidy=TRUE,eval=TRUE}
 citation("Cyclops")
 ```
+
+**Please reference this paper if you use the PLP Package in your work:**
+
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.

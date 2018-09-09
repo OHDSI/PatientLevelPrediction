@@ -1,7 +1,16 @@
 ---
-title: "Building multiple patient-level predictive models"
+title: "Automatically Build Multiple Patient-Level Predictive Models"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
-date: '2018-09-05'
+date: '`r Sys.Date()`'
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead{}
+    - \fancyhead[CO,CE]{Automatically Build Multiple Patient-Level Predictive Models}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[LE,RO]{\thepage}
+    - \renewcommand{\headrulewidth}{0.4pt}
+    - \renewcommand{\footrulewidth}{0.4pt}
 output:
   pdf_document:
     includes:
@@ -19,22 +28,23 @@ output:
 %\VignetteIndexEntry{Building multiple patient-level predictive models}
 -->
 
-\newpage
 # Introduction
-This vignette describes how you can use the `PatientLevelPrediction` package to build multiple patient-level predictive models. This vignette assumes you have read and are comfortable with running single patient level prediction models.
+This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to automatically build multiple patient-level predictive models. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
 
+# Creating the setting lists
+To develop multiple models the user has to create a list of Study Populations Settings, Covariate Settings, and Model Settings. These list will then be combined in a Model Analysis List and all combinations of the elements in this list will be automatically run by the package.
 
-# Study Populations
-The create a study population setting use the function `createStudyPopulationSettings`.  If we want to test out three study populations:
+## Study population settings
 
-- study population 1 includes people who have the outcome but leave the database before the end of time-at-risk and only those without the outcome who are observed for the whole time-at-risk period.
-- study population 2 includes people who are observed for the whole time-at-risk period.
-- study population 3 includes people who are not observed for the whole time-at-risk
+Suppose we like to make the following three population settings:
 
-we can make all three populations and then combine them into a list:
+*  study population 1: includes people who have the outcome but leave the database before the end of time-at-risk and only those without the outcome who are observed for the whole time-at-risk period.
+*  study population 2: includes people who are observed for the whole time-at-risk period.
+*  study population 3: includes people who do not have to be observed for the whole time-at-risk.
 
+The create a study population setting list we use the function `createStudyPopulationSettings` as described below:
 
-```r
+```{r tidy=FALSE,eval=FALSE}
 studyPop1 <- createStudyPopulationSettings(binary = T,
                                           includeAllOutcomes = T,
                                           removeSubjectsWithPriorOutcome = TRUE,
@@ -44,6 +54,7 @@ studyPop1 <- createStudyPopulationSettings(binary = T,
                                           riskWindowStart = 1,
                                           riskWindowEnd = 365,
                                           verbosity = "INFO")
+
 studyPop2 <- createStudyPopulationSettings(binary = T,
                                            includeAllOutcomes = F,
                                            removeSubjectsWithPriorOutcome = TRUE,
@@ -53,6 +64,7 @@ studyPop2 <- createStudyPopulationSettings(binary = T,
                                            riskWindowStart = 1,
                                            riskWindowEnd = 365,
                                            verbosity = "INFO")
+
 studyPop3 <- createStudyPopulationSettings(binary = T,
                                            includeAllOutcomes = F,
                                            removeSubjectsWithPriorOutcome = TRUE,
@@ -65,51 +77,49 @@ studyPop3 <- createStudyPopulationSettings(binary = T,
                                            
 populationSettingList <- list(studyPop1,studyPop2,studyPop3)
 ```
-# Covariate Settings   
-The covariate settings are created using `createCovariateSettings`.  We create seperate covariate settings and then combine them into a list:
+## Covariate settings   
+The covariate settings are created using `createCovariateSettings`.  We can create multiple covariate settings and then combine them in a list:
 
-
-```r
+```{r tidy=FALSE,eval=FALSE}
 covSet1 <- createCovariateSettings(useDemographicsGender = T, 
                                    useDemographicsAgeGroup = T, 
                                    useConditionGroupEraAnyTimePrior = T,
                                    useDrugGroupEraAnyTimePrior = T)
+
 covSet2 <- createCovariateSettings(useDemographicsGender = T, 
                                    useDemographicsAgeGroup = T, 
                                    useConditionGroupEraAnyTimePrior = T,
                                    useDrugGroupEraAnyTimePrior = F)
+
 covariateSettingList <- list(covSet1, covSet2)
-```
-# Model Settings                                    
+```                                   
+## Model settings                                    
 The model settings requires running the setModel functions for the machine learning models of interest and specifying the hyper-parameter search and then combining these into a list.  For example, if we wanted to try a logistic regression, gradient boosting machine and ada boost model then:
 
-
-```r
+```{r tidy=FALSE,eval=FALSE}
 gbm <- setGradientBoostingMachine()
 lr <- setLassoLogisticRegression()
 ada <- setAdaBoost()
 
 modelList <- list(gbm, lr, ada)
-```
+```   
 
-# Creating the model analysis list   
+## Model analysis list   
 To create the complete plp model settings use `createPlpModelSettings` to combine the population, covariate and model settings.
 
-
-```r
+```{r tidy=FALSE,eval=FALSE}
 modelAnalysisList <- createPlpModelSettings(modelList = modelList, 
                                    covariateSettingList = covariateSettingList,
                                    populationSettingList = populationSettingList)
-```
+```  
 
-# Running the multiple prediction patient-level-prediction
+# Running multiple models
 As we will be downloading loads of data in the multiple plp analysis it is useful to set fftempdir to a directory with write access and plenty of space.
 `options(fftempdir = 'T:/fftemp')`
 
 To run the study requires setting up a connectionDetails object
 
-
-```r
+```{r tidy=FALSE,eval=FALSE}
 dbms <- "your dbms"
 user <- "your username"
 pw <- "your password"
@@ -125,16 +135,14 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
 
 Next you need to specify the cdmDatabaseSchema where your cdm database is found and workDatabaseSchema where your target population and outcome cohorts are.
 
-
-```r
+```{r tidy=FALSE,eval=FALSE}
 cdmDatabaseSchema <- "your cdmDatabaseSchema"
 workDatabaseSchema <- "your workDatabaseSchema"
 ```
 
 Now you can run the multiple patient-level prediction analysis by specifying the target cohort ids and outcome ids 
 
-
-```r
+```{r tidy=FALSE,eval=FALSE}
 allresults <- runPlpAnalyses(connectionDetails = connectionDetails,
                            cdmDatabaseSchema = cdmDatabaseSchema,
                            oracleTempSchema = cdmDatabaseSchema,
@@ -158,31 +166,45 @@ allresults <- runPlpAnalyses(connectionDetails = connectionDetails,
                            nfold = 3,
                            verbosity = "INFO")
 ```
-This will then save all the plpData objects from the study into "./PlpMultiOutput/plpData", the populations for the analysis into "./PlpMultiOutput/population" and the results into "./PlpMultiOutput/Result".  The csv named settings.csv found in "./PlpMultiOutput" has a row for each prediction model developed and points to the plpData and popualtion used for the model development, it also has descriptions of the cohorts and settings if these are input by the user.
+This will then save all the plpData objects from the study into "./PlpMultiOutput/plpData", the populations for the analysis into "./PlpMultiOutput/population" and the results into "./PlpMultiOutput/Result".  The csv named settings.csv found in "./PlpMultiOutput" has a row for each prediction model developed and points to the plpData and population used for the model development, it also has descriptions of the cohorts and settings if these are input by the user.
 
-# Validating the multiple prediction patient-level-prediction results
-To validate all the models on new data and cohorts run (where analysesLocation is the output location you input for runPlpAnalyses() and the suggested outputLocation is the subdirectory 'validation' in this location):
+Note that if for some reason the run is interrupted, e.g. because of an error, a new call to `RunPlpAnalyses` will continue and not restart until you remove the output folder.
 
-```r
+# Validating multiple models
+If you have access to multiple databases on the same server in different schemas you could evaluate accross these using this call:
+
+```{r tidy=FALSE,eval=FALSE}
 val <- evaluateMultiplePlp(analysesLocation = "./PlpMultiOutput",
-                                outputLocation = "./PlpMultiOutput/validation",
-                                connectionDetails = connectionDetails, 
-                                validationSchemaTarget = list('new_database_1.dbo',
+                           outputLocation = "./PlpMultiOutput/validation",
+                           connectionDetails = connectionDetails, 
+                           validationSchemaTarget = list('new_database_1.dbo',
                                                               'new_database_2.dbo'),
-                                validationSchemaOutcome = list('new_database_1.dbo',
+                           validationSchemaOutcome = list('new_database_1.dbo',
                                                               'new_database_2.dbo'),
-                                validationSchemaCdm = list('new_database_1.dbo',
+                           validationSchemaCdm = list('new_database_1.dbo',
                                                               'new_database_2.dbo'), 
-                                databaseNames = c('database1','database2'),
-                                validationTableTarget = 'your new cohort table',
-                                validationTableOutcome = 'your new cohort table')
+                           databaseNames = c('database1','database2'),
+                           validationTableTarget = 'your new cohort table',
+                           validationTableOutcome = 'your new cohort table')
 ```
 This then saves the external validation results in the validation folder of the main study (the outputLocation you used in runPlpAnalyses).
 
-# Viewing the multiple prediction patient-level-prediction results
+# Viewing the results
 To view the results for the multiple prediction analysis:
-
-```r
+```{r tidy=FALSE,eval=FALSE}
 viewMultiplePlp(analysesLocation="./PlpMultiOutput")
 ```
 If the validation directory in "./PlpMultiOutput" has results, the external validation will also be displayed.
+
+# Acknowledgments
+
+Considerable work has been dedicated to provide the `PatientLevelPrediction` package.
+
+```{r tidy=TRUE,eval=TRUE}
+citation("PatientLevelPrediction")
+```
+
+**Please reference this paper if you use the PLP Package in your work:**
+
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+

@@ -1,5 +1,5 @@
 ---
-title: "Implementing Existing Prediction Models using the OHDSI PatientLevelPrediction framework"
+title: "Implementing Existing Prediction Models using the OHDSI PatientLevelPrediction Framework"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
 header-includes:
@@ -25,22 +25,21 @@ output:
 ---
 <!--
 %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Adding existing patient-level predictive models}
+%\VignetteIndexEntry{Implementing existing patient-level predictive models}
 -->
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
 ```
-\newpage
 # Introduction
 
-This vignette describes how you can implement existing logistic regression models in the `PatientLevelPrediction` framework. This allows you to for example externally validate them at scale in the OHDSI data network.
+This vignette describes how you can implement existing logistic regression models in the Observational Health Data Sciences (OHDSI) [`PatientLevelPrediction`](http://www.github.com/OHDSI/PatientLevelPrediction) framework. This allows you to for example externally validate them at scale in the OHDSI data network.
 
-As an example we are going to implement the CHADS2 model:
+As an example we are going to implement the CHADS2 model as described in:
 
 Gage BF, Waterman AD, Shannon W, Boechler M, Rich MW, Radford MJ. Validation of clinical classification schemes for predicting stroke: results from the National Registry of Atrial Fibrillation. JAMA. 2001 Jun 13;285(22):2864-70 
 
-To implement the model you need to create three tables: the model table, the covariate table, and the intercept table.  The model table specifies the modelId (sequence number), the modelCovariateId (sequence number) and the covariateValue (beta for the covariate).  The covariate table specifies the mapping between the covariates from the published model and the standard Patient Level Prediction framework covariates, i.e. its maps to a combination of an analysisid and a concept_id (see below). The intercept table specifies per modelId the intercept.
+To implement the model you need to create three tables: the model table, the covariate table, and the intercept table.  The model table specifies the modelId (sequence number), the modelCovariateId (sequence number) and the covariateValue (beta for the covariate).  The covariate table specifies the mapping between the covariates from the published model and the standard covariates, i.e. it maps to a combination of an analysisid and a concept_id (see below). The intercept table specifies per modelId the intercept.
 
 # Model implementation
 ## Define the model
@@ -64,9 +63,9 @@ data.frame(modelId = c(1,1,1,1,1),
                           
 The covariateTable will then specify what standard covariates need to be included in the model.  
 
-In this case we choose the following Standard SNOMED concept_ids: 319835 for congestive heart failure, 316866 for hypertensive disorder, 201820 for diabetes, and 381591 for cerebrovascular disease.  It is allowed to add multiple concept_ids as seperate rows for the same modelCovariateId if concept sets are needed. These concept_ids can be found using the vocabulary search in ATLAS. 
+In this case we choose the following Standard SNOMED concept_ids: 319835 for congestive heart failure, 316866 for hypertensive disorder, 201820 for diabetes, and 381591 for cerebrovascular disease.  It is allowed to add multiple concept_ids as separate rows for the same modelCovariateId if concept sets are needed. These concept_ids can be found using the vocabulary search in ATLAS. 
 
-The Patient Level Prediction standard covariates are of the form: conceptid*1000 + analysisid. The analysisid specifies the domain of the covariate and its lookback window. Examples can be found here: https://github.com/OHDSI/FeatureExtraction/blob/master/inst/csv/PrespecAnalyses.csv
+The standard covariates are of the form: conceptid*1000 + analysisid. The analysisid specifies the domain of the covariate and its lookback window. Examples can be found here: https://github.com/OHDSI/FeatureExtraction/blob/master/inst/csv/PrespecAnalyses.csv
 
 Our example of CHADS2 uses agegroup and conditions in the full history.  Therefore we need to define the standard covariates using the FeatureExtraction::createCovariateSettings as follows:
 
@@ -74,11 +73,11 @@ Our example of CHADS2 uses agegroup and conditions in the full history.  Therefo
 library(PatientLevelPrediction)
 covSet <- FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T,                             
                                                      useConditionOccurrenceLongTerm = T,
-                                                     includedCovariateIds = c(),
+                                                     includedCovariateIds = NULL,
                                                      longTermStartDays = -9999, 
                                                      endDays = 0)
 ```
-In the above code we used the useConditionOccurrenceLongTerm (these have an analysis id of 102) and we defined the longTermStartDays to be -9999 days relative to index (so we get the full history).  We include the index date in our lookback period by specifying endDays = 0.  The includeCovariateIds is set to 0, but this will be updated when you run the next code to pick out the standard covariates of interest.  As we picked analysis id 102, the standard covariate for anytime prior congestive heart failure is 319835102, the same logic follows for the other conditions, so the covariate table will be:
+In the above code we used the useConditionOccurrenceLongTerm (these have an analysis id of 102) and we defined the longTermStartDays to be -9999 days relative to index (so we get the full history).  We include the index date in our lookback period by specifying endDays = 0.  The includeCovariateIds is set to NULL here, but this will be updated automatically later on.  As we picked analysis id 102, the standard covariate for anytime prior congestive heart failure is 319835102. The same logic follows for the other conditions, so the covariate table will be:
 
 ```{r tidy = FALSE,results = 'axis', echo = FALSE}
 data.frame(modelCovariateId = c(1,2,3,3,3,3,3,4,5),
@@ -110,7 +109,7 @@ interceptTable <-  data.frame(modelId = 1,
 
 ## Create the model 
 
-Now you have everything in place actually create the existing model. First specify the current environment as executing createExistingModelSql creates two functions for running the existing model into the specificed environment.  Next a few additional settings are needed: as some models require an intercept, there is an option for this (set it to 0 if an intercept isn't needed), also the type specifies the final mapping (either logistic or linear/score), in our example we are calculating a score. We finally need to specify the analysisId for the newly created CHADS2 covariate. 
+Now you have everything in place to actually create the existing model. First specify the current environment as executing createExistingModelSql creates two functions for running the existing model into the specified environment.  You need to specify the type of model (either logistic or score), in our example we are calculating a score. We finally need to specify the analysisId for the newly created CHADS2 covariate. 
 
 ```{r tidy=FALSE,eval=FALSE}
 e <- environment()
@@ -127,7 +126,7 @@ Once run you will find two new functions in your environment:
    * createExistingmodelsCovariateSettings()
    * getExistingmodelsCovariateSettings()
 
-# Run the model
+## Run the model
 Now you can use the functions you previously created to extract the existing model risk scores for a target population:
 ```{r tidy=FALSE,eval=FALSE}
 plpData <- PatientLevelPrediction::getPlpData(connectionDetails, 
@@ -175,7 +174,7 @@ Finally you need to add the settings for downloading the new data:
   * outcomeId
   * oracleTempSchema
   
-To run the external validation of an existing model where the target population are those in the cohort table with id 1 and the outcome is those in the cohort table with id 2 and we are looking to predict first time occurrance of the outcome 1 day to 365 days after the target cohort start date (asusming you have the modelTable, covariateTable and interceptTable in the format explained above):
+To run the external validation of an existing model where the target population are those in the cohort table with id 1 and the outcome is those in the cohort table with id 2 and we are looking to predict first time occurrence of the outcome 1 day to 365 days after the target cohort start date (assuming you have the modelTable, covariateTable and interceptTable in the format explained above):
 
 ```{r tidy=FALSE,eval=FALSE}
 
@@ -207,6 +206,8 @@ result <- evaluateExistingModel(modelTable = modelTable,
 
 ```
 
+`Result` will contain the performance and the predictions made by the model.
+
 # Acknowledgments
 
 Considerable work has been dedicated to provide the `PatientLevelPrediction` package.
@@ -214,6 +215,11 @@ Considerable work has been dedicated to provide the `PatientLevelPrediction` pac
 ```{r tidy=TRUE,eval=TRUE}
 citation("PatientLevelPrediction")
 ```
+
+**Please reference this paper if you use the PLP Package in your work:**
+
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.
 

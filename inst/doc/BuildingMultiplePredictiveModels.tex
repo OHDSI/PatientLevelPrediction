@@ -1,0 +1,428 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Automatically Build Multiple Patient-Level Predictive Models},
+            pdfauthor={Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Automatically Build Multiple Patient-Level Predictive Models}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{2018-09-09}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[CO,CE]{Automatically Build Multiple Patient-Level Predictive Models}
+\fancyfoot[CO,CE]{PatientLevelPrediction Package Version 2.0.5}
+\fancyfoot[LE,RO]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\section{Introduction}\label{introduction}
+
+This vignette describes how you can use the Observational Health Data
+Sciencs and Informatics (OHDSI)
+\href{http://github.com/OHDSI/PatientLevelPrediction}{\texttt{PatientLevelPrediction}}
+package to automatically build multiple patient-level predictive models.
+This vignette assumes you have read and are comfortable with building
+single patient level prediction models as described in the
+\href{https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf}{\texttt{BuildingPredictiveModels}
+vignette}.
+
+\section{Creating the setting lists}\label{creating-the-setting-lists}
+
+To develop multiple models the user has to create a list of Study
+Populations Settings, Covariate Settings, and Model Settings. These list
+will then be combined in a Model Analysis List and all combinations of
+the elements in this list will be automatically run by the package.
+
+\subsection{Study population settings}\label{study-population-settings}
+
+Suppose we like to make the following three population settings:
+
+\begin{itemize}
+\tightlist
+\item
+  study population 1: includes people who have the outcome but leave the
+  database before the end of time-at-risk and only those without the
+  outcome who are observed for the whole time-at-risk period.
+\item
+  study population 2: includes people who are observed for the whole
+  time-at-risk period.
+\item
+  study population 3: includes people who do not have to be observed for
+  the whole time-at-risk.
+\end{itemize}
+
+The create a study population setting list we use the function
+\texttt{createStudyPopulationSettings} as described below:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{studyPop1 <-}\StringTok{ }\KeywordTok{createStudyPopulationSettings}\NormalTok{(}\DataTypeTok{binary =}\NormalTok{ T,}
+                                          \DataTypeTok{includeAllOutcomes =}\NormalTok{ T,}
+                                          \DataTypeTok{removeSubjectsWithPriorOutcome =} \OtherTok{TRUE}\NormalTok{,}
+                                          \DataTypeTok{priorOutcomeLookback =} \DecValTok{99999}\NormalTok{,}
+                                          \DataTypeTok{requireTimeAtRisk =}\NormalTok{ T,}
+                                          \DataTypeTok{minTimeAtRisk=}\DecValTok{364}\NormalTok{,}
+                                          \DataTypeTok{riskWindowStart =} \DecValTok{1}\NormalTok{,}
+                                          \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
+                                          \DataTypeTok{verbosity =} \StringTok{"INFO"}\NormalTok{)}
+
+\NormalTok{studyPop2 <-}\StringTok{ }\KeywordTok{createStudyPopulationSettings}\NormalTok{(}\DataTypeTok{binary =}\NormalTok{ T,}
+                                           \DataTypeTok{includeAllOutcomes =}\NormalTok{ F,}
+                                           \DataTypeTok{removeSubjectsWithPriorOutcome =} \OtherTok{TRUE}\NormalTok{,}
+                                           \DataTypeTok{priorOutcomeLookback =} \DecValTok{99999}\NormalTok{,}
+                                           \DataTypeTok{requireTimeAtRisk =}\NormalTok{ T,}
+                                           \DataTypeTok{minTimeAtRisk=}\DecValTok{364}\NormalTok{,}
+                                           \DataTypeTok{riskWindowStart =} \DecValTok{1}\NormalTok{,}
+                                           \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
+                                           \DataTypeTok{verbosity =} \StringTok{"INFO"}\NormalTok{)}
+
+\NormalTok{studyPop3 <-}\StringTok{ }\KeywordTok{createStudyPopulationSettings}\NormalTok{(}\DataTypeTok{binary =}\NormalTok{ T,}
+                                           \DataTypeTok{includeAllOutcomes =}\NormalTok{ F,}
+                                           \DataTypeTok{removeSubjectsWithPriorOutcome =} \OtherTok{TRUE}\NormalTok{,}
+                                           \DataTypeTok{priorOutcomeLookback =} \DecValTok{99999}\NormalTok{,}
+                                           \DataTypeTok{requireTimeAtRisk =}\NormalTok{ F,}
+                                           \DataTypeTok{minTimeAtRisk=}\DecValTok{364}\NormalTok{,}
+                                           \DataTypeTok{riskWindowStart =} \DecValTok{1}\NormalTok{,}
+                                           \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
+                                           \DataTypeTok{verbosity =} \StringTok{"INFO"}\NormalTok{)}
+                                           
+\NormalTok{populationSettingList <-}\StringTok{ }\KeywordTok{list}\NormalTok{(studyPop1,studyPop2,studyPop3)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Covariate settings}\label{covariate-settings}
+
+The covariate settings are created using
+\texttt{createCovariateSettings}. We can create multiple covariate
+settings and then combine them in a list:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{covSet1 <-}\StringTok{ }\KeywordTok{createCovariateSettings}\NormalTok{(}\DataTypeTok{useDemographicsGender =}\NormalTok{ T, }
+                                   \DataTypeTok{useDemographicsAgeGroup =}\NormalTok{ T, }
+                                   \DataTypeTok{useConditionGroupEraAnyTimePrior =}\NormalTok{ T,}
+                                   \DataTypeTok{useDrugGroupEraAnyTimePrior =}\NormalTok{ T)}
+
+\NormalTok{covSet2 <-}\StringTok{ }\KeywordTok{createCovariateSettings}\NormalTok{(}\DataTypeTok{useDemographicsGender =}\NormalTok{ T, }
+                                   \DataTypeTok{useDemographicsAgeGroup =}\NormalTok{ T, }
+                                   \DataTypeTok{useConditionGroupEraAnyTimePrior =}\NormalTok{ T,}
+                                   \DataTypeTok{useDrugGroupEraAnyTimePrior =}\NormalTok{ F)}
+
+\NormalTok{covariateSettingList <-}\StringTok{ }\KeywordTok{list}\NormalTok{(covSet1, covSet2)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Model settings}\label{model-settings}
+
+The model settings requires running the setModel functions for the
+machine learning models of interest and specifying the hyper-parameter
+search and then combining these into a list. For example, if we wanted
+to try a logistic regression, gradient boosting machine and ada boost
+model then:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gbm <-}\StringTok{ }\KeywordTok{setGradientBoostingMachine}\NormalTok{()}
+\NormalTok{lr <-}\StringTok{ }\KeywordTok{setLassoLogisticRegression}\NormalTok{()}
+\NormalTok{ada <-}\StringTok{ }\KeywordTok{setAdaBoost}\NormalTok{()}
+
+\NormalTok{modelList <-}\StringTok{ }\KeywordTok{list}\NormalTok{(gbm, lr, ada)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Model analysis list}\label{model-analysis-list}
+
+To create the complete plp model settings use
+\texttt{createPlpModelSettings} to combine the population, covariate and
+model settings.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{modelAnalysisList <-}\StringTok{ }\KeywordTok{createPlpModelSettings}\NormalTok{(}\DataTypeTok{modelList =}\NormalTok{ modelList, }
+                                   \DataTypeTok{covariateSettingList =}\NormalTok{ covariateSettingList,}
+                                   \DataTypeTok{populationSettingList =}\NormalTok{ populationSettingList)}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Running multiple models}\label{running-multiple-models}
+
+As we will be downloading loads of data in the multiple plp analysis it
+is useful to set fftempdir to a directory with write access and plenty
+of space.
+\texttt{options(fftempdir\ =\ \textquotesingle{}T:/fftemp\textquotesingle{})}
+
+To run the study requires setting up a connectionDetails object
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dbms <-}\StringTok{ "your dbms"}
+\NormalTok{user <-}\StringTok{ "your username"}
+\NormalTok{pw <-}\StringTok{ "your password"}
+\NormalTok{server <-}\StringTok{ "your server"}
+\NormalTok{port <-}\StringTok{ "your port"}
+
+\NormalTok{connectionDetails <-}\StringTok{ }\NormalTok{DatabaseConnector}\OperatorTok{::}\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =}\NormalTok{ dbms,}
+                                                                \DataTypeTok{server =}\NormalTok{ server,}
+                                                                \DataTypeTok{user =}\NormalTok{ user,}
+                                                                \DataTypeTok{password =}\NormalTok{ pw,}
+                                                                \DataTypeTok{port =}\NormalTok{ port)}
+\end{Highlighting}
+\end{Shaded}
+
+Next you need to specify the cdmDatabaseSchema where your cdm database
+is found and workDatabaseSchema where your target population and outcome
+cohorts are.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cdmDatabaseSchema <-}\StringTok{ "your cdmDatabaseSchema"}
+\NormalTok{workDatabaseSchema <-}\StringTok{ "your workDatabaseSchema"}
+\end{Highlighting}
+\end{Shaded}
+
+Now you can run the multiple patient-level prediction analysis by
+specifying the target cohort ids and outcome ids
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{allresults <-}\StringTok{ }\KeywordTok{runPlpAnalyses}\NormalTok{(}\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails,}
+                           \DataTypeTok{cdmDatabaseSchema =}\NormalTok{ cdmDatabaseSchema,}
+                           \DataTypeTok{oracleTempSchema =}\NormalTok{ cdmDatabaseSchema,}
+                           \DataTypeTok{cohortDatabaseSchema =}\NormalTok{ workDatabaseSchema,}
+                           \DataTypeTok{cohortTable =} \StringTok{"your cohort table"}\NormalTok{,}
+                           \DataTypeTok{outcomeDatabaseSchema =}\NormalTok{ workDatabaseSchema,}
+                           \DataTypeTok{outcomeTable =} \StringTok{"your cohort table"}\NormalTok{,}
+                           \DataTypeTok{cdmVersion =} \DecValTok{5}\NormalTok{,}
+                           \DataTypeTok{outputFolder =} \StringTok{"./PlpMultiOutput"}\NormalTok{,}
+                           \DataTypeTok{modelAnalysisList =}\NormalTok{ modelAnalysisList,}
+                           \DataTypeTok{cohortIds =} \KeywordTok{c}\NormalTok{(}\DecValTok{2484}\NormalTok{,}\DecValTok{6970}\NormalTok{),}
+                           \DataTypeTok{cohortNames =} \KeywordTok{c}\NormalTok{(}\StringTok{'visit 2010'}\NormalTok{,}\StringTok{'test cohort'}\NormalTok{),}
+                           \DataTypeTok{outcomeIds =} \KeywordTok{c}\NormalTok{(}\DecValTok{7331}\NormalTok{,}\DecValTok{5287}\NormalTok{),}
+                           \DataTypeTok{outcomeNames =}  \KeywordTok{c}\NormalTok{(}\StringTok{'outcome 1'}\NormalTok{,}\StringTok{'outcome 2'}\NormalTok{),}
+                           \DataTypeTok{maxSampleSize =} \OtherTok{NULL}\NormalTok{,}
+                           \DataTypeTok{minCovariateFraction =} \DecValTok{0}\NormalTok{,}
+                           \DataTypeTok{normalizeData =}\NormalTok{ T,}
+                           \DataTypeTok{testSplit =} \StringTok{"person"}\NormalTok{,}
+                           \DataTypeTok{testFraction =} \FloatTok{0.25}\NormalTok{,}
+                           \DataTypeTok{splitSeed =} \OtherTok{NULL}\NormalTok{,}
+                           \DataTypeTok{nfold =} \DecValTok{3}\NormalTok{,}
+                           \DataTypeTok{verbosity =} \StringTok{"INFO"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+This will then save all the plpData objects from the study into
+``./PlpMultiOutput/plpData'', the populations for the analysis into
+``./PlpMultiOutput/population'' and the results into
+``./PlpMultiOutput/Result''. The csv named settings.csv found in
+``./PlpMultiOutput'' has a row for each prediction model developed and
+points to the plpData and population used for the model development, it
+also has descriptions of the cohorts and settings if these are input by
+the user.
+
+Note that if for some reason the run is interrupted, e.g.~because of an
+error, a new call to \texttt{RunPlpAnalyses} will continue and not
+restart until you remove the output folder.
+
+\section{Validating multiple models}\label{validating-multiple-models}
+
+If you have access to multiple databases on the same server in different
+schemas you could evaluate accross these using this call:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{val <-}\StringTok{ }\KeywordTok{evaluateMultiplePlp}\NormalTok{(}\DataTypeTok{analysesLocation =} \StringTok{"./PlpMultiOutput"}\NormalTok{,}
+                           \DataTypeTok{outputLocation =} \StringTok{"./PlpMultiOutput/validation"}\NormalTok{,}
+                           \DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }
+                           \DataTypeTok{validationSchemaTarget =} \KeywordTok{list}\NormalTok{(}\StringTok{'new_database_1.dbo'}\NormalTok{,}
+                                                              \StringTok{'new_database_2.dbo'}\NormalTok{),}
+                           \DataTypeTok{validationSchemaOutcome =} \KeywordTok{list}\NormalTok{(}\StringTok{'new_database_1.dbo'}\NormalTok{,}
+                                                              \StringTok{'new_database_2.dbo'}\NormalTok{),}
+                           \DataTypeTok{validationSchemaCdm =} \KeywordTok{list}\NormalTok{(}\StringTok{'new_database_1.dbo'}\NormalTok{,}
+                                                              \StringTok{'new_database_2.dbo'}\NormalTok{), }
+                           \DataTypeTok{databaseNames =} \KeywordTok{c}\NormalTok{(}\StringTok{'database1'}\NormalTok{,}\StringTok{'database2'}\NormalTok{),}
+                           \DataTypeTok{validationTableTarget =} \StringTok{'your new cohort table'}\NormalTok{,}
+                           \DataTypeTok{validationTableOutcome =} \StringTok{'your new cohort table'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+This then saves the external validation results in the validation folder
+of the main study (the outputLocation you used in runPlpAnalyses).
+
+\section{Viewing the results}\label{viewing-the-results}
+
+To view the results for the multiple prediction analysis:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{viewMultiplePlp}\NormalTok{(}\DataTypeTok{analysesLocation=}\StringTok{"./PlpMultiOutput"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+If the validation directory in ``./PlpMultiOutput'' has results, the
+external validation will also be displayed.
+
+\section{Acknowledgments}\label{acknowledgments}
+
+Considerable work has been dedicated to provide the
+\texttt{PatientLevelPrediction} package.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{citation}\NormalTok{(}\StringTok{"PatientLevelPrediction"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##   Jenna Reps, Martijn J. Schuemie, Marc A. Suchard, Patrick B.
+##   Ryan and Peter R. Rijnbeek (2018). PatientLevelPrediction:
+##   Package for patient level prediction using data in the OMOP
+##   Common Data Model. R package version 2.0.5.
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
+## Common Data Model},
+##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
+##     year = {2018},
+##     note = {R package version 2.0.5},
+##   }
+\end{verbatim}
+
+\textbf{Please reference this paper if you use the PLP Package in your
+work:}
+
+\href{http://dx.doi.org/10.1093/jamia/ocy032}{Reps JM, Schuemie MJ,
+Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a
+standardized framework to generate and evaluate patient-level prediction
+models using observational healthcare data. J Am Med Inform Assoc.
+2018;25(8):969-975.}
+
+
+\end{document}

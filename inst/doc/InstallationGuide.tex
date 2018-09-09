@@ -6,7 +6,6 @@
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
-  \usepackage{eurosym}
 \else % if luatex or xelatex
   \ifxetex
     \usepackage{mathspec}
@@ -14,7 +13,6 @@
     \usepackage{fontspec}
   \fi
   \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
-  \newcommand{\euro}{€}
 \fi
 % use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -26,8 +24,8 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{hyperref}
 \hypersetup{unicode=true,
-            pdftitle={Patient-level prediction installation guide},
-            pdfauthor={Jenna Reps},
+            pdftitle={Patient-Level Prediction Installation Guide},
+            pdfauthor={Jenna Reps, Peter R. Rijnbeek},
             pdfborder={0 0 0},
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
@@ -115,16 +113,25 @@
 }
 
 \setlength{\droptitle}{-2em}
-  \title{Patient-level prediction installation guide}
-  \pretitle{\vspace{\droptitle}\centering\huge}
-  \posttitle{\par}
-  \author{Jenna Reps}
-  \preauthor{\centering\large\emph}
-  \postauthor{\par}
-  \predate{\centering\large\emph}
-  \postdate{\par}
-  \date{2018-05-30}
 
+  \title{Patient-Level Prediction Installation Guide}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Jenna Reps, Peter R. Rijnbeek}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{2018-09-09}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[CO,CE]{Installation Guide}
+\fancyfoot[CO,CE]{PatientLevelPrediction Package Version 2.0.5}
+\fancyfoot[LE,RO]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
 
 \begin{document}
 \maketitle
@@ -133,13 +140,19 @@
 \setcounter{tocdepth}{2}
 \tableofcontents
 }
-\newpage
-
 \section{Introduction}\label{introduction}
+
+This vignette describes how you need to install the Observational Health
+Data Sciencs and Informatics (OHDSI)
+\href{http://github.com/OHDSI/PatientLevelPrediction}{\texttt{PatientLevelPrediction}}
+package under Windows, Mac, and Linux.
+
+\section{Software Prerequisites}\label{software-prerequisites}
 
 \subsection{Windows Users}\label{windows-users}
 
-The OHDSI Patient Level Prediction (PLP) package requires installing:
+Under Windows the OHDSI Patient Level Prediction (PLP) package requires
+installing:
 
 \begin{itemize}
 \tightlist
@@ -155,13 +168,37 @@ The OHDSI Patient Level Prediction (PLP) package requires installing:
 \item
   Anaconda 3.6 (\url{https://www.continuum.io/downloads}) - this will
   require checking your path variable to ensure the correct python is
-  used by R - more instructions below
+  used by R - more instructions below. For Python you need to make sure
+  it is in the Path: go to my computer -\textgreater{} system properties
+  -\textgreater{} advanced system settings Then at the bottom right
+  you'll see a button: Environmental Variables, clicking on that will
+  enable you to edit the PATH variable to add the Anaconda location. In
+  R you need to check the Path is correct: You can access the path
+  variable in R using
+  \texttt{Sys.getenv(\textquotesingle{}PATH\textquotesingle{})}. This
+  should contain the location of your Anaconda or python 3.6.
+\item
+  If you have Anaconda and want to use PyTorch v0.4
+  (\url{https://pytorch.org}) as the backend of deep learning, you can
+  directly use command ``conda install pytorch torchvision -c pytorch''
+  for Linux. Please refers to commands for installing PyTorch
+  (\url{https://pytorch.org}) on other develop environments.
+\item
+  To add the R keras interface, in Rstudio run:
 \end{itemize}
 
-\hypertarget{maclinux-users}{\subsection{Mac/Linux
-Users}\label{maclinux-users}}
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{"rstudio/keras"}\NormalTok{)}
+\KeywordTok{library}\NormalTok{(keras)}
+\KeywordTok{install_keras}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
 
-The OHDSI Patient Level Prediction (PLP) package requires installing:
+\subsection{Mac/Linux Users}\label{maclinux-users}
+
+Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package
+requires installing:
 
 \begin{itemize}
 \tightlist
@@ -179,12 +216,22 @@ The OHDSI Patient Level Prediction (PLP) package requires installing:
   Python 3.6 (\url{https://www.python.org/downloads/}) - this will
   require checking your path variable to ensure this version python is
   added - more instructions below
+\item
+  To add the R keras interface, in Rstudio run:
 \end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{"rstudio/keras"}\NormalTok{)}
+\KeywordTok{library}\NormalTok{(keras)}
+\KeywordTok{install_keras}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
 
 \subsubsection{Setting up Python for Mac/Linux
 Users}\label{setting-up-python-for-maclinux-users}
 
-After installing python 3.6 you can type python3 to open python in a
+After installing python 3.6 you need to type python3 to open python in a
 terminal.
 
 To get the package dependencies, in a terminal run:
@@ -198,34 +245,54 @@ pip3 install --upgrade tensorflow
 pip3 install keras
 \end{verbatim}
 
-\section{Checking Python in Path}\label{checking-python-in-path}
-
-Both anaconda and python 3.6 change the path by default. You can access
-the path variable in R using
-\texttt{Sys.getenv(\textquotesingle{}PATH\textquotesingle{})}. This
-should contain the location of your anaconda or python 3.6.
-
-If you cannot find the anaconda/python in your path, then you need to
-add it:
-
-\subsection{Windows users need to:}\label{windows-users-need-to}
-
-my computer -\textgreater{} system properties -\textgreater{} advanced
-system settings Then at the bottom right you'll see a button:
-Environmental Variables, clicking on that will enable you yo edit the
-PATH variable to add the anaconda location.
-
-\subsection{Mac/Linux users need to:}\label{maclinux-users-need-to}
-
-Need to edit the bash profile to add it by running in the terminal:
+Mac and Linux users need edit the bash profile to add python in their
+Path by running in the terminal:
 \texttt{touch\ \textasciitilde{}/.bash\_profile;\ open\ \textasciitilde{}/.bash\_profile;}
-and adding in the location of python 3.6.
+and adding in the location of python 3.6 in the PATH variable.
 
-Please note: if you update the path while R is open, you will need to
-shut R down and reopen before the path is refreshed.
+Furthermore, you need to specify in their R environment that R needs to
+use python 3.6 rather than the default python. In a new Rstudio session
+run this to open the environment file:
 
-\section{Installing PatientLevelPrediction using
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{install.packages}\NormalTok{(‘usethis’)}
+\NormalTok{usethis}\OperatorTok{::}\KeywordTok{edit_r_environ}\NormalTok{()}\OperatorTok{::}\KeywordTok{edit_r_environ}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+In the file that opens add and save: PATH= \{The path containing the
+python 3\}
+
+USESPECIALPYTHONVERSION=``python3.6''
+
+You now need to compile PythonInR so it uses python 3.6. In a new R
+studio session run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{Sys.setenv}\NormalTok{(}\StringTok{'USESPECIALPYTHONVERSION'}\NormalTok{=}\StringTok{'python3.6'}\NormalTok{)}
+\NormalTok{devtools}\OperatorTok{::}\KeywordTok{install_bitbucket}\NormalTok{(}\StringTok{"Floooo/PythonInR"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+This should now set the PythonInR package to use your python 3.6. Please
+note: if you update the path while R is open, you will need to shutdown
+R and reopen before the path is refreshed.
+
+\section{Installing the Package}\label{installing-the-package}
+
+The preferred way to install the package is by using drat, which will
+automatically install the latest release and all the latest
+dependencies. If the drat code fails or you do not want the official
+release you could use devtools to install the bleading edge version of
+the package (latest master). Note that the latest master could contain
+bugs, please report them to us if you experience problems.
+
+\subsection{Installing PatientLevelPrediction using
 drat}\label{installing-patientlevelprediction-using-drat}
+
+To install using drat run:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -234,75 +301,44 @@ drat}\label{installing-patientlevelprediction-using-drat}
 \KeywordTok{install.packages}\NormalTok{(}\StringTok{"PatientLevelPrediction"}\NormalTok{)}
 \CommentTok{# to get the latest PLP then use devtools}
 \KeywordTok{install.packages}\NormalTok{(}\StringTok{"devtools"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/PatientLevelPrediction"}\NormalTok{)}
+\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/PatientLevelPrediction"}\NormalTok{) }
 \end{Highlighting}
 \end{Shaded}
 
-\section{Installing PatientLevelPrediction using
+\subsection{Installing PatientLevelPrediction using
 devtools}\label{installing-patientlevelprediction-using-devtools}
 
-If the drat code fails as the repository is not available you can try:
+To install using devtools run:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{install.packages}\NormalTok{(}\StringTok{"devtools"}\NormalTok{)}
 \KeywordTok{library}\NormalTok{(}\StringTok{"devtools"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/SqlRender"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/DatabaseConnectorJars"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/DatabaseConnector"}\NormalTok{)}
+\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/SqlRender"}\NormalTok{) }
+\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/DatabaseConnectorJars"}\NormalTok{) }
+\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/DatabaseConnector"}\NormalTok{) }
 \KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/FeatureExtraction"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/OhdsiSharing"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/OhdsiRTools"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/BigKnn"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/PatientLevelPrediction"}\NormalTok{)}
+\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/OhdsiSharing"}\NormalTok{) }
+\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/OhdsiRTools"}\NormalTok{) }
+\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/BigKnn"}\NormalTok{)  }
+\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/PatientLevelPrediction"}\NormalTok{) }
 \end{Highlighting}
 \end{Shaded}
-
-\section{\texorpdfstring{Configuring PythonInR
-\protect\hyperlink{maclinux-users}{Mac/Linux
-users}}{Configuring PythonInR Mac/Linux users}}\label{configuring-pythoninr-maclinux-users}
-
-Non-windows users need to specify their R environment to get R to use
-python 3.6 rather than the default python. In a new Rstudio session run
-this to open the environment file:
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{install.packages}\NormalTok{(â€˜usethisâ€™)}
-\NormalTok{usethis}\OperatorTok{::}\KeywordTok{edit_r_environ}\NormalTok{()}\OperatorTok{::}\KeywordTok{edit_r_environ}\NormalTok{()}
-\end{Highlighting}
-\end{Shaded}
-
-In the file that opens add and save: PATH= \{The path containing the
-python 3\} USESPECIALPYTHONVERSION=â\euro{}œpython3.6"
-
-For example mine was:
-PATH=``/Library/Frameworks/Python.framework/Versions/3.6/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin''
-USESPECIALPYTHONVERSION=``python3.6''
-
-You now need to compile PythonInR so it uses python 3.6. In a new R
-studio session run:
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{Sys.setenv}\NormalTok{(}\DataTypeTok{USESPECIALPYTHONVERSION =} \StringTok{"python3.6"}\NormalTok{)}
-\NormalTok{devtools}\OperatorTok{::}\KeywordTok{install_bitbucket}\NormalTok{(}\StringTok{"Floooo/PythonInR"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-This should now set the PythonInR package to use your python 3.6.
 
 \section{Testing installation}\label{testing-installation}
 
-To test the installation (including python) run:
+To test whether the package is installed correctly run:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(DatabaseConnector)}
-\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{"sql_server"}\NormalTok{, }\DataTypeTok{user =} \StringTok{"username"}\NormalTok{, }
-    \DataTypeTok{password =} \StringTok{"hidden"}\NormalTok{, }\DataTypeTok{server =} \StringTok{"your server"}\NormalTok{, }\DataTypeTok{port =} \StringTok{"your port"}\NormalTok{)}
+\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{'sql_server'}\NormalTok{, }
+                                             \DataTypeTok{user =} \StringTok{'username'}\NormalTok{, }
+                                             \DataTypeTok{password =} \StringTok{'hidden'}\NormalTok{, }
+                                             \DataTypeTok{server =} \StringTok{'your server'}\NormalTok{, }
+                                             \DataTypeTok{port =} \StringTok{'your port'}\NormalTok{)}
 \NormalTok{PatientLevelPrediction}\OperatorTok{::}\KeywordTok{checkPlpInstallation}\NormalTok{(}\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }
-    \DataTypeTok{python =}\NormalTok{ T)}
+                                             \DataTypeTok{python =}\NormalTok{ T)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -311,10 +347,13 @@ To test the installation (excluding python) run:
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(DatabaseConnector)}
-\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{"sql_server"}\NormalTok{, }\DataTypeTok{user =} \StringTok{"username"}\NormalTok{, }
-    \DataTypeTok{password =} \StringTok{"hidden"}\NormalTok{, }\DataTypeTok{server =} \StringTok{"your server"}\NormalTok{, }\DataTypeTok{port =} \StringTok{"your port"}\NormalTok{)}
+\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{'sql_server'}\NormalTok{, }
+                                           \DataTypeTok{user =} \StringTok{'username'}\NormalTok{, }
+                                           \DataTypeTok{password =} \StringTok{'hidden'}\NormalTok{, }
+                                           \DataTypeTok{server =} \StringTok{'your server'}\NormalTok{, }
+                                           \DataTypeTok{port =} \StringTok{'your port'}\NormalTok{)}
 \NormalTok{PatientLevelPrediction}\OperatorTok{::}\KeywordTok{checkPlpInstallation}\NormalTok{(}\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }
-    \DataTypeTok{python =}\NormalTok{ F)}
+                                             \DataTypeTok{python =}\NormalTok{ F)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -323,34 +362,69 @@ can determine the issue by running:
 \texttt{PatientLevelPrediction::interpretInstallCode(N)} where
 \texttt{N} is the value returned by the plp installation check.
 
-\section{Adding Keras for deep
-learning}\label{adding-keras-for-deep-learning}
+\section{Installation issues}\label{installation-issues}
 
-To add the R keras interface, in Rstudio run:
+Installation issues need to be posted in our issue tracker:
+\url{http://github.com/OHDSI/PatientLevelPrediction/issues}
+
+The list below provides solutions for some common issues:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  If you have an error when trying to install a package in R saying
+  \textbf{`Dependancy X not available \ldots{}'} then this cna sometimes
+  be fixed by running
+  \texttt{install.packages(\textquotesingle{}X\textquotesingle{})} and
+  then once that completes trying to reinstall the package that had the
+  error.
+\item
+  I have found that using the github devtools to install packages can be
+  impacted if you have \textbf{multiple R sessions} open as one session
+  with a library open can causethe library to be locked and this can
+  prevent an install of a package that depends on that library.
+\end{enumerate}
+
+\section{Acknowledgments}\label{acknowledgments}
+
+Considerable work has been dedicated to provide the
+\texttt{PatientLevelPrediction} package.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{"rstudio/keras"}\NormalTok{)}
-\KeywordTok{library}\NormalTok{(keras)}
-\KeywordTok{install_keras}\NormalTok{()}
+\KeywordTok{citation}\NormalTok{(}\StringTok{"PatientLevelPrediction"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\section{Common install issues}\label{common-install-issues}
+\begin{verbatim}
+## 
+##   Jenna Reps, Martijn J. Schuemie, Marc A. Suchard, Patrick B.
+##   Ryan and Peter R. Rijnbeek (2018). PatientLevelPrediction:
+##   Package for patient level prediction using data in the OMOP
+##   Common Data Model. R package version 2.0.5.
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
+## Common Data Model},
+##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
+##     year = {2018},
+##     note = {R package version 2.0.5},
+##   }
+\end{verbatim}
 
-This will be updated over time.
+\textbf{Please reference this paper if you use the PLP Package in your
+work:}
 
-If you have an error when trying to install a package in R saying
-`Dependancy X not available \ldots{}' then this cna sometimes be fixed
-by running
-\texttt{install.packages(\textquotesingle{}X\textquotesingle{})} and
-then once that completes trying to reinstall the package that had the
-error.
+\href{http://dx.doi.org/10.1093/jamia/ocy032}{Reps JM, Schuemie MJ,
+Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a
+standardized framework to generate and evaluate patient-level prediction
+models using observational healthcare data. J Am Med Inform Assoc.
+2018;25(8):969-975.}
 
-I have found that using the github devtools to install packages can be
-impacted if you have multiple R sessions open as one session with a
-library open cause cause the library to be looked and this can prevent
-an install of a package that depends on that library.
+This work is supported in part through the National Science Foundation
+grant IIS 1251151.
 
 
 \end{document}
