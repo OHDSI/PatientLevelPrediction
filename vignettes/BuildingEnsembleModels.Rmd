@@ -113,7 +113,7 @@ testSplit <- 'person'
 Run the ensemble learning to combine model1 and model2. You can also use different plpData for different models.
 
 ```{r eval=FALSE}
-results <- PatientLevelPrediction::runEnsembleModel(population, 
+ensembleModel <- PatientLevelPrediction::runEnsembleModel(population, 
                                    dataList = list(plpData, plpData), 
                                    modelList = list(model1, model2),
                                    testSplit=testSplit,
@@ -126,19 +126,21 @@ results <- PatientLevelPrediction::runEnsembleModel(population,
 # Apply Ensemble model
 ```{r eval=FALSE}
 plpData <- loadPlpData("\<data file\>")
-modelList <- loadEnsemblePlpModel(""\<model\>")  
 populationSettings <- plpModel$populationSettings
 populationSettings$plpData <- plpData
 population <- do.call(createStudyPopulation, populationSettings)
 ```
-Get the prediction, please make sure the ensemble strategy for training and applying is the same:
+# Load the model if the model is saved during runEnsembleModel, otherwise use the return object by runEnsembleModel.
+```{r}
+# The ensemble model and result need be loaded.
+ensembleModel <- loadEnsemblePlpResult("\<model dir\>") 
+```
+
+Get the prediction, ensembleModel is return results from runEnsembleModel:
 ```{r eval=FALSE}
 prediction <- applyEnsembleModel(population,
                                   dataList = list(plpData, plpData),
-                                  modelList = modelList,
-                                  analysisId = NULL,
-                                  save = NULL,
-                                  ensembleStrategy = "stacked")$prediction
+                                  modelList = modelList, ensembleModel = ensembleModel)$prediction
 ```
 # Acknowledgments
 
