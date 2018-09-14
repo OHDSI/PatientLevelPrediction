@@ -28,7 +28,7 @@ setNaiveBayes <- function(variableNumber=2000){
   
   if(length(variableNumber)!=1)
     stop('Can only currently enter a single value for variableNumber')
-  if(class(variableNumber)!="numeric")
+  if(!class(variableNumber) %in% c("numeric", "integer"))
     stop('Can incorrect class for variableNumber - must be numeric')
   
   # test python is available and the required dependancies are there:

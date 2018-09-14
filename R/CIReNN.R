@@ -146,6 +146,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
   covariateRef$included <- incs
+  covariateRef$covariateValue <- rep(0, nrow(covariateRef))
   
   #modelTrained <- file.path(outLoc) 
   param.best <- param[[bestInd]]

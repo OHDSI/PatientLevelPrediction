@@ -32,17 +32,17 @@
 #' @export
 setRandomForest<- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, seed=NULL){
   # check seed is int
-  if(!class(seed)%in%c('numeric','NULL'))
+  if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
-  if(class(ntrees)!='numeric')
+  if(!class(ntrees) %in% c("numeric", "integer"))
     stop('ntrees must be a numeric value >0')
   if(sum(ntrees < 0)>0)
     stop('mtries must be greater that 0')
-  if(class(mtries)!='numeric')
+  if(!class(mtries) %in% c("numeric", "integer"))
     stop('mtries must be a numeric value >1 or -1')
   if(sum(mtries < -1)>0)
     stop('mtries must be greater that 0 or -1')
-  if(class(maxDepth)!='numeric')
+  if(!class(maxDepth) %in% c("numeric", "integer"))
     stop('maxDepth must be a numeric value >0')
   if(sum(maxDepth < 1)>0)
     stop('maxDepth must be greater that 0')

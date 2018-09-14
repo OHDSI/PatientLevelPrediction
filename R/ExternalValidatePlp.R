@@ -45,6 +45,8 @@
 #'                                         \item{FATAL}{Be silent except for fatal errors}
 #'                                         }
 #' @param keepPrediction                   Whether to keep the predicitons for the new data                                         
+#' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
+#' 
 #' @return
 #' A list containing the performance for each validation_schema 
 #'
@@ -58,7 +60,8 @@ externalValidatePlp <- function(plpResult,
                                 validationTableTarget='cohort', validationTableOutcome='cohort',
                                 validationIdTarget = NULL, validationIdOutcome = NULL,
                                 oracleTempSchema=NULL,#validationSchemaCdm,
-                                verbosity="INFO", keepPrediction=F){
+                                verbosity="INFO", keepPrediction=F,
+                                sampleSize = NULL){
   
   # TODO:: ADD LOGGING, MORE INOUT TESTS, ADD TEST CASE IN PACKAGE... 
   if(missing(plpResult))
@@ -130,7 +133,7 @@ externalValidatePlp <- function(plpResult,
                                                       newOutcomeTable = outcomeTable, 
                                                       newOutcomeId = validationIdOutcome, 
                                                       newOracleTempSchema = oracleTempSchema,
-                                                      sample = NULL, 
+                                                      sample = sampleSize, 
                                                       createPopulation = T )
     
     if(sum(newData$population$outcomeCount>0)<20){

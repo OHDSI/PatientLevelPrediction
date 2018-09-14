@@ -45,11 +45,11 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   if (!is.null(seed))
     set.seed(seed)
 
-  if (class(nfold) != "numeric" | nfold < 1) {
+  if (!class(nfold) %in% c("numeric","integer") | nfold < 1) {
     stop("nfold must be an integer 1 or greater")
   }
 
-  if (class(test) != "numeric" | test <= 0 | test >= 1) {
+  if (!class(test) %in% c("numeric","integer") | test <= 0 | test >= 1) {
     stop("test must be between 0 and 1")
   }
   
@@ -57,7 +57,7 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
     train <- 1 - test
   }
   
-  if (class(train) != "numeric" | train <= 0 | train > 1-test) {
+  if (!class(train) %in% c("numeric","integer") | train <= 0 | train > 1-test) {
     stop("train must be between 0 and 1-test")
   }
 

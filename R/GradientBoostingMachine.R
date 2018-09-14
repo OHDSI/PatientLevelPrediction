@@ -36,17 +36,17 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
   
   if(length(nthread)>1)
     stop(paste('nthreads must be length 1'))
-  if(!class(seed)%in%c('numeric','NULL'))
+  if(!class(seed)%in%c('numeric','NULL', 'integer'))
     stop('Invalid seed')
-  if(class(ntrees)!='numeric')
+  if(!class(ntrees) %in% c("numeric", "integer"))
     stop('ntrees must be a numeric value >0 ')
   if(sum(ntrees < 1)>0)
     stop('ntrees must be greater that 0 or -1')
-  if(class(maxDepth)!='numeric')
+  if(!class(maxDepth) %in% c("numeric", "integer"))
     stop('maxDepth must be a numeric value >0')
   if(sum(maxDepth < 1)>0)
     stop('maxDepth must be greater that 0')
-  if(class(minRows)!='numeric')
+  if(!class(minRows) %in% c("numeric", "integer"))
     stop('minRows must be a numeric value >1')
   if(sum(minRows < 2)>0)
     stop('minRows must be greater that 1')
@@ -58,9 +58,9 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
     stop('learnRate must be less that or equal to 1')
   
   result <- list(model='fitGradientBoostingMachine', 
-                 param= split(expand.grid(nround=ntrees, 
-                                          max.depth=maxDepth, min_child_weight=minRows, 
-                                          eta=learnRate, nthread=nthread,
+                 param= split(expand.grid(ntrees=ntrees, 
+                                          maxDepth=maxDepth, minRows=minRows, 
+                                          learnRate=learnRate, nthread=nthread,
                                           seed=ifelse(is.null(seed),'NULL', seed)),
                               1:(length(ntrees)*length(maxDepth)*length(minRows)*length(learnRate)  )),
                  name='Gradient boosting machine'
@@ -74,6 +74,12 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
 #xgboost
 fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                         outcomeId, cohortId, ...){
+  
+  # set old params with reformated names
+  param$max.depth <- param$maxDepth
+  param$nround <- param$ntrees
+  param$min_child_weight <- param$minRows
+  param$eta <- param$learnRate
   # check logger
   if(length(OhdsiRTools::getLoggers())==0){
     logger <- OhdsiRTools::createLogger(name = "SIMPLE",

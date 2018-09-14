@@ -19,7 +19,7 @@ population <- PatientLevelPrediction::createStudyPopulation(plpData,
                                                             addExposureDaysToStart = FALSE,
                                                             riskWindowEnd = 365,
                                                             addExposureDaysToEnd = FALSE,
-                                                            verbosity = futile.logger::INFO)
+                                                            verbosity = "INFO")
 
 ### Example 1: Regularised logistic regression
 lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
@@ -29,7 +29,7 @@ lr_results <- PatientLevelPrediction::runPlp(population,
                                              testSplit = "time",
                                              testFraction = 0.25,
                                              nfold = 2,
-                                             verbosity = futile.logger::INFO,
+                                             verbosity = "INFO",
                                              save = "./plpmodels")
 
 ### Example 2: Naive bayes model using python
@@ -43,7 +43,7 @@ nb_results <- PatientLevelPrediction::runPlp(population,
                                              testSplit = "time",
                                              testFraction = 0.25,
                                              nfold = 2,
-                                             verbosity = futile.logger::INFO,
+                                             verbosity = "INFO",
                                              save = "./plpmodels")
 
 ### Example 3: Gradient Boosting Machine with person split
@@ -59,6 +59,6 @@ gbm_results <- PatientLevelPrediction::runPlp(population,
                                               testSplit = "person",
                                               testFraction = 0.25,
                                               nfold = 2,
-                                              verbosity = futile.logger::INFO,
+                                              verbosity = "INFO",
                                               save = "./plpmodels")
 

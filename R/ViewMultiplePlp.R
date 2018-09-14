@@ -3,10 +3,10 @@ viewMultiplePlp <- function(analysesLocation){
   
   allPerformance <- summaryPlpAnalyses(analysesLocation)
   plpResultLocation <- allPerformance[,c('plpResultLocation', 'plpResultLoad')]
-  allPerformance$combinedModelSettingName <- paste0(allPerformance$modelSettingName,'-', allPerformance$modelSettingsId)
-  formatPerformance <- allPerformance[,c('devDatabase','valDatabase','cohortName','outcomeName','combinedModelSettingName','riskWindowStart', 'riskWindowEnd', 'AUC','AUPRC', 'populationSize','outcomeCount','incidence',
+  #allPerformance$combinedModelSettingName <- paste0(allPerformance$modelSettingName,'-', allPerformance$modelSettingsId
+  formatPerformance <- allPerformance[,c('analysisId','devDatabase','valDatabase','cohortName','outcomeName','modelSettingName','riskWindowStart', 'riskWindowEnd', 'AUC','AUPRC', 'populationSize','outcomeCount','incidence',
                                          'addExposureDaysToStart','addExposureDaysToEnd')]
-  colnames(formatPerformance) <- c('Dev', 'Val', 'T', 'O','Model', 'TAR start', 'TAR end', 'AUC','AUPRC', 'T Size','O Count','O Incidence (%)', 'addExposureDaysToStart','addExposureDaysToEnd')
+  colnames(formatPerformance) <- c('Analysis','Dev', 'Val', 'T', 'O','Model', 'TAR start', 'TAR end', 'AUC','AUPRC', 'T Size','O Count','O Incidence (%)', 'addExposureDaysToStart','addExposureDaysToEnd')
   
   
   #========================================
@@ -32,33 +32,53 @@ viewMultiplePlp <- function(analysesLocation){
                                                 
                                                 shiny::div(DT::dataTableOutput('summaryTable'), 
                                                            style = "font-size:70%"),
-                                                shiny::h3('Model Settings:'),
+                                                shiny::h3('Model Settings: ', shiny::actionLink("modelhelp", "help")),
                                                 DT::dataTableOutput('modelTable'),
-                                                shiny::h3('Population Settings:'),
+                                                shiny::h3('Population Settings: ', shiny::actionLink("pophelp", "help")),
                                                 DT::dataTableOutput('populationTable'),
-                                                shiny::h3('Covariate Settings:'),
+                                                shiny::h3('Covariate Settings: ', shiny::actionLink("covhelp", "help")),
                                                 DT::dataTableOutput('covariateTable')
                                                 
                                   )
                                   
                        )),
-                       shiny::tabPanel("Plots", 
+                       shiny::tabPanel("Performance Plots", 
                                 shiny::h3('Problem:'),
                                 shiny::textOutput('info'),
+                                shiny::wellPanel(
+                                  shiny::sliderInput("slider1", 
+                                            shiny::h5("Threshold value slider: "), 
+                                            min = 1, max = 100, value = 50, ticks = F),
+                                shiny::tags$script(shiny::HTML("
+        $(document).ready(function() {setTimeout(function() {
+                                                supElement = document.getElementById('slider1').parentElement;
+                                                $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
+}, 50);})
+                                                ")),
+                                shiny::tableOutput('performance'),
+                                shiny::tableOutput('twobytwo')),
+                                
                                 shiny::h4('ROC plot:'),
-                                shiny::plotOutput('roc'),
-                                shiny::h4('Calibration plot:'),
-                                shiny::plotOutput('cal'),
+                                plotly::plotlyOutput('roc'),
                                 shiny::h4('Precision recall plot:'),
-                                shiny::plotOutput('pr'),
+                                plotly::plotlyOutput('pr'),
                                 shiny::h4('F1 score plot:'),
-                                shiny::plotOutput('f1'),
-                                shiny::h4('Demographic plot:'),
-                                shiny::plotOutput('demo'),
+                                plotly::plotlyOutput('f1'),
+                                shiny::h4('Prediction score distribution:'),
+                                shiny::plotOutput('preddist'),
+                                shiny::h4('Preference score distribution:'),
+                                shiny::plotOutput('prefdist'),
                                 shiny::h4('Box plot:'),
                                 shiny::plotOutput('box'),
-                                shiny::h4('Preference score distribution:'),
-                                shiny::plotOutput('dist'))
+                                shiny::h4('Calibration plot:'),
+                                shiny::plotOutput('cal'),
+                                shiny::h4('Demographic plot:'),
+                                shiny::plotOutput('demo')),
+                       shiny::tabPanel("Model Plot", 
+                                       plotly::plotlyOutput('covariateSummaryBinary'),
+                                       plotly::plotlyOutput('covariateSummaryMeasure')),
+                       shiny::tabPanel("Log",
+                                       shiny::verbatimTextOutput('log'))
                        #, tabPanel("CovariateSummary", covSet, val-T-pop shiny::plotOutput('covSummary'))
                        
                        
@@ -69,6 +89,21 @@ viewMultiplePlp <- function(analysesLocation){
   
   # Define server logic ----
   server <- function(input, output) {
+    
+    # helpers
+    #shiny::observeEvent(input$modelhelp, {
+    # model <- dataofint()$modelset - get the model name to figure the set rd to show
+    #  test <- ?PatientLevelPrediction::runPlp
+    #  file.show(getRd(test))
+    #})
+    shiny::observeEvent(input$covhelp, {
+      test <- ?FeatureExtraction::createCovariateSettings
+      file.show(getRd(test))
+    })
+    shiny::observeEvent(input$pophelp, {
+      test <- ?PatientLevelPrediction::createStudyPopulation
+      file.show(getRd(test))
+    })
     
     summaryData <- shiny::reactive({
       ind <- 1:nrow(allPerformance)
@@ -99,9 +134,70 @@ viewMultiplePlp <- function(analysesLocation){
     
     
     
-    output$summaryTable <- DT::renderDataTable(formatPerformance[summaryData(),!colnames(formatPerformance)%in%c('addExposureDaysToStart','addExposureDaysToEnd')])
+    output$summaryTable <- DT::renderDataTable(DT::datatable(formatPerformance[summaryData(),!colnames(formatPerformance)%in%c('addExposureDaysToStart','addExposureDaysToEnd')],
+                                                             rownames= FALSE))
+    
+    
+    dataofint <- shiny::reactive({
+      if(is.null(input$summaryTable_rows_selected[1])){
+        ind <- 1
+      }else{
+          ind <- input$summaryTable_rows_selected[1]
+      }
+      
+      loc <- plpResultLocation[summaryData(),][ind,]
+      logLocation <- gsub('plpResult','plplog.txt', as.character(loc[1]))
+      txt <- readLines(logLocation)
+      
+      covariates <- NULL
+      population <- NULL
+      modelset <- NULL
+      if(loc[2]=='loadPlpResult'){
+        eval <- tryCatch(do.call(as.character(loc[2]), list(dirPath=as.character(loc[1]))),
+                         error = function(err) return(NULL))
+        type <- 'test'
+      } else {
+        eval <- tryCatch(do.call(as.character(loc[2]), list(file=as.character(loc[1]))),
+                         error = function(err) return(NULL))
+        type <- 'validation'
+      }
+      if(!is.null(eval)){
+      covariates <- eval$inputSetting$dataExtrractionSettings$covariateSettings
+      population <- eval$inputSetting$populationSettings
+      covariates <- data.frame(covariateName = names(covariates), 
+                               SettingValue = unlist(lapply(covariates, 
+                                                            function(x) paste0(x, 
+                                                                               collapse='-')))
+      )
+      population$attrition <- NULL # remove the attrition as result and not setting
+      population <- data.frame(Setting = names(population), 
+                               Value = unlist(lapply(population, 
+                                                     function(x) paste0(x, 
+                                                                        collapse='-')))
+      )
+      modelset <- data.frame(Setting = c('Model',names(eval$model$modelSettings[[2]])),
+                             Value = c(eval$model$modelSettings[[1]], unlist(lapply(eval$model$modelSettings[[2]], 
+                                                                                    function(x) paste0(x, collapse=''))))
+      )
+      
+      row.names(covariates) <- NULL
+      row.names(population) <- NULL
+      row.names(modelset) <- NULL
+    }
+      
+      return(list(eval=eval, type=type, 
+                  logtext = txt,
+                  logLocation=logLocation,
+                  covariates = covariates,
+                  population = population,
+                  modelset = modelset))
+    })
     
     plotters <- shiny::reactive({
+      
+      eval <- dataofint()$eval$performanceEvaluation
+      if(is.null(eval)){return(NULL)}
+      
       calPlot <- NULL 
       rocPlot <- NULL
       prPlot <- NULL
@@ -109,25 +205,29 @@ viewMultiplePlp <- function(analysesLocation){
       demoPlot <- NULL
       boxPlot <- NULL
       distPlot <- NULL
+      txt <- 'Empty'
       predictionText <- c()
-      if(!is.null(input$summaryTable_rows_selected[1])){
-        loc <- plpResultLocation[summaryData(),][input$summaryTable_rows_selected[1],]
-        if(loc[2]=='loadPlpResult'){
-          eval <- do.call(as.character(loc[2]), list(dirPath=as.character(loc[1])))$performanceEvaluation
-          type <- 'test'
-        } else {
-          eval <- do.call(as.character(loc[2]), list(file=as.character(loc[1])))$performanceEvaluation
-          type <- 'validation'
-        }
-        calPlot <- plotSparseCalibration2(eval, type=type )
-        rocPlot <- plotSparseRoc(eval, type=type )
-        prPlot <- plotPrecisionRecall(eval, type=type )
-        f1Plot <- plotF1Measure(eval, type=type )
-        demoPlot <- tryCatch(plotDemographicSummary(eval, type=type ),
-                             error= function(cond){return(NULL)})
-        boxPlot <-  plotPredictionDistribution(eval, type=type )
-        distPlot <- plotPreferencePDF(eval, type=type )
+      
+      if(!is.null(eval)){
+        intPlot <- plotShiny(eval, input$slider1)
+        rocPlot <- intPlot$roc
+        prPlot <- intPlot$pr
+        f1Plot <- intPlot$f1score
+        threshold <- intPlot$threshold
+        prefthreshold <- intPlot$prefthreshold
+        TP <- intPlot$TP
+        FP <- intPlot$FP
+        TN <- intPlot$TN
+        FN <- intPlot$FN
+        prefdistPlot <- plotPreferencePDF(eval, type=dataofint()$type )
+        prefdistPlot <- prefdistPlot + ggplot2::geom_vline(xintercept=prefthreshold)
+        preddistPlot <- plotPredictedPDF(eval, type=dataofint()$type )
+        preddistPlot <- preddistPlot + ggplot2::geom_vline(xintercept=threshold)
+        boxPlot <-  plotPredictionDistribution(eval, type=dataofint()$type )
         
+        calPlot <- plotSparseCalibration2(eval, type=dataofint()$type )
+        demoPlot <- tryCatch(plotDemographicSummary(eval, type=dataofint()$type ),
+                             error= function(cond){return(NULL)})
         
         predictionText <- paste0('Within ', formatPerformance[summaryData(),'T'][1],
                                  ' predict who will develop ', formatPerformance[summaryData(),'O'][1],
@@ -135,64 +235,53 @@ viewMultiplePlp <- function(analysesLocation){
                                  ' after ', ifelse(formatPerformance[summaryData(),'addExposureDaysToStart'][1]==0, ' cohort start ', ' cohort end '),
                                  ' and ', formatPerformance[summaryData(),'TAR end'][1], ' day/s',
                                  ' after ', ifelse(formatPerformance[summaryData(),'addExposureDaysToEnd'][1]==0, ' cohort start ', ' cohort end '))
+      
       }
+      
+      twobytwo <- as.data.frame(matrix(c(FP,TP,TN,FN), byrow=T, ncol=2))
+      colnames(twobytwo) <- c('Ground Truth Negative','Ground Truth Positive')
+      rownames(twobytwo) <- c('Predicted Positive','Predicted Negative')
+      
+      performance <- data.frame(Incidence = (TP+FN)/(TP+TN+FP+FN),
+                                Threshold = threshold,
+                                Sensitivity = TP/(TP+FN),
+                                Specificity = TN/(TN+FP),
+                                PPV = TP/(TP+FP),
+                                NPV = TN/(TN+FN))
+      
       list(rocPlot= rocPlot, calPlot=calPlot, 
            prPlot=prPlot, f1Plot=f1Plot, 
-           demoPlot=demoPlot, boxPlot=boxPlot, 
-           distPlot=distPlot, predictionText=predictionText)
-      #rocPlot
+           demoPlot=demoPlot, boxPlot=boxPlot,
+           prefdistPlot=prefdistPlot,
+           preddistPlot=preddistPlot, predictionText=predictionText,
+           threshold = format(threshold, digits=5), 
+           twobytwo=twobytwo,
+           performance = performance )
     })
     
-   details <- shiny::reactive({
-       loc <- plpResultLocation[summaryData(),][input$summaryTable_rows_selected[1],]
-     if(nrow(loc)==0){return(NULL)}
-     if(loc[2]=='loadPlpResult'){
-       eval <- do.call(as.character(loc[2]), list(dirPath=as.character(loc[1])))
-     } else {
-       eval <- do.call(as.character(loc[2]), list(file=as.character(loc[1])))
-     }
-     covariates <- eval$inputSetting$dataExtrractionSettings$covariateSettings
-     population <- eval$inputSetting$populationSettings
-     covariates <- data.frame(covariateName = names(covariates), 
-                              SettingValue = unlist(lapply(covariates, 
-                                                   function(x) paste0(x, 
-                                                                      collapse='-')))
-                              )
-     population <- data.frame(Setting = names(population), 
-                              Value = unlist(lapply(population, 
-                                                   function(x) paste0(x, 
-                                                                      collapse='-')))
-                              )
-     modelset <- data.frame(Setting = c('Model',names(eval$model$modelSettings[[2]])),
-                            Value = c(eval$model$modelSettings[[1]], unlist(lapply(eval$model$modelSettings[[2]], 
-                                function(x) paste0(x, collapse=''))))
-                            )
-     
-     row.names(covariates) <- NULL
-     row.names(population) <- NULL
-     row.names(modelset) <- NULL
-     
-     return(list(covariates = covariates,
-                 population = population,
-                 modelset = modelset))
-    })
-   
-   output$modelTable <- DT::renderDataTable(details()$modelset)
-   output$covariateTable <- DT::renderDataTable(details()$covariates)
-   output$populationTable <- DT::renderDataTable(details()$population)
+    output$performance <- shiny::renderTable(plotters()$performance, 
+                                          rownames = F, digits = 3)
+    output$twobytwo <- shiny::renderTable(plotters()$twobytwo, 
+                                          rownames = T, digits = 0)
+    
+   output$modelTable <- DT::renderDataTable(dataofint()$modelset)
+   output$covariateTable <- DT::renderDataTable(dataofint()$covariates)
+   output$populationTable <- DT::renderDataTable(dataofint()$population)
    
     output$info <- shiny::renderText(plotters()$predictionText)
-    
-    output$roc <- shiny::renderPlot({
+    output$log <- shiny::renderText( paste(dataofint()$logtext, collapse="\n") )
+    output$threshold <- shiny::renderText(plotters()$threshold)
+      
+    output$roc <- plotly::renderPlotly({
       plotters()$rocPlot
       })
     output$cal <- shiny::renderPlot({
       plotters()$calPlot
       })
-    output$pr <- shiny::renderPlot({
+    output$pr <- plotly::renderPlotly({
       plotters()$prPlot
     })
-    output$f1 <- shiny::renderPlot({
+    output$f1 <- plotly::renderPlotly({
       plotters()$f1Plot
     })
     output$demo <- shiny::renderPlot({
@@ -201,9 +290,22 @@ viewMultiplePlp <- function(analysesLocation){
     output$box <- shiny::renderPlot({
       plotters()$boxPlot
     })
-    output$dist <- shiny::renderPlot({
-      plotters()$distPlot
+    output$preddist <- shiny::renderPlot({
+      plotters()$preddistPlot
     })
+    output$prefdist <- shiny::renderPlot({
+      plotters()$prefdistPlot
+    })
+    
+    
+    covs <- shiny::reactive({
+      if(is.null(dataofint()$eval))
+        return(NULL)
+      plotCovariateSummary(dataofint()$eval$covariateSummary)
+    })
+    output$covariateSummaryBinary <- plotly::renderPlotly({ covs()$binary })
+    output$covariateSummaryMeasure <- plotly::renderPlotly({ covs()$meas })
+    
   }
   
   shiny::shinyApp(ui, server)
@@ -215,7 +317,11 @@ viewMultiplePlp <- function(analysesLocation){
 getPerformance <- function(analysisLocation){
   location <- file.path(analysisLocation, 'plpResult')
   if(!file.exists(location)){
-    return(NULL)
+    analysisId <- strsplit(analysisLocation, '/')[[1]]
+    return(data.frame(analysisId=analysisId[length(analysisId)], 
+                      AUC=0.000, AUPRC=0, outcomeCount=0,
+                      populationSize=0,incidence=0,plpResultLocation=location, 
+                      plpResultLoad='loadPlpResult'))
   }
   res <- as.data.frame(loadPlpResult(location)$performanceEvaluation$evaluationStatistics)
   
@@ -229,7 +335,8 @@ getPerformance <- function(analysisLocation){
     format(as.double(res[, !colnames(res)%in%c('analysisId','outcomeCount','populationSize')]), digits = 2, scientific = F) 
   
   if(sum(colnames(res)=='AUC.auc_ub95ci')>0){
-  res$AUC <- paste0(res$AUC.auc, ' (', res$AUC.auc_lb95ci,'-', res$AUC.auc_ub95ci,')')
+    res$AUC <- res$AUC.auc
+    #res$AUC <- paste0(res$AUC.auc, ' (', res$AUC.auc_lb95ci,'-', res$AUC.auc_ub95ci,')')
   }
   
   res$plpResultLocation <- location
@@ -246,7 +353,8 @@ getValidationPerformance <- function(validationLocation){
       format(as.double(valPerformance[, !colnames(valPerformance)%in%c('analysisId','outcomeCount','populationSize')]), digits = 2, scientific = F) 
     
     if(sum(colnames(valPerformance)=='AUC.auc_ub95ci')>0){
-      valPerformance$AUC <- paste0(valPerformance$AUC.auc, ' (', valPerformance$AUC.auc_lb95ci,'-', valPerformance$AUC.auc_ub95ci,')')
+      valPerformance$AUC <- valPerformance$AUC.auc
+      #valPerformance$AUC <- paste0(valPerformance$AUC.auc, ' (', valPerformance$AUC.auc_lb95ci,'-', valPerformance$AUC.auc_ub95ci,')')
     }
     valPerformance$analysisId <- strsplit(validationLocation, '/')[[1]][[length(strsplit(validationLocation, '/')[[1]])]]
     valPerformance$valDatabase <- strsplit(validationLocation, '/')[[1]][[length(strsplit(validationLocation, '/')[[1]])-1]]
@@ -307,5 +415,175 @@ summaryPlpAnalyses <- function(analysesLocation){
     allPerformance <- devPerformance
   }
   
+  allPerformance$AUC <- as.double(allPerformance$AUC)
+  allPerformance$AUPRC <- as.double(allPerformance$AUPRC)
+  allPerformance$outcomeCount <- as.double(allPerformance$outcomeCount)
+  allPerformance$populationSize <- as.double(allPerformance$populationSize)
+  allPerformance$incidence <- as.double(allPerformance$incidence)
   return(allPerformance)
+}
+
+
+
+
+
+#============  DYNAMIC PLOTS ======================
+#++++++++++++++++++++++++++++++++++++++++++++++++++
+
+plotShiny <- function(eval, pointOfInterest){
+  
+  data <- eval$thresholdSummary[eval$thresholdSummary$Eval=='train',]
+  # pointOfInterest # this is a threshold
+  pointOfInterest <- data[pointOfInterest,]
+  rocobject <- plotly::plot_ly(x = 1-c(0,data$specificity,1)) %>%
+    plotly::add_lines(y = c(1,data$sensitivity,0),name = "hv", 
+                      text = paste('Risk Threshold:',c(0,data$predictionThreshold,1)),
+                      line = list(shape = "hv",
+                                  color = 'rgb(22, 96, 167)'),
+                      fill = 'tozeroy') %>%
+    plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                      line = list(dash = "dash"), color = I('black'),
+                      type='scatter') %>%
+    plotly::add_trace(x= 1-pointOfInterest$specificity, y=pointOfInterest$sensitivity, 
+                      mode = 'markers', symbols='x') %>%  # change the colour of this!
+    plotly::add_lines(x=c(1-pointOfInterest$specificity, 1-pointOfInterest$specificity),
+                      y = c(0,1),
+                      line = list(dash ='solid',
+                                  color = 'black')) %>%
+    plotly::layout(title = "ROC Plot",
+           xaxis = list(title = "1-specificity"),
+           yaxis = list (title = "Sensitivity"),
+           showlegend = FALSE)
+  
+  popAv <- data$trueCount[1]/(data$trueCount[1] + data$falseCount[1])
+  probject <- plotly::plot_ly(x = data$sensitivity) %>%
+    plotly::add_lines(y = data$positivePredictiveValue, name = "hv", 
+                      text = paste('Risk Threshold:',data$predictionThreshold),
+                      line = list(shape = "hv",
+                                  color = 'rgb(22, 96, 167)'),
+                      fill = 'tozeroy') %>%
+    plotly::add_trace(x= c(0,1), y = c(popAv,popAv),mode = 'lines',
+                      line = list(dash = "dash"), color = I('red'),
+                      type='scatter') %>%
+    plotly::add_trace(x= pointOfInterest$sensitivity, y=pointOfInterest$positivePredictiveValue, 
+                      mode = 'markers', symbols='x') %>%  
+    plotly::add_lines(x=c(pointOfInterest$sensitivity, pointOfInterest$sensitivity),
+                      y = c(0,1),
+                      line = list(dash ='solid',
+                                  color = 'black')) %>%
+    plotly::layout(title = "PR Plot",
+                   xaxis = list(title = "Recall"),
+                   yaxis = list (title = "Precision"),
+                   showlegend = FALSE)
+  
+  # add F1 score
+  f1object <- plotly::plot_ly(x = data$predictionThreshold) %>%
+    plotly::add_lines(y = data$f1Score, name = "hv", 
+                      text = paste('Risk Threshold:',data$predictionThreshold),
+                      line = list(shape = "hv",
+                                  color = 'rgb(22, 96, 167)'),
+                      fill = 'tozeroy') %>%
+    plotly::add_trace(x= pointOfInterest$predictionThreshold, y=pointOfInterest$f1Score, 
+                      mode = 'markers', symbols='x') %>%  
+    plotly::add_lines(x=c(pointOfInterest$predictionThreshold, pointOfInterest$predictionThreshold),
+                      y = c(0,1),
+                      line = list(dash ='solid',
+                                  color = 'black')) %>%
+    plotly::layout(title = "F1-Score Plot",
+                   xaxis = list(title = "Prediction Threshold"),
+                   yaxis = list (title = "F1-Score"),
+                   showlegend = FALSE)
+  # create 2x2 table with TP, FP, TN, FN and threshold
+  threshold <- pointOfInterest$predictionThreshold
+  TP <- pointOfInterest$truePositiveCount
+  TN <- pointOfInterest$trueNegativeCount
+  FP <- pointOfInterest$falsePositiveCount
+  FN <- pointOfInterest$falseNegativeCount
+  preferenceThreshold <- pointOfInterest$preferenceThreshold
+  
+  return(list(roc = rocobject,
+              pr = probject,
+              f1score = f1object,
+              threshold = threshold, prefthreshold=preferenceThreshold,
+              TP = TP, TN=TN,
+              FP= FP, FN=FN))
+}
+
+plotCovariateSummary <- function(covariateSummary){
+  
+  writeLines(paste(colnames(covariateSummary)))
+  writeLines(paste(covariateSummary[1,]))
+  # remove na values 
+  covariateSummary$CovariateMeanWithNoOutcome[is.na(covariateSummary$CovariateMeanWithNoOutcome)] <- 0
+  covariateSummary$CovariateMeanWithOutcome[is.na(covariateSummary$CovariateMeanWithOutcome)] <- 0
+  covariateSummary$covariateValue[is.na(covariateSummary$covariateValue)] <- 0
+  
+  # save dots based on coef value 
+  covariateSummary$size <- abs(covariateSummary$covariateValue)
+  covariateSummary$size[is.na(covariateSummary$size)] <- 4
+  covariateSummary$size <- 4+4*covariateSummary$size/max(covariateSummary$size)
+  
+  # color based on analysis id
+  covariateSummary$color <- as.factor(covariateSummary$analysisId)
+  
+  #covariateSummary$annotation <- sapply(covariateSummary$covariateName, getName)
+  covariateSummary$annotation <- covariateSummary$covariateName
+  
+  
+  ind <- covariateSummary$CovariateMeanWithNoOutcome <1 & covariateSummary$CovariateMeanWithOutcome < 1
+  # create two plots -1 or less or g1
+  binary <- plotly::plot_ly(x = covariateSummary$CovariateMeanWithNoOutcome[ind] ) %>%
+    plotly::add_markers(y = covariateSummary$CovariateMeanWithOutcome[ind],
+                        marker = list(size = covariateSummary$size[ind], 
+                                      color=covariateSummary$color[ind]),
+                        text = paste(covariateSummary$annotation[ind])) %>%
+    plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                      line = list(dash = "dash"), color = I('black'),
+                      type='scatter') %>%
+    plotly::layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+           xaxis = list(title = "Prevalance in persons without outcome"),
+           yaxis = list(title = "Prevalance in persons with outcome"),
+           showlegend = FALSE)
+  
+  if(sum(!ind)>0){
+  meas <- plotly::plot_ly(x = covariateSummary$CovariateMeanWithNoOutcome[!ind] ) %>%
+    plotly::add_markers(y = covariateSummary$CovariateMeanWithOutcome[!ind],
+                        marker = list(size = covariateSummary$size[!ind], 
+                                      color=covariateSummary$color[!ind]),
+                        text = paste(covariateSummary$annotation[!ind])) %>%
+    plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
+                      line = list(dash = "dash"), color = I('black'),
+                      type='scatter') %>%
+    plotly::layout(title = 'Prevalance of baseline predictors in persons with and without outcome',
+                   xaxis = list(title = "Prevalance in persons without outcome"),
+                   yaxis = list(title = "Prevalance in persons with outcome"),
+                   showlegend = FALSE)
+  } else {
+    meas <- NULL
+  }
+  
+  return(list(binary=binary,
+         meas = meas))
+}
+
+
+getRd <- function(functionName){
+  
+  topic <- attr(functionName, "topic")
+  type <- attr(functionName, "type")
+  paths <- as.character(functionName) 
+  file <- paths
+  
+  path <- dirname(file)
+  dirpath <- dirname(path)
+  pkgname <- basename(dirpath)
+  RdDB <- file.path(path, pkgname)
+  
+  if(file.exists(paste(RdDB, "rdx", sep="."))) {
+    rdo <- tools:::fetchRdDB(RdDB, basename(file))
+  }
+  
+  temp <- tools::Rd2txt(rdo, out=paste0(tempfile("Rtxt"),'.txt'), package=pkgname)
+  
+  return(temp)
 }

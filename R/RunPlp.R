@@ -175,7 +175,8 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
   # write log to both console and file (tee). 
   # note other appenders can be created, e.g., to webservice or database!
-  logger <- OhdsiRTools::createLogger(name = "Main Log",
+  clearLoggerType("PLP Log")
+  logger <- OhdsiRTools::createLogger(name = "PLP Log",
                                       threshold = verbosity,
                                       appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutParallel,
                                                                           fileName = logFileName)))
@@ -205,12 +206,12 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   OhdsiRTools::logDebug(paste0('plpData class: ', class(plpData)))
   checkIsClass(plpData, c('plpData'))
   OhdsiRTools::logDebug(paste0('testfraction: ', testFraction))
-  checkIsClass(testFraction, 'numeric')
+  checkIsClass(testFraction, c('numeric','integer'))
   checkHigher(testFraction,0)
   checkHigher(-1*testFraction,-1)
   OhdsiRTools::logDebug(paste0('nfold class: ', class(nfold)))
   OhdsiRTools::logDebug(paste0('nfold: ', nfold))
-  checkIsClass(nfold, 'numeric')
+  checkIsClass(nfold, c('numeric','integer'))
   checkHigher(nfold, 0)
   
   # if savePlpData

@@ -237,6 +237,7 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   
   writeLines("\nPatientLevelPrediction installation check completed...")
   writeLines(paste0("\nResponse code: ", outCode))
+  interpretInstallCode(outCode)
 }
 
 
@@ -279,6 +280,19 @@ interpretInstallCode <- function(response){
     
   }
     return(NULL)
+}
+
+
+clearLoggerType <- function(type='PLP log'){
+  logs <- OhdsiRTools::getLoggers()
+  logNames <- unlist(lapply(logs, function(x) x$name))
+  ind <- which(logNames==type)
+  
+  for(i in ind){
+    OhdsiRTools::unregisterLogger(logNames[i])
+  }
+  
+  return(NULL)
 }
   
 checkPython <- function(){
