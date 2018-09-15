@@ -683,7 +683,7 @@ getCohortNames <- function(json, targetIds){
   idNames <- as.data.frame(idNames)
   name <- c()
   for(tid in targetIds){
-    name <- c(name, as.character(idNames$name[idNames$id==targetIds][1]))
+    name <- c(name, as.character(idNames$name[idNames$id==tid][1]))
   }
   return(name)
 }
@@ -761,9 +761,10 @@ savePredictionAnalysisList <- function(workFolder="inst/settings",
     length(json$modelSettings) <- length(modelSettingList)
     for( k in 1:length(modelSettingList)){
       modSet <- list()
-      if(modelSettingList[[k]]$model=='fitLassoLogisticRegression'){
+      if(modelSettingList[[k]]$model%in%c('fitLassoLogisticRegression','fitKNN','fitNaiveBayes')){
         modSet[[1]] <- modelSettingList[[k]]$param
       } else {
+        if(class(modelSettingList[[k]]$param)=='data.frame'){modelSettingList[[k]]$param <- split(modelSettingList[[k]]$param, factor(1:nrow(modelSettingList[[k]]$param)))}
         params <- lapply(1:ncol(modelSettingList[[k]]$param[[1]]), function(i) unique(unlist(lapply(modelSettingList[[k]]$param, function(x) x[[i]]))))
         names(params) <- colnames(modelSettingList[[k]]$param[[1]])
         if(params$seed=='NULL'){
@@ -777,9 +778,10 @@ savePredictionAnalysisList <- function(workFolder="inst/settings",
   } else {
     length(json$modelSettings) <- 1
     modSet <- list()
-    if(modelSettingList$model=='fitLassoLogisticRegression'){
+    if(modelSettingList$model%in%c('fitLassoLogisticRegression','fitKNN','fitNaiveBayes')){
       modSet[[1]] <- modelSettingList$param
     } else {
+      if(class(modelSettingList$param)=='data.frame'){modelSettingList$param <- split(modelSettingList$param, factor(1:nrow(modelSettingList$param)))}
       params <- lapply(1:ncol(modelSettingList$param[[1]]), function(i) unique(unlist(lapply(modelSettingList$param, function(x) x[[i]]))))
       names(params) <- colnames(modelSettingList$param[[1]])
       if(params$seed=='NULL'){
