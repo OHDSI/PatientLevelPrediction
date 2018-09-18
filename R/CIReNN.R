@@ -35,6 +35,14 @@
 #' @param epochs          Number of times to iterate over dataset
 #' @param earlyStoppingMinDelta         minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.
 #' @param earlyStoppingPatience         Number of epochs with no improvement after which training will be stopped.
+#' @param useVae                        logical (either TRUE or FALSE) value for using Variational AutoEncoder before RNN
+#' @param vaeDataSamplingProportion     Data sampling proportion for VAE
+#' @param vaeValidationSplit            Validation split proportion for VAE
+#' @param vaeBatchSize                  batch size for VAE
+#' @param vaeLatentDim                  Number of latent dimesion for VAE
+#' @param vaeIntermediateDim            Number of intermediate dimesion for VAE
+#' @param vaeEpoch                      Number of times to interate over dataset for VAE
+#' @param vaeEpislonStd                 Epsilon
 #' @param seed            Random seed used by deep learning model
 #'
 #' @examples
@@ -44,7 +52,10 @@
 #' @export
 setCIReNN <- function(units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(1.0), batchSize = c(100), 
-                      epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10),
+                      epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
+                      useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
+                      vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
+                      vaeEpoch = 100L, vaeEpislonStd = 1.0,
                       seed=NULL  ){
   
   # if(class(indexFolder)!='character')
@@ -98,7 +109,11 @@ setCIReNN <- function(units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(
     layerDropout=layerDropout,
     lr =lr, decay=decay, outcomeWeight=outcomeWeight,epochs= epochs,
     earlyStoppingMinDelta = earlyStoppingMinDelta, earlyStoppingPatience = earlyStoppingPatience,
+    useVae= useVae,vaeDataSamplingProportion = vaeDataSamplingProportion, vaeValidationSplit= vaeValidationSplit, 
+    vaeBatchSize = vaeBatchSize, vaeLatentDim = vaeLatentDim, vaeIntermediateDim = vaeIntermediateDim, 
+    vaeEpoch = vaeEpoch, vaeEpislonStd = vaeEpislonStd,
     seed=ifelse(is.null(seed),'NULL', seed)),
+    
     1:(length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(earlyStoppingMinDelta)*length(earlyStoppingPatience)*length(epochs)*max(1,length(seed)))),
     name='CIReNN'
   )
@@ -124,16 +139,49 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   result<- toSparseM(plpData,population,map=NULL, temporal=T)
   data <- result$data
   covariateMap <- result$map
+
   #remove result to save memory
   rm(result)
+  
+  if(param[[1]]$useVae){
+    #Sampling the data for bulding VAE
+    vaeSampleData<-data[sample(seq(dim(data)[1]), floor(dim(data)[1]*param[[1]]$vaeDataSamplingProportion),replace=FALSE),,]
+    
+    #Build VAE
+    vae<-buildVae(vaeSampleData, vaeValidationSplit= param[[1]]$vaeValidationSplit, 
+                  vaeBatchSize = param[[1]]$vaeBatchSize, vaeLatentDim = param[[1]]$vaeLatentDim, vaeIntermediateDim = param[[1]]$vaeIntermediateDim,
+                  vaeEpoch = param[[1]]$vaeEpoch, vaeEpislonStd = param[[1]]$vaeEpislonStd, temporal = TRUE)
+    #remove sample data for VAE to save memory
+    rm(vaeSampleData)
+    
+    vaeEnDecoder<- vae[[1]]
+    vaeEncoder  <- vae[[2]]
+    
+    #Embedding by using VAE encoder
+    data<- plyr::aaply(as.array(data), 2, function(x) predict(vaeEncoder, x, batch_size = param$vaeBatchSize))
+    data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
+    
+    ##Check the performance of vae
+    # decodedVaeData<-plyr::aaply(as.array(data), 2, function(x) predict(vaeEnDecoder, x, batch_size = param$vaeBatchSzie))
+    # decodedVaeData<-aperm(decodedVaeData, c(2,1,3))
+    # a1=Epi::ROC(form=as.factor(as.vector(data))~as.vector(decodedVaeData),plot="ROC")
+    
+  }else {
+    vaeEnDecoder <- NULL
+    vaeEncoder <- NULL
+  }
   
   #one-hot encoding
   population$y <- keras::to_categorical(population$outcomeCount, 2)#[,2] #population$outcomeCount
 
   # do cross validation to find hyperParameter
   datas <- list(population=population, plpData=data)
-  hyperParamSel <- lapply(param, function(x) do.call(trainCIReNN, c(x,datas,train=TRUE)  ))
   
+  #remove data to save memory
+  rm(data)  
+  
+  #Selection of hyperparameters
+  hyperParamSel <- lapply(param, function(x) do.call(trainCIReNN, c(x,datas,train=TRUE)  ))
   hyperSummary <- cbind(do.call(rbind, lapply(hyperParamSel, function(x) x$hyperSum)))
   hyperSummary <- as.data.frame(hyperSummary)
   hyperSummary$auc <- unlist(lapply(hyperParamSel, function (x) x$auc))
@@ -164,7 +212,11 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef, 
                  trainingTime =comp,
-                 covariateMap=covariateMap
+                 covariateMap=covariateMap,
+                 useVae = param[[1]]$useVae,
+                 vaeBatchSize = param[[1]]$vaeBatchSize,
+                 vaeEnDecoder = vaeEnDecoder,
+                 vaeEncoder = vaeEncoder
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'deep'
@@ -176,7 +228,11 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
 trainCIReNN<-function(plpData, population,
                       units=128, recurrentDropout=0.2, layerDropout=0.2,
                       lr =1e-4, decay=1e-5, outcomeWeight = 1.0, batchSize = 100, 
-                      epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), seed=NULL, train=TRUE){
+                      epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
+                      useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
+                      vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
+                      vaeEpoch = 100L, vaeEpislonStd = 1.0,
+                      seed=NULL, train=TRUE){
   
   if(!is.null(population$indexes) && train==T){
     writeLines(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))
@@ -349,4 +405,70 @@ trainCIReNN<-function(plpData, population,
   )
   return(result)
   
+}
+
+#function for building vae
+buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
+                   vaeEpoch = 100L, vaeEpislonStd = 1.0, temporal = TRUE){
+  if (temporal) dataSample <- data %>% apply(3, as.numeric) else dataSample <- data
+  originalDim<-dim(dataSample)[2]
+  K <- keras::backend()
+  x <- keras::layer_input (shape =originalDim)
+  h <- keras::layer_dense (x, vaeIntermediateDim, activation = 'relu')
+  z_mean <- keras::layer_dense(h, vaeLatentDim)
+  z_log_var <- keras::layer_dense(h, vaeLatentDim)
+  
+  sampling<- function(arg){
+    z_mean <- arg[,1:vaeLatentDim]
+    z_log_var <- arg[, (vaeLatentDim+1):(2*vaeLatentDim)]
+    
+    epsilon <- keras::k_random_normal(
+      shape = c(keras::k_shape(z_mean)[[1]]),
+      mean = 0.,
+      stddev = vaeEpislonStd
+    )
+    
+    z_mean + keras::k_exp(z_log_var/2)*epsilon
+  }
+  
+  z <- keras::layer_concatenate(list(z_mean, z_log_var)) %>% 
+    keras::layer_lambda(sampling)
+  
+  #we instantiate these layers separately so as to reuse them later
+  decoder_h <- keras::layer_dense(units = vaeIntermediateDim, activation = 'relu')
+  decoder_mean <- keras::layer_dense (units = originalDim, activation = 'sigmoid')
+  h_decoded <- decoder_h (z)
+  x_decoded_mean <- decoder_mean(h_decoded)
+  
+  #end-to-end autoencoder
+  vae <- keras::keras_model (x,x_decoded_mean)
+  #encoder, from inputs to latent space
+  encoder <- keras::keras_model(x, z_mean)
+  
+  #generator, from latent space to reconstruted inputs
+  decoder_input <- keras::layer_input (shape = vaeLatentDim)
+  h_decoded_2 <- decoder_h(decoder_input)
+  x_decoded_mean_2 <- decoder_mean(h_decoded_2)
+  generator <- keras::keras_model (decoder_input, x_decoded_mean_2)
+  
+  vae_loss <- function(x, x_decoded_mean){
+    xent_loss <- (originalDim/1.0)* keras::loss_binary_crossentropy(x, x_decoded_mean)
+    k1_loss <- -0.5 * keras::k_mean(1 + z_log_var - keras::k_square(z_mean) - keras::k_exp(z_log_var), axis = -1L)
+    xent_loss + k1_loss
+  }
+  
+  vae %>% keras::compile (optimizer = "rmsprop", loss = vae_loss)
+  #if (!is.null(dataValidation)) dataValidation<-list(dataValidation,dataValidation)
+  vaeEarlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=5,mode="auto",min_delta = 1e-3)
+  
+  vae %>% keras::fit (
+    dataSample,dataSample
+    ,shuffle = TRUE
+    ,epochs = vaeEpoch
+    ,batch_size = vaeBatchSize
+    #,validation_data = dataValidation
+    ,validation_split = vaeValidationSplit
+    ,callbacks = list(vaeEarlyStopping)
+  )
+  return (list (vae,encoder))
 }
