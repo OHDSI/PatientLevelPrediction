@@ -209,7 +209,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     
     data <-result$data[population$rowId,,]
     if(plpModel$useVae==TRUE){
-      data<- plyr::aaply(as.array(result$data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
+      data<- plyr::aaply(as.array(data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
       data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
     }
     
