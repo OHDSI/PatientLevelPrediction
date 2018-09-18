@@ -129,6 +129,11 @@ applyModel <- function(population,
     OhdsiRTools::logInfo(paste("Starting covariate summary at ", Sys.time()))
   start.pred  <- Sys.time()
   covSum <- covariateSummary(plpData, population)
+  if(exists("plpModel")){
+    if(!is.null(plpModel$varImp)){
+      covSum <- merge(plpModel$varImp[,colnames(plpModel$varImp)!='covariateName'], covSum, by='covariateId', all=T)
+    }
+  }
   
   if (!silent)
     OhdsiRTools::logInfo(paste("Covariate summary completed at ", Sys.time(), " taking ", start.pred - Sys.time()))

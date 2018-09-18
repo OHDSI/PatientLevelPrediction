@@ -4,25 +4,23 @@
 \alias{savePredictionAnalysisList}
 \title{Saves a json prediction settings given R settings}
 \usage{
-savePredictionAnalysisList(workFolder = "inst/settings/", cohortIds,
-  cohortNames, outcomeIds, outcomeNames, covariateSettingsList,
-  populationSettingList, modelSettingList, maxSampleSize = NULL,
-  washoutPeriod = 0, minCovariateFraction = 0, normalizeData = T,
-  testSplit = "person", testFraction = 0.25, splitSeed = 1, nfold = 3,
-  verbosity = "INFO")
+savePredictionAnalysisList(workFolder = "inst/settings", cohortIds,
+  outcomeIds, cohortSettingCsv = file.path(workFolder, "CohortsToCreate.csv"),
+  covariateSettingList, populationSettingList, modelSettingList,
+  maxSampleSize = NULL, washoutPeriod = 0, minCovariateFraction = 0,
+  normalizeData = T, testSplit = "person", testFraction = 0.25,
+  splitSeed = 1, nfold = 3, verbosity = "INFO")
 }
 \arguments{
 \item{workFolder}{Location to save json specification}
 
 \item{cohortIds}{Vector of target population cohort ids}
 
-\item{cohortNames}{Vector of names for each cohortId}
-
 \item{outcomeIds}{Vector of outcome cohort ids}
 
-\item{outcomeNames}{Vector of names for each outcomeId}
+\item{cohortSettingCsv}{The location to the csv containing the cohort details}
 
-\item{covariateSettingsList}{A list of covariate settings}
+\item{covariateSettingList}{A list of covariate settings}
 
 \item{populationSettingList}{A list of population settings}
 

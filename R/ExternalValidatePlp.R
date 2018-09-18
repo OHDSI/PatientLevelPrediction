@@ -167,8 +167,8 @@ externalValidatePlp <- function(plpResult,
                                     outcomeId = validationIdOutcome,
                                     newOracleTempSchema = oracleTempSchema,
                                     # added the below
-                                    populationSettings = plpResult$inputSetting$populationSettings,
-                                    dataExtrractionSettings = list(covariateSettings = plpResult$inputSetting$dataExtrractionSettings$covariateSettings)
+                                    populationSettings = plpResult$model$populationSettings,
+                                    dataExtrractionSettings = list(covariateSettings = plpResult$model$metaData$call$covariateSettings)
                                     )
       
       results[[i]]$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,

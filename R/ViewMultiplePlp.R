@@ -159,6 +159,9 @@ viewMultiplePlp <- function(analysesLocation){
       } else {
         eval <- tryCatch(do.call(as.character(loc[2]), list(file=as.character(loc[1]))),
                          error = function(err) return(NULL))
+        if(!'inputSetting'%in%names(eval)){
+          eval <- eval[[1]]
+        }
         type <- 'validation'
       }
       if(!is.null(eval)){
@@ -346,8 +349,13 @@ getPerformance <- function(analysisLocation){
 
 getValidationPerformance <- function(validationLocation){
     val <- readRDS(file.path(validationLocation,'validationResult.rds'))
+    if("performanceEvaluation"%in%names(val)){
     valPerformance <- reshape2::dcast(as.data.frame(val$performanceEvaluation$evaluationStatistics), 
                                       analysisId ~ Metric, value.var='Value')
+    } else {
+      valPerformance <- reshape2::dcast(as.data.frame(val[[1]]$performanceEvaluation$evaluationStatistics), 
+                                        analysisId ~ Metric, value.var='Value')  
+    }
     valPerformance$incidence <- as.double(valPerformance$outcomeCount)/as.double(valPerformance$populationSize)*100
     valPerformance[, !colnames(valPerformance)%in%c('analysisId','outcomeCount','populationSize')] <- 
       format(as.double(valPerformance[, !colnames(valPerformance)%in%c('analysisId','outcomeCount','populationSize')]), digits = 2, scientific = F) 
@@ -394,6 +402,7 @@ summaryPlpAnalyses <- function(analysesLocation){
     for( valDatabase in valDatabases){
       
       valAnalyses <-  dir(valDatabase, recursive = F, full.names = T)
+      valAnalyses <-  valAnalyses[grep('Analysis_', valAnalyses)]
       valPerformance <- do.call(rbind,lapply(file.path(valAnalyses), function(x) getValidationPerformance(x)))
       valSettings <- settings[,c('analysisId','modelSettingsId', 'cohortName', 'outcomeName',
                                  'populationSettingId','modelSettingName','addExposureDaysToStart',
@@ -432,7 +441,7 @@ summaryPlpAnalyses <- function(analysesLocation){
 
 plotShiny <- function(eval, pointOfInterest){
   
-  data <- eval$thresholdSummary[eval$thresholdSummary$Eval=='train',]
+  data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('train','validation'),]
   # pointOfInterest # this is a threshold
   pointOfInterest <- data[pointOfInterest,]
   rocobject <- plotly::plot_ly(x = 1-c(0,data$specificity,1)) %>%
@@ -516,7 +525,12 @@ plotCovariateSummary <- function(covariateSummary){
   # remove na values 
   covariateSummary$CovariateMeanWithNoOutcome[is.na(covariateSummary$CovariateMeanWithNoOutcome)] <- 0
   covariateSummary$CovariateMeanWithOutcome[is.na(covariateSummary$CovariateMeanWithOutcome)] <- 0
-  covariateSummary$covariateValue[is.na(covariateSummary$covariateValue)] <- 0
+  if(!'covariateValue'%in%colnames(covariateSummary)){
+    covariateSummary$covariateValue <- 1
+  }
+  if(sum(is.na(covariateSummary$covariateValue))>0){
+    covariateSummary$covariateValue[is.na(covariateSummary$covariateValue)] <- 0
+  }
   
   # save dots based on coef value 
   covariateSummary$size <- abs(covariateSummary$covariateValue)
