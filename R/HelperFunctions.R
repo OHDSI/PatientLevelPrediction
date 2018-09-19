@@ -16,9 +16,9 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
     writeLines("Checking database connectivity")
     conn <- tryCatch({DatabaseConnector::connect(connectionDetails)},
                      error = function(e) {
-                       return(0)
+                       return(NULL)
                      })
-    if(length(conn)==1)
+    if(length(conn)==0)
       outCode <- outCode*3
     
     discon <- tryCatch({DatabaseConnector::disconnect(conn)},

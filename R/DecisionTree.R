@@ -37,7 +37,7 @@ setDecisionTree <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
     stop('Invalid seed')
   if(!class(maxDepth) %in% c("numeric", "integer"))
     stop('maxDepth must be a numeric value >0 ')
-  if(maxDepth < 1)
+  if(min(maxDepth) < 1)
     stop('maxDepth must be greater that 0 or -1')
   if(!class(minSamplesSplit) %in% c("numeric", "integer") )
     stop('minSamplesSplit must be a numeric value >1')
