@@ -1,2 +1,3 @@
 SingleModelDemo   Develop a single model on simulated data
 LearningCurveDemo Generate a learning curve on simulated data
+EnsembleModelDemo Generate an ensemble model on simulated data

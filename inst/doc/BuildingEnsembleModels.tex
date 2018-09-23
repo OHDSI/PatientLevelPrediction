@@ -122,7 +122,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-09}
+    \date{2018-09-23}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -145,11 +145,11 @@
 Ensemble models combine several models to improve the overall
 performance. Traditionally, weak learners were combined to boost
 performance but recent results show that combining several strong
-approaches can result in a better performance. There are many examples
-in literature where ensemble models outperform individual models using
-stacking, i.e.~a final logistic regresssion layer accross the individual
-model outputs, but other approaches like weigthing has also shown
-promising results.
+approaches can also result in a better performance. There are many
+examples in literature where ensemble models outperform individual
+models using stacking, i.e.~a final logistic regresssion layer accross
+the individual model outputs, but other approaches like weigthing has
+also shown promising results.
 
 This vignette describes how you can use the Observational Health Data
 Sciencs and Informatics (OHDSI)
@@ -199,9 +199,9 @@ code snippet creates a population of 12000 patients.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{set.seed}\NormalTok{(}\DecValTok{1234}\NormalTok{)}
 \KeywordTok{data}\NormalTok{(plpDataSimulationProfile)}
-\NormalTok{sampleSize <-}\StringTok{ }\DecValTok{12000}
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{1234}\NormalTok{)}
+\NormalTok{sampleSize <-}\StringTok{ }\DecValTok{2000}
 \NormalTok{plpData <-}\StringTok{ }\KeywordTok{simulatePlpData}\NormalTok{(}
 \NormalTok{  plpDataSimulationProfile,}
   \DataTypeTok{n =}\NormalTok{ sampleSize}
@@ -221,7 +221,7 @@ code snippet creates a population of 12000 patients.
   \DataTypeTok{addExposureDaysToStart =} \OtherTok{FALSE}\NormalTok{,}
   \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
   \DataTypeTok{addExposureDaysToEnd =} \OtherTok{FALSE}\NormalTok{,}
-  \DataTypeTok{verbosity =}\NormalTok{ futile.logger}\OperatorTok{::}\NormalTok{INFO}
+  \DataTypeTok{verbosity =} \StringTok{"INFO"}
 \NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -272,7 +272,7 @@ different plpData for different models.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{results <-}\StringTok{ }\NormalTok{PatientLevelPrediction}\OperatorTok{::}\KeywordTok{runEnsembleModel}\NormalTok{(population, }
+\NormalTok{ensembleResults <-}\StringTok{ }\NormalTok{PatientLevelPrediction}\OperatorTok{::}\KeywordTok{runEnsembleModel}\NormalTok{(population, }
                                    \DataTypeTok{dataList =} \KeywordTok{list}\NormalTok{(plpData, plpData), }
                                    \DataTypeTok{modelList =} \KeywordTok{list}\NormalTok{(model1, model2),}
                                    \DataTypeTok{testSplit=}\NormalTok{testSplit,}
@@ -282,29 +282,58 @@ different plpData for different models.
 \end{Highlighting}
 \end{Shaded}
 
+\subsection{Saving and loading the ensemble
+model}\label{saving-and-loading-the-ensemble-model}
+
+You can save and load the model using:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{saveEnsemblePlpModel}\NormalTok{(ensembleResults}\OperatorTok{$}\NormalTok{model, }\DataTypeTok{dirPath =} \KeywordTok{file.path}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"model"}\NormalTok{))}
+\NormalTok{ensembleModel <-}\StringTok{ }\KeywordTok{loadEnsemblePlpModel}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"model"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
 \section{Apply Ensemble model}\label{apply-ensemble-model}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{plpData <-}\StringTok{ }\KeywordTok{loadPlpData}\NormalTok{(}\StringTok{"\textbackslash{}<data file\textbackslash{}>"}\NormalTok{)}
-\NormalTok{modelList <-}\StringTok{ }\KeywordTok{loadEnsemblePlpModel}\NormalTok{(}\StringTok{""}\NormalTok{\textbackslash{}}\OperatorTok{<}\NormalTok{model\textbackslash{}}\OperatorTok{>}\StringTok{")  }
-\StringTok{populationSettings <- plpModel$populationSettings}
-\StringTok{populationSettings$plpData <- plpData}
-\StringTok{population <- do.call(createStudyPopulation, populationSettings)}
+\NormalTok{plpData <-}\StringTok{ }\KeywordTok{loadPlpData}\NormalTok{(}\StringTok{"<data file>"}\NormalTok{)}
+\NormalTok{populationSettings <-}\StringTok{ }\NormalTok{ensembleModel}\OperatorTok{$}\NormalTok{populationSettings}
+\NormalTok{populationSettings}\OperatorTok{$}\NormalTok{plpData <-}\StringTok{ }\NormalTok{plpData}
+\NormalTok{population <-}\StringTok{ }\KeywordTok{do.call}\NormalTok{(createStudyPopulation, populationSettings)}
 \end{Highlighting}
 \end{Shaded}
 
-Get the prediction, please make sure the ensemble strategy for training
-and applying is the same:
+Load the model.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ensembleModel <-}\StringTok{ }\KeywordTok{loadEnsemblePlpModel}\NormalTok{(}\StringTok{"<model folder>"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Get the predictions by applying the model:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{prediction <-}\StringTok{ }\KeywordTok{applyEnsembleModel}\NormalTok{(population,}
                                   \DataTypeTok{dataList =} \KeywordTok{list}\NormalTok{(plpData, plpData),}
-                                  \DataTypeTok{modelList =}\NormalTok{ modelList,}
-                                  \DataTypeTok{analysisId =} \OtherTok{NULL}\NormalTok{,}
-                                  \DataTypeTok{save =} \OtherTok{NULL}\NormalTok{,}
-                                  \DataTypeTok{ensembleStrategy =} \StringTok{"stacked"}\NormalTok{)}\OperatorTok{$}\NormalTok{prediction}
+                                  \DataTypeTok{ensembleModel =}\NormalTok{ ensembleModel)}\OperatorTok{$}\NormalTok{prediction}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Demo}\label{demo}
+
+We have added a demo of the ensemble training:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Show all demos in our package: }
+ \KeywordTok{demo}\NormalTok{(}\DataTypeTok{package =} \StringTok{"PatientLevelPrediction"}\NormalTok{)}
+
+\CommentTok{# Run the learning curve}
+ \KeywordTok{demo}\NormalTok{(}\StringTok{"EnsembleModelDemo"}\NormalTok{, }\DataTypeTok{package =} \StringTok{"PatientLevelPrediction"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -329,8 +358,8 @@ Considerable work has been dedicated to provide the
 ## A BibTeX entry for LaTeX users is
 ## 
 ##   @Manual{,
-##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
-## Common Data Model},
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP Common Data
+## Model},
 ##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
 ##     year = {2018},
 ##     note = {R package version 2.0.5},
