@@ -123,7 +123,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-09}
+    \date{2018-09-23}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -143,12 +143,49 @@
 }
 \section{Introduction}\label{introduction}
 
-This vignette describes how you can use the
-\texttt{PatientLevelPrediction} package to build patient-level
-predictive models. The package enables data extraction, model building,
-and model evaluation using data from databases that are translated into
-the Observational Medical Outcomes Partnership Common Data Model (OMOP
-CDM).
+Observational healthcare data, such as administrative claims and
+electronic health records, are increasingly used for clinical
+characterization of disease progression, quality improvement, and
+population-level effect estimation for medical product safety
+surveillance and comparative effectiveness. Advances in machine learning
+for large dataset analysis have led to increased interest in applying
+patient-level prediction on this type of data. Patient-level prediction
+offers the potential for medical practice to move beyond average
+treatment effects and to consider personalized risks as part of clinical
+decision-making. Many published efforts in patient-level-prediction do
+not follow the model development guidelines, fail to perform extensive
+external validation, or provide insufficient model details that limits
+the ability of independent researchers to reproduce the models and
+perform external validation. This makes it hard to fairly evaluate the
+predictive performance of the models and reduces the likelihood of the
+model being used appropriately in clinical practice. To improve
+standards, several papers have been written detailing guidelines for
+best practices in developing and reporting prediction models.
+
+The Transparent Reporting of a multivariable prediction model for
+Individual Prognosis Or Diagnosis (TRIPOD) statement
+\href{https://www.equator-network.org/reporting-guidelines/tripod-statement/}{(link)}
+provides clear recommendations for reporting prediction model
+development and validation5 and addresses some of the concerns related
+to transparency. However, data structure heterogeneity and inconsistent
+terminologies still make collaboration and model sharing difficult as
+different researchers are often required to write new code to extract
+the data from their databases and may define variables differently.
+
+In our paper
+\href{https://academic.oup.com/jamia/article/25/8/969/4989437}{(link)},
+we propose a standardised framework for patient-level prediction that
+utilizes the OMOP CDM and standardized vocabularies, and describe the
+open-source software that we developed implementing the framework's
+pipeline. The framework is the first to support existing best practice
+guidelines and will enable open dissemination of models that can be
+extensively validated across the network of OHDSI collaborators.
+
+Figure 1, illustrates the prediction problem we address. Among a
+population at risk, we aim to predict which patients at a defined moment
+in time (t = 0) will experience some outcome during a time-at-risk.
+Prediction is done using only information about the patients in an
+observation window prior to that moment in time.
 
 \begin{figure}
 \centering
@@ -156,111 +193,72 @@ CDM).
 \caption{The prediction problem}
 \end{figure}
 
-Figure 1 illustrates the prediction problem we address. Among a
-population at risk, we aim to predict which patients at a defined moment
-in time (t = 0) will experience some outcome during a time-at-risk.
-Prediction is done using only information about the patients in an
-observation window prior to that moment in time.
+As shown in Figure 2, to define a prediction problem we have to define
+t=0 by a Target Cohort (T), the outcome we like to predict by an outcome
+cohort (O), and the time at risk (TAR). Furthermore, we have to make
+design choices for the model we like to develop.
 
-To develop a model the user needs to take the following steps:
+\begin{figure}
+\centering
+\includegraphics{studydesign.png}
+\caption{Design choices}
+\end{figure}
 
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\tightlist
-\item
-  Create the target population and outcome cohorts
-\item
-  Define the covariates (aka features/independant variables) to use in
-  the model
-\item
-  Extract the patient-level data from the server
-\item
-  Define the population of interest (this defines the time-at-risk
-  period to create the class labels)
-\item
-  Pick a test/train split
-\item
-  Create model settings
-\item
-  Fit the model
-\item
-  Evaluate the model
-\item
-  Apply the model
-\end{enumerate}
+This framework works for all type of prediction problems, for example
+those presented in Figure 3.
 
-We have selected the well-studied topic of predicting re-hospitalization
-to walk you through these steps. The model will be developed for a
-diabetes type 2 population.
+\begin{figure}
+\centering
+\includegraphics{problems.png}
+\caption{Examples of prediction problems}
+\end{figure}
 
-\section{Installation instructions}\label{installation-instructions}
+This vignette describes how you can use the
+\texttt{PatientLevelPrediction} package to build patient-level
+predictive models. The package enables data extraction, model building,
+and model evaluation using data from databases that are translated into
+the Observational Medical Outcomes Partnership Common Data Model (OMOP
+CDM). In this vignette we assume you have installed the package
+correctly using the
+\href{https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf}{InstallationGuide}.
 
-Before installing the \texttt{PatientLevelPrediction} package make sure
-you have Java available. Java can be downloaded from
-\href{http://www.java.com}{www.java.com}. For Windows users, RTools is
-also necessary. RTools can be downloaded from
-\href{http://cran.r-project.org/bin/windows/Rtools/}{CRAN}.
+To guide you through the process of model building and validation we
+will use the ``Disease onset and progression'' type as an example.
 
-Furthermore, a python installation is required for some of the machine
-learning algorithms. We advise to install Python 3 using Anaconda
-(\url{https://www.continuum.io/downloads}). If you are using Mac or
-Linux make sure the anaconda python is your default python (the python
-that runs then you type python in the command line) - you may need to
-add it to your path before the default python. If you edit the path,
-close and restart R as the updated path will not happen until you
-re-open R.
+\section{Definition of the Prediction
+Problem}\label{definition-of-the-prediction-problem}
 
-The \texttt{PatientLevelPrediction} package is currently maintained in a
-GitHub repository
-(\url{https://github.com/OHDSI/PatientLevelPrediction}), and has
-dependencies on other packages in Github. All of these packages can be
-downloaded and installed from within R using the \texttt{drat} package:
-
-\texttt{r\ \ \ install.packages("drat")\ \ \ drat::addRepo("OHDSI")\ \ \ install.packages("PatientLevelPrediction")}
-
-Once installed, you can type \texttt{library(PatientLevelPrediction)} to
-load the package.
-
-We recomment testing the installation by running:
-\texttt{checkPlpInstallation()}
+!!!! TEXT PATRICK TO BE ADDED
 
 \section{Data extraction}\label{data-extraction}
 
 The \texttt{PatientLevelPrediction} package requires longitudinal
-observational healthcare data in the OMOP Common Data Model format. The
-user will need to specify two things:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  Time periods for which we wish to predict the occurrence of an
-  outcome. We will call this the \textbf{target population cohort of
-  interest} or cohort for short. One person can have multiple time
-  periods, but time periods should not overlap.
-\item
-  Outcomes for which we wish to build a predictive model.
-\end{enumerate}
-
-The first step in running the \texttt{PatientLevelPrediction} is
-extracting all necessary data from the database server holding the data
-in the CDM.
+observational healthcare data in the OMOP Common Data Model format. We
+will now explain how to connect to the server and how the generate the
+Target (T=Atrial Fibrillation) and outcome cohort (O=Stroke).
 
 \subsection{Configuring the connection to the
 server}\label{configuring-the-connection-to-the-server}
 
-We need to tell R how to connect to the server where the data are.
+First we need to tell R how to connect to the server.
 \texttt{PatientLevelPrediction} uses the \texttt{DatabaseConnector}
 package, which provides the \texttt{createConnectionDetails} function.
 Type \texttt{?createConnectionDetails} for the specific settings
 required for the various database management systems (DBMS). For
 example, one might connect to a PostgreSQL database using this code:
 
-```r connectionDetails \textless{}- createConnectionDetails(dbms =
-``postgresql'', server = ``localhost/ohdsi'', user = ``joe'', password =
-``supersecret'')
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{"postgresql"}\NormalTok{, }
+                                             \DataTypeTok{server =} \StringTok{"localhost/ohdsi"}\NormalTok{, }
+                                             \DataTypeTok{user =} \StringTok{"joe"}\NormalTok{, }
+                                             \DataTypeTok{password =} \StringTok{"supersecret"}\NormalTok{)}
 
-cdmDatabaseSchema \textless{}- ``my\_cdm\_data'' cohortsDatabaseSchema
-\textless{}- ``my\_results'' cdmVersion \textless{}- ``5'' ```
+\NormalTok{cdmDatabaseSchema <-}\StringTok{ "my_cdm_data"}
+\NormalTok{cohortsDatabaseSchema <-}\StringTok{ "my_results"}
+\NormalTok{cdmVersion <-}\StringTok{ "5"}
+\end{Highlighting}
+\end{Shaded}
 
 The last three lines define the \texttt{cdmDatabaseSchema} and
 \texttt{cohortsDatabaseSchema} variables, as well as the CDM version. We
@@ -274,10 +272,8 @@ the database and the schema, so for example
 interest}\label{preparing-the-cohort-and-outcome-of-interest}
 
 First we need to define the cohort of persons for which we want to
-perform the prediction and we need to define the outcomes we want to
-predict.
-
-The cohort and outcomes are provided as data in a table on the server
+perform the prediction and we need to define the outcome we want to
+predict. These cohorts are provided as data in a table on the server
 that has the same structure as the `cohort' table in the OMOP CDM,
 meaning it should have the following columns:
 
@@ -302,10 +298,12 @@ meaning it should have the following columns:
 The observational and health data sciences \& informatics (OHDSI)
 community has developed a tool named ATLAS which can be used to create
 cohorts based on inclusion criteria. We can also write custom SQL
-statements against the CDM.
+statements against the CDM. Both methods are described below.
 
 \subsubsection{Cohort creation using
 ATLAS}\label{cohort-creation-using-atlas}
+
+!!!!! TO BE UPDATED WITH COHORT FIGURES AND TEXT OF PATRICK
 
 \begin{figure}
 \centering
@@ -327,6 +325,8 @@ When a cohort is created in ATLAS the cohortid is needed to extract the
 data in R. The cohortid can be found in the link as shown in Figure 2.
 
 \subsubsection{Custom cohort creation}\label{custom-cohort-creation}
+
+!!!!! TO BE UPDATED WITH SQL AND TEXT OF PATRICK
 
 It is also possible to create cohorts without the use of ATLAS. Using
 custom cohort code (SQL) you can make more advanced cohorts if needed.
@@ -491,12 +491,13 @@ covariate settings.
 \end{Highlighting}
 \end{Shaded}
 
-Note that if the cohorts are created in ATLAS the corresponding database
-schemas need to be selected. There are many additional parameters for
-the \texttt{getPlpData} function which are all documented in the
-\texttt{PatientLevelPrediction} manual. The resulting \texttt{plpData}
-object uses the package \texttt{ff} to store information in a way that
-ensures R does not run out of memory, even when the data are large.
+Note that if the cohorts are created in ATLAS its corresponding cohort
+database schema needs to be selected. There are many additional
+parameters for the \texttt{getPlpData} function which are all documented
+in the \texttt{PatientLevelPrediction} manual. The resulting
+\texttt{plpData} object uses the package \texttt{ff} to store
+information in a way that ensures R does not run out of memory, even
+when the data are large.
 
 \subsection{Saving the data to file}\label{saving-the-data-to-file}
 
@@ -508,7 +509,7 @@ function:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{savePlpData}\NormalTok{(plpData, }\StringTok{"rehosp_plp_data"}\NormalTok{)}
+\KeywordTok{savePlpData}\NormalTok{(plpData, }\StringTok{"stroke_in_af_data"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -639,28 +640,36 @@ Yes\strut
 size (the number of hidden nodes), alpha (the l2 regularisation),
 seed\strut
 \end{minipage}\tabularnewline
+\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+Deep Learning\strut
+\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
+Yes\strut
+\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+in the BuildingDeepLearningModels vignette we describe these models and
+hyper-parameters in more detail.\strut
+\end{minipage}\tabularnewline
 \bottomrule
 \end{longtable}
 
 The table shows the currently implemented algorithms and their
-hyper-parameters. Some of these algorithms are calling python.In the
-settings function of the algorithm the user can specify a list of
-eligible values for each hyper-parameter. All possible combinations of
-the hyper-parameters are included in a so-called grid search using
-cross-validation on the training set. If a user does not specify any
-value then the default value is used instead.
+hyper-parameters. In the settings function of the algorithms the user
+can specify a list of eligible values for each hyper-parameter. All
+possible combinations of the hyper-parameters are included in a
+so-called grid search using cross-validation on the training set. If a
+user does not specify any value then the default value is used instead.
 
 For example, if we use the following settings for the
 gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search
 will apply the gradient boosting machine algorithm with ntrees=100 and
 maxDepth=4 plus the default settings for other hyper-parameters and
 ntrees=200 and maxDepth=4 plus the default settings for other
-hyper-parameters. The hyper-parameters that lead to the best
-cross-validation performance will then be chosen for the final model.
+hyper-parameters. The hyper-parameters that lead to the
+bestcross-validation performance will then be chosen for the final
+model. For our problem we choose to build a logistic regression model
+with the default hyper-parameters.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{gbmModel <-}\StringTok{ }\KeywordTok{setGradientBoostingMachine}\NormalTok{(}\DataTypeTok{ntrees =} \KeywordTok{c}\NormalTok{(}\DecValTok{100}\NormalTok{, }\DecValTok{200}\NormalTok{), }\DataTypeTok{maxDepth =} \DecValTok{4}\NormalTok{)}
 \NormalTok{lrModel <-}\StringTok{ }\KeywordTok{setLassoLogisticRegression}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
@@ -687,8 +696,6 @@ fit a large-scale regularized regression using 75\% of the data and will
 evaluate the model on the remaining 25\%. A results data structure is
 returned containing information about the model, its performance etc.
 
-\newpage
-
 \subsection{Saving and loading}\label{saving-and-loading}
 
 You can save and load the model using:
@@ -709,14 +716,21 @@ You can save and load the full results structure using:
 \end{Highlighting}
 \end{Shaded}
 
-you can interactively view the results by running:
-\texttt{viewPlp(runPlp=lrResults)}. \newpage
+\newpage
 
 \section{Model Evaluation}\label{model-evaluation}
 
 The runPlp() function returns the trained model and the evaluation of
-the model on the train/test sets. To generate all the plots run the
-following code:
+the model on the train/test sets.
+
+You can also interactively view the results by running:
+\texttt{viewPlp(runPlp=lrResults)}. This will generate a Shiny App in
+which you can view all plots and performance measure created by the
+framework as shown in the Figure below.
+
+!!! TO BE REPLACE BY SHINY APP EXAMPLE OF PATRICK
+
+To generate and save all the evaluation plots run the following code:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -724,31 +738,10 @@ following code:
 \end{Highlighting}
 \end{Shaded}
 
-To run individual plots you can use the following functions:
+The plots that are generated are described in more detail in the next
+sections.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{testResults <-}\StringTok{ }\NormalTok{lrResult}\OperatorTok{$}\NormalTok{performanceEvaluationTest}
-
-\KeywordTok{plotSparseRoc}\NormalTok{(testResults, }\StringTok{"sparseROC.pdf"}\NormalTok{)}
-
-\KeywordTok{plotSparseCalibration}\NormalTok{(testResults, }\StringTok{"sparseCalibration.pdf"}\NormalTok{)}
-
-\KeywordTok{plotPreferencePDF}\NormalTok{(testResults, }\StringTok{"preferencePDF.pdf"}\NormalTok{)}
-
-\KeywordTok{plotPredictionDistribution}\NormalTok{(testResults, }\StringTok{"predictionDistribution.pdf"}\NormalTok{)}
-
-\KeywordTok{plotGeneralizability}\NormalTok{(testResults, }\StringTok{"generalizability.pdf"}\NormalTok{)}
-
-\KeywordTok{plotVariableScatterplot}\NormalTok{(testResults, }\StringTok{"variableScatterplot.pdf"}\NormalTok{)}
-
-\KeywordTok{plotPrecisionRecall}\NormalTok{(testResults, }\StringTok{"precisionRecall.pdf"}\NormalTok{)}
-
-\KeywordTok{plotDemographicSummary}\NormalTok{(testResults, }\StringTok{"demographicSummary.pdf"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-These plots are described in more detail in the following paragraphs.
+\newpage
 
 \subsection{ROC plot}\label{roc-plot}
 
@@ -764,6 +757,8 @@ the people with the outcome and those without. The dashed diagonal line
 is the performance of a model that randomly assigns predictions. The
 higher the area under the ROC plot the better the discrimination of the
 model.
+
+\newpage
 
 \subsection{Calibration plot}\label{calibration-plot}
 
@@ -782,6 +777,8 @@ black line is the linear regression using these 10 plotted quantile mean
 predicted vs observed fraction points. The two blue straight lines
 represented the 95\% lower and upper confidence intervals of the slope
 of the fitted line.
+
+\newpage
 
 \subsection{Smooth Calibration plot}\label{smooth-calibration-plot}
 
@@ -805,6 +802,8 @@ However the increased information game comes at a computational cost. It
 is recommended to use the traditional plot for examination and then to
 produce the smooth plot for final versions.
 
+\newpage
+
 \subsection{Preference distribution
 plots}\label{preference-distribution-plots}
 
@@ -817,6 +816,8 @@ plots}\label{preference-distribution-plots}
 The preference distribution plots are the preference score distributions
 corresponding to i) people in the test set with the outcome (red) and
 ii) people in the test set without the outcome (blue).
+
+\newpage
 
 \subsection{Box plots}\label{box-plots}
 
@@ -835,6 +836,8 @@ the outcome is indeed higher for those with the outcome but there is
 also overlap between the two distribution which lead to an imperfect
 discrimination.
 
+\newpage
+
 \subsection{Test-Train similarity
 plot}\label{test-train-similarity-plot}
 
@@ -851,13 +854,9 @@ and without the outcome.
 The results for our example of re-hospitalization look very promising
 since the mean values of the covariates are on the diagonal.
 
-\subsection{Variable scatter plot}\label{variable-scatter-plot}
+\newpage
 
-\begin{figure}
-\centering
-\includegraphics{variableScatterplot.png}
-\caption{Variabel scatter Plot}
-\end{figure}
+\subsection{Variable scatter plot}\label{variable-scatter-plot}
 
 The variable scatter plot shows the mean covariate value for the people
 with the outcome against the mean covariate value for the people without
@@ -870,11 +869,24 @@ The plot shows that the mean of most of the covariates is higher for
 subjects with the outcome compared to those without. Also there seem to
 be a very predictive, but rare covariate with a high beta.
 
+\begin{figure}
+\centering
+\includegraphics{variableScatterplot.png}
+\caption{Variabel scatter Plot}
+\end{figure}
+
+\newpage
+
 \subsection{Plot Precision Recall}\label{plot-precision-recall}
 
-\includegraphics{precisionRecall.png} Precision (P) is defined as the
-number of true positives (Tp) over the number of true positives plus the
-number of false positives (Fp).
+\begin{figure}
+\centering
+\includegraphics{precisionRecall.png}
+\caption{Precision Recall Plot}
+\end{figure}
+
+Precision (P) is defined as the number of true positives (Tp) over the
+number of true positives plus the number of false positives (Fp).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -914,6 +926,8 @@ may increase recall, by increasing the number of true positive results.
 It is also possible that lowering the threshold may leave recall
 unchanged, while the precision fluctuates.
 
+\newpage
+
 \subsection{Demographic Summary plot}\label{demographic-summary-plot}
 
 \begin{figure}
@@ -929,7 +943,7 @@ different age groups together with a confidence area.
 
 \section{External validation}\label{external-validation}
 
-We recommend to always peform external validation, i.e.~apply the final
+We recommend to always perform external validation, i.e.~apply the final
 model on as much new datasets as feasible and evaluate its performance.
 
 \begin{Shaded}
@@ -999,6 +1013,20 @@ the new schemas and cohort tables as a list:
 \end{Highlighting}
 \end{Shaded}
 
+\section{Demos}\label{demos}
+
+We have added several demos in the package that run on simulated data:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Show all demos in our package: }
+ \KeywordTok{demo}\NormalTok{(}\DataTypeTok{package =} \StringTok{"PatientLevelPrediction"}\NormalTok{)}
+
+\CommentTok{# To run the SingleModelDemo for example use this call}
+ \KeywordTok{demo}\NormalTok{(}\StringTok{"SingleModelDemo"}\NormalTok{, }\DataTypeTok{package =} \StringTok{"PatientLevelPrediction"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
 \newpage
 
 \section{Acknowledgments}\label{acknowledgments}
@@ -1022,8 +1050,8 @@ Considerable work has been dedicated to provide the
 ## A BibTeX entry for LaTeX users is
 ## 
 ##   @Manual{,
-##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
-## Common Data Model},
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP Common Data
+## Model},
 ##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
 ##     year = {2018},
 ##     note = {R package version 2.0.5},

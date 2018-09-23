@@ -41,62 +41,47 @@ if (file.exists(vignetteDataFolder)){
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
 ```
+
 # Introduction
 
-This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the Observational Medical Outcomes Partnership Common Data Model (OMOP CDM). 
+Observational healthcare data, such as administrative claims and electronic health records, are increasingly used for clinical characterization of disease progression, quality improvement, and population-level effect estimation for medical product safety surveillance and comparative effectiveness. Advances in machine learning for large dataset analysis have led to increased interest in applying patient-level prediction on this type of data. Patient-level prediction offers the potential for medical practice to move beyond average treatment effects and to consider personalized risks as part of clinical decision-making. Many published efforts in patient-level-prediction do not follow the model development guidelines, fail to perform extensive external validation, or provide insufficient model details that limits the ability of independent researchers to reproduce the models and perform external validation. This makes it hard to fairly evaluate the predictive performance of the models and reduces the likelihood of the model being used appropriately in clinical practice. To improve standards, several papers have been written detailing guidelines for best practices in developing and reporting prediction models.
+
+The Transparent Reporting of a multivariable prediction model for Individual Prognosis Or Diagnosis (TRIPOD) statement [(link)](https://www.equator-network.org/reporting-guidelines/tripod-statement/) provides clear recommendations for reporting prediction model development and validation5 and addresses some of the concerns related to transparency. However, data structure heterogeneity and inconsistent terminologies still make collaboration and model sharing difficult as different researchers are often required to write new code to extract the data from their databases and may define variables differently.
+
+In our paper [(link)](https://academic.oup.com/jamia/article/25/8/969/4989437), we propose a standardised framework for patient-level prediction that utilizes the OMOP CDM and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to support existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
+
+Figure 1, illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
 ![The prediction problem](Figure1.png)
 
-Figure 1 illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
-To develop a model the user needs to take the following steps:
-  
-1. Create the target population and outcome cohorts
-2. Define the covariates (aka features/independant variables) to use in the model
-3. Extract the patient-level data from the server
-4. Define the population of interest (this defines the time-at-risk period to create the class labels)
-5. Pick a test/train split 
-6. Create model settings
-7. Fit the model
-8. Evaluate the model
-9. Apply the model
 
-We have selected the well-studied topic of predicting re-hospitalization to walk you through these steps. The model will be developed for a diabetes type 2 population.
+As shown in Figure 2, to define a prediction problem we have to define t=0 by a Target Cohort (T), the outcome we like to predict by an outcome cohort (O), and the time at risk (TAR). Furthermore, we have to make design choices for the model we like to develop.
 
-# Installation instructions
 
-Before installing the `PatientLevelPrediction` package make sure you have Java available.  Java can be downloaded from [www.java.com](http://www.java.com). For Windows users, RTools is also necessary.  RTools can be downloaded from [CRAN](http://cran.r-project.org/bin/windows/Rtools/).
+![Design choices](studydesign.png)
 
-Furthermore, a python installation is required for some of the machine learning algorithms. We advise to install Python 3 using Anaconda (https://www.continuum.io/downloads).  If you are using Mac or Linux make sure the anaconda python is your default python (the python that runs then you type python in the command line) - you may need to add it to your path before the default python.  If you edit the path, close and restart R as the updated path will not happen until you re-open R.
+This framework works for all type of prediction problems, for example those presented in Figure 3. 
 
-The `PatientLevelPrediction` package is currently maintained in a GitHub repository (https://github.com/OHDSI/PatientLevelPrediction), and has dependencies on other packages in Github. All of these packages can be downloaded and installed from within R using the `drat` package:
-  
-  ```{r tidy=TRUE,eval=FALSE}
-install.packages("drat")
-drat::addRepo("OHDSI")
-install.packages("PatientLevelPrediction")
-```
+![Examples of prediction problems](problems.png)
 
-Once installed, you can type `library(PatientLevelPrediction)` to load the package.
+This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the Observational Medical Outcomes Partnership Common Data Model (OMOP CDM). In this vignette we assume you have installed the package correctly using the [InstallationGuide](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf).
 
-We recomment testing the installation by running: `checkPlpInstallation()`
+To guide you through the process of model building and validation we will use the "Disease onset and progression" type as an example.
 
+# Definition of the Prediction Problem
+
+!!!! TEXT PATRICK TO BE ADDED
 
 # Data extraction
 
-The `PatientLevelPrediction` package requires longitudinal observational healthcare data in the OMOP Common Data Model format. The user will need to specify two things: 
-  
-  1. Time periods for which we wish to predict the occurrence of an outcome. We will call this the **target population cohort of interest** or cohort for short. One person can have multiple time periods, but time periods should not overlap.
-
-2. Outcomes for which we wish to build a predictive model.
-
-The first step in running the `PatientLevelPrediction` is extracting all necessary data from the database server holding the data in the CDM.
+The `PatientLevelPrediction` package requires longitudinal observational healthcare data in the OMOP Common Data Model format. We will now explain how to connect to the server and how the generate the Target (T=Atrial Fibrillation) and outcome cohort (O=Stroke). 
 
 ## Configuring the connection to the server
 
-We need to tell R how to connect to the server where the data are. `PatientLevelPrediction` uses the `DatabaseConnector` package, which provides the `createConnectionDetails` function. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
+First we need to tell R how to connect to the server. `PatientLevelPrediction` uses the `DatabaseConnector` package, which provides the `createConnectionDetails` function. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
   
-  ```{r tidy=FALSE,eval=FALSE}
+```{r tidy=FALSE,eval=FALSE}
 connectionDetails <- createConnectionDetails(dbms = "postgresql", 
                                              server = "localhost/ohdsi", 
                                              user = "joe", 
@@ -111,18 +96,18 @@ The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` 
 
 ## Preparing the cohort and outcome of interest
 
-First we need to define the cohort of persons for which we want to perform the prediction and we need to define the outcomes we want to predict.
-
-The cohort and outcomes are provided as data in a table on the server that has the same structure as the 'cohort' table in the OMOP CDM, meaning it should have the following columns:
+First we need to define the cohort of persons for which we want to perform the prediction and we need to define the outcome we want to predict. These cohorts are provided as data in a table on the server that has the same structure as the 'cohort' table in the OMOP CDM, meaning it should have the following columns:
   
   - `cohort_definition_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
 - `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
 - `cohort_start_date`, the start of the time period where we wish to predict the occurrence of the outcome.
 - `cohort_end_date`, which can be used to determine the end of the prediction window. Can be set equal to the `cohort_start_date` for outcomes.
 
-The observational and health data sciences & informatics (OHDSI) community has developed a tool named ATLAS which can be used to create cohorts based on inclusion criteria. We can also write custom SQL statements against the CDM. 
+The observational and health data sciences & informatics (OHDSI) community has developed a tool named ATLAS which can be used to create cohorts based on inclusion criteria. We can also write custom SQL statements against the CDM. Both methods are described below.
 
 ### Cohort creation using ATLAS
+
+!!!!! TO BE UPDATED WITH COHORT FIGURES AND TEXT OF PATRICK
 
 ![Cohort creation using ATLAS](Figure2.png)
 
@@ -131,6 +116,8 @@ ATLAS as shown in Figure 2 allows you to define cohorts interactively by specify
 When a cohort is created in ATLAS the cohortid is needed to extract the data in R. The cohortid can be found in the link as shown in Figure 2. 
 
 ### Custom cohort creation
+
+!!!!! TO BE UPDATED WITH SQL AND TEXT OF PATRICK
 
 It is also possible to create cohorts without the use of ATLAS. Using custom cohort code (SQL) you can make more advanced cohorts if needed.
 
@@ -233,7 +220,6 @@ useVisitCountLongTerm = TRUE,
 longTermStartDays = -365,
 endDays = -1)
 
-
 ```
 
 The final step for extracting the data is to run the `getPlpData` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the washoutPeriod which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings. 
@@ -253,15 +239,14 @@ outcomeIds = 2,
 cdmVersion = cdmVersion)
 ```
 
-Note that if the cohorts are created in ATLAS the corresponding database schemas need to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
-
+Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
 
 ## Saving the data to file
 
 Creating the `plpData` object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because `plpData` uses `ff`, we cannot use R's regular save function. Instead, we'll have to use the `savePlpData()` function:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpData(plpData, "rehosp_plp_data")
+savePlpData(plpData, "stroke_in_af_data")
 ```
 
 We can use the `loadPlpData()` function to load the data in a future session.
@@ -294,7 +279,6 @@ Note that some of these constraints could also already be applied in the cohort 
 
 ## Defining the model settings
 
-
 | Models                      | Python | Parameters                              |
 | ----------------------------| ------ | --------------------------------------- |
 | Logistic regression with regularization | No | var  (starting  variance), seed |
@@ -305,15 +289,14 @@ Note that some of these constraints could also already be applied in the cohort 
 | AdaBoost           | Yes                      | nEstimators (the maximum number of estimators at which boosting is terminated), learningRate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learningRate and nEstimators)|
 |Decision Tree | Yes | maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight ("Balance"" or "None") |
 | Multilayer Perception | Yes | size (the number of hidden nodes), alpha (the l2 regularisation), seed |
+| Deep Learning | Yes | in the BuildingDeepLearningModels vignette we describe these models and hyper-parameters in more detail.|
 
-The table shows the currently implemented algorithms and their hyper-parameters. Some of these algorithms are calling python.In the settings function of the algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
+The table shows the currently implemented algorithms and their hyper-parameters. In the settings function of the algorithms the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
 
-For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and maxDepth=4    plus  the  default  settings  for  other  hyper-parameters  and  ntrees=200  and  maxDepth=4  plus  the  default settings  for  other  hyper-parameters.  The  hyper-parameters  that lead  to  the  best  cross-validation  performance will then be chosen for the final  model.
+For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and maxDepth=4 plus  the  default  settings  for  other  hyper-parameters  and  ntrees=200  and  maxDepth=4  plus  the  default settings  for  other  hyper-parameters.  The  hyper-parameters  that lead to the  bestcross-validation  performance will then be chosen for the final  model. For our problem we choose to build a logistic regression model with the default hyper-parameters.
 
 ```{r tidy=TRUE,eval=FALSE}
-gbmModel <- setGradientBoostingMachine(ntrees = c(100,200), maxDepth=4)
 lrModel <- setLassoLogisticRegression()
-
 ```
 
 ## Model training 
@@ -325,8 +308,6 @@ testFraction = 0.25, nfold = 2)
 
 ```
 Under the hood the package will now use the `Cyclops` package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.
-
-\newpage
 
 ## Saving and loading 
 
@@ -343,55 +324,39 @@ You can save and load the full results structure using:
 savePlpResult(lrResults, location = file.path(getwd(),'lr'))
 lrResults <- loadPlpResult(file.path(getwd(),'lr'))
 ```
-
-you can interactively view the results by running: `viewPlp(runPlp=lrResults)`.
 \newpage
 
 # Model Evaluation
 
-The runPlp() function returns the trained model and the evaluation of the model on the train/test sets. To generate all the plots run the following code:
+The runPlp() function returns the trained model and the evaluation of the model on the train/test sets.
+
+You can also interactively view the results by running: `viewPlp(runPlp=lrResults)`. This will generate a Shiny App in which you can view all plots and performance measure created by the framework as shown in the Figure below. 
+
+!!! TO BE REPLACE BY SHINY APP EXAMPLE OF PATRICK
+
+
+To generate and save all the evaluation plots run the following code:
 
 ```{r tidy=TRUE,eval=FALSE}
 plotPlp(lrResults, dirPath=getwd())
 ```
+The plots that are generated are described in more detail in the next sections.
 
-To run individual plots you can use the following functions:
-
-```{r tidy=TRUE,eval=FALSE}
-testResults <- lrResult$performanceEvaluationTest
-
-plotSparseRoc(testResults,'sparseROC.pdf')
-
-plotSparseCalibration(testResults,'sparseCalibration.pdf')
-
-plotPreferencePDF(testResults,'preferencePDF.pdf')
-
-plotPredictionDistribution(testResults,'predictionDistribution.pdf')
-
-plotGeneralizability(testResults,'generalizability.pdf')
-
-plotVariableScatterplot(testResults,'variableScatterplot.pdf')
-
-plotPrecisionRecall(testResults,'precisionRecall.pdf')
-
-plotDemographicSummary(testResults,'demographicSummary.pdf')
-
-```
-
-These plots are described in more detail in the following paragraphs.
-
+\newpage
 ## ROC plot
 
 ![Receiver Operator Plot](sparseRoc.png)
 
 The ROC plot plots the sensitivity against 1-specificity on the test set. The plot shows how well the model is able to discriminate between the people with the outcome and those without. The dashed diagonal line is the performance of a model that randomly assigns predictions. The higher the area under the ROC plot the better the discrimination of the model.  
 
+\newpage
 ## Calibration plot
 
 ![Calibration Plot](sparseCalibration.png)
 
 The calibration plot shows how close the predicted risk is to the observed risk. The diagonal dashed line thus indicates a perfectly calibrated model. The ten (or fewer) dots represent the mean predicted values for each quantile plotted against the observed fraction of people in that quantile who had the outcome (observed fraction). The straight black line is the linear regression using these 10 plotted quantile mean predicted vs observed fraction points. The two blue straight lines represented the 95% lower and upper confidence intervals of the slope of the fitted line.
 
+\newpage
 ## Smooth Calibration plot
 
 ![Smooth Calibration plot](smoothCalibration.jpeg)
@@ -400,12 +365,14 @@ Similar to the traditional calibration shown above the Smooth Calibration plot s
 
 However the increased information game comes at a computational cost. It is recommended to use the traditional plot for examination and then to produce the smooth plot for final versions.
 
+\newpage
 ## Preference distribution plots
 
 ![Preference Plot](preferencePDF.png)
 
 The preference distribution plots are the preference score distributions corresponding to i) people in the test set with the outcome (red) and ii) people in the test set without the outcome (blue).
 
+\newpage
 ## Box plots
 
 ![Prediction Distribution Box Plot](predictionDistribution.png)
@@ -414,6 +381,7 @@ The prediction distribution boxplots are box plots for the predicted risks of th
 
 The box plots in the Figure above show that the predicted probability of the outcome is indeed higher for those with the outcome but there is also overlap between the two distribution which lead to an imperfect discrimination.
 
+\newpage
 ## Test-Train similarity plot
 
 ![Similarity plots of train and test set](generalizability.png)
@@ -422,17 +390,20 @@ The test-train similarity is presented by plotting the mean covariate values in 
 
 The results for our example of re-hospitalization look very promising since the mean values of the covariates are on the diagonal.
 
+\newpage
 ## Variable scatter plot
-
-![Variabel scatter Plot](variableScatterplot.png)
 
 The variable scatter plot shows the mean covariate value for the people with the outcome against the mean covariate value for the people without the outcome. The size and color of the dots correspond to the importance of the covariates in the trained model (size of beta) and its direction (sign of beta with green meaning positive and red meaning negative), respectivily.
 
 The plot shows that the mean of most of the covariates is higher for subjects with the outcome compared to those without. Also there seem to be a very predictive, but rare covariate with a high beta.
 
+![Variabel scatter Plot](variableScatterplot.png)
+
+\newpage
 ## Plot Precision Recall
 
 ![Precision Recall Plot](precisionRecall.png)
+
 Precision (P) is defined as the number of true positives (Tp) over the number of true positives plus the number of false positives (Fp).
 
 ```{r tidy=TRUE,eval=FALSE}
@@ -450,6 +421,7 @@ Note that the precision can either decrease or increase if the threshold is lowe
 
 For Recall the demoninator does not depend on the classifier threshold (Tp+Fn is a constant). This means that lowering the classifier threshold may increase recall, by increasing the number of true positive results. It is also possible that lowering the threshold may leave recall unchanged, while the precision fluctuates.
 
+\newpage
 ## Demographic Summary plot
 
 ![Demographic Summary Plot](demographicSummary.png)
@@ -457,10 +429,9 @@ For Recall the demoninator does not depend on the classifier threshold (Tp+Fn is
 This plot shows for females and males the expected and observed risk in different age groups together with a confidence area.
 
 \newpage
-
 # External validation
 
-We recommend to always peform external validation, i.e. apply the final model on as much new datasets as feasible and evaluate its performance.
+We recommend to always perform external validation, i.e. apply the final model on as much new datasets as feasible and evaluate its performance.
 
 ```{r tidy=TRUE,eval=FALSE}
 # load the trained model
@@ -483,7 +454,6 @@ riskWindowEnd = 365
 # apply the trained model on the new data
 validationResults <- applyModel(population,plpData,plpModel)
 ```
-
 
 To make things easier we also provide a function for performing external validation of a model across one or multiple datasets:
 ```{r tidy=TRUE,eval=FALSE}
@@ -539,10 +509,17 @@ validation <- externalValidatePlp(plpResult = plpResult,
                                   )
 
 ```
+# Demos
 
+We have added several demos in the package that run on simulated data:
 
+``` {r eval=FALSE}
+# Show all demos in our package: 
+ demo(package = "PatientLevelPrediction")
 
-
+# To run the SingleModelDemo for example use this call
+ demo("SingleModelDemo", package = "PatientLevelPrediction")
+```
 \newpage
 
 # Acknowledgments
