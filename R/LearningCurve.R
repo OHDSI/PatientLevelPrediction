@@ -753,7 +753,7 @@ createLearningCurvePar <- function(population,
   TotalExecutionElapsedTime <-
     as.numeric(difftime(endTime, ExecutionDateTime,
                         units = "secs"))
-  OhdsiRTools::logInfo(paste0('Finished in ', round(TotalExecutionElapsedTime), ' secs.'))
+  OhdsiRTools::logInfo('Finished in ', round(TotalExecutionElapsedTime), ' secs.')
   
   # de-register the parallel backend by registering a sequential backend
   registerSequentialBackend()

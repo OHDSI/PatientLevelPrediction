@@ -36,11 +36,11 @@ This vignette describes how you need to install the Observational Health Data Sc
 ## Windows Users
 Under Windows the OHDSI Patient Level Prediction (PLP) package requires installing:
 
-* R (https://cran.cnr.berkeley.edu/ ) \- the latest version is recommended
+* R (https://cran.cnr.berkeley.edu/ ) \- (R >= 3.3.0, but latest is recommended)
 * Rstudio (https://www.rstudio.com/  )
 * Java (http://www.java.com )
 * RTools (https://cran.r-project.org/bin/windows/Rtools/) 
-* Anaconda 3.6 (https://www.continuum.io/downloads) \- this will require checking your path variable to ensure the correct python is used by R \- more instructions below. For Python you need to make sure it is in the Path: go to my computer -> system properties -> advanced system settings 
+* Anaconda 3.6 (https://www.anaconda.com/download) \- this will require checking your path variable to ensure the correct python is used by R \- more instructions below. For Python you need to make sure it is in the Path: go to my computer -> system properties -> advanced system settings 
 Then at the bottom right you'll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable to add the Anaconda location. In R you need to check the Path is correct: You can access the path variable in R using `Sys.getenv('PATH')`.  This should contain the location of your Anaconda or python 3.6.
 * If you have Anaconda and want to use PyTorch v0.4 (https://pytorch.org) as the backend of deep learning, you can directly use command "conda install pytorch torchvision -c pytorch" for Linux. 
   Please refers to commands for installing PyTorch (https://pytorch.org) on other develop environments.
@@ -54,7 +54,7 @@ install_keras()
 ## Mac/Linux Users
 Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires installing:
 
-* R (https://cran.cnr.berkeley.edu/ ) \- the latest version is recommended
+* R (https://cran.cnr.berkeley.edu/ ) \- (R >= 3.3.0, but latest is recommended)
 * Rstudio (https://www.rstudio.com/  )
 * Java (http://www.java.com )
 * Xcode command line tools(run in terminal: xcode-select --install) [MAC USERS ONLY]
@@ -67,7 +67,7 @@ install_keras()
 ```
 
 ### Setting up Python for Mac/Linux Users
-After installing python 3.6 you need to type python3 to open python in a terminal.
+After installing python 3.6 check it is working by typing python3 to open python in a terminal.
 
 To get the package dependencies, in a terminal run:
 ```
@@ -78,16 +78,21 @@ pip3 install -U scikit-learn
 pip3 install --upgrade tensorflow 
 pip3 install keras
 ```
+Dependent on your permissions you may need to add a sudo command in front of the pip3 commands.
 
 Mac and Linux users need edit the bash profile to add python in their Path by running in the terminal:
 `touch ~/.bash_profile; open ~/.bash_profile;`
-and adding in the location of python 3.6 in the PATH variable.  
+and adding in the location of python 3.6 in the PATH variable.  You can find the location of the python versions by typing this in a terminal:
+
+```
+type -a python
+```
 
 Furthermore, you need to specify in their R environment that R needs to use python 3.6 rather than the default python.
 In a new Rstudio session run this to open the environment file:
 ```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
 install.packages(‘usethis’)
-usethis::edit_r_environ()::edit_r_environ()
+usethis::edit_r_environ()
 ```
 
 In the file that opens add and save:
@@ -116,10 +121,6 @@ To install using drat run:
 install.packages("drat")
 drat::addRepo("OHDSI")
 install.packages("PatientLevelPrediction")
-# to get the latest PLP then use devtools
-install.packages("devtools")
-install_github("ohdsi/PatientLevelPrediction") 
-```
 
 ## Installing PatientLevelPrediction using devtools
 To install using devtools run:
@@ -161,7 +162,8 @@ PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetai
                                              python = F)
 ```
 
-If the above returns a value other than 1 then there is an issue.  You can determine the issue by running: `PatientLevelPrediction::interpretInstallCode(N)` where `N` is the value returned by the plp installation check.
+The check can take a while to run since it will build the following models in sequence on simulated data:Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting.
+Moreover, it will test the database connection. 
 
 # Installation issues
 Installation issues need to be posted in our issue tracker:
@@ -169,7 +171,7 @@ http://github.com/OHDSI/PatientLevelPrediction/issues
 
 The list below provides solutions for some common issues:
 
-1. If you have an error when trying to install a package in R saying **'Dependancy X not available ...'** then this cna sometimes be fixed by running `install.packages('X')` and then once that completes trying to reinstall the package that had the error.
+1. If you have an error when trying to install a package in R saying **'Dependancy X not available ...'** then this can sometimes be fixed by running `install.packages('X')` and then once that completes trying to reinstall the package that had the error.
 
 2. I have found that using the github devtools to install packages can be impacted if you have **multiple R sessions** open as one session with a library open can causethe library to be locked and this can prevent an install of a package that depends on that library.
 

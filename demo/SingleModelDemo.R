@@ -1,4 +1,8 @@
 library(PatientLevelPrediction)
+
+# We need to have a writable folder for the ff objects
+checkffFolder()
+
 ### Simulated data from a database profile
 set.seed(1234)
 data(plpDataSimulationProfile)
@@ -19,7 +23,7 @@ population <- PatientLevelPrediction::createStudyPopulation(plpData,
                                                             addExposureDaysToStart = FALSE,
                                                             riskWindowEnd = 365,
                                                             addExposureDaysToEnd = FALSE,
-                                                            verbosity = futile.logger::INFO)
+                                                            verbosity = "INFO")
 
 ### Example 1: Regularised logistic regression
 lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
@@ -29,8 +33,8 @@ lr_results <- PatientLevelPrediction::runPlp(population,
                                              testSplit = "time",
                                              testFraction = 0.25,
                                              nfold = 2,
-                                             verbosity = futile.logger::INFO,
-                                             save = "./plpmodels")
+                                             verbosity = "INFO",
+                                             saveDirectory =  "./plpmodels")
 
 ### Example 2: Naive bayes model using python
 cat("Press a key to continue")
@@ -43,22 +47,25 @@ nb_results <- PatientLevelPrediction::runPlp(population,
                                              testSplit = "time",
                                              testFraction = 0.25,
                                              nfold = 2,
-                                             verbosity = futile.logger::INFO,
-                                             save = "./plpmodels")
+                                             verbosity = "INFO",
+                                             saveDirectory =  "./plpmodels")
 
 ### Example 3: Gradient Boosting Machine with person split
 cat("Press a key to continue")
 invisible(readline())
 
 gbm_model <- PatientLevelPrediction::setGradientBoostingMachine(ntrees = c(10, 50, 100),
-                                                                max_depth = c(4, 16),
-                                                                min_rows = 2)
+                                                                maxDepth = c(4, 16),
+                                                                minRows = 2)
 gbm_results <- PatientLevelPrediction::runPlp(population,
                                               plpData,
                                               modelSettings = gbm_model,
                                               testSplit = "person",
                                               testFraction = 0.25,
                                               nfold = 2,
-                                              verbosity = futile.logger::INFO,
-                                              save = "./plpmodels")
+                                              verbosity = "INFO",
+                                              saveDirectory =  "./plpmodels")
 
+### Example 4: Viewing Results of Logistic Regression example
+cat("Press a key to continue")
+viewPlp(lr_results)

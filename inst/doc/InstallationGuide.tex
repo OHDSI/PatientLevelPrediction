@@ -122,7 +122,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-09}
+    \date{2018-09-23}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -157,8 +157,8 @@ installing:
 \begin{itemize}
 \tightlist
 \item
-  R (\url{https://cran.cnr.berkeley.edu/} ) - the latest version is
-  recommended
+  R (\url{https://cran.cnr.berkeley.edu/} ) - (R \textgreater{}= 3.3.0,
+  but latest is recommended)
 \item
   Rstudio (\url{https://www.rstudio.com/} )
 \item
@@ -166,7 +166,7 @@ installing:
 \item
   RTools (\url{https://cran.r-project.org/bin/windows/Rtools/})
 \item
-  Anaconda 3.6 (\url{https://www.continuum.io/downloads}) - this will
+  Anaconda 3.6 (\url{https://www.anaconda.com/download}) - this will
   require checking your path variable to ensure the correct python is
   used by R - more instructions below. For Python you need to make sure
   it is in the Path: go to my computer -\textgreater{} system properties
@@ -203,8 +203,8 @@ requires installing:
 \begin{itemize}
 \tightlist
 \item
-  R (\url{https://cran.cnr.berkeley.edu/} ) - the latest version is
-  recommended
+  R (\url{https://cran.cnr.berkeley.edu/} ) - (R \textgreater{}= 3.3.0,
+  but latest is recommended)
 \item
   Rstudio (\url{https://www.rstudio.com/} )
 \item
@@ -231,8 +231,8 @@ requires installing:
 \subsubsection{Setting up Python for Mac/Linux
 Users}\label{setting-up-python-for-maclinux-users}
 
-After installing python 3.6 you need to type python3 to open python in a
-terminal.
+After installing python 3.6 check it is working by typing python3 to
+open python in a terminal.
 
 To get the package dependencies, in a terminal run:
 
@@ -245,10 +245,18 @@ pip3 install --upgrade tensorflow
 pip3 install keras
 \end{verbatim}
 
+Dependent on your permissions you may need to add a sudo command in
+front of the pip3 commands.
+
 Mac and Linux users need edit the bash profile to add python in their
 Path by running in the terminal:
 \texttt{touch\ \textasciitilde{}/.bash\_profile;\ open\ \textasciitilde{}/.bash\_profile;}
-and adding in the location of python 3.6 in the PATH variable.
+and adding in the location of python 3.6 in the PATH variable. You can
+find the location of the python versions by typing this in a terminal:
+
+\begin{verbatim}
+type -a python
+\end{verbatim}
 
 Furthermore, you need to specify in their R environment that R needs to
 use python 3.6 rather than the default python. In a new Rstudio session
@@ -257,7 +265,7 @@ run this to open the environment file:
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{install.packages}\NormalTok{(‘usethis’)}
-\NormalTok{usethis}\OperatorTok{::}\KeywordTok{edit_r_environ}\NormalTok{()}\OperatorTok{::}\KeywordTok{edit_r_environ}\NormalTok{()}
+\NormalTok{usethis}\OperatorTok{::}\KeywordTok{edit_r_environ}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -299,16 +307,11 @@ To install using drat run:
 \KeywordTok{install.packages}\NormalTok{(}\StringTok{"drat"}\NormalTok{)}
 \NormalTok{drat}\OperatorTok{::}\KeywordTok{addRepo}\NormalTok{(}\StringTok{"OHDSI"}\NormalTok{)}
 \KeywordTok{install.packages}\NormalTok{(}\StringTok{"PatientLevelPrediction"}\NormalTok{)}
-\CommentTok{# to get the latest PLP then use devtools}
-\KeywordTok{install.packages}\NormalTok{(}\StringTok{"devtools"}\NormalTok{)}
-\KeywordTok{install_github}\NormalTok{(}\StringTok{"ohdsi/PatientLevelPrediction"}\NormalTok{) }
+
+\NormalTok{## Installing PatientLevelPrediction using devtools}
+\NormalTok{To install using devtools run}\OperatorTok{:}
 \end{Highlighting}
 \end{Shaded}
-
-\subsection{Installing PatientLevelPrediction using
-devtools}\label{installing-patientlevelprediction-using-devtools}
-
-To install using devtools run:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -357,10 +360,10 @@ To test the installation (excluding python) run:
 \end{Highlighting}
 \end{Shaded}
 
-If the above returns a value other than 1 then there is an issue. You
-can determine the issue by running:
-\texttt{PatientLevelPrediction::interpretInstallCode(N)} where
-\texttt{N} is the value returned by the plp installation check.
+The check can take a while to run since it will build the following
+models in sequence on simulated \url{data:Logistic} Regression,
+RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient
+Boosting. Moreover, it will test the database connection.
 
 \section{Installation issues}\label{installation-issues}
 
@@ -373,7 +376,7 @@ The list below provides solutions for some common issues:
 \def\labelenumi{\arabic{enumi}.}
 \item
   If you have an error when trying to install a package in R saying
-  \textbf{`Dependancy X not available \ldots{}'} then this cna sometimes
+  \textbf{`Dependancy X not available \ldots{}'} then this can sometimes
   be fixed by running
   \texttt{install.packages(\textquotesingle{}X\textquotesingle{})} and
   then once that completes trying to reinstall the package that had the
@@ -406,8 +409,8 @@ Considerable work has been dedicated to provide the
 ## A BibTeX entry for LaTeX users is
 ## 
 ##   @Manual{,
-##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
-## Common Data Model},
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP Common Data
+## Model},
 ##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
 ##     year = {2018},
 ##     note = {R package version 2.0.5},

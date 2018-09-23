@@ -1,12 +1,7 @@
 library(PatientLevelPrediction)
 
 # We need to have a writable folder for the ff objects
-currentfftempdir <- getOption("fftempdir")
-while (file.access(currentfftempdir)==-1) {
-  yourfftempdir <- readline(prompt="Specify a writable fftemp folder:")
-  options(fftempdir = yourfftempdir)
-  currentfftempdir <- getOption("fftempdir")
-}
+checkffFolder()
 
 # This demo will generate a learning curve using 8 training set sizes
 # Dependent on your system it can take some time to run

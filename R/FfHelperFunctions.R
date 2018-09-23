@@ -89,3 +89,20 @@ calculatePrevs <- function(plpData, population){
 clearffTempDir <- function(){
   file.remove(dir(getOption("fftempdir"), full.names = TRUE))
 }
+
+#' Check if the fftempdir is writable
+#'
+#' @details
+#' This function checks whether the fftempdir is writable.
+#' If not, it will ask the use to specify a writable folder.
+#' @export
+
+checkffFolder <- function(){ 
+  currentfftempdir <- getOption("fftempdir")
+  while (file.access(currentfftempdir)==-1) {
+    yourfftempdir <- readline(prompt="Specify a writable fftemp folder:")
+    options(fftempdir = yourfftempdir)
+    currentfftempdir <- getOption("fftempdir")
+  }
+  return(TRUE)
+}
