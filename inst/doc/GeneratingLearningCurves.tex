@@ -122,7 +122,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-09}
+    \date{2018-09-23}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -161,7 +161,7 @@ performance on the testing set.
 Learning curves assess the effect of training set size on model
 performance by training a sequence of prediction models on successively
 larger subsets of the training set. A learning curve plot can also help
-in diagnosing a bias or variance problem.
+in diagnosing a bias or variance problem as explained below.
 
 \begin{figure}
 \centering
@@ -169,30 +169,31 @@ in diagnosing a bias or variance problem.
 \caption{Learning curve example.}
 \end{figure}
 
-Figure 1, shows a commonly observed learning curve plot, where model
-performance is mapped to the vertical axis and training set size is
-mapped to the horizontal axis. If training set size is small, the
-performance on the training set is high, because a model can generally
-be fitted well to a limited number of training examples. At the same
-time, the performance on the testing set will be poor, because the model
-trained on such a limited number of training examples will not
-generalize well to unseen data in the testing set. As the training set
-size increases, the performance of the model on the training set will
-decrease. It becomes more difficult for the model to find a good fit
-through all the training examples. Also, the model will be trained on a
-more representative portion of training examples, making it generalize
-better to unseen data. This can be observed by the testing set
-performance increasing.
+Figure 1, shows an example of learning curve plot in which the vertical
+axis represents the model performance and the horizontal axis the
+training set size. If training set size is small, the performance on the
+training set is high, because a model can often be fitted well to a
+limited number of training examples. At the same time, the performance
+on the testing set will be poor, because the model trained on such a
+limited number of training examples will not generalize well to unseen
+data in the testing set. As the training set size increases, the
+performance of the model on the training set will decrease. It becomes
+more difficult for the model to find a good fit through all the training
+examples. Also, the model will be trained on a more representative
+portion of training examples, making it generalize better to unseen
+data. This can be observed by the increasin testing set performance.
 
-We can observe high variance (overfitting) in a prediction model if it
-performs well on the training set, but poorly on the testing set (Figure
-2). Adding additional data is a common approach to counteract high
-variance. From the learning curve it becomes apparent, that adding
-additional data may improve performance on the testing set a little
-further, as the learning curve has not yet plateaued and, thus, the
-model is not saturated yet. Therefore, adding more data will decrease
-the gap between training set and testing set, which is the main
-indicator for a high variance problem.
+The learning curve can help us in diagnosing bias and variance problems
+with our classifier which will provide guidance on how to further
+improve our model. We can observe high variance (overfitting) in a
+prediction model if it performs well on the training set, but poorly on
+the testing set (Figure 2). Adding additional data is a common approach
+to counteract high variance. From the learning curve it becomes
+apparent, that adding additional data may improve performance on the
+testing set a little further, as the learning curve has not yet
+plateaued and, thus, the model is not saturated yet. Therefore, adding
+more data will decrease the gap between training set and testing set,
+which is the main indicator for a high variance problem.
 
 \begin{figure}
 \centering
@@ -206,8 +207,8 @@ model performs poorly on the training set as well as on the testing set
 flattened on a low performance with only a small gap in between them.
 Adding additional data will in this case have little to no impact on the
 model performance. Choosing another prediction algorithm that can find
-more complex (potentially non-linear) relationships in the data may be
-an alternative approach to consider.
+more complex (for example non-linear) relationships in the data may be
+an alternative approach to consider in this high bias situation.
 
 \begin{figure}
 \centering
@@ -248,7 +249,7 @@ code snippet creates a population of 12000 patients.
   \DataTypeTok{addExposureDaysToStart =} \OtherTok{FALSE}\NormalTok{,}
   \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
   \DataTypeTok{addExposureDaysToEnd =} \OtherTok{FALSE}\NormalTok{,}
-  \DataTypeTok{verbosity =}\NormalTok{ futile.logger}\OperatorTok{::}\NormalTok{INFO}
+  \DataTypeTok{verbosity =} \StringTok{"INFO"}
 \NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -267,7 +268,7 @@ Specify a test fraction and a sequence of training set fractions.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{testFraction <-}\StringTok{ }\FloatTok{0.2}
-\NormalTok{trainFractions <-}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.8}\NormalTok{, }\FloatTok{0.1}\NormalTok{)}
+\NormalTok{trainFractions <-}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.8}\NormalTok{, }\FloatTok{0.1}\NormalTok{) }\CommentTok{# Create eight training set fractions}
 \end{Highlighting}
 \end{Shaded}
 
@@ -284,16 +285,14 @@ Create the learning curve object.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{learningCurve <-}\StringTok{ }\KeywordTok{createLearningCurve}\NormalTok{(}
-\NormalTok{  population,}
-  \DataTypeTok{plpData =}\NormalTok{ plpData,}
-  \DataTypeTok{modelSettings =}\NormalTok{ modelSettings,}
-  \DataTypeTok{testFraction =}\NormalTok{ testFraction,}
-  \DataTypeTok{trainFractions =}\NormalTok{ trainFractions,}
-  \DataTypeTok{splitSeed =} \DecValTok{1000}\NormalTok{,}
-  \DataTypeTok{saveModel =} \OtherTok{FALSE}\NormalTok{,}
-  \DataTypeTok{timeStamp =} \OtherTok{FALSE}
-\NormalTok{)}
+\NormalTok{learningCurve <-}\StringTok{ }\KeywordTok{createLearningCurve}\NormalTok{(population,}
+                                     \DataTypeTok{plpData =}\NormalTok{ plpData,}
+                                     \DataTypeTok{modelSettings =}\NormalTok{ modelSettings,}
+                                     \DataTypeTok{testFraction =} \FloatTok{0.2}\NormalTok{,}
+                                     \DataTypeTok{verbosity =} \StringTok{"TRACE"}\NormalTok{,}
+                                     \DataTypeTok{trainFractions =}\NormalTok{ trainFractions,}
+                                     \DataTypeTok{splitSeed =} \DecValTok{1000}\NormalTok{,}
+                                     \DataTypeTok{saveModel =} \OtherTok{TRUE}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -346,6 +345,26 @@ parallel backend.
 \end{Highlighting}
 \end{Shaded}
 
+\section{Demo}\label{demo}
+
+We have added a demo of the learningcurve to the Patient-Level
+Prediction Package.
+
+You can run the demos as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Show all demos in our package: }
+ \KeywordTok{demo}\NormalTok{(}\DataTypeTok{package =} \StringTok{"PatientLevelPrediction"}\NormalTok{)}
+
+\CommentTok{# Run the learning curve}
+ \KeywordTok{demo}\NormalTok{(}\StringTok{"LearningCurveDemo"}\NormalTok{, }\DataTypeTok{package =} \StringTok{"PatientLevelPrediction"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Do note that running this demo can take a considerable amount of time
+(15 min on Quad core running in parallel)!
+
 \section{Acknowledgments}\label{acknowledgments}
 
 Considerable work has been dedicated to provide the
@@ -367,8 +386,8 @@ Considerable work has been dedicated to provide the
 ## A BibTeX entry for LaTeX users is
 ## 
 ##   @Manual{,
-##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
-## Common Data Model},
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP Common Data
+## Model},
 ##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
 ##     year = {2018},
 ##     note = {R package version 2.0.5},

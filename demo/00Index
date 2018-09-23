@@ -1,1 +1,2 @@
-demoRun      Developing a model on simulated data
+SingleModelDemo   Develop a single model on simulated data
+LearningCurveDemo Generate a learning curve on simulated data
