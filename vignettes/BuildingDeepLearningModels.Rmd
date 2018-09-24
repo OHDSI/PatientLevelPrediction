@@ -1,6 +1,6 @@
 ---
 title: "Building Deep Learning Models"
-author: ' Xiaoyong Pan, Jenna Reps, Peter R. Rijnbeek,'
+author: 'Peter R. Rijnbeek, Seng Chan You, Xiaoyong Pan, Jenna Reps'
 date: '`r Sys.Date()`'
 header-includes:
     - \usepackage{fancyhdr}
@@ -34,15 +34,15 @@ This vignette describes how you can use the Observational Health Data Sciences a
 
 # Background
 
-Deep learning models are build by stacking often a large number of neural network layers that perform feature engineering steps, e.g embedding, and are collapsed in a final softmax layer (basically a logistic regression layer). These algorithms need a lot of data to converge to a good representation, but currently the sizes of the EHR databases are growing fast which would make Deep Learning an interesting approach to test within the OHDSI Patient-Level Prediction Framework. For relatively small Target and Outcome cohorts, Deep Learning is most probaby not the best choice.
+Deep learning models are build by stacking often a large number of neural network layers that perform feature engineering steps, e.g embedding, and are collapsed in a final softmax layer (basically a logistic regression layer). These algorithms need a lot of data to converge to a good representation, but currently the sizes of the EHR databases are growing fast which would make Deep Learning an interesting approach to test within OHDSI's [Patient-Level Prediction Framework](https://academic.oup.com/jamia/article/25/8/969/4989437). For relatively small Target and Outcome cohorts, Deep Learning is most probaby not the best choice. However, the current implementation allows us to perform research on the value an limitations of Deep Learning using EHR data.
 
-Multiple Deep Learning backends have been developed, e.g. Tensorflow, PyTorch, Keras etc. In the package we have implemented interaction with Keras and PyTorch but we invite the community to add other backends. 
+Most current Deep Learning research is performed in python and we have developed a pipeline to interact with python. Multiple Deep Learning backends have been developed, e.g. Tensorflow, PyTorch, Keras (recently also available in R) etc. In the package we have implemented interaction with Keras in R and PyTorch in Python but we invite the community to add other backends.  
 
-Many network topologies have recently been proposed and we have implemented a number of them, however, this list will grow in the near future. It is important to understand that some of these topologies require a 2D data matrix, i.e. |patient|x|feature|, and others use a 3D data matrix |patient|x|feature|X|time|. The FeatureExtraction Package has been extended to enable the extraction of both data formats as will be described with examples below.
+Many network topologies have recently been proposed and we have implemented a number of them, however, this list will grow in the near future. It is important to understand that some of these topologies require a 2D data matrix, i.e. |patient|x|feature|, and others use a 3D data matrix |patient|x|feature|x|time|. The [FeatureExtraction Package](www.github.com\ohdsi\FeatureExtraction) has been extended to enable the extraction of both data formats as will be described with examples below.
 
-Training Deep Learning Models is computationally intensive, our implementation therefore supports both GPU and CPU. It will automatically check whether there is GPU or not in your computer. A GPU is highly recommended for Deep Learning!
+Note that training Deep Learning Models is computationally intensive, our implementation therefore supports both GPU and CPU. It will automatically check whether there is GPU or not in your computer. A GPU is highly recommended for Deep Learning!
 
-# Non-Temporal topologies
+# Non-Temporal topologies 
 We implement the following non-temporal (2D data matrix) topologies using Pytorch:
 
 	1) Logistics regression (LRTorch)
@@ -53,7 +53,7 @@ We implement the following non-temporal (2D data matrix) topologies using Pytorc
 	   Self-Normalizing Neural Networks (mlp_type = SNN)
 	   Reference: https://arxiv.org/abs/1706.02515
 
-For the above two methods, we implemented support for a stacked autoencoder and a variational autoencoder to reduce the feature dimension as a first step. These autoencoders learn efficient data codings in an unsupervised manner by stacking multiple layers in a neural network. 
+For the above two methods, we implemented support for a stacked autoencoder and a variational autoencoder to reduce the feature dimension as a first step. These autoencoders learn efficient data codings in an unsupervised manner by stacking multiple layers in a neural network. Compared to the standard implementations of LR and MLP these implementations can use the GPU power to speed up the gradient descent approach in the backpropagation to optimize the weights of the classifier.
 
 Table 1: Non-Temporal Deep Learning Models Hyper-Parameters
 
@@ -92,67 +92,49 @@ population <- createStudyPopulation(
   addExposureDaysToStart = FALSE,
   riskWindowEnd = 365,
   addExposureDaysToEnd = FALSE,
-  verbosity = futile.logger::INFO
+  verbosity = "INFO"
 )
 ```
 
-Specify the prediction algorithm you like to develop.
-
-```{r eval=FALSE}
-# Use Logistics regression
-model <- setLRTorch()
-```
-
-Additionally, we can specify the stacked autoencoder to be used for reducing the feature dimension as an initial layer.
+As an example we will build a LRTorch model. We could specify the stacked autoencoder or the variational autoencode to be used for reducing the feature dimension as an initial layer, but for this example we do not.
 
 ```{r}
-# Use stacked autoencoder.
 autoencoder <- FALSE
-```
-
-Alternatively, a variational autoencoder could be used for reducing the feature dimension.
-
-```{r}
-# Use variational autoencoder.
 vae <- FALSE
 ```
 NEED TO CHANGE THE PARAMETER TO LEVEL.
 
-Specify a class_weight for imbalanced data, the default value is the inverse ratio between negatives and positives. 
+We a class_weight for imbalanced data, the default value (-1) is the inverse ratio between negatives and positives. 
 
 ```{r eval = FALSE}
-class_weight <- 2
+class_weight <- -1
 
 ```
 
 ```{r eval=FALSE}
-# Use Logistics regression
+# Specify the settings for Logistics regression model using Torch in Python
 model <- setLRTorch(autoencoder=autoencoder, vae=vae,  class_weight=class_weight)
 ```
 
-Specify a test fraction.
+No we define our modelling parameters. 
 
 ```{r eval = FALSE}
 testFraction <- 0.2
-
-```
-
-Specify the test split to be used.
-
-```{r}
-# Use a split by person, alternatively a time split is possible
 testSplit <- 'person'
+nfold <- 3
+splitSeed <- 1000
 ```
 
-
-Run the model training.
+And we train and internally validate the model.
 
 ```{r eval=FALSE}
-results <- PatientLevelPrediction::runPlp(population, plpData, 
-                                                    model,
-                                                    testSplit=testSplit,
-                                                    testFraction=testFraction,
-                                                    nfold=3, splitSeed=1000) 
+results <- PatientLevelPrediction::runPlp(population = population, 
+                                          plpData = plpData, 
+                                          modelSettings = model,
+                                          testSplit=testSplit,
+                                          testFraction=testFraction,
+                                          nfold=nfold, 
+                                          splitSeed=splitSeed) 
 ```
 
 # Temporal Architectures
@@ -226,22 +208,25 @@ epochs    | The number of epochs
 seed      | Random seed 
 class_weight  | The class weight used for imbalanced data <br> (0: Inverse ratio between positives and negatives, -1: Focal loss, or number)
 
+\newpage
 ## R Keras CNN	
-The following temporal architectures were implemented using R Keras:
+The following temporal architectures as described in https://arxiv.org/pdf/1608.00647.pdf were implemented using R Keras:
 
   1. <dl>
-       <dt>Multi-resolution CovNN model according to https://arxiv.org/pdf/1608.00647.pdf (CovNN.R)</dt>
+       <dt>Multi-resolution CovNN model (CovNN.R)</dt>
        <dd>![](covcnn.png)</dd>
      </dl>
   
   2. <dl>
-       <dt>Convolution accross data and time according to https://arxiv.org/pdf/1608.00647.pdf (CovNN2.R)</dt>
+       <dt>Convolution accross data and time according(CovNN2.R)</dt>
        <dd>![](covcnn2.png)</dd>
      </dl>
+\newpage
 
+  Furthemore, a custom build RNN is added that uses a variational autoencoder.
   3. <dl>
-       <dt>Clinically Informing application based on Recurrent Neural Network (CIReNN)</dt>
-       <dd>Image to be added.</dd>
+       <dt>Clinically Informing application based on Recurrent Neural Network (CIReNN.R)</dt>
+       <dd>![](cirenn.png)</dd>
      </dl>
   
 Table 2: Temporal Deep Learning Models

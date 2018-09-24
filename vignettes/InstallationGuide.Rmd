@@ -75,6 +75,7 @@ pip3 install --upgrade pip
 pip3 install -U NumPy
 pip3 install -U SciPy 
 pip3 install -U scikit-learn
+pip3 install -U torch
 pip3 install --upgrade tensorflow 
 pip3 install keras
 ```

@@ -25,7 +25,7 @@
 \usepackage{hyperref}
 \hypersetup{unicode=true,
             pdftitle={Building Deep Learning Models},
-            pdfauthor={Xiaoyong Pan, Jenna Reps, Peter R. Rijnbeek,},
+            pdfauthor={Peter R. Rijnbeek, Seng Chan You, Xiaoyong Pan, Jenna Reps},
             pdfborder={0 0 0},
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
@@ -118,12 +118,12 @@
   \title{Building Deep Learning Models}
     \pretitle{\vspace{\droptitle}\centering\huge}
   \posttitle{\par}
-    \author{Xiaoyong Pan, Jenna Reps, Peter R. Rijnbeek,}
+    \author{Peter R. Rijnbeek, Seng Chan You, Xiaoyong Pan, Jenna Reps}
     \preauthor{\centering\large\emph}
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-09}
+    \date{2018-09-24}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -171,13 +171,19 @@ embedding, and are collapsed in a final softmax layer (basically a
 logistic regression layer). These algorithms need a lot of data to
 converge to a good representation, but currently the sizes of the EHR
 databases are growing fast which would make Deep Learning an interesting
-approach to test within the OHDSI Patient-Level Prediction Framework.
-For relatively small Target and Outcome cohorts, Deep Learning is most
-probaby not the best choice.
+approach to test within OHDSI's
+\href{https://academic.oup.com/jamia/article/25/8/969/4989437}{Patient-Level
+Prediction Framework}. For relatively small Target and Outcome cohorts,
+Deep Learning is most probaby not the best choice. However, the current
+implementation allows us to perform research on the value an limitations
+of Deep Learning using EHR data.
 
-Multiple Deep Learning backends have been developed, e.g.~Tensorflow,
-PyTorch, Keras etc. In the package we have implemented interaction with
-Keras and PyTorch but we invite the community to add other backends.
+Most current Deep Learning research is performed in python and we have
+developed a pipeline to interact with python. Multiple Deep Learning
+backends have been developed, e.g.~Tensorflow, PyTorch, Keras (recently
+also available in R) etc. In the package we have implemented interaction
+with Keras in R and PyTorch in Python but we invite the community to add
+other backends.
 
 Many network topologies have recently been proposed and we have
 implemented a number of them, however, this list will grow in the near
@@ -185,12 +191,13 @@ future. It is important to understand that some of these topologies
 require a 2D data matrix, i.e.
 \textbar{}patient\textbar{}x\textbar{}feature\textbar{}, and others use
 a 3D data matrix
-\textbar{}patient\textbar{}x\textbar{}feature\textbar{}X\textbar{}time\textbar{}.
-The FeatureExtraction Package has been extended to enable the extraction
-of both data formats as will be described with examples below.
+\textbar{}patient\textbar{}x\textbar{}feature\textbar{}x\textbar{}time\textbar{}.
+The \href{www.github.com/ohdsi/FeatureExtraction}{FeatureExtraction
+Package} has been extended to enable the extraction of both data formats
+as will be described with examples below.
 
-Training Deep Learning Models is computationally intensive, our
-implementation therefore supports both GPU and CPU. It will
+Note that training Deep Learning Models is computationally intensive,
+our implementation therefore supports both GPU and CPU. It will
 automatically check whether there is GPU or not in your computer. A GPU
 is highly recommended for Deep Learning!
 
@@ -213,7 +220,10 @@ For the above two methods, we implemented support for a stacked
 autoencoder and a variational autoencoder to reduce the feature
 dimension as a first step. These autoencoders learn efficient data
 codings in an unsupervised manner by stacking multiple layers in a
-neural network.
+neural network. Compared to the standard implementations of LR and MLP
+these implementations can use the GPU power to speed up the gradient
+descent approach in the backpropagation to optimize the weights of the
+classifier.
 
 Table 1: Non-Temporal Deep Learning Models Hyper-Parameters
 
@@ -291,84 +301,63 @@ code snippet creates a population of 12000 patients.
   \DataTypeTok{addExposureDaysToStart =} \OtherTok{FALSE}\NormalTok{,}
   \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
   \DataTypeTok{addExposureDaysToEnd =} \OtherTok{FALSE}\NormalTok{,}
-  \DataTypeTok{verbosity =}\NormalTok{ futile.logger}\OperatorTok{::}\NormalTok{INFO}
+  \DataTypeTok{verbosity =} \StringTok{"INFO"}
 \NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-Specify the prediction algorithm you like to develop.
+As an example we will build a LRTorch model. We could specify the
+stacked autoencoder or the variational autoencode to be used for
+reducing the feature dimension as an initial layer, but for this example
+we do not.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Use Logistics regression}
-\NormalTok{model <-}\StringTok{ }\KeywordTok{setLRTorch}\NormalTok{()}
-\end{Highlighting}
-\end{Shaded}
-
-Additionally, we can specify the stacked autoencoder to be used for
-reducing the feature dimension as an initial layer.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# Use stacked autoencoder.}
 \NormalTok{autoencoder <-}\StringTok{ }\OtherTok{FALSE}
-\end{Highlighting}
-\end{Shaded}
-
-Alternatively, a variational autoencoder could be used for reducing the
-feature dimension.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# Use variational autoencoder.}
 \NormalTok{vae <-}\StringTok{ }\OtherTok{FALSE}
 \end{Highlighting}
 \end{Shaded}
 
 NEED TO CHANGE THE PARAMETER TO LEVEL.
 
-Specify a class\_weight for imbalanced data, the default value is the
+We a class\_weight for imbalanced data, the default value (-1) is the
 inverse ratio between negatives and positives.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{class_weight <-}\StringTok{ }\DecValTok{2}
+\NormalTok{class_weight <-}\StringTok{ }\OperatorTok{-}\DecValTok{1}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Use Logistics regression}
+\CommentTok{# Specify the settings for Logistics regression model using Torch in Python}
 \NormalTok{model <-}\StringTok{ }\KeywordTok{setLRTorch}\NormalTok{(}\DataTypeTok{autoencoder=}\NormalTok{autoencoder, }\DataTypeTok{vae=}\NormalTok{vae,  }\DataTypeTok{class_weight=}\NormalTok{class_weight)}
 \end{Highlighting}
 \end{Shaded}
 
-Specify a test fraction.
+No we define our modelling parameters.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{testFraction <-}\StringTok{ }\FloatTok{0.2}
-\end{Highlighting}
-\end{Shaded}
-
-Specify the test split to be used.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# Use a split by person, alternatively a time split is possible}
 \NormalTok{testSplit <-}\StringTok{ 'person'}
+\NormalTok{nfold <-}\StringTok{ }\DecValTok{3}
+\NormalTok{splitSeed <-}\StringTok{ }\DecValTok{1000}
 \end{Highlighting}
 \end{Shaded}
 
-Run the model training.
+And we train and internally validate the model.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{results <-}\StringTok{ }\NormalTok{PatientLevelPrediction}\OperatorTok{::}\KeywordTok{runPlp}\NormalTok{(population, plpData, }
-\NormalTok{                                                    model,}
-                                                    \DataTypeTok{testSplit=}\NormalTok{testSplit,}
-                                                    \DataTypeTok{testFraction=}\NormalTok{testFraction,}
-                                                    \DataTypeTok{nfold=}\DecValTok{3}\NormalTok{, }\DataTypeTok{splitSeed=}\DecValTok{1000}\NormalTok{) }
+\NormalTok{results <-}\StringTok{ }\NormalTok{PatientLevelPrediction}\OperatorTok{::}\KeywordTok{runPlp}\NormalTok{(}\DataTypeTok{population =}\NormalTok{ population, }
+                                          \DataTypeTok{plpData =}\NormalTok{ plpData, }
+                                          \DataTypeTok{modelSettings =}\NormalTok{ model,}
+                                          \DataTypeTok{testSplit=}\NormalTok{testSplit,}
+                                          \DataTypeTok{testFraction=}\NormalTok{testFraction,}
+                                          \DataTypeTok{nfold=}\NormalTok{nfold, }
+                                          \DataTypeTok{splitSeed=}\NormalTok{splitSeed) }
 \end{Highlighting}
 \end{Shaded}
 
@@ -514,28 +503,36 @@ positives and negatives, -1: Focal loss, or number)\strut
 \bottomrule
 \end{longtable}
 
+\newpage
+
 \subsection{R Keras CNN}\label{r-keras-cnn}
 
-The following temporal architectures were implemented using R Keras:
+The following temporal architectures as described in
+\url{https://arxiv.org/pdf/1608.00647.pdf} were implemented using R
+Keras:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  Multi-resolution CovNN model according to
-  \url{https://arxiv.org/pdf/1608.00647.pdf} (CovNN.R)
+  Multi-resolution CovNN model (CovNN.R)
 
   \includegraphics{covcnn.png}
 \item
-  Convolution accross data and time according to
-  \url{https://arxiv.org/pdf/1608.00647.pdf} (CovNN2.R)
+  Convolution accross data and time according(CovNN2.R)
 
   \includegraphics{covcnn2.png}
-\item
-  Clinically Informing application based on Recurrent Neural Network
-  (CIReNN)
 
-  Image to be added.
+  \newpage
 \end{enumerate}
+
+Furthemore, a custom build RNN is added that uses a variational
+autoencoder. 3.
+
+\begin{verbatim}
+   <dt>Clinically Informing application based on Recurrent Neural Network (CIReNN.R)</dt>
+   <dd>![](cirenn.png)</dd>
+ </dl>
+\end{verbatim}
 
 Table 2: Temporal Deep Learning Models
 
@@ -724,8 +721,8 @@ Considerable work has been dedicated to provide the
 ## A BibTeX entry for LaTeX users is
 ## 
 ##   @Manual{,
-##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
-## Common Data Model},
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP Common Data
+## Model},
 ##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
 ##     year = {2018},
 ##     note = {R package version 2.0.5},
