@@ -122,7 +122,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-09}
+    \date{2018-09-24}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -142,14 +142,30 @@
 }
 \section{Introduction}\label{introduction}
 
-This vignette describes how you can use the Observational Health Data
-Sciencs and Informatics (OHDSI)
+In our paper
+\href{https://academic.oup.com/jamia/article/25/8/969/4989437}{(link)},
+we propose a standardised framework for patient-level prediction that
+utilizes the OMOP CDM and standardized vocabularies, and describe the
+open-source software that we developed implementing the framework's
+pipeline. The framework is the first to support existing best practice
+guidelines and will enable open dissemination of models that can be
+extensively validated across the network of OHDSI collaborators.
+
+One our best practices is that we see the selection of models and all
+study setting as an emperical question, i.e.~we should use a data-driven
+approach in which we try many settings. This vignette describes how you
+can use the Observational Health Data Sciencs and Informatics (OHDSI)
 \href{http://github.com/OHDSI/PatientLevelPrediction}{\texttt{PatientLevelPrediction}}
-package to automatically build multiple patient-level predictive models.
-This vignette assumes you have read and are comfortable with building
-single patient level prediction models as described in the
+package to automatically build multiple patient-level predictive models,
+e.g.~different population settings, covariate settings, and
+modelsetting. This vignette assumes you have read and are comfortable
+with building single patient level prediction models as described in the
 \href{https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf}{\texttt{BuildingPredictiveModels}
 vignette}.
+
+Note that it is also possible to generate a Study Package directly in
+Atlas that allows for multiple patient-level prediction analyses this is
+out-of-scope for this vignette.
 
 \section{Creating the setting lists}\label{creating-the-setting-lists}
 
@@ -165,15 +181,19 @@ Suppose we like to make the following three population settings:
 \begin{itemize}
 \tightlist
 \item
-  study population 1: includes people who have the outcome but leave the
+  study population 1: allows persons who have the outcome to leave the
   database before the end of time-at-risk and only those without the
-  outcome who are observed for the whole time-at-risk period.
+  outcome who are observed for the whole time-at-risk period
+  (requireTimeAtRisk = T).
 \item
-  study population 2: includes people who are observed for the whole
-  time-at-risk period.
+  study population 2: does not impose the restriction that persons who
+  do not experience the outcome need to be observed for the full
+  time-at-risk period (requireTimeAtRisk = F).
 \item
-  study population 3: includes people who do not have to be observed for
-  the whole time-at-risk.
+  study population 3: does impose the restriction that persons who do
+  not experience the outcome need to be observed for the full
+  time-at-risk period (requireTimeAtRisk = T) and allows persons that
+  had the outcome before (removeSubjectsWithPriorOutcome = F)
 \end{itemize}
 
 The create a study population setting list we use the function
@@ -181,9 +201,10 @@ The create a study population setting list we use the function
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{# define all study population settings}
 \NormalTok{studyPop1 <-}\StringTok{ }\KeywordTok{createStudyPopulationSettings}\NormalTok{(}\DataTypeTok{binary =}\NormalTok{ T,}
-                                          \DataTypeTok{includeAllOutcomes =}\NormalTok{ T,}
-                                          \DataTypeTok{removeSubjectsWithPriorOutcome =} \OtherTok{TRUE}\NormalTok{,}
+                                          \DataTypeTok{includeAllOutcomes =}\NormalTok{ F,}
+                                          \DataTypeTok{removeSubjectsWithPriorOutcome =}\NormalTok{ T,}
                                           \DataTypeTok{priorOutcomeLookback =} \DecValTok{99999}\NormalTok{,}
                                           \DataTypeTok{requireTimeAtRisk =}\NormalTok{ T,}
                                           \DataTypeTok{minTimeAtRisk=}\DecValTok{364}\NormalTok{,}
@@ -193,9 +214,9 @@ The create a study population setting list we use the function
 
 \NormalTok{studyPop2 <-}\StringTok{ }\KeywordTok{createStudyPopulationSettings}\NormalTok{(}\DataTypeTok{binary =}\NormalTok{ T,}
                                            \DataTypeTok{includeAllOutcomes =}\NormalTok{ F,}
-                                           \DataTypeTok{removeSubjectsWithPriorOutcome =} \OtherTok{TRUE}\NormalTok{,}
+                                           \DataTypeTok{removeSubjectsWithPriorOutcome =}\NormalTok{ T,}
                                            \DataTypeTok{priorOutcomeLookback =} \DecValTok{99999}\NormalTok{,}
-                                           \DataTypeTok{requireTimeAtRisk =}\NormalTok{ T,}
+                                           \DataTypeTok{requireTimeAtRisk =}\NormalTok{ F,}
                                            \DataTypeTok{minTimeAtRisk=}\DecValTok{364}\NormalTok{,}
                                            \DataTypeTok{riskWindowStart =} \DecValTok{1}\NormalTok{,}
                                            \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
@@ -203,14 +224,15 @@ The create a study population setting list we use the function
 
 \NormalTok{studyPop3 <-}\StringTok{ }\KeywordTok{createStudyPopulationSettings}\NormalTok{(}\DataTypeTok{binary =}\NormalTok{ T,}
                                            \DataTypeTok{includeAllOutcomes =}\NormalTok{ F,}
-                                           \DataTypeTok{removeSubjectsWithPriorOutcome =} \OtherTok{TRUE}\NormalTok{,}
+                                           \DataTypeTok{removeSubjectsWithPriorOutcome =}\NormalTok{ F,}
                                            \DataTypeTok{priorOutcomeLookback =} \DecValTok{99999}\NormalTok{,}
-                                           \DataTypeTok{requireTimeAtRisk =}\NormalTok{ F,}
+                                           \DataTypeTok{requireTimeAtRisk =}\NormalTok{ T,}
                                            \DataTypeTok{minTimeAtRisk=}\DecValTok{364}\NormalTok{,}
                                            \DataTypeTok{riskWindowStart =} \DecValTok{1}\NormalTok{,}
                                            \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
                                            \DataTypeTok{verbosity =} \StringTok{"INFO"}\NormalTok{)}
                                            
+\CommentTok{# combine these in a population setting list}
 \NormalTok{populationSettingList <-}\StringTok{ }\KeywordTok{list}\NormalTok{(studyPop1,studyPop2,studyPop3)}
 \end{Highlighting}
 \end{Shaded}
@@ -407,8 +429,8 @@ Considerable work has been dedicated to provide the
 ## A BibTeX entry for LaTeX users is
 ## 
 ##   @Manual{,
-##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
-## Common Data Model},
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP Common Data
+## Model},
 ##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
 ##     year = {2018},
 ##     note = {R package version 2.0.5},

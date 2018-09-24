@@ -29,25 +29,29 @@ output:
 -->
 
 # Introduction
-This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to automatically build multiple patient-level predictive models. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
+In our paper [(link)](https://academic.oup.com/jamia/article/25/8/969/4989437), we propose a standardised framework for patient-level prediction that utilizes the OMOP CDM and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to support existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
+
+One our best practices is that we see the selection of models and all study setting as an emperical question, i.e. we should use a data-driven approach in which we try many settings. This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to automatically build multiple patient-level predictive models, e.g. different population settings, covariate settings, and modelsetting. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf). 
+
+Note that it is also possible to generate a Study Package directly in Atlas that allows for multiple patient-level prediction analyses this is out-of-scope for this vignette.
 
 # Creating the setting lists
-To develop multiple models the user has to create a list of Study Populations Settings, Covariate Settings, and Model Settings. These list will then be combined in a Model Analysis List and all combinations of the elements in this list will be automatically run by the package.
+To develop multiple models the user has to create a list of Study Populations Settings, Covariate Settings, and Model Settings. These list will then be combined in a Model Analysis List and all combinations of the elements in this list will be automatically run by the package. 
 
 ## Study population settings
-
 Suppose we like to make the following three population settings:
 
-*  study population 1: includes people who have the outcome but leave the database before the end of time-at-risk and only those without the outcome who are observed for the whole time-at-risk period.
-*  study population 2: includes people who are observed for the whole time-at-risk period.
-*  study population 3: includes people who do not have to be observed for the whole time-at-risk.
+*  study population 1: allows persons who have the outcome to leave the database before the end of time-at-risk and only those without the outcome who are observed for the whole time-at-risk period (requireTimeAtRisk = T).
+*  study population 2: does not impose the restriction that persons who do not experience the outcome need to be observed for the full time-at-risk period (requireTimeAtRisk = F).
+*  study population 3: does impose the restriction that persons who do not experience the outcome need to be observed for the full time-at-risk period (requireTimeAtRisk = T) and allows persons that had the outcome before (removeSubjectsWithPriorOutcome = F)
 
 The create a study population setting list we use the function `createStudyPopulationSettings` as described below:
 
 ```{r tidy=FALSE,eval=FALSE}
+# define all study population settings
 studyPop1 <- createStudyPopulationSettings(binary = T,
-                                          includeAllOutcomes = T,
-                                          removeSubjectsWithPriorOutcome = TRUE,
+                                          includeAllOutcomes = F,
+                                          removeSubjectsWithPriorOutcome = T,
                                           priorOutcomeLookback = 99999,
                                           requireTimeAtRisk = T,
                                           minTimeAtRisk=364,
@@ -57,9 +61,9 @@ studyPop1 <- createStudyPopulationSettings(binary = T,
 
 studyPop2 <- createStudyPopulationSettings(binary = T,
                                            includeAllOutcomes = F,
-                                           removeSubjectsWithPriorOutcome = TRUE,
+                                           removeSubjectsWithPriorOutcome = T,
                                            priorOutcomeLookback = 99999,
-                                           requireTimeAtRisk = T,
+                                           requireTimeAtRisk = F,
                                            minTimeAtRisk=364,
                                            riskWindowStart = 1,
                                            riskWindowEnd = 365,
@@ -67,14 +71,15 @@ studyPop2 <- createStudyPopulationSettings(binary = T,
 
 studyPop3 <- createStudyPopulationSettings(binary = T,
                                            includeAllOutcomes = F,
-                                           removeSubjectsWithPriorOutcome = TRUE,
+                                           removeSubjectsWithPriorOutcome = F,
                                            priorOutcomeLookback = 99999,
-                                           requireTimeAtRisk = F,
+                                           requireTimeAtRisk = T,
                                            minTimeAtRisk=364,
                                            riskWindowStart = 1,
                                            riskWindowEnd = 365,
                                            verbosity = "INFO")
                                            
+# combine these in a population setting list
 populationSettingList <- list(studyPop1,studyPop2,studyPop3)
 ```
 ## Covariate settings   
