@@ -69,9 +69,15 @@ This vignette describes how you can use the `PatientLevelPrediction` package to 
 
 To guide you through the process of model building and validation we will use the "Disease onset and progression" type as an example.
 
+\newpage
 # Definition of the Prediction Problem
 
-!!!! TEXT PATRICK TO BE ADDED
+Atrial fibrillation is a disease characterized by an irregular heart rate that can cause poor blood flow. Patients with atrial fibrillation are at increased risk of ischemic stroke.  Anticoagulation is a recommended prophylaxis treatment strategy for patients at high risk of stroke, though the underuse of anticoagulants and persistent severity of ischemic stroke represents a substantial unmet medical need.  Various strategies have been developed to predict risk of ischemic stroke in patients with atrial fibrillation.  CHADS2 (Gage JAMA 2001) was developed as a risk score based on history of congestive heart failure, hypertension, age>=75, diabetes and stroke.  CHADS2 was initially derived using Medicare claims data, where it achieved good discrimination (AUC=0.82).  However, subsequent external validation studies revealed the CHADS2 had substantially lower predictive accuracy (Keogh Thromb Haemost 2011).  Subsequent stroke risk calculators have been developed and evaluated, including the extension of CHADS2Vasc.  The management of atrial fibrillation has evolved substantially over the last decade, for various reasons that include the introduction of novel oral anticoagulants.  With these innovations has come a renewed interest in greater precision medicine for stroke prevention. 
+
+We will apply the PatientLevelPrediction package to observational healthcare data to address the following patient-level prediction question:
+Amongst patients who are newly diagnosed with Atrial Fibrillation, which patients will go on to have Ischemic Stroke within 3 years? 
+
+We will define 'patients who are newly diagnosed with Atrial Fibrillation' as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias.  We will define 'Ischemic stroke events' as ischemic stroke condition records during an inpatient or ER visit;  successive records with > 180 day gap are considered independent episodes.
 
 # Data extraction
 
@@ -277,9 +283,9 @@ Note that some of these constraints could also already be applied in the cohort 
 
 # Model Development
 
-## Defining the model settings
+## Selecting the algorithm
 
-| Models                      | Python | Parameters                              |
+| Algorithms                      | Python | Parameters                              |
 | ----------------------------| ------ | --------------------------------------- |
 | Logistic regression with regularization | No | var  (starting  variance), seed |
 | Gradient boosting machines              | No | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, seed  |
