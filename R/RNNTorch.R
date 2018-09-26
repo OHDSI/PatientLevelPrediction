@@ -23,21 +23,21 @@
 #' @param class_weight   The class weight used for imbalanced data: 
 #'                           0: Inverse ratio between positives and negatives
 #'                          -1: Focal loss
-#' @param rnn_type      It can be normal 'RNN', 'BiRNN' (bidirectional RNN) and 'GRU'
+#' @param type      It can be normal 'RNN', 'BiRNN' (bidirectional RNN) and 'GRU'
 #'
 #' @examples
 #' \dontrun{
 #' model.rnnTorch <- setRNNTorch()
 #' }
 #' @export
-setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, class_weight = 0, rnn_type = 'RNN'){
+setRNNTorch <- function(hidden_size=c(50, 100), epochs=c(20, 50), seed=0, class_weight = 0, type = 'RNN'){
   
   # test python is available and the required dependancies are there:
   checkPython()
   
   result <- list(model='fitRNNTorch', param=split(expand.grid(hidden_size=hidden_size,
                                             epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
-                                            class_weight = class_weight, rnn_type = rnn_type),
+                                            class_weight = class_weight, type = type),
 									        1:(length(hidden_size)*length(epochs)) ),
                                       name='RNN Torch')
   
@@ -128,18 +128,18 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, class_weight= 0, rnn_type = 'RNN', train=TRUE){
+trainRNNTorch <- function(epochs=50, hidden_size = 100, seed=0, class_weight= 0, type = 'RNN', train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("hidden_size = ",hidden_size))
   PythonInR::pyExec(paste0("seed = ",seed))
   #PythonInR::pyExec(paste0("time_window = ",time_window))
   PythonInR::pyExec(paste0("class_weight = ",class_weight))
-    if (rnn_type == 'RNN'){
+    if (type == 'RNN'){
     PythonInR::pyExec("model_type = 'RNN'")
-  } else if (rnn_type == 'BiRNN'){
+  } else if (type == 'BiRNN'){
     PythonInR::pyExec("model_type = 'BiRNN'")
-  } else if (rnn_type == 'GRU'){
+  } else if (type == 'GRU'){
     PythonInR::pyExec("model_type = 'GRU'")
   }
   if(train)

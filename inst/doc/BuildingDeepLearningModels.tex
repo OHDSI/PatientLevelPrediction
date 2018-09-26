@@ -123,7 +123,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-24}
+    \date{2018-09-26}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -143,20 +143,21 @@
 }
 \section{Introduction}\label{introduction}
 
-Electronic Health Records data is high dimensional, heterogeneous, and
-sparse, which makes predictive modelling a challenge. In the early days,
-the machine learning community mainly focused on algorithm development,
-currently there is a shift to more powerful feature engineering. Deep
-learning models are widely used to automatically learn high-level
-feature representations from the data, and have achieved remarkable
-results in image processing, speech recognition and computational
-biology. Recently, interesting results have been shown in healthcare
-applications using EHR data.
+Electronic Health Records (EHR) data is high dimensional, heterogeneous,
+and sparse, which makes predictive modelling a challenge. In the early
+days, the machine learning community mainly focused on algorithm
+development, currently there is a shift to more powerful feature
+engineering. Deep Learning models are widely used to automatically learn
+high-level feature representations from the data, and have achieved
+remarkable results in image processing, speech recognition and
+computational biology. Recently, interesting results have been shown
+using EHRs, but more extensive research is needed to assess the power of
+Deep Learning in this domain.
 
 This vignette describes how you can use the Observational Health Data
 Sciences and Informatics (OHDSI)
 \href{http://github.com/OHDSI/PatientLevelPrediction}{\texttt{PatientLevelPrediction}}
-package to build deep learning models. This vignette assumes you have
+package to build Deep Learning models. This vignette assumes you have
 read and are comfortable with building patient level prediction models
 as described in the
 \href{https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf}{\texttt{BuildingPredictiveModels}
@@ -165,7 +166,7 @@ Learning methods.
 
 \section{Background}\label{background}
 
-Deep learning models are build by stacking often a large number of
+Deep Learning models are build by stacking an often large number of
 neural network layers that perform feature engineering steps, e.g
 embedding, and are collapsed in a final softmax layer (basically a
 logistic regression layer). These algorithms need a lot of data to
@@ -173,10 +174,10 @@ converge to a good representation, but currently the sizes of the EHR
 databases are growing fast which would make Deep Learning an interesting
 approach to test within OHDSI's
 \href{https://academic.oup.com/jamia/article/25/8/969/4989437}{Patient-Level
-Prediction Framework}. For relatively small Target and Outcome cohorts,
-Deep Learning is most probaby not the best choice. However, the current
-implementation allows us to perform research on the value an limitations
-of Deep Learning using EHR data.
+Prediction Framework}. The current implementation allows us to perform
+research at scale on the value and limitations of Deep Learning using
+EHR data. For relatively small Target and Outcome cohorts, Deep Learning
+is most probably not the best choice.
 
 Most current Deep Learning research is performed in python and we have
 developed a pipeline to interact with python. Multiple Deep Learning
@@ -185,9 +186,9 @@ also available in R) etc. In the package we have implemented interaction
 with Keras in R and PyTorch in Python but we invite the community to add
 other backends.
 
-Many network topologies have recently been proposed and we have
+Many network architectures have recently been proposed and we have
 implemented a number of them, however, this list will grow in the near
-future. It is important to understand that some of these topologies
+future. It is important to understand that some of these architectures
 require a 2D data matrix, i.e.
 \textbar{}patient\textbar{}x\textbar{}feature\textbar{}, and others use
 a 3D data matrix
@@ -196,21 +197,21 @@ The \href{www.github.com/ohdsi/FeatureExtraction}{FeatureExtraction
 Package} has been extended to enable the extraction of both data formats
 as will be described with examples below.
 
-Note that training Deep Learning Models is computationally intensive,
+Note that training Deep Learning models is computationally intensive,
 our implementation therefore supports both GPU and CPU. It will
 automatically check whether there is GPU or not in your computer. A GPU
 is highly recommended for Deep Learning!
 
-\section{Non-Temporal topologies}\label{non-temporal-topologies}
+\section{Non-Temporal Architectures}\label{non-temporal-architectures}
 
-We implement the following non-temporal (2D data matrix) topologies
-using Pytorch:
+We implemented the following non-temporal (2D data matrix) architectures
+using PyTorch:
 
 \begin{verbatim}
 1) Logistics regression (LRTorch)
-   A simple softmax layer with l2 regularisation
+   A simple softmax layer with l2 regularization
 
-2) Feedforward network (MLPTorch) 
+2) Feed forward network (MLPTorch) 
    Supports multilayer perceptron (mlp_type = MLP) and 
    Self-Normalizing Neural Networks (mlp_type = SNN)
    Reference: https://arxiv.org/abs/1706.02515
@@ -219,10 +220,10 @@ using Pytorch:
 For the above two methods, we implemented support for a stacked
 autoencoder and a variational autoencoder to reduce the feature
 dimension as a first step. These autoencoders learn efficient data
-codings in an unsupervised manner by stacking multiple layers in a
+encodings in an unsupervised manner by stacking multiple layers in a
 neural network. Compared to the standard implementations of LR and MLP
 these implementations can use the GPU power to speed up the gradient
-descent approach in the backpropagation to optimize the weights of the
+descent approach in the back propagation to optimize the weights of the
 classifier.
 
 Table 1: Non-Temporal Deep Learning Models Hyper-Parameters
@@ -234,7 +235,7 @@ Name\strut
 \end{minipage} & \begin{minipage}[b]{0.34\columnwidth}\raggedright\strut
 Description\strut
 \end{minipage} & \begin{minipage}[b]{0.46\columnwidth}\raggedright\strut
-Hyperparameters\strut
+Hyper-parameters\strut
 \end{minipage}\tabularnewline
 \midrule
 \endhead
@@ -243,7 +244,7 @@ LRTorch\strut
 \end{minipage} & \begin{minipage}[t]{0.34\columnwidth}\raggedright\strut
 Logistic Regression Model\strut
 \end{minipage} & \begin{minipage}[t]{0.46\columnwidth}\raggedright\strut
-w\_decay (l2 regularisation), epochs (number of epochs), class\_weight
+w\_decay (l2 regularization), epochs (number of epochs), class\_weight
 (0 = inverse ratio between number of positive and negative examples, -1
 = focal loss (\url{https://arxiv.org/abs/1708.02002}), or other),
 autoencoder (apply stacked autoencoder?, vae (apply variational
@@ -255,7 +256,7 @@ MLPTorch\strut
 Multi-Layer Perceptron Model\strut
 \end{minipage} & \begin{minipage}[t]{0.46\columnwidth}\raggedright\strut
 mlp\_type (MLP = default, SNN = self-normalizing neural network), size
-(number of hidden nodes), w\_decay (l2 regularisation), epochs (number
+(number of hidden nodes), w\_decay (l2 regularization), epochs (number
 of epochs), class\_weight(0 = inverse ratio between number of positive
 and negative examples, -1 = focal loss, or other), autoencoder (apply
 stacked autoencoder), vae (apply variational autoencoder?)\strut
@@ -307,7 +308,7 @@ code snippet creates a population of 12000 patients.
 \end{Shaded}
 
 As an example we will build a LRTorch model. We could specify the
-stacked autoencoder or the variational autoencode to be used for
+stacked autoencoder or the variational autoencoder to be used for
 reducing the feature dimension as an initial layer, but for this example
 we do not.
 
@@ -363,8 +364,8 @@ And we train and internally validate the model.
 
 \section{Temporal Architectures}\label{temporal-architectures}
 
-Several topologies are implemented that can handle temporal data in
-pyTorch and R Keras.
+Several architectures are implemented that can handle temporal data in
+PyTorch and R Keras.
 
 \subsection{PyTorch CNN}\label{pytorch-cnn}
 
@@ -389,7 +390,7 @@ We implemented the following \textbf{convolutional} models described in
   \includegraphics{conv_arch1.png}
 \end{enumerate}
 
-Furthermore, we added the following topologies:
+Furthermore, we added the following achitectures:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi})}
@@ -404,7 +405,7 @@ Furthermore, we added the following topologies:
 
   \includegraphics{cnn_lstm.png}
 \item
-  Residual Learning Network as descripted in:
+  Residual Learning Network as described in:
   \url{https://arxiv.org/abs/1512.03385} (type = resnet)
 
   This a very big network, see the paper for the topology.
@@ -468,7 +469,7 @@ in RNNTorch:
   This network looks the same as above but then implemented as GRU
 \end{enumerate}
 
-The following hyper-parameters can be set for these pyTorch models:
+The following hyper-parameters can be set for these PyTorch models:
 
 \begin{longtable}[]{@{}ll@{}}
 \toprule
@@ -518,14 +519,14 @@ Keras:
 
   \includegraphics{covcnn.png}
 \item
-  Convolution accross data and time according(CovNN2.R)
+  Convolution across data and time according(CovNN2.R)
 
   \includegraphics{covcnn2.png}
 
   \newpage
 \end{enumerate}
 
-Furthemore, a custom build RNN is added that uses a variational
+Furthermore, a custom build RNN is added that uses a variational
 autoencoder. 3.
 
 \begin{verbatim}
@@ -541,7 +542,7 @@ Table 2: Temporal Deep Learning Models
 \begin{minipage}[b]{0.12\columnwidth}\raggedright\strut
 Model\strut
 \end{minipage} & \begin{minipage}[b]{0.82\columnwidth}\raggedright\strut
-Hyperparameters\strut
+Hyper-parameters\strut
 \end{minipage}\tabularnewline
 \midrule
 \endhead
@@ -551,7 +552,7 @@ CovNN\strut
 batchSize (The number of samples to used in each batch during model
 training), outcomeWeight (The weight assigned to the outcome), lr (The
 learning rate), decay (The decay of the learning rate), dropout
-({[}currently not used{]} the dropout rate for regularisation), epochs
+({[}currently not used{]} the dropout rate for regularization), epochs
 (The number of times data is used to train the model, e.g., epoches=1
 means data only used once to train), filters (The number of columns
 output by each convolution), kernelSize (The number of time dimensions
@@ -564,7 +565,7 @@ CovNN2\strut
 batchSize (The number of samples to used in each batch during model
 training), outcomeWeight (The weight assigned to the outcome), lr (The
 learning rate), decay (The decay of the learning rate), dropout
-({[}currently not used{]} the dropout rate for regularisation), epochs
+({[}currently not used{]} the dropout rate for regularization), epochs
 (The number of times data is used to train the model, e.g., epoches=1
 means data only used once to train), filters (The number of columns
 output by each convolution), kernelSize (The number of time dimensions
@@ -579,20 +580,20 @@ recurrentDropout (The reccurrent dropout rate), layerDropout (The layer
 dropout rate), lr (Learning rate), decay (Learning rate decay over each
 update), outcomeWeight (The weight of the outcome class in the loss
 function), batchSize (The number of data points to use per training
-batch), epochs (Number of times to iterate over dataset),
+batch), epochs (Number of times to iterate over data set),
 earlyStoppingMinDelta (Minimum change in the monitored quantity to
 qualify as an improvement for early stopping, i.e.~an absolute change of
 less than min\_delta in loss of validation data, will count as no
 improvement), earlyStoppingPatience (Number of epochs with no
 improvement after which training will be stopped), seed (Random seed
-used by deep learning model)\strut
+used by Deep Learning model)\strut
 \end{minipage}\tabularnewline
 \bottomrule
 \end{longtable}
 
 \subsection{Example}\label{example-1}
 
-We will now show how to use the temporal models by usinng CNNTorch as an
+We will now show how to use the temporal models by using CNNTorch as an
 example.
 
 You need to generate a \texttt{population} and \texttt{plpData} object
@@ -673,10 +674,10 @@ package:
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{# load the trained model}
-\NormalTok{plpModel <-}\StringTok{ }\KeywordTok{loadPlpModel}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"\textbackslash{}<model\textbackslash{}>"}\NormalTok{)}
+\NormalTok{plpModel <-}\StringTok{ }\KeywordTok{loadPlpModel}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"<your model>"}\NormalTok{)}
 
 \CommentTok{# load the new plpData (should have the same temporal features!) and create the population}
-\NormalTok{plpData <-}\StringTok{ }\KeywordTok{loadPlpData}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"\textbackslash{}<data\textbackslash{}>"}\NormalTok{)}
+\NormalTok{plpData <-}\StringTok{ }\KeywordTok{loadPlpData}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"<your data>"}\NormalTok{)}
 
 \NormalTok{populationSettings <-}\StringTok{ }\NormalTok{plpModel}\OperatorTok{$}\NormalTok{populationSettings}
 \NormalTok{populationSettings}\OperatorTok{$}\NormalTok{plpData <-}\StringTok{ }\NormalTok{plpData}
@@ -689,16 +690,11 @@ package:
 
 \section{Adding new architectures}\label{adding-new-architectures}
 
-If you like to add new architectures you have the option to add them
-using pyTorch of R Keras.
-
-\subsection{pyTorch}\label{pytorch}
-
-XIAOYONG is working on some text for this.
-
-\subsection{R Keras}\label{r-keras}
-
-JENNA: Add some details
+It is possible to add new architectures in our framework using PyTorch
+or R Keras. We are happy to help you with this, please post your
+questions on the
+\href{www.github.com/OHDSI/PatientLevelPrediction/issues}{issue tracker}
+of the package.
 
 \section{Acknowledgments}\label{acknowledgments}
 
