@@ -102,12 +102,11 @@ As an example we will build a LRTorch model. We could specify the stacked autoen
 autoencoder <- FALSE
 vae <- FALSE
 ```
-NEED TO CHANGE THE PARAMETER TO LEVEL.
 
-We a class_weight for imbalanced data, the default value (-1) is the inverse ratio between negatives and positives. 
+We added a class_weight for imbalanced data, the default value 0 is the inverse ratio between negatives and positives,-1 applies focal loss.
 
 ```{r eval = FALSE}
-class_weight <- -1
+class_weight <- 0
 
 ```
 
@@ -224,6 +223,7 @@ The following temporal architectures as described in https://arxiv.org/pdf/1608.
 \newpage
 
   Furthermore, a custom build RNN is added that uses a variational autoencoder.
+  
   3. <dl>
        <dt>Clinically Informing application based on Recurrent Neural Network (CIReNN.R)</dt>
        <dd>![](cirenn.png)</dd>

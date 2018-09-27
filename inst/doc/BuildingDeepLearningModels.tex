@@ -123,7 +123,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-26}
+    \date{2018-09-27}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -319,14 +319,12 @@ we do not.
 \end{Highlighting}
 \end{Shaded}
 
-NEED TO CHANGE THE PARAMETER TO LEVEL.
-
-We a class\_weight for imbalanced data, the default value (-1) is the
-inverse ratio between negatives and positives.
+We added a class\_weight for imbalanced data, the default value 0 is the
+inverse ratio between negatives and positives,-1 applies focal loss.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{class_weight <-}\StringTok{ }\OperatorTok{-}\DecValTok{1}
+\NormalTok{class_weight <-}\StringTok{ }\DecValTok{0}
 \end{Highlighting}
 \end{Shaded}
 
@@ -527,13 +525,17 @@ Keras:
 \end{enumerate}
 
 Furthermore, a custom build RNN is added that uses a variational
-autoencoder. 3.
+autoencoder.
 
-\begin{verbatim}
-   <dt>Clinically Informing application based on Recurrent Neural Network (CIReNN.R)</dt>
-   <dd>![](cirenn.png)</dd>
- </dl>
-\end{verbatim}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\item
+  Clinically Informing application based on Recurrent Neural Network
+  (CIReNN.R)
+
+  \includegraphics{cirenn.png}
+\end{enumerate}
 
 Table 2: Temporal Deep Learning Models
 

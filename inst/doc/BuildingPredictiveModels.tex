@@ -123,7 +123,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-26}
+    \date{2018-09-27}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -596,101 +596,165 @@ extracted plpData from the database.
 
 \subsection{Selecting the algorithm}\label{selecting-the-algorithm}
 
+We see the selection of the best algorithm for a certain prediction
+problem as an emperical question, i.e.~you need to let the data speak
+for itself and try different approaches to find the best. There is no
+algorithm that will work best for all problems (no free lunch). In our
+package we therefore aim to implement many algorithms. Furthermore, we
+made the system modular so you can add your own custom algorithms as
+described in more detail in the
+\href{Link\%20to\%20be\%20added}{AddingCustomAlgorithms} vignette.
+
+Our package currently contains the following algorithms:
+
 \begin{longtable}[]{@{}lll@{}}
 \toprule
-\begin{minipage}[b]{0.35\columnwidth}\raggedright\strut
-Algorithms\strut
-\end{minipage} & \begin{minipage}[b]{0.08\columnwidth}\raggedright\strut
-Python\strut
-\end{minipage} & \begin{minipage}[b]{0.48\columnwidth}\raggedright\strut
-Parameters\strut
+\begin{minipage}[b]{0.12\columnwidth}\raggedright\strut
+Algorihm\strut
+\end{minipage} & \begin{minipage}[b]{0.55\columnwidth}\raggedright\strut
+Description\strut
+\end{minipage} & \begin{minipage}[b]{0.25\columnwidth}\raggedright\strut
+Hyper-parameters\strut
 \end{minipage}\tabularnewline
 \midrule
 \endhead
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
-Logistic regression with regularization\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-No\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
+Regularized Logistic Regression\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+Lasso logistic regression belongs to the family of generalized linear
+models, where a linear combination of the variables is learned and
+finally a logistic function maps the linear combination to a value
+between 0 and 1. The lasso regularization adds a cost based on model
+complexity to the objective function when training the model. This cost
+is the sum of the absolute values of the linear combination of the
+coefficients. The model automatically performs feature selection by
+minimizing this cost. We use the Cyclic coordinate descent for logistic,
+Poisson and survival analysis (Cyclops) package to perform large-scale
+regularized logistic regression:
+\url{https://github.com/OHDSI/Cyclops}\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 var (starting variance), seed\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
 Gradient boosting machines\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-No\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+Gradient boosting machines is a boosting ensemble technique and in our
+framework it combines multiple decision trees. Boosting works by
+iteratively adding decision trees but adds more weight to the
+data-points that are misclassified by prior decision trees in the cost
+function when training the next tree. We use Extreme Gradient Boosting,
+which is an efficient implementation of the gradient boosting framework
+implemented in the xgboost R package available from CRAN.\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 ntree (number of trees), max depth (max levels in tree), min rows
 (minimum data points in in node), learning rate, seed\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
 Random forest\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-Yes\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+Random forest is a bagging ensemble technique that combines multiple
+decision trees. The idea behind bagging is to reduce the likelihood of
+overfitting, by using weak classifiers, but combining multiple diverse
+weak classifiers into a strong classifier. Random forest accomplishes
+this by training multiple decision trees but only using a subset of the
+variables in each tree and the subset of variables differ between trees.
+Our packages uses the sklearn learn implementation of Random Forest in
+python.\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 mtry (number of features in each tree),ntree (number of trees), maxDepth
 (max levels in tree), minRows (minimum data points in in node),balance
 (balance class labels), seed\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
 K-nearest neighbors\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-No\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+K-nearest neighbors (KNN) is an algorithm that uses some metric to find
+the K closest labelled data-points, given the specified metric, to a new
+unlabelled data-point. The prediction of the new data-points is then the
+most prevalent class of the K-nearest labelled data-points. There is a
+sharing limitation of KNN, as the model requires labelled data to
+perform the prediction on new data, and it is often not possible to
+share this data across data sites.We included the BigKnn classifier
+developed in OHDSI which is a large scale k-nearest neighbor classifier
+using the Lucene search engine:
+\url{https://github.com/OHDSI/BigKnn}\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 k (number of neighbours),weighted (weight by inverse frequency)\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
 Naive Bayes\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-Yes\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+To add\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 none\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
 AdaBoost\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-Yes\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+AdaBoost is a boosting ensemble technique. Boosting works by iteratively
+adding decision trees but adds more weight to the data-points that are
+misclassified by prior decision trees in the cost function when training
+the next tree.We use the sklearn ``AdaboostClassifier'' implementation
+in Python.\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 nEstimators (the maximum number of estimators at which boosting is
 terminated), learningRate (learning rate shrinks the contribution of
 each classifier by learning\_rate. There is a trade-off between
 learningRate and nEstimators)\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
 Decision Tree\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-Yes\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+A decision tree is a classifier that partitions the variable space using
+individual tests selected using a greedy approach. It aims to find
+partitions that have the highest information gain to separate the
+classes. The decision tree can easily overfit by enabling a large number
+of partitions (tree depth) and often needs some regularization (e.g.,
+pruning or specifying hyper-parameters that limit the complexity of the
+model). We use the sklearn ``DecisionTreeClassifier'' implementation in
+Python.\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 maxDepth (the maximum depth of the tree),
 minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early
 stopping in tree growth. A node will split if its impurity is above the
 threshold, otherwise it is a leaf.), seed,classWeight (``Balance''" or
 ``None'')\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
 Multilayer Perception\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-Yes\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+Neural networks contain multiple layers that weight their inputs using
+an non-linear function. The first layer is the input layer, the last
+layer is the output layer the between are the hidden layers. Neural
+networks are generally trained using feed forward back-propagation. This
+is when you go through the network with a data-point and calculate the
+error between the true label and predicted label, then go backwards
+through the network and update the linear function weights based on the
+error. This can also be performed as a batch, where multiple data-points
+are fee\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 size (the number of hidden nodes), alpha (the l2 regularisation),
 seed\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.35\columnwidth}\raggedright\strut
+\begin{minipage}[t]{0.12\columnwidth}\raggedright\strut
 Deep Learning\strut
-\end{minipage} & \begin{minipage}[t]{0.08\columnwidth}\raggedright\strut
-Yes\strut
-\end{minipage} & \begin{minipage}[t]{0.48\columnwidth}\raggedright\strut
-in the BuildingDeepLearningModels vignette we describe these models and
-hyper-parameters in more detail.\strut
+\end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
+Deep learning such as deep nets, convolutional neural networks or
+recurrent neural networks are similar to a neural network but have
+multiple hidden layers that aim to learn latent representations useful
+for prediction. In the seperate BuildingDeepLearningModels vignette we
+describe these models and hyper-parameters in more detail\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
+\strut
 \end{minipage}\tabularnewline
 \bottomrule
 \end{longtable}
 
-The table shows the currently implemented algorithms and their
-hyper-parameters. In the settings function of the algorithms the user
-can specify a list of eligible values for each hyper-parameter. All
-possible combinations of the hyper-parameters are included in a
-so-called grid search using cross-validation on the training set. If a
-user does not specify any value then the default value is used instead.
+In the settings function of the algorithms the user can specify a list
+of eligible values for each hyper-parameter. All possible combinations
+of the hyper-parameters are included in a so-called grid search using
+cross-validation on the training set. If a user does not specify any
+value then the default value is used instead.
 
 For example, if we use the following settings for the
 gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search
@@ -983,17 +1047,24 @@ model on as much new datasets as feasible and evaluate its performance.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{# load the trained model}
-\NormalTok{plpModel <-}\StringTok{ }\KeywordTok{loadPlpModel}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"model"}\NormalTok{)}
+\NormalTok{plpModel <-}\StringTok{ }\KeywordTok{loadPlpModel}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(),}\StringTok{'model'}\NormalTok{)}
 
-\CommentTok{# load the new plpData and create the population}
-\NormalTok{plpData <-}\StringTok{ }\KeywordTok{loadPlpData}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"data"}\NormalTok{)}
-\NormalTok{population <-}\StringTok{ }\KeywordTok{createStudyPopulation}\NormalTok{(plpData, }\DataTypeTok{outcomeId =} \DecValTok{2}\NormalTok{, }\DataTypeTok{includeAllOutcomes =} \OtherTok{TRUE}\NormalTok{, }
-    \DataTypeTok{firstExposureOnly =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{washoutPeriod =} \DecValTok{365}\NormalTok{, }\DataTypeTok{removeSubjectsWithPriorOutcome =} \OtherTok{TRUE}\NormalTok{, }
-    \DataTypeTok{priorOutcomeLookback =} \DecValTok{365}\NormalTok{, }\DataTypeTok{riskWindowStart =} \DecValTok{1}\NormalTok{, }\DataTypeTok{requireTimeAtRisk =} \OtherTok{FALSE}\NormalTok{, }
-    \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{)}
+\CommentTok{#load the new plpData and create the population}
+\NormalTok{plpData <-}\StringTok{ }\KeywordTok{loadPlpData}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(),}\StringTok{'data'}\NormalTok{)}
+\NormalTok{population <-}\StringTok{ }\KeywordTok{createStudyPopulation}\NormalTok{(plpData, }
+\DataTypeTok{outcomeId =} \DecValTok{2}\NormalTok{, }
+\DataTypeTok{includeAllOutcomes =} \OtherTok{TRUE}\NormalTok{, }
+\DataTypeTok{firstExposureOnly =} \OtherTok{TRUE}\NormalTok{, }
+\DataTypeTok{washoutPeriod =} \DecValTok{365}\NormalTok{, }
+\DataTypeTok{removeSubjectsWithPriorOutcome =} \OtherTok{TRUE}\NormalTok{, }
+\DataTypeTok{priorOutcomeLookback =} \DecValTok{365}\NormalTok{,}
+\DataTypeTok{riskWindowStart =} \DecValTok{1}\NormalTok{,}
+\DataTypeTok{requireTimeAtRisk =} \OtherTok{FALSE}\NormalTok{,}
+\DataTypeTok{riskWindowEnd =} \DecValTok{365}
+\NormalTok{)}
 
 \CommentTok{# apply the trained model on the new data}
-\NormalTok{validationResults <-}\StringTok{ }\KeywordTok{applyModel}\NormalTok{(population, plpData, plpModel)}
+\NormalTok{validationResults <-}\StringTok{ }\KeywordTok{applyModel}\NormalTok{(population,plpData,plpModel)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1003,26 +1074,33 @@ validation of a model across one or multiple datasets:
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{# load the trained model}
-\NormalTok{plpResult <-}\StringTok{ }\KeywordTok{loadPlpResult}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"plpResult"}\NormalTok{)}
+\NormalTok{plpResult <-}\StringTok{ }\KeywordTok{loadPlpResult}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(),}\StringTok{'plpResult'}\NormalTok{)}
 
-\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{"postgresql"}\NormalTok{, }\DataTypeTok{server =} \StringTok{"localhost/ohdsi"}\NormalTok{, }
-    \DataTypeTok{user =} \StringTok{"joe"}\NormalTok{, }\DataTypeTok{password =} \StringTok{"supersecret"}\NormalTok{)}
+\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{"postgresql"}\NormalTok{, }
+                                             \DataTypeTok{server =} \StringTok{"localhost/ohdsi"}\NormalTok{, }
+                                             \DataTypeTok{user =} \StringTok{"joe"}\NormalTok{, }
+                                             \DataTypeTok{password =} \StringTok{"supersecret"}\NormalTok{)}
 
-\NormalTok{validation <-}\StringTok{ }\KeywordTok{externalValidatePlp}\NormalTok{(}\DataTypeTok{plpResult =}\NormalTok{ plpResult, }\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }
-    \DataTypeTok{validationSchemaTarget =} \StringTok{"new_cohort_schema"}\NormalTok{, }\DataTypeTok{validationSchemaOutcome =} \StringTok{"new_cohort_schema"}\NormalTok{, }
-    \DataTypeTok{validationSchemaCdm =} \StringTok{"new_cdm_schema"}\NormalTok{, }\DataTypeTok{validationTableTarget =} \StringTok{"cohort_table"}\NormalTok{, }
-    \DataTypeTok{validationTableOutcome =} \StringTok{"cohort_table"}\NormalTok{, }\DataTypeTok{validationIdTarget =} \StringTok{"cohort_id"}\NormalTok{, }
-    \DataTypeTok{validationIdOutcome =} \StringTok{"outcome_id"}\NormalTok{, }\DataTypeTok{keepPrediction =}\NormalTok{ T)}
+\NormalTok{validation <-}\StringTok{ }\KeywordTok{externalValidatePlp}\NormalTok{(}\DataTypeTok{plpResult =}\NormalTok{ plpResult, }
+                                  \DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails,}
+                                  \DataTypeTok{validationSchemaTarget =} \StringTok{'new_cohort_schema'}\NormalTok{,}
+                                  \DataTypeTok{validationSchemaOutcome =} \StringTok{'new_cohort_schema'}\NormalTok{,}
+                                  \DataTypeTok{validationSchemaCdm =} \StringTok{'new_cdm_schema'}\NormalTok{, }
+                                  \DataTypeTok{validationTableTarget =} \StringTok{'cohort_table'}\NormalTok{,}
+                                  \DataTypeTok{validationTableOutcome =} \StringTok{'cohort_table'}\NormalTok{, }
+                                  \DataTypeTok{validationIdTarget =} \StringTok{'cohort_id'}\NormalTok{, }
+                                  \DataTypeTok{validationIdOutcome =} \StringTok{'outcome_id'}\NormalTok{, }
+                                  \DataTypeTok{keepPrediction =}\NormalTok{ T}
+\NormalTok{                                  )}
 \end{Highlighting}
 \end{Shaded}
 
-This will run extract the new plpData from the specified schemas and
-cohort tables with the target cohort id of cohort id and outcome cohort
-id of outcome id. It will then apply the same population settings and
-the trained plp model. Finally, it will evaluate the performance and
-return the standard output as \texttt{validation\$performance} and if
+This will extract the new plpData from the specified schemas and cohort
+tables. It will then apply the same population settings and the trained
+plp model. Finally, it will evaluate the performance and return the
+standard output as \texttt{validation\$performance} and if
 keepPrediction is TRUE then it will also return the prediction on the
-population as \texttt{validation\$prediction}. The can be inserted into
+population as \texttt{validation\$prediction}. They can be inserted into
 the shiny app for viewing the model and validation by running:
 \texttt{viewPlp(runPlp=plpResult,\ validatePlp=validation\ )}.
 
@@ -1032,18 +1110,29 @@ the new schemas and cohort tables as a list:
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{# load the trained model}
-\NormalTok{plpResult <-}\StringTok{ }\KeywordTok{loadPlpResult}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(), }\StringTok{"plpResult"}\NormalTok{)}
+\NormalTok{plpResult <-}\StringTok{ }\KeywordTok{loadPlpResult}\NormalTok{(}\KeywordTok{getwd}\NormalTok{(),}\StringTok{'plpResult'}\NormalTok{)}
 
-\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{"postgresql"}\NormalTok{, }\DataTypeTok{server =} \StringTok{"localhost/ohdsi"}\NormalTok{, }
-    \DataTypeTok{user =} \StringTok{"joe"}\NormalTok{, }\DataTypeTok{password =} \StringTok{"supersecret"}\NormalTok{)}
+\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{"postgresql"}\NormalTok{, }
+                                             \DataTypeTok{server =} \StringTok{"localhost/ohdsi"}\NormalTok{, }
+                                             \DataTypeTok{user =} \StringTok{"joe"}\NormalTok{, }
+                                             \DataTypeTok{password =} \StringTok{"supersecret"}\NormalTok{)}
 
-\NormalTok{validation <-}\StringTok{ }\KeywordTok{externalValidatePlp}\NormalTok{(}\DataTypeTok{plpResult =}\NormalTok{ plpResult, }\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }
-    \DataTypeTok{validationSchemaTarget =} \KeywordTok{list}\NormalTok{(}\StringTok{"new_cohort_schema1"}\NormalTok{, }\StringTok{"new_cohort_schema2"}\NormalTok{), }
-    \DataTypeTok{validationSchemaOutcome =} \KeywordTok{list}\NormalTok{(}\StringTok{"new_cohort_schema1"}\NormalTok{, }\StringTok{"new_cohort_schema2"}\NormalTok{), }
-    \DataTypeTok{validationSchemaCdm =} \KeywordTok{list}\NormalTok{(}\StringTok{"new_cdm_schema1"}\NormalTok{, }\StringTok{"new_cdm_schema2"}\NormalTok{), }\DataTypeTok{validationTableTarget =} \KeywordTok{list}\NormalTok{(}\StringTok{"new_cohort_table1"}\NormalTok{, }
-        \StringTok{"new_cohort_table2"}\NormalTok{), }\DataTypeTok{validationTableOutcome =} \KeywordTok{list}\NormalTok{(}\StringTok{"new_cohort_table1"}\NormalTok{, }
-        \StringTok{"new_cohort_table2"}\NormalTok{), }\DataTypeTok{validationIdTarget =} \StringTok{"cohort_id"}\NormalTok{, }\DataTypeTok{validationIdOutcome =} \StringTok{"outcome_id"}\NormalTok{, }
-    \DataTypeTok{keepPrediction =}\NormalTok{ T)}
+\NormalTok{validation <-}\StringTok{ }\KeywordTok{externalValidatePlp}\NormalTok{(}\DataTypeTok{plpResult =}\NormalTok{ plpResult, }
+                                  \DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails,}
+                                  \DataTypeTok{validationSchemaTarget =} \KeywordTok{list}\NormalTok{(}\StringTok{'new_cohort_schema1'}\NormalTok{,}
+                                                                \StringTok{'new_cohort_schema2'}\NormalTok{),}
+                                  \DataTypeTok{validationSchemaOutcome =} \KeywordTok{list}\NormalTok{(}\StringTok{'new_cohort_schema1'}\NormalTok{,}
+                                                                 \StringTok{'new_cohort_schema2'}\NormalTok{),}
+                                  \DataTypeTok{validationSchemaCdm =} \KeywordTok{list}\NormalTok{(}\StringTok{'new_cdm_schema1'}\NormalTok{,}
+                                                             \StringTok{'new_cdm_schema2'}\NormalTok{), }
+                                  \DataTypeTok{validationTableTarget =} \KeywordTok{list}\NormalTok{(}\StringTok{'new_cohort_table1'}\NormalTok{,}
+                                                               \StringTok{'new_cohort_table2'}\NormalTok{),}
+                                  \DataTypeTok{validationTableOutcome =} \KeywordTok{list}\NormalTok{(}\StringTok{'new_cohort_table1'}\NormalTok{,}
+                                                                \StringTok{'new_cohort_table2'}\NormalTok{),}
+                                  \DataTypeTok{validationIdTarget =} \StringTok{'cohort_id'}\NormalTok{, }
+                                  \DataTypeTok{validationIdOutcome =} \StringTok{'outcome_id'}\NormalTok{, }
+                                  \DataTypeTok{keepPrediction =}\NormalTok{ T}
+\NormalTok{                                  )}
 \end{Highlighting}
 \end{Shaded}
 
