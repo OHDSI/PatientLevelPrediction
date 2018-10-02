@@ -43,6 +43,7 @@ Gage BF, Waterman AD, Shannon W, Boechler M, Rich MW, Radford MJ. Validation of 
 To implement the model you need to create three tables: the model table, the covariate table, and the intercept table.  The model table specifies the modelId (sequence number), the modelCovariateId (sequence number) and the covariateValue (beta for the covariate).  The covariate table specifies the mapping between the covariates from the published model and the standard Patient Level Prediction framework covariates, i.e. its maps to a combination of an analysisid and a concept_id (see below). The intercept table specifies per modelId the intercept.
 
 # Model implementation
+
 ## Define the model
 
 The CHADS2 is a score based model with:

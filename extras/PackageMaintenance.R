@@ -28,7 +28,7 @@ system("R CMD Rd2pdf ./ --output=extras/PatientLevelPrediction.pdf")
 rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd",
                   output_file = "../inst/doc/BuildingPredictiveModels.pdf",
                   rmarkdown::pdf_document(latex_engine = "pdflatex",
-                                          toc = TRUE,
+                                          toc = TRUE, toc_depth = 3,
                                           number_sections = TRUE))
 
 rmarkdown::render("vignettes/BuildingMultiplePredictiveModels.Rmd",

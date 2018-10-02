@@ -178,10 +178,11 @@ To run the external validation of an existing model where the target population 
 
 ```{r tidy=FALSE,eval=FALSE}
 
-# if the existing model uses gender and condition groups looking back 200 days:
+# in our example the existing model uses gender and condition groups looking back 200 days:
 covSet <- FeatureExtraction::createCovariateSettings(useDemographicsGender = T,
                                                      useConditionGroupEraMediumTerm = T, 
                                                      mediumTermStartDays = -200)
+
 result <- evaluateExistingModel(modelTable = modelTable,
                                 covariateTable = covariateTable,
                                 interceptTable = NULL,

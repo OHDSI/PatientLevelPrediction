@@ -123,7 +123,7 @@ PatientLevelPrediction Framework}
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-09}
+    \date{2018-09-28}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -409,10 +409,11 @@ interceptTable in the format explained above):
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# if the existing model uses gender and condition groups looking back 200 days:}
+\CommentTok{# in our example the existing model uses gender and condition groups looking back 200 days:}
 \NormalTok{covSet <-}\StringTok{ }\NormalTok{FeatureExtraction}\OperatorTok{::}\KeywordTok{createCovariateSettings}\NormalTok{(}\DataTypeTok{useDemographicsGender =}\NormalTok{ T,}
                                                      \DataTypeTok{useConditionGroupEraMediumTerm =}\NormalTok{ T, }
                                                      \DataTypeTok{mediumTermStartDays =} \OperatorTok{-}\DecValTok{200}\NormalTok{)}
+
 \NormalTok{result <-}\StringTok{ }\KeywordTok{evaluateExistingModel}\NormalTok{(}\DataTypeTok{modelTable =}\NormalTok{ modelTable,}
                                 \DataTypeTok{covariateTable =}\NormalTok{ covariateTable,}
                                 \DataTypeTok{interceptTable =} \OtherTok{NULL}\NormalTok{,}
@@ -461,8 +462,8 @@ Considerable work has been dedicated to provide the
 ## A BibTeX entry for LaTeX users is
 ## 
 ##   @Manual{,
-##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP
-## Common Data Model},
+##     title = {PatientLevelPrediction: Package for patient level prediction using data in the OMOP Common Data
+## Model},
 ##     author = {Jenna Reps and Martijn J. Schuemie and Marc A. Suchard and Patrick B. Ryan and Peter R. Rijnbeek},
 ##     year = {2018},
 ##     note = {R package version 2.0.5},
