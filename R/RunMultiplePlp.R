@@ -271,17 +271,12 @@ createPlpReferenceTable <- function(modelAnalysisList,
   analyses$devDatabase <- cdmDatabaseName
   analyses <- merge(analyses, modelAnalysisList$settingLookupTable, 
                     by.x='modelSettingsId', by.y='lookupId', all.x=T)
-  #analyses$plpDataFolder <- file.path(outputFolder,'plpData',
-  #                                    paste0(analyses$cohortId,'-',analyses$covariateSettingId))
+  
+  # TODO: replace outputFolder with '.' to make relative positions
   analyses$plpDataFolder <- file.path(outputFolder,
                                       paste0('PlpData_L',analyses$covariateSettingId,'_T',analyses$cohortId))
-  
-  #analyses$studyPopFile <- file.path(outputFolder,'population',
-  #                              paste0(analyses$cohortId,'-',analyses$outcomeId,'-',analyses$populationSettingId,'.rds'))
   analyses$studyPopFile <- file.path(outputFolder,
                                      paste0('StudyPop_L',analyses$populationSettingId,'_T',analyses$cohortId,'_O',analyses$outcomeId,'.rds'))
-  #analyses$plpResultFolder <- file.path(outputFolder,'Result',
-  #                                   paste0(analyses$analysisId))
   analyses$plpResultFolder <- file.path(outputFolder,
                                         paste0('Analysis_',analyses$analysisId))
 return(analyses)  
@@ -670,8 +665,8 @@ loadPredictionAnalysisList <- function(predictionAnalysisListFile){
                          testSplit = json$runPlpArgs$testSplit,
                          testFraction = json$runPlpArgs$testFraction,
                          splitSeed = json$runPlpArgs$splitSeed,
-                         nfold = json$runPlpArgs$nfold,
-                         verbosity = json$runPlpArgs$verbosity
+                         nfold = json$runPlpArgs$nfold#,
+                         #verbosity = json$runPlpArgs$verbosity - isnt in atlas
   )
   
   return(runPlpAnalyses)
@@ -711,7 +706,6 @@ getCohortNames <- function(json, targetIds){
 #' @param testFraction            Fractiuon of data to use for test set
 #' @param splitSeed               Seed used in test split
 #' @param nfold                   Number of folds used when training model
-#' @param verbosity               Level of log details 
 #'
 #' @export
 savePredictionAnalysisList <- function(workFolder="inst/settings",
@@ -729,8 +723,7 @@ savePredictionAnalysisList <- function(workFolder="inst/settings",
                                        testSplit='person',
                                        testFraction=0.25,
                                        splitSeed=1,
-                                       nfold=3,
-                                       verbosity="INFO"
+                                       nfold=3
                                        ){
   
   json <- list()
@@ -749,8 +742,8 @@ savePredictionAnalysisList <- function(workFolder="inst/settings",
                           testSplit=testSplit,
                           testFraction=testFraction,
                           splitSeed=splitSeed,
-                          nfold=nfold,
-                          verbosity=verbosity)
+                          nfold=nfold)#,
+                          #verbosity=verbosity) removed due to atlas
   
   json$covariateSettings <- covariateSettingList
   json$populationSettings <- populationSettingList

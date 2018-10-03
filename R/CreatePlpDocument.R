@@ -480,11 +480,10 @@ textPlpAnalysis <- function(plpResult){
   # execution time
   execution <- as.double(plpResult$executionSummary$TotalExecutionElapsedTime, units='mins')
 
-  result <- paste0("A ", name, " was trained using ",nfold, " cross-validation on a training dataset consisting of",
-                   " ", (1-testfrac)*100,"% of the total dataset, with the remaining ",testfrac*100,"% of the dataset",
-                   " held out to enable an internal validation of the model.  The PatientLevelPrediction R package version ",
+  result <- paste0("A ", name, " model was developed using ",testfrac*100,"% of the data for training and ",(1-testfrac)*100,"% for testing. ",
+                   "Hyper-parameter training was performed using ",nfold,"-fold cross-validation on the training set. The PatientLevelPrediction R package version ",
                    rversion, " was used and the total training/valdiation time was ",format(as.double(execution), digits=3)," minutes.")
-
+  
   return(result)
 
 }
@@ -643,14 +642,14 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                        "externally validated by applying the model to <add external databases> mapped to",
                        " the OMOP common data model with <target/outcome sizes> respectively. "),
 
-                paste0(" Results: The internal validation showed the model achieved < good/excellent>",
-                       " discrimination ability with an AUC of ",auc ," and the calibration plots",
-                       " indicates a <fair/well> calibrated model.  The external validation showed",
+                paste0(" Results: The internal validation showed the model achieved an",
+                       " AUC of ",auc ," and the calibration plots",
+                       " indicates a <poorly/fair/well> calibrated model.  The external validation showed",
                        " the model <was/was not> transportable, with AUCs ranging between <auc range> on",
                        " the <databases> databases. "),
 
-                paste0("Conclusions: This paper details the transparent development of a < good/excellent>",
-                       " discriminative model for predicting ", outcomeName, " in <target details or external target",
+                paste0("Conclusions: This paper details the development and external validation of a ",
+                       " model for predicting ", outcomeName, " in <target details or external target",
                        " details>.  The model can be readily implemented to any observational healthcare",
                        " database in the OMOP common data model/development code and is available from",
                        " <add weblink>.")
@@ -665,14 +664,11 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   background <- c(paste0("<background on outcome: motivation for model, list existing models",
                          " (database developed on, external validation, performance)>"),
 
-                  paste0("The objective of this paper is to use the Observational Healthcare and Data Science",
-                         " Informatics (OHDSI) Patient Level Prediction software, an open source R package,",
-                         " to develope a <diagnostic/prognostic> model to predict ",outcomeName," within ",
-                         targetName,".  The software implements a framework for developing ",
-                         " diagnostic/prognostic models while addressing existing best practices towards ",
-                         " ensuring models are clinically useful and transparent.  The model will be develop ",
+                  paste0("The objective of this paper is build and validate a <diagnostic/prognostic> model to predict ",outcomeName," within ",
+                         targetName," during  ",time_at_risk, ".  The model will be developed ",
                          " on <development database> and externally validated on <validation databases> to ",
-                         " determine the transportability and generalizability of the model when applied to ",
+                         " determine the transportability (how well it performs on different data) and ",
+                         "generalizability (how well it performs on similar data) of the model when applied to ",
                          " new data.  All the datasets will be in the Observational Medical Outcome ",
                          " Partnership (OMOP) common data model as having the datasets in a homogeneous data ",
                          " structure enables re-use of code between model development and validation to ensure ",
@@ -698,7 +694,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     #doc = ReporteRs::addPlot(predictionPlot)
 
     # Pic1: Add standardise paragraph describing prediction - use name inputs
-    doc <- doc %>% officer::body_add_par(value =  'Figure 2 shows the prediction visulisation...' )
+    doc <- doc %>% officer::body_add_par(value =  'Figure 2 shows the prediction visualization...' )
     
     }
 
@@ -709,7 +705,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   ##doc = ReporteRs::addFlexTable(plpResult$model$hyperParamSearch)
   doc <- doc %>% officer::body_add_par(value = 'Method', style = "heading 2")
   
-  doc <- doc %>% officer::body_add_par(value = 'Source of data:', style = "heading 3")
+  doc <- doc %>% officer::body_add_par(value = 'Data sources:', style = "heading 3")
   
   datasources <- "ADD DATASOURCE FOR DEVELOPMENT AND VALIDATION HERE..."
   doc <- doc %>% officer::body_add_par(value = datasources, style = "Normal")
@@ -778,7 +774,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     
 
     # Pic3: Add comments
-    doc <- doc %>% officer::body_add_par(value = "The attrition table shows..." )
+    doc <- doc %>% officer::body_add_par(value = "<add comment on what the attrition table shows>" )
   }
 
   #=============== characterisation ==============
@@ -806,7 +802,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   # Add plot of outcome vs non-outcome
   covSum <- PatientLevelPrediction::plotVariableScatterplot(plpResult$covariateSummary)
   doc <- doc %>% officer::body_add_gg(value = covSum)
-  doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the scatter plot of the prevalence of each variable in the outcome vs non-outcome groups.' )
+  doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the scatter plot of the prevalence of each variable in the non-outcome vs outcome groups.' )
   
 
   text <- paste0("Table 1 presents the baseline characteristics of the development datasets and validation ",
@@ -814,16 +810,18 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   doc <- doc %>% officer::body_add_par(value = text )
 
   doc <- doc %>% officer::body_add_par(value = 'Model Specification', style='heading 3')
-  text <- paste0("The model developed on <database> with a target size of <target count> and outcome count ",
-                 " of <outcome count> is available from <add link>.  The <coefficients/variable importance> ",
+  text <- paste0("The model developed on <database> with a target size of ",nrow(population)," and outcome count ",
+                 " of ",sum(population$outcomeCount>0)," is available from <add link>.  Out of ",nrow(plpResult$covariateSummary)," candidate predictors the final model",
+                 " included ", sum(plpResult$covariateSummary$covariateValue!=0, na.rm = T) , ".",
+                 "The <coefficients/variable importance> ",
                  "for each predictor is available as a supplement.")
   doc <- doc %>% officer::body_add_par(value = text )
 
-  doc <- doc %>% officer::body_add_par(value = 'Model Performance', style='heading 3')
+  doc <- doc %>% officer::body_add_par(value = 'Internal model validation', style='heading 3')
   
-  text <- paste0(" The internal validation of the model obtained an AUC of ",auc,
-                 " the ROC plot is presented in Figure 2.  The calibration plot for the internal validation ",
-                 "of the model is presented in Figure 3.")
+  text <- paste0(" The discriminative performance of the model is described by the ROC curve in Figure 2. The AUC of the model was ",auc," .",
+                 "The calibration of the model is presented in Figure 3.")
+  
   doc <- doc %>% officer::body_add_par(value =  text )
 
   #=============== RESULTS: ROC plot  ==============
@@ -865,11 +863,13 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
       ciInd <- grep('95ci',tolower(colnames(plpValidation$summary)))
       aucInd <- aucInd[!aucInd%in%ciInd]
       
-      auc <- paste0(round(as.numeric(plpValidation$summary[,aucInd]), digits=3), 
+      plpValidation$summary[is.na(plpValidation$summary)] <- 0
+      
+      aucv <- paste0(round(as.numeric(apply(plpValidation$summary[,aucInd],1,max)), digits=3), 
                      ' (', round(as.numeric(plpValidation$summary[,ciInd[1]]), digits=3) ,
                      '-',round(as.numeric(plpValidation$summary[,ciInd[2]]), digits = 3) , 
                      ')')
-      aucs <- paste0(paste0(auc[-length(auc)],collapse = ', '), ' and ', auc[length(auc)])
+      aucs <- paste0(paste0(aucv[-length(aucv)],collapse = ', '), ' and ', aucv[length(aucv)])
       
     } else {
       datasets <- paste0(plpValidation$summary$Database, collapse=' and ')
@@ -879,17 +879,17 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
       aucInd <- grep('auc',tolower(colnames(plpValidation$summary)))
       ciInd <- grep('95ci',tolower(colnames(plpValidation$summary)))
       aucInd <- aucInd[!aucInd%in%ciInd]
-      auc <- paste0(round(as.numeric(plpValidation$summary[,aucInd]), digits=3), 
+      aucv <- paste0(round(as.numeric(plpValidation$summary[,aucInd]), digits=3), 
                      ' (', round(as.numeric(plpValidation$summary[,ciInd[1]]), digits=3) ,
                      '-',round(as.numeric(plpValidation$summary[,ciInd[2]]), digits = 3) , 
                      ')')
-      aucs <- paste0(auc, collapse = ' and ')
+      aucs <- paste0(aucv, collapse = ' and ')
     }
     text <- paste0(" The external validation on ",datasets," consisting of target population sizes of ",
                    targetCounts,
                    " and outcome counts of ",outcomeCounts," obtained an AUC of ",
                    aucs,
-                   " respectively.  The external validation roc and calibration plots ",
+                   " respectively.  The external validation ROC and calibration plots ",
                    "can be found in Appendix B.")
     doc <- doc %>% officer::body_add_par(value = text )
     
@@ -897,7 +897,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     text <- paste0(" The external validation on <dataset 1> consisting of a target population of ",
                    "<target count> and outcome count of <outcome count> obtained an AUC of <add auc> ",
                    "(<auc ci>).  [repeat for each dataset].  The external validation calibration plots ",
-                   "can be found in Appendix 2.")
+                   "can be found in Appendix B.")
     doc <- doc %>% officer::body_add_par(value = text )
   }
   
@@ -906,16 +906,17 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   
   doc <- doc %>% officer::body_add_par(value = 'Interpretation', style = 'heading 3' )
   text <-c(
-    paste0("The discriminative ability of the model was <average/good/excellent>, obtaining an AUC of ",auc,
-           " indicating the model can distinguish between people who will develop the outcome and those ",
-           "who are unlike to develop the outcome and <compare with existing models if possible>."),
-    paste0("The results show the model is <reasonably/well> calibrated on the development dataset <but/and> ",
-           "is <not/is also> well calibrated on the validation datasets.  This shows "),
+    paste0("The AUC, the discriminative ability of the model, was ",auc, ".",
+           " <add statement indicating what this means e.g., the model can distinguish between people who will develop the outcome and those ",
+           "who are unlike to develop the outcome and compare with existing models if possible>."),
+    paste0("The results show the model is <poorly/reasonably/well> calibrated on the development dataset <but/and> ",
+           "is <not/is also> well calibrated on the validation datasets.  <add statement about what calibration shows>"),
     paste0("The most predictive variables were <add interesting ones from top 20>.  The variables <add> ",
            "are known or suspected to be risk factors of <add outcome> but the model has highlighted ",
            "<add variables> as predictive but they have not been incorporated in previous models.  ",
            "These variables could be studied using conventional population level estimation to determine ",
-           "whether they are causally related to the outcome.")
+           "whether they are causally related to the outcome."),
+    paste0("< add statement about how to use this model e.g., suitable thresholds to classify or as a risk score >")
   )
   doc <- doc %>% officer::body_add_par(value = text )
   
@@ -923,10 +924,11 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   doc <- doc %>% officer::body_add_par(value = 'Implications', style = 'heading 3')
   
   text <-c(
-    paste0("The results show that developing a model using <add database> data for the outcome ",outcomeName,
+    paste0("< add statement about the model performance inplciations: e.g., ",
+           "The results show that developing a model using <add database> data for the outcome ",outcomeName,
            " within ",targetName," resulted in a good discriminative ability and this model was validated ",
            "across several datasets and showed a consistently high external validation AUC.  This suggests ",
-           "the model could be a useful tool to aid decision making for ..."),
+           "the model could be a useful tool to aid decision making for ...>"),
     paste0("Inspecting the model variable importance may help to gain new insight into the disease dynamics ",
            "into the development of <outcome>.  As the model highlighted <new predictors> as potential new ",
            "risk factors, it would be useful in future research to determine whether these variables do in fact have a ",
@@ -938,10 +940,10 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   doc <- doc %>% officer::body_add_par(value = 'Limitations', style = 'heading 3')
   
   text <- c(
-    paste0("In this study we have developed a model on one US observational healthcare database and ",
-           "externally validated it across several other US databases to aim to determine the ",
-           "generalizability of the model.  However, each database only includes a sample of the whole ",
-           "US population and may not be representative of the whole US population.  "),
+    paste0("In this study we have developed a model on one <add database type> database and ",
+           "externally validated it across several other <add external database types> databases to aim to determine the ",
+           "generalizability of the model.  However, each database only includes a sample of the ",
+           "population and may not be representative of the whole population.  "),
     paste0("It is also possible for predictors such as conditions or drugs to be missing from the databases ",
            "(e.g., over the counter medication) and missing data will result in no record for the condition ",
            "or drug and therefore be treated like an absence of the condition or drug.  Therefore the ",
@@ -951,7 +953,8 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
            "that do not perform as well as models developed on datasets that contain variables on genetics ",
            "or lifestyle. However, observational datasets often contain thousands of variables that may be ",
            "used as proxies for genetic or lifestyle factors and observational data is often more readily ",
-           "available.")
+           "available."),
+    paste0("<add any other limitation of the study>")
   )
   for(i in 1:length(text)){
     doc <- doc %>% officer::body_add_par(value =  text[i] )
@@ -961,7 +964,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   text <- paste0("In this paper we developed a model for ",outcomeName," occurring within a target ",
                  "population consisting of ",targetName," during ",time_at_risk," on <development database> and ",
                  "externally validated the model on <validation datasets>.  The discriminative ability of ",
-                 "the model was  and the model was  calibrated. <talk about clinical usefulness>.  ",
+                 "the model was ",auc," and the model was <poorly/well> calibrated. <talk about clinical usefulness>.  ",
                  "In the future it would be useful to extend the external validation across the OHDS ",
                  "network and outside the OHDSI network and also determine the clinical usefulness of the ",
                  "model by implementing it retrospectively in a new dataset [ref].")
@@ -995,6 +998,12 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     
     
   }
+  
+  # adding the model covaraites to the appendix
+  doc <- doc %>% officer::body_add_par(value = 'Appendix C', style = 'heading 2')
+  modelVar <- plpResult$model$varImp[plpResult$model$varImp$covariateValue!=0,]
+  doc <- doc %>% officer::body_add_table(value=modelVar)
+  
 
   # write the document to file location
   print(doc, target = file.path(outputLocation))
