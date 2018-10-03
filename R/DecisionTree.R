@@ -33,17 +33,17 @@
 setDecisionTree <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
                             minImpurityDecrease=10^-7,seed =NULL, classWeight='None', 
                             plot=F  ){
-  if(!class(seed)%in%c('numeric','NULL'))
+  if(!class(seed)%in%c('numeric','NULL', 'integer'))
     stop('Invalid seed')
-  if(class(maxDepth)!='numeric')
+  if(!class(maxDepth) %in% c("numeric", "integer"))
     stop('maxDepth must be a numeric value >0 ')
-  if(maxDepth < 1)
+  if(min(maxDepth) < 1)
     stop('maxDepth must be greater that 0 or -1')
-  if(class(minSamplesSplit)!='numeric')
+  if(!class(minSamplesSplit) %in% c("numeric", "integer") )
     stop('minSamplesSplit must be a numeric value >1')
   if(min(minSamplesSplit) < 2)
     stop('minSamplesSplit must be greater that 1')
-  if(class(minSamplesLeaf)!='numeric')
+  if(!class(minSamplesLeaf) %in% c("numeric", "integer"))
     stop('minSamplesLeaf must be a numeric value >0')
   if(min(minSamplesLeaf) < 1)
     stop('minSamplesLeaf must be greater that 0')

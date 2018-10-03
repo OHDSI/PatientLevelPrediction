@@ -8,7 +8,8 @@ externalValidatePlp(plpResult, connectionDetails, validationSchemaTarget,
   validationSchemaOutcome, validationSchemaCdm, databaseNames,
   validationTableTarget = "cohort", validationTableOutcome = "cohort",
   validationIdTarget = NULL, validationIdOutcome = NULL,
-  oracleTempSchema = NULL, verbosity = "INFO", keepPrediction = F)
+  oracleTempSchema = NULL, verbosity = "INFO", keepPrediction = F,
+  sampleSize = NULL)
 }
 \arguments{
 \item{plpResult}{The object returned by runPlp() containing the trained model}
@@ -44,6 +45,8 @@ externalValidatePlp(plpResult, connectionDetails, validationSchemaTarget,
 }}
 
 \item{keepPrediction}{Whether to keep the predicitons for the new data}
+
+\item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
 }
 \value{
 A list containing the performance for each validation_schema

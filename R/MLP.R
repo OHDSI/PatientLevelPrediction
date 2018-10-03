@@ -28,13 +28,13 @@
 #' @export
 setMLP <- function(size=4, alpha=0.00001, seed=NULL){
   
-  if(!class(seed)%in%c('numeric','NULL'))
+  if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
-  if(class(size)!='numeric')
+  if(!class(size) %in% c("numeric", "integer"))
     stop('size must be a numeric value >0 ')
   if(size < 1)
     stop('size must be greater that 0')
-  if(class(alpha)!='numeric')
+  if(!class(alpha) %in% c("numeric", "integer"))
     stop('alpha must be a numeric value >0')
   if(alpha <= 0)
     stop('alpha must be greater that 0')

@@ -8,7 +8,8 @@ evaluateMultiplePlp(analysesLocation, outputLocation, connectionDetails,
   validationSchemaTarget, validationSchemaOutcome, validationSchemaCdm,
   databaseNames, validationTableTarget, validationTableOutcome,
   validationIdTarget = NULL, validationIdOutcome = NULL,
-  oracleTempSchema = NULL, verbosity = "INFO", keepPrediction = F)
+  oracleTempSchema = NULL, verbosity = "INFO", keepPrediction = F,
+  sampleSize = NULL)
 }
 \arguments{
 \item{analysesLocation}{The location where the multiple plp analyses are}
@@ -46,6 +47,8 @@ evaluateMultiplePlp(analysesLocation, outputLocation, connectionDetails,
 }}
 
 \item{keepPrediction}{Whether to keep the predicitons for the new data}
+
+\item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
 }
 \description{
 This function loads all the models in a multiple plp analysis folder and

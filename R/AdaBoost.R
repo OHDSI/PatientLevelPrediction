@@ -29,13 +29,13 @@
 #' @export
 setAdaBoost <- function(nEstimators = 50, learningRate = 1, seed = NULL) {
 
-  if (!class(seed) %in% c("numeric", "NULL"))
+  if (!class(seed) %in% c("numeric", "NULL", "integer"))
     stop("Invalid seed")
-  if (class(nEstimators) != "numeric")
+  if (!class(nEstimators) %in% c("numeric", "integer"))
     stop("nEstimators must be a numeric value >0 ")
   if (min(nEstimators) < 1)
     stop("nEstimators must be greater that 0 or -1")
-  if (class(learningRate) != "numeric")
+  if (!class(learningRate) %in% c("numeric", "integer"))
     stop("learningRate must be a numeric value >0 and <=1")
   if (max(learningRate) > 1)
     stop("learningRate must be less that or equal to 1")
@@ -115,7 +115,7 @@ fitAdaBoost <- function(population,
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
-  covariateRef$value <- unlist(varImp)
+  covariateRef$covariateValue <- unlist(varImp)
 
 
   # select best model and remove the others (!!!NEED TO EDIT THIS)

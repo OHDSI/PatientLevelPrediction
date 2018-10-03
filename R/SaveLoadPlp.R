@@ -127,7 +127,7 @@ getPlpData <- function(connectionDetails,
   if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)
     stop("Study end date must have format YYYYMMDD")
   if(!is.null(sampleSize)){
-    if(class(sampleSize)!='numeric')
+    if(!class(sampleSize) %in% c('numeric', 'integer'))
       stop("sampleSize must be numeric")
   }
   

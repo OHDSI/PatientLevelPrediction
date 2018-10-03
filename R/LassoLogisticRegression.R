@@ -25,14 +25,14 @@
 #' model.lr <- setLassoLogisticRegression()
 #' @export
 setLassoLogisticRegression<- function(variance=0.01, seed=NULL){
-  if(!class(seed)%in%c('numeric','NULL'))
+  if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
-  if(class(variance)!='numeric')
+  if(!class(variance) %in% c("numeric", "integer"))
     stop('Variance must be numeric')
   if(variance<0)
     stop('Variance must be >= 0')
   
-  result <- list(model='fitLassoLogisticRegression', param=list(val=variance, seed=seed), name="Lasso Logistic Regression")
+  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -50,7 +50,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   }
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) || class(plpData)=='plpData.libsvm'){
+  if(!'ffdf'%in%class(plpData$covariates)){
     OhdsiRTools::logError('Lasso Logistic regression requires plpData in coo format')
     stop()
   }
@@ -60,15 +60,15 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
   #TODO - how to incorporate indexes?
-  val <- 0.003
-  if(!is.null(param$val )) val <- param$val
+  variance <- 0.003
+  if(!is.null(param$variance )) variance <- param$variance
   start <- Sys.time()
   modelTrained <- fitGLMModel(population,
                                      plpData = plpData,
                                      modelType = "logistic",
                                      prior = createPrior("laplace",exclude = c(0),useCrossValidation = TRUE),
                                      control = createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
-                                                             startingVariance = val,
+                                                             startingVariance = variance,
                                                              tolerance  = 2e-07,
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
                                                              selectorType = "byPid",

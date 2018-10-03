@@ -98,6 +98,16 @@ runPlpAnalyses <- function(connectionDetails,
                           nfold = 3,
                           verbosity = "INFO") {
   
+  # start log:
+  clearLoggerType("Multple PLP Log")
+  if(!dir.exists(outputFolder)){dir.create(outputFolder,recursive=T)}
+  logFileName = paste0(outputFolder,'/plplog.txt')
+  logger <- OhdsiRTools::createLogger(name = "Multple PLP Log",
+                                      threshold = verbosity,
+                                      appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutParallel,
+                                                                                       fileName = logFileName)))
+  OhdsiRTools::registerLogger(logger)
+  
   if (missing(outcomeIds)){
     stop("Need to specify outcome ids")
   }
@@ -145,10 +155,12 @@ runPlpAnalyses <- function(connectionDetails,
     dir.create(file.path(outputFolder,'Validation'), recursive = T)
   }
   
-  referenceTable <- createPlpReferenceTable(modelAnalysisList,
+  OhdsiRTools::logTrace(paste0('Creating reference table'))
+  referenceTable <- tryCatch({createPlpReferenceTable(modelAnalysisList,
                                          cohortIds,
                                          outcomeIds,
-                                         outputFolder, cdmDatabaseName)
+                                         outputFolder, cdmDatabaseName)},
+                             error = function(cont){OhdsiRTools::logTrace(paste0('Creating reference table error:', cont)); stop()})
   if(!missing(cohortNames)){
     if(!is.null(cohortNames))
       if(length(cohortNames)!=length(cohortIds)){
@@ -167,6 +179,7 @@ runPlpAnalyses <- function(connectionDetails,
   }
   
   if(!file.exists(file.path(outputFolder,'settings.csv'))){
+    OhdsiRTools::logTrace(paste0('Writing settings csv to ',file.path(outputFolder,'settings.csv') ))
     write.csv(referenceTable,
               file.path(outputFolder,'settings.csv'), 
               row.names = F )
@@ -176,7 +189,7 @@ runPlpAnalyses <- function(connectionDetails,
     
     plpDataFolder <- referenceTable$plpDataFolder[i]
     if(!dir.exists(plpDataFolder)){
-      
+      OhdsiRTools::logTrace(paste0('Running setting ', i ))
       
       oind <- referenceTable$cohortId==referenceTable$cohortId[i] & 
               referenceTable$covariateSettingId==referenceTable$covariateSettingId[i]
@@ -188,32 +201,38 @@ runPlpAnalyses <- function(connectionDetails,
         
       plpData <- tryCatch(do.call(getPlpData, plpDataSettings),
                finally= OhdsiRTools::logTrace('Done plpData.'),
-               error= function(cond){return(NULL)})
+               error= function(cond){OhdsiRTools::logTrace(paste0('Error with getPlpData:',cond));return(NULL)})
   
       if(!is.null(plpData)){
+        OhdsiRTools::logTrace(paste0('Saving data in setting ', i ))
         savePlpData(plpData, referenceTable$plpDataFolder[i])
       }
     } else{
+      OhdsiRTools::logTrace(paste0('Loading data in setting ', i ))
       plpData <- loadPlpData(referenceTable$plpDataFolder[i])
     }
     
     if(!file.exists(referenceTable$studyPop[i])){
+      OhdsiRTools::logTrace(paste0('Setting population settings for setting ', i ))
       # get pop and save to referenceTable$popFile
       popSettings <- modelAnalysisList$populationSettings[[referenceTable$populationSettingId[i]]]
       popSettings$outcomeId <- referenceTable$outcomeId[i] 
       popSettings$plpData <- plpData
       population <- tryCatch(do.call(createStudyPopulation, popSettings),
                finally= OhdsiRTools::logTrace('Done pop.'), 
-               error= function(cond){return(NULL)})
+               error= function(cond){OhdsiRTools::logTrace(paste0('Error with pop:',cond));return(NULL)})
       if(!is.null(population)){
+        OhdsiRTools::logTrace(paste0('Saving population for setting ', i ))
         saveRDS(population, referenceTable$studyPop[i])
       }
     } else{
+      OhdsiRTools::logTrace(paste0('Loading population for setting', i ))
       population <- readRDS(referenceTable$studyPop[i])
     }
     
     plpResultFolder = file.path(referenceTable$plpResultFolder[i],'plpResult')
     if(!dir.exists(plpResultFolder)){
+      OhdsiRTools::logTrace(paste0('Running runPlp for setting ', i ))
       dir.create(referenceTable$plpResultFolder[i], recursive = T)
       # runPlp and save result to referenceTable$plpResultFolder
       runPlpSettings$modelSettings <- modelAnalysisList$models[[referenceTable$modelSettingId[i]]]
@@ -227,7 +246,7 @@ runPlpAnalyses <- function(connectionDetails,
       runPlpSettings$saveEvaluation <- F
       result <- tryCatch(do.call(runPlp, runPlpSettings),
                              finally= OhdsiRTools::logTrace('Done runPlp.'), 
-                             error= function(cond){return(NULL)})
+                             error= function(cond){OhdsiRTools::logTrace(paste0('Error with runPlp:',cond));return(NULL)})
     }
     
   }
@@ -252,17 +271,12 @@ createPlpReferenceTable <- function(modelAnalysisList,
   analyses$devDatabase <- cdmDatabaseName
   analyses <- merge(analyses, modelAnalysisList$settingLookupTable, 
                     by.x='modelSettingsId', by.y='lookupId', all.x=T)
-  #analyses$plpDataFolder <- file.path(outputFolder,'plpData',
-  #                                    paste0(analyses$cohortId,'-',analyses$covariateSettingId))
+  
+  # TODO: replace outputFolder with '.' to make relative positions
   analyses$plpDataFolder <- file.path(outputFolder,
                                       paste0('PlpData_L',analyses$covariateSettingId,'_T',analyses$cohortId))
-  
-  #analyses$studyPopFile <- file.path(outputFolder,'population',
-  #                              paste0(analyses$cohortId,'-',analyses$outcomeId,'-',analyses$populationSettingId,'.rds'))
   analyses$studyPopFile <- file.path(outputFolder,
                                      paste0('StudyPop_L',analyses$populationSettingId,'_T',analyses$cohortId,'_O',analyses$outcomeId,'.rds'))
-  #analyses$plpResultFolder <- file.path(outputFolder,'Result',
-  #                                   paste0(analyses$analysisId))
   analyses$plpResultFolder <- file.path(outputFolder,
                                         paste0('Analysis_',analyses$analysisId))
 return(analyses)  
@@ -492,6 +506,7 @@ createStudyPopulationSettings <- function(binary = T,
 #'                                         \item{FATAL}{Be silent except for fatal errors}
 #'                                         }
 #' @param keepPrediction                   Whether to keep the predicitons for the new data                                         
+#' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
 #' 
 #' @export 
 evaluateMultiplePlp <- function(analysesLocation,
@@ -507,7 +522,17 @@ evaluateMultiplePlp <- function(analysesLocation,
                                 validationIdOutcome = NULL,
                                 oracleTempSchema = NULL,
                                 verbosity = 'INFO',
-                                keepPrediction = F){
+                                keepPrediction = F,
+                                sampleSize = NULL){
+  
+  clearLoggerType("Multple Evaluate PLP Log")
+  if(!dir.exists(outputLocation)){dir.create(outputLocation,recursive=T)}
+  logFileName = paste0(outputLocation,'/plplog.txt')
+  logger <- OhdsiRTools::createLogger(name = "Multple Evaluate PLP Log",
+                                      threshold = verbosity,
+                                      appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutParallel,
+                                                                                       fileName = logFileName)))
+  OhdsiRTools::registerLogger(logger)
   
   if(missing(databaseNames)){
     stop('Need to put a shareable name/s for the database/s')
@@ -521,7 +546,11 @@ evaluateMultiplePlp <- function(analysesLocation,
   
   for(i in 1:length(modelSettings)){
     
+    OhdsiRTools::logInfo(paste0('Evaluating model in ',modelSettings[i] ))
+    
     if(dir.exists(file.path(modelSettings[i],'plpResult'))){
+      OhdsiRTools::logInfo(paste0('plpResult found in ',modelSettings[i] ))
+      
       plpResult <- loadPlpResult(file.path(modelSettings[i],'plpResult'))
       
       validations <-   tryCatch(externalValidatePlp(plpResult = plpResult,
@@ -536,8 +565,10 @@ evaluateMultiplePlp <- function(analysesLocation,
                                                     validationIdOutcome = validationIdOutcome,
                                                     oracleTempSchema = oracleTempSchema,
                                                     verbosity = verbosity, 
-                                                    keepPrediction = keepPrediction),
-                                error = function(cont){return(NULL)})
+                                                    keepPrediction = keepPrediction,
+                                                    sampleSize=sampleSize),
+                                error = function(cont){OhdsiRTools::logInfo(paste0('Error: ',cont ))
+                                  ;return(NULL)})
       
       if(!is.null(validations)){
         if(length(validations$validation)>1){
@@ -546,6 +577,8 @@ evaluateMultiplePlp <- function(analysesLocation,
             if(!dir.exists(saveName)){
               dir.create(saveName, recursive = T)
             }
+            OhdsiRTools::logInfo(paste0('Evaluation result save in ',file.path(saveName,'validationResult.rds') ))
+            
             saveRDS(validations$validation[[j]], file.path(saveName,'validationResult.rds'))
             
           }
@@ -554,6 +587,7 @@ evaluateMultiplePlp <- function(analysesLocation,
           if(!dir.exists(saveName)){
             dir.create(saveName, recursive = T)
           }
+          OhdsiRTools::logInfo(paste0('Evaluation result save in ',file.path(saveName,'validationResult.rds') ))
           saveRDS(validations$validation, file.path(saveName,'validationResult.rds'))
         }
       }
@@ -592,22 +626,23 @@ evaluateMultiplePlp <- function(analysesLocation,
 #' @export
 loadPredictionAnalysisList <- function(predictionAnalysisListFile){
   # load the json file and parse into prediction list
-  json <- tryCatch({rjson::fromJSON(file=predictionAnalysisListFile)},
+  json <- tryCatch({OhdsiRTools::loadSettingsFromJson(file=predictionAnalysisListFile)},
                    error=function(cond) {
                      stop('Issue with json file...')
                    })
-  
+
   modelList <- list()
   length(modelList) <-  length(json$modelSettings)
   for(i in 1:length(json$modelSettings)){
-    name <- names(json$modelSettings)[i]
+    name <- names(json$modelSettings[[i]])
     modelList[[i]] <- do.call(get(paste0('set',gsub('Settings','',name)), envir = environment(PatientLevelPrediction::accuracy)), 
-                              json$modelSettings[[i]]
+                              json$modelSettings[[i]][[1]]
     )
   }
   
   # this can be multiple?
-  covariateSettingList <- lapply(json$covariateSettings, function(x) do.call(FeatureExtraction::createCovariateSettings, x))
+  ##covariateSettingList <- lapply(json$covariateSettings, function(x) do.call(FeatureExtraction::createCovariateSettings, x))
+  covariateSettingList <- json$covariateSettings
   
   # extract the population settings:
   populationSettingList <- lapply(json$populationSettings, function(x) do.call(PatientLevelPrediction::createStudyPopulationSettings, x))
@@ -630,8 +665,8 @@ loadPredictionAnalysisList <- function(predictionAnalysisListFile){
                          testSplit = json$runPlpArgs$testSplit,
                          testFraction = json$runPlpArgs$testFraction,
                          splitSeed = json$runPlpArgs$splitSeed,
-                         nfold = json$runPlpArgs$nfold,
-                         verbosity = json$runPlpArgs$verbosity
+                         nfold = json$runPlpArgs$nfold#,
+                         #verbosity = json$runPlpArgs$verbosity - isnt in atlas
   )
   
   return(runPlpAnalyses)
@@ -643,7 +678,115 @@ getCohortNames <- function(json, targetIds){
   idNames <- as.data.frame(idNames)
   name <- c()
   for(tid in targetIds){
-    name <- c(name, as.character(idNames$name[idNames$id==targetIds][1]))
+    name <- c(name, as.character(idNames$name[idNames$id==tid][1]))
   }
   return(name)
+}
+
+
+
+#' Saves a json prediction settings given R settings
+#'
+#' @details
+#' This function interprets a json with the multiple prediction settings and creates a list 
+#' that can be combined with connection settings to run a multiple prediction study
+#' 
+#' @param  workFolder    Location to save json specification
+#' @param  cohortIds     Vector of target population cohort ids
+#' @param  outcomeIds     Vector of outcome cohort ids
+#' @param  cohortSettingCsv   The location to the csv containing the cohort details
+#' @param  covariateSettingList   A list of covariate settings
+#' @param populationSettingList   A list of population settings
+#' @param modelSettingList        A list of model settings
+#' @param maxSampleSize           If not NULL then max number of target population to sample for model training
+#' @param washoutPeriod           Minimum prior observation for each person in target pop to be included
+#' @param minCovariateFraction    Minimum covariate fraction to include
+#' @param normalizeData           Whether to normalise data
+#' @param testSplit               Split by person or time
+#' @param testFraction            Fractiuon of data to use for test set
+#' @param splitSeed               Seed used in test split
+#' @param nfold                   Number of folds used when training model
+#'
+#' @export
+savePredictionAnalysisList <- function(workFolder="inst/settings",
+                                       cohortIds,
+                                       outcomeIds,
+                                       cohortSettingCsv = file.path(workFolder, 'CohortsToCreate.csv'),
+                                       covariateSettingList,
+                                       populationSettingList,
+                                       modelSettingList,
+                                       
+                                       maxSampleSize= NULL,
+                                       washoutPeriod=0,
+                                       minCovariateFraction=0,
+                                       normalizeData=T,
+                                       testSplit='person',
+                                       testFraction=0.25,
+                                       splitSeed=1,
+                                       nfold=3
+                                       ){
+  
+  json <- list()
+  json$targetIds <- cohortIds
+  json$outcomeIds <- outcomeIds
+  
+  cohortsToCreate <- read.csv(cohortSettingCsv)
+  json$cohortDefinitions <- apply(cohortsToCreate[,c('cohortId','name')], 1, function(x) list(id=x[1], name=x[2]))
+  # could extract the cohort json and add expression?
+  
+  json$getPlpDataArgs <- list(maxSampleSize=maxSampleSize,
+                              washoutPeriod=washoutPeriod)
+  
+  json$runPlpArgs <- list(minCovariateFraction=minCovariateFraction,
+                          normalizeData=normalizeData,
+                          testSplit=testSplit,
+                          testFraction=testFraction,
+                          splitSeed=splitSeed,
+                          nfold=nfold)#,
+                          #verbosity=verbosity) removed due to atlas
+  
+  json$covariateSettings <- covariateSettingList
+  json$populationSettings <- populationSettingList
+  
+  #format modelSettings
+  json$modelSettings <- list()
+  if(class(modelSettingList)=='list'){
+    length(json$modelSettings) <- length(modelSettingList)
+    for( k in 1:length(modelSettingList)){
+      modSet <- list()
+      if(modelSettingList[[k]]$model%in%c('fitLassoLogisticRegression','fitKNN','fitNaiveBayes')){
+        modSet[[1]] <- modelSettingList[[k]]$param
+      } else {
+        if(class(modelSettingList[[k]]$param)=='data.frame'){modelSettingList[[k]]$param <- split(modelSettingList[[k]]$param, factor(1:nrow(modelSettingList[[k]]$param)))}
+        params <- lapply(1:ncol(modelSettingList[[k]]$param[[1]]), function(i) unique(unlist(lapply(modelSettingList[[k]]$param, function(x) x[[i]]))))
+        names(params) <- colnames(modelSettingList[[k]]$param[[1]])
+        if(params$seed=='NULL'){
+          params$seed <- NULL
+        }
+        modSet[[1]] <- params
+      }
+      names(modSet) <- paste0(gsub('fit','',modelSettingList[[k]]$model),'Settings')
+      json$modelSettings[[k]] <- modSet  
+    }
+  } else {
+    length(json$modelSettings) <- 1
+    modSet <- list()
+    if(modelSettingList$model%in%c('fitLassoLogisticRegression','fitKNN','fitNaiveBayes')){
+      modSet[[1]] <- modelSettingList$param
+    } else {
+      if(class(modelSettingList$param)=='data.frame'){modelSettingList$param <- split(modelSettingList$param, factor(1:nrow(modelSettingList$param)))}
+      params <- lapply(1:ncol(modelSettingList$param[[1]]), function(i) unique(unlist(lapply(modelSettingList$param, function(x) x[[i]]))))
+      names(params) <- colnames(modelSettingList$param[[1]])
+      if(params$seed=='NULL'){
+        params$seed <- NULL
+      }
+      modSet[[1]] <- params
+    }
+    names(modSet) <- paste0(gsub('fit','',modelSettingList$model),'Settings')
+    json$modelSettings[[1]] <- modSet 
+    }
+  
+  OhdsiRTools::saveSettingsToJson(json, file=file.path(workFolder,"predictionAnalysisList.json"))
+
+  return(file.path(workFolder,"predictionAnalysisList.json"))  
 }
