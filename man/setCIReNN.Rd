@@ -4,16 +4,18 @@
 \alias{setCIReNN}
 \title{Create setting for CIReNN model}
 \usage{
-setCIReNN(units = c(128, 64), recurrentDropout = c(0.2),
-  layerDropout = c(0.2), lr = c(1e-04), decay = c(1e-05),
-  outcomeWeight = c(1), batchSize = c(100), epochs = c(100),
-  earlyStoppingMinDelta = c(1e-04), earlyStoppingPatience = c(10),
-  useVae = T, vaeDataSamplingProportion = 0.1, vaeValidationSplit = 0.2,
+setCIReNN(numberOfRNNLayer = c(1), units = c(128, 64),
+  recurrentDropout = c(0.2), layerDropout = c(0.2), lr = c(1e-04),
+  decay = c(1e-05), outcomeWeight = c(1), batchSize = c(100),
+  epochs = c(100), earlyStoppingMinDelta = c(1e-04),
+  earlyStoppingPatience = c(10), useVae = T,
+  vaeDataSamplingProportion = 0.1, vaeValidationSplit = 0.2,
   vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
   vaeEpoch = 100L, vaeEpislonStd = 1, seed = NULL)
-  seed = NULL)
 }
 \arguments{
+\item{numberOfRNNLayer}{The number of RNN layer, only 1, 2, or 3 layers available now. eg. 1, c(1,2), c(1,2,3)}
+
 \item{units}{The number of units of RNN layer - as a list of vectors}
 
 \item{recurrentDropout}{The reccurrent dropout rate (regularisation)}
