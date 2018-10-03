@@ -46,9 +46,9 @@ library(PatientLevelPrediction)
 
 Observational healthcare data, such as administrative claims and electronic health records, are increasingly used for clinical characterization of disease progression, quality improvement, and population-level effect estimation for medical product safety surveillance and comparative effectiveness. Advances in machine learning for large dataset analysis have led to increased interest in applying patient-level prediction on this type of data. Patient-level prediction offers the potential for medical practice to move beyond average treatment effects and to consider personalized risks as part of clinical decision-making. However, many published efforts in patient-level-prediction do not follow the model development guidelines, fail to perform extensive external validation, or provide insufficient model details that limits the ability of independent researchers to reproduce the models and perform external validation. This makes it hard to fairly evaluate the predictive performance of the models and reduces the likelihood of the model being used appropriately in clinical practice. To improve standards, several papers have been written detailing guidelines for best practices in developing and reporting prediction models.
 
-The Transparent Reporting of a multivariable prediction model for Individual Prognosis Or Diagnosis (TRIPOD) statement [(link)](https://www.equator-network.org/reporting-guidelines/tripod-statement/) provides clear recommendations for reporting prediction model development and validation and addresses some of the concerns related to transparency. However, data structure heterogeneity and inconsistent terminologies still make collaboration and model sharing difficult as different researchers are often required to write new code to extract the data from their databases and may define variables differently.
+The Transparent Reporting of a multivariable prediction model for [`Individual Prognosis Or Diagnosis (TRIPOD) statement`](https://www.equator-network.org/reporting-guidelines/tripod-statement/) provides clear recommendations for reporting prediction model development and validation and addresses some of the concerns related to transparency. However, data structure heterogeneity and inconsistent terminologies still make collaboration and model sharing difficult as different researchers are often required to write new code to extract the data from their databases and may define variables differently.
 
-In our paper [(link)](https://academic.oup.com/jamia/article/25/8/969/4989437), we propose a standardised framework for patient-level prediction that utilizes the OMOP CDM and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to support existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
+In our [`paper`](https://academic.oup.com/jamia/article/25/8/969/4989437), we propose a standardised framework for patient-level prediction that utilizes the OMOP Common Data Model (CDM) and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to support existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
 
 Figure 1, illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
@@ -56,14 +56,14 @@ Figure 1, illustrates the prediction problem we address. Among a population at r
 
 
 
-As shown in Figure 2, to define a prediction problem we have to define t=0 by a Target Cohort (T), the outcome we like to predict by an outcome cohort (O), and the time-at-risk (TAR). Furthermore, we have to make design choices for the model we like to develop. This conceptual framework works for all type of prediction problems, for example those presented in Figure 3.  
+As shown in Figure 2, to define a prediction problem we have to define t=0 by a Target Cohort (T), the outcome we like to predict by an outcome cohort (O), and the time-at-risk (TAR). Furthermore, we  have to make design choices for the model we like to develop, and determine the observational datasets to perform internal and external validation. This conceptual framework works for all type of prediction problems, for example those presented in Figure 3.
 
 ![Design choices](studydesign.png)
 
 
 ![Examples of prediction problems](problems.png)
 
-This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the Observational Medical Outcomes Partnership Common Data Model (OMOP CDM). In this vignette we assume you have installed the package correctly using the [`InstallationGuide`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf).
+This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the OMOP CDM. In this vignette we assume you have installed the package correctly using the [`InstallationGuide`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf).
 
 # Study specification
 
@@ -75,7 +75,7 @@ Atrial fibrillation is a disease characterized by an irregular heart rate that c
 
 We will apply the PatientLevelPrediction package to observational healthcare data to address the following patient-level prediction question:
 
-Amongst patients who are newly diagnosed with Atrial Fibrillation, which patients will go on to have Ischemic Stroke within 3 years? 
+Amongst patients who are newly diagnosed with Atrial Fibrillation, which patients will go on to have Ischemic Stroke within 1 year? 
 
 We will define 'patients who are newly diagnosed with Atrial Fibrillation' as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias.  We will define 'Ischemic stroke events' as ischemic stroke condition records during an inpatient or ER visit;  successive records with > 180 day gap are considered independent episodes.
 
@@ -83,19 +83,20 @@ We will define 'patients who are newly diagnosed with Atrial Fibrillation' as th
 
 The final study population in which we will develop our model is often a subset of the Target population, because we will e.g. apply criteria that are dependent on T and O or we want to do sensitivity analyses with subpopulations of T.  For this we have to answer the following questions:
 
-- *What is the minimum amount of observation time we require before the start of the target cohort?* This choice could depend on the available patient time in your training data, but also on the time you expect to be available in the data sources you want to apply the model on in the future. Moreover, there could be clinical reasons to choose a short or longer lookback period. For our example, we will use a prior history as lookback period (washout period).
+- *What is the minimum amount of observation time we require before the start of the target cohort?* This choice could depend on the available patient time in your training data, but also on the time you expect  to be available in the data sources you want to apply the model on in the future. The longer the minimum observation time, the more baseline history time is available for each person to use for feature extraction, but the fewer patients will qualify for analysis.  Moreover, there could  be clinical reasons to choose a short or longer lookback period. For our example, we will use a prior history as lookback period (washout period).
 
-- *Can patients enter the target cohort multiple times?* In our target cohort definition we did not apply a restriction to only let the patients enter once. This allows us to re-use this cohort definition for other questions, e.g. if we use it as an outcome. However, we now have to define if this is what we want for our stroke prediction problem. Since we want to look at the first occurrence of atrial fibrillation we will have patients enter only once in the target cohort. 
+- *Can patients enter the target cohort multiple times?* In the target cohort definition, a person may qualify for the cohort multiple times during different spans of time, for example if they had different episodes of a disease or separate periods of exposure to a medical product.  The cohort definition does not necessarily apply a restriction to only let the patients enter once, but in the context of a particular patient-level prediction problem, a user may want to restrict the cohort to the first qualifying episode. In our example, a person could only enter the target cohort once since our criteria was based on first occurrence of atrial fibrillation. 
 
-- *Do we allow persons to enter the cohort if they experienced the outcome before?* For our prediction example, the answer to this question is 'Yes' because we know from the CHADS2 score that prior strokes are very predictive of future strokes. If this answer would have been 'No' we also had to decide how long we would look back for previous occurrences of the outcome.
+- *Do we allow persons to enter the cohort if they experienced the outcome before?* Do we allow persons to enter the target cohort if they experienced the outcome before qualifying for the target cohort?  Depending on the particular patient-level prediction problem, there may be desire to predict ‘incident’ first occurrence of an outcome, in which case patients who have previously experienced the outcome are no ‘at-risk’ for having a first occurrence and therefore should be excluded from the target cohort.  In other circumstances, there may be desire to predict ‘prevalent’ episodes, whereby patients with prior outcomes can be included in the analysis and the prior outcome itself can be a predictor of future outcomes.  For our prediction example, the answer to this question is ‘Yes, allow persons with prior outcomes’ because we know from the CHADS2 score that prior strokes are very predictive of future strokes. If this answer would have been ‘No’ we also have to decide how long we would look back for previous occurrences of the outcome.
 
-- *How do we define the period in which we will predict our outcome relative to the target cohort start?* We actually have to make two decisions to answer that question. First, does the time-at-risk window start at the date of the start of the target cohort or later? Arguments to make it start later could be that you want to avoid outcomes that were entered late in the record that actually occured before the start of the target cohort. Second, you need to define the time-at-risk by setting the end date. For our problem we will predict in a window starting 1 day after the start of the target cohort upto 365 days later. 
+- *How do we define the period in which we will predict our outcome relative to the target cohort start?* We actually have to make two decisions to answer that question. First, does the time-at-risk window start at the date of the start of the target cohort or later? Arguments to make it start later could be that you want to avoid outcomes that were entered late in the record that actually occurred before the start of the target cohort. Second, you need to define the time-at-risk by setting the risk window end, as some specification of days offset relative to the target cohort start or end dates. For our problem we will predict in a ‘time-at-risk’ window starting 1 day after the start of the target cohort up to 365 days later (to look for 1-year risk following atrial fibrillation diagnosis).
 
-- *Do we require a minimum amount of time-at-risk?* We have to decide if we want to include patients that did not experience the outcome but did leave the data base earlier than the end of our time-at-risk period. These patients may experience the outcome when we do not observe them. For our prediction problem we decide to answer this question with 'Yes' for that reason. Furthermore, we have to decide if this contraint also applies to persons who experienced the outcome or we will include all persons with the outcome irrespective of their total time at risk. For example, if the outcome is death none of these will have the required time-at-risk.
+
+- *Do we require a minimum amount of time-at-risk?* We have to decide if we want to include patients that did not experience the outcome but did leave the database earlier than the end of our time-at-risk period. These patients may experience the outcome when we do not observe them. For our  prediction problem we decide to answer this question with ‘Yes, require a mimimum time-at-risk’ for that reason. Furthermore, we have to decide if this constraint also applies to persons who experienced the outcome or we will include all persons with the outcome irrespective of their total time at risk. For example, if the outcome is death, then persons with the outcome are likely censored before the full time-at-risk period is complete.
 
 ## Model development settings
 
-To develop the model we have to decide which model we like to train. We see the selection of the best algorithm for a certain prediction problem as an emperical question, i.e. you need to let the data speak for itself and try different approaches to find the best one. There is no algorithm that will work best for all problems (no free lunch). In our package we therefore aim to implement many algorithms. Furthermore, we made the system modular so you can add your own custom algorithms as described in more detail in the [`AddingCustomAlgorithms`](Link to be added) vignette. 
+To develop the model we have to decide which algorithm(s) we like to train. We see the selection of the best algorithm for a certain prediction problem as an empirical question, i.e. you need to let the data speak for itself and try different approaches to find the best one. There is no algorithm that will work best for all problems (no free lunch). In our package we therefore aim to implement many algorithms. Furthermore, we made the system modular so you can add your own custom algorithms as described in more detail in the [`AddingCustomAlgorithms`](Link to be added) vignette. 
 
 Our package currently contains the following algorithms to choose from:
 
@@ -105,7 +106,7 @@ Our package currently contains the following algorithms to choose from:
 | Gradient boosting machines | Gradient boosting machines is a boosting ensemble technique and in our framework it combines multiple decision trees.  Boosting works by iteratively adding decision trees but adds more weight to the data-points that are misclassified by prior decision trees in the cost function when training the next tree.  We use Extreme Gradient Boosting, which is an efficient implementation of the gradient boosting framework implemented in the xgboost R package available from CRAN. | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, seed  | mtry  (number  of  features  in  each  tree),ntree (number of trees), maxDepth (max levels in tree), minRows (minimum data points in in node),balance (balance class labels), seed  |
 | Random forest | Random forest is a bagging ensemble technique that combines multiple decision trees.  The idea behind bagging is to reduce the likelihood of overfitting, by using weak classifiers, but combining multiple diverse weak classifiers into a strong classifier.  Random forest accomplishes this by training multiple decision trees but only using a subset of the variables in each tree and the subset of variables differ between trees. Our packages uses the sklearn learn implementation of Random Forest in python. | mtry  (number  of  features  in  each  tree),ntree (number of trees), maxDepth (max levels in tree), minRows (minimum data points in in node),balance (balance class labels), seed  |
 | K-nearest neighbors | K-nearest neighbors (KNN) is an algorithm that uses some metric to find the K closest labelled data-points, given the specified metric, to a new unlabelled data-point.  The prediction of the new data-points is then the most prevalent class of the K-nearest labelled data-points.  There is a sharing limitation of KNN, as the model requires labelled data to perform the prediction on new data, and it is often not possible to share this data across data sites.We included the BigKnn classifier developed in OHDSI which is a large scale k-nearest neighbor classifier using the Lucene search engine: https://github.com/OHDSI/BigKnn | k (number   of   neighbours),weighted (weight by inverse frequency)  |
-| Naive Bayes | The Naive Bayes algorithm applies the Bayes’ theorem with the “naive” assumption of conditional independence between every pair of features given the value of the class variable. Based on the likelyhood of the data belong to a class and the prior distribution of the class, a posterior distribution is obtained.  | none |
+| Naive Bayes | The Naive Bayes algorithm applies the Bayes’ theorem with the “naive” assumption of conditional independence between every pair of features given the value of the class variable. Based on the likelihood the data belongs to a class and the prior distribution of the class, a posterior distribution is obtained.  | none |
 | AdaBoost | AdaBoost is a boosting ensemble technique. Boosting works by iteratively adding decision trees but adds more weight to the data-points that are misclassified by prior decision trees in the cost function when training the next tree.We use the sklearn “AdaboostClassifier” implementation in Python. | nEstimators (the maximum number of estimators at which boosting is terminated), learningRate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learningRate and nEstimators) |
 | Decision Tree | A decision tree is a classifier that partitions the variable space using individual tests selected using a greedy approach.  It aims to find partitions that have the highest information gain to separate the classes.  The decision tree can easily overfit by enabling a large number of partitions (tree depth) and often needs some regularization (e.g., pruning or specifying hyper-parameters that limit the complexity of the model). We use the sklearn “DecisionTreeClassifier” implementation in Python. | maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight ("Balance"" or "None") |
 | Multilayer Perception | Neural networks contain multiple layers that weight their inputs using an non-linear function.  The first layer is the input layer, the last layer is the output layer the between are the hidden layers.  Neural networks are generally trained using feed forward back-propagation.  This is when you go through the network with a data-point and calculate the error between the true label and predicted label, then go backwards through the network and update the linear function weights based on the error.  This can also be performed as a batch, where multiple data-points are fee| size (the number of hidden nodes), alpha (the l2 regularisation), seed |
@@ -113,9 +114,9 @@ Our package currently contains the following algorithms to choose from:
 
 Furthermore, we have to decide on the **covariates** that we will use to train our model. This choice can be driven by domain knowledge of available computational resources. In our example, we like to add the Gender, Age, Conditions, Drugs Groups, and Visit Count. We also have to specify in which time windows we will look and we decide to look in year before and any time prior.
 
-Finaly, we have to define how we will train and test our model on our data, i.e. how we perform **internal validation**. For this we have to decide how we divide our dataset in a training and testing dataset and how we randomly assign patients to these two sets. Dependent on the size of the training set we can decide how much data we like to use for training, typically this is a 75%, 25% split. If you have very large datasets you can use more data for training. To randomly assign patients to the training and testing set, there are two commonly used approaches:
+Finally, we have to define how we will train and test our model on our data, i.e. how we perform **internal validation**. For this we have to decide how we divide our dataset in a training and testing dataset and how we randomly assign patients to these two sets. Dependent on the size of the training set we can decide how much data we like to use for training, typically this is a 75%, 25% split. If you have very large datasets you can use more data for training. To randomly assign patients to the training and testing set, there are two commonly used approaches:
 
-1. split by person. In this case a randam seed is used to assign the patient to either sets.
+1. split by person. In this case a random seed is used to assign the patient to either sets.
 2. split by time. In this case a time point is used to split the persons, e.g. 75% of the data is before and 25% is after this date. The advantage of this is that you take into consideration that the health care system has changed over time.
 
 For our prediction model we decide to start with a Regularized Logistic Regression and will use the default parameters. We will do a 75%-25% split by person.
@@ -130,11 +131,11 @@ Outcome Cohort (O) | 'Ischemic stroke events' defined as ischemic stroke conditi
 Time-at-risk (TAR) | 365 days |
  | |
 **Population Definition** | |
-  Washout Period |365 |
+  Washout Period | 1095 |
   Enter the target cohort multiple times? | No|
   Allow prior outcomes? | Yes |
   Start of time-at-risk | 1 day |
-  End of time-at-risk | 366 days |
+  End of time-at-risk | 364 days |
   Require a minimum amount of time-at-risk? | Yes (365 days)
  | |
 **Model Development** | |
@@ -143,7 +144,7 @@ Time-at-risk (TAR) | 365 days |
   Covariates | ender, Age, Conditions (ever before, <365), Drugs Groups (ever before, <365), and Visit Count
   Data split | 75% train, 25% test. Randomly assigned by person
 
-According to the best practices we need to make a protocol that completely specifies how we plan to execure our study. This protocol will be assessed by the governance boards of the participating data sources in your network study. For this a template could be used but we prefer to automate this process as much as possible by adding functionality to automatically generate study protocol from a study specification. We will discuss this in more detail later.
+According to the best practices we need to make a protocol that completely specifies how we plan to execute our study. This protocol will be assessed by the governance boards of the participating data sources in your network study. For this a template could be used but we prefer to automate this process as much as possible by adding functionality to automatically generate study protocol from a study specification. We will discuss this in more detail later.
 
 # Study implementation
 
@@ -151,7 +152,7 @@ Now we have completely design our study we have to implement the study. We have 
 
 ## Cohort instantiation
 
-For our study we need to know when a person enters the target and outcome cohorts. This is stored in a table on the server that contains the cohort start date and cohort end date for all subjects for a specific cohort defintion. This cohort table has a very simple structure as shown below:
+For our study we need to know when a person enters the target and outcome cohorts. This is stored in a table on the server that contains the cohort start date and cohort end date for all subjects for a specific cohort definition. This cohort table has a very simple structure as shown below:
   
 - `cohort_definition_id`, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.
 - `subject_id`, a unique identifier corresponding to the `person_id` in the CDM.
@@ -160,32 +161,32 @@ For our study we need to know when a person enters the target and outcome cohort
 
 How do we fill this table according to our cohort definitions? There are two options for this: 
 
-1) use the interactive cohort builder tool in [Atlas](www.github.com/OHDSI/Atlas) which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort tabel
+1) use the interactive cohort builder tool in [ATLAS](www.github.com/OHDSI/ATLAS) which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort table.
 
 2) write your own custom SQL statements to fill the cohort table. 
 
 Both methods are described below for our example prediction problem.
 
-### Atlas cohort builder
+### ATLAS cohort builder
 
-![Target Cohort Atrial Fibrillation](ATLAS_O.png)
+![Target Cohort Atrial Fibrillation](ATLAS_T.png)
 
-Atlas allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involve selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person's episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. As an example, Figure 4 shows how we created the Atrial Fibrillation cohort and Figure 5 shows how we created the stroke cohort in Atlas. 
+ATLAS allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involve selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person's episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. As an example, Figure 4 shows how we created the Atrial Fibrillation cohort and Figure 5 shows how we created the stroke cohort in ATLAS. 
 
-![Outcome Cohort Stroke](ATLAS_T.png)
+![Outcome Cohort Stroke](ATLAS_O.png)
 
 The T and O cohorts can be found here: 
 
-- Atrial Fibrilaton (T): http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769447
+- Atrial Fibrillaton (T): http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769447
 - Stroke (O) : http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769448
 
-In depth explanation of cohort creation in Atlas is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas). 
+In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas). 
 
-Note that when a cohort is created in Atlas the cohortid is needed to extract the data in R. The cohortid can be foundat the top of the Atlas screen, e.g. 1769447 in Figure 4. 
+Note that when a cohort is created in ATLAS the cohortid is needed to extract the data in R. The cohortid can be found at the top of the ATLAS screen, e.g. 1769447 in Figure 4. 
 
 ### Custom cohorts
 
-It is also possible to create cohorts without the use of Atlas. Using custom cohort code (SQL) you can make more advanced cohorts if needed.
+It is also possible to create cohorts without the use of ATLAS. Using custom cohort code (SQL) you can make more advanced cohorts if needed.
 
 For our example study, we need to create at table to hold the cohort data and we need to create SQL code to instantiate this table for both the AF and Stroke cohorts. Therefore, we create a file called *AfStrokeCohorts.sql* with the following contents:
 
@@ -217,8 +218,10 @@ CREATE TABLE @resultsDatabaseSchema.PLPAFibStrokeCohort
   - who have >1095 days of prior observation before their first diagnosis
   - and have no warfarin exposure any time prior to first AFib diagnosis
 */
-INSERT INTO @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, subject_id, 
-                                                     cohort_start_date, cohort_end_date)
+INSERT INTO @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
+                                                     subject_id, 
+                                                     cohort_start_date, 
+                                                     cohort_end_date)
 SELECT 1 AS cohort_definition_id,
   AFib.person_id AS subject_id,
   AFib.condition_start_date AS cohort_start_date,
@@ -257,8 +260,10 @@ WHERE warfarin.person_id IS NULL
     'cerebral infarction' and descendants, 'cerebral thrombosis', 
     'cerebral embolism', 'cerebral artery occlusion' 
 */
-INSERT INTO @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, subject_id, 
-                                                     cohort_start_date, cohort_end_date)
+INSERT INTO @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
+                                                     subject_id, 
+                                                     cohort_start_date, 
+                                                     cohort_end_date)
 SELECT 2 AS cohort_definition_id,
   visit_occurrence.person_id AS subject_id,
   visit_occurrence.visit_start_date AS cohort_start_date,
@@ -335,7 +340,7 @@ data.frame(cohort_definition_id = c(1, 2),count = c(527616, 221555))
 
 ## Study script creation
 
-In this section we assume that our cohorts have been created either by using Atlas or a custom SQL script. We will first explain how to create a R script yourself that will execute our study as we have defined earlier. 
+In this section we assume that our cohorts have been created either by using ATLAS or a custom SQL script. We will first explain how to create a R script yourself that will execute our study as we have defined earlier. 
 
 ### Data extraction
 
@@ -369,7 +374,7 @@ plpData <- getPlpData(connectionDetails = connectionDetails,
 )
 ```
 
-Note that if the cohorts are created in Atlas its corresponding cohort database schema needs to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
+Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
 
 Creating the `plpData` object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because `plpData` uses `ff`, we cannot use R's regular save function. Instead, we'll have to use the `savePlpData()` function:
 
@@ -450,7 +455,7 @@ lrResults <- loadPlpResult(file.path(getwd(),'lr'))
 \newpage
 ## Study package creation 
 
-The script we created manually above can also be automatically created using a powerful feature in Atlas. By creating a new prediction study (left menu) you can select the Target and Outcome as created in Atlas, set all the study parameters, and then you can download a R package that you can use to execute your study. What is really powerful is that you can add multiple Ts, Os, covariate settings etc. The package will then run all the combinations of automatically as seperate analyses. The screenshots below explain this process.
+The script we created manually above can also be automatically created using a powerful feature in ATLAS. By creating a new prediction study (left menu) you can select the Target and Outcome as created in ATLAS, set all the study parameters, and then you can download a R package that you can use to execute your study. What is really powerful is that you can add multiple Ts, Os, covariate settings etc. The package will then run all the combinations of automatically as separate analyses. The screenshots below explain this process.
 
 1)  <dl>
     <dt>Create a new prediction study and select your target and outcome cohorts.</dt>
@@ -472,25 +477,27 @@ The script we created manually above can also be automatically created using a p
     <dd>![](atlasplp4.png)</dd>
   </dl>  
 
-Atlas can build a R package for you that will execute the full study against you CDM.
+ATLAS can build a R package for you that will execute the full study against you CDM.
 
-Below the steps are explained how to do this in Atlas.
+Below the steps are explained how to do this in ATLAS.
 
 1) <dl>
     <dt>Under utilities you can find download. Click on the button to review the full study specification</dt>
-    <dd>![R package download functionality in Atlas](atlasdownload1.png)</dd>
+    <dd>![R package download functionality in ATLAS](atlasdownload1.png)</dd>
 </dl>
 
 2) <dl>
     <dt>You now have to review that you indeed want to run all these analyses (cartesian product of all the settings for each T and O combination.</dt>
-    <dd>![R package download functionality in Atlas](atlasdownload2.png)</dd>
+    <dd>![R package download functionality in ATLAS](atlasdownload2.png)</dd>
 </dl>
 
 3) If you agree, you give the package a name, and download the package as a zipfile. 
 
 4) By opening the R package in R studio and building the package you can run the study using the `execute` function. Theres is also an example CodeToRun.R script available in the extras folder of the package with extra instructions.
 
-TODO: ADD DETAILS ON STUDY PROTOCOL GENERATION??
+## Study protocol generation
+
+DETAILS TO BE ADDED.
 
 # Internal validation
 
@@ -736,12 +743,12 @@ This work is supported in part through the National Science Foundation grant IIS
 
 \newpage
 
-# Appendix 1: Study population settings details
+# Appendix 1: Study population settings details {-}
 
 In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, requireTimAtRisk, and includeAllOutcomes booleans on the final study population. We start with a Target Cohort with firstExposureOnly = false and we require a washout period = 1095. We then subset the target cohort based on additional constraints. The final study population in the Venn diagrams below are colored green.
 
 1)  <dl>
-    <dt>Require minumum time-at-risk for all person in the target cohort</dt>
+    <dt>Require minimum time-at-risk for all person in the target cohort</dt>
     <dd>![](popdef1.png)</dd>
   </dl>
 

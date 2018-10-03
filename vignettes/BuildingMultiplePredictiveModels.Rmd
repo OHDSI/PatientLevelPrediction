@@ -29,14 +29,14 @@ output:
 -->
 
 # Introduction
-In our paper [(link)](https://academic.oup.com/jamia/article/25/8/969/4989437), we propose a standardised framework for patient-level prediction that utilizes the OMOP CDM and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to support existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
+In our [`paper`](https://academic.oup.com/jamia/article/25/8/969/4989437), we propose a standardised framework for patient-level prediction that utilizes the OMOP CDM and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to enforce existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
 
 One our best practices is that we see the selection of models and all study setting as an emperical question, i.e. we should use a data-driven approach in which we try many settings. This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to automatically build multiple patient-level predictive models, e.g. different population settings, covariate settings, and modelsetting. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf). 
 
 Note that it is also possible to generate a Study Package directly in Atlas that allows for multiple patient-level prediction analyses this is out-of-scope for this vignette.
 
 # Creating the setting lists
-To develop multiple models the user has to create a list of Study Populations Settings, Covariate Settings, and Model Settings. These list will then be combined in a Model Analysis List and all combinations of the elements in this list will be automatically run by the package. 
+To develop multiple models the user has to create a list of Study Populations Settings, Covariate Settings, and Model Settings. These lists will then be combined in a Model Analysis List and all combinations of the elements in this list will be automatically run by the package. 
 
 ## Study population settings
 Suppose we like to make the following three population settings:
@@ -98,8 +98,8 @@ covSet2 <- createCovariateSettings(useDemographicsGender = T,
 
 covariateSettingList <- list(covSet1, covSet2)
 ```                                   
-## Model settings                                    
-The model settings requires running the setModel functions for the machine learning models of interest and specifying the hyper-parameter search and then combining these into a list.  For example, if we wanted to try a logistic regression, gradient boosting machine and ada boost model then:
+## Algorithm settings                                    
+The model settings requires running the setModel functions for the machine learning algorithms of interest and specifying the hyper-parameter search and then combining these into a list.  For example, if we wanted to try a logistic regression, gradient boosting machine and ada boost model then:
 
 ```{r tidy=FALSE,eval=FALSE}
 gbm <- setGradientBoostingMachine()
@@ -138,11 +138,12 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                                 port = port)
 ```
 
-Next you need to specify the cdmDatabaseSchema where your cdm database is found and workDatabaseSchema where your target population and outcome cohorts are.
+Next you need to specify the cdmDatabaseSchema where your cdm database is found and workDatabaseSchema where your target population and outcome cohorts are and you need to specify a label for the database name: a string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported).
 
 ```{r tidy=FALSE,eval=FALSE}
 cdmDatabaseSchema <- "your cdmDatabaseSchema"
 workDatabaseSchema <- "your workDatabaseSchema"
+cdmDatabaseName <- "your cdmDatabaseName"
 ```
 
 Now you can run the multiple patient-level prediction analysis by specifying the target cohort ids and outcome ids 
@@ -150,6 +151,7 @@ Now you can run the multiple patient-level prediction analysis by specifying the
 ```{r tidy=FALSE,eval=FALSE}
 allresults <- runPlpAnalyses(connectionDetails = connectionDetails,
                            cdmDatabaseSchema = cdmDatabaseSchema,
+                           cdmDatabaseName = cdmDatabaseName,
                            oracleTempSchema = cdmDatabaseSchema,
                            cohortDatabaseSchema = workDatabaseSchema,
                            cohortTable = "your cohort table",

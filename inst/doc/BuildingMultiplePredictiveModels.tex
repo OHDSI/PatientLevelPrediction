@@ -122,7 +122,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-09-24}
+    \date{2018-10-03}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -142,12 +142,12 @@
 }
 \section{Introduction}\label{introduction}
 
-In our paper
-\href{https://academic.oup.com/jamia/article/25/8/969/4989437}{(link)},
+In our
+\href{https://academic.oup.com/jamia/article/25/8/969/4989437}{\texttt{paper}},
 we propose a standardised framework for patient-level prediction that
 utilizes the OMOP CDM and standardized vocabularies, and describe the
 open-source software that we developed implementing the framework's
-pipeline. The framework is the first to support existing best practice
+pipeline. The framework is the first to enforce existing best practice
 guidelines and will enable open dissemination of models that can be
 extensively validated across the network of OHDSI collaborators.
 
@@ -170,9 +170,10 @@ out-of-scope for this vignette.
 \section{Creating the setting lists}\label{creating-the-setting-lists}
 
 To develop multiple models the user has to create a list of Study
-Populations Settings, Covariate Settings, and Model Settings. These list
-will then be combined in a Model Analysis List and all combinations of
-the elements in this list will be automatically run by the package.
+Populations Settings, Covariate Settings, and Model Settings. These
+lists will then be combined in a Model Analysis List and all
+combinations of the elements in this list will be automatically run by
+the package.
 
 \subsection{Study population settings}\label{study-population-settings}
 
@@ -259,13 +260,13 @@ settings and then combine them in a list:
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Model settings}\label{model-settings}
+\subsection{Algorithm settings}\label{algorithm-settings}
 
 The model settings requires running the setModel functions for the
-machine learning models of interest and specifying the hyper-parameter
-search and then combining these into a list. For example, if we wanted
-to try a logistic regression, gradient boosting machine and ada boost
-model then:
+machine learning algorithms of interest and specifying the
+hyper-parameter search and then combining these into a list. For
+example, if we wanted to try a logistic regression, gradient boosting
+machine and ada boost model then:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -318,12 +319,15 @@ To run the study requires setting up a connectionDetails object
 
 Next you need to specify the cdmDatabaseSchema where your cdm database
 is found and workDatabaseSchema where your target population and outcome
-cohorts are.
+cohorts are and you need to specify a label for the database name: a
+string with a shareable name of the database (this will be shown to
+OHDSI researchers if the results get transported).
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{cdmDatabaseSchema <-}\StringTok{ "your cdmDatabaseSchema"}
 \NormalTok{workDatabaseSchema <-}\StringTok{ "your workDatabaseSchema"}
+\NormalTok{cdmDatabaseName <-}\StringTok{ "your cdmDatabaseName"}
 \end{Highlighting}
 \end{Shaded}
 
@@ -334,6 +338,7 @@ specifying the target cohort ids and outcome ids
 \begin{Highlighting}[]
 \NormalTok{allresults <-}\StringTok{ }\KeywordTok{runPlpAnalyses}\NormalTok{(}\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails,}
                            \DataTypeTok{cdmDatabaseSchema =}\NormalTok{ cdmDatabaseSchema,}
+                           \DataTypeTok{cdmDatabaseName =}\NormalTok{ cdmDatabaseName,}
                            \DataTypeTok{oracleTempSchema =}\NormalTok{ cdmDatabaseSchema,}
                            \DataTypeTok{cohortDatabaseSchema =}\NormalTok{ workDatabaseSchema,}
                            \DataTypeTok{cohortTable =} \StringTok{"your cohort table"}\NormalTok{,}
