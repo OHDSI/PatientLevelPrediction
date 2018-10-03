@@ -97,7 +97,7 @@ createStudyPopulation <- function(plpData,
   # check logger
   if(length(OhdsiRTools::getLoggers())==0){
     logger <- OhdsiRTools::createLogger(name = "SIMPLE",
-                                        threshold = "INFO",
+                                        threshold = verbosity,
                                         appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
     OhdsiRTools::registerLogger(logger)
   }

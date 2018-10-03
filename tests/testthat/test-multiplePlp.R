@@ -65,8 +65,8 @@ test_that("createStudyPopulationSettings", {
   testthat::expect_true(result$minTimeAtRisk == washoutPeriod)
   testthat::expect_true(result$riskWindowStart == washoutPeriod)
   testthat::expect_true(result$riskWindowEnd == washoutPeriod)
-  testthat::expect_true(result$addExposureDaysToStart = binary)
-  testthat::expect_true(result$addExposureDaysToEnd = binary)
+  testthat::expect_true(result$addExposureDaysToStart == binary)
+  testthat::expect_true(result$addExposureDaysToEnd == binary)
   
 })
 
