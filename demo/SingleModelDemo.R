@@ -52,11 +52,7 @@ nb_results <- PatientLevelPrediction::runPlp(population,
                                              testFraction = 0.25,
                                              nfold = 2,
                                              verbosity = "INFO",
-<<<<<<< HEAD:demo/SingleModelDemo.R
-                                             saveDirectory =  "./plpmodels")
-=======
                                              save = "./plpmodels")
->>>>>>> master:demo/demoRun.R
 
 ### Example 3: Gradient Boosting Machine with person split
 cat("Press a key to continue")
@@ -72,11 +68,7 @@ gbm_results <- PatientLevelPrediction::runPlp(population,
                                               testFraction = 0.25,
                                               nfold = 2,
                                               verbosity = "INFO",
-<<<<<<< HEAD:demo/SingleModelDemo.R
-                                              saveDirectory =  "./plpmodels")
-=======
                                               save = "./plpmodels")
->>>>>>> master:demo/demoRun.R
 
 ### Example 4: Viewing Results of Logistic Regression example
 cat("Press a key to continue")
