@@ -123,7 +123,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2018-10-02}
+    \date{2018-10-03}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -164,8 +164,7 @@ detailing guidelines for best practices in developing and reporting
 prediction models.
 
 The Transparent Reporting of a multivariable prediction model for
-Individual Prognosis Or Diagnosis (TRIPOD) statement
-\href{https://www.equator-network.org/reporting-guidelines/tripod-statement/}{(link)}
+\href{https://www.equator-network.org/reporting-guidelines/tripod-statement/}{\texttt{Individual\ Prognosis\ Or\ Diagnosis\ (TRIPOD)\ statement}}
 provides clear recommendations for reporting prediction model
 development and validation and addresses some of the concerns related to
 transparency. However, data structure heterogeneity and inconsistent
@@ -173,14 +172,15 @@ terminologies still make collaboration and model sharing difficult as
 different researchers are often required to write new code to extract
 the data from their databases and may define variables differently.
 
-In our paper
-\href{https://academic.oup.com/jamia/article/25/8/969/4989437}{(link)},
+In our
+\href{https://academic.oup.com/jamia/article/25/8/969/4989437}{\texttt{paper}},
 we propose a standardised framework for patient-level prediction that
-utilizes the OMOP CDM and standardized vocabularies, and describe the
-open-source software that we developed implementing the framework's
-pipeline. The framework is the first to support existing best practice
-guidelines and will enable open dissemination of models that can be
-extensively validated across the network of OHDSI collaborators.
+utilizes the OMOP Common Data Model (CDM) and standardized vocabularies,
+and describe the open-source software that we developed implementing the
+framework's pipeline. The framework is the first to support existing
+best practice guidelines and will enable open dissemination of models
+that can be extensively validated across the network of OHDSI
+collaborators.
 
 Figure 1, illustrates the prediction problem we address. Among a
 population at risk, we aim to predict which patients at a defined moment
@@ -197,9 +197,10 @@ observation window prior to that moment in time.
 As shown in Figure 2, to define a prediction problem we have to define
 t=0 by a Target Cohort (T), the outcome we like to predict by an outcome
 cohort (O), and the time-at-risk (TAR). Furthermore, we have to make
-design choices for the model we like to develop. This conceptual
-framework works for all type of prediction problems, for example those
-presented in Figure 3.
+design choices for the model we like to develop, and determine the
+observational datasets to perform internal and external validation. This
+conceptual framework works for all type of prediction problems, for
+example those presented in Figure 3.
 
 \begin{figure}
 \centering
@@ -217,8 +218,7 @@ This vignette describes how you can use the
 \texttt{PatientLevelPrediction} package to build patient-level
 predictive models. The package enables data extraction, model building,
 and model evaluation using data from databases that are translated into
-the Observational Medical Outcomes Partnership Common Data Model (OMOP
-CDM). In this vignette we assume you have installed the package
+the OMOP CDM. In this vignette we assume you have installed the package
 correctly using the
 \href{https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf}{\texttt{InstallationGuide}}.
 
@@ -258,7 +258,7 @@ healthcare data to address the following patient-level prediction
 question:
 
 Amongst patients who are newly diagnosed with Atrial Fibrillation, which
-patients will go on to have Ischemic Stroke within 3 years?
+patients will go on to have Ischemic Stroke within 1 year?
 
 We will define `patients who are newly diagnosed with Atrial
 Fibrillation' as the first condition record of cardiac arrhythmia, which
@@ -283,60 +283,78 @@ subpopulations of T. For this we have to answer the following questions:
   the start of the target cohort?} This choice could depend on the
   available patient time in your training data, but also on the time you
   expect to be available in the data sources you want to apply the model
-  on in the future. Moreover, there could be clinical reasons to choose
-  a short or longer lookback period. For our example, we will use a
-  prior history as lookback period (washout period).
+  on in the future. The longer the minimum observation time, the more
+  baseline history time is available for each person to use for feature
+  extraction, but the fewer patients will qualify for analysis.
+  Moreover, there could be clinical reasons to choose a short or longer
+  lookback period. For our example, we will use a prior history as
+  lookback period (washout period).
 \item
-  \emph{Can patients enter the target cohort multiple times?} In our
-  target cohort definition we did not apply a restriction to only let
-  the patients enter once. This allows us to re-use this cohort
-  definition for other questions, e.g.~if we use it as an outcome.
-  However, we now have to define if this is what we want for our stroke
-  prediction problem. Since we want to look at the first occurrence of
-  atrial fibrillation we will have patients enter only once in the
-  target cohort.
+  \emph{Can patients enter the target cohort multiple times?} In the
+  target cohort definition, a person may qualify for the cohort multiple
+  times during different spans of time, for example if they had
+  different episodes of a disease or separate periods of exposure to a
+  medical product. The cohort definition does not necessarily apply a
+  restriction to only let the patients enter once, but in the context of
+  a particular patient-level prediction problem, a user may want to
+  restrict the cohort to the first qualifying episode. In our example, a
+  person could only enter the target cohort once since our criteria was
+  based on first occurrence of atrial fibrillation.
 \item
   \emph{Do we allow persons to enter the cohort if they experienced the
-  outcome before?} For our prediction example, the answer to this
-  question is `Yes' because we know from the CHADS2 score that prior
-  strokes are very predictive of future strokes. If this answer would
-  have been `No' we also had to decide how long we would look back for
-  previous occurrences of the outcome.
+  outcome before?} Do we allow persons to enter the target cohort if
+  they experienced the outcome before qualifying for the target cohort?
+  Depending on the particular patient-level prediction problem, there
+  may be desire to predict `incident' first occurrence of an outcome, in
+  which case patients who have previously experienced the outcome are no
+  `at-risk' for having a first occurrence and therefore should be
+  excluded from the target cohort. In other circumstances, there may be
+  desire to predict `prevalent' episodes, whereby patients with prior
+  outcomes can be included in the analysis and the prior outcome itself
+  can be a predictor of future outcomes. For our prediction example, the
+  answer to this question is `Yes, allow persons with prior outcomes'
+  because we know from the CHADS2 score that prior strokes are very
+  predictive of future strokes. If this answer would have been `No' we
+  also have to decide how long we would look back for previous
+  occurrences of the outcome.
 \item
   \emph{How do we define the period in which we will predict our outcome
   relative to the target cohort start?} We actually have to make two
   decisions to answer that question. First, does the time-at-risk window
   start at the date of the start of the target cohort or later?
   Arguments to make it start later could be that you want to avoid
-  outcomes that were entered late in the record that actually occured
+  outcomes that were entered late in the record that actually occurred
   before the start of the target cohort. Second, you need to define the
-  time-at-risk by setting the end date. For our problem we will predict
-  in a window starting 1 day after the start of the target cohort upto
-  365 days later.
+  time-at-risk by setting the risk window end, as some specification of
+  days offset relative to the target cohort start or end dates. For our
+  problem we will predict in a `time-at-risk' window starting 1 day
+  after the start of the target cohort up to 365 days later (to look for
+  1-year risk following atrial fibrillation diagnosis).
 \item
   \emph{Do we require a minimum amount of time-at-risk?} We have to
   decide if we want to include patients that did not experience the
-  outcome but did leave the data base earlier than the end of our
+  outcome but did leave the database earlier than the end of our
   time-at-risk period. These patients may experience the outcome when we
   do not observe them. For our prediction problem we decide to answer
-  this question with `Yes' for that reason. Furthermore, we have to
-  decide if this contraint also applies to persons who experienced the
-  outcome or we will include all persons with the outcome irrespective
-  of their total time at risk. For example, if the outcome is death none
-  of these will have the required time-at-risk.
+  this question with `Yes, require a mimimum time-at-risk' for that
+  reason. Furthermore, we have to decide if this constraint also applies
+  to persons who experienced the outcome or we will include all persons
+  with the outcome irrespective of their total time at risk. For
+  example, if the outcome is death, then persons with the outcome are
+  likely censored before the full time-at-risk period is complete.
 \end{itemize}
 
 \subsection{Model development
 settings}\label{model-development-settings}
 
-To develop the model we have to decide which model we like to train. We
-see the selection of the best algorithm for a certain prediction problem
-as an emperical question, i.e.~you need to let the data speak for itself
-and try different approaches to find the best one. There is no algorithm
-that will work best for all problems (no free lunch). In our package we
-therefore aim to implement many algorithms. Furthermore, we made the
-system modular so you can add your own custom algorithms as described in
-more detail in the
+To develop the model we have to decide which algorithm(s) we like to
+train. We see the selection of the best algorithm for a certain
+prediction problem as an empirical question, i.e.~you need to let the
+data speak for itself and try different approaches to find the best one.
+There is no algorithm that will work best for all problems (no free
+lunch). In our package we therefore aim to implement many algorithms.
+Furthermore, we made the system modular so you can add your own custom
+algorithms as described in more detail in the
 \href{Link\%20to\%20be\%20added}{\texttt{AddingCustomAlgorithms}}
 vignette.
 
@@ -421,9 +439,9 @@ Naive Bayes\strut
 \end{minipage} & \begin{minipage}[t]{0.55\columnwidth}\raggedright\strut
 The Naive Bayes algorithm applies the Bayes' theorem with the ``naive''
 assumption of conditional independence between every pair of features
-given the value of the class variable. Based on the likelyhood of the
-data belong to a class and the prior distribution of the class, a
-posterior distribution is obtained.\strut
+given the value of the class variable. Based on the likelihood the data
+belongs to a class and the prior distribution of the class, a posterior
+distribution is obtained.\strut
 \end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright\strut
 none\strut
 \end{minipage}\tabularnewline
@@ -496,7 +514,7 @@ Gender, Age, Conditions, Drugs Groups, and Visit Count. We also have to
 specify in which time windows we will look and we decide to look in year
 before and any time prior.
 
-Finaly, we have to define how we will train and test our model on our
+Finally, we have to define how we will train and test our model on our
 data, i.e.~how we perform \textbf{internal validation}. For this we have
 to decide how we divide our dataset in a training and testing dataset
 and how we randomly assign patients to these two sets. Dependent on the
@@ -509,7 +527,7 @@ to the training and testing set, there are two commonly used approaches:
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  split by person. In this case a randam seed is used to assign the
+  split by person. In this case a random seed is used to assign the
   patient to either sets.
 \item
   split by time. In this case a time point is used to split the persons,
@@ -572,7 +590,7 @@ Time-at-risk (TAR)\strut
 \begin{minipage}[t]{0.42\columnwidth}\raggedright\strut
 Washout Period\strut
 \end{minipage} & \begin{minipage}[t]{0.51\columnwidth}\raggedright\strut
-365\strut
+1095\strut
 \end{minipage}\tabularnewline
 \begin{minipage}[t]{0.42\columnwidth}\raggedright\strut
 Enter the target cohort multiple times?\strut
@@ -592,7 +610,7 @@ Start of time-at-risk\strut
 \begin{minipage}[t]{0.42\columnwidth}\raggedright\strut
 End of time-at-risk\strut
 \end{minipage} & \begin{minipage}[t]{0.51\columnwidth}\raggedright\strut
-366 days\strut
+364 days\strut
 \end{minipage}\tabularnewline
 \begin{minipage}[t]{0.42\columnwidth}\raggedright\strut
 Require a minimum amount of time-at-risk?\strut
@@ -634,7 +652,7 @@ Data split\strut
 \end{longtable}
 
 According to the best practices we need to make a protocol that
-completely specifies how we plan to execure our study. This protocol
+completely specifies how we plan to execute our study. This protocol
 will be assessed by the governance boards of the participating data
 sources in your network study. For this a template could be used but we
 prefer to automate this process as much as possible by adding
@@ -653,8 +671,8 @@ study.
 For our study we need to know when a person enters the target and
 outcome cohorts. This is stored in a table on the server that contains
 the cohort start date and cohort end date for all subjects for a
-specific cohort defintion. This cohort table has a very simple structure
-as shown below:
+specific cohort definition. This cohort table has a very simple
+structure as shown below:
 
 \begin{itemize}
 \tightlist
@@ -678,24 +696,24 @@ two options for this:
 \def\labelenumi{\arabic{enumi})}
 \item
   use the interactive cohort builder tool in
-  \href{www.github.com/OHDSI/Atlas}{Atlas} which can be used to create
+  \href{www.github.com/OHDSI/ATLAS}{ATLAS} which can be used to create
   cohorts based on inclusion criteria and will automatically populate
-  this cohort tabel
+  this cohort table.
 \item
   write your own custom SQL statements to fill the cohort table.
 \end{enumerate}
 
 Both methods are described below for our example prediction problem.
 
-\subsubsection{Atlas cohort builder}\label{atlas-cohort-builder}
+\subsubsection{ATLAS cohort builder}\label{atlas-cohort-builder}
 
 \begin{figure}
 \centering
-\includegraphics{ATLAS_O.png}
+\includegraphics{ATLAS_T.png}
 \caption{Target Cohort Atrial Fibrillation}
 \end{figure}
 
-Atlas allows you to define cohorts interactively by specifying cohort
+ATLAS allows you to define cohorts interactively by specifying cohort
 entry and cohort exit criteria. Cohort entry criteria involve selecting
 one or more initial events, which determine the start date for cohort
 entry, and optionally specifying additional inclusion criteria which
@@ -704,11 +722,11 @@ each cohort entry record to determine the end date when the person's
 episode no longer qualifies for the cohort. For the outcome cohort the
 end date is less relevant. As an example, Figure 4 shows how we created
 the Atrial Fibrillation cohort and Figure 5 shows how we created the
-stroke cohort in Atlas.
+stroke cohort in ATLAS.
 
 \begin{figure}
 \centering
-\includegraphics{ATLAS_T.png}
+\includegraphics{ATLAS_O.png}
 \caption{Outcome Cohort Stroke}
 \end{figure}
 
@@ -717,24 +735,24 @@ The T and O cohorts can be found here:
 \begin{itemize}
 \tightlist
 \item
-  Atrial Fibrilaton (T):
+  Atrial Fibrillaton (T):
   \url{http://www.ohdsi.org/web/atlas/\#/cohortdefinition/1769447}
 \item
   Stroke (O) :
   \url{http://www.ohdsi.org/web/atlas/\#/cohortdefinition/1769448}
 \end{itemize}
 
-In depth explanation of cohort creation in Atlas is out of scope of this
+In depth explanation of cohort creation in ATLAS is out of scope of this
 vignette but can be found on the OHDSI wiki pages
 \href{http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas}{(link)}.
 
-Note that when a cohort is created in Atlas the cohortid is needed to
-extract the data in R. The cohortid can be foundat the top of the Atlas
+Note that when a cohort is created in ATLAS the cohortid is needed to
+extract the data in R. The cohortid can be found at the top of the ATLAS
 screen, e.g.~1769447 in Figure 4.
 
 \subsubsection{Custom cohorts}\label{custom-cohorts}
 
-It is also possible to create cohorts without the use of Atlas. Using
+It is also possible to create cohorts without the use of ATLAS. Using
 custom cohort code (SQL) you can make more advanced cohorts if needed.
 
 For our example study, we need to create at table to hold the cohort
@@ -771,8 +789,10 @@ the AF and Stroke cohorts. Therefore, we create a file called
 \CommentTok{  - who have >1095 days of prior observation before their first diagnosis}
 \CommentTok{  - and have no warfarin exposure any time prior to first AFib diagnosis}
 \CommentTok{*/}
-\KeywordTok{INSERT} \KeywordTok{INTO}\NormalTok{ @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, subject_id, }
-\NormalTok{                                                     cohort_start_date, cohort_end_date)}
+\KeywordTok{INSERT} \KeywordTok{INTO}\NormalTok{ @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, }
+\NormalTok{                                                     subject_id, }
+\NormalTok{                                                     cohort_start_date, }
+\NormalTok{                                                     cohort_end_date)}
 \KeywordTok{SELECT} \DecValTok{1} \KeywordTok{AS}\NormalTok{ cohort_definition_id,}
 \NormalTok{  AFib.person_id }\KeywordTok{AS}\NormalTok{ subject_id,}
 \NormalTok{  AFib.condition_start_date }\KeywordTok{AS}\NormalTok{ cohort_start_date,}
@@ -811,8 +831,10 @@ the AF and Stroke cohorts. Therefore, we create a file called
 \CommentTok{    'cerebral infarction' and descendants, 'cerebral thrombosis', }
 \CommentTok{    'cerebral embolism', 'cerebral artery occlusion' }
 \CommentTok{*/}
-\KeywordTok{INSERT} \KeywordTok{INTO}\NormalTok{ @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, subject_id, }
-\NormalTok{                                                     cohort_start_date, cohort_end_date)}
+\KeywordTok{INSERT} \KeywordTok{INTO}\NormalTok{ @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, }
+\NormalTok{                                                     subject_id, }
+\NormalTok{                                                     cohort_start_date, }
+\NormalTok{                                                     cohort_end_date)}
 \KeywordTok{SELECT} \DecValTok{2} \KeywordTok{AS}\NormalTok{ cohort_definition_id,}
 \NormalTok{  visit_occurrence.person_id }\KeywordTok{AS}\NormalTok{ subject_id,}
 \NormalTok{  visit_occurrence.visit_start_date }\KeywordTok{AS}\NormalTok{ cohort_start_date,}
@@ -924,7 +946,7 @@ can see how many events per type:
 \subsection{Study script creation}\label{study-script-creation}
 
 In this section we assume that our cohorts have been created either by
-using Atlas or a custom SQL script. We will first explain how to create
+using ATLAS or a custom SQL script. We will first explain how to create
 a R script yourself that will execute our study as we have defined
 earlier.
 
@@ -978,7 +1000,7 @@ covariate settings.
 \end{Highlighting}
 \end{Shaded}
 
-Note that if the cohorts are created in Atlas its corresponding cohort
+Note that if the cohorts are created in ATLAS its corresponding cohort
 database schema needs to be selected. There are many additional
 parameters for the \texttt{getPlpData} function which are all documented
 in the \texttt{PatientLevelPrediction} manual. The resulting
@@ -1123,12 +1145,12 @@ To load the full results structure use:
 \subsection{Study package creation}\label{study-package-creation}
 
 The script we created manually above can also be automatically created
-using a powerful feature in Atlas. By creating a new prediction study
-(left menu) you can select the Target and Outcome as created in Atlas,
+using a powerful feature in ATLAS. By creating a new prediction study
+(left menu) you can select the Target and Outcome as created in ATLAS,
 set all the study parameters, and then you can download a R package that
 you can use to execute your study. What is really powerful is that you
 can add multiple Ts, Os, covariate settings etc. The package will then
-run all the combinations of automatically as seperate analyses. The
+run all the combinations of automatically as separate analyses. The
 screenshots below explain this process.
 
 \begin{enumerate}
@@ -1154,10 +1176,10 @@ screenshots below explain this process.
   \includegraphics{atlasplp4.png}
 \end{enumerate}
 
-Atlas can build a R package for you that will execute the full study
+ATLAS can build a R package for you that will execute the full study
 against you CDM.
 
-Below the steps are explained how to do this in Atlas.
+Below the steps are explained how to do this in ATLAS.
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi})}
@@ -1181,7 +1203,9 @@ Below the steps are explained how to do this in Atlas.
   package with extra instructions.
 \end{enumerate}
 
-TODO: ADD DETAILS ON STUDY PROTOCOL GENERATION??
+\subsection{Study protocol generation}\label{study-protocol-generation}
+
+DETAILS TO BE ADDED.
 
 \section{Internal validation}\label{internal-validation}
 
@@ -1214,7 +1238,7 @@ The plots are described in more detail in the next sections.
 
 \newpage
 
-\subsubsection{Discrimination}\label{discrimination}
+\subsection{Discrimination}\label{discrimination}
 
 The Receiver Operating Characteristics (ROC) plot shows the sensitivity
 against 1-specificity on the test set. The plot illustrates how well the
@@ -1228,7 +1252,7 @@ changing the propabilty threshold to assign the positive class.
 
 \newpage
 
-\subsubsection{Calibration}\label{calibration}
+\subsection{Calibration}\label{calibration}
 
 The calibration plot shows how close the predicted risk is to the
 observed risk. The diagonal dashed line thus indicates a perfectly
@@ -1244,7 +1268,7 @@ of the fitted line.
 
 \newpage
 
-\subsubsection{Smooth Calibration}\label{smooth-calibration}
+\subsection{Smooth Calibration}\label{smooth-calibration}
 
 Similar to the traditional calibration shown above the Smooth
 Calibration plot shows the relationship between predicted and observed
@@ -1279,7 +1303,7 @@ levels that well.
 
 \newpage
 
-\subsubsection{Preference distribution}\label{preference-distribution}
+\subsection{Preference distribution}\label{preference-distribution}
 
 The preference distribution plots are the preference score distributions
 corresponding to i) people in the test set with the outcome (red) and
@@ -1289,7 +1313,7 @@ ii) people in the test set without the outcome (blue).
 
 \newpage
 
-\subsubsection{Predicted probability
+\subsection{Predicted probability
 distribution}\label{predicted-probability-distribution}
 
 The prediction distribution box plots are for the predicted risks of the
@@ -1305,7 +1329,7 @@ discrimination.
 
 \newpage
 
-\subsubsection{Test-Train similarity}\label{test-train-similarity}
+\subsection{Test-Train similarity}\label{test-train-similarity}
 
 The test-train similarity is assessed by plotting the mean covariate
 values in the train set against those in the test set for people with
@@ -1318,7 +1342,7 @@ of the covariates are on the diagonal.
 
 \newpage
 
-\subsubsection{Variable scatter plot}\label{variable-scatter-plot}
+\subsection{Variable scatter plot}\label{variable-scatter-plot}
 
 The variable scatter plot shows the mean covariate value for the people
 with the outcome against the mean covariate value for the people without
@@ -1334,7 +1358,7 @@ subjects with the outcome compared to those without.
 
 \newpage
 
-\subsubsection{Precision recall}\label{precision-recall}
+\subsection{Precision recall}\label{precision-recall}
 
 Precision (P) is defined as the number of true positives (Tp) over the
 number of true positives plus the number of false positives (Fp).
@@ -1381,7 +1405,7 @@ unchanged, while the precision fluctuates.
 
 \newpage
 
-\subsubsection{Demographic summary}\label{demographic-summary}
+\subsection{Demographic summary}\label{demographic-summary}
 
 This plot shows for females and males the expected and observed risk in
 different age groups together with a confidence area.
@@ -1644,8 +1668,10 @@ grant IIS 1251151.
 
 \newpage
 
-\section{Appendix 1: Study population settings
+\section*{Appendix 1: Study population settings
 details}\label{appendix-1-study-population-settings-details}
+\addcontentsline{toc}{section}{Appendix 1: Study population settings
+details}
 
 In the figures below the effect is shown of the
 removeSubjectsWithPriorOutcome, requireTimAtRisk, and includeAllOutcomes
@@ -1657,7 +1683,7 @@ final study population in the Venn diagrams below are colored green.
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi})}
 \item
-  Require minumum time-at-risk for all person in the target cohort
+  Require minimum time-at-risk for all person in the target cohort
 
   \includegraphics{popdef1.png}
 \item
