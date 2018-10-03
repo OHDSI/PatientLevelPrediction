@@ -5,7 +5,7 @@
 \title{Create setting for RNN model with python}
 \usage{
 setRNNTorch(hidden_size = c(50, 100), epochs = c(20, 50), seed = 0,
-  class_weight = 0, rnn_type = "RNN")
+  class_weight = 0, type = "RNN")
 }
 \arguments{
 \item{hidden_size}{The hidden size}
@@ -18,7 +18,7 @@ setRNNTorch(hidden_size = c(50, 100), epochs = c(20, 50), seed = 0,
  0: Inverse ratio between positives and negatives
 -1: Focal loss}
 
-\item{rnn_type}{It can be normal 'RNN', 'BiRNN' (bidirectional RNN) and 'GRU'}
+\item{type}{It can be normal 'RNN', 'BiRNN' (bidirectional RNN) and 'GRU'}
 }
 \description{
 Create setting for RNN model with python
