@@ -55,7 +55,7 @@ test_that("createStudyPopulationSettings", {
                                             addExposureDaysToEnd = binary,
                                             verbosity = "INFO")
   
-  testthat::expect_true(class(result)=='list')
+  testthat::expect_true(class(result)=='populationSettings')
   testthat::expect_true(result$includeAllOutcomes==includeAllOutcomes)
   testthat::expect_true(result$firstExposureOnly==firstExposureOnly)
   testthat::expect_true(result$washoutPeriod==washoutPeriod)
@@ -65,8 +65,8 @@ test_that("createStudyPopulationSettings", {
   testthat::expect_true(result$minTimeAtRisk == washoutPeriod)
   testthat::expect_true(result$riskWindowStart == washoutPeriod)
   testthat::expect_true(result$riskWindowEnd == washoutPeriod)
-  testthat::expect_true(result$addExposureDaysToStart = binary)
-  testthat::expect_true(result$addExposureDaysToEnd = binary)
+  testthat::expect_true(result$addExposureDaysToStart == binary)
+  testthat::expect_true(result$addExposureDaysToEnd == binary)
   
 })
 
@@ -81,10 +81,12 @@ test_that("createPlpModelSettings", {
 
   modN <- sample(10,1)
   modList <- as.list(sample(10,modN))
+  modList <- lapply(modList, function(x) list(x, name='test'))
   covN <- sample(10,1)
   covList <- as.list(sample(10,covN))
   popN <- sample(10,1)
   popList <- as.list(sample(10,popN))
+  popList <- lapply(popList, function(x) list(x, addExposureDaysToStart=T, riskWindowStart=1, addExposureDaysToEnd=T, riskWindowEnd=365 ))
   modelAnalysisList <- createPlpModelSettings(modelList = modList, 
                                               covariateSettingList = covList, 
                                               populationSettingList = popList)

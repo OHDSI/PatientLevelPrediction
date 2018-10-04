@@ -345,7 +345,7 @@ getCovariateData <- function(connection,
 #' @param file               The name of the folder where the data will be written. The folder should
 #'                           not yet exist.
 #' @param envir              The environment for to evaluate variables when saving
-#'
+#' @param overwrite          Whether to force overwrite an existing file
 #' @details
 #' The data will be written to a set of files in the folder specified by the user.
 #'
@@ -353,7 +353,7 @@ getCovariateData <- function(connection,
 #' # todo
 #'
 #' @export
-savePlpData <- function(plpData, file, envir=NULL) {
+savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
   if (missing(plpData))
     stop("Must specify plpData")
   if (missing(file))
@@ -379,20 +379,20 @@ savePlpData <- function(plpData, file, envir=NULL) {
       if(!is.null(plpData$timeRef)){
         analysisRef <- plpData$analysisRef
         timeRef <- plpData$timeRef
-        ffbase::save.ffdf(covariates, covariateRef,analysisRef,timeRef, dir = file, clone = TRUE)
+        ffbase::save.ffdf(covariates, covariateRef,analysisRef,timeRef, dir = file, clone = TRUE, overwrite = overwrite)
       } else {
         analysisRef <- plpData$analysisRef
-        ffbase::save.ffdf(covariates, covariateRef,analysisRef, dir = file, clone = TRUE)
+        ffbase::save.ffdf(covariates, covariateRef,analysisRef, dir = file, clone = TRUE, overwrite = overwrite)
       }
     } else {
-      ffbase::save.ffdf(covariates, covariateRef, dir = file, clone = TRUE)
+      ffbase::save.ffdf(covariates, covariateRef, dir = file, clone = TRUE, overwrite = overwrite)
     }
     
   } else{
     covariateRef <- plpData$covariateRef
     analysisRef <- plpData$analysisRef
     timeRef <- plpData$timeRef
-    ffbase::save.ffdf(covariateRef,analysisRef,timeRef, dir = file, clone = TRUE)
+    ffbase::save.ffdf(covariateRef,analysisRef,timeRef, dir = file, clone = TRUE, overwrite = overwrite)
     saveRDS(plpData$covariates, file = file.path(file, "covariates.rds"))
   }
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))

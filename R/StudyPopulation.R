@@ -137,6 +137,14 @@ createStudyPopulation <- function(plpData,
   OhdsiRTools::logDebug(paste0('addExposureDaysToEnd: ', addExposureDaysToEnd))
   checkBoolean(addExposureDaysToEnd)
   
+  if(requireTimeAtRisk){
+    if(addExposureDaysToStart==addExposureDaysToEnd){
+      if(minTimeAtRisk>(riskWindowEnd-riskWindowStart)){
+        warning('issue: minTimeAtRisk is greater than max possible time-at-risk')
+      }
+    }
+  }
+  
   if (is.null(population)) {
     population <- plpData$cohorts
   }

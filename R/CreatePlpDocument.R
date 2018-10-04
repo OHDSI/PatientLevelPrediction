@@ -585,6 +585,10 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   populationSet$plpData <- plpData
   population <- do.call('createStudyPopulation', populationSet)
 
+  
+  #============== STYLES =======================================================
+  style_helper_text <- officer::shortcuts$fp_italic(color = "#FF8C00")
+  
   # create new word document
   ###doc = ReporteRs::docx()
   doc = officer::read_docx() 
@@ -599,49 +603,86 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   outcome_size <- sum(population$outcomeCount==1)
   if(populationSet$addExposureDaysToEnd &
      populationSet$addExposureDaysToStart){
+    
+    totdays <- populationSet$riskWindowEnd-populationSet$riskWindowStart
+    if(totdays%in%c(364,365)){
+      time_at_risk <- '1-year after target cohort end date'
+    } else if(totdays%in%c(365*2-1,365*2)){
+      time_at_risk <- '2-year after target cohort end date'
+    }else if(totdays%in%c(365*10-1,365*10)){
+      time_at_risk <- '10-year after target cohort end date'
+    } else {
+    
     time_at_risk <- paste0(populationSet$riskWindowStart,
-                           " day/s from target end date  to ", populationSet$riskWindowEnd,
+                           ifelse(populationSet$riskWindowStart==1," day", " day/s"),
+                           " from target end date  to ", populationSet$riskWindowEnd,
                            " days from target end date ")
+    }
   }
   if(!populationSet$addExposureDaysToEnd &
      populationSet$addExposureDaysToStart){
     time_at_risk <- paste0(populationSet$riskWindowStart,
-                           " day/s from target end date  to ", populationSet$riskWindowEnd,
+                           ifelse(populationSet$riskWindowStart==1," day", " day/s"),
+                           " from target end date  to ", populationSet$riskWindowEnd,
                            " days from target start date ")
   }
   if(populationSet$addExposureDaysToEnd &
      !populationSet$addExposureDaysToStart){
     time_at_risk <- paste0(populationSet$riskWindowStart,
-                           " day/s from target start date  to ", populationSet$riskWindowEnd,
+                           ifelse(populationSet$riskWindowStart==1," day", " day/s"),
+                           " from target start date  to ", populationSet$riskWindowEnd,
                            " days from target end date ")
   }
   if(!populationSet$addExposureDaysToEnd &
      !populationSet$addExposureDaysToStart){
+    
+    totdays <- populationSet$riskWindowEnd-populationSet$riskWindowStart
+    if(totdays%in%c(364,365)){
+      time_at_risk <- '1-year after target cohort start date'
+    } else if(totdays%in%c(365*2-1, 365*2)){
+      time_at_risk <- '2-year after target cohort start date'
+    }else if(totdays%in%c(365*10-1, 365*10)){
+      time_at_risk <- '10-year after target cohort start date'
+    } else {
     time_at_risk <- paste0(populationSet$riskWindowStart,
-                           " day/s from target start date to ", populationSet$riskWindowEnd,
+                           ifelse(populationSet$riskWindowStart==1," day", " day/s"),
+                           " from target start date to ", populationSet$riskWindowEnd,
                            " days from target start date ")
+    }
   }
 
   #============ TITLE ==========================================
-  title <- paste0("Development of a multivariate model to predict ", outcomeName ,
+  title <- paste0("Development and validation of a multivariate model to predict ", outcomeName ,
                   " in a target population of ",targetName," during ",time_at_risk," using observational data")
 
   #title <- paste0('Predicting the outcome of ', outcomeName ,' in a target population of ', targetName)
   doc <- doc %>% officer::body_add_par(value = title, style = "heading 1")
 
   #============ ABSTRACT ==========================================
-  abstract <- c(paste0("Objective: To develop a model to predict ", outcomeName,
+  # TRIPOD: Provide a summary of objectives, study design, setting, participants, 
+  #         sample size, predictors, outcome, statistical analysis, results, and conclusions.
+  abstract <- c(paste0("Objective: To develop and validate a model to predict ", outcomeName,
                        " within a target population of ", targetName,
-                       " during ",time_at_risk," and evaluate the model performance using calibration ",
-                       "and discrimination performance measures."),
+                       " during ",time_at_risk,"."),
+                
+                paste0("Study design: A retrospective cohort style patient-level prediction using observational healthcare data."
+                       ),
 
-                paste0("Methods: In <add development database> mapped to the Observational Medical Outcome ",
-                       "Partnership (OMOP) common data model ",target_size," people satisfied the ",
-                       "target criteria and ",outcome_size," had the outcome during ",time_at_risk,
-                       ". A ",plpResult$inputSetting$modelSettings$name," was trained using the predictors <add predictor variables> and ",
-                       "externally validated by applying the model to <add external databases> mapped to",
-                       " the OMOP common data model with <target/outcome sizes> respectively. "),
+                paste0("Settings: The model was developed using <add development data set details> mapped to the Observational Medical Outcome ",
+                       "Partnership (OMOP) common data model. The model was validated using <add valdiation data set details>"),
+                
+                paste0("Participants: <add target popualtion description>. ",target_size," people satisfied the ",
+                       "target criteria and ",outcome_size," had the outcome during ",time_at_risk),
+                
+                paste0("Outcome: <add outcome description>."),
 
+                paste0("Predictors: <add predictor variable summary>"),
+
+                paste0("Statistical analysis: A", plpResult$inputSetting$modelSettings$name, " model was trained.",
+                       " The model performance is evaluated using ",
+                       "the area under the receiver operating characteristic (AUROC) curve ", 
+                       "and inspecting the calibration plot."),
+                
                 paste0(" Results: The internal validation showed the model achieved an",
                        " AUC of ",auc ," and the calibration plots",
                        " indicates a <poorly/fair/well> calibrated model.  The external validation showed",
@@ -657,14 +698,18 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   doc <- doc %>% officer::body_add_par(value = 'Abstract', style = "heading 2")
   for(i in 1:length(abstract)){
-    doc <- doc %>% officer::body_add_par(value =  abstract[i] )
+    doc <- doc %>% officer::body_add_par(value =  abstract[i] ) %>%
+      officer::body_add_par("")
   }
   
   #============ BACKGROUND ==========================================
-  background <- c(paste0("<background on outcome: motivation for model, list existing models",
-                         " (database developed on, external validation, performance)>"),
-
-                  paste0("The objective of this paper is build and validate a <diagnostic/prognostic> model to predict ",outcomeName," within ",
+  doc <- doc %>% officer::body_add_par(value = 'Background', style = "heading 2") %>% 
+    officer::body_add_par("")
+  background <- paste0("<background on outcome: Explain the medical context and rationale for the multivariable prediction model, including references to existing models.",
+                       " >")
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext(background, prop = style_helper_text))) %>% 
+    officer::body_add_par("")
+  background <- c(paste0("The objective of this paper is to build and validate a <diagnostic/prognostic> model to predict ",outcomeName," within ",
                          targetName," during  ",time_at_risk, ".  The model will be developed ",
                          " on <development database> and externally validated on <validation databases> to ",
                          " determine the transportability (how well it performs on different data) and ",
@@ -672,11 +717,14 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                          " new data.  All the datasets will be in the Observational Medical Outcome ",
                          " Partnership (OMOP) common data model as having the datasets in a homogeneous data ",
                          " structure enables re-use of code between model development and validation to ensure ",
-                         " the model can be externally validated efficiently and reduce model reproducibility errors.")
+                         " the model can be externally validated efficiently and reduce model reproducibility errors."),
+                  
+                  paste0("The model development and validation follow the standardized patient-level prediction framework [1]. ",
+                         "This framework is based on best practices proposed by PROGRESS [2].",
+                         "The TRIPOD statement [3] for reporting patient-level prediction development is followed in this paper.")
   )
-  doc <- doc %>% officer::body_add_par(value = 'Background', style = "heading 2")
   for(i in 1:length(background)){
-    doc <- doc %>% officer::body_add_par(value =  background[i] )
+    doc <- doc %>% officer::body_add_par(value =  background[i] ) %>% officer::body_add_par("")
   }
   #=============== METHOD: Prediction plot  ==============
   if(includePredictionPicture){
@@ -694,7 +742,8 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     #doc = ReporteRs::addPlot(predictionPlot)
 
     # Pic1: Add standardise paragraph describing prediction - use name inputs
-    doc <- doc %>% officer::body_add_par(value =  'Figure 2 shows the prediction visualization...' )
+    doc <- doc %>% officer::body_add_par(value =  'Figure 2 shows the prediction visualization...' ) %>%
+      officer::body_add_par("")
     
     }
 
@@ -707,15 +756,22 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   
   doc <- doc %>% officer::body_add_par(value = 'Data sources:', style = "heading 3")
   
-  datasources <- "ADD DATASOURCE FOR DEVELOPMENT AND VALIDATION HERE..."
-  doc <- doc %>% officer::body_add_par(value = datasources, style = "Normal")
+  datasources <- "<ADD DATASOURCE FOR DEVELOPMENT AND VALIDATION HERE - type of data and description>"
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext(datasources, prop = style_helper_text))) %>% 
+    officer::body_add_par("")
+  
+  datasources <- "<Add IRB statement here>"
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext(datasources, prop = style_helper_text))) %>% 
+    officer::body_add_par("")
   
   doc <- doc %>% officer::body_add_par(value = 'Target population:', style = "heading 3")
   
-  doc <- doc %>% officer::body_add_par( value = "<target definition>")
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<add target definition here>", prop = style_helper_text))) %>% 
+    officer::body_add_par("")
   
   doc <- doc %>% officer::body_add_par(value = 'Outcome:', style = "heading 3")
-  doc <- doc %>% officer::body_add_par( value = "<outcome definition>")
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<add outcome definition here>", prop = style_helper_text))) %>% 
+    officer::body_add_par("")
 
   doc <- doc %>% officer::body_add_par(value = 'Predictors:', style = "heading 3")
   covset <- plpResult$inputSetting$dataExtrractionSettings$covariateSettings
@@ -732,24 +788,27 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     doc <- doc %>% officer::body_add_table(value = covs)
     doc <- doc %>% officer::body_add_par(value = timeset)
     
-    doc <- doc %>% officer::body_add_par( value = "<!Clarify about missing data>")
-  } else {
+    doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<!Clarify about missing data>", prop = style_helper_text))) %>% 
+      officer::body_add_par("")
+     } else {
     covs <- as.data.frame(unlist(covset)) #collapse covset values if vectors?
     covs <- data.frame(Covariate = row.names(covs), Value = covs)
     colnames(covs) <- c('Covariate','Value')
+    #restrict to true
+    covs <- covs[union(which(covs$Value!=0),grep('TermStartDays',covs$Covariate)),]
     doc <- doc %>% officer::body_add_table(value = covs)
-    doc <- doc %>% officer::body_add_par( value = "<!Clarify about missing data>")
-    
+    doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<!Clarify about missing data>", prop = style_helper_text))) %>% 
+      officer::body_add_par("")
      }
 
   doc <- doc %>% officer::body_add_par(value = 'Statistical analysis methods', style = "heading 3")
   
-  doc <- doc %>% officer::body_add_par(value =textPlpAnalysis(plpResult) )
+  doc <- doc %>% officer::body_add_par(value =textPlpAnalysis(plpResult) ) %>% officer::body_add_par("")
   
   evaltext <- paste0("To evaluate the models the model discrimination is assessed using the area under",
                      " the receiver operating characteristic curve (AUC) and the model calibration is ",
                      "assessed by inspecting a calibration plot.")
-  doc <- doc %>% officer::body_add_par(value = evaltext )
+  doc <- doc %>% officer::body_add_par(value = evaltext ) %>% officer::body_add_par("")
   
 
 
@@ -762,7 +821,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   text <- paste0("The number of people eligible for inclusion into the target population, ",
                  "outcome count and the number of people lost due to each inclusion step are ",
-                 "presented in Figure  ")
+                 "presented in Figure 1.")
   doc <- doc %>% officer::body_add_par(value = text )
 
   if(includeAttritionPlot){
@@ -770,12 +829,13 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     attrPlot <- PatientLevelPrediction::drawAttritionDiagramPlp(attr(population,'metaData')$attrition)
     #doc = ReporteRs::addPlot(attrPlot)
     doc <- doc %>% officer::body_add_gg(value = attrPlot)  # IS THIS GG??
-    
+    doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the attrition for the model development.' )
     
 
     # Pic3: Add comments
-    doc <- doc %>% officer::body_add_par(value = "<add comment on what the attrition table shows>" )
-  }
+    doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<add comment on what the attrition table shows>", prop = style_helper_text))) %>% 
+      officer::body_add_par("")
+    }
 
   #=============== characterisation ==============
 
@@ -795,32 +855,37 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
     doc <- doc %>% officer::body_add_par(value = characterisationText)
     
-    doc <- doc %>% officer::body_add_par(value = '<add comment of differences>')
-    
-  }
+    doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<add comment of differences>", prop = style_helper_text))) %>% 
+      officer::body_add_par("")
+    }
 
   # Add plot of outcome vs non-outcome
   covSum <- PatientLevelPrediction::plotVariableScatterplot(plpResult$covariateSummary)
   doc <- doc %>% officer::body_add_gg(value = covSum)
-  doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the scatter plot of the prevalence of each variable in the non-outcome vs outcome groups.' )
+  doc <- doc %>% officer::body_add_par(value = 'Figure 2 shows the scatter plot of the prevalence of each variable in the non-outcome vs outcome groups.' ) %>%
+    officer::body_add_par("")
   
 
-  text <- paste0("Table 1 presents the baseline characteristics of the development datasets and validation ",
-                 " datasets <add text describing key features> ")
+  text <- paste0("Table 1 presents the baseline characteristics of the development datasets and validation datasets")
   doc <- doc %>% officer::body_add_par(value = text )
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<add text describing key features>", prop = style_helper_text))) %>% 
+    officer::body_add_par("")
 
   doc <- doc %>% officer::body_add_par(value = 'Model Specification', style='heading 3')
   text <- paste0("The model developed on <database> with a target size of ",nrow(population)," and outcome count ",
                  " of ",sum(population$outcomeCount>0)," is available from <add link>.  Out of ",nrow(plpResult$covariateSummary)," candidate predictors the final model",
                  " included ", sum(plpResult$covariateSummary$covariateValue!=0, na.rm = T) , ".",
-                 "The <coefficients/variable importance> ",
+                 " The <coefficients/variable importance> ",
                  "for each predictor is available as a supplement.")
-  doc <- doc %>% officer::body_add_par(value = text )
-
+  doc <- doc %>% officer::body_add_par(value = text ) %>% officer::body_add_par("")
+  
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("< add explaination of how to the use the prediction model>", prop = style_helper_text))) %>% 
+    officer::body_add_par("")
+  
   doc <- doc %>% officer::body_add_par(value = 'Internal model validation', style='heading 3')
   
-  text <- paste0(" The discriminative performance of the model is described by the ROC curve in Figure 2. The AUC of the model was ",auc," .",
-                 "The calibration of the model is presented in Figure 3.")
+  text <- paste0(" The discriminative performance of the model is described by the ROC curve in Figure 3. The AUC of the model was ",auc," .",
+                 "The calibration of the model is presented in Figure 4.")
   
   doc <- doc %>% officer::body_add_par(value =  text )
 
@@ -828,8 +893,10 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   # Pic4: add test/train ROC plots
   testROCPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='test')
   trainROCPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='train')
-  if(includeTest)
-     doc <- doc %>% officer::body_add_gg(value = testROCPlot)
+  if(includeTest){
+     doc <- doc %>% officer::body_add_gg(value = testROCPlot) %>%
+       officer::body_add_par(value =  'Figure 3 ROC plot for test set' )
+  }
   #doc = ReporteRs::addPlot(testROCPlot)
 
   if(includeTrain)
@@ -838,8 +905,10 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   # Pic5: add test/train calibration plots
   testCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='test')
   trainCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='train')
-  if(includeTest)
-    doc <- doc %>% officer::body_add_gg(value = testCalPlot)
+  if(includeTest){
+    doc <- doc %>% officer::body_add_gg(value = testCalPlot) %>%
+      officer::body_add_par(value =  'Figure 4 calibration plot for test set' )
+  }
   if(includeTrain)
     doc <- doc %>% officer::body_add_gg(value = trainCalPlot)
 
@@ -916,26 +985,25 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
            "<add variables> as predictive but they have not been incorporated in previous models.  ",
            "These variables could be studied using conventional population level estimation to determine ",
            "whether they are causally related to the outcome."),
-    paste0("< add statement about how to use this model e.g., suitable thresholds to classify or as a risk score >")
+    paste0("< add statement about how the results compare to any existing similar models >")
   )
-  doc <- doc %>% officer::body_add_par(value = text )
-  
+  for(i in 1:length(text)){
+    doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext(text[i], prop = style_helper_text))) %>% 
+      officer::body_add_par("")
+  }
 
   doc <- doc %>% officer::body_add_par(value = 'Implications', style = 'heading 3')
   
   text <-c(
-    paste0("< add statement about the model performance inplciations: e.g., ",
-           "The results show that developing a model using <add database> data for the outcome ",outcomeName,
-           " within ",targetName," resulted in a good discriminative ability and this model was validated ",
-           "across several datasets and showed a consistently high external validation AUC.  This suggests ",
-           "the model could be a useful tool to aid decision making for ...>"),
+    paste0("< add statement about the clinical uses of the model and future research> "),
     paste0("Inspecting the model variable importance may help to gain new insight into the disease dynamics ",
            "into the development of <outcome>.  As the model highlighted <new predictors> as potential new ",
            "risk factors, it would be useful in future research to determine whether these variables do in fact have a ",
            "biological relationship to the outcome.")
   )
   for(i in 1:length(text)){
-    doc <- doc %>% officer::body_add_par(value =  text[i] )
+    doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext(text[i], prop = style_helper_text))) %>% 
+        officer::body_add_par("")
   }
   doc <- doc %>% officer::body_add_par(value = 'Limitations', style = 'heading 3')
   
@@ -953,12 +1021,15 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
            "that do not perform as well as models developed on datasets that contain variables on genetics ",
            "or lifestyle. However, observational datasets often contain thousands of variables that may be ",
            "used as proxies for genetic or lifestyle factors and observational data is often more readily ",
-           "available."),
-    paste0("<add any other limitation of the study>")
+           "available.")
   )
   for(i in 1:length(text)){
-    doc <- doc %>% officer::body_add_par(value =  text[i] )
+    doc <- doc %>% officer::body_add_par(value =  text[i] ) %>% officer::body_add_par("")
   }
+  
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<add any other limitation of the study>", prop = style_helper_text))) %>% 
+    officer::body_add_par("")
+  
   doc <- doc %>% officer::body_add_par(value = 'Conclusion', style = 'heading 2')
   
   text <- paste0("In this paper we developed a model for ",outcomeName," occurring within a target ",
@@ -967,20 +1038,29 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                  "the model was ",auc," and the model was <poorly/well> calibrated. <talk about clinical usefulness>.  ",
                  "In the future it would be useful to extend the external validation across the OHDS ",
                  "network and outside the OHDSI network and also determine the clinical usefulness of the ",
-                 "model by implementing it retrospectively in a new dataset [ref].")
+                 "model by implementing it retrospectively in a new dataset.")
   doc <- doc %>% officer::body_add_par(value = text )
 
   doc <- doc %>% officer::body_add_par(value = 'References', style = 'heading 2')
+  refs <- c(paste0('1. Reps, J.M., Schuemie, M.J., Suchard, M.A., Ryan, P.B. and Rijnbeek, P.R., 2018. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. Journal of the American Medical Informatics Association. 25(8), p.969-975.'),
+            paste0('2. Steyerberg, E.W., Moons, K.G., van der Windt, D.A., Hayden, J.A., Perel, P., Schroter, S., Riley, R.D., Hemingway, H., Altman, D.G. and PROGRESS Group, 2013. Prognosis Research Strategy (PROGRESS) 3: prognostic model research. PLoS medicine, 10(2), p.e1001381.'),
+            paste0('3. Collins, G.S., Reitsma, J.B., Altman, D.G. and Moons, K.G., 2015. Transparent reporting of a multivariable prediction model for individual prognosis or diagnosis (TRIPOD): the TRIPOD statement. BMC medicine, 13(1), p.1.'))
+  for(i in 1:length(refs)){
+    doc <- doc %>% officer::body_add_par(value =  refs[i] )
+  }
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<add references>", prop = style_helper_text))) %>% 
+    officer::body_add_par("")
   
-  doc <- doc %>% officer::body_add_par(value = "<add references>" )
-
   doc <- doc %>% officer::body_add_par(value = 'Appendix A', style = 'heading 2')
   
-  doc <- doc %>% officer::body_add_par(value = "<atlas cohorts + concept sets>" )
-
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<atlas cohorts + concept sets>", prop = style_helper_text))) %>% 
+    officer::body_add_par("")
+  
   doc <- doc %>% officer::body_add_par(value = 'Appendix B', style = 'heading 2')
   
-  doc <- doc %>% officer::body_add_par(value = "<Plots of external validation>" )
+  doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<Plots of external validation>", prop = style_helper_text))) %>% 
+    officer::body_add_par("")
+  
   if(!is.null(plpValidation)){
     doc <- doc %>% officer::body_add_par(value = paste("The roc plots are:"))
     for(i in 1:length(plpValidation$validation)){
@@ -1001,7 +1081,8 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   
   # adding the model covaraites to the appendix
   doc <- doc %>% officer::body_add_par(value = 'Appendix C', style = 'heading 2')
-  modelVar <- plpResult$model$varImp[plpResult$model$varImp$covariateValue!=0,]
+  modelVar <- plpResult$model$varImp[plpResult$model$varImp$covariateValue!=0,c('covariateId','covariateName','covariateValue')]
+  modelVar$covariateValue <- format(as.double(modelVar$covariateValue), nsmall = 3, digits = 3, scientific = F)
   doc <- doc %>% officer::body_add_table(value=modelVar)
   
 

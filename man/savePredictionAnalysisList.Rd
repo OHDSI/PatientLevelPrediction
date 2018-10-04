@@ -9,7 +9,7 @@ savePredictionAnalysisList(workFolder = "inst/settings", cohortIds,
   covariateSettingList, populationSettingList, modelSettingList,
   maxSampleSize = NULL, washoutPeriod = 0, minCovariateFraction = 0,
   normalizeData = T, testSplit = "person", testFraction = 0.25,
-  splitSeed = 1, nfold = 3, verbosity = "INFO")
+  splitSeed = 1, nfold = 3)
 }
 \arguments{
 \item{workFolder}{Location to save json specification}
@@ -41,8 +41,6 @@ savePredictionAnalysisList(workFolder = "inst/settings", cohortIds,
 \item{splitSeed}{Seed used in test split}
 
 \item{nfold}{Number of folds used when training model}
-
-\item{verbosity}{Level of log details}
 }
 \description{
 Saves a json prediction settings given R settings
