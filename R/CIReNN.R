@@ -25,6 +25,7 @@
 
 #' Create setting for CIReNN model
 #'
+#' @param numberOfRNNLayer The number of RNN layer, only 1, 2, or 3 layers available now. eg. 1, c(1,2), c(1,2,3) 
 #' @param units         The number of units of RNN layer - as a list of vectors
 #' @param recurrentDropout  The reccurrent dropout rate (regularisation)
 #' @param layerDropout      The layer dropout rate (regularisation)
@@ -50,14 +51,14 @@
 #' model.CIReNN <- setCIReNN()
 #' }
 #' @export
-setCIReNN <- function(units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
+setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(1.0), batchSize = c(100), 
                       epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
                       vaeEpoch = 100L, vaeEpislonStd = 1.0,
                       seed=NULL  ){
-  
+  if( sum(!( numberOfRNNLayer %in% c(1,2,3)))!=0 ) stop ('Only 1,2 or 3 is available now. ')  
   # if(class(indexFolder)!='character')
   #     stop('IndexFolder must be a character')
   # if(length(indexFolder)>1)
@@ -105,7 +106,7 @@ setCIReNN <- function(units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(
   #    stop('UsetidyCovariateData must be an TRUE or FALSE')
   
   result <- list(model='fitCIReNN', param=split(expand.grid(
-    units=units, recurrentDropout=recurrentDropout, 
+    numberOfRNNLayer=numberOfRNNLayer,units=units, recurrentDropout=recurrentDropout, 
     layerDropout=layerDropout,
     lr =lr, decay=decay, outcomeWeight=outcomeWeight,epochs= epochs,
     earlyStoppingMinDelta = earlyStoppingMinDelta, earlyStoppingPatience = earlyStoppingPatience,
@@ -114,7 +115,7 @@ setCIReNN <- function(units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(
     vaeEpoch = vaeEpoch, vaeEpislonStd = vaeEpislonStd,
     seed=ifelse(is.null(seed),'NULL', seed)),
     
-    1:(length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(earlyStoppingMinDelta)*length(earlyStoppingPatience)*length(epochs)*max(1,length(seed)))),
+    1:(length(numberOfRNNLayer)*length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(earlyStoppingMinDelta)*length(earlyStoppingPatience)*length(epochs)*max(1,length(seed)))),
     name='CIReNN'
   )
 
@@ -226,7 +227,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
 }
 
 trainCIReNN<-function(plpData, population,
-                      units=128, recurrentDropout=0.2, layerDropout=0.2,
+                      numberOfRNNLayer=1,units=128, recurrentDropout=0.2, layerDropout=0.2,
                       lr =1e-4, decay=1e-5, outcomeWeight = 1.0, batchSize = 100, 
                       epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
@@ -248,14 +249,18 @@ trainCIReNN<-function(plpData, population,
     for(index in 1:length(index_vect )){
       writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       
-      ##single-layer gru
+      ##GRU layer
       model <- keras::keras_model_sequential()
-      model %>%
-        keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
-                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
-                         return_sequences=FALSE#,stateful=TRUE
-        ) %>%
-        keras::layer_dropout(layerDropout) %>%
+      if(numberOfRNNLayer==1) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
+                                                         return_sequences=FALSE) 
+      if(numberOfRNNLayer>1 ) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
+                                                         return_sequences=TRUE) 
+      if(numberOfRNNLayer==2) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+      if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE)
+      if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+      model %>% keras::layer_dropout(layerDropout) %>%
         keras::layer_dense(units=2, activation='softmax')
       
       model %>% keras::compile(
@@ -323,22 +328,26 @@ trainCIReNN<-function(plpData, population,
     foldPerm <- perform
     
     # Output  ----------------------------------------------------------------
-    param.val <- paste0('units: ',units,'-- recurrentDropout: ', recurrentDropout,
+    param.val <- paste0('RNNlayer Number: ', numberOfRNNLayer, '-- units: ',units,'-- recurrentDropout: ', recurrentDropout,
                         'layerDropout: ',layerDropout,'-- lr: ', lr,
-                        '-- decay: ', decay, '-- batchSize: ',batchSize, '-- epochs: ', epochs)
+                        '-- decay: ', decay,'-- outcomeWeight',outcomeWeight, '-- batchSize: ',batchSize, '-- epochs: ', epochs)
     writeLines('==========================================')
     writeLines(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
     writeLines('==========================================')
     
       } else {
-        ##single-layer gru
+        ##GRU layer
         model <- keras::keras_model_sequential()
-        model %>%
-          keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
-                           input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
-                           return_sequences=FALSE#,stateful=TRUE
-          ) %>%
-          keras::layer_dropout(layerDropout) %>%
+        if(numberOfRNNLayer==1) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                           input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
+                                                           return_sequences=FALSE) 
+        if(numberOfRNNLayer>1 ) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                           input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
+                                                           return_sequences=TRUE) 
+        if(numberOfRNNLayer==2) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+        if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE)
+        if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+        model %>% keras::layer_dropout(layerDropout) %>%
           keras::layer_dense(units=2, activation='softmax')
         
         model %>% keras::compile(
@@ -398,8 +407,9 @@ trainCIReNN<-function(plpData, population,
   
   result <- list(model=model,
                  auc=auc,
-                 hyperSum = unlist(list(units=units, recurrentDropout=recurrentDropout, 
-                                        layerDropout=layerDropout,lr =lr, decay=decay,
+                 hyperSum = unlist(list(numberOfRNNLayer=numberOfRNNLayer, 
+                                        units=units, recurrentDropout=recurrentDropout, 
+                                        layerDropout=layerDropout,lr =lr, decay=decay,outcomeWeight=outcomeWeight,
                                         batchSize = batchSize, epochs= epochs, earlyStoppingMinDelta = earlyStoppingMinDelta, 
                                         earlyStoppingPatience=earlyStoppingPatience))
   )
