@@ -497,10 +497,6 @@ Below the steps are explained how to do this in ATLAS.
 
 4) By opening the R package in R studio and building the package you can run the study using the `execute` function. Theres is also an example CodeToRun.R script available in the extras folder of the package with extra instructions.
 
-## Study protocol generation
-
-DETAILS TO BE ADDED.
-
 # Internal validation
 
 Once we execute the study, the runPlp() function returns the trained model and the evaluation of the model on the train/test sets.
@@ -541,7 +537,7 @@ Similar to the traditional calibration shown above the Smooth Calibration plot s
 However, the increased information gain comes at a computational cost. It is recommended to use the traditional plot for examination and then to produce the smooth plot for final versions. To create the smooth calibarion plot you have to run the follow command:
 
 ```{r tidy=TRUE,eval=FALSE}
-plotSmoothCalibration(lrResults$)
+plotSmoothCalibration(lrResults)
 ```
 
 See the help function for more information, on how to set the smoothing method etc.
@@ -705,7 +701,7 @@ If you have performed external validation these results will can be added as wel
 
 You can create the draft journal paper by running this function:
 
-```{r tidy=TRUE,eval=FALSE}
+```{r tidy=FALSE,eval=FALSE}
 
  createPlpJournalDocument(plpResult = <your plp results>, 
                           plpValidation = <your validation results>,
