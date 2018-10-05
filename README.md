@@ -1,21 +1,37 @@
 PatientLevelPrediction
 ======================
 
+An R package for building and validating patient-level predictive models using data in the OMOP Common Data Model format.  
+
+Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. [Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data.](https://academic.oup.com/jamia/article/25/8/969/4989437) J Am Med Inform Assoc. 2018;25(8):969-975.
+
 Introduction
 ============
-An R package for building and validating patient level predictive models using data in the OMOP Common Data Model format.  Please see our [JAMIA paper](https://academic.oup.com/jamia/article/25/8/969/4989437) for more details.
+
+The figure below illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
+
+![](vignettes/Figure1.png)
+
+To define a prediction problem we have to define t=0 by a Target Cohort (T), the outcome we like to predict by an outcome cohort (O), and the time-at-risk (TAR). Furthermore, we  have to make design choices for the model we like to develop, and determine the observational datasets to perform internal and external validation. This conceptual framework works for all type of prediction problems, for example those presented below (T=green, O=red).
+
+![](vignettes/problems.png)
 
 Features
 ========
-- Takes one or more target cohorts (Ts) and one or more outcome cohorts (Os) and develops models for all T and O combinations.
-- Takes multiple prediction design options.
+- Takes one or more target cohorts (Ts) and one or more outcome cohorts (Os) and develops and validates models for all T and O combinations.
+- Allows for multiple prediction design options.
 - Extracts the necessary data from a database in OMOP Common Data Model format for multiple covariate settings.
-- Uses a large set of covariates including for example all drugs, diagnoses, procedures, as well as age, comorbidity indexes, etc.  Also enables you to use custom covariates.
-- Includes a library of state-of-the-art machine learning algorithms that can be used to develop predictive models or add custom machine learning algorithms.
-- Supported machine learning models are: Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural network and Deep learning (Convolutional neural networks, Recurrent neural network and Deep nets).
-- Includes function for evaluating predictive models
-- Includes functions to plot and explore model performance (ROC + Calibration)
-- Includes a shiny app to interactively view and explore results
+- Uses a large set of covariates including for example all drugs, diagnoses, procedures, as well as age, comorbidity indexes, and custom covariates.
+- Includes a large number of state-of-the-art machine learning algorithms that can be used to develop predictive models, including Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural network and Deep learning (Convolutional neural networks, Recurrent neural network and Deep nets).
+- Allows you to add custom algorithms.
+- Contains functionality to externally validate models.
+- Includes functions to plot and explore model performance (ROC + Calibration).
+- Includes a shiny app to interactively view and explore results.
+- Implements existing models.
+- Builds ensemble models.
+- Builds Deep Learning models.
+- Generates learning curves.
+- Automatically creates a word document containing all the study results.
 
 
 Screenshots
@@ -31,7 +47,13 @@ Screenshots
 </tr><tr>
 <td>Calibration plot</td><td>ROC plot</td>
 </tr>
+<td>
 </table>
+
+
+A demo of the Shiny App can be found here:
+
+LINK to add or figure!
 
 Technology
 ==========
@@ -54,51 +76,32 @@ Dependencies
 
 Getting Started
 ===============
-1. On Windows, make sure [RTools](http://cran.r-project.org/bin/windows/Rtools/) is installed.
-2. The DatabaseConnector and SqlRender packages require Java. Java can be downloaded from
-<a href="http://www.java.com" target="_blank">http://www.java.com</a>.
-3. Random forest, Naive Bayes and MLP require python 3.6.  Python 3.6 can be downloaded from: <a href="https://www.continuum.io/downloads" target="_blank">https://www.continuum.io/downloads</a>.
-4. In R, use the following commands to download and install PatientLevelPrediction:
 
-  ```r
-  install.packages("drat")
-  drat::addRepo("OHDSI")
-  install.packages("PatientLevelPrediction")
-  ```
-5. We recommend testing your instalation by running:
-  ```r
-  PatientLevelPrediction::checkPlpInstallation()
-  
-  ```
-  If you have a response other than 1 (indicating everything works), enter the response number in:
-  ```r
-  PatientLevelPrediction::interpretInstallCode()
-  
-  ```
-Non-windows users: Please note that the package uses python to implement some of the classifiers.  The package pythonInR is used as the interface, and in Linux or Mac OS it uses the same python specified in path (the python that loads when you type the command python).  Please make sure the anaconda python is specified in your path rather than any default python (unless it is set up with the following packages), as the packages: numpy, scikit-learn and tensorFlow are required to run the patient level prediciton python code.  
+- To install the package please read the [Package Installation guide](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf)
 
-
-Note that for testing you can simulate a random plpData object using the following code:
-
-  ```r
-  set.seed(1234)
-  data(plpDataSimulationProfile)
-  sampleSize <- 2000
-  plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-  ```
-  
-Have a look at the video below for an extensive demo of the package.
+- Have a look at the video below for an extensive demo of the package.
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=BEukCbT8UoA
 " target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
 alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
+Please read the main vignette for the package:
+
+- [Building Single Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf)
+
+In addition we have created vignettes that describe advanced functionality in more detail:
+
+- [Building Multiple Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingMultiplePredictiveModels.pdf)
+- [Implementing Existing Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/ImplementingExistingModels.pdf)
+- [Adding Custom Machine Learning Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomAlgorithms.pdf)
+- [Building Deep Learning Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingDeepLearningModels.pdf)
+- [Building Ensemble Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingEnsembleModels.pdf)
+- [Generating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/GeneratingLearningCurves.pdf)
+
 Getting Involved
-================
-* Vignette: [Package Installation guide](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf)
-* Vignette: [Building Single Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf)
-* Vignette: [Adding Existing Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingExistingModels.pdf)
-* Vignette: [Adding Custom Machine Learning  Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/CustomPredictionAlgorithms.pdf)
+===============
+We like to get involved in the development of this package through pull requests to our development branch.
+
 * Developer questions/comments/feedback: <a href="http://forumBuildingPredictiveModels.pdfs.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="../../issues">GitHub issue tracker</a> for all bugs/issues/enhancements
  
@@ -117,5 +120,7 @@ PatientLevelPrediction is being developed in R Studio.
 Beta
 
 # Acknowledgements
-- This project is supported in part through the National Science Foundation grant IIS 1251151.
 
+- The package is maintained by Jenna Reps and Peter Rijnbeek and has been developed with major contributions from Martijn Schuemie, Patrick Ryan, and Marc Suchard.
+- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins.
+- This project is supported in part through the National Science Foundation grant IIS 1251151.

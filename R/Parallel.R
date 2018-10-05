@@ -45,7 +45,10 @@ registerParallelBackend <- function(cores = NULL, logical = TRUE) {
       numCores <- cores
     }
   } else {
-    warning("Found number of cores to be ", numCores, ".")
+    if (logical)
+      message("Your system has ", numCores, " logical cores available.")
+    else
+      message("Your system has ", numCores, " physical cores available.")
   }
   
   # register parallel backend

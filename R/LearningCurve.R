@@ -198,7 +198,7 @@ createLearningCurve <- function(population,
     # construct the training and testing set according to split type
     # indices will be non-zero for rows in training and testing set
     if (testSplit == 'time') {
-      OhdsiRTools::logTrace('Dataset time split starter')
+      OhdsiRTools::logTrace('Dataset time split started')
       indexes <- tryCatch({
         timeSplitter(
           population,
@@ -211,7 +211,7 @@ createLearningCurve <- function(population,
       finally = OhdsiRTools::logTrace('Done.'))
     }
     if (testSplit == 'person') {
-      OhdsiRTools::logTrace('Dataset person split starter')
+      OhdsiRTools::logTrace('Dataset person split started')
       indexes <- tryCatch({
         personSplitter(
           population,
@@ -606,6 +606,8 @@ createLearningCurvePar <- function(population,
   # verify that a parallel backend has been registered
   setup_parallel()
   
+  OhdsiRTools::logInfo('Started to run in parallel, this can take a while...')
+  
   # record global start time
   ExecutionDateTime <- Sys.time()
   
@@ -746,6 +748,12 @@ createLearningCurvePar <- function(population,
     "trainCalibrationSlope",
     "testCalibrationSlope"
   )
+  
+  endTime <- Sys.time()
+  TotalExecutionElapsedTime <-
+    as.numeric(difftime(endTime, ExecutionDateTime,
+                        units = "secs"))
+  OhdsiRTools::logInfo('Finished in ', round(TotalExecutionElapsedTime), ' secs.')
   
   # de-register the parallel backend by registering a sequential backend
   registerSequentialBackend()

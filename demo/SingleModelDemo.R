@@ -1,4 +1,10 @@
+# This demo will run a logistic regression model on simulated data and will show the Shiny App
 library(PatientLevelPrediction)
+devAskNewPage(ask = FALSE)
+
+# We need to have a writable folder for the ff objects
+checkffFolder()
+
 ### Simulated data from a database profile
 set.seed(1234)
 data(plpDataSimulationProfile)
@@ -13,7 +19,7 @@ population <- PatientLevelPrediction::createStudyPopulation(plpData,
                                                             washoutPeriod = 0,
                                                             removeSubjectsWithPriorOutcome = FALSE,
                                                             priorOutcomeLookback = 99999,
-                                                            requireTimeAtRisk = FALSE,
+                                                            requireTimeAtRisk = TRUE,
                                                             minTimeAtRisk = 0,
                                                             riskWindowStart = 0,
                                                             addExposureDaysToStart = FALSE,
@@ -21,7 +27,7 @@ population <- PatientLevelPrediction::createStudyPopulation(plpData,
                                                             addExposureDaysToEnd = FALSE,
                                                             verbosity = "INFO")
 
-### Example 1: Regularised logistic regression
+### Regularised logistic regression
 lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
 lr_results <- PatientLevelPrediction::runPlp(population,
                                              plpData,
@@ -30,35 +36,11 @@ lr_results <- PatientLevelPrediction::runPlp(population,
                                              testFraction = 0.25,
                                              nfold = 2,
                                              verbosity = "INFO",
-                                             save = "./plpmodels")
+                                             savePlpPlots = F,
+                                             saveDirectory = "./plpmodels")
 
-### Example 2: Naive bayes model using python
-cat("Press a key to continue")
-invisible(readline())
 
-nb_model <- PatientLevelPrediction::setNaiveBayes()
-nb_results <- PatientLevelPrediction::runPlp(population,
-                                             plpData,
-                                             modelSettings = nb_model,
-                                             testSplit = "time",
-                                             testFraction = 0.25,
-                                             nfold = 2,
-                                             verbosity = "INFO",
-                                             save = "./plpmodels")
+### Have a look at the results object.
 
-### Example 3: Gradient Boosting Machine with person split
-cat("Press a key to continue")
-invisible(readline())
-
-gbm_model <- PatientLevelPrediction::setGradientBoostingMachine(ntrees = c(10, 50, 100),
-                                                                max_depth = c(4, 16),
-                                                                min_rows = 2)
-gbm_results <- PatientLevelPrediction::runPlp(population,
-                                              plpData,
-                                              modelSettings = gbm_model,
-                                              testSplit = "person",
-                                              testFraction = 0.25,
-                                              nfold = 2,
-                                              verbosity = "INFO",
-                                              save = "./plpmodels")
-
+### You can start the Shiny App by using this command now:
+### viewPlp(lr_results)

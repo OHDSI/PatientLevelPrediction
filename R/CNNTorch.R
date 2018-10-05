@@ -23,7 +23,7 @@
 #' @param class_weight   The class weight used for imbalanced data: 
 #'                           0: Inverse ratio between positives and negatives
 #'                          -1: Focal loss
-#' @param cnn_type      It can be normal 'CNN', 'CNN_LSTM', CNN_MLF' with multiple kernels with different kernel size, 
+#' @param type      It can be normal 'CNN', 'CNN_LSTM', CNN_MLF' with multiple kernels with different kernel size, 
 #'                      'CNN_MIX', 'ResNet' and 'CNN_MULTI'
 #' 
 #' @examples
@@ -31,14 +31,14 @@
 #' model.cnnTorch <- setCNNTorch()
 #' }
 #' @export
-setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, class_weight = 0, cnn_type = 'CNN'){
+setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, class_weight = 0, type = 'CNN'){
   
   # test python is available and the required dependancies are there:
   checkPython()
   
   result <- list(model='fitCNNTorch', param=split(expand.grid(nbfilters=nbfilters,
                                             epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
-											class_weight = class_weight, cnn_type = cnn_type),
+											class_weight = class_weight, type = type),
 											1:(length(nbfilters)*length(epochs)) ),
                  					  name='CNN Torch')
   
@@ -129,29 +129,29 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, class_weight= 0, cnn_type = 'CNN', train=TRUE){
+trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, class_weight= 0, type = 'CNN', train=TRUE){
   #PythonInR::pyExec(paste0("size = ",size))
   PythonInR::pyExec(paste0("epochs = ",epochs))
   PythonInR::pyExec(paste0("nbfilters = ",nbfilters))
   PythonInR::pyExec(paste0("seed = ",seed))
   #PythonInR::pyExec(paste0("time_window = ",time_window))
   PythonInR::pyExec(paste0("class_weight = ",class_weight))
-  if (cnn_type == 'CNN'){
+  if (type == 'CNN'){
     PythonInR::pyExec("model_type = 'CNN'")
-  } else if (cnn_type == 'CNN_LSTM'){
+  } else if (type == 'CNN_LSTM'){
     PythonInR::pyExec("model_type = 'CNN_LSTM'")
   }
-  else if (cnn_type == 'CNN_MLF'){
+  else if (type == 'CNN_MLF'){
     PythonInR::pyExec("model_type = 'CNN_MLF'")
   }
-  else if (cnn_type == 'CNN_MIX'){
+  else if (type == 'CNN_MIX'){
     PythonInR::pyExec("model_type = 'CNN_MIX'")
-  } else if (cnn_type == 'CNN_MULTI'){
+  } else if (type == 'CNN_MULTI'){
     PythonInR::pyExec("model_type = 'CNN_MULTI'")
-  } else if (cnn_type == 'ResNet'){
+  } else if (type == 'ResNet'){
     PythonInR::pyExec("model_type = 'ResNet'")
   }
-  #PythonInR::pyExec(paste0("model_type = ",cnn_type))
+  #PythonInR::pyExec(paste0("model_type = ",type))
   if(train)
     PythonInR::pyExec("train = True")
   if(!train)

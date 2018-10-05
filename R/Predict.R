@@ -333,7 +333,7 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
   attr(prediction, "outcomeId") <- attr(population, "metadata")$outcomeId
 
   delta <- Sys.time() - start
-  OhdsiRTools::logInfo("Prediction took", signif(delta, 3), attr(delta, "units"))
+  OhdsiRTools::logInfo("Prediction took ", signif(delta, 3), " ", attr(delta, "units"))
   return(prediction)
 }
 
