@@ -102,7 +102,7 @@ Getting Involved
 ===============
 We like to get involved in the development of this package through pull requests to our development branch.
 
-* Developer questions/comments/feedback: <a href="http://forumBuildingPredictiveModels.pdfs.ohdsi.org/c/developers">OHDSI Forum</a>
+* Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="../../issues">GitHub issue tracker</a> for all bugs/issues/enhancements
  
 License
