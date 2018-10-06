@@ -53,7 +53,7 @@ Screenshots
 
 A demo of the Shiny App can be found here:
 
-LINK to add or figure!
+[Prediction Viewer Shiny App](http://data.ohdsi.org/PredictionViewer/)
 
 Technology
 ==========
