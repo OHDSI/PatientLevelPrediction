@@ -98,9 +98,12 @@ In addition we have created vignettes that describe advanced functionality in mo
 - [Building Ensemble Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingEnsembleModels.pdf)
 - [Generating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/GeneratingLearningCurves.pdf)
 
+Package manual: [PatientLevelPrediction.pdf](https://github.com/OHDSI/PatientLevelPrediction/blob/master/extras/PatientLevelPrediction.pdf)
+
 Getting Involved
 ===============
 We like to get involved in the development of this package through pull requests to our development branch.
+
 
 * Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="../../issues">GitHub issue tracker</a> for all bugs/issues/enhancements
