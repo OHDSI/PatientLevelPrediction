@@ -441,7 +441,7 @@ summaryPlpAnalyses <- function(analysesLocation){
 
 plotShiny <- function(eval, pointOfInterest){
   
-  data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('train','validation'),]
+  data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
   # pointOfInterest # this is a threshold
   pointOfInterest <- data[pointOfInterest,]
   rocobject <- plotly::plot_ly(x = 1-c(0,data$specificity,1)) %>%
