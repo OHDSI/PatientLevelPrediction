@@ -144,6 +144,14 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   varImp <- varImp[order(-varImp$Gain),]
   colnames(varImp)[colnames(varImp)=='Gain'] <- 'covariateValue'
   
+  # apply the model to the train set:
+  prediction <- data.frame(rowId=population$rowId,
+                           value=stats::predict(trainedModel, data)
+  )
+  prediction <- merge(population, prediction, by='rowId')
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+  attr(prediction, "metaData") <- list(predictionType = "binary") 
+
   result <- list(model = trainedModel,
                  modelSettings = list(model='gbm_xgboost', modelParameters=param), #todo get lambda as param
                  trainCVAuc = NULL,
@@ -154,7 +162,8 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                  cohortId=cohortId,
                  varImp = varImp,
                  trainingTime=comp,
-                 covariateMap=result$map
+                 covariateMap=result$map,
+                 predictionTrain = prediction
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'xgboost'

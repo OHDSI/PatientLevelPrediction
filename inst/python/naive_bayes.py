@@ -76,6 +76,9 @@ for i in range(1, int(np.max(population[:,population.shape[1]-1])+1), 1):
   print("Prediction complete: %s rows " %(np.shape(test_pred[ind])[0]))
   print("Mean: %s prediction value" %(np.mean(test_pred[ind])))
 
+# cv pred
+test_pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
+predictioncv = np.append(population[population[:,population.shape[1]-1] > 0,:],test_pred, axis=1)
 	
 # train final:
 print("Training final naive bayes model on all train data...")
@@ -93,5 +96,6 @@ print("Model saved to: %s" %(modelOutput)	)
 joblib.dump(gnb, os.path.join(modelOutput,"model.pkl"))  
 
 # merge pred with indexes[testInd,:]
+test_pred = gnb.predict_proba(X)[:,1]
 test_pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
 prediction = np.append(population[population[:,population.shape[1]-1] > 0,:],test_pred, axis=1)

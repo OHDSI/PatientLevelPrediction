@@ -118,6 +118,10 @@ fitCovNN <- function(plpData,population, param, search='grid', quiet=F,
   
   comp <- start-Sys.time()
   
+  # train prediction
+  prediction <- finalModel$prediction
+  finalModel$prediction <- NULL
+  
   # return model location 
   result <- list(model = finalModel,
                  trainCVAuc = -1, # ToDo decide on how to deal with this
@@ -129,7 +133,8 @@ fitCovNN <- function(plpData,population, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef, 
                  trainingTime =comp,
-                 covariateMap=result$map
+                 covariateMap=result$map,
+                 predictionTrain = prediction
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'deepMulti'
@@ -497,10 +502,12 @@ trainCovNN<-function(plpData, population,
     attr(prediction, "metaData") <- list(predictionType = "binary")
     auc <- computeAuc(prediction)
     foldPerm <- auc
+    predictionMat <- prediction
   }
   
   result <- list(model=model,
-                 auc=auc,
+                 auc=auc, 
+                 prediction = predictionMat,
                  hyperSum = unlist(list(batchSize = batchSize, lr=lr, decay=decay,
                                         outcomeWeight=outcomeWeight,
                                         dropout=dropout,filters=filters,

@@ -93,6 +93,11 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
     colnames(varImp)[colnames(varImp)=='value'] <- 'covariateValue'
   }
   
+  #get prediction on test set:
+  prediction <- predict.plp(plpModel=list(model = modelTrained),
+              population = population, 
+              plpData = plpData)
+  
   result <- list(model = modelTrained,
                  modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
                  hyperParamSearch = c(priorVariance=modelTrained$priorVariance, 
@@ -105,7 +110,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                  cohortId=cohortId,
                  varImp = varImp,
                  trainingTime=comp,
-                 covariateMap = NULL
+                 covariateMap = NULL,
+                 predictionTrain = prediction
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'plp'

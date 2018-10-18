@@ -27,6 +27,7 @@ joblib.dump(rf, os.path.join(modelOutput,"model.pkl"))
 
 # merge pred with indexes[testInd,:]
 # save 
+test_pred = rf.predict_proba(train_x)[:,1]
 test_pred.shape = (population[trainInd,:].shape[0], 1)
 prediction = np.append(population[trainInd,:],test_pred, axis=1)
 #print "%s - %s" %(prediction.shape[0], prediction.shape[1])

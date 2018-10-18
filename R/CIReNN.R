@@ -202,6 +202,10 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   
   comp <- start-Sys.time()
   
+  # train prediction
+  prediction <- finalModel$predictionMat
+  finalModel$predictionMat <- NULL
+  
   # return model location 
   result <- list(model = finalModel,
                  trainCVAuc = -1, # ToDo decide on how to deal with this
@@ -217,7 +221,8 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
                  useVae = param[[1]]$useVae,
                  vaeBatchSize = param[[1]]$vaeBatchSize,
                  vaeEnDecoder = vaeEnDecoder,
-                 vaeEncoder = vaeEncoder
+                 vaeEncoder = vaeEncoder,
+                 predictionTrain  = prediction
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'deep'
@@ -402,11 +407,13 @@ trainCIReNN<-function(plpData, population,
     attr(prediction, "metaData") <- list(predictionType = "binary")
     auc <- computeAuc(prediction)
     foldPerm <- auc
+    predictionMat <- prediction
   }
   
   
   result <- list(model=model,
                  auc=auc,
+                 prediction = predictionMat,
                  hyperSum = unlist(list(numberOfRNNLayer=numberOfRNNLayer, 
                                         units=units, recurrentDropout=recurrentDropout, 
                                         layerDropout=layerDropout,lr =lr, decay=decay,outcomeWeight=outcomeWeight,

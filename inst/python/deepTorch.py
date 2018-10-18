@@ -1146,6 +1146,16 @@ if __name__ == "__main__":
             print("Model saved to: %s" % (modelOutput))
 
             joblib.dump(model, os.path.join(modelOutput,'model.pkl'))
+            
+            # prediction on train:
+            test_batch = tu.batch(train_x, batch_size = 32)
+                test_pred = []
+                for test in test_batch:
+                    pred_test1 = model.predict_proba(test)[:, 1]
+                    test_pred = np.concatenate((test_pred, pred_test1), axis = 0)
+            test_pred.shape = (population.shape[0], 1)
+            prediction = np.append(population, test_pred, axis=1)
+
 '''
 if __name__ == "__main__":
     DATA_SIZE = 1000

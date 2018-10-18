@@ -107,6 +107,17 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   
   comp <- start-Sys.time()
   
+  # train prediction
+  pred <- PythonInR::pyGet('prediction', simplify = F)
+  pred <-  apply(pred,1, unlist)
+  pred <- t(pred)
+  pred[,1] <- pred[,1] + 1 # converting from python to r index
+  colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
+  pred <- as.data.frame(pred)
+  attr(pred, "metaData") <- list(predictionType="binary")
+  prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
+  
+  
   # return model location 
   result <- list(model = modelTrained,
                  trainCVAuc = -1, # ToDo decide on how to deal with this
@@ -119,8 +130,9 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                  varImp = covariateRef, 
                  trainingTime =comp,
                  dense=1,
-                 covariateMap=result$map # I think this is need for new data to map the same?
-  )
+                 covariateMap=result$map, # I think this is need for new data to map the same?
+                 predictionTrain = prediction
+                 )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'
   attr(result, 'predictionType') <- 'binary'

@@ -81,4 +81,9 @@ else:
   print("Model saved to: %s" %(modelOutput)	)
 
   joblib.dump(adab, os.path.join(modelOutput,"model.pkl")) 
+  
+  pred = adab.predict_proba(X[trainInds,:])[:,1]
+  pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
+  prediction = np.append(population[population[:,population.shape[1]-1] > 0,:],pred, axis=1)
+
 

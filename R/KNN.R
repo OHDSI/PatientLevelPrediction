@@ -80,6 +80,14 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
   varImp<- ff::as.ram(plpData$covariateRef)
   varImp$covariateValue <- rep(0, nrow(varImp))
   
+  prediction <- predict.knn(plpData=plpData, 
+                            population = population, 
+                            plpModel=list(model=indexFolder,
+                                          modelSettings = list(model='knn',
+                                                               modelParameters=list(k=k),
+                                                               indexFolder=indexFolder
+                                          )))
+  
   result <- list(model = indexFolder,
                  trainCVAuc = NULL,    # did I actually save this!?
                  modelSettings = list(model='knn',
@@ -92,7 +100,8 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
                  outcomeId=outcomeId,
                  cohortId=cohortId,
                  varImp = varImp,
-                 trainingTime =comp
+                 trainingTime =comp,
+                 predictionTrain = prediction
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'knn'

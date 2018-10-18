@@ -93,6 +93,10 @@ else:
 
   joblib.dump(dt, os.path.join(modelOutput,"model.pkl"))
   
+  test_pred = dt.predict_proba(X[trainInds,:])[:,1]
+  test_pred.shape = (population[trainInds,:].shape[0], 1)
+  prediction = np.append(population[trainInds,:],test_pred, axis=1)
+  
   if plot:
     plotfile = modelOutput+"\\tree_plot.dot"
     tree.export_graphviz(dt, out_file=plotfile, feature_names=varnames[:,0])#X.dtype.names ) #variables[:,0])

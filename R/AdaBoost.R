@@ -123,6 +123,17 @@ fitAdaBoost <- function(population,
   param.best <- param[[bestInd]]
 
   comp <- start - Sys.time()
+  
+  # train prediction
+  pred <- PythonInR::pyGet('prediction', simplify = F)
+  pred <-  apply(pred,1, unlist)
+  pred <- t(pred)
+  pred[,1] <- pred[,1] + 1 # converting from python to r index
+  colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
+  pred <- as.data.frame(pred)
+  attr(pred, "metaData") <- list(predictionType="binary")
+  prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
+  
 
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
@@ -136,7 +147,8 @@ fitAdaBoost <- function(population,
                  varImp = covariateRef,
                  trainingTime = comp,
                  dense = 0,
-                 covariateMap = x$map)
+                 covariateMap = x$map,
+                 predictionTrain=prediction)
   class(result) <- "plpModel"
   attr(result, "type") <- "python"
   attr(result, "predictionType") <- "binary"

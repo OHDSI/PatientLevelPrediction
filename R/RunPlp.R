@@ -271,10 +271,22 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                   OhdsiRTools::logTrace('Done.')})
   model$analysisId <- analysisId # adding this so we can link validation to models
   
+  # get train prediction and remove it from model
+  predictionTrain <- model$predictionTrain
+  model$predictionTrain <- NULL
+  
+  # create test subset of population
+  populationTest <- population[population$indexes<0,]
+  attr(populationTest, 'metaData') <- attr(population, 'metaData')
   # calculate metrics
   OhdsiRTools::logTrace('Prediction')
-  prediction <- tryCatch(predictPlp(plpModel = model, population = population, plpData = plpData, index = NULL), 
+  predictionTest <- tryCatch(predictPlp(plpModel = model, 
+                                    population = populationTest, #population, 
+                                    plpData = plpData, 
+                                    index = NULL), 
                      finally = OhdsiRTools::logTrace('Done.'))
+  
+  prediction <- rbind(predictionTest, predictionTrain[,colnames(predictionTest)])
   
   OhdsiRTools::logDebug(paste0('prediction null: ', is.null(prediction)))
   OhdsiRTools::logDebug(paste0('prediction unique values: ', length(unique(prediction$value))))

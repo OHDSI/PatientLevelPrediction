@@ -212,18 +212,21 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   colnames(covariateRef) <- c('covariateId','covariateName','analysisId','conceptId','included','covariateValue')
   ##write.table(covariateRef, file.path(outLoc, 'covs.txt'), row.names=F, col.names=T) # might not need?
   
+  #auc <- PatientLevelPrediction::computeAuc(pred)
+  #OhdsiRTools::logInfo(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' maxDepth: ',param$maxDepth[which.max(all_auc)], 
+  #                  'mtry: ', param$mtry[which.max(all_auc)] , ' obtained AUC of ', auc))
+  
+  comp <- start-Sys.time()
+  
+  # train auc
   pred <- PythonInR::pyGet('prediction', simplify = F)
   pred <-  apply(pred,1, unlist)
   pred <- t(pred)
+  pred[,1] <- pred[,1] + 1 # converting from python to r index
   colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
   pred <- as.data.frame(pred)
   attr(pred, "metaData") <- list(predictionType="binary")
-  
-  auc <- PatientLevelPrediction::computeAuc(pred)
-  OhdsiRTools::logInfo(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' maxDepth: ',param$maxDepth[which.max(all_auc)], 
-                    'mtry: ', param$mtry[which.max(all_auc)] , ' obtained AUC of ', auc))
-  
-  comp <- start-Sys.time()
+  prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
   
   # return model location
   result <- list(model = modelTrained,
@@ -237,7 +240,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                  varImp = covariateRef,
                  trainingTime =comp,
                  dense=0,
-                 covariateMap=x$map
+                 covariateMap=x$map,
+                 predictionTrain = prediction
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'python'

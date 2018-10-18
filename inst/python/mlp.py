@@ -81,4 +81,9 @@ else:
   print("Model saved to: %s" %(modelOutput))
 	
   joblib.dump(mlp, os.path.join(modelOutput,"model.pkl"))
+  
+  pred = mlp.predict_proba(X[trainInds,:])[:,1]
+  pred.shape = (population[trainInds,:].shape[0], 1)
+  prediction = np.append(population[trainInds,:],pred, axis=1)
+
 
