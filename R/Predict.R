@@ -103,8 +103,54 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
   
 }
 
-# TODO: edit caret methods (or remove as slow - replace with python)
-# caret model prediction 
+predict.python2 <- function(plpModel, population, plpData){
+  
+  OhdsiRTools::logInfo('Mapping covariates...')
+  newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
+  included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
+  included <- newData$map$newIds[newData$map$oldIds%in%included] 
+  pdata <- reticulate::r_to_py(newData$data[,included])
+  
+  # save population
+  if('indexes'%in%colnames(population)){
+    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+    pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
+    
+  } else {
+    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+    pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount')])
+  }
+  
+  # run the python predict code:
+  OhdsiRTools::logInfo('Executing prediction...')
+  e <- environment()
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
+  
+  result <- python_predict(population = pPopulation, 
+                           plpData = pdata, 
+                           model_loc = plpModel$model,
+                           dense = ifelse(is.null(plpModel$dense),0,plpModel$dense) )
+  #get the prediction from python and reformat:
+  OhdsiRTools::logInfo('Returning results...')
+  prediction <- result
+  prediction <- as.data.frame(prediction)
+  attr(prediction, "metaData") <- list(predictionType="binary")
+  if(ncol(prediction)==4){
+    colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
+  } else {
+    colnames(prediction) <- c('rowId','outcomeCount', 'value')
+  }
+  
+  # add 1 to rowId from python:
+  prediction$rowId <- prediction$rowId+1
+  
+  # add subjectId and date:
+  prediction <- merge(prediction,
+                      population[,c('rowId','subjectId','cohortStartDate')], 
+                      by='rowId')
+  return(prediction)
+}
+
 predict.python <- function(plpModel, population, plpData){
   
   # connect to python if not connected
@@ -344,7 +390,7 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
 #' @param population       A data frame containing the population to do the prediction for
 #' @param covariates     A data frame or ffdf object containing the covariates with predefined columns
 #'                       (see below).
-#' @param modelType      Current supported types are "logistic", "poisson", or "survival".
+#' @param modelType      Current supported types are "logistic", "poisson", "cox" or "survival".
 #'
 #' @details
 #' These columns are expected in the outcome object: \tabular{lll}{ \verb{rowId} \tab(integer) \tab
@@ -357,7 +403,7 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
 #'
 #' @export
 predictFfdf <- function(coefficients, population, covariates, modelType = "logistic") {
-  if (!(modelType %in% c("logistic", "poisson", "survival"))) {
+  if (!(modelType %in% c("logistic", "poisson", "survival","cox"))) {
     stop(paste("Unknown modelType:", modelType))
   }
   if (class(covariates) != "ffdf") {
@@ -388,8 +434,11 @@ predictFfdf <- function(coefficients, population, covariates, modelType = "logis
       return(1/(1 + exp(0 - x)))
     }
     prediction$value <- link(prediction$value)
-  } else if (modelType == "poisson" || modelType == "survival") {
+  } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     prediction$value <- exp(prediction$value)
+    if(max(prediction$value)>1){
+       prediction$value <- prediction$value/max(prediction$value)
+    }
   }
   return(prediction)
 }

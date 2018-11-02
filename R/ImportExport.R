@@ -148,6 +148,10 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
     # remove less than n counts from demographicSummary
 
     if(!is.null(plpResult$performanceEvaluation$demographicSummary)){
+      
+      plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk[is.na(plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk)] <- 0
+      plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome[is.na(plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome)] <- 0
+      
       removeInd <- plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk< n |
         plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome < n 
       plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk[removeInd] <- -1
@@ -156,6 +160,11 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
     
     if(!is.null(plpResult$covariateSummary)){
       plpResult$covariateSummary <- plpResult$covariateSummary[,colnames(plpResult$covariateSummary)%in%c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','CovariateCountWithOutcome','CovariateCountWithNoOutcome','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome')]
+      
+      plpResult$covariateSummary$CovariateCount[is.na(plpResult$covariateSummary$CovariateCount)] <- 0
+      plpResult$covariateSummary$CovariateCountWithOutcome[is.na(plpResult$covariateSummary$CovariateCountWithOutcome)] <- 0
+      plpResult$covariateSummary$CovariateCountWithNoOutcome[is.na(plpResult$covariateSummary$CovariateCountWithNoOutcome)] <- 0
+      
       removeInd <- plpResult$covariateSummary$CovariateCount < n |
         plpResult$covariateSummary$CovariateCountWithOutcome < n | 
         plpResult$covariateSummary$CovariateCountWithNoOutcome < n 

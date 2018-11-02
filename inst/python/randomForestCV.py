@@ -82,8 +82,3 @@ for i in range(1, int(np.max(population[:,population.shape[1]-1])+1), 1):
 trainInd = population[:,population.shape[1]-1] > 0
 test_pred.shape = (population[trainInd,:].shape[0], 1)
 prediction = np.append(population[trainInd,:],test_pred, axis=1)
-
-
-	
-
-

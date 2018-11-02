@@ -15,7 +15,7 @@ first value which is expected to be the intercept.}
 \item{covariates}{A data frame or ffdf object containing the covariates with predefined columns
 (see below).}
 
-\item{modelType}{Current supported types are "logistic", "poisson", or "survival".}
+\item{modelType}{Current supported types are "logistic", "poisson", "cox" or "survival".}
 }
 \description{
 Generated predictions from a regression model

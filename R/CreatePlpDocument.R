@@ -774,7 +774,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     officer::body_add_par("")
 
   doc <- doc %>% officer::body_add_par(value = 'Predictors:', style = "heading 3")
-  covset <- plpResult$inputSetting$dataExtrractionSettings$covariateSettings
+  covset <- plpResult$model$metaData$call$covariateSettings #plpResult$inputSetting$dataExtrractionSettings$covariateSettings
   if(class(plpResult$inputSetting$dataExtrractionSettings$covariateSettings)=="list"){
     covs <- unlist(covset)[grep('use',names(unlist(covset)))]
     covs <- gsub('useCovariate','',names(covs)[covs==1])
@@ -934,7 +934,13 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
       
       plpValidation$summary[is.na(plpValidation$summary)] <- 0
       
-      aucv <- paste0(round(as.numeric(apply(plpValidation$summary[,aucInd],1,max)), digits=3), 
+      if(length(aucInd)>1){
+        aucVals <- apply(plpValidation$summary[,aucInd],1,max)
+      } else{
+        aucVals <- plpValidation$summary[,aucInd]
+      }
+      
+      aucv <- paste0(round(as.numeric(aucVals), digits=3), 
                      ' (', round(as.numeric(plpValidation$summary[,ciInd[1]]), digits=3) ,
                      '-',round(as.numeric(plpValidation$summary[,ciInd[2]]), digits = 3) , 
                      ')')

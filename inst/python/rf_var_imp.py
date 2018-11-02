@@ -62,6 +62,3 @@ train_x = feat_sel.transform(train_x)
 
 if quiet==False:
   print("Selected %s number of features" %(train_x.shape[1]))
-	
-
-

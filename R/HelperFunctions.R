@@ -330,6 +330,20 @@ createTempModelLoc <- function(){
   }
 }
 
-
+listAppend <- function(a, b){
+  size <- length(a) + length(b)
+  x <- list()
+  length(x) <- size
+  for(i in 1:size){
+    if(i<=length(a)){
+      x[[i]] <- a[[i]]
+    } else{
+      x[[i]] <- b[[i-length(a)]]
+    }
+  }
+  names(x) <- c(names(a), names(b))
+  return(x)
+}
+  
 
 
