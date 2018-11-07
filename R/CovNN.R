@@ -106,7 +106,7 @@ fitCovNN <- function(plpData,population, param, search='grid', quiet=F,
   
   #now train the final model and return coef
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
-  finalModel<-do.call(trainCovNN, c(param[[bestInd]],datas, train=FALSE))$model
+  finalModel<-do.call(trainCovNN, c(param[[bestInd]],datas, train=FALSE))
   
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
@@ -123,7 +123,7 @@ fitCovNN <- function(plpData,population, param, search='grid', quiet=F,
   finalModel$prediction <- NULL
   
   # return model location 
-  result <- list(model = finalModel,
+  result <- list(model = finalModel$model,
                  trainCVAuc = -1, # ToDo decide on how to deal with this
                  hyperParamSearch = hyperSummary,
                  modelSettings = list(model='fitCovNN',modelParameters=param.best),

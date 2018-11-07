@@ -105,11 +105,72 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
 
 predict.python2 <- function(plpModel, population, plpData){
   
+  e <- environment()
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
+  
+  
   OhdsiRTools::logInfo('Mapping covariates...')
-  newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
-  included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
-  included <- newData$map$newIds[newData$map$oldIds%in%included] 
-  pdata <- reticulate::r_to_py(newData$data[,included])
+  if(!is.null(plpData$timeRef)){
+    pdata <- toSparseTorchPython2(plpData,population, map=plpModel$covariateMap, temporal=T)
+    fun_predict <- python_predict_temporal
+  } else {  
+    newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
+    included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
+    included <- newData$map$newIds[newData$map$oldIds%in%included] 
+    pdata <- reticulate::r_to_py(newData$data[,included])
+    fun_predict <- python_predict
+  }
+  
+  # save population
+  if('indexes'%in%colnames(population)){
+    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+    pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
+    
+  } else {
+    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+    pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount')])
+  }
+  
+  # run the python predict code:
+  OhdsiRTools::logInfo('Executing prediction...')
+  result <- fun_predict(population = pPopulation, 
+                           plpData = pdata, 
+                           model_loc = plpModel$model,
+                           dense = ifelse(is.null(plpModel$dense),0,plpModel$dense),
+                           autoencoder = F)
+  
+  #get the prediction from python and reformat:
+  OhdsiRTools::logInfo('Returning results...')
+  prediction <- result
+  prediction <- as.data.frame(prediction)
+  attr(prediction, "metaData") <- list(predictionType="binary")
+  if(ncol(prediction)==4){
+    colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
+  } else {
+    colnames(prediction) <- c('rowId','outcomeCount', 'value')
+  }
+  
+  # add 1 to rowId from python:
+  prediction$rowId <- prediction$rowId+1
+  
+  # add subjectId and date:
+  prediction <- merge(prediction,
+                      population[,c('rowId','subjectId','cohortStartDate')], 
+                      by='rowId')
+  return(prediction)
+}
+
+predict.pythonAuto <- function(plpModel, population, plpData){
+  
+  OhdsiRTools::logInfo('Mapping covariates...')
+  if(!is.null(plpData$timeRef)){
+    pdata <- toSparseTorchPython2(plpData,population, map=plpModel$covariateMap, temporal=T)
+  } else {  
+    newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
+    included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
+    included <- newData$map$newIds[newData$map$oldIds%in%included] 
+    pdata <- reticulate::r_to_py(newData$data[,included])
+  }
   
   # save population
   if('indexes'%in%colnames(population)){
@@ -129,7 +190,8 @@ predict.python2 <- function(plpModel, population, plpData){
   result <- python_predict(population = pPopulation, 
                            plpData = pdata, 
                            model_loc = plpModel$model,
-                           dense = ifelse(is.null(plpModel$dense),0,plpModel$dense) )
+                           dense = ifelse(is.null(plpModel$dense),0,plpModel$dense),
+                           autoencoder = T)
   #get the prediction from python and reformat:
   OhdsiRTools::logInfo('Returning results...')
   prediction <- result
@@ -254,10 +316,11 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
     
     data <-result$data[population$rowId,,]
-    if(plpModel$useVae==TRUE){
-      data<- plyr::aaply(as.array(data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
-      data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
-    }
+    if(!is.null(plpModel$useVae)){
+      if(plpModel$useVae==TRUE){
+        data<- plyr::aaply(as.array(data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
+        data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
+      }}
     
     batch_size <- min(2000, length(population$rowId))
     maxVal <- length(population$rowId)

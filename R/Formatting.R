@@ -95,12 +95,32 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     OhdsiRTools::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
     OhdsiRTools::logTrace(paste0('Max time:', max(plpData$timeRef$timeId)))
     for(i in min(plpData$timeRef$timeId):max(plpData$timeRef$timeId)){
+      
       if(sum(plpData.mapped$covariates$timeId==i)!=0){
-        plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
+        # initiate the sparse matrix
         data <- Matrix::sparseMatrix(i=1,
                                      j=1,
                                      x=0,
-                                     dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
+                                     dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) 
+        
+        # add the non-temporal features 
+        timeId <- i
+        tempData <- addAgeTemp(timeId,plpData.mapped, plpData$timeRef)
+        temp <- tryCatch(Matrix::sparseMatrix(i=tempData$rowId,
+                                              j=tempData$covariateId,
+                                              x=tempData$covariateValue,
+                                              dims=c(max(population$rowId), max(plpData.mapped$map$newIds))))
+        data <- data + temp
+        tempData <- addNonAgeTemp(timeId,plpData.mapped)
+        temp <- tryCatch(Matrix::sparseMatrix(i=tempData$rowId,
+                                              j=tempData$covariateId,
+                                              x=tempData$covariateValue,
+                                              dims=c(max(population$rowId), max(plpData.mapped$map$newIds))))
+        data <- data + temp
+        rm(tempData)
+        # non-temporal features added
+      
+        plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
         for (ind in bit::chunk(plpData.mapped$temp_covariates$covariateId)) {
           OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
           temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$temp_covariates$rowId[ind]),
@@ -410,6 +430,133 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
   
 }
 
+#' Convert the plpData in COO format into a sparse python matrix using torch.sparse
+#'
+#' @description
+#' Converts the standard plpData to a sparse matrix firectly into python
+#'
+#' @details
+#' This function converts the covariate file from ffdf in COO format into a sparse matrix from
+#' the package Matrix
+#' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction
+#'                                      data extracted from the CDM.
+#' @param population                    The population to include in the matrix
+#' @param map                           A covariate map (telling us the column number for covariates)
+#' @param temporal                      Whether to include timeId into tensor
+#' @param pythonExePath                 Location of python exe you want to use
+#' @examples
+#' #TODO
+#'
+#' @return
+#' Returns a list, containing the python object name of the sparse matrix, the plpData covariateRef
+#' and a data.frame named map that tells us what covariate corresponds to each column
+#' This object is a list with the following components: \describe{
+#' \item{data}{The python object name containing a sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.}
+#' \item{covariateRef}{The plpData covariateRef.}
+#' \item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.}
+#' }
+#'
+#' @export
+toSparseTorchPython2 <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
+  # check logger
+  if(length(OhdsiRTools::getLoggers())==0){
+    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+                                        threshold = "INFO",
+                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = 'layoutTimestamp')))
+    OhdsiRTools::registerLogger(logger)
+  }
+  
+  # test python is available and the required dependancies are there:
+  cov <- plpData$covariates #ff::clone(plpData$covariates)
+  covref <- plpData$covariateRef #ff::clone(plpData$covariateRef)
+  
+  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=ff::clone(covref),
+                                  population, map=map)
+  
+  for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
+    ids <- plpData.mapped$covariateRef$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariateRef$covariateId[i[1]:i[2]] <- ids
+    # tested and working
+  }
+  for (i in bit::chunk(plpData.mapped$covariates$covariateId)) {
+    ids <- plpData.mapped$covariates$covariateId[i[1]:i[2]]
+    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
+    plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
+  }
+  OhdsiRTools::logTrace(paste0('Converting data into python sparse matrix...'))
+  
+  #convert into sparseM
+  OhdsiRTools::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
+  OhdsiRTools::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  
+  maxT <- NULL
+  if(temporal){
+    OhdsiRTools::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
+    maxT <- as.integer(ffbase::max.ff(plpData.mapped$covariates$timeId))
+  }
+  
+  maxRow <- ffbase::max.ff(plpData.mapped$covariates$rowId)
+  maxCol <- as.double(max(plpData.mapped$map$newIds))
+  
+  # source the python fucntion
+  e <- environment()
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','TorchMap.py'), envir = e)
+  result <- map_python_initiate(maxCol = as.integer(maxCol), 
+                                maxRow = as.integer(maxRow), 
+                                maxT= maxT)
+  
+  if(temporal==T){
+    # add the age and non-temporal data
+    timeIds <- unique(ff::as.ram(plpData$timeRef$timeId))
+    for(timeId in timeIds){
+      tempData <- addAgeTemp(timeId,plpData.mapped, plpData$timeRef)
+      result <- map_python(matrix = result, 
+                           datas = as.matrix(tempData[,c('rowId','covariateId','timeId', 'covariateValue')]),
+                           maxCol = as.integer(maxCol),
+                           maxRow = as.integer(maxRow),
+                           maxT = as.integer(maxT))
+      tempData <- addNonAgeTemp(timeId,plpData.mapped)
+      result <- map_python(matrix = result, 
+                           datas = as.matrix(tempData[,c('rowId','covariateId','timeId', 'covariateValue')]),
+                           maxCol = as.integer(maxCol),
+                           maxRow = as.integer(maxRow),
+                           maxT = as.integer(maxT))
+      rm(tempData)
+    }
+    #now remove the NULL timeId plpData
+    plpData.mapped$covariates <- plpData.mapped$covariates[plpData.mapped$covariates$timeId!=0,]
+  }
+  
+  for (ind in bit::chunk(plpData.mapped$covariates)) {
+    OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+    # subtract 1 as python index starts at 0:
+    if(temporal==T){
+      result <- map_python(matrix = result, 
+                           datas = as.matrix(ff::as.ram(plpData.mapped$covariates[ind,c('rowId','covariateId','timeId', 'covariateValue')])),
+                           maxCol = as.integer(maxCol),
+                           maxRow = as.integer(maxRow),
+                           maxT = as.integer(maxT))
+    } else {
+      result <- map_python(matrix = result, 
+                           datas = as.matrix(ff::as.ram(plpData.mapped$covariates[ind,c('rowId','covariateId', 'covariateValue')])),
+                           maxCol = as.integer(maxCol),
+                           maxRow = as.integer(maxRow),
+                           maxT = NULL)
+    }
+    
+  }
+  
+  OhdsiRTools::logTrace(paste0('Sparse python tensor converted'))                            
+  
+  result <- list(data=result,
+                 covariateRef=plpData.mapped$covariateRef,
+                 map=plpData.mapped$map)
+  return(result)
+  
+}
+
+
 # reformat the evaluation
 reformatPerformance <- function(train, test, analysisId){
 
@@ -465,3 +612,36 @@ reformatPerformance <- function(train, test, analysisId){
   return(result)
 }
 
+
+
+
+# helpers for converting temporal PLP data to matrix/tensor
+addAgeTemp <- function(timeId, plpData, timeRef){
+  if(length(plpData$map[plpData$map$oldIds==1002,'newIds'])>0){
+    ageId <- plpData$map[plpData$map$oldIds==1002,'newIds']
+  }
+  
+  ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[plpData$covariates$timeId==0]))
+  if(ageId%in%ntCovs){
+    ageData <- ff::as.ram(plpData$covariates[plpData$covariates$covariateId==ageId,c('rowId','covariateId','covariateValue')])
+    ageData$covariateValue <- ageData$covariateValue*365 + ff::as.ram(timeRef[timeRef$timeId==timeId,])$startDay
+    ageData$timeId <- timeId
+    return(ageData)
+  }
+  return(NULL)
+}
+addNonAgeTemp <- function(timeId, plpData){
+  ageId <- plpData$map[plpData$map$oldIds==1002,'newIds']
+  
+  ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[plpData$covariates$timeId==0]))
+  if(sum(!ntCovs%in%ageId)==0){
+    return(NULL)
+  }
+  ntCovs <- ntCovs[!ntCovs%in%ageId]
+  ntData <- c()
+  for(ntCov in ntCovs){
+    ntData <- rbind(ntData,ff::as.ram(plpData$covariates[plpData$covariates$covariateId==ntCov,c('rowId','covariateId','covariateValue')]))
+  }
+  ntData$timeId <- timeId
+  return(ntData)
+}

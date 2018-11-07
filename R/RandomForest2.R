@@ -49,9 +49,14 @@ setRandomForest2<- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, 
   if(class(varImp)!="logical")
     stop('varImp must be boolean')
   
+  # set seed
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
+  
   result <- list(model='fitRandomForest2', param= expand.grid(ntrees=ntrees, mtries=mtries,
                                                               maxDepth=maxDepth, varImp=varImp, 
-                                                              seed=ifelse(is.null(seed),'NULL', seed)),
+                                                              seed= seed[1]),
                  name='Random forest')
   class(result) <- 'modelSettings' 
   

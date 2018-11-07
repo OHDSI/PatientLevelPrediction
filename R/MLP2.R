@@ -80,14 +80,14 @@ fitMLP2 <- function(population, plpData, param, search='grid', quiet=F,
   
   # convert plpData in coo to python:
   x <- toSparseM(plpData,population, map=NULL)
+  pydata <- reticulate::r_to_py(x$data)
   
   # save the model to outLoc  TODO: make this an input or temp location?
   outLoc <- createTempModelLoc()
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
-  
-  pydata <- reticulate::r_to_py(x$data)
+
 
   # do cross validation to find hyperParameter
   hyperParamSel <- lapply(param, function(x) do.call(trainMLP2, listAppend(x,

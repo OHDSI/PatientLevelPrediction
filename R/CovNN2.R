@@ -35,14 +35,14 @@
 #' }
 #' @export
 setCovNN2 <- function(batchSize = 1000,
-                     outcomeWeight=1,
-                     lr=0.00001,
-                     decay=0.000001,
-                     dropout=0,
-                     epochs = 10,
-                     filters = 3, kernelSize = 10,
-                     loss = "binary_crossentropy", 
-                     seed=NULL  ){
+                      outcomeWeight=1,
+                      lr=0.00001,
+                      decay=0.000001,
+                      dropout=0,
+                      epochs = 10,
+                      filters = 3, kernelSize = 10,
+                      loss = "binary_crossentropy", 
+                      seed=NULL  ){
   #[TODO: add input checks...]
   
   if(!is.null(seed)){
@@ -70,7 +70,7 @@ setCovNN2 <- function(batchSize = 1000,
 
 
 fitCovNN2 <- function(plpData,population, param, search='grid', quiet=F,
-                     outcomeId, cohortId, ...){
+                      outcomeId, cohortId, ...){
   # check plpData is coo format:
   if(!'ffdf'%in%class(plpData$covariates) )
     stop('CovNN requires plpData in coo format')
@@ -105,7 +105,7 @@ fitCovNN2 <- function(plpData,population, param, search='grid', quiet=F,
   
   #now train the final model and return coef
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
-  finalModel<-do.call(trainCovNN2, c(param[[bestInd]],datas, train=FALSE))$model
+  finalModel<-do.call(trainCovNN2, c(param[[bestInd]],datas, train=FALSE))
   
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
@@ -122,7 +122,7 @@ fitCovNN2 <- function(plpData,population, param, search='grid', quiet=F,
   finalModel$prediction <- NULL
   
   # return model location 
-  result <- list(model = finalModel,
+  result <- list(model = finalModel$model,
                  trainCVAuc = -1, # ToDo decide on how to deal with this
                  hyperParamSearch = hyperSummary,
                  modelSettings = list(model='fitCovNN2',modelParameters=param.best),
@@ -143,11 +143,11 @@ fitCovNN2 <- function(plpData,population, param, search='grid', quiet=F,
 }
 
 trainCovNN2<-function(plpData, population,
-                     outcomeWeight=1, lr=0.0001, decay=0.9,
-                     dropout=0.5, filters=3,
-                     kernelSize = dim(plpData)[3],
-                     batchSize, epochs, loss= "binary_crossentropy",
-                     seed=NULL, train=TRUE){
+                      outcomeWeight=1, lr=0.0001, decay=0.9,
+                      dropout=0.5, filters=3,
+                      kernelSize = dim(plpData)[3],
+                      batchSize, epochs, loss= "binary_crossentropy",
+                      seed=NULL, train=TRUE){
   
   if(!is.null(population$indexes) && train==T){
     writeLines(paste('Training covolutional neural network (input and time) with ',length(unique(population$indexes)),' fold CV'))
@@ -163,31 +163,35 @@ trainCovNN2<-function(plpData, population,
     for(index in 1:length(index_vect )){
       writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       
-      model <- keras::keras_model_sequential()
-      
-      model <- keras::layer_input(shape=c(dim(plpData)[2], dim(plpData)[3]), 
-                                            name='main_input') %>%
-        keras::layer_permute(dims = c(2,1))
+      model <- keras::keras_model_sequential()  %>%
+        
+        ##model_input <- keras::layer_input(shape=c(dim(plpData)[2], dim(plpData)[3]), 
+        ##                                      name='initial_input') %>%
+        keras::layer_permute(dims = c(2,1), 
+                             input_shape = c(dim(plpData)[2], dim(plpData)[3])) %>%
+        
         # Begin with 1D convolutional layer across input - hidden layer 1
+        ##model_output <-  keras::layer_input(shape=c(dim(plpData)[3], dim(plpData)[2]), 
+        ##                                    name='second_input') %>%
         keras::layer_conv_1d(
           filters = filters, 
-          kernel_size = dim(plpData)[3],
+          kernel_size = dim(plpData)[3]-2,
           padding = "valid"
         ) %>%
         keras::layer_batch_normalization() %>%
         keras::layer_activation(activation = 'relu') %>% 
-          # second layer across input - hidden layer 2   time x filters
-          keras::layer_conv_1d(
-            filters = filters, 
-            kernel_size = filters,
-            padding = "valid"
-          ) %>%
-          keras::layer_batch_normalization() %>%
-          keras::layer_activation(activation = 'relu') %>% 
-          
-          # permute bact to time x var
-          keras::layer_permute(dims = c(2,1)) %>% 
- #max pool over time and conv
+        # second layer across input - hidden layer 2   time x filters
+        keras::layer_conv_1d(
+          filters = filters, 
+          kernel_size = 3,#filters,
+          padding = "valid"
+        ) %>%
+        keras::layer_batch_normalization() %>%
+        keras::layer_activation(activation = 'relu') %>% 
+        
+        # permute bact to time x var
+        keras::layer_permute(dims = c(2,1)) %>% 
+        #max pool over time and conv
         keras::layer_max_pooling_1d(pool_size = 2) %>%
         keras::layer_conv_1d(
           filters = filters, 
@@ -196,8 +200,8 @@ trainCovNN2<-function(plpData, population,
         ) %>%
         keras::layer_batch_normalization() %>%
         keras::layer_activation(activation = 'relu') %>% 
-          keras::layer_flatten() %>%
-      # final 2 deep layers with dropout and batchnorm/ relu activation
+        keras::layer_flatten() %>%
+        # final 2 deep layers with dropout and batchnorm/ relu activation
         keras::layer_dropout(rate=dropout) %>%
         # add fully connected layer 2
         keras::layer_dense( 
@@ -227,6 +231,10 @@ trainCovNN2<-function(plpData, population,
         keras::layer_batch_normalization() %>%
         keras::layer_activation(activation = 'sigmoid', name='main_output')
       
+      ##model <- keras::keras_model(
+      ##  inputs = c(model_input), 
+      ##  outputs = c(model_output)
+      ##)
       
       # Prepare model for training
       model %>% keras::compile(
@@ -303,23 +311,23 @@ trainCovNN2<-function(plpData, population,
     writeLines('==========================================')
   } else {
     
-    model <- keras::keras_model_sequential()
-    
-    model <- keras::layer_input(shape=c(dim(plpData)[2], dim(plpData)[3]), 
-                                name='main_input') %>%
-      keras::layer_permute(dims = c(2,1))
-    # Begin with 1D convolutional layer across input - hidden layer 1
-    keras::layer_conv_1d(
-      filters = filters, 
-      kernel_size = dim(plpData)[3],
-      padding = "valid"
-    ) %>%
+    model <- keras::keras_model_sequential()  %>%
+      
+      keras::layer_permute(dims = c(2,1), 
+                           input_shape = c(dim(plpData)[2], dim(plpData)[3])) %>%
+      
+      # Begin with 1D convolutional layer across input - hidden layer 1
+      keras::layer_conv_1d(
+        filters = filters, 
+        kernel_size = dim(plpData)[3]-2,
+        padding = "valid"
+      ) %>%
       keras::layer_batch_normalization() %>%
       keras::layer_activation(activation = 'relu') %>% 
       # second layer across input - hidden layer 2   time x filters
       keras::layer_conv_1d(
         filters = filters, 
-        kernel_size = filters,
+        kernel_size = 3,
         padding = "valid"
       ) %>%
       keras::layer_batch_normalization() %>%
