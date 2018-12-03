@@ -15,5 +15,5 @@ setCoxModel(variance = 0.01, seed = NULL)
 Create setting for lasso Cox model
 }
 \examples{
-model.lr <- setLassoCoxModel()
+model.lr <- setCoxModel()
 }

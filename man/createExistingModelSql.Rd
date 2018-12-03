@@ -6,7 +6,7 @@
 \usage{
 createExistingModelSql(modelTable, modelNames, interceptTable, covariateTable,
   type = "logistic", analysisId = 112, covariateSettings, asFunctions = F,
-  customCovariates = NULL, e = environment())
+  customCovariates = NULL, e = environment(), covariateValues = F)
 }
 \arguments{
 \item{modelTable}{A dataframe or list of dataframes with columns: modelId, modelCovariateId, coefficientValue all doubles}
@@ -28,6 +28,8 @@ createExistingModelSql(modelTable, modelNames, interceptTable, covariateTable,
 \item{customCovariates}{enables custome SQL to be used to create custom covariates}
 
 \item{e}{The environment to output the covariate setting functions to}
+
+\item{covariateValues}{boolean Whether to also download the covariates that make up the risk score}
 }
 \description{
 Apply an existing logistic regression prediction model

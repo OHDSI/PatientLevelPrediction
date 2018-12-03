@@ -252,7 +252,8 @@ summariseVal <- function(result, database){
 #' @param oracleTempSchema                 The temp oracle schema 
 #' @param modelName                        The name of the model
 #' @param calibrationPopulation            A data.frame of subjectId, cohortStartDate, indexes used to recalibrate the model on new data
-#' 
+#' @param covariateSummary                 Whether to calculate the covariateSummary 
+#'  
 #' @return
 #' The performance of the existing model and prediction
 #'
@@ -277,7 +278,8 @@ evaluateExistingModel <- function(modelTable,
                                    outcomeDatabaseSchema, outcomeTable, outcomeId,
                                    oracleTempSchema = cdmDatabaseSchema,
                                   modelName='existingModel',
-                                  calibrationPopulation=NULL
+                                  calibrationPopulation=NULL,
+                                  covariateSummary = T
                                 
                                    ){
   
@@ -339,7 +341,8 @@ evaluateExistingModel <- function(modelTable,
                                                  analysisId=919, 
                                                  covariateSettings=covariateSettings, 
                                                  customCovariates=customCovariates,
-                                                 asFunctions=T)
+                                                 asFunctions=T, 
+                                                 covariateValues = covariateSummary)
   
   createExistingmodelsCovariateSettings <- custCovs$createExistingmodelsCovariateSettings
   getExistingmodelsCovariateSettings <- custCovs$getExistingmodelsCovariateSettings
@@ -367,7 +370,15 @@ evaluateExistingModel <- function(modelTable,
                                                               riskWindowEnd = riskWindowEnd, 
                                                               removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome
                                                               )
-  prediction <- merge(population, ff::as.ram(plpData$covariates), by='rowId', all.x=T)
+  prediction <- merge(population, ff::as.ram(plpData$covariates$risks), by='rowId', all.x=T)
+  
+  covSum <- NULL
+  if(covariateSummary){
+    plpData$covariates <- plpData$covariates$covariateValues
+    plpData$covariateRef <- ff::as.ffdf(data.frame(covariateId = modelTable$modelCovariateId,
+                                                   covariateName = rep(' ', length(modelTable$modelCovariateId))))
+    covSum <- covariateSummary(plpData, population)
+  }
   
   if(!is.null(calibrationPopulation)){
     #re-calibrate model:
@@ -425,9 +436,9 @@ evaluateExistingModel <- function(modelTable,
   
   return(list(performanceEvaluation=performance, 
               prediction=prediction,
-              inputSetting = list(outcomeId=outcomeId, 
+              inputSetting = list(dataExtrractionSettings = list(outcomeId=outcomeId, 
                                   cohortId=cohortId,
-                                  database = cdmDatabaseSchema),
+                                  database = cdmDatabaseSchema)),
               executionSummary = executionSummary,
               model = list(model='existing model',
                            modelName=modelName,
@@ -437,6 +448,6 @@ evaluateExistingModel <- function(modelTable,
               analysisRef=list(analysisId=NULL,
                                analysisName=NULL,
                                analysisSettings= NULL),
-              covariateSummary = NULL
+              covariateSummary = covSum
               ))
 }

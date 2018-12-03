@@ -210,13 +210,19 @@ transportModel <- function(plpModel,outputFolder){
   plpModel$metaData$call$cdmDatabaseSchema <- NULL
   plpModel$metaData$call$cohortDatabaseSchema <- NULL
   plpModel$metaData$call$outcomeDatabaseSchema <- NULL
+  plpModel$metaData$call$oracleTempSchema <- NULL
 
   # remove any sensitive data:
-  mod <- get("plpModel", envir = environment(plpModel$predict))
-  mod$index <- NULL
-  mod$metaData$call$connectionDetails <- NULL
-  assign("plpModel", mod, envir = environment(plpModel$predict))
-
+  if(!is.null(plpModel$predict)){
+    mod <- get("plpModel", envir = environment(plpModel$predict))
+    mod$index <- NULL
+    mod$metaData$call$connectionDetails <- NULL
+    mod$metaData$call$oracleTempSchema <- NULL
+    mod$metaData$call$outcomeDatabaseSchema <-'Missing'
+    mod$metaData$call$cdmDatabaseSchema <- 'Missing'
+    mod$metaData$call$cohortDatabaseSchema <- 'Missing'
+    assign("plpModel", mod, envir = environment(plpModel$predict))
+  }
 
   #save to the output location
   PatientLevelPrediction::savePlpModel(plpModel, outputFolder)
@@ -512,13 +518,15 @@ getPredictionCovariateData <- function(connection,
 #' @param asFunctions        If T then return two functions
 #' @param customCovariates   enables custome SQL to be used to create custom covariates
 #' @param e              The environment to output the covariate setting functions to
+#' @param covariateValues  boolean Whether to also download the covariates that make up the risk score
 #' @export
 #'
 createExistingModelSql <- function(modelTable, modelNames, interceptTable,
                                    covariateTable, type='logistic',
                                    analysisId=112, covariateSettings,
                                    asFunctions=F, customCovariates=NULL,
-                                   e=environment()
+                                   e=environment(),
+                                   covariateValues = F
 ){
 
   # test model inputs
@@ -544,7 +552,8 @@ createExistingModelSql <- function(modelTable, modelNames, interceptTable,
                                                   analysisId=analysisId,
                                                   covariateSettings=covariateSettings,
                                                   customCovariates = customCovariates,
-                                                  type=type)
+                                                  type=type,
+                                                  covariateValues  = covariateValues)
     attr(createExistingmodelsCovariateSettings, "fun") <- paste0('getExistingmodelsCovariateSettings')
     class(createExistingmodelsCovariateSettings) <- "covariateSettings"
     return(createExistingmodelsCovariateSettings)
@@ -652,7 +661,8 @@ createExistingModelSql <- function(modelTable, modelNames, interceptTable,
                                                  covariateSettings = covSettings,
                                                  customCovariates = covariateSettings$customCovariates,
                                                  analysisId = covariateSettings$analysisId,
-                                                 type=covariateSettings$type)
+                                                 type=covariateSettings$type,
+                                                 covariateValues = covariateSettings$covariateValues)
 
     # clean the model_table... [TODO]
     covariateRef <- data.frame(covariateId = 1000*(1:length(covariateSettings$modelNames))+covariateSettings$analysisId,
@@ -704,7 +714,8 @@ getExistingmodelsCovariateData <- function(connection,
                                            customCovariates = NULL,
                                            aggregated = FALSE,
                                            analysisId=112,
-                                           type='logistic') {
+                                           type='logistic',
+                                           covariateValues = F) {
   if (!is(covariateSettings, "covariateSettings")) {
     stop("Covariate settings object not of type covariateSettings")
   }
@@ -785,12 +796,36 @@ getExistingmodelsCovariateData <- function(connection,
   sql <- SqlRender::renderSql(sql,
                               analysis_id = analysisId
   )$sql
-  sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"))$sql
+  sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"),
+                                 oracleTempSchema = oracleTempSchema)$sql
 
   # Retrieve the covariate:
-  covariates <- DatabaseConnector::querySql.ffdf(connection, sql)
+  risks <- DatabaseConnector::querySql.ffdf(connection, sql)
   # Convert colum names to camelCase:
-  colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
+  colnames(risks) <- SqlRender::snakeCaseToCamelCase(colnames(risks))
+  
+  riskCovariates <- NULL
+  if(covariateValues){
+    #extract the covariateSummary as well
+    sql <- " select #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id as covariate_id,
+    max(#model_table.coefficient_value) as coefficient_value, max(#cov_temp.covariate_value) as covariate_value
+    from
+    #cov_temp inner join #covariate_table on #cov_temp.covariate_id=#covariate_table.covariate_id
+    inner join #model_table on #covariate_table.model_covariate_id=#model_table.model_covariate_id
+    
+    group by #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id"
+    
+    sql <- SqlRender::renderSql(sql,
+                                analysis_id = analysisId
+    )$sql
+    sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"),
+                                   oracleTempSchema = oracleTempSchema)$sql
+    
+    # Retrieve the covariate:
+    riskCovariates <- DatabaseConnector::querySql.ffdf(connection, sql)
+    # Convert colum names to camelCase:
+    colnames(riskCovariates) <- SqlRender::snakeCaseToCamelCase(colnames(riskCovariates))
+  }
 
   # Drop temp tables
   #sql <- SqlRender::translateSql(sql = todo$sqlCleanup,
@@ -799,7 +834,8 @@ getExistingmodelsCovariateData <- function(connection,
   #DatabaseConnector::executeSql(connection, sql, progressBar = FALSE, reportOverallTime = FALSE)
 
 
-  return(covariates)
+  return(list(risks = risks,
+              covariateValues = riskCovariates))
 }
 
 

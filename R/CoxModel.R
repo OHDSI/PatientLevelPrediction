@@ -22,7 +22,7 @@
 #' @param seed       An option to add a seed when training the model
 #'
 #' @examples
-#' model.lr <- setLassoCoxModel()
+#' model.lr <- setCoxModel()
 #' @export
 setCoxModel<- function(variance=0.01, seed=NULL){
   if(!class(seed)%in%c('numeric','NULL','integer'))
