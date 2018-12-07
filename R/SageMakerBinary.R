@@ -186,7 +186,9 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
 predict.sagemaker <- function(plpModel, population, plpData){
   
   bucket <- Sys.getenv('s3_bucket') 
-  roleArn <- Sys.getenv('aws_role_arn')
+  #roleArn <- Sys.getenv('aws_role_arn')
+  sm <- reticulate::import('sagemaker')
+  roleArn <- paste(strsplit(sm$get_execution_role(),'\\/')[[1]][1],Sys.getenv('aws_role_arn'), sep='/') 
   
   prefix <- 'PLP_prediction'
   
