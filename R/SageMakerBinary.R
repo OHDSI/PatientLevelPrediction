@@ -234,7 +234,7 @@ predict.sagemaker <- function(plpModel, population, plpData){
   #pred <- PythonInR::pyGet("prediction", simplify = FALSE)
   buc <- aws.s3::get_bucket(bucket) 
   pred <- aws.s3::s3read_using(function(x) read.csv(x, header=F), object = paste0(prefix,"/pred.csv.out"), bucket = buc)
-  if(grep('predicted', pred$V1[1])){
+  if(length(grep('predicted', pred$V1[1]))>0){
     if(is.null(pred$V2)){
       pred$V2 <- as.double(gsub('\\}','',gsub('\\{predicted_label:','',as.character(pred$V1))))
     }
