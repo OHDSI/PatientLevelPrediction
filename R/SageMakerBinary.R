@@ -159,7 +159,9 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   comp <- start-Sys.time()
   
   # return model location
-  result <- list(model = list(loc= file.path(outLoc), job_name=job_name, container=container),
+  result <- list(model = list(loc= file.path(outLoc), 
+                              job_name=paste('sagemaker-train',param$classifier, format(Sys.time(), '%H-%M-%S'), sep = '-'), 
+                              container=container),
                  trainCVAuc = NULL,
                  modelSettings = list(model=paste0('sagemaker-',param$classifier)),
                  hyperParamSearch = NULL,
