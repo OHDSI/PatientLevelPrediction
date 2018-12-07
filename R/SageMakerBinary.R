@@ -139,7 +139,7 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   buc <- aws.s3::get_bucket(param$bucket) 
   pred <- aws.s3::s3read_using(function(x) read.csv(x, header=F), object = "prediction/test.csv.out", bucket = buc)
   prediction <- pPopulation[pPopulation[,3]>0,]
-  if(grep('predicted', pred$V1[1])){
+  if(length(grep('predicted', pred$V1[1]))>0){
     if(is.null(pred$V2)){
       pred$V2 <- as.double(gsub('\\}','',gsub('\\{predicted_label:','',as.character(pred$V1))))
     }
