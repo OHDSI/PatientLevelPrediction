@@ -149,6 +149,8 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   }
   prediction <- as.data.frame(prediction)
   colnames(prediction) <- c("rowId", "outcomeCount", "indexes", "value")
+  prediction$value[prediction$value < 0] <- 0
+  prediction$value[prediction$value >1] <- 1
   # convert to R indexes
   prediction$rowId <- prediction$rowId + 1
   attr(prediction, "metaData") <- list(predictionType = "binary")
