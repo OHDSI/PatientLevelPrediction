@@ -588,7 +588,7 @@ evaluateMultiplePlp <- function(analysesLocation,
             dir.create(saveName, recursive = T)
           }
           OhdsiRTools::logInfo(paste0('Evaluation result save in ',file.path(saveName,'validationResult.rds') ))
-          saveRDS(validations$validation, file.path(saveName,'validationResult.rds'))
+          saveRDS(validations$validation[[1]], file.path(saveName,'validationResult.rds'))
         }
       }
     }

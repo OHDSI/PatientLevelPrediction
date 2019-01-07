@@ -157,18 +157,21 @@ externalValidatePlp <- function(plpResult,
       } else{
         niceName <-   databaseNames
       }
-      results[[i]]$inputSetting<- list(newCdmDatabaseSchema = validationSchemaCdm[[i]],
-                                       databaseNames = niceName[i], #added [i]
-                                    newCohortDatabaseSchema = validationSchemaTarget[[i]], 
-                                    newCohortTable = targetTable, 
+      results[[i]]$inputSetting<- list(databaseNames = niceName[i],
                                     cohortId = validationIdTarget, 
-                                    newOutcomeDatabaseSchema = validationSchemaOutcome[[i]], 
-                                    newOutcomeTable = outcomeTable, 
                                     outcomeId = validationIdOutcome,
-                                    newOracleTempSchema = oracleTempSchema,
                                     # added the below
                                     populationSettings = plpResult$model$populationSettings,
-                                    dataExtrractionSettings = list(covariateSettings = plpResult$model$metaData$call$covariateSettings)
+                                    dataExtrractionSettings = list(covariateSettings = plpResult$model$metaData$call$covariateSettings,
+                                                                   newCdmDatabaseSchema = validationSchemaCdm[[i]],
+                                                                   databaseNames = niceName[i], #added [i]
+                                                                   newCohortDatabaseSchema = validationSchemaTarget[[i]], 
+                                                                   newCohortTable = targetTable, 
+                                                                   cohortId = validationIdTarget, 
+                                                                   newOutcomeDatabaseSchema = validationSchemaOutcome[[i]], 
+                                                                   newOutcomeTable = outcomeTable, 
+                                                                   outcomeId = validationIdOutcome,
+                                                                   newOracleTempSchema = oracleTempSchema)
                                     )
       
       results[[i]]$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,

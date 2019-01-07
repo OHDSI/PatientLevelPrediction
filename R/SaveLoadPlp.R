@@ -658,6 +658,24 @@ savePlpModel <- function(plpModel, dirPath){
   #============================================================
   
   #==================================================================
+  # if sagemaker then move pickle
+  #==================================================================
+  if(attr(plpModel, 'type') =='sagemaker'){
+    if(!dir.exists(file.path(dirPath,'sagemaker_model')))
+      dir.create(file.path(dirPath,'sagemaker_model'))
+    for(file in dir(plpModel$model$loc)){
+      file.copy(file.path(plpModel$model$loc,file), 
+                file.path(dirPath,'sagemaker_model'), overwrite=TRUE,  recursive = FALSE,
+                copy.mode = TRUE, copy.date = FALSE)
+    }
+    
+    plpModel$model <- file.path(dirPath,'sagemaker_model')
+    plpModel$predict <- createTransform(plpModel)
+  }
+  
+  #============================================================
+  
+  #==================================================================
   # if knn then move model
   #==================================================================
   if(attr(plpModel, 'type') =='knn'){
@@ -761,6 +779,10 @@ loadPlpModel <- function(dirPath) {
   # if python update the location
   if(attributes$type=='python'){
     result$model <- file.path(dirPath,'python_model')
+    result$predict <- createTransform(result)
+  }
+  if(attributes$type=='sagemaker'){
+    result$model <- file.path(dirPath,'sagemaker_model')
     result$predict <- createTransform(result)
   }
   # if knn update the locaiton - TODO !!!!!!!!!!!!!!

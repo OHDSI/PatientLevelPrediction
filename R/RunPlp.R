@@ -414,6 +414,11 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
       results$model$predict <- createTransform(results$model)
     }
     
+    if(attr(results$model, 'type')=='sagemaker'){
+      results$model$model <- file.path(analysisPath,'plpResult','model','sagemaker_model')
+      results$model$predict <- createTransform(results$model)
+    }
+    
     # update knn and keras?
     if(attr(results$model, 'type')=='knn'){
       results$model$model <- file.path(analysisPath,'plpResult','model','knn_model')

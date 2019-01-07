@@ -158,6 +158,8 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   auc <- PatientLevelPrediction::computeAuc(prediction)
   writeLines(paste0("Model obtained CV AUC of ", auc))
   
+  prediction <- merge(population, prediction[,c('rowId', 'value')], by='rowId')
+  
   comp <- start-Sys.time()
   
   # return model location
@@ -256,6 +258,8 @@ predict.sagemaker <- function(plpModel, population, plpData){
   prediction <- prediction[,c('rowId','outcomeCount','indexes','value')]
   
   attr(prediction, "metaData") <- list(predictionType = "binary")
+  prediction <- merge(population, prediction[,c('rowId', 'value')], by='rowId')
+  
   
   return(prediction)
 }
