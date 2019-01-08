@@ -45,7 +45,10 @@ def train_sagemaker(population, plpData, classifier, hyperParameters, container,
   if classifier == 'xgboost': 
     estimator.set_hyperparameters(num_round = 10L)
   if classifier == 'knn': 
-    estimator.set_hyperparameters(feature_dim = X[trainInds,:].shape[1], predictor_type = 'classifier', k = 1000, sample_size=X[trainInds,:].shape[0])
+    k = 1000
+    if hyperParameters["k"] is not None:
+      k = hyperParameters["k"]
+    estimator.set_hyperparameters(feature_dim = X[trainInds,:].shape[1], predictor_type = 'classifier', k = k, sample_size=X[trainInds,:].shape[0])
   
   input_data = {"train": train_s3}
   estimator.fit(inputs = input_data, job_name = job_name)
