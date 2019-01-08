@@ -46,8 +46,9 @@ def train_sagemaker(population, plpData, classifier, hyperParameters, container,
     estimator.set_hyperparameters(num_round = 10L)
   if classifier == 'knn': 
     k = 1000
-    if hyperParameters["k"] is not None:
-      k = int(hyperParameters["k"])
+    if hyperParameters is not None:
+      if hyperParameters["k"] is not None:
+        k = int(hyperParameters["k"])
     estimator.set_hyperparameters(feature_dim = X[trainInds,:].shape[1], predictor_type = 'classifier', k = k, sample_size=X[trainInds,:].shape[0])
   
   input_data = {"train": train_s3}
