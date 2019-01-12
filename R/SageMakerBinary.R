@@ -255,7 +255,7 @@ predict.sagemaker <- function(plpModel, population, plpData){
   # fix negative or greater 1 values
   prediction$value[prediction$value < 0] <- 0
   prediction$value[prediction$value >1] <- 1
-  prediction <- prediction[,c('rowId','outcomeCount','indexes','value')]
+  #prediction <- prediction[,c('rowId','outcomeCount','value')]
   
   attr(prediction, "metaData") <- list(predictionType = "binary")
   prediction <- merge(population, prediction[,c('rowId', 'value')], by='rowId')

@@ -58,6 +58,7 @@ Imports:
     slam,
     magrittr,
     OhdsiRTools,
+    reticulate (> 1.6)
 Suggests:
     testthat,
     pROC,
