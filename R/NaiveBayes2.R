@@ -61,6 +61,8 @@ fitNaiveBayes2 <- function(population, plpData, param, search='grid', quiet=F,
   population$rowIdPython <- population$rowId - 1  # -1 to account for python/r index difference
   pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
   
+  covariateRef <- ff::as.ram(plpData$covariateRef)
+  
   # convert plpData in coo to python:
   x <- toSparseM(plpData, population, map = NULL)
   
@@ -102,7 +104,7 @@ fitNaiveBayes2 <- function(population, plpData, param, search='grid', quiet=F,
   
   topN <- varImp[order(-varImp)][param$variableNumber]
   inc <- which(varImp>=topN, arr.ind=T)
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  
   incs <- rep(0, nrow(covariateRef))
   incs[inc] <- 1
   covariateRef$included <- incs

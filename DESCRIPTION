@@ -43,7 +43,6 @@ Imports:
     PythonInR,
     utils,
     methods,
-    BigKnn,
     reshape2,
     officer,
     diagram,
@@ -58,9 +57,7 @@ Imports:
     keras,
     slam,
     magrittr,
-    OhdsiSharing,
     OhdsiRTools,
-    reticulate
 Suggests:
     testthat,
     pROC,
@@ -70,7 +67,8 @@ Suggests:
     scoring,
     Metrics,
     SparseM,
-    ResourceSelection
+    ResourceSelection,
+    BigKnn
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 6.0.1

@@ -27,7 +27,7 @@
 #' }
 #' @export
 setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
-  
+  ensure_installed("BigKnn")
   if(class(indexFolder)!='character')
     stop('IndexFolder must be a character')
   if(!class(k) %in% c("numeric", "integer"))

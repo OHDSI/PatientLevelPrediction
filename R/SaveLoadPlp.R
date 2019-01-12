@@ -782,7 +782,7 @@ loadPlpModel <- function(dirPath) {
     result$predict <- createTransform(result)
   }
   if(attributes$type=='sagemaker'){
-    result$model <- file.path(dirPath,'sagemaker_model')
+    result$model$loc <- file.path(dirPath,'sagemaker_model')
     result$predict <- createTransform(result)
   }
   # if knn update the locaiton - TODO !!!!!!!!!!!!!!

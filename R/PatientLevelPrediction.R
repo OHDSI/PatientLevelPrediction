@@ -35,7 +35,6 @@
 #' @import DatabaseConnector
 #' @import FeatureExtraction
 #' @import plotly
-#' @import OhdsiSharing
 #' @useDynLib PatientLevelPrediction
 NULL
 
