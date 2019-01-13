@@ -669,7 +669,7 @@ savePlpModel <- function(plpModel, dirPath){
                 copy.mode = TRUE, copy.date = FALSE)
     }
     
-    plpModel$model <- file.path(dirPath,'sagemaker_model')
+    plpModel$model$loc <- file.path(dirPath,'sagemaker_model')
     plpModel$predict <- createTransform(plpModel)
   }
   
