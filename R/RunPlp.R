@@ -415,7 +415,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     }
     
     if(attr(results$model, 'type')=='sagemaker'){
-      results$model$model <- file.path(analysisPath,'plpResult','model','sagemaker_model')
+      results$model$model$loc <- file.path(analysisPath,'plpResult','model','sagemaker_model')
       results$model$predict <- createTransform(results$model)
     }
     
