@@ -30,6 +30,10 @@
 #' @export
 
 viewPlp <- function(runPlp, validatePlp = NULL) {
+  ensure_installed("shiny")
+  ensure_installed("DT")
+  ensure_installed("htmlwidgets")
+  
   if(missing(runPlp))
     stop('Need to input runPlp object')
   if(class(runPlp)!='runPlp'){

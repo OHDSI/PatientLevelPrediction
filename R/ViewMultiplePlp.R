@@ -1,5 +1,15 @@
+#' open a local shiny app for viewing the result of a multiple PLP analyses
+#'
+#' @details
+#' Opens a shiny app for viewing the results of the models from various T,O, Tar and settings
+#' settings.
+#' @param analysesLocation  The directory containing the results (with the analysis_x folders)
+#' 
 #' @export
 viewMultiplePlp <- function(analysesLocation){
+  ensure_installed("shiny")
+  ensure_installed("DT")
+  ensure_installed("htmlwidgets")
   
   allPerformance <- summaryPlpAnalyses(analysesLocation)
   plpResultLocation <- allPerformance[,c('plpResultLocation', 'plpResultLoad')]
@@ -374,6 +384,13 @@ getValidationPerformance <- function(validationLocation){
   return(valPerformance)
 }
 
+#' summarises the multiple PLP results into a dataframe
+#'
+#' @details
+#' Loads all the study results contained in the analysesLocation and aggregates a summary of the results
+#' 
+#' @param analysesLocation  The directory containing the results (with the analysis_x folders)
+#' 
 #' @export
 summaryPlpAnalyses <- function(analysesLocation){ 
   # loads the analyses and validations to get summaries

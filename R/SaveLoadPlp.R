@@ -639,56 +639,12 @@ savePlpModel <- function(plpModel, dirPath){
   
   if(!dir.exists(dirPath)) dir.create(dirPath)
   
-  #==================================================================
-  # if python then move pickle
-  #==================================================================
-  if(attr(plpModel, 'type') =='python'){
-    if(!dir.exists(file.path(dirPath,'python_model')))
-      dir.create(file.path(dirPath,'python_model'))
-    for(file in dir(plpModel$model)){
-      file.copy(file.path(plpModel$model,file), 
-                file.path(dirPath,'python_model'), overwrite=TRUE,  recursive = FALSE,
-                copy.mode = TRUE, copy.date = FALSE)
-    }
-    
-    plpModel$model <- file.path(dirPath,'python_model')
-    plpModel$predict <- createTransform(plpModel)
-  }
   
+  # If model is saved on hard drive move it...
   #============================================================
-  
-  #==================================================================
-  # if sagemaker then move pickle
-  #==================================================================
-  if(attr(plpModel, 'type') =='sagemaker'){
-    if(!dir.exists(file.path(dirPath,'sagemaker_model')))
-      dir.create(file.path(dirPath,'sagemaker_model'))
-    for(file in dir(plpModel$model$loc)){
-      file.copy(file.path(plpModel$model$loc,file), 
-                file.path(dirPath,'sagemaker_model'), overwrite=TRUE,  recursive = FALSE,
-                copy.mode = TRUE, copy.date = FALSE)
-    }
-    
-    plpModel$model$loc <- file.path(dirPath,'sagemaker_model')
-    plpModel$predict <- createTransform(plpModel)
-  }
-  
-  #============================================================
-  
-  #==================================================================
-  # if knn then move model
-  #==================================================================
-  if(attr(plpModel, 'type') =='knn'){
-    if(!dir.exists(file.path(dirPath,'knn_model')))
-      dir.create(file.path(dirPath,'knn_model'))
-    for(file in dir(plpModel$model)){
-      file.copy(file.path(plpModel$model,file), 
-                file.path(dirPath,'knn_model'), overwrite=TRUE,  recursive = FALSE,
-                copy.mode = TRUE, copy.date = FALSE)
-    }
-    
-    plpModel$model <- file.path(dirPath,'knn_model')
-    plpModel$predict <- createTransform(plpModel)
+  moveFile <- moveHdModel(plpModel, dirPath )
+  if(!moveFile){
+    ParallelLogger::logError('Moving model files error')
   }
   #============================================================
     
@@ -721,6 +677,49 @@ savePlpModel <- function(plpModel, dirPath){
   saveRDS(attributes, file = file.path(dirPath,  "attributes.rds"))
   
   
+}
+
+moveHdModel <- function(plpModel, dirPath ){
+  #==================================================================
+  # if python then move pickle
+  #==================================================================
+  if(attr(plpModel, 'type') =='python'){
+    if(!dir.exists(file.path(dirPath,'python_model')))
+      dir.create(file.path(dirPath,'python_model'))
+    for(file in dir(plpModel$model)){
+      file.copy(file.path(plpModel$model,file), 
+                file.path(dirPath,'python_model'), overwrite=TRUE,  recursive = FALSE,
+                copy.mode = TRUE, copy.date = FALSE)
+    }
+  }
+  
+  #==================================================================
+  # if sagemaker then move pickle
+  #==================================================================
+  if(attr(plpModel, 'type') =='sagemaker'){
+    if(!dir.exists(file.path(dirPath,'sagemaker_model')))
+      dir.create(file.path(dirPath,'sagemaker_model'))
+    for(file in dir(plpModel$model$loc)){
+      file.copy(file.path(plpModel$model$loc,file), 
+                file.path(dirPath,'sagemaker_model'), overwrite=TRUE,  recursive = FALSE,
+                copy.mode = TRUE, copy.date = FALSE)
+    }
+  }
+  
+  #==================================================================
+  # if knn then move model
+  #==================================================================
+  if(attr(plpModel, 'type') =='knn'){
+    if(!dir.exists(file.path(dirPath,'knn_model')))
+      dir.create(file.path(dirPath,'knn_model'))
+    for(file in dir(plpModel$model)){
+      file.copy(file.path(plpModel$model,file), 
+                file.path(dirPath,'knn_model'), overwrite=TRUE,  recursive = FALSE,
+                copy.mode = TRUE, copy.date = FALSE)
+    }
+  }
+  
+  return(TRUE)
 }
 
 #' loads the plp model
@@ -776,31 +775,39 @@ loadPlpModel <- function(dirPath) {
   attr(result, 'predictionType') <- attributes$predictionType
   class(result) <- "plpModel"
   
+  # update the model location to the load dirPath
+  result <- updateModelLocation(result, dirPath)
+    
+  return(result)
+}
+
+updateModelLocation  <- function(plpModel, dirPath){
+  type <- attr(plpModel, 'type')
   # if python update the location
-  if(attributes$type=='python'){
-    result$model <- file.path(dirPath,'python_model')
-    result$predict <- createTransform(result)
+  if( type=='python'){
+    plpModel$model <- file.path(dirPath,'python_model')
+    plpModel$predict <- createTransform(plpModel)
   }
-  if(attributes$type=='sagemaker'){
-    result$model$loc <- file.path(dirPath,'sagemaker_model')
-    result$predict <- createTransform(result)
+  if( type =='sagemaker'){
+    plpModel$model$loc <- file.path(dirPath,'sagemaker_model')
+    plpModel$predict <- createTransform(plpModel)
   }
   # if knn update the locaiton - TODO !!!!!!!!!!!!!!
-  if(attributes$type=='knn'){
-    result$model <- file.path(dirPath,'knn_model')
-    result$predict <- createTransform(result)
+  if( type =='knn'){
+    plpModel$model <- file.path(dirPath,'knn_model')
+    plpModel$predict <- createTransform(plpModel)
   }
-  if(attributes$type=='deep' ){
-    result$predict <- createTransform(result)
+  if( type =='deep' ){
+    plpModel$predict <- createTransform(plpModel)
   }
-  if(attributes$type=='deepMulti'){
-    attr(result, 'inputs') <- tryCatch(readRDS(file.path(dirPath, "inputs_attr.rds")),
+  if( type =='deepMulti'){
+    attr(plpModel, 'inputs') <- tryCatch(readRDS(file.path(dirPath, "inputs_attr.rds")),
                                        error=function(e) NULL) 
-    result$predict <- createTransform(result)
-   
+    plpModel$predict <- createTransform(plpModel)
+    
   }
   
-  return(result)
+  return(plpModel) 
 }
 
 

@@ -117,20 +117,20 @@ createLearningCurve <- function(population,
   
   
   # remove all registered loggers
-  OhdsiRTools::clearLoggers()
+  ParallelLogger::clearLoggers()
   
   # check logger
-  if (length(OhdsiRTools::getLoggers()) == 0) {
-    logger <- OhdsiRTools::createLogger(
+  if (length(ParallelLogger::getLoggers()) == 0) {
+    logger <- ParallelLogger::createLogger(
       name = "SIMPLE",
       threshold = verbosity,
       appenders = list(
-        OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutSimple),
-        OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutTimestamp,
+        ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutSimple),
+        ParallelLogger::createFileAppender(layout = ParallelLogger::layoutTimestamp,
                                         fileName = logPath)
       )
     )
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # number of training set fractions
@@ -166,7 +166,7 @@ createLearningCurve <- function(population,
     # write log to both, console and file
     # other appenders can be created, e.g. to a web service or database
 
-    OhdsiRTools::logInfo(paste0(
+    ParallelLogger::logInfo(paste0(
       'Patient-Level Prediction Package version ',
       utils::packageVersion("PatientLevelPrediction")
     ))
@@ -176,17 +176,17 @@ createLearningCurve <- function(population,
     outcomeId <- attr(population, "metaData")$outcomeId
     
     # add header to analysis log
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Training Size: ', trainFractions[i]))
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'AnalysisID: ', analysisId))
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount > 0)))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Training Size: ', trainFractions[i]))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'AnalysisID: ', analysisId))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount > 0)))
 
     # check parameters
-    OhdsiRTools::logTrace('Parameter Check Started')
+    ParallelLogger::logTrace('Parameter Check Started')
     checkInStringVector(testSplit, c('person', 'time'))
     checkHigherEqual(sum(population[, 'outcomeCount'] > 0), 25)
     checkIsClass(plpData, c('plpData.coo', 'plpData'))
@@ -198,7 +198,7 @@ createLearningCurve <- function(population,
     # construct the training and testing set according to split type
     # indices will be non-zero for rows in training and testing set
     if (testSplit == 'time') {
-      OhdsiRTools::logTrace('Dataset time split started')
+      ParallelLogger::logTrace('Dataset time split started')
       indexes <- tryCatch({
         timeSplitter(
           population,
@@ -208,10 +208,10 @@ createLearningCurve <- function(population,
           seed = splitSeed
         )
       },
-      finally = OhdsiRTools::logTrace('Done.'))
+      finally = ParallelLogger::logTrace('Done.'))
     }
     if (testSplit == 'person') {
-      OhdsiRTools::logTrace('Dataset person split started')
+      ParallelLogger::logTrace('Dataset person split started')
       indexes <- tryCatch({
         personSplitter(
           population,
@@ -221,12 +221,12 @@ createLearningCurve <- function(population,
           seed = splitSeed
         )
       },
-      finally = OhdsiRTools::logTrace('Done.'))
+      finally = ParallelLogger::logTrace('Done.'))
     }
     
     # check if population count is equal to the number of indices returned
     if (nrow(population) != nrow(indexes)) {
-      OhdsiRTools::logError(sprintf(
+      ParallelLogger::logError(sprintf(
         'Population dimension not compatible with indexes: %d <-> %d',
         nrow(population),
         nrow(indexes)
@@ -255,10 +255,10 @@ createLearningCurve <- function(population,
       outcomeId = outcomeId
     )
     
-    OhdsiRTools::logInfo(sprintf('Training %s model', settings$modelSettings$name))
+    ParallelLogger::logInfo(sprintf('Training %s model', settings$modelSettings$name))
     # the call is sinked because of the external calls (Python etc)
     if (sink.number() > 0) {
-      OhdsiRTools::logWarn(paste0('sink had ', sink.number(), ' connections open!'))
+      ParallelLogger::logWarn(paste0('sink had ', sink.number(), ' connections open!'))
     }
 
     # fit the model
@@ -266,11 +266,11 @@ createLearningCurve <- function(population,
       do.call(fitPlp, settings)
     },
     error = function(e) {
-      OhdsiRTools::logError(e)
+      ParallelLogger::logError(e)
       stop(paste0(e))
     },
     finally = {
-      OhdsiRTools::logTrace('Done.')
+      ParallelLogger::logTrace('Done.')
     })
     
     # save the model
@@ -278,15 +278,15 @@ createLearningCurve <- function(population,
       modelLoc <- file.path(saveDir, analysisId, 'savedModel')
       tryCatch({
         savePlpModel(model, modelLoc)},
-        finally = OhdsiRTools::logInfo(paste0(
+        finally = ParallelLogger::logInfo(paste0(
           'Model saved to ..\\', analysisId, '\\savedModel'
         ))
       )
     }
     
     # calculate metrics
-    OhdsiRTools::logTrace('Prediction')
-    OhdsiRTools::logTrace(paste0('Calculating prediction for ', sum(indexes$index != 0)))
+    ParallelLogger::logTrace('Prediction')
+    ParallelLogger::logTrace(paste0('Calculating prediction for ', sum(indexes$index != 0)))
     ind <- population$rowId %in% indexes$rowId[indexes$index != 0]
     prediction <-
       model$predict(plpData = plpData, population = population[ind,])
@@ -299,7 +299,7 @@ createLearningCurve <- function(population,
     
     attr(prediction, "metaData") <- metaData
     
-    finally = OhdsiRTools::logTrace('Done.')
+    finally = ParallelLogger::logTrace('Done.')
     
     # measure model performance
     if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
@@ -307,14 +307,14 @@ createLearningCurve <- function(population,
       # add analysisID
       attr(prediction, "metaData")$analysisId <- analysisId
       
-      OhdsiRTools::logInfo('Train set evaluation')
+      ParallelLogger::logInfo('Train set evaluation')
       performance.train <-
         evaluatePlp(prediction[prediction$indexes > 0,], plpData)
-      OhdsiRTools::logTrace('Done.')
-      OhdsiRTools::logInfo('Test set evaluation')
+      ParallelLogger::logTrace('Done.')
+      ParallelLogger::logInfo('Test set evaluation')
       performance.test <-
         evaluatePlp(prediction[prediction$indexes < 0,], plpData)
-      OhdsiRTools::logTrace('Done.')
+      ParallelLogger::logTrace('Done.')
       
       # combine the test and train data and add analysisId
       performance <-
@@ -322,7 +322,7 @@ createLearningCurve <- function(population,
                             analysisId)
       
       if (!is.null(saveDir)) {
-        OhdsiRTools::logTrace('Saving evaluation')
+        ParallelLogger::logTrace('Saving evaluation')
         if (!dir.exists(file.path(analysisPath, 'evaluation')))
           dir.create(file.path(analysisPath, 'evaluation'))
         tryCatch(
@@ -331,7 +331,7 @@ createLearningCurve <- function(population,
             file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'),
             row.names = F
           ),
-          finally = OhdsiRTools::logTrace('Saved EvaluationStatistics.')
+          finally = ParallelLogger::logTrace('Saved EvaluationStatistics.')
         )
         tryCatch(
           utils::write.csv(
@@ -339,7 +339,7 @@ createLearningCurve <- function(population,
             file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'),
             row.names = F
           ),
-          finally = OhdsiRTools::logTrace('Saved ThresholdSummary.')
+          finally = ParallelLogger::logTrace('Saved ThresholdSummary.')
         )
         tryCatch(
           utils::write.csv(
@@ -347,7 +347,7 @@ createLearningCurve <- function(population,
             file.path(analysisPath, 'evaluation', 'demographicSummary.csv'),
             row.names = F
           ),
-          finally = OhdsiRTools::logTrace('Saved DemographicSummary.')
+          finally = ParallelLogger::logTrace('Saved DemographicSummary.')
         )
         tryCatch(
           utils::write.csv(
@@ -355,7 +355,7 @@ createLearningCurve <- function(population,
             file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'),
             row.names = F
           ),
-          finally = OhdsiRTools::logTrace('Saved CalibrationSummary.')
+          finally = ParallelLogger::logTrace('Saved CalibrationSummary.')
         )
         tryCatch(
           utils::write.csv(
@@ -365,12 +365,12 @@ createLearningCurve <- function(population,
                       'predictionDistribution.csv'),
             row.names = F
           ),
-          finally = OhdsiRTools::logTrace('Saved PredictionDistribution.')
+          finally = ParallelLogger::logTrace('Saved PredictionDistribution.')
         )
       }
 
     } else{
-      OhdsiRTools::logWarn(paste0(
+      ParallelLogger::logWarn(paste0(
         'Evaluation not possible as prediciton NULL or all the same values'
       ))
       performance.test <- NULL
@@ -416,8 +416,8 @@ createLearningCurve <- function(population,
         # version, release date, vocabulary version
       )
     
-    OhdsiRTools::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
-    OhdsiRTools::logInfo('This can take a while...')
+    ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
+    ParallelLogger::logInfo('This can take a while...')
     covSummary <- covariateSummary(plpData, population)
     covSummary <-
       merge(model$varImp, covSummary, by = 'covariateId', all = T)
@@ -442,7 +442,7 @@ createLearningCurve <- function(population,
             by = 'covariateId',
             all = T)
     if (!is.null(saveDir)) {
-      OhdsiRTools::logTrace('Saving covariate summary')
+      ParallelLogger::logTrace('Saving covariate summary')
       if (!dir.exists(file.path(analysisPath, 'evaluation')))
         dir.create(file.path(analysisPath, 'evaluation'))
       tryCatch({
@@ -451,10 +451,10 @@ createLearningCurve <- function(population,
           file.path(analysisPath, 'evaluation', 'covariateSummary.csv'),
           row.names = F
         )},
-        finally = OhdsiRTools::logTrace('Saved covariate summary.')
+        finally = ParallelLogger::logTrace('Saved covariate summary.')
       )
     }
-    OhdsiRTools::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
+    ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
     
     # create result object
     result <- list(
@@ -472,8 +472,8 @@ createLearningCurve <- function(population,
     )
     class(result) <- c('list', 'plpModel')
     
-    OhdsiRTools::logInfo("Run finished successfully.")
-    OhdsiRTools::logInfo()
+    ParallelLogger::logInfo("Run finished successfully.")
+    ParallelLogger::logInfo()
     
     # combine performance metrics
     df <- data.frame(
@@ -507,7 +507,7 @@ createLearningCurve <- function(population,
     return(df)
   }
 
-  OhdsiRTools::clearLoggers()
+  ParallelLogger::clearLoggers()
   
   names(learningCurve) <- c(
     "x",
@@ -606,7 +606,7 @@ createLearningCurvePar <- function(population,
   # verify that a parallel backend has been registered
   setup_parallel()
   
-  OhdsiRTools::logInfo('Started to run in parallel, this can take a while...')
+  ParallelLogger::logInfo('Started to run in parallel, this can take a while...')
   
   # record global start time
   ExecutionDateTime <- Sys.time()
@@ -753,7 +753,7 @@ createLearningCurvePar <- function(population,
   TotalExecutionElapsedTime <-
     as.numeric(difftime(endTime, ExecutionDateTime,
                         units = "secs"))
-  OhdsiRTools::logInfo('Finished in ', round(TotalExecutionElapsedTime), ' secs.')
+  ParallelLogger::logInfo('Finished in ', round(TotalExecutionElapsedTime), ' secs.')
   
   # de-register the parallel backend by registering a sequential backend
   registerSequentialBackend()

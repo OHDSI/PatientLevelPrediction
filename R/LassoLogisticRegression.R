@@ -32,7 +32,12 @@ setLassoLogisticRegression<- function(variance=0.01, seed=NULL){
   if(variance<0)
     stop('Variance must be >= 0')
   
-  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed), name="Lasso Logistic Regression")
+  # set seed
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
+  
+  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1]), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -42,16 +47,16 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                      outcomeId, cohortId, trace=F,...){
   
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
   
   # check plpData is coo format:
   if(!'ffdf'%in%class(plpData$covariates)){
-    OhdsiRTools::logError('Lasso Logistic regression requires plpData in coo format')
+    ParallelLogger::logError('Lasso Logistic regression requires plpData in coo format')
     stop()
   }
 
@@ -82,7 +87,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   varImp <- data.frame(covariateId=names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'], 
                        value=modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
   if(sum(abs(varImp$value)>0)==0){
-    OhdsiRTools::logWarn('No non-zero coefficients')
+    ParallelLogger::logWarn('No non-zero coefficients')
     varImp <- NULL
   } else {
     #varImp <- varImp[abs(varImp$value)>0,]

@@ -237,13 +237,19 @@ summariseVal <- function(result, database){
 #' @param type                             Model type (score or logistic)
 #' @param covariateSettings                The standard covariate settings (specify covariate lookback time)
 #' @param customCovariates                 A table of covariateId, sql (sql creates the custom covariate)
+#' @param addExposureDaysToStart           riskWindowStart relative to the cohort end date instead of the cohort start date?
 #' @param riskWindowStart                  The day after index to start predicting the outcome
-#' @param addExposureDaysToEnd             riskWindomEnd relative to the cohort end date instead of the cohort start date?
+#' @param addExposureDaysToEnd             riskWindowEnd relative to the cohort end date instead of the cohort start date?
 #' @param riskWindowEnd                    The day after index to stop predicting the outcome
 #' @param requireTimeAtRisk                Do you want to ignore people who leave the database some point between the riskWindowStart and riskWindowEnd 
 #' @param minTimeAtRisk                    If requireTimeAtRisk is TRUE, how many days must they be observed before leaving to get included (default recommendation is all risk period: riskWindowEnd-riskWindowStart)    
 #' @param includeAllOutcomes               Setting this to TRUE means people with the outcome who leave the data during the risk period are still included, so only non-outcome people who leave during the risk period are removed 
 #' @param removeSubjectsWithPriorOutcome   Remove people from the target population if they have the outcome prior to target cohort start date
+#' @param priorOutcomeLookback             Lookback for removeSubjectsWithPriorOutcome
+#' @param verbosity                        The study population creation verbosity
+#' @param washoutPeriod                    Remove patients from the population with less than washoutPeriod of days prior observation
+#' @param firstExposureOnly                If patients are in the target population multiple times, use only the first date
+#' @param binary                           Binary classificsation (T or F)
 #' @param connectionDetails                The details to connect to the CDM
 #' @param cohortDatabaseSchema             A string specifying the database containing the target cohorts
 #' @param outcomeDatabaseSchema            A string specifying the database containing the outcome cohorts
@@ -255,7 +261,8 @@ summariseVal <- function(result, database){
 #' @param oracleTempSchema                 The temp oracle schema 
 #' @param modelName                        The name of the model
 #' @param calibrationPopulation            A data.frame of subjectId, cohortStartDate, indexes used to recalibrate the model on new data
-#' @param covariateSummary                 Whether to calculate the covariateSummary 
+#' @param covariateSummary                 Whether to calculate the covariateSummary
+#' @param cdmVersion                       The CDM version being used 
 #'  
 #' @return
 #' The performance of the existing model and prediction
@@ -268,6 +275,7 @@ evaluateExistingModel <- function(modelTable,
                                    type='score',
                                    covariateSettings,
                                   customCovariates=NULL,
+                                  addExposureDaysToStart = F,
                                   riskWindowStart = 1, 
                                   addExposureDaysToEnd = F,
                                   riskWindowEnd = 365,
@@ -275,6 +283,11 @@ evaluateExistingModel <- function(modelTable,
                                   minTimeAtRisk = 364,
                                   includeAllOutcomes = T,
                                   removeSubjectsWithPriorOutcome=T,
+                                  priorOutcomeLookback = 99999,
+                                  verbosity = 'INFO', 
+                                  washoutPeriod = 0,
+                                  firstExposureOnly= F, 
+                                  binary = T,
                                    connectionDetails,
                                    cdmDatabaseSchema,
                                    cohortDatabaseSchema, cohortTable, cohortId,
@@ -282,8 +295,8 @@ evaluateExistingModel <- function(modelTable,
                                    oracleTempSchema = cdmDatabaseSchema,
                                   modelName='existingModel',
                                   calibrationPopulation=NULL,
-                                  covariateSummary = T
-                                
+                                  covariateSummary = T,
+                                   cdmVersion = 5
                                    ){
   
   #input tests
@@ -362,7 +375,8 @@ evaluateExistingModel <- function(modelTable,
                                                 outcomeDatabaseSchema = outcomeDatabaseSchema, 
                                                 outcomeTable = outcomeTable , 
                                                 covariateSettings =  createExistingmodelsCovariateSettings(),
-                                                sampleSize = NULL)
+                                                sampleSize = NULL, 
+                                                cdmVersion = cdmVersion)
   
   population <- PatientLevelPrediction::createStudyPopulation(plpData = plpData, outcomeId = outcomeId,
                                                               includeAllOutcomes = includeAllOutcomes, 
@@ -371,7 +385,11 @@ evaluateExistingModel <- function(modelTable,
                                                               riskWindowStart = riskWindowStart,
                                                               addExposureDaysToEnd = addExposureDaysToEnd,
                                                               riskWindowEnd = riskWindowEnd, 
-                                                              removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome
+                                                              removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome,
+                                                              verbosity = verbosity, 
+                                                              washoutPeriod = washoutPeriod,
+                                                              firstExposureOnly = firstExposureOnly, 
+                                                              binary = binary
                                                               )
   prediction <- merge(population, ff::as.ram(plpData$covariates$risks), by='rowId', all.x=T)
   
@@ -383,6 +401,7 @@ evaluateExistingModel <- function(modelTable,
     covSum <- covariateSummary(plpData, population)
   }
   
+  recalModel <- NULL
   if(!is.null(calibrationPopulation)){
     #re-calibrate model:
     prediction <- base::merge(calibrationPopulation, prediction, by=c('subjectId','cohortStartDate'))
@@ -441,13 +460,17 @@ evaluateExistingModel <- function(modelTable,
               prediction=prediction,
               inputSetting = list(dataExtrractionSettings = list(outcomeId=outcomeId, 
                                   cohortId=cohortId,
-                                  database = cdmDatabaseSchema)),
+                                  database = cdmDatabaseSchema),
+                                  populationSettings = attr(population,'metaData')),
               executionSummary = executionSummary,
-              model = list(model='existing model',
+              model = list(model='existing model', 
+                           type=type,
                            modelName=modelName,
                            modelTable=modelTable, 
                            covariateTable=covariateTable, 
-                           interceptTable=interceptTable),
+                           interceptTable=interceptTable,
+                           covariateSettings=covariateSettings,
+                           recalModel = recalModel),
               analysisRef=list(analysisId=NULL,
                                analysisName=NULL,
                                analysisSettings= NULL),

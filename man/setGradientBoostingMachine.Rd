@@ -5,13 +5,15 @@
 \title{Create setting for gradient boosting machine model using gbm_xgboost implementation}
 \usage{
 setGradientBoostingMachine(ntrees = c(10, 100), nthread = 20,
-  maxDepth = c(4, 6, 17), minRows = 20, learnRate = c(0.01, 0.1),
-  seed = NULL)
+  earlyStopRound = 10, maxDepth = c(4, 6, 17), minRows = 20,
+  learnRate = c(0.01, 0.1), seed = NULL)
 }
 \arguments{
 \item{ntrees}{The number of trees to build}
 
 \item{nthread}{The number of computer threads to (how many cores do you have?)}
+
+\item{earlyStopRound}{If the performance does not increase over earlyStopRound number of interactions then training stops (this prevents overfitting)}
 
 \item{maxDepth}{Maximum number of interactions - a large value will lead to slow model training}
 

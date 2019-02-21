@@ -115,6 +115,7 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
   plpResult$model$metaData$call$cohortDatabaseSchema <- NULL
   plpResult$model$metaData$call$outcomeDatabaseSchema <- NULL
   plpResult$model$metaData$call$oracleTempSchema <- NULL
+  plpResult$model$metaData$call$baseUrl <- NULL
   plpResult$model$metaData$modelName <- modelName
   plpResult$model$index <- NULL
   plpResult$prediction <- NULL
@@ -126,6 +127,7 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
     mod$metaData$call$outcomeDatabaseSchema <-'Missing'
     mod$metaData$call$cdmDatabaseSchema <- 'Missing'
     mod$metaData$call$cohortDatabaseSchema <- 'Missing'
+    mod$metaData$call$baseUrl <- NULL
     
     assign("plpModel", mod, envir = environment(plpResult$model$predict))
   }
@@ -615,7 +617,7 @@ createExistingModelSql <- function(modelTable, modelNames, interceptTable,
     }
 
     # adding age with 0 coef to make sure everyone gets value
-    allVars <- rbind(allVars, data.frame(modelId=unique(allVars$modelId),
+    allVars <- rbind(allVars[,c('modelId','modelCovariateId','coefficientValue')], data.frame(modelId=unique(allVars$modelId),
                                          modelCovariateId=rep(-1,length(unique(allVars$modelId))),
                                          coefficientValue=rep(0,length(unique(allVars$modelId)))
     ))

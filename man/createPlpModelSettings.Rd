@@ -12,12 +12,6 @@ createPlpModelSettings(modelList, covariateSettingList, populationSettingList)
 \item{covariateSettingList}{A list of covariate settings}
 
 \item{populationSettingList}{A list of population settings}
-
-\item{modelSettingNames}{A vector of names for each model in modelList}
-
-\item{covariateSettingNames}{A vector of names for each covariate setting in covariateSettingList}
-
-\item{populationSettingNames}{A vector of names for each population setting in populationSettingList}
 }
 \value{
 A list containing a dataframe settingLookupTable containing all the model, covariate and popualtion combination details, 

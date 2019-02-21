@@ -67,21 +67,21 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
   
   # check plpData is libsvm format:
   if(!'ffdf'%in%class(plpData$covariates)){
-    OhdsiRTools::logError('class plpData$covariates: ', class(plpData$covariates))
+    ParallelLogger::logError('class plpData$covariates: ', class(plpData$covariates))
     stop('Random forest requires plpData')
   }
   
   if(colnames(population)[ncol(population)]!='indexes'){
-    OhdsiRTools::logWarn(paste0('population columns: ', paste0(colnames(population), collapse='-')))
+    ParallelLogger::logWarn(paste0('population columns: ', paste0(colnames(population), collapse='-')))
     warning('indexes column not present as last column - setting all index to 1')
     population$indexes <- rep(1, nrow(population))
   }
@@ -91,7 +91,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   PythonInR::pyExec('quiet = True')
   if(quiet==F){
-    OhdsiRTools::logTrace(paste0('Training random forest model...' ))
+    ParallelLogger::logTrace(paste0('Training random forest model...' ))
     PythonInR::pyExec('quiet = False')
   }
   start <- Sys.time()
@@ -110,7 +110,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   }
 
   # convert plpData in coo to python:
-  OhdsiRTools::logTrace('Mapping R data to python')
+  ParallelLogger::logTrace('Mapping R data to python')
   x <- toSparsePython(plpData,population, map=NULL)
     
   #do var imp
@@ -124,7 +124,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     varImp <-PythonInR::pyGet("rf.feature_importances_", simplify = FALSE)[,1]
     
     if(!quiet)
-      OhdsiRTools::logTrace('Variable importance completed')  
+      ParallelLogger::logTrace('Variable importance completed')  
     if(mean(varImp)==0)
       stop('No important variables - seems to be an issue with the data')
     
@@ -186,7 +186,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     auc <- PatientLevelPrediction::computeAuc(pred)
     all_auc <- c(all_auc, auc)
     if(!quiet)
-      OhdsiRTools::logInfo(paste0('Model with settings: ntrees:',param$ntrees[i],' maxDepth: ',param$maxDepth[i], 
+      ParallelLogger::logInfo(paste0('Model with settings: ntrees:',param$ntrees[i],' maxDepth: ',param$maxDepth[i], 
                       'mtry: ', param$mtry[i] , ' obtained AUC of ', auc))
   }
   
@@ -213,7 +213,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   ##write.table(covariateRef, file.path(outLoc, 'covs.txt'), row.names=F, col.names=T) # might not need?
   
   #auc <- PatientLevelPrediction::computeAuc(pred)
-  #OhdsiRTools::logInfo(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' maxDepth: ',param$maxDepth[which.max(all_auc)], 
+  #ParallelLogger::logInfo(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' maxDepth: ',param$maxDepth[which.max(all_auc)], 
   #                  'mtry: ', param$mtry[which.max(all_auc)] , ' obtained AUC of ', auc))
   
   comp <- start-Sys.time()

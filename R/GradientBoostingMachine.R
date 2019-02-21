@@ -20,6 +20,7 @@
 #'
 #' @param ntrees     The number of trees to build 
 #' @param nthread   The number of computer threads to (how many cores do you have?)
+#' @param earlyStopRound   If the performance does not increase over earlyStopRound number of interactions then training stops (this prevents overfitting)
 #' @param maxDepth  Maximum number of interactions - a large value will lead to slow model training
 #' @param minRows   The minimum number of rows required at each end node of the tree
 #' @param learnRate The boosting learn rate
@@ -30,7 +31,7 @@
 #'                            maxDepth=c(4,6), learnRate=c(0.1,0.3))
 #'
 #' @export
-setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
+setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20, earlyStopRound = 10,
                                   maxDepth=c(4,6,17), minRows=20, learnRate=c(0.01,0.1),
                                   seed= NULL){
   
@@ -56,13 +57,20 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
     stop('learnRate must be greater that 0')
   if(sum(learnRate > 1)>0)
     stop('learnRate must be less that or equal to 1')
+  if(!class(earlyStopRound) %in% c("numeric", "integer", "NULL"))
+    stop('incorrect class for earlyStopRound')
+  
+  # set seed
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
   
   result <- list(model='fitGradientBoostingMachine', 
-                 param= split(expand.grid(ntrees=ntrees, 
+                 param= split(expand.grid(ntrees=ntrees, earlyStopRound=earlyStopRound,
                                           maxDepth=maxDepth, minRows=minRows, 
                                           learnRate=learnRate, nthread=nthread,
-                                          seed=ifelse(is.null(seed),'NULL', seed)),
-                              1:(length(ntrees)*length(maxDepth)*length(minRows)*length(learnRate)  )),
+                                          seed= seed[1] ),
+                              1:(length(ntrees)*length(maxDepth)*length(minRows)*length(learnRate)*length(earlyStopRound)  )),
                  name='Gradient boosting machine'
   )
   class(result) <- 'modelSettings' 
@@ -74,22 +82,16 @@ setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20,
 #xgboost
 fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                         outcomeId, cohortId, ...){
-  
-  # set old params with reformated names
-  param$max.depth <- param$maxDepth
-  param$nround <- param$ntrees
-  param$min_child_weight <- param$minRows
-  param$eta <- param$learnRate
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
   
   if(!quiet)
-    OhdsiRTools::logTrace('Training GBM model')
+    ParallelLogger::logTrace('Training GBM model')
   
   if(param[[1]]$seed!='NULL')
     set.seed(param[[1]]$seed)
@@ -112,7 +114,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   data <- data[population$rowId,]
   
   # set test/train sets (for printing performance as it trains)
-  OhdsiRTools::logInfo(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
+  ParallelLogger::logInfo(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
   start <- Sys.time()
   
   # pick the best hyper-params and then do final training on all data...
@@ -126,17 +128,17 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   param <- param[[which.max(param.sel)]]
   param$final=T
   
-  #OhdsiRTools::logTrace("Final train")
+  #ParallelLogger::logTrace("Final train")
   trainedModel <- do.call("gbm_model2", c(param,datas)  )$model
   
   comp <- Sys.time() - start
   if(!quiet)
-    OhdsiRTools::logInfo(paste0('Model GBM trained - took:',  format(comp, digits=3)))
+    ParallelLogger::logInfo(paste0('Model GBM trained - took:',  format(comp, digits=3)))
   
   varImp <- xgboost::xgb.importance(model =trainedModel)
   
   # get the original feature names:
-  varImp$Feature <- as.numeric(varImp$Feature)
+  varImp$Feature <- as.numeric(varImp$Feature)+1 # adding +1 as xgboost index starts at 0
   varImp <- merge(result$map, varImp, by.x='newIds', by.y='Feature')
   
   varImp<- merge(ff::as.ram(plpData$covariateRef),varImp,  by.y='oldIds', by.x='covariateId', all=T)
@@ -172,8 +174,9 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
 }
 
 gbm_model2 <- function(data, population,
-                       max.depth=6, min_child_weight=20, nthread=20,
-                       nround=100, eta=0.1, final=F, ...){
+                       maxDepth=6, minRows=20, nthread=20,
+                       ntrees=100, learnRate=0.1, final=F, earlyStopRound=NULL, ...){
+  
   if(missing(final)){
     final <- F
   }
@@ -181,32 +184,35 @@ gbm_model2 <- function(data, population,
     stop('No population')
   }
   if(!is.null(population$indexes) && final==F){
-    OhdsiRTools::logInfo(paste0("Training GBM with ",length(unique(population$indexes))," fold CV"))
+    ParallelLogger::logInfo(paste0("Training GBM with ",length(unique(population$indexes))," fold CV"))
     index_vect <- unique(population$indexes)
-    OhdsiRTools::logDebug(paste0('index vect: ', paste0(index_vect, collapse='-')))
+    ParallelLogger::logDebug(paste0('index vect: ', paste0(index_vect, collapse='-')))
     perform <- c()
     
     # create prediction matrix to store all predictions
     predictionMat <- population
-    OhdsiRTools::logDebug(paste0('population nrow: ', nrow(population)))
+    ParallelLogger::logDebug(paste0('population nrow: ', nrow(population)))
     
     predictionMat$value <- 0
     attr(predictionMat, "metaData") <- list(predictionType = "binary")
     
     for(index in 1:length(index_vect )){
-      OhdsiRTools::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      ParallelLogger::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
       test <- xgboost::xgb.DMatrix(data = data[population$indexes==index,], label=population$outcomeCount[population$indexes==index])
       watchlist <- list(train=train, test=test)
       
       model <- xgboost::xgb.train(data = train, 
-                                  max.depth = max.depth, eta = eta, nthread = nthread, 
-                                  min_child_weight = min_child_weight,
-                                  nround = nround,
+                                  max.depth = maxDepth, 
+                                  eta = learnRate, 
+                                  nthread = nthread, 
+                                  min_child_weight = minRows,
+                                  nround = ntrees,
                                   watchlist = watchlist,
                                   objective = "binary:logistic",
                                   eval.metric = "logloss", eval.metric = "auc",
-                                  print_every_n=10)
+                                  print_every_n=10,
+                                  early_stopping_rounds = earlyStopRound)
       
       pred <- stats::predict(model, data[population$indexes==index,])
       prediction <- population[population$indexes==index,]
@@ -225,13 +231,26 @@ gbm_model2 <- function(data, population,
     foldPerm <- perform
   } else {
     train <- xgboost::xgb.DMatrix(data = data, label=population$outcomeCount)
+    watchlist <- NULL
+    
+    if(!is.null(earlyStopRound)){
+      ind <- (1:nrow(population))%in%sample(nrow(population), floor(nrow(population)*0.9))
+      train <- xgboost::xgb.DMatrix(data = data[ind,], label=population$outcomeCount[ind])
+      test <- xgboost::xgb.DMatrix(data = data[!ind,], label=population$outcomeCount[!ind])
+      watchlist <- list(train=train, test=test)
+    }
+      
     model <- xgboost::xgb.train(data = train, 
-                                max.depth = max.depth, eta = eta, nthread = nthread, 
-                                min_child_weight = min_child_weight,
-                                nround = nround,
+                                max.depth = maxDepth, 
+                                eta = learnRate, 
+                                nthread = nthread, 
+                                min_child_weight = minRows,
+                                nround = ntrees,
+                                watchlist = watchlist,
                                 objective = "binary:logistic",
                                 eval.metric = "logloss", eval.metric = "auc",
-                                print_every_n=10)
+                                print_every_n=10,
+                                early_stopping_rounds = earlyStopRound)
     
     pred <- stats::predict(model, data)
     prediction <- population
@@ -240,16 +259,16 @@ gbm_model2 <- function(data, population,
     auc <- computeAuc(prediction)
     foldPerm <- auc
   }
-  param.val <- paste0('max depth: ',max.depth,'-- min_child_weight: ', min_child_weight, 
-                      '-- nthread: ', nthread, ' nround: ',nround, '-- eta: ', eta)
-  OhdsiRTools::logInfo("==========================================")
-  OhdsiRTools::logInfo(paste0("GMB with parameters: ", param.val," obtained an AUC of ",auc))
-  OhdsiRTools::logInfo("==========================================")
+  param.val <- paste0('maxDepth: ',maxDepth,'-- minRows: ', minRows, 
+                      '-- nthread: ', nthread, ' ntrees: ',ntrees, '-- learnRate: ', learnRate)
+  ParallelLogger::logInfo("==========================================")
+  ParallelLogger::logInfo(paste0("GMB with parameters: ", param.val," obtained an AUC of ",auc))
+  ParallelLogger::logInfo("==========================================")
   
   result <- list(model=model,
                  auc=auc,
-                 hyperSum = unlist(list(maxDepth = max.depth, eta = eta, nthread = nthread, 
-                                  min_child_weight = min_child_weight,nround = nround, fold_auc=foldPerm))
+                 hyperSum = unlist(list(maxDepth = maxDepth, learnRate = learnRate, nthread = nthread, 
+                                        minRows = minRows, ntrees = ntrees, fold_auc=foldPerm))
   )
   return(result)
 }

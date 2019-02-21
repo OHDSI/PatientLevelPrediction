@@ -52,11 +52,11 @@ applyModel <- function(population,
                        silent = F) {
   
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = 'layoutTimestamp')))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
+    ParallelLogger::registerLogger(logger)
   }
   
   # check input:
@@ -74,13 +74,13 @@ applyModel <- function(population,
 
   start.pred <- Sys.time()
   if (!silent)
-    OhdsiRTools::logInfo(paste("Starting Prediction ", Sys.time(), "for ", peopleCount, " people"))
+    ParallelLogger::logInfo(paste("Starting Prediction ", Sys.time(), "for ", peopleCount, " people"))
 
   prediction <- plpModel$predict(plpData = plpData, population = population)
 
   
   if (!silent)
-    OhdsiRTools::logInfo(paste("Prediction completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+    ParallelLogger::logInfo(paste("Prediction completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
 
 
   if (!"outcomeCount" %in% colnames(prediction))
@@ -90,7 +90,7 @@ applyModel <- function(population,
     return(prediction)
 
   if (!silent)
-    OhdsiRTools::logInfo(paste("Starting evaulation at ", Sys.time()))
+    ParallelLogger::logInfo(paste("Starting evaulation at ", Sys.time()))
 
   performance <- evaluatePlp(prediction, plpData)
 
@@ -123,10 +123,10 @@ applyModel <- function(population,
   
 
   if (!silent)
-    OhdsiRTools::logInfo(paste("Evaluation completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+    ParallelLogger::logInfo(paste("Evaluation completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
 
   if (!silent)
-    OhdsiRTools::logInfo(paste("Starting covariate summary at ", Sys.time()))
+    ParallelLogger::logInfo(paste("Starting covariate summary at ", Sys.time()))
   start.pred  <- Sys.time()
   covSum <- covariateSummary(plpData, population)
   if(exists("plpModel")){
@@ -136,7 +136,7 @@ applyModel <- function(population,
   }
   
   if (!silent)
-    OhdsiRTools::logInfo(paste("Covariate summary completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+    ParallelLogger::logInfo(paste("Covariate summary completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
   
   executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
                                                  packageVersion = utils::packageVersion("PatientLevelPrediction")),
@@ -219,11 +219,11 @@ similarPlpData <- function(plpModel=NULL,
                            createPopulation= T) {
   
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
   
   if(is.null(plpModel))
@@ -248,14 +248,14 @@ similarPlpData <- function(plpModel=NULL,
  
     exists <- toupper(newCohortTable)%in%DatabaseConnector::getTableNames(connection , newCohortDatabaseSchema)
     if(!exists){
-      OhdsiRTools::logTrace('Creating temp cohort table')
+      ParallelLogger::logTrace('Creating temp cohort table')
     sql <- "create table @target_cohort_schema.@target_cohort_table(cohort_definition_id bigint, subject_id bigint, cohort_start_date datetime, cohort_end_date datetime)"
     sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
     sql <- SqlRender::renderSql(sql,
                                 target_cohort_schema = newCohortDatabaseSchema,
                                 target_cohort_table= newCohortTable)$sql
     tryCatch(DatabaseConnector::executeSql(connection,sql),
-         error = stop, finally = OhdsiRTools::logTrace('Cohort table created'))
+         error = stop, finally = ParallelLogger::logTrace('Cohort table created'))
     }
     
     exists <- toupper(newOutcomeTable)%in%DatabaseConnector::getTableNames(connection , newOutcomeDatabaseSchema)
@@ -266,11 +266,11 @@ similarPlpData <- function(plpModel=NULL,
                                   target_cohort_schema = newOutcomeDatabaseSchema,
                                   target_cohort_table= newOutcomeTable)$sql
       tryCatch(DatabaseConnector::executeSql(connection,sql),
-           error = stop, finally = OhdsiRTools::logTrace('outcome table created'))
+           error = stop, finally = ParallelLogger::logTrace('outcome table created'))
       
     }
     
-    OhdsiRTools::logTrace('Populating cohort tables')
+    ParallelLogger::logTrace('Populating cohort tables')
     targetSql <- plpModel$metaData$cohortCreate$targetCohort$sql
     targetSql <- SqlRender::renderSql(targetSql, 
                                       cdm_database_schema=ifelse(is.null(newCdmDatabaseSchema),plpModel$metaData$call$cdmDatabaseSchema,newCdmDatabaseSchema),
@@ -298,14 +298,14 @@ similarPlpData <- function(plpModel=NULL,
     
   }
   
-  OhdsiRTools::logTrace('Loading model data extraction settings')
+  ParallelLogger::logTrace('Loading model data extraction settings')
   dataOptions <- as.list(plpModel$metaData$call)
   dataOptions[[1]] <- NULL
   dataOptions$sampleSize <- sample
   
   dataOptions$covariateSettings$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
   
-  OhdsiRTools::logTrace('Adding new settings if set...')
+  ParallelLogger::logTrace('Adding new settings if set...')
   if(is.null(newCdmDatabaseSchema))
     return(NULL)
   dataOptions$cdmDatabaseSchema <- newCdmDatabaseSchema
@@ -338,7 +338,7 @@ similarPlpData <- function(plpModel=NULL,
   if(!createPopulation) return(plpData)
   
   # get the popualtion
-  OhdsiRTools::logTrace('Loading model population settings')
+  ParallelLogger::logTrace('Loading model population settings')
   popOptions <- plpModel$populationSettings
   popOptions$cohortId <- dataOptions$cohortId
   popOptions$outcomeId <- dataOptions$outcomeIds
@@ -347,7 +347,7 @@ similarPlpData <- function(plpModel=NULL,
   
   
   # return the popualtion and plpData for the new database
-  OhdsiRTools::logTrace('Returning population and plpData for new data using model settings')
+  ParallelLogger::logTrace('Returning population and plpData for new data using model settings')
   return(list(population=population,
               plpData=plpData))
 }

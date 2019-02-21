@@ -35,7 +35,7 @@ shows the entire space.}
 function \code{ggsave} in the ggplot2 package for supported file formats.}
 }
 \value{
-A cowplot object. Use the \code{\link{save_plot()}} function to save to file in a different format.
+A cowplot object. Use the \code{cowplot::save_plot} function to save to file in a different format.
 }
 \description{
 Plot the smooth calibration as detailed in Calster et al. "A calibration heirarchy for risk models

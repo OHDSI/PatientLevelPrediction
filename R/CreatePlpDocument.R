@@ -64,7 +64,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   #================ CALCULATE KEY VARIABLES =========================
   # calcualte the auc
   eval <- plpResult$performanceEvaluation$evaluationStatistics
-  auc <- formatDocNumbers(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc','Value'])
+  auc <- formatDocNumbers(eval[eval[,'Eval']=='test' & eval[,'Metric']%in%c('AUC.auc',"AUC"),'Value'])
   if(length(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_lb95ci','Value'])>0)
     auc <- paste0(auc, '(',formatDocNumbers(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_lb95ci','Value']),
                   '-',formatDocNumbers(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_ub95ci','Value']),')')
@@ -574,7 +574,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   # calcualte the auc
   eval <- plpResult$performanceEvaluation$evaluationStatistics
-  auc <- formatDocNumbers(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc','Value'])
+  auc <- formatDocNumbers(eval[eval[,'Eval']=='test' & eval[,'Metric']%in%c('AUC.auc',"AUC"),'Value'])
   if(length(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_lb95ci','Value'])>0)
     auc <- paste0(auc, '(',formatDocNumbers(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_lb95ci','Value']),
                   '-',formatDocNumbers(eval[eval[,'Eval']=='test' & eval[,'Metric']=='AUC.auc_ub95ci','Value']),')')

@@ -32,11 +32,11 @@
 evaluatePlp <- function(prediction, plpData){
 
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
 
   # checking inputs
@@ -55,62 +55,66 @@ evaluatePlp <- function(prediction, plpData){
   #============================
 
   # auc
-  OhdsiRTools::logTrace('Calculating AUC')
-  if(nrow(prediction) < 100000){
+  ParallelLogger::logTrace('Calculating AUC')
+  if(sum(prediction$outcomeCount>0) < 1000){
     auc <- computeAuc(prediction, confidenceInterval = T)
-    OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
+    ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
+    ParallelLogger::logInfo(sprintf('%-20s%.2f', '95% lower AUC: ', auc[2]*100))
+    ParallelLogger::logInfo(sprintf('%-20s%.2f', '95% upper AUC: ', auc[3]*100))
   } else{
     # speed issues with big data so using AUC package
-    auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
-    OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc*100))
+    auc <- data.frame(auc = AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount))),
+                      auc_lb95ci = NA,
+                      auc_ub95ci = NA)
+    ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
   }
 
   # auprc
-  OhdsiRTools::logTrace('Calculating AUPRC')
+  ParallelLogger::logTrace('Calculating AUPRC')
   positive <- prediction$value[prediction$outcomeCount == 1]
   negative <- prediction$value[prediction$outcomeCount == 0]
   pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
   auprc <- pr$auc.integral
-  OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
+  ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
   
   # brier scores-returnss; brier, brierScaled
-  OhdsiRTools::logTrace('Calculating Brier Score')
+  ParallelLogger::logTrace('Calculating Brier Score')
   brier <- brierScore(prediction)
-  OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
+  ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
 
   # 2) thresholdSummary
   # need to update thresholdSummary this with all the requested values
-  OhdsiRTools::logTrace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
   thresholdSummary <-getThresholdSummary(prediction) # rename and edit this
 
-  OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
   
   # 3) demographicSummary
-  OhdsiRTools::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
   demographicSummary <- tryCatch(getDemographicSummary(prediction, plpData),
                                  error= function(cond){return(NULL)})
-  OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
 
 
   # calibration linear fit- returns gradient, intercept
-  OhdsiRTools::logTrace('Calculating Calibration Line')
+  ParallelLogger::logTrace('Calculating Calibration Line')
   calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
-  OhdsiRTools::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
+  ParallelLogger::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
   # 4) calibrationSummary
-  OhdsiRTools::logTrace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
   calibrationSummary <- getCalibration(prediction,
                                        numberOfStrata = 10,
                                        truncateFraction = 0.01)
-  OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
 
   # 5) predictionDistribution - done
-  OhdsiRTools::logTrace(paste0('Calculating Quantiles Started @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0('Calculating Quantiles Started @ ',Sys.time()))
   predictionDistribution <- getPredictionDistribution(prediction)
-  OhdsiRTools::logTrace(paste0('Completed @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
 
   # Extra: Average Precision
   aveP.val <- averagePrecision(prediction)
-  OhdsiRTools::logInfo(sprintf('%-20s%.2f', 'Average Precision: ', aveP.val))
+  ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Average Precision: ', aveP.val))
 
   # evaluationStatistics:
   evaluationStatistics <- list(analysisId= attr(prediction, "metaData")$analysisId,

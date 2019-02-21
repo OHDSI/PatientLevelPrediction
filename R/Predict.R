@@ -44,19 +44,19 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
     stop('No plpData input')
   
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                            threshold = "INFO",
-                           appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                           appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
   
   # apply the feature transformations
   if(!is.null(index)){
-    OhdsiRTools::logTrace(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
+    ParallelLogger::logTrace(paste0('Calculating prediction for ',sum(index$index<0),' in test set'))
     ind <- population$rowId%in%index$rowId[index$index<0]
   } else{
-    OhdsiRTools::logTrace(paste0('Calculating prediction for ',nrow(population),' in dataset'))
+    ParallelLogger::logTrace(paste0('Calculating prediction for ',nrow(population),' in dataset'))
     ind <- rep(T, nrow(population))
   }
   
@@ -66,9 +66,9 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
     prediction <- plpModel$predict(plpData=plpData,population=population[ind,])
     
     if(nrow(prediction)!=nrow(population[ind,]))
-      OhdsiRTools::logWarn(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
+      ParallelLogger::logWarn(paste0('Dimension mismatch between prediction and population test cases.  Population test: ',nrow(population[ind, ]), '-- Prediction:', nrow(prediction) ))
   } else{
-    OhdsiRTools::logError('Non plpModel input')
+    ParallelLogger::logError('Non plpModel input')
     stop()
   }
   
@@ -109,7 +109,7 @@ predict.python2 <- function(plpModel, population, plpData){
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
   
   
-  OhdsiRTools::logInfo('Mapping covariates...')
+  ParallelLogger::logInfo('Mapping covariates...')
   if(!is.null(plpData$timeRef)){
     pdata <- toSparseTorchPython2(plpData,population, map=plpModel$covariateMap, temporal=T)
     fun_predict <- python_predict_temporal
@@ -132,7 +132,7 @@ predict.python2 <- function(plpModel, population, plpData){
   }
   
   # run the python predict code:
-  OhdsiRTools::logInfo('Executing prediction...')
+  ParallelLogger::logInfo('Executing prediction...')
   result <- fun_predict(population = pPopulation, 
                            plpData = pdata, 
                            model_loc = plpModel$model,
@@ -140,7 +140,7 @@ predict.python2 <- function(plpModel, population, plpData){
                            autoencoder = F)
   
   #get the prediction from python and reformat:
-  OhdsiRTools::logInfo('Returning results...')
+  ParallelLogger::logInfo('Returning results...')
   prediction <- result
   prediction <- as.data.frame(prediction)
   attr(prediction, "metaData") <- list(predictionType="binary")
@@ -162,7 +162,7 @@ predict.python2 <- function(plpModel, population, plpData){
 
 predict.pythonAuto <- function(plpModel, population, plpData){
   
-  OhdsiRTools::logInfo('Mapping covariates...')
+  ParallelLogger::logInfo('Mapping covariates...')
   if(!is.null(plpData$timeRef)){
     pdata <- toSparseTorchPython2(plpData,population, map=plpModel$covariateMap, temporal=T)
   } else {  
@@ -183,7 +183,7 @@ predict.pythonAuto <- function(plpModel, population, plpData){
   }
   
   # run the python predict code:
-  OhdsiRTools::logInfo('Executing prediction...')
+  ParallelLogger::logInfo('Executing prediction...')
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
   
@@ -193,7 +193,7 @@ predict.pythonAuto <- function(plpModel, population, plpData){
                            dense = ifelse(is.null(plpModel$dense),0,plpModel$dense),
                            autoencoder = T)
   #get the prediction from python and reformat:
-  OhdsiRTools::logInfo('Returning results...')
+  ParallelLogger::logInfo('Returning results...')
   prediction <- result
   prediction <- as.data.frame(prediction)
   attr(prediction, "metaData") <- list(predictionType="binary")
@@ -218,11 +218,11 @@ predict.python <- function(plpModel, population, plpData){
   # connect to python if not connected
   initiatePython()
 
-  OhdsiRTools::logInfo('Setting inputs...')
+  ParallelLogger::logInfo('Setting inputs...')
   PythonInR::pySet("dense", plpModel$dense)
   PythonInR::pySet("model_loc", plpModel$model)
   
-  OhdsiRTools::logInfo('Mapping covariates...')
+  ParallelLogger::logInfo('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
   if (plpModel$modelSettings$model == 'fitCNNTorch' | plpModel$modelSettings$model == 'fitRNNTorch'){
@@ -261,11 +261,11 @@ predict.python <- function(plpModel, population, plpData){
   }
   
   # run the python predict code:
-  OhdsiRTools::logInfo('Executing prediction...')
+  ParallelLogger::logInfo('Executing prediction...')
   PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py'))
   
   #get the prediction from python and reformat:
-  OhdsiRTools::logInfo('Returning results...')
+  ParallelLogger::logInfo('Returning results...')
   prediction <- PythonInR::pyGet('prediction', simplify = F)
   prediction <-  apply(prediction,1, unlist)
   prediction <- t(prediction)
@@ -310,9 +310,9 @@ predict.knn <- function(plpData, population, plpModel, ...){
 
 predict.deep <- function(plpModel, population, plpData,   ...){
   temporal <- !is.null(plpData$timeRef)
-  OhdsiRTools::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
+  ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
   if(temporal){
-    OhdsiRTools::logTrace('temporal')
+    ParallelLogger::logTrace('temporal')
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
     
     data <-result$data[population$rowId,,]
@@ -364,9 +364,9 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
   repeats <- attr(plpModel, 'inputs')
   
   temporal <- !is.null(plpData$timeRef)
-  OhdsiRTools::logDebug('timeRef null: ',paste0(is.null(plpData$timeRef)))
+  ParallelLogger::logDebug('timeRef null: ',paste0(is.null(plpData$timeRef)))
   if(temporal){
-    OhdsiRTools::logTrace('temporal')
+    ParallelLogger::logTrace('temporal')
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
     data <-result$data[population$rowId,,]
     
@@ -442,7 +442,7 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
   attr(prediction, "outcomeId") <- attr(population, "metadata")$outcomeId
 
   delta <- Sys.time() - start
-  OhdsiRTools::logInfo("Prediction took ", signif(delta, 3), " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Prediction took ", signif(delta, 3), " ", attr(delta, "units"))
   return(prediction)
 }
 

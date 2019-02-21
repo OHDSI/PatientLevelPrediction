@@ -35,6 +35,7 @@ def sagemaker_predict(population, plpData, bucket, prefix, container, role_arn, 
   print("loading model...")
   model_url = 's3://{}/plpModel/model.tar.gz'.format(bucket)
   
+  #role = sagemaker.get_execution_role()
   role = role_arn
   container = container 
   sm_client = boto3.client('sagemaker')

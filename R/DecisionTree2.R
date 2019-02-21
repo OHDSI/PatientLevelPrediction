@@ -53,7 +53,7 @@ setDecisionTree2 <- function(maxDepth=10 ,minSamplesSplit=2 ,minSamplesLeaf=10,
     stop('minImpurityDecrease must be greater that 0')
   if(class(classWeight) !='character')
     stop('classWeight must be a character of either None or balanced')
-  if(!classWeight%in%c('None','balanced'))
+  if(sum(!classWeight%in%c('None','balanced'))!=0)
     stop('classWeight must be a character of either None or balanced')
   if(class(plot) !='logical')
     stop('Plot must be logical')

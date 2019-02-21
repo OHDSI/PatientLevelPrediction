@@ -46,20 +46,21 @@ Imports:
     reshape2,
     officer,
     diagram,
-    shiny,
-    plotly,
-    DT,
-    htmlwidgets (> 0.8),
     tidyr,
     viridisLite,
     RCurl,
     RJSONIO,
     keras,
     slam,
-    magrittr,
-    OhdsiRTools,
-    reticulate (> 1.6)
+    ParallelLogger,
+    reticulate (> 1.6),
+    tools,
+    plotly
 Suggests:
+    shiny,
+    DT,
+    htmlwidgets (> 0.8),
+    cowplot,
     testthat,
     pROC,
     gnm,
@@ -69,7 +70,10 @@ Suggests:
     Metrics,
     SparseM,
     ResourceSelection,
-    BigKnn
+    BigKnn,
+    aws.s3,
+    devtools,
+    rms
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 6.0.1

@@ -34,11 +34,11 @@
 personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
 
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
 
   # parameter checking
@@ -70,7 +70,7 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   }
   
 
-  OhdsiRTools::logInfo(paste0("Creating a ",
+  ParallelLogger::logInfo(paste0("Creating a ",
                    test * 100,
                    "% test and ",
                    train * 100,
@@ -119,10 +119,10 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   split <- split[order(-split$rowId), ]
 
   foldSizesTrain <- utils::tail(table(split$index), nfold)
-  OhdsiRTools::logInfo(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
+  ParallelLogger::logInfo(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
     0), " train cases", " (", toString(foldSizesTrain), ")"))
   if (test+train<1)
-    OhdsiRTools::logInfo(paste0(sum(split$index == 0), " were not used for training or testing"))
+    ParallelLogger::logInfo(paste0(sum(split$index == 0), " were not used for training or testing"))
   
   # return index vector
   return(split)
@@ -155,11 +155,11 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
 #' @export
 timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
 
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
   
   # parameter checking
@@ -188,7 +188,7 @@ timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed =
                        date = dates[population$outcomeCount ==
     0])
 
-  OhdsiRTools::logInfo(paste0("Creating ",
+  ParallelLogger::logInfo(paste0("Creating ",
                    test * 100,
                    "% test and ",
                    train * 100,
@@ -220,10 +220,10 @@ timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed =
   split <- split[order(split$rowId), ]
 
   foldSizesTrain <- utils::tail(table(split$index), nfold)
-  OhdsiRTools::logInfo(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
+  ParallelLogger::logInfo(paste0("Data split into ", sum(split$index < 0), " test cases and ", sum(split$index >
     0), " train samples", " (", toString(foldSizesTrain), ")"))
   if (test+train<1)
-    OhdsiRTools::logInfo(paste0(sum(split$index == 0), " were not used for training or testing"))
+    ParallelLogger::logInfo(paste0(sum(split$index == 0), " were not used for training or testing"))
   # return index vector
   return(split)
 }

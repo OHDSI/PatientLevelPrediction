@@ -12,6 +12,10 @@ setSagemakerBinary(classifier = "xgboost", bucket, prefix = "data", roleArn,
 
 \item{bucket}{The s3 bucker string to save data for model training}
 
+\item{prefix}{The s3 subdirectory for the data}
+
+\item{roleArn}{The amazon roleArn}
+
 \item{otherparams}{Other parameters for training (currently not working)}
 
 \item{seed}{The seed for the training}

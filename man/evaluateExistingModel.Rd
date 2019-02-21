@@ -6,13 +6,15 @@
 \usage{
 evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
   type = "score", covariateSettings, customCovariates = NULL,
-  riskWindowStart = 1, addExposureDaysToEnd = F, riskWindowEnd = 365,
-  requireTimeAtRisk = T, minTimeAtRisk = 364, includeAllOutcomes = T,
-  removeSubjectsWithPriorOutcome = T, connectionDetails, cdmDatabaseSchema,
-  cohortDatabaseSchema, cohortTable, cohortId, outcomeDatabaseSchema,
-  outcomeTable, outcomeId, oracleTempSchema = cdmDatabaseSchema,
-  modelName = "existingModel", calibrationPopulation = NULL,
-  covariateSummary = T)
+  addExposureDaysToStart = F, riskWindowStart = 1,
+  addExposureDaysToEnd = F, riskWindowEnd = 365, requireTimeAtRisk = T,
+  minTimeAtRisk = 364, includeAllOutcomes = T,
+  removeSubjectsWithPriorOutcome = T, priorOutcomeLookback = 99999,
+  verbosity = "INFO", washoutPeriod = 0, firstExposureOnly = F,
+  binary = T, connectionDetails, cdmDatabaseSchema, cohortDatabaseSchema,
+  cohortTable, cohortId, outcomeDatabaseSchema, outcomeTable, outcomeId,
+  oracleTempSchema = cdmDatabaseSchema, modelName = "existingModel",
+  calibrationPopulation = NULL, covariateSummary = T, cdmVersion = 5)
 }
 \arguments{
 \item{modelTable}{The model covariates and scores}
@@ -27,9 +29,11 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 
 \item{customCovariates}{A table of covariateId, sql (sql creates the custom covariate)}
 
+\item{addExposureDaysToStart}{riskWindowStart relative to the cohort end date instead of the cohort start date?}
+
 \item{riskWindowStart}{The day after index to start predicting the outcome}
 
-\item{addExposureDaysToEnd}{riskWindomEnd relative to the cohort end date instead of the cohort start date?}
+\item{addExposureDaysToEnd}{riskWindowEnd relative to the cohort end date instead of the cohort start date?}
 
 \item{riskWindowEnd}{The day after index to stop predicting the outcome}
 
@@ -40,6 +44,16 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 \item{includeAllOutcomes}{Setting this to TRUE means people with the outcome who leave the data during the risk period are still included, so only non-outcome people who leave during the risk period are removed}
 
 \item{removeSubjectsWithPriorOutcome}{Remove people from the target population if they have the outcome prior to target cohort start date}
+
+\item{priorOutcomeLookback}{Lookback for removeSubjectsWithPriorOutcome}
+
+\item{verbosity}{The study population creation verbosity}
+
+\item{washoutPeriod}{Remove patients from the population with less than washoutPeriod of days prior observation}
+
+\item{firstExposureOnly}{If patients are in the target population multiple times, use only the first date}
+
+\item{binary}{Binary classificsation (T or F)}
 
 \item{connectionDetails}{The details to connect to the CDM}
 
@@ -64,6 +78,8 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 \item{calibrationPopulation}{A data.frame of subjectId, cohortStartDate, indexes used to recalibrate the model on new data}
 
 \item{covariateSummary}{Whether to calculate the covariateSummary}
+
+\item{cdmVersion}{The CDM version being used}
 }
 \value{
 The performance of the existing model and prediction

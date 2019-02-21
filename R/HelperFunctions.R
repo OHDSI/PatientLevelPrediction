@@ -11,11 +11,11 @@ ensure_installed <- function(pkg) {
     msg <- paste0(sQuote(pkg), " must be installed for this functionality.")
     if (interactive()) {
       message(msg, "\nWould you like to install it?")
-      if (menu(c("Yes", "No")) == 1) {
+      if (utils::menu(c("Yes", "No")) == 1) {
         if(pkg%in%c('BigKnn')){
           devtools::install_github(paste0('OHDSI/',pkg))
         }else{
-          install.packages(pkg)
+          utils::install.packages(pkg)
         }
       } else {
         stop(msg, call. = FALSE)
@@ -312,12 +312,12 @@ interpretInstallCode <- function(response){
 
 
 clearLoggerType <- function(type='PLP log'){
-  logs <- OhdsiRTools::getLoggers()
+  logs <- ParallelLogger::getLoggers()
   logNames <- unlist(lapply(logs, function(x) x$name))
   ind <- which(logNames==type)
   
   for(i in ind){
-    OhdsiRTools::unregisterLogger(logNames[i])
+    ParallelLogger::unregisterLogger(logNames[i])
   }
   
   return(NULL)
@@ -332,6 +332,14 @@ createTempModelLoc <- function(){
   }
 }
 
+#' join two lists
+#'
+#' @details
+#' This function joins two lists
+#' @param a   A list 
+#' @param b   Another list
+#'
+#' @export
 listAppend <- function(a, b){
   size <- length(a) + length(b)
   x <- list()
@@ -373,11 +381,11 @@ configurePython <- function(envname='PLP', envtype=NULL){
     if(envname%in%pEnvironments$name){
       warning(paste0('Conda environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
-      OhdsiRTools::logInfo(paste0('Creating virtual conda environment called ', envname))
+      ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
       location <- reticulate::conda_create(envname=envname, packages = "python", conda = "auto")
     }
     packages <- c('numpy', 'scikit-learn','scipy', 'pandas','pydotplus','keras')
-    OhdsiRTools::logInfo(paste0('Adding python dependancies to ', envname))
+    ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))
     reticulate::conda_install(envname=envname, packages = packages, forge = TRUE, pip = FALSE,
                               pip_ignore_installed = TRUE, conda = "auto")
   } else {
@@ -385,11 +393,11 @@ configurePython <- function(envname='PLP', envtype=NULL){
     if(envname%in%pEnvironments$name){
       warning(paste0('Python environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
-      OhdsiRTools::logInfo(paste0('Creating virtual python environment called ', envname))
+      ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))
       location <- reticulate::virtualenv_create(envname=envname, packages = "python")
     }
     packages <- c('numpy', 'scikit-learn','scipy', 'pandas','pydotplus','keras')
-    OhdsiRTools::logInfo(paste0('Adding python dependancies to ', envname))
+    ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))
     reticulate::virtualenv_install(envname=envname, packages = packages, forge = TRUE, pip = TRUE,
                               pip_ignore_installed = TRUE)
   }
@@ -465,7 +473,7 @@ checkPython <- function(){
 
 initiatePython <- function(){
   if(!PythonInR::pyIsConnected()){ 
-    OhdsiRTools::logTrace('Connecting to python')
+    ParallelLogger::logTrace('Connecting to python')
     PythonInR::pyConnect()
   }
   if ( !PythonInR::pyIsConnected() ){

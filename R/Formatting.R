@@ -44,16 +44,16 @@
 #' @export
 toSparseM <- function(plpData,population, map=NULL, temporal=F){
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
   }
   
-  OhdsiRTools::logDebug(paste0('covariates nrow: ', nrow(plpData$covariates)))
+  ParallelLogger::logDebug(paste0('covariates nrow: ', nrow(plpData$covariates)))
   cov <- plpData$covariates #ff::clone(plpData$covariates)
-  OhdsiRTools::logDebug(paste0('covariateRef nrow: ', nrow(plpData$covariateRef)))
+  ParallelLogger::logDebug(paste0('covariateRef nrow: ', nrow(plpData$covariateRef)))
   covref <- plpData$covariateRef#ff::clone(plpData$covariateRef)
 
   plpData.mapped <- MapCovariates(covariates=cov, covariateRef=ff::clone(covref),
@@ -70,11 +70,11 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
     plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  OhdsiRTools::logDebug(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
+  ParallelLogger::logDebug(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
 
     #convert into sparseM
-  OhdsiRTools::logDebug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
-  OhdsiRTools::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  ParallelLogger::logDebug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
+  ParallelLogger::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
 
   # chunk then add
   if(!temporal){
@@ -83,7 +83,7 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
                                x=0,
                                dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
   for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
-    OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+    ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
     temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
                                           j=ff::as.ram(plpData.mapped$covariates$covariateId[ind]),
                                           x=ff::as.ram(plpData.mapped$covariates$covariateValue[ind]),
@@ -92,8 +92,8 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     data <- data+ temp
   }
   } else {
-    OhdsiRTools::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
-    OhdsiRTools::logTrace(paste0('Max time:', max(plpData$timeRef$timeId)))
+    ParallelLogger::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
+    ParallelLogger::logTrace(paste0('Max time:', max(plpData$timeRef$timeId)))
     for(i in min(plpData$timeRef$timeId):max(plpData$timeRef$timeId)){
       
       if(sum(plpData.mapped$covariates$timeId==i)!=0){
@@ -122,7 +122,7 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
       
         plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
         for (ind in bit::chunk(plpData.mapped$temp_covariates$covariateId)) {
-          OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+          ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
           temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$temp_covariates$rowId[ind]),
                                                 j=ff::as.ram(plpData.mapped$temp_covariates$covariateId[ind]),
                                                 x=ff::as.ram(plpData.mapped$temp_covariates$covariateValue[ind]),
@@ -150,7 +150,7 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     data <- result_array
   }
   
-  OhdsiRTools::logDebug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
+  ParallelLogger::logDebug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
 
   result <- list(data=data,
                  covariateRef=plpData.mapped$covariateRef,
@@ -163,19 +163,19 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
 MapCovariates <- function(covariates, covariateRef, population, map){
 
   # restrict to population for speed
-  OhdsiRTools::logTrace('restricting to population for speed...')
+  ParallelLogger::logTrace('restricting to population for speed...')
   idx <- ffbase::ffmatch(x = covariates$rowId, table = ff::as.ff(population$rowId))
   idx <- ffbase::ffwhich(idx, !is.na(idx))
   covariates <- covariates[idx, ]
 
-  OhdsiRTools::logTrace('Now converting covariateId...')
+  ParallelLogger::logTrace('Now converting covariateId...')
   oldIds <- as.double(ff::as.ram(covariateRef$covariateId))
   newIds <- 1:nrow(covariateRef)
 
   if(!is.null(map)){
-    OhdsiRTools::logTrace('restricting to model variables...')
-    OhdsiRTools::logTrace(paste0('oldIds: ',length(map[,'oldIds'])))
-    OhdsiRTools::logTrace(paste0('newIds:', max(as.double(map[,'newIds']))))
+    ParallelLogger::logTrace('restricting to model variables...')
+    ParallelLogger::logTrace(paste0('oldIds: ',length(map[,'oldIds'])))
+    ParallelLogger::logTrace(paste0('newIds:', max(as.double(map[,'newIds']))))
     ind <- ffbase::ffmatch(x=covariateRef$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
     ind <- ffbase::ffwhich(ind, !is.na(ind))
     covariateRef <- covariateRef[ind,]
@@ -222,11 +222,11 @@ MapCovariates <- function(covariates, covariateRef, population, map){
 #' @export
 toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = 'layoutTimestamp')))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
+    ParallelLogger::registerLogger(logger)
   }
   
   # test python is available and the required dependancies are there:
@@ -255,14 +255,14 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
     ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
     plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  OhdsiRTools::logTrace(paste0('Converting data into python sparse matrix...'))
+  ParallelLogger::logTrace(paste0('Converting data into python sparse matrix...'))
 
   #convert into sparseM
-  OhdsiRTools::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
-  OhdsiRTools::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  ParallelLogger::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
+  ParallelLogger::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
 
   if(temporal){
-    OhdsiRTools::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
+    ParallelLogger::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
   }
   
   # chunk then add
@@ -281,7 +281,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
   PythonInR::pyExec("plpData = coo_matrix((np.array([0]), (np.array([0]), np.array([0]) )), shape=(xmax, ymax))")
   ##for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
   for (ind in bit::chunk(plpData.mapped$covariates)) {
-    OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+    ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
     # then load in the three vectors based on ram limits and add to the current matrix
     ## old slower code =====
     ##PythonInR::pySet('data', as.matrix(ff::as.ram(plpData.mapped$covariates$covariateValue[ind])))
@@ -293,8 +293,8 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
     PythonInR::pyExec("tempData = coo_matrix((dataall[:,2], (dataall[:,0]-1, dataall[:,1]-1)), shape=(xmax, ymax))")
     PythonInR::pyExec("plpData = plpData+tempData")
   }
-  OhdsiRTools::logTrace(paste0('Sparse python matrix done '))
-  OhdsiRTools::logDebug(PythonInR::pyExec("print('dataset has %s rows and %s columns' %(plpData.shape[0],plpData.shape[1]))"))
+  ParallelLogger::logTrace(paste0('Sparse python matrix done '))
+  ParallelLogger::logDebug(PythonInR::pyExec("print('dataset has %s rows and %s columns' %(plpData.shape[0],plpData.shape[1]))"))
   } else{
     # do the sparse tensor in tensorflow
     # initiate empty sparsetensor:
@@ -302,7 +302,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
                   values=np.float64([0]), dense_shape=[xmax, ymax, tmax])")
     
     for (ind in bit::chunk(plpData.mapped$covariates)) {
-      OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+      ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
       # subtract 1 as python index starts at 0:
       PythonInR::pySet('datas', as.matrix(ff::as.ram(plpData.mapped$covariates[ind,c('rowId','covariateId','timeId', 'covariateValue')])))
       PythonInR::pyExec("indexes= tf.convert_to_tensor(datas[:,0:3]-1, dtype=tf.int64)")
@@ -312,7 +312,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
       PythonInR::pyExec("plpData = tf.sparse_add(plpData, tempData)")
     }
    
-    OhdsiRTools::logTrace(paste0('Sparse python tensor converted'))                            
+    ParallelLogger::logTrace(paste0('Sparse python tensor converted'))                            
   }
   result <- list(data='plpData',
                  covariateRef=plpData.mapped$covariateRef,
@@ -350,11 +350,11 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
 #' @export
 toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = 'layoutTimestamp')))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
+    ParallelLogger::registerLogger(logger)
   }
   
   # test python is available and the required dependancies are there:
@@ -383,14 +383,14 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
     ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
     plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  OhdsiRTools::logTrace(paste0('Converting data into python sparse matrix...'))
+  ParallelLogger::logTrace(paste0('Converting data into python sparse matrix...'))
   
   #convert into sparseM
-  OhdsiRTools::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
-  OhdsiRTools::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  ParallelLogger::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
+  ParallelLogger::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
   
   if(temporal){
-    OhdsiRTools::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
+    ParallelLogger::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
   }
   
   # chunk then add
@@ -409,7 +409,7 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
     PythonInR::pyExec("plpData = torch.sparse.FloatTensor(xmax, ymax, tmax)")
     PythonInR::pyExec("sz = torch.Size([xmax, ymax, tmax])")
     for (ind in bit::chunk(plpData.mapped$covariates)) {
-      OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+      ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
       # subtract 1 as python index starts at 0:
       PythonInR::pySet('datas', as.matrix(ff::as.ram(plpData.mapped$covariates[ind,c('rowId','covariateId','timeId', 'covariateValue')])))
       #PythonInR::pyExec("indexes= tf.convert_to_tensor(datas[:,0:3]-1, dtype=tf.int64)")
@@ -421,7 +421,7 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
       PythonInR::pyExec("plpData = plpData.add(tempData)")
     }
     
-    OhdsiRTools::logTrace(paste0('Sparse python tensor converted'))                            
+    ParallelLogger::logTrace(paste0('Sparse python tensor converted'))                            
 
   result <- list(data='plpData',
                  covariateRef=plpData.mapped$covariateRef,
@@ -459,11 +459,11 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
 #' @export
 toSparseTorchPython2 <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = 'layoutTimestamp')))
-    OhdsiRTools::registerLogger(logger)
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
+    ParallelLogger::registerLogger(logger)
   }
   
   # test python is available and the required dependancies are there:
@@ -484,15 +484,15 @@ toSparseTorchPython2 <- function(plpData,population, map=NULL, temporal=F, pytho
     ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
     plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
   }
-  OhdsiRTools::logTrace(paste0('Converting data into python sparse matrix...'))
+  ParallelLogger::logTrace(paste0('Converting data into python sparse matrix...'))
   
   #convert into sparseM
-  OhdsiRTools::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
-  OhdsiRTools::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  ParallelLogger::logDebug(paste0('# cols: ', as.double(max(plpData.mapped$map$newIds)))) #nrow(plpData.mapped$covariateRef)))
+  ParallelLogger::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
   
   maxT <- NULL
   if(temporal){
-    OhdsiRTools::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
+    ParallelLogger::logDebug(paste0('Max timeId: ', ffbase::max.ff(plpData.mapped$covariates$timeId)))
     maxT <- as.integer(ffbase::max.ff(plpData.mapped$covariates$timeId))
   }
   
@@ -529,7 +529,7 @@ toSparseTorchPython2 <- function(plpData,population, map=NULL, temporal=F, pytho
   }
   
   for (ind in bit::chunk(plpData.mapped$covariates)) {
-    OhdsiRTools::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
+    ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
     # subtract 1 as python index starts at 0:
     if(temporal==T){
       result <- map_python(matrix = result, 
@@ -547,7 +547,7 @@ toSparseTorchPython2 <- function(plpData,population, map=NULL, temporal=F, pytho
     
   }
   
-  OhdsiRTools::logTrace(paste0('Sparse python tensor converted'))                            
+  ParallelLogger::logTrace(paste0('Sparse python tensor converted'))                            
   
   result <- list(data=result,
                  covariateRef=plpData.mapped$covariateRef,

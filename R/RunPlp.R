@@ -38,11 +38,17 @@
 #' @param normalizeData                    Whether to normalise the covariates before training (Default: TRUE)      
 #' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
-#'                                         \item{logisticRegressionModel()}{ A lasso logistic regression model}
-#'                                         \item{GBMclassifier()}{ A gradient boosting machine}
-#'                                         \item{RFclassifier()}{ A random forest model}
-#'                                         \item{GLMclassifier ()}{ A generalised linear model}
-#'                                         \item{KNNclassifier()}{ A KNN model}
+#'                                         \item{setLassoLogisticRegression()}{ A lasso logistic regression model}
+#'                                         \item{setGradientBoostingMachine()}{ A gradient boosting machine}
+#'                                         \item{setAdaBoost()}{ An ada boost model}
+#'                                         \item{setRandomForest()}{ A random forest model}
+#'                                         \item{setDecisionTree()}{ A decision tree model}
+#'                                         \item{setCovNN())}{ A convolutional neural network model}
+#'                                         \item{setCIReNN()}{ A recurrent neural network model}
+#'                                         \item{setMLP()}{ A neural network model}
+#'                                         \item{setDeepNN()}{ A deep neural network model}
+#'                                         \item{setKNN()}{ A KNN model}
+#'                                         
 #'                                         }
 #' @param testSplit                        Either 'person' or 'time' specifying the type of evaluation used.
 #'                                         'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
@@ -176,71 +182,71 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   # write log to both console and file (tee). 
   # note other appenders can be created, e.g., to webservice or database!
   clearLoggerType("PLP Log")
-  logger <- OhdsiRTools::createLogger(name = "PLP Log",
+  logger <- ParallelLogger::createLogger(name = "PLP Log",
                                       threshold = verbosity,
-                                      appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutParallel,
+                                      appenders = list(ParallelLogger::createFileAppender(layout = ParallelLogger::layoutParallel,
                                                                           fileName = logFileName)))
-  OhdsiRTools::registerLogger(logger)
+  ParallelLogger::registerLogger(logger)
   
-  OhdsiRTools::logInfo(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
+  ParallelLogger::logInfo(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
   
   # get ids
   cohortId <- attr(population, "metaData")$cohortId
   outcomeId <- attr(population, "metaData")$outcomeId
   
   # add header to analysis log
-  OhdsiRTools::logInfo(sprintf('%-20s%s', 'AnalysisID: ',analysisId))
-  OhdsiRTools::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
-  OhdsiRTools::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
-  OhdsiRTools::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
-  OhdsiRTools::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
-  OhdsiRTools::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
-  OhdsiRTools::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'AnalysisID: ',analysisId))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))
   
   # check parameters
-  OhdsiRTools::logTrace('Parameter Check Started')
-  OhdsiRTools::logDebug(paste0('testSplit: ', testSplit))
+  ParallelLogger::logTrace('Parameter Check Started')
+  ParallelLogger::logDebug(paste0('testSplit: ', testSplit))
   checkInStringVector(testSplit, c('person','time'))
-  OhdsiRTools::logDebug(paste0('outcomeCount: ', sum(population[,'outcomeCount']>0)))
+  ParallelLogger::logDebug(paste0('outcomeCount: ', sum(population[,'outcomeCount']>0)))
   checkHigherEqual(sum(population[,'outcomeCount']>0), 25)
-  OhdsiRTools::logDebug(paste0('plpData class: ', class(plpData)))
+  ParallelLogger::logDebug(paste0('plpData class: ', class(plpData)))
   checkIsClass(plpData, c('plpData'))
-  OhdsiRTools::logDebug(paste0('testfraction: ', testFraction))
+  ParallelLogger::logDebug(paste0('testfraction: ', testFraction))
   checkIsClass(testFraction, c('numeric','integer'))
   checkHigher(testFraction,0)
   checkHigher(-1*testFraction,-1)
-  OhdsiRTools::logDebug(paste0('nfold class: ', class(nfold)))
-  OhdsiRTools::logDebug(paste0('nfold: ', nfold))
+  ParallelLogger::logDebug(paste0('nfold class: ', class(nfold)))
+  ParallelLogger::logDebug(paste0('nfold: ', nfold))
   checkIsClass(nfold, c('numeric','integer'))
   checkHigher(nfold, 0)
   
   # if savePlpData
   if(savePlpData){
-    OhdsiRTools::logInfo(sprintf('%-20s%s', 'Saving plpData to ', file.path(analysisPath,'plpData')))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Saving plpData to ', file.path(analysisPath,'plpData')))
     savePlpData(plpData, file.path(analysisPath,'plpData'))
   }
 
   # construct the settings for the model pipeline
   if(is.null(indexes)){
     if(testSplit=='time'){
-      OhdsiRTools::logTrace('Dataset time split starter')
+      ParallelLogger::logTrace('Dataset time split starter')
       indexes <-tryCatch(timeSplitter(population, test=testFraction, train = trainFraction, nfold=nfold),
-                     finally=OhdsiRTools::logTrace('Done.'))
+                     finally=ParallelLogger::logTrace('Done.'))
     }
     if(testSplit=='person'){
-      OhdsiRTools::logTrace('Dataset person split starter')
+      ParallelLogger::logTrace('Dataset person split starter')
       if(is.null(splitSeed)){ #keep record of splitSeed
         splitSeed <- sample(20000000,1)-10000000
-        OhdsiRTools::logInfo(paste0('splitSeed: ', splitSeed))
+        ParallelLogger::logInfo(paste0('splitSeed: ', splitSeed))
         } 
       indexes <- tryCatch(personSplitter(population, test=testFraction, train = trainFraction, nfold=nfold, seed=splitSeed),
-                      finally= OhdsiRTools::logTrace('Done.')
+                      finally= ParallelLogger::logTrace('Done.')
       )
     }
   }
   
   if(nrow(population)!=nrow(indexes)){
-    OhdsiRTools::logError(sprintf('Population dimension not compatible with indexes: %d <-> %d', nrow(population), nrow(indexes)))
+    ParallelLogger::logError(sprintf('Population dimension not compatible with indexes: %d <-> %d', nrow(population), nrow(indexes)))
     stop('Population dimension not compatible with indexes')
   }
   
@@ -257,10 +263,10 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                    cohortId=cohortId,
                    outcomeId=outcomeId)
   
-  OhdsiRTools::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
+  ParallelLogger::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
   # the call is sinked because of the external calls (Python etc)
   if (sink.number()>0){
-    OhdsiRTools::logWarn(paste0('sink had ',sink.number(),' connections open!'))
+    ParallelLogger::logWarn(paste0('sink had ',sink.number(),' connections open!'))
   }
   #sink(logFileName, append = TRUE, split = TRUE)
   
@@ -268,7 +274,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                 error = function(e) {
                   stop(paste0(e))},
                 finally = {
-                  OhdsiRTools::logTrace('Done.')})
+                  ParallelLogger::logTrace('Done.')})
   model$analysisId <- analysisId # adding this so we can link validation to models
   
   # get train prediction and remove it from model
@@ -279,55 +285,55 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   populationTest <- population[population$indexes<0,]
   attr(populationTest, 'metaData') <- attr(population, 'metaData')
   # calculate metrics
-  OhdsiRTools::logTrace('Prediction')
+  ParallelLogger::logTrace('Prediction')
   predictionTest <- tryCatch(predictPlp(plpModel = model, 
                                     population = populationTest, #population, 
                                     plpData = plpData, 
                                     index = NULL), 
-                     finally = OhdsiRTools::logTrace('Done.'))
+                     finally = ParallelLogger::logTrace('Done.'))
   
   prediction <- rbind(predictionTest, predictionTrain[,colnames(predictionTest)])
   
-  OhdsiRTools::logDebug(paste0('prediction null: ', is.null(prediction)))
-  OhdsiRTools::logDebug(paste0('prediction unique values: ', length(unique(prediction$value))))
+  ParallelLogger::logDebug(paste0('prediction null: ', is.null(prediction)))
+  ParallelLogger::logDebug(paste0('prediction unique values: ', length(unique(prediction$value))))
   if(ifelse(is.null(prediction), FALSE, length(unique(prediction$value))>1)){
     
     # add analysisID
     attr(prediction, "metaData")$analysisId <- analysisId
     
-    OhdsiRTools::logInfo('Train set evaluation')
+    ParallelLogger::logInfo('Train set evaluation')
     performance.train <- evaluatePlp(prediction[prediction$indexes>0,], plpData)
-    OhdsiRTools::logTrace('Done.')
-    OhdsiRTools::logInfo('Test set evaluation')
+    ParallelLogger::logTrace('Done.')
+    ParallelLogger::logInfo('Test set evaluation')
     performance.test <- evaluatePlp(prediction[prediction$indexes<0,], plpData)
-    OhdsiRTools::logTrace('Done.')
+    ParallelLogger::logTrace('Done.')
     
     # now combine the test and train data and add analysisId
     performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
     
     if(saveEvaluation){
-      OhdsiRTools::logTrace('Saving evaluation csv files')
+      ParallelLogger::logTrace('Saving evaluation csv files')
       if(!dir.exists( file.path(analysisPath, 'evaluation') ))
         dir.create(file.path(analysisPath, 'evaluation'))
       tryCatch(utils::write.csv(performance$evaluationStatistics, file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'), row.names=F ),
-           finally= OhdsiRTools::logTrace('Saved EvaluationStatistics.')
+           finally= ParallelLogger::logTrace('Saved EvaluationStatistics.')
       )
       tryCatch(utils::write.csv(performance$thresholdSummary, file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'), row.names=F ),
-           finally= OhdsiRTools::logTrace('Saved ThresholdSummary.')
+           finally= ParallelLogger::logTrace('Saved ThresholdSummary.')
       )
       tryCatch(utils::write.csv(performance$demographicSummary, file.path(analysisPath, 'evaluation', 'demographicSummary.csv'), row.names=F),
-           finally= OhdsiRTools::logTrace('Saved DemographicSummary.')
+           finally= ParallelLogger::logTrace('Saved DemographicSummary.')
       )
       tryCatch(utils::write.csv(performance$calibrationSummary, file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'), row.names=F),
-           finally= OhdsiRTools::logTrace('Saved CalibrationSummary.')
+           finally= ParallelLogger::logTrace('Saved CalibrationSummary.')
       )
       tryCatch(utils::write.csv(performance$predictionDistribution, file.path(analysisPath, 'evaluation', 'predictionDistribution.csv'), row.names=F),
-           finally= OhdsiRTools::logTrace('Saved PredictionDistribution.')
+           finally= ParallelLogger::logTrace('Saved PredictionDistribution.')
       )
     }
     
   }else{
-    OhdsiRTools::logWarn(paste0('Evaluation not possible as prediciton NULL or all the same values'))
+    ParallelLogger::logWarn(paste0('Evaluation not possible as prediciton NULL or all the same values'))
     performance.test <- NULL
     performance.train <- NULL
     performance <- NULL
@@ -359,8 +365,8 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                            #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )
   
-  OhdsiRTools::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
-  OhdsiRTools::logInfo('This can take a while...')
+  ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
+  ParallelLogger::logInfo('This can take a while...')
   covSummary <- covariateSummary(plpData, population)
   if(exists("model")){
     if(!is.null(model$varImp)){
@@ -376,14 +382,14 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
   covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
   if(saveEvaluation){
-    OhdsiRTools::logTrace('Saving covariate summary as csv')
+    ParallelLogger::logTrace('Saving covariate summary as csv')
     if(!dir.exists( file.path(analysisPath, 'evaluation') ))
       dir.create(file.path(analysisPath, 'evaluation'))
     tryCatch(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
-         finally= OhdsiRTools::logTrace('Saved covariate summary.')
+         finally= ParallelLogger::logTrace('Saved covariate summary.')
     )
     }
-  OhdsiRTools::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
+  ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
   
   results <- list(inputSetting=inputSetting,
                   executionSummary=executionSummary,
@@ -403,42 +409,25 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
   # save the results
   if(savePlpResult){
-    OhdsiRTools::logInfo(paste0('Saving PlpResult'))
+    ParallelLogger::logInfo(paste0('Saving PlpResult'))
     tryCatch(savePlpResult(results, file.path(analysisPath,'plpResult')),
-             finally= OhdsiRTools::logTrace('Done.'))
-    OhdsiRTools::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
+             finally= ParallelLogger::logTrace('Done.'))
+    ParallelLogger::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
     
-    #update the python saved location
-    if(attr(results$model, 'type')=='python'){
-      results$model$model <- file.path(analysisPath,'plpResult','model','python_model')
-      results$model$predict <- createTransform(results$model)
-    }
-    
-    if(attr(results$model, 'type')=='sagemaker'){
-      results$model$model$loc <- file.path(analysisPath,'plpResult','model','sagemaker_model')
-      results$model$predict <- createTransform(results$model)
-    }
-    
-    # update knn and keras?
-    if(attr(results$model, 'type')=='knn'){
-      results$model$model <- file.path(analysisPath,'plpResult','model','knn_model')
-      results$model$predict <- createTransform(results$model)
-    }
-    if(attr(results$model, 'type')=='deep'){
-      results$models$model <- file.path(analysisPath,'plpResult','model','keras_model')
-      results$models$predict <- createTransform(results$model)
-    }
+    # update from temp location to saved location
+    results$model <- updateModelLocation(results$model, file.path(analysisPath,'plpResult'))
   }
   
-  OhdsiRTools::logInfo(paste0('Log saved to ',logFileName))  
-  OhdsiRTools::logInfo("Run finished successfully.")
+  
+  ParallelLogger::logInfo(paste0('Log saved to ',logFileName))  
+  ParallelLogger::logInfo("Run finished successfully.")
   
   # stop logger
-  OhdsiRTools::clearLoggers()
-  logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  ParallelLogger::clearLoggers()
+  logger <- ParallelLogger::createLogger(name = "SIMPLE",
                          threshold = "INFO",
-                         appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-  OhdsiRTools::registerLogger(logger)
+                         appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+  ParallelLogger::registerLogger(logger)
   
   return(results)
   

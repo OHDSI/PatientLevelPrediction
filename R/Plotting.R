@@ -26,6 +26,7 @@
 #' @param filename              Name of the file where the plot should be saved, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
+#' @param type                  Evaluation data type either 'test', 'val' or 'train'                            
 #'
 #' @return
 #' TRUE if it ran 
@@ -602,7 +603,7 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
 #' @param fileName   Name of the file where the plot should be saved, for example 'plot.png'. See the
 #'                   function \code{ggsave} in the ggplot2 package for supported file formats.
 #' @return
-#' A cowplot object. Use the \code{\link{save_plot()}} function to save to file in a different format.
+#' A cowplot object. Use the \code{cowplot::save_plot} function to save to file in a different format.
 #'
 #' @export
 
@@ -672,7 +673,7 @@ plotSmoothCalibration <- function(result,
     # limits for zoom functionality
     if (zoom == "data") {
       # xlim <- c(min(smoothData$p), max(smoothData$p))
-      fit <- loess(y ~ p, degree = 2)
+      fit <- stats::loess(y ~ p, degree = 2)
       maxes <- max(max(smoothData$p), max(fit$fitted))
       xlim <- c(0, maxes)
       ylim <- c(0, maxes)
@@ -737,7 +738,7 @@ plotSmoothCalibration <- function(result,
 
     # create the rcs mapping
     xRange <- seq(0, p[length(p)], length.out = 1000)
-    pred <- predict(smoothFit, xRange, se.fit = T, type = "lp")
+    pred <- stats::predict(smoothFit, xRange, se.fit = T, type = "lp")
     predXRange <- expit(pred$linear.predictors)
 
     # construct the zoom limits
