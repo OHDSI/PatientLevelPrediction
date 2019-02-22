@@ -99,7 +99,7 @@ createStudyPopulation <- function(plpData,
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = verbosity,
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   

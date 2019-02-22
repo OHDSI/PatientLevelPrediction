@@ -48,7 +48,7 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                            threshold = "INFO",
                            appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # apply the feature transformations

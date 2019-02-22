@@ -46,7 +46,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # check plpData is coo format:

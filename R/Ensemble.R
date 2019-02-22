@@ -91,7 +91,7 @@ runEnsembleModel <- function(population,
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = verbosity,
                                         appenders = list(ParallelLogger::createFileAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   trainFraction <- NULL
   if (ensembleStrategy == "stacked") {

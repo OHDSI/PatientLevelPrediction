@@ -130,7 +130,7 @@ createLearningCurve <- function(population,
                                         fileName = logPath)
       )
     )
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # number of training set fractions

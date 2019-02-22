@@ -180,7 +180,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                                       threshold = verbosity,
                                       appenders = list(ParallelLogger::createFileAppender(layout = OhdsiRTools::layoutParallel,
                                                                           fileName = logFileName)))
-  OhdsiRTools::registerLogger(logger)
+  ParallelLogger::registerLogger(logger)
   
   ParallelLogger::logInfo(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
   
@@ -433,7 +433,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   logger <- ParallelLogger::createLogger(name = "SIMPLE",
                          threshold = "INFO",
                          appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-  OhdsiRTools::registerLogger(logger)
+  ParallelLogger::registerLogger(logger)
   
   return(results)
   

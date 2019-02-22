@@ -38,7 +38,7 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
 
   # parameter checking
@@ -159,7 +159,7 @@ timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed =
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # parameter checking

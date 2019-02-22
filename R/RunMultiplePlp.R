@@ -106,7 +106,7 @@ runPlpAnalyses <- function(connectionDetails,
                                       threshold = verbosity,
                                       appenders = list(ParallelLogger::createFileAppender(layout = OhdsiRTools::layoutParallel,
                                                                                        fileName = logFileName)))
-  OhdsiRTools::registerLogger(logger)
+  ParallelLogger::registerLogger(logger)
   
   if (missing(outcomeIds)){
     stop("Need to specify outcome ids")
@@ -532,7 +532,7 @@ evaluateMultiplePlp <- function(analysesLocation,
                                       threshold = verbosity,
                                       appenders = list(ParallelLogger::createFileAppender(layout = OhdsiRTools::layoutParallel,
                                                                                        fileName = logFileName)))
-  OhdsiRTools::registerLogger(logger)
+  ParallelLogger::registerLogger(logger)
   
   if(missing(databaseNames)){
     stop('Need to put a shareable name/s for the database/s')

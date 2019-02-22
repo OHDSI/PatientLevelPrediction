@@ -48,7 +48,7 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   ParallelLogger::logDebug(paste0('covariates nrow: ', nrow(plpData$covariates)))
@@ -226,7 +226,7 @@ toSparsePython <- function(plpData,population, map=NULL, temporal=F, pythonExePa
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # test python is available and the required dependancies are there:
@@ -354,7 +354,7 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # test python is available and the required dependancies are there:
@@ -463,7 +463,7 @@ toSparseTorchPython2 <- function(plpData,population, map=NULL, temporal=F, pytho
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # test python is available and the required dependancies are there:

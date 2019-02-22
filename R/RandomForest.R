@@ -71,7 +71,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
                                         appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
-    OhdsiRTools::registerLogger(logger)
+    ParallelLogger::registerLogger(logger)
   }
   
   # check plpData is libsvm format:
