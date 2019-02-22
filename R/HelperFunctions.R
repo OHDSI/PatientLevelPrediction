@@ -458,32 +458,3 @@ getOs <- function(){
   tolower(os)
 }
 
-
-# OLD PYTHONINR CODE  ############### 
-checkPython <- function(){
-  if ( !PythonInR::pyIsConnected() ){
-    python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    
-    if(is.null(python.test$pythonExePath))
-      stop('You need to install python for this method - please see ...')
-  }
-  return(NULL)
-}
-
-
-initiatePython <- function(){
-  if(!PythonInR::pyIsConnected()){ 
-    ParallelLogger::logTrace('Connecting to python')
-    PythonInR::pyConnect()
-  }
-  if ( !PythonInR::pyIsConnected() ){
-    stop('Python not connecting error')
-  }
-  
-  # then set numpy options
-  PythonInR::pyOptions("numpyAlias", "np")
-  PythonInR::pyOptions("useNumpy", TRUE)
-  PythonInR::pyImport("numpy", as='np')
-  return(NULL) 
-}
-########

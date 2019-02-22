@@ -103,7 +103,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
   
 }
 
-predict.python2 <- function(plpModel, population, plpData){
+predict.pythonReticulate <- function(plpModel, population, plpData){
   
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
@@ -213,7 +213,9 @@ predict.pythonAuto <- function(plpModel, population, plpData){
   return(prediction)
 }
 
-predict.python <- function(plpModel, population, plpData){
+predict.pythonOld <- function(plpModel, population, plpData){
+  
+  # require pythonInR
   
   # connect to python if not connected
   initiatePython()

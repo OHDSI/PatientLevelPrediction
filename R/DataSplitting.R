@@ -62,7 +62,7 @@ personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   }
 
   if (length(table(population$outcomeCount)) <= 1 | sum(population$outcomeCount > 0) < 10) {
-    stop("nfold must be an integer 1 or greater")
+    stop("Outcome only occurs in fewer than 10 people or only one class")
   }
 
   if (floor(sum(population$outcomeCount > 0) * test/nfold) == 0) {

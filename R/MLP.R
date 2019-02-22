@@ -32,39 +32,25 @@ setMLP <- function(size=4, alpha=0.00001, seed=NULL){
     stop('Invalid seed')
   if(!class(size) %in% c("numeric", "integer"))
     stop('size must be a numeric value >0 ')
-  if(size < 1)
+  if(min(size) < 1)
     stop('size must be greater that 0')
   if(!class(alpha) %in% c("numeric", "integer"))
     stop('alpha must be a numeric value >0')
-  if(alpha <= 0)
+  if(min(alpha) <= 0)
     stop('alpha must be greater that 0')
   
   # test python is available and the required dependancies are there:
-  checkPython()
+  ##checkPython()
   
-  # test to make sure you have the version required for MLP
-  if ( !PythonInR::pyIsConnected() || .Platform$OS.type=="unix"){ 
-    PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')}
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
-  PythonInR::pyExec("import sklearn")
-  PythonInR::pyExec("ver = sklearn.__version__")
-  version <- PythonInR::pyGet("ver")
-  if(length(version)==0)
-    stop(paste0('You need sklearn for MLP - please add'))
-  if (version < '0.18.2')
-    stop(paste0('You need sklearn version 0.18.2 or greater for MLP - please update by',
-                ' typing: "conda update scikit-learn" into windows command prompt (make sure to restart R afterwards)'))
+  # set seed
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
   
   result <- list(model='fitMLP', 
                  param= split(expand.grid(size=size, 
                                           alpha=alpha,
-                                          seed=ifelse(is.null(seed),'NULL', seed)),
+                                          seed=seed[1]),
                               1:(length(size)*length(alpha))  ),
                  name='Neural network')
   class(result) <- 'modelSettings' 
@@ -85,46 +71,50 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  initiatePython()
+  ##initiatePython()
   
   start <- Sys.time()
   
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-  PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
+  pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
   
   # convert plpData in coo to python:
-  x <- toSparsePython(plpData,population, map=NULL)
+  x <- toSparseM(plpData,population, map=NULL)
+  pydata <- reticulate::r_to_py(x$data)
   
   # save the model to outLoc  TODO: make this an input or temp location?
-  outLoc <- file.path(getwd(),'python_models')
+  outLoc <- createTempModelLoc()
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
 
-  # run model:
-  outLoc <- file.path(getwd(),'python_models')
-  PythonInR::pySet("modelOutput",outLoc)
-  
 
   # do cross validation to find hyperParameter
-  hyperParamSel <- lapply(param, function(x) do.call(trainMLP, c(x, train=TRUE)  ))
+  hyperParamSel <- lapply(param, function(x) do.call(trainMLP, listAppend(x,
+                                                                          list(plpData = pydata,
+                                                                          population = pPopulation,
+                                                                          train=TRUE,
+                                                                          quiet = quiet,
+                                                                          modelOutput = outLoc)  )))
 
   
   hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
   
   #now train the final model and return coef
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
-  finalModel <- do.call(trainMLP, c(param[[bestInd]], train=FALSE))
+  finalModel <- do.call(trainMLP, listAppend(param[[bestInd]], 
+                                             list(plpData = pydata,
+                                                  population = pPopulation,
+                                                  train=FALSE,
+                                                  quiet = quiet,
+                                                  modelOutput = outLoc)
+                                             ))
   
   # get the coefs and do a basic variable importance:
-  lev1 <- PythonInR::pyGet('mlp.coefs_[0]', simplify = F)
-  lev1 <- apply(lev1,2, unlist)
-  lev2 <- PythonInR::pyGet('mlp.coefs_[1]', simplify = F)
-  lev2 <- apply(lev2,2, unlist)
+  lev1 <- finalModel[[2]]
+  lev2 <- finalModel[[3]]
   vals <- abs(lev1)%*%abs(lev2)
   varImp <- apply(vals, 1, function(x) sum(abs(x)))
-  #varImp <- PythonInR::pyGet('mlp.coefs_[0]', simplify = F)[,1]
-  #varImp[is.na(varImp)] <- 0
   
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef))
@@ -139,9 +129,7 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   comp <- start-Sys.time()
   
   # train prediction
-  pred <- PythonInR::pyGet('prediction', simplify = F)
-  pred <-  apply(pred,1, unlist)
-  pred <- t(pred)
+  pred <- finalModel[[1]]
   pred[,1] <- pred[,1] + 1 # converting from python to r index
   colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
   pred <- as.data.frame(pred)
@@ -165,41 +153,37 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
                  predictionTrain = prediction
   )
   class(result) <- 'plpModel'
-  attr(result, 'type') <- 'python'
+  attr(result, 'type') <- 'pythonReticulate'
   attr(result, 'predictionType') <- 'binary'
-  
   
   return(result)
 }
 
 
-trainMLP <- function(size=1, alpha=0.001, seed=NULL, train=TRUE){
-  PythonInR::pyExec(paste0("size = ", size))
-  PythonInR::pyExec(paste0("alpha = ", alpha))
-  PythonInR::pyExec(paste0("seed = ", ifelse(is.null(seed),'None',seed)))
-  if(train)
-    PythonInR::pyExec("train = True")
-  if(!train)
-    PythonInR::pyExec("train = False")
+trainMLP <- function(plpData, population, size=1, alpha=0.001, seed=NULL, train=TRUE, quiet=F, modelOutput){
+
+  e <- environment()
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','mlpFunctions.py'), envir = e)
   
-  # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','mlp.py'))
+  result <- train_mlp(population = population, 
+                      plpData = plpData, 
+                      alpha =alpha, 
+                      size = as.integer(size), 
+                      seed = as.integer(seed), 
+                      quiet = quiet, 
+                      modelOutput = modelOutput,
+                      train = train)
   
   if(train){
     # then get the prediction 
-    pred <- PythonInR::pyGet('prediction', simplify = FALSE)
-    pred <-  apply(pred,1, unlist)
-    pred <- t(pred)
+    pred <- result
     colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
-    
-    pred$value <- 1-pred$value
     auc <- PatientLevelPrediction::computeAuc(pred)
     writeLines(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }
   
-  return(T)
-  
+  return(result)
 }

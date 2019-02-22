@@ -125,7 +125,7 @@ fitRNNTorch2 <- function(population, plpData, param, search='grid', quiet=F,
                  predictionTrain = prediction
   )
   class(result) <- 'plpModel'
-  attr(result, 'type') <- 'python2'
+  attr(result, 'type') <- 'pythonReticulate'
   attr(result, 'predictionType') <- 'binary'
   
   return(result)

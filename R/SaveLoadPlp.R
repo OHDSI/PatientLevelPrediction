@@ -683,10 +683,10 @@ moveHdModel <- function(plpModel, dirPath ){
   #==================================================================
   # if python then move pickle
   #==================================================================
-  if(attr(plpModel, 'type') =='python'){
+  if(attr(plpModel, 'type') %in% c('pythonOld','pythonReticulate', 'pythonAuto') ){
     if(!dir.exists(file.path(dirPath,'python_model')))
       dir.create(file.path(dirPath,'python_model'))
-    for(file in dir(plpModel$model)){
+    for(file in dir(plpModel$model)){   #DOES THIS CORRECTLY TRANSFER AUTOENCODER BITS?
       file.copy(file.path(plpModel$model,file), 
                 file.path(dirPath,'python_model'), overwrite=TRUE,  recursive = FALSE,
                 copy.mode = TRUE, copy.date = FALSE)
@@ -784,7 +784,7 @@ loadPlpModel <- function(dirPath) {
 updateModelLocation  <- function(plpModel, dirPath){
   type <- attr(plpModel, 'type')
   # if python update the location
-  if( type=='python'){
+  if( type %in% c('pythonOld','pythonReticulate', 'pythonAuto')){
     plpModel$model <- file.path(dirPath,'python_model')
     plpModel$predict <- createTransform(plpModel)
   }

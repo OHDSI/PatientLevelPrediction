@@ -40,7 +40,6 @@ Imports:
     xgboost,
     Matrix,
     AUC,
-    PythonInR,
     utils,
     methods,
     reshape2,
@@ -73,7 +72,8 @@ Suggests:
     BigKnn,
     aws.s3,
     devtools,
-    rms
+    rms,
+    PythonInR
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 6.0.1

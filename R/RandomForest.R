@@ -30,7 +30,7 @@
 #'                            maxDepth=c(5,20))
 #' }                           
 #' @export
-setRandomForest<- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, seed=NULL){
+setRandomForest <- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, seed=NULL){
   # check seed is int
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
@@ -49,12 +49,14 @@ setRandomForest<- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, s
   if(class(varImp)!="logical")
     stop('varImp must be boolean')
   
-  # test python is available and the required dependancies are there:
-  checkPython()
+  # set seed
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
   
   result <- list(model='fitRandomForest', param= expand.grid(ntrees=ntrees, mtries=mtries,
-                                                       maxDepth=maxDepth, varImp=varImp, 
-                                                       seed=ifelse(is.null(seed),'NULL', seed)),
+                                                              maxDepth=maxDepth, varImp=varImp, 
+                                                              seed= seed[1]),
                  name='Random forest')
   class(result) <- 'modelSettings' 
   
@@ -64,7 +66,10 @@ setRandomForest<- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, s
 
 
 fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
-                      outcomeId, cohortId, ...){
+                             outcomeId, cohortId, ...){
+  
+  covariateRef <- ff::as.ram(plpData$covariateRef)
+  e <- environment()
   
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
@@ -85,65 +90,58 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     warning('indexes column not present as last column - setting all index to 1')
     population$indexes <- rep(1, nrow(population))
   }
-  
-  # connect to python if not connected
-  initiatePython()
-  
-  PythonInR::pyExec('quiet = True')
+
+  pQuiet <- 'True'
   if(quiet==F){
     ParallelLogger::logTrace(paste0('Training random forest model...' ))
-    PythonInR::pyExec('quiet = False')
+    #PythonInR::pyExec('quiet = False')
+    pQuiet <- 'False'
   }
   start <- Sys.time()
   
   # make sure population is ordered?
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-  PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
-  
+  #PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
+  pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
   
   # set seed
-  if(param$seed[1] == 'NULL')
-    PythonInR::pyExec('seed = None')
-  if(param$seed[1]!='NULL'){
-    PythonInR::pySet('seed', as.matrix(param$seed[1]) )
-    PythonInR::pyExec('seed = int(seed)')
+  if(param$seed[1] == 'NULL'){
+    pSeed <- as.integer(sample(100000000,1))
   }
-
+  if(param$seed[1]!='NULL'){
+    pSeed <- as.integer(param$seed[1])
+  }
+  
   # convert plpData in coo to python:
   ParallelLogger::logTrace('Mapping R data to python')
-  x <- toSparsePython(plpData,population, map=NULL)
-    
+  #x <- toSparsePython2(plpData,population, map=NULL)
+  prediction <- population
+  x <- PatientLevelPrediction::toSparseM(plpData,population,map=NULL, temporal = F)
+
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','randomForestFunctions.py'), envir = e)
+  data <- reticulate::r_to_py(x$data)
+  
   #do var imp
   if(param$varImp[1]==T){
-  
+    
     # python checked in .set 
-    PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','rf_var_imp.py'))
-    
-    
-    #load var imp and create mapping/missing
-    varImp <-PythonInR::pyGet("rf.feature_importances_", simplify = FALSE)[,1]
+    varImp <- rf_var_imp(population = pPopulation,
+                             plpData = data, 
+                             quiet=pQuiet)
     
     if(!quiet)
       ParallelLogger::logTrace('Variable importance completed')  
     if(mean(varImp)==0)
       stop('No important variables - seems to be an issue with the data')
     
-    inc <- which(varImp>mean(varImp), arr.ind=T)
-    covariateRef <- ff::as.ram(plpData$covariateRef) 
+    incRInd <- which(varImp>mean(varImp), arr.ind=T)
     
     # save mapping, missing, indexes
   } else{
-    covariateRef <- ff::as.ram(plpData$covariateRef)
-    inc <- 1:ncol(covariateRef)
+    incRInd <- 1:ncol(covariateRef)
   }
   
-  # write the include covariates to file (gets read by python)
-  ##write.table(inc-1, file.path(plpData$covariates, 'included.txt'), row.names=F, col.names = F)
-  # above now is loaded threw pythoninR
-  
-  
   # save the model to outLoc
-  ##outLoc <- file.path(getwd(),'python_models')
   outLoc <- createTempModelLoc()
   # clear the existing model pickles
   for(file in dir(outLoc))
@@ -151,82 +149,64 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   # run rf_plp for each grid search:
   all_auc <- c()
-  
+
   for(i in 1:nrow(param)){
     
-    # set variable params - do loop  
-    PythonInR::pyExec(paste0("ntrees = int(",param$ntree[i],")"))
-    PythonInR::pyExec(paste0("max_depth = int(",param$maxDepth[i],")"))
-    PythonInR::pySet("mtry",param$mtries[i])
-    
-    ##PythonInR::pySet("dataLocation" ,plpData$covariates)
-    
-    # do inc-1 to go to python index as python starts at 0, R starts at 1
-    ##PythonInR::pyImport("numpy", as="np")
-    PythonInR::pySet('included', as.matrix(inc-1), 
-                     namespace = "__main__", useNumpy = TRUE)
-    
-    #mapping = sys.argv[5] # this contains column selection/ordering 
-    #missing = sys.argv[6] # this contains missing
-    
     # then run standard python code
-    PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','randomForestCV.py'))
-    
-    # then get the prediction 
-    pred <- PythonInR::pyGet('prediction', simplify = FALSE)
-    pred <-  apply(pred,1, unlist)
-    pred <- t(pred)
+    pred <- train_rf(population=pPopulation, 
+                         plpData = data,
+                         ntrees = as.integer(param$ntree[i]),
+                         max_depth = as.integer(param$maxDepth[i]),
+                         mtry = param$mtries[i],
+                         included = as.matrix(incRInd-1),
+                         seed = pSeed,
+                         quiet='False')
+
     colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
-    # close python
     
-    ##pred <- read.csv(file.path(outLoc,i,'prediction.txt'), header=F)
-    ##colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
     auc <- PatientLevelPrediction::computeAuc(pred)
     all_auc <- c(all_auc, auc)
     if(!quiet)
       ParallelLogger::logInfo(paste0('Model with settings: ntrees:',param$ntrees[i],' maxDepth: ',param$maxDepth[i], 
-                      'mtry: ', param$mtry[i] , ' obtained AUC of ', auc))
+                                  'mtry: ', param$mtry[i] , ' obtained AUC of ', auc))
   }
   
   hyperSummary <- cbind(param, cv_auc=all_auc)
   
   # now train the final model for the best hyper-parameters previously found
-  PythonInR::pyExec(paste0("ntrees = int(",param$ntree[which.max(all_auc)],")"))
-  PythonInR::pyExec(paste0("max_depth = int(",param$maxDepth[which.max(all_auc)],")"))
-  PythonInR::pySet("mtry",param$mtries[which.max(all_auc)])
-  PythonInR::pySet("modelOutput",outLoc)
+  #reticulate::source_python(system.file(package='PatientLevelPrediction','python','finalRandomForest.py'), envir = e)
+  result <- final_rf(population=pPopulation, 
+                         plpData = data,
+                         ntrees = as.integer(param$ntree[which.max(all_auc)]),
+                         max_depth = as.integer(param$maxDepth[which.max(all_auc)]),
+                         mtry = as.integer(param$mtries[which.max(all_auc)]),
+                         included = as.matrix(incRInd-1),
+                         modelOutput = outLoc,
+                         seed = pSeed,
+                         quiet='False')
   
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','finalRandomForest.py'))
+  pred <- result[[1]]
+  varImp <- result[[2]]
   
   modelTrained <- file.path(outLoc) # location 
   param.best <- param[which.max(all_auc),]
-  varImp <- PythonInR::pyGet('rf.feature_importances_', simplify = F)[,1]
 
   variableImportance <- rep(0, nrow(covariateRef))
-  variableImportance[inc] <- varImp
+  variableImportance[incRInd] <- varImp
   incs <- rep(0, nrow(covariateRef))
-  incs[inc] <- 1
+  incs[incRInd] <- 1
   covariateRef <- cbind(covariateRef, incs, variableImportance)
   colnames(covariateRef) <- c('covariateId','covariateName','analysisId','conceptId','included','covariateValue')
-  ##write.table(covariateRef, file.path(outLoc, 'covs.txt'), row.names=F, col.names=T) # might not need?
-  
-  #auc <- PatientLevelPrediction::computeAuc(pred)
-  #ParallelLogger::logInfo(paste0('Final model with ntrees:',param$ntrees[which.max(all_auc)],' maxDepth: ',param$maxDepth[which.max(all_auc)], 
-  #                  'mtry: ', param$mtry[which.max(all_auc)] , ' obtained AUC of ', auc))
   
   comp <- start-Sys.time()
   
-  # train auc
-  pred <- PythonInR::pyGet('prediction', simplify = F)
-  pred <-  apply(pred,1, unlist)
-  pred <- t(pred)
   pred[,1] <- pred[,1] + 1 # converting from python to r index
   colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
   pred <- as.data.frame(pred)
   attr(pred, "metaData") <- list(predictionType="binary")
-  prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
+  prediction <- merge(prediction, pred[,c('rowId', 'value')], by='rowId')
   
   # return model location
   result <- list(model = modelTrained,
@@ -244,9 +224,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                  predictionTrain = prediction
   )
   class(result) <- 'plpModel'
-  attr(result, 'type') <- 'python'
+  attr(result, 'type') <- 'pythonReticulate'
   attr(result, 'predictionType') <- 'binary'
-  
-  
+
   return(result)
 }

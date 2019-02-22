@@ -33,18 +33,16 @@
 setLRTorch <- function(w_decay=c(0.0005, 0.005), epochs=c(20, 50, 100), seed=NULL, 
                        class_weight = 0, autoencoder = FALSE, vae =FALSE){
   
-  # test python is available and the required dependancies are there:
-  checkPython()
+  # set seed
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
   
   result <- list(model='fitLRTorch', param=split(expand.grid(w_decay=w_decay, epochs=epochs, 
-                                           seed=ifelse(is.null(seed),'NULL', seed),  class_weight = class_weight, 
+                                           seed=seed[1],  class_weight = class_weight, 
                                            autoencoder = autoencoder, vae = vae),
 									       1:(length(w_decay)*length(epochs)) ),
                                      name='LR Torch')
-  
-  #result <- list(model='fitLRTorch', 
-  #               param= c(size,epochs,seed),
-  #               name='LR Torch')
   
   class(result) <- 'modelSettings' 
   
@@ -63,37 +61,41 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
     population$indexes <- rep(1, nrow(population))
   }
   
-  # connect to python if not connected
-  initiatePython()
-  
   start <- Sys.time()
   
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-  PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
+  pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
   
   # convert plpData in coo to python:
-  x <- toSparsePython(plpData,population, map=NULL)
+  x <- toSparseM(plpData,population, map=NULL)
 
-  # save the model to outLoc  TODO: make this an input or temp location?
-  outLoc <- file.path(getwd(),'python_models')
+  outLoc <- createTempModelLoc()
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
   
-  #covariateRef$value <- unlist(varImp)
-  # run model:
-  outLoc <- file.path(getwd(),'python_models')
-  PythonInR::pySet("modelOutput",outLoc)
+  pydata <- reticulate::r_to_py(x$data)
 
   # do cross validation to find hyperParameter
-  hyperParamSel <- lapply(param, function(x) do.call(trainLRTorch, c(x, train=TRUE)  ))
+  hyperParamSel <- lapply(param, function(x) do.call(trainLRTorch, 
+                                                     listAppend(x, 
+                                                                list(plpData = pydata,
+                                                                population = pPopulation,
+                                                                quiet = quiet,
+                                                                train=TRUE,
+                                                                modelOutput=outLoc)  )))
 
   
   hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
   
   #now train the final model
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
-  finalModel <- do.call(trainLRTorch, c(param[[bestInd]], train=FALSE))
+  finalModel <- do.call(trainLRTorch, listAppend(param[[bestInd]], 
+                                                  list(plpData = pydata,
+                                                       population = pPopulation,
+                                                       quiet = quiet,
+                                                       train=F,
+                                                       modelOutput=outLoc)))
 
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
@@ -106,9 +108,7 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
   comp <- start-Sys.time()
   
   # train prediction
-  pred <- PythonInR::pyGet('prediction', simplify = F)
-  pred <-  apply(pred,1, unlist)
-  pred <- t(pred)
+  pred <- finalModel
   pred[,1] <- pred[,1] + 1 # converting from python to r index
   colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
   pred <- as.data.frame(pred)
@@ -132,44 +132,34 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
                  predictionTrain = prediction
   )
   class(result) <- 'plpModel'
-  attr(result, 'type') <- 'python'
+  attr(result, 'type') <- ifelse(param[[bestInd]]$autoencoder == T, 'pythonAuto' ,'pythonReticulate')
   attr(result, 'predictionType') <- 'binary'
   
   return(result)
 }
 
 
-trainLRTorch <- function(epochs=100, w_decay = 0.001, seed=0, class_weight = 0, train=TRUE, autoencoder = FALSE, vae =FALSE){
-  #PythonInR::pyExec(paste0("size = ",size))
-  PythonInR::pyExec(paste0("epochs = ",epochs))
-  PythonInR::pyExec(paste0("w_decay = ",w_decay))
-  PythonInR::pyExec(paste0("class_weight = ",class_weight))
-  PythonInR::pyExec("model_type = 'LogisticRegression'")
-  python_dir <- system.file(package='PatientLevelPrediction','python')
-  PythonInR::pySet("python_dir", python_dir)
-  if (autoencoder | vae){
-    PythonInR::pyExec("autoencoder = True")
-    if (vae){
-      PythonInR::pyExec("vae = True")
-    } else {
-      PythonInR::pyExec("vae = False")
-    }
-  } else {
-    PythonInR::pyExec("autoencoder = False")
-  }
-  if(train)
-    PythonInR::pyExec("train = True")
-  if(!train)
-    PythonInR::pyExec("train = False")
+trainLRTorch <- function(population, plpData, modelOutput, epochs=100, w_decay = 0.001, seed=0, class_weight = 0, train=TRUE, autoencoder = FALSE, vae =FALSE, quiet){
   
-  # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','deepTorch.py'))
+  e <- environment()
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','deepTorchFunctions.py'), envir = e)
   
+  result <- train_deeptorch(population = population, 
+                            train = train,
+                            plpData = plpData, 
+                            model_type = 'LogisticRegression',
+                            autoencoder = autoencoder,
+                            vae = vae,
+                            epochs = as.integer(epochs),
+                            w_decay = w_decay,
+                            class_weight = class_weight,
+                            seed = as.integer(seed), 
+                            quiet = quiet,
+                            modelOutput = modelOutput)
+
   if(train){
     # then get the prediction 
-    pred <- PythonInR::pyGet('prediction', simplify = FALSE)
-    pred <-  apply(pred,1, unlist)
-    pred <- t(pred)
+    pred <- result
     colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
@@ -180,6 +170,6 @@ trainLRTorch <- function(epochs=100, w_decay = 0.001, seed=0, class_weight = 0, 
     return(auc)
   }
   
-  return(T)
+  return(result)
   
 }
