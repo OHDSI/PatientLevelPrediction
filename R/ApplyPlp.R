@@ -250,8 +250,8 @@ similarPlpData <- function(plpModel=NULL,
     if(!exists){
       ParallelLogger::logTrace('Creating temp cohort table')
     sql <- "create table @target_cohort_schema.@target_cohort_table(cohort_definition_id bigint, subject_id bigint, cohort_start_date datetime, cohort_end_date datetime)"
-    sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
-    sql <- SqlRender::renderSql(sql,
+    sql <- SqlRender::translate(sql, targetDialect = connectionDetails$dbms)$sql
+    sql <- SqlRender::render(sql,
                                 target_cohort_schema = newCohortDatabaseSchema,
                                 target_cohort_table= newCohortTable)$sql
     tryCatch(DatabaseConnector::executeSql(connection,sql),
@@ -261,8 +261,8 @@ similarPlpData <- function(plpModel=NULL,
     exists <- toupper(newOutcomeTable)%in%DatabaseConnector::getTableNames(connection , newOutcomeDatabaseSchema)
     if(!exists){
       sql <- "create table @target_cohort_schema.@target_cohort_table(cohort_definition_id bigint, subject_id bigint, cohort_start_date datetime, cohort_end_date datetime)"
-      sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
-      sql <- SqlRender::renderSql(sql,
+      sql <- SqlRender::translate(sql, targetDialect = connectionDetails$dbms)$sql
+      sql <- SqlRender::render(sql,
                                   target_cohort_schema = newOutcomeDatabaseSchema,
                                   target_cohort_table= newOutcomeTable)$sql
       tryCatch(DatabaseConnector::executeSql(connection,sql),
@@ -272,24 +272,24 @@ similarPlpData <- function(plpModel=NULL,
     
     ParallelLogger::logTrace('Populating cohort tables')
     targetSql <- plpModel$metaData$cohortCreate$targetCohort$sql
-    targetSql <- SqlRender::renderSql(targetSql, 
+    targetSql <- SqlRender::render(targetSql, 
                                       cdm_database_schema=ifelse(is.null(newCdmDatabaseSchema),plpModel$metaData$call$cdmDatabaseSchema,newCdmDatabaseSchema),
                                       target_database_schema= ifelse(is.null(newCohortDatabaseSchema),plpModel$metaData$call$cdmDatabaseSchema,newCohortDatabaseSchema),
                                       target_cohort_table = ifelse(is.null(newCohortTable),plpModel$metaData$call$newCohortTable,newCohortTable),
                                       target_cohort_id = ifelse(is.null(newCohortId),plpModel$metaData$call$cohortId, newCohortId) )$sql
     
-    targetSql <- SqlRender::translateSql(targetSql, 
+    targetSql <- SqlRender::translate(targetSql, 
                                          targetDialect = ifelse(is.null(newConnectionDetails$dbms), 'pdw',newConnectionDetails$dbms)  )$sql
     DatabaseConnector::executeSql(connection, targetSql)
     
     for(outcomesql in plpModel$metaData$cohortCreate$outcomeCohorts){
       outcomeSql <- outcomesql$sql
-      outcomeSql <- SqlRender::renderSql(outcomeSql, 
+      outcomeSql <- SqlRender::render(outcomeSql, 
                                          cdm_database_schema=ifelse(is.null(newCdmDatabaseSchema),plpModel$metaData$call$cdmDatabaseSchema,newCdmDatabaseSchema),
                                          target_database_schema= ifelse(is.null(newOutcomeDatabaseSchema),plpModel$metaData$call$cdmDatabaseSchema,newOutcomeDatabaseSchema),
                                          target_cohort_table = ifelse(is.null(newOutcomeTable),plpModel$metaData$call$newOutcomeTable,newOutcomeTable),
                                          target_cohort_id = ifelse(is.null(newOutcomeId),plpModel$metaData$call$outcomeId, newOutcomeId))$sql
-      outcomeSql <- SqlRender::translateSql(outcomeSql, 
+      outcomeSql <- SqlRender::translate(outcomeSql, 
                                             targetDialect = ifelse(is.null(newConnectionDetails$dbms), 'pdw',newConnectionDetails$dbms))$sql
       DatabaseConnector::executeSql(connection, outcomeSql)
       

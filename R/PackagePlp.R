@@ -157,7 +157,7 @@ createCohort <- function(cohortDetails,
                                              )
   } else {
     sql <- SqlRender::readSql(file.path(cohortLocation,cohortname))
-    sql <- SqlRender::renderSql(sql, 
+    sql <- SqlRender::render(sql, 
                                 cdm_database_schema = cdmDatabaseSchema,
                                 vocabulary_database_schema=cdmDatabaseSchema,
                                 target_database_schema = cohortDatabaseSchema,
@@ -166,7 +166,7 @@ createCohort <- function(cohortDetails,
                                 oracleTempSchema = oracleTempSchema)$sql
   }
   
-  sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+  sql <- SqlRender::translate(sql, targetDialect = connectionDetails$dbms)$sql
   
   writeLines(paste0('Inserting cohort ', cohortName, ' with cohort id: ', cohortId))
   DatabaseConnector::executeSql(connection, sql)
@@ -175,9 +175,9 @@ createCohort <- function(cohortDetails,
   # get the final sumamry of the cohorts
   writeLines('Extracting cohort counts for each inserted cohort')
   sql <- "select cohort_definition_id as cohort_id, count(*) size from @cohortDatabaseSchema.@cohortTable where cohort_definition_id in (@cohortIds) group by cohort_definition_id"
-  sql <- SqlRender::renderSql(sql, cohortDatabaseSchema = cohortDatabaseSchema, cohortTable=cohortTable,
+  sql <- SqlRender::render(sql, cohortDatabaseSchema = cohortDatabaseSchema, cohortTable=cohortTable,
                    cohortIds = paste(cohortDetails$cohortId, collapse=','))$sql
-  sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+  sql <- SqlRender::translate(sql, targetDialect = connectionDetails$dbms)$sql
   counts <- DatabaseConnector::querySql(connection, sql)
   colnames(counts) <- SqlRender::snakeCaseToCamelCase(colnames(counts))
   

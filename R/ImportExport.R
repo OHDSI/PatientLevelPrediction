@@ -465,10 +465,10 @@ getPredictionCovariateData <- function(connection,
   from #cov_temp inner join #model_table on #cov_temp.covariate_id=#model_table.covariate_id
   inner join #intercepts on #intercepts.model_id=#model_table.model_id
   group by #cov_temp.row_id,  #model_table.model_id"
-  sql <- SqlRender::renderSql(sql,
+  sql <- SqlRender::render(sql,
                               analysis_id = analysisId
   )$sql
-  sql <- SqlRender::translateSql(sql, targetDialect ='pdw')$sql
+  sql <- SqlRender::translate(sql, targetDialect ='pdw')$sql
 
   # Retrieve the covariate:
   covariates <- DatabaseConnector::querySql.ffdf(connection, sql)
@@ -488,13 +488,13 @@ getPredictionCovariateData <- function(connection,
   inner join #intercepts on #intercepts.model_id=#model_table.model_id
   group by #cov_temp.row_id,  #model_table.model_id) b on a.@rowIdField=b.row_id"
 
-  sql <- SqlRender::renderSql(sql, 
+  sql <- SqlRender::render(sql, 
                               rowIdField = rowIdField,
                               cohortTable =cohortTable,
                               analysis_id = analysisId,
                               databaseOutput=databaseOutput
   )$sql
-  sql <- SqlRender::translateSql(sql, targetDialect ='pdw')$sql
+  sql <- SqlRender::translate(sql, targetDialect ='pdw')$sql
   DatabaseConnector::executeSql(connection, sql)
 }
 
@@ -741,7 +741,7 @@ getExistingmodelsCovariateData <- function(connection,
       # this code will render input sql and insert custome covariates into #cov_temp
 
       sql <- customCovariates$sql[sql_i]
-      sql <- SqlRender::renderSql(as.character(sql), covariateId = customCovariates$covariateId[sql_i],
+      sql <- SqlRender::render(as.character(sql), covariateId = customCovariates$covariateId[sql_i],
                                   oracleTempSchema = oracleTempSchema,
                                   cdmDatabaseSchema = cdmDatabaseSchema,
                                   cohortTable = cohortTable,
@@ -749,7 +749,7 @@ getExistingmodelsCovariateData <- function(connection,
                                   rowIdField = rowIdField,
                                   targetCovariateTable = "#cov_temp"
       )$sql
-      sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"))$sql
+      sql <- SqlRender::translate(sql, targetDialect =attr(connection,"dbms"))$sql
       DatabaseConnector::executeSql(connection, sql)
     }
 
@@ -793,10 +793,10 @@ getExistingmodelsCovariateData <- function(connection,
       group by row_id,  model_id"
   }
 
-  sql <- SqlRender::renderSql(sql,
+  sql <- SqlRender::render(sql,
                               analysis_id = analysisId
   )$sql
-  sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"),
+  sql <- SqlRender::translate(sql, targetDialect =attr(connection,"dbms"),
                                  oracleTempSchema = oracleTempSchema)$sql
 
   # Retrieve the covariate:
@@ -815,10 +815,10 @@ getExistingmodelsCovariateData <- function(connection,
     
     group by #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id"
     
-    sql <- SqlRender::renderSql(sql,
+    sql <- SqlRender::render(sql,
                                 analysis_id = analysisId
     )$sql
-    sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"),
+    sql <- SqlRender::translate(sql, targetDialect =attr(connection,"dbms"),
                                    oracleTempSchema = oracleTempSchema)$sql
     
     # Retrieve the covariate:
@@ -828,7 +828,7 @@ getExistingmodelsCovariateData <- function(connection,
   }
 
   # Drop temp tables
-  #sql <- SqlRender::translateSql(sql = todo$sqlCleanup,
+  #sql <- SqlRender::translate(sql = todo$sqlCleanup,
   #                               targetDialect = attr(connection, "dbms"),
   #                               oracleTempSchema = oracleTempSchema)$sql
   #DatabaseConnector::executeSql(connection, sql, progressBar = FALSE, reportOverallTime = FALSE)
