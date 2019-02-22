@@ -284,7 +284,7 @@ interpretInstallCode <- function(response){
 
 
 clearLoggerType <- function(type='PLP log'){
-  logs <- OhdsiRTools::getLoggers()
+  logs <- ParallelLogger::getLoggers()
   logNames <- unlist(lapply(logs, function(x) x$name))
   ind <- which(logNames==type)
   
@@ -345,11 +345,11 @@ configurePython <- function(envname='PLP', envtype=NULL){
     if(envname%in%pEnvironments$name){
       warning(paste0('Conda environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
-      OhdsiRTools::logInfo(paste0('Creating virtual conda environment called ', envname))
+      ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
       location <- reticulate::conda_create(envname=envname, packages = "python", conda = "auto")
     }
     packages <- c('numpy', 'scikit-learn','scipy', 'pandas','pydotplus','keras')
-    OhdsiRTools::logInfo(paste0('Adding python dependancies to ', envname))
+    ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))
     reticulate::conda_install(envname=envname, packages = packages, forge = TRUE, pip = FALSE,
                               pip_ignore_installed = TRUE, conda = "auto")
   } else {
@@ -357,11 +357,11 @@ configurePython <- function(envname='PLP', envtype=NULL){
     if(envname%in%pEnvironments$name){
       warning(paste0('Python environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
-      OhdsiRTools::logInfo(paste0('Creating virtual python environment called ', envname))
+      ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))
       location <- reticulate::virtualenv_create(envname=envname, packages = "python")
     }
     packages <- c('numpy', 'scikit-learn','scipy', 'pandas','pydotplus','keras')
-    OhdsiRTools::logInfo(paste0('Adding python dependancies to ', envname))
+    ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))
     reticulate::virtualenv_install(envname=envname, packages = packages, forge = TRUE, pip = TRUE,
                               pip_ignore_installed = TRUE)
   }
@@ -437,7 +437,7 @@ checkPython <- function(){
 
 initiatePython <- function(){
   if(!PythonInR::pyIsConnected()){ 
-    OhdsiRTools::logTrace('Connecting to python')
+    ParallelLogger::logTrace('Connecting to python')
     PythonInR::pyConnect()
   }
   if ( !PythonInR::pyIsConnected() ){

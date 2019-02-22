@@ -81,15 +81,15 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   param$min_child_weight <- param$minRows
   param$eta <- param$learnRate
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
     OhdsiRTools::registerLogger(logger)
   }
   
   if(!quiet)
-    OhdsiRTools::logTrace('Training GBM model')
+    ParallelLogger::logTrace('Training GBM model')
   
   if(param[[1]]$seed!='NULL')
     set.seed(param[[1]]$seed)
@@ -112,7 +112,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   data <- data[population$rowId,]
   
   # set test/train sets (for printing performance as it trains)
-  OhdsiRTools::logInfo(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
+  ParallelLogger::logInfo(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
   start <- Sys.time()
   
   # pick the best hyper-params and then do final training on all data...
@@ -126,12 +126,12 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   param <- param[[which.max(param.sel)]]
   param$final=T
   
-  #OhdsiRTools::logTrace("Final train")
+  #ParallelLogger::logTrace("Final train")
   trainedModel <- do.call("gbm_model2", c(param,datas)  )$model
   
   comp <- Sys.time() - start
   if(!quiet)
-    OhdsiRTools::logInfo(paste0('Model GBM trained - took:',  format(comp, digits=3)))
+    ParallelLogger::logInfo(paste0('Model GBM trained - took:',  format(comp, digits=3)))
   
   varImp <- xgboost::xgb.importance(model =trainedModel)
   
@@ -181,20 +181,20 @@ gbm_model2 <- function(data, population,
     stop('No population')
   }
   if(!is.null(population$indexes) && final==F){
-    OhdsiRTools::logInfo(paste0("Training GBM with ",length(unique(population$indexes))," fold CV"))
+    ParallelLogger::logInfo(paste0("Training GBM with ",length(unique(population$indexes))," fold CV"))
     index_vect <- unique(population$indexes)
-    OhdsiRTools::logDebug(paste0('index vect: ', paste0(index_vect, collapse='-')))
+    ParallelLogger::logDebug(paste0('index vect: ', paste0(index_vect, collapse='-')))
     perform <- c()
     
     # create prediction matrix to store all predictions
     predictionMat <- population
-    OhdsiRTools::logDebug(paste0('population nrow: ', nrow(population)))
+    ParallelLogger::logDebug(paste0('population nrow: ', nrow(population)))
     
     predictionMat$value <- 0
     attr(predictionMat, "metaData") <- list(predictionType = "binary")
     
     for(index in 1:length(index_vect )){
-      OhdsiRTools::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
+      ParallelLogger::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
       test <- xgboost::xgb.DMatrix(data = data[population$indexes==index,], label=population$outcomeCount[population$indexes==index])
       watchlist <- list(train=train, test=test)
@@ -242,9 +242,9 @@ gbm_model2 <- function(data, population,
   }
   param.val <- paste0('max depth: ',max.depth,'-- min_child_weight: ', min_child_weight, 
                       '-- nthread: ', nthread, ' nround: ',nround, '-- eta: ', eta)
-  OhdsiRTools::logInfo("==========================================")
-  OhdsiRTools::logInfo(paste0("GMB with parameters: ", param.val," obtained an AUC of ",auc))
-  OhdsiRTools::logInfo("==========================================")
+  ParallelLogger::logInfo("==========================================")
+  ParallelLogger::logInfo(paste0("GMB with parameters: ", param.val," obtained an AUC of ",auc))
+  ParallelLogger::logInfo("==========================================")
   
   result <- list(model=model,
                  auc=auc,

@@ -72,16 +72,16 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
                          outcomeId, cohortId, ...){
   
   # check logger
-  if(length(OhdsiRTools::getLoggers())==0){
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = "INFO",
-                                        appenders = list(OhdsiRTools::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = OhdsiRTools::layoutTimestamp)))
     OhdsiRTools::registerLogger(logger)
   }
   
   
   if(colnames(population)[ncol(population)]!='indexes'){
-    OhdsiRTools::logWarn(paste0('population columns: ', paste0(colnames(population), collapse='-')))
+    ParallelLogger::logWarn(paste0('population columns: ', paste0(colnames(population), collapse='-')))
     warning('indexes column not present as last column - setting all index to 1')
     population$indexes <- rep(1, nrow(population))
   }
@@ -94,7 +94,7 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   pyt <- reticulate::py
   
   if(quiet==F){
-    OhdsiRTools::logTrace(paste0('Training sagemaker model...' ))
+    ParallelLogger::logTrace(paste0('Training sagemaker model...' ))
   }
   start <- Sys.time()
   
@@ -105,7 +105,7 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   x <- PatientLevelPrediction::toSparseM(plpData,population,map=NULL, temporal = F)
   plpData <- reticulate::r_to_py(x$data)
   
-  OhdsiRTools::logInfo(paste0('Setting parameters...' ))
+  ParallelLogger::logInfo(paste0('Setting parameters...' ))
   sm <- reticulate::import('sagemaker')
   session <- sm$Session()
   container <- sm$amazon$amazon_estimator$get_image_uri(session$boto_region_name, param$classifier)
@@ -116,7 +116,7 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   # clear the existing model pickles
   for (file in dir(outLoc)) file.remove(file.path(outLoc, file))
   
-  OhdsiRTools::logInfo(paste0('Running python code...' ))
+  ParallelLogger::logInfo(paste0('Running python code...' ))
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','sageMakerFunctions.py'), envir = e)
   #reticulate::source_python('python_sagemaker_train.py', envir = e)
@@ -199,7 +199,7 @@ predict.sagemaker <- function(plpModel, population, plpData){
   #upload model
   aws.s3::put_object(file=file.path(plpModel$model$loc,'model.tar.gz'), bucket=paste0(bucket,'/plpModel')) #use model$job_name?
   
-  OhdsiRTools::logInfo('Mapping covariates...')
+  ParallelLogger::logInfo('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
   newData <- PatientLevelPrediction::toSparseM(plpData, population, map=plpModel$covariateMap)
@@ -218,7 +218,7 @@ predict.sagemaker <- function(plpModel, population, plpData){
   }
   
   # run the python predict code:
-  OhdsiRTools::logInfo('Executing prediction...')
+  ParallelLogger::logInfo('Executing prediction...')
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','sageMakerPredict.py'), envir = e)
   #reticulate::source_python('sagemaker_predict.py', envir = e)
@@ -233,7 +233,7 @@ predict.sagemaker <- function(plpModel, population, plpData){
   )
   
   #get the prediction from python and reformat:
-  OhdsiRTools::logInfo('Returning results...')
+  ParallelLogger::logInfo('Returning results...')
   
   #pred <- PythonInR::pyGet("prediction", simplify = FALSE)
   buc <- aws.s3::get_bucket(bucket) 

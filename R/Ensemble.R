@@ -87,16 +87,16 @@ runEnsembleModel <- function(population,
     analysisId <- gsub(":", "", gsub("-", "", gsub(" ", "", ExecutionDateTime)))
 
   # check logger
-  if (length(OhdsiRTools::getLoggers()) == 0) {
-    logger <- OhdsiRTools::createLogger(name = "SIMPLE",
+  if (length(ParallelLogger::getLoggers()) == 0) {
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                         threshold = verbosity,
-                                        appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutTimestamp)))
+                                        appenders = list(ParallelLogger::createFileAppender(layout = OhdsiRTools::layoutTimestamp)))
     OhdsiRTools::registerLogger(logger)
   }
   trainFraction <- NULL
   if (ensembleStrategy == "stacked") {
     trainFraction <- 0.8 * (1 - testFraction)
-    OhdsiRTools::logInfo("0.2 * (1 - testFraction) is validation set for training logistics regression as the combinator for stacked ensemble!")
+    ParallelLogger::logInfo("0.2 * (1 - testFraction) is validation set for training logistics regression as the combinator for stacked ensemble!")
   }
   
   if(is.null(saveDirectory)){
@@ -176,12 +176,12 @@ runEnsembleModel <- function(population,
   prediction[ncol(prediction)] <- ensem_proba
   attr(prediction, "metaData")$analysisId <- analysisId
 
-  OhdsiRTools::logInfo("Train set evaluation")
+  ParallelLogger::logInfo("Train set evaluation")
   performance.train <- evaluatePlp(prediction[prediction$indexes >= 0, ], dataList[[1]])
-  OhdsiRTools::logTrace("Done.")
-  OhdsiRTools::logInfo("Test set evaluation")
+  ParallelLogger::logTrace("Done.")
+  ParallelLogger::logInfo("Test set evaluation")
   performance.test <- evaluatePlp(prediction[prediction$indexes < 0, ], dataList[[1]])
-  OhdsiRTools::logTrace("Done.")
+  ParallelLogger::logTrace("Done.")
   performance <- reformatPerformance(train = performance.train, test = performance.test, analysisId)
 
   

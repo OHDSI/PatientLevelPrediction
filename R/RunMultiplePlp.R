@@ -102,9 +102,9 @@ runPlpAnalyses <- function(connectionDetails,
   clearLoggerType("Multple PLP Log")
   if(!dir.exists(outputFolder)){dir.create(outputFolder,recursive=T)}
   logFileName = paste0(outputFolder,'/plplog.txt')
-  logger <- OhdsiRTools::createLogger(name = "Multple PLP Log",
+  logger <- ParallelLogger::createLogger(name = "Multple PLP Log",
                                       threshold = verbosity,
-                                      appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutParallel,
+                                      appenders = list(ParallelLogger::createFileAppender(layout = OhdsiRTools::layoutParallel,
                                                                                        fileName = logFileName)))
   OhdsiRTools::registerLogger(logger)
   
@@ -155,12 +155,12 @@ runPlpAnalyses <- function(connectionDetails,
     dir.create(file.path(outputFolder,'Validation'), recursive = T)
   }
   
-  OhdsiRTools::logTrace(paste0('Creating reference table'))
+  ParallelLogger::logTrace(paste0('Creating reference table'))
   referenceTable <- tryCatch({createPlpReferenceTable(modelAnalysisList,
                                          cohortIds,
                                          outcomeIds,
                                          outputFolder, cdmDatabaseName)},
-                             error = function(cont){OhdsiRTools::logTrace(paste0('Creating reference table error:', cont)); stop()})
+                             error = function(cont){ParallelLogger::logTrace(paste0('Creating reference table error:', cont)); stop()})
   if(!missing(cohortNames)){
     if(!is.null(cohortNames))
       if(length(cohortNames)!=length(cohortIds)){
@@ -179,7 +179,7 @@ runPlpAnalyses <- function(connectionDetails,
   }
   
   if(!file.exists(file.path(outputFolder,'settings.csv'))){
-    OhdsiRTools::logTrace(paste0('Writing settings csv to ',file.path(outputFolder,'settings.csv') ))
+    ParallelLogger::logTrace(paste0('Writing settings csv to ',file.path(outputFolder,'settings.csv') ))
     write.csv(referenceTable,
               file.path(outputFolder,'settings.csv'), 
               row.names = F )
@@ -189,7 +189,7 @@ runPlpAnalyses <- function(connectionDetails,
     
     plpDataFolder <- referenceTable$plpDataFolder[i]
     if(!dir.exists(plpDataFolder)){
-      OhdsiRTools::logTrace(paste0('Running setting ', i ))
+      ParallelLogger::logTrace(paste0('Running setting ', i ))
       
       oind <- referenceTable$cohortId==referenceTable$cohortId[i] & 
               referenceTable$covariateSettingId==referenceTable$covariateSettingId[i]
@@ -200,39 +200,39 @@ runPlpAnalyses <- function(connectionDetails,
       plpDataSettings$covariateSettings <- modelAnalysisList$covariateSettings[[referenceTable$covariateSettingId[i]]]
         
       plpData <- tryCatch(do.call(getPlpData, plpDataSettings),
-               finally= OhdsiRTools::logTrace('Done plpData.'),
-               error= function(cond){OhdsiRTools::logTrace(paste0('Error with getPlpData:',cond));return(NULL)})
+               finally= ParallelLogger::logTrace('Done plpData.'),
+               error= function(cond){ParallelLogger::logTrace(paste0('Error with getPlpData:',cond));return(NULL)})
   
       if(!is.null(plpData)){
-        OhdsiRTools::logTrace(paste0('Saving data in setting ', i ))
+        ParallelLogger::logTrace(paste0('Saving data in setting ', i ))
         savePlpData(plpData, referenceTable$plpDataFolder[i])
       }
     } else{
-      OhdsiRTools::logTrace(paste0('Loading data in setting ', i ))
+      ParallelLogger::logTrace(paste0('Loading data in setting ', i ))
       plpData <- loadPlpData(referenceTable$plpDataFolder[i])
     }
     
     if(!file.exists(referenceTable$studyPop[i])){
-      OhdsiRTools::logTrace(paste0('Setting population settings for setting ', i ))
+      ParallelLogger::logTrace(paste0('Setting population settings for setting ', i ))
       # get pop and save to referenceTable$popFile
       popSettings <- modelAnalysisList$populationSettings[[referenceTable$populationSettingId[i]]]
       popSettings$outcomeId <- referenceTable$outcomeId[i] 
       popSettings$plpData <- plpData
       population <- tryCatch(do.call(createStudyPopulation, popSettings),
-               finally= OhdsiRTools::logTrace('Done pop.'), 
-               error= function(cond){OhdsiRTools::logTrace(paste0('Error with pop:',cond));return(NULL)})
+               finally= ParallelLogger::logTrace('Done pop.'), 
+               error= function(cond){ParallelLogger::logTrace(paste0('Error with pop:',cond));return(NULL)})
       if(!is.null(population)){
-        OhdsiRTools::logTrace(paste0('Saving population for setting ', i ))
+        ParallelLogger::logTrace(paste0('Saving population for setting ', i ))
         saveRDS(population, referenceTable$studyPop[i])
       }
     } else{
-      OhdsiRTools::logTrace(paste0('Loading population for setting', i ))
+      ParallelLogger::logTrace(paste0('Loading population for setting', i ))
       population <- readRDS(referenceTable$studyPop[i])
     }
     
     plpResultFolder = file.path(referenceTable$plpResultFolder[i],'plpResult')
     if(!dir.exists(plpResultFolder)){
-      OhdsiRTools::logTrace(paste0('Running runPlp for setting ', i ))
+      ParallelLogger::logTrace(paste0('Running runPlp for setting ', i ))
       dir.create(referenceTable$plpResultFolder[i], recursive = T)
       # runPlp and save result to referenceTable$plpResultFolder
       runPlpSettings$modelSettings <- modelAnalysisList$models[[referenceTable$modelSettingId[i]]]
@@ -245,8 +245,8 @@ runPlpAnalyses <- function(connectionDetails,
       runPlpSettings$savePlpPlots <- F
       runPlpSettings$saveEvaluation <- F
       result <- tryCatch(do.call(runPlp, runPlpSettings),
-                             finally= OhdsiRTools::logTrace('Done runPlp.'), 
-                             error= function(cond){OhdsiRTools::logTrace(paste0('Error with runPlp:',cond));return(NULL)})
+                             finally= ParallelLogger::logTrace('Done runPlp.'), 
+                             error= function(cond){ParallelLogger::logTrace(paste0('Error with runPlp:',cond));return(NULL)})
     }
     
   }
@@ -528,9 +528,9 @@ evaluateMultiplePlp <- function(analysesLocation,
   clearLoggerType("Multple Evaluate PLP Log")
   if(!dir.exists(outputLocation)){dir.create(outputLocation,recursive=T)}
   logFileName = paste0(outputLocation,'/plplog.txt')
-  logger <- OhdsiRTools::createLogger(name = "Multple Evaluate PLP Log",
+  logger <- ParallelLogger::createLogger(name = "Multple Evaluate PLP Log",
                                       threshold = verbosity,
-                                      appenders = list(OhdsiRTools::createFileAppender(layout = OhdsiRTools::layoutParallel,
+                                      appenders = list(ParallelLogger::createFileAppender(layout = OhdsiRTools::layoutParallel,
                                                                                        fileName = logFileName)))
   OhdsiRTools::registerLogger(logger)
   
@@ -546,10 +546,10 @@ evaluateMultiplePlp <- function(analysesLocation,
   
   for(i in 1:length(modelSettings)){
     
-    OhdsiRTools::logInfo(paste0('Evaluating model in ',modelSettings[i] ))
+    ParallelLogger::logInfo(paste0('Evaluating model in ',modelSettings[i] ))
     
     if(dir.exists(file.path(modelSettings[i],'plpResult'))){
-      OhdsiRTools::logInfo(paste0('plpResult found in ',modelSettings[i] ))
+      ParallelLogger::logInfo(paste0('plpResult found in ',modelSettings[i] ))
       
       plpResult <- loadPlpResult(file.path(modelSettings[i],'plpResult'))
       
@@ -567,7 +567,7 @@ evaluateMultiplePlp <- function(analysesLocation,
                                                     verbosity = verbosity, 
                                                     keepPrediction = keepPrediction,
                                                     sampleSize=sampleSize),
-                                error = function(cont){OhdsiRTools::logInfo(paste0('Error: ',cont ))
+                                error = function(cont){ParallelLogger::logInfo(paste0('Error: ',cont ))
                                   ;return(NULL)})
       
       if(!is.null(validations)){
@@ -577,7 +577,7 @@ evaluateMultiplePlp <- function(analysesLocation,
             if(!dir.exists(saveName)){
               dir.create(saveName, recursive = T)
             }
-            OhdsiRTools::logInfo(paste0('Evaluation result save in ',file.path(saveName,'validationResult.rds') ))
+            ParallelLogger::logInfo(paste0('Evaluation result save in ',file.path(saveName,'validationResult.rds') ))
             
             saveRDS(validations$validation[[j]], file.path(saveName,'validationResult.rds'))
             
@@ -587,7 +587,7 @@ evaluateMultiplePlp <- function(analysesLocation,
           if(!dir.exists(saveName)){
             dir.create(saveName, recursive = T)
           }
-          OhdsiRTools::logInfo(paste0('Evaluation result save in ',file.path(saveName,'validationResult.rds') ))
+          ParallelLogger::logInfo(paste0('Evaluation result save in ',file.path(saveName,'validationResult.rds') ))
           saveRDS(validations$validation, file.path(saveName,'validationResult.rds'))
         }
       }
