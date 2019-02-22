@@ -626,7 +626,7 @@ evaluateMultiplePlp <- function(analysesLocation,
 #' @export
 loadPredictionAnalysisList <- function(predictionAnalysisListFile){
   # load the json file and parse into prediction list
-  json <- tryCatch({OhdsiRTools::loadSettingsFromJson(file=predictionAnalysisListFile)},
+  json <- tryCatch({ParallelLogger::loadSettingsFromJson(file=predictionAnalysisListFile)},
                    error=function(cond) {
                      stop('Issue with json file...')
                    })
