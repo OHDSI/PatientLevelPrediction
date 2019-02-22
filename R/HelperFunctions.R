@@ -289,7 +289,7 @@ clearLoggerType <- function(type='PLP log'){
   ind <- which(logNames==type)
   
   for(i in ind){
-    OhdsiRTools::unregisterLogger(logNames[i])
+    ParallelLogger::unregisterLogger(logNames[i])
   }
   
   return(NULL)

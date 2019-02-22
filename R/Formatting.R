@@ -622,21 +622,27 @@ addAgeTemp <- function(timeId, plpData, timeRef){
   }
   
   ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[plpData$covariates$timeId==0]))
+  
+  if (!exists("ageId")) return(NULL)
   if(ageId%in%ntCovs){
     ageData <- ff::as.ram(plpData$covariates[plpData$covariates$covariateId==ageId,c('rowId','covariateId','covariateValue')])
     ageData$covariateValue <- ageData$covariateValue*365 + ff::as.ram(timeRef[timeRef$timeId==timeId,])$startDay
     ageData$timeId <- timeId
-    return(ageData)
-  }
+    return(ageData)}
+  
+  
   return(NULL)
 }
 addNonAgeTemp <- function(timeId, plpData){
   ageId <- plpData$map[plpData$map$oldIds==1002,'newIds']
   
   ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[plpData$covariates$timeId==0]))
+  
+  if (!exists("ageId")) return(NULL)
+  
   if(sum(!ntCovs%in%ageId)==0){
-    return(NULL)
-  }
+  return(NULL)}
+  
   ntCovs <- ntCovs[!ntCovs%in%ageId]
   ntData <- c()
   for(ntCov in ntCovs){
