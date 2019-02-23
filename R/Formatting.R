@@ -94,15 +94,17 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
   } else {
     ParallelLogger::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
     ParallelLogger::logTrace(paste0('Max time:', max(plpData$timeRef$timeId)))
+    
     for(i in min(plpData$timeRef$timeId):max(plpData$timeRef$timeId)){
       
-      if(sum(plpData.mapped$covariates$timeId==i)!=0){
+      if(sum(plpData.mapped$covariates$timeId==i, na.rm = T)!=0){
+        ParallelLogger::logTrace(paste0('Found covariates for timeId ', i))
         # initiate the sparse matrix
         data <- Matrix::sparseMatrix(i=1,
                                      j=1,
                                      x=0,
                                      dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) 
-        
+        ParallelLogger::logTrace(paste0('Initiated Mapping covariates for timeId ', i))
         # add the non-temporal features 
         timeId <- i
         tempData <- addAgeTemp(timeId,plpData.mapped, plpData$timeRef)
@@ -111,16 +113,22 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
                                               x=tempData$covariateValue,
                                               dims=c(max(population$rowId), max(plpData.mapped$map$newIds))))
         data <- data + temp
+        ParallelLogger::logTrace(paste0('Added any age covariates for timeId ', i))
+        
         tempData <- addNonAgeTemp(timeId,plpData.mapped)
         temp <- tryCatch(Matrix::sparseMatrix(i=tempData$rowId,
                                               j=tempData$covariateId,
                                               x=tempData$covariateValue,
                                               dims=c(max(population$rowId), max(plpData.mapped$map$newIds))))
         data <- data + temp
+        ParallelLogger::logTrace(paste0('Added non-age non-temporal covariates for timeId ', i))
         rm(tempData)
         # non-temporal features added
       
-        plpData.mapped$temp_covariates<-plpData.mapped$covariates[plpData.mapped$covariates$timeId==i]
+        plpData.mapped$temp_covariates<- plpData.mapped$covariates[!is.na(plpData.mapped$covariates$timeId),] 
+        plpData.mapped$temp_covariates<- plpData.mapped$temp_covariates[plpData.mapped$temp_covariates$timeId==i,] 
+        #plpData.mapped$temp_covariates<-plpData.mapped$covariates[ffbase::ffwhich(plpData.mapped$covariates, timeId==i), ] #changed to which becuase of NA
+        
         for (ind in bit::chunk(plpData.mapped$temp_covariates$covariateId)) {
           ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
           temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$temp_covariates$rowId[ind]),
@@ -133,6 +141,7 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
         data_array<-slam::as.simple_sparse_array(data)
         #extending one more dimesion to the array
         data_array<-slam::extend_simple_sparse_array(data_array,c(1L))
+        ParallelLogger::logTrace(paste0('Finished Mapping covariates for timeId ', i))
       } else {
         data_array <- tryCatch(slam::simple_sparse_array(i=matrix(c(1,1,1), ncol = 3), 
                                                    v=0,
@@ -621,7 +630,9 @@ addAgeTemp <- function(timeId, plpData, timeRef){
     ageId <- plpData$map[plpData$map$oldIds==1002,'newIds']
   }
   
-  ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[plpData$covariates$timeId==0]))
+  #ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[plpData$covariates$timeId==0]))
+  ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[is.na(plpData$covariates$timeId)]))
+  
   if(ageId%in%ntCovs){
     ageData <- ff::as.ram(plpData$covariates[plpData$covariates$covariateId==ageId,c('rowId','covariateId','covariateValue')])
     ageData$covariateValue <- ageData$covariateValue*365 + ff::as.ram(timeRef[timeRef$timeId==timeId,])$startDay
@@ -633,7 +644,9 @@ addAgeTemp <- function(timeId, plpData, timeRef){
 addNonAgeTemp <- function(timeId, plpData){
   ageId <- plpData$map[plpData$map$oldIds==1002,'newIds']
   
-  ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[plpData$covariates$timeId==0]))
+  #ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[plpData$covariates$timeId==0]))
+  ntCovs <- unique(ff::as.ram(plpData$covariates$covariateId[is.na(plpData$covariates$timeId)]))
+  
   if(sum(!ntCovs%in%ageId)==0){
     return(NULL)
   }

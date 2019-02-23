@@ -82,10 +82,11 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   
   # normalise the data:
   class(plpData) <- c(class(plpData), 'covariateData')
+  removeRedundancy <- ifelse("timeId" %in%colnames(plpData$covariates), F, T)
   plpData <- FeatureExtraction::tidyCovariateData(covariateData=plpData, 
                                 minFraction = minCovariateFraction,
                                 normalize = normalizeData,
-                                removeRedundancy = TRUE)
+                                removeRedundancy = removeRedundancy)
   if(length(plpData$metaData$deletedInfrequentCovariateIds)>0){
     plpData$covariateRef <- plpData$covariateRef[!ffbase::`%in%`(plpData$covariateRef$covariateId, plpData$metaData$deletedInfrequentCovariateIds), ]
   }
