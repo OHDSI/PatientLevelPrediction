@@ -31,8 +31,8 @@
 #'                            maxDepth=c(4,6), learnRate=c(0.1,0.3))
 #'
 #' @export
-setGradientBoostingMachine <- function(ntrees=c(10,100), nthread=20, earlyStopRound = 10,
-                                  maxDepth=c(4,6,17), minRows=20, learnRate=c(0.01,0.1),
+setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlyStopRound = 25,
+                                  maxDepth=c(4,6,17), minRows=2, learnRate=c(0.005, 0.01,0.1),
                                   seed= NULL){
   
   if(length(nthread)>1)
