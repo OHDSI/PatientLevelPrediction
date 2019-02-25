@@ -381,6 +381,13 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'] <- paste0('Test',colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'])
   covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
   covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
+  
+  # make covariateValue 0 if NA
+  if('covariateValue'%in%colnames(covSummary)){
+    covSummary$covariateValue[is.na(covSummary$covariateValue)] <- 0
+  }
+  
+  
   if(saveEvaluation){
     ParallelLogger::logTrace('Saving covariate summary as csv')
     if(!dir.exists( file.path(analysisPath, 'evaluation') ))

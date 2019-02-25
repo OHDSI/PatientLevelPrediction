@@ -133,7 +133,7 @@ fitDeepNN <- function(plpData,population, param, search='grid', quiet=F,
   
   #now train the final model and return coef
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
-  finalModel<-do.call(trainDeepNN, c(param[[bestInd]],datas, train=FALSE))$model
+  finalModel<-do.call(trainDeepNN, c(param[[bestInd]],datas, train=FALSE))
   
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
@@ -145,8 +145,12 @@ fitDeepNN <- function(plpData,population, param, search='grid', quiet=F,
   
   comp <- start-Sys.time()
   
+  # train prediction
+  prediction <- finalModel$prediction
+  finalModel$prediction <- NULL
+  
   # return model location 
-  result <- list(model = finalModel,
+  result <- list(model = finalModel$model,
                  trainCVAuc = -1, # ToDo decide on how to deal with this
                  hyperParamSearch = hyperSummary,
                  modelSettings = list(model='fitDeepNN',modelParameters=param.best),
@@ -156,7 +160,8 @@ fitDeepNN <- function(plpData,population, param, search='grid', quiet=F,
                  cohortId=cohortId,
                  varImp = covariateRef, 
                  trainingTime =comp,
-                 covariateMap=result$map
+                 covariateMap=result$map,
+                 predictionTrain = prediction
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'deep'
@@ -284,7 +289,7 @@ trainDeepNN<-function(plpData, population,
                         'layer_dropout: ',layer_dropout,'-- lr: ', lr,
                         '-- decay: ', decay, '-- batch_size: ',batch_size, '-- epochs: ', epochs)
     ParallelLogger::logInfo('==========================================')
-    ParallelLogger::logInfo(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
+    ParallelLogger::logInfo(paste0('DeepNN with parameters:', param.val,' obtained an AUC of ',auc))
     ParallelLogger::logInfo('==========================================')
     
   } else {
@@ -368,10 +373,12 @@ trainDeepNN<-function(plpData, population,
     attr(prediction, "metaData") <- list(predictionType = "binary")
     auc <- computeAuc(prediction)
     foldPerm <- auc
+    predictionMat <- prediction
   }
   
   result <- list(model=model,
                  auc=auc,
+                 prediction = predictionMat,
                  hyperSum = unlist(list(units1=units1,units2=units2,units3=units3, 
                                         layer_dropout=layer_dropout,lr =lr, decay=decay,
                                         batch_size = batch_size, epochs= epochs))
