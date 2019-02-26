@@ -1,12 +1,19 @@
 PatientLevelPrediction
 ======================
 
-An R package for building and validating patient-level predictive models using data in the OMOP Common Data Model format.  
+### Development status
+[![Build Status](https://travis-ci.org/OHDSI/PatientLevelPrediction.svg?branch=master)](https://travis-ci.org/OHDSI/PatientLevelPrediction)
+[![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=master)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=master)
 
-Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. [Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data.](https://academic.oup.com/jamia/article/25/8/969/4989437) J Am Med Inform Assoc. 2018;25(8):969-975.
+PatientLevelPrediction is part of the [OHDSI Methods Library](https://ohdsi.github.io/MethodsLibrary/).
+
 
 Introduction
 ============
+
+PatientLevelPrediction is an R package for building and validating patient-level predictive models using data in the OMOP Common Data Model format.  
+
+Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. [Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data.](https://academic.oup.com/jamia/article/25/8/969/4989437) J Am Med Inform Assoc. 2018;25(8):969-975.
 
 The figure below illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
@@ -72,7 +79,6 @@ Dependencies
  * DatabaseConnector
  * SqlRender
  * FeatureExtraction
- * BigKnn
 
 Getting Started
 ===============
@@ -115,10 +121,6 @@ PatientLevelPrediction is licensed under Apache License 2.0
 Development
 ===========
 PatientLevelPrediction is being developed in R Studio.
-
-### Development status
-[![Build Status](https://travis-ci.org/OHDSI/PatientLevelPrediction.svg?branch=master)](https://travis-ci.org/OHDSI/PatientLevelPrediction)
-[![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=master)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=master)
 
 Beta
 

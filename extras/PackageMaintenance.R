@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# recreate the html index when new documentation
+pkgdown::build_site()
+
 # Format and check code
 OhdsiRTools::formatRFolder()
 OhdsiRTools::checkUsagePackage("PatientLevelPrediction")

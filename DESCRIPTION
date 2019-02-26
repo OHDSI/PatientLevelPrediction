@@ -2,20 +2,24 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 3.0.0
-Date: 2018-10-07
-Author: Jenna Reps [aut],
-    Martijn J. Schuemie [aut, cre],
-    Marc A. Suchard [aut],
-    Patrick B. Ryan [aut],
-    Peter R. Rijnbeek [aut]
-Maintainer: Jenna Reps <reps@ohdsi.org>
+Version: 3.0.1
+Date: 2019-02-26
+Authors@R: c(
+    person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
+    person("Martijn", "Schuemie", role = c("aut")),
+    person("Marc", "Suchard", role = c("aut")),
+    person("Patrick", "Ryan", role = c("aut")),
+    person("Peter", "Rijnbeek", role = c("aut"))
+    )
+Maintainer: Jenna Reps <jreps@its.jnj.com>
 Description: A package for creating patient level prediction models. Given a
     cohort of interest and an outcome of interest, the package can use data in the
     OMOP Common Data Model to build a large set of features. These features can then
     be assessed to fit a predictive model using a number of machine learning algorithms.
     Several performance measures are implemented for model evaluation.
 License: Apache License 2.0
+URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/PatientLevelPrediction
+BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 Depends:
     R (>= 3.3.0), 
     DatabaseConnector (>= 1.11.4),
