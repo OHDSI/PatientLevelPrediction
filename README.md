@@ -1,7 +1,6 @@
 PatientLevelPrediction
 ======================
 
-### Development status
 [![Build Status](https://travis-ci.org/OHDSI/PatientLevelPrediction.svg?branch=master)](https://travis-ci.org/OHDSI/PatientLevelPrediction)
 [![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=master)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=master)
 
@@ -43,24 +42,29 @@ Features
 
 Screenshots
 ===========
-<table border = "">
-<tr valign="top">
+
+<table>
+<tr valign="bottom">
 <td width = 50%>
-  <img src="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/sparseCalibration.png" alt="Prediction calibration plot" title="Prediction calibration plot" />
+
+<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/master/vignettes/sparseCalibration.png" alt="Calibration plot" title="Calibration plot" />
+
 </td>
 <td width = 50%>
- <img src="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/sparseROC.png" alt="ROC plot" title="ROC plot" />
+<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/master/vignettes/sparseROC.png" alt="ROC plot" title="ROC plot" />
+
 </td>
 </tr><tr>
-<td>Calibration plot</td><td>ROC plot</td>
+<td> Calibration Plot</td><td> ROC Plot</td>
 </tr>
-<td>
 </table>
 
 
-A demo of the Shiny App can be found here:
+Demo of the Shiny Apps can be found here:
 
-[Prediction Viewer Shiny App](http://data.ohdsi.org/PredictionViewer/)
+- [Single Prediction Viewer Shiny App](http://data.ohdsi.org/PredictionViewer/)
+- [Multiple Prediction Viewer Shiny App](http://data.ohdsi.org/smokingPhenotypeExplorer/)
+
 
 Technology
 ==========
@@ -71,7 +75,7 @@ System Requirements
 Requires R (version 3.3.0 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java and Python.
 
 The python installation is required for some of the machine learning algorithms. We advise to
-install Python 3.6 using Anaconda (https://www.continuum.io/downloads) when using Windows operating system or Python 3.6 (https://www.python.org/downloads/release/python-360/)  when using Linux or a Mac. 
+install Python 3.7 using Anaconda (https://www.continuum.io/downloads). 
 
 Dependencies
 ============
@@ -112,7 +116,7 @@ We like to get involved in the development of this package through pull requests
 
 
 * Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
-* We use the <a href="../../issues">GitHub issue tracker</a> for all bugs/issues/enhancements
+* We use the <a href="https://github.com/OHDSI/PatientLevelPrediction/issues">GitHub issue tracker</a> for all bugs/issues/enhancements
  
 License
 =======

@@ -13,5 +13,6 @@ articles:
   GeneratingLearningCurves: GeneratingLearningCurves.html
   ImplementingExistingModels: ImplementingExistingModels.html
   InstallationGuide: InstallationGuide.html
+  PatientLevelPrediction: PatientLevelPrediction.html
   PlottingLearningCurves: PlottingLearningCurves.html
 
