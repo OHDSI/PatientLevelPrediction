@@ -107,29 +107,3 @@ PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetai
                                              python = F)
 ```
 The check can take a while to run since it will build the following models in sequence on simulated data:Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.
-
-
-
-#Demo Videos
-***
-
-## Setting up a connection between your database and R:
-<a href="https://youtu.be/8F2X5SKN64w" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
-alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
-
-
-## Running a single PatientLevelPrediction model:
-<a href="https://youtu.be/W9uf1IIhDQs" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
-alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
-
-
-## Running multiple PatientLevelPrediction models study:
-<a href="https://youtu.be/Ppsn_08z5FE" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
-alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
-
-
-## Designing a study in Atlas:
-<a href="https://youtu.be/HqUdO3zx3DI" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
-alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
-
-

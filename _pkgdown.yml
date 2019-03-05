@@ -1,11 +1,42 @@
 template:
   params:
     bootswatch: cosmo
-
+    
 home:
   links:
   - text: Ask a question
     href: http://forums.ohdsi.org
+    
+navbar:
+  structure:
+    left:
+    - home
+    - intro
+    - videos
+    - reference
+    - articles
+    - tutorials
+    - news
+    right: github
+  components:
+    home:
+      icon: fa-home fa-lg
+      href: index.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    intro:
+      text: Get started
+      href: articles/PatientLevelPrediction.html
+    videos:
+      text: Videos
+      href: articles/Videos.html
+    news:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fa-github fa-lg
+      href: https://github.com/OHDSI/PatientLevelPrediction
 
 reference:
   - title: "Getting data and creating a study population"
