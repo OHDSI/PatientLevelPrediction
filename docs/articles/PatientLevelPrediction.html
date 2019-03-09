@@ -91,6 +91,9 @@
   </ul>
 </li>
 <li>
+  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
@@ -142,9 +145,22 @@
 <h2 class="hasAnchor">
 <a href="#setting-up-python" class="anchor"></a>Setting up Python</h2>
 <p>Many of the classifiers in PatientLevelPrediction use python. To use the python classifiers you need to install and set up the python connection in R. We used the reticulate package to run the python code.</p>
-<p>To set python up: * Close your RStudio * Install python 3.7 using anaconda (<a href="https://www.anaconda.com/download" class="uri">https://www.anaconda.com/download</a>) - anaconda should update you path variable with the python binary. * Open a new Rstudio and check whether your python is configured correctly by running:</p>
+<p>To set python up:</p>
+<ul>
+<li>Close your RStudio</li>
+<li>Install python 3.7 using anaconda (<a href="https://www.anaconda.com/download" class="uri">https://www.anaconda.com/download</a>) - anaconda should update you path variable with the python binary.</li>
+<li>Open a new Rstudio and check whether your python is configured correctly by running:</li>
+</ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/system">system</a></span>(<span class="st">"python --version"</span>) </code></pre></div>
-<p>If set up correctly you should see “Python 3.x.x :: Anaconda, Inc.” returned. * If not set up correctly then: + Windows users: make sure your anaconda python binary is in the Path: go to my computer -&gt; system properties -&gt; advanced system settings Then at the bottom right you’ll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable to add the Anaconda location + Mac/Linux users: edit the bash profile to add python in the Path by running in the terminal: touch ~/.bash_profile; open ~/.bash_profile; and adding in the location of python in the PATH variable. Unfortunately, you also need to make an edit to the .Rprofile for R to get the correct PATH. To do this open the .Rprofile by running:</p>
+<p>If set up correctly you should see “Python 3.x.x :: Anaconda, Inc.” returned.</p>
+<ul>
+<li>If not set up correctly then:
+<ul>
+<li>Windows users: make sure your anaconda python binary is in the Path: go to my computer -&gt; system properties -&gt; advanced system settings Then at the bottom right you’ll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable to add the Anaconda location</li>
+<li>Mac/Linux users: edit the bash profile to add python in the Path by running in the terminal: touch ~/.bash_profile; open ~/.bash_profile; and adding in the location of python in the PATH variable. Unfortunately, you also need to make an edit to the .Rprofile for R to get the correct PATH. To do this open the .Rprofile by running:</li>
+</ul>
+</li>
+</ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  usethis<span class="op">::</span><span class="kw">edit_r_profile</span>()</code></pre></div>
 <p>and in this file add</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.setenv">Sys.setenv</a></span>(<span class="dt">PATH =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">"your python bin location"</span>, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.getenv">Sys.getenv</a></span>(<span class="st">"PATH"</span>), <span class="dt">sep=</span><span class="st">":"</span>))</code></pre></div>
@@ -152,34 +168,6 @@
 <li>After editing your Path or .Rprofile open a new Rstudio session and test that python is correctly set up via</li>
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/system">system</a></span>(<span class="st">"python --version"</span>)</code></pre></div>
-<div id="creating-a-plp-python-vitual-environment" class="section level3">
-<h3 class="hasAnchor">
-<a href="#creating-a-plp-python-vitual-environment" class="anchor"></a>Creating A PLP Python Vitual Environment</h3>
-<p>The PatientLevelPrediction package contains code that will create a virual conda environment for PLP and install all the libraries required by the package. To create an virtual environment called ‘PLP’ run:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/configurePython">configurePython</a></span>(<span class="dt">envname =</span> <span class="st">'PLP'</span>, <span class="dt">envtype =</span> <span class="st">'conda'</span>) </code></pre></div>
-<p>You can then find the location of this environment by running:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">reticulate<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/reticulate/topics/conda-tools">conda_list</a></span>() </code></pre></div>
-<p>and the location is returned in the ‘python’ column corresponding to the ‘name’ column equal to ‘PLP’.</p>
-<p>Windows users: simple run</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/setPythonEnvironment">setPythonEnvironment</a></span>(<span class="dt">envname =</span> <span class="st">'PLP'</span>, <span class="dt">envtype =</span> <span class="st">'conda'</span>) </code></pre></div>
-<p>to use the PLP environment</p>
-<p>Mac/linux users: to make sure R uses this environment you need to edit your .Rprofile with the location of the python binary for the PLP environment. Edit the .Rprofile by running:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">usethis<span class="op">::</span><span class="kw">edit_r_profile</span>()</code></pre></div>
-<p>and add</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.setenv">Sys.setenv</a></span>(<span class="dt">PATH =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">"your python bin location"</span>, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.getenv">Sys.getenv</a></span>(<span class="st">"PATH"</span>), <span class="dt">sep=</span><span class="st">":"</span>))</code></pre></div>
-<p>to the file then save. Where your python bin location is the location returned by</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">reticulate<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/reticulate/topics/conda-tools">conda_list</a></span>() </code></pre></div>
-<p>e.g., My PLP virtual environment location was /anaconda3/envs/PLP/bin/python so I added:<br>
-Sys.setenv(PATH = paste(“/anaconda3/envs/PLP/bin”, Sys.getenv(“PATH”), sep=“:”))</p>
-</div>
-</div>
-<div id="using-keras" class="section level2">
-<h2 class="hasAnchor">
-<a href="#using-keras" class="anchor"></a>Using Keras</h2>
-<p>To set up Keras</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/devtools/topics/install_github">install_github</a></span>(<span class="st">"rstudio/keras"</span>)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(keras)
-<span class="kw">install_keras</span>()</code></pre></div>
 </div>
 <div id="testing-the-patientlevelprediction-installation" class="section level2">
 <h2 class="hasAnchor">
@@ -202,7 +190,43 @@ connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectio
                                            <span class="dt">port =</span> <span class="st">'your port'</span>)
 PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/checkPlpInstallation">checkPlpInstallation</a></span>(<span class="dt">connectionDetails =</span> connectionDetails, 
                                              <span class="dt">python =</span> F)</code></pre></div>
-<p>The check can take a while to run since it will build the following models in sequence on simulated <a href="data:Logistic" class="uri">data:Logistic</a> Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.</p>
+<p>The check can take a while to run since it will build the following models in sequence on simulated data: Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.</p>
+</div>
+<div id="installing-keras" class="section level2">
+<h2 class="hasAnchor">
+<a href="#installing-keras" class="anchor"></a>Installing Keras</h2>
+<p>To set up Keras</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/devtools/topics/install_github">install_github</a></span>(<span class="st">"rstudio/keras"</span>)
+<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(keras)
+<span class="kw">install_keras</span>()</code></pre></div>
+</div>
+<div id="creating-a-plp-python-vitual-environment" class="section level2">
+<h2 class="hasAnchor">
+<a href="#creating-a-plp-python-vitual-environment" class="anchor"></a>Creating A PLP Python Vitual Environment</h2>
+<p>The PatientLevelPrediction package contains code that will create a virual conda environment for PLP and install all the libraries required by the package. To create an virtual environment called ‘PLP’ run:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/configurePython">configurePython</a></span>(<span class="dt">envname =</span> <span class="st">'PLP'</span>, <span class="dt">envtype =</span> <span class="st">'conda'</span>) </code></pre></div>
+<p>You can then find the location of this environment by running:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">reticulate<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/reticulate/topics/conda-tools">conda_list</a></span>() </code></pre></div>
+<p>and the location is returned in the ‘python’ column corresponding to the ‘name’ column equal to ‘PLP’.</p>
+<div id="windows-users" class="section level3">
+<h3 class="hasAnchor">
+<a href="#windows-users" class="anchor"></a>Windows users:</h3>
+<p>simply run</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/setPythonEnvironment">setPythonEnvironment</a></span>(<span class="dt">envname =</span> <span class="st">'PLP'</span>, <span class="dt">envtype =</span> <span class="st">'conda'</span>) </code></pre></div>
+<p>to use the PLP environment</p>
+</div>
+<div id="maclinux-users" class="section level3">
+<h3 class="hasAnchor">
+<a href="#maclinux-users" class="anchor"></a>Mac/linux users:</h3>
+<p>to make sure R uses this environment you need to edit your .Rprofile with the location of the python binary for the PLP environment. Edit the .Rprofile by running:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">usethis<span class="op">::</span><span class="kw">edit_r_profile</span>()</code></pre></div>
+<p>and add</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.setenv">Sys.setenv</a></span>(<span class="dt">PATH =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">"your python bin location"</span>, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.getenv">Sys.getenv</a></span>(<span class="st">"PATH"</span>), <span class="dt">sep=</span><span class="st">":"</span>))</code></pre></div>
+<p>to the file then save. Where your python bin location is the location returned by</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">reticulate<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/reticulate/topics/conda-tools">conda_list</a></span>() </code></pre></div>
+<p>e.g., My PLP virtual environment location was /anaconda3/envs/PLP/bin/python so I added:<br>
+Sys.setenv(PATH = paste(“/anaconda3/envs/PLP/bin”, Sys.getenv(“PATH”), sep=“:”))</p>
+</div>
 </div>
 </div>
   </div>
@@ -216,8 +240,9 @@ PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https:
 <a href="#quick-install-guide">Quick Install Guide</a><ul class="nav nav-pills nav-stacked">
 <li><a href="#intalling-the-r-package">Intalling the R package</a></li>
       <li><a href="#setting-up-python">Setting up Python</a></li>
-      <li><a href="#using-keras">Using Keras</a></li>
       <li><a href="#testing-the-patientlevelprediction-installation">Testing the PatientLevelPrediction Installation</a></li>
+      <li><a href="#installing-keras">Installing Keras</a></li>
+      <li><a href="#creating-a-plp-python-vitual-environment">Creating A PLP Python Vitual Environment</a></li>
       </ul>
 </li>
       </ul>

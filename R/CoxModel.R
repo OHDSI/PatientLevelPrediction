@@ -32,7 +32,7 @@ setCoxModel<- function(variance=0.01, seed=NULL){
   if(variance<0)
     stop('Variance must be >= 0')
   
-  result <- list(model='fitCoxModel', param=list(variance=variance, seed=seed), name="Lasso Logistic Regression")
+  result <- list(model='fitCoxModel', param=list(variance=variance, seed=seed), name="Lasso Cox Regression")
   class(result) <- 'modelSettings' 
   
   return(result)
