@@ -354,7 +354,9 @@ loadEnsemblePlpModel <- function(dirPath) {
   model <- list(level1= level1,
                 level2 = level2)
   
-  return(model)
+  results <- list(model = model)
+  class(results) <- c('ensemblePlp')
+  return(results)
 }
 
 #' saves the Ensemble plp results 
