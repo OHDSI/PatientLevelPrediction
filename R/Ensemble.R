@@ -93,10 +93,16 @@ runEnsembleModel <- function(population,
                                         appenders = list(ParallelLogger::createFileAppender(layout = ParallelLogger::layoutTimestamp)))
     ParallelLogger::registerLogger(logger)
   }
-  trainFraction <- NULL
+  
+  if(is.null(splitSeed)){
+    splitSeed <- sample(1000000, 1)
+  }
+  prediction <- population
+  
+  stackerFraction <- 0
   if (ensembleStrategy == "stacked") {
-    trainFraction <- 0.8 * (1 - testFraction)
-    ParallelLogger::logInfo("0.2 * (1 - testFraction) is validation set for training logistics regression as the combinator for stacked ensemble!")
+    stackerFraction <- 0.2 * (1 - testFraction)
+    ParallelLogger::logInfo(paste0(stackerFraction*100,"% of the data in validation set for training logistics regression as the combinator for stacked ensemble!"))
   }
   
   if(is.null(saveDirectory)){
@@ -104,7 +110,7 @@ runEnsembleModel <- function(population,
   }
   
   trainAUCs <- c()
-  pred_probas <- matrix(nrow = length(population$subjectId), ncol = 0)
+
   # run the models in list one by one.#
   level1 <- list()
   length(level1) <- length(modelList)
@@ -113,8 +119,8 @@ runEnsembleModel <- function(population,
                                               dataList[[Index]],
                                               modelSettings = modelList[[Index]],
                                               testSplit = testSplit,
-                                              testFraction = testFraction,
-                                              trainFraction = trainFraction,
+                                              testFraction = testFraction+stackerFraction,
+                                              #trainFraction = trainFraction,
                                               nfold = nfold,
                                               saveDirectory=file.path(saveDirectory,Index), 
                                               savePlpData=savePlpData, 
@@ -124,15 +130,22 @@ runEnsembleModel <- function(population,
                                               splitSeed = splitSeed,
                                               analysisId = analysisId)
     
+    metaData <- attr(results$prediction, 'metaData')
     level1[[Index]] <- results$model
-    trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4]))
-    prob <- results$prediction
-    if (Index == 1) {
-      prediction <- prob
+    # train auc or test auc?  replace 3,4 with logic 
+    ##trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4]))
+    tempres <- as.data.frame(results$performanceEvaluation$evaluationStatistics)
+    trainAUCs <- c(trainAUCs, as.numeric(as.character(tempres$Value[tempres$Metric=='AUC.auc' & tempres$Eval=='train']))) # overfitting?!
+
+    cnames <- c('rowId','value')
+    if(!'indexes'%in%colnames(prediction)){
+      cnames <- c('rowId','indexes','value')
     }
-    pred_probas <- cbind(pred_probas, prob$value)
+    prediction <- merge(prediction, results$prediction[,cnames], by='rowId', all.x=T)
+    colnames(prediction)[ncol(prediction)] <- paste0('value_',Index)
   }
   names(level1) <- paste0('model_',1:length(level1))
+  pred_probas <- prediction[,grep('value_',colnames(prediction))] #
 
   if (ensembleStrategy == "mean") {
     ensem_proba <- rowMeans(pred_probas)
@@ -158,10 +171,16 @@ runEnsembleModel <- function(population,
     pfunction = pfunction)
     
   } else if (ensembleStrategy == "stacked") {
-    train_index <- prediction$indexes == 0
-    train_prob <- pred_probas[train_index, ]
-    train_y <- as.matrix(prediction$outcomeCount)[train_index]
-    lr_model <- glm(train_y ~ ., data = data.frame(train_prob), family = binomial(link = "logit"))
+    nontrain_index <- which(prediction$indexes < 0)
+    test_index <- sample(nontrain_index, round(testFraction*nrow(prediction)))
+    stacker_index <- setdiff(nontrain_index, test_index)
+    prediction$indexes[stacker_index] <- 0
+    stacker_prob <- pred_probas[stacker_index, ]
+    stacker_y <- as.matrix(prediction$outcomeCount)[stacker_index]
+    dataStack <- as.data.frame(stacker_prob)
+    dataStack$y <- stacker_y
+    ParallelLogger::logInfo("Training Stacker logistic model")
+    lr_model <- glm(formula = y ~ ., data = dataStack, family = binomial(link = "logit"))
     ensem_proba <- predict(lr_model, newdata = data.frame(pred_probas), type = "response")
     pfunction <- function(x){
       x <- predict(lr_model, newdata = data.frame(x), type = "response")
@@ -173,8 +192,8 @@ runEnsembleModel <- function(population,
     stop("ensembleStrategy must be mean, product, weighted and stacked")
   }
 
-  prediction[ncol(prediction)] <- ensem_proba
-  attr(prediction, "metaData")$analysisId <- analysisId
+  prediction$value <- ensem_proba
+  attr(prediction, 'metaData') <- metaData
 
   ParallelLogger::logInfo("Train set evaluation")
   performance.train <- evaluatePlp(prediction[prediction$indexes >= 0, ], dataList[[1]])

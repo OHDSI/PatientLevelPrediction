@@ -1,3 +1,9 @@
+PatientLevelPrediction 3.0.2
+======================
+
+Changes:
+- Fixed ensemble stacker 
+
 PatientLevelPrediction 3.0.1
 ======================
 
