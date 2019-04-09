@@ -38,7 +38,7 @@ expect_error(createPlpJournalDocument(plpResult=plpResult, targetName='target te
                                outcomeName='outcome test',characterisationSettings=1 ))
 
 # includeTrain not logical
-expect_error(createPlpDocument(plpResult=plpResult, targetName='target test', 
+expect_error(createPlpJournalDocument(plpResult=plpResult, targetName='target test', 
                                outcomeName='outcome test',characterisationSettings=list(),
                                includeTrain='Y'))
 

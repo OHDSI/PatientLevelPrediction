@@ -15,7 +15,9 @@
 # limitations under the License.
 
 library("testthat")
-context("Transport")
+context("ImportExport.R")
+
+# how to test exportPlpDataToCsv?
 
 # Test unit for the creation of the study externalValidatePlp
 model <- list(model='none - validation',
@@ -309,4 +311,107 @@ test_that("check transportPlp N is 5", {
   
   check3 <- sum(transport$covariateSummary$CovariateCountWithNoOutcome < 5 & transport$covariateSummary$CovariateCountWithNoOutcome > 0)==0
   expect_equal(check3, TRUE)
+})
+
+#test_that("transportModel", {
+#  })
+
+test_that("createLrSql", {
+  testthat::expect_error(createLrSql(modelNames=NULL, covariateConstructionName='prediction', 
+                                     modelTable='#model_table',
+                                     analysisId=111, e=environment(),
+                                     databaseOutput=NULL))
+  
+  testthat::expect_error(createLrSql(models=NULL, covariateConstructionName='prediction', 
+                                     modelTable='#model_table',
+                                     analysisId=111, e=environment(),
+                                     databaseOutput=NULL))
+  })
+
+
+test_that("getPredictionCovariateData", {
+  covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
+  testthat::expect_error(PatientLevelPrediction:::getPredictionCovariateData(connection =NULL,
+                                                                oracleTempSchema = NULL,
+                                                                cdmDatabaseSchema = NULL,
+                                                                cohortTable = "#cohort_person",
+                                                                cohortId = -1,
+                                                                cdmVersion = "5",
+                                                                rowIdField = "subject_id",
+                                                                covariateSettings= NULL,
+                                                                aggregated = FALSE,
+                                                                analysisId=111,
+                                                                databaseOutput=NULL))
+  
+  testthat::expect_error(PatientLevelPrediction:::getPredictionCovariateData(connection =NULL,
+                                                    oracleTempSchema = NULL,
+                                                    cdmDatabaseSchema = NULL,
+                                                    cohortTable = "#cohort_person",
+                                                    cohortId = -1,
+                                                    cdmVersion = "4",
+                                                    rowIdField = "subject_id",
+                                                    covariateSettings=  covariateSettings,
+                                                    aggregated = FALSE,
+                                                    analysisId=111,
+                                                    databaseOutput=NULL))
+  
+})
+
+
+test_that("createExistingModelSq", {
+  covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
+  testthat::expect_error(createExistingModelSql(modelNames = NULL, interceptTable = NULL,
+                                                covariateTable, type='logistic',
+                                                analysisId=112, covariateSettings,
+                                                asFunctions=F, customCovariates=NULL,
+                                                e=environment(),
+                                                covariateValues = F
+  ))
+  
+  testthat::expect_error(createExistingModelSql(modelTable = NULL, interceptTable = NULL,
+                                                covariateTable, type='logistic',
+                                                analysisId=112, covariateSettings,
+                                                asFunctions=F, customCovariates=NULL,
+                                                e=environment(),
+                                                covariateValues = F
+  ))
+  
+})
+
+test_that("getExistingmodelsCovariateData", {
+# getExistingmodelsCovariateData
+  covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
+  testthat::expect_error(PatientLevelPrediction:::getExistingmodelsCovariateData(covariateSettings= NULL))
+  testthat::expect_error(PatientLevelPrediction:::getExistingmodelsCovariateData(covariateSettings= covariateSettings,
+                                                                                 cdmVersion = "4"))
+})
+
+test_that("toPlpData", {
+  
+  # CHeCKING THE CONVERSION FROM MATRIX TO PLPDATA
+  
+  nppl <- 10
+  ncov <- 10
+  data <- matrix(runif(nppl*ncov), ncol=ncov)
+  
+  columnInfo <- data.frame(columnId=1:ncov, 
+                           columnName = paste0('column',1:ncov), 
+                           columnTime = c(rep(-1, ncov-1),0)
+  )
+  outcomeId <- ncov
+  
+  # check input fails
+  options(fftempdir = getwd())
+  testData <- PatientLevelPrediction::toPlpData(data, columnInfo, outcomeId, outcomeThreshold=0.5,
+                                                indexTime =0, includeIndexDay=T )
+  
+  # should convert all the entries 10 variables per 10 people = 100 rows
+  testthat::expect_equal(nrow(ff::as.ram(testData$covariates)), nppl*(ncov-1))
+  testthat::expect_equal(nrow(ff::as.ram(testData$covariateRef)), nrow(columnInfo))
+  testthat::expect_equal(nrow(testData$cohorts), nppl)
+  testthat::expect_equal(nrow(testData$outcomes), sum(data[,ncov]>=0.5))
+  
+  ## Now test the failed inputs...
+  # [TODO]
+  
 })

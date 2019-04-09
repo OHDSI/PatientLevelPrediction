@@ -218,34 +218,6 @@ test_that("toSparseM", {
 })
 
 
-test_that("mappingMatrixPlpData", {
-  
-  # CHeCKING THE CONVERSION FROM MATRIX TO PLPDATA
-  
-  nppl <- 10
-  ncov <- 10
-  data <- matrix(runif(nppl*ncov), ncol=ncov)
-  
-  columnInfo <- data.frame(columnId=1:ncov, 
-                           columnName = paste0('column',1:ncov), 
-                           columnTime = c(rep(-1, ncov-1),0)
-  )
-  outcomeId <- ncov
-  
-  # check input fails
-  options(fftempdir = getwd())
-  testData <- PatientLevelPrediction::toPlpData(data, columnInfo, outcomeId, outcomeThreshold=0.5,
-                                                indexTime =0, includeIndexDay=T )
-  
-  # should convert all the entries 10 variables per 10 people = 100 rows
-  testthat::expect_equal(nrow(ff::as.ram(testData$covariates)), nppl*(ncov-1))
-  testthat::expect_equal(nrow(ff::as.ram(testData$covariateRef)), nrow(columnInfo))
-  testthat::expect_equal(nrow(testData$cohorts), nppl)
-  testthat::expect_equal(nrow(testData$outcomes), sum(data[,ncov]>=0.5))
-  
-  ## Now test the failed inputs...
-  # [TODO]
-  
-})
+
 
 ##[TODO] - ADD TESTS FOR SQL CREATION EXISTING AND PLP LOG REG MODELS...

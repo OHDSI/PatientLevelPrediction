@@ -413,21 +413,6 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
 }
 
 
-# helper function
-sameCovs <- function(model1, model2){
-  test1 <- model1$varImp[,c('covariateId', 'covariateName')]
-  colnames(test1) <- c('covariateId', 'covariateName1')
-  test2 <- model2$varImp[,c('covariateId', 'covariateName')]
-  colnames(test2) <- c('covariateId', 'covariateName2')
-  vars <-merge(test1,test2,
-               by='covariateId')
-  if(nrow(vars)==0)
-    return(FALSE)
-
-  return(sum(vars$covariateName1==vars$covariateName2)==nrow(vars))
-}
-
-
 getPredictionCovariateData <- function(connection,
                                        oracleTempSchema = NULL,
                                        cdmDatabaseSchema,

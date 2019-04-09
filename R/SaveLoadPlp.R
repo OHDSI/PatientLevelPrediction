@@ -811,32 +811,34 @@ updateModelLocation  <- function(plpModel, dirPath){
 }
 
 
-#' Saves the prediction dataframe to csv
+#' Saves the prediction dataframe to RDS
 #'
 #' @details
-#' Saves the prediction data frame returned by predict.R to a csv file
+#' Saves the prediction data frame returned by predict.R to an RDS file and returns the fileLocation where the prediction is saved
 #'
 #' @param prediction                   The prediciton data.frame
-#' @param dirPath                     The directory to save the csv
+#' @param dirPath                     The directory to save the prediction RDS
+#' @param fileName                    The name of the RDS file that will be saved in dirPath
 #' 
 #' @export
-savePrediction <- function(prediction, dirPath){
+savePrediction <- function(prediction, dirPath, fileName='prediction.rds'){
   #TODO check inupts
-  utils::write.csv(prediction, file=dirPath, row.names = F, col.names = T)
+  saveRDS(prediction, file=file.path(dirPath,fileName))
   
+  return(file.path(dirPath,fileName))
 }
 
 #' Loads the prediciton dataframe to csv
 #'
 #' @details
-#' Loads the prediciton  csv file
+#' Loads the prediciton  RDS file
 #'
-#' @param dirPath                     The directory to saved the csv
+#' @param fileLocation                     The location with the saved prediction
 #' 
 #' @export
-loadPrediction <- function(dirPath){
+loadPrediction <- function(fileLocation){
   #TODO check inupts
-  prediction <- utils::read.csv(file=dirPath, header = T)
+  prediction <- readRDS(file=fileLocation)
   return(prediction)
 }
 
@@ -901,117 +903,7 @@ loadPlpResult <- function(dirPath){
   
 }
 
-
-
-# this code is not needed now?
-writeOutput <- function(prediction, 
-                        performance.test, 
-                        performance.train, 
-                        plpModel,
-                        population,
-                        plpData,
-                        dirPath,
-                        analysisId,
-                        start.all,
-                        testSplit,
-                        modelLoc){
-  if(!dir.exists(file.path(dirPath,analysisId , 'test'))){dir.create(file.path(dirPath,analysisId , 'test'))}
-  utils::write.table(performance.test$raw, file.path(dirPath,analysisId , 'test','rocRawSparse.txt'), row.names=F)
-  utils::write.table(performance.test$preferenceScores, file.path(dirPath,analysisId , 'test','preferenceScoresSparse.txt'), row.names=F)
-  utils::write.table(performance.test$calSparse, file.path(dirPath,analysisId , 'test','calSparse.txt'), row.names=F)
-  utils::write.table(performance.test$calSparse2_10, file.path(dirPath,analysisId , 'test','calSparse2_10.txt'), row.names=F)
-  utils::write.table(performance.test$calSparse2_100, file.path(dirPath,analysisId , 'test','calSparse2_100.txt'), row.names=F)
-  utils::write.table(performance.test$quantiles, file.path(dirPath,analysisId , 'test','quantiles.txt'), row.names=F)
-  
-  if(!dir.exists(file.path(dirPath,analysisId , 'train'))){dir.create(file.path(dirPath,analysisId , 'train'))}
-  utils::write.table(performance.train$raw, file.path(dirPath,analysisId , 'train','rocRawSparse.txt'), row.names=F)
-  utils::write.table(performance.train$preferenceScores, file.path(dirPath,analysisId , 'train','preferenceScoresSparse.txt'), row.names=F)
-  utils::write.table(performance.train$calSparse, file.path(dirPath,analysisId , 'train','calSparse.txt'), row.names=F)
-  utils::write.table(performance.train$calSparse2_10, file.path(dirPath,analysisId , 'train','calSparse2_10.txt'), row.names=F)
-  utils::write.table(performance.train$calSparse2_100, file.path(dirPath,analysisId , 'train','calSparse2_100.txt'), row.names=F)
-  utils::write.table(performance.train$quantiles, file.path(dirPath,analysisId , 'train','quantiles.txt'), row.names=F)
-  
-  
-  #save plots:
-  grDevices::pdf(file.path(dirPath,analysisId,'plots.pdf'))
-  gridExtra::grid.arrange(performance.test$calPlot, 
-                          gridExtra::arrangeGrob(performance.test$prefScorePlot, performance.test$boxPlot), 
-                          nrow=2,
-                          top='Performance Plots')
-  print(PatientLevelPrediction::plotRoc(prediction[prediction$indexes<0,]))
-  
-  grDevices::dev.off()
-  
-  comp <- format(difftime(Sys.time(), start.all, units='hours'), nsmall=1)
-  
-  # make nice formated model info table and performance table
-  tryCatch({
-    modelInfo <- data.frame(modelId = analysisId,
-                            database = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)), '\\.')[[1]][1],
-                            cohortId=attr(prediction, "metaData")$cohortId,
-                            outcomeId=attr(prediction, "metaData")$outcomeId,
-                            # add fold information and test/train size/ num events?
-                            model= plpModel$modelSettings$model,
-                            splitOn = testSplit,
-                            modelLoc =modelLoc ,
-                            populationLoc='NULL' ,
-                            parameters = paste(names(plpModel$modelSettings$modelParameters), unlist(plpModel$modelSettings$modelParameters), sep=':', collapse=','),
-                            modelTime = comp)
-  }, error= function(err){print(paste("MY_ERROR:  ",err))
-    writeLines(paste(plpData$metaData$call$cdmDatabaseSchema,attr(prediction, "metaData")$cohortId, plpModel$modelSettings$model, sep='-'))
-    
-  })
-  performanceInfoTest <- data.frame(modelId =analysisId,
-                                    AUC = performance.test$auc[1],
-                                    AUC_lb = performance.test$auc[2],
-                                    AUC_ub = performance.test$auc[3],
-                                    Brier = performance.test$brier,
-                                    BrierScaled = performance.test$brierScaled,
-                                    hosmerlemeshow_chi2 = performance.test$hosmerlemeshow[1],
-                                    hosmerlemeshow_df = performance.test$hosmerlemeshow[2],
-                                    hosmerlemeshow_pvalue = performance.test$hosmerlemeshow[3],
-                                    calibrationIntercept = performance.test$calibrationIntercept10,
-                                    calibrationGradient = performance.test$calibrationGradient10,
-                                    preference3070_0 = performance.test$preference3070_0,
-                                    preference3070_1 = performance.test$preference3070_1
-  )
-  
-  performanceInfoTrain <- data.frame(modelId =analysisId,
-                                     AUC = performance.train$auc[1],
-                                     AUC_lb = performance.train$auc[2],
-                                     AUC_ub = performance.train$auc[3],
-                                     Brier = performance.train$brier,
-                                     BrierScaled = performance.train$brierScaled,
-                                     hosmerlemeshow_chi2 = performance.train$hosmerlemeshow[1],
-                                     hosmerlemeshow_df = performance.train$hosmerlemeshow[2],
-                                     hosmerlemeshow_pvalue = performance.train$hosmerlemeshow[3],
-                                     calibrationIntercept = performance.train$calibrationIntercept10,
-                                     calibrationGradient = performance.train$calibrationGradient10,
-                                     preference3070_0 = performance.train$preference3070_0,
-                                     preference3070_1 = performance.train$preference3070_1
-  )
-  
-  # search for modelInfo in directory - if does not exist create and save model info table
-  # otherwise append model info to existing file
-  if(file.exists(file.path(dirPath, 'modelInfo.txt')))
-    utils::write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), append=T, row.names = F, col.names = F)
-  if(!file.exists(file.path(dirPath, 'modelInfo.txt')))
-    utils::write.table(modelInfo, file.path(dirPath, 'modelInfo.txt'), row.names = F)
-  
-  # repeat for performance info
-  if(file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
-    utils::write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), append=T, row.names = F, col.names = F)
-  if(!file.exists(file.path(dirPath, 'performanceInfoTest.txt')))
-    utils::write.table(performanceInfoTest, file.path(dirPath, 'performanceInfoTest.txt'), row.names = F)
-  if(file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
-    utils::write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), append=T, row.names = F, col.names = F)
-  if(!file.exists(file.path(dirPath, 'performanceInfoTrain.txt')))
-    utils::write.table(performanceInfoTrain, file.path(dirPath, 'performanceInfoTrain.txt'), row.names = F)
-  
-  
-  
-}
-
+# MIGHT DELETE THIS:
 # Insert cohort definitions into package
 saveCirceDefinition <- function (definitionId, name = NULL,
                                             baseUrl = "https://enter_address")

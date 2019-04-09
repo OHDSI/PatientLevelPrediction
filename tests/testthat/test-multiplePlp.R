@@ -95,9 +95,9 @@ test_that("createPlpModelSettings", {
   testthat::expect_true(length(modelAnalysisList$covariateSettings) == covN)
   testthat::expect_true(length(modelAnalysisList$populationSettings) == popN)
   testthat::expect_true(nrow(modelAnalysisList$settingLookupTable) == modN*covN*popN)
-  testthat::expect_true(max(as.character(modelAnalysisList$settingLookupTable$populationSettingId))==popN)
-  testthat::expect_true(max(as.character(modelAnalysisList$settingLookupTable$covariateSettingId))==covN)
-  testthat::expect_true(max(as.character(modelAnalysisList$settingLookupTable$modelSettingId))==modN)
+  testthat::expect_true(max(as.double(as.character(modelAnalysisList$settingLookupTable$populationSettingId)))==popN)
+  testthat::expect_true(max(as.double(as.character(modelAnalysisList$settingLookupTable$covariateSettingId)))==covN)
+  testthat::expect_true(max(as.double(as.character(modelAnalysisList$settingLookupTable$modelSettingId)))==modN)
   testthat::expect_true(length(unique(modelAnalysisList$settingLookupTable$populationSettingId))==popN)
   testthat::expect_true(length(unique(modelAnalysisList$settingLookupTable$covariateSettingId))==covN)
   testthat::expect_true(length(unique(modelAnalysisList$settingLookupTable$modelSettingId))==modN)
@@ -137,7 +137,7 @@ test_that("createPlpReferenceTable", {
                                                                            studyPop2))
   
   cohorts <- sample(200,sample(10,1))
-  outs <- sample(200,sample(10,1))
+  outs <- 200+sample(200,sample(10,1))
   result <- PatientLevelPrediction:::createPlpReferenceTable(modelAnalysisList,
                                     cohortIds = cohorts,
                                     outcomeIds = outs,

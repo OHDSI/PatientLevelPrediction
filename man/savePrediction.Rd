@@ -2,18 +2,20 @@
 % Please edit documentation in R/SaveLoadPlp.R
 \name{savePrediction}
 \alias{savePrediction}
-\title{Saves the prediction dataframe to csv}
+\title{Saves the prediction dataframe to RDS}
 \usage{
-savePrediction(prediction, dirPath)
+savePrediction(prediction, dirPath, fileName = "prediction.rds")
 }
 \arguments{
 \item{prediction}{The prediciton data.frame}
 
-\item{dirPath}{The directory to save the csv}
+\item{dirPath}{The directory to save the prediction RDS}
+
+\item{fileName}{The name of the RDS file that will be saved in dirPath}
 }
 \description{
-Saves the prediction dataframe to csv
+Saves the prediction dataframe to RDS
 }
 \details{
-Saves the prediction data frame returned by predict.R to a csv file
+Saves the prediction data frame returned by predict.R to an RDS file and returns the fileLocation where the prediction is saved
 }

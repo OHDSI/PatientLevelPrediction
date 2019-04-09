@@ -1,3 +1,10 @@
+PatientLevelPrediction 3.0.3
+======================
+
+Changes:
+- Added more tests
+- test files now match R files
+
 PatientLevelPrediction 3.0.2
 ======================
 
