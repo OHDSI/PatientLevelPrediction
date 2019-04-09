@@ -7,7 +7,7 @@
 createPlpReport(plpResult = NULL, plpValidation = NULL, plpData = NULL,
   targetName = "<target population>", outcomeName = "<outcome>",
   targetDefinition = NULL, outcomeDefinition = NULL,
-  outputLocation = file.path(getwd(), "plp_report.docx"))
+  outputLocation = file.path(getwd(), "plp_report.docx"), save = T)
 }
 \arguments{
 \item{plpResult}{An object of type \code{plpResult} returned by running runPlp()}
@@ -25,6 +25,8 @@ createPlpReport(plpResult = NULL, plpValidation = NULL, plpData = NULL,
 \item{outcomeDefinition}{The cohort details}
 
 \item{outputLocation}{The location to write the document to}
+
+\item{save}{If false the output of the function of the function is the document rather than creating the document in outputLocation}
 }
 \value{
 A work document containing the selected outputs within the user's directory at location specified in outputLocation

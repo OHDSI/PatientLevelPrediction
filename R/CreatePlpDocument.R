@@ -30,17 +30,19 @@
 #' @param targetDefinition                 The cohort details
 #' @param outcomeDefinition                The cohort details
 #' @param outputLocation                   The location to write the document to
+#' @param save                             If false the output of the function of the function is the document rather than creating the document in outputLocation
 #'
 #' @return
 #' A work document containing the selected outputs within the user's directory at location specified in outputLocation
 #' @export
 createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
-                              plpData = NULL,
-                              targetName = '<target population>',
-                              outcomeName = '<outcome>',
-                              targetDefinition = NULL,
-                              outcomeDefinition = NULL,
-                              outputLocation=file.path(getwd(), 'plp_report.docx')){
+                            plpData = NULL,
+                            targetName = '<target population>',
+                            outcomeName = '<outcome>',
+                            targetDefinition = NULL,
+                            outcomeDefinition = NULL,
+                            outputLocation=file.path(getwd(), 'plp_report.docx'),
+                            save= T){
 
   if(is.null(plpResult)){
     stop('plpResult needs to be input')
@@ -172,13 +174,15 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   covSet <- data.frame(setting=names(unlist(plpResult$model$metaData$call$covariateSettings)),
                        choice = unlist(plpResult$model$metaData$call$covariateSettings))
   rownames(covSet) <- NULL
-  doc <- doc %>% officer::body_add_table(value = covSet)
+  if(nrow(covSet)!=0){
+    doc <- doc %>% officer::body_add_table(value = covSet)
+  }
   
   doc <- doc %>% officer::body_add_par(value = 'Population Settings:', style = "heading 3")
   
   # add table of population settings
   plpResult$inputSetting$populationSettings$attrition <- NULL
-  popSet <- data.frame(setting=names(plpResult$inputSetting$populationSettings),
+  popSet <- data.frame(setting=names(unlist(plpResult$inputSetting$populationSettings)),
                        choice = unlist(plpResult$inputSetting$populationSettings))
   rownames(popSet) <- NULL
   doc <- doc %>% officer::body_add_table(value = popSet)
@@ -381,9 +385,13 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
 
 
   #======================= FINAL OUTPUT ========================
-  # write the document to file location
-  print(doc, target = file.path(outputLocation))
-  return(TRUE)
+  if(save){
+    # write the document to file location
+    print(doc, target = file.path(outputLocation))
+    return(TRUE)
+  } else{
+    return(doc)
+  }
 
 }
 
@@ -512,6 +520,7 @@ formatDocNumbers <- function(x, dp=3){
 #' @param includePredictionPicture         Whether to include a picture detailing the prediction problem
 #' @param includeAttritionPlot            Whether to include the attriction plot
 #' @param outputLocation                   The location to write the document to
+#' @param save                            If false this fucntion returns the document and does not save to outputLocation 
 #'
 #' @return
 #' A work document containing the selected outputs within the user's directory at location specified in outputLocation
@@ -525,7 +534,8 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                                      includeTrain=FALSE, includeTest=TRUE,
                                      includePredictionPicture=TRUE,
                                      includeAttritionPlot=TRUE,
-                                     outputLocation=file.path(getwd(), 'plp_journal_document.docx')){
+                                     outputLocation=file.path(getwd(), 'plp_journal_document.docx'),
+                                     save = T){
 
   if(is.null(plpResult)){
     stop('plpResult needs to be input')
@@ -791,15 +801,18 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<!Clarify about missing data>", prop = style_helper_text))) %>% 
       officer::body_add_par("")
      } else {
-    covs <- as.data.frame(unlist(covset)) #collapse covset values if vectors?
-    covs <- data.frame(Covariate = row.names(covs), Value = covs)
-    colnames(covs) <- c('Covariate','Value')
-    #restrict to true
-    covs <- covs[union(which(covs$Value!=0),grep('TermStartDays',covs$Covariate)),]
-    doc <- doc %>% officer::body_add_table(value = covs)
-    doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<!Clarify about missing data>", prop = style_helper_text))) %>% 
-      officer::body_add_par("")
-     }
+       if(!is.null(covset)){
+         covs <- as.data.frame(unlist(covset)) #collapse covset values if vectors?
+         covs <- data.frame(Covariate = row.names(covs), Value = covs)
+         colnames(covs) <- c('Covariate','Value')
+         #restrict to true
+         covs <- covs[union(which(covs$Value!=0),grep('TermStartDays',covs$Covariate)),]
+         doc <- doc %>% officer::body_add_table(value = covs)
+         doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<!Clarify about missing data>", prop = style_helper_text))) %>% 
+           officer::body_add_par("")
+       }
+     }    
+
 
   doc <- doc %>% officer::body_add_par(value = 'Statistical analysis methods', style = "heading 3")
   
@@ -1091,10 +1104,13 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   modelVar$covariateValue <- format(as.double(modelVar$covariateValue), nsmall = 3, digits = 3, scientific = F)
   doc <- doc %>% officer::body_add_table(value=modelVar)
   
-
-  # write the document to file location
-  print(doc, target = file.path(outputLocation))
-  return(TRUE)
+  if(save){
+    # write the document to file location
+    print(doc, target = file.path(outputLocation))
+    return(TRUE)
+  } else {
+    return(doc)
+  }
 
 }
 

@@ -148,23 +148,23 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                    verbosity="INFO", timeStamp=FALSE, analysisId=NULL, 
                    save=NULL
 ){
-
+  
   if(!missing(save)){
     warning('save has been replaced with saveDirectory - please use this input from now on')
-    if(NULL(saveDirectory)){saveDirectory <- save}
+    if(is.null(saveDirectory)){saveDirectory <- save}
   }
   
   if(missing(verbosity)){
     verbosity <- "INFO"
   } else{
-    if(!verbosity%in%c("DEBUG","TRACE","INFO","WARN","FATAL","ERROR")){
+    if(!verbosity%in%c("DEBUG","TRACE","INFO","WARN","FATAL","ERROR", "NONE")){
       stop('Incorrect verbosity string')
     }
   }
-
+  
   # log the start time:
   ExecutionDateTime <- Sys.time()
-
+  
   # create an analysisid and folder to save the results
   start.all <- Sys.time()
   if(is.null(analysisId))
@@ -174,19 +174,23 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     analysisPath <- file.path(getwd(),analysisId)
   } else {
     analysisPath <- file.path(saveDirectory,analysisId) 
-    }
+  }
   
-  if(!dir.exists(analysisPath)){dir.create(analysisPath,recursive=T)}
+  if(verbosity!="NONE"){
+    if(!dir.exists(analysisPath)){dir.create(analysisPath,recursive=T)}
+  }
   logFileName = paste0(analysisPath,'/plplog.txt')
   
   # write log to both console and file (tee). 
   # note other appenders can be created, e.g., to webservice or database!
   clearLoggerType("PLP Log")
-  logger <- ParallelLogger::createLogger(name = "PLP Log",
-                                      threshold = verbosity,
-                                      appenders = list(ParallelLogger::createFileAppender(layout = ParallelLogger::layoutParallel,
-                                                                          fileName = logFileName)))
-  ParallelLogger::registerLogger(logger)
+  if(verbosity!="NONE"){
+    logger <- ParallelLogger::createLogger(name = "PLP Log",
+                                           threshold = verbosity,
+                                           appenders = list(ParallelLogger::createFileAppender(layout = ParallelLogger::layoutParallel,
+                                                                                               fileName = logFileName)))
+    ParallelLogger::registerLogger(logger)
+  }
   
   ParallelLogger::logInfo(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
   
@@ -225,22 +229,22 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     ParallelLogger::logInfo(sprintf('%-20s%s', 'Saving plpData to ', file.path(analysisPath,'plpData')))
     savePlpData(plpData, file.path(analysisPath,'plpData'))
   }
-
+  
   # construct the settings for the model pipeline
   if(is.null(indexes)){
     if(testSplit=='time'){
       ParallelLogger::logTrace('Dataset time split starter')
       indexes <-tryCatch(timeSplitter(population, test=testFraction, train = trainFraction, nfold=nfold),
-                     finally=ParallelLogger::logTrace('Done.'))
+                         finally=ParallelLogger::logTrace('Done.'))
     }
     if(testSplit=='person'){
       ParallelLogger::logTrace('Dataset person split starter')
       if(is.null(splitSeed)){ #keep record of splitSeed
         splitSeed <- sample(20000000,1)-10000000
         ParallelLogger::logInfo(paste0('splitSeed: ', splitSeed))
-        } 
+      } 
       indexes <- tryCatch(personSplitter(population, test=testFraction, train = trainFraction, nfold=nfold, seed=splitSeed),
-                      finally= ParallelLogger::logTrace('Done.')
+                          finally= ParallelLogger::logTrace('Done.')
       )
     }
   }
@@ -271,10 +275,10 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   #sink(logFileName, append = TRUE, split = TRUE)
   
   model <- tryCatch(do.call(fitPlp, settings),
-                error = function(e) {
-                  stop(paste0(e))},
-                finally = {
-                  ParallelLogger::logTrace('Done.')})
+                    error = function(e) {
+                      stop(paste0(e))},
+                    finally = {
+                      ParallelLogger::logTrace('Done.')})
   model$analysisId <- analysisId # adding this so we can link validation to models
   
   # get train prediction and remove it from model
@@ -287,10 +291,10 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   # calculate metrics
   ParallelLogger::logTrace('Prediction')
   predictionTest <- tryCatch(predictPlp(plpModel = model, 
-                                    population = populationTest, #population, 
-                                    plpData = plpData, 
-                                    index = NULL), 
-                     finally = ParallelLogger::logTrace('Done.'))
+                                        population = populationTest, #population, 
+                                        plpData = plpData, 
+                                        index = NULL), 
+                             finally = ParallelLogger::logTrace('Done.'))
   
   prediction <- rbind(predictionTest, predictionTrain[,colnames(predictionTest)])
   
@@ -316,19 +320,19 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
       if(!dir.exists( file.path(analysisPath, 'evaluation') ))
         dir.create(file.path(analysisPath, 'evaluation'))
       tryCatch(utils::write.csv(performance$evaluationStatistics, file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'), row.names=F ),
-           finally= ParallelLogger::logTrace('Saved EvaluationStatistics.')
+               finally= ParallelLogger::logTrace('Saved EvaluationStatistics.')
       )
       tryCatch(utils::write.csv(performance$thresholdSummary, file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'), row.names=F ),
-           finally= ParallelLogger::logTrace('Saved ThresholdSummary.')
+               finally= ParallelLogger::logTrace('Saved ThresholdSummary.')
       )
       tryCatch(utils::write.csv(performance$demographicSummary, file.path(analysisPath, 'evaluation', 'demographicSummary.csv'), row.names=F),
-           finally= ParallelLogger::logTrace('Saved DemographicSummary.')
+               finally= ParallelLogger::logTrace('Saved DemographicSummary.')
       )
       tryCatch(utils::write.csv(performance$calibrationSummary, file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'), row.names=F),
-           finally= ParallelLogger::logTrace('Saved CalibrationSummary.')
+               finally= ParallelLogger::logTrace('Saved CalibrationSummary.')
       )
       tryCatch(utils::write.csv(performance$predictionDistribution, file.path(analysisPath, 'evaluation', 'predictionDistribution.csv'), row.names=F),
-           finally= ParallelLogger::logTrace('Saved PredictionDistribution.')
+               finally= ParallelLogger::logTrace('Saved PredictionDistribution.')
       )
     }
     
@@ -393,9 +397,9 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
     if(!dir.exists( file.path(analysisPath, 'evaluation') ))
       dir.create(file.path(analysisPath, 'evaluation'))
     tryCatch(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
-         finally= ParallelLogger::logTrace('Saved covariate summary.')
+             finally= ParallelLogger::logTrace('Saved covariate summary.')
     )
-    }
+  }
   ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
   
   results <- list(inputSetting=inputSetting,
@@ -426,14 +430,16 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   }
   
   
-  ParallelLogger::logInfo(paste0('Log saved to ',logFileName))  
+  if(verbosity!="NONE"){
+    ParallelLogger::logInfo(paste0('Log saved to ',logFileName))  
+  }
   ParallelLogger::logInfo("Run finished successfully.")
   
   # stop logger
   ParallelLogger::clearLoggers()
   logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                         threshold = "INFO",
-                         appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+                                         threshold = "INFO",
+                                         appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
   ParallelLogger::registerLogger(logger)
   
   return(results)
@@ -457,11 +463,11 @@ summary.plpModel <- function(object, ...) {
   }
   
   writeLines(paste0("The study was started at: ", object$executionSummary$ExecutionDateTime, 
-                   " and took at total of ", as.double(object$executionSummary$TotalExecutionElapsedTime, unit='mins'),
-                   " minutes.  ", hyper))
+                    " and took at total of ", as.double(object$executionSummary$TotalExecutionElapsedTime, unit='mins'),
+                    " minutes.  ", hyper))
   
   aucInd <- object$performanceEvaluation$evaluationStatistics[,'Eval']=='test' & 
-            object$performanceEvaluation$evaluationStatistics[,'Metric']%in%c('auc','AUC.auc')
+    object$performanceEvaluation$evaluationStatistics[,'Metric']%in%c('auc','AUC.auc')
   
   brierScoreInd <- object$performanceEvaluation$evaluationStatistics[,'Eval']=='test' & 
     object$performanceEvaluation$evaluationStatistics[,'Metric']%in%c('BrierScore')

@@ -89,6 +89,20 @@ test_that("fitting", {
                                                                             param=NULL, outcomeId = 1,
                                                                             cohortId = 2))
   
+  
+  #=====================================
+  # checking Cox Regression 
+  #=====================================
+  model_set <- setCoxModel()
+  testthat::expect_that(model_set, testthat::is_a("modelSettings"))
+  testthat::expect_length(model_set,3)
+  testthat::expect_error(PatientLevelPrediction::setCoxModel(variance = -3))
+  testthat::expect_error(PatientLevelPrediction::setCoxModel(seed = 'F'))
+  testthat::expect_error(PatientLevelPrediction:::fitCoxModel())
+  testthat::expect_error(PatientLevelPrediction:::fitCoxModel(population,plpData=list(), 
+                                                                             param=NULL, outcomeId = 1,
+                                                                             cohortId = 2))
+  
   #checkPrediction(model_set=lr_set, plpData=plpData, population, index)
   ##model <-PatientLevelPrediction::fitPlp(population[population$indexes>0,], data=plpData,  
   ##               modelSettings=model_set, 

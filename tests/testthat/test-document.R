@@ -15,7 +15,7 @@
 # limitations under the License.
 
 library("testthat")
-
+context("Document.R")
 # Test unit for the document creation 
 
 test_that("document creation parameters", {
@@ -76,6 +76,44 @@ expect_error(createPlpJournalDocument(plpResult=plpResult, targetName='target te
 ## clean up
 #file.remove(file.path(getwd(), 'plp_journal_document.docx'))
 
+})
+
+data(plpDataSimulationProfile)
+sampleSize <- 2000
+plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+population <- PatientLevelPrediction::createStudyPopulation(plpData, outcomeId=2,
+                                                            riskWindowEnd = 365)
+modelset <- PatientLevelPrediction::setCoxModel()
+plpResult <- PatientLevelPrediction::runPlp(population=population, 
+                                            plpData=plpData, modelSettings = modelset, 
+                                            savePlpData = F, saveEvaluation = F, 
+                                            savePlpResult = F, 
+                                            savePlpPlots = F, verbosity = 'NONE')
+
+test_that("createPlpJournalDocument document works", {
+
+  doc <- PatientLevelPrediction::createPlpJournalDocument(plpResult=plpResult, plpData = plpData, 
+                                                          targetName='target test', 
+                                                   outcomeName='outcome test',
+                                                   includeTrain=T, includeTest=T, 
+                                                   includePredictionPicture=T, 
+                                                   includeAttritionPlot=T, save=F)
+  expect_equal(class(doc), "rdocx")
+  
+})
+
+test_that("createPlpReport document works", {
+  doc <- createPlpReport(plpResult=plpResult, plpValidation=NULL,
+                         plpData = plpData,
+                         targetName = '<target population>',
+                         outcomeName = '<outcome>',
+                         targetDefinition = NULL,
+                         outcomeDefinition = NULL,
+                         outputLocation=file.path(getwd(), 'plp_report.docx'),
+                         save = F)
+  
+  expect_equal(class(doc), "rdocx")
+  
 })
 
 

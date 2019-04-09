@@ -39,7 +39,8 @@ population <- createStudyPopulation(plpData,
                                     #,verbosity=INFO
 )
 lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
-lr_results <- tryCatch(runPlp(population = population, plpData = plpData,
+lr_results <- tryCatch(runPlp(population = population, plpData = plpData, 
+                              verbosity = 'NONE',
                               modelSettings = lr_model, savePlpData = F,
                               savePlpResult = F, savePlpPlots =  F, 
                               saveEvaluation = F,

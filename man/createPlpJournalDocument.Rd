@@ -9,7 +9,8 @@ createPlpJournalDocument(plpResult = NULL, plpValidation = NULL,
   outcomeName = "<outcome>", table1 = F, connectionDetails = NULL,
   includeTrain = FALSE, includeTest = TRUE,
   includePredictionPicture = TRUE, includeAttritionPlot = TRUE,
-  outputLocation = file.path(getwd(), "plp_journal_document.docx"))
+  outputLocation = file.path(getwd(), "plp_journal_document.docx"),
+  save = T)
 }
 \arguments{
 \item{plpResult}{An object of type \code{plpResult} returned by running runPlp()}
@@ -35,6 +36,8 @@ createPlpJournalDocument(plpResult = NULL, plpValidation = NULL,
 \item{includeAttritionPlot}{Whether to include the attriction plot}
 
 \item{outputLocation}{The location to write the document to}
+
+\item{save}{If false this fucntion returns the document and does not save to outputLocation}
 }
 \value{
 A work document containing the selected outputs within the user's directory at location specified in outputLocation
