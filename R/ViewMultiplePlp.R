@@ -42,11 +42,15 @@ viewMultiplePlp <- function(analysesLocation){
                                                 
                                                 shiny::div(DT::dataTableOutput('summaryTable'), 
                                                            style = "font-size:70%"),
-                                                shiny::h3('Model Settings: ', shiny::actionLink("modelhelp", "help")),
+                                                shiny::h3('Model Settings: ', shiny::a("help", href="https://ohdsi.github.io/PatientLevelPrediction/reference/index.html", target="_blank") 
+                                                ),
                                                 DT::dataTableOutput('modelTable'),
-                                                shiny::h3('Population Settings: ', shiny::actionLink("pophelp", "help")),
+                                                shiny::h3('Population Settings: ', shiny::a("help", href="https://ohdsi.github.io/PatientLevelPrediction/reference/createStudyPopulation.html", target="_blank") 
+                                                ),
                                                 DT::dataTableOutput('populationTable'),
-                                                shiny::h3('Covariate Settings: ', shiny::actionLink("covhelp", "help")),
+                                                shiny::h3('Covariate Settings: ', 
+                                                          shiny::a("help", href="http://ohdsi.github.io/FeatureExtraction/reference/createCovariateSettings.html", target="_blank") 
+                                                ),
                                                 DT::dataTableOutput('covariateTable')
                                                 
                                   )
@@ -99,21 +103,7 @@ viewMultiplePlp <- function(analysesLocation){
   
   # Define server logic ----
   server <- function(input, output) {
-    
-    # helpers
-    #shiny::observeEvent(input$modelhelp, {
-    # model <- dataofint()$modelset - get the model name to figure the set rd to show
-    #  test <- ?PatientLevelPrediction::runPlp
-    #  file.show(getRd(test))
-    #})
-    shiny::observeEvent(input$covhelp, {
-      test <- ?FeatureExtraction::createCovariateSettings
-      file.show(getRd(test))
-    })
-    shiny::observeEvent(input$pophelp, {
-      test <- ?PatientLevelPrediction::createStudyPopulation
-      file.show(getRd(test))
-    })
+
     
     summaryData <- shiny::reactive({
       ind <- 1:nrow(allPerformance)
