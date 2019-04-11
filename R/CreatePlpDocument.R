@@ -592,8 +592,12 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   # rerun the pop
   populationSet <- plpResult$inputSetting$populationSettings
-  populationSet$plpData <- plpData
-  population <- do.call('createStudyPopulation', populationSet)
+  if(is.null(plpResult$prediction)){
+    populationSet$plpData <- plpData
+    population <- do.call('createStudyPopulation', populationSet)
+  } else{
+    population <- plpResult$prediction
+  }
 
   
   #============== STYLES =======================================================
@@ -839,7 +843,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   if(includeAttritionPlot){
     # Pic3: add attriction plot
-    attrPlot <- PatientLevelPrediction::drawAttritionDiagramPlp(attr(population,'metaData')$attrition)
+    attrPlot <- PatientLevelPrediction::drawAttritionDiagramPlp(plpResult$inputSetting$populationSettings$attrition)#attr(population,'metaData')$attrition)
     #doc = ReporteRs::addPlot(attrPlot)
     doc <- doc %>% officer::body_add_gg(value = attrPlot)  # IS THIS GG??
     doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the attrition for the model development.' )
