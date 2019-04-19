@@ -18,7 +18,7 @@ Many of the classifiers in PatientLevelPrediction use python.  To use the python
 To set python up:
 
 * Close your RStudio
-* Install python 3.7 using anaconda (https://www.anaconda.com/download) - anaconda should update you path variable with the python binary.
+* Install python 3.7 using anaconda (https://www.anaconda.com/download) and note the installation location. Anaconda should update you path variable with the python binary.
 * Open a new Rstudio and check whether your python is configured correctly by running:
 ```{r eval=FALSE} 
 system("python --version") 
@@ -26,7 +26,7 @@ system("python --version")
 If set up correctly you should see "Python 3.x.x :: Anaconda, Inc." returned.
 
 * If not set up correctly then:
-    + Windows users: make sure your anaconda python binary is in the Path: go to my computer -> system properties -> advanced system settings Then at the bottom right you’ll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable to add the Anaconda location 
+    + Windows users: make sure your anaconda python binary is in the System PATH environmental variable: go to my computer -> system properties -> advanced system settings Then at the bottom right you’ll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable. Add the following Anaconda locations to your path: `D:\Anaconda3;D:\Anaconda3\Scripts;D:\Anaconda3\Library\bin` (this assumes your installation was done to `D:\Anaconda3`).
     + Mac/Linux users: edit the bash profile to add python in the Path by running in the terminal: touch ~/.bash_profile; open ~/.bash_profile; and adding in the location of python in the PATH variable. Unfortunately, you also need to make an edit to the .Rprofile for R to get the correct PATH. To do this open the .Rprofile by running: 
 ```{r eval=FALSE} 
   usethis::edit_r_profile()
@@ -43,6 +43,7 @@ system("python --version")
 ## Testing the PatientLevelPrediction Installation
 To test whether the package is installed correctly run:
 ```{r eval=FALSE}
+library(PatientLevelPrediction)
 library(DatabaseConnector)
 connectionDetails <- createConnectionDetails(dbms = 'sql_server', 
                                              user = 'username', 
@@ -55,6 +56,7 @@ PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetai
 To test the installation (excluding python) run:
 
 ```{r eval=FALSE}
+library(PatientLevelPrediction)
 library(DatabaseConnector)
 connectionDetails <- createConnectionDetails(dbms = 'sql_server', 
                                            user = 'username', 
@@ -70,6 +72,8 @@ The check can take a while to run since it will build the following models in se
 To set up Keras 
 ```{r eval=FALSE}
 devtools::install_github("rstudio/keras")
+# NOTE: A restart of your R Session is likely required
+# after installing the rstudio/keras package
 library(keras)
 install_keras()
 ```
