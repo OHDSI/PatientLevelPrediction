@@ -30,7 +30,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.4</span>
       </span>
     </div>
 
@@ -148,7 +148,7 @@
 <p>To set python up:</p>
 <ul>
 <li>Close your RStudio</li>
-<li>Install python 3.7 using anaconda (<a href="https://www.anaconda.com/download" class="uri">https://www.anaconda.com/download</a>) - anaconda should update you path variable with the python binary.</li>
+<li>Install python 3.7 using anaconda (<a href="https://www.anaconda.com/download" class="uri">https://www.anaconda.com/download</a>) [make sure you pick the correct operating system] and note the installation location. Anaconda should update you path variable with the python binary.</li>
 <li>Open a new Rstudio and check whether your python is configured correctly by running:</li>
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/system">system</a></span>(<span class="st">"python --version"</span>) </code></pre></div>
@@ -156,7 +156,7 @@
 <ul>
 <li>If not set up correctly then:
 <ul>
-<li>Windows users: make sure your anaconda python binary is in the Path: go to my computer -&gt; system properties -&gt; advanced system settings Then at the bottom right you’ll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable to add the Anaconda location</li>
+<li>Windows users: make sure your anaconda python binary is in the System PATH environmental variable: go to my computer -&gt; system properties -&gt; advanced system settings Then at the bottom right you’ll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable. Add the following Anaconda locations to your path: <code>D:\Anaconda3;D:\Anaconda3\Scripts;D:\Anaconda3\Library\bin</code> (this assumes your installation was done to <code>D:\Anaconda3</code>).</li>
 <li>Mac/Linux users: edit the bash profile to add python in the Path by running in the terminal: touch ~/.bash_profile; open ~/.bash_profile; and adding in the location of python in the PATH variable. Unfortunately, you also need to make an edit to the .Rprofile for R to get the correct PATH. To do this open the .Rprofile by running:</li>
 </ul>
 </li>
@@ -173,7 +173,8 @@
 <h2 class="hasAnchor">
 <a href="#testing-the-patientlevelprediction-installation" class="anchor"></a>Testing the PatientLevelPrediction Installation</h2>
 <p>To test whether the package is installed correctly run:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(DatabaseConnector)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(PatientLevelPrediction)
+<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(DatabaseConnector)
 connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectionDetails</span>(<span class="dt">dbms =</span> <span class="st">'sql_server'</span>, 
                                              <span class="dt">user =</span> <span class="st">'username'</span>, 
                                              <span class="dt">password =</span> <span class="st">'hidden'</span>, 
@@ -182,7 +183,8 @@ connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectio
 PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/checkPlpInstallation">checkPlpInstallation</a></span>(<span class="dt">connectionDetails =</span> connectionDetails, 
                                              <span class="dt">python =</span> T)</code></pre></div>
 <p>To test the installation (excluding python) run:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(DatabaseConnector)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(PatientLevelPrediction)
+<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(DatabaseConnector)
 connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectionDetails</span>(<span class="dt">dbms =</span> <span class="st">'sql_server'</span>, 
                                            <span class="dt">user =</span> <span class="st">'username'</span>, 
                                            <span class="dt">password =</span> <span class="st">'hidden'</span>, 
@@ -192,17 +194,19 @@ PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https:
                                              <span class="dt">python =</span> F)</code></pre></div>
 <p>The check can take a while to run since it will build the following models in sequence on simulated data: Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.</p>
 </div>
-<div id="installing-keras" class="section level2">
+<div id="installing-keras-optional" class="section level2">
 <h2 class="hasAnchor">
-<a href="#installing-keras" class="anchor"></a>Installing Keras</h2>
+<a href="#installing-keras-optional" class="anchor"></a>Installing Keras (optional)</h2>
 <p>To set up Keras</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/devtools/topics/install_github">install_github</a></span>(<span class="st">"rstudio/keras"</span>)
+<span class="co"># </span><span class="al">NOTE</span><span class="co">: A restart of your R Session is likely required</span>
+<span class="co"># after installing the rstudio/keras package</span>
 <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(keras)
 <span class="kw">install_keras</span>()</code></pre></div>
 </div>
-<div id="creating-a-plp-python-vitual-environment" class="section level2">
+<div id="creating-a-plp-python-vitual-environment-optional" class="section level2">
 <h2 class="hasAnchor">
-<a href="#creating-a-plp-python-vitual-environment" class="anchor"></a>Creating A PLP Python Vitual Environment</h2>
+<a href="#creating-a-plp-python-vitual-environment-optional" class="anchor"></a>Creating A PLP Python Vitual Environment (optional)</h2>
 <p>The PatientLevelPrediction package contains code that will create a virual conda environment for PLP and install all the libraries required by the package. To create an virtual environment called ‘PLP’ run:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/configurePython">configurePython</a></span>(<span class="dt">envname =</span> <span class="st">'PLP'</span>, <span class="dt">envtype =</span> <span class="st">'conda'</span>) </code></pre></div>
 <p>You can then find the location of this environment by running:</p>
@@ -241,8 +245,8 @@ Sys.setenv(PATH = paste(“/anaconda3/envs/PLP/bin”, Sys.getenv(“PATH”), s
 <li><a href="#intalling-the-r-package">Intalling the R package</a></li>
       <li><a href="#setting-up-python">Setting up Python</a></li>
       <li><a href="#testing-the-patientlevelprediction-installation">Testing the PatientLevelPrediction Installation</a></li>
-      <li><a href="#installing-keras">Installing Keras</a></li>
-      <li><a href="#creating-a-plp-python-vitual-environment">Creating A PLP Python Vitual Environment</a></li>
+      <li><a href="#installing-keras-optional">Installing Keras (optional)</a></li>
+      <li><a href="#creating-a-plp-python-vitual-environment-optional">Creating A PLP Python Vitual Environment (optional)</a></li>
       </ul>
 </li>
       </ul>

@@ -18,7 +18,7 @@ Many of the classifiers in PatientLevelPrediction use python.  To use the python
 To set python up:
 
 * Close your RStudio
-* Install python 3.7 using anaconda (https://www.anaconda.com/download) and note the installation location. Anaconda should update you path variable with the python binary.
+* Install python 3.7 using anaconda (https://www.anaconda.com/download) [make sure you pick the correct operating system] and note the installation location. Anaconda should update you path variable with the python binary.
 * Open a new Rstudio and check whether your python is configured correctly by running:
 ```{r eval=FALSE} 
 system("python --version") 
@@ -68,7 +68,7 @@ PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetai
 ```
 The check can take a while to run since it will build the following models in sequence on simulated data: Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.
 
-## Installing Keras
+## Installing Keras (optional)
 To set up Keras 
 ```{r eval=FALSE}
 devtools::install_github("rstudio/keras")
@@ -79,7 +79,7 @@ install_keras()
 ```
 
 
-## Creating A PLP Python Vitual Environment
+## Creating A PLP Python Vitual Environment (optional)
 The PatientLevelPrediction package contains code that will create a virual conda environment for PLP and install all the libraries required by the package.  To create an virtual environment called 'PLP' run:
 ```{r eval=FALSE} 
 PatientLevelPrediction::configurePython(envname = 'PLP', envtype = 'conda') 

@@ -87,3 +87,17 @@ test_that("plots", {
   testthat::expect_s3_class(test, 'grob')
 
 })
+
+
+test_that("outcomeSurvivalPlot", {
+  
+  # test the plot works
+  test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = 2)
+  testthat::expect_s3_class(test, 'ggsurvplot')
+  
+  testthat::expect_error(outcomeSurvivalPlot())
+  testthat::expect_error(outcomeSurvivalPlot(plpData = NULL))
+  testthat::expect_error(outcomeSurvivalPlot(outcomeId = 094954))
+})
+
+  

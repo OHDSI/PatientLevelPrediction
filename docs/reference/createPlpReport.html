@@ -63,7 +63,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.4</span>
       </span>
     </div>
 
@@ -164,7 +164,7 @@
     <pre class="usage"><span class='fu'>createPlpReport</span>(<span class='kw'>plpResult</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>plpValidation</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>plpData</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>targetName</span> <span class='kw'>=</span> <span class='st'>"&lt;target population&gt;"</span>, <span class='kw'>outcomeName</span> <span class='kw'>=</span> <span class='st'>"&lt;outcome&gt;"</span>,
   <span class='kw'>targetDefinition</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>outcomeDefinition</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>outputLocation</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/file.path'>file.path</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/getwd'>getwd</a></span>(), <span class='st'>"plp_report.docx"</span>))</pre>
+  <span class='kw'>outputLocation</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/file.path'>file.path</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/getwd'>getwd</a></span>(), <span class='st'>"plp_report.docx"</span>), <span class='kw'>save</span> <span class='kw'>=</span> <span class='no'>T</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -200,6 +200,10 @@
     <tr>
       <th>outputLocation</th>
       <td><p>The location to write the document to</p></td>
+    </tr>
+    <tr>
+      <th>save</th>
+      <td><p>If false the output of the function of the function is the document rather than creating the document in outputLocation</p></td>
     </tr>
     </table>
     

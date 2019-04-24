@@ -17,6 +17,70 @@
 # limitations under the License.
 
 
+#' Plot the outcome incidence over time
+#'
+#' @details
+#' This creates a survival plot that can be used to pick a suitable time-at-risk period
+#'
+#' @param plpData               The plpData object returned by running getPlpData()
+#' @param outcomeId             The cohort id corresponding to the outcome 
+#' @param removeSubjectsWithPriorOutcome  Remove patients who have had the outcome before their target cohort index date from the plot
+#' @param riskWindowStart       (integer) The time-at-risk starts at target cohort index date plus this value
+#' @param riskWindowEnd       (integer) The time-at-risk ends at target cohort index date plus this value 
+#' @param riskTable           (binary) Whether to include a table at the bottom  of the plot showing the number of people at risk over time
+#' @param confInt             (binary) Whether to include a confidence interval
+#' @param yLabel              (string) The label for the y-axis         
+#'
+#' @return
+#' TRUE if it ran 
+#'
+#' @export
+outcomeSurvivalPlot <- function(plpData, outcomeId,
+                                removeSubjectsWithPriorOutcome = T,  
+                                riskWindowStart = 1, 
+                                riskWindowEnd = 3650,
+                                riskTable = T,
+                                confInt= T, 
+                                yLabel = 'Fraction of those who are outcome free in target population'){
+  
+  ensure_installed("survminer")
+  if(missing(plpData)){
+    stop('plpData missing')
+  }
+  if(missing(outcomeId)){
+    stop('outcomeId missing')
+  }
+  if(class(plpData)!='plpData'){
+    stop('Incorrect plpData object')
+  }
+  if(!outcomeId%in%unique(plpData$outcomes$outcomeId)){
+    stop('outcome id not in data')
+  }
+  
+  
+  pop <- createStudyPopulation(plpData = plpData, outcomeId = outcomeId, 
+                                                       removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome, 
+                                                       requireTimeAtRisk = F, 
+                                                       riskWindowStart = riskWindowStart, riskWindowEnd = riskWindowEnd)
+  pop$daysToEvent[is.na(pop$daysToEvent)] <- pop$survivalTime[is.na(pop$daysToEvent)]
+  sv <- survival::survfit(survival::Surv(daysToEvent, outcomeCount)~cohortId,#riskDecile, 
+                          pop, 
+                          conf.int = TRUE)
+  res <- survminer::ggsurvplot(fit=sv, 
+                               data = pop,
+                               risk.table = riskTable,
+                               pval = F,
+                               xlim = c(0,3650), ylim=c(min(sv$surv)*0.95,1),
+                               conf.int = confInt,
+                               ggtheme = ggplot2::theme_minimal(),
+                               risk.table.y.text.col = T,
+                               risk.table.y.text = FALSE,
+                               ylab = yLabel
+  )
+  return(res)
+}
+
+
 #' Plot all the PatientLevelPrediction plots
 #'
 #' @details

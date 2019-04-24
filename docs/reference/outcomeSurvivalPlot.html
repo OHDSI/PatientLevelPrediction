@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Saves the prediction dataframe to RDS — savePrediction • PatientLevelPrediction</title>
+<title>Plot the outcome incidence over time — outcomeSurvivalPlot • PatientLevelPrediction</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Saves the prediction dataframe to RDS — savePrediction" />
+<meta property="og:title" content="Plot the outcome incidence over time — outcomeSurvivalPlot" />
 
-<meta property="og:description" content="Saves the prediction dataframe to RDS" />
+<meta property="og:description" content="Plot the outcome incidence over time" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -150,39 +150,65 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Saves the prediction dataframe to RDS</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/SaveLoadPlp.R'><code>R/SaveLoadPlp.R</code></a></small>
-    <div class="hidden name"><code>savePrediction.Rd</code></div>
+    <h1>Plot the outcome incidence over time</h1>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/Plotting.R'><code>R/Plotting.R</code></a></small>
+    <div class="hidden name"><code>outcomeSurvivalPlot.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Saves the prediction dataframe to RDS</p>
+    <p>Plot the outcome incidence over time</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>savePrediction</span>(<span class='no'>prediction</span>, <span class='no'>dirPath</span>, <span class='kw'>fileName</span> <span class='kw'>=</span> <span class='st'>"prediction.rds"</span>)</pre>
+    <pre class="usage"><span class='fu'>outcomeSurvivalPlot</span>(<span class='no'>plpData</span>, <span class='no'>outcomeId</span>, <span class='kw'>removeSubjectsWithPriorOutcome</span> <span class='kw'>=</span> <span class='no'>T</span>,
+  <span class='kw'>riskWindowStart</span> <span class='kw'>=</span> <span class='fl'>1</span>, <span class='kw'>riskWindowEnd</span> <span class='kw'>=</span> <span class='fl'>3650</span>, <span class='kw'>riskTable</span> <span class='kw'>=</span> <span class='no'>T</span>, <span class='kw'>confInt</span> <span class='kw'>=</span> <span class='no'>T</span>,
+  <span class='kw'>yLabel</span> <span class='kw'>=</span> <span class='st'>"Fraction of those who are outcome free in target population"</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>prediction</th>
-      <td><p>The prediciton data.frame</p></td>
+      <th>plpData</th>
+      <td><p>The plpData object returned by running getPlpData()</p></td>
     </tr>
     <tr>
-      <th>dirPath</th>
-      <td><p>The directory to save the prediction RDS</p></td>
+      <th>outcomeId</th>
+      <td><p>The cohort id corresponding to the outcome</p></td>
     </tr>
     <tr>
-      <th>fileName</th>
-      <td><p>The name of the RDS file that will be saved in dirPath</p></td>
+      <th>removeSubjectsWithPriorOutcome</th>
+      <td><p>Remove patients who have had the outcome before their target cohort index date from the plot</p></td>
+    </tr>
+    <tr>
+      <th>riskWindowStart</th>
+      <td><p>(integer) The time-at-risk starts at target cohort index date plus this value</p></td>
+    </tr>
+    <tr>
+      <th>riskWindowEnd</th>
+      <td><p>(integer) The time-at-risk ends at target cohort index date plus this value</p></td>
+    </tr>
+    <tr>
+      <th>riskTable</th>
+      <td><p>(binary) Whether to include a table at the bottom  of the plot showing the number of people at risk over time</p></td>
+    </tr>
+    <tr>
+      <th>confInt</th>
+      <td><p>(binary) Whether to include a confidence interval</p></td>
+    </tr>
+    <tr>
+      <th>yLabel</th>
+      <td><p>(string) The label for the y-axis</p></td>
     </tr>
     </table>
     
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>TRUE if it ran</p>
+    
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Saves the prediction data frame returned by predict.R to an RDS file and returns the fileLocation where the prediction is saved</p>
+    <p>This creates a survival plot that can be used to pick a suitable time-at-risk period</p>
     
 
   </div>
@@ -191,6 +217,8 @@
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
+      <li><a href="#value">Value</a></li>
+
       <li><a href="#details">Details</a></li>
           </ul>
 
