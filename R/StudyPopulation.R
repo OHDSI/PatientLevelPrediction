@@ -1,6 +1,6 @@
 # @file StudyPopulation.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2019 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -84,36 +84,66 @@ createStudyPopulation <- function(plpData,
                                   addExposureDaysToStart = FALSE,
                                   riskWindowEnd = 365,
                                   addExposureDaysToEnd = F,
-                                  verbosity = futile.logger::INFO,
+                                  verbosity = "INFO",
                                   ...) {
   
-  if (verbosity == TRACE){
-    futile.logger::flog.layout(layout.format('[~l]\t[~t]\t~m'))
-  } else {
-    futile.logger::flog.layout(layout.format('~m'))
+  if(missing(verbosity)){
+    verbosity <- "INFO"
+  } else{
+    if(!verbosity%in%c("DEBUG","TRACE","INFO","WARN","FATAL","ERROR")){
+      stop('Incorrect verbosity string')
+    }
   }
-  futile.logger::flog.threshold(verbosity)
+  # check logger
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
+                                        threshold = verbosity,
+                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+    ParallelLogger::registerLogger(logger)
+  }
+  
   
   # parameter checks
   if(!class(plpData)%in%c('plpData.libsvm','plpData.coo','plpData')){
-    futile.logger::flog.error('Check plpData format')
+    ParallelLogger::logError('Check plpData format')
     stop('Wrong plpData input')
   }
+  ParallelLogger::logDebug(paste0('outcomeId: ', outcomeId))
   checkNotNull(outcomeId)
+  ParallelLogger::logDebug(paste0('binary: ', binary))
   checkBoolean(binary)
+  ParallelLogger::logDebug(paste0('includeAllOutcomes: ', includeAllOutcomes))
   checkBoolean(includeAllOutcomes)
+  ParallelLogger::logDebug(paste0('firstExposureOnly: ', firstExposureOnly))
   checkBoolean(firstExposureOnly)
+  ParallelLogger::logDebug(paste0('washoutPeriod: ', washoutPeriod))
   checkHigherEqual(washoutPeriod,0)
+  ParallelLogger::logDebug(paste0('removeSubjectsWithPriorOutcome: ', removeSubjectsWithPriorOutcome))
   checkBoolean(removeSubjectsWithPriorOutcome)
   if (removeSubjectsWithPriorOutcome){
+    ParallelLogger::logDebug(paste0('priorOutcomeLookback: ', priorOutcomeLookback))
     checkHigher(priorOutcomeLookback,0)
   }
+  ParallelLogger::logDebug(paste0('requireTimeAtRisk: ', requireTimeAtRisk))
   checkBoolean(requireTimeAtRisk)
+  ParallelLogger::logDebug(paste0('minTimeAtRisk: ', minTimeAtRisk))
   checkHigherEqual(minTimeAtRisk,0)
+  ParallelLogger::logDebug(paste0('riskWindowStart: ', riskWindowStart))
   checkHigherEqual(riskWindowStart,0)
+  ParallelLogger::logDebug(paste0('addExposureDaysToStart: ', addExposureDaysToStart))
   checkBoolean(addExposureDaysToStart)
+  ParallelLogger::logDebug(paste0('riskWindowEnd: ', riskWindowEnd))
   checkHigherEqual(riskWindowEnd,0)
+  ParallelLogger::logDebug(paste0('addExposureDaysToEnd: ', addExposureDaysToEnd))
   checkBoolean(addExposureDaysToEnd)
+  
+  if(requireTimeAtRisk){
+    if(addExposureDaysToStart==addExposureDaysToEnd){
+      if(minTimeAtRisk>(riskWindowEnd-riskWindowStart)){
+        warning('issue: minTimeAtRisk is greater than max possible time-at-risk')
+      }
+    }
+  }
   
   if (is.null(population)) {
     population <- plpData$cohorts
@@ -135,8 +165,22 @@ createStudyPopulation <- function(plpData,
   metaData$riskWindowEnd = riskWindowEnd
   metaData$addExposureDaysToEnd = addExposureDaysToEnd
   
+  # get attriction for outcomeId
+  if(!is.null(metaData$attrition$uniquePeople)){
+    metaData$attrition <- metaData$attrition[metaData$attrition$outcomeId==outcomeId,c('description', 'targetCount', 'uniquePeople', 'outcomes')]
+  } else {
+    if(!is.null(attr(plpData$cohorts,  'metaData')$attrition)){
+    metaData$attrition <- data.frame(outcomeId=outcomeId,description=metaData$attrition$description, 
+                                     targetCount=attr(plpData$cohorts,  'metaData')$attrition$persons, uniquePeople=0,
+                                     outcomes= metaData$attrition$outcomes)
+    } else {
+      metaData$attrition <- c()
+    }
+
+  }
+  
   if (firstExposureOnly) {
-    futile.logger::flog.trace("Keeping only first exposure per subject")
+    ParallelLogger::logTrace("Keeping only first exposure per subject")
     population <- population[order(population$subjectId, as.Date(population$cohortStartDate)), ]
     idx <- duplicated(population[, c("subjectId", "cohortId")])
     population <- population[!idx, ]
@@ -148,7 +192,7 @@ createStudyPopulation <- function(plpData,
     metaData$attrition <- rbind(metaData$attrition, getCounts(population,outCount, "First exposure only"))
   }
   if (washoutPeriod) {
-    futile.logger::flog.trace(paste("Requiring", washoutPeriod, "days of observation prior index date"))
+    ParallelLogger::logTrace(paste("Requiring", washoutPeriod, "days of observation prior index date"))
     population <- population[population$daysFromObsStart >= washoutPeriod,]
     outCount <- 0
     if(!missing(outcomeId) && !is.null(outcomeId))
@@ -157,9 +201,9 @@ createStudyPopulation <- function(plpData,
   }
   if (removeSubjectsWithPriorOutcome) {
     if (missing(outcomeId) || is.null(outcomeId)){
-      futile.logger::flog.trace("No outcome specified so skipping removing people with prior outcomes")
+      ParallelLogger::logTrace("No outcome specified so skipping removing people with prior outcomes")
     } else {
-      futile.logger::flog.trace("Removing subjects with prior outcomes (if any)")
+      ParallelLogger::logTrace("Removing subjects with prior outcomes (if any)")
       outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
       if (addExposureDaysToStart) {
         outcomes <- merge(outcomes, population[, c("rowId","daysToCohortEnd")])
@@ -188,7 +232,7 @@ createStudyPopulation <- function(plpData,
   
   if (requireTimeAtRisk) {
     if(includeAllOutcomes){
-      futile.logger::flog.trace("Removing non outcome subjects with insufficient time at risk (if any)")
+      ParallelLogger::logTrace("Removing non outcome subjects with insufficient time at risk (if any)")
       
       #people with the outcome:
       outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
@@ -201,7 +245,7 @@ createStudyPopulation <- function(plpData,
       population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
     }
     else {
-      futile.logger::flog.trace("Removing subjects with insufficient time at risk (if any)")
+      ParallelLogger::logTrace("Removing subjects with insufficient time at risk (if any)")
       noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart + minTimeAtRisk ]
       population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
     }
@@ -211,7 +255,7 @@ createStudyPopulation <- function(plpData,
     metaData$attrition <- rbind(metaData$attrition, getCounts(population, outCount, paste("Have time at risk")))
   }
   if (missing(outcomeId) || is.null(outcomeId)){
-    futile.logger::flog.trace("No outcome specified so not creating outcome and time variables")
+    ParallelLogger::logTrace("No outcome specified so not creating outcome and time variables")
   } else {
     # Select outcomes during time at risk
     outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
@@ -221,17 +265,17 @@ createStudyPopulation <- function(plpData,
     # check outcome still there
     if(nrow(outcomes)==0){
       population <- NULL
-      futile.logger::flog.warn('No outcomes left...')
+      ParallelLogger::logWarn('No outcomes left...')
       return(population)
     }
     
     # Create outcome count column
     if(binary){
-      futile.logger::flog.info("Outcome is 0 or 1")
+      ParallelLogger::logInfo("Outcome is 0 or 1")
       one <- function(x) return(1)
       outcomeCount <- stats::aggregate(outcomeId ~ rowId, data = outcomes, one)
     } else {
-      futile.logger::flog.trace("Outcome is count")
+      ParallelLogger::logTrace("Outcome is count")
       outcomeCount <- stats::aggregate(outcomeId ~ rowId, data = outcomes, length)
     }
     colnames(outcomeCount)[colnames(outcomeCount) == "outcomeId"] <- "outcomeCount"
@@ -256,7 +300,11 @@ createStudyPopulation <- function(plpData,
 
 limitCovariatesToPopulation <- function(covariates, rowIds) {
   idx <- !is.na(ffbase::ffmatch(covariates$rowId, rowIds))
-  covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
+  if(sum(idx)!=0){
+    covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
+  }else{
+    stop('No covariates')
+  }
   return(covariates)
 }
 
@@ -283,9 +331,27 @@ getAttritionTable <- function(object) {
 
 getCounts <- function(population,outCount, description = "") {
   persons <- length(unique(population$subjectId))
-
+  targets <- nrow(population)
+  
   counts <- data.frame(description = description,
-                       persons = persons,
+                       targetCount= targets,
+                       uniquePeople = persons,
                        outcomes = outCount)
+  return(counts)
+}
+
+getCounts2 <- function(cohort,outcomes, description = "") {
+  persons <- length(unique(cohort$subjectId))
+  targets <- nrow(cohort)
+  
+  outcomes <- aggregate(cbind(count = outcomeId) ~ outcomeId, 
+                        data = outcomes, 
+                        FUN = function(x){NROW(x)})
+  
+  counts <- data.frame(outcomeId = outcomes$outcomeId,
+                       description = description,
+                       targetCount= targets,
+                       uniquePeople = persons,
+                       outcomes = outcomes$count)
   return(counts)
 }

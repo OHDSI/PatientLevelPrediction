@@ -1,6 +1,6 @@
 # @file naiveBayes.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2019 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -17,24 +17,24 @@
 # limitations under the License.
 
 #' Create setting for naive bayes model with python 
+#' @param variableNumber   The number of variables selected by feature selection prior to training the model (this is required due to Naive Bayes requring a non sparse matrix)
 #'
 #' @examples
 #' \dontrun{
 #' model.nb <- setNaiveBayes()
 #' }
 #' @export
-setNaiveBayes <- function(){
+setNaiveBayes <- function(variableNumber=2000){
+  
+  if(length(variableNumber)!=1)
+    stop('Can only currently enter a single value for variableNumber')
+  if(!class(variableNumber) %in% c("numeric", "integer"))
+    stop('Can incorrect class for variableNumber - must be numeric')
   
   # test python is available and the required dependancies are there:
-  if (!PythonInR::pyIsConnected()){
-    tryCatch({
-      python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    }, error = function(err){
-        stop('Python was not found on your system. See the vignette for instructions.')
-       }  
-    )
-  }
-  result <- list(model='fitNaiveBayes', name='Naive Bayes', param= '')
+  ##checkPython()
+  
+  result <- list(model='fitNaiveBayes', name='Naive Bayes', param= list('variableNumber'=variableNumber))
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -53,66 +53,59 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # connect to python if not connected
-  if ( !PythonInR::pyIsConnected() ){ 
-    PythonInR::pyConnect()
-    PythonInR::pyOptions("numpyAlias", "np")
-    PythonInR::pyOptions("useNumpy", TRUE)
-    PythonInR::pyImport("numpy", as='np')}
-  
-  
-  # return error if we can't connect to python
-  if ( !PythonInR::pyIsConnected() )
-    stop('Python not connect error')
+  ##initiatePython()
   
   start <- Sys.time()
   
   # make sure population is ordered?
-  population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-  PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
+  prediction <- population
+  population$rowIdPython <- population$rowId - 1  # -1 to account for python/r index difference
+  pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
+  
+  covariateRef <- ff::as.ram(plpData$covariateRef)
   
   # convert plpData in coo to python:
-  x <- toSparsePython(plpData,population, map=NULL)
+  x <- toSparseM(plpData, population, map = NULL)
   
-  # save the model to outLoc
-  outLoc <- file.path(getwd(),'python_models')
+  # save the model to outLoc TODO: make this an input or temp location?
+  outLoc <- createTempModelLoc()
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
-
   
-  # run model:
-  outLoc <- file.path(getwd(),'python_models')
-  PythonInR::pySet("modelOutput",outLoc)
-  
-
   # then run standard python code
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','naive_bayes.py '))
+  e <- environment()
+  # then run standard python code
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','naiveBayesFunctions.py'), envir = e)
+  pdata <- reticulate::r_to_py(x$data)
   
-  # then get the prediction 
-  pred <- PythonInR::pyGet('prediction', simplify = FALSE)
-  pred <-  apply(pred,1, unlist)
-  pred <- t(pred)
+  result <- train_naive_bayes(population=pPopulation, 
+                           plpData=pdata, 
+                           modelOutput = outLoc,
+                           variableNumber = as.integer(param$variableNumber),
+                           quiet = quiet)
+  
+  pred <- result[[2]]
   colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
   pred <- as.data.frame(pred)
   attr(pred, "metaData") <- list(predictionType="binary")
   
   # add 1 to rowId from python:
   pred$rowId <- pred$rowId+1
-  
   pred$value <- 1-pred$value
   auc <- PatientLevelPrediction::computeAuc(pred)
   writeLines(paste0('Model obtained CV AUC of ', auc))
   
   # get the univeriate selected features (nb requires dense so need feat sel)
   #varImp <- read.csv(file.path(outLoc,1, 'varImp.txt'), header=F)[,1]
-  varImp <- PythonInR::pyGet('kbest.scores_', simplify = F)[,1]
+  varImp <- result[[3]]
   varImp[is.na(varImp)] <- 0
   if(mean(varImp)==0)
     stop('No important variables - seems to be an issue with the data')
   
-  top2000 <- varImp[order(-varImp)][2000]
-  inc <- which(varImp>=top2000, arr.ind=T)
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  topN <- varImp[order(-varImp)][param$variableNumber]
+  inc <- which(varImp>=topN, arr.ind=T)
+  
   incs <- rep(0, nrow(covariateRef))
   incs[inc] <- 1
   covariateRef$included <- incs
@@ -123,6 +116,15 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   param.best <- ''
   
   comp <- start-Sys.time()
+  
+  # train prediction
+  pred <- result[[1]]
+  pred[,1] <- pred[,1] + 1 # converting from python to r index
+  colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
+  pred <- as.data.frame(pred)
+  attr(pred, "metaData") <- list(predictionType="binary")
+  prediction <- merge(prediction, pred[,c('rowId', 'value')], by='rowId')
+  
   
   # return model location
   result <- list(model = modelTrained,
@@ -136,10 +138,11 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
                  varImp = covariateRef,
                  trainingTime =comp,
                  dense=1,
-                 covariateMap=x$map
+                 covariateMap=x$map,
+                 predictionTrain = prediction
   )
   class(result) <- 'plpModel'
-  attr(result, 'type') <- 'python'
+  attr(result, 'type') <- 'pythonReticulate'
   attr(result, 'predictionType') <- 'binary'
   
   

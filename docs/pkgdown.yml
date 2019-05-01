@@ -1,0 +1,16 @@
+pandoc: 1.19.2.1
+pkgdown: 1.3.0
+pkgdown_sha: ~
+articles:
+  AddingCustomAlgorithms: AddingCustomAlgorithms.html
+  BuildingDeepLearningModels: BuildingDeepLearningModels.html
+  BuildingEnsembleModels: BuildingEnsembleModels.html
+  BuildingMultiplePredictiveModels: BuildingMultiplePredictiveModels.html
+  BuildingPredictiveModels: BuildingPredictiveModels.html
+  CreatingNetworkStudies: CreatingNetworkStudies.html
+  GeneratingLearningCurves: GeneratingLearningCurves.html
+  ImplementingExistingModels: ImplementingExistingModels.html
+  InstallationGuide: InstallationGuide.html
+  PatientLevelPrediction: PatientLevelPrediction.html
+  Videos: Videos.html
+

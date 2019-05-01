@@ -2,6 +2,10 @@ language: R
 cache: packages
 sudo: false
 
+branches:
+  except:
+    - /^*-v[0-9]/
+
 r_packages:
   - covr
   - drat
@@ -10,11 +14,22 @@ r_github_packages:
   - OHDSI/DatabaseConnector
   - OHDSI/FeatureExtraction
   - OHDSI/OhdsiRTools
+  - OHDSI/Cyclops
   - OHDSI/BigKnn
+  - OHDSI/OhdsiSharing
 
-before_install:
-  - Rscript -e 'update.packages(ask = FALSE)'
-  - export LD_LIBRARY_PATH=$JAVA_HOME:$LD_LIBRARY_PATH
+before_script:
+  - export PKG_NAME=$(Rscript -e 'cat(paste0(devtools::as.package(".")$package))')
+  - export PKG_TARBALL=$(Rscript -e 'pkg <- devtools::as.package("."); cat(paste0(pkg$package,"_",pkg$version,".tar.gz"))')
+
+script:
+  - R CMD build .
+  - _R_CHECK_CRAN_INCOMING_=FALSE R CMD check "${PKG_TARBALL}" --as-cran
+  - cat ${PKG_NAME}.Rcheck/00install.out # Print out install / compile log
+
+after_success:
+  - Rscript -e 'covr::codecov()'
+  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && perl compare_versions --tag && bash deploy.sh && curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/broadsea-methodslibrary/trigger/f0b51cec-4027-4781-9383-4b38b42dd4f5/
 
 notifications:
   recipients:
@@ -25,13 +40,3 @@ notifications:
   email:
     on_success: change
     on_failure: change
-
-after_success:
-  - Rscript -e 'covr::codecov()'
-  - curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/broadsea-methodslibrary/trigger/f0b51cec-4027-4781-9383-4b38b42dd4f5/
-  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
-
-env:
-  global:
-    secure: pEhWT0SZmEpxcK0iclaqIro0HfU9gI555/dxaGm4h6lbJnZOJLTv19o65EV52HJRpTXtuv612bR7jf5+eOIqIkcrzO9XdbLMigp/R/YHkp22RFEZBnnGX9xH/3D6QbeeUaHn0h8goBildzX5q1ZyCVNBIpA7kP418b2pG3rWgaA=
-    

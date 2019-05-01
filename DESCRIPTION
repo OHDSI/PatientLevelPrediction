@@ -2,28 +2,37 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 1.2.0
-Date: 2016-11-17
-Author: Jenna Reps [aut],
-    Martijn J. Schuemie [aut, cre],
-    Marc A. Suchard [aut],
-    Patrick B. Ryan [aut],
-    Peter R. Rijnbeek [aut]
-Maintainer: Jenna Reps <reps@ohdsi.org>
+Version: 3.0.4
+Date: 2019-04-18
+Authors@R: c(
+    person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
+    person("Martijn", "Schuemie", role = c("aut")),
+    person("Marc", "Suchard", role = c("aut")),
+    person("Patrick", "Ryan", role = c("aut")),
+    person("Peter", "Rijnbeek", role = c("aut"))
+    )
+Maintainer: Jenna Reps <jreps@its.jnj.com>
 Description: A package for creating patient level prediction models. Given a
     cohort of interest and an outcome of interest, the package can use data in the
     OMOP Common Data Model to build a large set of features. These features can then
     be assessed to fit a predictive model using a number of machine learning algorithms.
     Several performance measures are implemented for model evaluation.
 License: Apache License 2.0
+URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/PatientLevelPrediction
+BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 Depends:
-    R (>= 3.2.2),
+    R (>= 3.3.0), 
     DatabaseConnector (>= 1.11.4),
-    FeatureExtraction,
+    FeatureExtraction (>= 2.0.0),
     Cyclops (>= 1.2.2)
 Imports:
     ggplot2,
     gridExtra,
+    PRROC,
+    magrittr,
+    foreach,
+    doParallel,
+    dplyr,
     bit,
     ff,
     ffbase (>= 0.12.1),
@@ -35,14 +44,26 @@ Imports:
     xgboost,
     Matrix,
     AUC,
-    PythonInR,
-    futile.options,
-    futile.logger,
     utils,
     methods,
-    BigKnn,
-    reshape2
+    reshape2,
+    officer,
+    diagram,
+    tidyr,
+    viridisLite,
+    RCurl,
+    RJSONIO,
+    keras,
+    slam,
+    ParallelLogger,
+    reticulate (> 1.6),
+    tools,
+    plotly
 Suggests:
+    shiny,
+    DT,
+    htmlwidgets (> 0.8),
+    cowplot,
     testthat,
     pROC,
     gnm,
@@ -51,7 +72,13 @@ Suggests:
     scoring,
     Metrics,
     SparseM,
-    ResourceSelection
+    ResourceSelection,
+    BigKnn,
+    aws.s3,
+    devtools,
+    rms,
+    PythonInR,
+    survminer
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 6.0.1

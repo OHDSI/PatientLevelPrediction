@@ -4,7 +4,8 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(population, data, modelSettings, cohortId, outcomeId)
+fitPlp(population, data, modelSettings, cohortId, outcomeId,
+  minCovariateFraction = 0.001, normalizeData = T)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted}
@@ -24,6 +25,10 @@ data extracted from the CDM.}
 \item{cohortId}{Id of study cohort}
 
 \item{outcomeId}{Id of outcome cohort}
+
+\item{minCovariateFraction}{The minimum fraction of the target popualtion who have a variable for it to be included in the model training}
+
+\item{normalizeData}{Whether to normalise the data before model fitting}
 }
 \value{
 An object of class \code{plpModel} containing:

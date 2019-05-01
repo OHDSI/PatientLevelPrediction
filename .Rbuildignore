@@ -9,3 +9,5 @@ man/ps.png
 deploy.sh
 extras
 man-roxygen
+xgboost
+compare_versions

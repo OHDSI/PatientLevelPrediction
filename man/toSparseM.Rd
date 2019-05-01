@@ -4,34 +4,35 @@
 \alias{toSparseM}
 \title{Convert the plpData in COO format into a sparse R matrix}
 \usage{
-toSparseM(plpData, population, map = NULL)
+toSparseM(plpData, population, map = NULL, temporal = F)
 }
 \arguments{
-\item{plpData}{An object of type \code{plpData} with covariate in coo format - the patient level prediction 
+\item{plpData}{An object of type \code{plpData} with covariate in coo format - the patient level prediction
 data extracted from the CDM.}
 
 \item{population}{The population to include in the matrix}
 
 \item{map}{A covariate map (telling us the column number for covariates)}
+
+\item{temporal}{Whether you want to convert temporal data}
 }
 \value{
 Returns a list, containing the data as a sparse matrix, the plpData covariateRef
 and a data.frame named map that tells us what covariate corresponds to each column
 This object is a list with the following components: \describe{
-\item{data}{A sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.} 
-\item{covariateRef}{The plpData covariateRef.} 
-\item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.} 
+\item{data}{A sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.}
+\item{covariateRef}{The plpData covariateRef.}
+\item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.}
 }
 }
 \description{
 Converts the standard plpData to a sparse matrix
 }
 \details{
-This function converts the covariate file from ffdf in COO format into a sparse matrix from 
+This function converts the covariate file from ffdf in COO format into a sparse matrix from
 the package Matrix
 }
 \examples{
-   
 #TODO
 
 }

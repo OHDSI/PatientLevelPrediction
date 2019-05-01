@@ -1,0 +1,115 @@
+# Quick Install Guide
+***
+
+## Intalling the R package
+```{r eval=FALSE}  
+install.packages("devtools")
+library("devtools")
+install_github("ohdsi/SqlRender") 
+install_github("ohdsi/DatabaseConnectorJars") 
+install_github("ohdsi/DatabaseConnector") 
+install_github("ohdsi/FeatureExtraction")
+install_github("ohdsi/PatientLevelPrediction") 
+```
+
+## Setting up Python 
+Many of the classifiers in PatientLevelPrediction use python.  To use the python classifiers you need to install and set up the python connection in R.  We used the reticulate package to run the python code.  
+
+To set python up:
+
+* Close your RStudio
+* Install python 3.7 using anaconda (https://www.anaconda.com/download) [make sure you pick the correct operating system] and note the installation location. Anaconda should update you path variable with the python binary.
+* Open a new Rstudio and check whether your python is configured correctly by running:
+```{r eval=FALSE} 
+system("python --version") 
+```
+If set up correctly you should see "Python 3.x.x :: Anaconda, Inc." returned.
+
+* If not set up correctly then:
+    + Windows users: make sure your anaconda python binary is in the System PATH environmental variable: go to my computer -> system properties -> advanced system settings Then at the bottom right you’ll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable. Add the following Anaconda locations to your path: `D:\Anaconda3;D:\Anaconda3\Scripts;D:\Anaconda3\Library\bin` (this assumes your installation was done to `D:\Anaconda3`).
+    + Mac/Linux users: edit the bash profile to add python in the Path by running in the terminal: touch ~/.bash_profile; open ~/.bash_profile; and adding in the location of python in the PATH variable. Unfortunately, you also need to make an edit to the .Rprofile for R to get the correct PATH. To do this open the .Rprofile by running: 
+```{r eval=FALSE} 
+  usethis::edit_r_profile()
+``` 
+and in this file add 
+```{r eval=FALSE} 
+Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep=":"))
+``` 
+* After editing your Path or .Rprofile open a new Rstudio session and test that python is correctly set up via 
+```{r eval=FALSE} 
+system("python --version")
+```
+
+## Testing the PatientLevelPrediction Installation
+To test whether the package is installed correctly run:
+```{r eval=FALSE}
+library(PatientLevelPrediction)
+library(DatabaseConnector)
+connectionDetails <- createConnectionDetails(dbms = 'sql_server', 
+                                             user = 'username', 
+                                             password = 'hidden', 
+                                             server = 'your server', 
+                                             port = 'your port')
+PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, 
+                                             python = T)
+```
+To test the installation (excluding python) run:
+
+```{r eval=FALSE}
+library(PatientLevelPrediction)
+library(DatabaseConnector)
+connectionDetails <- createConnectionDetails(dbms = 'sql_server', 
+                                           user = 'username', 
+                                           password = 'hidden', 
+                                           server = 'your server', 
+                                           port = 'your port')
+PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, 
+                                             python = F)
+```
+The check can take a while to run since it will build the following models in sequence on simulated data: Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.
+
+## Installing Keras (optional)
+To set up Keras 
+```{r eval=FALSE}
+devtools::install_github("rstudio/keras")
+# NOTE: A restart of your R Session is likely required
+# after installing the rstudio/keras package
+library(keras)
+install_keras()
+```
+
+
+## Creating A PLP Python Vitual Environment (optional)
+The PatientLevelPrediction package contains code that will create a virual conda environment for PLP and install all the libraries required by the package.  To create an virtual environment called 'PLP' run:
+```{r eval=FALSE} 
+PatientLevelPrediction::configurePython(envname = 'PLP', envtype = 'conda') 
+``` 
+
+You can then find the location of this environment by running:
+```{r eval=FALSE} 
+reticulate::conda_list() 
+``` 
+and the location is returned in the 'python' column corresponding to the 'name' column equal to 'PLP'.
+
+### Windows users: 
+simply run 
+```{r eval=FALSE} 
+PatientLevelPrediction::setPythonEnvironment(envname = 'PLP', envtype = 'conda') 
+``` 
+to use the PLP environment 
+
+### Mac/linux users: 
+to make sure R uses this environment you need to edit your .Rprofile with the location of the python binary for the PLP environment.    Edit the .Rprofile by running: 
+```{r eval=FALSE}
+usethis::edit_r_profile()
+``` 
+and add  
+```{r eval=FALSE} 
+Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep=":"))
+``` 
+to the file then save.  Where your python bin location is the location returned by 
+```{r eval=FALSE} 
+reticulate::conda_list() 
+``` 
+e.g., My PLP virtual environment location was /anaconda3/envs/PLP/bin/python so I added:  
+Sys.setenv(PATH = paste("/anaconda3/envs/PLP/bin", Sys.getenv("PATH"), sep=":"))

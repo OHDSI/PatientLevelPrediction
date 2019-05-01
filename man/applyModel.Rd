@@ -8,7 +8,7 @@ in [0,1] for each person in the population. If the user inputs a population with
 column then the function also returns the evaluation of the prediction (AUC, brier score,
 calibration)}
 \usage{
-applyModel(population, plpData, plpModel, logConnection = NULL,
+applyModel(population, plpData, plpModel, calculatePerformance = T,
   databaseOutput = NULL, silent = F)
 }
 \arguments{
@@ -18,7 +18,7 @@ applyModel(population, plpData, plpModel, logConnection = NULL,
 
 \item{plpModel}{The trained PatientLevelPrediction model}
 
-\item{logConnection}{A connection to output any logging during the process}
+\item{calculatePerformance}{Whether to also calculate the performance metrics [default TRUE]}
 
 \item{databaseOutput}{Whether to save the details into the prediction database}
 

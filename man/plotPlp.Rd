@@ -4,7 +4,7 @@
 \alias{plotPlp}
 \title{Plot all the PatientLevelPrediction plots}
 \usage{
-plotPlp(result, filename)
+plotPlp(result, filename, type = "test")
 }
 \arguments{
 \item{result}{Object returned by the runPlp() function}
@@ -12,6 +12,8 @@ plotPlp(result, filename)
 \item{filename}{Name of the file where the plot should be saved, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 supported file formats.}
+
+\item{type}{Evaluation data type either 'test', 'val' or 'train'}
 }
 \value{
 TRUE if it ran

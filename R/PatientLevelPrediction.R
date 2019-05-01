@@ -1,6 +1,6 @@
 # @file PatientLevelPrediction.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2019 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -24,11 +24,17 @@
 #' @importFrom SqlRender loadRenderTranslateSql translateSql
 #' @importFrom plyr ddply
 #' @importFrom methods is
-#' @importFrom stats binom.test lm printCoefmat rpois runif sd
-#' @importFrom utils write.csv write.table
+#' @importFrom stats binom.test lm printCoefmat rpois runif sd aggregate
+#' @importFrom utils write.csv write.table data ?
+#' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
+#' @importFrom magrittr %>%
+#' @importFrom foreach %dopar% %do%
 #' @import bit
+#' @import ffbase
 #' @import Cyclops
 #' @import DatabaseConnector
+#' @import FeatureExtraction
+#' @import plotly
 #' @useDynLib PatientLevelPrediction
 NULL
 
@@ -36,6 +42,15 @@ NULL
 #' @docType data
 #' @keywords datasets
 #' @name plpDataSimulationProfile
+#' @format A data frame containing the following elements:
+#' \describe{
+#'   \item{covariatePrevalence}{prevalence of all covariates}
+#'   \item{outcomeModels}{regression model parameters to simulate outcomes}
+#'   \item{metaData}{settings used to simulate the profile}
+#'   \item{covariateRef}{covariateIds and covariateNames}
+#'   \item{timePrevalence}{time window}
+#'   \item{exclusionPrevalence}{prevalence of exclusion of covariates}
+#' }
 #' @usage
 #' data(plpDataSimulationProfile)
 NULL

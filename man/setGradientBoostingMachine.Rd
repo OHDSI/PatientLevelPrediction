@@ -4,19 +4,22 @@
 \alias{setGradientBoostingMachine}
 \title{Create setting for gradient boosting machine model using gbm_xgboost implementation}
 \usage{
-setGradientBoostingMachine(ntrees = c(10, 100), nthread = 20,
-  max_depth = 6, min_rows = 20, learn_rate = 0.1, seed = NULL)
+setGradientBoostingMachine(ntrees = c(100, 1000), nthread = 20,
+  earlyStopRound = 25, maxDepth = c(4, 6, 17), minRows = 2,
+  learnRate = c(0.005, 0.01, 0.1), seed = NULL)
 }
 \arguments{
 \item{ntrees}{The number of trees to build}
 
 \item{nthread}{The number of computer threads to (how many cores do you have?)}
 
-\item{max_depth}{Maximum number of interactions - a large value will lead to slow model training}
+\item{earlyStopRound}{If the performance does not increase over earlyStopRound number of interactions then training stops (this prevents overfitting)}
 
-\item{min_rows}{The minimum number of rows required at each end node of the tree}
+\item{maxDepth}{Maximum number of interactions - a large value will lead to slow model training}
 
-\item{learn_rate}{The boosting learn rate}
+\item{minRows}{The minimum number of rows required at each end node of the tree}
+
+\item{learnRate}{The boosting learn rate}
 
 \item{seed}{An option to add a seed when training the final model}
 }
@@ -25,6 +28,6 @@ Create setting for gradient boosting machine model using gbm_xgboost implementat
 }
 \examples{
 model.gbm <- setGradientBoostingMachine(ntrees=c(10,100), nthread=20,
-                           max_depth=c(4,6), learn_rate=c(0.1,0.3))
+                           maxDepth=c(4,6), learnRate=c(0.1,0.3))
 
 }

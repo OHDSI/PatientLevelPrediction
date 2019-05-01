@@ -1,6 +1,6 @@
-?# @file ffHelperFunctions.R
+# @file ffHelperFunctions.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2019 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -40,20 +40,25 @@ calculatePrevs <- function(plpData, population){
   ppl <- ff::as.ff(population$rowId[population$outcomeCount==1])
   idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
   idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- plpData$covariates[idx, ]
-  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId")], 
-                              split=covariates$covariateId, 
-                              FUN = function(data){
-                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
-                                
-                                data <- as.data.frame(data)
-                                result <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
-                                as.data.frame(result)
-                              })
-  
-  prev.out <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
-                         prev.out=ff::as.ram(grp_qty$x))
-  prev.out$prev.out <- prev.out$prev.out/length(ppl) 
+  if(length(idx)>0){
+    covariates <- plpData$covariates[idx, ]
+    grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId")], 
+                                split=covariates$covariateId, 
+                                FUN = function(data){
+                                  ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
+                                  
+                                  data <- as.data.frame(data)
+                                  result <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                  as.data.frame(result)
+                                })
+    
+    prev.out <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
+                           prev.out=ff::as.ram(grp_qty$x))
+    prev.out$prev.out <- prev.out$prev.out/length(ppl) 
+  } else {
+    prev.out <- data.frame(covariateId=0, 
+                           prev.out=0)
+  }
   
   #===========================
   # non-outcome prevs
@@ -61,25 +66,54 @@ calculatePrevs <- function(plpData, population){
   ppl <- ff::as.ff(population$rowId[population$outcomeCount==0])
   idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
   idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- plpData$covariates[idx, ]
-  grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId")], 
-                              split=covariates$covariateId, 
-                              FUN = function(data){
-                                ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
-                                
-                                data <- as.data.frame(data)
-                                result <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
-                                as.data.frame(result)
-                              })
-  
-  prev.noout <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
-                           prev.noout=ff::as.ram(grp_qty$x))
-  prev.noout$prev.noout <- prev.noout$prev.noout/(length(ppl) )
+  if(length(idx)>0){
+    covariates <- plpData$covariates[idx, ]
+    grp_qty <- ffbase::ffdfdply(x=covariates[c("rowId","covariateId")], 
+                                split=covariates$covariateId, 
+                                FUN = function(data){
+                                  ## This happens in RAM - containing **several** split elements so here we can use data.table which works fine for in RAM computing
+                                  
+                                  data <- as.data.frame(data)
+                                  result <- stats::aggregate(data$covariateId, by=list(data$covariateId), FUN=length)
+                                  as.data.frame(result)
+                                })
+    
+    prev.noout <- data.frame(covariateId=ff::as.ram(grp_qty$Group.1), 
+                             prev.noout=ff::as.ram(grp_qty$x))
+    prev.noout$prev.noout <- prev.noout$prev.noout/(length(ppl) )
+  } else {
+    prev.noout <- data.frame(covariateId=0, 
+                             prev.noout=0)
+  }
   
   # now merge the predictors with prev.out and prev.noout
   prevs <- merge(prev.out,prev.noout, all=T)
   prevs[is.na(prevs)] <- 0
+  prevs <- prevs[prevs$covariateId!=0,] #removing dummy that was added when no covs
   
   return(prevs)
 }
 
+#' @title clearffTempDir
+#' 
+#' @description Clears the temporary ff directory to free up disk space.
+clearffTempDir <- function(){
+  file.remove(dir(getOption("fftempdir"), full.names = TRUE))
+}
+
+#' Check if the fftempdir is writable
+#'
+#' @details
+#' This function checks whether the fftempdir is writable.
+#' If not, it will ask the use to specify a writable folder.
+#' @export
+
+checkffFolder <- function(){ 
+  currentfftempdir <- getOption("fftempdir")
+  while (file.access(currentfftempdir)==-1) {
+    yourfftempdir <- readline(prompt="Specify a writable fftemp folder:")
+    options(fftempdir = yourfftempdir)
+    currentfftempdir <- getOption("fftempdir")
+  }
+  return(TRUE)
+}

@@ -3,7 +3,7 @@
  *
  * This file is part of PatientLevelPrediction
  *
- * Copyright 2015 Observational Health Data Sciences and Informatics
+ * Copyright 2019 Observational Health Data Sciences and Informatics
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 
 using namespace Rcpp;
 
-// [[Rcpp::export(".aucWithCi")]]
+// [[Rcpp::export]]
 std::vector<double> aucWithCi(std::vector<double> propensityScores, std::vector<int> treatment) {
 
   using namespace ohdsi::patientLevelPrediction;
@@ -46,8 +46,8 @@ std::vector<double> aucWithCi(std::vector<double> propensityScores, std::vector<
 	return auc;
 }
 
-// [[Rcpp::export(".auc")]]
-double auc(std::vector<double> propensityScores, std::vector<int> treatment) {
+// [[Rcpp::export]]
+double aucWithoutCi(std::vector<double> propensityScores, std::vector<int> treatment) {
 
   using namespace ohdsi::patientLevelPrediction;
 
@@ -62,7 +62,7 @@ double auc(std::vector<double> propensityScores, std::vector<int> treatment) {
 	return 0.0;
 }
 
-// [[Rcpp::export(".bySum")]]
+// [[Rcpp::export]]
 DataFrame bySum(List ffValues, List ffBins) {
   
   using namespace ohdsi::patientLevelPrediction;
@@ -84,7 +84,7 @@ DataFrame bySum(List ffValues, List ffBins) {
   return DataFrame::create();
 }
 
-// [[Rcpp::export(".byMax")]]
+// [[Rcpp::export]]
 DataFrame byMax(List ffValues, List ffBins) {
   
   using namespace ohdsi::patientLevelPrediction;

@@ -2,122 +2,96 @@
 % Please edit documentation in R/RunMultiplePlp.R
 \name{runPlpAnalyses}
 \alias{runPlpAnalyses}
-\title{Develop patient-level predcition  models for multiple outcomes, target popuations and 
-settings}
+\title{Run a list of predictions}
 \usage{
-runPlpAnalyses(outputFolder = getwd(), connectionDetails = NULL,
-  cdmDatabaseSchema = NULL, oracleTempSchema = cdmDatabaseSchema,
+runPlpAnalyses(connectionDetails, cdmDatabaseSchema, cdmDatabaseName,
+  oracleTempSchema = cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema, outcomeTable = "cohort",
-  cdmVersion = "5", studyStartDate = "", studyEndDate = "",
-  atRiskCohortIds = 1, outcomeIds = 2,
-  covariateSettings = list(FeatureExtraction::createCovariateSettings(useCovariateDemographics
-  = T, useCovariateDemographicsGender = T, useCovariateDemographicsRace = T,
-  useCovariateDemographicsAge = T, useCovariateDemographicsYear = F,
-  useCovariateDemographicsMonth = T, useCovariateConditionOccurrence = T,
-  useCovariateConditionOccurrenceLongTerm = T),
-  FeatureExtraction::createCovariateSettings(useCovariateDemographics = T,
-  useCovariateDemographicsGender = T, useCovariateDemographicsRace = T,
-  useCovariateDemographicsAge = T,      useCovariateDemographicsYear = F,
-  useCovariateDemographicsMonth = T, useCovariateDrugExposure = T,
-  useCovariateDrugExposureLongTerm = T)),
-  timeAtRisks = list(setTimeAtRisks(riskWindowEnd = 365),
-  setTimeAtRisks(riskWindowEnd = 365 * 2)), modelSettings = NULL,
-  internalValidation = "time", testFraction = 0.25, nfold = 3,
-  splitSeed = NULL, indexes = NULL, verbosity = futile.logger::INFO)
+  cdmVersion = 5, outputFolder = "./PlpOutput", modelAnalysisList,
+  cohortIds, cohortNames, outcomeIds, outcomeNames, washoutPeriod = 0,
+  maxSampleSize = NULL, minCovariateFraction = 0, normalizeData = T,
+  testSplit = "person", testFraction = 0.25, splitSeed = NULL,
+  nfold = 3, verbosity = "INFO")
 }
 \arguments{
-\item{outputFolder}{The directory to save the results and data to - needs read/write privileges}
-
-\item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the
+\item{connectionDetails}{An R object of type \code{connectionDetails} created using the
 function \code{createConnectionDetails} in the
 \code{DatabaseConnector} package.}
 
 \item{cdmDatabaseSchema}{The name of the database schema that contains the OMOP CDM
-instance.  Requires read permissions to this database. On SQL
+instance. Requires read permissions to this database. On SQL
 Server, this should specifiy both the database and the schema,
 so for example 'cdm_instance.dbo'.}
 
-\item{oracleTempSchema}{For Oracle only: the name of the database schema where you want
-all temporary tables to be managed. Requires create/insert
-permissions to this database.}
+\item{cdmDatabaseName}{A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)}
+
+\item{oracleTempSchema}{For Oracle only: the name of the database schema where you
+want all temporary tables to be managed. Requires
+create/insert permissions to this database.}
 
 \item{cohortDatabaseSchema}{The name of the database schema that is the location where the
-cohort data used to define the at risk cohort is available.
-If cohortTable = DRUG_ERA, cohortDatabaseSchema is not used
-by assumed to be cdmSchema.  Requires read permissions to this
-database.}
+target cohorts are available.  Requires read
+permissions to this database.}
 
-\item{cohortTable}{The tablename that contains the at risk cohort.  If
-cohortTable <> DRUG_ERA, then expectation is cohortTable has
-format of COHORT table: cohort_concept_id, SUBJECT_ID,
+\item{cohortTable}{The tablename that contains the target cohorts.  Expectation is cohortTable
+has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID,
 COHORT_START_DATE, COHORT_END_DATE.}
 
-\item{outcomeDatabaseSchema}{The name of the database schema that is the location where
-the data used to define the outcome cohorts is available. If
-cohortTable = CONDITION_ERA, exposureDatabaseSchema is not
-used by assumed to be cdmSchema.  Requires read permissions
-to this database.}
+\item{outcomeDatabaseSchema}{The name of the database schema that is the location where the
+data used to define the outcome cohorts is available. Requires read permissions to
+this database.}
 
-\item{outcomeTable}{The tablename that contains the outcome cohorts.  If
-outcomeTable <> CONDITION_OCCURRENCE, then expectation is
-outcomeTable has format of COHORT table:
-COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
-COHORT_END_DATE.}
+\item{outcomeTable}{The tablename that contains the outcome cohorts.  Expectation is
+outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
+SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 
-\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
+\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and
+"5".}
 
-\item{studyStartDate}{A calendar date specifying the minimum date that a cohort index
-date can appear. Date format is 'yyyymmdd'.}
+\item{outputFolder}{Name of the folder where all the outputs will written to.}
 
-\item{studyEndDate}{A calendar date specifying the maximum date that a cohort index
-date can appear. Date format is 'yyyymmdd'. Important: the study
-end data is also used to truncate risk windows, meaning no outcomes
-beyond the study end date will be considered.}
+\item{modelAnalysisList}{A list of objects of type \code{modelSettings} as created using
+the \code{\link{createPlpModelSettings}} function.}
 
-\item{atRiskCohortIds}{A vector containing the unique identifiers to define the at risk cohorts.
-Each at risk cohortId is used to select the cohort_concept_id in the cohort-like table.}
+\item{cohortIds}{A vector of cohortIds that specify all the target cohorts}
 
-\item{outcomeIds}{A list of cohort_definition_ids used to define outcomes.}
+\item{cohortNames}{A vector of cohortNames corresponding to the cohortIds}
 
-\item{covariateSettings}{An object of type \code{covariateSettings} as created using the
-\code{createCovariateSettings} function in the
-\code{FeatureExtraction} package.  This can be a list of multiple
-settings.}
+\item{outcomeIds}{A vector of outcomeIds that specify all the outcome cohorts}
 
-\item{timeAtRisks}{A list detailing the time at risk intervals that willbe used
-to create the prediciton models (the period of time we wish to predict the outcome
-occurence within) created using the function \code{setTimeAtRisks}.}
+\item{outcomeNames}{A vector of outcomeNames corresponding to the outcomeIds}
 
-\item{modelSettings}{A list of model settings created using the \code{setGradientBoostingMachine}, 
-\code{setRandomForest}, \code{setLassoLogisticRegression}, \code{setNaiveBayes} or
-\code{setKNN}.}
+\item{washoutPeriod}{Minimum number of prior observation days}
 
-\item{internalValidation}{The type of internal validation for the model.  Either 
-'person' which stratifies by outcome to partion into test/train sets or
-'time' which picks a set date and all people with an at risk cohort
-start date prior to this join the train set and people after join the
-test set.}
+\item{maxSampleSize}{Max number of target people to sample from to develop models}
 
-\item{testFraction}{The fracion of the target population to include into the test set}
+\item{minCovariateFraction}{Any covariate with an incidence less than this value if ignored}
 
-\item{nfold}{The number of cross validation folds to apply when finding the optimal hyperparameters}
+\item{normalizeData}{Whether to normalize the covariates}
 
-\item{splitSeed}{(default NULL) The seed used to do the random split for internalValidation='person'}
+\item{testSplit}{How to split into test/train (time or person)}
 
-\item{indexes}{The nfold validation indexes}
+\item{testFraction}{Fraction of data to use as test set}
 
-\item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
-\itemize{
-\item{DEBUG}{Highest verbosity showing all debug statements}
-\item{TRACE}{Showing information about start and end of steps}
-\item{INFO}{Show informative information (Default)}
-\item{WARN}{Show warning messages}
-\item{ERROR}{Show error messages}
-\item{FATAL}{Be silent except for fatal errors}
-}}
+\item{splitSeed}{The seed used for the randomization into test/train}
+
+\item{nfold}{Number of folds used to do cross validation}
+
+\item{verbosity}{The logging level}
+}
+\value{
+A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
+for a set of analysis choices.\cr \verb{cohortId} \tab The ID of the target cohort populations.\cr
+\verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{plpDataFolder} \tab The location where the plpData was saved\cr \verb{studyPopFile} \tab The
+name of the file containing the study population \cr \verb{evaluationFolder} \tab The name of file containing the evaluation saved as a csv
+ \cr \verb{modelFolder} \tab The name of the file containing the developed model.\cr }
 }
 \description{
-Develop patient-level predcition  models for multiple outcomes, target popuations and 
-settings
+Run a list of predictions
+}
+\details{
+Run a list of predictions for the target cohorts and outcomes of interest. This function will run all
+specified predictions, meaning that the total number of outcome
+models is `length(cohortIds) * length(outcomeIds) * length(modelAnalysisList)`.
 }

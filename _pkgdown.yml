@@ -1,0 +1,158 @@
+template:
+  params:
+    bootswatch: cosmo
+    
+home:
+  links:
+  - text: Ask a question
+    href: http://forums.ohdsi.org
+    
+navbar:
+  structure:
+    left:
+    - home
+    - intro
+    - videos
+    - reference
+    - articles
+    - tutorial
+    - news
+    right: github
+  components:
+    home:
+      icon: fa-home fa-lg
+      href: index.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    intro:
+      text: Get started
+      href: articles/PatientLevelPrediction.html
+    videos:
+      text: Videos
+      href: articles/Videos.html
+    news:
+      text: Changelog
+      href: news/index.html
+    tutorial:
+      text: Tutorial
+      href: https://www.ohdsi.org/past-events/patient-level-prediction/
+    github:
+      icon: fa-github fa-lg
+      href: https://github.com/OHDSI/PatientLevelPrediction
+
+reference:
+  - title: "Getting data and creating a study population"
+    desc: >
+      Functions for getting the necessary data from the database in Common Data Model, and creating a study population.
+    contents:
+      - getPlpData
+      - savePlpData
+      - loadPlpData
+      - createStudyPopulation
+  - title: "Non-Temporal Feature Models"
+    desc: >
+      Functions for setting model that use non-temporal data and their hyper-parameter search.
+    contents:
+      - setAdaBoost
+      - setDeepNN
+      - setDecisionTree
+      - setGradientBoostingMachine
+      - setKNN
+      - setLassoLogisticRegression
+      - setLRTorch
+      - setMLP
+      - setMLPTorch
+      - setNaiveBayes
+      - setRandomForest
+  - title: "Temporal Feature Models"
+    desc: >
+      Functions for setting model that use temporal data and their hyper-parameter search.
+    contents:
+      - setCIReNN
+      - setCNNTorch
+      - setCovNN
+      - setRNNTorch
+  - title: "Single Patient-Level Prediction Model"
+    desc: >
+      Functions for training/evaluating/applying a single patient-level-prediction model
+    contents:
+      - runPlp
+      - applyModel
+      - evaluatePlp
+      - savePlpModel
+      - loadPlpModel
+      - savePlpResult
+      - loadPlpResult
+  - title: "Multiple Patient-Level Prediction Models"
+    desc: >
+      Functions for training mutliple patient-level-prediction model in an efficient way.
+    contents:
+      - runPlpAnalyses  
+      - createPlpModelSettings
+      - combinePlpModelSettings
+      - createStudyPopulationSettings
+      - evaluateMultiplePlp
+      - savePredictionAnalysisList
+      - loadPredictionAnalysisList
+  - title: "Ensemble Model"
+    desc: >
+      Functions for creating an ensemble model
+    contents:
+      - runEnsembleModel
+      - applyEnsembleModel
+      - saveEnsemblePlpModel
+      - loadEnsemblePlpModel
+      - saveEnsemblePlpResult
+      - loadEnsemblePlpResult
+  - title: "External validation"
+    desc: >
+      Functions for externally validating a model on new datasets
+    contents:
+      - externalValidatePlp
+  - title: "Shiny Viewers"
+    desc: >
+      Functions for viewing results via a shiny app
+    contents:
+      - viewPlp
+      - viewMultiplePlp
+  - title: "Report Creation"
+    desc: >
+      Functions for creating documents
+    contents:
+      - createPlpJournalDocument
+      - createPlpReport
+  - title: "Plotting"
+    desc: >
+      Functions for various performance plots
+    contents:
+      - plotPlp
+      - plotSparseRoc
+      - plotSmoothCalibration
+      - plotSparseCalibration
+      - plotSparseCalibration2
+      - plotDemographicSummary
+      - plotF1Measure
+      - plotGeneralizability
+      - plotPrecisionRecall
+      - plotPredictedPDF
+      - plotPreferencePDF
+      - plotPredictionDistribution
+      - plotVariableScatterplot
+  - title: "Learning Curves"
+    desc: >
+      Functions for creating and plotting learning curves
+    contents:
+      - createLearningCurve
+      - createLearningCurvePar
+      - plotLearningCurve
+  - title: "Simulation"
+    desc: >
+      Functions for simulating cohort method data objects.
+    contents:
+      - simulatePlpData
+  - title: "Helper functions"
+    desc: >
+      Various helper functions
+    contents:
+      - checkPlpInstallation

@@ -4,14 +4,14 @@
 \alias{loadPrediction}
 \title{Loads the prediciton dataframe to csv}
 \usage{
-loadPrediction(dirPath)
+loadPrediction(fileLocation)
 }
 \arguments{
-\item{dirPath}{The directory to saved the csv}
+\item{fileLocation}{The location with the saved prediction}
 }
 \description{
 Loads the prediciton dataframe to csv
 }
 \details{
-Loads the prediciton  csv file
+Loads the prediciton  RDS file
 }

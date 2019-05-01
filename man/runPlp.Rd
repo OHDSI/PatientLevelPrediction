@@ -4,10 +4,12 @@
 \alias{runPlp}
 \title{runPlp - Train and evaluate the model}
 \usage{
-runPlp(population, plpData, modelSettings, testSplit = "time",
-  testFraction = 0.25, splitSeed = NULL, nfold = 3, indexes = NULL,
-  save = NULL, saveModel = T, verbosity = futile.logger::INFO,
-  timeStamp = FALSE, analysisId = NULL)
+runPlp(population, plpData, minCovariateFraction = 0.001, normalizeData = T,
+  modelSettings, testSplit = "time", testFraction = 0.25,
+  trainFraction = NULL, splitSeed = NULL, nfold = 3, indexes = NULL,
+  saveDirectory = NULL, savePlpData = T, savePlpResult = T,
+  savePlpPlots = T, saveEvaluation = T, verbosity = "INFO",
+  timeStamp = FALSE, analysisId = NULL, save = NULL)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}
@@ -15,13 +17,23 @@ runPlp(population, plpData, modelSettings, testSplit = "time",
 \item{plpData}{An object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
 
+\item{minCovariateFraction}{The minimum fraction of target population who must have a covariate for it to be included in the model training}
+
+\item{normalizeData}{Whether to normalise the covariates before training (Default: TRUE)}
+
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
-\item{logisticRegressionModel()}{ A lasso logistic regression model}
-\item{GBMclassifier()}{ A gradient boosting machine}
-\item{RFclassifier()}{ A random forest model}
-\item{GLMclassifier ()}{ A generalised linear model}
-\item{KNNclassifier()}{ A KNN model}
+\item{setLassoLogisticRegression()}{ A lasso logistic regression model}
+\item{setGradientBoostingMachine()}{ A gradient boosting machine}
+\item{setAdaBoost()}{ An ada boost model}
+\item{setRandomForest()}{ A random forest model}
+\item{setDecisionTree()}{ A decision tree model}
+\item{setCovNN())}{ A convolutional neural network model}
+\item{setCIReNN()}{ A recurrent neural network model}
+\item{setMLP()}{ A neural network model}
+\item{setDeepNN()}{ A deep neural network model}
+\item{setKNN()}{ A KNN model}
+
 }}
 
 \item{testSplit}{Either 'person' or 'time' specifying the type of evaluation used.
@@ -32,15 +44,24 @@ train (validationFraction of the data) sets.  The split is stratified by the cla
 \item{testFraction}{The fraction of the data to be used as the test set in the patient
 split evaluation.}
 
+\item{trainFraction}{A real number between 0 and 1 indicating the train set fraction of the data.
+If not set trainFraction is equal to 1 - test}
+
 \item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
 
 \item{nfold}{The number of folds used in the cross validation (default 3)}
 
 \item{indexes}{A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)}
 
-\item{save}{The path to the directory where the models will be saved (if NULL uses working directory)}
+\item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
 
-\item{saveModel}{Binary indicating whether to save the model once it is trained (default is T)}
+\item{savePlpData}{Binary indicating whether to save the plpData object (default is T)}
+
+\item{savePlpResult}{Binary indicating whether to save the object returned by runPlp (default is T)}
+
+\item{savePlpPlots}{Binary indicating whether to save the performance plots as pdf files (default is T)}
+
+\item{saveEvaluation}{Binary indicating whether to save the oerformance as csv files (default is T)}
 
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 \itemize{
@@ -55,6 +76,8 @@ split evaluation.}
 \item{timeStamp}{If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.}
 
 \item{analysisId}{Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
+
+\item{save}{Old input - please now use saveDirectory}
 }
 \value{
 An object containing the model or location where the model is save, the data selection settings, the preprocessing
@@ -109,11 +132,11 @@ population <- createStudyPopulation(plpData,outcomeId=2042,
 #and results are saved to file.path('C:','User','home')
 model.lr <- lassoLogisticRegression.set()
 mod.lr <- runPlp(population=population,
-                        plpData= plpData,
+                        plpData= plpData, minCovariateFraction = 0.001,
                         modelSettings = model.lr ,
                         testSplit = 'time', testFraction=0.3, 
                         nfold=3, indexes=NULL,
-                        save=file.path('C:','User','home'),
+                        saveDirectory =file.path('C:','User','myPredictionName'),
                         verbosity='INFO')
  
 #******** EXAMPLE 2 *********                                               
@@ -127,6 +150,6 @@ mod.gbm <- runPlp(population=population,
                         modelSettings = model.gbm,
                         testSplit = 'time', testFraction=0.3, 
                         nfold=3, indexes=mod.lr$indexes,
-                        save=file.path('C:','User','home'))
+                        saveDirectory =file.path('C:','User','myPredictionName2'))
 } 
 }

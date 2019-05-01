@@ -4,7 +4,7 @@
 \alias{savePlpData}
 \title{Save the cohort data to folder}
 \usage{
-savePlpData(plpData, file, envir = NULL)
+savePlpData(plpData, file, envir = NULL, overwrite = F)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
@@ -14,6 +14,8 @@ savePlpData(plpData, file, envir = NULL)
 not yet exist.}
 
 \item{envir}{The environment for to evaluate variables when saving}
+
+\item{overwrite}{Whether to force overwrite an existing file}
 }
 \description{
 \code{savePlpData} saves an object of type plpData to folder.

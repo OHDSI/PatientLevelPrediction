@@ -1,6 +1,6 @@
 # @file simulation.R
 #
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2019 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -54,7 +54,7 @@
 ##                                                                 startingVariance = 0.001,
 ##                                                                 threads = 10))
 ##    model$coefficients <- model$coefficients[model$coefficients != 0]
-##   outcomeModels[[i]] <- model$coefficients
+##    outcomeModels[[i]] <- model$coefficients
 ##  }
 ##  
 ##  writeLines("Computing time distribution")
@@ -121,7 +121,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
   r <- runif(n)
   cohorts$time <- as.numeric(as.character(cut(r, breaks = c(0, breaks), labels = names(breaks))))
-  cohorts$cohortStartDates <- sample(-1000:1000,n,replace=TRUE) + as.Date("2010-01-01")
+  cohorts$cohortStartDate <- sample(-1000:1000,n,replace=TRUE) + as.Date("2010-01-01")
   cohorts$daysFromObsStart <- sample(1:1000,n,replace=TRUE)
   cohorts$daysToCohortEnd <- sample(1:1000,n,replace=TRUE)
   cohorts$daysToObsEnd <- cohorts$daysToCohortEnd + sample(1:1000,n,replace=TRUE)
@@ -163,7 +163,16 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   rownames(plpDataSimulationProfile$covariateRef) <- NULL
 
   metaData = plpDataSimulationProfile$metaData
-  metaData$call$cdmDatabaseSchema = "Profile"
+  
+  #remove details from profile
+  metaData$call$cdmDatabaseSchema = 'Profile'
+  metaData$call$outcomeDatabaseSchema = NULL
+  metaData$call$cohortDatabaseSchema = NULL
+  metaData$call$connectionDetails = NULL
+  metaData$call$outcomeTable = NULL
+  metaData$call$cohortTable = NULL
+  metaData$call$cdmVersion = 5
+  metaData$call$covariateSettings = NULL
 
   #convert to correct format
   outcomes = ff::as.data.frame.ffdf(allOutcomes)
@@ -174,7 +183,10 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
 
   temp <- list(cohortId = 0,
                studyStartDate = NULL,
-               studyEndDate = NULL)
+               studyEndDate = NULL,
+               attrition= data.frame(outcomeId=2,description='Simulated data', 
+                                      targetCount=nrow(cohorts), uniquePeople=nrow(cohorts), 
+                                      outcomes=nrow(outcomes)))
   attr(cohorts, "metaData") <- temp
   
   result <- list(outcomes = outcomes,

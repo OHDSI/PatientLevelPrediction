@@ -1,4 +1,4 @@
-# Copyright 2017 Observational Health Data Sciences and Informatics
+# Copyright 2019 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -17,38 +17,39 @@
 library("testthat")
 
 context("Plotting")
+#TODO: add input checks and test these...
+#options(fftempdir = getwd())
+set.seed(1234)
+data(plpDataSimulationProfile)
+sampleSize <- 2000
+plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+# create popualtion for outcome 2
+population <- createStudyPopulation(plpData,
+                                    outcomeId = 2,
+                                    firstExposureOnly = FALSE,
+                                    washoutPeriod = 0,
+                                    removeSubjectsWithPriorOutcome = FALSE,
+                                    priorOutcomeLookback = 99999,
+                                    requireTimeAtRisk = FALSE,
+                                    minTimeAtRisk=0,
+                                    riskWindowStart = 0,
+                                    addExposureDaysToStart = FALSE,
+                                    riskWindowEnd = 365,
+                                    addExposureDaysToEnd = FALSE
+                                    #,verbosity=INFO
+)
+lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
+lr_results <- tryCatch(runPlp(population = population, plpData = plpData, 
+                              verbosity = 'NONE',
+                              modelSettings = lr_model, savePlpData = F,
+                              savePlpResult = F, savePlpPlots =  F, 
+                              saveEvaluation = F,
+                              testSplit='person', # this splits by person
+                              testFraction=0.25,
+                              nfold=2))
 
 test_that("plots", {
-  
-  #TODO: add input checks and test these...
-  
-  set.seed(1234)
-  data(plpDataSimulationProfile)
-  sampleSize <- 2000
-  plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-  
-  # create popualtion for outcome 2
-  population <- createStudyPopulation(plpData,
-                                      outcomeId = 2,
-                                      firstExposureOnly = FALSE,
-                                      washoutPeriod = 0,
-                                      removeSubjectsWithPriorOutcome = FALSE,
-                                      priorOutcomeLookback = 99999,
-                                      requireTimeAtRisk = FALSE,
-                                      minTimeAtRisk=0,
-                                      riskWindowStart = 0,
-                                      addExposureDaysToStart = FALSE,
-                                      riskWindowEnd = 365,
-                                      addExposureDaysToEnd = FALSE
-                                      #,verbosity=INFO
-  )
-  lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
-  lr_results <- runPlp(population = population, plpData = plpData,
-                       modelSettings = lr_model,
-                       testSplit='person', # this splits by person
-                       testFraction=0.25,
-                       nfold=2)
-  
+
   # test all the outputs are ggplots
   test <- plotRoc(lr_results$prediction)
   testthat::expect_s3_class(test, 'ggplot')
@@ -68,8 +69,10 @@ test_that("plots", {
   test <- plotF1Measure(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotDemographicSummary(lr_results$performanceEvaluation)
-  testthat::expect_s3_class(test, 'ggplot')
+  if(!is.null(lr_results$performanceEvaluation$demographicSummary)){
+    test <- plotDemographicSummary(lr_results$performanceEvaluation)
+    testthat::expect_s3_class(test, 'ggplot')
+  }
   
   test <- plotSparseCalibration(lr_results$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
@@ -84,3 +87,17 @@ test_that("plots", {
   testthat::expect_s3_class(test, 'grob')
 
 })
+
+
+test_that("outcomeSurvivalPlot", {
+  
+  # test the plot works
+  test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = 2)
+  testthat::expect_s3_class(test, 'ggsurvplot')
+  
+  testthat::expect_error(outcomeSurvivalPlot())
+  testthat::expect_error(outcomeSurvivalPlot(plpData = NULL))
+  testthat::expect_error(outcomeSurvivalPlot(outcomeId = 094954))
+})
+
+  
