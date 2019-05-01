@@ -63,9 +63,9 @@ NULL
     if (.Platform$OS.type == "windows")
     {
       if (getRversion() >= "2.6.0")  # memory.limit was silently changed from 2.6.0 to return in MB instead of bytes
-        options(ffbatchbytes = memory.limit()*(1024^2 / 100))
+        options(ffbatchbytes =  utils::memory.limit()*(1024^2 / 100))
       else
-        options(ffbatchbytes = memory.limit() / 100)
+        options(ffbatchbytes =  utils::memory.limit() / 100)
     } else {
       # some magic constant
       options(ffbatchbytes = 16*1024^2)
