@@ -243,6 +243,7 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
 # +++++++++++++++++++++++++++++++++++++++++
 
 server <- shiny::shinyServer(function(input, output, session) {
+  session$onSessionEnded(shiny::stopApp)
   # reactive values - contains the location of the plpResult
   ##reactVars <- shiny::reactiveValues(resultLocation=NULL,
   ##                                   plpResult= NULL)
@@ -479,36 +480,42 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   output$performanceBoxIncidence <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
+      "Incidence", paste0(round(plotters()$performance$Incidence*100, digits=3),'%'), icon = shiny::icon("ambulance"),
       color = "green"
     )
   })
   
   output$performanceBoxThreshold <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
+      "Threshold", format((plotters()$performance$Threshold), scientific = F, digits=3), icon = shiny::icon("edit"),
       color = "yellow"
     )
   })
   
   output$performanceBoxPPV <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
+      "PPV", paste0(round(plotters()$performance$PPV*1000)/10, "%"), icon = shiny::icon("thumbs-up"),
       color = "orange"
     )
   })
   
   output$performanceBoxSpecificity <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
+      "Specificity", paste0(round(plotters()$performance$Specificity*1000)/10, "%"), icon = shiny::icon("bullseye"),
       color = "purple"
     )
   })
   
   output$performanceBoxSensitivity <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
+      "Sensitivity", paste0(round(plotters()$performance$Sensitivity*1000)/10, "%"), icon = shiny::icon("low-vision"),
       color = "blue"
     )
   })
   
   output$performanceBoxNPV <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
+      "NPV", paste0(round(plotters()$performance$NPV*1000)/10, "%"), icon = shiny::icon("minus-square"),
       color = "black"
     )
   })
@@ -516,6 +523,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   
   # Downloadable csv of model ----
+  output$downloadData <- shiny::downloadHandler(
     filename = function(){'model.csv'},
     content = function(file) {
       write.csv(dataofint()$eval$covariateSummary[dataofint()$eval$covariateSummary$covariateValue!=0,c('covariateName','covariateValue','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome' )]
