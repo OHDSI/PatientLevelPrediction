@@ -101,12 +101,15 @@ fitGLMModel <- function(population,
     } else if (fit$return_flag == "ILLCONDITIONED") {
       coefficients <- c(0)
         status <- "ILL CONDITIONED, CANNOT FIT"
+        ParallelLogger::logWarn(paste("GLM fitting issue: ", status))
     } else if (fit$return_flag == "MAX_ITERATIONS") {
       coefficients <- c(0)
        status <- "REACHED MAXIMUM NUMBER OF ITERATIONS, CANNOT FIT"
+       ParallelLogger::logWarn(paste("GLM fitting issue: ", status))
     } else {
       status <- "OK"
       coefficients <- stats::coef(fit) # not sure this is stats??
+      ParallelLogger::logInfo(paste("GLM fit status: ", status))
        }
   }
   outcomeModel <- attr(population, "metaData")

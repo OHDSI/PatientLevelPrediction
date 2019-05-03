@@ -1,3 +1,11 @@
+PatientLevelPrediction 3.0.5
+======================
+
+Changes:
+- Added GLM status to log (will now inform about any fitting issue in log)
+- Added requirement to use R v3.4.4 or later (needed for PLP skeleton)
+- Updated viewMultiplePlp() to match PLP skeleton package app
+
 PatientLevelPrediction 3.0.4
 ======================
 
