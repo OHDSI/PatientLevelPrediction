@@ -360,7 +360,8 @@ trainCIReNN<-function(plpData, population,
           metrics = c('accuracy'),
           optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
         )
-        earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=10,mode="auto",min_delta = 1e-4)
+        earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
+                                                     mode="auto",min_delta = earlyStoppingMinDelta)
         reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
                                                       patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
         
