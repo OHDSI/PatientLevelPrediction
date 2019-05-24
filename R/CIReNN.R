@@ -47,9 +47,7 @@
 #' @param vaeEpoch                      Number of times to interate over dataset for VAE
 #' @param vaeEpislonStd                 Epsilon
 #' @param seed            Random seed used by deep learning model
-#' @import keras
-#' @import tensorflow
-#'
+#' @importFrom zeallot %<-%
 #' @examples
 #' \dontrun{
 #' model.CIReNN <- setCIReNN()
@@ -228,6 +226,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
                  trainingTime =comp,
                  covariateMap=covariateMap,
                  useDeepEnsemble = param.best$useDeepEnsemble,
+                 numberOfEnsembleNetwork = param.best$numberOfEnsembleNetwork,
                  useVae = param.best$useVae,
                  vaeBatchSize = param.best$vaeBatchSize,
                  vaeEnDecoder = vaeEnDecoder,
@@ -235,7 +234,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
                  predictionTrain  = prediction
   )
   class(result) <- 'plpModel'
-  attr(result, 'type') <- 'deepEnsemble'
+  attr(result, 'type') <- 'deep'
   if(param.best$useDeepEnsemble)attr(result, 'type') <- 'deepEnsemble'
   attr(result, 'predictionType') <- 'binary'
   
@@ -252,166 +251,6 @@ trainCIReNN<-function(plpData, population,
                       vaeEpoch = 100L, vaeEpislonStd = 1.0,
                       seed=NULL, train=TRUE){
   
-  if(useDeepEnsemble){
-    custom_loss <- function(sigma){
-      gaussian_loss <- function(y_true,y_pred){
-        tensorflow::tf$reduce_mean(0.5*tensorflow::tf$log(sigma) + 0.5*tensorflow::tf$div(tensorflow::tf$square(y_true - y_pred), sigma)) + 1e-6
-      }
-      return(gaussian_loss)
-    }
-    
-    GaussianLayer <- R6::R6Class("GaussianLayer",
-                                 inherit = keras::KerasLayer,
-                                 
-                                 public = list(
-                                   output_dim = NULL,
-                                   kernel_1 = NULL,
-                                   kernel_2 = NULL,
-                                   bias_1 = NULL,
-                                   bias_2 = NULL,
-                                   
-                                   initialize = function(output_dim){
-                                     self$output_dim <- output_dim
-                                   },
-                                   build = function(input_shape){
-                                     super$build(input_shape)
-                                     
-                                     self$kernel_1 = self$add_weight(name = 'kernel_1',
-                                                                     shape = list(as.integer(input_shape[[2]]), self$output_dim), #list(30, self$output_dim),#shape = keras::shape(30, self$output_dim),
-                                                                     initializer = keras::initializer_glorot_normal(),
-                                                                     trainable = TRUE)
-                                     self$kernel_2 = self$add_weight(name = 'kernel_2',
-                                                                     shape = list(as.integer(input_shape[[2]]), self$output_dim),#list(30, self$output_dim),  #shape = keras::shape(30, self$output_dim),
-                                                                     initializer = keras::initializer_glorot_normal(),
-                                                                     trainable = TRUE)
-                                     self$bias_1 = self$add_weight(name = 'bias_1',
-                                                                   shape = list(self$output_dim),  #shape = keras::shape(self$output_dim),
-                                                                   initializer = keras::initializer_glorot_normal(),
-                                                                   trainable = TRUE)
-                                     self$bias_2 = self$add_weight(name = 'bias_2',
-                                                                   shape = list(self$output_dim), #shape = keras::shape(self$output_dim),
-                                                                   initializer = keras::initializer_glorot_normal(),
-                                                                   trainable = TRUE)
-                                   },
-                                   
-                                   call = function(x, mask = NULL){
-                                     output_mu = keras::k_dot(x, self$kernel_1) + self$bias_1
-                                     output_sig = keras::k_dot(x, self$kernel_2) + self$bias_2
-                                     output_sig_pos = keras::k_log(1 + keras::k_exp(output_sig)) + 1e-06
-                                     return (list(output_mu, output_sig_pos))
-                                   },
-                                   
-                                   
-                                   compute_output_shape = function(input_shape){
-                                     return (list (
-                                       list(input_shape[[1]], self$output_dim), 
-                                       list(input_shape[[1]], self$output_dim) )
-                                     )
-                                   } 
-                                 )
-    )
-    
-    # define layer wrapper function
-    layer_custom <- function(object, output_dim, name = NULL, trainable = TRUE) {
-      keras::create_layer(GaussianLayer, object, list(
-        output_dim = as.integer(output_dim),
-        name = name,
-        trainable = trainable
-      ))
-    }
-    
-    
-    createEnsembleNetwork<-function(train, plpData,population,batchSize,train_rows=NULL,index=NULL,lr,decay,
-                                    units,recurrentDropout,numberOfRNNLayer,layerDropout){
-      ##GRU layer
-      layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
-      
-      if(numberOfRNNLayer==1){
-        layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-                                                  return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
-          keras::layer_dense(units=2, activation='softmax')
-      } 
-      if(numberOfRNNLayer==2){
-        layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-                                                  return_sequences=TRUE) %>% 
-          keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE)%>% keras::layer_dropout(layerDropout) %>%
-          keras::layer_dense(units=2, activation='softmax')
-      }
-      if(numberOfRNNLayer==3){
-        layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-                                                  return_sequences=TRUE) %>% 
-          keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE) %>%
-          keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
-          keras::layer_dense(units=2, activation='softmax')
-      }
-      
-      c(mu,sigma) %<-% layer_custom(layers, 2, name = 'main_output')
-      
-      model <- keras::keras_model(inputs = layerInput,outputs=mu)
-      
-      model %>% keras::compile(
-        loss = custom_loss(sigma),
-        optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
-      )
-      
-      
-      if(!is.null(population$indexes) && train==T){
-        data <- plpData[population$rowId[population$indexes!=index],,]
-        #Extract validation set first - 10k people or 5%
-        valN <- min(10000,sum(population$indexes!=index)*0.05)
-        val_rows<-sample(1:sum(population$indexes!=index), valN, replace=FALSE)
-        train_rows <- c(1:sum(population$indexes!=index))[-val_rows]
-        
-        sampling_generator<-function(data, population, batchSize, train_rows, index){
-          function(){
-            gc()
-            rows<-sample(train_rows, batchSize, replace=FALSE)
-            
-            list(as.array(data[rows,,]), population$y[population$indexes!=index,][rows,])
-          }
-        }
-        
-        #print(table(population$y))
-        
-        history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
-                                                  steps_per_epoch = sum(population$indexes!=index)/batchSize,
-                                                  epochs=epochs,
-                                                  validation_data=list(as.array(data[val_rows,,]), 
-                                                                       population$y[population$indexes!=index,][val_rows,])#,
-                                                  #callbacks=list(earlyStopping,reduceLr),
-        )
-      }else{
-        data <- plpData[population$rowId,,]
-        
-        #Extract validation set first - 10k people or 5%
-        valN <- min(10000,length(population$indexes)*0.05)
-        val_rows<-sample(1:length(population$indexes), valN, replace=FALSE)
-        train_rows <- c(1:length(population$indexes))[-val_rows]
-        
-        sampling_generator<-function(data, population, batchSize, train_rows){
-          function(){
-            gc()
-            rows<-sample(train_rows, batchSize, replace=FALSE)
-            list(as.array(data[rows,,]), population$y[rows,])
-          }
-        }
-        
-        
-        history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
-                                                  steps_per_epoch = nrow(population[-val_rows,])/batchSize,
-                                                  epochs=epochs,
-                                                  validation_data=list(as.array(data[val_rows,,]), 
-                                                                       population$y[val_rows,]),
-                                                  view_metrics=F)
-      }
-      
-      layer_name = 'main_output'
-      get_intermediate = keras::k_function(inputs=list(model$input),
-                                           outputs=model$get_layer(layer_name)$output)
-      return(get_intermediate)
-    }
-  }
-  
   if(!is.null(population$indexes) && train==T){
     writeLines(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))
     
@@ -427,78 +266,11 @@ trainCIReNN<-function(plpData, population,
       writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       
       if(useDeepEnsemble){
-        # ##GRU layer
-        # layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
-        # 
-        # if(numberOfRNNLayer==1){
-        #   layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-        #                                             return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
-        #     keras::layer_dense(units=2, activation='softmax')
-        # } 
-        # if(numberOfRNNLayer==2){
-        #   layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-        #                                             return_sequences=TRUE) %>% 
-        #     keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE)%>% keras::layer_dropout(layerDropout) %>%
-        #     keras::layer_dense(units=2, activation='softmax')
-        # }
-        # if(numberOfRNNLayer==3){
-        #   layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-        #                                             return_sequences=TRUE) %>% 
-        #     keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE) %>%
-        #     keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
-        #     keras::layer_dense(units=2, activation='softmax')
-        # }
-        # 
-        # c(mu,sigma) %<-% layer_custom(layers, 2, name = 'main_output')
-        # 
-        # model <- keras::keras_model(inputs = layerInput,outputs=mu)
-        # 
-        # model %>% keras::compile(
-        #   loss = custom_loss(sigma),
-        #   optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
-        # )
-        # 
-        # # earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
-        # #                                              mode="auto",min_delta = earlyStoppingMinDelta)
-        # # reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
-        # #                                               patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
-        # 
-        # class_weight=list("0"=1,"1"=outcomeWeight)
-        # 
-        # data <- plpData[population$rowId[population$indexes!=index],,]
-        # 
-        # #Extract validation set first - 10k people or 5%
-        # valN <- min(10000,sum(population$indexes!=index)*0.05)
-        # val_rows<-sample(1:sum(population$indexes!=index), valN, replace=FALSE)
-        # train_rows <- c(1:sum(population$indexes!=index))[-val_rows]
-        # 
-        # sampling_generator<-function(data, population, batchSize, train_rows, index){
-        #   function(){
-        #     gc()
-        #     rows<-sample(train_rows, batchSize, replace=FALSE)
-        #     
-        #     list(as.array(data[rows,,]), population$y[population$indexes!=index,][rows,])
-        #   }
-        # }
-        # 
-        # 
-        # #print(table(population$y))
-        # 
-        # history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
-        #                                           steps_per_epoch = sum(population$indexes!=index)/batchSize,
-        #                                           epochs=epochs,
-        #                                           validation_data=list(as.array(data[val_rows,,]), 
-        #                                                                population$y[population$indexes!=index,][val_rows,])#,
-        #                                           #callbacks=list(earlyStopping,reduceLr),
-        #                                           #class_weight=class_weight
-        #                                           )
-        # layer_name = 'main_output'
-        # get_intermediate = keras::k_function(inputs=list(model$input),
-        #                                      outputs=model$get_layer(layer_name)$output)
+        
         predList<-list()
         for (i in seq(numberOfEnsembleNetwork)){
           #print(i)
-          pred<-createEnsembleNetwork(train = train, plpData=plpData,population=population,batchSize=batchSize,
+          pred<-createEnsembleNetwork(train = train, plpData=plpData,population=population,batchSize=batchSize,epochs = epochs,
                                       train_rows=train_rows,index=index,lr=lr,decay=decay,
                                       units=units,recurrentDropout=recurrentDropout,numberOfRNNLayer=numberOfRNNLayer,
                                       layerDropout=layerDropout)
@@ -627,8 +399,6 @@ trainCIReNN<-function(plpData, population,
         
       }
       
-      
-      
     }
     
     auc <- computeAuc(predictionMat)
@@ -646,7 +416,7 @@ trainCIReNN<-function(plpData, population,
     if(useDeepEnsemble){
       predList<-list()
       for (i in seq(numberOfEnsembleNetwork)){
-        pred<-createEnsembleNetwork(train = train, plpData=plpData,population=population,batchSize=batchSize,
+        pred<-createEnsembleNetwork(train = train, plpData=plpData,population=population,batchSize=batchSize,epochs=epochs,
                                     train_rows=train_rows,index=index,lr=lr,decay=decay,
                                     units=units,recurrentDropout=recurrentDropout,numberOfRNNLayer=numberOfRNNLayer,
                                     layerDropout=layerDropout)
@@ -683,7 +453,7 @@ trainCIReNN<-function(plpData, population,
         prediction$sigmas[batch] <- c(sigmaResult)
       }
       if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
-
+      
     }else{
       ##GRU layer
       model <- keras::keras_model_sequential()
@@ -841,4 +611,164 @@ buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatent
     ,callbacks = list(vaeEarlyStopping)
   )
   return (list (vae,encoder))
+}
+
+#Defining Gaussian Layer for Deep Ensemble
+GaussianLayer <- R6::R6Class("GaussianLayer",
+                             inherit = keras::KerasLayer,
+                             
+                             public = list(
+                               output_dim = NULL,
+                               kernel_1 = NULL,
+                               kernel_2 = NULL,
+                               bias_1 = NULL,
+                               bias_2 = NULL,
+                               
+                               initialize = function(output_dim){
+                                 self$output_dim <- output_dim
+                               },
+                               build = function(input_shape){
+                                 super$build(input_shape)
+                                 
+                                 self$kernel_1 = self$add_weight(name = 'kernel_1',
+                                                                 shape = list(as.integer(input_shape[[2]]), self$output_dim), #list(30, self$output_dim),#shape = keras::shape(30, self$output_dim),
+                                                                 initializer = keras::initializer_glorot_normal(),
+                                                                 trainable = TRUE)
+                                 self$kernel_2 = self$add_weight(name = 'kernel_2',
+                                                                 shape = list(as.integer(input_shape[[2]]), self$output_dim),#list(30, self$output_dim),  #shape = keras::shape(30, self$output_dim),
+                                                                 initializer = keras::initializer_glorot_normal(),
+                                                                 trainable = TRUE)
+                                 self$bias_1 = self$add_weight(name = 'bias_1',
+                                                               shape = list(self$output_dim),  #shape = keras::shape(self$output_dim),
+                                                               initializer = keras::initializer_glorot_normal(),
+                                                               trainable = TRUE)
+                                 self$bias_2 = self$add_weight(name = 'bias_2',
+                                                               shape = list(self$output_dim), #shape = keras::shape(self$output_dim),
+                                                               initializer = keras::initializer_glorot_normal(),
+                                                               trainable = TRUE)
+                               },
+                               
+                               call = function(x, mask = NULL){
+                                 output_mu = keras::k_dot(x, self$kernel_1) + self$bias_1
+                                 output_sig = keras::k_dot(x, self$kernel_2) + self$bias_2
+                                 output_sig_pos = keras::k_log(1 + keras::k_exp(output_sig)) + 1e-06
+                                 return (list(output_mu, output_sig_pos))
+                               },
+                               
+                               
+                               compute_output_shape = function(input_shape){
+                                 return (list (
+                                   list(input_shape[[1]], self$output_dim), 
+                                   list(input_shape[[1]], self$output_dim) )
+                                 )
+                               } 
+                             )
+)
+
+#define layer wrapper function for Deep Ensemble
+layer_custom <- function(object, output_dim, name = NULL, trainable = TRUE) {
+  keras::create_layer(GaussianLayer, object, list(
+    output_dim = as.integer(output_dim),
+    name = name,
+    trainable = trainable
+  ))
+}
+
+#Custom loss function for Deep Ensemble
+custom_loss <- function(sigma){
+  gaussian_loss <- function(y_true,y_pred){
+    tensorflow::tf$reduce_mean(0.5*tensorflow::tf$log(sigma) + 0.5*tensorflow::tf$div(tensorflow::tf$square(y_true - y_pred), sigma)) + 1e-6
+  }
+  return(gaussian_loss)
+}
+
+#Create Deep Ensemble Network function
+createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, train_rows=NULL,index=NULL,lr,decay,
+                                units,recurrentDropout,numberOfRNNLayer,layerDropout){
+  ##GRU layer
+  layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
+  
+  if(numberOfRNNLayer==1){
+    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                              return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
+      keras::layer_dense(units=2, activation='softmax')
+  } 
+  if(numberOfRNNLayer==2){
+    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                              return_sequences=TRUE) %>% 
+      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE)%>% keras::layer_dropout(layerDropout) %>%
+      keras::layer_dense(units=2, activation='softmax')
+  }
+  if(numberOfRNNLayer==3){
+    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                              return_sequences=TRUE) %>% 
+      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE) %>%
+      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
+      keras::layer_dense(units=2, activation='softmax')
+  }
+  
+  c(mu,sigma) %<-% layer_custom(layers, 2, name = 'main_output')
+  
+  model <- keras::keras_model(inputs = layerInput,outputs=mu)
+  
+  model %>% keras::compile(
+    loss = custom_loss(sigma),
+    optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
+  )
+  
+  
+  if(!is.null(population$indexes) && train==T){
+    data <- plpData[population$rowId[population$indexes!=index],,]
+    #Extract validation set first - 10k people or 5%
+    valN <- min(10000,sum(population$indexes!=index)*0.05)
+    val_rows<-sample(1:sum(population$indexes!=index), valN, replace=FALSE)
+    train_rows <- c(1:sum(population$indexes!=index))[-val_rows]
+    
+    sampling_generator<-function(data, population, batchSize, train_rows, index){
+      function(){
+        gc()
+        rows<-sample(train_rows, batchSize, replace=FALSE)
+        
+        list(as.array(data[rows,,]), population$y[population$indexes!=index,][rows,])
+      }
+    }
+    
+    #print(table(population$y))
+    
+    history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
+                                              steps_per_epoch = sum(population$indexes!=index)/batchSize,
+                                              epochs=epochs,
+                                              validation_data=list(as.array(data[val_rows,,]), 
+                                                                   population$y[population$indexes!=index,][val_rows,])#,
+                                              #callbacks=list(earlyStopping,reduceLr),
+    )
+  }else{
+    data <- plpData[population$rowId,,]
+    
+    #Extract validation set first - 10k people or 5%
+    valN <- min(10000,length(population$indexes)*0.05)
+    val_rows<-sample(1:length(population$indexes), valN, replace=FALSE)
+    train_rows <- c(1:length(population$indexes))[-val_rows]
+    
+    sampling_generator<-function(data, population, batchSize, train_rows){
+      function(){
+        gc()
+        rows<-sample(train_rows, batchSize, replace=FALSE)
+        list(as.array(data[rows,,]), population$y[rows,])
+      }
+    }
+    
+    
+    history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
+                                              steps_per_epoch = nrow(population[-val_rows,])/batchSize,
+                                              epochs=epochs,
+                                              validation_data=list(as.array(data[val_rows,,]), 
+                                                                   population$y[val_rows,]),
+                                              view_metrics=F)
+  }
+  
+  layer_name = 'main_output'
+  get_intermediate = keras::k_function(inputs=list(model$input),
+                                       outputs=model$get_layer(layer_name)$output)
+  return(get_intermediate)
 }
