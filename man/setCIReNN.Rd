@@ -8,7 +8,8 @@ setCIReNN(numberOfRNNLayer = c(1), units = c(128, 64),
   recurrentDropout = c(0.2), layerDropout = c(0.2), lr = c(1e-04),
   decay = c(1e-05), outcomeWeight = c(1), batchSize = c(100),
   epochs = c(100), earlyStoppingMinDelta = c(1e-04),
-  earlyStoppingPatience = c(10), useVae = T,
+  earlyStoppingPatience = c(10), useDeepEnsemble = F,
+  numberOfEnsembleNetwork = 3, useVae = T,
   vaeDataSamplingProportion = 0.1, vaeValidationSplit = 0.2,
   vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
   vaeEpoch = 100L, vaeEpislonStd = 1, seed = NULL)
@@ -35,6 +36,10 @@ setCIReNN(numberOfRNNLayer = c(1), units = c(128, 64),
 \item{earlyStoppingMinDelta}{minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.}
 
 \item{earlyStoppingPatience}{Number of epochs with no improvement after which training will be stopped.}
+
+\item{useDeepEnsemble}{logical (either TRUE or FALSE) value for using Deep Ensemble}
+
+\item{numberOfEnsembleNetwork}{Integer, Number of Ensemble. If you want to use Deep Ensemble, this number should be greater than 1.}
 
 \item{useVae}{logical (either TRUE or FALSE) value for using Variational AutoEncoder before RNN}
 

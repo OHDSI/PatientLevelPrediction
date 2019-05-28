@@ -650,8 +650,20 @@ savePlpModel <- function(plpModel, dirPath){
     
 
   # if deep (keras) then save hdfs
-  if(attr(plpModel, 'type')%in%c('deep', 'deepMulti')){
-    keras::save_model_hdf5(plpModel$model, filepath = file.path(dirPath, "keras_model"))
+  if(attr(plpModel, 'type')%in%c('deep', 'deepMulti','deepEnsemble')){
+    
+    if(attr(plpModel, 'type')=='deepEnsemble'){
+      tryCatch(
+        {#saveRDS(plpModel, file = file.path(dirPath,  "deepEnsemble_model.rds"))
+          for (i in seq(plpModel$modelSettings$modelParameters$numberOfEnsembleNetwork)){
+          model<-keras::serialize_model(plpModel$model[[i]], include_optimizer = TRUE)
+          keras::save_model_hdf5(model, filepath = file.path(dirPath, "keras_model",i))
+        }},error=function(e) NULL
+      )
+    }
+    if(attr(plpModel, 'type')=='deep'){
+      keras::save_model_hdf5(plpModel$model, filepath = file.path(dirPath, "keras_model"))
+    }
     if(attr(plpModel, 'type')=='deepMulti'){
       saveRDS(attr(plpModel, 'inputs'), file = file.path(dirPath,  "inputs_attr.rds"))
     }
@@ -798,6 +810,9 @@ updateModelLocation  <- function(plpModel, dirPath){
     plpModel$predict <- createTransform(plpModel)
   }
   if( type =='deep' ){
+    plpModel$predict <- createTransform(plpModel)
+  }
+  if( type =='deepEnsemble' ){
     plpModel$predict <- createTransform(plpModel)
   }
   if( type =='deepMulti'){
