@@ -58,6 +58,19 @@ NULL
 
 .onLoad <- function(libname, pkgname) {
   # Copied this from the ff package:
+  if (is.null(getOption("ffbatchbytes"))) {
+    # memory.limit is windows specific
+    if (.Platform$OS.type == "windows")
+    {
+      if (getRversion() >= "2.6.0")  # memory.limit was silently changed from 2.6.0 to return in MB instead of bytes
+        options(ffbatchbytes =  utils::memory.limit()*(1024^2 / 100))
+      else
+        options(ffbatchbytes =  utils::memory.limit() / 100)
+    } else {
+      # some magic constant
+      options(ffbatchbytes = 16*1024^2)
+    }
+  }
   if (is.null(getOption("ffmaxbytes"))) {
     # memory.limit is windows specific
     if (.Platform$OS.type == "windows") {
@@ -68,8 +81,9 @@ NULL
       options(ffmaxbytes = 0.5 * 1024^3)
     }
   }
-
+  
   # Workaround for problem with ff on machines with lots of memory (see
   # https://github.com/edwindj/ffbase/issues/37)
+  options(ffbatchbytes = min(getOption("ffbatchbytes"), .Machine$integer.max / 10))
   options(ffmaxbytes = min(getOption("ffmaxbytes"), .Machine$integer.max * 12))
 }

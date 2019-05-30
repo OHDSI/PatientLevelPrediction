@@ -46,8 +46,8 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                           threshold = "INFO",
-                           appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+                                           threshold = "INFO",
+                                           appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
     ParallelLogger::registerLogger(logger)
   }
   
@@ -94,7 +94,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
   data <- result$data[population$rowId,]
   prediction <- data.frame(rowId=population$rowId,
                            value=stats::predict(plpModel$model, data)
-                           )
+  )
   
   prediction <- merge(population, prediction, by='rowId')
   prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
@@ -134,10 +134,10 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   # run the python predict code:
   ParallelLogger::logInfo('Executing prediction...')
   result <- fun_predict(population = pPopulation, 
-                           plpData = pdata, 
-                           model_loc = plpModel$model,
-                           dense = ifelse(is.null(plpModel$dense),0,plpModel$dense),
-                           autoencoder = F)
+                        plpData = pdata, 
+                        model_loc = plpModel$model,
+                        dense = ifelse(is.null(plpModel$dense),0,plpModel$dense),
+                        autoencoder = F)
   
   #get the prediction from python and reformat:
   ParallelLogger::logInfo('Returning results...')
@@ -219,7 +219,7 @@ predict.pythonOld <- function(plpModel, population, plpData){
   
   # connect to python if not connected
   initiatePython()
-
+  
   ParallelLogger::logInfo('Setting inputs...')
   PythonInR::pySet("dense", plpModel$dense)
   PythonInR::pySet("model_loc", plpModel$model)
@@ -251,7 +251,7 @@ predict.pythonOld <- function(plpModel, population, plpData){
     included <- newData$map$newIds[newData$map$oldIds%in%included]-1 # python starts at 0, r at 1
     PythonInR::pySet("included", as.matrix(sort(included)))
   } 
-
+  
   # save population
   if('indexes'%in%colnames(population)){
     population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
@@ -360,6 +360,90 @@ predict.deep <- function(plpModel, population, plpData,   ...){
   }
 }
 
+predict.deepEnsemble <- function(plpModel, population, plpData,   ...){
+  temporal <- !is.null(plpData$timeRef)
+  ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
+  if(temporal){
+    ParallelLogger::logTrace('temporal')
+    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
+    
+    data <-result$data[population$rowId,,]
+    if(!is.null(plpModel$useVae)){
+      if(plpModel$useVae==TRUE){
+        data<- plyr::aaply(as.array(data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
+        data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
+      }}
+    
+    batch_size <- min(2000, length(population$rowId))
+    maxVal <- length(population$rowId)
+    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+    prediction <- population
+    prediction$value <- 0
+    
+    prediction$sigmas <- 0
+    for(batch in batches){
+      for (i in seq(plpModel$modelSettings$modelParameters$numberOfEnsembleNetwork)){
+        if(i==1){
+          muMatrix <- data.frame()
+          sigmaMatrix <-data.frame()
+        }
+        c(mu,sigma) %<-% plpModel$model[[i]](inputs=list(as.array(data[batch,,])))
+        muMatrix<-rbind(muMatrix,t(as.data.frame(mu[,2])))
+        sigmaMatrix<-rbind(sigmaMatrix,t(as.data.frame(sigma[,2])))
+      }
+      
+      muMean <- apply(muMatrix,2,mean)
+      muSq <- muMatrix^2
+      sigmaSq <- sigmaMatrix^2
+      sigmaMean <- apply(sigmaMatrix,2,mean)
+      sigmaResult=apply(muSq+sigmaSq,2, mean)- muMean^2
+      
+      prediction$value[batch] <- c(muMean)
+      prediction$sigmas[batch] <- c(sigmaResult)
+    }
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value', 'sigmas')] # need to fix no index issue
+    #If the prediction value is negative, please add values to make all the values to positive. 
+    if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
+    return(prediction)
+    
+  } else{
+    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
+    data <-result$data[population$rowId,]
+    
+    batch_size <- min(2000, length(population$rowId))
+    maxVal <- length(population$rowId)
+    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+    prediction <- population
+    prediction$value <- 0
+    
+    prediction$sigmas <- 0
+    for(batch in batches){
+      for (i in seq(plpModel$modelSettings$modelParameters$numberOfEnsembleNetwork)){
+        if(i==1){
+          muMatrix <- data.frame()
+          sigmaMatrix <-data.frame()
+        }
+        c(mu,sigma) %<-% plpModel$model[[i]](inputs=list(as.array(data[batch,,])))
+        muMatrix<-rbind(muMatrix,t(as.data.frame(mu[,2])))
+        sigmaMatrix<-rbind(sigmaMatrix,t(as.data.frame(sigma[,2])))
+      }
+      
+      muMean <- apply(muMatrix,2,mean)
+      muSq <- muMatrix^2
+      sigmaSq <- sigmaMatrix^2
+      sigmaMean <- apply(sigmaMatrix,2,mean)
+      sigmaResult=apply(muSq+sigmaSq,2, mean)- muMean^2
+      
+      prediction$value[batch] <- c(muMean)
+      prediction$sigmas[batch] <- c(sigmaResult)
+    }
+    
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value', 'sigmas')] # need to fix no index issue
+    if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
+    return(prediction)
+    
+  }
+}
 
 predict.deepMulti <- function(plpModel, population, plpData,   ...){
   
@@ -381,7 +465,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       dat <- list()
       length(dat) <- repeats
       for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
-
+      
       pred <- keras::predict_on_batch(plpModel$model, dat)
       if(is.null(dim(pred))){
         prediction$value[batch] <- pred
@@ -433,7 +517,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
 #' @export
 predictProbabilities <- function(predictiveModel, population, covariates) {
   start <- Sys.time()
-
+  
   prediction <- predictFfdf(predictiveModel$coefficients,
                             population,
                             covariates,
@@ -442,7 +526,7 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
   attr(prediction, "modelType") <- predictiveModel$modelType
   attr(prediction, "cohortId") <- attr(population, "metadata")$cohortId
   attr(prediction, "outcomeId") <- attr(population, "metadata")$outcomeId
-
+  
   delta <- Sys.time() - start
   ParallelLogger::logInfo("Prediction took ", signif(delta, 3), " ", attr(delta, "units"))
   return(prediction)
@@ -485,7 +569,7 @@ predictFfdf <- function(coefficients, population, covariates, modelType = "logis
     prediction$value <- prediction$covariateValue * prediction$beta
     prediction <- bySumFf(prediction$value, prediction$rowId)
     colnames(prediction) <- c("rowId", "value")
-   # prediction <- merge(population, ff::as.ram(prediction), by = "rowId", all.x = TRUE)
+    # prediction <- merge(population, ff::as.ram(prediction), by = "rowId", all.x = TRUE)
     prediction <- merge(ff::as.ram(population), prediction, by ="rowId", all.x = TRUE)
     prediction$value[is.na(prediction$value)] <- 0
     prediction$value <- prediction$value + intercept
@@ -502,7 +586,7 @@ predictFfdf <- function(coefficients, population, covariates, modelType = "logis
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     prediction$value <- exp(prediction$value)
     if(max(prediction$value)>1){
-       prediction$value <- prediction$value/max(prediction$value)
+      prediction$value <- prediction$value/max(prediction$value)
     }
   }
   return(prediction)

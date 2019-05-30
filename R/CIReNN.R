@@ -36,6 +36,8 @@
 #' @param epochs          Number of times to iterate over dataset
 #' @param earlyStoppingMinDelta         minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.
 #' @param earlyStoppingPatience         Number of epochs with no improvement after which training will be stopped.
+#' @param useDeepEnsemble               logical (either TRUE or FALSE) value for using Deep Ensemble
+#' @param numberOfEnsembleNetwork       Integer, Number of Ensemble. If you want to use Deep Ensemble, this number should be greater than 1. 
 #' @param useVae                        logical (either TRUE or FALSE) value for using Variational AutoEncoder before RNN
 #' @param vaeDataSamplingProportion     Data sampling proportion for VAE
 #' @param vaeValidationSplit            Validation split proportion for VAE
@@ -45,7 +47,7 @@
 #' @param vaeEpoch                      Number of times to interate over dataset for VAE
 #' @param vaeEpislonStd                 Epsilon
 #' @param seed            Random seed used by deep learning model
-#'
+#' @importFrom zeallot %<-%
 #' @examples
 #' \dontrun{
 #' model.CIReNN <- setCIReNN()
@@ -54,11 +56,15 @@
 setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(1.0), batchSize = c(100), 
                       epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
+                      useDeepEnsemble = F, numberOfEnsembleNetwork = 3,
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
                       vaeEpoch = 100L, vaeEpislonStd = 1.0,
                       seed=NULL  ){
-  if( sum(!( numberOfRNNLayer %in% c(1,2,3)))!=0 ) stop ('Only 1,2 or 3 is available now. ')  
+  if( sum(!( numberOfRNNLayer %in% c(1,2,3)))!=0 ) stop ('Only 1,2 or 3 is available now. ')
+  if(!((all.equal(numberOfEnsembleNetwork, as.integer(numberOfEnsembleNetwork))) & (numberOfEnsembleNetwork>=1) )) {
+    stop ('Number of ensemble network should be a natural number')  }
+  
   # if(class(indexFolder)!='character')
   #     stop('IndexFolder must be a character')
   # if(length(indexFolder)>1)
@@ -110,6 +116,7 @@ setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c
     layerDropout=layerDropout,
     lr =lr, decay=decay, outcomeWeight=outcomeWeight,epochs= epochs,
     earlyStoppingMinDelta = earlyStoppingMinDelta, earlyStoppingPatience = earlyStoppingPatience,
+    useDeepEnsemble = useDeepEnsemble,numberOfEnsembleNetwork = numberOfEnsembleNetwork,
     useVae= useVae,vaeDataSamplingProportion = vaeDataSamplingProportion, vaeValidationSplit= vaeValidationSplit, 
     vaeBatchSize = vaeBatchSize, vaeLatentDim = vaeLatentDim, vaeIntermediateDim = vaeIntermediateDim, 
     vaeEpoch = vaeEpoch, vaeEpislonStd = vaeEpislonStd,
@@ -118,7 +125,7 @@ setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c
     1:(length(numberOfRNNLayer)*length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(earlyStoppingMinDelta)*length(earlyStoppingPatience)*length(epochs)*max(1,length(seed)))),
     name='CIReNN'
   )
-
+  
   class(result) <- 'modelSettings' 
   return(result)
 }
@@ -140,7 +147,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   result<- toSparseM(plpData,population,map=NULL, temporal=T)
   data <- result$data
   covariateMap <- result$map
-
+  
   #remove result to save memory
   rm(result)
   
@@ -174,7 +181,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   
   #one-hot encoding
   population$y <- keras::to_categorical(population$outcomeCount, 2)#[,2] #population$outcomeCount
-
+  
   # do cross validation to find hyperParameter
   datas <- list(population=population, plpData=data)
   
@@ -218,14 +225,17 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
                  varImp = covariateRef, 
                  trainingTime =comp,
                  covariateMap=covariateMap,
-                 useVae = param[[1]]$useVae,
-                 vaeBatchSize = param[[1]]$vaeBatchSize,
+                 useDeepEnsemble = param.best$useDeepEnsemble,
+                 numberOfEnsembleNetwork = param.best$numberOfEnsembleNetwork,
+                 useVae = param.best$useVae,
+                 vaeBatchSize = param.best$vaeBatchSize,
                  vaeEnDecoder = vaeEnDecoder,
                  vaeEncoder = vaeEncoder,
                  predictionTrain  = prediction
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'deep'
+  if(param.best$useDeepEnsemble)attr(result, 'type') <- 'deepEnsemble'
   attr(result, 'predictionType') <- 'binary'
   
   return(result)
@@ -235,6 +245,7 @@ trainCIReNN<-function(plpData, population,
                       numberOfRNNLayer=1,units=128, recurrentDropout=0.2, layerDropout=0.2,
                       lr =1e-4, decay=1e-5, outcomeWeight = 1.0, batchSize = 100, 
                       epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
+                      useDeepEnsemble = F,numberOfEnsembleNetwork =3,
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
                       vaeEpoch = 100L, vaeEpislonStd = 1.0,
@@ -254,93 +265,65 @@ trainCIReNN<-function(plpData, population,
     for(index in 1:length(index_vect )){
       writeLines(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       
-      ##GRU layer
-      model <- keras::keras_model_sequential()
-      if(numberOfRNNLayer==1) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
-                                                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
-                                                         return_sequences=FALSE) 
-      if(numberOfRNNLayer>1 ) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
-                                                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
-                                                         return_sequences=TRUE) 
-      if(numberOfRNNLayer==2) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
-      if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE)
-      if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
-      model %>% keras::layer_dropout(layerDropout) %>%
-        keras::layer_dense(units=2, activation='softmax')
-      
-      model %>% keras::compile(
-        loss = 'binary_crossentropy',
-        metrics = c('accuracy'),
-        optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
-      )
-      
-      earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
-                                                   mode="auto",min_delta = earlyStoppingMinDelta)
-      reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
-                                                    patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
-      
-      class_weight=list("0"=1,"1"=outcomeWeight)
-      
-      data <- plpData[population$rowId[population$indexes!=index],,]
-      
-      #Extract validation set first - 10k people or 5%
-      valN <- min(10000,sum(population$indexes!=index)*0.05)
-      val_rows<-sample(1:sum(population$indexes!=index), valN, replace=FALSE)
-      train_rows <- c(1:sum(population$indexes!=index))[-val_rows]
+      if(useDeepEnsemble){
         
-      sampling_generator<-function(data, population, batchSize, train_rows, index){
-        function(){
-          gc()
-          rows<-sample(train_rows, batchSize, replace=FALSE)
-          
-          list(as.array(data[rows,,]), population$y[population$indexes!=index,][rows,])
+        predList<-list()
+        for (i in seq(numberOfEnsembleNetwork)){
+          #print(i)
+          pred<-createEnsembleNetwork(train = train, plpData=plpData,population=population,batchSize=batchSize,epochs = epochs,
+                                      train_rows=train_rows,index=index,lr=lr,decay=decay,
+                                      units=units,recurrentDropout=recurrentDropout,numberOfRNNLayer=numberOfRNNLayer,
+                                      layerDropout=layerDropout)
+          predList<-append(predList,pred)
         }
-      }
-      
- 
-      #print(table(population$y))
-      
-        history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
-                                       steps_per_epoch = sum(population$indexes!=index)/batchSize,
-                                       epochs=epochs,
-                                       validation_data=list(as.array(data[val_rows,,]), 
-                                                            population$y[population$indexes!=index,][val_rows,]),
-                                       callbacks=list(earlyStopping,reduceLr),
-                                       class_weight=class_weight)
-      
-      # batch prediciton 
-      maxVal <- sum(population$indexes==index)
-      batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
-      prediction <- population[population$indexes==index,]
-      prediction$value <- 0
-      for(batch in batches){
-        pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
-        prediction$value[batch] <- pred[,2]
+        model <- predList
+        
+        # batch prediciton 
+        maxVal <- sum(population$indexes==index)
+        batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
+        prediction <- population[population$indexes==index,]
+        prediction$value <- 0
+        prediction$sigmas <- 0
+        
+        for(batch in batches){
+          
+          for (i in seq(numberOfEnsembleNetwork)){
+            if(i==1){
+              muMatrix <- data.frame()
+              sigmaMatrix <-data.frame()
+            }
+            c(mu,sigma) %<-% predList[[i]](inputs=list(as.array(plpData[population$rowId[population$indexes==index],,][batch,,])))
+            muMatrix<-rbind(muMatrix,t(as.data.frame(mu[,2])))
+            sigmaMatrix<-rbind(sigmaMatrix,t(as.data.frame(sigma[,2])))
+          }
+          
+          muMean <- apply(muMatrix,2,mean)
+          muSq <- muMatrix^2
+          sigmaSq <- sigmaMatrix^2
+          sigmaMean <- apply(sigmaMatrix,2,mean)
+          sigmaResult=apply(muSq+sigmaSq,2, mean)- muMean^2
+          
+          prediction$value[batch] <- c(muMean)
+          #if prediction$value is negative, make this positive
+          prediction$sigmas[batch] <- c(sigmaResult)
+          
+        }
+        if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
+        #prediction$value[batch] <- mu[,2]
+        #prediction$sigmas[batch] <- sigma[,2]
+        
         #writeLines(paste0(dim(pred[,2]), collapse='-'))
         #writeLines(paste0(pred[1,2], collapse='-'))
-      }
-      
-      attr(prediction, "metaData") <- list(predictionType = "binary")
-      aucVal <- computeAuc(prediction)
-      perform <- c(perform,aucVal)
-      
-      # add the fold predictions and compute AUC after loop
-      predictionMat$value[population$indexes==index] <- prediction$value
-      
-    }
-    
-    auc <- computeAuc(predictionMat)
-    foldPerm <- perform
-    
-    # Output  ----------------------------------------------------------------
-    param.val <- paste0('RNNlayer Number: ', numberOfRNNLayer, '-- units: ',units,'-- recurrentDropout: ', recurrentDropout,
-                        'layerDropout: ',layerDropout,'-- lr: ', lr,
-                        '-- decay: ', decay,'-- outcomeWeight',outcomeWeight, '-- batchSize: ',batchSize, '-- epochs: ', epochs)
-    writeLines('==========================================')
-    writeLines(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
-    writeLines('==========================================')
-    
-      } else {
+        
+        attr(prediction, "metaData") <- list(predictionType = "binary")
+        aucVal <- computeAuc(prediction)
+        perform <- c(perform,aucVal)
+        
+        # add the fold predictions and compute AUC after loop
+        predictionMat$value[population$indexes==index] <- prediction$value
+        
+      }else{
+        
         ##GRU layer
         model <- keras::keras_model_sequential()
         if(numberOfRNNLayer==1) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
@@ -360,54 +343,187 @@ trainCIReNN<-function(plpData, population,
           metrics = c('accuracy'),
           optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
         )
-        earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=10,mode="auto",min_delta = 1e-4)
+        
+        earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
+                                                     mode="auto",min_delta = earlyStoppingMinDelta)
         reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
                                                       patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
         
+        class_weight=list("0"=1,"1"=outcomeWeight)
         
-    class_weight=list("0"=1,"1"=outcomeWeight)
-    
-    data <- plpData[population$rowId,,]
-    
-    #Extract validation set first - 10k people or 5%
-    valN <- min(10000,length(population$indexes)*0.05)
-    val_rows<-sample(1:length(population$indexes), valN, replace=FALSE)
-    train_rows <- c(1:length(population$indexes))[-val_rows]
-
-    
-    sampling_generator<-function(data, population, batchSize, train_rows){
-      function(){
-        gc()
-        rows<-sample(train_rows, batchSize, replace=FALSE)
-        list(as.array(data[rows,,]), population$y[rows,])
+        data <- plpData[population$rowId[population$indexes!=index],,]
+        
+        #Extract validation set first - 10k people or 5%
+        valN <- min(10000,sum(population$indexes!=index)*0.05)
+        val_rows<-sample(1:sum(population$indexes!=index), valN, replace=FALSE)
+        train_rows <- c(1:sum(population$indexes!=index))[-val_rows]
+        
+        sampling_generator<-function(data, population, batchSize, train_rows, index){
+          function(){
+            gc()
+            rows<-sample(train_rows, batchSize, replace=FALSE)
+            
+            list(as.array(data[rows,,]), population$y[population$indexes!=index,][rows,])
+          }
+        }
+        
+        
+        #print(table(population$y))
+        
+        history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
+                                                  steps_per_epoch = sum(population$indexes!=index)/batchSize,
+                                                  epochs=epochs,
+                                                  validation_data=list(as.array(data[val_rows,,]), 
+                                                                       population$y[population$indexes!=index,][val_rows,]),
+                                                  callbacks=list(earlyStopping,reduceLr),
+                                                  class_weight=class_weight)
+        
+        # batch prediciton 
+        maxVal <- sum(population$indexes==index)
+        batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
+        prediction <- population[population$indexes==index,]
+        prediction$value <- 0
+        for(batch in batches){
+          pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+          prediction$value[batch] <- pred[,2]
+          #writeLines(paste0(dim(pred[,2]), collapse='-'))
+          #writeLines(paste0(pred[1,2], collapse='-'))
+        }
+        
+        attr(prediction, "metaData") <- list(predictionType = "binary")
+        aucVal <- computeAuc(prediction)
+        perform <- c(perform,aucVal)
+        
+        # add the fold predictions and compute AUC after loop
+        predictionMat$value[population$indexes==index] <- prediction$value
+        
       }
+      
     }
+    
+    auc <- computeAuc(predictionMat)
+    foldPerm <- perform
+    
+    # Output  ----------------------------------------------------------------
+    param.val <- paste0('RNNlayer Number: ', numberOfRNNLayer, '-- units: ',units,'-- recurrentDropout: ', recurrentDropout,
+                        'layerDropout: ',layerDropout,'-- lr: ', lr,
+                        '-- decay: ', decay,'-- outcomeWeight',outcomeWeight, '-- batchSize: ',batchSize, '-- epochs: ', epochs)
+    writeLines('==========================================')
+    writeLines(paste0('CIReNN with parameters:', param.val,' obtained an AUC of ',auc))
+    writeLines('==========================================')
+    
+  } else {
+    if(useDeepEnsemble){
+      predList<-list()
+      for (i in seq(numberOfEnsembleNetwork)){
+        pred<-createEnsembleNetwork(train = train, plpData=plpData,population=population,batchSize=batchSize,epochs=epochs,
+                                    train_rows=train_rows,index=index,lr=lr,decay=decay,
+                                    units=units,recurrentDropout=recurrentDropout,numberOfRNNLayer=numberOfRNNLayer,
+                                    layerDropout=layerDropout)
+        predList<-append(predList,pred)
+      }
+      model <- predList
+      
+      # batch prediciton 
+      maxVal <- nrow(population)
+      batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
+      prediction <- population
+      prediction$value <- 0
+      prediction$sigmas <- 0
+      
+      for(batch in batches){
+        
+        for (i in seq(numberOfEnsembleNetwork)){
+          if(i==1){
+            muMatrix <- data.frame()
+            sigmaMatrix <-data.frame()
+          }
+          c(mu,sigma) %<-% predList[[i]](inputs=list(as.array(plpData[batch,,])))
+          muMatrix<-rbind(muMatrix,t(as.data.frame(mu[,2])))
+          sigmaMatrix<-rbind(sigmaMatrix,t(as.data.frame(sigma[,2])))
+        }
+        
+        muMean <- apply(muMatrix,2,mean)
+        muSq <- muMatrix^2
+        sigmaSq <- sigmaMatrix^2
+        sigmaMean <- apply(sigmaMatrix,2,mean)
+        sigmaResult=apply(muSq+sigmaSq,2, mean)- muMean^2
+        
+        prediction$value[batch] <- c(muMean)
+        prediction$sigmas[batch] <- c(sigmaResult)
+      }
+      if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
+      
+    }else{
+      ##GRU layer
+      model <- keras::keras_model_sequential()
+      if(numberOfRNNLayer==1) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
+                                                         return_sequences=FALSE) 
+      if(numberOfRNNLayer>1 ) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
+                                                         return_sequences=TRUE) 
+      if(numberOfRNNLayer==2) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+      if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE)
+      if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+      model %>% keras::layer_dropout(layerDropout) %>%
+        keras::layer_dense(units=2, activation='softmax')
+      
+      model %>% keras::compile(
+        loss = 'binary_crossentropy',
+        metrics = c('accuracy'),
+        optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
+      )
+      earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
+                                                   mode="auto",min_delta = earlyStoppingMinDelta)
+      reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
+                                                    patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
+      
+      
+      class_weight=list("0"=1,"1"=outcomeWeight)
+      
+      data <- plpData[population$rowId,,]
+      
+      #Extract validation set first - 10k people or 5%
+      valN <- min(10000,length(population$indexes)*0.05)
+      val_rows<-sample(1:length(population$indexes), valN, replace=FALSE)
+      train_rows <- c(1:length(population$indexes))[-val_rows]
+      
+      sampling_generator<-function(data, population, batchSize, train_rows){
+        function(){
+          gc()
+          rows<-sample(train_rows, batchSize, replace=FALSE)
+          list(as.array(data[rows,,]), population$y[rows,])
+        }
+      }
       
       
       history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
-                                     steps_per_epoch = nrow(population[-val_rows,])/batchSize,
-                                     epochs=epochs,
-                                     validation_data=list(as.array(data[val_rows,,]), 
-                                                         population$y[val_rows,]),
-                                     callbacks=list(earlyStopping,reduceLr),
-                                     class_weight=class_weight,
-                                     view_metrics=F)
-  
-
-    # batched prediciton 
+                                                steps_per_epoch = nrow(population[-val_rows,])/batchSize,
+                                                epochs=epochs,
+                                                validation_data=list(as.array(data[val_rows,,]), 
+                                                                     population$y[val_rows,]),
+                                                callbacks=list(earlyStopping,reduceLr),
+                                                class_weight=class_weight,
+                                                view_metrics=F)
+      
+      
+      # batched prediciton 
       maxVal <- nrow(population)
       batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    for(batch in batches){
-      pred <- keras::predict_on_batch(model, as.array(plpData[batch,,]))
-      prediction$value[batch] <- pred[,2]
+      prediction <- population
+      prediction$value <- 0
+      for(batch in batches){
+        pred <- keras::predict_on_batch(model, as.array(plpData[batch,,]))
+        prediction$value[batch] <- pred[,2]
+      }
+      
     }
-    
     attr(prediction, "metaData") <- list(predictionType = "binary")
     auc <- computeAuc(prediction)
     foldPerm <- auc
     predictionMat <- prediction
+    
   }
   
   
@@ -418,7 +534,14 @@ trainCIReNN<-function(plpData, population,
                                         units=units, recurrentDropout=recurrentDropout, 
                                         layerDropout=layerDropout,lr =lr, decay=decay,outcomeWeight=outcomeWeight,
                                         batchSize = batchSize, epochs= epochs, earlyStoppingMinDelta = earlyStoppingMinDelta, 
-                                        earlyStoppingPatience=earlyStoppingPatience))
+                                        earlyStoppingPatience=earlyStoppingPatience,
+                                        useDeepEnsemble = useDeepEnsemble,
+                                        numberOfEnsembleNetwork =numberOfEnsembleNetwork,
+                                        useVae = useVae, vaeDataSamplingProportion =vaeDataSamplingProportion ,vaeValidationSplit = vaeValidationSplit,
+                                        vaeBatchSize =vaeBatchSize,
+                                        vaeLatentDim = vaeLatentDim,
+                                        vaeIntermediateDim = vaeIntermediateDim,
+                                        vaeEpoch = vaeEpoch, vaeEpislonStd = vaeEpislonStd))
   )
   return(result)
   
@@ -488,4 +611,164 @@ buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatent
     ,callbacks = list(vaeEarlyStopping)
   )
   return (list (vae,encoder))
+}
+
+#Defining Gaussian Layer for Deep Ensemble
+GaussianLayer <- R6::R6Class("GaussianLayer",
+                             inherit = keras::KerasLayer,
+                             
+                             public = list(
+                               output_dim = NULL,
+                               kernel_1 = NULL,
+                               kernel_2 = NULL,
+                               bias_1 = NULL,
+                               bias_2 = NULL,
+                               
+                               initialize = function(output_dim){
+                                 self$output_dim <- output_dim
+                               },
+                               build = function(input_shape){
+                                 super$build(input_shape)
+                                 
+                                 self$kernel_1 = self$add_weight(name = 'kernel_1',
+                                                                 shape = list(as.integer(input_shape[[2]]), self$output_dim), #list(30, self$output_dim),#shape = keras::shape(30, self$output_dim),
+                                                                 initializer = keras::initializer_glorot_normal(),
+                                                                 trainable = TRUE)
+                                 self$kernel_2 = self$add_weight(name = 'kernel_2',
+                                                                 shape = list(as.integer(input_shape[[2]]), self$output_dim),#list(30, self$output_dim),  #shape = keras::shape(30, self$output_dim),
+                                                                 initializer = keras::initializer_glorot_normal(),
+                                                                 trainable = TRUE)
+                                 self$bias_1 = self$add_weight(name = 'bias_1',
+                                                               shape = list(self$output_dim),  #shape = keras::shape(self$output_dim),
+                                                               initializer = keras::initializer_glorot_normal(),
+                                                               trainable = TRUE)
+                                 self$bias_2 = self$add_weight(name = 'bias_2',
+                                                               shape = list(self$output_dim), #shape = keras::shape(self$output_dim),
+                                                               initializer = keras::initializer_glorot_normal(),
+                                                               trainable = TRUE)
+                               },
+                               
+                               call = function(x, mask = NULL){
+                                 output_mu = keras::k_dot(x, self$kernel_1) + self$bias_1
+                                 output_sig = keras::k_dot(x, self$kernel_2) + self$bias_2
+                                 output_sig_pos = keras::k_log(1 + keras::k_exp(output_sig)) + 1e-06
+                                 return (list(output_mu, output_sig_pos))
+                               },
+                               
+                               
+                               compute_output_shape = function(input_shape){
+                                 return (list (
+                                   list(input_shape[[1]], self$output_dim), 
+                                   list(input_shape[[1]], self$output_dim) )
+                                 )
+                               } 
+                             )
+)
+
+#define layer wrapper function for Deep Ensemble
+layer_custom <- function(object, output_dim, name = NULL, trainable = TRUE) {
+  keras::create_layer(GaussianLayer, object, list(
+    output_dim = as.integer(output_dim),
+    name = name,
+    trainable = trainable
+  ))
+}
+
+#Custom loss function for Deep Ensemble
+custom_loss <- function(sigma){
+  gaussian_loss <- function(y_true,y_pred){
+    tensorflow::tf$reduce_mean(0.5*tensorflow::tf$log(sigma) + 0.5*tensorflow::tf$div(tensorflow::tf$square(y_true - y_pred), sigma)) + 1e-6
+  }
+  return(gaussian_loss)
+}
+
+#Create Deep Ensemble Network function
+createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, train_rows=NULL,index=NULL,lr,decay,
+                                units,recurrentDropout,numberOfRNNLayer,layerDropout){
+  ##GRU layer
+  layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
+  
+  if(numberOfRNNLayer==1){
+    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                              return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
+      keras::layer_dense(units=2, activation='softmax')
+  } 
+  if(numberOfRNNLayer==2){
+    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                              return_sequences=TRUE) %>% 
+      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE)%>% keras::layer_dropout(layerDropout) %>%
+      keras::layer_dense(units=2, activation='softmax')
+  }
+  if(numberOfRNNLayer==3){
+    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                              return_sequences=TRUE) %>% 
+      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE) %>%
+      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
+      keras::layer_dense(units=2, activation='softmax')
+  }
+  
+  c(mu,sigma) %<-% layer_custom(layers, 2, name = 'main_output')
+  
+  model <- keras::keras_model(inputs = layerInput,outputs=mu)
+  
+  model %>% keras::compile(
+    loss = custom_loss(sigma),
+    optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
+  )
+  
+  
+  if(!is.null(population$indexes) && train==T){
+    data <- plpData[population$rowId[population$indexes!=index],,]
+    #Extract validation set first - 10k people or 5%
+    valN <- min(10000,sum(population$indexes!=index)*0.05)
+    val_rows<-sample(1:sum(population$indexes!=index), valN, replace=FALSE)
+    train_rows <- c(1:sum(population$indexes!=index))[-val_rows]
+    
+    sampling_generator<-function(data, population, batchSize, train_rows, index){
+      function(){
+        gc()
+        rows<-sample(train_rows, batchSize, replace=FALSE)
+        
+        list(as.array(data[rows,,]), population$y[population$indexes!=index,][rows,])
+      }
+    }
+    
+    #print(table(population$y))
+    
+    history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
+                                              steps_per_epoch = sum(population$indexes!=index)/batchSize,
+                                              epochs=epochs,
+                                              validation_data=list(as.array(data[val_rows,,]), 
+                                                                   population$y[population$indexes!=index,][val_rows,])#,
+                                              #callbacks=list(earlyStopping,reduceLr),
+    )
+  }else{
+    data <- plpData[population$rowId,,]
+    
+    #Extract validation set first - 10k people or 5%
+    valN <- min(10000,length(population$indexes)*0.05)
+    val_rows<-sample(1:length(population$indexes), valN, replace=FALSE)
+    train_rows <- c(1:length(population$indexes))[-val_rows]
+    
+    sampling_generator<-function(data, population, batchSize, train_rows){
+      function(){
+        gc()
+        rows<-sample(train_rows, batchSize, replace=FALSE)
+        list(as.array(data[rows,,]), population$y[rows,])
+      }
+    }
+    
+    
+    history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
+                                              steps_per_epoch = nrow(population[-val_rows,])/batchSize,
+                                              epochs=epochs,
+                                              validation_data=list(as.array(data[val_rows,,]), 
+                                                                   population$y[val_rows,]),
+                                              view_metrics=F)
+  }
+  
+  layer_name = 'main_output'
+  get_intermediate = keras::k_function(inputs=list(model$input),
+                                       outputs=model$get_layer(layer_name)$output)
+  return(get_intermediate)
 }
