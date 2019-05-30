@@ -30,7 +30,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.5</span>
       </span>
     </div>
 
@@ -119,7 +119,7 @@
       <h1>Building patient-level predictive models</h1>
                         <h4 class="author">Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2019-04-24</h4>
+            <h4 class="date">2019-05-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/BuildingPredictiveModels.Rmd"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingPredictiveModels.Rmd</code></div>
@@ -129,6 +129,9 @@
     
     
 <p><!--
+  %\VignetteEngine{knitr}
+%\VignetteIndexEntry{Building patient-level predictive models}
+--> <!--
   %\VignetteEngine{knitr}
 %\VignetteIndexEntry{Building patient-level predictive models}
 --></p>
@@ -155,13 +158,21 @@
 <h1 class="hasAnchor">
 <a href="#study-specification" class="anchor"></a>Study specification</h1>
 <p>We have to clearly specify our study upfront to be able to implement it. This means we need to define the prediction problem we like to address, in which population we will build the model, which model we will build and how we will evaluate its performance. To guide you through this process we will use a “Disease onset and progression” prediction type as an example.</p>
-<div id="problem-definition" class="section level2">
+<div id="problem-definition-1-stroke-in-afibrilation-patients" class="section level2">
 <h2 class="hasAnchor">
-<a href="#problem-definition" class="anchor"></a>Problem definition</h2>
+<a href="#problem-definition-1-stroke-in-afibrilation-patients" class="anchor"></a>Problem definition 1: Stroke in afibrilation patients</h2>
 <p>Atrial fibrillation is a disease characterized by an irregular heart rate that can cause poor blood flow. Patients with atrial fibrillation are at increased risk of ischemic stroke. Anticoagulation is a recommended prophylaxis treatment strategy for patients at high risk of stroke, though the underuse of anticoagulants and persistent severity of ischemic stroke represents a substantial unmet medical need. Various strategies have been developed to predict risk of ischemic stroke in patients with atrial fibrillation. CHADS2 (Gage JAMA 2001) was developed as a risk score based on history of congestive heart failure, hypertension, age&gt;=75, diabetes and stroke. CHADS2 was initially derived using Medicare claims data, where it achieved good discrimination (AUC=0.82). However, subsequent external validation studies revealed the CHADS2 had substantially lower predictive accuracy (Keogh Thromb Haemost 2011). Subsequent stroke risk calculators have been developed and evaluated, including the extension of CHADS2Vasc. The management of atrial fibrillation has evolved substantially over the last decade, for various reasons that include the introduction of novel oral anticoagulants. With these innovations has come a renewed interest in greater precision medicine for stroke prevention.</p>
 <p>We will apply the PatientLevelPrediction package to observational healthcare data to address the following patient-level prediction question:</p>
 <p>Amongst patients who are newly diagnosed with Atrial Fibrillation, which patients will go on to have Ischemic Stroke within 1 year?</p>
 <p>We will define ‘patients who are newly diagnosed with Atrial Fibrillation’ as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias. We will define ‘Ischemic stroke events’ as ischemic stroke condition records during an inpatient or ER visit; successive records with &gt; 180 day gap are considered independent episodes.</p>
+</div>
+<div id="problem-definition-2-angioedema-in-ace-inhibitor-users" class="section level2">
+<h2 class="hasAnchor">
+<a href="#problem-definition-2-angioedema-in-ace-inhibitor-users" class="anchor"></a>Problem definition 2: Angioedema in ACE inhibitor users</h2>
+<p>Angiotensin converting enzyme inhibitors (ACE inhibitors) are medications used by patients with hypertension that widen the blood vessles and therefore increse the amount of blood pumped by the heart and decreases blood pressure. Ace inhibitors reduce a patients risk of cardiovasular disease but can lead to drug-induced angioedema.</p>
+<p>We will apply the PatientLevelPrediction package to observational healthcare data to address the following patient-level prediction question:</p>
+<p>Amongst patients who are newly dispensed an ACE inhibitor, which patients will go on to have angioedema within 1 year?</p>
+<p>We will define ‘patients who are newly dispensed an ACE inhibitor’ as the first drug record of sny ACE inhibitor, […]which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias. We will define ‘angioedema’ as an angioedema condition record.</p>
 </div>
 <div id="study-population-definition" class="section level2">
 <h2 class="hasAnchor">
@@ -201,7 +212,7 @@
 <tr class="even">
 <td>Gradient boosting machines</td>
 <td>Gradient boosting machines is a boosting ensemble technique and in our framework it combines multiple decision trees. Boosting works by iteratively adding decision trees but adds more weight to the data-points that are misclassified by prior decision trees in the cost function when training the next tree. We use Extreme Gradient Boosting, which is an efficient implementation of the gradient boosting framework implemented in the xgboost R package available from CRAN.</td>
-<td>ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, seed</td>
+<td>ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, balance (balance class labels), seed</td>
 </tr>
 <tr class="odd">
 <td>Random forest</td>
@@ -216,18 +227,18 @@
 </tr>
 <tr class="odd">
 <td>Naive Bayes</td>
-<td>The Naive Bayes algorithm applies the Bayes’ theorem with the “naive” assumption of conditional independence between every pair of features given the value of the class variable. Based on the likelihood the data belongs to a class and the prior distribution of the class, a posterior distribution is obtained.</td>
+<td>The Naive Bayes algorithm applies the Bayes theorem with the ‘naive’ assumption of conditional independence between every pair of features given the value of the class variable. Based on the likelihood the data belongs to a class and the prior distribution of the class, a posterior distribution is obtained.</td>
 <td>none</td>
 </tr>
 <tr class="even">
 <td>AdaBoost</td>
-<td>AdaBoost is a boosting ensemble technique. Boosting works by iteratively adding classifiers but adds more weight to the data-points that are misclassified by prior classifiers in the cost function when training the next classifier. We use the sklearn “AdaboostClassifier” implementation in Python.</td>
+<td>AdaBoost is a boosting ensemble technique. Boosting works by iteratively adding classifiers but adds more weight to the data-points that are misclassified by prior classifiers in the cost function when training the next classifier. We use the sklearn ‘AdaboostClassifier’ implementation in Python.</td>
 <td>nEstimators (the maximum number of estimators at which boosting is terminated), learningRate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learningRate and nEstimators)</td>
 </tr>
 <tr class="odd">
 <td>Decision Tree</td>
-<td>A decision tree is a classifier that partitions the variable space using individual tests selected using a greedy approach. It aims to find partitions that have the highest information gain to separate the classes. The decision tree can easily overfit by enabling a large number of partitions (tree depth) and often needs some regularization (e.g., pruning or specifying hyper-parameters that limit the complexity of the model). We use the sklearn “DecisionTreeClassifier” implementation in Python.</td>
-<td>maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight (“Balance”" or “None”)</td>
+<td>A decision tree is a classifier that partitions the variable space using individual tests selected using a greedy approach. It aims to find partitions that have the highest information gain to separate the classes. The decision tree can easily overfit by enabling a large number of partitions (tree depth) and often needs some regularization (e.g., pruning or specifying hyper-parameters that limit the complexity of the model). We use the sklearn ‘DecisionTreeClassifier’ implementation in Python.</td>
+<td>maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight (‘Balance’ or ‘None’)</td>
 </tr>
 <tr class="even">
 <td>Multilayer Perception</td>
@@ -237,7 +248,7 @@
 <tr class="odd">
 <td>Deep Learning</td>
 <td>Deep learning such as deep nets, convolutional neural networks or recurrent neural networks are similar to a neural network but have multiple hidden layers that aim to learn latent representations useful for prediction. In the seperate BuildingDeepLearningModels vignette we describe these models and hyper-parameters in more detail</td>
-<td></td>
+<td>see BuildingDeepLearningModels vignette</td>
 </tr>
 </tbody>
 </table>
@@ -247,8 +258,20 @@
 <li>split by person. In this case a random seed is used to assign the patient to either sets.</li>
 <li>split by time. In this case a time point is used to split the persons, e.g. 75% of the data is before and 25% is after this date. The advantage of this is that you take into consideration that the health care system has changed over time.</li>
 </ol>
-<p>For our prediction model we decide to start with a Regularized Logistic Regression and will use the default parameters. We will do a 75%-25% split by person.</p>
-<p>We now completely defined our study:</p>
+<p>We now completely defined our studies and implement them:</p>
+<ul>
+<li><a href="#example1">See example 1: Stroke in afibrilation patients</a></li>
+<li><a href="#example2">See example 2: Agioedema in ACE inhibitor new users</a></li>
+</ul>
+</div>
+</div>
+<div id="example1" class="section level1">
+<h1 class="hasAnchor">
+<a href="#example1" class="anchor"></a>Example 1: Stroke in afibrilation patients</h1>
+<div id="study-specification-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#study-specification-1" class="anchor"></a>Study Specification</h2>
+<p>For our first prediction model we decide to start with a Regularized Logistic Regression and will use the default parameters. We will do a 75%-25% split by person.</p>
 <table class="table">
 <colgroup>
 <col width="44%">
@@ -325,7 +348,7 @@
 </tr>
 <tr class="odd">
 <td>Covariates</td>
-<td>ender, Age, Conditions (ever before, &lt;365), Drugs Groups (ever before, &lt;365), and Visit Count</td>
+<td>Gender, Age, Conditions (ever before, &lt;365), Drugs Groups (ever before, &lt;365), and Visit Count</td>
 </tr>
 <tr class="even">
 <td>Data split</td>
@@ -335,14 +358,13 @@
 </table>
 <p>According to the best practices we need to make a protocol that completely specifies how we plan to execute our study. This protocol will be assessed by the governance boards of the participating data sources in your network study. For this a template could be used but we prefer to automate this process as much as possible by adding functionality to automatically generate study protocol from a study specification. We will discuss this in more detail later.</p>
 </div>
-</div>
-<div id="study-implementation" class="section level1">
-<h1 class="hasAnchor">
-<a href="#study-implementation" class="anchor"></a>Study implementation</h1>
-<p>Now we have completely design our study we have to implement the study. We have to generate the target and outcome cohorts and we need to develop the R code to run against our CDM that will execute the full study.</p>
-<div id="cohort-instantiation" class="section level2">
+<div id="study-implementation" class="section level2">
 <h2 class="hasAnchor">
-<a href="#cohort-instantiation" class="anchor"></a>Cohort instantiation</h2>
+<a href="#study-implementation" class="anchor"></a>Study implementation</h2>
+<p>Now we have completely design our study we have to implement the study. We have to generate the target and outcome cohorts and we need to develop the R code to run against our CDM that will execute the full study.</p>
+<div id="cohort-instantiation" class="section level3">
+<h3 class="hasAnchor">
+<a href="#cohort-instantiation" class="anchor"></a>Cohort instantiation</h3>
 <p>For our study we need to know when a person enters the target and outcome cohorts. This is stored in a table on the server that contains the cohort start date and cohort end date for all subjects for a specific cohort definition. This cohort table has a very simple structure as shown below:</p>
 <ul>
 <li>
@@ -360,15 +382,16 @@
 <li><p>write your own custom SQL statements to fill the cohort table.</p></li>
 </ol>
 <p>Both methods are described below for our example prediction problem.</p>
+</div>
 <div id="atlas-cohort-builder" class="section level3">
 <h3 class="hasAnchor">
 <a href="#atlas-cohort-builder" class="anchor"></a>ATLAS cohort builder</h3>
 <div class="figure">
-<img src="ATLAS_T.PNG" alt="Target Cohort Atrial Fibrillation"><p class="caption">Target Cohort Atrial Fibrillation</p>
+<img src="example1/ATLAS_T.PNG" alt="Target Cohort Atrial Fibrillation"><p class="caption">Target Cohort Atrial Fibrillation</p>
 </div>
 <p>ATLAS allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involve selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person’s episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. As an example, Figure 4 shows how we created the Atrial Fibrillation cohort and Figure 5 shows how we created the stroke cohort in ATLAS.</p>
 <div class="figure">
-<img src="ATLAS_O.PNG" alt="Outcome Cohort Stroke"><p class="caption">Outcome Cohort Stroke</p>
+<img src="example1/ATLAS_O.PNG" alt="Outcome Cohort Stroke"><p class="caption">Outcome Cohort Stroke</p>
 </div>
 <p>The T and O cohorts can be found here:</p>
 <ul>
@@ -389,163 +412,162 @@
 <span class="co">File AfStrokeCohorts.sql </span>
 <span class="co">***********************************/</span>
 <span class="co">/*</span>
-<span class="co">  Create a table to store the persons in the T and C cohort</span>
+<span class="co">Create a table to store the persons in the T and C cohort</span>
 <span class="co">*/</span>
 
 <span class="kw">IF</span> OBJECT_ID(<span class="st">'@resultsDatabaseSchema.PLPAFibStrokeCohort'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/NULL">NULL</a></span> 
-  <span class="kw">DROP</span> <span class="kw">TABLE</span> @resultsDatabaseSchema.PLPAFibStrokeCohort;
+<span class="kw">DROP</span> <span class="kw">TABLE</span> @resultsDatabaseSchema.PLPAFibStrokeCohort;
 
 <span class="kw">CREATE</span> <span class="kw">TABLE</span> @resultsDatabaseSchema.PLPAFibStrokeCohort 
 ( 
-  cohort_definition_id <span class="dt">INT</span>, 
-  subject_id BIGINT,
-  cohort_start_date <span class="dt">DATE</span>, 
-  cohort_end_date <span class="dt">DATE</span>
+cohort_definition_id <span class="dt">INT</span>, 
+subject_id BIGINT,
+cohort_start_date <span class="dt">DATE</span>, 
+cohort_end_date <span class="dt">DATE</span>
 );
 
 
 <span class="co">/*</span>
-<span class="co">  T cohort:  [PatientLevelPrediction vignette]:  T : patients who are newly </span>
-<span class="co">             diagnosed with Atrial fibrillation</span>
-<span class="co">  - persons with a condition occurrence record of 'Atrial fibrillation' or </span>
-<span class="co">    any descendants, indexed at the first diagnosis</span>
-<span class="co">  - who have &gt;1095 days of prior observation before their first diagnosis</span>
-<span class="co">  - and have no warfarin exposure any time prior to first AFib diagnosis</span>
+<span class="co">T cohort:  [PatientLevelPrediction vignette]:  T : patients who are newly </span>
+<span class="co">diagnosed with Atrial fibrillation</span>
+<span class="co">- persons with a condition occurrence record of 'Atrial fibrillation' or </span>
+<span class="co">any descendants, indexed at the first diagnosis</span>
+<span class="co">- who have &gt;1095 days of prior observation before their first diagnosis</span>
+<span class="co">- and have no warfarin exposure any time prior to first AFib diagnosis</span>
 <span class="co">*/</span>
 <span class="kw">INSERT</span> <span class="kw">INTO</span> @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
-                                                     subject_id, 
-                                                     cohort_start_date, 
-                                                     cohort_end_date)
+subject_id, 
+cohort_start_date, 
+cohort_end_date)
 <span class="kw">SELECT</span> <span class="dv">1</span> <span class="kw">AS</span> cohort_definition_id,
-  AFib.person_id <span class="kw">AS</span> subject_id,
-  AFib.condition_start_date <span class="kw">AS</span> cohort_start_date,
-  observation_period.observation_period_end_date <span class="kw">AS</span> cohort_end_date
+AFib.person_id <span class="kw">AS</span> subject_id,
+AFib.condition_start_date <span class="kw">AS</span> cohort_start_date,
+observation_period.observation_period_end_date <span class="kw">AS</span> cohort_end_date
 <span class="kw">FROM</span>
 (
   <span class="kw">SELECT</span> person_id, <span class="fu">min</span>(condition_start_date) <span class="kw">as</span> condition_start_date
   <span class="kw">FROM</span> @cdmDatabaseSchema.condition_occurrence
   <span class="kw">WHERE</span> condition_concept_id <span class="kw">IN</span> (<span class="kw">SELECT</span> descendant_concept_id <span class="kw">FROM</span> 
-        @cdmDatabaseSchema.concept_ancestor <span class="kw">WHERE</span> ancestor_concept_id <span class="kw">IN</span> 
-        (<span class="dv">313217</span> <span class="co">/*atrial fibrillation*/</span>))
+  @cdmDatabaseSchema.concept_ancestor <span class="kw">WHERE</span> ancestor_concept_id <span class="kw">IN</span> 
+  (<span class="dv">313217</span> <span class="co">/*atrial fibrillation*/</span>))
   <span class="kw">GROUP</span> <span class="kw">BY</span> person_id
 ) AFib
-<span class="kw">INNER</span> <span class="kw">JOIN</span> @cdmDatabaseSchema.observation_period
+  <span class="kw">INNER</span> <span class="kw">JOIN</span> @cdmDatabaseSchema.observation_period
   <span class="kw">ON</span> AFib.person_id = observation_period.person_id
   <span class="kw">AND</span> AFib.condition_start_date &gt;= dateadd(dd,<span class="dv">1095</span>, 
-                                   observation_period.observation_period_start_date)
+  observation_period.observation_period_start_date)
   <span class="kw">AND</span> AFib.condition_start_date &lt;= observation_period.observation_period_end_date
-<span class="kw">LEFT</span> <span class="kw">JOIN</span>
-(
+  <span class="kw">LEFT</span> <span class="kw">JOIN</span>
+  (
   <span class="kw">SELECT</span> person_id, <span class="fu">min</span>(drug_exposure_start_date) <span class="kw">as</span> drug_exposure_start_date
   <span class="kw">FROM</span> @cdmDatabaseSchema.drug_exposure
   <span class="kw">WHERE</span> drug_concept_id <span class="kw">IN</span> (<span class="kw">SELECT</span> descendant_concept_id <span class="kw">FROM</span> 
-       @cdmDatabaseSchema.concept_ancestor <span class="kw">WHERE</span> ancestor_concept_id <span class="kw">IN</span> 
-       (<span class="dv">1310149</span> <span class="co">/*warfarin*/</span>))
+  @cdmDatabaseSchema.concept_ancestor <span class="kw">WHERE</span> ancestor_concept_id <span class="kw">IN</span> 
+  (<span class="dv">1310149</span> <span class="co">/*warfarin*/</span>))
   <span class="kw">GROUP</span> <span class="kw">BY</span> person_id
-) warfarin
+  ) warfarin
   <span class="kw">ON</span> Afib.person_id = warfarin.person_id
   <span class="kw">AND</span> Afib.condition_start_date &gt; warfarin.drug_exposure_start_date
-<span class="kw">WHERE</span> warfarin.person_id <span class="kw">IS</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/NULL">NULL</a></span>
-;
-
-<span class="co">/*</span>
+  <span class="kw">WHERE</span> warfarin.person_id <span class="kw">IS</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/NULL">NULL</a></span>
+  ;
+  
+  <span class="co">/*</span>
 <span class="co">  C cohort:  [PatientLevelPrediction vignette]:  O: Ischemic stroke events</span>
 <span class="co">  - inpatient visits that include a condition occurrence record for </span>
-<span class="co">    'cerebral infarction' and descendants, 'cerebral thrombosis', </span>
-<span class="co">    'cerebral embolism', 'cerebral artery occlusion' </span>
-<span class="co">*/</span>
-<span class="kw">INSERT</span> <span class="kw">INTO</span> @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
-                                                     subject_id, 
-                                                     cohort_start_date, 
-                                                     cohort_end_date)
-<span class="kw">SELECT</span> <span class="dv">2</span> <span class="kw">AS</span> cohort_definition_id,
+<span class="co">  'cerebral infarction' and descendants, 'cerebral thrombosis', </span>
+<span class="co">  'cerebral embolism', 'cerebral artery occlusion' </span>
+<span class="co">  */</span>
+  <span class="kw">INSERT</span> <span class="kw">INTO</span> @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
+  subject_id, 
+  cohort_start_date, 
+  cohort_end_date)
+  <span class="kw">SELECT</span> <span class="dv">2</span> <span class="kw">AS</span> cohort_definition_id,
   visit_occurrence.person_id <span class="kw">AS</span> subject_id,
   visit_occurrence.visit_start_date <span class="kw">AS</span> cohort_start_date,
   visit_occurrence.visit_end_date <span class="kw">AS</span> cohort_end_date
-<span class="kw">FROM</span>  
-(
+  <span class="kw">FROM</span>  
+  (
   <span class="kw">SELECT</span> person_id, condition_start_date
   <span class="kw">FROM</span> @cdmDatabaseSchema.condition_occurrence
   <span class="kw">WHERE</span> condition_concept_id <span class="kw">IN</span> (<span class="kw">SELECT</span> <span class="kw">DISTINCT</span> descendant_concept_id <span class="kw">FROM</span> 
   @cdmDatabaseSchema.concept_ancestor <span class="kw">WHERE</span> ancestor_concept_id <span class="kw">IN</span> 
   (<span class="dv">443454</span> <span class="co">/*cerebral infarction*/</span>) <span class="kw">OR</span> descendant_concept_id <span class="kw">IN</span> 
   (<span class="dv">441874</span> <span class="co">/*cerebral thrombosis*/</span>, <span class="dv">375557</span> <span class="co">/*cerebral embolism*/</span>, 
-   <span class="dv">372924</span> <span class="co">/*cerebral artery occlusion*/</span>))
-) stroke
-<span class="kw">INNER</span> <span class="kw">JOIN</span> @cdmDatabaseSchema.visit_occurrence
-<span class="kw">ON</span> stroke.person_id = visit_occurrence.person_id
-<span class="kw">AND</span> stroke.condition_start_date &gt;= visit_occurrence.visit_start_date
-<span class="kw">AND</span> stroke.condition_start_date &lt;= visit_occurrence.visit_end_date
-<span class="kw">AND</span> visit_occurrence.visit_concept_id <span class="kw">IN</span> (<span class="dv">9201</span>, <span class="dv">262</span> <span class="co">/*'Inpatient Visit'  or </span>
-<span class="co">    'Emergency Room and Inpatient Visit'*/</span>)
-<span class="kw">GROUP</span> <span class="kw">BY</span> visit_occurrence.person_id, visit_occurrence.visit_start_date, 
-         visit_occurrence.visit_end_date
-;</code></pre></div>
+  <span class="dv">372924</span> <span class="co">/*cerebral artery occlusion*/</span>))
+  ) stroke
+  <span class="kw">INNER</span> <span class="kw">JOIN</span> @cdmDatabaseSchema.visit_occurrence
+  <span class="kw">ON</span> stroke.person_id = visit_occurrence.person_id
+  <span class="kw">AND</span> stroke.condition_start_date &gt;= visit_occurrence.visit_start_date
+  <span class="kw">AND</span> stroke.condition_start_date &lt;= visit_occurrence.visit_end_date
+  <span class="kw">AND</span> visit_occurrence.visit_concept_id <span class="kw">IN</span> (<span class="dv">9201</span>, <span class="dv">262</span> <span class="co">/*'Inpatient Visit'  or </span>
+<span class="co">  'Emergency Room and Inpatient Visit'*/</span>)
+  <span class="kw">GROUP</span> <span class="kw">BY</span> visit_occurrence.person_id, visit_occurrence.visit_start_date, 
+  visit_occurrence.visit_end_date
+  ;
+  </code></pre></div>
 <p>This is parameterized SQL which can be used by the <a href="http://github.com/OHDSI/SqlRender"><code>SqlRender</code></a> package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in <code>SqlRender</code>, we can make sure the SQL code can be run in many different environments.</p>
 <p>To execute this sql against our CDM we first need to tell R how to connect to the server. <code>PatientLevelPrediction</code> uses the <a href="http://github.com/ohdsi/DatabaseConnector"><code>DatabaseConnector</code></a> package, which provides a function called <code>createConnectionDetails</code>. Type <code>?createConnectionDetails</code> for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectionDetails</span>(<span class="dt">dbms =</span> <span class="st">"postgresql"</span>, 
-                                             <span class="dt">server =</span> <span class="st">"localhost/ohdsi"</span>, 
-                                             <span class="dt">user =</span> <span class="st">"joe"</span>, 
-                                             <span class="dt">password =</span> <span class="st">"supersecret"</span>)
-
-cdmDatabaseSchema &lt;-<span class="st"> "my_cdm_data"</span>
-cohortsDatabaseSchema &lt;-<span class="st"> "my_results"</span>
-cdmVersion &lt;-<span class="st"> "5"</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectionDetails</span>(<span class="dt">dbms =</span> <span class="st">"postgresql"</span>, 
+  <span class="dt">server =</span> <span class="st">"localhost/ohdsi"</span>, 
+  <span class="dt">user =</span> <span class="st">"joe"</span>, 
+  <span class="dt">password =</span> <span class="st">"supersecret"</span>)
+  
+  cdmDatabaseSchema &lt;-<span class="st"> "my_cdm_data"</span>
+  cohortsDatabaseSchema &lt;-<span class="st"> "my_results"</span>
+  cdmVersion &lt;-<span class="st"> "5"</span></code></pre></div>
 <p>The last three lines define the <code>cdmDatabaseSchema</code> and <code>cohortsDatabaseSchema</code> variables, as well as the CDM version. We will use these later to tell R where the data in CDM format live, where we want to create the cohorts of interest, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example <code>cdmDatabaseSchema &lt;- "my_cdm_data.dbo"</code>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(SqlRender)
-sql &lt;-<span class="st"> </span><span class="kw">readSql</span>(<span class="st">"AfStrokeCohorts.sql"</span>)
-sql &lt;-<span class="st"> </span><span class="kw">renderSql</span>(sql,
-<span class="dt">cdmDatabaseSchema =</span> cdmDatabaseSchema,
-<span class="dt">cohortsDatabaseSchema =</span> cohortsDatabaseSchema,
-<span class="dt">post_time =</span> <span class="dv">30</span>,
-<span class="dt">pre_time =</span> <span class="dv">365</span>)<span class="op">$</span>sql
-sql &lt;-<span class="st"> </span><span class="kw">translateSql</span>(sql, <span class="dt">targetDialect =</span> connectionDetails<span class="op">$</span>dbms)<span class="op">$</span>sql
-
-connection &lt;-<span class="st"> </span><span class="kw">connect</span>(connectionDetails)
-<span class="kw">executeSql</span>(connection, sql)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(SqlRender)
+  sql &lt;-<span class="st"> </span><span class="kw">readSql</span>(<span class="st">"AfStrokeCohorts.sql"</span>)
+  sql &lt;-<span class="st"> </span><span class="kw">renderSql</span>(sql,
+  <span class="dt">cdmDatabaseSchema =</span> cdmDatabaseSchema,
+  <span class="dt">cohortsDatabaseSchema =</span> cohortsDatabaseSchema,
+  <span class="dt">post_time =</span> <span class="dv">30</span>,
+  <span class="dt">pre_time =</span> <span class="dv">365</span>)<span class="op">$</span>sql
+  sql &lt;-<span class="st"> </span><span class="kw">translateSql</span>(sql, <span class="dt">targetDialect =</span> connectionDetails<span class="op">$</span>dbms)<span class="op">$</span>sql
+  
+  connection &lt;-<span class="st"> </span><span class="kw">connect</span>(connectionDetails)
+  <span class="kw">executeSql</span>(connection, sql)</code></pre></div>
 <p>In this code, we first read the SQL from the file into memory. In the next line, we replace four parameter names with the actual values. We then translate the SQL into the dialect appropriate for the DBMS we already specified in the <code>connectionDetails</code>. Next, we connect to the server, and submit the rendered and translated SQL.</p>
 <p>If all went well, we now have a table with the events of interest. We can see how many events per type:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sql &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">"SELECT cohort_definition_id, COUNT(*) AS count"</span>,
-<span class="st">"FROM @cohortsDatabaseSchema.AFibStrokeCohort"</span>,
-<span class="st">"GROUP BY cohort_definition_id"</span>)
-sql &lt;-<span class="st"> </span><span class="kw">renderSql</span>(sql, <span class="dt">cohortsDatabaseSchema =</span> cohortsDatabaseSchema)<span class="op">$</span>sql
-sql &lt;-<span class="st"> </span><span class="kw">translateSql</span>(sql, <span class="dt">targetDialect =</span> connectionDetails<span class="op">$</span>dbms)<span class="op">$</span>sql
-
-<span class="kw">querySql</span>(connection, sql)</code></pre></div>
-<pre><code>##   cohort_definition_id  count
-## 1                    1 527616
-## 2                    2 221555</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  sql &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">"SELECT cohort_definition_id, COUNT(*) AS count"</span>,
+  <span class="st">"FROM @cohortsDatabaseSchema.AFibStrokeCohort"</span>,
+  <span class="st">"GROUP BY cohort_definition_id"</span>)
+  sql &lt;-<span class="st"> </span><span class="kw">renderSql</span>(sql, <span class="dt">cohortsDatabaseSchema =</span> cohortsDatabaseSchema)<span class="op">$</span>sql
+  sql &lt;-<span class="st"> </span><span class="kw">translateSql</span>(sql, <span class="dt">targetDialect =</span> connectionDetails<span class="op">$</span>dbms)<span class="op">$</span>sql
+  
+  <span class="kw">querySql</span>(connection, sql)</code></pre></div>
+<p><code>##   cohort_definition_id  count   ## 1                    1 527616   ## 2                    2 221555</code></p>
 </div>
-</div>
-<div id="study-script-creation" class="section level2">
-<h2 class="hasAnchor">
-<a href="#study-script-creation" class="anchor"></a>Study script creation</h2>
+<div id="study-script-creation" class="section level3">
+<h3 class="hasAnchor">
+<a href="#study-script-creation" class="anchor"></a>Study script creation</h3>
 <p>In this section we assume that our cohorts have been created either by using ATLAS or a custom SQL script. We will first explain how to create an R script yourself that will execute our study as we have defined earlier.</p>
+</div>
 <div id="data-extraction" class="section level3">
 <h3 class="hasAnchor">
 <a href="#data-extraction" class="anchor"></a>Data extraction</h3>
 <p>Now we can tell <code>PatientLevelPrediction</code> to extract all necessary data for our analysis. This is done using the <a href="https://github.com/OHDSI/FeatureExtration"><code>FeatureExtractionPackage</code></a>. In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its <a href="https://github.com/OHDSI/FeatureExtration">vignettes</a>. For our example study we decided to use these settings:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">covariateSettings &lt;-<span class="st"> </span><span class="kw">createCovariateSettings</span>(<span class="dt">useDemographicsGender =</span> <span class="ot">TRUE</span>,
-                                             <span class="dt">useDemographicsAge =</span> <span class="ot">TRUE</span>,
-                                             <span class="dt">useConditionGroupEraLongTerm =</span> <span class="ot">TRUE</span>,
-                                             <span class="dt">useConditionGroupEraAnyTimePrior =</span> <span class="ot">TRUE</span>,
-                                             <span class="dt">useDrugGroupEraLongTerm =</span> <span class="ot">TRUE</span>,
-                                             <span class="dt">useDrugGroupEraAnyTimePrior =</span> <span class="ot">TRUE</span>,
-                                             <span class="dt">useVisitConceptCountLongTerm =</span> <span class="ot">TRUE</span>,
-                                             <span class="dt">longTermStartDays =</span> <span class="op">-</span><span class="dv">365</span>,
-                                             <span class="dt">endDays =</span> <span class="op">-</span><span class="dv">1</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  covariateSettings &lt;-<span class="st"> </span><span class="kw">createCovariateSettings</span>(<span class="dt">useDemographicsGender =</span> <span class="ot">TRUE</span>,
+  <span class="dt">useDemographicsAge =</span> <span class="ot">TRUE</span>,
+  <span class="dt">useConditionGroupEraLongTerm =</span> <span class="ot">TRUE</span>,
+  <span class="dt">useConditionGroupEraAnyTimePrior =</span> <span class="ot">TRUE</span>,
+  <span class="dt">useDrugGroupEraLongTerm =</span> <span class="ot">TRUE</span>,
+  <span class="dt">useDrugGroupEraAnyTimePrior =</span> <span class="ot">TRUE</span>,
+  <span class="dt">useVisitConceptCountLongTerm =</span> <span class="ot">TRUE</span>,
+  <span class="dt">longTermStartDays =</span> <span class="op">-</span><span class="dv">365</span>,
+  <span class="dt">endDays =</span> <span class="op">-</span><span class="dv">1</span>)</code></pre></div>
 <p>The final step for extracting the data is to run the <code>getPlpData</code> function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the washoutPeriod which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">plpData &lt;-<span class="st"> </span><span class="kw"><a href="../reference/getPlpData.html">getPlpData</a></span>(<span class="dt">connectionDetails =</span> connectionDetails,
-                      <span class="dt">cdmDatabaseSchema =</span> cdmDatabaseSchema,
-                      <span class="dt">cohortDatabaseSchema =</span> resultsDatabaseSchema,
-                      <span class="dt">cohortTable =</span> <span class="st">'AFibStrokeCohort'</span>,
-                      <span class="dt">cohortId =</span> <span class="dv">1</span>,
-                      <span class="dt">covariateSettings =</span> covariateSettings,
-                      <span class="dt">outcomeDatabaseSchema =</span> resultsDatabaseSchema,
-                      <span class="dt">outcomeTable =</span> <span class="st">'AFibStrokeCohort'</span>,
-                      <span class="dt">outcomeIds =</span> <span class="dv">2</span>,
-                      <span class="dt">sampleSize =</span> <span class="dv">10000</span>
-)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  plpData &lt;-<span class="st"> </span><span class="kw"><a href="../reference/getPlpData.html">getPlpData</a></span>(<span class="dt">connectionDetails =</span> connectionDetails,
+  <span class="dt">cdmDatabaseSchema =</span> cdmDatabaseSchema,
+  <span class="dt">cohortDatabaseSchema =</span> resultsDatabaseSchema,
+  <span class="dt">cohortTable =</span> <span class="st">'AFibStrokeCohort'</span>,
+  <span class="dt">cohortId =</span> <span class="dv">1</span>,
+  <span class="dt">covariateSettings =</span> covariateSettings,
+  <span class="dt">outcomeDatabaseSchema =</span> resultsDatabaseSchema,
+  <span class="dt">outcomeTable =</span> <span class="st">'AFibStrokeCohort'</span>,
+  <span class="dt">outcomeIds =</span> <span class="dv">2</span>,
+  <span class="dt">sampleSize =</span> <span class="dv">10000</span>
+  )</code></pre></div>
 <p>Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the <code>getPlpData</code> function which are all documented in the <code>PatientLevelPrediction</code> manual. The resulting <code>plpData</code> object uses the package <code>ff</code> to store information in a way that ensures R does not run out of memory, even when the data are large.</p>
 <p>Creating the <code>plpData</code> object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because <code>plpData</code> uses <code>ff</code>, we cannot use R’s regular save function. Instead, we’ll have to use the <code><a href="../reference/savePlpData.html">savePlpData()</a></code> function:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/savePlpData.html">savePlpData</a></span>(plpData, <span class="st">"stroke_in_af_data"</span>)</code></pre></div>
@@ -557,21 +579,21 @@ sql &lt;-<span class="st"> </span><span class="kw">translateSql</span>(sql, <spa
 <p>To completely define the prediction problem the final study population is obtained by applying additional constraints on the two earlier defined cohorts, e.g., a minumim time at risk can be enforced (<code>requireTimeAtRisk, minTimeAtRisk</code>) and we can specify if this also applies to patients with the outcome (<code>includeAllOutcomes</code>). Here we also specify the start and end of the risk window relative to target cohort start. For example, if we like the risk window to start 30 days after the at-risk cohort start and end a year later we can set <code>riskWindowStart = 30</code> and <code>riskWindowEnd = 365</code>. In some cases the risk window needs to start at the cohort end date. This can be achieved by setting <code>addExposureToStart = TRUE</code> which adds the cohort (exposure) time to the start date.</p>
 <p>In Appendix 1, we demonstrate the effect of these settings on the subset of the persons in the target cohort that end up in the final study population.</p>
 <p>In the example below all the settings we defined for our study are imposed:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">population &lt;-<span class="st"> </span><span class="kw"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span>(<span class="dt">plpData =</span> plpData,
-                                    <span class="dt">outcomeId =</span> <span class="dv">2</span>,
-                                    <span class="dt">washoutPeriod =</span> <span class="dv">1095</span>,
-                                    <span class="dt">firstExposureOnly =</span> <span class="ot">FALSE</span>,
-                                    <span class="dt">removeSubjectsWithPriorOutcome =</span> <span class="ot">FALSE</span>,
-                                    <span class="dt">priorOutcomeLookback =</span> <span class="dv">1</span>,
-                                    <span class="dt">riskWindowStart =</span> <span class="dv">1</span>,
-                                    <span class="dt">riskWindowEnd =</span> <span class="dv">365</span>,
-                                    <span class="dt">addExposureDaysToStart =</span> <span class="ot">FALSE</span>,
-                                    <span class="dt">addExposureDaysToEnd =</span> <span class="ot">FALSE</span>,
-                                    <span class="dt">minTimeAtRisk =</span> <span class="dv">364</span>,
-                                    <span class="dt">requireTimeAtRisk =</span> <span class="ot">TRUE</span>,
-                                    <span class="dt">includeAllOutcomes =</span> <span class="ot">TRUE</span>,
-                                    <span class="dt">verbosity =</span> <span class="st">"DEBUG"</span>
-                                    )</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  population &lt;-<span class="st"> </span><span class="kw"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span>(<span class="dt">plpData =</span> plpData,
+  <span class="dt">outcomeId =</span> <span class="dv">2</span>,
+  <span class="dt">washoutPeriod =</span> <span class="dv">1095</span>,
+  <span class="dt">firstExposureOnly =</span> <span class="ot">FALSE</span>,
+  <span class="dt">removeSubjectsWithPriorOutcome =</span> <span class="ot">FALSE</span>,
+  <span class="dt">priorOutcomeLookback =</span> <span class="dv">1</span>,
+  <span class="dt">riskWindowStart =</span> <span class="dv">1</span>,
+  <span class="dt">riskWindowEnd =</span> <span class="dv">365</span>,
+  <span class="dt">addExposureDaysToStart =</span> <span class="ot">FALSE</span>,
+  <span class="dt">addExposureDaysToEnd =</span> <span class="ot">FALSE</span>,
+  <span class="dt">minTimeAtRisk =</span> <span class="dv">364</span>,
+  <span class="dt">requireTimeAtRisk =</span> <span class="ot">TRUE</span>,
+  <span class="dt">includeAllOutcomes =</span> <span class="ot">TRUE</span>,
+  <span class="dt">verbosity =</span> <span class="st">"DEBUG"</span>
+  )</code></pre></div>
 </div>
 <div id="model-development" class="section level3">
 <h3 class="hasAnchor">
@@ -580,14 +602,14 @@ sql &lt;-<span class="st"> </span><span class="kw">translateSql</span>(sql, <spa
 <p>For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and maxDepth=4 plus the default settings for other hyper-parameters and ntrees=200 and maxDepth=4 plus the default settings for other hyper-parameters. The hyper-parameters that lead to the bestcross-validation performance will then be chosen for the final model. For our problem we choose to build a logistic regression model with the default hyper-parameters</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lrModel &lt;-<span class="st"> </span><span class="kw"><a href="../reference/setLassoLogisticRegression.html">setLassoLogisticRegression</a></span>()</code></pre></div>
 <p>The <code>runPlP</code> function uses the population, <code>plpData</code>, and model settings to train and evaluate the model. We can use the testSplit (person/time) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lrResults &lt;-<span class="st"> </span><span class="kw"><a href="../reference/runPlp.html">runPlp</a></span>(population, plpData, <span class="dt">modelSettings =</span> lrModel, <span class="dt">testSplit=</span><span class="st">'person'</span>, 
-                    <span class="dt">testFraction=</span><span class="fl">0.25</span>, <span class="dt">nfold=</span><span class="dv">2</span>, <span class="dt">splitSeed =</span> <span class="dv">1234</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  lrResults &lt;-<span class="st"> </span><span class="kw"><a href="../reference/runPlp.html">runPlp</a></span>(population, plpData, <span class="dt">modelSettings =</span> lrModel, <span class="dt">testSplit=</span><span class="st">'person'</span>, 
+  <span class="dt">testFraction=</span><span class="fl">0.25</span>, <span class="dt">nfold=</span><span class="dv">2</span>, <span class="dt">splitSeed =</span> <span class="dv">1234</span>)</code></pre></div>
 <p>Under the hood the package will now use the <a href="www.github.com/OHDSI/Cyclops"><code>Cyclops</code></a> package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.</p>
 <p>In the runPlp function there are several parameters to save the plpData, plpResults, plpPlots, evaluation etc. which are all set to True by default. However, there is also some functionality to this manually.</p>
 <p>You can save the model using:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/savePlpModel.html">savePlpModel</a></span>(lrResults<span class="op">$</span>model, <span class="dt">dirPath =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/file.path">file.path</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"model"</span>))</code></pre></div>
 <p>You can load the model using:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">plpModel &lt;-<span class="st"> </span><span class="kw"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"model"</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">plpModel &lt;-<span class="st"> </span><span class="kw"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/file.path">file.path</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"model"</span>))</code></pre></div>
 <p>You can also save the full results structure using:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/savePlpResult.html">savePlpResult</a></span>(lrResults, <span class="dt">location =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/file.path">file.path</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"lr"</span>))</code></pre></div>
 <p>To load the full results structure use:</p>
@@ -595,9 +617,339 @@ sql &lt;-<span class="st"> </span><span class="kw">translateSql</span>(sql, <spa
 
 </div>
 </div>
-<div id="study-package-creation" class="section level2">
+</div>
+<div id="example2" class="section level1">
+<h1 class="hasAnchor">
+<a href="#example2" class="anchor"></a>Example 2: Angioedema in ACE inhibitor users</h1>
+<div id="study-specification-2" class="section level2">
 <h2 class="hasAnchor">
-<a href="#study-package-creation" class="anchor"></a>Study package creation</h2>
+<a href="#study-specification-2" class="anchor"></a>Study Specification</h2>
+<table class="table">
+<colgroup>
+<col width="44%">
+<col width="54%">
+</colgroup>
+<thead><tr class="header">
+<th>Definition</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Problem Definition</strong></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Target Cohort (T)</td>
+<td>‘Patients who are newly dispensed an ACE inhibitor’ defined as the first drug record of any ACE inhibitor</td>
+</tr>
+<tr class="odd">
+<td>Outcome Cohort (O)</td>
+<td>‘Angioedema’ defined as an angioedema condition record during an inpatient or ER visit</td>
+</tr>
+<tr class="even">
+<td>Time-at-risk (TAR)</td>
+<td>1 day till 365 days from cohort start</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Population Definition</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Washout Period</td>
+<td>365</td>
+</tr>
+<tr class="even">
+<td>Enter the target cohort multiple times?</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>Allow prior outcomes?</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>Start of time-at-risk</td>
+<td>1 day</td>
+</tr>
+<tr class="odd">
+<td>End of time-at-risk</td>
+<td>365 days</td>
+</tr>
+<tr class="even">
+<td>Require a minimum amount of time-at-risk?</td>
+<td>Yes (364 days)</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Model Development</strong></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Algorithm</td>
+<td>Gradient Boosting Machine</td>
+</tr>
+<tr class="even">
+<td>Hyper-parameters</td>
+<td>ntree:5000, max depth:4 or 7 or 10 and learning rate: 0.001 or 0.01 or 0.1 or 0.9</td>
+</tr>
+<tr class="odd">
+<td>Covariates</td>
+<td>Gender, Age, Conditions (ever before, &lt;365), Drugs Groups (ever before, &lt;365), and Visit Count</td>
+</tr>
+<tr class="even">
+<td>Data split</td>
+<td>75% train, 25% test. Randomly assigned by person</td>
+</tr>
+</tbody>
+</table>
+<p>According to the best practices we need to make a protocol that completely specifies how we plan to execute our study. This protocol will be assessed by the governance boards of the participating data sources in your network study. For this a template could be used but we prefer to automate this process as much as possible by adding functionality to automatically generate study protocol from a study specification. We will discuss this in more detail later.</p>
+</div>
+<div id="study-implementation-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#study-implementation-1" class="anchor"></a>Study implementation</h2>
+<p>Now we have completely design our study we have to implement the study. We have to generate the target and outcome cohorts and we need to develop the R code to run against our CDM that will execute the full study.</p>
+<div id="cohort-instantiation-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#cohort-instantiation-1" class="anchor"></a>Cohort instantiation</h3>
+<p>For our study we need to know when a person enters the target and outcome cohorts. This is stored in a table on the server that contains the cohort start date and cohort end date for all subjects for a specific cohort definition. This cohort table has a very simple structure as shown below:</p>
+<ul>
+<li>
+<code>cohort_definition_id</code>, a unique identifier for distinguishing between different types of cohorts, e.g. cohorts of interest and outcome cohorts.</li>
+<li>
+<code>subject_id</code>, a unique identifier corresponding to the <code>person_id</code> in the CDM.</li>
+<li>
+<code>cohort_start_date</code>, the date the subject enters the cohort.</li>
+<li>
+<code>cohort_end_date</code>, the date the subject leaves the cohort.</li>
+</ul>
+<p>How do we fill this table according to our cohort definitions? There are two options for this:</p>
+<ol style="list-style-type: decimal">
+<li><p>use the interactive cohort builder tool in <a href="www.github.com/OHDSI/ATLAS">ATLAS</a> which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort table.</p></li>
+<li><p>write your own custom SQL statements to fill the cohort table.</p></li>
+</ol>
+<p>Both methods are described below for our example prediction problem.</p>
+</div>
+<div id="atlas-cohort-builder-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#atlas-cohort-builder-1" class="anchor"></a>ATLAS cohort builder</h3>
+<div class="figure">
+<img src="example2/aceinhibitors.png" alt="Target Cohort ACE inhibitors"><p class="caption">Target Cohort ACE inhibitors</p>
+</div>
+<p>ATLAS allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involve selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person’s episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. As an example, Figure 6 shows how we created the ACE inhibitors cohort and Figure 7 shows how we created the angioedema cohort in ATLAS.</p>
+<div class="figure">
+<img src="example2/angioedema.png" alt="Outcome Cohort Angioedema"><p class="caption">Outcome Cohort Angioedema</p>
+</div>
+<p>The T and O cohorts can be found here:</p>
+<ul>
+<li>Ace inhibitors (T): <a href="http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770617" class="uri">http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770617</a>
+</li>
+<li>Angioedema (O) : <a href="http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770616" class="uri">http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770616</a>
+</li>
+</ul>
+<p>In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages <a href="http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas">(link)</a>.</p>
+<p>Note that when a cohort is created in ATLAS the cohortid is needed to extract the data in R. The cohortid can be found at the top of the ATLAS screen, e.g. 1770617 in Figure 6.</p>
+</div>
+<div id="custom-cohorts-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#custom-cohorts-1" class="anchor"></a>Custom cohorts</h3>
+<p>It is also possible to create cohorts without the use of ATLAS. Using custom cohort code (SQL) you can make more advanced cohorts if needed.</p>
+<p>For our example study, we need to create at table to hold the cohort data and we need to create SQL code to instantiate this table for both the AF and Stroke cohorts. Therefore, we create a file called <em>AceAngioCohorts.sql</em> with the following contents:</p>
+<div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql">  <span class="co">/***********************************</span>
+<span class="co">    File AceAngioCohorts.sql </span>
+<span class="co">  ***********************************/</span>
+    <span class="co">/*</span>
+<span class="co">    Create a table to store the persons in the T and C cohort</span>
+<span class="co">  */</span>
+    
+    <span class="kw">IF</span> OBJECT_ID(<span class="st">'@resultsDatabaseSchema.PLPAceAngioCohort'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/NULL">NULL</a></span> 
+  <span class="kw">DROP</span> <span class="kw">TABLE</span> @resultsDatabaseSchema.PLPAceAngioCohort;
+  
+  <span class="kw">CREATE</span> <span class="kw">TABLE</span> @resultsDatabaseSchema.PLPAceAngioCohort 
+  ( 
+    cohort_definition_id <span class="dt">INT</span>, 
+    subject_id BIGINT,
+    cohort_start_date <span class="dt">DATE</span>, 
+    cohort_end_date <span class="dt">DATE</span>
+  );
+  
+  
+  <span class="co">/*</span>
+<span class="co">    T cohort:  [PatientLevelPrediction vignette]:  T : patients who are newly </span>
+<span class="co">  dispensed an ACE inhibitor</span>
+<span class="co">  - persons with a drug exposure record of any 'ACE inhibitor' or </span>
+<span class="co">  any descendants, indexed at the first diagnosis</span>
+<span class="co">  - who have &gt;364 days of prior observation before their first dispensing</span>
+<span class="co">  */</span>
+    <span class="kw">INSERT</span> <span class="kw">INTO</span> @resultsDatabaseSchema.AceAngioCohort (cohort_definition_id, 
+                                                       subject_id, 
+                                                       cohort_start_date, 
+                                                       cohort_end_date)
+  <span class="kw">SELECT</span> <span class="dv">1</span> <span class="kw">AS</span> cohort_definition_id,
+  Ace.person_id <span class="kw">AS</span> subject_id,
+  Ace.drug_start_date <span class="kw">AS</span> cohort_start_date,
+  observation_period.observation_period_end_date <span class="kw">AS</span> cohort_end_date
+  <span class="kw">FROM</span>
+  (
+    <span class="kw">SELECT</span> person_id, <span class="fu">min</span>(drug_exposure_date) <span class="kw">as</span> drug_start_date
+    <span class="kw">FROM</span> @cdmDatabaseSchema.drug_exposure
+    <span class="kw">WHERE</span> drug_concept_id <span class="kw">IN</span> (<span class="kw">SELECT</span> descendant_concept_id <span class="kw">FROM</span> 
+                              @cdmDatabaseSchema.concept_ancestor <span class="kw">WHERE</span> ancestor_concept_id <span class="kw">IN</span> 
+                              (<span class="dv">1342439</span>,<span class="dv">1334456</span>, <span class="dv">1331235</span>, <span class="dv">1373225</span>, <span class="dv">1310756</span>, <span class="dv">1308216</span>, <span class="dv">1363749</span>, <span class="dv">1341927</span>, <span class="dv">1340128</span>, <span class="dv">1335471</span> <span class="co">/*ace inhibitors*/</span>))
+    <span class="kw">GROUP</span> <span class="kw">BY</span> person_id
+  ) Ace
+  <span class="kw">INNER</span> <span class="kw">JOIN</span> @cdmDatabaseSchema.observation_period
+  <span class="kw">ON</span> Ace.person_id = observation_period.person_id
+  <span class="kw">AND</span> Ace.drug_start_date &gt;= dateadd(dd,<span class="dv">364</span>, 
+                                     observation_period.observation_period_start_date)
+  <span class="kw">AND</span> Ace.drug_start_date &lt;= observation_period.observation_period_end_date
+  ;
+  
+  <span class="co">/*</span>
+<span class="co">    C cohort:  [PatientLevelPrediction vignette]:  O: Angioedema</span>
+<span class="co">  */</span>
+    <span class="kw">INSERT</span> <span class="kw">INTO</span> @resultsDatabaseSchema.AceAngioCohort (cohort_definition_id, 
+                                                       subject_id, 
+                                                       cohort_start_date, 
+                                                       cohort_end_date)
+  <span class="kw">SELECT</span> <span class="dv">2</span> <span class="kw">AS</span> cohort_definition_id,
+  angioedema.person_id <span class="kw">AS</span> subject_id,
+  angioedema.condition_start_date <span class="kw">AS</span> cohort_start_date,
+  angioedema.condition_start_date <span class="kw">AS</span> cohort_end_date
+  <span class="kw">FROM</span>  
+  (
+    <span class="kw">SELECT</span> person_id, condition_start_date
+    <span class="kw">FROM</span> @cdmDatabaseSchema.condition_occurrence
+    <span class="kw">WHERE</span> condition_concept_id <span class="kw">IN</span> (<span class="kw">SELECT</span> <span class="kw">DISTINCT</span> descendant_concept_id <span class="kw">FROM</span> 
+                                   @cdmDatabaseSchema.concept_ancestor <span class="kw">WHERE</span> ancestor_concept_id <span class="kw">IN</span> 
+                                   (<span class="dv">432791</span> <span class="co">/*angioedema*/</span>) <span class="kw">OR</span> descendant_concept_id <span class="kw">IN</span> 
+                                   (<span class="dv">432791</span> <span class="co">/*angioedema*/</span>)
+    ) angioedema
+    
+    ;
+    </code></pre></div>
+<p>This is parameterized SQL which can be used by the <a href="http://github.com/OHDSI/SqlRender"><code>SqlRender</code></a> package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in <code>SqlRender</code>, we can make sure the SQL code can be run in many different environments.</p>
+<p>To execute this sql against our CDM we first need to tell R how to connect to the server. <code>PatientLevelPrediction</code> uses the <a href="http://github.com/ohdsi/DatabaseConnector"><code>DatabaseConnector</code></a> package, which provides a function called <code>createConnectionDetails</code>. Type <code>?createConnectionDetails</code> for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectionDetails</span>(<span class="dt">dbms =</span> <span class="st">"postgresql"</span>, 
+                                                 <span class="dt">server =</span> <span class="st">"localhost/ohdsi"</span>, 
+                                                 <span class="dt">user =</span> <span class="st">"joe"</span>, 
+                                                 <span class="dt">password =</span> <span class="st">"supersecret"</span>)
+    
+    cdmDatabaseSchema &lt;-<span class="st"> "my_cdm_data"</span>
+    cohortsDatabaseSchema &lt;-<span class="st"> "my_results"</span>
+    cdmVersion &lt;-<span class="st"> "5"</span></code></pre></div>
+<p>The last three lines define the <code>cdmDatabaseSchema</code> and <code>cohortsDatabaseSchema</code> variables, as well as the CDM version. We will use these later to tell R where the data in CDM format live, where we want to create the cohorts of interest, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example <code>cdmDatabaseSchema &lt;- "my_cdm_data.dbo"</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(SqlRender)
+    sql &lt;-<span class="st"> </span><span class="kw">readSql</span>(<span class="st">"AceAngioCohorts.sql"</span>)
+    sql &lt;-<span class="st"> </span><span class="kw">render</span>(sql,
+                  <span class="dt">cdmDatabaseSchema =</span> cdmDatabaseSchema,
+                  <span class="dt">cohortsDatabaseSchema =</span> cohortsDatabaseSchema)
+    sql &lt;-<span class="st"> </span><span class="kw">translate</span>(sql, <span class="dt">targetDialect =</span> connectionDetails<span class="op">$</span>dbms)
+    
+    connection &lt;-<span class="st"> </span><span class="kw">connect</span>(connectionDetails)
+    <span class="kw">executeSql</span>(connection, sql)</code></pre></div>
+<p>In this code, we first read the SQL from the file into memory. In the next line, we replace four parameter names with the actual values. We then translate the SQL into the dialect appropriate for the DBMS we already specified in the <code>connectionDetails</code>. Next, we connect to the server, and submit the rendered and translated SQL.</p>
+<p>If all went well, we now have a table with the events of interest. We can see how many events per type:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    sql &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">"SELECT cohort_definition_id, COUNT(*) AS count"</span>,
+                 <span class="st">"FROM @cohortsDatabaseSchema.AceAngioCohort"</span>,
+                 <span class="st">"GROUP BY cohort_definition_id"</span>)
+    sql &lt;-<span class="st"> </span><span class="kw">render</span>(sql, <span class="dt">cohortsDatabaseSchema =</span> cohortsDatabaseSchema)
+    sql &lt;-<span class="st"> </span><span class="kw">translate</span>(sql, <span class="dt">targetDialect =</span> connectionDetails<span class="op">$</span>dbms)
+    
+    <span class="kw">querySql</span>(connection, sql)</code></pre></div>
+<pre><code>##   cohort_definition_id count
+## 1                    1     0
+## 2                    2     0</code></pre>
+</div>
+<div id="study-script-creation-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#study-script-creation-1" class="anchor"></a>Study script creation</h3>
+<p>In this section we assume that our cohorts have been created either by using ATLAS or a custom SQL script. We will first explain how to create an R script yourself that will execute our study as we have defined earlier.</p>
+</div>
+<div id="data-extraction-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#data-extraction-1" class="anchor"></a>Data extraction</h3>
+<p>Now we can tell <code>PatientLevelPrediction</code> to extract all necessary data for our analysis. This is done using the <a href="https://github.com/OHDSI/FeatureExtration"><code>FeatureExtractionPackage</code></a>. In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its <a href="https://github.com/OHDSI/FeatureExtration">vignettes</a>. For our example study we decided to use these settings:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    covariateSettings &lt;-<span class="st"> </span><span class="kw">createCovariateSettings</span>(<span class="dt">useDemographicsGender =</span> <span class="ot">TRUE</span>,
+                                                 <span class="dt">useDemographicsAge =</span> <span class="ot">TRUE</span>,
+                                                 <span class="dt">useConditionGroupEraLongTerm =</span> <span class="ot">TRUE</span>,
+                                                 <span class="dt">useConditionGroupEraAnyTimePrior =</span> <span class="ot">TRUE</span>,
+                                                 <span class="dt">useDrugGroupEraLongTerm =</span> <span class="ot">TRUE</span>,
+                                                 <span class="dt">useDrugGroupEraAnyTimePrior =</span> <span class="ot">TRUE</span>,
+                                                 <span class="dt">useVisitConceptCountLongTerm =</span> <span class="ot">TRUE</span>,
+                                                 <span class="dt">longTermStartDays =</span> <span class="op">-</span><span class="dv">365</span>,
+                                                 <span class="dt">endDays =</span> <span class="op">-</span><span class="dv">1</span>)</code></pre></div>
+<p>The final step for extracting the data is to run the <code>getPlpData</code> function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the washoutPeriod which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    plpData &lt;-<span class="st"> </span><span class="kw"><a href="../reference/getPlpData.html">getPlpData</a></span>(<span class="dt">connectionDetails =</span> connectionDetails,
+                          <span class="dt">cdmDatabaseSchema =</span> cdmDatabaseSchema,
+                          <span class="dt">cohortDatabaseSchema =</span> resultsDatabaseSchema,
+                          <span class="dt">cohortTable =</span> <span class="st">'AceAngioCohort'</span>,
+                          <span class="dt">cohortId =</span> <span class="dv">1</span>,
+                          <span class="dt">covariateSettings =</span> covariateSettings,
+                          <span class="dt">outcomeDatabaseSchema =</span> resultsDatabaseSchema,
+                          <span class="dt">outcomeTable =</span> <span class="st">'AceAngioCohort'</span>,
+                          <span class="dt">outcomeIds =</span> <span class="dv">2</span>,
+                          <span class="dt">sampleSize =</span> <span class="dv">10000</span>
+    )</code></pre></div>
+<p>Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the <code>getPlpData</code> function which are all documented in the <code>PatientLevelPrediction</code> manual. The resulting <code>plpData</code> object uses the package <code>ff</code> to store information in a way that ensures R does not run out of memory, even when the data are large.</p>
+<p>Creating the <code>plpData</code> object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because <code>plpData</code> uses <code>ff</code>, we cannot use R’s regular save function. Instead, we’ll have to use the <code><a href="../reference/savePlpData.html">savePlpData()</a></code> function:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/savePlpData.html">savePlpData</a></span>(plpData, <span class="st">"angio_in_ace_data"</span>)</code></pre></div>
+<p>We can use the <code><a href="../reference/loadPlpData.html">loadPlpData()</a></code> function to load the data in a future session.</p>
+</div>
+<div id="additional-inclusion-criteria-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#additional-inclusion-criteria-1" class="anchor"></a>Additional inclusion criteria</h3>
+<p>To completely define the prediction problem the final study population is obtained by applying additional constraints on the two earlier defined cohorts, e.g., a minumim time at risk can be enforced (<code>requireTimeAtRisk, minTimeAtRisk</code>) and we can specify if this also applies to patients with the outcome (<code>includeAllOutcomes</code>). Here we also specify the start and end of the risk window relative to target cohort start. For example, if we like the risk window to start 30 days after the at-risk cohort start and end a year later we can set <code>riskWindowStart = 30</code> and <code>riskWindowEnd = 365</code>. In some cases the risk window needs to start at the cohort end date. This can be achieved by setting <code>addExposureToStart = TRUE</code> which adds the cohort (exposure) time to the start date.</p>
+<p>In Appendix 1, we demonstrate the effect of these settings on the subset of the persons in the target cohort that end up in the final study population.</p>
+<p>In the example below all the settings we defined for our study are imposed:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    population &lt;-<span class="st"> </span><span class="kw"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span>(<span class="dt">plpData =</span> plpData,
+                                        <span class="dt">outcomeId =</span> <span class="dv">2</span>,
+                                        <span class="dt">washoutPeriod =</span> <span class="dv">364</span>,
+                                        <span class="dt">firstExposureOnly =</span> <span class="ot">FALSE</span>,
+                                        <span class="dt">removeSubjectsWithPriorOutcome =</span> <span class="ot">TRUE</span>,
+                                        <span class="dt">priorOutcomeLookback =</span> <span class="dv">9999</span>,
+                                        <span class="dt">riskWindowStart =</span> <span class="dv">1</span>,
+                                        <span class="dt">riskWindowEnd =</span> <span class="dv">365</span>,
+                                        <span class="dt">addExposureDaysToStart =</span> <span class="ot">FALSE</span>,
+                                        <span class="dt">addExposureDaysToEnd =</span> <span class="ot">FALSE</span>,
+                                        <span class="dt">minTimeAtRisk =</span> <span class="dv">364</span>,
+                                        <span class="dt">requireTimeAtRisk =</span> <span class="ot">TRUE</span>,
+                                        <span class="dt">includeAllOutcomes =</span> <span class="ot">TRUE</span>,
+                                        <span class="dt">verbosity =</span> <span class="st">"DEBUG"</span>
+    )</code></pre></div>
+</div>
+<div id="model-development-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#model-development-1" class="anchor"></a>Model Development</h3>
+<p>In the set function of an algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.</p>
+<p>For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and maxDepth=4 plus the default settings for other hyper-parameters and ntrees=200 and maxDepth=4 plus the default settings for other hyper-parameters. The hyper-parameters that lead to the bestcross-validation performance will then be chosen for the final model. For our problem we choose to build a logistic regression model with the default hyper-parameters</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gbmModel &lt;-<span class="st"> </span><span class="kw"><a href="../reference/setGradientBoostingMachine.html">setGradientBoostingMachine</a></span>(<span class="dt">ntrees =</span> <span class="dv">5000</span>, <span class="dt">maxDepth =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="dv">4</span>, <span class="dv">7</span>, <span class="dv">10</span>), 
+    <span class="dt">learnRate =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="fl">0.9</span>))</code></pre></div>
+<p>The <code>runPlP</code> function uses the population, <code>plpData</code>, and model settings to train and evaluate the model. We can use the testSplit (person/time) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    gbmResults &lt;-<span class="st"> </span><span class="kw"><a href="../reference/runPlp.html">runPlp</a></span>(population, plpData, <span class="dt">modelSettings =</span> gbmModel, <span class="dt">testSplit=</span><span class="st">'person'</span>, 
+                         <span class="dt">testFraction=</span><span class="fl">0.25</span>, <span class="dt">nfold=</span><span class="dv">2</span>, <span class="dt">splitSeed =</span> <span class="dv">1234</span>)</code></pre></div>
+<p>Under the hood the package will now use the R xgboost package to fit a a gradient boosting machine model using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.</p>
+<p>In the runPlp function there are several parameters to save the plpData, plpResults, plpPlots, evaluation etc. which are all set to True by default. However, there is also some functionality to this manually.</p>
+<p>You can save the model using:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/savePlpModel.html">savePlpModel</a></span>(gbmResults<span class="op">$</span>model, <span class="dt">dirPath =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/file.path">file.path</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"model"</span>))</code></pre></div>
+<p>You can load the model using:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">plpModel &lt;-<span class="st"> </span><span class="kw"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/file.path">file.path</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"model"</span>))</code></pre></div>
+<p>You can also save the full results structure using:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/savePlpResult.html">savePlpResult</a></span>(gbmResults, <span class="dt">location =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/file.path">file.path</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"gbm"</span>))</code></pre></div>
+<p>To load the full results structure use:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gbmResults &lt;-<span class="st"> </span><span class="kw"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/file.path">file.path</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"gbm"</span>))</code></pre></div>
+
+</div>
+</div>
+</div>
+<div id="study-package-creation" class="section level1">
+<h1 class="hasAnchor">
+<a href="#study-package-creation" class="anchor"></a>Study package creation</h1>
 <p>The script we created manually above can also be automatically created using a powerful feature in ATLAS. By creating a new prediction study (left menu) you can select the Target and Outcome as created in ATLAS, set all the study parameters, and then you can download a R package that you can use to execute your study. What is really powerful is that you can add multiple Ts, Os, covariate settings etc. The package will then run all the combinations of automatically as separate analyses. The screenshots below explain this process.</p>
 <ol style="list-style-type: decimal">
 <li><dl>
@@ -655,7 +1007,6 @@ You now have to review that you indeed want to run all these analyses (cartesian
 <li><p>By opening the R package in R studio and building the package you can run the study using the <code>execute</code> function. Theres is also an example CodeToRun.R script available in the extras folder of the package with extra instructions.</p></li>
 </ol>
 </div>
-</div>
 <div id="internal-validation" class="section level1">
 <h1 class="hasAnchor">
 <a href="#internal-validation" class="anchor"></a>Internal validation</h1>
@@ -679,11 +1030,7 @@ Furthermore, many interactive plots are available in the Shiny App, for example 
 <dd>
 <img src="sparseRoc.png" alt="Receiver Operating Characteristic Plot">
 </dd>
-
-</div>
-<div id="calibration" class="section level2">
-<h2 class="hasAnchor">
-<a href="#calibration" class="anchor"></a>Calibration</h2>
+<p>## Calibration</p>
 <p>The calibration plot shows how close the predicted risk is to the observed risk. The diagonal dashed line thus indicates a perfectly calibrated model. The ten (or fewer) dots represent the mean predicted values for each quantile plotted against the observed fraction of people in that quantile who had the outcome (observed fraction). The straight black line is the linear regression using these 10 plotted quantile mean predicted vs observed fraction points. The straight vertical lines represented the 95% lower and upper confidence intervals of the slope of the fitted line.</p>
 <dd>
 <img src="sparseCalibration.png" alt="Calibration Plot">
@@ -701,50 +1048,30 @@ Furthermore, many interactive plots are available in the Shiny App, for example 
 <dd>
 <img src="smoothCalibration.jpeg" alt="Smooth Calibration plot">
 </dd>
-
-</div>
-<div id="preference-distribution" class="section level2">
-<h2 class="hasAnchor">
-<a href="#preference-distribution" class="anchor"></a>Preference distribution</h2>
+<p>## Preference distribution</p>
 <p>The preference distribution plots are the preference score distributions corresponding to i) people in the test set with the outcome (red) and ii) people in the test set without the outcome (blue).</p>
 <dd>
 <img src="preferencePDF.png" alt="Preference Plot">
 </dd>
-
-</div>
-<div id="predicted-probability-distribution" class="section level2">
-<h2 class="hasAnchor">
-<a href="#predicted-probability-distribution" class="anchor"></a>Predicted probability distribution</h2>
+<p>## Predicted probability distribution</p>
 <p>The prediction distribution box plots are for the predicted risks of the people in the test set with the outcome (class 1: blue) and without the outcome (class 0: red).</p>
 <p>The box plots in the Figure show that the predicted probability of the outcome is indeed higher for those with the outcome but there is also overlap between the two distribution which lead to an imperfect discrimination.</p>
 <dd>
 <img src="predictionDistribution.png" alt="Prediction Distribution Box Plot">
 </dd>
-
-</div>
-<div id="test-train-similarity" class="section level2">
-<h2 class="hasAnchor">
-<a href="#test-train-similarity" class="anchor"></a>Test-Train similarity</h2>
+<p>## Test-Train similarity</p>
 <p>The test-train similarity is assessed by plotting the mean covariate values in the train set against those in the test set for people with and without the outcome.</p>
 <p>The results for our example of look very promising since the mean values of the covariates are on the diagonal.</p>
 <dd>
 <img src="generalizability.png" alt="Similarity plots of train and test set">
 </dd>
-
-</div>
-<div id="variable-scatter-plot" class="section level2">
-<h2 class="hasAnchor">
-<a href="#variable-scatter-plot" class="anchor"></a>Variable scatter plot</h2>
+<p>## Variable scatter plot</p>
 <p>The variable scatter plot shows the mean covariate value for the people with the outcome against the mean covariate value for the people without the outcome. The color of the dots corresponds to the inclusion (green) or exclusion in the model (blue), respectively. It is highly recommended to use the Shiny App since this allows you to hoover over a covariate to show more details (name, value etc).</p>
 <p>The plot shows that the mean of most of the covariates is higher for subjects with the outcome compared to those without.</p>
 <dd>
 <img src="variableScatterplot.png" alt="Variabel scatter Plot">
 </dd>
-
-</div>
-<div id="precision-recall" class="section level2">
-<h2 class="hasAnchor">
-<a href="#precision-recall" class="anchor"></a>Precision recall</h2>
+<p>## Precision recall</p>
 <p>Precision (P) is defined as the number of true positives (Tp) over the number of true positives plus the number of false positives (Fp).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">P &lt;-<span class="st"> </span>Tp<span class="op">/</span>(Tp <span class="op">+</span><span class="st"> </span>Fp)</code></pre></div>
 <p>Recall (R) is defined as the number of true positives (Tp) over the number of true positives plus the number of false negatives (Fn).</p>
@@ -756,22 +1083,13 @@ Furthermore, many interactive plots are available in the Shiny App, for example 
 <dd>
 <img src="precisionRecall.png" alt="Precision Recall Plot">
 </dd>
-
-</div>
-<div id="demographic-summary" class="section level2">
-<h2 class="hasAnchor">
-<a href="#demographic-summary" class="anchor"></a>Demographic summary</h2>
+<p>## Demographic summary</p>
 <p>This plot shows for females and males the expected and observed risk in different age groups together with a confidence area.</p>
 <p>The results show that our model is well calibrated across gender and age groups.</p>
 <dd>
 <img src="demographicSummary.png" alt="Demographic Summary Plot">
 </dd>
-
-</div>
-</div>
-<div id="external-validation" class="section level1">
-<h1 class="hasAnchor">
-<a href="#external-validation" class="anchor"></a>External validation</h1>
+<p># External validation</p>
 <p>We recommend to always perform external validation, i.e. apply the final model on as much new datasets as feasible and evaluate its performance.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># load the trained model</span>
 plpModel &lt;-<span class="st"> </span><span class="kw"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(),<span class="st">'model'</span>)
@@ -779,15 +1097,15 @@ plpModel &lt;-<span class="st"> </span><span class="kw"><a href="../reference/lo
 <span class="co">#load the new plpData and create the population</span>
 plpData &lt;-<span class="st"> </span><span class="kw"><a href="../reference/loadPlpData.html">loadPlpData</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(),<span class="st">'data'</span>)
 population &lt;-<span class="st"> </span><span class="kw"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span>(plpData, 
-<span class="dt">outcomeId =</span> <span class="dv">2</span>, 
-<span class="dt">includeAllOutcomes =</span> <span class="ot">TRUE</span>, 
-<span class="dt">firstExposureOnly =</span> <span class="ot">TRUE</span>, 
-<span class="dt">washoutPeriod =</span> <span class="dv">365</span>, 
-<span class="dt">removeSubjectsWithPriorOutcome =</span> <span class="ot">TRUE</span>, 
-<span class="dt">priorOutcomeLookback =</span> <span class="dv">365</span>,
-<span class="dt">riskWindowStart =</span> <span class="dv">1</span>,
-<span class="dt">requireTimeAtRisk =</span> <span class="ot">FALSE</span>,
-<span class="dt">riskWindowEnd =</span> <span class="dv">365</span>
+                                    <span class="dt">outcomeId =</span> <span class="dv">2</span>, 
+                                    <span class="dt">includeAllOutcomes =</span> <span class="ot">TRUE</span>, 
+                                    <span class="dt">firstExposureOnly =</span> <span class="ot">TRUE</span>, 
+                                    <span class="dt">washoutPeriod =</span> <span class="dv">365</span>, 
+                                    <span class="dt">removeSubjectsWithPriorOutcome =</span> <span class="ot">TRUE</span>, 
+                                    <span class="dt">priorOutcomeLookback =</span> <span class="dv">365</span>,
+                                    <span class="dt">riskWindowStart =</span> <span class="dv">1</span>,
+                                    <span class="dt">requireTimeAtRisk =</span> <span class="ot">FALSE</span>,
+                                    <span class="dt">riskWindowEnd =</span> <span class="dv">365</span>
 )
 
 <span class="co"># apply the trained model on the new data</span>
@@ -811,7 +1129,7 @@ validation &lt;-<span class="st"> </span><span class="kw"><a href="../reference/
                                   <span class="dt">validationIdTarget =</span> <span class="st">'cohort_id'</span>, 
                                   <span class="dt">validationIdOutcome =</span> <span class="st">'outcome_id'</span>, 
                                   <span class="dt">keepPrediction =</span> T
-                                  )</code></pre></div>
+)</code></pre></div>
 <p>This will extract the new plpData from the specified schemas and cohort tables. It will then apply the same population settings and the trained plp model. Finally, it will evaluate the performance and return the standard output as <code>validation$performance</code> and if keepPrediction is TRUE then it will also return the prediction on the population as <code>validation$prediction</code>. They can be inserted into the shiny app for viewing the model and validation by running: <code><a href="../reference/viewPlp.html">viewPlp(runPlp=plpResult, validatePlp=validation )</a></code>.</p>
 <p>If you want to validate on multiple databases available you can insert the new schemas and cohort tables as a list:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># load the trained model</span>
@@ -837,25 +1155,26 @@ validation &lt;-<span class="st"> </span><span class="kw"><a href="../reference/
                                   <span class="dt">validationIdTarget =</span> <span class="st">'cohort_id'</span>, 
                                   <span class="dt">validationIdOutcome =</span> <span class="st">'outcome_id'</span>, 
                                   <span class="dt">keepPrediction =</span> T
-                                  )</code></pre></div>
+)</code></pre></div>
+</div>
 </div>
 <div id="journal-paper-generation" class="section level1">
 <h1 class="hasAnchor">
 <a href="#journal-paper-generation" class="anchor"></a>Journal paper generation</h1>
 <p>We have added functionality to automatically generate a word document you can use as start of a journal paper. It contains many of the generated study details and results. If you have performed external validation these results will can be added as well. Optionally, you can add a “Table 1” that contains data on many covariates for the target population.</p>
 <p>You can create the draft journal paper by running this function:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"> <span class="kw"><a href="../reference/createPlpJournalDocument.html">createPlpJournalDocument</a></span>(<span class="dt">plpResult =</span> <span class="op">&lt;</span>your plp results<span class="op">&gt;</span>, 
-                          <span class="dt">plpValidation =</span> <span class="op">&lt;</span>your validation results<span class="op">&gt;</span>,
-                          <span class="dt">plpData =</span> <span class="op">&lt;</span>your plp data<span class="op">&gt;</span>, 
-                          <span class="dt">targetName =</span> <span class="st">"&lt;target population&gt;"</span>,
-                          <span class="dt">outcomeName =</span> <span class="st">"&lt;outcome&gt;"</span>, 
-                          <span class="dt">table1 =</span> F, 
-                          <span class="dt">connectionDetails =</span> <span class="ot">NULL</span>,
-                          <span class="dt">includeTrain =</span> <span class="ot">FALSE</span>,
-                          <span class="dt">includeTest =</span> <span class="ot">TRUE</span>,
-                          <span class="dt">includePredictionPicture =</span> <span class="ot">TRUE</span>,
-                          <span class="dt">includeAttritionPlot =</span> <span class="ot">TRUE</span>,
-                          <span class="dt">outputLocation =</span> <span class="st">"&lt;your location&gt;"</span>)<span class="er">)</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/createPlpJournalDocument.html">createPlpJournalDocument</a></span>(<span class="dt">plpResult =</span> <span class="op">&lt;</span>your plp results<span class="op">&gt;</span>, 
+                         <span class="dt">plpValidation =</span> <span class="op">&lt;</span>your validation results<span class="op">&gt;</span>,
+                         <span class="dt">plpData =</span> <span class="op">&lt;</span>your plp data<span class="op">&gt;</span>, 
+                         <span class="dt">targetName =</span> <span class="st">"&lt;target population&gt;"</span>,
+                         <span class="dt">outcomeName =</span> <span class="st">"&lt;outcome&gt;"</span>, 
+                         <span class="dt">table1 =</span> F, 
+                         <span class="dt">connectionDetails =</span> <span class="ot">NULL</span>,
+                         <span class="dt">includeTrain =</span> <span class="ot">FALSE</span>,
+                         <span class="dt">includeTest =</span> <span class="ot">TRUE</span>,
+                         <span class="dt">includePredictionPicture =</span> <span class="ot">TRUE</span>,
+                         <span class="dt">includeAttritionPlot =</span> <span class="ot">TRUE</span>,
+                         <span class="dt">outputLocation =</span> <span class="st">"&lt;your location&gt;"</span>)<span class="er">)</span></code></pre></div>
 <p>For more details see the help page of the function.</p>
 
 </div>
@@ -913,10 +1232,10 @@ validation &lt;-<span class="st"> </span><span class="kw"><a href="../reference/
 <a href="#demos" class="anchor"></a>Demos</h1>
 <p>We have added several demos in the package that run on simulated data:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Show all demos in our package: </span>
- <span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/demo">demo</a></span>(<span class="dt">package =</span> <span class="st">"PatientLevelPrediction"</span>)
+<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/demo">demo</a></span>(<span class="dt">package =</span> <span class="st">"PatientLevelPrediction"</span>)
 
 <span class="co"># For example, to run the SingleModelDemo that runs Lasso and shows you how to run the Shiny App use this call</span>
- <span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/demo">demo</a></span>(<span class="st">"SingleModelDemo"</span>, <span class="dt">package =</span> <span class="st">"PatientLevelPrediction"</span>)</code></pre></div>
+<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/demo">demo</a></span>(<span class="st">"SingleModelDemo"</span>, <span class="dt">package =</span> <span class="st">"PatientLevelPrediction"</span>)</code></pre></div>
 
 </div>
 <div id="acknowledgments" class="section level1">
@@ -995,15 +1314,16 @@ Require minumum time-at-risk for target cohort, except for persons with outcomes
 </dd>
 </dl></li>
 </ol>
-<ol start="3" style="list-style-type: decimal">
-<li><dl>
+3)
+<dl>
 <dt>
 Include all persons in the target cohort exclude persons with prior outcomes
 </dt>
 <dd>
 <img src="popdef3.png">
 </dd>
-</dl></li>
+</dl>
+<ol start="4" style="list-style-type: decimal">
 <li><dl>
 <dt>
 Require minimum time-at-risk for target cohort, except for persons with outcomes during time-at-risk, exclude persons with prior outcomes
@@ -1013,15 +1333,16 @@ Require minimum time-at-risk for target cohort, except for persons with outcomes
 </dd>
 </dl></li>
 </ol>
-<ol start="5" style="list-style-type: decimal">
-<li><dl>
+5)
+<dl>
 <dt>
 Include all persons in target cohort exclude persons with prior outcomes
 </dt>
 <dd>
 <img src="popdef5.png">
 </dd>
-</dl></li>
+</dl>
+<ol start="6" style="list-style-type: decimal">
 <li><dl>
 <dt>
 Include all persons in target cohort
@@ -1042,32 +1363,31 @@ Include all persons in target cohort
 <li><a href="#introduction">Introduction</a></li>
       <li>
 <a href="#study-specification">Study specification</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#problem-definition">Problem definition</a></li>
+<li><a href="#problem-definition-1-stroke-in-afibrilation-patients">Problem definition 1: Stroke in afibrilation patients</a></li>
+      <li><a href="#problem-definition-2-angioedema-in-ace-inhibitor-users">Problem definition 2: Angioedema in ACE inhibitor users</a></li>
       <li><a href="#study-population-definition">Study population definition</a></li>
       <li><a href="#model-development-settings">Model development settings</a></li>
       </ul>
 </li>
       <li>
-<a href="#study-implementation">Study implementation</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#cohort-instantiation">Cohort instantiation</a></li>
-      <li><a href="#study-script-creation">Study script creation</a></li>
-      <li><a href="#study-package-creation">Study package creation</a></li>
+<a href="#example1">Example 1: Stroke in afibrilation patients</a><ul class="nav nav-pills nav-stacked">
+<li><a href="#study-specification-1">Study Specification</a></li>
+      <li><a href="#study-implementation">Study implementation</a></li>
       </ul>
 </li>
       <li>
-<a href="#internal-validation">Internal validation</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#discrimination">Discrimination</a></li>
-      <li><a href="#calibration">Calibration</a></li>
-      <li><a href="#smooth-calibration">Smooth Calibration</a></li>
-      <li><a href="#preference-distribution">Preference distribution</a></li>
-      <li><a href="#predicted-probability-distribution">Predicted probability distribution</a></li>
-      <li><a href="#test-train-similarity">Test-Train similarity</a></li>
-      <li><a href="#variable-scatter-plot">Variable scatter plot</a></li>
-      <li><a href="#precision-recall">Precision recall</a></li>
-      <li><a href="#demographic-summary">Demographic summary</a></li>
+<a href="#example2">Example 2: Angioedema in ACE inhibitor users</a><ul class="nav nav-pills nav-stacked">
+<li><a href="#study-specification-2">Study Specification</a></li>
+      <li><a href="#study-implementation-1">Study implementation</a></li>
       </ul>
 </li>
-      <li><a href="#external-validation">External validation</a></li>
+      <li><a href="#study-package-creation">Study package creation</a></li>
+      <li>
+<a href="#internal-validation">Internal validation</a><ul class="nav nav-pills nav-stacked">
+<li><a href="#discrimination">Discrimination</a></li>
+      <li><a href="#smooth-calibration">Smooth Calibration</a></li>
+      </ul>
+</li>
       <li><a href="#journal-paper-generation">Journal paper generation</a></li>
       <li><a href="#other-functionality">Other functionality</a></li>
       <li><a href="#demos">Demos</a></li>

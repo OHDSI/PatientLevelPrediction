@@ -97,3 +97,52 @@ def python_predict(population, plpData, model_loc, dense, autoencoder):
   test_pred.shape = (population.shape[0], 1)
   prediction = np.append(population,test_pred, axis=1)
   return prediction
+
+
+def python_predict_survival(population, plpData, model_loc):
+  print("Applying Python Model") 
+  print("Loading Data...")
+  # load data + train,test indexes + validation index
+  X = plpData[population[:,0],:]
+  # load index file
+  print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
+  print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))
+  print("Data ready for model has %s features" %(np.shape(X)[1]))
+  ###########################################################################	
+  # load model
+  print("Loading model...")
+  modelTrained = joblib.load(os.path.join(model_loc,"model.pkl")) 
+  print("Calculating predictions on population...")
+  test_pred = modelTrained.predict(X.toarray())
+  test_pred = test_pred.flatten()
+  rowCount = population.shape[0]
+  test_pred = test_pred[0:(rowCount)]
+  print("Prediction complete: %s rows" %(np.shape(test_pred)[0]))
+  print("Mean: %s prediction value" %(np.mean(test_pred)))
+  # merge pred with population
+  test_pred.shape = (population.shape[0], 1)
+  prediction = np.append(population,test_pred, axis=1)
+  return prediction
+  
+def python_predict_garden(population, plpData, model_loc,quantile=None):
+  print("Applying Python Model") 
+  print("Loading Data...")
+  # load data + train,test indexes + validation index
+  y=population[:,1]
+  X = plpData[population[:,0],:]
+  # load index file
+  print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
+  print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))
+  print("Data ready for model has %s features" %(np.shape(X)[1]))
+  ###########################################################################	
+  # load model
+  print("Loading model...")
+  modelTrained = joblib.load(os.path.join(model_loc,"model.pkl")) 
+  print("Calculating predictions on population...")
+  test_pred = modelTrained.predict(X,quantile=quantile)[:, 0]
+  print("Prediction complete: %s rows" %(np.shape(test_pred)[0]))
+  print("Mean: %s prediction value" %(np.mean(test_pred)))
+  # merge pred with population
+  test_pred.shape = (population.shape[0], 1)
+  prediction = np.append(population,test_pred, axis=1)
+  return prediction

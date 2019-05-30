@@ -3,8 +3,11 @@ PatientLevelPrediction 3.0.5
 
 Changes:
 - Added GLM status to log (will now inform about any fitting issue in log)
-- Added requirement to use R v3.4.4 or later (needed for PLP skeleton)
+- Added GBM survival model (still under development)
+- Added RF quantile regression (still under development)
 - Updated viewMultiplePlp() to match PLP skeleton package app
+- Updated single plp vignette with additional example 
+- Merge in deep learning updates from Chan
 
 PatientLevelPrediction 3.0.4
 ======================

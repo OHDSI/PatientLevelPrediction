@@ -30,7 +30,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.5</span>
       </span>
     </div>
 
@@ -161,7 +161,7 @@
 </ul>
 </li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  usethis<span class="op">::</span><span class="kw">edit_r_profile</span>()</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  usethis<span class="op">::</span><span class="kw"><a href="https://usethis.r-lib.org/reference/edit.html">edit_r_profile</a></span>()</code></pre></div>
 <p>and in this file add</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.setenv">Sys.setenv</a></span>(<span class="dt">PATH =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">"your python bin location"</span>, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.getenv">Sys.getenv</a></span>(<span class="st">"PATH"</span>), <span class="dt">sep=</span><span class="st">":"</span>))</code></pre></div>
 <ul>
@@ -223,7 +223,7 @@ PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https:
 <h3 class="hasAnchor">
 <a href="#maclinux-users" class="anchor"></a>Mac/linux users:</h3>
 <p>to make sure R uses this environment you need to edit your .Rprofile with the location of the python binary for the PLP environment. Edit the .Rprofile by running:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">usethis<span class="op">::</span><span class="kw">edit_r_profile</span>()</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">usethis<span class="op">::</span><span class="kw"><a href="https://usethis.r-lib.org/reference/edit.html">edit_r_profile</a></span>()</code></pre></div>
 <p>and add</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.setenv">Sys.setenv</a></span>(<span class="dt">PATH =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">"your python bin location"</span>, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.getenv">Sys.getenv</a></span>(<span class="st">"PATH"</span>), <span class="dt">sep=</span><span class="st">":"</span>))</code></pre></div>
 <p>to the file then save. Where your python bin location is the location returned by</p>
