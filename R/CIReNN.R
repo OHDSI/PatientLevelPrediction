@@ -46,6 +46,8 @@
 #' @param vaeIntermediateDim            Number of intermediate dimesion for VAE
 #' @param vaeEpoch                      Number of times to interate over dataset for VAE
 #' @param vaeEpislonStd                 Epsilon
+#' @param ParallelVae                   If you have multiple GPU in your machine, and want to use multiple GPU for VAE, set this value as TRUE
+#' @param vaeMaxGPUs                    How many GPUs will be used for VAE? default value is 1, which doesn't use paralleisation. Integer >= 2 or list of integers, number of GPUs or list of GPU IDs on which to create model replicas. GPU parallelisation for VAE will be activated only when parallel vae is true.
 #' @param seed            Random seed used by deep learning model
 #' @importFrom zeallot %<-%
 #' @examples
@@ -56,11 +58,11 @@
 setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(1.0), batchSize = c(100), 
                       epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
-                      useDeepEnsemble = F, numberOfEnsembleNetwork = 3,
+                      useDeepEnsemble = F, numberOfEnsembleNetwork = 3, 
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
-                      vaeEpoch = 100L, vaeEpislonStd = 1.0,
-                      seed=NULL  ){
+                      vaeEpoch = 100L, vaeEpislonStd = 1.0, ParallelVae = FALSE, vaeMaxGPUs = 1,
+                      seed=1234  ){
   if( sum(!( numberOfRNNLayer %in% c(1,2,3)))!=0 ) stop ('Only 1,2 or 3 is available now. ')
   if(!((all.equal(numberOfEnsembleNetwork, as.integer(numberOfEnsembleNetwork))) & (numberOfEnsembleNetwork>=1) )) {
     stop ('Number of ensemble network should be a natural number')  }
@@ -119,7 +121,7 @@ setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c
     useDeepEnsemble = useDeepEnsemble,numberOfEnsembleNetwork = numberOfEnsembleNetwork,
     useVae= useVae,vaeDataSamplingProportion = vaeDataSamplingProportion, vaeValidationSplit= vaeValidationSplit, 
     vaeBatchSize = vaeBatchSize, vaeLatentDim = vaeLatentDim, vaeIntermediateDim = vaeIntermediateDim, 
-    vaeEpoch = vaeEpoch, vaeEpislonStd = vaeEpislonStd,
+    vaeEpoch = vaeEpoch, vaeEpislonStd = vaeEpislonStd, ParallelVae = ParallelVae, vaeMaxGPUs = vaeMaxGPUs,
     seed=ifelse(is.null(seed),'NULL', seed)),
     
     1:(length(numberOfRNNLayer)*length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(earlyStoppingMinDelta)*length(earlyStoppingPatience)*length(epochs)*max(1,length(seed)))),
@@ -158,7 +160,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
     #Build VAE
     vae<-buildVae(vaeSampleData, vaeValidationSplit= param[[1]]$vaeValidationSplit, 
                   vaeBatchSize = param[[1]]$vaeBatchSize, vaeLatentDim = param[[1]]$vaeLatentDim, vaeIntermediateDim = param[[1]]$vaeIntermediateDim,
-                  vaeEpoch = param[[1]]$vaeEpoch, vaeEpislonStd = param[[1]]$vaeEpislonStd, temporal = TRUE)
+                  vaeEpoch = param[[1]]$vaeEpoch, vaeEpislonStd = param[[1]]$vaeEpislonStd, ParallelVae= param[[1]]$ParallelVae, vaeMaxGPUs= param[[1]]$vaeMaxGPUs, temporal = TRUE)
     #remove sample data for VAE to save memory
     rm(vaeSampleData)
     
@@ -549,7 +551,7 @@ trainCIReNN<-function(plpData, population,
 
 #function for building vae
 buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
-                   vaeEpoch = 100L, vaeEpislonStd = 1.0, temporal = TRUE){
+                   vaeEpoch = 100L, vaeEpislonStd = 1.0, ParallelVae= FALSE, vaeMaxGPUs = NULL, temporal = TRUE){
   if (temporal) dataSample <- data %>% apply(3, as.numeric) else dataSample <- data
   originalDim<-dim(dataSample)[2]
   K <- keras::backend()
@@ -596,6 +598,8 @@ buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatent
     k1_loss <- -0.5 * keras::k_mean(1 + z_log_var - keras::k_square(z_mean) - keras::k_exp(z_log_var), axis = -1L)
     xent_loss + k1_loss
   }
+  #Activating parallelisation of GPU in encoder
+  if(ParallelVae) vae <- keras::multi_gpu_model(vae,gpus = vaeMaxGPUs)
   
   vae %>% keras::compile (optimizer = "rmsprop", loss = vae_loss)
   #if (!is.null(dataValidation)) dataValidation<-list(dataValidation,dataValidation)
