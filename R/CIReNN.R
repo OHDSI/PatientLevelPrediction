@@ -47,7 +47,7 @@
 #' @param vaeEpoch                      Number of times to interate over dataset for VAE
 #' @param vaeEpislonStd                 Epsilon
 #' @param ParallelVae                   If you have multiple GPU in your machine, and want to use multiple GPU for VAE, set this value as TRUE
-#' @param vaeMaxGPUs                    How many GPUs will be used for VAE? default value is 1, which doesn't use paralleisation. Integer >= 2 or list of integers, number of GPUs or list of GPU IDs on which to create model replicas. GPU parallelisation for VAE will be activated only when parallel vae is true.
+#' @param vaeMaxGPUs                    How many GPUs will be used for VAE? GPU parallelisation for VAE will be activated only when parallel vae is true. Integer >= 2 or list of integers, number of GPUs or list of GPU IDs on which to create model replicas.
 #' @param seed            Random seed used by deep learning model
 #' @importFrom zeallot %<-%
 #' @examples
@@ -61,7 +61,7 @@ setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c
                       useDeepEnsemble = F, numberOfEnsembleNetwork = 3, 
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
-                      vaeEpoch = 100L, vaeEpislonStd = 1.0, ParallelVae = FALSE, vaeMaxGPUs = 1,
+                      vaeEpoch = 100L, vaeEpislonStd = 1.0, ParallelVae = FALSE, vaeMaxGPUs = 2,
                       seed=1234  ){
   if( sum(!( numberOfRNNLayer %in% c(1,2,3)))!=0 ) stop ('Only 1,2 or 3 is available now. ')
   if(!((all.equal(numberOfEnsembleNetwork, as.integer(numberOfEnsembleNetwork))) & (numberOfEnsembleNetwork>=1) )) {
@@ -250,7 +250,7 @@ trainCIReNN<-function(plpData, population,
                       useDeepEnsemble = F,numberOfEnsembleNetwork =3,
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
-                      vaeEpoch = 100L, vaeEpislonStd = 1.0,
+                      vaeEpoch = 100L, vaeEpislonStd = 1.0, ParallelVae = FALSE, vaeMaxGPUs = 2,
                       seed=NULL, train=TRUE){
   
   if(!is.null(population$indexes) && train==T){
@@ -273,6 +273,7 @@ trainCIReNN<-function(plpData, population,
         for (i in seq(numberOfEnsembleNetwork)){
           #print(i)
           pred<-createEnsembleNetwork(train = train, plpData=plpData,population=population,batchSize=batchSize,epochs = epochs,
+                                      earlyStoppingMinDelta=earlyStoppingMinDelta, earlyStoppingPatience=earlyStoppingPatience,
                                       train_rows=train_rows,index=index,lr=lr,decay=decay,
                                       units=units,recurrentDropout=recurrentDropout,numberOfRNNLayer=numberOfRNNLayer,
                                       layerDropout=layerDropout)
@@ -599,7 +600,7 @@ buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatent
     xent_loss + k1_loss
   }
   #Activating parallelisation of GPU in encoder
-  if(ParallelVae) vae <- keras::multi_gpu_model(vae,gpus = vaeMaxGPUs)
+  if(ParallelVae & (vaeMaxGPUs>1) ) vae <- keras::multi_gpu_model(vae,gpus = vaeMaxGPUs)
   
   vae %>% keras::compile (optimizer = "rmsprop", loss = vae_loss)
   #if (!is.null(dataValidation)) dataValidation<-list(dataValidation,dataValidation)
@@ -687,7 +688,8 @@ custom_loss <- function(sigma){
 }
 
 #Create Deep Ensemble Network function
-createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, train_rows=NULL,index=NULL,lr,decay,
+createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earlyStoppingPatience, earlyStoppingMinDelta,
+                                train_rows=NULL,index=NULL,lr,decay,
                                 units,recurrentDropout,numberOfRNNLayer,layerDropout){
   ##GRU layer
   layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
@@ -714,6 +716,9 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, trai
   c(mu,sigma) %<-% layer_custom(layers, 2, name = 'main_output')
   
   model <- keras::keras_model(inputs = layerInput,outputs=mu)
+  
+  earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
+                                               mode="auto",min_delta = earlyStoppingMinDelta)
   
   model %>% keras::compile(
     loss = custom_loss(sigma),
@@ -744,6 +749,7 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, trai
                                               epochs=epochs,
                                               validation_data=list(as.array(data[val_rows,,]), 
                                                                    population$y[population$indexes!=index,][val_rows,])#,
+                                              ,callbacks=list(earlyStopping)
                                               #callbacks=list(earlyStopping,reduceLr),
     )
   }else{
@@ -768,6 +774,7 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, trai
                                               epochs=epochs,
                                               validation_data=list(as.array(data[val_rows,,]), 
                                                                    population$y[val_rows,]),
+                                              callbacks=list(earlyStopping),
                                               view_metrics=F)
   }
   
