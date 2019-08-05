@@ -83,8 +83,9 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
 # default patient level prediction prediction  
 predict.plp <- function(plpModel,population, plpData, ...){
   covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
+  ParallelLogger::logTrace('predict.plp - predictingProbabilities start')
   prediction <- predictProbabilities(plpModel$model, population, covariates)
-  
+  ParallelLogger::logTrace('predict.plp - predictingProbabilities end')
   return(prediction)
 }
 
@@ -518,10 +519,12 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
 predictProbabilities <- function(predictiveModel, population, covariates) {
   start <- Sys.time()
   
+  ParallelLogger::logTrace('predictProbabilities - predictFfdf start')
   prediction <- predictFfdf(predictiveModel$coefficients,
                             population,
                             covariates,
                             predictiveModel$modelType)
+  ParallelLogger::logTrace('predictProbabilities - predictFfdf end')
   prediction$time <- NULL
   attr(prediction, "modelType") <- predictiveModel$modelType
   attr(prediction, "cohortId") <- attr(population, "metadata")$cohortId

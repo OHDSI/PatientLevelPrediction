@@ -82,7 +82,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                                              seed=param$seed))
   
   # TODO get optimal lambda value
-  
+  ParallelLogger::logTrace('Returned from fitting to LassoLogisticRegression')
   comp <- Sys.time() - start
   varImp <- data.frame(covariateId=names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'], 
                        value=modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
@@ -90,6 +90,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
     ParallelLogger::logWarn('No non-zero coefficients')
     varImp <- NULL
   } else {
+    ParallelLogger::logInfo('Creating variable importance data frame')
     #varImp <- varImp[abs(varImp$value)>0,]
     varImp <- merge(ff::as.ram(plpData$covariateRef), varImp, 
                     by='covariateId',all=T)
@@ -99,6 +100,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   }
   
   #get prediction on test set:
+  ParallelLogger::logInfo('Getting predictions on train set')
   prediction <- predict.plp(plpModel=list(model = modelTrained),
               population = population, 
               plpData = plpData)

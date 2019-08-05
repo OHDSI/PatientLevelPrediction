@@ -256,7 +256,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
   # train the model
   tempmeta <- attr(population, "metaData")
-  population <- merge(population, indexes)
+  population <- merge(population, indexes, by = 'rowId')
   colnames(population)[colnames(population)=='index'] <- 'indexes'
   attr(population, "metaData") <- tempmeta
   

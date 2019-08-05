@@ -211,6 +211,10 @@ plotRoc <- function(prediction, fileName = NULL) {
 #'
 #' @export
 plotSparseRoc <- function(evaluation,type='test', fileName=NULL){
+  
+  if(is.null(evaluation$thresholdSummary$Eval)){
+    evaluation$thresholdSummary$Eval <- type
+  }
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('falsePositiveRate','sensitivity')]
@@ -254,6 +258,9 @@ plotSparseRoc <- function(evaluation,type='test', fileName=NULL){
 #'
 #' @export
 plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
+  if(is.null(evaluation$thresholdSummary$Eval)){
+    evaluation$thresholdSummary$Eval <- type
+  }
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('predictionThreshold','truePositiveCount','trueNegativeCount',
@@ -317,6 +324,9 @@ plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
 #'
 #' @export
 plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
+  if(is.null(evaluation$thresholdSummary$Eval)){
+    evaluation$thresholdSummary$Eval <- type
+  }
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('preferenceThreshold','truePositiveCount','trueNegativeCount',
@@ -380,11 +390,14 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
 #'
 #' @export
 plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
+  if(is.null(evaluation$thresholdSummary$Eval)){
+    evaluation$thresholdSummary$Eval <- type
+  }
+  ind <- evaluation$thresholdSummary$Eval==type
+  
   N <- sum(evaluation$calibrationSummary$PersonCountAtRisk, na.rm = T)
   O <- sum(evaluation$calibrationSummary$PersonCountWithOutcome, na.rm=T)
   inc <- O/N
-  
-  ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('positivePredictiveValue', 'sensitivity')]
   #x <- rbind(c(0,1), x, c(1,0))
@@ -421,6 +434,9 @@ plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
 #'
 #' @export
 plotF1Measure <- function(evaluation,type='test', fileName=NULL){
+  if(is.null(evaluation$thresholdSummary$Eval)){
+    evaluation$thresholdSummary$Eval <- type
+  }
   ind <- evaluation$thresholdSummary$Eval==type
   
   x<- evaluation$thresholdSummary[ind,c('predictionThreshold', 'f1Score')]
@@ -461,6 +477,9 @@ plotF1Measure <- function(evaluation,type='test', fileName=NULL){
 #' @export
 plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
   if (!all(is.na(evaluation$demographicSummary$averagePredictedProbability))){
+    if(is.null(evaluation$demographicSummary$Eval)){
+      evaluation$demographicSummary$Eval <- type
+    }
     ind <- evaluation$demographicSummary$Eval==type
     x<- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability',
                                             'PersonCountAtRisk', 'PersonCountWithOutcome')]
@@ -548,6 +567,9 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
 #'
 #' @export
 plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
+  if(is.null(evaluation$calibrationSummary$Eval)){
+    evaluation$calibrationSummary$Eval <- type
+  }
   ind <- evaluation$calibrationSummary$Eval==type
   
   x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence')]
@@ -609,6 +631,9 @@ plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
 #'
 #' @export
 plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
+  if(is.null(evaluation$calibrationSummary$Eval)){
+    evaluation$calibrationSummary$Eval <- type
+  }
   ind <- evaluation$calibrationSummary$Eval==type
   
   x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence', 'PersonCountAtRisk')]
@@ -682,6 +707,9 @@ plotSmoothCalibration <- function(result,
                                   fileName = NULL) {
   prediction <- result$prediction
   evaluation <- result$performanceEvaluation
+  if(is.null(result$performanceEvaluation$calibrationSummary$Eval)){
+    result$performanceEvaluation$calibrationSummary$Eval <- type
+  }
   ind <- result$performanceEvaluation$calibrationSummary$Eval == type
   x <- evaluation$calibrationSummary[ind, c("averagePredictedProbability", "observedIncidence")]
   maxVal <- max(x$averagePredictedProbability, x$observedIncidence)
@@ -905,6 +933,9 @@ plotSmoothCalibration <- function(result,
 #'
 #' @export
 plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
+  if(is.null(evaluation$predictionDistribution$Eval)){
+    evaluation$predictionDistribution$Eval <- type
+  }
   ind <- evaluation$predictionDistribution$Eval==type
   x<- evaluation$predictionDistribution[ind,]
 

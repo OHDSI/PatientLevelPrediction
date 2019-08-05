@@ -99,12 +99,15 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   args <- list(plpData =plpData,param =modelSettings$param, 
                population=population, cohortId=cohortId, outcomeId=outcomeId)
   plpModel <- do.call(fun, args)
+  ParallelLogger::logTrace('Returned from classifier function')
   # add pre-processing details
   plpModel$metaData$preprocessSettings <- list(normFactors=plpData$metaData$normFactors,
                                                deletedRedundantCovariateIds=plpData$metaData$deletedRedundantCovariateIds,
                                                deletedInfrequentCovariateIds=plpData$metaData$deletedInfrequentCovariateIds)
   
+  ParallelLogger::logTrace('Creating prediction function')
   plpModel$predict <- createTransform(plpModel)
+  ParallelLogger::logTrace('Adding index')
   plpModel$index <- population$indexes  ##?- dont think we need this, just the seed instead
   class(plpModel) <- 'plpModel'
   
