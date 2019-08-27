@@ -46,7 +46,7 @@
 #' @param vaeIntermediateDim            Number of intermediate dimesion for VAE
 #' @param vaeEpoch                      Number of times to interate over dataset for VAE
 #' @param vaeEpislonStd                 Epsilon
-#' @param ParallelGPU                   If you have multiple GPU in your machine, and want to use multiple GPU for deep learning, set this value as TRUE
+#' @param useGPU                   If you have GPUs in your machine, and want to use multiple GPU for deep learning, set this value as TRUE
 #' @param maxGPUs                    How many GPUs will be used for deep learning? GPU parallelisation for deep learning will be activated only when parallel vae is true. Integer >= 2 or list of integers, number of GPUs or list of GPU IDs on which to create model replicas.
 #' @param seed            Random seed used by deep learning model
 #' @importFrom zeallot %<-%
@@ -58,10 +58,10 @@
 setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(1.0), batchSize = c(100), 
                       epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
-                      useDeepEnsemble = F, numberOfEnsembleNetwork = 3, 
+                      bayes = T, useDeepEnsemble = F, numberOfEnsembleNetwork = 3, 
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
-                      vaeEpoch = 100L, vaeEpislonStd = 1.0, ParallelGPU = FALSE, maxGPUs = 2,
+                      vaeEpoch = 100L, vaeEpislonStd = 1.0, useGPU = FALSE, maxGPUs = 2,
                       seed=1234  ){
   if( sum(!( numberOfRNNLayer %in% c(1,2,3)))!=0 ) stop ('Only 1,2 or 3 is available now. ')
   if(!((all.equal(numberOfEnsembleNetwork, as.integer(numberOfEnsembleNetwork))) & (numberOfEnsembleNetwork>=1) )) {
@@ -118,10 +118,10 @@ setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c
     layerDropout=layerDropout,
     lr =lr, decay=decay, outcomeWeight=outcomeWeight,epochs= epochs,
     earlyStoppingMinDelta = earlyStoppingMinDelta, earlyStoppingPatience = earlyStoppingPatience,
-    useDeepEnsemble = useDeepEnsemble,numberOfEnsembleNetwork = numberOfEnsembleNetwork,
+    bayes= bayes, useDeepEnsemble = useDeepEnsemble,numberOfEnsembleNetwork = numberOfEnsembleNetwork,
     useVae= useVae,vaeDataSamplingProportion = vaeDataSamplingProportion, vaeValidationSplit= vaeValidationSplit, 
     vaeBatchSize = vaeBatchSize, vaeLatentDim = vaeLatentDim, vaeIntermediateDim = vaeIntermediateDim, 
-    vaeEpoch = vaeEpoch, vaeEpislonStd = vaeEpislonStd, ParallelGPU = ParallelGPU, maxGPUs = maxGPUs,
+    vaeEpoch = vaeEpoch, vaeEpislonStd = vaeEpislonStd, useGPU = useGPU, maxGPUs = maxGPUs,
     seed=ifelse(is.null(seed),'NULL', seed)),
     
     1:(length(numberOfRNNLayer)*length(units)*length(recurrentDropout)*length(layerDropout)*length(lr)*length(decay)*length(outcomeWeight)*length(earlyStoppingMinDelta)*length(earlyStoppingPatience)*length(epochs)*max(1,length(seed)))),
@@ -160,7 +160,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
     #Build VAE
     vae<-buildVae(vaeSampleData, vaeValidationSplit= param[[1]]$vaeValidationSplit, 
                   vaeBatchSize = param[[1]]$vaeBatchSize, vaeLatentDim = param[[1]]$vaeLatentDim, vaeIntermediateDim = param[[1]]$vaeIntermediateDim,
-                  vaeEpoch = param[[1]]$vaeEpoch, vaeEpislonStd = param[[1]]$vaeEpislonStd, ParallelGPU= param[[1]]$ParallelGPU, maxGPUs= param[[1]]$maxGPUs, temporal = TRUE)
+                  vaeEpoch = param[[1]]$vaeEpoch, vaeEpislonStd = param[[1]]$vaeEpislonStd, useGPU= param[[1]]$useGPU, maxGPUs= param[[1]]$maxGPUs, temporal = TRUE)
     #remove sample data for VAE to save memory
     rm(vaeSampleData)
     
@@ -238,6 +238,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'deep'
   if(param.best$useDeepEnsemble)attr(result, 'type') <- 'deepEnsemble'
+  if(param.best$bayes)attr(result, 'type') <- 'BayesianDeep'
   attr(result, 'predictionType') <- 'binary'
   
   return(result)
@@ -247,11 +248,20 @@ trainCIReNN<-function(plpData, population,
                       numberOfRNNLayer=1,units=128, recurrentDropout=0.2, layerDropout=0.2,
                       lr =1e-4, decay=1e-5, outcomeWeight = 1.0, batchSize = 100, 
                       epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
-                      useDeepEnsemble = F,numberOfEnsembleNetwork =3,
+                      bayes = T, useDeepEnsemble = F,numberOfEnsembleNetwork =3,
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
-                      vaeEpoch = 100L, vaeEpislonStd = 1.0, ParallelGPU = FALSE, maxGPUs = 2,
+                      vaeEpoch = 100L, vaeEpislonStd = 1.0, useGPU = FALSE, maxGPUs = 2,
                       seed=NULL, train=TRUE){
+  output_dim = 2 #output dimension for outcomes
+  num_MC_samples = 100 #sample number for MC sampling in Bayesian Deep Learning Prediction
+  #heteroscedatic loss function
+  heteroscedastic_loss = function(y_true, y_pred) {
+    mean = y_pred[, 1:output_dim]
+    log_var = y_pred[, (output_dim + 1):(output_dim * 2)]
+    precision = keras::k_exp(-log_var)
+    keras::k_sum(precision * (y_true - mean) ^ 2 + log_var, axis = 2)
+  }
   
   if(!is.null(population$indexes) && train==T){
     writeLines(paste('Training recurrent neural network with ',length(unique(population$indexes)),' fold CV'))
@@ -276,7 +286,7 @@ trainCIReNN<-function(plpData, population,
                                       earlyStoppingMinDelta=earlyStoppingMinDelta, earlyStoppingPatience=earlyStoppingPatience,
                                       train_rows=train_rows,index=index,lr=lr,decay=decay,
                                       units=units,recurrentDropout=recurrentDropout,numberOfRNNLayer=numberOfRNNLayer,
-                                      layerDropout=layerDropout, ParallelGPU = ParallelGPU, maxGPUs = maxGPUs)
+                                      layerDropout=layerDropout, useGPU = useGPU, maxGPUs = maxGPUs)
           ParallelLogger::logInfo(paste(i,'th process is ended started'))
           predList<-append(predList,pred)
         }
@@ -312,7 +322,8 @@ trainCIReNN<-function(plpData, population,
           prediction$sigmas[batch] <- c(sigmaResult)
           
         }
-        if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
+        prediction$value[prediction$value>1] <- 1
+        prediction$value[prediction$value<0] <- 0
         #prediction$value[batch] <- mu[,2]
         #prediction$sigmas[batch] <- sigma[,2]
         
@@ -327,26 +338,42 @@ trainCIReNN<-function(plpData, population,
         predictionMat$value[population$indexes==index] <- prediction$value
         
       }else{
-        
-        ##GRU layer
-        model <- keras::keras_model_sequential()
-        if(numberOfRNNLayer==1) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
-                                                           input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
-                                                           return_sequences=FALSE) 
-        if(numberOfRNNLayer>1 ) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
-                                                           input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
-                                                           return_sequences=TRUE) 
-        if(numberOfRNNLayer==2) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
-        if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE)
-        if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
-        model %>% keras::layer_dropout(layerDropout) %>%
-          keras::layer_dense(units=2, activation='softmax')
-        
-        model %>% keras::compile(
-          loss = 'binary_crossentropy',
-          metrics = c('accuracy'),
-          optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
-        )
+        layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
+        if(useGPU){
+          ##GRU layer
+          if(numberOfRNNLayer==1){
+            layerOutput <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                                 return_sequences=FALSE) %>% 
+              keras::layer_dropout(layerDropout)
+          } 
+          if(numberOfRNNLayer==2){
+            layerOutput <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                                 return_sequences=TRUE) %>% 
+              keras::layer_dropout(layerDropout) %>%
+              keras::layer_cudnn_gru(units=units, return_sequences=FALSE) %>% 
+              keras::layer_dropout(layerDropout)
+          }
+          if(numberOfRNNLayer==3){
+            layerOutput <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                                 return_sequences=TRUE) %>% 
+              keras::layer_dropout(layerDropout) %>%
+              keras::layer_cudnn_gru(units=units, return_sequences=TRUE) %>%
+              keras::layer_dropout(layerDropout) %>%
+              keras::layer_cudnn_gru(units=units, return_sequences=FALSE) %>% 
+              keras::layer_dropout(layerDropout)
+          }
+        }else{
+          ##GRU layer
+          if(numberOfRNNLayer==1) layerOutput<-layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                                               return_sequences=FALSE) 
+          if(numberOfRNNLayer>1 ) layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                                  return_sequences=TRUE) 
+          if(numberOfRNNLayer==2) layerOutput<-layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+          if(numberOfRNNLayer==3) {layerOutput<-layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE) %>%
+            layerOutput<-layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+            
+          }
+        }
         
         earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
                                                      mode="auto",min_delta = earlyStoppingMinDelta)
@@ -354,6 +381,33 @@ trainCIReNN<-function(plpData, population,
                                                       patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
         
         class_weight=list("0"=1,"1"=outcomeWeight)
+        
+        if(bayes){
+          mean = layerOutput %>% layer_concrete_dropout(
+            layer = keras::layer_dense(units = output_dim)
+          )
+          
+          log_var = layerOutput %>% layer_concrete_dropout(
+            layer = keras::layer_dense(units = output_dim)
+          )
+          
+          output = keras::layer_concatenate(list(mean, log_var))
+          model = keras::keras_model(layerInput, output)
+          #model = keras::keras_model(keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3])), output)
+          model %>% keras::compile(
+            optimizer = "adam",
+            loss = heteroscedastic_loss,
+            metrics = c(keras::custom_metric("heteroscedastic_loss", heteroscedastic_loss))
+          )
+          
+        }else{
+          model<- layerInput %>% keras::layer_dense(units=2, activation='softmax')
+          model %>% keras::compile(
+            loss = 'binary_crossentropy',
+            metrics = c('accuracy'),
+            optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
+          )
+        }
         
         data <- plpData[population$rowId[population$indexes!=index],,]
         
@@ -371,7 +425,7 @@ trainCIReNN<-function(plpData, population,
           }
         }
         
-        
+
         #print(table(population$y))
         
         history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
@@ -387,20 +441,52 @@ trainCIReNN<-function(plpData, population,
         batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
         prediction <- population[population$indexes==index,]
         prediction$value <- 0
-        for(batch in batches){
-          pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
-          prediction$value[batch] <- pred[,2]
-          #writeLines(paste0(dim(pred[,2]), collapse='-'))
-          #writeLines(paste0(pred[1,2], collapse='-'))
-        }
         
+        if(bayes){
+          prediction$epistemicUncertainty <- 0
+          prediction$aleatoricUncertainty <- 0
+          for(batch in batches){
+            MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
+            for (k in 1:num_MC_samples){
+              MC_samples[k,, ] = predict(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+                #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+            }
+            pred <- apply(MC_samples[,,output_dim], 2, mean)
+            epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, var)
+            logVar = MC_samples[, , output_dim * 2]
+            if(length(dim(logVar))<=1){
+              aleatoricUncertainty = exp(mean(logVar))
+            }else{
+              aleatoricUncertainty = exp(colMeans(logVar))
+              
+            }
+            prediction$value[batch] <- pred
+            prediction$epistemicUncertainty[batch] = epistemicUncertainty
+            prediction$aleatoricUncertainty[batch] = aleatoricUncertainty
+            #writeLines(paste0(dim(pred[,2]), collapse='-'))
+            #writeLines(paste0(pred[1,2], collapse='-'))
+            
+          }
+          
+        }else{
+          for(batch in batches){
+            pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+            prediction$value[batch] <- pred[,2]
+            #writeLines(paste0(dim(pred[,2]), collapse='-'))
+            #writeLines(paste0(pred[1,2], collapse='-'))
+          }
+        }
+        prediction$value[prediction$value>1] <- 1
+        prediction$value[prediction$value<0] <- 0
         attr(prediction, "metaData") <- list(predictionType = "binary")
         aucVal <- computeAuc(prediction)
         perform <- c(perform,aucVal)
         
         # add the fold predictions and compute AUC after loop
         predictionMat$value[population$indexes==index] <- prediction$value
-        
+        # add uncertainty
+        predictionMat$aleatoricUncertainty[population$indexes==index] <- prediction$aleatoricUncertainty
+        predictionMat$epistemicUncertainty[population$indexes==index] <- prediction$epistemicUncertainty
       }
       
     }
@@ -425,7 +511,7 @@ trainCIReNN<-function(plpData, population,
                                    earlyStoppingMinDelta=earlyStoppingMinDelta, earlyStoppingPatience=earlyStoppingPatience,
                                    train_rows=train_rows,index=index,lr=lr,decay=decay,
                                    units=units,recurrentDropout=recurrentDropout,numberOfRNNLayer=numberOfRNNLayer,
-                                   layerDropout=layerDropout, ParallelGPU = ParallelGPU, maxGPUs = maxGPUs)
+                                   layerDropout=layerDropout, useGPU = useGPU, maxGPUs = maxGPUs)
        
        predList<-append(predList,pred)
       }
@@ -459,35 +545,80 @@ trainCIReNN<-function(plpData, population,
         prediction$value[batch] <- c(muMean)
         prediction$sigmas[batch] <- c(sigmaResult)
       }
-      if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
+      prediction$value[prediction$value>1] <- 1
+      prediction$value[prediction$value<0] <- 0
+
       
     }else{
-      ##GRU layer
-      model <- keras::keras_model_sequential()
-      if(numberOfRNNLayer==1) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
-                                                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
-                                                         return_sequences=FALSE) 
-      if(numberOfRNNLayer>1 ) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
-                                                         input_shape = c(dim(plpData)[2],dim(plpData)[3]), #time step x number of features
-                                                         return_sequences=TRUE) 
-      if(numberOfRNNLayer==2) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
-      if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE)
-      if(numberOfRNNLayer==3) model %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
-      model %>% keras::layer_dropout(layerDropout) %>%
-        keras::layer_dense(units=2, activation='softmax')
-      
-      model %>% keras::compile(
-        loss = 'binary_crossentropy',
-        metrics = c('accuracy'),
-        optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
-      )
+      layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
+      if(useGPU){
+        ##GRU layer
+        if(numberOfRNNLayer==1){
+          layerOutput <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                               return_sequences=FALSE) %>% 
+            keras::layer_dropout(layerDropout)
+        } 
+        if(numberOfRNNLayer==2){
+          layerOutput <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                               return_sequences=TRUE) %>% 
+            keras::layer_dropout(layerDropout) %>%
+            keras::layer_cudnn_gru(units=units, return_sequences=FALSE) %>% 
+            keras::layer_dropout(layerDropout)
+        }
+        if(numberOfRNNLayer==3){
+          layerOutput <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                               return_sequences=TRUE) %>% 
+            keras::layer_dropout(layerDropout) %>%
+            keras::layer_cudnn_gru(units=units, return_sequences=TRUE) %>%
+            keras::layer_dropout(layerDropout) %>%
+            keras::layer_cudnn_gru(units=units, return_sequences=FALSE) %>% 
+            keras::layer_dropout(layerDropout)
+        }
+      }else{
+        ##GRU layer
+        if(numberOfRNNLayer==1) layerOutput<-layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                                             return_sequences=FALSE) 
+        if(numberOfRNNLayer>1 ) layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,
+                                                                return_sequences=TRUE) 
+        if(numberOfRNNLayer==2) layerOutput<-layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+        if(numberOfRNNLayer==3) {layerOutput<-layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE) %>%
+          layerOutput<-layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) 
+          
+        }
+      }
       earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
                                                    mode="auto",min_delta = earlyStoppingMinDelta)
       reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
                                                     patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, min_lr = 0)
       
-      
       class_weight=list("0"=1,"1"=outcomeWeight)
+      
+      if(bayes){
+        mean = layerOutput %>% layer_concrete_dropout(
+          layer = keras::layer_dense(units = output_dim)
+        )
+        
+        log_var = layerOutput %>% layer_concrete_dropout(
+          layer = keras::layer_dense(units = output_dim)
+        )
+        
+        output = keras::layer_concatenate(list(mean, log_var))
+        model = keras::keras_model(layerInput, output)
+        #model = keras::keras_model(keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3])), output)
+        model %>% keras::compile(
+          optimizer = "adam",
+          loss = heteroscedastic_loss,
+          metrics = c(keras::custom_metric("heteroscedastic_loss", heteroscedastic_loss))
+        )
+        
+      }else{
+        model<- layerInput %>% keras::layer_dense(units=2, activation='softmax')
+        model %>% keras::compile(
+          loss = 'binary_crossentropy',
+          metrics = c('accuracy'),
+          optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
+        )
+      }
       
       data <- plpData[population$rowId,,]
       
@@ -520,20 +651,51 @@ trainCIReNN<-function(plpData, population,
       batches <- lapply(1:ceiling(maxVal/batchSize), function(x) ((x-1)*batchSize+1):min((x*batchSize),maxVal))
       prediction <- population
       prediction$value <- 0
-      for(batch in batches){
-        pred <- keras::predict_on_batch(model, as.array(plpData[batch,,]))
-        prediction$value[batch] <- pred[,2]
+      
+      if(bayes){
+        prediction$epistemicUncertainty <- 0
+        prediction$aleatoricUncertainty <- 0
+        for(batch in batches){
+          MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
+          for (k in 1:num_MC_samples){
+            MC_samples[k,, ] = predict(model, as.array(plpData[batch,,]))
+            #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+          }
+          pred <- apply(MC_samples[,,output_dim], 2, mean)
+          epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, var)
+          logVar = MC_samples[, , output_dim * 2]
+          if(length(dim(logVar))<=1){
+            aleatoricUncertainty = exp(mean(logVar))
+          }else{
+            aleatoricUncertainty = exp(colMeans(logVar))
+            
+          }
+          prediction$value[batch] <- pred
+          prediction$epistemicUncertainty[batch] = epistemicUncertainty
+          prediction$aleatoricUncertainty[batch] = aleatoricUncertainty
+          #writeLines(paste0(dim(pred[,2]), collapse='-'))
+          #writeLines(paste0(pred[1,2], collapse='-'))
+          
+        }
+        
+      }else{
+        for(batch in batches){
+          pred <- keras::predict_on_batch(model, as.array(plpData[batch,,]))
+          prediction$value[batch] <- pred[,2]
+        }
+        
       }
+      prediction$value[prediction$value>1] <- 1
+      prediction$value[prediction$value<0] <- 0
+      
+      attr(prediction, "metaData") <- list(predictionType = "binary")
+      auc <- computeAuc(prediction)
+      foldPerm <- auc
+      predictionMat <- prediction
       
     }
-    attr(prediction, "metaData") <- list(predictionType = "binary")
-    auc <- computeAuc(prediction)
-    foldPerm <- auc
-    predictionMat <- prediction
-    
+  
   }
-  
-  
   result <- list(model=model,
                  auc=auc,
                  prediction = predictionMat,
@@ -556,7 +718,7 @@ trainCIReNN<-function(plpData, population,
 
 #function for building vae
 buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
-                   vaeEpoch = 100L, vaeEpislonStd = 1.0, ParallelGPU= FALSE, maxGPUs = NULL, temporal = TRUE){
+                   vaeEpoch = 100L, vaeEpislonStd = 1.0, useGPU= FALSE, maxGPUs = NULL, temporal = TRUE){
   if (temporal) dataSample <- data %>% apply(3, as.numeric) else dataSample <- data
   originalDim<-dim(dataSample)[2]
   K <- keras::backend()
@@ -604,7 +766,7 @@ buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatent
     xent_loss + k1_loss
   }
   #Activating parallelisation of GPU in encoder
-  if(ParallelGPU & (maxGPUs>1) ) vae <- keras::multi_gpu_model(vae,gpus = maxGPUs)
+  if(useGPU & (maxGPUs>1) ) vae <- keras::multi_gpu_model(vae,gpus = maxGPUs)
   
   vae %>% keras::compile (optimizer = "rmsprop", loss = vae_loss)
   #if (!is.null(dataValidation)) dataValidation<-list(dataValidation,dataValidation)
@@ -698,27 +860,57 @@ custom_loss <- function(sigma){
 #Create Deep Ensemble Network function
 createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earlyStoppingPatience, earlyStoppingMinDelta,
                                 train_rows=NULL,index=NULL,lr,decay,
-                                units,recurrentDropout,numberOfRNNLayer,layerDropout, ParallelGPU = ParallelGPU, maxGPUs = maxGPUs){
-  ##GRU layer
-  layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
-  
-  if(numberOfRNNLayer==1){
-    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-                                              return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
-      keras::layer_dense(units=2, activation='softmax')
-  } 
-  if(numberOfRNNLayer==2){
-    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-                                              return_sequences=TRUE) %>% 
-      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE)%>% keras::layer_dropout(layerDropout) %>%
-      keras::layer_dense(units=2, activation='softmax')
-  }
-  if(numberOfRNNLayer==3){
-    layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
-                                              return_sequences=TRUE) %>% 
-      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE) %>%
-      keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
-      keras::layer_dense(units=2, activation='softmax')
+                                units,recurrentDropout,numberOfRNNLayer,layerDropout, useGPU = useGPU, maxGPUs = maxGPUs){
+  if(useGPU){
+    ##GRU layer
+    layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
+    
+    if(numberOfRNNLayer==1){
+      layers <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                return_sequences=FALSE) %>% 
+        keras::layer_dropout(layerDropout) %>%
+        keras::layer_dense(units=2, activation='softmax')
+    } 
+    if(numberOfRNNLayer==2){
+      layers <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                return_sequences=TRUE) %>% 
+        keras::layer_dropout(layerDropout) %>%
+        keras::layer_gru(units=units, return_sequences=FALSE) %>% 
+        keras::layer_dropout(layerDropout) %>%
+        keras::layer_dense(units=2, activation='softmax')
+    }
+    if(numberOfRNNLayer==3){
+      layers <- layerInput %>% keras::layer_cudnn_gru(units=units, #time step x number of features
+                                                return_sequences=TRUE) %>% 
+        keras::layer_dropout(layerDropout) %>%
+        keras::layer_cudnn_gru(units=units, return_sequences=TRUE) %>%
+        keras::layer_dropout(layerDropout) %>%
+        keras::layer_cudnn_gru(units=units, return_sequences=FALSE) %>% 
+        keras::layer_dropout(layerDropout) %>%
+        keras::layer_dense(units=2, activation='softmax')
+    }
+  }else{
+    ##GRU layer
+    layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
+    
+    if(numberOfRNNLayer==1){
+      layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                                return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
+        keras::layer_dense(units=2, activation='softmax')
+    } 
+    if(numberOfRNNLayer==2){
+      layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                                return_sequences=TRUE) %>% 
+        keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE)%>% keras::layer_dropout(layerDropout) %>%
+        keras::layer_dense(units=2, activation='softmax')
+    }
+    if(numberOfRNNLayer==3){
+      layers <- layerInput %>% keras::layer_gru(units=units, recurrent_dropout = recurrentDropout, #time step x number of features
+                                                return_sequences=TRUE) %>% 
+        keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=TRUE) %>%
+        keras::layer_gru(units=units, recurrent_dropout = recurrentDropout,return_sequences=FALSE) %>% keras::layer_dropout(layerDropout) %>%
+        keras::layer_dense(units=2, activation='softmax')
+    }
   }
   
   c(mu,sigma) %<-% layer_custom(layers, 2, name = 'main_output')
@@ -728,7 +920,7 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earl
   earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=earlyStoppingPatience,
                                                mode="auto",min_delta = earlyStoppingMinDelta)
   #Currently using Parallel GPU makes errors in Deep Ensemble
-  #if(ParallelGPU & (maxGPUs>1) ) model <- keras::multi_gpu_model(model,gpus = maxGPUs) 
+  #if(useGPU & (maxGPUs>1) ) model <- keras::multi_gpu_model(model,gpus = maxGPUs) 
   
   model %>% keras::compile(
     loss = custom_loss(sigma),
@@ -781,10 +973,11 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earl
     history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
                                               steps_per_epoch = nrow(population[-val_rows,])/batchSize,
                                               epochs=epochs,
-                                              validation_data=list(as.array(data[val_rows,,]), 
+                                              validation_data=list(as.array(data[val_rows,,]),
                                                                    population$y[val_rows,]),
                                               callbacks=list(earlyStopping),
                                               view_metrics=F)
+
   }
   #ParallelLogger::logInfo('right before get_intermediate')
   layer_name = 'main_output'
@@ -792,4 +985,118 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earl
                                        outputs=model$get_layer(layer_name)$output)
   #ParallelLogger::logInfo('right after get_intermediate')
   return(get_intermediate)
+}
+
+#Custom layer for Bayesian Drop Out Layer
+ConcreteDropout <- R6::R6Class("ConcreteDropout",
+                               
+                               inherit = keras::KerasWrapper,
+                               
+                               public = list(
+                                 weight_regularizer = NULL,
+                                 dropout_regularizer = NULL,
+                                 init_min = NULL,
+                                 init_max = NULL,
+                                 is_mc_dropout = NULL,
+                                 supports_masking = TRUE,
+                                 p_logit = NULL,
+                                 p = NULL,
+                                 
+                                 initialize = function(weight_regularizer,
+                                                       dropout_regularizer,
+                                                       init_min,
+                                                       init_max,
+                                                       is_mc_dropout) {
+                                   self$weight_regularizer <- weight_regularizer
+                                   self$dropout_regularizer <- dropout_regularizer
+                                   self$is_mc_dropout <- is_mc_dropout
+                                   self$init_min <- keras::k_log(init_min) - keras::k_log(1 - init_min)
+                                   self$init_max <- keras::k_log(init_max) - keras::k_log(1 - init_max)
+                                 },
+                                 
+                                 build = function(input_shape) {
+                                   super$build(input_shape)
+                                   
+                                   self$p_logit <- super$add_weight(
+                                     name = "p_logit",
+                                     shape = keras::shape(1),
+                                     initializer = keras::initializer_random_uniform(self$init_min, self$init_max),
+                                     trainable = TRUE
+                                   )
+                                   
+                                   self$p <- keras::k_sigmoid(self$p_logit)
+                                   
+                                   input_dim <- input_shape[[2]]
+                                   
+                                   weight <- private$py_wrapper$layer$kernel
+                                   
+                                   kernel_regularizer <- self$weight_regularizer * 
+                                     keras::k_sum(keras::k_square(weight)) / 
+                                     (1 - self$p)
+                                   
+                                   dropout_regularizer <- self$p * keras::k_log(self$p)
+                                   dropout_regularizer <- dropout_regularizer +  
+                                     (1 - self$p) * keras::k_log(1 - self$p)
+                                   dropout_regularizer <- dropout_regularizer * 
+                                     self$dropout_regularizer * 
+                                     keras::k_cast(input_dim, keras::k_floatx())
+                                   
+                                   regularizer <- keras::k_sum(kernel_regularizer + dropout_regularizer)
+                                   super$add_loss(regularizer)
+                                 },
+                                 
+                                 concrete_dropout = function(x) {
+                                   eps <- keras::k_cast_to_floatx(keras::k_epsilon())
+                                   temp <- 0.1
+                                   
+                                   unif_noise <- keras::k_random_uniform(shape = keras::k_shape(x))
+                                   
+                                   drop_prob <- keras::k_log(self$p + eps) - 
+                                     keras::k_log(1 - self$p + eps) + 
+                                     keras::k_log(unif_noise + eps) - 
+                                     keras::k_log(1 - unif_noise + eps)
+                                   drop_prob <- keras::k_sigmoid(drop_prob / temp)
+                                   
+                                   random_tensor <- 1 - drop_prob
+                                   
+                                   retain_prob <- 1 - self$p
+                                   x <- x * random_tensor
+                                   x <- x / retain_prob
+                                   x
+                                 },
+                                 
+                                 call = function(x, mask = NULL, training = NULL) {
+                                   if (self$is_mc_dropout) {
+                                     super$call(self$concrete_dropout(x))
+                                   } else {
+                                     k_in_train_phase(
+                                       function()
+                                         super$call(self$concrete_dropout(x)),
+                                       super$call(x),
+                                       training = training
+                                     )
+                                   }
+                                 }
+                               )
+)
+#define layer wrapper for Bayesian Drop-out layer
+layer_concrete_dropout <- function(object, 
+                                   layer,
+                                   weight_regularizer = 1e-6,
+                                   dropout_regularizer = 1e-5,
+                                   init_min = 0.1,
+                                   init_max = 0.1,
+                                   is_mc_dropout = TRUE,
+                                   name = NULL,
+                                   trainable = TRUE) {
+  keras::create_wrapper(ConcreteDropout, object, list(
+    layer = layer,
+    weight_regularizer = weight_regularizer,
+    dropout_regularizer = dropout_regularizer,
+    init_min = init_min,
+    init_max = init_max,
+    is_mc_dropout = is_mc_dropout,
+    name = name,
+    trainable = trainable
+  ))
 }
