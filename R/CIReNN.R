@@ -31,7 +31,7 @@
 #' @param layerDropout      The layer dropout rate (regularisation)
 #' @param lr                 Learning rate
 #' @param decay              Learning rate decay over each update.
-#' @param outcomeWeight      The weight of the outcome class in the loss function
+#' @param outcomeWeight      The weight of the outcome class in the loss function. Default is 0, which will be replaced by balanced weight. 
 #' @param batchSize          The number of data points to use per training batch
 #' @param epochs          Number of times to iterate over dataset
 #' @param earlyStoppingMinDelta         minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.
@@ -56,7 +56,7 @@
 #' }
 #' @export
 setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
-                      lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(1.0), batchSize = c(100), 
+                      lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(0), batchSize = c(100), 
                       epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
                       bayes = T, useDeepEnsemble = F, numberOfEnsembleNetwork = 3, 
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
@@ -116,7 +116,7 @@ setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c
   result <- list(model='fitCIReNN', param=split(expand.grid(
     numberOfRNNLayer=numberOfRNNLayer,units=units, recurrentDropout=recurrentDropout, 
     layerDropout=layerDropout,
-    lr =lr, decay=decay, outcomeWeight=outcomeWeight,epochs= epochs,
+    lr =lr, decay=decay, outcomeWeight=outcomeWeight, epochs= epochs,
     earlyStoppingMinDelta = earlyStoppingMinDelta, earlyStoppingPatience = earlyStoppingPatience,
     bayes= bayes, useDeepEnsemble = useDeepEnsemble,numberOfEnsembleNetwork = numberOfEnsembleNetwork,
     useVae= useVae,vaeDataSamplingProportion = vaeDataSamplingProportion, vaeValidationSplit= vaeValidationSplit, 
@@ -246,7 +246,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
 
 trainCIReNN<-function(plpData, population,
                       numberOfRNNLayer=1,units=128, recurrentDropout=0.2, layerDropout=0.2,
-                      lr =1e-4, decay=1e-5, outcomeWeight = 1.0, batchSize = 100, 
+                      lr =1e-4, decay=1e-5, outcomeWeight = 0, batchSize = 100, 
                       epochs= 100, earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
                       bayes = T, useDeepEnsemble = F,numberOfEnsembleNetwork =3,
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
@@ -255,6 +255,7 @@ trainCIReNN<-function(plpData, population,
                       seed=NULL, train=TRUE){
   output_dim = 2 #output dimension for outcomes
   num_MC_samples = 100 #sample number for MC sampling in Bayesian Deep Learning Prediction
+  if(outcomeWeight == 0) outcomeWeight = round(sum(population$outcomeCount==0)/sum(population$outcomeCount>=1),1) #if outcome weight = 0, then it means balanced weight
   #heteroscedatic loss function
   heteroscedastic_loss = function(y_true, y_pred) {
     mean = y_pred[, 1:output_dim]
