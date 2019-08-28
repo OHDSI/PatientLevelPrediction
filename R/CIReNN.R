@@ -38,6 +38,9 @@
 #' @param earlyStoppingPatience         Number of epochs with no improvement after which training will be stopped.
 #' @param useDeepEnsemble               logical (either TRUE or FALSE) value for using Deep Ensemble
 #' @param numberOfEnsembleNetwork       Integer, Number of Ensemble. If you want to use Deep Ensemble, this number should be greater than 1. 
+#' @param bayes                         logical (either TRUE or FALSE) value for using Bayesian Drop Out Layer to measure uncertainty. If it is TRUE, both Epistemic and Aleatoric uncertainty will be measured through Bayesian Drop Out layer
+#' @param useDeepEnsemble               logical (either TRUE or FALSE) value for using Deep Ensemble (Lakshminarayanan et al., 2017) to measure uncertainty. It cannot be used together with Bayesian deep learing. 
+#' @param numberOfEnsembleNetwork       Integer. Number of network used for Deep Ensemble (Lakshminarayanan et al recommended 5).
 #' @param useVae                        logical (either TRUE or FALSE) value for using Variational AutoEncoder before RNN
 #' @param vaeDataSamplingProportion     Data sampling proportion for VAE
 #' @param vaeValidationSplit            Validation split proportion for VAE
@@ -46,8 +49,8 @@
 #' @param vaeIntermediateDim            Number of intermediate dimesion for VAE
 #' @param vaeEpoch                      Number of times to interate over dataset for VAE
 #' @param vaeEpislonStd                 Epsilon
-#' @param useGPU                   If you have GPUs in your machine, and want to use multiple GPU for deep learning, set this value as TRUE
-#' @param maxGPUs                    How many GPUs will be used for deep learning? GPU parallelisation for deep learning will be activated only when parallel vae is true. Integer >= 2 or list of integers, number of GPUs or list of GPU IDs on which to create model replicas.
+#' @param useGPU                        logical (either TRUE or FALSE) value. If you have GPUs in your machine, and want to use multiple GPU for deep learning, set this value as TRUE
+#' @param maxGPUs                       Integer, If you will use GPU, how many GPUs will be used for deep learning in VAE? GPU parallelisation for deep learning will be activated only when parallel vae is true. Integer >= 2 or list of integers, number of GPUs or list of GPU IDs on which to create model replicas.
 #' @param seed            Random seed used by deep learning model
 #' @importFrom zeallot %<-%
 #' @examples
@@ -58,7 +61,7 @@
 setCIReNN <- function(numberOfRNNLayer=c(1),units=c(128, 64), recurrentDropout=c(0.2), layerDropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcomeWeight = c(0), batchSize = c(100), 
                       epochs= c(100), earlyStoppingMinDelta = c(1e-4), earlyStoppingPatience = c(10), 
-                      bayes = T, useDeepEnsemble = F, numberOfEnsembleNetwork = 3, 
+                      bayes = T, useDeepEnsemble = F, numberOfEnsembleNetwork = 5, 
                       useVae = T, vaeDataSamplingProportion = 0.1,vaeValidationSplit= 0.2, 
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
                       vaeEpoch = 100L, vaeEpislonStd = 1.0, useGPU = FALSE, maxGPUs = 2,
