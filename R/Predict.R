@@ -361,6 +361,98 @@ predict.deep <- function(plpModel, population, plpData,   ...){
   }
 }
 
+predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
+  temporal <- !is.null(plpData$timeRef)
+  ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
+  if(temporal){
+    ParallelLogger::logTrace('temporal')
+    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
+    
+    data <-result$data[population$rowId,,]
+    if(!is.null(plpModel$useVae)){
+      if(plpModel$useVae==TRUE){
+        data<- plyr::aaply(as.array(data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
+        data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
+      }}
+    
+    batch_size <- min(2000, length(population$rowId))
+    maxVal <- length(population$rowId)
+    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+    prediction <- population
+    prediction$value <- 0
+    prediction$epistemicUncertainty <- 0
+    prediction$aleatoricUncertainty <- 0
+    for(batch in batches){
+      num_MC_samples = 100
+      output_dim = 2
+      pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,,]))
+      MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
+      for (k in 1:num_MC_samples){
+        MC_samples[k,, ] = predict(plpModel$model, as.array(data[batch,,]))
+        #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+      }
+      pred <- apply(MC_samples[,,output_dim], 2, mean)
+      epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, var)
+      logVar = MC_samples[, , output_dim * 2]
+      if(length(dim(logVar))<=1){
+        aleatoricUncertainty = exp(mean(logVar))
+      }else{
+        aleatoricUncertainty = exp(colMeans(logVar))
+        
+      }
+      prediction$value[batch] <- pred
+      prediction$epistemicUncertainty[batch] = epistemicUncertainty
+      prediction$aleatoricUncertainty[batch] = aleatoricUncertainty
+      #writeLines(paste0(dim(pred[,2]), collapse='-'))
+      #writeLines(paste0(pred[1,2], collapse='-'))
+      
+    }
+    prediction$value[prediction$value>1] <- 1
+    prediction$value[prediction$value<0] <- 0
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value',
+                                                        'epistemicUncertainty', 'aleatoricUncertainty')] # need to fix no index issue
+    return(prediction)
+  } else{
+    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
+    data <-result$data[population$rowId,]
+    
+    batch_size <- min(2000, length(population$rowId))
+    maxVal <- length(population$rowId)
+    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
+    prediction <- population
+    prediction$value <- 0
+    for(batch in batches){
+      num_MC_samples = 100
+      output_dim =2
+      MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
+      for (k in 1:num_MC_samples){
+        MC_samples[k,, ] = predict(plpModel$model, as.array(data[batch,,]))
+        #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+      }
+      pred <- apply(MC_samples[,,output_dim], 2, mean)
+      epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, var)
+      logVar = MC_samples[, , output_dim * 2]
+      if(length(dim(logVar))<=1){
+        aleatoricUncertainty = exp(mean(logVar))
+      }else{
+        aleatoricUncertainty = exp(colMeans(logVar))
+        
+      }
+      prediction$value[batch] <- pred
+      prediction$epistemicUncertainty[batch] = epistemicUncertainty
+      prediction$aleatoricUncertainty[batch] = aleatoricUncertainty
+      #writeLines(paste0(dim(pred[,2]), collapse='-'))
+      #writeLines(paste0(pred[1,2], collapse='-'))
+    }
+    prediction$value[prediction$value>1] <- 1
+    prediction$value[prediction$value<0] <- 0
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value',
+                                                        'epistemicUncertainty', 'aleatoricUncertainty')] # need to fix no index issue
+    return(prediction)
+    
+  }
+}
+
 predict.deepEnsemble <- function(plpModel, population, plpData,   ...){
   temporal <- !is.null(plpData$timeRef)
   ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))

@@ -6,13 +6,14 @@
 \usage{
 setCIReNN(numberOfRNNLayer = c(1), units = c(128, 64),
   recurrentDropout = c(0.2), layerDropout = c(0.2), lr = c(1e-04),
-  decay = c(1e-05), outcomeWeight = c(1), batchSize = c(100),
+  decay = c(1e-05), outcomeWeight = c(0), batchSize = c(100),
   epochs = c(100), earlyStoppingMinDelta = c(1e-04),
-  earlyStoppingPatience = c(10), useDeepEnsemble = F,
-  numberOfEnsembleNetwork = 3, useVae = T,
+  earlyStoppingPatience = c(10), bayes = T, useDeepEnsemble = F,
+  numberOfEnsembleNetwork = 5, useVae = T,
   vaeDataSamplingProportion = 0.1, vaeValidationSplit = 0.2,
   vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L,
-  vaeEpoch = 100L, vaeEpislonStd = 1, seed = NULL)
+  vaeEpoch = 100L, vaeEpislonStd = 1, useGPU = FALSE, maxGPUs = 2,
+  seed = 1234)
 }
 \arguments{
 \item{numberOfRNNLayer}{The number of RNN layer, only 1, 2, or 3 layers available now. eg. 1, c(1,2), c(1,2,3)}
@@ -27,7 +28,7 @@ setCIReNN(numberOfRNNLayer = c(1), units = c(128, 64),
 
 \item{decay}{Learning rate decay over each update.}
 
-\item{outcomeWeight}{The weight of the outcome class in the loss function}
+\item{outcomeWeight}{The weight of the outcome class in the loss function. Default is 0, which will be replaced by balanced weight.}
 
 \item{batchSize}{The number of data points to use per training batch}
 
@@ -36,6 +37,8 @@ setCIReNN(numberOfRNNLayer = c(1), units = c(128, 64),
 \item{earlyStoppingMinDelta}{minimum change in the monitored quantity to qualify as an improvement for early stopping, i.e. an absolute change of less than min_delta in loss of validation data, will count as no improvement.}
 
 \item{earlyStoppingPatience}{Number of epochs with no improvement after which training will be stopped.}
+
+\item{bayes}{logical (either TRUE or FALSE) value for using Bayesian Drop Out Layer to measure uncertainty. If it is TRUE, both Epistemic and Aleatoric uncertainty will be measured through Bayesian Drop Out layer}
 
 \item{useDeepEnsemble}{logical (either TRUE or FALSE) value for using Deep Ensemble}
 
@@ -57,7 +60,15 @@ setCIReNN(numberOfRNNLayer = c(1), units = c(128, 64),
 
 \item{vaeEpislonStd}{Epsilon}
 
+\item{useGPU}{logical (either TRUE or FALSE) value. If you have GPUs in your machine, and want to use multiple GPU for deep learning, set this value as TRUE}
+
+\item{maxGPUs}{Integer, If you will use GPU, how many GPUs will be used for deep learning in VAE? GPU parallelisation for deep learning will be activated only when parallel vae is true. Integer >= 2 or list of integers, number of GPUs or list of GPU IDs on which to create model replicas.}
+
 \item{seed}{Random seed used by deep learning model}
+
+\item{useDeepEnsemble}{logical (either TRUE or FALSE) value for using Deep Ensemble (Lakshminarayanan et al., 2017) to measure uncertainty. It cannot be used together with Bayesian deep learing.}
+
+\item{numberOfEnsembleNetwork}{Integer. Number of network used for Deep Ensemble (Lakshminarayanan et al recommended 5).}
 }
 \description{
 Create setting for CIReNN model
