@@ -58,7 +58,7 @@ personSplitter <- function(population, test=0.3, train=NULL, nfold=3, seed=NULL)
         stop('train + test must be less than 1')
     }
     
-    leftover <- 1 - train - test
+    leftover <- max(c(0, 1 - train - test))
     
     
     if (length(table(population$outcomeCount)) <= 1 | sum(population$outcomeCount > 0) < 10) {
@@ -85,7 +85,7 @@ personSplitter <- function(population, test=0.3, train=NULL, nfold=3, seed=NULL)
     
     # Record the number of samples in each split
     num_test <- floor(test*nrow(subject_df))
-    num_leftover <- floor(leftover*nrow(subject_df))
+    num_leftover <- max(c(0, floor(leftover*nrow(subject_df))))
     num_train <- nrow(subject_df) - num_test - num_leftover
     
     # Get the subjects in the test set
