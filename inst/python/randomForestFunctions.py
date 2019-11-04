@@ -26,7 +26,7 @@ def train_rf(population, plpData, ntrees, max_depth, mtry, included, seed, quiet
     print("Training Random Forest with: mtry: %s - max_depth: %s - ntrees: %s " %(mtry, max_depth, ntrees))
   y = population[:,1]
   X = plpData[population[:,0].astype(int),:]
-  X = X[:,included.flatten()]
+  X = X[:,included.flatten().astype(int)]
   if (mtry==-1):
     mtry =int(np.round(np.sqrt(X.shape[1])))
   if quiet==False:
