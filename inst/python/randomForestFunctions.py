@@ -25,7 +25,7 @@ def train_rf(population, plpData, ntrees, max_depth, mtry, included, seed, quiet
   if quiet==False: 
     print("Training Random Forest with: mtry: %s - max_depth: %s - ntrees: %s " %(mtry, max_depth, ntrees))
   y = population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   X = X[:,included.flatten()]
   if (mtry==-1):
     mtry =int(np.round(np.sqrt(X.shape[1])))
@@ -78,7 +78,7 @@ def final_rf(population, plpData, ntrees, max_depth, mtry, included, modelOutput
   if quiet==False:
     print("Training final model with best investigated hyper-parameters..." )
   y = population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   X = X[:,included.flatten()]
   trainInd =population[:,population.shape[1]-1] >0
   train_x = X[trainInd,:]
@@ -114,7 +114,7 @@ def rf_var_imp(population, plpData, quiet='False'):
   ntrees = 2000
   max_depth = 17
   y = population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
   
   trainInd =population[:,population.shape[1]-1] >0

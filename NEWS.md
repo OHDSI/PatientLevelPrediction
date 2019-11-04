@@ -1,3 +1,9 @@
+PatientLevelPrediction 3.0.7
+======================
+Changes:
+- Updated splitting functions to include a splitby subject and renamed personSplitter to randomSplitter
+- Cast indices to integer in python functions to fix bug with non integer sparse matrix indices
+
 PatientLevelPrediction 3.0.5
 ======================
 

@@ -5,7 +5,7 @@
 \title{runPlp - Train and evaluate the model}
 \usage{
 runPlp(population, plpData, minCovariateFraction = 0.001, normalizeData = T,
-  modelSettings, testSplit = "time", testFraction = 0.25,
+  modelSettings, testSplit = "stratified", testFraction = 0.25,
   trainFraction = NULL, splitSeed = NULL, nfold = 3, indexes = NULL,
   saveDirectory = NULL, savePlpData = T, savePlpResult = T,
   savePlpPlots = T, saveEvaluation = T, verbosity = "INFO",
@@ -36,10 +36,11 @@ data extracted from the CDM.}
 
 }}
 
-\item{testSplit}{Either 'person' or 'time' specifying the type of evaluation used.
+\item{testSplit}{Either 'stratified', 'subject' or 'time' specifying the type of evaluation used.
 'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
-'person' splits the data into test (1-testFraction of the data) and
-train (validationFraction of the data) sets.  The split is stratified by the class label.}
+'stratified' splits the data into test (1-testFraction of the data) and
+train (validationFraction of the data) sets.  The split is stratified by the class label. 'subject' split is useful
+when a subject is in the data multiple times and you want all rows for the same subject in either the test or the train set but not in both.}
 
 \item{testFraction}{The fraction of the data to be used as the test set in the patient
 split evaluation.}

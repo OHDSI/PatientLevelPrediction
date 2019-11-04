@@ -50,10 +50,11 @@
 #'                                         \item{setKNN()}{ A KNN model}
 #'                                         
 #'                                         }
-#' @param testSplit                        Either 'person' or 'time' specifying the type of evaluation used.
+#' @param testSplit                        Either 'stratified', 'subject' or 'time' specifying the type of evaluation used.
 #'                                         'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
-#'                                         'person' splits the data into test (1-testFraction of the data) and
-#'                                         train (validationFraction of the data) sets.  The split is stratified by the class label.
+#'                                         'stratified' splits the data into test (1-testFraction of the data) and
+#'                                         train (validationFraction of the data) sets.  The split is stratified by the class label. 'subject' split is useful
+#'                                         when a subject is in the data multiple times and you want all rows for the same subject in either the test or the train set but not in both.
 #' @param testFraction                     The fraction of the data to be used as the test set in the patient
 #'                                         split evaluation.
 #' @param trainFraction                    A real number between 0 and 1 indicating the train set fraction of the data.
@@ -142,7 +143,7 @@
 #' } 
 runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalizeData=T,
                    modelSettings,
-                   testSplit = 'time', testFraction=0.25, trainFraction = NULL, splitSeed=NULL, nfold=3, indexes=NULL,
+                   testSplit = 'stratified', testFraction=0.25, trainFraction = NULL, splitSeed=NULL, nfold=3, indexes=NULL,
                    saveDirectory=NULL, savePlpData=T,
                    savePlpResult=T, savePlpPlots = T, saveEvaluation = T,
                    verbosity="INFO", timeStamp=FALSE, analysisId=NULL, 
@@ -210,7 +211,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   # check parameters
   ParallelLogger::logTrace('Parameter Check Started')
   ParallelLogger::logDebug(paste0('testSplit: ', testSplit))
-  checkInStringVector(testSplit, c('person','time'))
+  checkInStringVector(testSplit, c('person','time', 'stratified','subject'))
   ParallelLogger::logDebug(paste0('outcomeCount: ', sum(population[,'outcomeCount']>0)))
   checkHigherEqual(sum(population[,'outcomeCount']>0), 25)
   ParallelLogger::logDebug(paste0('plpData class: ', class(plpData)))
@@ -232,13 +233,31 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
   # construct the settings for the model pipeline
   if(is.null(indexes)){
+    if(testSplit=='stratified'){
+      ParallelLogger::logTrace('Dataset stratified split started')
+      if(is.null(splitSeed)){ #keep record of splitSeed
+        splitSeed <- sample(20000000,1)-10000000
+        ParallelLogger::logInfo(paste0('splitSeed: ', splitSeed))
+      } 
+      indexes <-tryCatch(randomSplitter(population, test=testFraction, train = trainFraction, nfold=nfold, seed=splitSeed),
+                         finally=ParallelLogger::logTrace('Done.'))
+    }
+    if(testSplit=='subject'){
+      ParallelLogger::logTrace('Dataset subject split started')
+      if(is.null(splitSeed)){ #keep record of splitSeed
+        splitSeed <- sample(20000000,1)-10000000
+        ParallelLogger::logInfo(paste0('splitSeed: ', splitSeed))
+      } 
+      indexes <-tryCatch(subjectSplitter(population, test=testFraction, train = trainFraction, nfold=nfold, seed=splitSeed),
+                         finally=ParallelLogger::logTrace('Done.'))
+    }
     if(testSplit=='time'){
-      ParallelLogger::logTrace('Dataset time split starter')
+      ParallelLogger::logTrace('Dataset time split started')
       indexes <-tryCatch(timeSplitter(population, test=testFraction, train = trainFraction, nfold=nfold),
                          finally=ParallelLogger::logTrace('Done.'))
     }
     if(testSplit=='person'){
-      ParallelLogger::logTrace('Dataset person split starter')
+      ParallelLogger::logTrace('Dataset person split started')
       if(is.null(splitSeed)){ #keep record of splitSeed
         splitSeed <- sample(20000000,1)-10000000
         ParallelLogger::logInfo(paste0('splitSeed: ', splitSeed))

@@ -26,7 +26,7 @@ from sklearn.feature_selection import chi2
 def train_naive_bayes(population, plpData, modelOutput, variableNumber, quiet):
   print("Training Naive Bayes model " )
   y = population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
   print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))
   ###########################################################################

@@ -72,7 +72,7 @@ def python_predict(population, plpData, model_loc, dense, autoencoder):
   print("Loading Data...")
   # load data + train,test indexes + validation index
   y=population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
   print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))
@@ -103,7 +103,7 @@ def python_predict_survival(population, plpData, model_loc):
   print("Applying Python Model") 
   print("Loading Data...")
   # load data + train,test indexes + validation index
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
   print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))
@@ -129,7 +129,7 @@ def python_predict_garden(population, plpData, model_loc,quantile=None):
   print("Loading Data...")
   # load data + train,test indexes + validation index
   y=population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
   print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))

@@ -25,7 +25,7 @@ def sagemaker_predict(population, plpData, bucket, prefix, container, role_arn, 
   ###########################################################################
   print("Loading Data...")
   # load data + train,test indexes + validation index
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))

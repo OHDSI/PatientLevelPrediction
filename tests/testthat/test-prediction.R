@@ -41,7 +41,7 @@ population <- createStudyPopulation(plpData,
                                     #,verbosity=INFO
 )
 
-index <- PatientLevelPrediction::personSplitter(population, test=0.2, seed=1)
+index <- PatientLevelPrediction::randomSplitter(population, test=0.2, seed=1)
 population <- merge(population, index)
 colnames(population)[colnames(population)=='index'] <- 'indexes'
 

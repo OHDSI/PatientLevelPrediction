@@ -24,7 +24,7 @@ from sklearn.externals import joblib
 def train_mlp(population, plpData, alpha, size, seed, quiet, modelOutput, train):
   print("Training Neural Network model " )
   y = population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   trainInds =population[:,population.shape[1]-1] >0
   
   print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))

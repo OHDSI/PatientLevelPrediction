@@ -24,7 +24,7 @@ from sklearn.externals import joblib
 def train_adaboost(population, plpData, train, n_estimators, learning_rate, modelOutput, seed, quiet):
   print("Training AdaBoost model " )
   y = population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   trainInds =population[:,population.shape[1]-1] >0
   print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))

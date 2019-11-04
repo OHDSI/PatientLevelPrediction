@@ -28,7 +28,7 @@ def train_decision_tree(population, train, plpData, plot, max_depth, min_samples
   if quiet==False:
     print("Training Decision Tree model " )
   y = population[:,1]
-  X = plpData[population[:,0],:]
+  X = plpData[population[:,0].astype(int),:]
   trainInds =population[:,population.shape[1]-1] >0
   if quiet==False:
     print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))
