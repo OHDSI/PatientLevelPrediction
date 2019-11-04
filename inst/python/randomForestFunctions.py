@@ -79,7 +79,7 @@ def final_rf(population, plpData, ntrees, max_depth, mtry, included, modelOutput
     print("Training final model with best investigated hyper-parameters..." )
   y = population[:,1]
   X = plpData[population[:,0].astype(int),:]
-  X = X[:,included.flatten()]
+  X = X[:,included.flatten().astype(int)]
   trainInd =population[:,population.shape[1]-1] >0
   train_x = X[trainInd,:]
   train_y = y[trainInd]
