@@ -27,120 +27,135 @@
 #include "Auc.h"
 
 namespace ohdsi {
-	namespace patientLevelPrediction {
+namespace patientLevelPrediction {
 
-		double Auc::mannWhitneyKernel(const double &x, const double &y) {
-			if (y < x) {
-				return 1;
-			}
-			if (y == x) {
-				return 0.5;
-			}
-			return -0;
-		}
+double Auc::mannWhitneyKernel(const double &x, const double &y) {
+  if (y < x) {
+    return 1;
+  }
+  if (y == x) {
+    return 0.5;
+  }
+  return -0;
+}
 
-		double Auc::auc(const std::vector<double> &propensityScores, const std::vector<int> &treatment) {
-			unsigned int m = 0;
-			for (unsigned int i = 0; i < treatment.size(); i++) {
-				if (treatment.at(i) == 1) {
-					m++;
-				}
-			}
-			unsigned int n = treatment.size() - m;
-      std::vector<double> cases(m);
-			std::vector<double> controls(n);
-			m = 0;
-			n = 0;
-			for (unsigned int i = 0; i < treatment.size(); i++) {
-				if (treatment.at(i) == 1) {
-					cases[m++] = propensityScores.at(i);
-				} else {
-					controls[n++] = propensityScores.at(i);
-				}
-			}
-			double mean = 0;
-			for (unsigned int i = 0; i < m; i++) {
-        double localMean = 0;
-				for (unsigned int j = 0; j < n; j++) {
-					double mw = mannWhitneyKernel(cases.at(i), controls.at(j));
-					localMean += mw;
-				}
-        mean += localMean / n;
-			}
-			mean /= m;
-			return mean;
-		}
+double Auc::auc(const std::vector<double> &propensityScores, const std::vector<int> &treatment) {
+  unsigned long int m = 0;
+  for (unsigned long int i = 0; i < treatment.size(); i++) {
+    if (treatment.at(i) == 1) {
+      m++;
+    }
+  }
+  unsigned long int n = treatment.size() - m;
+  double *cases;
+  double *controls;
+  cases = new double[m];
+  controls = new double[n];
+  m = 0;
+  n = 0;
+  for (unsigned long int i = 0; i < treatment.size(); i++) {
+    if (treatment.at(i) == 1) {
+      cases[m++] = propensityScores.at(i);
+    } else {
+      controls[n++] = propensityScores.at(i);
+    }
+  }
+  double mean = 0;
+  for (unsigned long int i = 0; i < m; i++) {
+    double localMean = 0;
+    for (unsigned long int j = 0; j < n; j++) {
+      double mw = mannWhitneyKernel(cases[i], controls[j]);
+      localMean += mw;
+    }
+    mean += localMean / n;
+  }
+  mean /= m;
+  delete[] cases;
+  delete[] controls;
+  return mean;
+}
 
-		std::vector<double> Auc::aucWithCi(const std::vector<double> &propensityScores, const std::vector<int> &treatment) {
-			unsigned int m = 0;
-			for (unsigned int i = 0; i < treatment.size(); i++) {
-				if (treatment.at(i) == 1) {
-					m++;
-				}
-			}
-			unsigned int n = treatment.size() - m;
-			std::vector<double> cases(m);
-			std::vector<double> controls(n);
-			m = 0;
-			n = 0;
-			for (unsigned int i = 0; i < treatment.size(); i++) {
-				if (treatment.at(i) == 1) {
-					cases[m++] = propensityScores.at(i);
-				} else {
-					controls[n++] = propensityScores.at(i);
-				}
-			}
-
-      double mean = 0;
-			for (unsigned int i = 0; i < m; i++) {
-        double localMean = 0;
-				for (unsigned int j = 0; j < n; j++) {
-					double mw = mannWhitneyKernel(cases.at(i), controls.at(j));
-					localMean += mw;
-				}
-        mean += localMean / n;
-			}
-			mean /= m;
-			double vr10[m];
-			for (unsigned int i = 0; i < m; i++) {
-				double sum = 0;
-				for (unsigned int j = 0; j < n; j++) {
-          sum += mannWhitneyKernel(cases.at(i), controls.at(j));
-				}
-				vr10[i] = sum / n;
-			}
-      
-			double vr01[n];
-			for (unsigned int i = 0; i < n; i++) {
-				double sum = 0;
-				for (unsigned int j = 0; j < m; j++) {
-          sum += mannWhitneyKernel(cases.at(j), controls.at(i));
-				}
-					
-				vr01[i] = sum / m;
-			}
-
-      double s10 = 0;
-			for (unsigned int i = 0; i < m; i++) {
-				s10 += (vr10[i] - mean) * (vr10[i] - mean);
-			}
-			s10 /= (double) (m - 1);
-
-			double s01 = 0;
-			for (unsigned int i = 0; i < n; i++) {
-				s01 += (vr01[i] - mean) * (vr01[i] - mean);
-			}
-			s01 /= (double) (n - 1);
-
-			double s = s10 / m + s01 / n;
-			double sd = sqrt(s);
-			std::vector<double> ci;
-			ci.push_back(mean);
-			ci.push_back(mean - (1.96 * sd));
-			ci.push_back(mean + (1.96 * sd));
-			return ci;
-		}
-	}
+std::vector<double> Auc::aucWithCi(const std::vector<double> &propensityScores, const std::vector<int> &treatment) {
+  unsigned long int m = 0;
+  unsigned long int n = 0;
+  for (unsigned long int i = 0; i < treatment.size(); i++) {
+    if (treatment.at(i) == 1) {
+      m++;
+    } else {
+      n++;
+    }
+  }
+  double *cases;
+  double *controls;
+  cases = new double[m];
+  controls = new double[n];
+  m = 0;
+  n = 0;
+  for (unsigned long int i = 0; i < treatment.size(); i++) {
+    if (treatment.at(i) == 1) {
+      cases[m++] = propensityScores.at(i);
+    } else {
+      controls[n++] = propensityScores.at(i);
+    }
+  }
+  double mean = 0;
+  for (unsigned long int i = 0; i < m; i++) {
+    double localMean = 0;
+    for (unsigned long int j = 0; j < n; j++) {
+      double mw = mannWhitneyKernel(cases[i], controls[j]);
+      localMean += mw;
+    }
+    mean += localMean / n;
+  }
+  mean /= m;
+  
+  double *vr10;
+  vr10 = new double[m];
+  for (unsigned long int i = 0; i < m; i++) {
+    double sum = 0;
+    for (unsigned long int j = 0; j < n; j++) {
+      sum += mannWhitneyKernel(cases[i], controls[j]);
+    }
+    vr10[i] = sum / n;
+  }
+  
+  double *vr01;
+  vr01 = new double[n];
+  for (unsigned long int i = 0; i < n; i++) {
+    double sum = 0;
+    for (unsigned long int j = 0; j < m; j++) {
+      sum += mannWhitneyKernel(cases[j], controls[i]);
+    }
+    vr01[i] = sum / m;
+  }
+  
+  double s10 = 0;
+  for (unsigned long int i = 0; i < m; i++) {
+    s10 += (vr10[i] - mean) * (vr10[i] - mean);
+  }
+  s10 /= (double) (m - 1);
+  
+  double s01 = 0;
+  for (unsigned long int i = 0; i < n; i++) {
+    s01 += (vr01[i] - mean) * (vr01[i] - mean);
+  }
+  s01 /= (double) (n - 1);
+  
+  double s = s10 / m + s01 / n;
+  double sd = sqrt(s);
+  
+  delete[] cases;
+  delete[] controls;
+  delete[] vr10;
+  delete[] vr01;
+  
+  std::vector<double> ci;
+  ci.push_back(mean);
+  ci.push_back(mean - (1.96 * sd));
+  ci.push_back(mean + (1.96 * sd));
+  return ci;
+}
+}
 }
 
 #endif // __Auc_cpp__
