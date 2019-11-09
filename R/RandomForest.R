@@ -138,7 +138,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     
     # save mapping, missing, indexes
   } else{
-    incRInd <- 1:ncol(covariateRef)
+    incRInd <- 1:nrow(covariateRef) 
   }
   
   # save the model to outLoc

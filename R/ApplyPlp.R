@@ -96,6 +96,10 @@ applyModel <- function(population,
 
   # reformatting the performance 
   analysisId <-   '000000'
+  if(!is.null(plpModel$analysisId)){
+    analysisId <-   plpModel$analysisId
+  }
+  
   nr1 <- length(unlist(performance$evaluationStatistics[-1]))
   performance$evaluationStatistics <- cbind(analysisId= rep(analysisId,nr1),
                                                Eval=rep('validation', nr1),

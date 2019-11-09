@@ -26,14 +26,14 @@
 #' 
 #' @param plpResult                        The object returned by runPlp() containing the trained model
 #' @param connectionDetails                The connection details for extracting the new data 
-#' @param validationSchemaTarget         A string or list of strings specifying the database containing the target cohorts
-#' @param validationSchemaOutcome       A string or list of strings specifying the database containing the outcome cohorts
-#' @param validationSchemaCdm            A string or list of strings specifying the database containing the cdm
-#' @param databaseNames                  A string of lift of strings specifying sharing friendly database names corresponding to validationSchemaCdm
-#' @param validationTableTarget          A string or list of strings specifying the table containing the target cohorts
-#' @param validationTableOutcome        A string or list of strings specifying the table containing the outcome cohorts
-#' @param validationIdTarget             An iteger or list of integers specifying the cohort id for the target cohorts
-#' @param validationIdOutcome           An iteger or list of integers specifying the cohort id for the outcome cohorts
+#' @param validationSchemaTarget         A string or vector of strings specifying the database containing the target cohorts
+#' @param validationSchemaOutcome       A string or vector of strings specifying the database containing the outcome cohorts
+#' @param validationSchemaCdm            A string or vector of strings specifying the database containing the cdm
+#' @param databaseNames                  A string of vector of strings specifying sharing friendly database names corresponding to validationSchemaCdm
+#' @param validationTableTarget          A string or vector of strings specifying the table containing the target cohorts
+#' @param validationTableOutcome        A string or vector of strings specifying the table containing the outcome cohorts
+#' @param validationIdTarget             An iteger specifying the cohort id for the target cohort
+#' @param validationIdOutcome           An iteger specifying the cohort id for the outcome cohort
 #' @param oracleTempSchema                 The temp oracle schema requires read/write 
 #' @param verbosity                        Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 #'                                         \itemize{
@@ -46,6 +46,7 @@
 #'                                         }
 #' @param keepPrediction                   Whether to keep the predicitons for the new data                                         
 #' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
+#' @param outputFolder                     If you want to save the results enter the directory to save here
 #' 
 #' @return
 #' A list containing the performance for each validation_schema 
@@ -61,13 +62,19 @@ externalValidatePlp <- function(plpResult,
                                 validationIdTarget = NULL, validationIdOutcome = NULL,
                                 oracleTempSchema=NULL,#validationSchemaCdm,
                                 verbosity="INFO", keepPrediction=F,
-                                sampleSize = NULL){
+                                sampleSize = NULL,
+                                outputFolder){
   
   # TODO:: ADD LOGGING, MORE INOUT TESTS, ADD TEST CASE IN PACKAGE... 
   if(missing(plpResult))
     stop('Need to input a plpResult')
   if(class(plpResult)!="runPlp")
     stop('Need to input a plpResult of class runPlp')
+  
+  if(!missing(outputFolder)){
+    if(missing(databaseNames)){
+      stop('Need to enter databaseNames if saving results to outputFolder')
+    }}
   
   if(missing(connectionDetails))
     stop('Need to enter connection details')
@@ -79,32 +86,57 @@ externalValidatePlp <- function(plpResult,
   if(missing(validationSchemaCdm))
     stop('Need to enter validationSchemaCdm ')
   
+  # convert the lists to vectors (to keep backwards compat)
   if(class(validationSchemaTarget)=='list'){
-    if(class(validationSchemaOutcome)!='list')
-      stop('If target schema is list outcomes must be list...')
-    if(class(validationSchemaCdm)!='list')
-      stop('If target schema is list cdm must be list...')    
-    
-    if(length(validationSchemaTarget)!=length(validationSchemaOutcome))
-      stop('Length of database schemas not matching...')
-    if(length(validationSchemaTarget)!=length(validationSchemaCdm))
-      stop('Length of database schemas not matching...')
+    validationSchemaTarget <- unlist(validationSchemaTarget)
+  }
+  if(class(validationSchemaOutcome)=='list'){
+    validationSchemaOutcome <- unlist(validationSchemaOutcome)
+  }
+  if(class(validationSchemaCdm )=='list'){
+    validationSchemaCdm  <- unlist(validationSchemaCdm)
+  }
+  if(class(databaseNames)=='list'){
+    databaseNames  <- unlist(databaseNames)
+  }
+  if(class(validationTableTarget)=='list'){
+    validationTableTarget  <- unlist(validationTableTarget)
+  }
+  if(class(validationTableOutcome)=='list'){
+    validationTableOutcome  <- unlist(validationTableOutcome)
+  }
+  if(class(validationIdTarget)=='list'){
+    validationIdTarget  <- unlist(validationIdTarget)
+  }
+  if(class(validationIdOutcome)=='list'){
+    validationIdOutcome  <- unlist(validationIdOutcome)
   }
   
-  if(class(validationSchemaTarget)!=class(validationSchemaOutcome))
+  
+  # check lengths
+  if(length(validationSchemaTarget) != length(validationSchemaOutcome)){
+      stop('validationSchemaTarget and validationSchemaOutcome need to be the same length')
+    }
+  if(length(validationSchemaTarget) != length(validationSchemaCdm)){
+    stop('validationSchemaTarget and validationSchemaCdm need to be the same length')
+  }
+  
+  # check class
+  if(class(validationSchemaTarget)!=class(validationSchemaOutcome)){
     stop('validationSchemaTarget and validationSchemaOutcome not same class')
-  if(class(validationSchemaTarget)!=class(validationSchemaCdm))
+  }
+  if(class(validationSchemaTarget)!=class(validationSchemaCdm)){
     stop('validationSchemaTarget and validationSchemaCdm not same class')
+  }
   
   if(!missing(databaseNames)){
-    if(length(validationSchemaCdm)!=length(databaseNames)){
-      stop('DatabaseNames not same length as validationSchemaCdm')
+    if(length(validationSchemaTarget)!=length(databaseNames)){
+      stop('DatabaseNames not same length as validationSchemaTarget')
     }
   }
   
   
-  # add lots of test for tables and ids :(
-  
+  # add lots of test for tables and ids -  TODO?
   
   if(is.null(validationIdTarget))
     validationIdTarget <- plpResult$inputSetting$populationSettings$cohortId# set the model ids
@@ -125,11 +157,11 @@ externalValidatePlp <- function(plpResult,
       outcomeTable <- validationTableOutcome[i]
     newData <- PatientLevelPrediction::similarPlpData(plpModel= plpResult$model, createCohorts = F, 
                                                       newConnectionDetails = connectionDetails, 
-                                                      newCdmDatabaseSchema = validationSchemaCdm[[i]], 
-                                                      newCohortDatabaseSchema = validationSchemaTarget[[i]], 
+                                                      newCdmDatabaseSchema = validationSchemaCdm[i], 
+                                                      newCohortDatabaseSchema = validationSchemaTarget[i], 
                                                       newCohortTable = targetTable, 
                                                       newCohortId = validationIdTarget, 
-                                                      newOutcomeDatabaseSchema = validationSchemaOutcome[[i]], 
+                                                      newOutcomeDatabaseSchema = validationSchemaOutcome[i], 
                                                       newOutcomeTable = outcomeTable, 
                                                       newOutcomeId = validationIdOutcome, 
                                                       newOracleTempSchema = oracleTempSchema,
@@ -161,17 +193,23 @@ externalValidatePlp <- function(plpResult,
                                     cohortId = validationIdTarget, 
                                     outcomeId = validationIdOutcome,
                                     # added the below
+                                    modelSettings = plpResult$model$modelSettings,
+                                    testSplit = 'NA',
+                                    testFraction = -1,
+                                    nfold = -1, 
+                                    splitSeed = -1,
                                     populationSettings = plpResult$model$populationSettings,
                                     dataExtrractionSettings = list(covariateSettings = plpResult$model$metaData$call$covariateSettings,
-                                                                   newCdmDatabaseSchema = validationSchemaCdm[[i]],
+                                                                   cdmDatabaseSchema = validationSchemaCdm[[i]],
                                                                    databaseNames = niceName[i], #added [i]
-                                                                   newCohortDatabaseSchema = validationSchemaTarget[[i]], 
-                                                                   newCohortTable = targetTable, 
+                                                                   cohortDatabaseSchema = validationSchemaTarget[[i]], 
+                                                                   cohortTable = targetTable, 
                                                                    cohortId = validationIdTarget, 
-                                                                   newOutcomeDatabaseSchema = validationSchemaOutcome[[i]], 
-                                                                   newOutcomeTable = outcomeTable, 
-                                                                   outcomeId = validationIdOutcome,
-                                                                   newOracleTempSchema = oracleTempSchema)
+                                                                   outcomeDatabaseSchema = validationSchemaOutcome[[i]], 
+                                                                   outcomeTable = outcomeTable, 
+                                                                   outcomeIds = validationIdOutcome,
+                                                                   oracleTempSchema = oracleTempSchema,
+                                                                   sampleSize = sampleSize)
                                     )
       
       results[[i]]$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
@@ -207,6 +245,17 @@ externalValidatePlp <- function(plpResult,
                  validation=results)
   
   class(result) <- 'validatePlp'
+  
+  # save results if not missing:
+  if(!missing(outputFolder)){
+    if(!dir.exists(outputFolder)){
+      dir.create(outputFolder)
+    }
+    for(i in 1:length(databaseNames)){
+      }
+    saveRDS(result$validation[[i]], file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId,'validationResult.rds'))
+    }
+  }
   
   # Now return results
   return(result)

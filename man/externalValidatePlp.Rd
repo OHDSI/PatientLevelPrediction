@@ -9,28 +9,28 @@ externalValidatePlp(plpResult, connectionDetails, validationSchemaTarget,
   validationTableTarget = "cohort", validationTableOutcome = "cohort",
   validationIdTarget = NULL, validationIdOutcome = NULL,
   oracleTempSchema = NULL, verbosity = "INFO", keepPrediction = F,
-  sampleSize = NULL)
+  sampleSize = NULL, outputFolder)
 }
 \arguments{
 \item{plpResult}{The object returned by runPlp() containing the trained model}
 
 \item{connectionDetails}{The connection details for extracting the new data}
 
-\item{validationSchemaTarget}{A string or list of strings specifying the database containing the target cohorts}
+\item{validationSchemaTarget}{A string or vector of strings specifying the database containing the target cohorts}
 
-\item{validationSchemaOutcome}{A string or list of strings specifying the database containing the outcome cohorts}
+\item{validationSchemaOutcome}{A string or vector of strings specifying the database containing the outcome cohorts}
 
-\item{validationSchemaCdm}{A string or list of strings specifying the database containing the cdm}
+\item{validationSchemaCdm}{A string or vector of strings specifying the database containing the cdm}
 
-\item{databaseNames}{A string of lift of strings specifying sharing friendly database names corresponding to validationSchemaCdm}
+\item{databaseNames}{A string of vector of strings specifying sharing friendly database names corresponding to validationSchemaCdm}
 
-\item{validationTableTarget}{A string or list of strings specifying the table containing the target cohorts}
+\item{validationTableTarget}{A string or vector of strings specifying the table containing the target cohorts}
 
-\item{validationTableOutcome}{A string or list of strings specifying the table containing the outcome cohorts}
+\item{validationTableOutcome}{A string or vector of strings specifying the table containing the outcome cohorts}
 
-\item{validationIdTarget}{An iteger or list of integers specifying the cohort id for the target cohorts}
+\item{validationIdTarget}{An iteger specifying the cohort id for the target cohort}
 
-\item{validationIdOutcome}{An iteger or list of integers specifying the cohort id for the outcome cohorts}
+\item{validationIdOutcome}{An iteger specifying the cohort id for the outcome cohort}
 
 \item{oracleTempSchema}{The temp oracle schema requires read/write}
 
@@ -47,6 +47,8 @@ externalValidatePlp(plpResult, connectionDetails, validationSchemaTarget,
 \item{keepPrediction}{Whether to keep the predicitons for the new data}
 
 \item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
+
+\item{outputFolder}{If you want to save the results enter the directory to save here}
 }
 \value{
 A list containing the performance for each validation_schema

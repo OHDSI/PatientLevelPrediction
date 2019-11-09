@@ -35,7 +35,7 @@ SELECT ROW_NUMBER() OVER (ORDER BY person_id, cohort_start_date) AS row_id,
 } : {
 	cohort_definition_id,
 }
-	cohort_start_date,
+	cohort_start_date, cohort_end_date,
 	DATEDIFF(DAY, observation_period_start_date, cohort_start_date) AS days_from_obs_start,
 	{@study_end_date != '' } ? { 
 	    CASE 
@@ -73,12 +73,24 @@ FROM (
 	FROM (
 }
 {@cohort_table == 'drug_era' } ? { 
+
+
+{@cdm_version == '6' } ? { 
+	SELECT person_id AS subject_id,
+@cohort_id AS cohort_definition_id,
+		drug_era_start_datetime AS cohort_start_date,
+		drug_era_end_datetime AS cohort_end_date
+	FROM  @cohort_database_schema.@cohort_table exposure_table
+	WHERE drug_concept_id IN (@cohort_id)} : {
 	SELECT person_id AS subject_id,
 @cohort_id AS cohort_definition_id,
 		drug_era_start_date AS cohort_start_date,
 		drug_era_end_date AS cohort_end_date
 	FROM  @cohort_database_schema.@cohort_table exposure_table
 	WHERE drug_concept_id IN (@cohort_id)
+	}
+	
+	
 } : {
 	SELECT subject_id,
 			@cohort_id AS cohort_definition_id,

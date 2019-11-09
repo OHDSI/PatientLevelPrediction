@@ -480,9 +480,16 @@ transferLearning <- function(plpResult,
   }
   
   # convert plpdata to matrix:
+  metaData <- attr(population, 'metaData')
+  if(!is.null(population$indexes))
+    population <- population[population$indexes>0,]
+  attr(population, 'metaData') <- metaData
   
-  
-  history <- model %>% keras::fit_generator(sampling_generator(plpData,population,batchSize,train_rows),
+  result<- toSparseM(plpData,population,map=NULL, temporal=F)
+  data <- result$data
+  population$y <- keras::to_categorical(population$outcomeCount, length(unique(population$outcomeCount)))
+
+  history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
                                             steps_per_epoch = nrow(population)/batchSize,
                                             epochs=epochs,
                                             validation_data=list(as.array(plpData[val_rows,,]),

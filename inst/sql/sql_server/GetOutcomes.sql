@@ -20,7 +20,25 @@ limitations under the License.
 {DEFAULT @cdm_version = '5'}
 
 {@outcome_table == 'condition_era' } ? {
+
+{@cdm_version == '6' } ? {
 SELECT DISTINCT row_id,
+	ancestor_concept_id AS outcome_id,
+	DATEDIFF(DAY, cohort_start_date, condition_era_start_datetime) AS days_to_event
+FROM #cohort_person cohort_person
+INNER JOIN @cdm_database_schema.condition_era
+	ON subject_id = person_id
+INNER JOIN (
+	SELECT descendant_concept_id,
+		ancestor_concept_id
+	FROM @cdm_database_schema.concept_ancestor
+	WHERE ancestor_concept_id IN (@outcome_ids)
+	) concept_ancestor
+	ON condition_concept_id = descendant_concept_id
+WHERE DATEDIFF(DAY, condition_era_start_datetime, cohort_start_date) <= days_from_obs_start
+	AND DATEDIFF(DAY, cohort_start_date, condition_era_start_datetime) <= days_to_obs_end} : {
+	
+	SELECT DISTINCT row_id,
 	ancestor_concept_id AS outcome_id,
 	DATEDIFF(DAY, cohort_start_date, condition_era_start_date) AS days_to_event
 FROM #cohort_person cohort_person
@@ -35,6 +53,11 @@ INNER JOIN (
 	ON condition_concept_id = descendant_concept_id
 WHERE DATEDIFF(DAY, condition_era_start_date, cohort_start_date) <= days_from_obs_start
 	AND DATEDIFF(DAY, cohort_start_date, condition_era_start_date) <= days_to_obs_end
+	
+	}
+	
+	
+	
 } : {
 SELECT DISTINCT row_id,
 {@cdm_version == "4"} ? {	

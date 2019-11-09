@@ -1,3 +1,11 @@
+PatientLevelPrediction 3.0.8
+======================
+Changes:
+- merged in bug fix from Martijn - fixed AUC bug causing crash with big data
+- update SQL code to be compatible with v6.0 OMOP CDM
+- added save option to external validate PLP
+
+
 PatientLevelPrediction 3.0.7
 ======================
 Changes:
