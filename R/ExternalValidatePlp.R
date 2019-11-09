@@ -252,6 +252,8 @@ externalValidatePlp <- function(plpResult,
       dir.create(outputFolder)
     }
     for(i in 1:length(databaseNames)){
+      if(!dir.exists(file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId))){
+        dir.create(file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId))
       }
     saveRDS(result$validation[[i]], file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId,'validationResult.rds'))
     }
