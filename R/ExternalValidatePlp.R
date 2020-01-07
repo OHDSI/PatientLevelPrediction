@@ -461,6 +461,7 @@ evaluateExistingModel <- function(modelTable,
     prediction <- merge(prediction, scoreToProb, by.x = 'covariateValue', by.y = 'score', all.x=T)
     prediction$probability[is.na(prediction$probability)] <- 0 
     prediction <- prediction[, !colnames(prediction%in%c('covariateValue','score') )]
+    colnames(prediction)[colnames(prediction)=='probability'] <- 'value'
   }
   
   recalModel <- NULL
