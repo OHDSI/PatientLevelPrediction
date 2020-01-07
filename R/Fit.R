@@ -202,12 +202,14 @@ createTransform <- function(plpModel){
                     timeRef=ff::clone(plpData $timeRef),
                     metaData=plpData$metaData)
     plpData2$covariates <- limitCovariatesToPopulation(plpData2$covariates, ff::as.ff(population$rowId))
-    plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
-    if(length(plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)>0){
-      idx <- !ffbase::`%in%`(plpData2$covariateRef$covariateId, plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)
-      if(sum(idx)!=0){
-        plpData2$covariateRef <- plpData2$covariateRef[idx, ]
-      } else{warning('All covariateRef removed by deletedInfrequentCovariateIds')}
+    if(!is.null(plpModel$metaData$preprocessSettings)){
+      plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
+      if(length(plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)>0){
+        idx <- !ffbase::`%in%`(plpData2$covariateRef$covariateId, plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)
+        if(sum(idx)!=0){
+          plpData2$covariateRef <- plpData2$covariateRef[idx, ]
+        } else{warning('All covariateRef removed by deletedInfrequentCovariateIds')}
+      }
     }
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData2, 

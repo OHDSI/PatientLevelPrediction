@@ -42,12 +42,12 @@ test_that("calculatePrevs", {
                     outcomeCount = c(rep(0,5), rep(1,5)))
   N <- sample(9,1)
   covariates <- data.frame(rowId = sample(10, N),
-                           covariateId = c(rep(101, N)))
+                           covariateId = as.factor(c(rep(101, N))))
   covariates <- ff::as.ffdf(covariates)
   data <- list(covariates = covariates)
   res <- PatientLevelPrediction:::calculatePrevs(plpData = data, population= pop)
   
-  testthat::expect_equal(res$covariateId, 101)
+  testthat::expect_equal(res$covariateId, '101')
   testthat::expect_equal(res$prev.out, sum(merge(pop, ff::as.ram(covariates), by='rowId')[,2]==1)/5)
   testthat::expect_equal(res$prev.noout, sum(merge(pop, ff::as.ram(covariates), by='rowId')[,2]==0)/5)
   

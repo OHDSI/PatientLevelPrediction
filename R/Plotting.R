@@ -226,8 +226,8 @@ plotSparseRoc <- function(evaluation,type='test', fileName=NULL){
   x <- rbind(c(1,1), x, stepsExtra, c(0,0))
   x <- x[order(x$falsePositiveRate, x$sensitivity),]
   
-  
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x$falsePositiveRate, x$sensitivity)) +
+  #plot <- ggplot2::ggplot(x, ggplot2::aes(x$falsePositiveRate, x$sensitivity)) +
+  plot <- ggplot2::ggplot(x, ggplot2::aes(falsePositiveRate, sensitivity)) +
     ggplot2::geom_polygon(fill = "blue", alpha = 0.2) +
     ggplot2::geom_line(size=1) +
     ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
@@ -291,10 +291,10 @@ plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
              data.frame(variable=rep('No outcome',length(vals2)), value=vals2)
   )
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x=x$value,
-                                          group=x$variable,
-                                          fill=x$variable)) +
-    ggplot2::geom_density(ggplot2::aes(x=x$value, fill=x$variable), alpha=.3) +
+  plot <- ggplot2::ggplot(x, ggplot2::aes(x=value,
+                                          group=variable,
+                                          fill=variable)) +
+    ggplot2::geom_density(ggplot2::aes(x=value, fill=variable), alpha=.3) +
     ggplot2::scale_x_continuous("Prediction Threshold")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("Density") + 
     ggplot2::guides(fill=ggplot2::guide_legend(title="Class"))
@@ -357,10 +357,10 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
              data.frame(variable=rep('No outcome',length(vals2)), value=vals2)
   )
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x=x$value,
-                                          group=x$variable,
-                                          fill=x$variable)) +
-    ggplot2::geom_density(ggplot2::aes(x=x$value, fill=x$variable), alpha=.3) +
+  plot <- ggplot2::ggplot(x, ggplot2::aes(x=value,
+                                          group=variable,
+                                          fill=variable)) +
+    ggplot2::geom_density(ggplot2::aes(x=value, fill=variable), alpha=.3) +
     ggplot2::scale_x_continuous("Preference Threshold")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("Density") + 
     ggplot2::guides(fill=ggplot2::guide_legend(title="Class"))
@@ -402,7 +402,7 @@ plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
   x<- evaluation$thresholdSummary[ind,c('positivePredictiveValue', 'sensitivity')]
   #x <- rbind(c(0,1), x, c(1,0))
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x$sensitivity, x$positivePredictiveValue)) +
+  plot <- ggplot2::ggplot(x, ggplot2::aes(sensitivity, positivePredictiveValue)) +
     ggplot2::geom_line(size=1) +
     ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
@@ -442,7 +442,7 @@ plotF1Measure <- function(evaluation,type='test', fileName=NULL){
   x<- evaluation$thresholdSummary[ind,c('predictionThreshold', 'f1Score')]
   #x <- rbind(c(0,1), x, c(1,0))
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x$predictionThreshold, x$f1Score)) +
+  plot <- ggplot2::ggplot(x, ggplot2::aes(predictionThreshold, f1Score)) +
     ggplot2::geom_line(size=1) +
     ggplot2::geom_point(size=1) +
     ggplot2::scale_x_continuous("predictionThreshold")+#, limits=c(0,1)) +
@@ -645,8 +645,8 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
   
   maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence))*1.1
   
-  # TODO: CHECK INPUT
-  limits <- ggplot2::aes(ymax = x$uci, ymin= x$lci)
+  # limits <- ggplot2::aes(ymax = x$uci, ymin= x$lci)
+  limits <- ggplot2::aes(ymax = uci, ymin= lci)
   
   plot <- ggplot2::ggplot(data=x,
                           ggplot2::aes(x=averagePredictedProbability, y=observedIncidence
@@ -941,6 +941,12 @@ plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
 
   #(x=Class, y=predictedProbabllity sequence:  min->P05->P25->Median->P75->P95->max)
   
+  
+  non05 <- x$P05PredictedProbability[x$class==0]
+  non95 <- x$P95PredictedProbability[x$class==0]
+  one05 <- x$P05PredictedProbability[x$class==1]
+  one95 <- x$P95PredictedProbability[x$class==1]
+  
   plot <-   ggplot2::ggplot(x, ggplot2::aes(x=as.factor(class),
                                             ymin=MinPredictedProbability,
                                             lower=P25PredictedProbability,
@@ -953,14 +959,14 @@ plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
     ggplot2::scale_x_discrete("Class") + 
     ggplot2::scale_y_continuous("Predicted Probability") + 
     ggplot2::theme(legend.position="none") +
-    ggplot2::geom_segment(ggplot2::aes(x = 0.9, y = x$P05PredictedProbability[x$class==0], 
-                     xend = 1.1, yend = x$P05PredictedProbability[x$class==0]), color='red') +
-    ggplot2::geom_segment(ggplot2::aes(x = 0.9, y = x$P95PredictedProbability[x$class==0], 
-                                       xend = 1.1, yend = x$P95PredictedProbability[x$class==0]), color='red') +
-  ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = x$P05PredictedProbability[x$class==1], 
-                                     xend = 2.1, yend = x$P05PredictedProbability[x$class==1])) +
-    ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = x$P95PredictedProbability[x$class==1], 
-                                       xend = 2.1, yend = x$P95PredictedProbability[x$class==1]))
+    ggplot2::geom_segment(ggplot2::aes(x = 0.9, y = non05, 
+                     xend = 1.1, yend = non05), color='red') +
+    ggplot2::geom_segment(ggplot2::aes(x = 0.9, y = non95, 
+                                       xend = 1.1, yend = non95), color='red') +
+  ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one05, 
+                                     xend = 2.1, yend = one05)) +
+    ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one95, 
+                                       xend = 2.1, yend = one95))
   
   
   if (!is.null(fileName))

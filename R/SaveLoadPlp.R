@@ -682,6 +682,7 @@ savePlpModel <- function(plpModel, dirPath){
   saveRDS(plpModel$dense, file = file.path(dirPath,  "dense.rds"))
   saveRDS(plpModel$cohortId, file = file.path(dirPath,  "cohortId.rds"))
   saveRDS(plpModel$outcomeId, file = file.path(dirPath,  "outcomeId.rds"))
+  saveRDS(plpModel$analysisId, file = file.path(dirPath,  "analysisId.rds"))
   #if(!is.null(plpModel$covariateMap))
   saveRDS(plpModel$covariateMap, file = file.path(dirPath,  "covariateMap.rds"))
   
@@ -759,6 +760,8 @@ loadPlpModel <- function(dirPath) {
                     error=function(e) NULL)  
   covariateMap <- tryCatch(readRDS(file.path(dirPath, "covariateMap.rds")),
                            error=function(e) NULL) 
+  analysisId <- tryCatch(readRDS(file.path(dirPath, "analysisId.rds")),
+                           error=function(e) NULL) 
   
   if(file.exists(file.path(dirPath, "keras_model"))){
     model <- keras::load_model_hdf5(file.path(dirPath, "keras_model"))
@@ -777,9 +780,10 @@ loadPlpModel <- function(dirPath) {
                  trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
                  varImp = readRDS(file.path(dirPath, "varImp.rds")),
                  dense = dense,
-                 cohortId= cohortId,
+                 cohortId = cohortId,
                  outcomeId = outcomeId,
-                 covariateMap=covariateMap)
+                 covariateMap =covariateMap,
+                 analysisId = analysisId)
   
   #attributes <- readRDS(file.path(dirPath, "attributes.rds"))
   attributes <- readRDS(file.path(dirPath, "attributes.rds"))

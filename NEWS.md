@@ -1,3 +1,19 @@
+PatientLevelPrediction 3.0.10
+======================
+- added recalibration using 25% sample in existing models
+- added option to provide score to probabilities for existing models
+- fixed warnings with some plots
+
+
+PatientLevelPrediction 3.0.9
+======================
+Small bug fixes:
+- added analysisId into model saving/loading
+- made external validation saving recursive 
+- added removal of patients with negative TAR when creating population 
+- added option to apply model without preprocessing settings (make them NULL)
+- updated create study population to remove patients with negative time-at-risk
+
 PatientLevelPrediction 3.0.8
 ======================
 Changes:

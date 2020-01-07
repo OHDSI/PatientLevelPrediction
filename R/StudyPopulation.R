@@ -253,6 +253,16 @@ createStudyPopulation <- function(plpData,
     if(!missing(outcomeId) && !is.null(outcomeId))
       outCount <- sum(plpData$outcomes$rowId%in%population$rowId & plpData$outcomes$outcomeId == outcomeId)
     metaData$attrition <- rbind(metaData$attrition, getCounts(population, outCount, paste("Have time at risk")))
+  } else {
+    # remve any patients with negative timeAtRisk
+    ParallelLogger::logTrace("Removing subjects with no time at risk (if any)")
+    noAtRiskTimeRowIds <- population$rowId[population$riskEnd < population$riskStart ]
+    population <- population[!(population$rowId %in% noAtRiskTimeRowIds), ]
+    outCount <- 0
+    if(!missing(outcomeId) && !is.null(outcomeId))
+      outCount <- sum(plpData$outcomes$rowId%in%population$rowId & plpData$outcomes$outcomeId == outcomeId)
+    metaData$attrition <- rbind(metaData$attrition, getCounts(population, outCount, paste("Have time at risk")))
+    
   }
   if (missing(outcomeId) || is.null(outcomeId)){
     ParallelLogger::logTrace("No outcome specified so not creating outcome and time variables")

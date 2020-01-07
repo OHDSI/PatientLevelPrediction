@@ -253,7 +253,7 @@ externalValidatePlp <- function(plpResult,
     }
     for(i in 1:length(databaseNames)){
       if(!dir.exists(file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId))){
-        dir.create(file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId))
+        dir.create(file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId), recursive = T)
       }
     saveRDS(result$validation[[i]], file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId,'validationResult.rds'))
     }
@@ -311,6 +311,8 @@ summariseVal <- function(result, database){
 #' @param outcomeId                        An iteger specifying the cohort id for the outcome cohorts
 #' @param oracleTempSchema                 The temp oracle schema 
 #' @param modelName                        The name of the model
+#' @param scoreToProb                      Mapping from the score to the probabilities
+#' @param recalibrate                      Whether to recalibrate the model on new data
 #' @param calibrationPopulation            A data.frame of subjectId, cohortStartDate, indexes used to recalibrate the model on new data
 #' @param covariateSummary                 Whether to calculate the covariateSummary
 #' @param cdmVersion                       The CDM version being used 
@@ -345,6 +347,8 @@ evaluateExistingModel <- function(modelTable,
                                    outcomeDatabaseSchema, outcomeTable, outcomeId,
                                    oracleTempSchema = cdmDatabaseSchema,
                                   modelName='existingModel',
+                                  scoreToProb = NULL,
+                                  recalibrate = F,
                                   calibrationPopulation=NULL,
                                   covariateSummary = T,
                                    cdmVersion = 5
@@ -452,6 +456,13 @@ evaluateExistingModel <- function(modelTable,
     covSum <- covariateSummary(plpData, population)
   }
   
+  # map score to probability
+  if(!is.null(scoreToProb)){
+    prediction <- merge(prediction, scoreToProb, by.x = 'covariateValue', by.y = 'score', all.x=T)
+    prediction$probability[is.na(prediction$probability)] <- 0 
+    prediction <- prediction[, !colnames(prediction%in%c('covariateValue','score') )]
+  }
+  
   recalModel <- NULL
   if(!is.null(calibrationPopulation)){
     #re-calibrate model:
@@ -463,6 +474,18 @@ evaluateExistingModel <- function(modelTable,
     value <- stats::predict(recalModel, data.frame(x=prediction$covariateValue),
                             type = "response")
     prediction$value <- value
+  } else if(recalibrate & is.null(calibrationPopulation)){
+    sampleCal <- sample(floor(nrow(prediction)*0.25))
+    recalModel <- stats::glm(y ~ x,
+                             family=stats::binomial(link='logit'),
+                             data=data.frame(x=prediction$covariateValue,
+                                             y=as.factor(prediction$outcomeCount))[sampleCal,])
+    value <- stats::predict(recalModel, data.frame(x=prediction$covariateValue),
+                            type = "response")
+    prediction$value <- value
+    prediction$index <- -1
+    prediction$index[sampleCal] <- 1
+    
   } else {
     colnames(prediction)[colnames(prediction)=='covariateValue'] <- 'value'
     prediction$value <- prediction$value/max(prediction$value)
@@ -514,14 +537,14 @@ evaluateExistingModel <- function(modelTable,
                                   database = cdmDatabaseSchema),
                                   populationSettings = attr(population,'metaData')),
               executionSummary = executionSummary,
-              model = list(model='existing model', 
+              model = list(model=list(name= 'existing model', 
                            type=type,
                            modelName=modelName,
                            modelTable=modelTable, 
                            covariateTable=covariateTable, 
                            interceptTable=interceptTable,
                            covariateSettings=covariateSettings,
-                           recalModel = recalModel),
+                           recalModel = recalModel)),
               analysisRef=list(analysisId=NULL,
                                analysisName=NULL,
                                analysisSettings= NULL),
