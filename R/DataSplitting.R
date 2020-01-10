@@ -115,11 +115,11 @@ randomSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   nonPpl.group <- rep(0, length(nonPpl))
   
   # set test set (index=-1)
-  test.ind <- 1:round(length(nonPpl) * test)
+  test.ind <- 1:floor(length(nonPpl) * test)
   nonPpl.group[test.ind] <- -1
   
   # set train set (index>0)
-  train.ind <- round(length(nonPpl) * test + length(nonPpl) * (1-train-test) + 1):length(nonPpl) 
+  train.ind <- (floor(length(nonPpl) * test) + round(length(nonPpl) * (1-train-test)) + 1):length(nonPpl) 
   reps <- floor(length(train.ind)/nfold)
   leftOver <- length(train.ind)%%nfold
   if (leftOver > 0)
@@ -129,9 +129,9 @@ randomSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
     
   # same for outcome = 1
   outPpl.group <- rep(0, length(outPpl))
-  test.ind <- 1:round(length(outPpl) * test)
+  test.ind <- 1:floor(length(outPpl) * test)
   outPpl.group[test.ind] <- -1
-  train.ind <- round(length(outPpl) * test + length(outPpl) * (1-train-test) + 1):length(outPpl)
+  train.ind <- (floor(length(outPpl) * test) + round(length(outPpl) * (1-train-test)) + 1):length(outPpl)
   reps <- floor(length(train.ind)/nfold)
   leftOver <- length(train.ind)%%nfold
   if (leftOver > 0)

@@ -770,19 +770,19 @@ loadPlpModel <- function(dirPath) {
   }
   
   result <- list(model = model,
-                 hyperParamSearch = hyperParamSearch,
-                 predict = readRDS(file.path(dirPath, "transform.rds")),
-                 index = readRDS(file.path(dirPath, "index.rds")),
-                 trainCVAuc = readRDS(file.path(dirPath, "trainCVAuc.rds")),
                  modelSettings = readRDS(file.path(dirPath, "modelSettings.rds")),
+                 hyperParamSearch = hyperParamSearch,
+                 trainCVAuc = readRDS(file.path(dirPath, "trainCVAuc.rds")),
                  metaData = readRDS(file.path(dirPath, "metaData.rds")),
                  populationSettings= readRDS(file.path(dirPath, "populationSettings.rds")),
-                 trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
-                 varImp = readRDS(file.path(dirPath, "varImp.rds")),
-                 dense = dense,
-                 cohortId = cohortId,
                  outcomeId = outcomeId,
+                 cohortId = cohortId,
+                 varImp = readRDS(file.path(dirPath, "varImp.rds")),
+                 trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
                  covariateMap =covariateMap,
+                 predict = readRDS(file.path(dirPath, "transform.rds")),
+                 index = readRDS(file.path(dirPath, "index.rds")),
+                 dense = dense,
                  analysisId = analysisId)
   
   #attributes <- readRDS(file.path(dirPath, "attributes.rds"))
