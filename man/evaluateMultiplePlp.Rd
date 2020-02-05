@@ -4,12 +4,23 @@
 \alias{evaluateMultiplePlp}
 \title{externally validate the multiple plp models across new datasets}
 \usage{
-evaluateMultiplePlp(analysesLocation, outputLocation, connectionDetails,
-  validationSchemaTarget, validationSchemaOutcome, validationSchemaCdm,
-  databaseNames, validationTableTarget, validationTableOutcome,
-  validationIdTarget = NULL, validationIdOutcome = NULL,
-  oracleTempSchema = NULL, verbosity = "INFO", keepPrediction = F,
-  sampleSize = NULL)
+evaluateMultiplePlp(
+  analysesLocation,
+  outputLocation,
+  connectionDetails,
+  validationSchemaTarget,
+  validationSchemaOutcome,
+  validationSchemaCdm,
+  databaseNames,
+  validationTableTarget,
+  validationTableOutcome,
+  validationIdTarget = NULL,
+  validationIdOutcome = NULL,
+  oracleTempSchema = NULL,
+  verbosity = "INFO",
+  keepPrediction = F,
+  sampleSize = NULL
+)
 }
 \arguments{
 \item{analysesLocation}{The location where the multiple plp analyses are}

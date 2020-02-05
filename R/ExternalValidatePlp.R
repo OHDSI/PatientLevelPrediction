@@ -155,7 +155,7 @@ externalValidatePlp <- function(plpResult,
       targetTable <- validationTableTarget[i]
     if(length(validationTableOutcome)>1)
       outcomeTable <- validationTableOutcome[i]
-    newData <- PatientLevelPrediction::similarPlpData(plpModel= plpResult$model, createCohorts = F, 
+    newData <- similarPlpData(plpModel= plpResult$model, createCohorts = F, 
                                                       newConnectionDetails = connectionDetails, 
                                                       newCdmDatabaseSchema = validationSchemaCdm[i], 
                                                       newCohortDatabaseSchema = validationSchemaTarget[i], 
@@ -176,7 +176,7 @@ externalValidatePlp <- function(plpResult,
       results[[i]] <- 'not run due to outcome count less than 5'
     } else{
       
-      results[[i]] <- PatientLevelPrediction::applyModel(population=newData$population, plpData = newData$plpData, 
+      results[[i]] <- applyModel(population=newData$population, plpData = newData$plpData, 
                                                          calculatePerformance = T, plpModel = plpResult$model)
       
       
@@ -404,7 +404,7 @@ evaluateExistingModel <- function(modelTable,
     calibrationPopulation <- calibrationPopulation[,c('subjectId','cohortStartDate','indexes')]
   }
   
-  custCovs <- PatientLevelPrediction::createExistingModelSql(modelTable= modelTable, 
+  custCovs <- createExistingModelSql(modelTable= modelTable, 
                                                  modelNames = modelName, 
                                                  interceptTable = interceptTable,
                                                  covariateTable=covariateTable, 
@@ -420,7 +420,7 @@ evaluateExistingModel <- function(modelTable,
   assign(paste0('getExistingmodelsCovariateSettings'), custCovs$getExistingmodelsCovariateSettings
          ,envir = globalenv())
   
-  plpData <- PatientLevelPrediction::getPlpData(connectionDetails, 
+  plpData <- getPlpData(connectionDetails, 
                                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                                 oracleTempSchema=oracleTempSchema,
                                                 cohortId = cohortId ,
@@ -433,7 +433,7 @@ evaluateExistingModel <- function(modelTable,
                                                 sampleSize = NULL, 
                                                 cdmVersion = cdmVersion)
   
-  population <- PatientLevelPrediction::createStudyPopulation(plpData = plpData, outcomeId = outcomeId,
+  population <- createStudyPopulation(plpData = plpData, outcomeId = outcomeId,
                                                               includeAllOutcomes = includeAllOutcomes, 
                                                               requireTimeAtRisk = requireTimeAtRisk, 
                                                               minTimeAtRisk = minTimeAtRisk, 
@@ -494,7 +494,7 @@ evaluateExistingModel <- function(modelTable,
   }
   
   attr(prediction, "metaData")$predictionType <- "binary"
-  performance <- PatientLevelPrediction::evaluatePlp(prediction, plpData)
+  performance <- evaluatePlp(prediction, plpData)
   
   # reformatting the performance 
   analysisId <-   '000000'

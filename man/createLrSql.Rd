@@ -4,9 +4,15 @@
 \alias{createLrSql}
 \title{Convert logistic regression model to sql code...}
 \usage{
-createLrSql(models, modelNames, covariateConstructionName = "prediction",
-  modelTable = "#model_table", analysisId = 111, e = environment(),
-  databaseOutput = NULL)
+createLrSql(
+  models,
+  modelNames,
+  covariateConstructionName = "prediction",
+  modelTable = "#model_table",
+  analysisId = 111,
+  e = environment(),
+  databaseOutput = NULL
+)
 }
 \arguments{
 \item{models}{A trianed plp model.}

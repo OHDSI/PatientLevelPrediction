@@ -4,9 +4,17 @@
 \alias{transferLearning}
 \title{[Under development] Transfer learning}
 \usage{
-transferLearning(plpResult, plpData, population, fixLayers = T,
-  addLayers = c(100, 10), layerDropout = c(T, T),
-  layerActivation = c("relu", "softmax"), batchSize = 10000, epochs = 20)
+transferLearning(
+  plpResult,
+  plpData,
+  population,
+  fixLayers = T,
+  addLayers = c(100, 10),
+  layerDropout = c(T, T),
+  layerActivation = c("relu", "softmax"),
+  batchSize = 10000,
+  epochs = 20
+)
 }
 \arguments{
 \item{plpResult}{The plp result when training a kersa deep learning model on big data}

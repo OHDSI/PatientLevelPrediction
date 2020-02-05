@@ -14,33 +14,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library("testthat")
 context("SaveLoadPlp")
-
 
 # print.plpData, summary.plpData, print.summary.plpData, 
 #grepCovariateNames, insertDbPopulation , savePlpModel, moveHdModel, loadPlpModel, 
 #updateModelLocation , savePrediction, loadPrediction, savePlpResult, loadPlpResult, 
 #writeOutput, saveCirceDefinition
 
-test_that("getPlpData", {
+test_that("summary.plpData", {
+  attr(plpData$outcomes, "metaData")$outcomeIds <- 2
+  sum <- summary.plpData(plpData)
+    testthat::expect_equal(class(sum),'summary.plpData')
+  })
+
+test_that("grepCovariateNames", {
+ pat <- grepCovariateNames('nonpattern',plpData)
+  testthat::expect_equal(class(pat),'data.frame')
+})
+
+test_that("getPlpData errors", {
   testthat::expect_error(getPlpData(cohortId = NULL))
   testthat::expect_error(getPlpData(cohortId = c(1,2)))
   testthat::expect_error(getPlpData(cohortId = 1, outcomeIds = NULL))
+})
+
+
+test_that("getPlpData works", {
+  testthat::expect_true(is(plpDataReal, "plpData"))
 })
 
 test_that("getCovariateData", {
   testthat::expect_error(getCovariateData())
 })
 
-test_that("savePlpData", {
+test_that("savePlpDataError", {
   testthat::expect_error(savePlpData())
   testthat::expect_error(savePlpData(plpData=1))
   testthat::expect_error(savePlpData(plpData=1, file='testing'))
 })
 
-test_that("loadPlpData", {
+test_that("savePlpData", {
+  savePlpData(plpData = plpData, 
+              file =  file.path(saveLoc,"saveDataTest"), overwrite = T)
+  testExist <- dir.exists(file.path(saveLoc,"saveDataTest"))
+  testthat::expect_equal(testExist, T)
+})
+
+test_that("loadPlpDataError", {
   testthat::expect_error(loadPlpData(file='madeup/dffdf/testing'))
+})
+
+test_that("loadPlpData", {
+  plpDataLoaded <- loadPlpData(file = file.path(saveLoc,"saveDataTest"))
+  testthat::expect_identical(plpDataLoaded$cohorts, plpData$cohorts)
+  testthat::expect_identical(plpDataLoaded$outcomes, plpData$outcomes)
+  testthat::expect_equal(plpDataLoaded$covariates, plpData$covariates)
+  testthat::expect_equal(plpDataLoaded$covariateRef, plpData$covariateRef)
 })
 
 # add tests using simualted data...
@@ -60,10 +89,8 @@ test_that("grepCovariateNames", {
   testthat::expect_error(grepCovariateNames(object=NULL))
 })
 
-# can't test insertDbPopulation
 
-
-test_that("savePlpModel", {
+test_that("savePlpModelError", {
   testthat::expect_error(savePlpModel(dirPath=NULL))
   testthat::expect_error(savePlpModel(plpModel=NULL))
   testthat::expect_error(savePlpModel(plpModel=NULL,dirPath=NULL))
@@ -76,7 +103,7 @@ test_that("moveHdModel", {
   testthat::expect_equal(PatientLevelPrediction:::moveHdModel(plpModel=plpModel,dirPath=NULL), T)
 })
 
-test_that("loadPlpModel", {
+test_that("loadPlpModelError", {
   testthat::expect_error(loadPlpModel(dirPath=NULL))
   testthat::expect_error(loadPlpModel(dirPath='madeup.txt'))
 })
@@ -88,21 +115,53 @@ test_that("updateModelLocation", {
 
 
 # savePrediction and loadPrediction - will save so no tests
+test_that("savePrediction", {
+  predLoc <- savePrediction(prediction = plpResult$prediction, 
+                            dirPath = saveLoc, fileName = "pred.csv"  )
+  fileExists <- file.exists(predLoc)
+  testthat::expect_equal(fileExists, T)
+})
+
+test_that("loadPrediction", {
+  pred <- loadPrediction(file.path(saveLoc,"pred.csv"))
+  testthat::expect_identical(plpResult$prediction, pred)
+})
 
 
-test_that("savePlpResult", {
+test_that("savePlpResultError", {
   testthat::expect_error(savePlpResult(dirPath=NULL))
   testthat::expect_error(savePlpResult(result=NULL))
 })
 
-
-test_that("loadPlpResult", {
-  testthat::expect_error(loadPlpResult(dirPath=NULL))
-  testthat::expect_error(loadPlpResult(dirPath = 'madeup/dfdfd/j'))
+test_that("savePlpResult", {
+  savePlpResult(result = plpResult, dirPath = file.path(saveLoc,"plpResultTest"))
+  testExist <- dir.exists(file.path(saveLoc,"plpResultTest"))
+  testthat::expect_equal(testExist, T)
 })
 
 
-# saveCirceDefinition  - might be removed soon?
+test_that("loadPlpResultError", {
+  testthat::expect_error(loadPlpResult(dirPath=NULL))
+  testthat::expect_error(loadPlpResult(dirPath = 'madeup/dfdfd/j'))
+  write.csv(c(1), file.path(saveLoc,"file.csv"))
+  testthat::expect_error(loadPlpResult(dirPath = file.path(saveLoc,"file.csv")))
+})
 
-
+test_that("loadPlpResult", {
+  plpResultLoaded <- loadPlpResult(file.path(saveLoc,"plpResultTest"))
+  if(is.null(plpResultLoaded$model$dense)){
+    ind <- which(names(plpResultLoaded$model)=='dense')
+    if(length(ind)>0){
+      plpResultLoaded$model[[ind]] <- NULL
+    }
+  }
+  testthat::expect_equal(plpResultLoaded$model, plpResult$model)
+  testthat::expect_identical(plpResultLoaded$analysisRef, plpResult$analysisRef)
+  testthat::expect_identical(plpResultLoaded$covariateSummary, plpResult$covariateSummary)
+  testthat::expect_identical(plpResultLoaded$executionSummary, plpResult$executionSummary)
+  testthat::expect_identical(plpResultLoaded$inputSetting, plpResult$inputSetting)
+  testthat::expect_identical(plpResultLoaded$performanceEvaluation, plpResult$performanceEvaluation)
+  testthat::expect_identical(plpResultLoaded$prediction, plpResult$prediction)
+  
+})
 

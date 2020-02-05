@@ -4,10 +4,17 @@
 \alias{createPlpReport}
 \title{createPlpReport}
 \usage{
-createPlpReport(plpResult = NULL, plpValidation = NULL, plpData = NULL,
-  targetName = "<target population>", outcomeName = "<outcome>",
-  targetDefinition = NULL, outcomeDefinition = NULL,
-  outputLocation = file.path(getwd(), "plp_report.docx"), save = T)
+createPlpReport(
+  plpResult = NULL,
+  plpValidation = NULL,
+  plpData = NULL,
+  targetName = "<target population>",
+  outcomeName = "<outcome>",
+  targetDefinition = NULL,
+  outcomeDefinition = NULL,
+  outputLocation = file.path(getwd(), "plp_report.docx"),
+  save = T
+)
 }
 \arguments{
 \item{plpResult}{An object of type \code{plpResult} returned by running runPlp()}

@@ -105,7 +105,7 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   population$rowIdPython <- population$rowId - 1  # -1 to account for python/r index difference
   pPopulation <- as.matrix(population[, c("rowIdPython", "outcomeCount", "indexes")])
   
-  x <- PatientLevelPrediction::toSparseM(plpData,population,map=NULL, temporal = F)
+  x <- toSparseM(plpData,population,map=NULL, temporal = F)
   plpData <- reticulate::r_to_py(x$data)
   
   ParallelLogger::logInfo(paste0('Setting parameters...' ))
@@ -158,7 +158,7 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   prediction$rowId <- prediction$rowId + 1
   attr(prediction, "metaData") <- list(predictionType = "binary")
   
-  auc <- PatientLevelPrediction::computeAuc(prediction)
+  auc <-computeAuc(prediction)
   writeLines(paste0("Model obtained CV AUC of ", auc))
   
   prediction <- merge(population, prediction[,c('rowId', 'value')], by='rowId')
@@ -207,7 +207,7 @@ predict.sagemaker <- function(plpModel, population, plpData){
   ParallelLogger::logInfo('Mapping covariates...')
   #load python model mapping.txt
   # create missing/mapping using plpData$covariateRef
-  newData <- PatientLevelPrediction::toSparseM(plpData, population, map=plpModel$covariateMap)
+  newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
   plpData <- reticulate::r_to_py(newData$data)
   
   # save population

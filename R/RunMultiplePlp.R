@@ -644,10 +644,10 @@ loadPredictionAnalysisList <- function(predictionAnalysisListFile){
   covariateSettingList <- json$covariateSettings
   
   # extract the population settings:
-  populationSettingList <- lapply(json$populationSettings, function(x) do.call(PatientLevelPrediction::createStudyPopulationSettings, x))
+  populationSettingList <- lapply(json$populationSettings, function(x) do.call(createStudyPopulationSettings, x))
   
   #create model analysis list:
-  modelAnalysisList <- PatientLevelPrediction::createPlpModelSettings(modelList = modelList,
+  modelAnalysisList <- createPlpModelSettings(modelList = modelList,
                                                                       covariateSettingList = covariateSettingList, 
                                                                       populationSettingList = populationSettingList
   )

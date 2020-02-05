@@ -4,10 +4,28 @@
 \alias{createLearningCurvePar}
 \title{createLearningCurvePar}
 \usage{
-createLearningCurvePar(population, plpData, modelSettings,
-  testSplit = "person", testFraction = 0.25, trainFractions = c(0.25, 0.5,
-  0.75), splitSeed = NULL, nfold = 3, indexes = NULL,
-  minCovariateFraction = 0.001)
+createLearningCurvePar(
+  population,
+  plpData,
+  modelSettings,
+  testSplit = "person",
+  testFraction = 0.25,
+  trainFractions = c(0.25, 0.5, 0.75),
+  splitSeed = NULL,
+  nfold = 3,
+  indexes = NULL,
+  verbosity = "TRACE",
+  clearffTemp = FALSE,
+  minCovariateFraction = 0.001,
+  normalizeData = T,
+  saveDirectory = getwd(),
+  savePlpData = F,
+  savePlpResult = F,
+  savePlpPlots = F,
+  saveEvaluation = F,
+  timeStamp = FALSE,
+  analysisId = NULL
+)
 }
 \arguments{
 \item{population}{The population created using \code{createStudyPopulation()}
@@ -49,6 +67,22 @@ the cross validation fold (default is \code{NULL}).}
 
 \item{minCovariateFraction}{Minimum covariate prevalence in population to
 avoid removal during preprocssing.}
+
+\item{normalizeData}{Whether to normalise the data}
+
+\item{saveDirectory}{Location to save log and results}
+
+\item{savePlpData}{Whether to save the plpData}
+
+\item{savePlpResult}{Whether to save the plpResult}
+
+\item{savePlpPlots}{Whether to save the plp plots}
+
+\item{saveEvaluation}{Whether to save the plp performance csv files}
+
+\item{timeStamp}{Include a timestamp in the log}
+
+\item{analysisId}{The analysis unique identifier}
 }
 \value{
 A learning curve object containing the various performance measures

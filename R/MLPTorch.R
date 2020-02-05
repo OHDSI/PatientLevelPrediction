@@ -170,7 +170,7 @@ trainMLPTorch <- function(population, plpData, modelOutput, size=200, epochs=100
     attr(pred, "metaData") <- list(predictionType="binary")
     
     pred$value <- 1-pred$value
-    auc <- PatientLevelPrediction::computeAuc(pred)
+    auc <- computeAuc(pred)
     writeLines(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }

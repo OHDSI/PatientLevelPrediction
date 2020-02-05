@@ -52,10 +52,6 @@
 #' @param indexes A dataframe containing a rowId and index column where the 
 #'   index value of -1 means in the test set, and positive integer represents
 #'   the cross validation fold (default is \code{NULL}).
-#' @param saveDir The path to the directory where the models will be saved
-#'   (if \code{NULL}, uses working directory).
-#' @param saveModel Logical indicating whether to save the model once it has
-#'   been trained (default is \code{TRUE}).
 #' @param verbosity Sets the level of the verbosity. If the log level is at or
 #'   higher in priority than the logger threshold, a message will print. The 
 #'   levels are:
@@ -71,6 +67,14 @@
 #'   This can be useful, if the fitted models are large.
 #' @param minCovariateFraction Minimum covariate prevalence in population to
 #'   avoid removal during preprocssing.
+#' @param normalizeData Whether to normalise the data
+#' @param saveDirectory Location to save log and results
+#' @param savePlpData Whether to save the plpData
+#' @param savePlpResult Whether to save the plpResult
+#' @param savePlpPlots Whether to save the plp plots
+#' @param saveEvaluation Whether to save the plp performance csv files
+#' @param timeStamp Include a timestamp in the log
+#' @param analysisId The analysis unique identifier
 #'
 #' @return A learning curve object containing the various performance measures
 #'  obtained by the model for each training set fraction. It can be plotted
@@ -99,39 +103,25 @@ createLearningCurve <- function(population,
                                 splitSeed = NULL,
                                 nfold = 3,
                                 indexes = NULL,
-                                saveDir = NULL,
-                                saveModel = TRUE,
                                 verbosity = 'TRACE',
                                 clearffTemp = FALSE,
-                                minCovariateFraction = 0.001) {
+                                minCovariateFraction = 0.001,
+                                
+                                normalizeData = T,
+                                saveDirectory = getwd(),
+                                savePlpData = F,
+                                savePlpResult = F,
+                                savePlpPlots = F,
+                                saveEvaluation = F,
+                                timeStamp = FALSE,
+                                analysisId = NULL) {
   
-  # the analysis id will always be generated automatically
-  analysisId <- NULL
-  
-  # if no path is provided, save to working directory
-  if (is.null(saveDir)) {
-    saveDir <- file.path(getwd(), 'plpmodels')
+  if (is.null(analysisId)) {
+    analysisId <- gsub(':', '', gsub('-', '', gsub(' ', '', Sys.time())))
   }
-  
-  logPath = file.path(saveDir, "plplog.txt")
-  
   
   # remove all registered loggers
   ParallelLogger::clearLoggers()
-  
-  # check logger
-  if (length(ParallelLogger::getLoggers()) == 0) {
-    logger <- ParallelLogger::createLogger(
-      name = "SIMPLE",
-      threshold = verbosity,
-      appenders = list(
-        ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutSimple),
-        ParallelLogger::createFileAppender(layout = ParallelLogger::layoutTimestamp,
-                                        fileName = logPath)
-      )
-    )
-    ParallelLogger::registerLogger(logger)
-  }
   
   # number of training set fractions
   nRuns <- length(trainFractions)
@@ -139,394 +129,84 @@ createLearningCurve <- function(population,
   # record global start time
   ExecutionDateTime <- Sys.time()
   
-  # store a copy of the original population
-  originalPopulation <- population
+  settings = list(population = population, 
+                  plpData = plpData, 
+                  minCovariateFraction = minCovariateFraction,
+                  normalizeData = normalizeData,
+                  modelSettings = modelSettings,
+                  testSplit = testSplit,
+                  testFraction = testFraction,
+                  splitSeed = splitSeed,
+                  nfold = nfold,
+                  indexes = indexes,
+                  saveDirectory = saveDirectory,
+                  savePlpData = savePlpData,
+                  savePlpResult = savePlpResult,
+                  savePlpPlots = savePlpPlots,
+                  saveEvaluation = saveEvaluation,
+                  verbosity = verbosity,
+                  timeStamp = timeStamp)
   
-  learningCurve <- foreach::foreach(i = 1:nRuns,
-                                    .combine = rbind,
-                                    .errorhandling = "remove") %do% {
+  learningCurve <- lapply(1:nRuns, function(i){
                                       
-    # record start time
-    startTime <- Sys.time()
+    settings$trainFraction = trainFractions[i]
+    settings$analysisId = paste(analysisId, '_', i)                                  
+    result <- do.call(runPlp, settings)  
     
-    # restore the original population
-    population <- originalPopulation
+    executeTime <- result$executionSummary$TotalExecutionElapsedTime
     
-    # create an analysis id and folder to save the results of each run
-    start.all <- Sys.time()
-    if (is.null(analysisId)) {
-      analysisId <- gsub(':', '', gsub('-', '', gsub(' ', '', start.all)))
-    }
-    
-    analysisPath = file.path(saveDir, analysisId)
-    if (!dir.exists(analysisPath)) {
-      dir.create(analysisPath, recursive = T)
-    }
+    result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
 
-    # write log to both, console and file
-    # other appenders can be created, e.g. to a web service or database
-
-    ParallelLogger::logInfo(paste0(
-      'Patient-Level Prediction Package version ',
-      utils::packageVersion("PatientLevelPrediction")
-    ))
+    df <- data.frame( x = trainFractions[i] * 100,
+                      name = c('executionTime',paste0(result$Eval, result$Metric)), 
+                      value = c(as.double(executeTime) ,as.double(as.character(result$Value)))
+                      )
+    df$name <- as.character(df$name)
+    df$name[df$name == 'trainAUC.auc'] <- 'trainAUCROC'
+    df$name[df$name == 'testAUC.auc'] <- 'testAUCROC'
+    df$name[df$name == 'trainpopulationSize'] <- 'popSizeTrain'
+    df$name[df$name == 'trainoutcomeCount'] <- 'outcomeCountTrain'
+    df$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', df$name))
     
-    # get target and outcome cohort ids
-    cohortId <- attr(population, "metaData")$cohortId
-    outcomeId <- attr(population, "metaData")$outcomeId
+    df <- df[-grep('auc_',df$name),]
     
-    # add header to analysis log
-    ParallelLogger::logInfo(sprintf('%-20s%s', 'Training Size: ', trainFractions[i]))
-    ParallelLogger::logInfo(sprintf('%-20s%s', 'AnalysisID: ', analysisId))
-    ParallelLogger::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
-    ParallelLogger::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
-    ParallelLogger::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
-    ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
-    ParallelLogger::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
-    ParallelLogger::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount > 0)))
-
-    # check parameters
-    ParallelLogger::logTrace('Parameter Check Started')
-    checkInStringVector(testSplit, c('person', 'time'))
-    checkHigherEqual(sum(population[, 'outcomeCount'] > 0), 25)
-    checkIsClass(plpData, c('plpData.coo', 'plpData'))
-    checkIsClass(testFraction, 'numeric')
-    checkHigher(testFraction, 0)
-    checkIsClass(nfold, 'numeric')
-    checkHigher(nfold, 0)
-    
-    # construct the training and testing set according to split type
-    # indices will be non-zero for rows in training and testing set
-    if (testSplit == 'time') {
-      ParallelLogger::logTrace('Dataset time split started')
-      indexes <- tryCatch({
-        timeSplitter(
-          population,
-          test = testFraction,
-          train = trainFractions[i],
-          nfold = nfold,
-          seed = splitSeed
-        )
-      },
-      finally = ParallelLogger::logTrace('Done.'))
-    }
-    if (testSplit == 'person') {
-      ParallelLogger::logTrace('Dataset person split started')
-      indexes <- tryCatch({
-        personSplitter(
-          population,
-          test = testFraction,
-          train = trainFractions[i],
-          nfold = nfold,
-          seed = splitSeed
-        )
-      },
-      finally = ParallelLogger::logTrace('Done.'))
-    }
-    
-    # check if population count is equal to the number of indices returned
-    if (nrow(population) != nrow(indexes)) {
-      ParallelLogger::logError(sprintf(
-        'Population dimension not compatible with indexes: %d <-> %d',
-        nrow(population),
-        nrow(indexes)
-      ))
-      stop('Population dimension not compatible with indexes')
-    }
-    
-    # concatenate indices to population dataframe
-    tempmeta <- attr(population, "metaData")
-    if (is.null(population$indexes)) {
-      population <- merge(population, indexes)
-      colnames(population)[colnames(population) == 'index'] <-
-        'indexes'
-    } else{
-      attr(population, 'indexes') <- indexes
-    }
-    attr(population, "metaData") <- tempmeta
-    
-    # create settings object
-    settings <- list(
-      data = plpData,
-      minCovariateFraction = minCovariateFraction,
-      modelSettings = modelSettings,
-      population = population,
-      cohortId = cohortId,
-      outcomeId = outcomeId
-    )
-    
-    ParallelLogger::logInfo(sprintf('Training %s model', settings$modelSettings$name))
-    # the call is sinked because of the external calls (Python etc)
-    if (sink.number() > 0) {
-      ParallelLogger::logWarn(paste0('sink had ', sink.number(), ' connections open!'))
-    }
-
-    # fit the model
-    model <- tryCatch({
-      do.call(fitPlp, settings)
-    },
-    error = function(e) {
-      ParallelLogger::logError(e)
-      stop(paste0(e))
-    },
-    finally = {
-      ParallelLogger::logTrace('Done.')
-    })
-    
-    # save the model
-    if (saveModel == TRUE) {
-      modelLoc <- file.path(saveDir, analysisId, 'savedModel')
-      tryCatch({
-        savePlpModel(model, modelLoc)},
-        finally = ParallelLogger::logInfo(paste0(
-          'Model saved to ..\\', analysisId, '\\savedModel'
-        ))
-      )
-    }
-    
-    # calculate metrics
-    ParallelLogger::logTrace('Prediction')
-    ParallelLogger::logTrace(paste0('Calculating prediction for ', sum(indexes$index != 0)))
-    ind <- population$rowId %in% indexes$rowId[indexes$index != 0]
-    prediction <-
-      model$predict(plpData = plpData, population = population[ind,])
-    
-    metaData <- list(
-      predictionType = "binary",
-      cohortId = attr(population, 'metaData')$cohortId,
-      outcomeId = attr(population, 'metaData')$outcomeId
-    )
-    
-    attr(prediction, "metaData") <- metaData
-    
-    finally = ParallelLogger::logTrace('Done.')
-    
-    # measure model performance
-    if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
-               1)) {
-      # add analysisID
-      attr(prediction, "metaData")$analysisId <- analysisId
-      
-      ParallelLogger::logInfo('Train set evaluation')
-      performance.train <-
-        evaluatePlp(prediction[prediction$indexes > 0,], plpData)
-      ParallelLogger::logTrace('Done.')
-      ParallelLogger::logInfo('Test set evaluation')
-      performance.test <-
-        evaluatePlp(prediction[prediction$indexes < 0,], plpData)
-      ParallelLogger::logTrace('Done.')
-      
-      # combine the test and train data and add analysisId
-      performance <-
-        reformatPerformance(train = performance.train, test = performance.test,
-                            analysisId)
-      
-      if (!is.null(saveDir)) {
-        ParallelLogger::logTrace('Saving evaluation')
-        if (!dir.exists(file.path(analysisPath, 'evaluation')))
-          dir.create(file.path(analysisPath, 'evaluation'))
-        tryCatch(
-          utils::write.csv(
-            performance$evaluationStatistics,
-            file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'),
-            row.names = F
-          ),
-          finally = ParallelLogger::logTrace('Saved EvaluationStatistics.')
-        )
-        tryCatch(
-          utils::write.csv(
-            performance$thresholdSummary,
-            file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'),
-            row.names = F
-          ),
-          finally = ParallelLogger::logTrace('Saved ThresholdSummary.')
-        )
-        tryCatch(
-          utils::write.csv(
-            performance$demographicSummary,
-            file.path(analysisPath, 'evaluation', 'demographicSummary.csv'),
-            row.names = F
-          ),
-          finally = ParallelLogger::logTrace('Saved DemographicSummary.')
-        )
-        tryCatch(
-          utils::write.csv(
-            performance$calibrationSummary,
-            file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'),
-            row.names = F
-          ),
-          finally = ParallelLogger::logTrace('Saved CalibrationSummary.')
-        )
-        tryCatch(
-          utils::write.csv(
-            performance$predictionDistribution,
-            file.path(analysisPath,
-                      'evaluation',
-                      'predictionDistribution.csv'),
-            row.names = F
-          ),
-          finally = ParallelLogger::logTrace('Saved PredictionDistribution.')
-        )
-      }
-
-    } else{
-      ParallelLogger::logWarn(paste0(
-        'Evaluation not possible as prediciton NULL or all the same values'
-      ))
-      performance.test <- NULL
-      performance.train <- NULL
-    }
-    
-    # record end time
-    endTime <- Sys.time()
-    TotalExecutionElapsedTime <-
-      as.numeric(difftime(endTime, ExecutionDateTime,
-                          units = "secs"))
-    
-    # compute execution time for each run
-    timeDiff <- as.numeric(difftime(endTime, startTime, units = "secs"))
-    
-    # input settings
-    inputSetting <-
-      list(
-        dataExtrractionSettings = plpData$metaData$call,
-        populationSettings = attr(population, "metaData"),
-        modelSettings = modelSettings,
-        testSplit = testSplit,
-        testFraction = testFraction
-      )
-    
-    # execution summary
-    executionSummary <-
-      list(
-        PackageVersion = list(
-          rVersion = R.Version()$version.string,
-          packageVersion = utils::packageVersion("PatientLevelPrediction")
-        ),
-        PlatformDetails = list(
-          platform = R.Version()$platform,
-          cores = Sys.getenv('NUMBER_OF_PROCESSORS'),
-          RAM = utils::memory.size()
-        ),
-        #  test for non-windows needed
-        TotalExecutionElapsedTime = TotalExecutionElapsedTime,
-        ExecutionDateTime = ExecutionDateTime,
-        Log = logPath # location for now
-        # Not available at the moment: CDM_SOURCE - meta-data containing CDM
-        # version, release date, vocabulary version
-      )
-    
-    ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
-    ParallelLogger::logInfo('This can take a while...')
-    covSummary <- covariateSummary(plpData, population)
-    covSummary <-
-      merge(model$varImp, covSummary, by = 'covariateId', all = T)
-    trainCovariateSummary <-
-      covariateSummary(plpData, population[population$index > 0,])
-    colnames(trainCovariateSummary)[colnames(trainCovariateSummary) != 'covariateId'] <-
-      paste0('Train', colnames(trainCovariateSummary)[colnames(trainCovariateSummary) !=
-                                                        'covariateId'])
-    testCovariateSummary <-
-      covariateSummary(plpData, population[population$index < 0,])
-    colnames(testCovariateSummary)[colnames(testCovariateSummary) != 'covariateId'] <-
-      paste0('Test', colnames(testCovariateSummary)[colnames(testCovariateSummary) !=
-                                                      'covariateId'])
-    covSummary <-
-      merge(covSummary,
-            trainCovariateSummary,
-            by = 'covariateId',
-            all = T)
-    covSummary <-
-      merge(covSummary,
-            testCovariateSummary,
-            by = 'covariateId',
-            all = T)
-    if (!is.null(saveDir)) {
-      ParallelLogger::logTrace('Saving covariate summary')
-      if (!dir.exists(file.path(analysisPath, 'evaluation')))
-        dir.create(file.path(analysisPath, 'evaluation'))
-      tryCatch({
-        utils::write.csv(
-          covSummary,
-          file.path(analysisPath, 'evaluation', 'covariateSummary.csv'),
-          row.names = F
-        )},
-        finally = ParallelLogger::logTrace('Saved covariate summary.')
-      )
-    }
-    ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
-    
-    # create result object
-    result <- list(
-      inputSetting = inputSetting,
-      executionSummary = executionSummary,
-      model = model,
-      prediction = prediction,
-      performanceEvaluation = performance,
-      covariateSummary = covSummary,
-      analysisRef = list(
-        analysisId = analysisId,
-        analysisName = NULL,
-        analysisSettings = NULL
-      )
-    )
-    class(result) <- c('list', 'plpModel')
-    
-    ParallelLogger::logInfo("Run finished successfully.")
-    ParallelLogger::logInfo()
-    
-    # combine performance metrics
-    df <- data.frame(
-      x = trainFractions[i] * 100,
-      popSizeTrain = nrow(population[population$index > 0,]),
-      outcomeCountTrain = sum(population[population$index > 0,]$outcomeCount),
-      executionTime = TotalExecutionElapsedTime,
-      trainAUCROC = performance.train$evaluationStatistics$AUC[[1]],
-      testAUCROC = performance.test$evaluationStatistics$AUC[[1]],
-      trainAUCPR = performance.train$evaluationStatistics$AUPRC[[1]],
-      testAUCPR = performance.test$evaluationStatistics$AUPRC[[1]],
-      trainBrierScore = performance.train$evaluationStatistics$BrierScore,
-      testBrierScore = performance.test$evaluationStatistics$BrierScore,
-      trainBrierScaled = performance.train$evaluationStatistics$BrierScaled,
-      testBrierScaled = performance.test$evaluationStatistics$BrierScaled,
-      trainCalibrationIntercept = performance.train$evaluationStatistics$CalibrationIntercept,
-      testCalibrationIntercept = performance.test$evaluationStatistics$CalibrationIntercept,
-      trainCalibrationSlope = performance.train$evaluationStatistics$CalibrationSlope,
-      testCalibrationSlope = performance.test$evaluationStatistics$CalibrationSlope
-    )
-
-    # remove temporary files after each run
-    if (clearffTemp) {
-      clearffTempDir()
-    }
-    
-    # reset analysis id
-    analysisId <- NULL
-    
+    df <- reshape2::dcast(df, x~ name)
+  
     # return data frame row for each run
     return(df)
-  }
+  })
+  
+  learningCurve <- do.call(rbind,learningCurve)
 
   ParallelLogger::clearLoggers()
   
   names(learningCurve) <- c(
-    "x",
-    "popSizeTrain",
-    "outcomeCountTrain",
-    "executionTime",
-    "trainAUCROC",
-    "testAUCROC",
-    "trainAUCPR",
-    "testAUCPR",
-    "trainBrierScore",
-    "testBrierScore",
-    "trainBrierScaled",
-    "testBrierScaled",
-    "trainCalibrationIntercept",
-    "testCalibrationIntercept",
-    "trainCalibrationSlope",
-    "testCalibrationSlope"
+    "Fraction",
+    "Time",
+    "Occurrences",
+    "Observations",
+    "TestROC",
+    "TestPR",
+    "TestBrierScaled",
+    "TestBrierScore",
+    "TestCalibrationIntercept",
+    "TestCalibrationSlope",
+    "outcomeCountTest",
+    "popSizeTest",
+    "TrainROC",
+    "TrainPR",
+    "TrainBrierScaled",
+    "TrainBrierScore",
+    "TrainCalibrationIntercept",
+    "TrainCalibrationSlope"
   )
+
+  
+  endTime <- Sys.time()
+  TotalExecutionElapsedTime <-
+    as.numeric(difftime(endTime, ExecutionDateTime,
+                        units = "secs"))
+  ParallelLogger::logInfo('Finished in ', round(TotalExecutionElapsedTime), ' secs.')
   
   return(learningCurve)
 }
@@ -567,7 +247,14 @@ createLearningCurve <- function(population,
 #'   the cross validation fold (default is \code{NULL}).
 #' @param minCovariateFraction Minimum covariate prevalence in population to
 #'   avoid removal during preprocssing.
-#'
+#' @param normalizeData Whether to normalise the data
+#' @param saveDirectory Location to save log and results
+#' @param savePlpData Whether to save the plpData
+#' @param savePlpResult Whether to save the plpResult
+#' @param savePlpPlots Whether to save the plp plots
+#' @param saveEvaluation Whether to save the plp performance csv files
+#' @param timeStamp Include a timestamp in the log
+#' @param analysisId The analysis unique identifier
 #' @return A learning curve object containing the various performance measures
 #'  obtained by the model for each training set fraction. It can be plotted
 #'  using \code{plotLearningCurve}.
@@ -598,7 +285,17 @@ createLearningCurvePar <- function(population,
                                    splitSeed = NULL,
                                    nfold = 3,
                                    indexes = NULL,
-                                   minCovariateFraction = 0.001) {
+                                   verbosity = 'TRACE',
+                                   clearffTemp = FALSE,
+                                   minCovariateFraction = 0.001,
+                                   normalizeData = T,
+                                   saveDirectory = getwd(),
+                                   savePlpData = F,
+                                   savePlpResult = F,
+                                   savePlpPlots = F,
+                                   saveEvaluation = F,
+                                   timeStamp = FALSE,
+                                   analysisId = NULL) {
   
   # register a parallel backend
   registerParallelBackend()
@@ -622,131 +319,68 @@ createLearningCurvePar <- function(population,
                   "PatientLevelPrediction")
   ) %dopar% {
     
-    # restore original population
-    population <- originalPopulation
+    result <- runPlp(population = originalPopulation, 
+                     plpData = plpData, 
+                     minCovariateFraction = minCovariateFraction,
+                     normalizeData = normalizeData,
+                     modelSettings = modelSettings,
+                     testSplit = testSplit,
+                     testFraction = testFraction,
+                     trainFraction = trainFractions[i],
+                     splitSeed = splitSeed,
+                     nfold = nfold,
+                     indexes = indexes,
+                     saveDirectory = saveDirectory,
+                     savePlpData = savePlpData,
+                     savePlpResult = savePlpResult,
+                     savePlpPlots = savePlpPlots,
+                     saveEvaluation = saveEvaluation,
+                     verbosity = verbosity,
+                     timeStamp = timeStamp,
+                     analysisId = paste(analysisId, '_', i)
+    )  
     
-    cohortId <- attr(population, "metaData")$cohortId
-    outcomeId <- attr(population, "metaData")$outcomeId
+    executeTime <- result$executionSummary$TotalExecutionElapsedTime
     
-    # construct the training and testing set according to split type
-    # indices will be non-zero for rows in training and testing set
-    if (testSplit == 'time') {
-      indexes <- PatientLevelPrediction::timeSplitter(
-        population,
-        test = testFraction,
-        train = trainFractions[i],
-        nfold = nfold,
-        seed = splitSeed
-      )
-    }
+    result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
     
-    if (testSplit == 'person') {
-      indexes <- PatientLevelPrediction::personSplitter(
-        population,
-        test = testFraction,
-        train = trainFractions[i],
-        nfold = nfold,
-        seed = splitSeed
-      )
-    }
-    
-    # concatenate indices to population dataframe
-    tempmeta <- attr(population, "metaData")
-    if (is.null(population$indexes)) {
-      population <- merge(population, indexes)
-      colnames(population)[colnames(population) == 'index'] <-
-        'indexes'
-    } else{
-      attr(population, 'indexes') <- indexes
-    }
-    attr(population, "metaData") <- tempmeta
-    
-    # create settings object
-    settings <- list(
-      data = plpData,
-      minCovariateFraction = minCovariateFraction,
-      modelSettings = modelSettings,
-      population = population,
-      cohortId = cohortId,
-      outcomeId = outcomeId
+    df <- data.frame( x = trainFractions[i] * 100,
+                      name = c('executionTime',paste0(result$Eval, result$Metric)), 
+                      value = c(as.double(executeTime) ,as.double(as.character(result$Value)))
     )
+    df$name <- as.character(df$name)
+    df$name[df$name == 'trainAUC.auc'] <- 'trainAUCROC'
+    df$name[df$name == 'testAUC.auc'] <- 'testAUCROC'
+    df$name[df$name == 'trainpopulationSize'] <- 'popSizeTrain'
+    df$name[df$name == 'trainoutcomeCount'] <- 'outcomeCountTrain'
+    df$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', df$name))
     
-    # fit the model
-    model <- do.call(PatientLevelPrediction::fitPlp, settings)
+    df <- df[-grep('auc_',df$name),]
     
-    ind <- population$rowId %in% indexes$rowId[indexes$index != 0]
-    prediction <-
-      model$predict(plpData = plpData, population = population[ind,])
+    df <- reshape2::dcast(df, x~ name)
     
-    metaData <- list(
-      predictionType = "binary",
-      cohortId = attr(population, 'metaData')$cohortId,
-      outcomeId = attr(population, 'metaData')$outcomeId
-    )
-    
-    attr(prediction, "metaData") <- metaData
-    
-    # measure model performance
-    if (ifelse(is.null(prediction), FALSE, length(unique(prediction$value)) >
-               1)) {
-      # add analysisID
-      attr(prediction, "metaData")$analysisId <- NULL
-      
-      performance.train <-
-        PatientLevelPrediction::evaluatePlp(prediction[prediction$indexes > 0,],
-                                            plpData)
-      
-      performance.test <-
-        PatientLevelPrediction::evaluatePlp(prediction[prediction$indexes < 0,],
-                                            plpData)
-    }
-    
-    # record end time
-    endTime <- Sys.time()
-    TotalExecutionElapsedTime <-
-      as.numeric(difftime(endTime, ExecutionDateTime,
-                          units = "secs"))    
-    
-    # return data frame row for each run
-    return(
-      data.frame(
-        x = trainFractions[i] * 100,
-        popSizeTrain = nrow(population[population$index > 0,]),
-        outcomeCountTrain = sum(population[population$index > 0,]$outcomeCount),
-        executionTime = TotalExecutionElapsedTime,
-        trainAUCROC = performance.train$evaluationStatistics$AUC[[1]],
-        testAUCROC = performance.test$evaluationStatistics$AUC[[1]],
-        trainAUCPR = performance.train$evaluationStatistics$AUPRC[[1]],
-        testAUCPR = performance.test$evaluationStatistics$AUPRC[[1]],
-        trainBrierScore = performance.train$evaluationStatistics$BrierScore,
-        testBrierScore = performance.test$evaluationStatistics$BrierScore,
-        trainBrierScaled = performance.train$evaluationStatistics$BrierScaled,
-        testBrierScaled = performance.test$evaluationStatistics$BrierScaled,
-        trainCalibrationIntercept = performance.train$evaluationStatistics$CalibrationIntercept,
-        testCalibrationIntercept = performance.test$evaluationStatistics$CalibrationIntercept,
-        trainCalibrationSlope = performance.train$evaluationStatistics$CalibrationSlope,
-        testCalibrationSlope = performance.test$evaluationStatistics$CalibrationSlope
-      )
-    )
+    return(df)
 
   }
   names(learningCurve) <- c(
-    "x",
-    "popSizeTrain",
-    "outcomeCountTrain",
-    "executionTime",
-    "trainAUCROC",
-    "testAUCROC",
-    "trainAUCPR",
-    "testAUCPR",
-    "trainBrierScore",
-    "testBrierScore",
-    "trainBrierScaled",
-    "testBrierScaled",
-    "trainCalibrationIntercept",
-    "testCalibrationIntercept",
-    "trainCalibrationSlope",
-    "testCalibrationSlope"
+    "Fraction",
+    "Time",
+    "Occurrences",
+    "Observations",
+    "TestROC",
+    "TestPR",
+    "TestBrierScaled",
+    "TestBrierScore",
+    "TestCalibrationIntercept",
+    "TestCalibrationSlope",
+    "outcomeCountTest",
+    "popSizeTest",
+    "TrainROC",
+    "TrainPR",
+    "TrainBrierScaled",
+    "TrainBrierScore",
+    "TrainCalibrationIntercept",
+    "TrainCalibrationSlope"
   )
   
   endTime <- Sys.time()

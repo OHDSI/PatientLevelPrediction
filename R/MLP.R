@@ -180,7 +180,7 @@ trainMLP <- function(plpData, population, size=1, alpha=0.001, seed=NULL, train=
     colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
-    auc <- PatientLevelPrediction::computeAuc(pred)
+    auc <- computeAuc(pred)
     writeLines(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }

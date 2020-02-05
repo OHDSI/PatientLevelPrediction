@@ -4,12 +4,28 @@
 \alias{runPlp}
 \title{runPlp - Train and evaluate the model}
 \usage{
-runPlp(population, plpData, minCovariateFraction = 0.001, normalizeData = T,
-  modelSettings, testSplit = "stratified", testFraction = 0.25,
-  trainFraction = NULL, splitSeed = NULL, nfold = 3, indexes = NULL,
-  saveDirectory = NULL, savePlpData = T, savePlpResult = T,
-  savePlpPlots = T, saveEvaluation = T, verbosity = "INFO",
-  timeStamp = FALSE, analysisId = NULL, save = NULL)
+runPlp(
+  population,
+  plpData,
+  minCovariateFraction = 0.001,
+  normalizeData = T,
+  modelSettings,
+  testSplit = "stratified",
+  testFraction = 0.25,
+  trainFraction = NULL,
+  splitSeed = NULL,
+  nfold = 3,
+  indexes = NULL,
+  saveDirectory = NULL,
+  savePlpData = T,
+  savePlpResult = T,
+  savePlpPlots = T,
+  saveEvaluation = T,
+  verbosity = "INFO",
+  timeStamp = FALSE,
+  analysisId = NULL,
+  save = NULL
+)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to develop the model}

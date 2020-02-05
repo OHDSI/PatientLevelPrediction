@@ -28,8 +28,12 @@ test_that("ensure_installed", {
 
 # how to test checkPlpInstallation?
 
-test_that("interpretInstallCode", {
+test_that("interpretInstallCode no issues", {
   testthat::expect_equal(PatientLevelPrediction:::interpretInstallCode(1), NULL)
+})
+
+test_that("interpretInstallCode all issues", {
+  testthat::expect_equal(PatientLevelPrediction:::interpretInstallCode(3*5*7*11*13*17*19*23*29*31*37*43), NULL)
 })
 
 test_that("clearLoggerType", {
@@ -43,14 +47,14 @@ test_that("createTempModelLoc", {
 list1 <- list(a=1:2, b=5:6)
 list2 <- list(c=1:5)
 test_that("listAppend", {
-  testthat::expect_equal(length(PatientLevelPrediction::listAppend(list1, list2)), 3)
+  testthat::expect_equal(length(listAppend(list1, list2)), 3)
 })
 
 # how to test configurePython?
 
 test_that("setPythonEnvironment", {
-  testthat::expect_error(PatientLevelPrediction::setPythonEnvironment(envname='madeup34343'))
-  testthat::expect_equal(class(PatientLevelPrediction::setPythonEnvironment(envname='madeup34343', envtype = 'conda')), "character")
+  testthat::expect_error(setPythonEnvironment(envname='madeup34343'))
+  testthat::expect_equal(class(setPythonEnvironment(envname='madeup34343', envtype = 'conda')), "character")
 })
 
 

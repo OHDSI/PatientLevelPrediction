@@ -364,7 +364,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
   # log the end time:
   endTime <- Sys.time()
-  TotalExecutionElapsedTime <- endTime-ExecutionDateTime
+  TotalExecutionElapsedTime <- difftime(endTime, ExecutionDateTime, units='mins')
   
   # 1) input settings:
   inputSetting <- list(dataExtrractionSettings=plpData$metaData$call,

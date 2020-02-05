@@ -233,7 +233,7 @@ trainDeepNN<-function(plpData, population,
       
       class_weight=list("0"=1,"1"=outcome_weight)
       
-      data <- plpData[population$rowId[population$indexes!=index],,]
+      data <- plpData[population$rowId[population$indexes!=index],]
       
       #Extract validation set first - 10k people or 5%
       valN <- min(10000,sum(population$indexes!=index)*0.05)
@@ -245,7 +245,7 @@ trainDeepNN<-function(plpData, population,
           gc()
           rows<-sample(train_rows, batch_size, replace=FALSE)
           
-          list(as.array(data[rows,,]),
+          list(as.array(data[rows,]),
                population$y[population$indexes!=index,1:2][rows,])
         }
       }
@@ -254,9 +254,9 @@ trainDeepNN<-function(plpData, population,
       #print(table(population$y))
       
       history <- model %>% keras::fit_generator(sampling_generator(data,population,batch_size,train_rows, index),
-                                                steps_per_epoch = sum(population$indexes!=index)/batch_size,
+                                                steps_per_epoch = floor(sum(population$indexes!=index)/batch_size),
                                                 epochs=epochs,
-                                                validation_data=list(as.array(data[val_rows,,]),
+                                                validation_data=list(as.array(data[val_rows,]),
                                                                      population$y[population$indexes!=index,1:2][val_rows,]),
                                                 callbacks=list(earlyStopping,reduceLr),
                                                 class_weight=class_weight)
@@ -438,6 +438,8 @@ transferLearning <- function(plpResult,
   # add our custom layers
   predictions <- base_model$output 
   
+  ## add loop over settings here - move code to new function and call it
+  ##====
   # !!check this looping logic works
   for(i in 1:length(addLayers)){
     predictions %>% keras::layer_dense(units = addLayers[i], activation = layerActivation[i])
@@ -457,6 +459,7 @@ transferLearning <- function(plpResult,
                            metrics = c('accuracy'))
   
   
+  # make this input...
   earlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=10,mode="auto",min_delta = 1e-4)
   reduceLr=keras::callback_reduce_lr_on_plateau(monitor="val_loss", factor =0.1, 
                                                 patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, 
@@ -464,11 +467,7 @@ transferLearning <- function(plpResult,
   
   class_weight=list("0"=1,"1"=outcome_weight)
   
-  #Extract validation set first - 10k people or 5%
-  valN <- min(10000,nrow(population)*0.05)
-  val_rows<-sample(1:nrow(population), valN, replace=FALSE)
-  train_rows <- c(1:nrow(population))[-val_rows]
-  
+
   sampling_generator<-function(data, population, batchSize, train_rows){
     function(){
       gc()
@@ -488,6 +487,12 @@ transferLearning <- function(plpResult,
   result<- toSparseM(plpData,population,map=NULL, temporal=F)
   data <- result$data
   population$y <- keras::to_categorical(population$outcomeCount, length(unique(population$outcomeCount)))
+  
+  #Extract validation set first - 10k people or 5%
+  valN <- min(10000,nrow(population)*0.05)
+  val_rows<-sample(1:nrow(population), valN, replace=FALSE)
+  train_rows <- c(1:nrow(population))[-val_rows]
+  
 
   history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
                                             steps_per_epoch = nrow(population)/batchSize,
@@ -507,6 +512,8 @@ transferLearning <- function(plpResult,
     pred <- keras::predict_proba(model, as.array(plpData[batch,]))
     prediction$value[batch] <- pred[,2]
   }
+  
+  ##===
   
   attr(prediction, "metaData") <- list(predictionType = "binary")
   auc <- computeAuc(prediction)

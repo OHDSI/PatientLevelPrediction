@@ -4,8 +4,14 @@
 \alias{setLRTorch}
 \title{Create setting for logistics regression model with python}
 \usage{
-setLRTorch(w_decay = c(5e-04, 0.005), epochs = c(20, 50, 100),
-  seed = NULL, class_weight = 0, autoencoder = FALSE, vae = FALSE)
+setLRTorch(
+  w_decay = c(5e-04, 0.005),
+  epochs = c(20, 50, 100),
+  seed = NULL,
+  class_weight = 0,
+  autoencoder = FALSE,
+  vae = FALSE
+)
 }
 \arguments{
 \item{w_decay}{The l2 regularisation}

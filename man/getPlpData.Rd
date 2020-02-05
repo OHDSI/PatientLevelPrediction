@@ -4,14 +4,26 @@
 \alias{getPlpData}
 \title{Get the patient level prediction data from the server}
 \usage{
-getPlpData(connectionDetails, cdmDatabaseSchema,
-  oracleTempSchema = cdmDatabaseSchema, cohortId, outcomeIds,
-  studyStartDate = "", studyEndDate = "",
-  cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
-  outcomeDatabaseSchema = cdmDatabaseSchema, outcomeTable = "cohort",
-  cdmVersion = "5", firstExposureOnly = FALSE, washoutPeriod = 0,
-  sampleSize = NULL, covariateSettings, excludeDrugsFromCovariates = FALSE,
-  baseUrl = NULL)
+getPlpData(
+  connectionDetails,
+  cdmDatabaseSchema,
+  oracleTempSchema = cdmDatabaseSchema,
+  cohortId,
+  outcomeIds,
+  studyStartDate = "",
+  studyEndDate = "",
+  cohortDatabaseSchema = cdmDatabaseSchema,
+  cohortTable = "cohort",
+  outcomeDatabaseSchema = cdmDatabaseSchema,
+  outcomeTable = "cohort",
+  cdmVersion = "5",
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  sampleSize = NULL,
+  covariateSettings,
+  excludeDrugsFromCovariates = FALSE,
+  ...
+)
 }
 \arguments{
 \item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the

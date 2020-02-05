@@ -35,19 +35,24 @@ def python_predict_temporal(population, plpData, model_loc, dense, autoencoder):
   print("Loading Data...")
   # load data + train,test indexes + validation index
   y=population[:,1]
-  #X = plpData[population[:,0],:]
-  X = plpData.to_dense().numpy()
+  
+  ###########################################################################	
+  # uf dense convert 
+  if dense==1:
+    print("converting to dense data...")
+    X = plpData.to_dense().numpy()
+  if dense==0:
+    print("keeping data sparse...")
+    X = plpData.numpy()
+  ###########################################################################	
+  
+  # order the data
   X = X[np.int64(population[:, 0]), :]
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
   print("Dataset has %s rows and %s columns" %(X.shape[0], X.shape[1]))
   print("Data ready for model has %s features" %(np.shape(X)[1]))
-  ###########################################################################	
-  # uf dense convert 
-  if dense==1:
-    print("converting to dense data...")
-    X=X.toarray()
-  ###########################################################################	
+
   # load model
   print("Loading model...")
   if autoencoder:

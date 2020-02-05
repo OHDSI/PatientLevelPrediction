@@ -4,9 +4,19 @@
 \alias{createExistingModelSql}
 \title{Apply an existing logistic regression prediction model}
 \usage{
-createExistingModelSql(modelTable, modelNames, interceptTable, covariateTable,
-  type = "logistic", analysisId = 112, covariateSettings, asFunctions = F,
-  customCovariates = NULL, e = environment(), covariateValues = F)
+createExistingModelSql(
+  modelTable,
+  modelNames,
+  interceptTable,
+  covariateTable,
+  type = "logistic",
+  analysisId = 112,
+  covariateSettings,
+  asFunctions = F,
+  customCovariates = NULL,
+  e = environment(),
+  covariateValues = F
+)
 }
 \arguments{
 \item{modelTable}{A dataframe or list of dataframes with columns: modelId, modelCovariateId, coefficientValue all doubles}

@@ -2,7 +2,7 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 3.0.10
+Version: 3.0.11
 Date: 2020-01-07
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
@@ -80,8 +80,7 @@ Suggests:
     aws.s3,
     devtools,
     rms,
-    PythonInR,
     survminer
 LinkingTo: Rcpp
 NeedsCompilation: yes
-RoxygenNote: 6.0.1
+RoxygenNote: 7.0.2

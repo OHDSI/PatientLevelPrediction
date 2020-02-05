@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library("testthat")
 context("ImportExport.R")
 
 # how to test exportPlpDataToCsv?
 
+outputFolder <- './Temp/importexport'
 # Test unit for the creation of the study externalValidatePlp
 model <- list(model='none - validation',
      modelSettings= NULL,
@@ -69,7 +69,7 @@ result <- list(inputSetting=list(dataExtrractionSettings=list(connectionDetails=
                analysisRef= NULL)
 class(result) <- 'runPlp'
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,modelName='model', dataName='data',
+transport <- transportPlp(plpResult=result,modelName='model', dataName='data',
                                                   outputFolder, n=NULL,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=T, includeDemographicSummary=T,
                                                   includeCalibrationSummary =T, includePredictionDistribution=T,
@@ -97,7 +97,7 @@ test_that("check transportPlp", {
   
 })
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,modelName=NULL, dataName='data',
+transport <- transportPlp(plpResult=result,modelName=NULL, dataName='data',
                                                   outputFolder, n=NULL,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=T, includeDemographicSummary=T,
                                                   includeCalibrationSummary =T, includePredictionDistribution=T,
@@ -125,7 +125,7 @@ test_that("check transportPlp modelName", {
   
 })
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,modelName='model', dataName= NULL,
+transport <- transportPlp(plpResult=result,modelName='model', dataName= NULL,
                                                   outputFolder, n=NULL,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=T, includeDemographicSummary=T,
                                                   includeCalibrationSummary =T, includePredictionDistribution=T,
@@ -154,7 +154,7 @@ test_that("check transportPlp dataName", {
 })
 
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,
+transport <- transportPlp(plpResult=result,
                                                   outputFolder=outputFolder, n=NULL,includeEvaluationStatistics=F,
                                                   includeThresholdSummary=T, includeDemographicSummary=T,
                                                   includeCalibrationSummary =T, includePredictionDistribution=T,
@@ -177,7 +177,7 @@ test_that("check transportPlp eval stats", {
   
 })
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,
+transport <- transportPlp(plpResult=result,
                                                   outputFolder=outputFolder, n=NULL,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=F, includeDemographicSummary=T,
                                                   includeCalibrationSummary =T, includePredictionDistribution=T,
@@ -201,7 +201,7 @@ test_that("check transportPlp threshold", {
 })
 
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,
+transport <- transportPlp(plpResult=result,
                                                   outputFolder=outputFolder, n=NULL,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=T, includeDemographicSummary=F,
                                                   includeCalibrationSummary =T, includePredictionDistribution=T,
@@ -224,7 +224,7 @@ test_that("check transportPlp demo", {
   
 })
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,
+transport <- transportPlp(plpResult=result,
                                                   outputFolder=outputFolder, n=NULL,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=T, includeDemographicSummary=T,
                                                   includeCalibrationSummary =F, includePredictionDistribution=T,
@@ -247,7 +247,7 @@ test_that("check transportPlp cal", {
   
 })
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,
+transport <- transportPlp(plpResult=result,
                                                   outputFolder=outputFolder, n=NULL,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=T, includeDemographicSummary=T,
                                                   includeCalibrationSummary =T, includePredictionDistribution=F,
@@ -271,7 +271,7 @@ test_that("check transportPlp pred dist", {
 })
 
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,
+transport <- transportPlp(plpResult=result,
                                                   outputFolder=outputFolder, n=NULL,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=T, includeDemographicSummary=T,
                                                   includeCalibrationSummary =T, includePredictionDistribution=T,
@@ -296,7 +296,7 @@ test_that("check transportPlp cov sum", {
 })
 
 
-transport <- PatientLevelPrediction::transportPlp(plpResult=result,
+transport <- transportPlp(plpResult=result,
                                                   outputFolder=outputFolder, n=5,includeEvaluationStatistics=T,
                                                   includeThresholdSummary=T, includeDemographicSummary=T,
                                                   includeCalibrationSummary =T, includePredictionDistribution=T,
@@ -313,10 +313,15 @@ test_that("check transportPlp N is 5", {
   expect_equal(check3, TRUE)
 })
 
-#test_that("transportModel", {
-#  })
+test_that("transportModel", {
+  transportModel(plpModel = plpResult$model,outputFolder = file.path(saveLoc,'transportModel'))
+  testthat::expect_equal(dir.exists(file.path(saveLoc,'transportModel')), T)
+  
+  tmod <- loadPlpModel(file.path(saveLoc,'transportModel'))
+  testthat::expect_equal(tmod$metaData$call$connectionDetails, NULL)
+  })
 
-test_that("createLrSql", {
+test_that("createLrSql fails", {
   testthat::expect_error(createLrSql(modelNames=NULL, covariateConstructionName='prediction', 
                                      modelTable='#model_table',
                                      analysisId=111, e=environment(),
@@ -328,10 +333,25 @@ test_that("createLrSql", {
                                      databaseOutput=NULL))
   })
 
+test_that("createLrSql works", {
+  
+  env <- environment()
+  res <- createLrSql(models = plpResult$model, 
+                     modelNames = 'test', 
+                     covariateConstructionName='prediction', 
+                     modelTable='#model_table',
+                     analysisId=111, 
+                     e=env,
+                     databaseOutput=NULL)
+  
+  testthat::expect_equal(res, T)
+  testthat::expect_equal(exists('createpredictionCovariateSettings', envir = env), T)
+  testthat::expect_equal(exists('getpredictionCovariateSettings', envir = env), T)
+})
 
-test_that("getPredictionCovariateData", {
+test_that("getPredictionCovariateData fails", {
   covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
-  testthat::expect_error(PatientLevelPrediction:::getPredictionCovariateData(connection =NULL,
+  testthat::expect_error(getPredictionCovariateData(connection =NULL,
                                                                 oracleTempSchema = NULL,
                                                                 cdmDatabaseSchema = NULL,
                                                                 cohortTable = "#cohort_person",
@@ -343,7 +363,7 @@ test_that("getPredictionCovariateData", {
                                                                 analysisId=111,
                                                                 databaseOutput=NULL))
   
-  testthat::expect_error(PatientLevelPrediction:::getPredictionCovariateData(connection =NULL,
+  testthat::expect_error(getPredictionCovariateData(connection =NULL,
                                                     oracleTempSchema = NULL,
                                                     cdmDatabaseSchema = NULL,
                                                     cohortTable = "#cohort_person",
@@ -358,7 +378,7 @@ test_that("getPredictionCovariateData", {
 })
 
 
-test_that("createExistingModelSq", {
+test_that("createExistingModelSq fails", {
   covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
   testthat::expect_error(createExistingModelSql(modelNames = NULL, interceptTable = NULL,
                                                 covariateTable, type='logistic',
@@ -378,7 +398,29 @@ test_that("createExistingModelSq", {
   
 })
 
-test_that("getExistingmodelsCovariateData", {
+
+test_that("createExistingModelSq worls", {
+  env <- environment()
+  res <- createExistingModelSql(modelTable = data.frame(modelId=1,
+                                                        modelCovariateId=rep(-1,1),
+                                                        coefficientValue=rep(0,1)), 
+                                modelNames = 'Testing', 
+                                interceptTable = NULL,
+                                covariateTable = data.frame(modelCovariateId=-1, covariateId=1002), 
+                                type='logistic',
+                                analysisId=112, 
+                                covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T),
+                                asFunctions=F, 
+                                customCovariates=NULL,
+                                e=env,
+                                covariateValues = F)
+
+testthat::expect_equal(res, T)
+testthat::expect_equal(exists('createExistingmodelsCovariateSettings', envir = env), T)
+testthat::expect_equal(exists('getExistingmodelsCovariateSettings', envir = env), T)
+})
+
+test_that("getExistingmodelsCovariateData fails", {
 # getExistingmodelsCovariateData
   covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
   testthat::expect_error(PatientLevelPrediction:::getExistingmodelsCovariateData(covariateSettings= NULL))
@@ -402,7 +444,7 @@ test_that("toPlpData", {
   
   # check input fails
   options(fftempdir = getwd())
-  testData <- PatientLevelPrediction::toPlpData(data, columnInfo, outcomeId, outcomeThreshold=0.5,
+  testData <- toPlpData(data, columnInfo, outcomeId, outcomeThreshold=0.5,
                                                 indexTime =0, includeIndexDay=T )
   
   # should convert all the entries 10 variables per 10 people = 100 rows

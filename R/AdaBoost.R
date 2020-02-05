@@ -183,7 +183,7 @@ trainAdaBoost <- function(population, plpData, nEstimators = 50, learningRate = 
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType = "binary")
 
-    auc <- PatientLevelPrediction::computeAuc(pred)
+    auc <- computeAuc(pred)
     writeLines(paste0("CV model obtained CV AUC of ", auc))
     return(auc)
   }

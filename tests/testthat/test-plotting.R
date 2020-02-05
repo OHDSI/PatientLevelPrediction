@@ -19,71 +19,44 @@ library("testthat")
 context("Plotting")
 #TODO: add input checks and test these...
 #options(fftempdir = getwd())
-set.seed(1234)
-data(plpDataSimulationProfile)
-sampleSize <- 2000
-plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-# create popualtion for outcome 2
-population <- createStudyPopulation(plpData,
-                                    outcomeId = 2,
-                                    firstExposureOnly = FALSE,
-                                    washoutPeriod = 0,
-                                    removeSubjectsWithPriorOutcome = FALSE,
-                                    priorOutcomeLookback = 99999,
-                                    requireTimeAtRisk = FALSE,
-                                    minTimeAtRisk=0,
-                                    riskWindowStart = 0,
-                                    addExposureDaysToStart = FALSE,
-                                    riskWindowEnd = 365,
-                                    addExposureDaysToEnd = FALSE
-                                    #,verbosity=INFO
-)
-lr_model <- PatientLevelPrediction::setLassoLogisticRegression()
-lr_results <- tryCatch(runPlp(population = population, plpData = plpData, 
-                              verbosity = 'NONE',
-                              modelSettings = lr_model, savePlpData = F,
-                              savePlpResult = F, savePlpPlots =  F, 
-                              saveEvaluation = F,
-                              testSplit='stratified', # this splits by person
-                              testFraction=0.25,
-                              nfold=2))
+
 
 test_that("plots", {
 
   # test all the outputs are ggplots
-  test <- plotRoc(lr_results$prediction)
+  test <- plotRoc(plpResult$prediction)
   testthat::expect_s3_class(test, 'ggplot')
 
-  test <- plotSparseRoc(lr_results$performanceEvaluation)
+  test <- plotSparseRoc(plpResult$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotPredictedPDF(lr_results$performanceEvaluation)
+  test <- plotPredictedPDF(plpResult$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotPreferencePDF(lr_results$performanceEvaluation)
+  test <- plotPreferencePDF(plpResult$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotPrecisionRecall(lr_results$performanceEvaluation)
+  test <- plotPrecisionRecall(plpResult$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotF1Measure(lr_results$performanceEvaluation)
+  test <- plotF1Measure(plpResult$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  if(!is.null(lr_results$performanceEvaluation$demographicSummary)){
-    test <- plotDemographicSummary(lr_results$performanceEvaluation)
+  if(!is.null(plpResult$performanceEvaluation$demographicSummary)){
+    test <- plotDemographicSummary(plpResult$performanceEvaluation)
     testthat::expect_s3_class(test, 'ggplot')
   }
   
-  test <- plotSparseCalibration(lr_results$performanceEvaluation)
+  test <- plotSparseCalibration(plpResult$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotPredictionDistribution(lr_results$performanceEvaluation)
+  test <- plotPredictionDistribution(plpResult$performanceEvaluation)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotVariableScatterplot(lr_results$covariateSummary)
+  test <- plotVariableScatterplot(plpResult$covariateSummary)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotGeneralizability(lr_results$covariateSummary)
+  test <- plotGeneralizability(plpResult$covariateSummary, fileName=NULL)
   testthat::expect_s3_class(test, 'grob')
 
 })
@@ -100,4 +73,75 @@ test_that("outcomeSurvivalPlot", {
   testthat::expect_error(outcomeSurvivalPlot(outcomeId = 094954))
 })
 
+
+test_that("plotPlp", {
   
+  # test the plot works
+  test <- plotPlp(result = plpResultReal, filename = saveLoc)
+  testthat::expect_equal(test, T)
+  testthat::expect_equal(dir.exists(file.path(saveLoc,'plots')), T)
+  
+})
+
+  
+test_that("plotSmoothCalibration", {
+  
+  # test the plot works
+  test <- plotSmoothCalibration(result = plpResultReal,
+                                smooth = "loess",
+                                span = 1,
+                                nKnots = 5,
+                                scatter = F,
+                                type = "test",
+                                bins = 20,
+                                zoom = "none",
+                                fileName = NULL)
+  testthat::expect_s3_class(test, 'ggplot')
+  
+  # this fails:
+  #test2 <- plotSmoothCalibration(result = plpResultReal,
+  #                              smooth = "rcs",
+  #                              span = 1,
+  #                              nKnots = 5,
+  #                              scatter = F,
+  #                              type = "test",
+  #                              bins = 20,
+  #                              zoom = "data",
+  #                              fileName = NULL)
+  #testthat::expect_s3_class(test2, 'ggplot')
+  
+})
+
+
+test_that("plotLearningCurve", {
+  
+  # test the plot works
+  test <- plotLearningCurve(learningCurve = learningCurve,
+                    metric = "AUROC",
+                    abscissa = "observations",
+                    plotTitle = "Learning Curve", 
+                    plotSubtitle = NULL,
+                    fileName = NULL)
+  testthat::expect_s3_class(test, 'ggplot')
+  
+  test <- plotLearningCurve(learningCurve = learningCurve,
+                            metric = "AUPRC",
+                            abscissa = "observations",
+                            plotTitle = "Learning Curve", 
+                            plotSubtitle = NULL,
+                            fileName = NULL)
+  testthat::expect_s3_class(test, 'ggplot')
+  
+  test <- plotLearningCurve(learningCurve = learningCurve,
+                            metric = "sBrier",
+                            abscissa = "observations",
+                            plotTitle = "Learning Curve", 
+                            plotSubtitle = NULL,
+                            fileName = NULL)
+  testthat::expect_s3_class(test, 'ggplot')
+  
+})
+
+
+
+

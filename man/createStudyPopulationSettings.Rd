@@ -4,12 +4,21 @@
 \alias{createStudyPopulationSettings}
 \title{create the study population settings}
 \usage{
-createStudyPopulationSettings(binary = T, includeAllOutcomes = T,
-  firstExposureOnly = FALSE, washoutPeriod = 0,
-  removeSubjectsWithPriorOutcome = TRUE, priorOutcomeLookback = 99999,
-  requireTimeAtRisk = T, minTimeAtRisk = 364, riskWindowStart = 1,
-  addExposureDaysToStart = FALSE, riskWindowEnd = 365,
-  addExposureDaysToEnd = F, verbosity = "INFO")
+createStudyPopulationSettings(
+  binary = T,
+  includeAllOutcomes = T,
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  removeSubjectsWithPriorOutcome = TRUE,
+  priorOutcomeLookback = 99999,
+  requireTimeAtRisk = T,
+  minTimeAtRisk = 364,
+  riskWindowStart = 1,
+  addExposureDaysToStart = FALSE,
+  riskWindowEnd = 365,
+  addExposureDaysToEnd = F,
+  verbosity = "INFO"
+)
 }
 \arguments{
 \item{binary}{Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)}

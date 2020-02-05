@@ -3,7 +3,6 @@
 \docType{package}
 \name{PatientLevelPrediction}
 \alias{PatientLevelPrediction}
-\alias{PatientLevelPrediction-package}
 \title{PatientLevelPrediction}
 \description{
 PatientLevelPrediction

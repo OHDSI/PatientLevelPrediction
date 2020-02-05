@@ -5,9 +5,17 @@
 \title{Plot the smooth calibration as detailed in Calster et al. "A calibration heirarchy for risk models
 was defined: from utopia to empirical data" (2016)}
 \usage{
-plotSmoothCalibration(result, smooth = c("loess", "rcs"), span = 1,
-  nKnots = 5, scatter = F, type = "test", bins = 20, zoom = c("none",
-  "deciles", "data"), fileName = NULL)
+plotSmoothCalibration(
+  result,
+  smooth = c("loess", "rcs"),
+  span = 1,
+  nKnots = 5,
+  scatter = F,
+  type = "test",
+  bins = 20,
+  zoom = c("none", "deciles", "data"),
+  fileName = NULL
+)
 }
 \arguments{
 \item{result}{The result of running \code{\link{runPlp}} function. An object containing the

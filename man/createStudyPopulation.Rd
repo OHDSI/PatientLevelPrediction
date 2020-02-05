@@ -4,12 +4,25 @@
 \alias{createStudyPopulation}
 \title{Create a study population}
 \usage{
-createStudyPopulation(plpData, population = NULL, outcomeId, binary = T,
-  includeAllOutcomes = T, firstExposureOnly = FALSE, washoutPeriod = 0,
-  removeSubjectsWithPriorOutcome = TRUE, priorOutcomeLookback = 99999,
-  requireTimeAtRisk = T, minTimeAtRisk = 365, riskWindowStart = 0,
-  addExposureDaysToStart = FALSE, riskWindowEnd = 365,
-  addExposureDaysToEnd = F, verbosity = "INFO", ...)
+createStudyPopulation(
+  plpData,
+  population = NULL,
+  outcomeId,
+  binary = T,
+  includeAllOutcomes = T,
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  removeSubjectsWithPriorOutcome = TRUE,
+  priorOutcomeLookback = 99999,
+  requireTimeAtRisk = T,
+  minTimeAtRisk = 365,
+  riskWindowStart = 0,
+  addExposureDaysToStart = FALSE,
+  riskWindowEnd = 365,
+  addExposureDaysToEnd = F,
+  verbosity = "INFO",
+  ...
+)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using

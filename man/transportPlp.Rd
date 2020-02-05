@@ -4,11 +4,20 @@
 \alias{transportPlp}
 \title{Transports a plpResult to a new location and removed sensitive data}
 \usage{
-transportPlp(plpResult, modelName = NULL, dataName = NULL, outputFolder,
-  n = NULL, includeEvaluationStatistics = T, includeThresholdSummary = T,
-  includeDemographicSummary = T, includeCalibrationSummary = T,
-  includePredictionDistribution = T, includeCovariateSummary = T,
-  save = T)
+transportPlp(
+  plpResult,
+  modelName = NULL,
+  dataName = NULL,
+  outputFolder,
+  n = NULL,
+  includeEvaluationStatistics = T,
+  includeThresholdSummary = T,
+  includeDemographicSummary = T,
+  includeCalibrationSummary = T,
+  includePredictionDistribution = T,
+  includeCovariateSummary = T,
+  save = T
+)
 }
 \arguments{
 \item{plpResult}{An object returned by running \code{runPlp}.}

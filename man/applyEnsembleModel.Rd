@@ -7,8 +7,13 @@ Prediction Data and get the predicted risk in [0,1] for each person in the popul
 inputs a population with an outcomeCount column then the function also returns the evaluation of
 the prediction (AUC, brier score, calibration)}
 \usage{
-applyEnsembleModel(population, dataList, ensembleModel, analysisId = NULL,
-  calculatePerformance = T)
+applyEnsembleModel(
+  population,
+  dataList,
+  ensembleModel,
+  analysisId = NULL,
+  calculatePerformance = T
+)
 }
 \arguments{
 \item{population}{The population of people who you want to predict the risk for}

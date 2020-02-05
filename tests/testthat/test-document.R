@@ -18,15 +18,13 @@ library("testthat")
 context("Document.R")
 # Test unit for the document creation 
 
-test_that("document creation parameters", {
+test_that("createPlpJournalDocument creation parameters errors", {
   
   #test createPlpDocument inputs
   expect_error(createPlpJournalDocument(plpResult=NULL))
   
   expect_error(createPlpJournalDocument(plpResult=1:5))
   
-  plpResult <- list(1)
-  class(plpResult) <- 'plpModel'
   # target name not character
   expect_error(createPlpJournalDocument(plpResult=plpResult, targetName=1))
   
@@ -57,42 +55,12 @@ test_that("document creation parameters", {
                                         includeTrain=T, includeTest=T, includePredictionPicture=T, 
                                         includeAttritionPlot='Y'))
   
-  
-  #set.seed(1234)
-  #data(plpDataSimulationProfile)
-  #sampleSize <- 2000
-  #plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-  #population <- PatientLevelPrediction::createStudyPopulation(plpData, outcomeId=2,
-  #                                                            riskWindowEnd = 365)
-  #modelset <- PatientLevelPrediction::setLassoLogisticRegression()
-  #plpResult <- PatientLevelPrediction::runPlp(population, plpData, modelset, saveModel = F)
-  #doc <- PatientLevelPrediction::createPlpJournalDocument(plpResult=plpResult, plpData = plpData, 
-  #                                                        targetName='target test', 
-  #                                                 outcomeName='outcome test',
-  #                                                 includeTrain=T, includeTest=T, 
-  #                                                 includePredictionPicture=T, 
-  #                                                 includeAttritionPlot=T)
-  #expect_equal(doc, TRUE)
-  ## clean up
-  #file.remove(file.path(getwd(), 'plp_journal_document.docx'))
-  
 })
 
-data(plpDataSimulationProfile)
-sampleSize <- 2000
-plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-population <- PatientLevelPrediction::createStudyPopulation(plpData, outcomeId=2,
-                                                            riskWindowEnd = 365)
-modelset <- PatientLevelPrediction::setCoxModel()
-plpResult <- PatientLevelPrediction::runPlp(population=population, 
-                                            plpData=plpData, modelSettings = modelset, 
-                                            savePlpData = F, saveEvaluation = F, 
-                                            savePlpResult = F, 
-                                            savePlpPlots = F, verbosity = 'NONE')
 
 test_that("createPlpJournalDocument document works", {
   
-  doc <- PatientLevelPrediction::createPlpJournalDocument(plpResult=plpResult, plpData = plpData, 
+  doc <- createPlpJournalDocument(plpResult=plpResult, plpData = plpData, 
                                                           targetName='target test', 
                                                           outcomeName='outcome test',
                                                           includeTrain=T, includeTest=T, 
@@ -102,16 +70,42 @@ test_that("createPlpJournalDocument document works", {
   
 })
 
-test_that("createPlpReport document works", {
+
+test_that("createPlpReport creation parameters errors", {
+  
+  #test createPlpDocument inputs
+  expect_error(createPlpReport(plpResult=NULL))
+  
+  expect_error(createPlpReport(plpResult=1:5))
+  
+  # target name not character
+  expect_error(createPlpReport(plpResult=plpResult, targetName=1))
+  
+  # outcomeName not character
+  expect_error(createPlpReport(plpResult=plpResult, targetName='target test', outcomeName=1))
+  
+  
+})
+
+test_that("createPlpReport document works without validation", {
   doc <- createPlpReport(plpResult=plpResult, plpValidation=NULL,
                          plpData = plpData,
                          targetName = '<target population>',
                          outcomeName = '<outcome>',
                          targetDefinition = NULL,
                          outcomeDefinition = NULL,
-                         outputLocation=file.path(getwd(), 'plp_report.docx'),
+                         outputLocation=file.path(saveLoc, 'plp_report.docx'),
                          save = F)
   
   expect_equal(class(doc), "rdocx")
   
 })
+
+# add tests with validation (validation object in helper-objects.R)
+# TODO...
+
+
+
+
+# test get table 1 - need to make temp cohort table...
+# getPlpTable <- function(cdmDatabaseSchema,oracleTempSchema, covariateSettings, longTermStartDays=-365,population, connectionDetails,cohortTable='#temp_person')

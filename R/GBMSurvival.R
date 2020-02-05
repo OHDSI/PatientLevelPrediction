@@ -287,7 +287,7 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
     pred$outcomeCount[pred$outcomeBoolean==T ] <- 1
     attr(pred, "metaData") <- list(predictionType = "binary")
 
-    auc <- PatientLevelPrediction::computeAuc(pred)
+    auc <- computeAuc(pred)
     writeLines(paste0("CV model obtained CV AUC of ", auc))
     return(auc)
   }

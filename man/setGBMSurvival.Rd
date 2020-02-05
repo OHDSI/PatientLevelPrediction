@@ -6,12 +6,25 @@
 #' @description
 This creates a setting for fitting  GBM surivial model.  You need sksurv python install.  To install this open your command line and type: conda install -c sebp scikit-survival}
 \usage{
-setGBMSurvival(loss = "coxph", learningRate = 0.1, nEstimators = c(100),
-  criterion = "friedman_mse", minSamplesSplit = 2, minSamplesLeaf = 1,
-  minWeightFractionLeaf = 0, maxDepth = c(3, 10, 17),
-  minImpuritySplit = NULL, minImpurityDecrease = 0, maxFeatures = NULL,
-  maxLeafNodes = NULL, presort = "auto", subsample = 1, dropoutRate = 0,
-  seed = NULL, quiet = F)
+setGBMSurvival(
+  loss = "coxph",
+  learningRate = 0.1,
+  nEstimators = c(100),
+  criterion = "friedman_mse",
+  minSamplesSplit = 2,
+  minSamplesLeaf = 1,
+  minWeightFractionLeaf = 0,
+  maxDepth = c(3, 10, 17),
+  minImpuritySplit = NULL,
+  minImpurityDecrease = 0,
+  maxFeatures = NULL,
+  maxLeafNodes = NULL,
+  presort = "auto",
+  subsample = 1,
+  dropoutRate = 0,
+  seed = NULL,
+  quiet = F
+)
 }
 \arguments{
 \item{loss}{A string specifying the loss function to minimise (default: 'coxph' )}

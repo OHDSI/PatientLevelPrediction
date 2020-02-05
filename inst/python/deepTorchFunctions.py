@@ -1621,7 +1621,7 @@ def train_deeptorch(population, plpData, train = True, model_type = 'LogisticReg
       loss=nn.CrossEntropyLoss(weight = class_weight)
     
     if train:
-      test_pred = np.zeros(pred_size)  # zeros length sum(population[:,population.size[1]] ==i)
+      test_pred = np.zeros(population[population[:, population.shape[1] - 1] > 0, :].shape[0])  # zeros length sum(population[:,population.size[1]] ==i)
       for i in range(1, int(np.max(population[:, population.shape[1] - 1]) + 1), 1):
         testInd = population[population[:, population.shape[1] - 1] > 0, population.shape[1] - 1] == i
         trainInd = (population[population[:, population.shape[1] - 1] > 0, population.shape[1] - 1] != i)
@@ -1727,6 +1727,6 @@ def train_deeptorch(population, plpData, train = True, model_type = 'LogisticReg
       for test in test_batch:
         pred_test1 = model.predict_proba(test)[:, 1]
         test_pred = np.concatenate((test_pred, pred_test1), axis = 0)
-      test_pred.shape = (population.shape[0], 1)
-      prediction = np.append(population, test_pred, axis=1)
+      test_pred.shape = (population[population[:, population.shape[1] - 1] > 0, :].shape[0], 1)
+      prediction = np.append(population[population[:, population.shape[1] - 1] > 0, :], test_pred, axis=1)
       return prediction;

@@ -4,8 +4,14 @@
 \alias{toPlpData}
 \title{Convert matrix into plpData}
 \usage{
-toPlpData(data, columnInfo, outcomeId, outcomeThreshold = 0.5,
-  indexTime = 0, includeIndexDay = T)
+toPlpData(
+  data,
+  columnInfo,
+  outcomeId,
+  outcomeThreshold = 0.5,
+  indexTime = 0,
+  includeIndexDay = T
+)
 }
 \arguments{
 \item{data}{An data.frame or matrix.}

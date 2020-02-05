@@ -4,9 +4,18 @@
 \alias{setCovNN2}
 \title{Create setting for CovNN2 model - convolution across input and time - https://arxiv.org/pdf/1608.00647.pdf}
 \usage{
-setCovNN2(batchSize = 1000, outcomeWeight = 1, lr = 1e-05,
-  decay = 1e-06, dropout = 0, epochs = 10, filters = 3,
-  kernelSize = 10, loss = "binary_crossentropy", seed = NULL)
+setCovNN2(
+  batchSize = 1000,
+  outcomeWeight = 1,
+  lr = 1e-05,
+  decay = 1e-06,
+  dropout = 0,
+  epochs = 10,
+  filters = 3,
+  kernelSize = 10,
+  loss = "binary_crossentropy",
+  seed = NULL
+)
 }
 \arguments{
 \item{batchSize}{The number of samples to used in each batch during model training}

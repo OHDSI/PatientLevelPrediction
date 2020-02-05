@@ -503,7 +503,7 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
     x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
     
     # 1.96*StDevPredictedProbability
-    ci <- evaluation$demographicSummary[,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
+    ci <- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
     ci$StDevPredictedProbability[is.na(ci$StDevPredictedProbability)] <- 1
     ci$lower <- ci$averagePredictedProbability-1.96*ci$StDevPredictedProbability
     ci$lower[ci$lower <0] <- 0
@@ -519,7 +519,8 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
     x <- merge(x, ci[,c('ageGroup','genGroup','lower','upper')], by=c('ageGroup','genGroup'))
     
     plot <- ggplot2::ggplot(data=x, 
-                            ggplot2::aes(x=age, group=variable*genGroup)) +
+                            ggplot2::aes(x=age, 
+                                         group=interaction(variable,genGroup))) +
 
       ggplot2::geom_line(ggplot2::aes(y=value, group=variable,
                                       color=variable,
@@ -527,7 +528,7 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
       ggplot2::geom_ribbon(data=x[x$variable!='observed',],
                            ggplot2::aes(ymin=lower, ymax=upper
                                         , group=genGroup), 
-                           fill="blue", alpha="0.2") +
+                           fill="blue", alpha=0.2) +
       ggplot2::facet_grid(.~ genGroup, scales = "free") +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
       #ggplot2::coord_flip() +
@@ -592,7 +593,7 @@ plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
                           ggplot2::aes(x=averagePredictedProbability, y=observedIncidence
                                        )) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin=lci,ymax=uci, x=x), 
-                         fill="blue", alpha="0.2") +
+                         fill="blue", alpha=0.2) +
     ggplot2::geom_point(size=1, color='darkblue') +
     ggplot2::coord_cartesian(ylim = c(0, maxVal), xlim =c(0,maxVal)) +
     ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 2, size=1,
@@ -856,7 +857,7 @@ plotSmoothCalibration <- function(result,
     smooth_plot <- ggplot2::ggplot(data = smoothData, ggplot2::aes(x = xRange, y = predXRange)) +
                    ggplot2::geom_line(ggplot2::aes(color = "rcs", linetype = "rcs")) +
                    ggplot2::geom_ribbon(ggplot2::aes(ymin = lci,
-                                                     ymax = uci), fill = "blue", alpha = "0.2") +
+                                                     ymax = uci), fill = "blue", alpha = 0.2) +
                    ggplot2::geom_segment(ggplot2::aes(x = 0,
                                                       xend = 1,
                                                       y = 0,
@@ -1122,14 +1123,6 @@ plotLearningCurve <- function(learningCurve,
                               plotSubtitle = NULL,
                               fileName = NULL){
   
-  # rename dataframe columns
-  colnames(learningCurve) <- c("Fraction", "Observations", "Occurrences",
-                               "Time", "TrainROC", "TestROC", "TrainPR",
-                               "TestPR", "TrainBrierScore", "TestBrierScore",
-                               "TrainBrierScaled", "TestBrierScaled",
-                               "TrainCalibrationIntercept",
-                               "TestCalibrationIntercept",
-                               "TrainCalibrationSlope", "TestCalibrationSlope")
   tidyLearningCurve <- NULL
   yAxisRsnge <- NULL
   y <- NULL

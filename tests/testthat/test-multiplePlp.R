@@ -17,10 +17,10 @@
 library("testthat")
 context("MultiplePlp")
 
-test_that("evaluateMultiplePlp", {
+test_that("evaluateMultiplePlp errors", {
   
-  testthat::expect_error(evaluateMultiplePlp(analysesLocation ='madeup' ,
-                                  outputLocation='madeup',
+  testthat::expect_error(evaluateMultiplePlp(analysesLocation = file.path(saveLoc,'madeup') ,
+                                  outputLocation= file.path(saveLoc,'madeup'),
                                   connectionDetails='madeup', 
                                   validationSchemaTarget='madeup',
                                   validationSchemaOutcome='madeup',
@@ -71,11 +71,9 @@ test_that("createStudyPopulationSettings", {
 })
 
 # TODO
-test_that("combinePlpModelSettings", {
-  
+#test_that("combinePlpModelSettings", {
   #result <- combinePlpModelSettings(plpModelSetting1, plpModelSetting2)
-
-})
+#})
 
 test_that("createPlpModelSettings", {
 
@@ -104,37 +102,33 @@ test_that("createPlpModelSettings", {
 
 })
 
+studyPop1 <- createStudyPopulationSettings(binary = T,
+                                           includeAllOutcomes = F,
+                                           removeSubjectsWithPriorOutcome = F,
+                                           priorOutcomeLookback = 99999,
+                                           requireTimeAtRisk = T,
+                                           minTimeAtRisk=1,
+                                           riskWindowStart = 0,
+                                           riskWindowEnd = 1000,
+                                           verbosity = "INFO")
+studyPop2 <- createStudyPopulationSettings(binary = T,
+                                           includeAllOutcomes = F,
+                                           removeSubjectsWithPriorOutcome = F,
+                                           priorOutcomeLookback = 99999,
+                                           requireTimeAtRisk = T,
+                                           minTimeAtRisk=1,
+                                           riskWindowStart = 0,
+                                           riskWindowEnd = 2000,
+                                           verbosity = "INFO")
+
+covSet1 <- createCovariateSettings(useDemographicsGender = T, 
+                                   useDemographicsAgeGroup = T)
+modelAnalysisList <- createPlpModelSettings(modelList = list(setGradientBoostingMachine(seed = 1)), 
+                                            covariateSettingList = list(covSet1), 
+                                            populationSettingList = list(studyPop1,
+                                                                         studyPop2))
 
 test_that("createPlpReferenceTable", {
-  
-  studyPop1 <- createStudyPopulationSettings(binary = T,
-                                             includeAllOutcomes = T,
-                                             removeSubjectsWithPriorOutcome = TRUE,
-                                             priorOutcomeLookback = 99999,
-                                             requireTimeAtRisk = T,
-                                             minTimeAtRisk=364,
-                                             riskWindowStart = 1,
-                                             riskWindowEnd = 365,
-                                             verbosity = "INFO")
-  studyPop2 <- createStudyPopulationSettings(binary = T,
-                                             includeAllOutcomes = F,
-                                             removeSubjectsWithPriorOutcome = TRUE,
-                                             priorOutcomeLookback = 99999,
-                                             requireTimeAtRisk = T,
-                                             minTimeAtRisk=364,
-                                             riskWindowStart = 1,
-                                             riskWindowEnd = 365,
-                                             verbosity = "INFO")
-  
-  covSet1 <- createCovariateSettings(useDemographicsGender = T, 
-                                     useDemographicsAgeGroup = T, 
-                                     useConditionGroupEraAnyTimePrior = T,
-                                     useDrugGroupEraAnyTimePrior = T)
-  modelAnalysisList <- createPlpModelSettings(modelList = list(setGradientBoostingMachine(),
-                                                               setLassoLogisticRegression()), 
-                                              covariateSettingList = list(covSet1), 
-                                              populationSettingList = list(studyPop1,
-                                                                           studyPop2))
   
   cohorts <- sample(200,sample(10,1))
   outs <- 200+sample(200,sample(10,1))
@@ -149,3 +143,90 @@ test_that("createPlpReferenceTable", {
   testthat::expect_true(unique(result$devDatabase)== 'data')
   
 })
+
+# returns location
+test_that("save and loadPredictionAnalysisList works", {
+  if(!dir.exists(file.path(saveLoc,'multList'))){dir.create(file.path(saveLoc,'multList'))}
+  write.csv(data.frame(cohortId = 1:2,name = paste('blabla',1:2)), file.path(saveLoc,'multList/CohortsToCreate.csv'))
+  predictionAnalysisListFile <- savePredictionAnalysisList(workFolder= file.path(saveLoc,"multList"),
+                                                           cohortIds = c(1,2),
+                                                           outcomeIds = c(3,4),
+                                                           modelSettingList = list(setLassoLogisticRegression()),
+                                                           covariateSettingList = list(covSet1), 
+                                                           populationSettingList = list(studyPop1,
+                                                                                        studyPop2),
+                                                           maxSampleSize= NULL,
+                                                           washoutPeriod=0,
+                                                           minCovariateFraction=0,
+                                                           normalizeData=T,
+                                                           testSplit='person',
+                                                           testFraction=0.25,
+                                                           splitSeed=1,
+                                                           nfold=3)
+  
+  testthat::expect_equal(file.exists(predictionAnalysisListFile), T)
+  
+  # returns a list
+  res <- loadPredictionAnalysisList(predictionAnalysisListFile)
+  testthat::expect_equal(class(res), 'list')
+})
+
+runPlpAnalysesResults <- runPlpAnalyses(connectionDetails = connectionDetails,
+                          cdmDatabaseSchema = cdmDatabaseSchema,
+                          cdmDatabaseName = 'test',
+                          oracleTempSchema = cdmDatabaseSchema,
+                          cohortDatabaseSchema = ohdsiDatabaseSchema,
+                          cohortTable = "cohorts",
+                          outcomeDatabaseSchema = ohdsiDatabaseSchema,
+                          outcomeTable = 'outs_test',
+                          cdmVersion = 5,
+                          outputFolder = file.path(saveLoc,"mult"),
+                          modelAnalysisList = modelAnalysisList,
+                          cohortIds = 1,
+                          cohortNames = 'test cohort',
+                          outcomeIds = 2,
+                          outcomeNames = 'test outcome',
+                          washoutPeriod = 0,
+                          maxSampleSize = NULL,
+                          minCovariateFraction = 0,
+                          normalizeData = T,
+                          testSplit = "subject",
+                          testFraction = 0.25,
+                          splitSeed = 1,
+                          nfold = 3,
+                          verbosity = "INFO")
+test_that("runPlpAnalyses works", {
+testthat::expect_equal(class(runPlpAnalysesResults), 'data.frame')
+
+})
+
+test_that("getSummary file without external validation", {
+  res <- getSummary(result = file.path(saveLoc,"mult"), inputType = 'file', validation = NULL)
+  testthat::expect_equal(class(res), 'data.frame')
+  testthat::expect_equal(nrow(res), 2)
+})
+test_that("checkPlpInput file", {
+  res <- checkPlpInput(file.path(saveLoc,"mult"))
+  testthat::expect_equal(res, 'file')
+})
+
+valMult <- evaluateMultiplePlp(analysesLocation = file.path(saveLoc,"mult"),
+                               outputLocation = file.path(saveLoc,'mult/Validation'),
+                               connectionDetails = connectionDetails, 
+                               validationSchemaTarget = ohdsiDatabaseSchema,
+                               validationSchemaOutcome = ohdsiDatabaseSchema,
+                               validationSchemaCdm = cdmDatabaseSchema, 
+                               databaseNames = 'test',
+                               validationTableTarget = 'cohorts',
+                               validationTableOutcome = 'outs_test',
+                               validationIdTarget = 1,
+                               validationIdOutcome = 2,
+                               oracleTempSchema = NULL,
+                               verbosity = 'INFO',
+                               keepPrediction = F,
+                               sampleSize = NULL)
+test_that("evaluateMultiplePlp", {
+testthat::expect_equal(dir.exists(file.path(saveLoc,'mult/Validation/test')), T)
+
+})
+

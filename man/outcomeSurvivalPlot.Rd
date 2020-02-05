@@ -4,9 +4,16 @@
 \alias{outcomeSurvivalPlot}
 \title{Plot the outcome incidence over time}
 \usage{
-outcomeSurvivalPlot(plpData, outcomeId, removeSubjectsWithPriorOutcome = T,
-  riskWindowStart = 1, riskWindowEnd = 3650, riskTable = T, confInt = T,
-  yLabel = "Fraction of those who are outcome free in target population")
+outcomeSurvivalPlot(
+  plpData,
+  outcomeId,
+  removeSubjectsWithPriorOutcome = T,
+  riskWindowStart = 1,
+  riskWindowEnd = 3650,
+  riskTable = T,
+  confInt = T,
+  yLabel = "Fraction of those who are outcome free in target population"
+)
 }
 \arguments{
 \item{plpData}{The plpData object returned by running getPlpData()}

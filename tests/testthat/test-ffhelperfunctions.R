@@ -38,18 +38,18 @@ test_that("in.ff", {
 
 
 test_that("calculatePrevs", {
-  pop <- data.frame(rowId = 1:10,
+  THpop <- data.frame(rowId = 1:10,
                     outcomeCount = c(rep(0,5), rep(1,5)))
   N <- sample(9,1)
-  covariates <- data.frame(rowId = sample(10, N),
-                           covariateId = as.factor(c(rep(101, N))))
-  covariates <- ff::as.ffdf(covariates)
-  data <- list(covariates = covariates)
-  res <- PatientLevelPrediction:::calculatePrevs(plpData = data, population= pop)
+  THcovariates <- data.frame(rowId = sample(10, N),
+                           covariateId = c(rep(101, N)))
+  THcovariates <- ff::as.ffdf(THcovariates)
+  THdata <- list(covariates = THcovariates)
+  THres <- PatientLevelPrediction:::calculatePrevs(plpData = THdata, population= THpop)
   
-  testthat::expect_equal(res$covariateId, '101')
-  testthat::expect_equal(res$prev.out, sum(merge(pop, ff::as.ram(covariates), by='rowId')[,2]==1)/5)
-  testthat::expect_equal(res$prev.noout, sum(merge(pop, ff::as.ram(covariates), by='rowId')[,2]==0)/5)
+  testthat::expect_equal(THres$covariateId, 101)
+  testthat::expect_equal(THres$prev.out, sum(merge(THpop, ff::as.ram(THcovariates), by='rowId')[,2]==1)/5)
+  testthat::expect_equal(THres$prev.noout, sum(merge(THpop, ff::as.ram(THcovariates), by='rowId')[,2]==0)/5)
   
 })
 

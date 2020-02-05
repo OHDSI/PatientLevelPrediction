@@ -89,12 +89,12 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   
   
   writeLines("\nChecking Models")
-  modset <- tryCatch({PatientLevelPrediction::setLassoLogisticRegression()},
+  modset <- tryCatch({setLassoLogisticRegression()},
                      error = function(e) {
                        return(NULL)
                      })
   if(!is.null(modset)){
-    model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+    model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
                                                       testFraction = 0.5, nfold = 3, 
                                                       minCovariateFraction = 0, 
                                                       saveEvaluation = F, 
@@ -112,12 +112,12 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   writeLines("- Ok")
   
   if(python){
-    modset <- tryCatch({PatientLevelPrediction::setRandomForest()},
+    modset <- tryCatch({setRandomForest()},
                        error = function(e) {
                          return(NULL)
                        })
     if(!is.null(modset)){
-      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
                                                         testFraction = 0.5, nfold = 3, 
                                                         minCovariateFraction = 0, 
                                                         saveEvaluation = F, 
@@ -132,12 +132,12 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
     if(is.null(model) || !"runPlp"%in%class(model))
       outCode <- outCode*13
     
-    modset <- tryCatch({PatientLevelPrediction::setMLP()},
+    modset <- tryCatch({setMLP()},
                        error = function(e) {
                          return(NULL)
                        })
     if(!is.null(modset)){
-      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
                                                         testFraction = 0.5, nfold = 3, 
                                                         minCovariateFraction = 0, 
                                                         saveEvaluation = F, 
@@ -152,12 +152,12 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
     if(is.null(model) || !"runPlp"%in%class(model))
       outCode <- outCode*17
     
-    modset <- tryCatch({PatientLevelPrediction::setAdaBoost()},
+    modset <- tryCatch({setAdaBoost()},
                        error = function(e) {
                          return(NULL)
                        })
     if(!is.null(modset)){
-      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
                                                         testFraction = 0.5, nfold = 3, 
                                                         minCovariateFraction = 0, 
                                                         saveEvaluation = F, 
@@ -172,12 +172,12 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
     if(is.null(model) || !"runPlp"%in%class(model))
       outCode <- outCode*19
     
-    modset <- tryCatch({PatientLevelPrediction::setDecisionTree()},
+    modset <- tryCatch({setDecisionTree()},
                        error = function(e) {
                          return(NULL)
                        })
     if(!is.null(modset)){
-      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
                                                         testFraction = 0.5, nfold = 3, 
                                                         minCovariateFraction = 0, 
                                                         saveEvaluation = F, 
@@ -192,12 +192,12 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
     if(is.null(model) || !"runPlp"%in%class(model))
       outCode <- outCode*23
     
-    modset <- tryCatch({PatientLevelPrediction::setNaiveBayes()},
+    modset <- tryCatch({setNaiveBayes()},
                        error = function(e) {
                          return(NULL)
                        })
     if(!is.null(modset)){
-      model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
                                                         testFraction = 0.5, nfold = 3, 
                                                         minCovariateFraction = 0, 
                                                         saveEvaluation = F, 
@@ -215,12 +215,12 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   }
   
   
-  modset <- tryCatch({PatientLevelPrediction::setKNN()},
+  modset <- tryCatch({setKNN()},
                      error = function(e) {
                        return(NULL)
                      })
   if(!is.null(modset)){
-    model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+    model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
                                                       testFraction = 0.5, nfold = 3, 
                                                       minCovariateFraction = 0, 
                                                       saveEvaluation = F, 
@@ -235,12 +235,12 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   if(is.null(model) || !"runPlp"%in%class(model))
     outCode <- outCode*31
   
-  modset <- tryCatch({PatientLevelPrediction::setGradientBoostingMachine()},
+  modset <- tryCatch({setGradientBoostingMachine()},
                      error = function(e) {
                        return(NULL)
                      })
   if(!is.null(modset)){
-    model <- tryCatch({PatientLevelPrediction::runPlp(population, plpData, modelSettings = modset,
+    model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
                                                       testFraction = 0.5, nfold = 3, 
                                                       minCovariateFraction = 0, 
                                                       saveEvaluation = F, 

@@ -75,6 +75,8 @@ double Auc::auc(const std::vector<double> &propensityScores, const std::vector<i
   return mean;
 }
 
+
+
 std::vector<double> Auc::aucWithCi(const std::vector<double> &propensityScores, const std::vector<int> &treatment) {
   unsigned long int m = 0;
   unsigned long int n = 0;
@@ -155,6 +157,9 @@ std::vector<double> Auc::aucWithCi(const std::vector<double> &propensityScores, 
   ci.push_back(mean + (1.96 * sd));
   return ci;
 }
+
+
+
 }
 }
 

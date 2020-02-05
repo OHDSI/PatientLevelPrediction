@@ -4,9 +4,16 @@
 \alias{setDeepNN}
 \title{Create setting for DeepNN model}
 \usage{
-setDeepNN(units = list(c(128, 64), 128), layer_dropout = c(0.2),
-  lr = c(1e-04), decay = c(1e-05), outcome_weight = c(1),
-  batch_size = c(100), epochs = c(100), seed = NULL)
+setDeepNN(
+  units = list(c(128, 64), 128),
+  layer_dropout = c(0.2),
+  lr = c(1e-04),
+  decay = c(1e-05),
+  outcome_weight = c(1),
+  batch_size = c(100),
+  epochs = c(100),
+  seed = NULL
+)
 }
 \arguments{
 \item{units}{The number of units of the deep network - as a list of vectors}

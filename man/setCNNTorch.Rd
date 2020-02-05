@@ -4,8 +4,13 @@
 \alias{setCNNTorch}
 \title{Create setting for CNN model with python}
 \usage{
-setCNNTorch(nbfilters = c(16, 32), epochs = c(20, 50), seed = 0,
-  class_weight = 0, type = "CNN")
+setCNNTorch(
+  nbfilters = c(16, 32),
+  epochs = c(20, 50),
+  seed = 0,
+  class_weight = 0,
+  type = "CNN"
+)
 }
 \arguments{
 \item{nbfilters}{The number of filters}

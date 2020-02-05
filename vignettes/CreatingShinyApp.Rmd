@@ -1,0 +1,300 @@
+---
+title: "Creating Shiny App"
+author: "Jenna Reps"
+date: '`r Sys.Date()`'
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead{}
+    - \fancyhead[CO,CE]{Installation Guide}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[LE,RO]{\thepage}
+    - \renewcommand{\headrulewidth}{0.4pt}
+    - \renewcommand{\footrulewidth}{0.4pt}
+output:
+  pdf_document:
+    includes:
+      in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+In this vignette we will show with example code how to create a shiny app and add the shiny app online for other research around the whole to explore.
+
+There are two ways to create the shiny app:
+1) Using the atlas R generated prediction package 
+2) Manually using the PatientLevelPrediction functions in a script
+
+We assume you have experience with using the OHDSI PatientLevelPrediction package to develop and externally validate prediction models using data in the OMOP CDM.  If you do not have experience with this then please first read our general vignette [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
+
+# Atlas Development Shiny App
+
+## Step 1: Run the model development package to get results
+To create a shiny app project via the Atlas auto-generated prediction R package you named 'myPackage' you need to run the execute function:
+```{r eval = FALSE}
+library(myPackage)
+myPackage::execute(connectionDetails = connectionDetails,
+        cdmDatabaseSchema = 'myDatabaseSchema.dbo',
+        cdmDatabaseName = 'MyDatabase',
+        cohortDatabaseSchema = 'myDatabaseSchema.ohdsi_results',
+        cohortTable = 'cohort',
+        outputFolder = 'C:/myResults',
+        createProtocol = F,
+        createCohorts = F,
+        runAnalyses = T,
+        createResultsDoc = F,
+        packageResults = F,
+        createValidationPackage = F, 
+        minCellCount= 5,
+        createShiny = F,
+        createJournalDocument = F,
+        analysisIdDocument = 1)
+```
+
+This will extract data based on the settings you supplied in the Atlas prediction design from cohort tables already generated in your CDM database schema.  The PatientLevelPrediction framework will then run and develop/evaluate models saving the results to the location specified by outputFolder (e.g., 'C:/myResults').
+
+## Step 2: Create the shiny app
+To create a shiny app project with these results you can then simply run:
+```{r eval = FALSE}
+myPackage::execute(connectionDetails = connectionDetails,
+        cdmDatabaseSchema = 'myDatabaseSchema.dbo',
+        cdmDatabaseName = 'MyDatabase',
+        cohortDatabaseSchema = 'myDatabaseSchema.ohdsi_results',
+        cohortTable = 'cohort',
+        outputFolder = 'C:/myResults',
+        minCellCount= 5,
+        createShiny = T)
+```
+
+making sure the outputFolder is the same location used when you ran the analysis.  This code populates a shiny app project with the results but removes sensitive date such as connection settings, the cdmDatabaseSchema setting, the predicton matrix and any sensitive counts less than 'minCellCount' from the covariate summary and performance evalaution.
+
+The shiny app project populated with the model development results can then be found inside your R library.  To find the location of your R library run:
+```{r eval = FALSE}
+.libPaths()
+```
+
+Go to the location shown and open the directory with the same name as your R package.  For example if the '.libPaths()' returns 'C:/R/library' and the name of your package is 'myPackage' then I will open 'C:/R/library/myPackage'.
+
+Inside this directory you will see a folder named 'shiny' open it and then you will see a folder named 'PLPViewer'.  This folder contains your PLP shiny app.  
+
+### Testing (Optional but recommended)
+You can test the app by opening the shiny project within the 'PLPViewer' folder, double click on the file named 'PLPViewer.Rproj'.  This will open an R studio session with the shiny app project loaded. Now load the 'ui.R' files within this R studio session and you will see a green arrow with the words 'Run App' at the top right of the script.  Click on this and the shiny app with open.  Note: You may need to install some R pacakge dependancies for the shiny app to work.
+
+## Step 3: Sharing the shiny app
+Once you are happy with your app, you can publish it onto https://data.ohdsi.org by adding the folder 'PLPViewer' to the OHDSI githib ShinyDeploy (https://github.com/OHDSI/ShinyDeploy/).  Continuing the example, we would copy the folder 'C:/R/library/myPackage/shiny/PLPViewer' and paste it to my local github clone of ShinyDeploy.  We recommend renaming the folder from 'PLPViewer' to a name that describes your prediction, e.g., 'StrokeinAF'.  Then commit the changes and make a pull request to ShinyDeploy.  Once accepted your shiny app will be viewable at 'https://data.ohdsi.org'.  If you commited the folder named 'StrokeInAF' then the shiny app will be hosted at 'https://data.ohdsi.org/StrokeInAF'.
+
+
+# Atlas External Validation
+
+To include external validation results you can use the Atlas generated R study package to create the external validation package:
+```{r eval = FALSE}
+myPackage::execute(connectionDetails = connectionDetails,
+        cdmDatabaseSchema = 'myDatabaseSchema.dbo',
+        cdmDatabaseName = 'MyDatabase',
+        cohortDatabaseSchema = 'myDatabaseSchema.ohdsi_results',
+        cohortTable = 'cohort',
+        outputFolder = 'C:/myResults',
+        createValidationPackage = T)
+```
+
+This will create a new R package inside the 'outputFolder' location with the word 'Validation' appended the name of your development package.  For example, if your 'outputFolder' was 'C:/myResults' and your development package was named  'myPackage' then the validation package will be found at: 'C:/myResults/myPackageValidation'.  When running the valdiation package make sure to set the 'outputFolder' to the Validation folder within your model development outputFolder location: 
+
+```{r eval = FALSE}
+myPackageValidation::execute(connectionDetails = connectionDetails,
+                 databaseName = databaseName,
+                 cdmDatabaseSchema = cdmDatabaseSchema,
+                 cohortDatabaseSchema = cohortDatabaseSchema,
+                 oracleTempSchema = oracleTempSchema,
+                 cohortTable = cohortTable,
+                 outputFolder = 'C:/myResults/Validation',
+                 createCohorts = T,
+                 runValidation = T,
+                 packageResults = F,
+                 minCellCount = 5,
+                 sampleSize = NULL)
+
+```
+
+Now you can rerun Steps 2-3 to populate the shiny app project that will also include the validation results (as long as the validation results are in the Validation folder found in the Step 1 outputFolder location e.g., in 'C:/myResults/Validation').
+
+
+# Combining multiple atlas results into one shiny app:
+The code below can be used to combine multiple Atlas packages' results into one shiny app:
+
+```{r eval = FALSE}
+populateMultipleShinyApp <- function(shinyDirectory,
+                             resultDirectory,
+                             minCellCount = 10,
+                             databaseName = 'sharable name of development data'){
+  
+  #check inputs
+  if(missing(shinyDirectory)){
+    shinyDirectory <- system.file("shiny", "PLPViewer", package = "SkeletonPredictionStudy")
+  }
+  if(missing(resultDirectory)){
+    stop('Need to enter the resultDirectory')
+  }
+  
+
+    for(i in 1:length(resultDirectory)){
+      if(!dir.exists(resultDirectory[i])){
+        stop(paste('resultDirectory ',i,' does not exist'))
+      }
+    }
+  
+  outputDirectory <- file.path(shinyDirectory,'data')
+  
+  # create the shiny data folder
+  if(!dir.exists(outputDirectory)){
+    dir.create(outputDirectory, recursive = T)
+  }
+  
+  
+  # need to edit settings ...
+  files <- c()
+  for(i in 1:length(resultDirectory)){
+  # copy the settings csv
+  file <- utils::read.csv(file.path(resultDirectory[i],'settings.csv'))
+  file$analysisId <- 1000*as.double(file$analysisId)+i
+  files <- rbind(files, file)
+  }
+  utils::write.csv(files, file.path(outputDirectory,'settings.csv'), row.names = F)
+  
+  for(i in 1:length(resultDirectory)){
+  # copy each analysis as a rds file and copy the log
+  files <- dir(resultDirectory[i], full.names = F)
+  files <- files[grep('Analysis', files)]
+  for(file in files){
+    
+    if(!dir.exists(file.path(outputDirectory,paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i)))){
+      dir.create(file.path(outputDirectory,paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i)))
+    }
+    
+    if(dir.exists(file.path(resultDirectory[i],file, 'plpResult'))){
+      res <- PatientLevelPrediction::loadPlpResult(file.path(resultDirectory[i],file, 'plpResult'))
+      res <- PatientLevelPrediction::transportPlp(res, n= minCellCount, 
+                                                  save = F, dataName = databaseName[i])
+      
+      res$covariateSummary <- res$covariateSummary[res$covariateSummary$covariateValue!=0,]
+      covSet <- res$model$metaData$call$covariateSettings
+      res$model$metaData <- NULL
+      res$model$metaData$call$covariateSettings <- covSet
+      res$model$predict <- NULL
+      if(!is.null(res$performanceEvaluation$evaluationStatistics)){
+      res$performanceEvaluation$evaluationStatistics[,1] <- paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i)
+      } else{
+        writeLines(paste0(resultDirectory[i],file, '-ev'))
+      }
+      if(!is.null(res$performanceEvaluation$thresholdSummary)){
+      res$performanceEvaluation$thresholdSummary[,1] <- paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i)
+      }else{
+        writeLines(paste0(resultDirectory[i],file, '-thres'))
+      }
+      if(!is.null(res$performanceEvaluation$demographicSummary)){
+      res$performanceEvaluation$demographicSummary[,1] <- paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i)
+      } else{
+        writeLines(paste0(resultDirectory[i],file, '-dem'))
+      }
+      if(!is.null(res$performanceEvaluation$calibrationSummary)){
+      res$performanceEvaluation$calibrationSummary[,1] <- paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i)
+      }else{
+        writeLines(paste0(resultDirectory[i],file, '-cal'))
+      }
+      if(!is.null(res$performanceEvaluation$predictionDistribution)){
+      res$performanceEvaluation$predictionDistribution[,1] <- paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i)
+      }else{
+        writeLines(paste0(resultDirectory[i],file, '-dist'))
+      }
+      saveRDS(res, file.path(outputDirectory,paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i), 'plpResult.rds'))
+    }
+    if(file.exists(file.path(resultDirectory[i],file, 'plpLog.txt'))){
+      file.copy(from = file.path(resultDirectory[i],file, 'plpLog.txt'), 
+                to = file.path(outputDirectory,paste0('Analysis_',1000*as.double(gsub('Analysis_','',file))+i), 'plpLog.txt'))
+    }
+  }
+  }
+  
+  
+  
+  for(i in 1:length(resultDirectory)){
+  # copy any validation results
+  if(dir.exists(file.path(resultDirectory[i],'Validation'))){
+    valFolders <-  dir(file.path(resultDirectory[i],'Validation'), full.names = F)
+    
+    if(length(valFolders)>0){
+      # move each of the validation rds
+      for(valFolder in valFolders){
+        
+        # get the analysisIds
+        valSubfolders <- dir(file.path(resultDirectory[i],'Validation',valFolder), full.names = F)
+        if(length(valSubfolders)!=0){
+          for(valSubfolder in valSubfolders ){
+            valSubfolderUpdate <- paste0('Analysis_', as.double(gsub('Analysis_','', valSubfolder))*1000+i)
+            valOut <- file.path(valFolder,valSubfolderUpdate)
+            valOutOld <- file.path(valFolder,valSubfolder)
+            if(!dir.exists(file.path(outputDirectory,'Validation',valOut))){
+              dir.create(file.path(outputDirectory,'Validation',valOut), recursive = T)
+            }
+            
+            
+            if(file.exists(file.path(resultDirectory[i],'Validation',valOutOld, 'validationResult.rds'))){
+              res <- readRDS(file.path(resultDirectory[i],'Validation',valOutOld, 'validationResult.rds'))
+              res <- PatientLevelPrediction::transportPlp(res, n= minCellCount, 
+                                                          save = F, dataName = databaseName[i])
+              res$covariateSummary <- res$covariateSummary[res$covariateSummary$covariateValue!=0,]
+              saveRDS(res, file.path(outputDirectory,'Validation',valOut, 'validationResult.rds'))
+            }
+          }
+        }
+        
+      }
+      
+    }
+    
+  }
+  }
+  
+  return(outputDirectory)
+  
+}
+```
+
+## Example code to combine multiple results
+The following code will combine the results found in 'C:/myResults', 'C:/myResults2' and 'C:/myResults3' into the shiny project at 'C:/R/library/myPackage/shiny/PLPViewer':
+```{r eval = FALSE}
+populateMultipleShinyApp(shinyDirectory = 'C:/R/library/myPackage/shiny/PLPViewer',
+                                     resultDirectory = c('C:/myResults',
+                                                         'C:/myResults2',
+                                                         'C:/myResults3'),
+                                     minCellCount = 0,
+                                     databaseName = c('database1','database2','database3'))
+
+```
+
+
+# Manual App Creation
+[instructions coming soon]
+
+
+
+# Acknowledgments
+
+Considerable work has been dedicated to provide the `PatientLevelPrediction` package.
+
+```{r tidy=TRUE,eval=TRUE}
+citation("PatientLevelPrediction")
+```
+
+**Please reference this paper if you use the PLP Package in your work:**
+
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)

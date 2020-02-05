@@ -18,62 +18,53 @@ library("testthat")
 
 context("Fitting")
 
-# this no longer checks predictions as models don't exist and take too long to train during test
-# generate simulated data:
-set.seed(1234)
-data(plpDataSimulationProfile)
-sampleSize <- 2000
-plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+plpResultKNN <- runPlp(population = population,
+                       plpData = plpData, 
+                       modelSettings = knnSet, 
+                       savePlpData = F, 
+                       savePlpResult = F, 
+                       saveEvaluation = F, 
+                       savePlpPlots = F, 
+                       analysisId = 'knnTest',
+                       saveDirectory =  saveLoc)
 
-# create popualtion for outcome 2
-population <- createStudyPopulation(plpData,
-                                    outcomeId = 2,
-                                    firstExposureOnly = FALSE,
-                                    washoutPeriod = 0,
-                                    removeSubjectsWithPriorOutcome = FALSE,
-                                    priorOutcomeLookback = 99999,
-                                    requireTimeAtRisk = FALSE,
-                                    minTimeAtRisk=0,
-                                    riskWindowStart = 0,
-                                    addExposureDaysToStart = FALSE,
-                                    riskWindowEnd = 365,
-                                    addExposureDaysToEnd = FALSE
-                                    #,verbosity=INFO
-)
 
-index <- PatientLevelPrediction::randomSplitter(population, test=0.2, seed=1)
-population <- merge(population, index)
-colnames(population)[colnames(population)=='index'] <- 'indexes'
+test_that("covRef is correct size", {
+  
+  # varImp contains all variables in LR
+  testthat::expect_equal(nrow(ff::as.ram(plpData$covariateRef)), 
+                         nrow(plpResult$model$varImp))
+  
+  testthat::expect_equal(nrow(ff::as.ram(plpDataReal$covariateRef)), 
+                         nrow(plpResultReal$model$varImp))
+  
+  testthat::expect_equal(nrow(ff::as.ram(plpData$covariateRef)), 
+                         nrow(plpResultKNN$model$varImp))
+  
+})
+
+
+test_that("LR, KNN and GBM results have same structure", {
+  
+
+  # same output names for LR, KNN and GBM
+  testthat::expect_equal(names(plpResult), 
+                         names(plpResultReal))
+  testthat::expect_equal(names(plpResultReal), 
+                         names(plpResultKNN))
+ 
+})
 
 test_that("fitting", {
-  # function for testing each model:
-  #checkPrediction <- function(model, plpData, population, index){
-  #  
-  #  # model class is correct
-  #  testthat::expect_that(model, is_a("plpModel"))
-  #  prediction <- PatientLevelPrediction::predictPlp(model, population, plpData, index)
-  #  # prediction size is correct
-  #  testthat::expect_that(length(population$rowId[population$indexes<0]), 
-  #                        is_equivalent_to(nrow(prediction)))
-  #  testthat::expect_that(sum(population$rowId[population$indexes<0]%in%prediction$rowId), 
-  #                        is_equivalent_to(sum(population$indexes<0)))
-  #  
-  #  # varImp contains all variables
-  #  testthat::expect_that(nrow(ff::as.ram(plpData$covariateRef)), 
-  #                        testthat::is_equivalent_to(nrow(model$varImp)))
-  #  
-  #}
-  
-  
   #=====================================
   # check fitPlp
   #=====================================
-  testthat::expect_error(PatientLevelPrediction::fitPlp(population=popualtion, data=plpData, modelSettings=NULL,
+  testthat::expect_error(fitPlp(population=popualtion, data=plpData, modelSettings=NULL,
                                                         cohortId=1, outcomeId=2))
-  testthat::expect_error(PatientLevelPrediction::fitPlp(population=NULL, data=plpData, 
+  testthat::expect_error(fitPlp(population=NULL, data=plpData, 
                                                         modelSettings=list(model='test'),
                                                         cohortId=1, outcomeId=2))
-  testthat::expect_error(PatientLevelPrediction::fitPlp(population=population, data=NULL, 
+  testthat::expect_error(fitPlp(population=population, data=NULL, 
                                                         modelSettings=list(model='test'),
                                                         cohortId=1, outcomeId=2))
   #=====================================
@@ -82,13 +73,9 @@ test_that("fitting", {
   model_set <- setLassoLogisticRegression()
   testthat::expect_that(model_set, testthat::is_a("modelSettings"))
   testthat::expect_length(model_set,3)
-  testthat::expect_error(PatientLevelPrediction::setLassoLogisticRegression(variance = -3))
-  testthat::expect_error(PatientLevelPrediction::setLassoLogisticRegression(seed = 'F'))
-  testthat::expect_error(PatientLevelPrediction:::fitLassoLogisticRegression())
-  testthat::expect_error(PatientLevelPrediction:::fitLassoLogisticRegression(population,plpData=list(), 
-                                                                            param=NULL, outcomeId = 1,
-                                                                            cohortId = 2))
-  
+  testthat::expect_error(setLassoLogisticRegression(variance = -3))
+  testthat::expect_error(setLassoLogisticRegression(seed = 'F'))
+
   
   #=====================================
   # checking Cox Regression 
@@ -96,68 +83,33 @@ test_that("fitting", {
   model_set <- setCoxModel()
   testthat::expect_that(model_set, testthat::is_a("modelSettings"))
   testthat::expect_length(model_set,3)
-  testthat::expect_error(PatientLevelPrediction::setCoxModel(variance = -3))
-  testthat::expect_error(PatientLevelPrediction::setCoxModel(seed = 'F'))
-  testthat::expect_error(PatientLevelPrediction:::fitCoxModel())
-  testthat::expect_error(PatientLevelPrediction:::fitCoxModel(population,plpData=list(), 
-                                                                             param=NULL, outcomeId = 1,
-                                                                             cohortId = 2))
-  
-  #checkPrediction(model_set=lr_set, plpData=plpData, population, index)
-  ##model <-PatientLevelPrediction::fitPlp(population[population$indexes>0,], data=plpData,  
-  ##               modelSettings=model_set, 
-  ##               cohortId=0, outcomeId=2)
-  ##savePlpModel(model, './tests/testthat/lr_model')
-  ##model <- loadPlpModel('lr_model') # (NEEDED MODEL FOLDER)
-  ##checkPrediction(model, plpData=plpData, population, index)
-  
-  #=====================================
+  testthat::expect_error(setCoxModel(variance = -3))
+  testthat::expect_error(setCoxModel(seed = 'F'))
+ 
+   #=====================================
   # checking Gradient Boosting Machine
   #=====================================
   gbm_set <- setGradientBoostingMachine(ntrees = 10)
   testthat::expect_that(gbm_set, testthat::is_a("modelSettings"))
   testthat::expect_length(gbm_set,3)
-  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(ntrees = -1))
-  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(minRows = 1))
-  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(maxDepth = 0))
-  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(learnRate = -2))
-  testthat::expect_error(PatientLevelPrediction::setGradientBoostingMachine(seed = 'F'))
+  testthat::expect_error(setGradientBoostingMachine(ntrees = -1))
+  testthat::expect_error(setGradientBoostingMachine(minRows = 1))
+  testthat::expect_error(setGradientBoostingMachine(maxDepth = 0))
+  testthat::expect_error(setGradientBoostingMachine(learnRate = -2))
+  testthat::expect_error(setGradientBoostingMachine(seed = 'F'))
   
-  testthat::expect_error(PatientLevelPrediction:::fitGradientBoostingMachine())
-  testthat::expect_error(PatientLevelPrediction:::fitGradientBoostingMachine(population,plpData=list(), 
-                                                                 param=NULL, outcomeId = 1,
-                                                                 cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction:::fitGradientBoostingMachine(population,plpData=plpData, 
-                                                                 param=NULL, outcomeId = NULL,
-                                                                 cohortId = 2))
-  ##model <- loadPlpModel('gbm_model')  # (NEEDED MODEL FOLDER)
-  ##checkPrediction(model, plpData=plpData, population, index)
-  
-  
+ 
   #=====================================
   # checking Random forest
   #=====================================
   #rf_set <- PatientLevelPrediction::setRandomForest(ntrees=10)
   #testthat::expect_that(rf_set, testthat::is_a("modelSettings"))
   #testthat::expect_length(rf_set,3)
-  testthat::expect_error(PatientLevelPrediction::setRandomForest(ntrees=-1))
-  testthat::expect_error(PatientLevelPrediction::setRandomForest(mtries = -4))
-  testthat::expect_error(PatientLevelPrediction::setRandomForest(maxDepth = 0))
-  testthat::expect_error(PatientLevelPrediction::setRandomForest(varImp = 3))
-  testthat::expect_error(PatientLevelPrediction::setRandomForest(seed = 'F'))
-  
-  testthat::expect_error(PatientLevelPrediction:::fitRandomForest())
-  testthat::expect_error(PatientLevelPrediction:::fitRandomForest(population,plpData=list(), 
-                                                                 param=NULL, outcomeId = 1,
-                                                                 cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction:::fitRandomForest(population,plpData=plpData, 
-                                                                 param=NULL, outcomeId = NULL,
-                                                                 cohortId = 2))
-  
-  #testthat::expect_that(rf_set, is_a("modelSettings"))
-  #model <- loadPlpModel('rf_model')
-  #checkPrediction(model, plpData=plpData.lsvm, population, index)
-  
+  testthat::expect_error(setRandomForest(ntrees=-1))
+  testthat::expect_error(setRandomForest(mtries = -4))
+  testthat::expect_error(setRandomForest(maxDepth = 0))
+  testthat::expect_error(setRandomForest(varImp = 3))
+  testthat::expect_error(setRandomForest(seed = 'F'))
   
   #=====================================
   # checking Decision Tree
@@ -165,22 +117,14 @@ test_that("fitting", {
   #dt_set <- PatientLevelPrediction::setDecisionTree()
   #testthat::expect_that(dt_set, is_a("modelSettings"))
   #testthat::expect_length(dt_set,3)
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(maxDepth = 0))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(minSamplesSplit = 1))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(minSamplesLeaf = -1))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(minImpuritySplit = -1))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(classWeight = 'dfds'))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(classWeight = 4))
-  testthat::expect_error(PatientLevelPrediction::setDecisionTree(seed = 'F'))
-  
-  testthat::expect_error(PatientLevelPrediction:::fitDecisionTree())
-  testthat::expect_error(PatientLevelPrediction:::fitDecisionTree(population,plpData=list(), 
-                                                                 param=NULL, outcomeId = 1,
-                                                                 cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction:::fitDecisionTree(population,plpData=plpData, 
-                                                                 param=NULL, outcomeId = NULL,
-                                                                 cohortId = 2))
-  
+  testthat::expect_error(setDecisionTree(maxDepth = 0))
+  testthat::expect_error(setDecisionTree(minSamplesSplit = 1))
+  testthat::expect_error(setDecisionTree(minSamplesLeaf = -1))
+  testthat::expect_error(setDecisionTree(minImpuritySplit = -1))
+  testthat::expect_error(setDecisionTree(classWeight = 'dfds'))
+  testthat::expect_error(setDecisionTree(classWeight = 4))
+  testthat::expect_error(setDecisionTree(seed = 'F'))
+
   
   #=====================================
   # checking Ada Boost
@@ -188,18 +132,10 @@ test_that("fitting", {
   #dt_set <- PatientLevelPrediction::setAdaBoost()
   #testthat::expect_that(dt_set, is_a("modelSettings"))
   #testthat::expect_length(dt_set,3)
-  testthat::expect_error(PatientLevelPrediction::setAdaBoost(nEstimators = 0))
-  testthat::expect_error(PatientLevelPrediction::setAdaBoost(learningRate = -1))
-  testthat::expect_error(PatientLevelPrediction::setAdaBoost(learningRate = 2))
-  testthat::expect_error(PatientLevelPrediction::setAdaBoost(seed = 'F'))
-  
-  testthat::expect_error(PatientLevelPrediction:::fitAdaBoost())
-  testthat::expect_error(PatientLevelPrediction:::fitAdaBoost(population,plpData=list(), 
-                                                                 param=NULL, outcomeId = 1,
-                                                                 cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction:::fitAdaBoost(population,plpData=plpData, 
-                                                                 param=NULL, outcomeId = NULL,
-                                                                 cohortId = 2))
+  testthat::expect_error(setAdaBoost(nEstimators = 0))
+  testthat::expect_error(setAdaBoost(learningRate = -1))
+  testthat::expect_error(setAdaBoost(learningRate = 2))
+  testthat::expect_error(setAdaBoost(seed = 'F'))
   
   #=====================================
   # checking KNN
@@ -207,15 +143,8 @@ test_that("fitting", {
   model_set <- setKNN()
   testthat::expect_that(model_set, is_a("modelSettings"))
   testthat::expect_length(model_set,3)
-  testthat::expect_error(PatientLevelPrediction::setKNN(k = 0))
-  testthat::expect_error(PatientLevelPrediction::setKNN(indexFolder = 2372))
-  testthat::expect_error(PatientLevelPrediction:::fitKNN())
-  testthat::expect_error(PatientLevelPrediction:::fitKNN(population,plpData=list(), 
-                                                                            param=NULL, outcomeId = 1,
-                                                                            cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction:::fitKNN(population,plpData=plpData, 
-                                                                            param=NULL, outcomeId = NULL,
-                                                                            cohortId = 2))
+  testthat::expect_error(setKNN(k = 0))
+  testthat::expect_error(setKNN(indexFolder = 2372))
   
   #=====================================
   # checking Naive Bayes
@@ -223,21 +152,7 @@ test_that("fitting", {
   #model_set <- setNaiveBayes()
   #testthat::expect_that(model_set, is_a("modelSettings"))
   #testthat::expect_length(model_set,3)
-  testthat::expect_error(PatientLevelPrediction:::fitNaiveBayes())
-  testthat::expect_error(PatientLevelPrediction:::fitNaiveBayes(population,plpData=list(), 
-                                                        param=NULL, outcomeId = 1,
-                                                        cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction:::fitNaiveBayes(population,plpData=plpData, 
-                                                        param=NULL, outcomeId = NULL,
-                                                        cohortId = 2))
-  
-  #nb_set <- naiveBayes.set()
-  #testthat::expect_that(nb_set, is_a("modelSettings"))
-  #model <- loadPlpModel('nb_model')
-  #checkPrediction(model, plpData=plpData.lsvm, population, index)
-  
-  
-  
+
   
   #=====================================
   # checking MLP
@@ -245,24 +160,133 @@ test_that("fitting", {
   #gbm_set <- setMLP()
   #testthat::expect_that(gbm_set, is_a("modelSettings"))
   #testthat::expect_length(gbm_set,3)
-  testthat::expect_error(PatientLevelPrediction::setMLP(size = -1))
-  testthat::expect_error(PatientLevelPrediction::setMLP(alpha = -1))
-  testthat::expect_error(PatientLevelPrediction::setMLP(seed = 'F'))
+  testthat::expect_error(setMLP(size = -1))
+  testthat::expect_error(setMLP(alpha = -1))
+  testthat::expect_error(setMLP(seed = 'F'))
   
-  testthat::expect_error(PatientLevelPrediction:::fitMLP())
-  testthat::expect_error(PatientLevelPrediction:::fitMLP(population,plpData=list(), 
-                                                                            param=NULL, outcomeId = 1,
-                                                                            cohortId = 2))
-  testthat::expect_error(PatientLevelPrediction:::fitMLP(population,plpData=plpData, 
-                                                                            param=NULL, outcomeId = NULL,
-                                                                            cohortId = 2))
-  ##model <- loadPlpModel('gbm_model')  # (NEEDED MODEL FOLDER)
-  ##checkPrediction(model, plpData=plpData, population, index)
-  
-  # removing files created duirng the test:
-  unlink('./plpmodels', recursive = T, force = T)
-  unlink('./python_models', recursive = T, force = T)
   
   })
 
+rfSet <- setRandomForest(ntrees = 10, maxDepth = 3)
+plpResultRF <- runPlp(population = population,
+                       plpData = plpData, 
+                       modelSettings = rfSet, 
+                       savePlpData = F, 
+                       savePlpResult = F, 
+                       saveEvaluation = F, 
+                       savePlpPlots = F, 
+                       analysisId = 'rfTest',
+                       saveDirectory =  saveLoc)
 
+test_that("RF working checks", {
+  
+  # check same structure
+  testthat::expect_equal(names(plpResultRF), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultRF$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultRF$prediction$value), 0)
+  testthat::expect_lte(max(plpResultRF$prediction$value), 1)
+  
+})
+
+abSet <- setAdaBoost(nEstimators = 5)
+plpResultAb <- runPlp(population = population,
+                      plpData = plpData, 
+                      modelSettings = abSet, 
+                      savePlpData = F, 
+                      savePlpResult = F, 
+                      saveEvaluation = F, 
+                      savePlpPlots = F, 
+                      analysisId = 'abTest',
+                      saveDirectory =  saveLoc)
+
+test_that("AdaBoost working checks", {
+  # check same structure
+  testthat::expect_equal(names(plpResultAb), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultAb$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultAb$prediction$value), 0)
+  testthat::expect_lte(max(plpResultAb$prediction$value), 1)
+})
+
+nbSet <- setNaiveBayes()
+plpResultNb <- runPlp(population = population,
+                      plpData = plpData, 
+                      modelSettings = nbSet, 
+                      savePlpData = F, 
+                      savePlpResult = F, 
+                      saveEvaluation = F, 
+                      savePlpPlots = F, 
+                      analysisId = 'nbTest',
+                      saveDirectory =  saveLoc)
+
+test_that("AdaBoost working checks", {
+  # check same structure
+  testthat::expect_equal(names(plpResultNb), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultNb$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultNb$prediction$value), 0)
+  testthat::expect_lte(max(plpResultNb$prediction$value), 1)
+})
+
+
+dtSet <- setDecisionTree(maxDepth = 2)
+plpResultDt <- runPlp(population = population,
+                      plpData = plpData, 
+                      modelSettings = dtSet, 
+                      savePlpData = F, 
+                      savePlpResult = F, 
+                      saveEvaluation = F, 
+                      savePlpPlots = F, 
+                      analysisId = 'dtTest',
+                      saveDirectory =  saveLoc)
+
+test_that("Decision tree working checks", {
+  # check same structure
+  testthat::expect_equal(names(plpResultDt), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultDt$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultDt$prediction$value), 0)
+  testthat::expect_lte(max(plpResultDt$prediction$value), 1)
+})
+
+
+mlpSet <- setMLP()
+plpResultMlp <- runPlp(population = population,
+                      plpData = plpData, 
+                      modelSettings = mlpSet, 
+                      savePlpData = F, 
+                      savePlpResult = F, 
+                      saveEvaluation = F, 
+                      savePlpPlots = F, 
+                      analysisId = 'mlpTest',
+                      saveDirectory =  saveLoc)
+
+test_that("MLP  working checks", {
+  # check same structure
+  testthat::expect_equal(names(plpResultMlp), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultMlp$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultMlp$prediction$value), 0)
+  testthat::expect_lte(max(plpResultMlp$prediction$value), 1)
+})

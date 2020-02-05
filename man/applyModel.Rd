@@ -8,8 +8,14 @@ in [0,1] for each person in the population. If the user inputs a population with
 column then the function also returns the evaluation of the prediction (AUC, brier score,
 calibration)}
 \usage{
-applyModel(population, plpData, plpModel, calculatePerformance = T,
-  databaseOutput = NULL, silent = F)
+applyModel(
+  population,
+  plpData,
+  plpModel,
+  calculatePerformance = T,
+  databaseOutput = NULL,
+  silent = F
+)
 }
 \arguments{
 \item{population}{The population of people who you want to predict the risk for}

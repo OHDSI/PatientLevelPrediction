@@ -4,8 +4,13 @@
 \alias{setRNNTorch}
 \title{Create setting for RNN model with python}
 \usage{
-setRNNTorch(hidden_size = c(50, 100), epochs = c(20, 50), seed = 0,
-  class_weight = 0, type = "RNN")
+setRNNTorch(
+  hidden_size = c(50, 100),
+  epochs = c(20, 50),
+  seed = 0,
+  class_weight = 0,
+  type = "RNN"
+)
 }
 \arguments{
 \item{hidden_size}{The hidden size}
