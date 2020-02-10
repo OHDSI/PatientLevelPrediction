@@ -19,7 +19,7 @@ install:
   - conda install --name r-reticulate scikit-learn
   - conda install --name r-reticulate pandas
   - conda install --name r-reticulate pydotplus
-  - conda install --name r-reticulate keras
+  - conda install --name r-reticulate -c conda-forge keras
   - conda install --name r-reticulate -c conda-forge tensorflow
   - conda install --name r-reticulate -c sebp scikit-survival
   - conda activate r-reticulate
