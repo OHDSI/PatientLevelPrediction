@@ -11,9 +11,11 @@ install:
   #- conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
+  
+  - conda install python=3.7
 
   # Adding dependencies into r-reticulate environment 
-  - conda create -q -n r-reticulate   
+  - conda create -q -n r-reticulate python=3.7  
   - conda install --name r-reticulate numpy 
   - conda install --name r-reticulate scipy
   - conda install --name r-reticulate scikit-learn
