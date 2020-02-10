@@ -3,6 +3,7 @@ PatientLevelPrediction 3.0.11
 - added tests to get >70% coverage
 - Fixed minor bugs
 - Fixed deep learning code and removed pythonInR dependancy
+- combined shiny into one file with one interface
 
 PatientLevelPrediction 3.0.10
 ======================

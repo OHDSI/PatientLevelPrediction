@@ -2,6 +2,28 @@ language: R
 cache: packages
 sudo: false
 
+install:
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - source "$HOME/miniconda/etc/profile.d/conda.sh"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  # Adding dependencies into r-reticulate environment 
+  - conda create -q -n r-reticulate   
+  - conda install --name r-reticulate numpy 
+  - conda install --name r-reticulate scipy
+  - conda install --name r-reticulate scikit-learn
+  - conda install --name r-reticulate pandas
+  - conda install --name r-reticulate pydotplus
+  - conda install --name r-reticulate keras
+  - conda install --name r-reticulate -c conda-forge tensorflow
+  - conda install --name r-reticulate -c sebp scikit-survival
+  - conda activate r-reticulate
+
 branches:
   except:
     - /^*-v[0-9]/
