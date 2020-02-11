@@ -59,7 +59,9 @@ Imports:
     reticulate (> 1.6),
     tools,
     plotly,
-    zeallot
+    zeallot,
+    htmltools,
+    tensorflow
 Suggests:
     shiny,
     DT,
@@ -84,3 +86,4 @@ Suggests:
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 7.0.2
+Encoding: UTF-8
