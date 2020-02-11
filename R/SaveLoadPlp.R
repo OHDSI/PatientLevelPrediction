@@ -87,7 +87,6 @@
 #'                                     \code{createCovariateSettings} function in the
 #'                                     \code{FeatureExtraction} package.
 #' @param excludeDrugsFromCovariates   A redundant option                                     
-#' @param baseUrl                      If extracting cohorts from atlas enter atlas url to extract cohort creation details
 #'
 #' @return
 #' Returns an object of type \code{plpData}, containing information on the cohorts, their
@@ -120,8 +119,7 @@ getPlpData <- function(connectionDetails,
                        washoutPeriod = 0,
                        sampleSize = NULL,
                        covariateSettings,
-                       excludeDrugsFromCovariates = FALSE,
-                       ...) {
+                       excludeDrugsFromCovariates = FALSE) {
   if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
     stop("Study start date must have format YYYYMMDD")
   if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)
