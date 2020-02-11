@@ -24,11 +24,12 @@
 #' @importFrom SqlRender loadRenderTranslateSql translateSql
 #' @importFrom plyr ddply
 #' @importFrom methods is
-#' @importFrom stats binom.test lm printCoefmat rpois runif sd aggregate
-#' @importFrom utils write.csv write.table data ?
+#' @importFrom stats binom.test lm printCoefmat rpois runif sd aggregate binomial glm predict sigma var
+#' @importFrom utils write.csv write.table data ? read.csv
 #' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
 #' @importFrom magrittr %>%
 #' @importFrom foreach %dopar% %do%
+#' @importFrom graphics lines par
 #' @import bit
 #' @import ffbase
 #' @import Cyclops
