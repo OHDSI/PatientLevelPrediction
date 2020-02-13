@@ -104,7 +104,7 @@ test_that("covNN2 working checks", {
   
 })
 
-CIReNNSet <- setCIReNN(epochs = 1, useVae = F)
+CIReNNSet <- setCIReNN(epochs = 1, useVae = F, units=c(10) )
 plpResultCIReNN <- runPlp(population = population2, plpData = plpData3, 
                                          minCovariateFraction = 0.001, normalizeData = F, 
                                          modelSettings = CIReNNSet, testSplit = 'person', 

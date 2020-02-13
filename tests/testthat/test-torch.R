@@ -88,7 +88,7 @@ test_that("MLP LR working checks", {
 
 
 # add temporal data:
-RNNTSet <- setRNNTorch(hidden_size = 4, 
+RNNTSet <- setRNNTorch(hidden_size = 1, 
                         epochs =1)
 plpResultRNNT <- runPlp(population = population2,
                                                 plpData = plpData3, 

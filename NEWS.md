@@ -1,3 +1,8 @@
+PatientLevelPrediction 3.0.12
+======================
+- set up testing 
+- fixed build warnings
+
 PatientLevelPrediction 3.0.11
 ======================
 - added tests to get >70% coverage

@@ -1,6 +1,7 @@
 # this files contains the objects used in the tests:
 
 saveLoc <- 'T:/Temp'
+saveLoc <- getwd()
 if(!dir.exists(file.path(saveLoc,"fftemp"))){
   dir.create(file.path(saveLoc,"fftemp"), recursive = T)
 }
@@ -22,9 +23,14 @@ sampleSize2 <- 1000+sample(1000,1)
 plpData2 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
 plpData2$metaData$cohortId <- plpData2$metaData$cohortIds
 
-# temporal
+# temporal - make less covs?
 plpData3 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
 plpData3$metaData$cohortId <- plpData3$metaData$cohortIds
+
+# filter out to 10 covariates
+#covIds <- unique(ff::as.ram(plpData3$covariates$covariateId))[1:10]
+#ind <- ff::as.ram(plpData3$covariates$covariateId)%in%covIds
+#plpData3$covariates <- plpData3$covariates[ind,]
 
 plpData3$timeRef <- ff::as.ffdf(data.frame(timeId = 1:10))
 plpData3$covariates$timeId <- ff::as.ff(sample(10, nrow(plpData3$covariates), replace = T))
@@ -62,6 +68,8 @@ population2 <- createStudyPopulation(plpData2,
 lrSet <- setLassoLogisticRegression()
 gbmSet <- setGradientBoostingMachine(ntrees = 50, maxDepth = 3, learnRate = 0.01, seed = 1)
 knnSet <- setKNN(k=100, indexFolder = file.path(saveLoc,"knn"))
+rfSet2 <- setRandomForest(mtries = -1,ntrees = 10, maxDepth = 2, varImp = F, seed=1)
+
 
 # RUNPLP - LASSO LR
 plpResult <- runPlp(population = population,
@@ -116,7 +124,7 @@ if(createCohort){
   DatabaseConnector::executeSql(conn, sql)
 }
 
-covSet <- FeatureExtraction::createCovariateSettings(useDemographicsGender = T, useConditionOccurrenceShortTerm = T)
+covSet <- FeatureExtraction::createCovariateSettings(useDemographicsGender = T, useDemographicsAgeGroup = T)#  useConditionOccurrenceShortTerm = T)
 plpDataReal <- getPlpData(connectionDetails = connectionDetails, 
                           cdmDatabaseSchema = cdmDatabaseSchema, 
                           cohortId = 1, outcomeIds = 2, 
@@ -143,7 +151,7 @@ populationReal <- createStudyPopulation(plpDataReal,
 
 plpResultReal <- runPlp(population = populationReal,
                         plpData = plpDataReal, 
-                        modelSettings = gbmSet, 
+                        modelSettings = rfSet2, 
                         splitSeed = 1,
                         savePlpData = F, 
                         savePlpResult = F, 

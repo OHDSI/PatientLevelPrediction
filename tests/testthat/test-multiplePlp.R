@@ -123,7 +123,7 @@ studyPop2 <- createStudyPopulationSettings(binary = T,
 
 covSet1 <- createCovariateSettings(useDemographicsGender = T, 
                                    useDemographicsAgeGroup = T)
-modelAnalysisList <- createPlpModelSettings(modelList = list(setGradientBoostingMachine(seed = 1)), 
+modelAnalysisList <- createPlpModelSettings(modelList = list(setRandomForest(mtries = -1,ntrees = 10, maxDepth = 2, varImp = F, seed=1)), 
                                             covariateSettingList = list(covSet1), 
                                             populationSettingList = list(studyPop1,
                                                                          studyPop2))
