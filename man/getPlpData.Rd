@@ -21,8 +21,7 @@ getPlpData(
   washoutPeriod = 0,
   sampleSize = NULL,
   covariateSettings,
-  excludeDrugsFromCovariates = FALSE,
-  ...
+  excludeDrugsFromCovariates = FALSE
 )
 }
 \arguments{
@@ -96,8 +95,6 @@ but can already be done here for efficiency reasons.}
 \code{FeatureExtraction} package.}
 
 \item{excludeDrugsFromCovariates}{A redundant option}
-
-\item{baseUrl}{If extracting cohorts from atlas enter atlas url to extract cohort creation details}
 }
 \value{
 Returns an object of type \code{plpData}, containing information on the cohorts, their

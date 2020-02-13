@@ -65,6 +65,21 @@ using a 'person' type split}
 index value of -1 means in the test set, and positive integer represents
 the cross validation fold (default is \code{NULL}).}
 
+\item{verbosity}{Sets the level of the verbosity. If the log level is at or
+higher in priority than the logger threshold, a message will print. The 
+levels are:
+\itemize{
+  \item{\code{DEBUG} - highest verbosity showing all debug statements}
+  \item{\code{TRACE} - showing information about start and end of steps}
+  \item{\code{INFO} - show informative messages (default)}
+  \item{\code{WARN} - show warning messages}
+  \item{\code{ERROR} - show error messages}
+  \item{\code{FATAL} - be silent except for fatal errors}
+}}
+
+\item{clearffTemp}{Clears the temporary ff-directory after each iteration. 
+This can be useful, if the fitted models are large.}
+
 \item{minCovariateFraction}{Minimum covariate prevalence in population to
 avoid removal during preprocssing.}
 
