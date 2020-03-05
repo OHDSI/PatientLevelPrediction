@@ -564,22 +564,22 @@ getSummary  <- function(result,inputType,validation){
 getSummaryFromObject <- function(result,validation=NULL){
   
   eval <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
-  eval <- eval[eval$Eval == 'test',]
+  eval <- eval[eval$Eval %in% c('test',"validation"),]
   allRes <- data.frame(analysisId = 1,
-                       devDatabase = result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema,
-                       valDatabase = result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema,
+                       devDatabase = ifelse(is.null(result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema),'Missing',result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema),
+                       valDatabase = ifelse(is.null(result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema),'Missing',result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema),
                        cohortName = 'T',
                        outcomeName = 'O',
                        modelSettingName = result$model$modelSettings$model,
-                       riskWindowStart = result$model$populationSettings$riskWindowStart, 
-                       riskWindowEnd = result$model$populationSettings$riskWindowEnd, 
+                       riskWindowStart = ifelse(is.null(result$model$populationSettings$riskWindowStart), 'Missing',result$model$populationSettings$riskWindowStart), 
+                       riskWindowEnd = ifelse(is.null(result$model$populationSettings$riskWindowEnd), 'Missing',result$model$populationSettings$riskWindowEnd), 
                        AUC = as.double(as.character(eval$Value[eval$Metric=='AUC.auc'])),
                        AUPRC = as.double(as.character(eval$Value[eval$Metric=='AUPRC'])),
                        populationSize = as.double(as.character(eval$Value[eval$Metric=='populationSize'])),
                        outcomeCount = as.double(as.character(eval$Value[eval$Metric=='outcomeCount'])),
                        incidence = as.double(as.character(eval$Value[eval$Metric=='outcomeCount']))/as.double(as.character(eval$Value[eval$Metric=='populationSize'])),
-                       addExposureDaysToStart = result$model$populationSettings$addExposureDaysToStart,
-                       addExposureDaysToEnd = result$model$populationSettings$addExposureDaysToEnd,
+                       addExposureDaysToStart = ifelse(is.null(result$model$populationSettings$addExposureDaysToStart),'Missing',result$model$populationSettings$addExposureDaysToStart),
+                       addExposureDaysToEnd = ifelse(is.null(result$model$populationSettings$addExposureDaysToEnd), 'Missing', result$model$populationSettings$addExposureDaysToEnd),
                        plpResultLocation = 'NULL', 
                        plpResultLoad = 'NULL'
   )

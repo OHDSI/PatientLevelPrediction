@@ -394,10 +394,12 @@ trainDeepNN<-function(plpData, population,
 #' @param plpResult   The plp result when training a kersa deep learning model on big data
 #' @param plpData     The new data to fine tune the model on
 #' @param population  The population for the new data
-#' @param fixLayers   boolean vector for each layer in plpResult$model specificying whether to fix it e.g. c(T,T,F) means to fix layers 1 and 2 but not fox layer 3
+#' @param fixLayers   boolean specificying whether to fix weights in model being transferred
+#' @param includeTop  If TRUE the final layer of the model being transferred is removed 
 #' @param addLayers   vector specifying nodes in each layer to add e.g. c(100,10) will add another layer with 100 nodels and then a final layer with 10
 #' @param layerDropout  Add dropout to each new layer (binary vector length of addLayers)
 #' @param layerActivation Activation function for each new layer (string vector length of addLayers)
+#' @param outcomeWeight  The weight to assign the class 1 when training the model
 #' @param batchSize   Size of each batch for updating layers
 #' @param epochs      Number of epoches to run 
 #' @examples
@@ -412,47 +414,67 @@ transferLearning <- function(plpResult,
                  plpData, 
                  population, 
                  fixLayers = T, 
+                 includeTop= F,
                  addLayers = c(100,10), 
                  layerDropout = c(T,T),
                  layerActivation = c('relu','softmax'),
+                 outcomeWeight = 1,
                  batchSize = 10000, 
                  epochs=20){
   
   # checks
-  # check length of fixLayers matches layers in plpResult$model$model
-  if(F){
-    #length(base_model$layers)<length(fixLayers)
-    stop('to many fix layers')
+  if(!is.null(addLayers)){
+    if(length(addLayers)!=length(layerDropout)){
+      stop('Layer vector not same length as layer dropout vector')
+    }
+    if(length(addLayers)!=length(layerActivation)){
+      stop('Layer vector not same length as layer activation vector')
+    }
+  }
+  if(batchSize > nrow(population)){
+    warning('batchSize is too big for your data...')
+    batchSize = nrow(population)/10
   }
   
-  if(length(addLayers)!=length(layerDropout)){
-    stop('Layer vector not same length as layer dropout vector')
+  if(!includeTop){
+  # remove last layer if not dropout
+    if(length(grep('Dropout',as.character(plpResult$model$model$layers[[length(plpResult$model$model$layers)]])))==0){
+      keras::pop_layer(plpResult$model$model)
+    }
   }
-  if(length(addLayers)!=length(layerFunction)){
-    stop('Layer vector not same length as layer function vector')
-  }
-  
-  # create the base pre-trained model
-  base_model <- plpResult$model$model
+ 
+  # create the base pre-trained
+  base_model <-  plpResult$model$model
   
   # add our custom layers
   predictions <- base_model$output 
   
+  
+  # fix the older layers
+  if(fixLayers){
+    for (i in 1:length(base_model$layers)){
+      try({base_model$layers[[i]]$trainable <- F}, silent = TRUE)
+    }
+  }
+  
   ## add loop over settings here - move code to new function and call it
   ##====
   # !!check this looping logic works
-  for(i in 1:length(addLayers)){
-    predictions %>% keras::layer_dense(units = addLayers[i], activation = layerActivation[i])
+  if(!is.null(addLayers)){
+    for(i in 1:length(addLayers)){
+      predictions <- keras::layer_dense(predictions,units = addLayers[i], activation = layerActivation[i])
+      if(layerDropout[i]){
+        predictions <- keras::layer_dropout(predictions, rate = 0.5)
+      }
+    }
   }
+  
+  # add find layer for binary outcome
+  predictions <- keras::layer_dense(predictions,units = 2, activation = 'sigmoid')
+  
   
   # this is the model we will train
   model <- keras::keras_model(inputs = base_model$input, outputs = predictions)
-  
-  # first: train only the top layers (which were randomly initialized)
-  # i.e. freeze all convolutional InceptionV3 layers
-  for (i in 1:length(fixLayers)){
-    model$layers[i]$trainable <- fixLayers[i]
-  }
   
   # compile the model (should be done *after* setting layers to non-trainable)
   model %>% keras::compile(optimizer = 'rmsprop', loss = 'binary_crossentropy',
@@ -465,7 +487,7 @@ transferLearning <- function(plpResult,
                                                 patience = 5,mode = "auto", min_delta = 1e-5, cooldown = 0, 
                                                 min_lr = 0)
   
-  class_weight=list("0"=1,"1"=outcome_weight)
+  class_weight=list("0"=1,"1"=outcomeWeight)
   
 
   sampling_generator<-function(data, population, batchSize, train_rows){
@@ -473,8 +495,8 @@ transferLearning <- function(plpResult,
       gc()
       rows<-sample(train_rows, batchSize, replace=FALSE)
       
-      list(as.array(data[rows,,]),
-           population$y[,1:2][rows,])
+      list(as.array(data[rows,]),
+           population$y[rows,1:2])
     }
   }
   
@@ -484,7 +506,7 @@ transferLearning <- function(plpResult,
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
   
-  result<- toSparseM(plpData,population,map=NULL, temporal=F)
+  result<- toSparseM(plpData,population,map=plpResult$model$covariateMap, temporal=F)
   data <- result$data
   population$y <- keras::to_categorical(population$outcomeCount, length(unique(population$outcomeCount)))
   
@@ -493,11 +515,10 @@ transferLearning <- function(plpResult,
   val_rows<-sample(1:nrow(population), valN, replace=FALSE)
   train_rows <- c(1:nrow(population))[-val_rows]
   
-
   history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
                                             steps_per_epoch = nrow(population)/batchSize,
                                             epochs=epochs,
-                                            validation_data=list(as.array(plpData[val_rows,,]),
+                                            validation_data=list(as.array(data[val_rows,,]),
                                                                  population$y[val_rows,1:2]),
                                             callbacks=list(earlyStopping,reduceLr),
                                             class_weight=class_weight)
@@ -509,7 +530,7 @@ transferLearning <- function(plpResult,
   prediction <- population
   prediction$value <- 0
   for(batch in batches){
-    pred <- keras::predict_proba(model, as.array(plpData[batch,]))
+    pred <- model$predict(as.array(data[batch,,]))
     prediction$value[batch] <- pred[,2]
   }
   

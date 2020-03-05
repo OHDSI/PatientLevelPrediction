@@ -9,9 +9,11 @@ transferLearning(
   plpData,
   population,
   fixLayers = T,
+  includeTop = F,
   addLayers = c(100, 10),
   layerDropout = c(T, T),
   layerActivation = c("relu", "softmax"),
+  outcomeWeight = 1,
   batchSize = 10000,
   epochs = 20
 )
@@ -23,13 +25,17 @@ transferLearning(
 
 \item{population}{The population for the new data}
 
-\item{fixLayers}{boolean vector for each layer in plpResult$model specificying whether to fix it e.g. c(T,T,F) means to fix layers 1 and 2 but not fox layer 3}
+\item{fixLayers}{boolean specificying whether to fix weights in model being transferred}
+
+\item{includeTop}{If TRUE the final layer of the model being transferred is removed}
 
 \item{addLayers}{vector specifying nodes in each layer to add e.g. c(100,10) will add another layer with 100 nodels and then a final layer with 10}
 
 \item{layerDropout}{Add dropout to each new layer (binary vector length of addLayers)}
 
 \item{layerActivation}{Activation function for each new layer (string vector length of addLayers)}
+
+\item{outcomeWeight}{The weight to assign the class 1 when training the model}
 
 \item{batchSize}{Size of each batch for updating layers}
 
