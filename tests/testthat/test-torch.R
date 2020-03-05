@@ -88,6 +88,7 @@ test_that("MLP LR working checks", {
 
 
 # add temporal data:
+if(!travis){
 RNNTSet <- setRNNTorch(hidden_size = 1, 
                         epochs =1)
 plpResultRNNT <- runPlp(population = population2,
@@ -99,9 +100,12 @@ plpResultRNNT <- runPlp(population = population2,
                                                 savePlpPlots = F, 
                                                 analysisId = 'rnntTest',
                                                 saveDirectory =  saveLoc)
+}
 
 test_that("RNN Torch working checks", {
-  
+  if(travis){
+    skip("Too slow for travis")
+  }
   # check same structure
   testthat::expect_equal(names(plpResultRNNT), 
                          names(plpResult))

@@ -33,9 +33,9 @@ test_that("population creation parameters", {
                         requireTimeAtRisk = FALSE,
                         minTimeAtRisk=0,
                         riskWindowStart = 0,
-                        addExposureDaysToStart = FALSE,
+                        startAnchor = 'cohort start',
                         riskWindowEnd = 365,
-                        addExposureDaysToEnd = FALSE)
+                        endAnchor = 'cohort start')
 
   #plpData = plpData
   expect_is(studyPopulation, "data.frame")
@@ -55,9 +55,9 @@ test_that("population creation parameters", {
                                            requireTimeAtRisk = FALSE,
                                            minTimeAtRisk=0,
                                            riskWindowStart = 0,
-                                           addExposureDaysToStart = FALSE,
+                                           startAnchor = 'cohort start',
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE)
+                                           endAnchor = 'cohort start')
   
   nrOutcomes2 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes2,0)
@@ -75,9 +75,9 @@ test_that("population creation parameters", {
                                            requireTimeAtRisk = TRUE,
                                            minTimeAtRisk=365,
                                            riskWindowStart = 0,
-                                           addExposureDaysToStart = FALSE,
+                                           startAnchor = 'cohort start',
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE)
+                                           endAnchor = 'cohort start')
   nrOutcomes3 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes3,0)
   expect_true(nrOutcomes3 <= nrOutcomes1) 
@@ -94,9 +94,9 @@ test_that("population creation parameters", {
                                            requireTimeAtRisk = FALSE,
                                            minTimeAtRisk=365,
                                            riskWindowStart = 0,
-                                           addExposureDaysToStart = FALSE,
+                                           startAnchor = 'cohort start',
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE)
+                                           endAnchor = 'cohort start')
   nrOutcomes4 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes4,0)
   expect_true(nrOutcomes4 <= nrOutcomes1) 
@@ -195,9 +195,9 @@ test_that("population creation parameters", {
                         requireTimeAtRisk = T,
                         minTimeAtRisk=365,
                         riskWindowStart = 0,
-                        addExposureDaysToStart = F,
+                        startAnchor = 'cohort start',
                         riskWindowEnd = 365,
-                        addExposureDaysToEnd = F)
+                        endAnchor = 'cohort start')
   
   # person 1 and 4 should be retruned
   expect_equal(Ppop$rowId[Ppop$outcomeCount>0], c(1,4))
@@ -214,9 +214,9 @@ test_that("population creation parameters", {
                                requireTimeAtRisk = T,
                                minTimeAtRisk=365,
                                riskWindowStart = 0,
-                               addExposureDaysToStart = F,
+                               startAnchor = 'cohort start',
                                riskWindowEnd = 365,
-                               addExposureDaysToEnd = F)
+                               endAnchor = 'cohort start')
   
   # person 4 only as person 1 has it before
   expect_equal(Ppop2$rowId[Ppop2$outcomeCount>0], c(4))
@@ -233,9 +233,9 @@ test_that("population creation parameters", {
                                requireTimeAtRisk = T,
                                minTimeAtRisk=365,
                                riskWindowStart = 0,
-                               addExposureDaysToStart = F,
+                               startAnchor = 'cohort start',
                                riskWindowEnd = 365,
-                               addExposureDaysToEnd = F)
+                               endAnchor = 'cohort start')
   
   # 4 only should be retruned
   expect_equal(Ppop3$rowId[Ppop3$outcomeCount>0], c(4))

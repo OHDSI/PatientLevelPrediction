@@ -1,5 +1,6 @@
 # this files contains the objects used in the tests:
 
+travis <- T
 saveLoc <- 'T:/Temp'
 saveLoc <- getwd()
 if(!dir.exists(file.path(saveLoc,"fftemp"))){
@@ -46,9 +47,9 @@ population <- createStudyPopulation(plpData,
                                     requireTimeAtRisk = T,
                                     minTimeAtRisk=10,
                                     riskWindowStart = 0,
-                                    addExposureDaysToStart = FALSE,
+                                    startAnchor = 'cohort start',
                                     riskWindowEnd = 365,
-                                    addExposureDaysToEnd = FALSE)
+                                    endAnchor = 'cohort start')
 
 population2 <- createStudyPopulation(plpData2,
                                     outcomeId = 2,
@@ -59,9 +60,9 @@ population2 <- createStudyPopulation(plpData2,
                                     requireTimeAtRisk = T,
                                     minTimeAtRisk=10,
                                     riskWindowStart = 0,
-                                    addExposureDaysToStart = FALSE,
+                                    startAnchor = 'cohort start',
                                     riskWindowEnd = 365,
-                                    addExposureDaysToEnd = FALSE)
+                                    endAnchor = 'cohort start')
 
 
 # MODEL SETTINGS
@@ -144,10 +145,10 @@ populationReal <- createStudyPopulation(plpDataReal,
                                         priorOutcomeLookback = 99999,
                                         requireTimeAtRisk = F,
                                         minTimeAtRisk=1,
-                                        riskWindowStart = 0,
-                                        addExposureDaysToStart = F,
+                                        riskWindowStart = 0, 
+                                        startAnchor = 'cohort start',
                                         riskWindowEnd = 1000,
-                                        addExposureDaysToEnd = T)
+                                        endAnchor = 'cohort end')
 
 plpResultReal <- runPlp(population = populationReal,
                         plpData = plpDataReal, 

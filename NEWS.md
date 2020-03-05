@@ -1,3 +1,9 @@
+PatientLevelPrediction 3.0.13
+======================
+- Deprecating addExposureDaysToStart and addExposureDaysToEnd arguments in createStudyPopulation, adding new arguments called startAnchor and endAnchor. The hope is this is less confusing.
+- fixed transfer learning code (can now transfer or fine-tune model)
+- made view plp shiny apps work when some results are missing
+
 PatientLevelPrediction 3.0.12
 ======================
 - set up testing 
@@ -5,7 +11,7 @@ PatientLevelPrediction 3.0.12
 
 PatientLevelPrediction 3.0.11
 ======================
-- added tests to get >70% coverage
+- added tests to get >70% coverage (keras tests too slow for travis)
 - Fixed minor bugs
 - Fixed deep learning code and removed pythonInR dependancy
 - combined shiny into one file with one interface

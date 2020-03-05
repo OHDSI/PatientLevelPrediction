@@ -104,6 +104,8 @@ test_that("covNN2 working checks", {
   
 })
 
+
+if(!travis){
 CIReNNSet <- setCIReNN(epochs = 1, useVae = F, units=c(10) )
 plpResultCIReNN <- runPlp(population = population2, plpData = plpData3, 
                                          minCovariateFraction = 0.001, normalizeData = F, 
@@ -114,9 +116,12 @@ plpResultCIReNN <- runPlp(population = population2, plpData = plpData3,
                                          saveEvaluation = F, 
                           analysisId = 'cireNNTest',
                           saveDirectory =  saveLoc)
+}
 
 test_that("CIReNN working checks", {
-  
+  if(travis){
+    skip("Too slow for travis")
+  }
   # check same structure
   testthat::expect_equal(names(plpResultCIReNN), 
                          names(plpResult))
