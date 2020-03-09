@@ -78,20 +78,14 @@ myPackage::execute(connectionDetails = connectionDetails,
 
 making sure the outputFolder is the same location used when you ran the analysis.  This code populates a shiny app project with the results but removes sensitive date such as connection settings, the cdmDatabaseSchema setting, the predicton matrix and any sensitive counts less than 'minCellCount' from the covariate summary and performance evalaution.
 
-The shiny app project populated with the model development results can then be found inside your R library.  To find the location of your R library run:
-```{r eval = FALSE}
-.libPaths()
-```
+The shiny app project populated with the model development results can then be found at '[outputFolder]/ShinyApp' e.g., 'C:/myResults/ShinyApp'.
 
-Go to the location shown and open the directory with the same name as your R package.  For example if the '.libPaths()' returns 'C:/R/library' and the name of your package is 'myPackage' then I will open 'C:/R/library/myPackage'.
-
-Inside this directory you will see a folder named 'shiny' open it and then you will see a folder named 'PLPViewer'.  This folder contains your PLP shiny app.  
 
 ### Testing (Optional but recommended)
-You can test the app by opening the shiny project within the 'PLPViewer' folder, double click on the file named 'PLPViewer.Rproj'.  This will open an R studio session with the shiny app project loaded. Now load the 'ui.R' files within this R studio session and you will see a green arrow with the words 'Run App' at the top right of the script.  Click on this and the shiny app with open.  Note: You may need to install some R pacakge dependancies for the shiny app to work.
+You can test the app by opening the shiny project within the [outputFolder]/ShinyApp' folder, double click on the file named 'PLPViewer.Rproj'.  This will open an R studio session with the shiny app project loaded. Now load the 'ui.R' files within this R studio session and you will see a green arrow with the words 'Run App' at the top right of the script.  Click on this and the shiny app with open.  Note: You may need to install some R pacakge dependancies for the shiny app to work.
 
 ## Step 3: Sharing the shiny app
-Once you are happy with your app, you can publish it onto https://data.ohdsi.org by adding the folder 'PLPViewer' to the OHDSI githib ShinyDeploy (https://github.com/OHDSI/ShinyDeploy/).  Continuing the example, we would copy the folder 'C:/R/library/myPackage/shiny/PLPViewer' and paste it to my local github clone of ShinyDeploy.  We recommend renaming the folder from 'PLPViewer' to a name that describes your prediction, e.g., 'StrokeinAF'.  Then commit the changes and make a pull request to ShinyDeploy.  Once accepted your shiny app will be viewable at 'https://data.ohdsi.org'.  If you commited the folder named 'StrokeInAF' then the shiny app will be hosted at 'https://data.ohdsi.org/StrokeInAF'.
+Once you are happy with your app, you can publish it onto https://data.ohdsi.org by adding the folder 'ShinyApp' to the OHDSI githib ShinyDeploy (https://github.com/OHDSI/ShinyDeploy/).  Continuing the example, we would copy the folder '[outputFolder]/ShinyApp' and paste it to the local github clone of ShinyDeploy.  We recommend renaming the folder from 'ShinyApp' to a name that describes your prediction, e.g., 'StrokeinAF'.  Then commit the changes and make a pull request to ShinyDeploy.  Once accepted your shiny app will be viewable at 'https://data.ohdsi.org'.  If you commited the folder named 'StrokeInAF' then the shiny app will be hosted at 'https://data.ohdsi.org/StrokeInAF'.
 
 
 # Atlas External Validation
