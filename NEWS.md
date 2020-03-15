@@ -1,3 +1,9 @@
+PatientLevelPrediction 3.0.14
+======================
+- updated external validate code to enable custom covariates using ATLAS cohorts
+- fixed issues with startAnchor and endAnchor
+
+
 PatientLevelPrediction 3.0.13
 ======================
 - Deprecating addExposureDaysToStart and addExposureDaysToEnd arguments in createStudyPopulation, adding new arguments called startAnchor and endAnchor. The hope is this is less confusing.

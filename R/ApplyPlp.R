@@ -248,8 +248,22 @@ similarPlpData <- function(plpModel=NULL,
   dataOptions[[1]] <- NULL
   dataOptions$sampleSize <- sample
   
-  dataOptions$covariateSettings$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
-  
+  if(class(dataOptions$covariateSettings)=="covariateSettings"){
+    dataOptions$covariateSettings$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
+  } else {
+    # figure out how to modify the multiple settings
+    for(i in 1:length(dataOptions$covariateSettings)){
+      type <- attr(dataOptions$covariateSettings[[i]], "fun")
+      if(type=="getDbDefaultCovariateData"){ # modify standard
+        dataOptions$covariateSettings[[i]]$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
+      }
+      if(type=="getCohortCovariateData"){ # modify custom cohort
+        #{TODO: update settings here...}
+        dataOptions$covariateSettings[[i]]$cohortDatabaseSchema <-newCohortDatabaseSchema
+        dataOptions$covariateSettings[[i]]$cohortTable <- newCohortTable
+      }
+    }
+  }
   ParallelLogger::logTrace('Adding new settings if set...')
   if(is.null(newCdmDatabaseSchema))
     return(NULL)

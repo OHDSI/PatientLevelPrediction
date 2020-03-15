@@ -614,6 +614,12 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   
   
   target_size <- nrow(population)
+  if(is.null(populationSet$addExposureDaysToStart)){
+    populationSet$addExposureDaysToStart <- populationSet$startAnchor == 'cohort end'
+  }
+  if(is.null(populationSet$addExposureDaysToEnd)){
+    populationSet$addExposureDaysToEnd <- populationSet$endAnchor == 'cohort end'
+  }
   outcome_size <- sum(population$outcomeCount==1)
   if(populationSet$addExposureDaysToEnd &
      populationSet$addExposureDaysToStart){

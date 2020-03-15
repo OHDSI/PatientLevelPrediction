@@ -422,11 +422,13 @@ combinePlpModelSettings <- function(plpModelSetting1, plpModelSetting2){
 #' @param riskWindowStart        The start of the risk window (in days) relative to the index date (+
 #'                               days of exposure if the \code{addExposureDaysToStart} parameter is
 #'                               specified).
-#' @param addExposureDaysToStart   Add the length of exposure the start of the risk window?
+#' @param startAnchor	           The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".
+#' @param addExposureDaysToStart DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.
 #' @param riskWindowEnd          The end of the risk window (in days) relative to the index data (+
 #'                               days of exposure if the \code{addExposureDaysToEnd} parameter is
 #'                               specified).
-#' @param addExposureDaysToEnd   Add the length of exposure the risk window?
+#' @param endAnchor              The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".
+#' @param addExposureDaysToEnd   DEPRECATED: Add the length of exposure the risk window? Use \code{endAnchor} instead.
 #' @param verbosity              Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 #'                               \itemize{
 #'                               \item{DEBUG}{Highest verbosity showing all debug statements}
@@ -448,11 +450,28 @@ createStudyPopulationSettings <- function(binary = T,
                                           requireTimeAtRisk = T,
                                           minTimeAtRisk=364,
                                           riskWindowStart = 1,
-                                          addExposureDaysToStart = FALSE,
+                                          startAnchor = 'cohort start',
+                                          addExposureDaysToStart,
                                           riskWindowEnd = 365,
-                                          addExposureDaysToEnd = F,
+                                          endAnchor = "cohort start",
+                                          addExposureDaysToEnd,
                                           verbosity = "INFO"){
   
+  if(missing(addExposureDaysToStart) | missing(addExposureDaysToEnd)) {
+    result <- list(binary = binary,
+                   includeAllOutcomes = includeAllOutcomes,
+                   firstExposureOnly = firstExposureOnly,
+                   washoutPeriod = washoutPeriod,
+                   removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome,
+                   priorOutcomeLookback = priorOutcomeLookback,
+                   requireTimeAtRisk = requireTimeAtRisk, 
+                   minTimeAtRisk = minTimeAtRisk,
+                   riskWindowStart = riskWindowStart,
+                   startAnchor = startAnchor,
+                   riskWindowEnd = riskWindowEnd,
+                   endAnchor = endAnchor, 
+                   verbosity = verbosity)
+  } else{
   result <- list(binary = binary,
               includeAllOutcomes = includeAllOutcomes,
               firstExposureOnly = firstExposureOnly,
@@ -466,6 +485,7 @@ createStudyPopulationSettings <- function(binary = T,
               riskWindowEnd = riskWindowEnd,
               addExposureDaysToEnd = addExposureDaysToEnd, 
               verbosity = verbosity)
+  }
   
   class(result) <- 'populationSettings'
   return(result)

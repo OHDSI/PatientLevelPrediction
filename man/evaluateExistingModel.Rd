@@ -11,9 +11,9 @@ evaluateExistingModel(
   type = "score",
   covariateSettings,
   customCovariates = NULL,
-  addExposureDaysToStart = F,
+  startAnchor = "cohort start",
   riskWindowStart = 1,
-  addExposureDaysToEnd = F,
+  endAnchor = "cohort start",
   riskWindowEnd = 365,
   requireTimeAtRisk = T,
   minTimeAtRisk = 364,
@@ -54,11 +54,11 @@ evaluateExistingModel(
 
 \item{customCovariates}{A table of covariateId, sql (sql creates the custom covariate)}
 
-\item{addExposureDaysToStart}{riskWindowStart relative to the cohort end date instead of the cohort start date?}
+\item{startAnchor}{riskWindowStart relative to the cohort end date instead of the cohort start date?}
 
 \item{riskWindowStart}{The day after index to start predicting the outcome}
 
-\item{addExposureDaysToEnd}{riskWindowEnd relative to the cohort end date instead of the cohort start date?}
+\item{endAnchor}{riskWindowEnd relative to the cohort end date instead of the cohort start date?}
 
 \item{riskWindowEnd}{The day after index to stop predicting the outcome}
 

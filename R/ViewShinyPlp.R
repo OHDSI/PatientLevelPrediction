@@ -713,6 +713,9 @@ summaryPlpAnalyses <- function(analysesLocation){
   if(length(dir(validationLocation))>0){
     valPerformances <- c()
     valDatabases <- dir(validationLocation, recursive = F, full.names = T)
+    if(length(grep('plplog.txt', valDatabases))>0){
+      valDatabases <- valDatabases[-grep('plplog.txt', valDatabases)]
+    }
     for( valDatabase in valDatabases){
       
       valAnalyses <-  dir(valDatabase, recursive = F, full.names = T)

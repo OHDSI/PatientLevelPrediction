@@ -14,9 +14,11 @@ createStudyPopulationSettings(
   requireTimeAtRisk = T,
   minTimeAtRisk = 364,
   riskWindowStart = 1,
-  addExposureDaysToStart = FALSE,
+  startAnchor = "cohort start",
+  addExposureDaysToStart,
   riskWindowEnd = 365,
-  addExposureDaysToEnd = F,
+  endAnchor = "cohort start",
+  addExposureDaysToEnd,
   verbosity = "INFO"
 )
 }
@@ -43,13 +45,17 @@ date for a person to be included in the cohort.}
 days of exposure if the \code{addExposureDaysToStart} parameter is
 specified).}
 
-\item{addExposureDaysToStart}{Add the length of exposure the start of the risk window?}
+\item{startAnchor}{The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".}
+
+\item{addExposureDaysToStart}{DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.}
 
 \item{riskWindowEnd}{The end of the risk window (in days) relative to the index data (+
 days of exposure if the \code{addExposureDaysToEnd} parameter is
 specified).}
 
-\item{addExposureDaysToEnd}{Add the length of exposure the risk window?}
+\item{endAnchor}{The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".}
+
+\item{addExposureDaysToEnd}{DEPRECATED: Add the length of exposure the risk window? Use \code{endAnchor} instead.}
 
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 \itemize{

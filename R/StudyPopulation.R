@@ -94,6 +94,7 @@ createStudyPopulation <- function(plpData,
       if(!startAnchor%in%c('cohort start', 'cohort end')){
         stop('invalid startAnchor')
       }
+      useStartAnchor = T
       addExposureDaysToStart <- ifelse(startAnchor == "cohort end", T, F)
     }
   } else {
@@ -107,6 +108,7 @@ createStudyPopulation <- function(plpData,
       if(!endAnchor%in%c('cohort start', 'cohort end')){
         stop('invalid endAnchor')
       }
+      useEndAnchor = T
       addExposureDaysToEnd <- ifelse(endAnchor == "cohort end", T, F)
     }
   } else {
@@ -187,11 +189,11 @@ createStudyPopulation <- function(plpData,
   metaData$requireTimeAtRisk = requireTimeAtRisk
   metaData$minTimeAtRisk=minTimeAtRisk
   metaData$riskWindowStart = riskWindowStart
-  metaData$addExposureDaysToStart = addExposureDaysToStart
-  metaData$startAnchor = addExposureDaysToStart
+  if(!useStartAnchor){metaData$addExposureDaysToStart = addExposureDaysToStart}
+  metaData$startAnchor = startAnchor
   metaData$riskWindowEnd = riskWindowEnd
   metaData$addExposureDaysToEnd = addExposureDaysToEnd
-  metaData$endAnchor = addExposureDaysToEnd
+  if(!useEndAnchor){metaData$endAnchor = endAnchor}
   
   # get attriction for outcomeId
   if(!is.null(metaData$attrition$uniquePeople)){
