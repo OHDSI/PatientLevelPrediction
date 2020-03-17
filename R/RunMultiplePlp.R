@@ -340,7 +340,7 @@ createPlpModelSettings <- function(modelList,
  
  # extract time-at-risk from population settings
  tarSetting <- do.call(rbind,(lapply(populationSettings, 
-                                     function(x) c(x$addExposureDaysToStart, x$riskWindowStart,x$addExposureDaysToEnd,x$riskWindowEnd ))))
+                                     function(x) c(ifelse(is.null(x$addExposureDaysToStart), x$startAnchor=='cohort end' ,x$addExposureDaysToStart) , x$riskWindowStart,ifelse(is.null(x$addExposureDaysToEnd),x$endAnchor == 'cohort end',x$addExposureDaysToEnd),x$riskWindowEnd ))))
  tarSetting <- as.data.frame(tarSetting)
  colnames(tarSetting) <- c('addExposureDaysToStart','riskWindowStart','addExposureDaysToEnd','riskWindowEnd' )
  tarSetting$populationSettingId <- 1:nrow(tarSetting)
