@@ -50,9 +50,9 @@ test_that("createStudyPopulationSettings", {
                                             requireTimeAtRisk = includeAllOutcomes,
                                             minTimeAtRisk=washoutPeriod,
                                             riskWindowStart = washoutPeriod,
-                                            addExposureDaysToStart = binary,
+                                            startAnchor = ifelse(binary, 'cohort end','cohort start'),
                                             riskWindowEnd = washoutPeriod,
-                                            addExposureDaysToEnd = binary,
+                                            endAnchor = ifelse(binary, 'cohort end','cohort start'),
                                             verbosity = "INFO")
   
   testthat::expect_true(class(result)=='populationSettings')
@@ -65,8 +65,8 @@ test_that("createStudyPopulationSettings", {
   testthat::expect_true(result$minTimeAtRisk == washoutPeriod)
   testthat::expect_true(result$riskWindowStart == washoutPeriod)
   testthat::expect_true(result$riskWindowEnd == washoutPeriod)
-  testthat::expect_true(result$addExposureDaysToStart == binary)
-  testthat::expect_true(result$addExposureDaysToEnd == binary)
+  testthat::expect_true(result$startAnchor == ifelse(binary, 'cohort end','cohort start'))
+  testthat::expect_true(result$endAnchor == ifelse(binary, 'cohort end','cohort start'))
   
 })
 

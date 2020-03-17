@@ -78,6 +78,15 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
 
   target_size <- nrow(population)
   outcome_size <- sum(population$outcomeCount==1)
+  
+  # update now we are using startAnchor and endAnchor
+  if(is.null(populationSet$addExposureDaysToStart)){
+    populationSet$addExposureDaysToStart <- populationSet$startAnchor == 'cohort end'
+  }
+  if(is.null(populationSet$addExposureDaysToEnd)){
+    populationSet$addExposureDaysToEnd <- populationSet$endAnchor == 'cohort end'
+  }
+  
   if(populationSet$addExposureDaysToEnd &
      populationSet$addExposureDaysToStart){
     time_at_risk <- paste0(populationSet$riskWindowStart,
@@ -171,8 +180,32 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   doc <- doc %>% officer::body_add_par(value = 'Covariate Settings:', style = "heading 3")
   
   # add table of covariate settings
-  covSet <- data.frame(setting=names(unlist(plpResult$model$metaData$call$covariateSettings)),
-                       choice = unlist(plpResult$model$metaData$call$covariateSettings))
+  if(class(plpResult$model$metaData$call$covariateSettings)=='list'){
+    #code for when multiple covariateSettings
+    covSet <- c() 
+    for(i in 1:length(plpResult$model$metaData$call$covariateSettings)){
+      if(attr(plpResult$model$metaData$call$covariateSettings[[i]],'fun')=='getDbDefaultCovariateData'){
+        covariatesTemp <- data.frame(covariateName = names(plpResult$model$metaData$call$covariateSettings[[i]]), 
+                                     SettingValue = unlist(lapply(plpResult$model$metaData$call$covariateSettings[[i]], 
+                                                                  function(x) paste0(x, 
+                                                                                     collapse='-'))))
+      } else{
+        covariatesTemp <- data.frame(covariateName = plpResult$model$metaData$call$covariateSettings[[i]]$covariateName,
+                                     SettingValue = ifelse(sum(names(plpResult$model$metaData$call$covariateSettings[[i]])%in%c("startDay","endDay"))>0,
+                                                           paste(names(plpResult$model$metaData$call$covariateSettings[[i]])[names(plpResult$model$metaData$call$covariateSettings[[i]])%in%c("startDay","endDay")],
+                                                                 plpResult$model$metaData$call$covariateSettings[[i]][names(plpResult$model$metaData$call$covariateSettings[[i]])%in%c("startDay","endDay")], sep=':', collapse = '-'),
+                                                           "")
+        )
+        
+      }
+      covSet  <- rbind(covSet,covariatesTemp)
+    }
+  } else{
+    covSet <- data.frame(covariateName = names(plpResult$model$metaData$call$covariateSettings), 
+                             SettingValue = unlist(lapply(plpResult$model$metaData$call$covariateSettings, 
+                                                          function(x) paste0(x, 
+                                                                             collapse='-'))))
+  }
   rownames(covSet) <- NULL
   if(nrow(covSet)!=0){
     doc <- doc %>% officer::body_add_table(value = covSet)
@@ -795,18 +828,26 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   doc <- doc %>% officer::body_add_par(value = 'Predictors:', style = "heading 3")
   covset <- plpResult$model$metaData$call$covariateSettings #plpResult$inputSetting$dataExtrractionSettings$covariateSettings
-  if(class(plpResult$inputSetting$dataExtrractionSettings$covariateSettings)=="list"){
-    covs <- unlist(covset)[grep('use',names(unlist(covset)))]
-    covs <- gsub('useCovariate','',names(covs)[covs==1])
-    covs <- as.data.frame(covs)
-    colnames(covs) <- 'Predictor'
-    timeset <- paste0("Longterm days:",covset$longTermDays, "-",
-                      "Mediumterm days:",covset$mediumDays, "-",
-                      "Shortterm days:",covset$shortTermDays, "-",
-                      "WindowEnd days:",covset$windowEndDays)
-
-    doc <- doc %>% officer::body_add_table(value = covs)
-    doc <- doc %>% officer::body_add_par(value = timeset)
+  if(class(covset)=="list"){
+    for(i in 1:length(covset)){
+      if(attr(covset[[i]],'fun')=='getDbDefaultCovariateData'){
+        covs <- as.data.frame(unlist(covset[[i]])) #collapse covset values if vectors?
+        covs <- data.frame(Covariate = row.names(covs), Setting = covs)
+        colnames(covs) <- c('Covariate','Setting')
+        #restrict to true
+        covs <- covs[union(which(covs$Setting!=0),grep('TermStartDays',covs$Covariate)),]
+        doc <- doc %>% officer::body_add_table(value = covs)
+      } else{
+        covs <- data.frame(covariate = covset[[i]]$covariateName,
+                          Setting = ifelse(sum(names(covset[[i]])%in%c("startDay","endDay"))>0,
+                                                paste(names(covset[[i]])[names(covset[[i]])%in%c("startDay","endDay")],
+                                                      covset[[i]][names(covset[[i]])%in%c("startDay","endDay")], sep=':', collapse = '-'),
+                                                "")
+                          )
+        #restrict to true
+        doc <- doc %>% officer::body_add_table(value = covs)
+      }
+    }
     
     doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<!Clarify about missing data>", prop = style_helper_text))) %>% 
       officer::body_add_par("")

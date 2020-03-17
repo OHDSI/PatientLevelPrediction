@@ -275,6 +275,8 @@ viewPlps <- function(result, validation=NULL){
     session$onSessionEnded(shiny::stopApp)
     filterIndex <- shiny::reactive({getFilter(summaryTable,input)})
     
+    print(summaryTable)
+    
     # need to remove over columns:
     output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable[filterIndex(),!colnames(summaryTable)%in%c('addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')],
                                                              rownames= FALSE, selection = 'single'))
@@ -286,6 +288,7 @@ viewPlps <- function(result, validation=NULL){
         return(input$summaryTable_rows_selected[1])
       }
     })
+    
     
     
     plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,filterIndex(), selectedRow())})
@@ -316,7 +319,7 @@ viewPlps <- function(result, validation=NULL){
                                             ' during ',summaryTable[filterIndex(),'TAR start'][selectedRow()], ' day/s',
                                             ' after ', ifelse(summaryTable[filterIndex(),'addExposureDaysToStart'][selectedRow()]==0, ' cohort start ', ' cohort end '),
                                             ' and ', summaryTable[filterIndex(),'TAR end'][selectedRow()], ' day/s',
-                                            ' after ', ifelse(summaryTable[filterIndex(),'addExposureDaysToEnd']==0, ' cohort start ', ' cohort end '))
+                                            ' after ', ifelse(summaryTable[filterIndex(),'addExposureDaysToEnd'][selectedRow()]==0, ' cohort start ', ' cohort end '))
     )
     
     # PLOTTING FUNCTION
@@ -506,13 +509,14 @@ viewPlps <- function(result, validation=NULL){
 # this checked whether input is valid analysis location or plpResult
 checkPlpInput <- function(result){
   if(class(result)=='runPlp'){
-    type <- 'plpResult'
+    return('plpResult')
   } else if(dir.exists(result)){
-    type <- 'file'
-  } else {
+    return('file')
+  } else if(sum(names(result)%in%c("prediction","performanceEvaluation","inputSetting","executionSummary","model","analysisRef","covariateSummary"))==7){
+    return('plpNoClass')
+    } else {
     stop('Incorrect class for input result')
   }
-  return(type)
 }
 
 
@@ -547,7 +551,7 @@ getFilter <- function(summaryTable,input){
 
 
 getSummary  <- function(result,inputType,validation){
-  if(inputType == 'plpResult'){
+  if(inputType == 'plpResult' || inputType == 'plpNoClass'){
     sumTab <- getSummaryFromObject(result,validation)
   } else if( inputType == 'file') {
     sumTab <- summaryPlpAnalyses(result)
@@ -622,6 +626,10 @@ getPlpResult <- function(result,validation,summaryTable, inputType,filterIndex, 
       tempResult$type <- 'validation'
     }
     tempResult$log <- 'log not available'
+  }else if(inputType == 'plpNoClass'){
+    tempResult <- result
+    tempResult$type <- 'validation'
+    tempResult$log <- 'log not available'
   }else if( inputType == 'file') {
     tempResult <- NULL
     loc <- summaryTable[filterIndex,][selectedRow,]$plpResultLocation
@@ -655,10 +663,32 @@ formatModSettings <- function(modelSettings){
 
 # format covariateSettings
 formatCovSettings <- function(covariateSettings){
-  covariates <- data.frame(covariateName = names(covariateSettings), 
-                           SettingValue = unlist(lapply(covariateSettings, 
-                                                        function(x) paste0(x, 
-                                                                           collapse='-'))))
+  if(class(covariateSettings)=='list'){
+    #code for when multiple covariateSettings
+    covariates <- c() 
+    for(i in 1:length(covariateSettings)){
+      if(attr(covariateSettings[[i]],'fun')=='getDbDefaultCovariateData'){
+        covariatesTemp <- data.frame(covariateName = names(covariateSettings[[i]]), 
+                                     SettingValue = unlist(lapply(covariateSettings[[i]], 
+                                                                  function(x) paste0(x, 
+                                                                                     collapse='-'))))
+      } else{
+        covariatesTemp <- data.frame(covariateName = covariateSettings[[i]]$covariateName,
+                                     SettingValue = ifelse(sum(names(covariateSettings[[i]])%in%c("startDay","endDay"))>0,
+                                                           paste(names(covariateSettings[[i]])[names(covariateSettings[[i]])%in%c("startDay","endDay")],
+                                                                 covariateSettings[[i]][names(covariateSettings[[i]])%in%c("startDay","endDay")], sep=':', collapse = '-'),
+                                                           "")
+        )
+        
+      }
+      covariates  <- rbind(covariates,covariatesTemp)
+    }
+  } else{
+    covariates <- data.frame(covariateName = names(covariateSettings), 
+                             SettingValue = unlist(lapply(covariateSettings, 
+                                                          function(x) paste0(x, 
+                                                                             collapse='-'))))
+  }
   row.names(covariates) <- NULL
   return(covariates)
 }

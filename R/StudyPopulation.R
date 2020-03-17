@@ -87,6 +87,10 @@ createStudyPopulation <- function(plpData,
                                   addExposureDaysToEnd,
                                   ...) {
   
+  
+  useStartAnchor <- F
+  useEndAnchor <- F
+  
   if(missing(addExposureDaysToStart)){
     if(is.null(startAnchor)){
       stop('Need to specify startAnchor') 
@@ -189,11 +193,11 @@ createStudyPopulation <- function(plpData,
   metaData$requireTimeAtRisk = requireTimeAtRisk
   metaData$minTimeAtRisk=minTimeAtRisk
   metaData$riskWindowStart = riskWindowStart
-  if(!useStartAnchor){metaData$addExposureDaysToStart = addExposureDaysToStart}
-  metaData$startAnchor = startAnchor
+  metaData$addExposureDaysToStart = addExposureDaysToStart
+  metaData$startAnchor = ifelse(useStartAnchor, startAnchor, ifelse(addExposureDaysToStart,'cohort end','cohort start'))
   metaData$riskWindowEnd = riskWindowEnd
   metaData$addExposureDaysToEnd = addExposureDaysToEnd
-  if(!useEndAnchor){metaData$endAnchor = endAnchor}
+  metaData$endAnchor = ifelse(useEndAnchor, endAnchor, ifelse(addExposureDaysToEnd,'cohort end','cohort start'))
   
   # get attriction for outcomeId
   if(!is.null(metaData$attrition$uniquePeople)){

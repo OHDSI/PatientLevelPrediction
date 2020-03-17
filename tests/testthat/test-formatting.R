@@ -131,9 +131,9 @@ test_that("toSparseM", {
                                            requireTimeAtRisk = FALSE,
                                            minTimeAtRisk=0,
                                            riskWindowStart = 0,
-                                           addExposureDaysToStart = FALSE,
+                                           startAnchor = 'cohort start',
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE
+                                           endAnchor = 'cohort start'
                                            #,verbosity=INFO
   )
   test <- toSparseM(FplpDataExact,FpopulationExact, map=NULL)
@@ -172,9 +172,9 @@ test_that("toSparseM", {
                                             requireTimeAtRisk = FALSE,
                                             minTimeAtRisk=0,
                                             riskWindowStart = 0,
-                                            addExposureDaysToStart = FALSE,
+                                            startAnchor = 'cohort start',
                                             riskWindowEnd = 365,
-                                            addExposureDaysToEnd = FALSE
+                                            endAnchor = 'cohort start'
                                             #,verbosity=INFO
   )
   
