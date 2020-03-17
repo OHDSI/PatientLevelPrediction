@@ -33,6 +33,7 @@ branches:
 r_packages:
   - covr
   - drat
+  - devtools
 
 r_github_packages:
   - OHDSI/DatabaseConnector
