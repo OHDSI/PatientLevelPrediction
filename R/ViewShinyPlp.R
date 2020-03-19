@@ -510,7 +510,7 @@ viewPlps <- function(result, validation=NULL){
 checkPlpInput <- function(result){
   if(class(result)=='runPlp'){
     return('plpResult')
-  } else if(dir.exists(result)){
+  } else if(ifelse(class(result)=='character', dir.exists(result),F)){
     return('file')
   } else if(sum(names(result)%in%c("prediction","performanceEvaluation","inputSetting","executionSummary","model","analysisRef","covariateSummary"))==7){
     return('plpNoClass')
