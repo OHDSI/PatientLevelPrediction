@@ -41,7 +41,9 @@
 #'                                     permissions to this database.
 #' @param cohortId                     A unique identifier to define the at risk cohorts. CohortId is
 #'                                     used to select the cohort_concept_id in the cohort-like table.
-#' @param outcomeIds                   A list of cohort_definition_ids used to define outcomes.
+#' @param cohortName                   A string specifying the name of the target cohort                                    
+#' @param outcomeIds                   A vector of cohort_definition_ids used to define outcomes.
+#' @param outcomeNames                 A vector of names for each outcome.
 #' @param cohortDatabaseSchema         The name of the database schema that is the location where the
 #'                                     cohort data used to define the at risk cohort is available.
 #'                                     If cohortTable = DRUG_ERA, cohortDatabaseSchema is not used
@@ -90,7 +92,9 @@ diagnostic <- function(plpData = NULL,
                        cdmDatabaseSchema,
                        oracleTempSchema = NULL,
                        cohortId,
+                       cohortName = cohortId,
                        outcomeIds,
+                       outcomeNames = outcomeIds,
                        cohortDatabaseSchema,
                        cohortTable = 'cohort',
                        outcomeDatabaseSchema = cohortDatabaseSchema,
@@ -109,6 +113,68 @@ diagnostic <- function(plpData = NULL,
       dir.create(file.path(outputFolder, cdmDatabaseName), recursive = T)
     }
   }
+  
+  if(!is.null(plpData)){
+    cohortId <- unique(plpData$cohorts$cohortId)
+    outcomeIds <- unique(plpData$outcomes$outcomeId)
+  }
+  
+  #create cohort names csv:
+  if(file.exists(file.path(outputFolder,'names.csv'))){
+    cohortNames <- read.csv(file.path(outputFolder,'names.csv'))
+    
+    newNames <- data.frame(ids = c(cohortId,outcomeIds), 
+                           names = c(cohortName,outcomeNames))
+    
+    newNames<- newNames[!newNames$ids%in%cohortNames$ids,]
+    if(length(newNames$ids)>0){
+      cohortNames <- rbind(cohortNames, newNames)
+    }
+    
+  } else {
+    cohortNames <- data.frame(ids = c(cohortId,outcomeIds), 
+                           names = c(cohortName,outcomeNames))
+  }
+  ParallelLogger::logInfo('Saving cohort names to csv')
+  utils::write.csv(cohortNames, file.path(outputFolder,'names.csv'), row.names = F)
+  
+  #create settings:
+  if(file.exists(file.path(outputFolder,'settings.csv'))){
+    settings <- read.csv(file.path(outputFolder,'settings.csv'))
+    
+    extras <- data.frame(cdmDatabaseName = cdmDatabaseName,
+                         cohortId = cohortId,
+                         outcomeId = outcomeIds,
+                         riskWindowStart = riskWindowStart,
+                         startAnchor = startAnchor,
+                         riskWindowEnd = riskWindowEnd,
+                         endAnchor = endAnchor,
+                         tarId = getTarId(riskWindowStart = riskWindowStart,
+                                          startAnchor = startAnchor,
+                                          riskWindowEnd = riskWindowEnd,
+                                          endAnchor = endAnchor)
+                         )
+    
+    settings <- unique(rbind(settings[,colnames(settings)!='id'],extras))
+    settings$id <- paste(settings$outcomeId, settings$cohortId, settings$tarId, sep='_' )
+    
+  } else{
+    settings <- data.frame(cdmDatabaseName = cdmDatabaseName,
+                         cohortId = cohortId,
+                         outcomeId = outcomeIds,
+                         riskWindowStart = riskWindowStart,
+                         startAnchor = startAnchor,
+                         riskWindowEnd = riskWindowEnd,
+                         endAnchor = endAnchor,
+                         tarId = getTarId(riskWindowStart = riskWindowStart,
+                                          startAnchor = startAnchor,
+                                          riskWindowEnd = riskWindowEnd,
+                                          endAnchor = endAnchor))
+    settings$id <- paste(settings$outcomeId, settings$cohortId, settings$tarId, sep='_' )
+  }
+  ParallelLogger::logInfo('Saving settings to csv')
+  write.csv(settings, file.path(outputFolder,'settings.csv'), row.names = F)
+  
   
   if(is.null(plpData)){
     # get outcome and cohort data - dont need covariates
@@ -197,8 +263,8 @@ diagnostic <- function(plpData = NULL,
     characterization[[i]][ind2,'CovariateMeanWithNoOutcome'] <- -1
     
     if(!is.null(outputFolder)){
-      saveRDS(incidence[[i]], file.path(outputFolder, cdmDatabaseName, paste('incidence',oi,startAnchor,endAnchor,riskWindowStart,paste0(riskWindowEnd,'.rds'), sep='_')))
-      saveRDS(characterization[[i]], file.path(outputFolder, cdmDatabaseName, paste('characterization_',oi,startAnchor,endAnchor,riskWindowStart,paste0(riskWindowEnd,'.rds'), sep='_') ))
+      write.csv(incidence[[i]], file.path(outputFolder, cdmDatabaseName, paste0('incidence_',oi,'_',cohortId, '_',getTarId(riskWindowStart = riskWindowStart,startAnchor=startAnchor,riskWindowEnd=riskWindowEnd, endAnchor=endAnchor ),'.csv')), row.names = F)
+      write.csv(characterization[[i]], file.path(outputFolder, cdmDatabaseName, paste0('characterization_',oi,'_',cohortId, '_',getTarId(riskWindowStart = riskWindowStart,startAnchor=startAnchor,riskWindowEnd=riskWindowEnd, endAnchor=endAnchor ),'.csv')), row.names = F)
     }
     
   }
@@ -216,6 +282,7 @@ getDistribution <- function(cohort,
                             outputFolder = NULL, 
                             databaseName){
   
+  cohortId <- unique(cohort$cohortId)
   outcomesIds <- unique(outcomes$outcomeId)
   
   result <- list()
@@ -259,7 +326,7 @@ getDistribution <- function(cohort,
     result[[i]] <- cohort
     
     if(!is.null(outputFolder)){
-      saveRDS(result[[i]], file.path(outputFolder, databaseName, paste0('distribution_',oi,'.rds')))
+      write.csv(result[[i]], file.path(outputFolder, databaseName, paste0('distribution_',oi,'_',cohortId,'.csv')), row.names = F)
     }
     
   }
@@ -267,4 +334,28 @@ getDistribution <- function(cohort,
   return(result)
 }
 
+
+
+getTarId <- function(riskWindowStart = riskWindowStart,
+                     startAnchor = startAnchor,
+                     riskWindowEnd = riskWindowEnd,
+                     endAnchor = endAnchor){
+  if(riskWindowEnd>9999){
+    warning('riskWindowEnd>9999 will cause error with tarId')
+  }
+  id<- riskWindowStart*1000000 + riskWindowEnd*100 + ifelse(startAnchor=='cohort start', 1, 0)*10 + ifelse(endAnchor=='cohort start', 1, 0)
+  return(id)
+}
+
+convertTarId <- function(tarId){
+  
+  riskWindowStart = floor(tarId/1000000)
+  riskWindowEnd = floor((tarId - riskWindowStart*1000000)/100)
+  startAnchor = ifelse(floor((tarId - riskWindowStart*1000000 - riskWindowEnd*100)/10)==0, 'cohort end', 'cohort start')
+  endAnchor = ifelse((tarId - riskWindowStart*1000000 - riskWindowEnd*100 - ifelse(startAnchor=='cohort start', 1, 0)*10) ==0, 'cohort end', 'cohort start')
+  
+  
+  return(data.frame(riskWindowStart = riskWindowStart, riskWindowEnd = riskWindowEnd,
+                    startAnchor = startAnchor, endAnchor = endAnchor ))
+}
   
