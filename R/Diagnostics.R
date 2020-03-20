@@ -68,6 +68,7 @@
 #' @param endAnchor              The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".
 #' @param outputFolder           Location to save results for shiny app
 #' @param sampleSize             Sample from the target population
+#' @param minCellCount           The minimum count that will be displayed
 #' 
 #' @return
 #' An object containing the model or location where the model is save, the data selection settings, the preprocessing
@@ -100,7 +101,8 @@ diagnostic <- function(plpData = NULL,
                        riskWindowEnd = 365,
                        endAnchor = 'cohort start',
                        outputFolder = NULL,
-                       sampleSize = NULL){
+                       sampleSize = NULL,
+                       minCellCount = 5){
   
   if(!is.null(outputFolder)){
     if(!dir.exists(file.path(outputFolder, cdmDatabaseName))){
@@ -111,8 +113,10 @@ diagnostic <- function(plpData = NULL,
   if(is.null(plpData)){
     # get outcome and cohort data - dont need covariates
     
-    ParallelLogger::logInfo('Connecting to database')
-    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+    if (!is.null(getOption("fftempdir")) && !file.exists(getOption("fftempdir"))) {
+      warning("fftempdir '", getOption("fftempdir"), "' not found. Attempting to create folder")
+      dir.create(getOption("fftempdir"), recursive = TRUE)
+    }
     
     ParallelLogger::logInfo('Extracting data')
     settings <- list(connectionDetails = connectionDetails,
@@ -132,7 +136,7 @@ diagnostic <- function(plpData = NULL,
     data <- plpData
   } 
   
-  outcomeIds <- unique(plpData$outcomes$outcomeId)
+  outcomeIds <- unique(data$outcomes$outcomeId)
   
   ParallelLogger::logInfo('Calculating distributions')
   distribution <- getDistribution(cohort = data$cohorts,
@@ -152,7 +156,7 @@ diagnostic <- function(plpData = NULL,
   names(characterization) <- outcomeIds
   for(i in 1:length(outcomeIds)){
     oi <- outcomeIds[i]
-    population <- createStudyPopulation(plpData = plpData, 
+    population <- createStudyPopulation(plpData = data, 
                                         outcomeId = oi, 
                                         firstExposureOnly = F,
                                         includeAllOutcomes = F, 
@@ -164,12 +168,33 @@ diagnostic <- function(plpData = NULL,
                                         riskWindowEnd = riskWindowEnd, 
                                         endAnchor = endAnchor)
     
-    incidence[[i]] <- data.frame(Opercent = sum(population$outcomeCount>0)/nrow(population)*100,
-                                Tcount = nrow(population),
-                                Ocount = sum(population$outcomeCount>0))
-    characterization[[i]] <- covariateSummary(plpData = plpData, 
+    
+    if(sum(population$outcomeCount>0) < minCellCount){
+      incidence[[i]] <-data.frame(Opercent = paste0('< ',round(minCellCount/nrow(population)*100, digits = 2)),
+                                  Tcount = nrow(population),
+                                  Ocount = paste0('< ',minCellCount))
+    } else {
+      incidence[[i]] <- data.frame(Opercent = sum(population$outcomeCount>0)/nrow(population)*100,
+                                   Tcount = nrow(population),
+                                   Ocount = sum(population$outcomeCount>0))
+    }
+    
+    characterization[[i]] <- covariateSummary(plpData = data, 
                                               population = population)
     
+    ind <- (characterization[[i]]$CovariateCount < minCellCount)  
+    ind2 <- (characterization[[i]]$CovariateCountWithOutcome < minCellCount) | (characterization[[i]]$CovariateCountWithNoOutcome < minCellCount)
+    
+    characterization[[i]][ind,'CovariateCount'] <- -1
+    characterization[[i]][ind,'CovariateCountWithOutcome'] <- -1
+    characterization[[i]][ind,'CovariateCountWithNoOutcome'] <- -1
+    characterization[[i]][ind,'CovariateMeanWithOutcome'] <- -1
+    characterization[[i]][ind,'CovariateMeanWithNoOutcome'] <- -1
+    
+    characterization[[i]][ind2,'CovariateCountWithOutcome'] <- -1
+    characterization[[i]][ind2,'CovariateCountWithNoOutcome'] <- -1
+    characterization[[i]][ind2,'CovariateMeanWithOutcome'] <- -1
+    characterization[[i]][ind2,'CovariateMeanWithNoOutcome'] <- -1
     
     if(!is.null(outputFolder)){
       saveRDS(incidence[[i]], file.path(outputFolder, cdmDatabaseName, paste('incidence',oi,startAnchor,endAnchor,riskWindowStart,paste0(riskWindowEnd,'.rds'), sep='_')))
