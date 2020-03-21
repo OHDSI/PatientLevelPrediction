@@ -144,17 +144,23 @@ diagnostic <- function(plpData = NULL,
   } else{
     settings <- c()
   }
+  maxAnalysis <-  ifelse(is.null(settings$analysisId), 0, max(settings$analysisId))
   for(i in 1:length(riskWindowStart)){
-    settingsTemp <- data.frame(cdmDatabaseName = cdmDatabaseName,
-                               cohortId = cohortId,
-                               outcomeId = outcomeIds,
-                               riskWindowStart = riskWindowStart[i],
-                               startAnchor = startAnchor[i],
-                               riskWindowEnd = riskWindowEnd[i],
-                               endAnchor = endAnchor[i]
-    )
-    settings <- unique(rbind(settings, settingsTemp))
+    for( j in 1:length(outcomeIds)){
+      maxAnalysis <- maxAnalysis + 1
+      settingsTemp <- data.frame(analysisId = maxAnalysis,
+                                 cdmDatabaseName = cdmDatabaseName,
+                                 cohortId = cohortId,
+                                 outcomeId = outcomeIds[j],
+                                 riskWindowStart = riskWindowStart[i],
+                                 startAnchor = startAnchor[i],
+                                 riskWindowEnd = riskWindowEnd[i],
+                                 endAnchor = endAnchor[i]
+      )
+      settings <- rbind(settings, settingsTemp)
+    }
   }
+  
   ParallelLogger::logInfo('Saving settings to csv')
   write.csv(settings, file.path(outputFolder,'settings.csv'), row.names = F)
   
@@ -222,9 +228,17 @@ diagnostic <- function(plpData = NULL,
                                           riskWindowEnd = riskWindowEnd[j], 
                                           endAnchor = endAnchor[j])
       
+      analysisId <- getAnalysisId(settings = settings, 
+                                  cohortId = cohortId,
+                                  outcomeId = oi,
+                                  riskWindowStart = riskWindowStart[j], 
+                                  startAnchor = startAnchor[j], 
+                                  riskWindowEnd = riskWindowEnd[j], 
+                                  endAnchor = endAnchor[j])
       
       if(sum(population$outcomeCount>0) < minCellCount){
-        incidenceTemp <-data.frame(databaseName = cdmDatabaseName,
+        incidenceTemp <-data.frame(analysisId = analysisId,
+                                   databaseName = cdmDatabaseName,
                                     cohort = cohortId,
                                     outcome = oi,
                                     riskWindowStart = riskWindowStart[j], 
@@ -235,7 +249,8 @@ diagnostic <- function(plpData = NULL,
                                     Tcount = nrow(population),
                                     Ocount = paste0('< ',minCellCount))
       } else {
-        incidenceTemp <- data.frame(databaseName = cdmDatabaseName,
+        incidenceTemp <- data.frame(analysisId = analysisId,
+                                    databaseName = cdmDatabaseName,
                                      cohort = cohortId,
                                      outcome = oi,
                                      riskWindowStart = riskWindowStart[j], 
@@ -247,7 +262,7 @@ diagnostic <- function(plpData = NULL,
                                      Ocount = sum(population$outcomeCount>0))
       }
       incidence <- unique(rbind(incidence, incidenceTemp))
-      
+
       characterizationTemp <- covariateSummary(plpData = data, 
                                                 population = population)
       
@@ -274,15 +289,9 @@ diagnostic <- function(plpData = NULL,
       characterizationTemp[ind2,'CovariateMeanWithOutcome'] <- -1
       characterizationTemp[ind2,'CovariateMeanWithNoOutcome'] <- -1
       
-      colnames(characterizationTemp)[-c(1:2)] <- paste(cdmDatabaseName, colnames(characterizationTemp)[-c(1:2)], sep='_')
-      if(length(characterization)!=0){
-      characterization <- merge(characterization, characterizationTemp, 
-                                all = T, 
-                                by =c('covariateId','covariateName'))
-      } else {
-        characterization = characterizationTemp
-      }
-      
+      # add analysisId
+      characterizationTemp$analysisId <- analysisId
+      characterization <- rbind(characterization, characterizationTemp)
     }
     
   }
@@ -389,5 +398,25 @@ getQuantiles <- function(distribution, year= 'all'){
   results$type = rownames(results)
   rownames(results) <- NULL
   return(results)
+}
+
+
+
+getAnalysisId <- function(settings, 
+                          cohortId,
+                          outcomeId,
+                          riskWindowStart, 
+                          startAnchor, 
+                          riskWindowEnd, 
+                          endAnchor){
+  
+  ind <- (settings$cohortId == cohortId) & (settings$outcomeId == outcomeId) & 
+    (settings$riskWindowStart == riskWindowStart) & (settings$riskWindowEnd == riskWindowEnd) &
+      (settings$startAnchor == startAnchor) &  (settings$endAnchor == endAnchor)
+      if(sum(ind)==0){
+        stop('No analysis id found for the settings')
+      } else {
+        return(settings$analysisId[ind][1])
+      }
 }
   
