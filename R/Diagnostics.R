@@ -109,8 +109,8 @@ diagnostic <- function(plpData = NULL,
                        minCellCount = 5){
   
   if(!is.null(outputFolder)){
-    if(!dir.exists(file.path(outputFolder, cdmDatabaseName))){
-      dir.create(file.path(outputFolder, cdmDatabaseName), recursive = T)
+    if(!dir.exists(file.path(outputFolder))){
+      dir.create(file.path(outputFolder), recursive = T)
     }
   }
   
@@ -141,36 +141,19 @@ diagnostic <- function(plpData = NULL,
   #create settings:
   if(file.exists(file.path(outputFolder,'settings.csv'))){
     settings <- read.csv(file.path(outputFolder,'settings.csv'))
-    
-    extras <- data.frame(cdmDatabaseName = cdmDatabaseName,
-                         cohortId = cohortId,
-                         outcomeId = outcomeIds,
-                         riskWindowStart = riskWindowStart,
-                         startAnchor = startAnchor,
-                         riskWindowEnd = riskWindowEnd,
-                         endAnchor = endAnchor,
-                         tarId = getTarId(riskWindowStart = riskWindowStart,
-                                          startAnchor = startAnchor,
-                                          riskWindowEnd = riskWindowEnd,
-                                          endAnchor = endAnchor)
-                         )
-    
-    settings <- unique(rbind(settings[,colnames(settings)!='id'],extras))
-    settings$id <- paste(settings$outcomeId, settings$cohortId, settings$tarId, sep='_' )
-    
   } else{
-    settings <- data.frame(cdmDatabaseName = cdmDatabaseName,
-                         cohortId = cohortId,
-                         outcomeId = outcomeIds,
-                         riskWindowStart = riskWindowStart,
-                         startAnchor = startAnchor,
-                         riskWindowEnd = riskWindowEnd,
-                         endAnchor = endAnchor,
-                         tarId = getTarId(riskWindowStart = riskWindowStart,
-                                          startAnchor = startAnchor,
-                                          riskWindowEnd = riskWindowEnd,
-                                          endAnchor = endAnchor))
-    settings$id <- paste(settings$outcomeId, settings$cohortId, settings$tarId, sep='_' )
+    settings <- c()
+  }
+  for(i in 1:length(riskWindowStart)){
+    settingsTemp <- data.frame(cdmDatabaseName = cdmDatabaseName,
+                               cohortId = cohortId,
+                               outcomeId = outcomeIds,
+                               riskWindowStart = riskWindowStart[i],
+                               startAnchor = startAnchor[i],
+                               riskWindowEnd = riskWindowEnd[i],
+                               endAnchor = endAnchor[i]
+    )
+    settings <- unique(rbind(settings, settingsTemp))
   }
   ParallelLogger::logInfo('Saving settings to csv')
   write.csv(settings, file.path(outputFolder,'settings.csv'), row.names = F)
@@ -213,60 +196,100 @@ diagnostic <- function(plpData = NULL,
   # do characterisation - needs TAR
   ParallelLogger::logInfo('Calculating incidence and characterizations')
   
-  incidence <- list()
-  length(incidence) <- length(outcomeIds)
-  names(incidence) <- outcomeIds
+  if(file.exists(file.path(outputFolder, 'incidence.csv'))){
+    incidence <- read.csv(file.path(outputFolder, 'incidence.csv')) 
+  } else {
+    incidence <- c()
+  }
   
-  characterization <- list()
-  length(characterization) <- length(outcomeIds)
-  names(characterization) <- outcomeIds
+  if(file.exists(file.path(outputFolder, 'characterization.csv'))){
+    characterization <- read.csv(file.path(outputFolder, 'characterization.csv')) 
+  } else {
+    characterization <- c()
+  }
   for(i in 1:length(outcomeIds)){
     oi <- outcomeIds[i]
-    population <- createStudyPopulation(plpData = data, 
-                                        outcomeId = oi, 
-                                        firstExposureOnly = F,
-                                        includeAllOutcomes = F, 
-                                        removeSubjectsWithPriorOutcome = F, 
-                                        requireTimeAtRisk = F, 
-                                        washoutPeriod = 0,
-                                        riskWindowStart = riskWindowStart, 
-                                        startAnchor = startAnchor, 
-                                        riskWindowEnd = riskWindowEnd, 
-                                        endAnchor = endAnchor)
-    
-    
-    if(sum(population$outcomeCount>0) < minCellCount){
-      incidence[[i]] <-data.frame(Opercent = paste0('< ',round(minCellCount/nrow(population)*100, digits = 2)),
-                                  Tcount = nrow(population),
-                                  Ocount = paste0('< ',minCellCount))
-    } else {
-      incidence[[i]] <- data.frame(Opercent = sum(population$outcomeCount>0)/nrow(population)*100,
-                                   Tcount = nrow(population),
-                                   Ocount = sum(population$outcomeCount>0))
+    for(j in 1:length(riskWindowStart)){
+      population <- createStudyPopulation(plpData = data, 
+                                          outcomeId = oi, 
+                                          firstExposureOnly = F,
+                                          includeAllOutcomes = F, 
+                                          removeSubjectsWithPriorOutcome = F, 
+                                          requireTimeAtRisk = F, 
+                                          washoutPeriod = 0,
+                                          riskWindowStart = riskWindowStart[j], 
+                                          startAnchor = startAnchor[j], 
+                                          riskWindowEnd = riskWindowEnd[j], 
+                                          endAnchor = endAnchor[j])
+      
+      
+      if(sum(population$outcomeCount>0) < minCellCount){
+        incidenceTemp <-data.frame(databaseName = cdmDatabaseName,
+                                    cohort = cohortId,
+                                    outcome = oi,
+                                    riskWindowStart = riskWindowStart[j], 
+                                    startAnchor = startAnchor[j], 
+                                    riskWindowEnd = riskWindowEnd[j], 
+                                    endAnchor = endAnchor[j],
+                                    Opercent = paste0('< ',round(minCellCount/nrow(population)*100, digits = 2)),
+                                    Tcount = nrow(population),
+                                    Ocount = paste0('< ',minCellCount))
+      } else {
+        incidenceTemp <- data.frame(databaseName = cdmDatabaseName,
+                                     cohort = cohortId,
+                                     outcome = oi,
+                                     riskWindowStart = riskWindowStart[j], 
+                                     startAnchor = startAnchor[j], 
+                                     riskWindowEnd = riskWindowEnd[j], 
+                                     endAnchor = endAnchor[j],
+                                     Opercent = sum(population$outcomeCount>0)/nrow(population)*100,
+                                     Tcount = nrow(population),
+                                     Ocount = sum(population$outcomeCount>0))
+      }
+      incidence <- unique(rbind(incidence, incidenceTemp))
+      
+      characterizationTemp <- covariateSummary(plpData = data, 
+                                                population = population)
+      
+      
+      characterizationTemp <- characterizationTemp[,c('covariateId',
+                                                      'covariateName',
+                                                      'CovariateCount',
+                                                      'CovariateCountWithOutcome',
+                                                      'CovariateCountWithNoOutcome',
+                                                      'CovariateMeanWithOutcome',
+                                                      'CovariateMeanWithNoOutcome')]
+      
+      ind <- (characterizationTemp$CovariateCount < minCellCount)  
+      ind2 <- (characterizationTemp$CovariateCountWithOutcome < minCellCount) | (characterizationTemp$CovariateCountWithNoOutcome < minCellCount)
+      
+      characterizationTemp[ind,'CovariateCount'] <- -1
+      characterizationTemp[ind,'CovariateCountWithOutcome'] <- -1
+      characterizationTemp[ind,'CovariateCountWithNoOutcome'] <- -1
+      characterizationTemp[ind,'CovariateMeanWithOutcome'] <- -1
+      characterizationTemp[ind,'CovariateMeanWithNoOutcome'] <- -1
+      
+      characterizationTemp[ind2,'CovariateCountWithOutcome'] <- -1
+      characterizationTemp[ind2,'CovariateCountWithNoOutcome'] <- -1
+      characterizationTemp[ind2,'CovariateMeanWithOutcome'] <- -1
+      characterizationTemp[ind2,'CovariateMeanWithNoOutcome'] <- -1
+      
+      colnames(characterizationTemp)[-c(1:2)] <- paste(cdmDatabaseName, colnames(characterizationTemp)[-c(1:2)], sep='_')
+      if(length(characterization)!=0){
+      characterization <- merge(characterization, characterizationTemp, 
+                                all = T, 
+                                by =c('covariateId','covariateName'))
+      } else {
+        characterization = characterizationTemp
+      }
+      
     }
     
-    characterization[[i]] <- covariateSummary(plpData = data, 
-                                              population = population)
-    
-    ind <- (characterization[[i]]$CovariateCount < minCellCount)  
-    ind2 <- (characterization[[i]]$CovariateCountWithOutcome < minCellCount) | (characterization[[i]]$CovariateCountWithNoOutcome < minCellCount)
-    
-    characterization[[i]][ind,'CovariateCount'] <- -1
-    characterization[[i]][ind,'CovariateCountWithOutcome'] <- -1
-    characterization[[i]][ind,'CovariateCountWithNoOutcome'] <- -1
-    characterization[[i]][ind,'CovariateMeanWithOutcome'] <- -1
-    characterization[[i]][ind,'CovariateMeanWithNoOutcome'] <- -1
-    
-    characterization[[i]][ind2,'CovariateCountWithOutcome'] <- -1
-    characterization[[i]][ind2,'CovariateCountWithNoOutcome'] <- -1
-    characterization[[i]][ind2,'CovariateMeanWithOutcome'] <- -1
-    characterization[[i]][ind2,'CovariateMeanWithNoOutcome'] <- -1
-    
-    if(!is.null(outputFolder)){
-      write.csv(incidence[[i]], file.path(outputFolder, cdmDatabaseName, paste0('incidence_',oi,'_',cohortId, '_',getTarId(riskWindowStart = riskWindowStart,startAnchor=startAnchor,riskWindowEnd=riskWindowEnd, endAnchor=endAnchor ),'.csv')), row.names = F)
-      write.csv(characterization[[i]], file.path(outputFolder, cdmDatabaseName, paste0('characterization_',oi,'_',cohortId, '_',getTarId(riskWindowStart = riskWindowStart,startAnchor=startAnchor,riskWindowEnd=riskWindowEnd, endAnchor=endAnchor ),'.csv')), row.names = F)
-    }
-    
+  }
+  
+  if(!is.null(outputFolder)){
+    write.csv(incidence, file.path(outputFolder, 'incidence.csv'), row.names = F)
+    write.csv(characterization, file.path(outputFolder, 'characterization.csv'), row.names = F)
   }
   
   result <- list(distribution = distribution,
@@ -285,9 +308,11 @@ getDistribution <- function(cohort,
   cohortId <- unique(cohort$cohortId)
   outcomesIds <- unique(outcomes$outcomeId)
   
-  result <- list()
-  length(result) <- length(outcomesIds)
-  names(result) <- outcomesIds
+  if(file.exists(file.path(outputFolder, 'distribution.csv'))){
+    result <- read.csv(file.path(outputFolder, 'distribution.csv'))
+  } else{
+    result <- c()
+  }
   
   for(i in  1:length(outcomesIds)){
     oi <- outcomesIds[i]
@@ -297,9 +322,8 @@ getDistribution <- function(cohort,
                           by = list(outcomes$rowId[ind]),
                           FUN = min)
       colnames(afterC) <- c('rowId','daysToOutcomeAfterMin')
-      afterC$hasOutcomeAfter <- rep(1, nrow(afterC))
       } else {
-        afterC <- data.frame(rowId = -1, daysToOutcomeAfterMin = 0, hasOutcomeAfter = 0)
+        afterC <- data.frame(rowId = -1, daysToOutcomeAfterMin = 0)
       }
   
     
@@ -309,53 +333,61 @@ getDistribution <- function(cohort,
                            by = list(outcomes$rowId[ind]),
                            FUN = max)
       colnames(beforeC) <- c('rowId','daysToOutcomeBeforeMin')
-      beforeC$hasOutcomeBefore <- rep(1, nrow(beforeC))
     } else {
-      beforeC <- data.frame(rowId = -1, daysToOutcomeBeforeMin = 0, hasOutcomeBefore = 0)
+      beforeC <- data.frame(rowId = -1, daysToOutcomeBeforeMin = 0)
     }
     
-    cohort <- merge(cohort, afterC, by='rowId', all.x = T)
-    cohort <- merge(cohort, beforeC, by='rowId', all.x = T)
-    if(sum(is.na(cohort$hasOutcomeAfter))>0){
-      cohort$hasOutcomeAfter[is.na(cohort$hasOutcomeAfter)] <- rep(0, sum(is.na(cohort$hasOutcomeAfter))) 
-    }
-    if(sum(is.na(cohort$hasOutcomeBefore))>0){
-      cohort$hasOutcomeBefore[is.na(cohort$hasOutcomeBefore)] <- rep(0, sum(is.na(cohort$hasOutcomeBefore)))
-    }
+    tempResult <- merge(cohort, afterC, by='rowId', all.x = T)
+    tempResult <- merge(tempResult, beforeC, by='rowId', all.x = T)
+
+    tempResult <- processDistribution(tempResult)
     
-    result[[i]] <- cohort
+    tempResult$databaseName <- databaseName 
+    tempResult$outcomeId <- oi
+    tempResult$targetId <- cohortId
     
-    if(!is.null(outputFolder)){
-      write.csv(result[[i]], file.path(outputFolder, databaseName, paste0('distribution_',oi,'_',cohortId,'.csv')), row.names = F)
-    }
-    
+    result <- rbind(result, tempResult)
+ 
+  }
+  
+  if(!is.null(outputFolder)){
+    write.csv(result, file.path(outputFolder, 'distribution.csv'), row.names = F)
   }
   
   return(result)
 }
 
 
-
-getTarId <- function(riskWindowStart = riskWindowStart,
-                     startAnchor = startAnchor,
-                     riskWindowEnd = riskWindowEnd,
-                     endAnchor = endAnchor){
-  if(riskWindowEnd>9999){
-    warning('riskWindowEnd>9999 will cause error with tarId')
-  }
-  id<- riskWindowStart*1000000 + riskWindowEnd*100 + ifelse(startAnchor=='cohort start', 1, 0)*10 + ifelse(endAnchor=='cohort start', 1, 0)
-  return(id)
+processDistribution <- function(distribution){
+  
+  distribution$year <- format(as.Date(as.character(distribution$cohortStartDate), format="%Y-%m-%d"),"%Y")
+  distribution <- distribution[, c('year','daysFromObsStart','daysToObsEnd','daysToOutcomeAfterMin','daysToOutcomeBeforeMin')]
+  results <- do.call(rbind, lapply(unique(distribution$year), function(x) getQuantiles(distribution, x) ))
+  return(results) 
 }
 
-convertTarId <- function(tarId){
+getQuantiles <- function(distribution, year= 'all'){
   
-  riskWindowStart = floor(tarId/1000000)
-  riskWindowEnd = floor((tarId - riskWindowStart*1000000)/100)
-  startAnchor = ifelse(floor((tarId - riskWindowStart*1000000 - riskWindowEnd*100)/10)==0, 'cohort end', 'cohort start')
-  endAnchor = ifelse((tarId - riskWindowStart*1000000 - riskWindowEnd*100 - ifelse(startAnchor=='cohort start', 1, 0)*10) ==0, 'cohort end', 'cohort start')
-  
-  
-  return(data.frame(riskWindowStart = riskWindowStart, riskWindowEnd = riskWindowEnd,
-                    startAnchor = startAnchor, endAnchor = endAnchor ))
+  if(year != 'all'){
+    distribution <- distribution[distribution$year==year,]
+  } 
+  quants <- data.frame(
+    year = year,
+    daysFromObsStart = quantile(distribution$daysFromObsStart, seq(0,1,0.01)),
+    daysToObsEnd = quantile(distribution$daysToObsEnd, seq(0,1,0.01)),
+    daysToOutcomeAfterMin = quantile(distribution$daysToOutcomeAfterMin[!is.na(distribution$daysToOutcomeAfterMin)], seq(0,1,0.01)),
+    daysToOutcomeBeforeMin = quantile(distribution$daysToOutcomeBeforeMin[!is.na(distribution$daysToOutcomeBeforeMin)], seq(0,1,0.01))
+  )
+  heading <- data.frame(
+    year = year,
+    daysFromObsStart =length(distribution$daysFromObsStart),
+    daysToObsEnd = length(distribution$daysToObsEnd),
+    daysToOutcomeAfterMin = sum(!is.na(distribution$daysToOutcomeAfterMin)),
+    daysToOutcomeBeforeMin = sum(!is.na(distribution$daysToOutcomeBeforeMin))
+  )
+  results <- rbind(N = heading, quants)
+  results$type = rownames(results)
+  rownames(results) <- NULL
+  return(results)
 }
   

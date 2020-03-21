@@ -16,28 +16,6 @@
 
 context("Diagnostic")
 
-test_that("tar id works", {
-  riskWindowStart = sample(1000,1)
-  startAnchor = ifelse(runif(1)<0.5, 'cohort start','cohort end')
-  riskWindowEnd = sample(9000,1)
-  endAnchor = ifelse(runif(1)<0.5, 'cohort start','cohort end')
-  
-  id <- getTarId(riskWindowStart = riskWindowStart,
-                       startAnchor = startAnchor,
-                       riskWindowEnd = riskWindowEnd ,
-                       endAnchor = endAnchor)
-  
-  reverse <- convertTarId(id)
-  
-  testthat::expect_equal(riskWindowStart, reverse$riskWindowStart)
-  testthat::expect_equal(startAnchor, as.character(reverse$startAnchor))
-  testthat::expect_equal(riskWindowEnd, reverse$riskWindowEnd)
-  testthat::expect_equal(endAnchor, as.character(reverse$endAnchor))
-  
-
-})
-
-
 test_that("test code works when using plpData", {
   test <- diagnostic(plpData = plpData, cdmDatabaseName = 'madeup', 
                      riskWindowStart = 10, 
@@ -52,6 +30,6 @@ test_that("test code works when using plpData", {
   testthat::expect_equal(sum(names(test)%in%c('distribution','incidence','characterization')), 3)
   
   # check the results are saved into the databaseName directory
-  testthat::expect_equal(T, dir.exists(file.path(saveLoc, 'diagnostics','madeup')))
+  testthat::expect_equal(T, dir.exists(file.path(saveLoc, 'diagnostics')))
   
 })
