@@ -174,7 +174,7 @@ diagnostic <- function(plpData = NULL,
     }
     
     ParallelLogger::logInfo('Extracting data')
-    settings <- list(connectionDetails = connectionDetails,
+    dataSettings <- list(connectionDetails = connectionDetails,
                      cdmDatabaseSchema = cdmDatabaseSchema,
                      oracleTempSchema = oracleTempSchema,
                      cohortId = cohortId,
@@ -186,7 +186,7 @@ diagnostic <- function(plpData = NULL,
                      cdmVersion = cdmVersion,
                      sampleSize = sampleSize,
                      covariateSettings = FeatureExtraction::createDefaultCovariateSettings())
-    data <- do.call(getPlpData, settings)
+    data <- do.call(getPlpData, dataSettings)
   } else {
     data <- plpData
   } 
@@ -414,6 +414,10 @@ getAnalysisId <- function(settings,
     (settings$riskWindowStart == riskWindowStart) & (settings$riskWindowEnd == riskWindowEnd) &
       (settings$startAnchor == startAnchor) &  (settings$endAnchor == endAnchor)
       if(sum(ind)==0){
+        writeLines(paste('cohortId:',cohortId, '-outcomeId:',outcomeId, 
+                         '-riskWindowStart:', riskWindowStart, '-riskWindowEnd:', riskWindowEnd,
+                         '-startAnchor:', startAnchor, '-endAnchor:',endAnchor))
+        print(settings)
         stop('No analysis id found for the settings')
       } else {
         return(settings$analysisId[ind][1])
