@@ -438,8 +438,11 @@ getThresholdSummary <- function(prediction){
 
   # get 100 points of distribution:
   # get the predictionThreshold and preferenceThreshold
-  predictionThreshold <- stats::quantile(prediction$value, probs=seq(0,0.99,0.01),na.rm=TRUE)
-  preferenceThreshold <- stats::quantile(prediction$preferenceScore, seq(0,0.99,0.01),na.rm=TRUE)
+  # add top 100 risk as well (for high ppv)
+  predictionThreshold <- sort(c(prediction$value[order(-prediction$value)][1:100], 
+                              stats::quantile(prediction$value, probs=seq(0,0.99,0.01),na.rm=TRUE)))
+  preferenceThreshold <- sort(c(prediction$preferenceScore[order(-prediction$preferenceScore)][1:100],
+                              stats::quantile(prediction$preferenceScore, seq(0,0.99,0.01),na.rm=TRUE)))
   
   # fix quantile bug when not enought unique values - this seems to get rid of issue
   for (val in names(table(predictionThreshold))[table(predictionThreshold)>1])

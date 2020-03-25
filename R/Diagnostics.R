@@ -338,9 +338,9 @@ getDistribution <- function(cohort,
     
     ind <- outcomes$outcomeId==oi & outcomes$daysToEvent < 0
     if(sum(ind)>0){
-      beforeC <- aggregate(x = outcomes$daysToEvent[ind], 
+      beforeC <- aggregate(x = abs(outcomes$daysToEvent[ind]), 
                            by = list(outcomes$rowId[ind]),
-                           FUN = max)
+                           FUN = min)
       colnames(beforeC) <- c('rowId','daysToOutcomeBeforeMin')
     } else {
       beforeC <- data.frame(rowId = -1, daysToOutcomeBeforeMin = 0)
@@ -371,7 +371,7 @@ processDistribution <- function(distribution){
   
   distribution$year <- format(as.Date(as.character(distribution$cohortStartDate), format="%Y-%m-%d"),"%Y")
   distribution <- distribution[, c('year','daysFromObsStart','daysToObsEnd','daysToOutcomeAfterMin','daysToOutcomeBeforeMin')]
-  results <- do.call(rbind, lapply(unique(distribution$year), function(x) getQuantiles(distribution, x) ))
+  results <- do.call(rbind, lapply(c('all',unique(distribution$year)), function(x) getQuantiles(distribution, x) ))
   return(results) 
 }
 

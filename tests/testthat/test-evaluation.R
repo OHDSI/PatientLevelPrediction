@@ -283,15 +283,15 @@ test_that("getThresholdSummary", {
   Eprediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
   thresSum <- getThresholdSummary(Eprediction)
   
-  expect_that(nrow(thresSum), equals(100))
+  expect_that(nrow(thresSum), equals(200))
   expect_that(ncol(thresSum), equals(23))
   
   expect_that(thresSum$truePositiveCount+thresSum$falseNegativeCount, 
-              equals(rep(sum(Eprediction$outcomeCount),100)))
+              equals(rep(sum(Eprediction$outcomeCount),200)))
   
   expect_that(thresSum$truePositiveCount+thresSum$falsePositiveCount+
               thresSum$trueNegativeCount+thresSum$falseNegativeCount, 
-              equals(rep(nrow(Eprediction),100)))
+              equals(rep(nrow(Eprediction),200)))
 })
 
 

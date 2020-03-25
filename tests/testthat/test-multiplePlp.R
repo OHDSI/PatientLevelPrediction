@@ -200,15 +200,6 @@ testthat::expect_equal(class(runPlpAnalysesResults), 'data.frame')
 
 })
 
-test_that("getSummary file without external validation", {
-  res <- getSummary(result = file.path(saveLoc,"mult"), inputType = 'file', validation = NULL)
-  testthat::expect_equal(class(res), 'data.frame')
-  testthat::expect_equal(sum(res$plpResultLoad == 'loadPlpResult'), 2)
-})
-test_that("checkPlpInput file", {
-  res <- checkPlpInput(file.path(saveLoc,"mult"))
-  testthat::expect_equal(res, 'file')
-})
 
 valMult <- evaluateMultiplePlp(analysesLocation = file.path(saveLoc,"mult"),
                                outputLocation = file.path(saveLoc,'mult/Validation'),

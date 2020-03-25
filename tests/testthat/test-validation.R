@@ -99,11 +99,6 @@ test_that("external validate", {
   
 })
 
-test_that("getSummary with external validation", {
-  res <- getSummary(result = plpResultReal, inputType = 'plpResult', validation = exVal)
-  testthat::expect_equal(class(res), 'data.frame')
-  testthat::expect_equal(nrow(res), 2)
-})
 
 existingModel <- evaluateExistingModel(modelTable = data.frame(modelId = c(1,1,1,1,1),
                                                                modelCovariateId = 1:5, 

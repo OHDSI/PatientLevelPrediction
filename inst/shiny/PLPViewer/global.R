@@ -1,14 +1,29 @@
 # uncomment if running standalone
 ##runPlp <- readRDS(file.path("data","results.rds"))
 ##validatePlp <- readRDS(file.path("data","extValidation.rds"))
-source("utils.R")
-analysesLocation <- file.path("data")
-allPerformance <- summaryPlpAnalyses(analysesLocation)
-plpResultLocation <- allPerformance[,c('plpResultLocation', 'plpResultLoad')]
-#allPerformance$combinedModelSettingName <- paste0(allPerformance$modelSettingName,'-', allPerformance$modelSettingsId
-formatPerformance <- allPerformance[,c('analysisId','devDatabase','valDatabase','cohortName','outcomeName','modelSettingName','riskWindowStart', 'riskWindowEnd', 'AUC','AUPRC', 'populationSize','outcomeCount','incidence',
-                                       'addExposureDaysToStart','addExposureDaysToEnd')]
-colnames(formatPerformance) <- c('Analysis','Dev', 'Val', 'T', 'O','Model', 'TAR start', 'TAR end', 'AUC','AUPRC', 'T Size','O Count','O Incidence (%)', 'addExposureDaysToStart','addExposureDaysToEnd')
+source("processing.R")
 
+if(is.null(.GlobalEnv$shinySettings$result)){
+  result <- 'data'
+  ParallelLogger::logInfo('Extracting results from data folder')
+} else{
+  result <- .GlobalEnv$shinySettings$result
+  ParallelLogger::logInfo('Extracting results from .GlobalEnv$shinySettings')
+}
 
+if(is.null(.GlobalEnv$shinySettings$validation)){
+  validation <- NULL
+} else{
+  validation <- .GlobalEnv$shinySettings$validation
+}
+
+inputType <- checkPlpInput(result) # this function checks 
+if(!class(validation)%in%c('NULL', 'validatePlp')){
+  stop('Incorrect validation class')
+}
+if(inputType == 'file' & !is.null(validation)){
+  warning('Validation input ignored when result is a directory location')
+}
+
+summaryTable <- getSummary(result, inputType, validation)
 
