@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library(PatientLevelPrediction)
 library(shiny)
 library(plotly)
 library(shinycssloaders)
@@ -47,13 +46,18 @@ server <- shiny::shinyServer(function(input, output, session) {
   plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,filterIndex(), selectedRow())})
   
   # covariate table
-  output$modelView <- DT::renderDataTable(formatCovariateTable(plpResult()$covariateSummary[,c('covariateName','covariateValue','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome' )]),
-                                          colnames = c('Covariate Name', 'Value', 'Outcome Mean', 'Non-outcome Mean'))
+  output$modelView <- DT::renderDataTable(editCovariates(plpResult()$covariateSummary)$table,  
+                                          colnames = editCovariates(plpResult()$covariateSummary)$colnames)
+  
+  
+  output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(plpResult()$covariateSummary),
+                                                              nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0)))
+  
   # Downloadable csv of model ----
   output$downloadData <- shiny::downloadHandler(
     filename = function(){'model.csv'},
     content = function(file) {
-      write.csv(plpResult()$covariateSummary[plpResult()$covariateSummary$covariateValue!=0,c('covariateName','covariateValue','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome' )]
+      write.csv(plpResult()$covariateSummary[plpResult()$covariateSummary$covariateValue!=0,c('covariateName','covariateValue','CovariateCount','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome' )]
                 , file, row.names = FALSE)
     }
   )
@@ -87,34 +91,47 @@ server <- shiny::shinyServer(function(input, output, session) {
     f1Plot <- NULL
     
     if(!is.null(eval)){
-      intPlot <- plotShiny(eval, input$slider1)
+      #intPlot <- plotShiny(eval, input$slider1) -- RMS
+      intPlot <- plotShiny(eval)
       rocPlot <- intPlot$roc
       prPlot <- intPlot$pr
       f1Plot <- intPlot$f1score
+      
+      list(rocPlot= rocPlot,
+           prPlot=prPlot, f1Plot=f1Plot)
+    }
+  })
+  
+  
+  performance <- shiny::reactive({
+    
+    eval <- plpResult()$performanceEvaluation
+    
+    if(is.null(eval)){
+      return(NULL)
+    } else {
+      intPlot <- getORC(eval, input$slider1)
       threshold <- intPlot$threshold
       prefthreshold <- intPlot$prefthreshold
       TP <- intPlot$TP
       FP <- intPlot$FP
       TN <- intPlot$TN
-      FN <- intPlot$FN}
+      FN <- intPlot$FN
+    }
     
     twobytwo <- as.data.frame(matrix(c(FP,TP,TN,FN), byrow=T, ncol=2))
     colnames(twobytwo) <- c('Ground Truth Negative','Ground Truth Positive')
     rownames(twobytwo) <- c('Predicted Positive','Predicted Negative')
     
-    performance <- data.frame(Incidence = (TP+FN)/(TP+TN+FP+FN),
-                              Threshold = threshold,
-                              Sensitivity = TP/(TP+FN),
-                              Specificity = TN/(TN+FP),
-                              PPV = TP/(TP+FP),
-                              NPV = TN/(TN+FN))
-    
-    list(rocPlot= rocPlot, calPlot=calPlot, 
-         prPlot=prPlot, f1Plot=f1Plot, 
-         threshold = threshold, 
+    list(threshold = threshold, 
          prefthreshold = prefthreshold,
-         twobytwo=twobytwo,
-         performance = performance )
+         twobytwo = twobytwo,
+         Incidence = (TP+FN)/(TP+TN+FP+FN),
+         Threshold = threshold,
+         Sensitivity = TP/(TP+FN),
+         Specificity = TN/(TN+FP),
+         PPV = TP/(TP+FP),
+         NPV = TN/(TN+FN) )
   })
   
   
@@ -124,8 +141,8 @@ server <- shiny::shinyServer(function(input, output, session) {
       return(NULL)
     } else{
       PatientLevelPrediction::plotPreferencePDF(plpResult()$performanceEvaluation, 
-                        type=plpResult()$type ) + 
-        ggplot2::geom_vline(xintercept=plotters()$prefthreshold)
+                        type=plpResult()$type ) #+ 
+        # ggplot2::geom_vline(xintercept=plotters()$prefthreshold) -- RMS
     }
   })
   
@@ -134,8 +151,8 @@ server <- shiny::shinyServer(function(input, output, session) {
       return(NULL)
     } else{
       PatientLevelPrediction::plotPredictedPDF(plpResult()$performanceEvaluation, 
-                       type=plpResult()$type ) + 
-        ggplot2::geom_vline(xintercept=plotters()$threshold)      
+                       type=plpResult()$type ) # + 
+        #ggplot2::geom_vline(xintercept=plotters()$threshold) -- RMS     
     }
   })
   
@@ -169,13 +186,13 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   # Do the tables and plots:
   
-  output$performance <- shiny::renderTable(plotters()$performance, 
+  output$performance <- shiny::renderTable(performance()$performance, 
                                            rownames = F, digits = 3)
-  output$twobytwo <- shiny::renderTable(plotters()$twobytwo, 
+  output$twobytwo <- shiny::renderTable(performance()$twobytwo, 
                                         rownames = T, digits = 0)
   
   
-  output$threshold <- shiny::renderText(format(plotters()$threshold,digits=5))
+  output$threshold <- shiny::renderText(format(performance()$threshold,digits=5))
   
   output$roc <- plotly::renderPlotly({
     plotters()$rocPlot
@@ -210,42 +227,42 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   output$performanceBoxIncidence <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
-      "Incidence", paste0(round(plotters()$performance$Incidence*100, digits=3),'%'), icon = shiny::icon("ambulance"),
+      "Incidence", paste0(round(performance()$Incidence*100, digits=3),'%'), icon = shiny::icon("ambulance"),
       color = "green"
     )
   })
   
   output$performanceBoxThreshold <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
-      "Threshold", format((plotters()$performance$Threshold), scientific = F, digits=3), icon = shiny::icon("edit"),
+      "Threshold", format((performance()$Threshold), scientific = F, digits=3), icon = shiny::icon("edit"),
       color = "yellow"
     )
   })
   
   output$performanceBoxPPV <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
-      "PPV", paste0(round(plotters()$performance$PPV*1000)/10, "%"), icon = shiny::icon("thumbs-up"),
+      "PPV", paste0(round(performance()$PPV*1000)/10, "%"), icon = shiny::icon("thumbs-up"),
       color = "orange"
     )
   })
   
   output$performanceBoxSpecificity <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
-      "Specificity", paste0(round(plotters()$performance$Specificity*1000)/10, "%"), icon = shiny::icon("bullseye"),
+      "Specificity", paste0(round(performance()$Specificity*1000)/10, "%"), icon = shiny::icon("bullseye"),
       color = "purple"
     )
   })
   
   output$performanceBoxSensitivity <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
-      "Sensitivity", paste0(round(plotters()$performance$Sensitivity*1000)/10, "%"), icon = shiny::icon("low-vision"),
+      "Sensitivity", paste0(round(performance()$Sensitivity*1000)/10, "%"), icon = shiny::icon("low-vision"),
       color = "blue"
     )
   })
   
   output$performanceBoxNPV <- shinydashboard::renderInfoBox({
     shinydashboard::infoBox(
-      "NPV", paste0(round(plotters()$performance$NPV*1000)/10, "%"), icon = shiny::icon("minus-square"),
+      "NPV", paste0(round(performance()$NPV*1000)/10, "%"), icon = shiny::icon("minus-square"),
       color = "black"
     )
   })

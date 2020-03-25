@@ -122,9 +122,26 @@ formatPopSettings <- function(populationSettings){
 
 # format covariate summary table
 formatCovariateTable <- function(covariateSummary){
-  for(coln in c('covariateValue','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome')){
-    covariateSummary[,coln] <- format(round(covariateSummary[,coln], 4), nsmall = 4)
-    class(covariateSummary[,coln]) <- "numeric"
+  for(coln in c('covariateValue','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','StandardizedMeanDiff')){
+    if(sum(colnames(covariateSummary)==coln)>0){
+      covariateSummary[,coln] <- format(round(covariateSummary[,coln], 4), nsmall = 4)
+      class(covariateSummary[,coln]) <- "numeric"
+    }
   }
   return(covariateSummary)
 }
+
+
+
+editCovariates <- function(covs){
+  if(!is.null(covs$StandardizedMeanDiff)){
+    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','StandardizedMeanDiff')]),
+                colnames = c('Covariate Name', 'Value','Count', 'Outcome Mean', 'Non-outcome Mean','Std Mean Diff')
+    ))
+  } else{
+    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome')]),
+                colnames = c('Covariate Name', 'Value','Count', 'Outcome Mean', 'Non-outcome Mean')
+    ))
+  }
+}
+    

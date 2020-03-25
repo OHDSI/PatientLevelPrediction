@@ -584,6 +584,11 @@ covariateSummary <- function(plpData, population){
   
   prevs <- merge(ff::as.ram(plpData$covariateRef[,c('covariateName','covariateId')]), prevs, by='covariateId')
   
+  # adding CovariateStandardizedMeanDifference
+  prevs$StandardizedMeanDiff <- (prevs$CovariateMeanWithOutcome - prevs$CovariateMeanWithNoOutcome)/sqrt(prevs$CovariateStDevWithNoOutcome^2 + prevs$CovariateStDevWithOutcome^2 )
+  prevs$StandardizedMeanDiff[is.na(prevs$StandardizedMeanDiff)] <- 0 
+  prevs$StandardizedMeanDiff[is.infinite(prevs$StandardizedMeanDiff)] <- 0 
+  
   return(prevs)
   
 }

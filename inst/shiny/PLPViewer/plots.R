@@ -1,11 +1,10 @@
 #============  DYNAMIC PLOTS ======================
 #++++++++++++++++++++++++++++++++++++++++++++++++++
 
-plotShiny <- function(eval, pointOfInterest){
+plotShiny <- function(eval){
   
   data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
-  # pointOfInterest # this is a threshold
-  pointOfInterest <- data[pointOfInterest,]
+
   rocobject <- plotly::plot_ly(x = 1-c(0,data$specificity,1)) %>%
     plotly::add_lines(y = c(1,data$sensitivity,0),name = "hv", 
                       text = paste('Risk Threshold:',c(0,data$predictionThreshold,1)),
@@ -15,12 +14,6 @@ plotShiny <- function(eval, pointOfInterest){
     plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
                       line = list(dash = "dash"), color = I('black'),
                       type='scatter') %>%
-    plotly::add_trace(x= 1-pointOfInterest$specificity, y=pointOfInterest$sensitivity, 
-                      mode = 'markers', symbols='x') %>%  # change the colour of this!
-    plotly::add_lines(x=c(1-pointOfInterest$specificity, 1-pointOfInterest$specificity),
-                      y = c(0,1),
-                      line = list(dash ='solid',
-                                  color = 'black')) %>%
     plotly::layout(title = "ROC Plot",
                    xaxis = list(title = "1-specificity"),
                    yaxis = list (title = "Sensitivity"),
@@ -36,13 +29,7 @@ plotShiny <- function(eval, pointOfInterest){
     plotly::add_trace(x= c(0,1), y = c(popAv,popAv),mode = 'lines',
                       line = list(dash = "dash"), color = I('red'),
                       type='scatter') %>%
-    plotly::add_trace(x= pointOfInterest$sensitivity, y=pointOfInterest$positivePredictiveValue, 
-                      mode = 'markers', symbols='x') %>%  
-    plotly::add_lines(x=c(pointOfInterest$sensitivity, pointOfInterest$sensitivity),
-                      y = c(0,1),
-                      line = list(dash ='solid',
-                                  color = 'black')) %>%
-    plotly::layout(title = "PR Plot",
+   plotly::layout(title = "PR Plot",
                    xaxis = list(title = "Recall"),
                    yaxis = list (title = "Precision"),
                    showlegend = FALSE)
@@ -54,28 +41,28 @@ plotShiny <- function(eval, pointOfInterest){
                       line = list(shape = "hv",
                                   color = 'rgb(22, 96, 167)'),
                       fill = 'tozeroy') %>%
-    plotly::add_trace(x= pointOfInterest$predictionThreshold, y=pointOfInterest$f1Score, 
-                      mode = 'markers', symbols='x') %>%  
-    plotly::add_lines(x=c(pointOfInterest$predictionThreshold, pointOfInterest$predictionThreshold),
-                      y = c(0,1),
-                      line = list(dash ='solid',
-                                  color = 'black')) %>%
     plotly::layout(title = "F1-Score Plot",
                    xaxis = list(title = "Prediction Threshold"),
                    yaxis = list (title = "F1-Score"),
                    showlegend = FALSE)
-  # create 2x2 table with TP, FP, TN, FN and threshold
+  
+  return(list(roc = rocobject,
+              pr = probject,
+              f1score = f1object))
+}
+
+getORC <- function(eval, pointOfInterest){
+  
+  data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
+  pointOfInterest <- data[pointOfInterest,]
+  
   threshold <- pointOfInterest$predictionThreshold
   TP <- pointOfInterest$truePositiveCount
   TN <- pointOfInterest$trueNegativeCount
   FP <- pointOfInterest$falsePositiveCount
   FN <- pointOfInterest$falseNegativeCount
   preferenceThreshold <- pointOfInterest$preferenceThreshold
-  
-  return(list(roc = rocobject,
-              pr = probject,
-              f1score = f1object,
-              threshold = threshold, prefthreshold=preferenceThreshold,
+  return(list(threshold = threshold, prefthreshold=preferenceThreshold,
               TP = TP, TN=TN,
               FP= FP, FN=FN))
 }
@@ -105,6 +92,10 @@ plotCovariateSummary <- function(covariateSummary){
   # color based on analysis id
   covariateSummary$color <- sapply(covariateSummary$covariateName, function(x) ifelse(is.na(x), '', strsplit(as.character(x), ' ')[[1]][1]))
   
+  covariateSummary$times <- sapply(sapply(covariateSummary$covariateName, function(x) ifelse(is.na(x), '', strsplit(as.character(x), 'during day ')[[1]][2])),function(x) ifelse(is.na(x), '', strsplit(as.character(x), ': ')[[1]][1]))
+  covariateSummary$desc <- sapply(covariateSummary$covariateName, function(x) ifelse(is.na(x), '', strsplit(as.character(x), ': ')[[1]][2]))
+  
+  
   l <- list(x = 0.01, y = 1,
             font = list(
               family = "sans-serif",
@@ -114,10 +105,6 @@ plotCovariateSummary <- function(covariateSummary){
             bordercolor = "#FFFFFF",
             borderwidth = 1)
   
-  #covariateSummary$annotation <- sapply(covariateSummary$covariateName, getName)
-  covariateSummary$annotation <- covariateSummary$covariateName
-  
-  
   ind <- covariateSummary$CovariateMeanWithNoOutcome <=1 & covariateSummary$CovariateMeanWithOutcome <= 1
   # create two plots -1 or less or g1
   binary <- plotly::plot_ly(x = covariateSummary$CovariateMeanWithNoOutcome[ind],
@@ -125,7 +112,10 @@ plotCovariateSummary <- function(covariateSummary){
                             showlegend = F) %>%
     plotly::add_markers(y = covariateSummary$CovariateMeanWithOutcome[ind],
                         color=factor(covariateSummary$color[ind]),
-                        text = paste(covariateSummary$annotation[ind]),
+                        hoverinfo = 'text',
+                        text = ~paste('</br> Type: ', covariateSummary$color[ind],
+                                      '</br> Time: ', covariateSummary$times[ind],
+                                      '</br> Name: ', covariateSummary$desc[ind]),
                         showlegend = T
     ) %>%
     plotly::add_trace(x= c(0,1), y = c(0,1),mode = 'lines',
@@ -136,14 +126,18 @@ plotCovariateSummary <- function(covariateSummary){
                    range = c(0, 1)),
       yaxis = list(title = "Prevalance in persons with outcome",
                    range = c(0, 1)),
-      legend = l, showlegend = T)
+      #legend = l, showlegend = T,
+      legend = list(orientation = 'h', y = -0.3), showlegend = T)
   
   if(sum(!ind)>0){
     maxValue <- max(c(covariateSummary$CovariateMeanWithNoOutcome[!ind],
                       covariateSummary$CovariateMeanWithOutcome[!ind]), na.rm = T)
     meas <- plotly::plot_ly(x = covariateSummary$CovariateMeanWithNoOutcome[!ind] ) %>%
       plotly::add_markers(y = covariateSummary$CovariateMeanWithOutcome[!ind],
-                          text = paste(covariateSummary$annotation[!ind])) %>%
+                          hoverinfo = 'text',
+                          text = ~paste('</br> Type: ', covariateSummary$color[!ind],
+                                        '</br> Time: ', covariateSummary$times[!ind],
+                                        '</br> Name: ', covariateSummary$desc[!ind])) %>%
       plotly::add_trace(x= c(0,maxValue), y = c(0,maxValue),mode = 'lines',
                         line = list(dash = "dash"), color = I('black'),
                         type='scatter', showlegend = FALSE) %>%

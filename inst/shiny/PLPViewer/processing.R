@@ -1,3 +1,4 @@
+
 # this checked whether input is valid analysis location or plpResult
 checkPlpInput <- function(result){
   if(class(result)=='runPlp'){
@@ -145,7 +146,7 @@ summaryPlpAnalyses <- function(analysesLocation){
 getPerformance <- function(analysisLocation){
   location <- file.path(analysisLocation, 'plpResult.rds')
   if(!file.exists(location)){
-    
+    require(PatientLevelPrediction)
     # check for PLP file instead 
     locationPlp <- file.path(analysisLocation, 'plpResult')
     if(!dir.exists(locationPlp)){
