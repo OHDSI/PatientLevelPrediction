@@ -55,7 +55,7 @@ getPlpResult <- function(result,validation,summaryTable, inputType,filterIndex, 
     if(file.exists(as.character(loc))){
       tempResult <- do.call(as.character(locLoaderFunc), list(as.character(loc)))
       tempResult$log <- txt
-      tempResult$type <- ifelse(locLoaderFunc=='loadPlpResult','test','validation')
+      tempResult$type <- ifelse(length(grep('/Validation',loc))>0,'validation','test')
     }
   }else {
     stop('Incorrect class')

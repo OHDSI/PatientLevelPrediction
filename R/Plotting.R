@@ -484,6 +484,14 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
     x<- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability',
                                             'PersonCountAtRisk', 'PersonCountWithOutcome')]
 
+    
+    # remove -1 values:
+    x$averagePredictedProbability[is.na(x$averagePredictedProbability)] <- 0
+    x <- x[x$PersonCountWithOutcome != -1,]
+    if(nrow(x)==0){
+      return(NULL)
+    }
+    
     x$observed <- x$PersonCountWithOutcome/x$PersonCountAtRisk
     
     
@@ -516,7 +524,10 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
                                    " 45-49"," 50-54"," 55-59"," 60-64"," 65-69"," 70-74",
                                    " 75-79"," 80-84"," 85-89"," 90-94"," 95-99","-1"),ordered=TRUE)
     
+    
+    
     x <- merge(x, ci[,c('ageGroup','genGroup','lower','upper')], by=c('ageGroup','genGroup'))
+    x <- x[!is.na(x$value),]
     
     plot <- ggplot2::ggplot(data=x, 
                             ggplot2::aes(x=age, 
