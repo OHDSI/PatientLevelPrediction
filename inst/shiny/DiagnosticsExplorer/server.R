@@ -51,7 +51,15 @@ shinyServer(function(input, output, session) {
   )
   
   output$characterizationTable <- renderDT({
-    table <- characterization %>% filter(analysisid == 1)
+    
+    analysisId <- settings %>% filter(cdmdatabasename == input$cdatabase & 
+                                        tar == input$ctar &
+                                        outcomeid == getId(input$coutcomeName) &
+                                        cohortid ==  getId(input$ctargetName)
+    ) %>% select(analysisid)
+    analysisId <-analysisId$analysisid[1]
+    
+    table <- characterization %>% filter(analysisid == analysisId)
     table$covariatemeanwithoutcome = as.numeric(prettyHr(table$covariatemeanwithoutcome))
     table$covariatemeanwithnooutcome = as.numeric(prettyHr(table$covariatemeanwithnooutcome))
     result<-datatable(table,
@@ -67,8 +75,101 @@ shinyServer(function(input, output, session) {
     return(result)}
   )
   
+  
+  output$characterizationPlot <- renderPlotly({
+    mySubplot <- function(myanalysisId,myDatabasename, myTar){
+      
+      plotdata <- characterization %>% filter(analysisid == myanalysisId)
+      
+      plotdataMeas <- plotdata %>% filter(covariatemeanwithnooutcome > 1 | covariatemeanwithoutcome > 1)
+      plotdata <- plotdata %>% filter(covariatemeanwithnooutcome < 1 & covariatemeanwithoutcome < 1)
+      
+
+      fig1 <- plot_ly()
+      fig2 <- plot_ly()
+      
+      fig1 <- fig1 %>%
+        add_trace(
+          type = 'scatter',
+          name = '',
+          mode = 'markers',
+          x = plotdata$covariatemeanwithnooutcome,
+          y = plotdata$covariatemeanwithoutcome,
+          showlegend = FALSE,
+          hovertemplate = paste(plotdata$covariatename,'<br>',
+                                '<i>Mean with outcome</i>: %{y:.2f}',
+                                '<br><i>Mean with no outcome</i>: %{x}<br>')
+        ) %>%
+        add_trace(x=c(0, 1), y=c(0, 1), 
+                  type="scatter", mode="lines", name='x = y') %>%
+      
+        layout(annotations = list(x = 0.5, y = 1.05, 
+                                  text=sprintf("<b>Database: %s - TAR: %s<b>",myDatabasename,myTar ),
+                                  xref='paper', yref='paper', showarrow=F),
+               xaxis = list(title = "Non-outcomes"), 
+               yaxis = list(title = "Outcomes"),
+               showlegend = FALSE)
+      
+      if(nrow(plotdataMeas)>0){
+        fig2 <- fig2 %>%
+          add_trace(
+            type = 'scatter',
+            name = '',
+            mode = 'markers',
+            x = plotdataMeas$covariatemeanwithnooutcome,
+            y = plotdataMeas$covariatemeanwithoutcome,
+            showlegend = FALSE,
+            hovertemplate = paste(plotdataMeas$covariatename,'<br>',
+                                  '<i>Mean with outcome</i>: %{y:.2f}',
+                                  '<br><i>Mean with no outcome</i>: %{x}<br>')
+          ) %>%
+          add_trace(x=c(0, max(c(plotdataMeas$covariatemeanwithnooutcome,plotdataMeas$covariatemeanwithoutcome))), 
+                    y=c(0, max(c(plotdataMeas$covariatemeanwithnooutcome,plotdataMeas$covariatemeanwithoutcome))), 
+                    type="scatter", mode="lines", name='x = y')  %>% 
+          layout(#xaxis = list(title = "Varible mean of non-outcomes"), 
+                 #yaxis = list(title = "Varible mean of outcomes"),
+                 showlegend = FALSE)
+      }
+      
+      list(fig1,fig2)
+      
+    }
+    
+    subplots_list <- list()
+    ind <- 1
+    for(i in 1:length(input$databases)){
+      
+      analysisId <- settings %>% filter(cdmdatabasename == input$cdatabases[i] & 
+                                          tar == input$ctar &
+                                          outcomeid == getId(input$coutcomeName) &
+                                          cohortid ==  getId(input$ctargetName)
+      ) %>% select(analysisid)
+      analysisId <-analysisId$analysisid[1]
+      
+      # if there is a result add it 
+      if(!is.na(analysisId)){
+        tempPlot <- mySubplot(analysisId, input$databases[i], input$ctar)
+        subplots_list[[ind]] <- tempPlot[[1]]
+        ind <- ind+1
+        subplots_list[[ind]] <- tempPlot[[2]]
+        ind <- ind+1
+      }
+    }
+    
+
+    
+    fig <- subplot(subplots_list, nrows=length(input$databases),shareX = F, shareY =F)
+    
+    return(fig)
+  })
+  
+  
+  
+  
+  
+  
   output$distributionTable <- renderDataTable({
-    table <- getPercentileTable(distribution,input$targetId,input$outcomeId,input$database,tolower(input$variable))
+    table <- getPercentileTable(distribution,getId(input$targetName),getId(input$outcomeName),input$database,tolower(input$variable))
     options(digits = 2)
       
       selection = list(mode = "single", target = "row")
@@ -109,14 +210,13 @@ shinyServer(function(input, output, session) {
   )
   
   # Plots
-
   output$distributionTimePlot <- renderPlotly({
     mySubplot <- function(myDatabasename){
       fig <- plot_ly()
       plotdata <-
         getPercentileTable(distribution,
-                           input$targetId,
-                           input$outcomeId,
+                           getId(input$targetName),
+                           getId(input$outcomeName),
                            NULL,
                            tolower(input$variable)) %>%
         filter(databasename == myDatabasename)
@@ -134,7 +234,7 @@ shinyServer(function(input, output, session) {
                                 '<br><b>Year</b>: %{x}<br>')
         ) %>%
         
-       add_trace(
+        add_trace(
           type = 'scatter',
           name = '',
           mode = 'lines+markers',
@@ -148,13 +248,26 @@ shinyServer(function(input, output, session) {
         layout(annotations = list(x = 0.5, y = 1.05, text=sprintf("<b>%s<b>",myDatabasename), xref='paper', yref='paper', showarrow=F))
     }
     
+    subplots_list <- list()
+    for(i in 1:length(input$databases)){
+      subplots_list[[i]] <- mySubplot(input$databases[i])
+    }
+    
+    fig <- subplot(subplots_list, nrows=length(input$databases),shareX = T, shareY =T)
+    
+    return(fig)
+  })
+  
+  output$distributionBoxPlot <- renderPlot({
+    
       subplots_list <- list()
       for(i in 1:length(input$databases)){
-        subplots_list[[i]] <- mySubplot(input$databases[i])
+        subplots_list[[i]] <- myBoxplot(input$databases[i],getId(input$targetName),getId(input$outcomeName),input$variable)
       }
       
-      fig <- subplot(subplots_list, nrows=length(input$databases),shareX = T, shareY =T)
-    
+      require(gridExtra)
+      fig <- do.call("grid.arrange", c(subplots_list, ncol=length(input$databases)))
+      
     return(fig)
   })
   
@@ -188,7 +301,7 @@ shinyServer(function(input, output, session) {
   }
   
   output$hoverInfoDistribution <- renderUI({
-    data <- getPercentileTable(distribution,input$targetId,input$outcomeId,NULL,tolower(input$variable)) %>%
+    data <- getPercentileTable(distribution,getId(input$targetName),getId(input$outcomeName),NULL,tolower(input$variable)) %>%
       filter(databasename %in% input$databases)
     if (is.null(data)) {
       return(NULL)

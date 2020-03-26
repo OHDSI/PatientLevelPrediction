@@ -120,8 +120,8 @@ diagnostic <- function(plpData = NULL,
   }
   
   #create cohort names csv:
-  if(file.exists(file.path(outputFolder,'names.csv'))){
-    cohortNames <- read.csv(file.path(outputFolder,'names.csv'))
+  if(file.exists(file.path(outputFolder,'nameDetails.csv'))){
+    cohortNames <- read.csv(file.path(outputFolder,'nameDetails.csv'))
     
     newNames <- data.frame(ids = c(cohortId,outcomeIds), 
                            names = c(cohortName,outcomeNames))
@@ -136,7 +136,7 @@ diagnostic <- function(plpData = NULL,
                            names = c(cohortName,outcomeNames))
   }
   ParallelLogger::logInfo('Saving cohort names to csv')
-  utils::write.csv(cohortNames, file.path(outputFolder,'names.csv'), row.names = F)
+  utils::write.csv(cohortNames, file.path(outputFolder,'nameDetails.csv'), row.names = F)
   
   #create settings:
   if(file.exists(file.path(outputFolder,'settings.csv'))){

@@ -28,21 +28,38 @@ dashboardPage(
       addInfo(menuItem("Distribution", tabName = "distribution"), "distributionInfo"),
       
       ## Option panel
+      # distribution options
       conditionalPanel(
         condition = "input.tabs=='distribution' && input.distributionTabsetPanel == 'Tables'",
         selectInput("database", "Database", databases)),
       conditionalPanel(
          condition = "input.tabs=='distribution'",
 
-         selectInput("targetId", "Target", targetCohorts),
-         selectInput("outcomeId", "Outcome", outcomeCohorts),
+         selectInput("targetName", "Target", targetCohorts),
+         selectInput("outcomeName", "Outcome", outcomeCohorts),
          selectInput("variable","distributionVar",distributionVars)
       ),
-      conditionalPanel(condition = "input.tabs == 'distribution' && input.distributionTabsetPanel == 'Figures'",
+      conditionalPanel(condition = "input.tabs == 'distribution' && (input.distributionTabsetPanel == 'Time Trend' | input.distributionTabsetPanel == 'Box Plot' )",
                        hr(),
                        checkboxGroupInput("databases", "Database", databases, selected = databases[1])
-      )
+      ),
+      # characterization options
+      conditionalPanel(
+        condition = "input.tabs=='characterization'",
+        selectInput("ctargetName", "Target", targetCohorts),
+        selectInput("coutcomeName", "Outcome", outcomeCohorts),
+        selectInput("ctar","Time-at-risk",tars)
+      ),
+      conditionalPanel(
+        condition = "input.tabs=='characterization' && input.characterizationTabsetPanel == 'Tables'",
+        selectInput("cdatabase", "Database", databases)),
+      
+    conditionalPanel(condition = "input.tabs == 'characterization' && (input.characterizationTabsetPanel == 'Figure' )",
+                     hr(),
+                     checkboxGroupInput("cdatabases", "Database", databases, selected = databases[1])
     )
+    )
+    
   ),
   dashboardBody(
     
@@ -90,7 +107,21 @@ dashboardPage(
         DTOutput("incidenceTable")
     ),
     tabItem(tabName = "characterization",
-        dataTableOutput("characterizationTable")
+            tabsetPanel(
+              id = "characterizationTabsetPanel",
+              tabPanel(
+                "Tables",
+                dataTableOutput("characterizationTable")
+              ),
+              tabPanel(
+                "Figure",
+                box(
+                  width = 12,
+                  br(),
+                  plotlyOutput("characterizationPlot")
+                )
+              )
+            )
     ),
     tabItem(tabName = "distribution",
             tabsetPanel(
@@ -100,14 +131,23 @@ dashboardPage(
                  dataTableOutput("distributionTable")
               ),
               tabPanel(
-                "Figures",
+                "Time Trend",
                 box(
                   title = textOutput("distributionTimePlotTitle"),
-                  width = 10,
+                  width = 12,
                   br(),
                   plotlyOutput("distributionTimePlot")
                 )
+              ),
+              tabPanel(
+                "Box Plot",
+                box(
+                  width = 12,
+                  br(),
+                  plotOutput("distributionBoxPlot")
+                )
               )
+              
             )
     )
 

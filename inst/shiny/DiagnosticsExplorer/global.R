@@ -5,16 +5,16 @@ library(plotly)
 library(dplyr)
 library(tidyr)
 library(scales)
-library(ggiraph)
+#library(ggiraph)
 
 source("PlotsAndTables.R")
 
 
 if (!exists("shinySettings")) {
-  if (file.exists("data")) {
-    shinySettings <- list(dataFolder = "data")
+  if (file.exists("diagnostics")) {
+    shinySettings <- list(dataFolder = "diagnostics")
   } else {
-    shinySettings <- list(dataFolder = "./data")
+    shinySettings <- list(dataFolder = "./diagnostics")
   }
   
 }
@@ -31,7 +31,9 @@ if (file.exists(file.path(dataFolder, "PreMerged.RData"))) {
     print(file)
     tableName <- gsub(".csv$", "", file)
     camelCaseName <- SqlRender::snakeCaseToCamelCase(tableName)
-    data <- readr::read_csv(file.path(folder, file), col_types = readr::cols(), guess_max = 1e7, locale = readr::locale(encoding = "UTF-8"))
+    #data <- readr::read_csv(file.path(folder, file), col_types = readr::cols(), guess_max = 1e7, locale = readr::locale(encoding = "UTF-8"))
+    data <- utils::read.csv(file.path(folder, file))
+    
     colnames(data) <- SqlRender::snakeCaseToCamelCase(colnames(data))
     
     if (!overwrite && exists(camelCaseName, envir = .GlobalEnv)) {
@@ -72,12 +74,31 @@ if (file.exists(file.path(dataFolder, "PreMerged.RData"))) {
   }
 }
 
+namesdetails$names <- as.character(namesdetails$names)
 # Fixing the labels (more to add)
-outcomeCohorts <- sort(as.list(unique(distribution %>% select(outcomeid)))$outcomeid)
-targetCohorts <- sort(as.list(unique(distribution %>% select(targetid)))$targetid)
+getNames <- function(cohortid){
+  res <- namesdetails %>% filter(ids == cohortid) %>% select(names)
+  res$names[1]
+}
+getId <- function(cohortname){
+  res <- namesdetails %>% filter(names == cohortname) %>% select(ids)
+  res$ids[1]
+}
 
 # Sort selectors
 databases <- sort(as.list(unique(settings %>% select(cdmdatabasename)))$cdmdatabasename)
+
+outcomeCohorts <- lapply(as.list(unique(settings %>% select(outcomeid)))$outcomeid, getNames)
+targetCohorts <- lapply(as.list(unique(settings %>% select(cohortid)))$cohortid, getNames)
+
+settings$tar <- unlist(
+  lapply(1:nrow(settings), function(x) paste0(settings$startanchor[x], ' + ', settings$riskwindowstart[x], 
+                                          ' days - ', settings$endanchor[x], ' + ', settings$riskwindowend[x], ' days'))
+  )
+tars <- as.list(unique(settings %>% select(tar)))$tar
+#tars <- unique(settings %>% select(riskwindowstart,	startanchor,	riskwindowend,	endanchor))
+#tars <- lapply(1:nrow(tars), function(x) paste0(tars$startanchor[x], ' + ', tars$riskwindowstart[x], 
+#                                  ' days - ', tars$endanchor[x], ' + ', tars$riskwindowend[x], ' days'))
 
 # Variable Selector
 distributionVars <- c('daysFromObsStart','daysToObsEnd','daysToOutcomeAfterMin','daysToOutcomeBeforeMin')
