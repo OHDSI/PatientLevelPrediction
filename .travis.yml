@@ -6,20 +6,7 @@ branches:
   except:
     - /^*-v[0-9]/
 
-r_packages:
-  - devtools
-  - covr
-  - drat
-
-r_github_packages:
-  - OHDSI/DatabaseConnector
-  - OHDSI/FeatureExtraction
-  - OHDSI/OhdsiRTools
-  - OHDSI/Cyclops
-  - OHDSI/BigKnn
-  - OHDSI/OhdsiSharing
-
-install:
+before_install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - source "$HOME/miniconda/etc/profile.d/conda.sh"
@@ -39,7 +26,20 @@ install:
   - conda install --name r-reticulate -c conda-forge keras
   - conda install --name r-reticulate -c conda-forge tensorflow
   - conda install --name r-reticulate -c sebp scikit-survival
-  - conda activate r-reticulate
+  - conda activate r-reticulate    
+
+r_packages:
+  - devtools
+  - covr
+  - drat
+
+r_github_packages:
+  - OHDSI/DatabaseConnector
+  - OHDSI/FeatureExtraction
+  - OHDSI/OhdsiRTools
+  - OHDSI/Cyclops
+  - OHDSI/BigKnn
+  - OHDSI/OhdsiSharing
 
 before_script:
   - export PKG_NAME=$(Rscript -e 'cat(paste0(devtools::as.package(".")$package))')
