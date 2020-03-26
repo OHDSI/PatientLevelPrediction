@@ -111,14 +111,14 @@ dashboardPage(
               id = "characterizationTabsetPanel",
               tabPanel(
                 "Tables",
-                dataTableOutput("characterizationTable")
+                shinycssloaders::withSpinner(dataTableOutput("characterizationTable"))
               ),
               tabPanel(
                 "Figure",
                 box(
                   width = 12,
                   br(),
-                  plotlyOutput("characterizationPlot")
+                  shinycssloaders::withSpinner(plotlyOutput("characterizationPlot"))
                 )
               )
             )
@@ -136,7 +136,7 @@ dashboardPage(
                   title = textOutput("distributionTimePlotTitle"),
                   width = 12,
                   br(),
-                  plotlyOutput("distributionTimePlot")
+                  shinycssloaders::withSpinner(plotlyOutput("distributionTimePlot"))
                 )
               ),
               tabPanel(
@@ -144,7 +144,7 @@ dashboardPage(
                 box(
                   width = 12,
                   br(),
-                  plotOutput("distributionBoxPlot")
+                  shinycssloaders::withSpinner(plotOutput("distributionBoxPlot"))
                 )
               )
               

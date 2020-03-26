@@ -11,7 +11,9 @@ diagnostic(
   cdmDatabaseSchema,
   oracleTempSchema = NULL,
   cohortId,
+  cohortName = cohortId,
   outcomeIds,
+  outcomeNames = outcomeIds,
   cohortDatabaseSchema,
   cohortTable = "cohort",
   outcomeDatabaseSchema = cohortDatabaseSchema,
@@ -22,7 +24,8 @@ diagnostic(
   riskWindowEnd = 365,
   endAnchor = "cohort start",
   outputFolder = NULL,
-  sampleSize = NULL
+  sampleSize = NULL,
+  minCellCount = 5
 )
 }
 \arguments{
@@ -46,7 +49,11 @@ permissions to this database.}
 \item{cohortId}{A unique identifier to define the at risk cohorts. CohortId is
 used to select the cohort_concept_id in the cohort-like table.}
 
-\item{outcomeIds}{A list of cohort_definition_ids used to define outcomes.}
+\item{cohortName}{A string specifying the name of the target cohort}
+
+\item{outcomeIds}{A vector of cohort_definition_ids used to define outcomes.}
+
+\item{outcomeNames}{A vector of names for each outcome.}
 
 \item{cohortDatabaseSchema}{The name of the database schema that is the location where the
 cohort data used to define the at risk cohort is available.
@@ -84,6 +91,8 @@ COHORT_END_DATE.}
 \item{outputFolder}{Location to save results for shiny app}
 
 \item{sampleSize}{Sample from the target population}
+
+\item{minCellCount}{The minimum count that will be displayed}
 }
 \value{
 An object containing the model or location where the model is save, the data selection settings, the preprocessing
