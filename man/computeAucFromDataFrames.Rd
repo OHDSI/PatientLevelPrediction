@@ -4,8 +4,14 @@
 \alias{computeAucFromDataFrames}
 \title{Compute the area under the ROC curve}
 \usage{
-computeAucFromDataFrames(prediction, status, time = NULL,
-  confidenceInterval = FALSE, timePoint, modelType = "logistic")
+computeAucFromDataFrames(
+  prediction,
+  status,
+  time = NULL,
+  confidenceInterval = FALSE,
+  timePoint,
+  modelType = "logistic"
+)
 }
 \arguments{
 \item{prediction}{A vector with the predicted hazard rate.}

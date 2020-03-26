@@ -4,9 +4,14 @@
 \alias{getCovariateData}
 \title{Get the covaridate data for a cohort table}
 \usage{
-getCovariateData(connection, cdmDatabaseSchema,
-  oracleTempSchema = cdmDatabaseSchema, cohortTable = "#cohort_person",
-  cdmVersion = 5, covariateSettings)
+getCovariateData(
+  connection,
+  cdmDatabaseSchema,
+  oracleTempSchema = cdmDatabaseSchema,
+  cohortTable = "#cohort_person",
+  cdmVersion = 5,
+  covariateSettings
+)
 }
 \arguments{
 \item{connection}{Can also use an existing connection rather than the connectionDetails}

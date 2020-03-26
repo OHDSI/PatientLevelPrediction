@@ -155,7 +155,7 @@ externalValidatePlp <- function(plpResult,
       targetTable <- validationTableTarget[i]
     if(length(validationTableOutcome)>1)
       outcomeTable <- validationTableOutcome[i]
-    newData <- PatientLevelPrediction::similarPlpData(plpModel= plpResult$model, createCohorts = F, 
+    newData <- similarPlpData(plpModel= plpResult$model, createCohorts = F, 
                                                       newConnectionDetails = connectionDetails, 
                                                       newCdmDatabaseSchema = validationSchemaCdm[i], 
                                                       newCohortDatabaseSchema = validationSchemaTarget[i], 
@@ -176,7 +176,7 @@ externalValidatePlp <- function(plpResult,
       results[[i]] <- 'not run due to outcome count less than 5'
     } else{
       
-      results[[i]] <- PatientLevelPrediction::applyModel(population=newData$population, plpData = newData$plpData, 
+      results[[i]] <- applyModel(population=newData$population, plpData = newData$plpData, 
                                                          calculatePerformance = T, plpModel = plpResult$model)
       
       
@@ -288,9 +288,9 @@ summariseVal <- function(result, database){
 #' @param type                             Model type (score or logistic)
 #' @param covariateSettings                The standard covariate settings (specify covariate lookback time)
 #' @param customCovariates                 A table of covariateId, sql (sql creates the custom covariate)
-#' @param addExposureDaysToStart           riskWindowStart relative to the cohort end date instead of the cohort start date?
+#' @param startAnchor                      riskWindowStart relative to the cohort end date instead of the cohort start date?
 #' @param riskWindowStart                  The day after index to start predicting the outcome
-#' @param addExposureDaysToEnd             riskWindowEnd relative to the cohort end date instead of the cohort start date?
+#' @param endAnchor                        riskWindowEnd relative to the cohort end date instead of the cohort start date?
 #' @param riskWindowEnd                    The day after index to stop predicting the outcome
 #' @param requireTimeAtRisk                Do you want to ignore people who leave the database some point between the riskWindowStart and riskWindowEnd 
 #' @param minTimeAtRisk                    If requireTimeAtRisk is TRUE, how many days must they be observed before leaving to get included (default recommendation is all risk period: riskWindowEnd-riskWindowStart)    
@@ -328,9 +328,9 @@ evaluateExistingModel <- function(modelTable,
                                    type='score',
                                    covariateSettings,
                                   customCovariates=NULL,
-                                  addExposureDaysToStart = F,
+                                  startAnchor = "cohort start",
                                   riskWindowStart = 1, 
-                                  addExposureDaysToEnd = F,
+                                  endAnchor = "cohort start",
                                   riskWindowEnd = 365,
                                    requireTimeAtRisk = T, 
                                   minTimeAtRisk = 364,
@@ -404,7 +404,7 @@ evaluateExistingModel <- function(modelTable,
     calibrationPopulation <- calibrationPopulation[,c('subjectId','cohortStartDate','indexes')]
   }
   
-  custCovs <- PatientLevelPrediction::createExistingModelSql(modelTable= modelTable, 
+  custCovs <- createExistingModelSql(modelTable= modelTable, 
                                                  modelNames = modelName, 
                                                  interceptTable = interceptTable,
                                                  covariateTable=covariateTable, 
@@ -420,7 +420,7 @@ evaluateExistingModel <- function(modelTable,
   assign(paste0('getExistingmodelsCovariateSettings'), custCovs$getExistingmodelsCovariateSettings
          ,envir = globalenv())
   
-  plpData <- PatientLevelPrediction::getPlpData(connectionDetails, 
+  plpData <- getPlpData(connectionDetails, 
                                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                                 oracleTempSchema=oracleTempSchema,
                                                 cohortId = cohortId ,
@@ -433,19 +433,21 @@ evaluateExistingModel <- function(modelTable,
                                                 sampleSize = NULL, 
                                                 cdmVersion = cdmVersion)
   
-  population <- PatientLevelPrediction::createStudyPopulation(plpData = plpData, outcomeId = outcomeId,
-                                                              includeAllOutcomes = includeAllOutcomes, 
-                                                              requireTimeAtRisk = requireTimeAtRisk, 
-                                                              minTimeAtRisk = minTimeAtRisk, 
-                                                              riskWindowStart = riskWindowStart,
-                                                              addExposureDaysToEnd = addExposureDaysToEnd,
-                                                              riskWindowEnd = riskWindowEnd, 
-                                                              removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome,
-                                                              verbosity = verbosity, 
-                                                              washoutPeriod = washoutPeriod,
-                                                              firstExposureOnly = firstExposureOnly, 
-                                                              binary = binary
-                                                              )
+  population <- createStudyPopulation(plpData = plpData, outcomeId = outcomeId,
+                                      includeAllOutcomes = includeAllOutcomes, 
+                                      requireTimeAtRisk = requireTimeAtRisk, 
+                                      minTimeAtRisk = minTimeAtRisk, 
+                                      riskWindowStart = riskWindowStart, 
+                                      startAnchor = startAnchor,
+                                      endAnchor = endAnchor,
+                                      riskWindowEnd = riskWindowEnd, 
+                                      removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome,
+                                      priorOutcomeLookback = priorOutcomeLookback,
+                                      verbosity = verbosity, 
+                                      washoutPeriod = washoutPeriod,
+                                      firstExposureOnly = firstExposureOnly, 
+                                      binary = binary
+                                      )
   prediction <- merge(population, ff::as.ram(plpData$covariates$risks), by='rowId', all.x=T)
   
   covSum <- NULL
@@ -494,7 +496,7 @@ evaluateExistingModel <- function(modelTable,
   }
   
   attr(prediction, "metaData")$predictionType <- "binary"
-  performance <- PatientLevelPrediction::evaluatePlp(prediction, plpData)
+  performance <- evaluatePlp(prediction, plpData)
   
   # reformatting the performance 
   analysisId <-   '000000'

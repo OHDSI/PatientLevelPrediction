@@ -4,14 +4,25 @@
 \alias{getPlpData}
 \title{Get the patient level prediction data from the server}
 \usage{
-getPlpData(connectionDetails, cdmDatabaseSchema,
-  oracleTempSchema = cdmDatabaseSchema, cohortId, outcomeIds,
-  studyStartDate = "", studyEndDate = "",
-  cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
-  outcomeDatabaseSchema = cdmDatabaseSchema, outcomeTable = "cohort",
-  cdmVersion = "5", firstExposureOnly = FALSE, washoutPeriod = 0,
-  sampleSize = NULL, covariateSettings, excludeDrugsFromCovariates = FALSE,
-  baseUrl = NULL)
+getPlpData(
+  connectionDetails,
+  cdmDatabaseSchema,
+  oracleTempSchema = cdmDatabaseSchema,
+  cohortId,
+  outcomeIds,
+  studyStartDate = "",
+  studyEndDate = "",
+  cohortDatabaseSchema = cdmDatabaseSchema,
+  cohortTable = "cohort",
+  outcomeDatabaseSchema = cdmDatabaseSchema,
+  outcomeTable = "cohort",
+  cdmVersion = "5",
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  sampleSize = NULL,
+  covariateSettings,
+  excludeDrugsFromCovariates = FALSE
+)
 }
 \arguments{
 \item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the
@@ -84,8 +95,6 @@ but can already be done here for efficiency reasons.}
 \code{FeatureExtraction} package.}
 
 \item{excludeDrugsFromCovariates}{A redundant option}
-
-\item{baseUrl}{If extracting cohorts from atlas enter atlas url to extract cohort creation details}
 }
 \value{
 Returns an object of type \code{plpData}, containing information on the cohorts, their

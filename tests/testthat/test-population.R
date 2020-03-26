@@ -20,11 +20,6 @@ context("Population")
 # Test unit for the creation of the study population. The firstExposureOnly, 
 # washout, requireTimeAtRisk are checked. Additionally, error messages are checked.
 
-set.seed(1234)
-data(plpDataSimulationProfile)
-sampleSize <- 2000
-plpData <- PatientLevelPrediction::simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-
 test_that("population creation parameters", {
   
   studyPopulation <- createStudyPopulation(plpData,
@@ -38,9 +33,9 @@ test_that("population creation parameters", {
                         requireTimeAtRisk = FALSE,
                         minTimeAtRisk=0,
                         riskWindowStart = 0,
-                        addExposureDaysToStart = FALSE,
+                        startAnchor = 'cohort start',
                         riskWindowEnd = 365,
-                        addExposureDaysToEnd = FALSE)
+                        endAnchor = 'cohort start')
 
   #plpData = plpData
   expect_is(studyPopulation, "data.frame")
@@ -60,9 +55,9 @@ test_that("population creation parameters", {
                                            requireTimeAtRisk = FALSE,
                                            minTimeAtRisk=0,
                                            riskWindowStart = 0,
-                                           addExposureDaysToStart = FALSE,
+                                           startAnchor = 'cohort start',
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE)
+                                           endAnchor = 'cohort start')
   
   nrOutcomes2 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes2,0)
@@ -80,12 +75,12 @@ test_that("population creation parameters", {
                                            requireTimeAtRisk = TRUE,
                                            minTimeAtRisk=365,
                                            riskWindowStart = 0,
-                                           addExposureDaysToStart = FALSE,
+                                           startAnchor = 'cohort start',
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE)
+                                           endAnchor = 'cohort start')
   nrOutcomes3 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes3,0)
-  expect_false(nrOutcomes3 == nrOutcomes1) 
+  expect_true(nrOutcomes3 <= nrOutcomes1) 
   
   #washoutPeriod
   studyPopulation <- createStudyPopulation(plpData,
@@ -99,12 +94,12 @@ test_that("population creation parameters", {
                                            requireTimeAtRisk = FALSE,
                                            minTimeAtRisk=365,
                                            riskWindowStart = 0,
-                                           addExposureDaysToStart = FALSE,
+                                           startAnchor = 'cohort start',
                                            riskWindowEnd = 365,
-                                           addExposureDaysToEnd = FALSE)
+                                           endAnchor = 'cohort start')
   nrOutcomes4 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes4,0)
-  expect_false(nrOutcomes4 == nrOutcomes1) 
+  expect_true(nrOutcomes4 <= nrOutcomes1) 
   
   #washoutPeriod >=0
   expect_error(
@@ -180,15 +175,15 @@ test_that("population creation parameters", {
                         daysToCohortEnd=rep(1,20),
                         daysToObsEnd=c(40, rep(900,19))
                         )
-  plpData2 <- plpData
-  plpData2$outcomes <- outcomes
-  plpData2$cohorts <- cohorts
+  PplpData <- plpData
+  PplpData$outcomes <- outcomes
+  PplpData$cohorts <- cohorts
   
-  attr(plpData2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
+  attr(PplpData$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
                                                                   targetCount=20,uniquePeople=20,
                                                                   outcomes=3))
   
-  pop <- createStudyPopulation(plpData2,
+  Ppop <- createStudyPopulation(PplpData,
                         population = NULL,
                         outcomeId = 1,
                         binary = T,
@@ -200,14 +195,14 @@ test_that("population creation parameters", {
                         requireTimeAtRisk = T,
                         minTimeAtRisk=365,
                         riskWindowStart = 0,
-                        addExposureDaysToStart = F,
+                        startAnchor = 'cohort start',
                         riskWindowEnd = 365,
-                        addExposureDaysToEnd = F)
+                        endAnchor = 'cohort start')
   
   # person 1 and 4 should be retruned
-  expect_equal(pop$rowId[pop$outcomeCount>0], c(1,4))
+  expect_equal(Ppop$rowId[Ppop$outcomeCount>0], c(1,4))
   
-  pop2 <- createStudyPopulation(plpData2,
+  Ppop2 <- createStudyPopulation(PplpData,
                                population = NULL,
                                outcomeId = 1,
                                binary = T,
@@ -219,14 +214,14 @@ test_that("population creation parameters", {
                                requireTimeAtRisk = T,
                                minTimeAtRisk=365,
                                riskWindowStart = 0,
-                               addExposureDaysToStart = F,
+                               startAnchor = 'cohort start',
                                riskWindowEnd = 365,
-                               addExposureDaysToEnd = F)
+                               endAnchor = 'cohort start')
   
   # person 4 only as person 1 has it before
-  expect_equal(pop2$rowId[pop2$outcomeCount>0], c(4))
+  expect_equal(Ppop2$rowId[Ppop2$outcomeCount>0], c(4))
   
-  pop3 <- createStudyPopulation(plpData2,
+  Ppop3 <- createStudyPopulation(PplpData,
                                population = NULL,
                                outcomeId = 1,
                                binary = T,
@@ -238,12 +233,12 @@ test_that("population creation parameters", {
                                requireTimeAtRisk = T,
                                minTimeAtRisk=365,
                                riskWindowStart = 0,
-                               addExposureDaysToStart = F,
+                               startAnchor = 'cohort start',
                                riskWindowEnd = 365,
-                               addExposureDaysToEnd = F)
+                               endAnchor = 'cohort start')
   
   # 4 only should be retruned
-  expect_equal(pop3$rowId[pop3$outcomeCount>0], c(4))
+  expect_equal(Ppop3$rowId[Ppop3$outcomeCount>0], c(4))
   
   
 })

@@ -776,7 +776,7 @@ buildVae<-function(data, vaeValidationSplit= 0.2, vaeBatchSize = 100L, vaeLatent
   #if (!is.null(dataValidation)) dataValidation<-list(dataValidation,dataValidation)
   vaeEarlyStopping=keras::callback_early_stopping(monitor = "val_loss", patience=5,mode="auto",min_delta = 1e-3)
   naanStopping = keras::callback_terminate_on_naan()
-  csvLogging = keras::callback_csv_logger (filename="./vae.csv",seperator = ",", append =TRUE )
+  csvLogging = keras::callback_csv_logger (filename="./vae.csv",separator = ",", append =TRUE )
   
   vae %>% keras::fit (
     dataSample,dataSample

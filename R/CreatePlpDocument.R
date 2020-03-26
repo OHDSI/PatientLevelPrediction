@@ -78,6 +78,15 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
 
   target_size <- nrow(population)
   outcome_size <- sum(population$outcomeCount==1)
+  
+  # update now we are using startAnchor and endAnchor
+  if(is.null(populationSet$addExposureDaysToStart)){
+    populationSet$addExposureDaysToStart <- populationSet$startAnchor == 'cohort end'
+  }
+  if(is.null(populationSet$addExposureDaysToEnd)){
+    populationSet$addExposureDaysToEnd <- populationSet$endAnchor == 'cohort end'
+  }
+  
   if(populationSet$addExposureDaysToEnd &
      populationSet$addExposureDaysToStart){
     time_at_risk <- paste0(populationSet$riskWindowStart,
@@ -147,7 +156,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   # characterisation
   doc <- doc %>% officer::body_add_par(value = 'Data characterisation:', style = "heading 3")
   
-  covSum <- PatientLevelPrediction::plotVariableScatterplot(plpResult$covariateSummary)
+  covSum <- plotVariableScatterplot(plpResult$covariateSummary)
   doc <- doc %>% officer::body_add_gg(value = covSum)
   doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the scatter plot of the prevalence of each variable in the outcome vs non-outcome groups.', style = "Normal")
   
@@ -171,8 +180,32 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   doc <- doc %>% officer::body_add_par(value = 'Covariate Settings:', style = "heading 3")
   
   # add table of covariate settings
-  covSet <- data.frame(setting=names(unlist(plpResult$model$metaData$call$covariateSettings)),
-                       choice = unlist(plpResult$model$metaData$call$covariateSettings))
+  if(class(plpResult$model$metaData$call$covariateSettings)=='list'){
+    #code for when multiple covariateSettings
+    covSet <- c() 
+    for(i in 1:length(plpResult$model$metaData$call$covariateSettings)){
+      if(attr(plpResult$model$metaData$call$covariateSettings[[i]],'fun')=='getDbDefaultCovariateData'){
+        covariatesTemp <- data.frame(covariateName = names(plpResult$model$metaData$call$covariateSettings[[i]]), 
+                                     SettingValue = unlist(lapply(plpResult$model$metaData$call$covariateSettings[[i]], 
+                                                                  function(x) paste0(x, 
+                                                                                     collapse='-'))))
+      } else{
+        covariatesTemp <- data.frame(covariateName = plpResult$model$metaData$call$covariateSettings[[i]]$covariateName,
+                                     SettingValue = ifelse(sum(names(plpResult$model$metaData$call$covariateSettings[[i]])%in%c("startDay","endDay"))>0,
+                                                           paste(names(plpResult$model$metaData$call$covariateSettings[[i]])[names(plpResult$model$metaData$call$covariateSettings[[i]])%in%c("startDay","endDay")],
+                                                                 plpResult$model$metaData$call$covariateSettings[[i]][names(plpResult$model$metaData$call$covariateSettings[[i]])%in%c("startDay","endDay")], sep=':', collapse = '-'),
+                                                           "")
+        )
+        
+      }
+      covSet  <- rbind(covSet,covariatesTemp)
+    }
+  } else{
+    covSet <- data.frame(covariateName = names(plpResult$model$metaData$call$covariateSettings), 
+                             SettingValue = unlist(lapply(plpResult$model$metaData$call$covariateSettings, 
+                                                          function(x) paste0(x, 
+                                                                             collapse='-'))))
+  }
   rownames(covSet) <- NULL
   if(nrow(covSet)!=0){
     doc <- doc %>% officer::body_add_table(value = covSet)
@@ -231,8 +264,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   # add test/train ROC plots
   doc <- doc %>% officer::body_add_par(value = paste("The overal discriminative performance:"), style = "Normal")
   
-  testCalPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='train')
+  testCalPlot <- plotSparseRoc(plpResult$performanceEvaluation, type='test')
+  trainCalPlot <- plotSparseRoc(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
   doc <- doc %>% officer::body_add_gg(value = testCalPlot)
@@ -243,8 +276,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   # add test/train calibration plots
   doc <- doc %>% officer::body_add_par(value = paste("The model calibration (how well the predicted risk matches the true risk):."), style = "Normal")
   
-  testCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='train')
+  testCalPlot <- plotSparseCalibration2(plpResult$performanceEvaluation, type='test')
+  trainCalPlot <- plotSparseCalibration2(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
   doc <- doc %>% officer::body_add_gg(value = testCalPlot)
@@ -255,8 +288,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   doc <- doc %>% officer::body_add_par(value = paste("The calibration across age/gender groups:"), style = "Normal")
   
   if(!is.null(plpResult$performanceEvaluation$demographicSummary)){
-    testCalPlot <- PatientLevelPrediction::plotDemographicSummary(plpResult$performanceEvaluation, type='test')
-    trainCalPlot <- PatientLevelPrediction::plotDemographicSummary(plpResult$performanceEvaluation, type='train')
+    testCalPlot <- plotDemographicSummary(plpResult$performanceEvaluation, type='test')
+    trainCalPlot <- plotDemographicSummary(plpResult$performanceEvaluation, type='train')
     testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
     trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
     doc <- doc %>% officer::body_add_gg(value = testCalPlot)
@@ -268,8 +301,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   
   doc <- doc %>% officer::body_add_par(value =  paste("Scaled predicted risk distributions for the outcome and non-outcome people:"), style = "Normal")
   
-  testCalPlot <- PatientLevelPrediction::plotPreferencePDF(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotPreferencePDF(plpResult$performanceEvaluation, type='train')
+  testCalPlot <- plotPreferencePDF(plpResult$performanceEvaluation, type='test')
+  trainCalPlot <- plotPreferencePDF(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
   doc <- doc %>% officer::body_add_gg(value = testCalPlot)
@@ -279,8 +312,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   
   doc <- doc %>% officer::body_add_par(value =  paste("Predicted risk distributions for the outcome and non-outcome people:"))
   
-  testCalPlot <- PatientLevelPrediction::plotPredictedPDF(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotPredictedPDF(plpResult$performanceEvaluation, type='train')
+  testCalPlot <- plotPredictedPDF(plpResult$performanceEvaluation, type='test')
+  trainCalPlot <- plotPredictedPDF(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
   doc <- doc %>% officer::body_add_gg(value = testCalPlot)
@@ -291,8 +324,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   
   doc <- doc %>% officer::body_add_par(value =  paste("Box plots summarising the predicted risk distributions for the outcome and non-outcome people:"))
   
-  testCalPlot <- PatientLevelPrediction::plotPredictionDistribution(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotPredictionDistribution(plpResult$performanceEvaluation, type='train')
+  testCalPlot <- plotPredictionDistribution(plpResult$performanceEvaluation, type='test')
+  trainCalPlot <- plotPredictionDistribution(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
   doc <- doc %>% officer::body_add_gg(value = testCalPlot)
@@ -302,8 +335,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   
   doc <- doc %>% officer::body_add_par(value =   paste("Precision vs recall plots:"))
   
-  testCalPlot <- PatientLevelPrediction::plotPrecisionRecall(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotPrecisionRecall(plpResult$performanceEvaluation, type='train')
+  testCalPlot <- plotPrecisionRecall(plpResult$performanceEvaluation, type='test')
+  trainCalPlot <- plotPrecisionRecall(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
   doc <- doc %>% officer::body_add_gg(value = testCalPlot)
@@ -313,8 +346,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   
   doc <- doc %>% officer::body_add_par(value =   paste("A measure combining sensitivity and specificity at each prediction threshold:"))
   
-  testCalPlot <- PatientLevelPrediction::plotF1Measure(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotF1Measure(plpResult$performanceEvaluation, type='train')
+  testCalPlot <- plotF1Measure(plpResult$performanceEvaluation, type='test')
+  trainCalPlot <- plotF1Measure(plpResult$performanceEvaluation, type='train')
   testCalPlot <- testCalPlot + ggplot2::labs(title=paste("Test"))
   trainCalPlot <- trainCalPlot + ggplot2::labs(title=paste("Train"))
   doc <- doc %>% officer::body_add_gg(value = testCalPlot)
@@ -335,7 +368,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
     doc <- doc %>% officer::body_add_par(value = paste("The roc plots are:"))
     
     for(i in 1:length(plpValidation$validation)){
-      valPlot <- PatientLevelPrediction::plotSparseRoc(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
+      valPlot <- plotSparseRoc(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
       valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
       doc <- doc %>% officer::body_add_gg(value = valPlot)
     }
@@ -343,7 +376,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
     doc <- doc %>% officer::body_add_par(value = paste("The calibration plots are:"))
     
     for(i in 1:length(plpValidation$validation)){
-      valPlot <- PatientLevelPrediction::plotSparseCalibration2(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
+      valPlot <- plotSparseCalibration2(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
       valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
       doc <- doc %>% officer::body_add_gg(value = valPlot)
     }
@@ -614,6 +647,12 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   
   
   target_size <- nrow(population)
+  if(is.null(populationSet$addExposureDaysToStart)){
+    populationSet$addExposureDaysToStart <- populationSet$startAnchor == 'cohort end'
+  }
+  if(is.null(populationSet$addExposureDaysToEnd)){
+    populationSet$addExposureDaysToEnd <- populationSet$endAnchor == 'cohort end'
+  }
   outcome_size <- sum(population$outcomeCount==1)
   if(populationSet$addExposureDaysToEnd &
      populationSet$addExposureDaysToStart){
@@ -789,18 +828,26 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   doc <- doc %>% officer::body_add_par(value = 'Predictors:', style = "heading 3")
   covset <- plpResult$model$metaData$call$covariateSettings #plpResult$inputSetting$dataExtrractionSettings$covariateSettings
-  if(class(plpResult$inputSetting$dataExtrractionSettings$covariateSettings)=="list"){
-    covs <- unlist(covset)[grep('use',names(unlist(covset)))]
-    covs <- gsub('useCovariate','',names(covs)[covs==1])
-    covs <- as.data.frame(covs)
-    colnames(covs) <- 'Predictor'
-    timeset <- paste0("Longterm days:",covset$longTermDays, "-",
-                      "Mediumterm days:",covset$mediumDays, "-",
-                      "Shortterm days:",covset$shortTermDays, "-",
-                      "WindowEnd days:",covset$windowEndDays)
-
-    doc <- doc %>% officer::body_add_table(value = covs)
-    doc <- doc %>% officer::body_add_par(value = timeset)
+  if(class(covset)=="list"){
+    for(i in 1:length(covset)){
+      if(attr(covset[[i]],'fun')=='getDbDefaultCovariateData'){
+        covs <- as.data.frame(unlist(covset[[i]])) #collapse covset values if vectors?
+        covs <- data.frame(Covariate = row.names(covs), Setting = covs)
+        colnames(covs) <- c('Covariate','Setting')
+        #restrict to true
+        covs <- covs[union(which(covs$Setting!=0),grep('TermStartDays',covs$Covariate)),]
+        doc <- doc %>% officer::body_add_table(value = covs)
+      } else{
+        covs <- data.frame(covariate = covset[[i]]$covariateName,
+                          Setting = ifelse(sum(names(covset[[i]])%in%c("startDay","endDay"))>0,
+                                                paste(names(covset[[i]])[names(covset[[i]])%in%c("startDay","endDay")],
+                                                      covset[[i]][names(covset[[i]])%in%c("startDay","endDay")], sep=':', collapse = '-'),
+                                                "")
+                          )
+        #restrict to true
+        doc <- doc %>% officer::body_add_table(value = covs)
+      }
+    }
     
     doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<!Clarify about missing data>", prop = style_helper_text))) %>% 
       officer::body_add_par("")
@@ -843,7 +890,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   if(includeAttritionPlot){
     # Pic3: add attriction plot
-    attrPlot <- PatientLevelPrediction::drawAttritionDiagramPlp(plpResult$inputSetting$populationSettings$attrition)#attr(population,'metaData')$attrition)
+    attrPlot <- drawAttritionDiagramPlp(plpResult$inputSetting$populationSettings$attrition)#attr(population,'metaData')$attrition)
     #doc = ReporteRs::addPlot(attrPlot)
     doc <- doc %>% officer::body_add_gg(value = attrPlot)  # IS THIS GG??
     doc <- doc %>% officer::body_add_par(value = 'Figure 1 shows the attrition for the model development.' )
@@ -877,7 +924,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     }
 
   # Add plot of outcome vs non-outcome
-  covSum <- PatientLevelPrediction::plotVariableScatterplot(plpResult$covariateSummary)
+  covSum <- plotVariableScatterplot(plpResult$covariateSummary)
   doc <- doc %>% officer::body_add_gg(value = covSum)
   doc <- doc %>% officer::body_add_par(value = 'Figure 2 shows the scatter plot of the prevalence of each variable in the non-outcome vs outcome groups.' ) %>%
     officer::body_add_par("")
@@ -908,8 +955,8 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
   #=============== RESULTS: ROC plot  ==============
   # Pic4: add test/train ROC plots
-  testROCPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='test')
-  trainROCPlot <- PatientLevelPrediction::plotSparseRoc(plpResult$performanceEvaluation, type='train')
+  testROCPlot <- plotSparseRoc(plpResult$performanceEvaluation, type='test')
+  trainROCPlot <- plotSparseRoc(plpResult$performanceEvaluation, type='train')
   if(includeTest){
      doc <- doc %>% officer::body_add_gg(value = testROCPlot) %>%
        officer::body_add_par(value =  'Figure 3 ROC plot for test set' )
@@ -920,8 +967,8 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
      doc <- doc %>% officer::body_add_gg(value = trainROCPlot)
   #=============== RESULTS: calibration plot  ==============
   # Pic5: add test/train calibration plots
-  testCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='test')
-  trainCalPlot <- PatientLevelPrediction::plotSparseCalibration2(plpResult$performanceEvaluation, type='train')
+  testCalPlot <- plotSparseCalibration2(plpResult$performanceEvaluation, type='test')
+  trainCalPlot <- plotSparseCalibration2(plpResult$performanceEvaluation, type='train')
   if(includeTest){
     doc <- doc %>% officer::body_add_gg(value = testCalPlot) %>%
       officer::body_add_par(value =  'Figure 4 calibration plot for test set' )
@@ -1087,14 +1134,14 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   if(!is.null(plpValidation)){
     doc <- doc %>% officer::body_add_par(value = paste("The roc plots are:"))
     for(i in 1:length(plpValidation$validation)){
-      valPlot <- PatientLevelPrediction::plotSparseRoc(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
+      valPlot <- plotSparseRoc(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
       valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
       doc <- doc %>% officer::body_add_gg(value = valPlot)
     }
     
     doc <- doc %>% officer::body_add_par(value = paste("The calibration plots are:"))
     for(i in 1:length(plpValidation$validation)){
-      valPlot <- PatientLevelPrediction::plotSparseCalibration2(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
+      valPlot <- plotSparseCalibration2(plpValidation$validation[[i]]$performanceEvaluation, type='validation')
       valPlot <- valPlot + ggplot2::labs(title=paste(names(plpValidation$validation)[i]))
       doc <- doc %>% officer::body_add_gg(value = valPlot)
     }
@@ -1153,7 +1200,7 @@ getPlpTable <- function(cdmDatabaseSchema,
 
   if(class(population)!='data.frame')
     stop('wrong population class')
-  if(sum(c('cohortId','subjectId','cohortStartDate')%in%colnames(population))!=3)  # need to remember column names
+  if(sum(c('subjectId','cohortStartDate')%in%colnames(population))!=2)  # need to remember column names
     stop('population missing required column')
 
   if(sum(population$outcomeCount>0)==0)
@@ -1167,7 +1214,8 @@ getPlpTable <- function(cdmDatabaseSchema,
 
 
   # create table of non-outcomes
-  popCohort <- population[population$outcomeCount==0,c('cohortId','subjectId','cohortStartDate','cohortStartDate')]
+  popCohort <- population[population$outcomeCount==0,c('subjectId','cohortStartDate','cohortStartDate')]
+  popCohort <- data.frame(cohortId = -1, popCohort)
   colnames(popCohort)[4] <- 'cohortEndDate'
   colnames(popCohort) <- SqlRender::camelCaseToSnakeCase(colnames(popCohort))
   DatabaseConnector::insertTable(connection = connection,
@@ -1201,7 +1249,8 @@ getPlpTable <- function(cdmDatabaseSchema,
 
   covariateData1 <- do.call(FeatureExtraction::getDbCovariateData, settings)
 
-  popCohort <- population[population$outcomeCount>0,c('cohortId','subjectId','cohortStartDate','cohortStartDate')]
+  popCohort <- population[population$outcomeCount>0,c('subjectId','cohortStartDate','cohortStartDate')]
+  popCohort <- data.frame(cohortId = -1, popCohort)
   colnames(popCohort)[4] <- 'cohortEndDate'
   colnames(popCohort) <- SqlRender::camelCaseToSnakeCase(colnames(popCohort))
   DatabaseConnector::insertTable(connection = connection,

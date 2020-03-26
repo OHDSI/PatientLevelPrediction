@@ -4,8 +4,13 @@
 \alias{setRandomForest}
 \title{Create setting for random forest model with python (very fast)}
 \usage{
-setRandomForest(mtries = -1, ntrees = 500, maxDepth = c(4, 10, 17),
-  varImp = T, seed = NULL)
+setRandomForest(
+  mtries = -1,
+  ntrees = 500,
+  maxDepth = c(4, 10, 17),
+  varImp = T,
+  seed = NULL
+)
 }
 \arguments{
 \item{mtries}{The number of features to include in each tree (-1 defaults to square root of total features)}

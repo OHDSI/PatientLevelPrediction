@@ -4,15 +4,32 @@
 \alias{runPlpAnalyses}
 \title{Run a list of predictions}
 \usage{
-runPlpAnalyses(connectionDetails, cdmDatabaseSchema, cdmDatabaseName,
+runPlpAnalyses(
+  connectionDetails,
+  cdmDatabaseSchema,
+  cdmDatabaseName,
   oracleTempSchema = cdmDatabaseSchema,
-  cohortDatabaseSchema = cdmDatabaseSchema, cohortTable = "cohort",
-  outcomeDatabaseSchema = cdmDatabaseSchema, outcomeTable = "cohort",
-  cdmVersion = 5, outputFolder = "./PlpOutput", modelAnalysisList,
-  cohortIds, cohortNames, outcomeIds, outcomeNames, washoutPeriod = 0,
-  maxSampleSize = NULL, minCovariateFraction = 0, normalizeData = T,
-  testSplit = "person", testFraction = 0.25, splitSeed = NULL,
-  nfold = 3, verbosity = "INFO")
+  cohortDatabaseSchema = cdmDatabaseSchema,
+  cohortTable = "cohort",
+  outcomeDatabaseSchema = cdmDatabaseSchema,
+  outcomeTable = "cohort",
+  cdmVersion = 5,
+  outputFolder = "./PlpOutput",
+  modelAnalysisList,
+  cohortIds,
+  cohortNames,
+  outcomeIds,
+  outcomeNames,
+  washoutPeriod = 0,
+  maxSampleSize = NULL,
+  minCovariateFraction = 0,
+  normalizeData = T,
+  testSplit = "person",
+  testFraction = 0.25,
+  splitSeed = NULL,
+  nfold = 3,
+  verbosity = "INFO"
+)
 }
 \arguments{
 \item{connectionDetails}{An R object of type \code{connectionDetails} created using the

@@ -18,46 +18,41 @@ library("testthat")
 
 context("Prediction")
 
-# this no longer checks predictions as models don't exist and take too long to train during test
-# generate simulated data:
-set.seed(1234)
-data(plpDataSimulationProfile)
-sampleSize <- 2000
-plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-
-# create popualtion for outcome 2
-population <- createStudyPopulation(plpData,
-                                    outcomeId = 2,
-                                    firstExposureOnly = FALSE,
-                                    washoutPeriod = 0,
-                                    removeSubjectsWithPriorOutcome = FALSE,
-                                    priorOutcomeLookback = 99999,
-                                    requireTimeAtRisk = FALSE,
-                                    minTimeAtRisk=0,
-                                    riskWindowStart = 0,
-                                    addExposureDaysToStart = FALSE,
-                                    riskWindowEnd = 365,
-                                    addExposureDaysToEnd = FALSE
-                                    #,verbosity=INFO
-)
-
-index <- PatientLevelPrediction::randomSplitter(population, test=0.2, seed=1)
-population <- merge(population, index)
-colnames(population)[colnames(population)=='index'] <- 'indexes'
 
 test_that("prediction inputs", {
   #=====================================
   # check prediction
   #=====================================
-  testthat::expect_error(PatientLevelPrediction::predictPlp(model=NULL, population=population, 
+  testthat::expect_error(predictPlp(model=NULL, population=population, 
                                                             plpData=plpData, index=NULL))
-  testthat::expect_error(PatientLevelPrediction::predictPlp(model=list(), population=NULL, 
+  testthat::expect_error(predictPlp(model=list(), population=NULL, 
                                                             plpData=plpData, index=NULL))
-  testthat::expect_error(PatientLevelPrediction::predictPlp(model=list(), population=population, 
+  testthat::expect_error(predictPlp(model=list(), population=population, 
                                                             plpData=NULL, index=NULL))
   
 
   })
+
+
+test_that("prediction works", {
+  #=====================================
+  # check prediction
+  #=====================================
+  pred <- predictPlp(plpModel=plpResult$model, 
+                                             population=population, 
+                                             plpData=plpData )
+  pred <- pred[order(pred$rowId),]
+  plpResult$prediction <- plpResult$prediction[order(plpResult$prediction$rowId),]
+  testthat::expect_equal(nrow(pred), 
+                         nrow(plpResult$prediction))
+  testthat::expect_equal(pred$value, 
+                         plpResult$prediction$value)
+  
+  # add single person pred and compare with manual cal
+  
+  # add prediction of other models
+  
+})
 
 # predict.*
 test_that("predictProbabilities inputs", {

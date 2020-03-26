@@ -149,37 +149,3 @@ modelTypeToCyclopsModelType <- function(modelType, stratified=F) {
   }
 
 }
-
-#' Get the predictive model details
-#'
-#' @description
-#' \code{getModelDetails} shows the full model, so showing the betas of all variables included in the
-#' model, along with the variable names
-#'
-#' @param predictiveModel   An object of type \code{predictiveModel} as generated using he
-#'                          \code{\link{fitPlp}} function.
-#' @param plpData           An object of type \code{plpData} as generated using
-#'                          \code{\link{getPlpData}}.
-#'
-#' @details
-#' Shows the coefficients and names of the covariates with non-zero coefficients.
-#'
-#' @export
-getModelDetails <- function(predictiveModel, plpData) {
-  cfs <- predictiveModel$coefficients
-  
-  cfs <- cfs[cfs != 0]
-  attr(cfs, "names")[attr(cfs, "names") == "(Intercept)"] <- 0
-  cfs <- data.frame(coefficient = cfs, id = as.numeric(attr(cfs, "names")))
-  
-  cfs <- merge(ff::as.ffdf(cfs),
-               plpData$covariateRef,
-               by.x = "id",
-               by.y = "covariateId",
-               all.x = TRUE)
-  cfs <- ff::as.ram(cfs[, c("coefficient", "id", "covariateName")])
-  cfs$covariateName <- as.character(cfs$covariateName)
-  cfs <- cfs[order(-abs(cfs$coefficient)), ]
-  cfs$covariateName[cfs$id == 0] <- "Intercept"
-  return(cfs)
-}

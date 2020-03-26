@@ -33,17 +33,15 @@
 #' @export
 setCNNTorch <- function(nbfilters=c(16, 32), epochs=c(20, 50), seed=0, class_weight = 0, type = 'CNN'){
   
-  ensure_installed("PythonInR")
-  # test python is available and the required dependancies are there:
-  if ( !PythonInR::pyIsConnected() ){
-    python.test <- PythonInR::autodetectPython(pythonExePath = NULL)
-    
-    if(is.null(python.test$pythonExePath))
-      stop('You need to install python for this method - please see ...')
+  ParallelLogger::logWarn('This model has broken - please use setCNN() or setCNN2() instead ')
+  
+  # set seed
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
   }
   
   result <- list(model='fitCNNTorch', param=split(expand.grid(nbfilters=nbfilters,
-                                            epochs=epochs, seed=ifelse(is.null(seed),'NULL', seed), 
+                                            epochs=epochs, seed=seed[1], 
 											class_weight = class_weight, type = type),
 											1:(length(nbfilters)*length(epochs)) ),
                  					  name='CNN Torch')
@@ -66,53 +64,36 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
     population$indexes <- rep(1, nrow(population))
   }
   
-  # connect to python if not connected
-  if(!PythonInR::pyIsConnected()){ 
-    ParallelLogger::logTrace('Connecting to python')
-    PythonInR::pyConnect()
-  }
-  if ( !PythonInR::pyIsConnected() ){
-    stop('Python not connecting error')
-  }
-  
-  # then set numpy options
-  PythonInR::pyOptions("numpyAlias", "np")
-  PythonInR::pyOptions("useNumpy", TRUE)
-  PythonInR::pyImport("numpy", as='np')
   
   start <- Sys.time()
   
   population$rowIdPython <- population$rowId-1  #to account for python/r index difference #subjectId
-  #idx <- ffbase::ffmatch(x = population$subjectId, table = ff::as.ff(plpData$covariates$rowId))
-  #idx <- ffbase::ffwhich(idx, !is.na(idx))
-  #population <- population[idx, ]
+  pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
   
-  PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
+  result <- toSparseTorchPython(plpData,population, map=NULL, temporal=T)
   
-  # convert plpData in coo to python:
-  #covariates <- plpData$covariates
-  #covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
-  #PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
-  
-  result <- toSparseTorchPython(plpData,population,map=NULL, temporal=T)
-  #result<- toSparsePython(plpData,population,map=NULL, temporal=T)
-  # save the model to outLoc  TODO: make this an input or temp location?
-  outLoc <- file.path(getwd(),'python_models')
+  outLoc <- createTempModelLoc()
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))
 
-  outLoc <- file.path(getwd(),'python_models')
-  PythonInR::pySet("modelOutput",outLoc)
-
   # do cross validation to find hyperParameter
-  hyperParamSel <- lapply(param, function(x) do.call(trainCNNTorch, c(x, train=TRUE)  ))
- 
+  hyperParamSel <- lapply(param, function(x) do.call(trainCNNTorch, listAppend(x, 
+                                                                                list(plpData = result$data,
+                                                                                     population = pPopulation,
+                                                                                     train=TRUE,
+                                                                                     modelOutput=outLoc))  ))
+  
   hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
   
   #now train the final model and return coef
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
-  finalModel <- do.call(trainCNNTorch, c(param[[bestInd]], train=FALSE))
+  finalModel <- do.call(trainCNNTorch, listAppend(param[[bestInd]], 
+                                                  list(plpData = result$data,
+                                                       population = pPopulation,
+                                                       train=FALSE,
+                                                       modelOutput=outLoc)))
+  
 
   covariateRef <- ff::as.ram(plpData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
@@ -125,14 +106,14 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
   comp <- start-Sys.time()
   
   # train prediction
-  pred <- PythonInR::pyGet('prediction', simplify = F)
-  pred <-  apply(pred,1, unlist)
-  pred <- t(pred)
-  pred[,1] <- pred[,1] + 1 # converting from python to r index
+  pred <- as.matrix(finalModel)
+  pred[,1] <- pred[,1] + 1 # adding one to convert from python to r indexes
   colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
   pred <- as.data.frame(pred)
   attr(pred, "metaData") <- list(predictionType="binary")
-  prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
+  
+  pred$value <- 1-pred$value
+  prediction <- merge(population, pred[,c('rowId','value')], by='rowId')
   
   
   # return model location 
@@ -151,60 +132,45 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
                  predictionTrain = prediction
                  )
   class(result) <- 'plpModel'
-  attr(result, 'type') <- 'python'
+  attr(result, 'type') <- 'pythonReticulate'
   attr(result, 'predictionType') <- 'binary'
   
   return(result)
 }
 
 
-trainCNNTorch <- function(epochs=50, nbfilters = 16, seed=0, class_weight= 0, type = 'CNN', train=TRUE){
-  #PythonInR::pyExec(paste0("size = ",size))
-  PythonInR::pyExec(paste0("epochs = ",epochs))
-  PythonInR::pyExec(paste0("nbfilters = ",nbfilters))
-  PythonInR::pyExec(paste0("seed = ",seed))
-  #PythonInR::pyExec(paste0("time_window = ",time_window))
-  PythonInR::pyExec(paste0("class_weight = ",class_weight))
-  if (type == 'CNN'){
-    PythonInR::pyExec("model_type = 'CNN'")
-  } else if (type == 'CNN_LSTM'){
-    PythonInR::pyExec("model_type = 'CNN_LSTM'")
-  }
-  else if (type == 'CNN_MLF'){
-    PythonInR::pyExec("model_type = 'CNN_MLF'")
-  }
-  else if (type == 'CNN_MIX'){
-    PythonInR::pyExec("model_type = 'CNN_MIX'")
-  } else if (type == 'CNN_MULTI'){
-    PythonInR::pyExec("model_type = 'CNN_MULTI'")
-  } else if (type == 'ResNet'){
-    PythonInR::pyExec("model_type = 'ResNet'")
-  }
-  #PythonInR::pyExec(paste0("model_type = ",type))
-  if(train)
-    PythonInR::pyExec("train = True")
-  if(!train)
-    PythonInR::pyExec("train = False")
+trainCNNTorch <- function(plpData, population, epochs=50, nbfilters = 16, seed=0, class_weight= 0, type = 'CNN', train=TRUE, modelOutput, quiet=F){
+  
   python_dir <- system.file(package='PatientLevelPrediction','python')
-  PythonInR::pySet("python_dir", python_dir)
-  # then run standard python code #learningcurve.py #deepTorch.py
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','deepTorch.py'))
+  e <- environment()
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','deepTorchFunctions.py'), envir = e)
+  
+  
+  result <- train_deeptorch(population = population, 
+                            plpData = plpData, 
+                            epochs = as.integer(epochs),
+                            nbfilters = as.integer(nbfilters),
+                            seed = as.integer(seed), 
+                            class_weight = as.double(class_weight),
+                            model_type = as.character(type),
+                            train = train,
+                            modelOutput = modelOutput,
+                            quiet = quiet
+                            )
   
   if(train){
     # then get the prediction 
-    pred <- PythonInR::pyGet('prediction', simplify = FALSE)
-    pred <-  apply(pred,1, unlist)
-    pred <- t(pred)
+    pred <- as.matrix(result)
     colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
     
     pred$value <- 1-pred$value
-    auc <- PatientLevelPrediction::computeAuc(pred)
+    auc <- computeAuc(pred)
     writeLines(paste0('Model obtained CV AUC of ', auc))
     return(auc)
   }
   
-  return(T)
+  return(result)
   
 }

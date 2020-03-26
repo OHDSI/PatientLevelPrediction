@@ -5,8 +5,7 @@
 \title{Split test/train data by time and then partitions training set into random folds stratified by
 class}
 \usage{
-timeSplitter(population, test = 0.3, train = NULL, nfold = 3,
-  seed = NULL)
+timeSplitter(population, test = 0.3, train = NULL, nfold = 3, seed = NULL)
 }
 \arguments{
 \item{population}{An object created using createStudyPopulation().}

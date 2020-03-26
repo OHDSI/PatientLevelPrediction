@@ -364,7 +364,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
   # log the end time:
   endTime <- Sys.time()
-  TotalExecutionElapsedTime <- endTime-ExecutionDateTime
+  TotalExecutionElapsedTime <- difftime(endTime, ExecutionDateTime, units='mins')
   
   # 1) input settings:
   inputSetting <- list(dataExtrractionSettings=plpData$metaData$call,
@@ -583,6 +583,11 @@ covariateSummary <- function(plpData, population){
   prevs[is.na(prevs)] <- 0
   
   prevs <- merge(ff::as.ram(plpData$covariateRef[,c('covariateName','covariateId')]), prevs, by='covariateId')
+  
+  # adding CovariateStandardizedMeanDifference
+  prevs$StandardizedMeanDiff <- (prevs$CovariateMeanWithOutcome - prevs$CovariateMeanWithNoOutcome)/sqrt(prevs$CovariateStDevWithNoOutcome^2 + prevs$CovariateStDevWithOutcome^2 )
+  prevs$StandardizedMeanDiff[is.na(prevs$StandardizedMeanDiff)] <- 0 
+  prevs$StandardizedMeanDiff[is.infinite(prevs$StandardizedMeanDiff)] <- 0 
   
   return(prevs)
   

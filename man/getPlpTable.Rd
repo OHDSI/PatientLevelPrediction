@@ -4,9 +4,15 @@
 \alias{getPlpTable}
 \title{Create a dataframe with the summary details of the population cohort for publications}
 \usage{
-getPlpTable(cdmDatabaseSchema, oracleTempSchema, covariateSettings,
-  longTermStartDays = -365, population, connectionDetails,
-  cohortTable = "#temp_person")
+getPlpTable(
+  cdmDatabaseSchema,
+  oracleTempSchema,
+  covariateSettings,
+  longTermStartDays = -365,
+  population,
+  connectionDetails,
+  cohortTable = "#temp_person"
+)
 }
 \arguments{
 \item{cdmDatabaseSchema}{The schema containing the OMOP CDM data}

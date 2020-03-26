@@ -4,8 +4,7 @@
 \alias{personSplitter}
 \title{Split data into random subsets stratified by class}
 \usage{
-personSplitter(population, test = 0.3, train = NULL, nfold = 3,
-  seed = NULL)
+personSplitter(population, test = 0.3, train = NULL, nfold = 3, seed = NULL)
 }
 \arguments{
 \item{population}{An object created using createStudyPopulation().}

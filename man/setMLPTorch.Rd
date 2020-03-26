@@ -4,9 +4,16 @@
 \alias{setMLPTorch}
 \title{Create setting for neural network model with python}
 \usage{
-setMLPTorch(size = c(500, 1000), w_decay = c(5e-04, 0.005), epochs = c(20,
-  50), seed = 0, class_weight = 0, mlp_type = "MLP",
-  autoencoder = FALSE, vae = FALSE)
+setMLPTorch(
+  size = c(500, 1000),
+  w_decay = c(5e-04, 0.005),
+  epochs = c(20, 50),
+  seed = 0,
+  class_weight = 0,
+  mlp_type = "MLP",
+  autoencoder = FALSE,
+  vae = FALSE
+)
 }
 \arguments{
 \item{size}{The number of hidden nodes}

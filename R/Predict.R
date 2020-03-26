@@ -112,7 +112,8 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   
   ParallelLogger::logInfo('Mapping covariates...')
   if(!is.null(plpData$timeRef)){
-    pdata <- toSparseTorchPython2(plpData,population, map=plpModel$covariateMap, temporal=T)
+    pdata <- toSparseTorchPython(plpData,population, map=plpModel$covariateMap, temporal=T)
+    pdata <- pdata$data
     fun_predict <- python_predict_temporal
   } else {  
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
@@ -165,7 +166,8 @@ predict.pythonAuto <- function(plpModel, population, plpData){
   
   ParallelLogger::logInfo('Mapping covariates...')
   if(!is.null(plpData$timeRef)){
-    pdata <- toSparseTorchPython2(plpData,population, map=plpModel$covariateMap, temporal=T)
+    pdata <- toSparseTorchPython(plpData,population, map=plpModel$covariateMap, temporal=T)
+    pdata <- pdata$data
   } else {  
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
@@ -214,84 +216,7 @@ predict.pythonAuto <- function(plpModel, population, plpData){
   return(prediction)
 }
 
-predict.pythonOld <- function(plpModel, population, plpData){
-  
-  # require pythonInR
-  
-  # connect to python if not connected
-  initiatePython()
-  
-  ParallelLogger::logInfo('Setting inputs...')
-  PythonInR::pySet("dense", plpModel$dense)
-  PythonInR::pySet("model_loc", plpModel$model)
-  
-  ParallelLogger::logInfo('Mapping covariates...')
-  #load python model mapping.txt
-  # create missing/mapping using plpData$covariateRef
-  if (plpModel$modelSettings$model == 'fitCNNTorch' | plpModel$modelSettings$model == 'fitRNNTorch'){
-    #covariates <- plpData$covariates
-    #covariates$rowIdPython <- covariates$rowId -1 #to account for python/r index difference
-    #PythonInR::pySet('covariates', as.matrix(covariates[,c('rowIdPython','covariateId','timeId', 'covariateValue')]))
-    result<- toSparseTorchPython(plpData,population,map=plpModel$covariateMap, temporal=T)
-    PythonInR::pySet("modeltype", 'temporal')
-    PythonInR::pySet("autoencoder", 0)
-    python_dir <- system.file(package='PatientLevelPrediction','python')
-    PythonInR::pySet("python_dir", python_dir)
-  } else{
-    newData <- toSparsePython(plpData, population, map=plpModel$covariateMap)
-    PythonInR::pySet("modeltype", 'normal')
-    PythonInR::pySet("autoencoder", 0)
-    if (plpModel$modelSettings$model == 'fitLRTorch' | plpModel$modelSettings$model == 'fitMLPTorch'){
-      python_dir <- system.file(package='PatientLevelPrediction','python')
-      PythonInR::pySet("python_dir", python_dir)      
-      if (plpModel$modelSettings$modelParameters$autoencoder | plpModel$modelSettings$modelParameters$vae){
-        PythonInR::pySet("autoencoder", 1)
-      }
-    }
-    included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
-    included <- newData$map$newIds[newData$map$oldIds%in%included]-1 # python starts at 0, r at 1
-    PythonInR::pySet("included", as.matrix(sort(included)))
-  } 
-  
-  # save population
-  if('indexes'%in%colnames(population)){
-    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-    PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount','indexes')]) )
-    
-  } else {
-    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-    PythonInR::pySet('population', as.matrix(population[,c('rowIdPython','outcomeCount')]) )
-  }
-  
-  # run the python predict code:
-  ParallelLogger::logInfo('Executing prediction...')
-  PythonInR::pyExecfile(system.file(package='PatientLevelPrediction','python','python_predict.py'))
-  
-  #get the prediction from python and reformat:
-  ParallelLogger::logInfo('Returning results...')
-  prediction <- PythonInR::pyGet('prediction', simplify = F)
-  prediction <-  apply(prediction,1, unlist)
-  prediction <- t(prediction)
-  prediction <- as.data.frame(prediction)
-  attr(prediction, "metaData") <- list(predictionType="binary")
-  if(ncol(prediction)==4){
-    colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
-  } else {
-    colnames(prediction) <- c('rowId','outcomeCount', 'value')
-  }
-  
-  # add 1 to rowId from python:
-  prediction$rowId <- prediction$rowId+1
-  
-  # add subjectId and date:
-  prediction <- merge(prediction,
-                      population[,c('rowId','subjectId','cohortStartDate')], 
-                      by='rowId')
-  
-  # TODO delete results
-  
-  return(prediction)
-}
+
 
 predict.knn <- function(plpData, population, plpModel, ...){
   covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
@@ -332,10 +257,10 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     prediction$value <- 0
     for(batch in batches){
       pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,,]))
-      if(is.null(dim(pred))){
-        prediction$value[batch] <- pred
+      if(is.null(dim(as.double(pred)))){
+        prediction$value[batch] <- as.double(pred)
       } else{
-        prediction$value[batch] <- pred[,2]
+        prediction$value[batch] <- as.double(pred[,2])
       }
     }
     
@@ -352,7 +277,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     prediction$value <- 0
     for(batch in batches){
       pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,]))
-      prediction$value[batch] <- pred
+      prediction$value[batch] <- as.double(pred[,2])
     }
     
     prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
@@ -560,10 +485,10 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
       
       pred <- keras::predict_on_batch(plpModel$model, dat)
-      if(is.null(dim(pred))){
-        prediction$value[batch] <- pred
+      if(is.null(dim(as.double(pred)))){
+        prediction$value[batch] <- as.double(pred)
       } else{
-        prediction$value[batch] <- pred[,2]
+        prediction$value[batch] <- as.double(pred[,2])
       }
     }
     
@@ -584,7 +509,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
       
       pred <- keras::predict_on_batch(plpModel$model, dat)
-      prediction$value[batch] <- pred
+      prediction$value[batch] <- as.double(pred)
     }
     
     prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue

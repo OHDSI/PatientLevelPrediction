@@ -20,36 +20,36 @@ context("Data splitting")
 test_that("Data stratified splitting", {
 
   # error message checks
-  population1 <- data.frame(rowId=1:20, outcomeCount=c(1,1,1,1,rep(0,16))) 
-  expect_error(randomSplitter(population1, test=0.3, nfold=3))
+  DSpopulation1 <- data.frame(rowId=1:20, outcomeCount=c(1,1,1,1,rep(0,16))) 
+  expect_error(randomSplitter(DSpopulation1, test=0.3, nfold=3))
   
-  population2 <- data.frame(rowId=1:200, outcomeCount=c(rep(1,42),rep(0,158)))
-  expect_error(randomSplitter(population2, test=0.3, nfold=-1))
-  expect_error(randomSplitter(population2, test=1.5, nfold=5))
-  expect_error(randomSplitter(population2, test=-1, nfold=5))
+  DSpopulation2 <- data.frame(rowId=1:200, outcomeCount=c(rep(1,42),rep(0,158)))
+  expect_error(randomSplitter(DSpopulation2, test=0.3, nfold=-1))
+  expect_error(randomSplitter(DSpopulation2, test=1.5, nfold=5))
+  expect_error(randomSplitter(DSpopulation2, test=-1, nfold=5))
   
   # fold creation check 1 (fixed)
-  test <- randomSplitter(population2, test=0.2, nfold=4)
-  test <- merge(population2, test)
+  test <- randomSplitter(DSpopulation2, test=0.2, nfold=4)
+  test <- merge(DSpopulation2, test)
   test <- table(test$outcomeCount, test$index)
   test.returned <- paste(test, collapse='-')
-  test.expected <- paste(matrix(c(32,32,32,31,31,8,9,9,8,8), ncol=5, byrow=T),collapse='-')
+  test.expected <- paste(matrix(c(31,32,32,32,31,8,9,9,8,8), ncol=5, byrow=T),collapse='-')
   expect_identical(test.returned, test.expected)
   
   # fold creation check 2 (sum)
   size <- 500
-  population3 <- data.frame(rowId=1:size, outcomeCount=c(rep(1,floor(size/3)),rep(0,size-floor(size/3)))) 
-  test <- randomSplitter(population3, test=0.2, nfold=4) 
-  test <- merge(population3, test)
+  DSpopulation3 <- data.frame(rowId=1:size, outcomeCount=c(rep(1,floor(size/3)),rep(0,size-floor(size/3)))) 
+  test <- randomSplitter(DSpopulation3, test=0.2, nfold=4) 
+  test <- merge(DSpopulation3, test)
   test <- table(test$outcomeCount, test$index)
   expect_that(sum(test), equals(size))
   
   # test the training fraction parameter for learning curves
   size = 500
-  population4 <- data.frame(rowId=1:size,
+  DSpopulation4 <- data.frame(rowId=1:size,
                             outcomeCount=c(rep(1,floor(size/3)),
                                            rep(0,size-floor(size/3)))) 
-  test <- randomSplitter(population4, test = 0.2, train = 0.4, nfold = 4)
+  test <- randomSplitter(DSpopulation4, test = 0.2, train = 0.4, nfold = 4)
 
   tolerance = 5
   excludedPatients = 200
@@ -71,28 +71,28 @@ test_that("Data stratified splitting", {
 test_that("Data splitting by time", {
   
   # error message checks
-  population1 <- data.frame(rowId=1:200, outcomeCount=c(rep(1,42),rep(0,158)), 
+  DSpopulation1 <- data.frame(rowId=1:200, outcomeCount=c(rep(1,42),rep(0,158)), 
                             cohortStartDate = as.Date("2016-01-01") + c(1:200))
-  expect_error(timeSplitter(population1, test=0.3, nfold=-1))
-  expect_error(timeSplitter(population1, test=1.5, nfold=5))
-  expect_error(timeSplitter(population1, test=-1, nfold=5))
+  expect_error(timeSplitter(DSpopulation1, test=0.3, nfold=-1))
+  expect_error(timeSplitter(DSpopulation1, test=1.5, nfold=5))
+  expect_error(timeSplitter(DSpopulation1, test=-1, nfold=5))
   
   # fold creation check (sum)
   size <- 500
   set.seed(1)
-  population2 <- data.frame(rowId=1:size, outcomeCount=sample(0:1,size,replace=TRUE),cohortStartDate = as.Date("2010-01-01") + c(1:size))
-  test <- timeSplitter(population2, test=0.2, nfold=4) 
-  test <- merge(population2, test)
+  DSpopulation2 <- data.frame(rowId=1:size, outcomeCount=sample(0:1,size,replace=TRUE),cohortStartDate = as.Date("2010-01-01") + c(1:size))
+  test <- timeSplitter(DSpopulation2, test=0.2, nfold=4) 
+  test <- merge(DSpopulation2, test)
   test <- table(test$outcomeCount, test$index)
   expect_that(sum(test), equals(size))
   
   # test the training fraction parameter for learning curves
   size <- 500
   set.seed(1)
-  population3 <- data.frame(rowId=1:size,
+  DSpopulation3 <- data.frame(rowId=1:size,
                             outcomeCount=sample(0:1,size,replace=TRUE),
                             cohortStartDate = as.Date("2010-01-01") + c(1:size))
-  test <- timeSplitter(population3, test = 0.2, train = 0.4, nfold = 4)
+  test <- timeSplitter(DSpopulation3, test = 0.2, train = 0.4, nfold = 4)
   
   tolerance = 5
   excludedPatients = 196
@@ -116,30 +116,30 @@ test_that("Data splitting by time", {
 
 test_that("Data splitting by subject", {
 # error message checks
-population1 <- data.frame(rowId=1:20, subjectId = 1:20, outcomeCount=c(1,1,1,1,rep(0,16))) 
-expect_error(subjectSplitter(population1, test=0.3, nfold=3))
+  DSpopulation1 <- data.frame(rowId=1:20, subjectId = 1:20, outcomeCount=c(1,1,1,1,rep(0,16))) 
+  expect_error(subjectSplitter(DSpopulation1, test=0.3, nfold=3))
 
-population2 <- data.frame(rowId=1:200,subjectId = 1:200, outcomeCount=c(rep(1,42),rep(0,158)))
-expect_error(subjectSplitter(population2, test=0.3, nfold=-1))
-expect_error(subjectSplitter(population2, test=1.5, nfold=5))
-expect_error(subjectSplitter(population2, test=-1, nfold=5))
+  DSpopulation2 <- data.frame(rowId=1:200,subjectId = 1:200, outcomeCount=c(rep(1,42),rep(0,158)))
+  expect_error(subjectSplitter(DSpopulation2, test=0.3, nfold=-1))
+  expect_error(subjectSplitter(DSpopulation2, test=1.5, nfold=5))
+  expect_error(subjectSplitter(DSpopulation2, test=-1, nfold=5))
 
-test <- subjectSplitter(population2, test=0.2, nfold=4)
-test <- merge(population2, test)
-test <- table(test$outcomeCount, test$index)
-test.returned <- paste(test, collapse='-')
-test.expected <- paste(matrix(c(32,32,32,31,31,8,9,9,8,8), ncol=5, byrow=T),collapse='-')
-expect_identical(test.returned, test.expected)
+  test <- subjectSplitter(DSpopulation2, test=0.2, nfold=4)
+  test <- merge(DSpopulation2, test)
+  test <- table(test$outcomeCount, test$index)
+  test.returned <- paste(test, collapse='-')
+  test.expected <- paste(matrix(c(32,32,32,31,31,8,9,9,8,8), ncol=5, byrow=T),collapse='-')
+  expect_identical(test.returned, test.expected)
 
 # test that people are not in multiple folds
-population3 <- data.frame(rowId=1:200,subjectId = rep(1:50,4), outcomeCount=c(rep(1,42),rep(0,158)))
-test <- subjectSplitter(population3, test=0.2, nfold=3)
-test <- merge(population3, test)
+  DSpopulation3 <- data.frame(rowId=1:200,subjectId = rep(1:50,4), outcomeCount=c(rep(1,42),rep(0,158)))
+  test <- subjectSplitter(DSpopulation3, test=0.2, nfold=3)
+  test <- merge(DSpopulation3, test)
 
-expect_equal(unique(table(test$subjectId[test$index==-1])), 4)
-expect_equal(unique(table(test$subjectId[test$index==2])), 4)
-expect_equal(unique(table(test$subjectId[test$index==3])), 4)
-expect_equal(unique(table(test$subjectId[test$index==1])), 4)
+  expect_equal(unique(table(test$subjectId[test$index==-1])), 4)
+  expect_equal(unique(table(test$subjectId[test$index==2])), 4)
+  expect_equal(unique(table(test$subjectId[test$index==3])), 4)
+  expect_equal(unique(table(test$subjectId[test$index==1])), 4)
 
 
 })

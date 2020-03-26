@@ -4,8 +4,13 @@
 \alias{toSparseTorchPython}
 \title{Convert the plpData in COO format into a sparse python matrix using torch.sparse}
 \usage{
-toSparseTorchPython(plpData, population, map = NULL, temporal = F,
-  pythonExePath = NULL)
+toSparseTorchPython(
+  plpData,
+  population,
+  map = NULL,
+  temporal = F,
+  pythonExePath = NULL
+)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} with covariate in coo format - the patient level prediction

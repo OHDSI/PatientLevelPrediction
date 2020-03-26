@@ -4,9 +4,18 @@
 \alias{setCovNN}
 \title{Create setting for multi-resolution CovNN model (stucture based on https://arxiv.org/pdf/1608.00647.pdf CNN1)}
 \usage{
-setCovNN(batchSize = 1000, outcomeWeight = 1, lr = 1e-05, decay = 1e-06,
-  dropout = 0, epochs = 10, filters = 3, kernelSize = 10,
-  loss = "binary_crossentropy", seed = NULL)
+setCovNN(
+  batchSize = 1000,
+  outcomeWeight = 1,
+  lr = 1e-05,
+  decay = 1e-06,
+  dropout = 0,
+  epochs = 10,
+  filters = 3,
+  kernelSize = 10,
+  loss = "binary_crossentropy",
+  seed = NULL
+)
 }
 \arguments{
 \item{batchSize}{The number of samples to used in each batch during model training}

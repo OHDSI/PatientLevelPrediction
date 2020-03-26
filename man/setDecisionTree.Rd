@@ -4,9 +4,15 @@
 \alias{setDecisionTree}
 \title{Create setting for DecisionTree with python}
 \usage{
-setDecisionTree(maxDepth = 10, minSamplesSplit = 2, minSamplesLeaf = 10,
-  minImpurityDecrease = 10^-7, seed = NULL, classWeight = "None",
-  plot = F)
+setDecisionTree(
+  maxDepth = 10,
+  minSamplesSplit = 2,
+  minSamplesLeaf = 10,
+  minImpurityDecrease = 10^-7,
+  seed = NULL,
+  classWeight = "None",
+  plot = F
+)
 }
 \arguments{
 \item{maxDepth}{The maximum depth of the tree}

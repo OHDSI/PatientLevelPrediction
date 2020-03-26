@@ -38,14 +38,10 @@
 #' @param priorOutcomeLookback            How many days should we look back when identifying prior outcomes?
 #' @param requireTimeAtRisk      Should subject without time at risk be removed?
 #' @param minTimeAtRisk          The minimum number of days at risk required to be included
-#' @param riskWindowStart        The start of the risk window (in days) relative to the index date (+
-#'                               days of exposure if the \code{addExposureDaysToStart} parameter is
-#'                               specified).
-#' @param addExposureDaysToStart   Add the length of exposure the start of the risk window?
-#' @param riskWindowEnd          The end of the risk window (in days) relative to the index data (+
-#'                               days of exposure if the \code{addExposureDaysToEnd} parameter is
-#'                               specified).
-#' @param addExposureDaysToEnd   Add the length of exposure the risk window?
+#' @param riskWindowStart        The start of the risk window (in days) relative to the \code{startAnchor}.
+#' @param startAnchor	           The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".
+#' @param riskWindowEnd          The end of the risk window (in days) relative to the \code{endAnchor} parameter
+#' @param endAnchor              The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".
 #' @param verbosity              Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 #'                               \itemize{
 #'                               \item{DEBUG}{Highest verbosity showing all debug statements}
@@ -55,6 +51,8 @@
 #'                               \item{ERROR}{Show error messages}
 #'                               \item{FATAL}{Be silent except for fatal errors} 
 #'                               }
+#' @param addExposureDaysToStart DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.
+#' @param addExposureDaysToEnd   DEPRECATED: Add the length of exposure the risk window? Use \code{endAnchor} instead.
 #' @param ...                   Other inputs
 #'
 #' @return
@@ -78,14 +76,48 @@ createStudyPopulation <- function(plpData,
                                   washoutPeriod = 0,
                                   removeSubjectsWithPriorOutcome = TRUE,
                                   priorOutcomeLookback = 99999,
-                                  requireTimeAtRisk = T,
+                                  requireTimeAtRisk = F,
                                   minTimeAtRisk=365, # outcome nonoutcome
                                   riskWindowStart = 0,
-                                  addExposureDaysToStart = FALSE,
+                                  startAnchor = "cohort start",
                                   riskWindowEnd = 365,
-                                  addExposureDaysToEnd = F,
+                                  endAnchor = "cohort start",
                                   verbosity = "INFO",
+                                  addExposureDaysToStart,
+                                  addExposureDaysToEnd,
                                   ...) {
+  
+  
+  useStartAnchor <- F
+  useEndAnchor <- F
+  
+  if(missing(addExposureDaysToStart)){
+    if(is.null(startAnchor)){
+      stop('Need to specify startAnchor') 
+    } else {
+      if(!startAnchor%in%c('cohort start', 'cohort end')){
+        stop('invalid startAnchor')
+      }
+      useStartAnchor = T
+      addExposureDaysToStart <- ifelse(startAnchor == "cohort end", T, F)
+    }
+  } else {
+    warning('addExposureDaysToStart is depreciated - please use startAnchor instead')
+  }
+  
+  if(missing(addExposureDaysToEnd)){
+    if(is.null(endAnchor)){
+      stop('Need to specify endAnchor') 
+    } else {
+      if(!endAnchor%in%c('cohort start', 'cohort end')){
+        stop('invalid endAnchor')
+      }
+      useEndAnchor = T
+      addExposureDaysToEnd <- ifelse(endAnchor == "cohort end", T, F)
+    }
+  } else {
+    warning('addExposureDaysToEnd is depreciated - please use endAnchor instead')
+  }
   
   if(missing(verbosity)){
     verbosity <- "INFO"
@@ -130,11 +162,11 @@ createStudyPopulation <- function(plpData,
   checkHigherEqual(minTimeAtRisk,0)
   ParallelLogger::logDebug(paste0('riskWindowStart: ', riskWindowStart))
   checkHigherEqual(riskWindowStart,0)
-  ParallelLogger::logDebug(paste0('addExposureDaysToStart: ', addExposureDaysToStart))
+  ParallelLogger::logDebug(paste0('startAnchor: ', addExposureDaysToStart))
   checkBoolean(addExposureDaysToStart)
   ParallelLogger::logDebug(paste0('riskWindowEnd: ', riskWindowEnd))
   checkHigherEqual(riskWindowEnd,0)
-  ParallelLogger::logDebug(paste0('addExposureDaysToEnd: ', addExposureDaysToEnd))
+  ParallelLogger::logDebug(paste0('endAnchor: ', addExposureDaysToEnd))
   checkBoolean(addExposureDaysToEnd)
   
   if(requireTimeAtRisk){
@@ -162,8 +194,10 @@ createStudyPopulation <- function(plpData,
   metaData$minTimeAtRisk=minTimeAtRisk
   metaData$riskWindowStart = riskWindowStart
   metaData$addExposureDaysToStart = addExposureDaysToStart
+  metaData$startAnchor = ifelse(useStartAnchor, startAnchor, ifelse(addExposureDaysToStart,'cohort end','cohort start'))
   metaData$riskWindowEnd = riskWindowEnd
   metaData$addExposureDaysToEnd = addExposureDaysToEnd
+  metaData$endAnchor = ifelse(useEndAnchor, endAnchor, ifelse(addExposureDaysToEnd,'cohort end','cohort start'))
   
   # get attriction for outcomeId
   if(!is.null(metaData$attrition$uniquePeople)){

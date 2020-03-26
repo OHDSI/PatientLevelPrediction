@@ -4,12 +4,23 @@
 \alias{externalValidatePlp}
 \title{externalValidatePlp - Validate a model on new databases}
 \usage{
-externalValidatePlp(plpResult, connectionDetails, validationSchemaTarget,
-  validationSchemaOutcome, validationSchemaCdm, databaseNames,
-  validationTableTarget = "cohort", validationTableOutcome = "cohort",
-  validationIdTarget = NULL, validationIdOutcome = NULL,
-  oracleTempSchema = NULL, verbosity = "INFO", keepPrediction = F,
-  sampleSize = NULL, outputFolder)
+externalValidatePlp(
+  plpResult,
+  connectionDetails,
+  validationSchemaTarget,
+  validationSchemaOutcome,
+  validationSchemaCdm,
+  databaseNames,
+  validationTableTarget = "cohort",
+  validationTableOutcome = "cohort",
+  validationIdTarget = NULL,
+  validationIdOutcome = NULL,
+  oracleTempSchema = NULL,
+  verbosity = "INFO",
+  keepPrediction = F,
+  sampleSize = NULL,
+  outputFolder
+)
 }
 \arguments{
 \item{plpResult}{The object returned by runPlp() containing the trained model}

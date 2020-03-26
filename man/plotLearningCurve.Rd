@@ -4,9 +4,14 @@
 \alias{plotLearningCurve}
 \title{plotLearningCurve}
 \usage{
-plotLearningCurve(learningCurve, metric = "AUROC",
-  abscissa = "observations", plotTitle = "Learning Curve",
-  plotSubtitle = NULL, fileName = NULL)
+plotLearningCurve(
+  learningCurve,
+  metric = "AUROC",
+  abscissa = "observations",
+  plotTitle = "Learning Curve",
+  plotSubtitle = NULL,
+  fileName = NULL
+)
 }
 \arguments{
 \item{learningCurve}{An object returned by \code{\link{createLearningCurve}}

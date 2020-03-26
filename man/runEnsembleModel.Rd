@@ -4,11 +4,24 @@
 \alias{runEnsembleModel}
 \title{ensemble - Create an ensembling model using different models}
 \usage{
-runEnsembleModel(population, dataList, modelList, testSplit = "time",
-  testFraction = 0.2, splitSeed = NULL, nfold = 3, saveDirectory = NULL,
-  saveEnsemble = F, savePlpData = F, savePlpResult = F,
-  savePlpPlots = F, saveEvaluation = F, analysisId = NULL,
-  verbosity = "INFO", ensembleStrategy = "mean")
+runEnsembleModel(
+  population,
+  dataList,
+  modelList,
+  testSplit = "time",
+  testFraction = 0.2,
+  splitSeed = NULL,
+  nfold = 3,
+  saveDirectory = NULL,
+  saveEnsemble = F,
+  savePlpData = F,
+  savePlpResult = F,
+  savePlpPlots = F,
+  saveEvaluation = F,
+  analysisId = NULL,
+  verbosity = "INFO",
+  ensembleStrategy = "mean"
+)
 }
 \arguments{
 \item{population}{The population created using createStudyPopulation() who will be used to

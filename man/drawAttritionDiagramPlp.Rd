@@ -4,8 +4,12 @@
 \alias{drawAttritionDiagramPlp}
 \title{Draw the attrition diagram}
 \usage{
-drawAttritionDiagramPlp(attrition, targetLabel = "Target Population",
-  outcomeLabel = "Outcome Count", fileName = NULL)
+drawAttritionDiagramPlp(
+  attrition,
+  targetLabel = "Target Population",
+  outcomeLabel = "Outcome Count",
+  fileName = NULL
+)
 }
 \arguments{
 \item{attrition}{The table of attrition details return from the population attr(popualtion, 'metaData')$attrition}

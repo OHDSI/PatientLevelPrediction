@@ -4,9 +4,15 @@
 \alias{setGradientBoostingMachine}
 \title{Create setting for gradient boosting machine model using gbm_xgboost implementation}
 \usage{
-setGradientBoostingMachine(ntrees = c(100, 1000), nthread = 20,
-  earlyStopRound = 25, maxDepth = c(4, 6, 17), minRows = 2,
-  learnRate = c(0.005, 0.01, 0.1), seed = NULL)
+setGradientBoostingMachine(
+  ntrees = c(100, 1000),
+  nthread = 20,
+  earlyStopRound = 25,
+  maxDepth = c(4, 6, 17),
+  minRows = 2,
+  learnRate = c(0.005, 0.01, 0.1),
+  seed = NULL
+)
 }
 \arguments{
 \item{ntrees}{The number of trees to build}

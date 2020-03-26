@@ -93,7 +93,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   # add 1 to rowId from python:
   pred$rowId <- pred$rowId+1
   pred$value <- 1-pred$value
-  auc <- PatientLevelPrediction::computeAuc(pred)
+  auc <- computeAuc(pred)
   writeLines(paste0('Model obtained CV AUC of ', auc))
   
   # get the univeriate selected features (nb requires dense so need feat sel)

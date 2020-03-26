@@ -4,11 +4,28 @@
 \alias{createLearningCurve}
 \title{createLearningCurve}
 \usage{
-createLearningCurve(population, plpData, modelSettings, testSplit = "person",
-  testFraction = 0.25, trainFractions = c(0.25, 0.5, 0.75),
-  splitSeed = NULL, nfold = 3, indexes = NULL, saveDir = NULL,
-  saveModel = TRUE, verbosity = "TRACE", clearffTemp = FALSE,
-  minCovariateFraction = 0.001)
+createLearningCurve(
+  population,
+  plpData,
+  modelSettings,
+  testSplit = "person",
+  testFraction = 0.25,
+  trainFractions = c(0.25, 0.5, 0.75),
+  splitSeed = NULL,
+  nfold = 3,
+  indexes = NULL,
+  verbosity = "TRACE",
+  clearffTemp = FALSE,
+  minCovariateFraction = 0.001,
+  normalizeData = T,
+  saveDirectory = getwd(),
+  savePlpData = F,
+  savePlpResult = F,
+  savePlpPlots = F,
+  saveEvaluation = F,
+  timeStamp = FALSE,
+  analysisId = NULL
+)
 }
 \arguments{
 \item{population}{The population created using \code{createStudyPopulation()}
@@ -51,12 +68,6 @@ using a 'person' type split}
 index value of -1 means in the test set, and positive integer represents
 the cross validation fold (default is \code{NULL}).}
 
-\item{saveDir}{The path to the directory where the models will be saved
-(if \code{NULL}, uses working directory).}
-
-\item{saveModel}{Logical indicating whether to save the model once it has
-been trained (default is \code{TRUE}).}
-
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or
 higher in priority than the logger threshold, a message will print. The 
 levels are:
@@ -74,6 +85,22 @@ This can be useful, if the fitted models are large.}
 
 \item{minCovariateFraction}{Minimum covariate prevalence in population to
 avoid removal during preprocssing.}
+
+\item{normalizeData}{Whether to normalise the data}
+
+\item{saveDirectory}{Location to save log and results}
+
+\item{savePlpData}{Whether to save the plpData}
+
+\item{savePlpResult}{Whether to save the plpResult}
+
+\item{savePlpPlots}{Whether to save the plp plots}
+
+\item{saveEvaluation}{Whether to save the plp performance csv files}
+
+\item{timeStamp}{Include a timestamp in the log}
+
+\item{analysisId}{The analysis unique identifier}
 }
 \value{
 A learning curve object containing the various performance measures

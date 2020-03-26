@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 3.0.10
-Date: 2020-01-07
+Version: 3.0.15
+Date: 2020-03-21
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -22,8 +22,8 @@ URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/Pa
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 Depends:
     R (>= 3.3.0),
-    DatabaseConnector (>= 1.11.4),
-    FeatureExtraction (>= 2.0.0),
+    DatabaseConnector (>= 2.2.0),
+    FeatureExtraction (>= 2.2.3),
     Cyclops (>= 1.2.2)
 Imports:
     ggplot2,
@@ -59,7 +59,9 @@ Imports:
     reticulate (> 1.6),
     tools,
     plotly,
-    zeallot
+    zeallot,
+    htmltools,
+    tensorflow
 Suggests:
     shiny,
     DT,
@@ -80,8 +82,11 @@ Suggests:
     aws.s3,
     devtools,
     rms,
-    PythonInR,
     survminer
+Remotes:
+    ohdsi/FeatureExtraction,
+    ohdsi/BigKnn
 LinkingTo: Rcpp
 NeedsCompilation: yes
-RoxygenNote: 6.0.1
+RoxygenNote: 7.1.0
+Encoding: UTF-8

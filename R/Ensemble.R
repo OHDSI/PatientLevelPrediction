@@ -115,20 +115,20 @@ runEnsembleModel <- function(population,
   level1 <- list()
   length(level1) <- length(modelList)
   for (Index in seq_along(modelList)) {
-    results <- PatientLevelPrediction::runPlp(population,
-                                              dataList[[Index]],
-                                              modelSettings = modelList[[Index]],
-                                              testSplit = testSplit,
-                                              testFraction = testFraction+stackerFraction,
-                                              #trainFraction = trainFraction,
-                                              nfold = nfold,
-                                              saveDirectory=file.path(saveDirectory,Index), 
-                                              savePlpData=savePlpData, 
-                                              savePlpResult=savePlpResult, 
-                                              savePlpPlots = savePlpPlots, 
-                                              saveEvaluation = saveEvaluation,
-                                              splitSeed = splitSeed,
-                                              analysisId = analysisId)
+    results <- runPlp(population,
+                      dataList[[Index]],
+                      modelSettings = modelList[[Index]],
+                      testSplit = testSplit,
+                      testFraction = testFraction+stackerFraction,
+                      #trainFraction = trainFraction,
+                      nfold = nfold,
+                      saveDirectory=file.path(saveDirectory,analysisId), 
+                      savePlpData=savePlpData, 
+                      savePlpResult=savePlpResult, 
+                      savePlpPlots = savePlpPlots, 
+                      saveEvaluation = saveEvaluation,
+                      splitSeed = splitSeed,
+                      analysisId = paste0(analysisId,'_',Index))
     
     metaData <- attr(results$prediction, 'metaData')
     level1[[Index]] <- results$model
@@ -303,6 +303,7 @@ applyEnsembleModel <- function(population,
     prob <- modelList[[Index]]$predict(plpData = dataList[[Index]], population = population)
     pred_probas <- cbind(pred_probas, prob$value)
   }
+  colnames(pred_probas) <- paste0('value_',1:ncol(pred_probas))
   value <- combinator$pfunction(pred_probas)
   ensem_proba <- data.frame(rowId=prob$rowId,
                             value= value)

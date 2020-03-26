@@ -4,18 +4,42 @@
 \alias{evaluateExistingModel}
 \title{evaluateExistingModel}
 \usage{
-evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
-  type = "score", covariateSettings, customCovariates = NULL,
-  addExposureDaysToStart = F, riskWindowStart = 1,
-  addExposureDaysToEnd = F, riskWindowEnd = 365, requireTimeAtRisk = T,
-  minTimeAtRisk = 364, includeAllOutcomes = T,
-  removeSubjectsWithPriorOutcome = T, priorOutcomeLookback = 99999,
-  verbosity = "INFO", washoutPeriod = 0, firstExposureOnly = F,
-  binary = T, connectionDetails, cdmDatabaseSchema, cohortDatabaseSchema,
-  cohortTable, cohortId, outcomeDatabaseSchema, outcomeTable, outcomeId,
-  oracleTempSchema = cdmDatabaseSchema, modelName = "existingModel",
-  scoreToProb = NULL, recalibrate = F, calibrationPopulation = NULL,
-  covariateSummary = T, cdmVersion = 5)
+evaluateExistingModel(
+  modelTable,
+  covariateTable,
+  interceptTable = NULL,
+  type = "score",
+  covariateSettings,
+  customCovariates = NULL,
+  startAnchor = "cohort start",
+  riskWindowStart = 1,
+  endAnchor = "cohort start",
+  riskWindowEnd = 365,
+  requireTimeAtRisk = T,
+  minTimeAtRisk = 364,
+  includeAllOutcomes = T,
+  removeSubjectsWithPriorOutcome = T,
+  priorOutcomeLookback = 99999,
+  verbosity = "INFO",
+  washoutPeriod = 0,
+  firstExposureOnly = F,
+  binary = T,
+  connectionDetails,
+  cdmDatabaseSchema,
+  cohortDatabaseSchema,
+  cohortTable,
+  cohortId,
+  outcomeDatabaseSchema,
+  outcomeTable,
+  outcomeId,
+  oracleTempSchema = cdmDatabaseSchema,
+  modelName = "existingModel",
+  scoreToProb = NULL,
+  recalibrate = F,
+  calibrationPopulation = NULL,
+  covariateSummary = T,
+  cdmVersion = 5
+)
 }
 \arguments{
 \item{modelTable}{The model covariates and scores}
@@ -30,11 +54,11 @@ evaluateExistingModel(modelTable, covariateTable, interceptTable = NULL,
 
 \item{customCovariates}{A table of covariateId, sql (sql creates the custom covariate)}
 
-\item{addExposureDaysToStart}{riskWindowStart relative to the cohort end date instead of the cohort start date?}
+\item{startAnchor}{riskWindowStart relative to the cohort end date instead of the cohort start date?}
 
 \item{riskWindowStart}{The day after index to start predicting the outcome}
 
-\item{addExposureDaysToEnd}{riskWindowEnd relative to the cohort end date instead of the cohort start date?}
+\item{endAnchor}{riskWindowEnd relative to the cohort end date instead of the cohort start date?}
 
 \item{riskWindowEnd}{The day after index to stop predicting the outcome}
 

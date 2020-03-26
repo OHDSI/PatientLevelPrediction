@@ -6,11 +6,21 @@
 #' @description
 This creates a setting for fitting a RandomForestQuantileRegressor model.  You need skgarden python install.  To install this open your command line and type: conda install -c conda-forge scikit-garden}
 \usage{
-setRandomForestQuantileRegressor(nEstimators = c(100), criterion = "mse",
-  maxFeatures = -1, maxDepth = 4, minSamplesSplit = 2,
-  minSamplesLeaf = 1, minWeightFractionLeaf = 0, maxLeafNodes = NULL,
-  bootstrap = TRUE, oobScore = FALSE, warmStart = FALSE, seed = NULL,
-  quiet = F)
+setRandomForestQuantileRegressor(
+  nEstimators = c(100),
+  criterion = "mse",
+  maxFeatures = -1,
+  maxDepth = 4,
+  minSamplesSplit = 2,
+  minSamplesLeaf = 1,
+  minWeightFractionLeaf = 0,
+  maxLeafNodes = NULL,
+  bootstrap = TRUE,
+  oobScore = FALSE,
+  warmStart = FALSE,
+  seed = NULL,
+  quiet = F
+)
 }
 \arguments{
 \item{nEstimators}{(int default:100) The number of trees in the forest.}

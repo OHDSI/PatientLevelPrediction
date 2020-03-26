@@ -116,7 +116,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   ParallelLogger::logTrace('Mapping R data to python')
   #x <- toSparsePython2(plpData,population, map=NULL)
   prediction <- population
-  x <- PatientLevelPrediction::toSparseM(plpData,population,map=NULL, temporal = F)
+  x <- toSparseM(plpData,population,map=NULL, temporal = F)
 
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','randomForestFunctions.py'), envir = e)
   data <- reticulate::r_to_py(x$data)
@@ -166,7 +166,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
     
-    auc <- PatientLevelPrediction::computeAuc(pred)
+    auc <- computeAuc(pred)
     all_auc <- c(all_auc, auc)
     if(!quiet)
       ParallelLogger::logInfo(paste0('Model with settings: ntrees:',param$ntrees[i],' maxDepth: ',param$maxDepth[i], 

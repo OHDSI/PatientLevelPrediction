@@ -4,12 +4,23 @@
 \alias{createStudyPopulationSettings}
 \title{create the study population settings}
 \usage{
-createStudyPopulationSettings(binary = T, includeAllOutcomes = T,
-  firstExposureOnly = FALSE, washoutPeriod = 0,
-  removeSubjectsWithPriorOutcome = TRUE, priorOutcomeLookback = 99999,
-  requireTimeAtRisk = T, minTimeAtRisk = 364, riskWindowStart = 1,
-  addExposureDaysToStart = FALSE, riskWindowEnd = 365,
-  addExposureDaysToEnd = F, verbosity = "INFO")
+createStudyPopulationSettings(
+  binary = T,
+  includeAllOutcomes = T,
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  removeSubjectsWithPriorOutcome = TRUE,
+  priorOutcomeLookback = 99999,
+  requireTimeAtRisk = T,
+  minTimeAtRisk = 364,
+  riskWindowStart = 1,
+  startAnchor = "cohort start",
+  addExposureDaysToStart,
+  riskWindowEnd = 365,
+  endAnchor = "cohort start",
+  addExposureDaysToEnd,
+  verbosity = "INFO"
+)
 }
 \arguments{
 \item{binary}{Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)}
@@ -34,13 +45,17 @@ date for a person to be included in the cohort.}
 days of exposure if the \code{addExposureDaysToStart} parameter is
 specified).}
 
-\item{addExposureDaysToStart}{Add the length of exposure the start of the risk window?}
+\item{startAnchor}{The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".}
+
+\item{addExposureDaysToStart}{DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.}
 
 \item{riskWindowEnd}{The end of the risk window (in days) relative to the index data (+
 days of exposure if the \code{addExposureDaysToEnd} parameter is
 specified).}
 
-\item{addExposureDaysToEnd}{Add the length of exposure the risk window?}
+\item{endAnchor}{The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".}
+
+\item{addExposureDaysToEnd}{DEPRECATED: Add the length of exposure the risk window? Use \code{endAnchor} instead.}
 
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 \itemize{

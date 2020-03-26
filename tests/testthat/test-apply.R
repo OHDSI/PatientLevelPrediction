@@ -18,31 +18,6 @@ library("testthat")
 
 context("ApplyPlp")
 
-# this no longer checks predictions as models don't exist and take too long to train during test
-# generate simulated data:
-set.seed(1234)
-data(plpDataSimulationProfile)
-sampleSize <- 2000
-plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-
-# create popualtion for outcome 2
-population <- createStudyPopulation(plpData,
-                                    outcomeId = 2,
-                                    firstExposureOnly = FALSE,
-                                    washoutPeriod = 0,
-                                    removeSubjectsWithPriorOutcome = FALSE,
-                                    priorOutcomeLookback = 99999,
-                                    requireTimeAtRisk = FALSE,
-                                    minTimeAtRisk=0,
-                                    riskWindowStart = 0,
-                                    addExposureDaysToStart = FALSE,
-                                    riskWindowEnd = 365,
-                                    addExposureDaysToEnd = FALSE)
-
-index <- PatientLevelPrediction::randomSplitter(population, test=0.2, seed=1)
-population <- merge(population, index)
-colnames(population)[colnames(population)=='index'] <- 'indexes'
-
 test_that("applyModel inputs", {
 
   testthat::expect_error(applyModel(population=NULL,
@@ -68,6 +43,29 @@ test_that("applyModel inputs", {
 
   })
 
+appliedModel <- applyModel(population=population2,
+                 plpData = plpData2,
+                 plpModel = plpResult$model,
+                 calculatePerformance=T,
+                 databaseOutput = NULL,
+                 silent = F)
+
+test_that("applyModel works", {
+
+  # all outputs:
+  testthat::expect_equal(sum(names(appliedModel)=="prediction"), 1)
+  testthat::expect_equal(sum(names(appliedModel)=="performanceEvaluation"), 1)
+  testthat::expect_equal(sum(names(appliedModel)=="executionSummary"), 1)
+  testthat::expect_equal(sum(names(appliedModel)=="inputSetting"), 1)
+  testthat::expect_equal(sum(names(appliedModel)=="model"), 1)
+  testthat::expect_equal(sum(names(appliedModel)=="analysisRef"), 1)
+  testthat::expect_equal(sum(names(appliedModel)=="covariateSummary"), 1)
+  
+  # correct size
+  testthat::expect_equal(nrow(appliedModel$prediction), nrow(population2))
+  
+  
+})
 
 
 test_that("similarPlpData inputs", {
@@ -82,7 +80,7 @@ test_that("similarPlpData inputs", {
                                         newOutcomeDatabaseSchema = NULL,
                                         newOutcomeTable = NULL,
                                         newOutcomeId = NULL,
-                                        newOracleTempSchema = newCdmDatabaseSchema,
+                                        newOracleTempSchema = NULL,
                                         sample=NULL, 
                                         createPopulation= T))
   

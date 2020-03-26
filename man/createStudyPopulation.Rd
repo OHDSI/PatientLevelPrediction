@@ -4,12 +4,27 @@
 \alias{createStudyPopulation}
 \title{Create a study population}
 \usage{
-createStudyPopulation(plpData, population = NULL, outcomeId, binary = T,
-  includeAllOutcomes = T, firstExposureOnly = FALSE, washoutPeriod = 0,
-  removeSubjectsWithPriorOutcome = TRUE, priorOutcomeLookback = 99999,
-  requireTimeAtRisk = T, minTimeAtRisk = 365, riskWindowStart = 0,
-  addExposureDaysToStart = FALSE, riskWindowEnd = 365,
-  addExposureDaysToEnd = F, verbosity = "INFO", ...)
+createStudyPopulation(
+  plpData,
+  population = NULL,
+  outcomeId,
+  binary = T,
+  includeAllOutcomes = T,
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  removeSubjectsWithPriorOutcome = TRUE,
+  priorOutcomeLookback = 99999,
+  requireTimeAtRisk = F,
+  minTimeAtRisk = 365,
+  riskWindowStart = 0,
+  startAnchor = "cohort start",
+  riskWindowEnd = 365,
+  endAnchor = "cohort start",
+  verbosity = "INFO",
+  addExposureDaysToStart,
+  addExposureDaysToEnd,
+  ...
+)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
@@ -39,17 +54,13 @@ date for a person to be included in the cohort.}
 
 \item{minTimeAtRisk}{The minimum number of days at risk required to be included}
 
-\item{riskWindowStart}{The start of the risk window (in days) relative to the index date (+
-days of exposure if the \code{addExposureDaysToStart} parameter is
-specified).}
+\item{riskWindowStart}{The start of the risk window (in days) relative to the \code{startAnchor}.}
 
-\item{addExposureDaysToStart}{Add the length of exposure the start of the risk window?}
+\item{startAnchor}{The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".}
 
-\item{riskWindowEnd}{The end of the risk window (in days) relative to the index data (+
-days of exposure if the \code{addExposureDaysToEnd} parameter is
-specified).}
+\item{riskWindowEnd}{The end of the risk window (in days) relative to the \code{endAnchor} parameter}
 
-\item{addExposureDaysToEnd}{Add the length of exposure the risk window?}
+\item{endAnchor}{The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".}
 
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 \itemize{
@@ -60,6 +71,10 @@ specified).}
 \item{ERROR}{Show error messages}
 \item{FATAL}{Be silent except for fatal errors} 
 }}
+
+\item{addExposureDaysToStart}{DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.}
+
+\item{addExposureDaysToEnd}{DEPRECATED: Add the length of exposure the risk window? Use \code{endAnchor} instead.}
 
 \item{...}{Other inputs}
 }

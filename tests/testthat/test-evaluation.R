@@ -22,21 +22,37 @@ library("scoring")
 library("Metrics")
 library("PRROC")
 
+
+test_that("evaluatePlp", {
+  eval <- evaluatePlp(prediction = plpResult$prediction, plpData = plpData)
+  testthat::expect_equal(class(eval), 'plpEvaluation')
+  testthat::expect_equal(names(eval), c('evaluationStatistics', 'thresholdSummary', 'demographicSummary', 'calibrationSummary', 'predictionDistribution') )
+})
+
 test_that("AUROC", {
-  prediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
-  
-  proc.auc <- pROC::roc(prediction$outcomeCount, prediction$value, algorithm = 3,
+  Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
+  attr(Eprediction, "metaData") <- list(predictionType = "binary")
+  proc.auc <- pROC::roc(Eprediction$outcomeCount, Eprediction$value, algorithm = 3,
                         direction="<")
-  auc.auc <- AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount)))
+  auc.auc <- AUC::auc(AUC::roc(Eprediction$value, factor(Eprediction$outcomeCount)))
   tolerance <- 0.001
   expect_equal(as.numeric(proc.auc$auc), auc.auc, tolerance = tolerance)
+  
+  plpAUC <- computeAuc(Eprediction, confidenceInterval = FALSE)
+  expect_equal(as.numeric(proc.auc$auc), plpAUC, tolerance = tolerance)
+  
+  plpAUCdf <- computeAucFromDataFrames(prediction = Eprediction$value,
+                           status = Eprediction$outcomeCount,
+                           modelType = "logistic")
+  expect_equal(as.numeric(proc.auc$auc), plpAUCdf, tolerance = tolerance)
+  
 })
 
 test_that("AUPRC", {
-  prediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
+  Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
   
-  positive <- prediction$value[prediction$outcomeCount == 1]
-  negative <- prediction$value[prediction$outcomeCount == 0]
+  positive <- Eprediction$value[Eprediction$outcomeCount == 1]
+  negative <- Eprediction$value[Eprediction$outcomeCount == 0]
   pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
   auprc <- pr$auc.integral
   
@@ -46,20 +62,20 @@ test_that("AUPRC", {
 })
 
 test_that("Brierscore", {
-  prediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
+  Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
 
-  prediction$dummy <- 1
-  brier.scoring <- scoring::brierscore(outcomeCount ~ value, data=prediction, group='dummy')$brieravg
-  brier.plp <- brierScore(prediction)$brier
+  Eprediction$dummy <- 1
+  brier.scoring <- scoring::brierscore(outcomeCount ~ value, data=Eprediction, group='dummy')$brieravg
+  brier.plp <- brierScore(Eprediction)$brier
   expect_that(as.double(brier.scoring), equals(brier.plp))
 })
 
 test_that("Average precision", {
-  prediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
+  Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
   
-  aveP.metrics <- Metrics::apk(nrow(prediction), 
-                               which(prediction$outcomeCount==1), (1:nrow(prediction))[order(-prediction$value)])
-  aveP.plp <- averagePrecision(prediction)
+  aveP.metrics <- Metrics::apk(nrow(Eprediction), 
+                               which(Eprediction$outcomeCount==1), (1:nrow(Eprediction))[order(-Eprediction$value)])
+  aveP.plp <- averagePrecision(Eprediction)
   expect_that(as.double(aveP.metrics), equals(aveP.plp))
 })
 
@@ -78,29 +94,29 @@ test_that("f1Score", {
 })
 
 test_that("accuracy", {
-  expect_that(PatientLevelPrediction::accuracy(TP=0,TN=0,FN=0,FP=0), equals(NaN))
-  expect_that(PatientLevelPrediction::accuracy(TP=-1,TN=0,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::accuracy(TP=1,TN=-1,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::accuracy(TP=1,TN=3,FN=-1,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::accuracy(TP=1,TN=1,FN=5,FP=-1),  throws_error())
-  expect_that(PatientLevelPrediction::accuracy(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::accuracy(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::accuracy(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::accuracy(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
-  expect_that(PatientLevelPrediction::accuracy(TP=10,TN=3,FN=5,FP=5), equals(13/23, tolerance  = 0.0001))
+  expect_that(accuracy(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(accuracy(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(accuracy(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(accuracy(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(accuracy(TP=10,TN=3,FN=5,FP=5), equals(13/23, tolerance  = 0.0001))
 })
 
 test_that("sensitivity", {
-  expect_that(PatientLevelPrediction::sensitivity(TP=0,TN=0,FN=0,FP=0), equals(NaN))
-  expect_that(PatientLevelPrediction::sensitivity(TP=-1,TN=0,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::sensitivity(TP=1,TN=-1,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::sensitivity(TP=1,TN=3,FN=-1,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::sensitivity(TP=1,TN=1,FN=5,FP=-1),  throws_error())
-  expect_that(PatientLevelPrediction::sensitivity(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::sensitivity(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::sensitivity(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::sensitivity(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
-  expect_that(PatientLevelPrediction::sensitivity(TP=10,TN=3,FN=5,FP=5), equals(10/(10+5),tolerance  = 0.0001))
+  expect_that(sensitivity(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(sensitivity(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(sensitivity(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(sensitivity(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(sensitivity(TP=10,TN=3,FN=5,FP=5), equals(10/(10+5),tolerance  = 0.0001))
 })
 
 test_that("falseNegativeRate", {
@@ -130,16 +146,16 @@ test_that("falsePositiveRate", {
 })
 
 test_that("specificity", {
-  expect_that(PatientLevelPrediction::specificity(TP=0,TN=0,FN=0,FP=0), equals(NaN))
-  expect_that(PatientLevelPrediction::specificity(TP=-1,TN=0,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::specificity(TP=1,TN=-1,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::specificity(TP=1,TN=3,FN=-1,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::specificity(TP=1,TN=1,FN=5,FP=-1),  throws_error())
-  expect_that(PatientLevelPrediction::specificity(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::specificity(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::specificity(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
-  expect_that(PatientLevelPrediction::specificity(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
-  expect_that(PatientLevelPrediction::specificity(TP=10,TN=3,FN=5,FP=5), equals(3/(5+3), tolerance  = 0.0001))
+  expect_that(specificity(TP=0,TN=0,FN=0,FP=0), equals(NaN))
+  expect_that(specificity(TP=-1,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=-1,FN=0,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=3,FN=-1,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=1,FN=5,FP=-1),  throws_error())
+  expect_that(specificity(TP=NULL,TN=0,FN=0,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=NULL,FN=0,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=3,FN=NULL,FP=0),  throws_error())
+  expect_that(specificity(TP=1,TN=1,FN=5,FP=NULL),  throws_error())
+  expect_that(specificity(TP=10,TN=3,FN=5,FP=5), equals(3/(5+3), tolerance  = 0.0001))
 })
 
 test_that("positivePredictiveValue", {
@@ -247,44 +263,44 @@ test_that("diagnosticOddsRatio", {
 #})
 
 test_that("getPredictionDistribution", {
-  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
-  predSum <- getPredictionDistribution(prediction)
+  Eprediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  predSum <- getPredictionDistribution(Eprediction)
   
   expect_that(nrow(predSum ), equals(2))
   expect_that(ncol(predSum ), equals(11))
 })
 
 test_that("getCalibration", {
-  prediction <- data.frame(rowId=1:100, value= runif(100), outcomeCount =round(runif(100)))
-  attr(prediction, "metaData")$predictionType <-  "binary"
-  calib <- getCalibration(prediction)
+  Eprediction <- data.frame(rowId=1:100, value= runif(100), outcomeCount =round(runif(100)))
+  attr(Eprediction, "metaData")$predictionType <-  "binary"
+  calib <- getCalibration(Eprediction)
   
   expect_that(nrow(calib ), equals(10))
   expect_that(ncol(calib ), equals(11))
 })
 
 test_that("getThresholdSummary", {
-  prediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
-  thresSum <- getThresholdSummary(prediction)
+  Eprediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
+  thresSum <- getThresholdSummary(Eprediction)
   
-  expect_that(nrow(thresSum), equals(100))
+  expect_that(nrow(thresSum), equals(200))
   expect_that(ncol(thresSum), equals(23))
   
   expect_that(thresSum$truePositiveCount+thresSum$falseNegativeCount, 
-              equals(rep(sum(prediction$outcomeCount),100)))
+              equals(rep(sum(Eprediction$outcomeCount),200)))
   
   expect_that(thresSum$truePositiveCount+thresSum$falsePositiveCount+
               thresSum$trueNegativeCount+thresSum$falseNegativeCount, 
-              equals(rep(nrow(prediction),100)))
+              equals(rep(nrow(Eprediction),200)))
 })
 
 
 test_that("Calibration", {
-  prediction <- data.frame(rowId=1:100,
+  Eprediction <- data.frame(rowId=1:100,
                            value= c(rep(0,50),rep(1,50)), 
                            outcomeCount =c(rep(0,50),rep(1,50)))
   # test the output 
-  calibrationTest1 <- calibrationLine(prediction,numberOfStrata=2)
+  calibrationTest1 <- calibrationLine(Eprediction,numberOfStrata=2)
   expect_that(calibrationTest1$lm['Intercept'],  is_equivalent_to(0))
   expect_that(calibrationTest1$lm['Gradient'],  is_equivalent_to(1))
   expect_that(nrow(calibrationTest1$aggregateLmData)==2, equals(T))
@@ -293,13 +309,13 @@ test_that("Calibration", {
   ##lm # has the 'Intercept' and 'Gradient'
   ##aggregateLmData # obs vs pred for groups
   ##hosmerlemeshow # hosmerlemeshow value
-  prediction2 <- data.frame(rowId=1:100,
+  Eprediction2 <- data.frame(rowId=1:100,
                            value= c(0.1+runif(50)*0.9,runif(50)*0.6), 
                            outcomeCount =c(rep(1,50),rep(0,50)))
   
-  hs.exist2 <- ResourceSelection::hoslem.test(prediction2$outcomeCount, 
-                                              prediction2$value, g=10)
-  calibrationTest2 <- calibrationLine(prediction2,numberOfStrata=10)
+  hs.exist2 <- ResourceSelection::hoslem.test(Eprediction2$outcomeCount, 
+                                              Eprediction2$value, g=10)
+  calibrationTest2 <- calibrationLine(Eprediction2,numberOfStrata=10)
   #  test plp values vs ResourceSelection::hoslem.test 
   expect_that(calibrationTest2$hosmerlemeshow['Xsquared'],  
               is_equivalent_to(hs.exist2$statistic))  

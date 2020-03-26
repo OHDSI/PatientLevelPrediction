@@ -267,9 +267,14 @@ trainCovNN2<-function(plpData, population,
       
       
       #print(table(population$y))
+      if(length(train_rows) < batchSize){
+        # checking if this fixes issue with batchsize too big
+        batchSize <- length(train_rows)
+        ParallelLogger::logInfo('Reducing batchSize to training size')
+      }
       
       history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows, index),
-                                                steps_per_epoch = sum(population$indexes!=index)/batchSize,
+                                                steps_per_epoch = length(train_rows)/batchSize,
                                                 epochs=epochs,
                                                 validation_data=list(as.array(data[val_rows,,]),
                                                                      population$y[population$indexes!=index,1:2][val_rows,]),
@@ -286,7 +291,7 @@ trainCovNN2<-function(plpData, population,
       prediction$value <- 0
       for(batch in batches){
         pred <- keras::predict_on_batch(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
-        prediction$value[batch] <- pred[,2]
+        prediction$value[batch] <- as.double(pred[,2])
       }
       
       attr(prediction, "metaData") <- list(predictionType = "binary")
@@ -406,9 +411,15 @@ trainCovNN2<-function(plpData, population,
       }
     }
     
+    if(length(train_rows) < batchSize){
+      # checking if this fixes issue with batchsize too big
+      batchSize <- length(train_rows)
+      ParallelLogger::logInfo('Reducing batchSize to training size')
+    }
+    
     
     history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
-                                              steps_per_epoch = nrow(population[-val_rows,])/batchSize,
+                                              steps_per_epoch = length(train_rows)/batchSize,
                                               epochs=epochs,
                                               validation_data=list(as.array(data[val_rows,,]),
                                                                    population$y[val_rows,]),
@@ -423,7 +434,7 @@ trainCovNN2<-function(plpData, population,
     prediction$value <- 0
     for(batch in batches){
       pred <- keras::predict_on_batch(model, as.array(plpData[batch,,]))
-      prediction$value[batch] <- pred[,2]
+      prediction$value[batch] <- as.double(pred[,2])
     }
     
     attr(prediction, "metaData") <- list(predictionType = "binary")

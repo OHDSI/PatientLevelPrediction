@@ -5,8 +5,7 @@
 \title{Split data when patients are in the data multiple times such that the same patient is always either in the 
 train set or the test set (the same patient cannot be in both the test and train set at different times)}
 \usage{
-subjectSplitter(population, test = 0.3, train = NULL, nfold = 3,
-  seed = NULL)
+subjectSplitter(population, test = 0.3, train = NULL, nfold = 3, seed = NULL)
 }
 \arguments{
 \item{population}{An object created using createStudyPopulation().}

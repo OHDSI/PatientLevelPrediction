@@ -1,3 +1,32 @@
+PatientLevelPrediction 3.0.15
+======================
+- improved shiny PLP viewer
+- added diagnostic shiny viewer
+
+PatientLevelPrediction 3.0.14
+======================
+- updated external validate code to enable custom covariates using ATLAS cohorts
+- fixed issues with startAnchor and endAnchor
+
+
+PatientLevelPrediction 3.0.13
+======================
+- Deprecating addExposureDaysToStart and addExposureDaysToEnd arguments in createStudyPopulation, adding new arguments called startAnchor and endAnchor. The hope is this is less confusing.
+- fixed transfer learning code (can now transfer or fine-tune model)
+- made view plp shiny apps work when some results are missing
+
+PatientLevelPrediction 3.0.12
+======================
+- set up testing 
+- fixed build warnings
+
+PatientLevelPrediction 3.0.11
+======================
+- added tests to get >70% coverage (keras tests too slow for travis)
+- Fixed minor bugs
+- Fixed deep learning code and removed pythonInR dependancy
+- combined shiny into one file with one interface
+
 PatientLevelPrediction 3.0.10
 ======================
 - added recalibration using 25% sample in existing models

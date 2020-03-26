@@ -221,7 +221,7 @@ trainDecisionTree <- function(population, plpData,
     attr(pred, "metaData") <- list(predictionType="binary")
     
     pred$value <- 1-pred$value
-    auc <- PatientLevelPrediction::computeAuc(pred)
+    auc <- computeAuc(pred)
     if(!quiet)
       writeLines(paste0('Model obtained CV AUC of ', auc))
     return(auc)

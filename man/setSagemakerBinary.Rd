@@ -4,8 +4,14 @@
 \alias{setSagemakerBinary}
 \title{Create setting for sagemaker model}
 \usage{
-setSagemakerBinary(classifier = "xgboost", bucket, prefix = "data", roleArn,
-  otherparams = NULL, seed = NULL)
+setSagemakerBinary(
+  classifier = "xgboost",
+  bucket,
+  prefix = "data",
+  roleArn,
+  otherparams = NULL,
+  seed = NULL
+)
 }
 \arguments{
 \item{classifier}{The name of the sagemaker binary classifier to use (pick from: knn, xgboost or linear-learner)}

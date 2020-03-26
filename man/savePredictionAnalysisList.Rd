@@ -4,12 +4,23 @@
 \alias{savePredictionAnalysisList}
 \title{Saves a json prediction settings given R settings}
 \usage{
-savePredictionAnalysisList(workFolder = "inst/settings", cohortIds,
-  outcomeIds, cohortSettingCsv = file.path(workFolder, "CohortsToCreate.csv"),
-  covariateSettingList, populationSettingList, modelSettingList,
-  maxSampleSize = NULL, washoutPeriod = 0, minCovariateFraction = 0,
-  normalizeData = T, testSplit = "person", testFraction = 0.25,
-  splitSeed = 1, nfold = 3)
+savePredictionAnalysisList(
+  workFolder = "inst/settings",
+  cohortIds,
+  outcomeIds,
+  cohortSettingCsv = file.path(workFolder, "CohortsToCreate.csv"),
+  covariateSettingList,
+  populationSettingList,
+  modelSettingList,
+  maxSampleSize = NULL,
+  washoutPeriod = 0,
+  minCovariateFraction = 0,
+  normalizeData = T,
+  testSplit = "person",
+  testFraction = 0.25,
+  splitSeed = 1,
+  nfold = 3
+)
 }
 \arguments{
 \item{workFolder}{Location to save json specification}
