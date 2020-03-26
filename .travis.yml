@@ -34,12 +34,8 @@ r_packages:
   - drat
 
 r_github_packages:
-  - OHDSI/DatabaseConnector
   - OHDSI/FeatureExtraction
-  - OHDSI/OhdsiRTools
-  - OHDSI/Cyclops
   - OHDSI/BigKnn
-  - OHDSI/OhdsiSharing
 
 before_script:
   - export PKG_NAME=$(Rscript -e 'cat(paste0(devtools::as.package(".")$package))')
