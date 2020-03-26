@@ -5,10 +5,10 @@ source("processing.R")
 
 if(is.null(.GlobalEnv$shinySettings$result)){
   result <- 'data'
-  ParallelLogger::logInfo('Extracting results from data folder')
+  print('Extracting results from data folder')
 } else{
   result <- .GlobalEnv$shinySettings$result
-  ParallelLogger::logInfo('Extracting results from .GlobalEnv$shinySettings')
+  print('Extracting results from .GlobalEnv$shinySettings')
 }
 
 if(is.null(.GlobalEnv$shinySettings$validation)){
