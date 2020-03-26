@@ -1,12 +1,24 @@
+# check package dependancies - will move to launcher after study-a-thon
+stop <- F
+for(pkg in c('shiny', 'shinydashboard', 'DT', 'plotly', 'dplyr', 'tidyr','ggplot2', 'shinycssloaders')){
+  if(is.na(tryCatch({utils::packageVersion(pkg)}, error = function(e) NA))){
+    warning(paste0('Package ', pkg, ' not installed - please install'))
+    stop <- T
+  }
+}
+if(stop){stop('Need to install dependancies')}
+
 library(shiny)
 library(shinydashboard)
 library(DT)
 library(plotly)
 library(dplyr)
 library(tidyr)
-library(scales)
+#library(scales)
 #library(ggiraph)
 
+
+rm(list=ls()[ls()%in%c('settings', 'namesdetails', 'characterization','distribution','incidence')])
 source("PlotsAndTables.R")
 
 

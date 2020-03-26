@@ -140,7 +140,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      PatientLevelPrediction::plotPreferencePDF(plpResult()$performanceEvaluation, 
+      plotPreferencePDF(plpResult()$performanceEvaluation, 
                         type=plpResult()$type ) #+ 
         # ggplot2::geom_vline(xintercept=plotters()$prefthreshold) -- RMS
     }
@@ -150,7 +150,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      PatientLevelPrediction::plotPredictedPDF(plpResult()$performanceEvaluation, 
+      plotPredictedPDF(plpResult()$performanceEvaluation, 
                        type=plpResult()$type ) # + 
         #ggplot2::geom_vline(xintercept=plotters()$threshold) -- RMS     
     }
@@ -160,7 +160,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      PatientLevelPrediction::plotPredictionDistribution(plpResult()$performanceEvaluation, type=plpResult()$type )
+      plotPredictionDistribution(plpResult()$performanceEvaluation, type=plpResult()$type )
     }
   })
   
@@ -168,7 +168,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      PatientLevelPrediction::plotSparseCalibration2(plpResult()$performanceEvaluation, type=plpResult()$type )
+      plotSparseCalibration2(plpResult()$performanceEvaluation, type=plpResult()$type )
     }
   })
   
@@ -176,7 +176,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      tryCatch(PatientLevelPrediction::plotDemographicSummary(plpResult()$performanceEvaluation, 
+      tryCatch(plotDemographicSummary(plpResult()$performanceEvaluation, 
                                       type=plpResult()$type ),
                error= function(cond){return(NULL)})
     }

@@ -146,7 +146,6 @@ summaryPlpAnalyses <- function(analysesLocation){
 getPerformance <- function(analysisLocation){
   location <- file.path(analysisLocation, 'plpResult.rds')
   if(!file.exists(location)){
-    require(PatientLevelPrediction)
     # check for PLP file instead 
     locationPlp <- file.path(analysisLocation, 'plpResult')
     if(!dir.exists(locationPlp)){
@@ -157,6 +156,7 @@ getPerformance <- function(analysisLocation){
                         populationSize=0,incidence=0,plpResultLocation=location, 
                         plpResultLoad='loadPlpResult'))
     } else {
+      require(PatientLevelPrediction)
       res <- loadPlpResult(file.path(analysisLocation,'plpResult'))
       res <- as.data.frame(res$performanceEvaluation$evaluationStatistics)
       location <- file.path(analysisLocation, 'plpResult')
