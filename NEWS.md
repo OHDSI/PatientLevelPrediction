@@ -1,3 +1,8 @@
+PatientLevelPrediction 3.0.15
+======================
+- improved shiny PLP viewer
+- added diagnostic shiny viewer
+
 PatientLevelPrediction 3.0.14
 ======================
 - updated external validate code to enable custom covariates using ATLAS cohorts
