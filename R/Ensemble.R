@@ -20,7 +20,7 @@
 #' @description
 #' #'
 #' @details
-#'
+#' This function applied a list of models and combines them into an ensemble model
 #'
 #' @param population         The population created using createStudyPopulation() who will be used to
 #'                           develop the model

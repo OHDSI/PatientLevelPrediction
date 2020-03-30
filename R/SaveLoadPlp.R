@@ -277,6 +277,7 @@ getPlpData <- function(connectionDetails,
 #' This function executes some SQL to extract covaraite data for a cohort table
 #'
 #' @details
+#' This function extracts covariate data for a given target popualtion 
 #'
 #' @param connection                   Can also use an existing connection rather than the connectionDetails
 #' @param cdmDatabaseSchema            The name of the database schema that contains the OMOP CDM

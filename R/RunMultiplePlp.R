@@ -214,7 +214,7 @@ runPlpAnalyses <- function(connectionDetails,
       plpData <- loadPlpData(referenceTable$plpDataFolder[i])
     }
     
-    if(!file.exists(referenceTable$studyPop[i])){
+    if(!file.exists(referenceTable$studyPopFile[i])){#studyPop[i])){
       ParallelLogger::logTrace(paste0('Setting population settings for setting ', i ))
       # get pop and save to referenceTable$popFile
       popSettings <- modelAnalysisList$populationSettings[[referenceTable$populationSettingId[i]]]
@@ -225,11 +225,11 @@ runPlpAnalyses <- function(connectionDetails,
                error= function(cond){ParallelLogger::logTrace(paste0('Error with pop:',cond));return(NULL)})
       if(!is.null(population)){
         ParallelLogger::logTrace(paste0('Saving population for setting ', i ))
-        saveRDS(population, referenceTable$studyPop[i])
+        saveRDS(population, referenceTable$studyPopFile[i])#studyPop[i])
       }
     } else{
       ParallelLogger::logTrace(paste0('Loading population for setting', i ))
-      population <- readRDS(referenceTable$studyPop[i])
+      population <- readRDS(referenceTable$studyPopFile[i])#studyPop[i])
     }
     
     plpResultFolder = file.path(referenceTable$plpResultFolder[i],'plpResult')
@@ -278,7 +278,7 @@ createPlpReferenceTable <- function(modelAnalysisList,
   analyses$plpDataFolder <- file.path(outputFolder,
                                       paste0('PlpData_L',analyses$covariateSettingId,'_T',analyses$cohortId))
   analyses$studyPopFile <- file.path(outputFolder,
-                                     paste0('StudyPop_L',analyses$populationSettingId,'_T',analyses$cohortId,'_O',analyses$outcomeId,'.rds'))
+                                     paste0('StudyPop_L',analyses$covariateSettingId,'_T',analyses$cohortId,'_O',analyses$outcomeId,'_P',analyses$populationSettingId,'.rds'))
   analyses$plpResultFolder <- file.path(outputFolder,
                                         paste0('Analysis_',analyses$analysisId))
 return(analyses)  
