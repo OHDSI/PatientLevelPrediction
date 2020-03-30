@@ -40,5 +40,5 @@ Returns the covariates for the people in the temp table
 This function executes some SQL to extract covaraite data for a cohort table
 }
 \details{
-
+This function extracts covariate data for a given target popualtion
 }

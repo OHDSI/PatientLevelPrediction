@@ -85,5 +85,5 @@ different models.}
 #'
 }
 \details{
-
+This function applied a list of models and combines them into an ensemble model
 }

@@ -1,3 +1,7 @@
+PatientLevelPrediction 3.0.16
+======================
+- Fixed bug when running multiple analyses using a data extraction sample with multiple covariate settings
+
 PatientLevelPrediction 3.0.15
 ======================
 - improved shiny PLP viewer

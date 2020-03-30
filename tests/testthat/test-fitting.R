@@ -167,6 +167,34 @@ test_that("fitting", {
   
   })
 
+
+gbmachSet <- setGradientBoostingMachine(ntrees = 10, maxDepth = 3, learnRate = 0.1)
+plpResultGbmach <- runPlp(population = population,
+                      plpData = plpData, 
+                      modelSettings = gbmachSet, 
+                      savePlpData = F, 
+                      savePlpResult = F, 
+                      saveEvaluation = F, 
+                      savePlpPlots = F, 
+                      analysisId = 'gbmachTest',
+                      saveDirectory =  saveLoc)
+
+test_that("GBM working checks", {
+  
+  # check same structure
+  testthat::expect_equal(names(plpResultGbmach), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultGbmach$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultGbmach$prediction$value), 0)
+  testthat::expect_lte(max(plpResultGbmach$prediction$value), 1)
+  
+})
+
+
 rfSet <- setRandomForest(ntrees = 10, maxDepth = 3)
 plpResultRF <- runPlp(population = population,
                        plpData = plpData, 
