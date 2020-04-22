@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 3.0.16
-Date: 2020-03-28
+Version: 3.1.0
+Date: 2020-04-20
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -34,8 +34,7 @@ Imports:
     doParallel,
     dplyr,
     bit,
-    ff,
-    ffbase (>= 0.12.1),
+    Andromeda,
     plyr,
     survAUC,
     Rcpp (>= 0.11.2),
@@ -85,7 +84,8 @@ Suggests:
     survminer
 Remotes:
     ohdsi/FeatureExtraction,
-    ohdsi/BigKnn
+    ohdsi/BigKnn,
+    ohdsi/Andromeda
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 7.1.0

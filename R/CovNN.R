@@ -73,8 +73,8 @@ setCovNN <- function(batchSize = 1000,
 fitCovNN <- function(plpData,population, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) )
-    stop('CovNN requires plpData in coo format')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData))
+    stop("Needs correct covariateData")
   if(is.null(plpData$timeRef)){
     stop('Data not temporal...')
   }
@@ -108,7 +108,7 @@ fitCovNN <- function(plpData,population, param, search='grid', quiet=F,
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
   finalModel<-do.call(trainCovNN, c(param[[bestInd]],datas, train=FALSE))
   
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
   covariateRef$included <- incs
   covariateRef$covariateValue <- rep(0, nrow(covariateRef))

@@ -58,16 +58,13 @@ fitGLMModel <- function(population,
   }  else {
     colnames(population)[colnames(population) == "outcomeCount"] <- "y"
     
-
-    covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
+    covariatesData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
     
     if (length(includeCovariateIds) != 0) {
-      idx <- !is.na(ffbase::ffmatch(covariates$covariateId, ff::as.ff(includeCovariateIds)))
-      covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
+      covariateData$covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds)
     }
     if (length(excludeCovariateIds) != 0) {
-      idx <- is.na(ffbase::ffmatch(covariates$covariateId, ff::as.ff(excludeCovariateIds)))
-      covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
+      covariateData$covariates <- covariateData$covariates %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
     }
     
     if (modelType == "cox"){
@@ -83,8 +80,8 @@ fitGLMModel <- function(population,
     } else {
       addIntercept <- TRUE
     }
-    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = ff::as.ffdf(population[,!colnames(population)%in%c('cohortStartDate')]),
-                                                 covariates = covariates,
+    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = population[,!colnames(population)%in%c('cohortStartDate')],
+                                                 covariates = covariateData$covariates,
                                                  addIntercept = addIntercept,
                                                  modelType = modelTypeToCyclopsModelType(modelType),
                                                  checkSorting = TRUE,

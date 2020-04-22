@@ -51,46 +51,38 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     ParallelLogger::registerLogger(logger)
   }
   
-  ParallelLogger::logDebug(paste0('covariates nrow: ', nrow(plpData$covariates)))
-  cov <- plpData$covariates #ff::clone(plpData$covariates)
-  ParallelLogger::logDebug(paste0('covariateRef nrow: ', nrow(plpData$covariateRef)))
-  covref <- plpData$covariateRef#ff::clone(plpData$covariateRef)
-
-  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=ff::clone(covref),
-                                  population, map)
-
-  for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
-    ids <- plpData.mapped$covariateRef$covariateId[i[1]:i[2]]
-    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
-    plpData.mapped$covariateRef$covariateId[i[1]:i[2]] <- ids
-    # tested and working
-  }
-  for (i in bit::chunk(plpData.mapped$covariates$covariateId)) {
-    ids <- plpData.mapped$covariates$covariateId[i[1]:i[2]]
-    ids <- plyr::mapvalues(ids, as.double(plpData.mapped$map$oldIds), as.double(plpData.mapped$map$newIds), warn_missing = FALSE)
-    plpData.mapped$covariates$covariateId[i[1]:i[2]] <- ids
-  }
-  ParallelLogger::logDebug(paste0('Max ',ffbase::max.ff(plpData.mapped$covariates$covariateId)))
-
-    #convert into sparseM
-  ParallelLogger::logDebug(paste0('# cols: ', nrow(plpData.mapped$covariateRef)))
-  ParallelLogger::logDebug(paste0('Max rowId: ', ffbase::max.ff(plpData.mapped$covariates$rowId)))
+  ParallelLogger::logDebug(paste0('covariates nrow: ', nrow(plpData$covariateData$covariates)))
+  ParallelLogger::logDebug(paste0('covariateRef nrow: ', nrow(plpData$covariateData$covariateRef)))
+  
+  #assign newIds to covariateRef
+  plpData$covariateData <- MapCovariates(plpData$covariateData,
+                                 population, 
+                                 mapping=map)
+  
+  
+  ParallelLogger::logDebug(paste0('Max ',as.data.frame(plpData$covariateData$covariates$covariateId %>% dplyr::summarise(max = max(id, na.rm=T)))))
+  ParallelLogger::logDebug(paste0('# cols: ', nrow(plpData$covariateRef)))
+  ParallelLogger::logDebug(paste0('Max rowId: ', as.data.frame(plpData$covariateData$covariates$rowId %>% dplyr::summarise(max = max(id, na.rm=T)))))
 
   # chunk then add
   if(!temporal){
+    
+    maxY <- as.data.frame(plpData$covariateData$mapping %>% dplyr::summarise(max=max(newCovariateId)))$max
+    maxX <- max(population$rowId)
+    
   data <- Matrix::sparseMatrix(i=1,
                                j=1,
                                x=0,
-                               dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) # edit this to max(map$newIds)
-  for (ind in bit::chunk(plpData.mapped$covariates$covariateId)) {
-    ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
-    temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$covariates$rowId[ind]),
-                                          j=ff::as.ram(plpData.mapped$covariates$covariateId[ind]),
-                                          x=ff::as.ram(plpData.mapped$covariates$covariateValue[ind]),
-                                          dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
-    )
-    data <- data+ temp
+                               dims=c(maxX,maxY))
+  convertData <- function(batch) {
+    data <<- data + Matrix::sparseMatrix(i=as.data.frame(batch %>% select(rowId))$rowId,
+                                         j=as.data.frame(batch %>% select(covariateId))$covariateId,
+                                         x=as.data.frame(batch %>% select(covariateValue))$covariateValue,
+                                         dims=c(maxX,maxY))
+    return(NULL)
   }
+  Andromeda::batchApply(plpData$covariateData$covariates, convertData, batchSize = 100000)
+  
   } else {
     ParallelLogger::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
     ParallelLogger::logTrace(paste0('Max time:', max(plpData$timeRef$timeId)))
@@ -99,49 +91,54 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
       
       if(sum(plpData.mapped$covariates$timeId==i, na.rm = T)!=0){
         ParallelLogger::logTrace(paste0('Found covariates for timeId ', i))
+        
+        maxY <- as.data.frame(plpData$covariateData$mapping %>% dplyr::summarise(max=max(newCovariateId)))$max
+        maxX <- max(population$rowId)
+        
         # initiate the sparse matrix
         data <- Matrix::sparseMatrix(i=1,
                                      j=1,
                                      x=0,
-                                     dims=c(max(population$rowId), max(plpData.mapped$map$newIds))) 
+                                     dims=c(maxX, maxY)) 
         ParallelLogger::logTrace(paste0('Initiated Mapping covariates for timeId ', i))
         # add the non-temporal features 
         timeId <- i
-        tempData <- addAgeTemp(timeId,plpData.mapped, plpData$timeRef)
+        tempData <- addAgeTemp(timeId,plpData, plpData$timeRef)
         if(!is.null(tempData)){
           temp <- tryCatch(Matrix::sparseMatrix(i=tempData$rowId,
                                                 j=tempData$covariateId,
                                                 x=tempData$covariateValue,
-                                                dims=c(max(population$rowId), max(plpData.mapped$map$newIds))))
+                                                dims=c(maxX, maxY)))
           data <- data + temp
           ParallelLogger::logTrace(paste0('Added any age covariates for timeId ', i))
         }
         
-        tempData <- addNonAgeTemp(timeId,plpData.mapped)
+        tempData <- addNonAgeTemp(timeId,plpData)
         if(!is.null(tempData)){
           temp <- tryCatch(Matrix::sparseMatrix(i=tempData$rowId,
                                                 j=tempData$covariateId,
                                                 x=tempData$covariateValue,
-                                                dims=c(max(population$rowId), max(plpData.mapped$map$newIds))))
+                                                dims=c(maxX, maxY)))
           data <- data + temp
           ParallelLogger::logTrace(paste0('Added non-age non-temporal covariates for timeId ', i))
         }
         rm(tempData)
         # non-temporal features added
       
-        plpData.mapped$temp_covariates<- plpData.mapped$covariates[!is.na(plpData.mapped$covariates$timeId),] 
-        plpData.mapped$temp_covariates<- plpData.mapped$temp_covariates[plpData.mapped$temp_covariates$timeId==i,] 
-        #plpData.mapped$temp_covariates<-plpData.mapped$covariates[ffbase::ffwhich(plpData.mapped$covariates, timeId==i), ] #changed to which becuase of NA
+        tempCovs <- plpData$coovariateData$covariates %>% 
+          dplyr::filter(!is.na(timeId)) %>% 
+          dplyr::filter(timeId == i) 
         
-        for (ind in bit::chunk(plpData.mapped$temp_covariates$covariateId)) {
-          ParallelLogger::logDebug(paste0('start:', ind[1],'- end:',ind[2]))
-          temp <- tryCatch(Matrix::sparseMatrix(i=ff::as.ram(plpData.mapped$temp_covariates$rowId[ind]),
-                                                j=ff::as.ram(plpData.mapped$temp_covariates$covariateId[ind]),
-                                                x=ff::as.ram(plpData.mapped$temp_covariates$covariateValue[ind]),
-                                                dims=c(max(population$rowId), max(plpData.mapped$map$newIds)))
-          )
-          data <- data+temp
-        } 
+        convertData <- function(batch) {
+          data <<- data + Matrix::sparseMatrix(i=as.data.frame(batch %>% select(rowId))$rowId,
+                                               j=as.data.frame(batch %>% select(covariateId))$covariateId,
+                                               x=as.data.frame(batch %>% select(covariateValue))$covariateValue,
+                                               dims=c(maxX,maxY))
+          return(NULL)
+        }
+        # add to data in batches
+        Andromeda::batchApply(tempCovs, convertData, batchSize = 100000)
+        
         data_array<-slam::as.simple_sparse_array(data)
         #extending one more dimesion to the array
         data_array<-slam::extend_simple_sparse_array(data_array,c(1L))
@@ -149,7 +146,7 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
       } else {
         data_array <- tryCatch(slam::simple_sparse_array(i=matrix(c(1,1,1), ncol = 3), 
                                                    v=0,
-                                                   dim=c(max(population$rowId),1, max(plpData.mapped$map$newIds)))
+                                                   dim=c(maxX,1, maxY))
         )
         
       }
@@ -166,44 +163,39 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
   ParallelLogger::logDebug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
 
   result <- list(data=data,
-                 covariateRef=plpData.mapped$covariateRef,
-                 map=plpData.mapped$map)
+                 covariateRef=as.data.frame(plpData$covariateData$covariateRef),
+                 map=as.data.frame(plpData$covariateData$mapping))
   return(result)
 
 }
 
 # restricts to pop and saves/creates mapping
-MapCovariates <- function(covariates, covariateRef, population, map){
-
+MapCovariates <- function(covariateData,population, mapping){
   # restrict to population for speed
-  ParallelLogger::logTrace('restricting to population for speed...')
-  idx <- ffbase::ffmatch(x = covariates$rowId, table = ff::as.ff(population$rowId))
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- covariates[idx, ]
-
-  ParallelLogger::logTrace('Now converting covariateId...')
-  oldIds <- as.double(ff::as.ram(covariateRef$covariateId))
-  newIds <- 1:nrow(covariateRef)
-
-  if(!is.null(map)){
-    ParallelLogger::logTrace('restricting to model variables...')
-    ParallelLogger::logTrace(paste0('oldIds: ',length(map[,'oldIds'])))
-    ParallelLogger::logTrace(paste0('newIds:', max(as.double(map[,'newIds']))))
-    ind <- ffbase::ffmatch(x=covariateRef$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
-    ind <- ffbase::ffwhich(ind, !is.na(ind))
-    covariateRef <- covariateRef[ind,]
-
-    ind <- ffbase::ffmatch(x=covariates$covariateId, table=ff::as.ff(as.double(map[,'oldIds'])))
-    ind <- ffbase::ffwhich(ind, !is.na(ind))
-    covariates <- covariates[ind,]
+  ParallelLogger::logTrace('restricting to population for speed and mapping')
+  if(is.null(mapping)){
+    mapping <- data.frame(oldCovariateId = as.data.frame(covariateData$covariateRef %>% dplyr::filter(covariateId)),
+                          newCovariateId = 1:nrow(covariateData$covariateRef))
   }
-  if(is.null(map))
-    map <- data.frame(oldIds=oldIds, newIds=newIds)
-
-  return(list(covariates=covariates,
-              covariateRef=covariateRef,
-              map=map))
+  if(sum(colnames(mapping)%in%c('oldCovariateId','newCovariateId'))==0){
+    colnames(mapping) <- c('oldCovariateId','newCovariateId')
+  }
+  covariateData$mapping <- mapping
+  covariateData$population <- population[,'rowId']
+  # assign new ids :
+  covariateData$covariates2 <- covariateData$covariates %>%
+    dplyr::inner_join(covariateData$population) %>% 
+    dplyr::rename(oldCovariateId = covariateId) %>% 
+    dplyr::inner_join(covariateData$mapping) %>% 
+    dplyr::select(-oldCovariateId)  %>%
+    dplyr::rename(covariateId = newCovariateId)
+  covariateData$covariates <- NULL
+  covariateData$population <- NULL
+  covariateData$covariates <- covariateData$covariates2 
+  
+  return(covariateData)
 }
+
 
 
 #' Convert the plpData in COO format into a sparse python matrix using torch.sparse
@@ -246,8 +238,8 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
   cov <- plpData$covariates #ff::clone(plpData$covariates)
   covref <- plpData$covariateRef #ff::clone(plpData$covariateRef)
   
-  plpData.mapped <- MapCovariates(covariates=cov, covariateRef=ff::clone(covref),
-                                  population, map=map)
+  plpData$covariatesData <- MapCovariates(covariatesData,
+                                  population, mapping=map)
   
   for (i in bit::chunk(plpData.mapped$covariateRef$covariateId)) {
     ids <- plpData.mapped$covariateRef$covariateId[i[1]:i[2]]

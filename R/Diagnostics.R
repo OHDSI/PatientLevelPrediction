@@ -168,11 +168,6 @@ diagnostic <- function(plpData = NULL,
   if(is.null(plpData)){
     # get outcome and cohort data - dont need covariates
     
-    if (!is.null(getOption("fftempdir")) && !file.exists(getOption("fftempdir"))) {
-      warning("fftempdir '", getOption("fftempdir"), "' not found. Attempting to create folder")
-      dir.create(getOption("fftempdir"), recursive = TRUE)
-    }
-    
     ParallelLogger::logInfo('Extracting data')
     dataSettings <- list(connectionDetails = connectionDetails,
                      cdmDatabaseSchema = cdmDatabaseSchema,

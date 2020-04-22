@@ -136,7 +136,7 @@ createStudyPopulation <- function(plpData,
   
   
   # parameter checks
-  if(!class(plpData)%in%c('plpData.libsvm','plpData.coo','plpData')){
+  if(!class(plpData)%in%c('plpData')){
     ParallelLogger::logError('Check plpData format')
     stop('Wrong plpData input')
   }
@@ -342,15 +342,6 @@ createStudyPopulation <- function(plpData,
   return(population)
 }
 
-limitCovariatesToPopulation <- function(covariates, rowIds) {
-  idx <- !is.na(ffbase::ffmatch(covariates$rowId, rowIds))
-  if(sum(idx)!=0){
-    covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
-  }else{
-    stop('No covariates')
-  }
-  return(covariates)
-}
 
 #' Get the attrition table for a population
 #'

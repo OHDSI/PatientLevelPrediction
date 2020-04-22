@@ -204,7 +204,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   ParallelLogger::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
-  ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateData$covariateRef)))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))
   
@@ -528,61 +528,52 @@ covariateSummary <- function(plpData, population){
   #===========================
   # all 
   #===========================
-  ppl <- ff::as.ff(population$rowId)
-  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- plpData$covariates[idx, ]
   
-  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
-  grp_qty <- bySumFf(covariates$ones, covariates$covariateId)
+  plpData$covariateData$population <- population %>% 
+    dplyr::select(rowId, outcomeCount)
+    
+  # restrict to pop
+  covData <- plpData$covariateData$covariates %>% 
+    dplyr::inner_join(plpData$covariateData$population)
   
-  allPeople <- data.frame(covariateId=ff::as.ram(grp_qty$bins), 
-                          CovariateCount=ff::as.ram(grp_qty$sums))
+  allPeople <- covData %>% dplyr::group_by(covariateId) %>%
+    dplyr::summarise(CovariateCount = length(covariateValue)) %>%
+    dplyr::select(covariateId, CovariateCount)
+  allPeople <- as.data.frame(allPeople)
+  
   
   #===========================
   # outcome prevs
   #===========================
-  ppl <- ff::as.ff(population$rowId[population$outcomeCount==1])
-  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- plpData$covariates[idx, ]
   
-  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
-  covariates$squared <- covariates$covariateValue^2
-  
-  lengths <- bySumFf(covariates$ones, covariates$covariateId)
-  sumval <- bySumFf(covariates$covariateValue, covariates$covariateId)
-  sumvalsquared <- bySumFf(covariates$squared, covariates$covariateId)
-  outPeople <- data.frame(covariateId=lengths$bins, 
-                          CovariateCountWithOutcome=lengths$sums,
-                          CovariateMeanWithOutcome=sumval$sums/length(ppl),
-                          CovariateStDevWithOutcome=  sqrt( (sumvalsquared$sums-(sumval$sums^2)/length(ppl) )/(length(ppl)-1)  ))
+  outCount <- nrow(covData %>% dplyr::select(outcomeCount == 1))
+  outPeople <- covData %>% dplyr::select(outcomeCount == 1)
+    dplyr::group_by(covariateId) %>%
+    dplyr::summarise(CovariateCountWithOutcome = length(covariateValue),
+                     CovariateMeanWithOutcome = sum(covariateValue)/outCount,
+                     CovariateStDevWithOutcome = sqrt(((sd(covariateValue)^2)*(length(covariateValue)-1)+((sum(covariateValue)/outCount)^2)*(outCount-length(covariateValue)))/(outCount-1))
+    ) %>%
+    dplyr::select(covariateId, CovariateCountWithOutcome,CovariateMeanWithOutcome,CovariateStDevWithOutcome )
+  outPeople <- as.data.frame(outPeople)
   
   #===========================
   # non-outcome prevs
   #===========================
-  ppl <- ff::as.ff(population$rowId[population$outcomeCount==0])
-  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- plpData$covariates[idx, ]
-  
-  
-  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
-  covariates$squared <- covariates$covariateValue^2
-  
-  lengths <- bySumFf(covariates$ones, covariates$covariateId)
-  sumval <- bySumFf(covariates$covariateValue, covariates$covariateId)
-  sumvalsquared <- bySumFf(covariates$squared, covariates$covariateId)
-  noOutPeople <- data.frame(covariateId=lengths$bins, 
-                            CovariateCountWithNoOutcome=lengths$sums,
-                            CovariateMeanWithNoOutcome=sumval$sums/length(ppl),
-                            CovariateStDevWithNoOutcome=  sqrt( (sumvalsquared$sums-(sumval$sums^2)/length(ppl) )/(length(ppl)-1)  ))
+  nooutCount <- nrow(covData %>% dplyr::select(outcomeCount == 0))
+  nooutPeople <- covData %>% dplyr::select(outcomeCount == 0)
+  dplyr::group_by(covariateId) %>%
+    dplyr::summarise(CovariateCountWithOutcome = length(covariateValue),
+                     CovariateMeanWithOutcome = sum(covariateValue)/nooutCount,
+                     CovariateStDevWithOutcome = sqrt(((sd(covariateValue)^2)*(length(covariateValue)-1)+((sum(covariateValue)/nooutCount)^2)*(nooutCount-length(covariateValue)))/(nooutCount-1))
+    ) %>%
+    dplyr::select(covariateId, CovariateCountWithOutcome,CovariateMeanWithOutcome,CovariateStDevWithOutcome )
+  nooutPeople <- as.data.frame(nooutPeople)
   
   # now merge the predictors with prev.out and prev.noout
-  prevs <- merge(merge(allPeople,outPeople, all=T), noOutPeople, all=T)
+  prevs <- merge(merge(allPeople,outPeople, all=T), nooutPeople, all=T)
   prevs[is.na(prevs)] <- 0
   
-  prevs <- merge(ff::as.ram(plpData$covariateRef[,c('covariateName','covariateId')]), prevs, by='covariateId')
+  prevs <- merge(as.data.frame(plpData$covariateData$covariateRef[,c('covariateName','covariateId')]), prevs, by='covariateId')
   
   # adding CovariateStandardizedMeanDifference
   prevs$StandardizedMeanDiff <- (prevs$CovariateMeanWithOutcome - prevs$CovariateMeanWithNoOutcome)/sqrt(prevs$CovariateStDevWithNoOutcome^2 + prevs$CovariateStDevWithOutcome^2 )
@@ -597,23 +588,27 @@ characterize <- function(plpData, population, N=1){
   #===========================
   # all 
   #===========================
-  popCount <- nrow(plpData$cohorts)
+  
+  covData <- plpData$covariateData$covariates
+  
   if(!missing(population)){
-    ppl <- ff::as.ff(population$rowId)
-    idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
-    idx <- ffbase::ffwhich(idx, !is.na(idx))
-    covariates <- plpData$covariates[idx, ]
-    popCount <- nrow(population)
+  plpData$covariateData$population <- population %>% 
+    dplyr::select(rowId, outcomeCount)
+  # restrict to pop
+  covData <- covData %>% 
+    dplyr::inner_join(plpData$covariateData$population)
   }
   
-  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
-  grp_qty <- bySumFf(covariates$ones, covariates$covariateId)
-  
-  ind <- ff::as.ram(grp_qty)>=N
-  
-  allPeople <- data.frame(covariateId=ff::as.ram(grp_qty$bins)[ind], 
-                          CovariateCount=ff::as.ram(grp_qty$sums)[ind],
-                          CovariateFraction = ff::as.ram(grp_qty$sums)[ind]/popCount)
-  
+  popSize <- nrow(covData %>% dplyr::select(rowId) %>% 
+                    dplyr::group_by(rowId) )
+
+  allPeople <- covData %>% 
+    dplyr::group_by(covariateId) %>%
+    dplyr::summarise(CovariateCount = length(covariateValue),
+                     CovariateFraction = length(covariateValue)/popSize) %>%
+    dplyr::filter(CovariateCount >= N)
+    dplyr::select(covariateId, CovariateCount,CovariateFraction)
+  allPeople <- as.data.frame(allPeople)
+
   return(allPeople)
 }

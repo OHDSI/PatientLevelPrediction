@@ -46,10 +46,10 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
   return(result)
 }
 fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...){
-  # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) )
-    stop('KNN requires plpData in coo format')
-  
+
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
   metaData <- attr(population, 'metaData')
   if(!is.null(population$indexes))
     population <- population[population$indexes>0,]
@@ -62,22 +62,21 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
   indexFolder <- param$indexFolder
   
   #clone data to prevent accidentally deleting plpData 
-  covariates <- ff::clone(plpData$covariates)
-  covariates <- limitCovariatesToPopulation(covariates, ff::as.ff(population$rowId))
+  covariateData <- limitCovariatesToPopulation(plpData$covariatesData, population$rowId)
   
   population$y <- population$outcomeCount
   population$y[population$y>0] <- 1
   
   # create the model in indexFolder
-  BigKnn::buildKnn(outcomes = ff::as.ffdf(population[,c('rowId','y')]),
-                   covariates = ff::as.ffdf(covariates),
+  BigKnn::buildKnn(outcomes = population[,c('rowId','y')],
+                   covariates = covariateData$covariates,
                    indexFolder = indexFolder)
   
   comp <- Sys.time() - start
   if(!quiet)
     writeLines(paste0('Model knn trained - took:',  format(comp, digits=3)))
   
-  varImp<- ff::as.ram(plpData$covariateRef)
+  varImp<- as.data.frame(plpData$covariateData$covariateRef)
   varImp$covariateValue <- rep(0, nrow(varImp))
   
   prediction <- predict.knn(plpData=plpData, 

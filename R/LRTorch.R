@@ -53,8 +53,9 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
                         outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
-  if(!'ffdf'%in%class(plpData$covariates))
-    stop('Needs plpData')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
   
   if(colnames(population)[ncol(population)]!='indexes'){
     warning('indexes column not present as last column - setting all index to 1')
@@ -97,7 +98,7 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
                                                        train=F,
                                                        modelOutput=outLoc)))
 
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
   covariateRef$included <- incs
   covariateRef$covariateValue <- rep(0, nrow(covariateRef))

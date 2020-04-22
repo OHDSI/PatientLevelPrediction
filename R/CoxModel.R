@@ -50,7 +50,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
   }
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates)){
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
     ParallelLogger::logError('Cox regression requires plpData in coo format')
     stop()
   }
@@ -86,7 +86,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
     varImp <- NULL
   } else {
     #varImp <- varImp[abs(varImp$value)>0,]
-    varImp <- merge(ff::as.ram(plpData$covariateRef), varImp, 
+    varImp <- merge(as.data.frame(plpData$covariateData$covariateRef), varImp, 
                     by='covariateId',all=T)
     varImp$value[is.na(varImp$value)] <- 0
     varImp <- varImp[order(-abs(varImp$value)),]

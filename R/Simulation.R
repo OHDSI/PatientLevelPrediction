@@ -95,8 +95,7 @@
 #'
 #' @export
 simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
-  # Note: currently, simulation is done completely in-memory. Could easily do batch-wise, storing in
-  # ffdf
+  # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
   writeLines("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariatePrevalence
   
@@ -112,9 +111,9 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                         covariateIds = covariateIds)
   covariateId <- do.call("c", covariateId)
   covariateValue <- rep(1, length(covariateId))
-  covariates <- ff::as.ffdf(data.frame(rowId = rowId,
+  covariateData <- Andromeda::andromeda( covariates = (data.frame(rowId = rowId,
                                        covariateId = covariateId,
-                                       covariateValue = covariateValue))
+                                       covariateValue = covariateValue)))
   
   writeLines("Generating cohorts")
   cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), cohortId = 1)
@@ -126,15 +125,13 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   cohorts$daysToCohortEnd <- sample(1:1000,n,replace=TRUE)
   cohorts$daysToObsEnd <- cohorts$daysToCohortEnd + sample(1:1000,n,replace=TRUE)
   
-  cohorts <- ff::as.ffdf(cohorts)
-  
   writeLines("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
-    prediction <- predictFfdf(plpDataSimulationProfile$outcomeModels[[i]],
-                              cohorts,
-                              covariates,
-                              modelType = "poisson")
+    prediction <- predictAndromeda(plpDataSimulationProfile$outcomeModels[[i]],
+                                   cohorts,
+                                   covariateData,
+                                   modelType = "poisson")
     outcomes <- merge(prediction, cohorts[, c("rowId", "time")])
     outcomes$value <- outcomes$value * outcomes$time  #Value is lambda
     outcomes$outcomeCount <- as.numeric(rpois(n, outcomes$value))
@@ -145,23 +142,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
     allOutcomes <- rbind(allOutcomes, outcomes)
   }
   
-  if (!is.null(plpDataSimulationProfile$exclusionPrevalence)) {
-    writeLines("Generating exclusion")
-    exclude <- data.frame()
-    for (i in 1:nrow(plpDataSimulationProfile$exclusionPrevalence)) {
-      sampleSize <- plpDataSimulationProfile$exclusionPrevalence[i] * nrow(cohorts)
-      rowId <- cohorts$rowId[sample(nrow(cohorts), size = sampleSize, replace = FALSE)]
-      outcomeId <- as.numeric(names(plpDataSimulationProfile$exclusionPrevalence)[i])
-      exclude <- rbind(exclude, data.frame(rowId = rowId, outcomeId = outcomeId))
-    }
-  }
   # Remove rownames else they will be copied to the ffdf objects:
-  rownames(allOutcomes) <- NULL
-  rownames(cohorts) <- NULL
-  rownames(covariates) <- NULL
-  rownames(exclude) <- NULL
-  rownames(plpDataSimulationProfile$covariateRef) <- NULL
-
   metaData = plpDataSimulationProfile$metaData
   
   #remove details from profile
@@ -175,25 +156,24 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   metaData$call$covariateSettings = NULL
 
   #convert to correct format
-  outcomes = ff::as.data.frame.ffdf(allOutcomes)
-  cohorts = ff::as.data.frame.ffdf(cohorts)
-  exclude = ff::as.data.frame.ffdf(exclude)
-  covariateRef = ff::as.ffdf(plpDataSimulationProfile$covariateRef)
+  outcomes = allOutcomes
+  cohorts = cohorts
+  covariateRef = plpDataSimulationProfile$covariateRef
   
+  covariateData$covariateRef <- covariateRef
 
-  temp <- list(cohortId = 0,
+  metaData <- list(cohortId = 0,
                studyStartDate = NULL,
                studyEndDate = NULL,
                attrition= data.frame(outcomeId=2,description='Simulated data', 
                                       targetCount=nrow(cohorts), uniquePeople=nrow(cohorts), 
                                       outcomes=nrow(outcomes)))
-  attr(cohorts, "metaData") <- temp
+  attr(cohorts, "metaData") <- metaData
   
-  result <- list(outcomes = outcomes,
-                 cohorts = cohorts,
-                 covariates = covariates,
-                 exclude = exclude,
-                 covariateRef = covariateRef,
+  result <- list(cohorts = cohorts,
+                 outcomes = outcomes,
+                 covariateData = covariateData,
+                 timeRef = NULL,
                  metaData = metaData)
   
   class(result) <- "plpData"
