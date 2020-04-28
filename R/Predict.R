@@ -589,10 +589,11 @@ predictAndromeda <- function(coefficients, population, covariateData, modelType 
     covariateData$coefficients <- coefficients
     
     prediction <- covariateData$covariates %>% 
-      dplyr::inner_join(covariateData$coefficients) %>% 
-      dplyr::summarise(values = covariateValue*beta) %>%
+      dplyr::inner_join(covariateData$coefficients, by= 'covariateId') %>% 
+      dplyr::mutate(values = covariateValue*beta) %>%
       dplyr::group_by(rowId) %>%
-      dplyr::summarise(value = sum(values))
+      dplyr::summarise(value = sum(values, na.rm = TRUE)) %>%
+      dplyr::select(rowId, value)
     
     prediction <- as.data.frame(prediction)
     prediction <- merge(population, prediction, by ="rowId", all.x = TRUE, fill = 0)

@@ -22,6 +22,7 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
   newCovariateData$covariates <- covariateData$covariates %>% dplyr::filter(rowId %in% rowIds)
+  class(newCovariateData) <- "CovariateData"
   ParallelLogger::logInfo(paste0('Finished limiting covariate data to population...'))
   return(newCovariateData)
 }
