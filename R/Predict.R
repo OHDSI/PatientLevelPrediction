@@ -97,7 +97,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
                            value=stats::predict(plpModel$model, data)
   )
   
-  prediction <- merge(population, prediction, by='rowId')
+  prediction <- merge(population, prediction, by='rowId', all.x=T, fill=0)
   prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
   attr(prediction, "metaData") <- list(predictionType = "binary") 
   return(prediction)
@@ -118,7 +118,7 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   } else {  
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
-    included <- newData$map$newIds[newData$map$oldIds%in%included] 
+    included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
     pdata <- reticulate::r_to_py(newData$data[,included])
     fun_predict <- python_predict
   }
@@ -171,7 +171,7 @@ predict.pythonAuto <- function(plpModel, population, plpData){
   } else {  
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
-    included <- newData$map$newIds[newData$map$oldIds%in%included] 
+    included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
     pdata <- reticulate::r_to_py(newData$data[,included])
   }
   
@@ -536,12 +536,12 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
 predictProbabilities <- function(predictiveModel, population, covariateData) {
   start <- Sys.time()
   
-  ParallelLogger::logTrace('predictProbabilities - predictFfdf start')
+  ParallelLogger::logTrace('predictProbabilities - predictAndromeda start')
   prediction <- predictAndromeda(predictiveModel$coefficients,
                             population,
                             covariateData,
                             predictiveModel$modelType)
-  ParallelLogger::logTrace('predictProbabilities - predictFfdf end')
+  ParallelLogger::logTrace('predictProbabilities - predictAndromeda end')
   prediction$time <- NULL
   attr(prediction, "modelType") <- predictiveModel$modelType
   attr(prediction, "cohortId") <- attr(population, "metadata")$cohortId
@@ -588,14 +588,14 @@ predictAndromeda <- function(coefficients, population, covariateData, modelType 
   if(sum(coefficients$beta != 0)>0){
     covariateData$coefficients <- coefficients
     
-    prediction <- covariateData$covariate %>% 
+    prediction <- covariateData$covariates %>% 
       dplyr::inner_join(covariateData$coefficients) %>% 
       dplyr::summarise(values = covariateValue*beta) %>%
       dplyr::group_by(rowId) %>%
       dplyr::summarise(value = sum(values))
     
     prediction <- as.data.frame(prediction)
-    prediction <- merge(population, prediction, by ="rowId", all.x = TRUE)
+    prediction <- merge(population, prediction, by ="rowId", all.x = TRUE, fill = 0)
     prediction$value[is.na(prediction$value)] <- 0
     prediction$value <- prediction$value + intercept
   } else{

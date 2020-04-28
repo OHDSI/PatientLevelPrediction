@@ -298,6 +298,10 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
     stop('Folder to save covariates already exists...')
   }
   
+  if(!dir.exists(file)){
+    dir.create(file)
+  }
+  
   # save the actual values in the metaData
   # TODO - only do this if exists in parent or environ
   if(is.null(plpData$metaData$call$sampleSize)){  # fixed a bug when sampleSize is NULL

@@ -58,13 +58,17 @@ fitGLMModel <- function(population,
   }  else {
     colnames(population)[colnames(population) == "outcomeCount"] <- "y"
     
-    covariatesData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
+    covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
     
-    if (length(includeCovariateIds) != 0) {
-      covariateData$covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds)
-    }
-    if (length(excludeCovariateIds) != 0) {
-      covariateData$covariates <- covariateData$covariates %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+    # exclude or include covariates
+    if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) != 0)) {
+      covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds) %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+    } else if ( (length(includeCovariateIds) == 0) & (length(excludeCovariateIds) != 0)) { 
+      covariates <- covariateData$covariates %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+    } else if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) == 0)) {
+      covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds)
+    } else {
+      covariates <- covariateData$covariates
     }
     
     if (modelType == "cox"){
@@ -80,14 +84,18 @@ fitGLMModel <- function(population,
     } else {
       addIntercept <- TRUE
     }
-    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = population[,!colnames(population)%in%c('cohortStartDate')],
-                                                 covariates = covariateData$covariates,
+    
+    andromedaPopulation <- Andromeda::andromeda(population = population[,!colnames(population)%in%c('cohortStartDate')])
+    
+    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = andromedaPopulation$population,
+                                                 covariates = covariates,
                                                  addIntercept = addIntercept,
                                                  modelType = modelTypeToCyclopsModelType(modelType),
                                                  checkSorting = TRUE,
                                                  checkRowIds = FALSE,
                                                  normalize = NULL,
                                                  quiet = TRUE)
+
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
       Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)}, 

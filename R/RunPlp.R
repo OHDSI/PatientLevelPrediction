@@ -529,15 +529,15 @@ covariateSummary <- function(plpData, population){
   # all 
   #===========================
   
-  plpData$covariateData$population <- population %>% 
+  plpData$covariateData$population <- tibble::as_tibble(population) %>% 
     dplyr::select(rowId, outcomeCount)
     
   # restrict to pop
   covData <- plpData$covariateData$covariates %>% 
-    dplyr::inner_join(plpData$covariateData$population)
+    dplyr::inner_join(plpData$covariateData$population, by= 'rowId')
   
   allPeople <- covData %>% dplyr::group_by(covariateId) %>%
-    dplyr::summarise(CovariateCount = length(covariateValue)) %>%
+    dplyr::summarise(CovariateCount = dplyr::n()) %>%
     dplyr::select(covariateId, CovariateCount)
   allPeople <- as.data.frame(allPeople)
   
@@ -546,12 +546,16 @@ covariateSummary <- function(plpData, population){
   # outcome prevs
   #===========================
   
-  outCount <- nrow(covData %>% dplyr::select(outcomeCount == 1))
-  outPeople <- covData %>% dplyr::select(outcomeCount == 1)
+  outCount <- nrow(covData %>% dplyr::filter(outcomeCount == 1) %>% 
+                     dplyr::select(rowId) %>% dplyr::distinct() )
+  outPeople <- covData %>% dplyr::filter(outcomeCount == 1) %>%
     dplyr::group_by(covariateId) %>%
-    dplyr::summarise(CovariateCountWithOutcome = length(covariateValue),
-                     CovariateMeanWithOutcome = sum(covariateValue)/outCount,
-                     CovariateStDevWithOutcome = sqrt(((sd(covariateValue)^2)*(length(covariateValue)-1)+((sum(covariateValue)/outCount)^2)*(outCount-length(covariateValue)))/(outCount-1))
+    dplyr::summarise(CovariateCountWithOutcome = dplyr::n(),
+                     CovariateMeanWithOutcome = 1.0*sum(covariateValue,na.rm = TRUE)/outCount,
+                     meandiff = (1.0*sum(covariateValue,na.rm = TRUE)/outCount - covariateValue)^2
+                     ) %>%
+    dplyr::mutate(CovariateStDevWithOutcome = sqrt( ( meandiff + CovariateMeanWithOutcome^2*(outCount - CovariateCountWithOutcome )  )/(outCount-1)  )
+                     #CovariateStDevWithOutcome = sqrt((1.0*(sd(covariateValue)^2)*(n()-1)+((sum(covariateValue)/outCount)^2)*(outCount-n()))/(outCount-1))
     ) %>%
     dplyr::select(covariateId, CovariateCountWithOutcome,CovariateMeanWithOutcome,CovariateStDevWithOutcome )
   outPeople <- as.data.frame(outPeople)
@@ -559,21 +563,25 @@ covariateSummary <- function(plpData, population){
   #===========================
   # non-outcome prevs
   #===========================
-  nooutCount <- nrow(covData %>% dplyr::select(outcomeCount == 0))
-  nooutPeople <- covData %>% dplyr::select(outcomeCount == 0)
-  dplyr::group_by(covariateId) %>%
-    dplyr::summarise(CovariateCountWithOutcome = length(covariateValue),
-                     CovariateMeanWithOutcome = sum(covariateValue)/nooutCount,
-                     CovariateStDevWithOutcome = sqrt(((sd(covariateValue)^2)*(length(covariateValue)-1)+((sum(covariateValue)/nooutCount)^2)*(nooutCount-length(covariateValue)))/(nooutCount-1))
+  nooutCount <- nrow(covData %>% dplyr::filter(outcomeCount == 0) %>%
+                       dplyr::select(rowId) %>% dplyr::distinct() )
+  nooutPeople <- covData %>% dplyr::filter(outcomeCount == 0) %>% 
+    dplyr::group_by(covariateId) %>%
+    dplyr::summarise(CovariateCountWithNoOutcome = dplyr::n(),
+                     CovariateMeanWithNoOutcome = 1.0*sum(covariateValue, na.rm = TRUE)/nooutCount,
+                     meandiff = (1.0*sum(covariateValue, na.rm = TRUE)/nooutCount - covariateValue)^2
     ) %>%
-    dplyr::select(covariateId, CovariateCountWithOutcome,CovariateMeanWithOutcome,CovariateStDevWithOutcome )
+    dplyr::mutate(CovariateStDevWithNoOutcome = sqrt( ( meandiff + CovariateMeanWithNoOutcome^2*(nooutCount - CovariateCountWithNoOutcome )  )/(nooutCount-1)  )
+                  #CovariateStDevWithOutcome = sqrt((1.0*(sd(covariateValue)^2)*(n()-1)+((sum(covariateValue)/outCount)^2)*(outCount-n()))/(outCount-1))
+    ) %>%
+    dplyr::select(covariateId, CovariateCountWithNoOutcome,CovariateMeanWithNoOutcome,CovariateStDevWithNoOutcome )
   nooutPeople <- as.data.frame(nooutPeople)
   
   # now merge the predictors with prev.out and prev.noout
   prevs <- merge(merge(allPeople,outPeople, all=T), nooutPeople, all=T)
   prevs[is.na(prevs)] <- 0
   
-  prevs <- merge(as.data.frame(plpData$covariateData$covariateRef[,c('covariateName','covariateId')]), prevs, by='covariateId')
+  prevs <- merge(as.data.frame(plpData$covariateData$covariateRef)[,c('covariateName','covariateId')], prevs, by='covariateId')
   
   # adding CovariateStandardizedMeanDifference
   prevs$StandardizedMeanDiff <- (prevs$CovariateMeanWithOutcome - prevs$CovariateMeanWithNoOutcome)/sqrt(prevs$CovariateStDevWithNoOutcome^2 + prevs$CovariateStDevWithOutcome^2 )
@@ -589,26 +597,33 @@ characterize <- function(plpData, population, N=1){
   # all 
   #===========================
   
-  covData <- plpData$covariateData$covariates
+  newCovariateData <- Andromeda::andromeda(covariateRef = plpData$covariateData$covariateRef,
+                                           analysisRef = plpData$covariateData$analysisRef)
   
   if(!missing(population)){
-  plpData$covariateData$population <- population %>% 
+  plpData$covariateData$population <- tibble::as_tibble(population) %>% 
     dplyr::select(rowId, outcomeCount)
   # restrict to pop
-  covData <- covData %>% 
+  newCovariateData$covariates <- plpData$covariateData$covariates %>% 
     dplyr::inner_join(plpData$covariateData$population)
+  plpData$covariateData$population <- NULL
+  } else{
+    newCovariateData$covariates <- plpData$covariateData$covariates
   }
   
-  popSize <- nrow(covData %>% dplyr::select(rowId) %>% 
-                    dplyr::group_by(rowId) )
+  
+  popSize <- as.data.frame(newCovariateData$covariates %>% dplyr::select(rowId) %>% 
+    dplyr::summarise(counts = dplyr::n_distinct(rowId)))$counts
 
-  allPeople <- covData %>% 
+  allPeople <- newCovariateData$covariates %>% 
     dplyr::group_by(covariateId) %>%
-    dplyr::summarise(CovariateCount = length(covariateValue),
-                     CovariateFraction = length(covariateValue)/popSize) %>%
-    dplyr::filter(CovariateCount >= N)
+    dplyr::summarise(CovariateCount = dplyr::n(),
+                     CovariateFraction = 1.0*dplyr::n()/popSize) %>%
+    dplyr::filter(CovariateCount >= N) %>%
     dplyr::select(covariateId, CovariateCount,CovariateFraction)
   allPeople <- as.data.frame(allPeople)
+  
+  Andromeda::close(newCovariateData)
 
   return(allPeople)
 }

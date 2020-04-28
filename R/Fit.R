@@ -70,7 +70,7 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   #=========================================================
   
   # normalise the data:
-  removeRedundancy <- ifelse("timeId" %in%colnames(plpData$covariates), F, T)
+  removeRedundancy <- ifelse("timeId" %in%colnames(plpData$covariateData$covariates), F, T)
   plpData$covariateData <- FeatureExtraction::tidyCovariateData(covariateData=data$covariateData, 
                                                                 minFraction = minCovariateFraction,
                                                                 normalize = normalizeData,
@@ -87,7 +87,7 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   plpModel <- do.call(fun, args)
   ParallelLogger::logTrace('Returned from classifier function')
   # add pre-processing details
-  plpModel$metaData$preprocessSettings <- attr(newCovariateData, "metaData") 
+  plpModel$metaData$preprocessSettings <- attr(plpData$CovariateData, "metaData") 
   
   ParallelLogger::logTrace('Creating prediction function')
   plpModel$predict <- createTransform(plpModel)
@@ -106,6 +106,9 @@ applyTidyCovariateData <- function(covariateData,preprocessSettings){
   if (!FeatureExtraction::isCovariateData(covariateData))
     stop("Data not of class CovariateData")
   
+  newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
+                                           analysisRef = covariateData$analysisRef)
+  
   maxs <- preprocessSettings$normFactors
   deleteRedundantCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
   deletedInfrequentCovariateIds <- preprocessSettings$deletedInfrequentCovariateIds
@@ -115,19 +118,21 @@ applyTidyCovariateData <- function(covariateData,preprocessSettings){
   
   covariateData$maxes <- maxs
   maxes %>% dplyr::rename(covariateId = bins) 
-  newData <- covariateData$covariates %>%  
+  newCovariateData$covariates <- covariateData$covariates %>%  
     dplyr::filter(!covariateId %in%deletedInfrequentCovariateIds) %>%
     dplyr::filter(!covariateId %in%deleteRedundantCovariateIds) %>%
     dplyr::inner_join(maxes) %>%
-    dplyr::mutate(value = covariateValue/maxs) %>%
+    dplyr::mutate(value = 1.0*covariateValue/maxs) %>%
     dplyr::select(-covariateValue) %>%
     dplyr::rename(covariateValue = value)
+  
+  covariateData$maxes <- NULL
      
   delta <- Sys.time() - start
   writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))
   
   # return processed data
-  return(newData)
+  return(newCovariateData)
 }
 
 # create transformation function

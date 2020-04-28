@@ -140,10 +140,10 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   
   # get the original feature names:
   varImp$Feature <- as.numeric(varImp$Feature)+1 # adding +1 as xgboost index starts at 0
-  varImp <- merge(result$map, varImp, by.x='newIds', by.y='Feature')
+  varImp <- merge(result$map, varImp, by.x='newCovariateId', by.y='Feature')
   
   covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
-  varImp<- merge(covariateRef,varImp,  by.y='oldIds', by.x='covariateId', all=T)
+  varImp<- merge(covariateRef,varImp,  by.y='oldCovariateId', by.x='covariateId', all=T)
   varImp$Gain[is.na(varImp$Gain)] <- 0
   varImp <- varImp[order(-varImp$Gain),]
   colnames(varImp)[colnames(varImp)=='Gain'] <- 'covariateValue'
