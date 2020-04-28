@@ -111,9 +111,13 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                         covariateIds = covariateIds)
   covariateId <- do.call("c", covariateId)
   covariateValue <- rep(1, length(covariateId))
-  covariateData <- Andromeda::andromeda( covariates = (data.frame(rowId = rowId,
-                                       covariateId = covariateId,
-                                       covariateValue = covariateValue)))
+  covariateData <- Andromeda::andromeda(covariates = data.frame(rowId = rowId,
+                                                                covariateId = covariateId,
+                                                                covariateValue = covariateValue),
+                                        covariateRef = plpDataSimulationProfile$covariateRef,
+                                        analysisRef  = data.frame(analysisId = 1))
+  
+  class(covariateData) <- "CovariateData"
   
   writeLines("Generating cohorts")
   cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), cohortId = 1)
@@ -142,6 +146,8 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
     allOutcomes <- rbind(allOutcomes, outcomes)
   }
   
+ covariateData$coefficients <- NULL
+  
   # Remove rownames else they will be copied to the ffdf objects:
   metaData = plpDataSimulationProfile$metaData
   
@@ -155,14 +161,8 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   metaData$call$cdmVersion = 5
   metaData$call$covariateSettings = NULL
 
-  #convert to correct format
-  outcomes = allOutcomes
-  cohorts = cohorts
-  covariateRef = plpDataSimulationProfile$covariateRef
-  
-  covariateData$covariateRef <- covariateRef
-
-  metaData <- list(cohortId = 0,
+  metaData <- list(cohortId = 1,
+                   outcomeIds = c(2,3),
                studyStartDate = NULL,
                studyEndDate = NULL,
                attrition= data.frame(outcomeId=2,description='Simulated data', 
@@ -171,7 +171,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   attr(cohorts, "metaData") <- metaData
   
   result <- list(cohorts = cohorts,
-                 outcomes = outcomes,
+                 outcomes = allOutcomes,
                  covariateData = covariateData,
                  timeRef = NULL,
                  metaData = metaData)

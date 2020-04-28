@@ -18,15 +18,15 @@ data(plpDataSimulationProfile, envir = environment())
 # PLPDATA
 sampleSize <- 2000+sample(1000,1)
 plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-plpData$metaData$cohortId <- plpData$metaData$cohortIds
+#plpData$metaData$cohortId <- plpData$metaData$cohortIds
 
 sampleSize2 <- 1000+sample(1000,1)
 plpData2 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
-plpData2$metaData$cohortId <- plpData2$metaData$cohortIds
+#plpData2$metaData$cohortId <- plpData2$metaData$cohortIds
 
 # temporal - make less covs?
 plpData3 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
-plpData3$metaData$cohortId <- plpData3$metaData$cohortIds
+#plpData3$metaData$cohortId <- plpData3$metaData$cohortIds
 
 # filter out to 10 covariates
 #covIds <- unique(ff::as.ram(plpData3$covariates$covariateId))[1:10]

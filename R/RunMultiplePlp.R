@@ -206,6 +206,7 @@ runPlpAnalyses <- function(connectionDetails,
       if(!is.null(plpData)){
         ParallelLogger::logTrace(paste0('Saving data in setting ', i ))
         savePlpData(plpData, referenceTable$plpDataFolder[i])
+        plpData <- loadPlpData(referenceTable$plpDataFolder[i])
       } else{
         ParallelLogger::logInfo('No plpData - probably empty cohort issue')
       }
