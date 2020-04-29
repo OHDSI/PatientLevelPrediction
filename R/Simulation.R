@@ -161,14 +161,16 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   metaData$call$cdmVersion = 5
   metaData$call$covariateSettings = NULL
 
-  metaData <- list(cohortId = 1,
-                   outcomeIds = c(2,3),
-               studyStartDate = NULL,
-               studyEndDate = NULL,
-               attrition= data.frame(outcomeId=2,description='Simulated data', 
+  metaData$cohortId = 1
+  metaData$outcomeIds = c(2,3)
+  metaData$studyStartDate = NULL
+  metaData$studyEndDate = NULL
+  metaData$attrition= data.frame(outcomeId=2,description='Simulated data', 
                                       targetCount=nrow(cohorts), uniquePeople=nrow(cohorts), 
-                                      outcomes=nrow(outcomes)))
+                                      outcomes=nrow(outcomes))
   attr(cohorts, "metaData") <- metaData
+  
+  attr(covariateData, "metaData") <- list(populationSize = n)
   
   result <- list(cohorts = cohorts,
                  outcomes = allOutcomes,

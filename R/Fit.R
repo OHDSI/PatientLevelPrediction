@@ -116,12 +116,11 @@ applyTidyCovariateData <- function(covariateData,preprocessSettings){
   writeLines("Removing infrequent and redundant covariates and normalizing")
   start <- Sys.time()       
   
-  covariateData$maxes <- maxs
-  maxes %>% dplyr::rename(covariateId = bins) 
+  covariateData$maxes <- tibble::as_tibble(maxs) %>% dplyr::rename(covariateId = bins) 
   newCovariateData$covariates <- covariateData$covariates %>%  
     dplyr::filter(!covariateId %in%deletedInfrequentCovariateIds) %>%
     dplyr::filter(!covariateId %in%deleteRedundantCovariateIds) %>%
-    dplyr::inner_join(maxes) %>%
+    dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
     dplyr::mutate(value = 1.0*covariateValue/maxs) %>%
     dplyr::select(-covariateValue) %>%
     dplyr::rename(covariateValue = value)
