@@ -390,26 +390,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
   ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
   ParallelLogger::logInfo('This can take a while...')
-  covSummary <- covariateSummary(plpData, population)
-  if(exists("model")){
-    if(!is.null(model$varImp)){
-      covSummary <- merge(model$varImp[,colnames(model$varImp)!='covariateName'], covSummary, by='covariateId', all=T)
-    }
-  }
-  trainCovariateSummary <- covariateSummary(plpData, population[population$index>0,])
-  trainCovariateSummary <- trainCovariateSummary[,colnames(trainCovariateSummary)!='covariateName']
-  colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'] <- paste0('Train',colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'])
-  testCovariateSummary <- covariateSummary(plpData, population[population$index<0,])
-  testCovariateSummary <- testCovariateSummary[,colnames(testCovariateSummary)!='covariateName']
-  colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'] <- paste0('Test',colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'])
-  covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
-  covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
-  
-  # make covariateValue 0 if NA
-  if('covariateValue'%in%colnames(covSummary)){
-    covSummary$covariateValue[is.na(covSummary$covariateValue)] <- 0
-  }
-  
+  covSummary <- covariateSummary(plpData, population, model)
   
   if(saveEvaluation){
     ParallelLogger::logTrace('Saving covariate summary as csv')
@@ -524,72 +505,135 @@ summary.plpModel <- function(object, ...) {
 # CovariateCountWithNoOutcome	CovariateMeanWithOutcome	
 # CovariateMeanWithNoOutcome	CovariateStDevWithOutcome	
 # CovariateStDevWithNoOutcome	CovariateStandardizedMeanDifference
-covariateSummary <- function(plpData, population){
+covariateSummary <- function(plpData, population, model){
   #===========================
   # all 
   #===========================
+  if(!is.null(model$varImp)){
+    variableImportance <- tibble::as_tibble(model$varImp[,colnames(model$varImp)!='covariateName'])
+  } else{
+    variableImportance <- tibble::as_tibble(data.frame(covariateId = 1,
+                                     covariateValue = 0))
+  }
   
-  plpData$covariateData$population <- tibble::as_tibble(population) %>% 
-    dplyr::select(rowId, outcomeCount)
+  # find total pop values:
+  N <- nrow(population)
+  means <- plpData$covariateData$covariates %>% 
+    dplyr::group_by(covariateId) %>%
+    dplyr::summarise(CovariateMean = 1.0*sum(covariateValue,na.rm = TRUE)/N) %>%
+    dplyr::select(covariateId,CovariateMean)
+  
+  allResult <- plpData$covariateData$covariates %>% 
+    dplyr::inner_join(means, by= 'covariateId') %>%
+    dplyr::group_by(covariateId, CovariateMean) %>%
+    dplyr::summarise(CovariateCount = dplyr::n(),
+                     meanDiff = sum((1.0*CovariateMean - covariateValue)^2, na.rm = TRUE) ) %>%
+    dplyr::mutate(CovariateStDev = sqrt( ( meanDiff + CovariateMean^2*(N - CovariateCount )  )/(N-1)  )) %>%
+    dplyr::select(covariateId,CovariateCount,CovariateMean,CovariateStDev) 
+  
+  allResult <- tibble::as_tibble(as.data.frame(plpData$covariateData$covariateRef)) %>%
+    dplyr::select('covariateId', 'covariateName') %>%
+    dplyr::inner_join(tibble::as_tibble(as.data.frame(allResult)))%>%
+    dplyr::left_join(variableImportance, by = 'covariateId')
+  
+  # add with and without outcome
+  if('outcomeCount' %in% colnames(population)){
+    plpData$covariateData$population <- tibble::as_tibble(population) %>% 
+      dplyr::group_by(outcomeCount) %>%
+      dplyr::summarise(Ns= dplyr::n()) %>% 
+      dplyr::inner_join(tibble::as_tibble(population), by = 'outcomeCount') %>%
+      dplyr::select('rowId', 'outcomeCount', 'Ns')
+      
+    plpData$covariateData$means <- plpData$covariateData$covariates %>% 
+      dplyr::inner_join(plpData$covariateData$population, by = 'rowId') %>%
+      dplyr::group_by(covariateId, outcomeCount, Ns) %>%
+      dplyr::summarise(CovariateMean = 1.0*sum(covariateValue,na.rm = TRUE)/Ns) %>%
+      dplyr::select(covariateId,outcomeCount,CovariateMean)
     
-  # restrict to pop
-  covData <- plpData$covariateData$covariates %>% 
-    dplyr::inner_join(plpData$covariateData$population, by= 'rowId')
+    oStratResult <- plpData$covariateData$covariates %>% 
+      dplyr::inner_join(plpData$covariateData$population, by = 'rowId') %>%
+      dplyr::inner_join(plpData$covariateData$means, by= c('covariateId','outcomeCount') ) %>%
+      dplyr::group_by(covariateId, outcomeCount, CovariateMean, Ns) %>%
+      dplyr::summarise(CovariateCount = dplyr::n(),
+                       meanDiff = sum((1.0*CovariateMean - covariateValue)^2, na.rm = TRUE) ) %>%
+      dplyr::mutate(CovariateStDev = sqrt( ( meanDiff + CovariateMean^2*(Ns - CovariateCount )  )/(Ns-1)  )) %>%
+      dplyr::select(covariateId,outcomeCount,CovariateCount,CovariateMean,CovariateStDev) 
+    
+    oStratResult <- tibble::as_tibble(as.data.frame(oStratResult))
+    # make the columns by outcome...
+    out <- oStratResult %>% 
+      dplyr::filter( outcomeCount == 1 ) %>%
+      dplyr::select(covariateId, CovariateCount, CovariateMean,CovariateStDev)
+    colnames(out)[-1] <- paste0(colnames(out)[-1], 'WithOutcome')
+    noout <- oStratResult %>% 
+      dplyr::filter( outcomeCount == 0) %>%
+      dplyr::select(covariateId, CovariateCount, CovariateMean,CovariateStDev)
+    colnames(noout)[-1] <- paste0(colnames(noout)[-1], 'WithNoOutcome')
+    
+    allResult <- allResult %>% 
+      dplyr::full_join(noout, by ='covariateId') %>%
+      dplyr::full_join(out, by ='covariateId')
+    
+  }
   
-  allPeople <- covData %>% dplyr::group_by(covariateId) %>%
-    dplyr::summarise(CovariateCount = dplyr::n()) %>%
-    dplyr::select(covariateId, CovariateCount)
-  allPeople <- as.data.frame(allPeople)
+  # find summary by outcome and index:
+  if('indexes' %in% colnames(population)){
+    totals <- tibble::as_tibble(population) %>% 
+      dplyr::mutate(index = indexes<0) %>% 
+      dplyr::group_by(outcomeCount, index) %>%
+      dplyr::summarise(Ns= dplyr::n())
+    
+    plpData$covariateData$population <- tibble::as_tibble(population) %>% 
+      dplyr::mutate(index = indexes<0) %>% 
+      dplyr::select(rowId, outcomeCount, index) %>% 
+      dplyr::inner_join(totals, by = c('outcomeCount','index'))
+    
+    result <- plpData$covariateData$covariates %>% 
+      dplyr::inner_join(plpData$covariateData$population, by= 'rowId') %>%
+      dplyr::group_by(covariateId, outcomeCount, index, Ns) %>%
+      dplyr::summarise(CovariateCount = dplyr::n(),
+                       CovariateMean = 1.0*sum(covariateValue,na.rm = TRUE)/Ns
+                       #meanDiff = (1.0*sum(covariateValue,na.rm = TRUE)/Ns - covariateValue)^2
+      ) %>%
+      #dplyr::mutate(CovariateStDev = sqrt( ( meanDiff + CovariateMean^2*(Ns - CovariateCount )  )/(Ns-1)  )) %>%
+      dplyr::select(covariateId,outcomeCount,index, CovariateCount,CovariateMean)
+    
+    result <- tibble::as_tibble(as.data.frame(result))
+    
+    # selecting the test/train/class 
+    nonOutTest <- result %>% 
+      dplyr::filter( outcomeCount == 0 & index == T ) %>%
+      dplyr::select(covariateId, CovariateCount, CovariateMean)
+    colnames(nonOutTest)[-1] <- paste0('Test',colnames(nonOutTest)[-1], 'WithNoOutcome')
+    nonOutTrain <- result %>% 
+      dplyr::filter( outcomeCount == 0 & index == F ) %>%
+      dplyr::select(covariateId, CovariateCount, CovariateMean)
+    colnames(nonOutTrain)[-1] <- paste0('Train',colnames(nonOutTrain)[-1], 'WithNoOutcome')
+    outTest <- result %>% 
+      dplyr::filter( outcomeCount == 1 & index == T ) %>%
+      dplyr::select(covariateId, CovariateCount, CovariateMean)
+    colnames(outTest)[-1] <- paste0('Test',colnames(outTest)[-1], 'WithOutcome')
+    outTrain <- result %>% 
+      dplyr::filter( outcomeCount == 1 & index == F) %>%
+      dplyr::select(covariateId, CovariateCount, CovariateMean)
+    colnames(outTrain)[-1] <- paste0('Train',colnames(outTrain)[-1], 'WithOutcome')
+    
+    covSummary <- as.data.frame(allResult %>%
+                                  dplyr::full_join(nonOutTest , by ='covariateId') %>%
+                                  dplyr::full_join(outTest , by ='covariateId') %>%
+                                  dplyr::full_join(nonOutTrain , by ='covariateId') %>% 
+                                  dplyr::full_join(outTrain , by ='covariateId'))
+  } else{
+    covSummary <- as.data.frame(allResult)
+  }
   
+
+  # make covariateValue 0 if NA
+  if('covariateValue'%in%colnames(covSummary)){
+    covSummary$covariateValue[is.na(covSummary$covariateValue)] <- 0
+  }
   
-  #===========================
-  # outcome prevs
-  #===========================
-  
-  outCount <- nrow(covData %>% dplyr::filter(outcomeCount == 1) %>% 
-                     dplyr::select(rowId) %>% dplyr::distinct() )
-  outPeople <- covData %>% dplyr::filter(outcomeCount == 1) %>%
-    dplyr::group_by(covariateId) %>%
-    dplyr::summarise(CovariateCountWithOutcome = dplyr::n(),
-                     CovariateMeanWithOutcome = 1.0*sum(covariateValue,na.rm = TRUE)/outCount,
-                     meandiff = (1.0*sum(covariateValue,na.rm = TRUE)/outCount - covariateValue)^2
-                     ) %>%
-    dplyr::mutate(CovariateStDevWithOutcome = sqrt( ( meandiff + CovariateMeanWithOutcome^2*(outCount - CovariateCountWithOutcome )  )/(outCount-1)  )
-                     #CovariateStDevWithOutcome = sqrt((1.0*(sd(covariateValue)^2)*(n()-1)+((sum(covariateValue)/outCount)^2)*(outCount-n()))/(outCount-1))
-    ) %>%
-    dplyr::select(covariateId, CovariateCountWithOutcome,CovariateMeanWithOutcome,CovariateStDevWithOutcome )
-  outPeople <- as.data.frame(outPeople)
-  
-  #===========================
-  # non-outcome prevs
-  #===========================
-  nooutCount <- nrow(covData %>% dplyr::filter(outcomeCount == 0) %>%
-                       dplyr::select(rowId) %>% dplyr::distinct() )
-  nooutPeople <- covData %>% dplyr::filter(outcomeCount == 0) %>% 
-    dplyr::group_by(covariateId) %>%
-    dplyr::summarise(CovariateCountWithNoOutcome = dplyr::n(),
-                     CovariateMeanWithNoOutcome = 1.0*sum(covariateValue, na.rm = TRUE)/nooutCount,
-                     meandiff = (1.0*sum(covariateValue, na.rm = TRUE)/nooutCount - covariateValue)^2
-    ) %>%
-    dplyr::mutate(CovariateStDevWithNoOutcome = sqrt( ( meandiff + CovariateMeanWithNoOutcome^2*(nooutCount - CovariateCountWithNoOutcome )  )/(nooutCount-1)  )
-                  #CovariateStDevWithOutcome = sqrt((1.0*(sd(covariateValue)^2)*(n()-1)+((sum(covariateValue)/outCount)^2)*(outCount-n()))/(outCount-1))
-    ) %>%
-    dplyr::select(covariateId, CovariateCountWithNoOutcome,CovariateMeanWithNoOutcome,CovariateStDevWithNoOutcome )
-  nooutPeople <- as.data.frame(nooutPeople)
-  
-  # now merge the predictors with prev.out and prev.noout
-  prevs <- merge(merge(allPeople,outPeople, all=T), nooutPeople, all=T)
-  prevs[is.na(prevs)] <- 0
-  
-  prevs <- merge(as.data.frame(plpData$covariateData$covariateRef)[,c('covariateName','covariateId')], prevs, by='covariateId')
-  
-  # adding CovariateStandardizedMeanDifference
-  prevs$StandardizedMeanDiff <- (prevs$CovariateMeanWithOutcome - prevs$CovariateMeanWithNoOutcome)/sqrt(prevs$CovariateStDevWithNoOutcome^2 + prevs$CovariateStDevWithOutcome^2 )
-  prevs$StandardizedMeanDiff[is.na(prevs$StandardizedMeanDiff)] <- 0 
-  prevs$StandardizedMeanDiff[is.infinite(prevs$StandardizedMeanDiff)] <- 0 
-  
-  return(prevs)
-  
+  return(covSummary)
 }
 
 characterize <- function(plpData, population, N=1){
