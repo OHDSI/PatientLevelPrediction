@@ -430,9 +430,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   }
   
   
-  if(verbosity!="NONE"){
-    ParallelLogger::logInfo(paste0('Log saved to ',logFileName))  
-  }
+  ParallelLogger::logInfo(paste0('Log saved to ',logFileName))  
   ParallelLogger::logInfo("Run finished successfully.")
   
   # stop logger
@@ -448,11 +446,11 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
 
 
 #' @export
-summary.plpModel <- function(object, ...) {
+summary.runPlp <- function(object, ...) {
   
-  if(object$model$modelSettings$model=="lr_lasso")
+  if(object$model$modelSettings$model=="lr_lasso"){
     hyper <-  paste0("The final model hyper-parameters were - variance: ",format(as.double(object$model$hyperParamSearch['priorVariance']), digits = 5))
-  if(is.null(object$model$hyperParamSearch)){
+  } else if(is.null(object$model$hyperParamSearch)){
     hyper <- 'No hyper-parameters...'
   } else {
     finalmod <- object$model$hyperParamSearch[which.max(object$model$hyperParamSearch$cv_auc),]
@@ -491,10 +489,10 @@ summary.plpModel <- function(object, ...) {
                  BrierScore = object$performanceEvaluation$evaluationStatistics[brierScoreInd,'Value'],
                  BrierScaled = object$performanceEvaluation$evaluationStatistics[brierScaledInd,'Value'],
                  CalibrationIntercept = object$performanceEvaluation$evaluationStatistics[calibrationInterceptInd,'Value'],
-                 CalibrationSlope = object$performanceEvaluation$evaluationStatistics[calibrationSlope,'Value']
+                 CalibrationSlope = object$performanceEvaluation$evaluationStatistics[calibrationSlopeInd,'Value']
                  
   )
-  class(result) <- "summary.plpModel"
+  class(result) <- "summary.runPlp"
   return(result)
 }
 
