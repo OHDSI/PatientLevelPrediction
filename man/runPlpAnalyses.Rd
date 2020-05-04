@@ -14,6 +14,7 @@ runPlpAnalyses(
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "cohort",
   cdmVersion = 5,
+  onlyFetchData = FALSE,
   outputFolder = "./PlpOutput",
   modelAnalysisList,
   cohortIds,
@@ -65,6 +66,8 @@ SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 
 \item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and
 "5".}
+
+\item{onlyFetchData}{Only fetches and saves the data object to the output folder without running the analysis.}
 
 \item{outputFolder}{Name of the folder where all the outputs will written to.}
 
