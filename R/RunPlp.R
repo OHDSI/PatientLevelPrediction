@@ -503,7 +503,7 @@ summary.runPlp <- function(object, ...) {
 # CovariateCountWithNoOutcome	CovariateMeanWithOutcome	
 # CovariateMeanWithNoOutcome	CovariateStDevWithOutcome	
 # CovariateStDevWithNoOutcome	CovariateStandardizedMeanDifference
-covariateSummary <- function(plpData, population, model){
+covariateSummary <- function(plpData, population, model = NULL){
   #===========================
   # all 
   #===========================
@@ -624,6 +624,8 @@ covariateSummary <- function(plpData, population, model){
   } else{
     covSummary <- as.data.frame(allResult)
   }
+  
+  covSummary[is.na(covSummary)] <- 0
   
 
   # make covariateValue 0 if NA

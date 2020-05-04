@@ -58,28 +58,6 @@ test_that("input checks work", {
                                    validation_table_target = 'table', validation_table_outcome = 'table',
                                    validation_id_target = 1, validation_id_outcome = 1))
   
-  # fails as no modelTable
-  expect_error(evaluateExistingModel())
-  
-  #fails as incorrect columns: 'modelId','modelCovariateId'
-  expect_error(evaluateExistingModel(modelTable=data.frame(modelId=rep(1,2), modelCovariateId=1:2)))
-  
-  #fails as covariateTable missin
-  expect_error(evaluateExistingModel(modelTable=data.frame(modelId=rep(1,2), modelCovariateId=1:2, 
-                                                           coefficientValue=rep(1,2))))
-  
-  expect_error(evaluateExistingModel(modelTable=data.frame(modelId=rep(1,2), modelCovariateId=1:2, 
-                                                           coefficientValue=rep(1,2)),
-                                     covariateTable = data.frame(modelCovariateId=1:2)))
-  
-  expect_error(evaluateExistingModel(modelTable=data.frame(modelId=rep(1,2), modelCovariateId=1:2, 
-                                                           coefficientValue=rep(1,2)),
-                                     covariateTable = data.frame(modelCovariateId=1:2, covariateId=1:2),
-                                     type='false'))
-  
-  
-  
-  
 })
 
 exVal <- externalValidatePlp(plpResult=plpResultReal, 
@@ -98,55 +76,6 @@ test_that("external validate", {
   testthat::expect_equal(sum(names(exVal)%in%c('summary','validation')), 2)
   
 })
-
-
-existingModel <- evaluateExistingModel(modelTable = data.frame(modelId = c(1,1,1,1,1),
-                                                               modelCovariateId = 1:5, 
-                                                               coefficientValue = c(1, 1, 1, 1, 2)), 
-                                       covariateTable = data.frame(modelCovariateId = c(1,2,3,3,3,3,3,4,5),
-                                                                   covariateId = c(319835102, 316866102, 
-                                                                                   15003, 16003, 17003, 18003, 19003, 
-                                                                                   201820102, 381591102)), 
-                                       interceptTable=NULL, 
-                                       type='score',
-                                       covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T),
-                                       customCovariates=NULL,
-                                       startAnchor = 'cohort start',
-                                       riskWindowStart = 1, 
-                                       endAnchor = 'cohort start',
-                                       riskWindowEnd = 365,
-                                       requireTimeAtRisk = T, 
-                                       minTimeAtRisk = 364,
-                                       includeAllOutcomes = T,
-                                       removeSubjectsWithPriorOutcome=T,
-                                       priorOutcomeLookback = 99999,
-                                       verbosity = 'INFO', 
-                                       washoutPeriod = 0,
-                                       firstExposureOnly= F, 
-                                       binary = T,
-                                       connectionDetails =connectionDetails,
-                                       cdmDatabaseSchema = cdmDatabaseSchema,
-                                       cohortDatabaseSchema = ohdsiDatabaseSchema, 
-                                       cohortTable ='cohorts', 
-                                       cohortId = 1,
-                                       outcomeDatabaseSchema = ohdsiDatabaseSchema, 
-                                       outcomeTable = 'outs_test', 
-                                       outcomeId = 2,
-                                       oracleTempSchema = cdmDatabaseSchema,
-                                       modelName='existingModel',
-                                       scoreToProb = NULL,
-                                       recalibrate = T,
-                                       calibrationPopulation=NULL,
-                                       covariateSummary = T,
-                                       cdmVersion = 5
-)
-
-test_that("validate existing models", {
-
-  testthat::expect_equal(class(existingModel), 'list')
-})
-
-
 
 
 test_that("createPlpJournalDocument document works with validation", {

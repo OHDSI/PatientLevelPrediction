@@ -85,9 +85,9 @@ fitGLMModel <- function(population,
       addIntercept <- TRUE
     }
     
-    andromedaPopulation <- Andromeda::andromeda(population = population[,!colnames(population)%in%c('cohortStartDate')])
+    covariateData$andromedaPopulation <- population[,!colnames(population)%in%c('cohortStartDate')]
     
-    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = andromedaPopulation$population,
+    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = covariateData$andromedaPopulation,
                                                  covariates = covariates,
                                                  addIntercept = addIntercept,
                                                  modelType = modelTypeToCyclopsModelType(modelType),

@@ -137,12 +137,7 @@ applyModel <- function(population,
   if (!silent)
     ParallelLogger::logInfo(paste("Starting covariate summary at ", Sys.time()))
   start.pred  <- Sys.time()
-  covSum <- covariateSummary(plpData, population)
-  if(exists("plpModel")){
-    if(!is.null(plpModel$varImp)){
-      covSum <- merge(plpModel$varImp[,colnames(plpModel$varImp)!='covariateName'], covSum, by='covariateId', all=T)
-    }
-  }
+  covSum <- covariateSummary(plpData, population, model = plpModel)
   
   delta <- start.pred - Sys.time()
   if (!silent)

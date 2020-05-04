@@ -396,7 +396,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   modelCov$covariateValue[is.na(modelCov$covariateValue)] <- 0
   modelCov <- modelCov[modelCov$covariateValue!=0,c('covariateName','covariateValue')]
   modelCov <- modelCov[order(-abs(modelCov$covariateValue)),]
-  doc <- doc %>% officer::body_add_table(value = modelCov)
+  doc <- doc %>% officer::body_add_table(value = modelCov, style = "table_template")
 
   #------------------------------------------------
 
@@ -1153,7 +1153,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   doc <- doc %>% officer::body_add_par(value = 'Appendix C', style = 'heading 2')
   modelVar <- plpResult$model$varImp[plpResult$model$varImp$covariateValue!=0,c('covariateId','covariateName','covariateValue')]
   modelVar$covariateValue <- format(as.double(modelVar$covariateValue), nsmall = 3, digits = 3, scientific = F)
-  doc <- doc %>% officer::body_add_table(value=modelVar)
+  doc <- doc %>% officer::body_add_table(value=modelVar, style = "table_template")
   
   if(save){
     # write the document to file location
