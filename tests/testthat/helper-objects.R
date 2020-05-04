@@ -1,13 +1,11 @@
 # this files contains the objects used in the tests:
 
 travis <- T
-saveLoc <- 'T:/Temp'
 saveLoc <- getwd()
-if(!dir.exists(file.path(saveLoc,"fftemp"))){
-  dir.create(file.path(saveLoc,"fftemp"), recursive = T)
+if(!dir.exists(file.path(saveLoc,"andromedaTemp"))){
+  dir.create(file.path(saveLoc,"andromedaTemp"), recursive = T)
 }
-options(fftempdir = file.path(saveLoc,"fftemp"))
-
+options(andromedaTempFolder = file.path(saveLoc,"andromedaTemp"))
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
@@ -26,15 +24,11 @@ plpData2 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
 
 # temporal - make less covs?
 plpData3 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
-#plpData3$metaData$cohortId <- plpData3$metaData$cohortIds
-
-# filter out to 10 covariates
-#covIds <- unique(ff::as.ram(plpData3$covariates$covariateId))[1:10]
-#ind <- ff::as.ram(plpData3$covariates$covariateId)%in%covIds
-#plpData3$covariates <- plpData3$covariates[ind,]
-
-plpData3$timeRef <- ff::as.ffdf(data.frame(timeId = 1:10))
-plpData3$covariates$timeId <- ff::as.ff(sample(10, nrow(plpData3$covariates), replace = T))
+plpData3$timeRef <- data.frame(timeId = 1:10)
+plpData3$covariateData$covariatesOld <- plpData3$covariateData$covariates
+plpData3$covariateData$covariates <- plpData3$covariateData$covariatesOld %>% 
+  dplyr::filter(covariateId <= 20 ) %>%
+  dplyr::mutate(timeId = 1+covariateId*rowId%%10)
 
 
 # POPULATION
@@ -52,17 +46,17 @@ population <- createStudyPopulation(plpData,
                                     endAnchor = 'cohort start')
 
 population2 <- createStudyPopulation(plpData2,
-                                    outcomeId = 2,
-                                    firstExposureOnly = FALSE,
-                                    washoutPeriod = 0,
-                                    removeSubjectsWithPriorOutcome = FALSE,
-                                    priorOutcomeLookback = 99999,
-                                    requireTimeAtRisk = T,
-                                    minTimeAtRisk=10,
-                                    riskWindowStart = 0,
-                                    startAnchor = 'cohort start',
-                                    riskWindowEnd = 365,
-                                    endAnchor = 'cohort start')
+                                     outcomeId = 2,
+                                     firstExposureOnly = FALSE,
+                                     washoutPeriod = 0,
+                                     removeSubjectsWithPriorOutcome = FALSE,
+                                     priorOutcomeLookback = 99999,
+                                     requireTimeAtRisk = T,
+                                     minTimeAtRisk=10,
+                                     riskWindowStart = 0,
+                                     startAnchor = 'cohort start',
+                                     riskWindowEnd = 365,
+                                     endAnchor = 'cohort start')
 
 
 # MODEL SETTINGS
@@ -74,14 +68,14 @@ rfSet2 <- setRandomForest(mtries = -1,ntrees = 10, maxDepth = 2, varImp = F, see
 
 # RUNPLP - LASSO LR
 plpResult <- runPlp(population = population,
-                                            plpData = plpData, 
-                                            modelSettings = lrSet, 
-                                            savePlpData = F, 
-                                            savePlpResult = F, 
-                                            saveEvaluation = F, 
-                                            savePlpPlots = F, 
-                                            analysisId = 'lrTest',
-                                            saveDirectory =  saveLoc)
+                    plpData = plpData, 
+                    modelSettings = lrSet, 
+                    savePlpData = F, 
+                    savePlpResult = F, 
+                    saveEvaluation = F, 
+                    savePlpPlots = F, 
+                    analysisId = 'lrTest',
+                    saveDirectory =  saveLoc)
 
 
 # learningCurve 
@@ -95,7 +89,7 @@ learningCurve <- createLearningCurve(population = population,
                                      clearffTemp = T, 
                                      analysisId = 'learningCurve',
                                      saveDirectory =  saveLoc
-                                     )
+)
 
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -115,7 +109,7 @@ createCohort <- F
 if(createCohort){
   conn <- DatabaseConnector::connect(connectionDetails)
   sql <- SqlRender::render(sql = 'select * into  @ohdsiDatabaseSchema.cohorts from (SELECT 1 as COHORT_DEFINITION_ID, PERSON_ID as SUBJECT_ID, min(CONDITION_START_DATE) as COHORT_START_DATE, min(CONDITION_START_DATE) as COHORT_END_DATE from @cdmDatabaseSchema.condition_occurrence where CONDITION_CONCEPT_ID=320128
- group by PERSON_ID) temp limit 1000;',
+                           group by PERSON_ID) temp limit 1000;',
                            cdmDatabaseSchema = cdmDatabaseSchema ,
                            ohdsiDatabaseSchema = ohdsiDatabaseSchema)
   DatabaseConnector::executeSql(conn, sql)
