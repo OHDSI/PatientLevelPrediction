@@ -35,6 +35,7 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                     
                                     shinydashboard::dashboardSidebar(
                                       shinydashboard::sidebarMenu(
+                                        shinydashboard::menuItem("About", tabName = "About", icon = shiny::icon("home")),
                                         shinydashboard::menuItem("Summary", tabName = "Summary", icon = shiny::icon("table")),
                                         shinydashboard::menuItem("Performance", tabName = "Performance", icon = shiny::icon("bar-chart")),
                                         shinydashboard::menuItem("Model", tabName = "Model", icon = shiny::icon("clipboard")),
@@ -51,6 +52,12 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                 shiny::h2("Information"),
                                                                 shiny::p("Click on a row to explore the results for that model.  When you wish to explore a different model, then select the new result row and the tabs will be updated."),
                                                                 shiny::a("Demo Video", href = 'https://youtu.be/StpV40yl1UE', target='_blank')
+                                        ),
+                                        
+                                        # First tab content
+                                        shinydashboard::tabItem(tabName = "About",
+                                                                shiny::includeMarkdown(path = "./www/shinyAbout.md")
+                                                                
                                         ),
                                         
                                         # First tab content
