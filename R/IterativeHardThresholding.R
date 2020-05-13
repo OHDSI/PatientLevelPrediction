@@ -66,13 +66,14 @@ fitIterativeHardThresholding<- function(population, plpData, param, search='adap
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
 
-  if(!is.null(param$variance )) variance <- param$variance
   start <- Sys.time()
   modelTrained <- fitGLMModel(population,
                               plpData = plpData,
                               modelType = "logistic",
-                              prior = IterativeHardThresholding::createIhtPrior(K  = 3, penalty = "bic", exclude = c("(Intercept)")),
-                              control = NULL
+                              prior = IterativeHardThresholding::createIhtPrior(K  = param$K, 
+                                                                                penalty = param$penalty, 
+                                                                                exclude = param$exclude),
+                              control = createControl()
                               )
                               
   
