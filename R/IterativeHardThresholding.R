@@ -17,11 +17,12 @@
 # limitations under the License.
 
 #' Create setting for lasso logistic regression
-#'
-#' @param K          The maximum number of non-zero predictors
-#' @param penalty    Specifies the IHT penalty; possible values are `BIC` or `AIC` or a numeric value
-#' @param seed       An option to add a seed when training the model
-#' @param exclude    A vector of numbers or covariateId names to exclude from prior
+#'  
+#' @param K              The maximum number of non-zero predictors
+#' @param penalty        Specifies the IHT penalty; possible values are `BIC` or `AIC` or a numeric value
+#' @param seed           An option to add a seed when training the model
+#' @param exclude        A vector of numbers or covariateId names to exclude from prior
+#' @param fitBestSubset  Logical: Fit final subset with no regularization 
 #'
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
