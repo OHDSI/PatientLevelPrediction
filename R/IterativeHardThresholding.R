@@ -33,6 +33,8 @@ setIterativeHardThresholding<- function(K, penalty = "bic", seed = NULL, exclude
     stop('Penalty must be "aic", "bic" or numeric')
   if(!is.logical(fitBestSubset))
     stop("fitBestSubset must be of type: logical")
+  if(!class(seed)%in%c('numeric','NULL','integer'))
+    stop('Invalid seed')
   
   # set seed
   if(is.null(seed[1])){
