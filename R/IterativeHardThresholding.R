@@ -18,7 +18,7 @@
 
 #' Create setting for lasso logistic regression
 #'
-#' @param k          The maximum number of non-zero predictors
+#' @param K          The maximum number of non-zero predictors
 #' @param penalty    Specifies the IHT penalty; possible values are `BIC` or `AIC` or a numeric value
 #' @param seed       An option to add a seed when training the model
 #' @param exclude    A vector of numbers or covariateId names to exclude from prior
@@ -26,12 +26,13 @@
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setIterativeHardThresholding<- function(K  = 3, penalty = "bic", seed = NULL, exclude = c("(Intercept)")){
+setIterativeHardThresholding<- function(K, penalty = "bic", seed = NULL, exclude = NULL, fitBestSubset = FALSE){
   if(K<1)
     stop('Invalid maximum number of predictors')
-  if(!penalty %in% c("aic", "bic"))
+  if(!(penalty %in% c("aic", "bic") || is.numeric(penalty)))
     stop('Penalty must be "aic", "bic" or numeric')
-
+  if(!is.logical(fitBestSubset))
+    stop("fitBestSubset must be of type: logical")
   
   # set seed
   if(is.null(seed[1])){
@@ -67,13 +68,14 @@ fitIterativeHardThresholding<- function(population, plpData, param, search='adap
   attr(population, 'metaData') <- metaData
 
   start <- Sys.time()
-  modelTrained <- fitGLMModel(population,
+  modelTrained <- fitGLMModel(population = population,
                               plpData = plpData,
-                              modelType = "logistic",
+                              modelType = "logistic", 
                               prior = IterativeHardThresholding::createIhtPrior(K  = param$K, 
                                                                                 penalty = param$penalty, 
                                                                                 exclude = param$exclude),
                               control = createControl()
+                              
                               )
                               
   
