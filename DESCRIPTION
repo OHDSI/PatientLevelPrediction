@@ -82,10 +82,11 @@ Suggests:
     aws.s3,
     devtools,
     rms,
-    survminer
+    survminer,
 Remotes:
     ohdsi/FeatureExtraction,
-    ohdsi/BigKnn
+    ohdsi/BigKnn,
+    ohdsi/IterativeHardThresholding
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 7.1.0

@@ -164,6 +164,16 @@ test_that("fitting", {
   testthat::expect_error(setMLP(alpha = -1))
   testthat::expect_error(setMLP(seed = 'F'))
   
+  #=====================================
+  # checking IHT
+  #=====================================
+  model_set <- setIterativeHardThresholding()
+  testthat::expect_that(model_set, is_a("modelSettings"))
+  testthat::expect_length(model_set,3)
+  testthat::expect_error(setIterativeHardThresholding(K = 0))
+  testthat::expect_error(setIterativeHardThresholding(penalty = 'L1'))
+  testthat::expect_error(setIterativeHardThresholding(fitBestSubset = "true"))
+  testthat::expect_error(setIterativeHardThresholding(seed = 'F'))
   
   })
 
@@ -317,4 +327,32 @@ test_that("MLP  working checks", {
   # check prediction between 0 and 1
   testthat::expect_gte(min(plpResultMlp$prediction$value), 0)
   testthat::expect_lte(max(plpResultMlp$prediction$value), 1)
+})
+
+
+ihtSet <- setIterativeHardThresholding(K = 3)
+plpResultIht <- runPlp(population = population,
+                       plpData = plpData, 
+                       modelSettings = ihtSet, 
+                       savePlpData = F, 
+                       savePlpResult = F, 
+                       saveEvaluation = F, 
+                       savePlpPlots = F, 
+                       analysisId = 'ihtTest',
+                       saveDirectory =  saveLoc)
+
+test_that("IHT  working checks", {
+  # check same structure
+  testthat::expect_equal(names(plpResultIht), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultIht$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultIht$prediction$value), 0)
+  testthat::expect_lte(max(plpResultIht$prediction$value), 1)
+  
+  # check that selected covariates less than K
+  testthat::expect_lte(nrow(plpResultIht$model$varImp[plpResultIht$model$varImp$covariateValue != 0.0,]), ihtSet$param$K)
 })
