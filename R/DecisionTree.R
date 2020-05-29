@@ -145,7 +145,7 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   varImp <- finalModel[[2]]
   varImp[is.na(varImp)] <- 0
   
-  covariateRef <- as.data.frame(plpData$covariateDate$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
   covariateRef$covariateValue <- varImp

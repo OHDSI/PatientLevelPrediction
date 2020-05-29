@@ -79,7 +79,7 @@ setGBMSurvival <- function(loss = 'coxph',
   
   # add check and warn if dependancy not available...
   ParallelLogger::logInfo('To use GBM survival models you need scikit-survival python library.  To set up open the command line and enter: "conda install -c sebp scikit-survival"')
-  
+  # reticulate::conda_install(envname='r-reticulate', packages = c('scikit-survival'), forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, conda = "auto", channel = 'sebp')
   if(is.null(minImpuritySplit)){
     minImpuritySplit <- 'NULL'
   }

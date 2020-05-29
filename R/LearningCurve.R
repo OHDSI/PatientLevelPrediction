@@ -256,8 +256,6 @@ createLearningCurve <- function(population,
 #'     \item{\code{ERROR} - show error messages}
 #'     \item{\code{FATAL} - be silent except for fatal errors}
 #'   }
-#' @param clearffTemp Clears the temporary ff-directory after each iteration. 
-#'   This can be useful, if the fitted models are large.
 #' @param minCovariateFraction Minimum covariate prevalence in population to
 #'   avoid removal during preprocssing.
 #' @param normalizeData Whether to normalise the data
@@ -268,6 +266,7 @@ createLearningCurve <- function(population,
 #' @param saveEvaluation Whether to save the plp performance csv files
 #' @param timeStamp Include a timestamp in the log
 #' @param analysisId The analysis unique identifier
+#' @param cores The number of cores to use
 #' @return A learning curve object containing the various performance measures
 #'  obtained by the model for each training set fraction. It can be plotted
 #'  using \code{plotLearningCurve}.
@@ -299,7 +298,6 @@ createLearningCurvePar <- function(population,
                                    nfold = 3,
                                    indexes = NULL,
                                    verbosity = 'TRACE',
-                                   clearffTemp = FALSE,
                                    minCovariateFraction = 0.001,
                                    normalizeData = T,
                                    saveDirectory = getwd(),
@@ -308,93 +306,112 @@ createLearningCurvePar <- function(population,
                                    savePlpPlots = F,
                                    saveEvaluation = F,
                                    timeStamp = FALSE,
-                                   analysisId = NULL) {
+                                   analysisId = NULL,
+                                   cores = NULL) {
   
-  # register a parallel backend
-  registerParallelBackend()
   
-  # verify that a parallel backend has been registered
-  setup_parallel()
   
-  ParallelLogger::logInfo('Started to run in parallel, this can take a while...')
-  
-  # record global start time
-  ExecutionDateTime <- Sys.time()
-  
-  # store a copy of the original population
-  originalPopulation <- population
-  
-  learningCurve <- foreach::foreach(
-    i = 1:length(trainFractions),
-    .combine = rbind,
-    .errorhandling = "remove",
-    .packages = c("doParallel",
-                  "PatientLevelPrediction")
-  ) %dopar% {
+  getLcSum <- function(i,population,plpData,minCovariateFraction,
+                       normalizeData,modelSettings,testSplit,
+                       testFraction,trainFractions,splitSeed,
+                       nfold,indexes,saveDirectory,savePlpData,
+                       savePlpResult,savePlpPlots,saveEvaluation,
+                       verbosity,timeStamp,analysisId){
     
-    result <- runPlp(population = originalPopulation, 
-                     plpData = plpData, 
-                     minCovariateFraction = minCovariateFraction,
-                     normalizeData = normalizeData,
-                     modelSettings = modelSettings,
-                     testSplit = testSplit,
-                     testFraction = testFraction,
-                     trainFraction = trainFractions[i],
-                     splitSeed = splitSeed,
-                     nfold = nfold,
-                     indexes = indexes,
-                     saveDirectory = saveDirectory,
-                     savePlpData = savePlpData,
-                     savePlpResult = savePlpResult,
-                     savePlpPlots = savePlpPlots,
-                     saveEvaluation = saveEvaluation,
-                     verbosity = verbosity,
-                     timeStamp = timeStamp,
-                     analysisId = paste(analysisId, '_', i)
-    )  
-    
-    executeTime <- result$executionSummary$TotalExecutionElapsedTime
-    
-    result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
-    
-    df <- data.frame( x = trainFractions[i] * 100,
-                      name = c('executionTime',paste0(result$Eval, result$Metric)), 
-                      value = c(as.double(executeTime) ,as.double(as.character(result$Value)))
+    dfr <- tryCatch({
+      x = runPlp(population = population, 
+                 plpData = plpData, 
+                 minCovariateFraction = minCovariateFraction,
+                 normalizeData = normalizeData,
+                 modelSettings = modelSettings,
+                 testSplit = testSplit,
+                 testFraction = testFraction,
+                 trainFraction = trainFractions[i],
+                 splitSeed = splitSeed,
+                 nfold = nfold,
+                 indexes = indexes,
+                 saveDirectory = saveDirectory,
+                 savePlpData = savePlpData,
+                 savePlpResult = savePlpResult,
+                 savePlpPlots = savePlpPlots,
+                 saveEvaluation = saveEvaluation,
+                 verbosity = verbosity,
+                 timeStamp = timeStamp,
+                 analysisId = paste0(analysisId, '_', i)
+      )
+      executeTime = x$executionSummary$TotalExecutionElapsedTime
+      
+      result = as.data.frame(x$performanceEvaluation$evaluationStatistics)
+      
+      dfr = data.frame( x = trainFractions[i] * 100,
+                        name = c('executionTime',paste0(result$Eval, result$Metric)), 
+                        value = c(as.double(executeTime) ,as.double(as.character(result$Value)))
+      )
+      dfr$name = as.character(dfr$name)
+      dfr$name[dfr$name == 'trainAUC.auc'] = 'trainAUCROC'
+      dfr$name[dfr$name == 'testAUC.auc'] = 'testAUCROC'
+      dfr$name[dfr$name == 'trainpopulationSize'] = 'popSizeTrain'
+      dfr$name[dfr$name == 'trainoutcomeCount'] = 'outcomeCountTrain'
+      dfr$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', dfr$name))
+      
+      dfr = dfr[-grep('auc_',dfr$name),]
+      
+      reshape2::dcast(dfr, x~ name)
+      
+    }, 
+    warning = function(war) {
+      dfr <- rep(0,18)
+      ParallelLogger::logInfo(paste0('a warning: ', war))}, 
+    error = function(err) {
+      dfr <- rep(0,18)
+      ParallelLogger::logError(paste0('an error: ', err))}
     )
-    df$name <- as.character(df$name)
-    df$name[df$name == 'trainAUC.auc'] <- 'trainAUCROC'
-    df$name[df$name == 'testAUC.auc'] <- 'testAUCROC'
-    df$name[df$name == 'trainpopulationSize'] <- 'popSizeTrain'
-    df$name[df$name == 'trainoutcomeCount'] <- 'outcomeCountTrain'
-    df$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', df$name))
     
-    df <- df[-grep('auc_',df$name),]
+    return(dfr)
     
-    df <- reshape2::dcast(df, x~ name)
-    
-    return(df)
-
   }
-  names(learningCurve) <- c(
-    "Fraction",
-    "Time",
-    "Occurrences",
-    "Observations",
-    "TestROC",
-    "TestPR",
-    "TestBrierScaled",
-    "TestBrierScore",
-    "TestCalibrationIntercept",
-    "TestCalibrationSlope",
-    "outcomeCountTest",
-    "popSizeTest",
-    "TrainROC",
-    "TrainPR",
-    "TrainBrierScaled",
-    "TrainBrierScore",
-    "TrainCalibrationIntercept",
-    "TrainCalibrationSlope"
-  )
+  
+  if(is.null(cores)){
+    ParallelLogger::logInfo(paste0('Number of cores not specified'))
+    cores <- parallel::detectCores()
+    ParallelLogger::logInfo(paste0('Using all ', cores))
+    ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
+  }
+  
+  cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
+  
+  learningCurve <- ParallelLogger::clusterApply(cluster = cluster, x = 1:length(trainFractions), 
+                               fun = getLcSum, stopOnError = FALSE, 
+                               population=population,plpData=plpData,minCovariateFraction=minCovariateFraction,
+                               normalizeData=normalizeData,modelSettings=modelSettings,testSplit=testSplit,
+                               testFraction=testFraction,trainFractions=trainFractions,splitSeed=splitSeed,
+                               nfold=nfold,indexes=indexes,saveDirectory=saveDirectory,savePlpData=savePlpData,
+                               savePlpResult=savePlpResult,savePlpPlots=savePlpPlots,saveEvaluation=saveEvaluation,
+                               verbosity=verbosity,timeStamp=timeStamp,analysisId=analysisId,
+                               progressBar = TRUE)
+  
+  learningCurve <- do.call(rbind, learningCurve)
+
+    names(learningCurve) <- c(
+      "Fraction",
+      "Time",
+      "Occurrences",
+      "Observations",
+      "TestROC",
+      "TestPR",
+      "TestBrierScaled",
+      "TestBrierScore",
+      "TestCalibrationIntercept",
+      "TestCalibrationSlope",
+      "outcomeCountTest",
+      "popSizeTest",
+      "TrainROC",
+      "TrainPR",
+      "TrainBrierScaled",
+      "TrainBrierScore",
+      "TrainCalibrationIntercept",
+      "TrainCalibrationSlope"
+    )
   
   endTime <- Sys.time()
   TotalExecutionElapsedTime <-

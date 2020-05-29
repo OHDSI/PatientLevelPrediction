@@ -91,7 +91,7 @@ fitGLMModel <- function(population,
                                                  covariates = covariates,
                                                  addIntercept = addIntercept,
                                                  modelType = modelTypeToCyclopsModelType(modelType),
-                                                 checkSorting = TRUE,
+                                                 #checkSorting = TRUE,
                                                  checkRowIds = FALSE,
                                                  normalize = NULL,
                                                  quiet = TRUE)

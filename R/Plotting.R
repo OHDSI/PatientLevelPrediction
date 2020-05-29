@@ -442,6 +442,11 @@ plotF1Measure <- function(evaluation,type='test', fileName=NULL){
   x<- evaluation$thresholdSummary[ind,c('predictionThreshold', 'f1Score')]
   #x <- rbind(c(0,1), x, c(1,0))
   
+  if(sum(is.nan(x$f1Score))>0){
+    x <- x[!is.nan(x$f1Score),]
+    if(nrow(x)==0){return(NULL)}
+  }
+  
   plot <- ggplot2::ggplot(x, ggplot2::aes(predictionThreshold, f1Score)) +
     ggplot2::geom_line(size=1) +
     ggplot2::geom_point(size=1) +

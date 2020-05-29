@@ -32,13 +32,13 @@ plpResultKNN <- runPlp(population = population,
 test_that("covRef is correct size", {
   
   # varImp contains all variables in LR
-  testthat::expect_equal(nrow(as.data.frame(plpData$covariateRef)), 
+  testthat::expect_equal(nrow(as.data.frame(plpData$covariateData$covariateRef)), 
                          nrow(plpResult$model$varImp))
   
-  testthat::expect_equal(nrow(as.data.frame(plpDataReal$covariateRef)), 
+  testthat::expect_equal(nrow(as.data.frame(plpDataReal$covariateData$covariateRef)), 
                          nrow(plpResultReal$model$varImp))
   
-  testthat::expect_equal(nrow(as.data.frame(plpData$covariateRef)), 
+  testthat::expect_equal(nrow(as.data.frame(plpData$covariateData$covariateRef)), 
                          nrow(plpResultKNN$model$varImp))
   
 })

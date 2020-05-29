@@ -31,7 +31,6 @@ test_that("learningCurvePar", {
                                        testFraction = 0.25, 
                                        trainFractions = c(0.5,0.6), 
                                        nfold = 3, 
-                                       clearffTemp = T, 
                                        analysisId = 'learningCurvePar',
                                        saveDirectory =  saveLoc
   )

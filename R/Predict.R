@@ -224,11 +224,14 @@ predict.knn <- function(plpData, population, plpModel, ...){
                                    cohorts= population[,!colnames(population)%in%'cohortStartDate'],
                                    indexFolder = plpModel$model,
                                    k = plpModel$modelSettings$modelParameters$k,
-                                   weighted = TRUE)
+                                   weighted = TRUE,
+                                   threads = plpModel$modelSettings$threads)
+  
+  # can add: threads = 1 in the future
   
   # return the cohorts as a data frame with the prediction added as 
   # a new column with the column name 'value'
-  prediction <- merge(population, prediction, by='rowId', 
+  prediction <- merge(population, prediction[,c('rowId','value')], by='rowId', 
                       all.x=T, fill=0)
   prediction$value[is.na(prediction$value)] <- 0
   
@@ -257,7 +260,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     prediction$value <- 0
     for(batch in batches){
       pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,,]))
-      if(is.null(dim(as.double(pred)))){
+      if(is.null(dim(pred))){
         prediction$value[batch] <- as.double(pred)
       } else{
         prediction$value[batch] <- as.double(pred[,2])
@@ -472,22 +475,28 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
   if(temporal){
     ParallelLogger::logTrace('temporal')
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
+    ParallelLogger::logDebug('result$data dim: ',paste0(dim(result$data), collapse = '-'))
+    ParallelLogger::logDebug('population dim: ',paste0(dim(population), collapse = '-'))
     data <-result$data[population$rowId,,]
     
+    ParallelLogger::logInfo('running batch prediction')
     batch_size <- min(2000, length(population$rowId))
     maxVal <- length(population$rowId)
     batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
     prediction <- population
     prediction$value <- 0
     for(batch in batches){
+      ParallelLogger::logDebug('batch length: ', length(batch))
       dat <- list()
       length(dat) <- repeats
       for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
       
       pred <- keras::predict_on_batch(plpModel$model, dat)
-      if(is.null(dim(as.double(pred)))){
+      if(is.null(dim(pred))){
+        ParallelLogger::logDebug('Pred length: ', length(pred))
         prediction$value[batch] <- as.double(pred)
       } else{
+        ParallelLogger::logDebug('Pred dim: ', paste0(dim(pred), collapse = '-'))
         prediction$value[batch] <- as.double(pred[,2])
       }
     }

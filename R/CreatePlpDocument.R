@@ -79,38 +79,12 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   target_size <- nrow(population)
   outcome_size <- sum(population$outcomeCount==1)
   
-  # update now we are using startAnchor and endAnchor
-  if(is.null(populationSet$addExposureDaysToStart)){
-    populationSet$addExposureDaysToStart <- populationSet$startAnchor == 'cohort end'
-  }
-  if(is.null(populationSet$addExposureDaysToEnd)){
-    populationSet$addExposureDaysToEnd <- populationSet$endAnchor == 'cohort end'
-  }
   
-  if(populationSet$addExposureDaysToEnd &
-     populationSet$addExposureDaysToStart){
-    time_at_risk <- paste0(populationSet$riskWindowStart,
-                           " day/s from target end date  to ", populationSet$riskWindowEnd,
-                           " days from target end date ")
-  }
-  if(!populationSet$addExposureDaysToEnd &
-     populationSet$addExposureDaysToStart){
-    time_at_risk <- paste0(populationSet$riskWindowStart,
-                           " day/s from target end date  to ", populationSet$riskWindowEnd,
-                           " days from target start date ")
-  }
-  if(populationSet$addExposureDaysToEnd &
-     !populationSet$addExposureDaysToStart){
-    time_at_risk <- paste0(populationSet$riskWindowStart,
-                           " day/s from target start date  to ", populationSet$riskWindowEnd,
-                           " days from target end date ")
-  }
-  if(!populationSet$addExposureDaysToEnd &
-     !populationSet$addExposureDaysToStart){
-    time_at_risk <- paste0(populationSet$riskWindowStart,
-                           " day/s from target start date to ", populationSet$riskWindowEnd,
-                           " days from target start date ")
-  }
+  time_at_risk <- paste0(populationSet$riskWindowStart,
+                         " day/s from target ",populationSet$startAnchor,
+                         "  to ", populationSet$riskWindowEnd,
+                         " days from target ", populationSet$endAnchor)
+  
 
   #-----------------------------------------------
   #+++++++++++++++++++++++++++++++++++++++++++++++
@@ -166,7 +140,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   doc <- doc %>% officer::body_add_par(value = 'Attrition:', style = "heading 3")
   
   # add table of attrition...
-  doc <- doc %>% officer::body_add_table(value=plpResult$model$populationSettings$attrition)
+  doc <- doc %>% officer::body_add_table(value=plpResult$model$populationSettings$attrition,
+                                         style = 'Normal Table' )
 
   #------------------------------------------------
 
@@ -208,7 +183,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   }
   rownames(covSet) <- NULL
   if(nrow(covSet)!=0){
-    doc <- doc %>% officer::body_add_table(value = covSet)
+    doc <- doc %>% officer::body_add_table(value = covSet, style = 'Normal Table')
   }
   
   doc <- doc %>% officer::body_add_par(value = 'Population Settings:', style = "heading 3")
@@ -218,7 +193,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   popSet <- data.frame(setting=names(unlist(plpResult$inputSetting$populationSettings)),
                        choice = unlist(plpResult$inputSetting$populationSettings))
   rownames(popSet) <- NULL
-  doc <- doc %>% officer::body_add_table(value = popSet)
+  doc <- doc %>% officer::body_add_table(value = popSet,style = 'Normal Table')
 
   doc <- doc %>% officer::body_add_par(value = 'Model Settings:', style = "heading 3")
   
@@ -234,13 +209,13 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   defaultSet <- unlist(lapply((formals(get(gsub('fit','set',plpResult$inputSetting$modelSettings$model)))), function(x) paste(x, collapse=',', sep=',')))
   defaultSet <- data.frame(names(defaultSet), defaultSet)
   row.names(defaultSet) <- NULL
-  doc <- doc %>% officer::body_add_table(value = defaultSet)
+  doc <- doc %>% officer::body_add_table(value = defaultSet, style = 'Normal Table')
   
   # hyper-parameters other than default searched and performance
   doc <- doc %>% officer::body_add_par(value = paste("The hyper-parameters searched and the performance:"), style = "Normal")
   
   hyparamSet <-as.data.frame(plpResult$model$hyperParamSearch)
-  doc <- doc %>% officer::body_add_table(value = hyparamSet)
+  doc <- doc %>% officer::body_add_table(value = hyparamSet, style = 'Normal Table')
 
   #------------------------------------------------
 
@@ -257,7 +232,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
   evalSet <- plpResult$performanceEvaluation$evaluationStatistics
   rownames(evalSet) <- NULL
   evalSet <- as.data.frame(evalSet)
-  doc <- doc %>% officer::body_add_table(value = evalSet)
+  doc <- doc %>% officer::body_add_table(value = evalSet, style = 'Normal Table')
 
   doc <- doc %>% officer::body_add_par(value = 'ROC Plots', style = "heading 3")
   
@@ -363,7 +338,7 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
     exSum <-  plpValidation$summary
     exSum <- exSum[,c('Database','populationSize','outcomeCount', colnames(exSum)[grep('auc', tolower(colnames(exSum)))])]
     exSum[,4:ncol(exSum)] <- round(apply(exSum[,4:ncol(exSum)], 2, function(x) as.numeric(x)), digits = 3)
-    doc <- doc %>% officer::body_add_table(value=exSum)
+    doc <- doc %>% officer::body_add_table(value=exSum, style = 'Normal Table')
     
     doc <- doc %>% officer::body_add_par(value = paste("The roc plots are:"))
     
@@ -440,9 +415,9 @@ plotPlpProblem <- function(plpResult){
   minObs <- plpResult$inputSetting$populationSettings$washoutPeriod
   target <- plpResult$inputSetting$populationSettings$cohortId
   outcome <- plpResult$inputSetting$populationSettings$outcomeId
-  addExposureDaysToStart <- plpResult$inputSetting$populationSettings$addExposureDaysToStart
+  startAnchor <- plpResult$inputSetting$populationSettings$startAnchor
   riskWindowStart <- plpResult$inputSetting$populationSettings$riskWindowStart
-  addExposureDaysToEnd <- plpResult$inputSetting$populationSettings$addExposureDaysToEnd
+  endAnchor <- plpResult$inputSetting$populationSettings$endAnchor
   riskWindowEnd <- plpResult$inputSetting$populationSettings$riskWindowEnd
 
   targetx <- 0.3
@@ -473,11 +448,11 @@ plotPlpProblem <- function(plpResult){
   # 0.127 -- 0.275
 
   tarstart <- targetx-widthTargetx + 2*widthTargetx*(riskWindowStart/max(riskWindowStart,riskWindowEnd))#riskWindowStart
-  if(addExposureDaysToStart)
+  if(startAnchor == 'cohort end')
     tarstart <- targetx+widthTargetx +  2*widthTargetx*(riskWindowStart/max(riskWindowStart,riskWindowEnd))
 
   tarend <- targetx-widthTargetx +  2*widthTargetx*(riskWindowEnd/max(riskWindowEnd,riskWindowEnd))
-  if(addExposureDaysToEnd)
+  if(endAnchor == 'cohort end')
     tarend <- targetx+widthTargetx +  2*widthTargetx*(riskWindowEnd/max(riskWindowEnd,riskWindowEnd))
 
   if(tarend <tarstart)
@@ -485,11 +460,11 @@ plotPlpProblem <- function(plpResult){
   # add tar
   lines(c(tarstart,tarend),c(0.6,0.6), type='l', lty = 1)
   lines(c(tarstart,tarstart),c(0.59,0.61), type='l', lty = 1)
-  startText <- ifelse(addExposureDaysToStart, paste0('end-date+ ',riskWindowStart ,'day/s'),paste0('start-date+ ',riskWindowStart ,'day/s'))
+  startText <- ifelse(startAnchor == 'cohort end', paste0('end-date+ ',riskWindowStart ,'day/s'),paste0('start-date+ ',riskWindowStart ,'day/s'))
   diagram::textempty(c(tarstart-0.1,0.64), 0.10, 0.05,lab = startText, cex = 0.8 )
 
   lines(c(tarend,tarend),c(0.59,0.61), type='l', lty = 1)
-  endText <- ifelse(addExposureDaysToEnd, paste0('end-date+ ',riskWindowEnd ,'day/s'),paste0('start-date+ ',riskWindowEnd ,'day/s'))
+  endText <- ifelse(endAnchor == 'cohort end', paste0('end-date+ ',riskWindowEnd ,'day/s'),paste0('start-date+ ',riskWindowEnd ,'day/s'))
   diagram::textempty(c(tarend-0.1,0.64), 0.10, 0.05,lab = endText, cex = 0.8 )
 
   diagram::textrect(c(tarstart+(tarend-tarstart)/2,0.6), 0.05, 0.02,lab = 'TAR', cex = 0.8 )
@@ -647,62 +622,30 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
   
   
   target_size <- nrow(population)
-  if(is.null(populationSet$addExposureDaysToStart)){
-    populationSet$addExposureDaysToStart <- populationSet$startAnchor == 'cohort end'
-  }
-  if(is.null(populationSet$addExposureDaysToEnd)){
-    populationSet$addExposureDaysToEnd <- populationSet$endAnchor == 'cohort end'
-  }
+  
   outcome_size <- sum(population$outcomeCount==1)
-  if(populationSet$addExposureDaysToEnd &
-     populationSet$addExposureDaysToStart){
+  
+  totdays <- -1
+  if(populationSet$startAnchor ==  populationSet$endAnchor){
+    totdays <- populationSet$riskWindowEnd-populationSet$riskWindowStart 
+  }
     
-    totdays <- populationSet$riskWindowEnd-populationSet$riskWindowStart
-    if(totdays%in%c(364,365)){
-      time_at_risk <- '1-year after target cohort end date'
-    } else if(totdays%in%c(365*2-1,365*2)){
-      time_at_risk <- '2-year after target cohort end date'
-    }else if(totdays%in%c(365*10-1,365*10)){
-      time_at_risk <- '10-year after target cohort end date'
-    } else {
+  if(totdays%in%c(364,365)){
+    time_at_risk <- paste0("1-year after target ",populationSet$endAnchor," date")
+  } else if(totdays%in%c(365*2-1,365*2)){
+    time_at_risk <- paste0("2-year after target ",populationSet$endAnchor," date")
+  }else if(totdays%in%c(365*10-1,365*10)){
+    time_at_risk <- paste0("10-year after target ",populationSet$endAnchor," date")
+  } else {
     
     time_at_risk <- paste0(populationSet$riskWindowStart,
                            ifelse(populationSet$riskWindowStart==1," day", " day/s"),
-                           " from target end date  to ", populationSet$riskWindowEnd,
-                           " days from target end date ")
-    }
+                           " from target ",populationSet$startAnchor," date  to ", 
+                           populationSet$riskWindowEnd,
+                           " days from target ",populationSet$endAnchor," date ")
   }
-  if(!populationSet$addExposureDaysToEnd &
-     populationSet$addExposureDaysToStart){
-    time_at_risk <- paste0(populationSet$riskWindowStart,
-                           ifelse(populationSet$riskWindowStart==1," day", " day/s"),
-                           " from target end date  to ", populationSet$riskWindowEnd,
-                           " days from target start date ")
-  }
-  if(populationSet$addExposureDaysToEnd &
-     !populationSet$addExposureDaysToStart){
-    time_at_risk <- paste0(populationSet$riskWindowStart,
-                           ifelse(populationSet$riskWindowStart==1," day", " day/s"),
-                           " from target start date  to ", populationSet$riskWindowEnd,
-                           " days from target end date ")
-  }
-  if(!populationSet$addExposureDaysToEnd &
-     !populationSet$addExposureDaysToStart){
-    
-    totdays <- populationSet$riskWindowEnd-populationSet$riskWindowStart
-    if(totdays%in%c(364,365)){
-      time_at_risk <- '1-year after target cohort start date'
-    } else if(totdays%in%c(365*2-1, 365*2)){
-      time_at_risk <- '2-year after target cohort start date'
-    }else if(totdays%in%c(365*10-1, 365*10)){
-      time_at_risk <- '10-year after target cohort start date'
-    } else {
-    time_at_risk <- paste0(populationSet$riskWindowStart,
-                           ifelse(populationSet$riskWindowStart==1," day", " day/s"),
-                           " from target start date to ", populationSet$riskWindowEnd,
-                           " days from target start date ")
-    }
-  }
+
+  
 
   #============ TITLE ==========================================
   title <- paste0("Development and validation of a multivariate model to predict ", outcomeName ,
@@ -836,7 +779,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
         colnames(covs) <- c('Covariate','Setting')
         #restrict to true
         covs <- covs[union(which(covs$Setting!=0),grep('TermStartDays',covs$Covariate)),]
-        doc <- doc %>% officer::body_add_table(value = covs)
+        doc <- doc %>% officer::body_add_table(value = covs, style = 'Normal Table')
       } else{
         covs <- data.frame(covariate = covset[[i]]$covariateName,
                           Setting = ifelse(sum(names(covset[[i]])%in%c("startDay","endDay"))>0,
@@ -845,7 +788,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                                                 "")
                           )
         #restrict to true
-        doc <- doc %>% officer::body_add_table(value = covs)
+        doc <- doc %>% officer::body_add_table(value = covs, style = 'Normal Table')
       }
     }
     
@@ -858,7 +801,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
          colnames(covs) <- c('Covariate','Value')
          #restrict to true
          covs <- covs[union(which(covs$Value!=0),grep('TermStartDays',covs$Covariate)),]
-         doc <- doc %>% officer::body_add_table(value = covs)
+         doc <- doc %>% officer::body_add_table(value = covs, style = 'Normal Table')
          doc <- doc %>% officer::body_add_fpar(officer::fpar(officer::ftext("<!Clarify about missing data>", prop = style_helper_text))) %>% 
            officer::body_add_par("")
        }
@@ -912,7 +855,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
 
     #charactTab1 <- ReporteRs::FlexTable(tab1)
     #doc = ReporteRs::addFlexTable(doc, charactTab1)
-    doc <- doc %>% officer::body_add_table(value = tab1)
+    doc <- doc %>% officer::body_add_table(value = tab1, style = 'Normal Table')
 
     # Tab1: Add paragraph describing data
     characterisationText <- paste0('Table 1a shows the key characteristic for people with and without the outcome')

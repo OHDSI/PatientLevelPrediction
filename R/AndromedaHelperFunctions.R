@@ -43,12 +43,12 @@ calculatePrevs <- function(plpData, population){
   # join covariate with label
   prevs <- plpData$covariateData$covariates %>% dplyr::inner_join(plpData$covariateData$population) %>%
     dplyr::group_by(covariateId) %>% 
-    dplyr::summarise(prev.out = 1.0*sum(outcomeCount==1)/outCount,
-              prev.noout = 1.0*sum(outcomeCount==0)/nonOutCount) %>%
+    dplyr::summarise(prev.out = 1.0*sum(outcomeCount==1, na.rm = TRUE)/outCount,
+              prev.noout = 1.0*sum(outcomeCount==0, na.rm = TRUE)/nonOutCount) %>%
     dplyr::select(covariateId, prev.out, prev.noout)
   
   #clear up data
-  plpData$covariateData$population <- NULL
+  ##plpData$covariateData$population <- NULL
   
   return(as.data.frame(prevs))
 }

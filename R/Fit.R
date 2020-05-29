@@ -125,8 +125,8 @@ applyTidyCovariateData <- function(covariateData,preprocessSettings){
     dplyr::select(-covariateValue) %>%
     dplyr::rename(covariateValue = value)
   
-  covariateData$maxes <- NULL
-     
+  on.exit(covariateData$maxes <- NULL, add = TRUE)
+  
   delta <- Sys.time() - start
   writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))
   

@@ -482,9 +482,11 @@ createStudyPopulationSettings <- function(binary = T,
               requireTimeAtRisk = requireTimeAtRisk, 
               minTimeAtRisk = minTimeAtRisk,
               riskWindowStart = riskWindowStart,
-              addExposureDaysToStart = addExposureDaysToStart,
+              startAnchor = ifelse(addExposureDaysToStart,'cohort end','cohort start'),
+              #addExposureDaysToStart = addExposureDaysToStart,
               riskWindowEnd = riskWindowEnd,
-              addExposureDaysToEnd = addExposureDaysToEnd, 
+              #addExposureDaysToEnd = addExposureDaysToEnd, 
+              endAnchor = ifelse(addExposureDaysToEnd,'cohort end','cohort start'),
               verbosity = verbosity)
   }
   

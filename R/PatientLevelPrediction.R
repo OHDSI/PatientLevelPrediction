@@ -30,8 +30,6 @@
 #' @importFrom magrittr %>%
 #' @importFrom foreach %dopar% %do%
 #' @importFrom graphics lines par
-#' @import bit
-#' @import ffbase
 #' @import Cyclops
 #' @import DatabaseConnector
 #' @import FeatureExtraction

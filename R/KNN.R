@@ -20,13 +20,14 @@
 #'
 #' @param k         The number of neighbors to consider 
 #' @param indexFolder The directory where the results and intermediate steps are output
+#' @param threads   The number of threads to use when applying big knn
 #'
 #' @examples
 #' \dontrun{
 #' model.knn <- setKNN(k=10000)
 #' }
 #' @export
-setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
+setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
   ensure_installed("BigKnn")
   if(class(indexFolder)!='character')
     stop('IndexFolder must be a character')
@@ -38,7 +39,7 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
   if(length(k)>1)
     stop('k can only be a single value')
   
-  result <- list(model='fitKNN', param=list(k=k, indexFolder=indexFolder),
+  result <- list(model='fitKNN', param=list(k=k, indexFolder=indexFolder, threads=threads),
                  name='KNN'
   )
   class(result) <- 'modelSettings' 
@@ -59,18 +60,27 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
   k <- param$k
   if(is.null(k))
     k <- 10
+  if(is.null(param$threads)){
+    param$threads<- 1
+  }
   indexFolder <- param$indexFolder
   
-  #clone data to prevent accidentally deleting plpData 
-  covariateData <- limitCovariatesToPopulation(plpData$covariatesData, population$rowId)
+  #removed as done in BigKnn
+  #covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
   
   population$y <- population$outcomeCount
   population$y[population$y>0] <- 1
   
   # create the model in indexFolder
-  BigKnn::buildKnn(outcomes = population[,c('rowId','y')],
-                   covariates = covariateData$covariates,
-                   indexFolder = indexFolder)
+  #BigKnn::buildKnn(population = population[,c('rowId','y')],
+  #                 covariateData = covariateData,
+  #                 indexFolder = indexFolder)
+  
+  BigKnn::buildKnnFromPlpData(plpData = plpData,
+                                  population = population,
+                                  indexFolder = indexFolder,
+                                  overwrite = TRUE)
+  
   
   comp <- Sys.time() - start
   if(!quiet)
@@ -84,14 +94,17 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
                             plpModel=list(model=indexFolder,
                                           modelSettings = list(model='knn',
                                                                modelParameters=list(k=k),
-                                                               indexFolder=indexFolder
+                                                               indexFolder=indexFolder,
+                                                               threads = param$threads
                                           )))
+  
   
   result <- list(model = indexFolder,
                  trainCVAuc = NULL,    # did I actually save this!?
                  modelSettings = list(model='knn',
                                       modelParameters=list(k=k),
-                                      indexFolder=indexFolder
+                                      indexFolder=indexFolder,
+                                      threads = param$threads
                  ),
                  hyperParamSearch = unlist(param),
                  metaData = plpData$metaData,

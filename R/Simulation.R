@@ -149,7 +149,9 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
  covariateData$coefficients <- NULL
   
   # Remove rownames else they will be copied to the ffdf objects:
-  metaData = plpDataSimulationProfile$metaData
+  metaData = list(cohortIds = 1,
+                  outcomeIds = 2:3,
+                  call = list())#plpDataSimulationProfile$metaData
   
   #remove details from profile
   metaData$call$cdmDatabaseSchema = 'Profile'
