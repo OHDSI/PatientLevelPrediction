@@ -15,7 +15,7 @@
 # limitations under the License.
 
 library("testthat")
-context("AndromedaHelperFunctions.R")
+context("AndromedaHelperFunctions")
 
 # add limitCovariatesToPopulation(covariateData, rowIds) test 
 

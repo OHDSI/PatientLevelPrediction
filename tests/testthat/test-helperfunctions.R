@@ -15,7 +15,7 @@
 # limitations under the License.
 
 library("testthat")
-context("HelperFunctions.R")
+context("HelperFunctions")
 
 test_that("is_installed", {
   testthat::expect_equal(PatientLevelPrediction:::is_installed('FeatureExtraction'), T)

@@ -58,7 +58,7 @@ setGBMSurvival <- function(loss = 'coxph',
                            minImpurityDecrease = 0,
                            maxFeatures = NULL,
                            maxLeafNodes = NULL,
-                           presort = 'auto',
+                           presort = NULL,
                            subsample = 1,
                            dropoutRate = 0,
                            seed = NULL,
@@ -76,6 +76,10 @@ setGBMSurvival <- function(loss = 'coxph',
     stop("nEstimators must be a numeric value >0 ")
   if (min(nEstimators) < 1)
     stop("nEstimators must be greater than or equal to 1")
+  
+  if(!is.null(presort)){
+    ParallelLogger::logWarn('presort has been depreciated - it will not be used')
+  }
   
   # add check and warn if dependancy not available...
   ParallelLogger::logInfo('To use GBM survival models you need scikit-survival python library.  To set up open the command line and enter: "conda install -c sebp scikit-survival"')
@@ -107,14 +111,13 @@ setGBMSurvival <- function(loss = 'coxph',
                                            minImpurityDecrease = minImpurityDecrease,
                                            maxFeatures = maxFeatures,
                                            maxLeafNodes = maxLeafNodes,
-                                           presort = presort,
                                            subsample = subsample,
                                            dropoutRate = dropoutRate ,
                                            seed = seed[1]), 1:(length(nEstimators) * length(learningRate) *
                                                                  length(loss) * length(criterion)*length(minSamplesSplit)*
                                                                  length(minSamplesLeaf) * length(minWeightFractionLeaf)*length(maxDepth)*
                                                                  length(minImpuritySplit) * length(minImpurityDecrease)*length(maxFeatures)*
-                                                                 length(maxLeafNodes) * length(presort)*length(subsample)*
+                                                                 length(maxLeafNodes) *length(subsample)*
                                                                  length(dropoutRate))),
                  name = "GBMSurvival")
   class(result) <- "modelSettings"
@@ -238,7 +241,6 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
                              minImpurityDecrease = 0,
                              maxFeatures = NULL,
                              maxLeafNodes = NULL,
-                             presort = 'auto',
                              subsample = 1,
                              dropoutRate = 0) {
 
@@ -274,7 +276,6 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
                           min_impurity_decrease = minImpurityDecrease,
                           max_features = maxFeatures,
                           max_leaf_nodes = maxLeafNodes,
-                          presort = as.character(presort),
                           subsample = subsample,
                           dropout_rate = dropoutRate)
   

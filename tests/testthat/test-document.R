@@ -15,7 +15,7 @@
 # limitations under the License.
 
 library("testthat")
-context("Document.R")
+context("Document")
 # Test unit for the document creation 
 
 test_that("createPlpJournalDocument creation parameters errors", {

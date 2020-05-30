@@ -33,6 +33,8 @@
 setLRTorch <- function(w_decay=c(0.0005, 0.005), epochs=c(20, 50, 100), seed=NULL, 
                        class_weight = 0, autoencoder = FALSE, vae =FALSE){
   
+  ParallelLogger::logWarn('To use LRTorch you need Torch python libraries \n')
+  ParallelLogger::logWarn("To install tourch run: reticulate::conda_install(envname='r-reticulate', packages = c('pytorch', 'torchvision', 'cpuonly'), forge = TRUE, pip = FALSE, channel = 'pytorch', pip_ignore_installed = TRUE, conda = 'auto')")
   # set seed
   if(is.null(seed[1])){
     seed <- as.integer(sample(100000000,1))

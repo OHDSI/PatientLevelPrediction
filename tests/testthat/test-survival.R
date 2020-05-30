@@ -15,7 +15,7 @@
 # limitations under the License.
 
 library("testthat")
-
+context("Survival")
 coxSet <- setCoxModel()
 
 plpResultCox <- runPlp(population = population,
@@ -30,7 +30,6 @@ plpResultCox <- runPlp(population = population,
 
 
 
-context("Survival")
 #TODO: add input checks and test these...
 #options(fftempdir = getwd())
 
