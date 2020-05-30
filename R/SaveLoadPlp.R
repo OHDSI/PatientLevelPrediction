@@ -312,7 +312,8 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
       plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
   }
   
-  FeatureExtraction::saveCovariateData(covariateData = plpData$covariateData, file = file.path(file, "covariates"))
+  #FeatureExtraction::saveCovariateData(covariateData = plpData$covariateData, file = file.path(file, "covariates"))
+  Andromeda::saveAndromeda(plpData$covariateData, file = file.path(file, "covariates"), maintainConnection = T)
   saveRDS(plpData$timeRef, file = file.path(file, "timeRef.rds"))
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
   saveRDS(plpData$outcomes, file = file.path(file, "outcomes.rds"))

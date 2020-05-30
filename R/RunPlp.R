@@ -297,7 +297,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                     error = function(e) {
                       stop(paste0(e))},
                     finally = {
-                      ParallelLogger::logTrace('Done.')})
+                      ParallelLogger::logTrace('Done fitting.')})
   model$analysisId <- analysisId # adding this so we can link validation to models
   
   # get train prediction and remove it from model
@@ -313,7 +313,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                                         population = populationTest, #population, 
                                         plpData = plpData, 
                                         index = NULL), 
-                             finally = ParallelLogger::logTrace('Done.'))
+                             finally = ParallelLogger::logTrace('Done predict.'))
   
   prediction <- rbind(predictionTest, predictionTrain[,colnames(predictionTest)])
   

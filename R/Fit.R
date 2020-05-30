@@ -71,11 +71,13 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   
   # normalise the data:
   removeRedundancy <- ifelse("timeId" %in%colnames(plpData$covariateData$covariates), F, T)
-  plpData$covariateData <- FeatureExtraction::tidyCovariateData(covariateData=data$covariateData, 
-                                                                minFraction = minCovariateFraction,
-                                                                normalize = normalizeData,
-                                                                removeRedundancy = removeRedundancy)
-
+  plpData$covariateData <- tryCatch({
+    suppressWarnings(FeatureExtraction::tidyCovariateData(covariateData=data$covariateData, 
+                                                          minFraction = minCovariateFraction,
+                                                          normalize = normalizeData,
+                                                          removeRedundancy = removeRedundancy))
+  })
+  
   # get the pre-processing settings
   ##preprocessSettings <- attr(newCovariateData, "metaData")  
   #   normFactors, deletedRedundantCovariateIds, deletedInfrequentCovariateIds 
