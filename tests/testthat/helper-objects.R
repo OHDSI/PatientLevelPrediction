@@ -1,5 +1,6 @@
 # this files contains the objects used in the tests:
 
+
 travis <- T
 saveLoc <- getwd()
 if(!dir.exists(file.path(saveLoc,"andromedaTemp"))){
@@ -14,7 +15,7 @@ options(andromedaTempFolder = file.path(saveLoc,"andromedaTemp"))
 data(plpDataSimulationProfile, envir = environment())
 
 # PLPDATA
-sampleSize <- 2000+sample(1000,1)
+sampleSize <- 2500+sample(1000,1)
 plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
 #plpData$metaData$cohortId <- plpData$metaData$cohortIds
 
@@ -24,11 +25,11 @@ plpData2 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
 
 # temporal - make less covs?
 plpData3 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
-plpData3$timeRef <- data.frame(timeId = 1:10)
+plpData3$timeRef <- data.frame(timeId = 1:3, startDay = 1:3, endDay = 1:3)
 plpData3$covariateData$covariatesOld <- plpData3$covariateData$covariates
 plpData3$covariateData$covariates <- plpData3$covariateData$covariatesOld %>% 
   dplyr::filter(covariateId <= 20 ) %>%
-  dplyr::mutate(timeId = 1+covariateId*rowId%%10)
+  dplyr::mutate(timeId = 1+covariateId*rowId%%3)
 
 
 # POPULATION
