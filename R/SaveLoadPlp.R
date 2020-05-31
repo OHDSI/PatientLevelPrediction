@@ -547,6 +547,9 @@ loadPlpModel <- function(dirPath) {
     model <- readRDS(file.path(dirPath, "model.rds"))
   }
   
+  # make this backwrds compatible by:
+  model$predict <- createTransform(model$model)
+  
   result <- list(model = model,
                  modelSettings = readRDS(file.path(dirPath, "modelSettings.rds")),
                  hyperParamSearch = hyperParamSearch,
