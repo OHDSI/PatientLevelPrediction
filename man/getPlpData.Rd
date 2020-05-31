@@ -38,10 +38,7 @@ so for example 'cdm_instance.dbo'.}
 all temporary tables to be managed. Requires create/insert
 permissions to this database.}
 
-\item{cohortId}{A unique identifier to define the at risk cohort.  If
-cohortTable = DRUG_ERA, cohortId is a CONCEPT_ID and all
-descendant concepts within that CONCEPT_ID will be used to
-define the cohort.  If cohortTable <> DRUG_ERA, cohortId is
+\item{cohortId}{A unique identifier to define the at risk cohort. CohortId is
 used to select the cohort_concept_id in the cohort-like table.}
 
 \item{outcomeIds}{A list of cohort_definition_ids used to define outcomes (-999 mean no outcome gets downloaded).}
@@ -56,28 +53,22 @@ beyond the study end date will be considered.}
 
 \item{cohortDatabaseSchema}{The name of the database schema that is the location where the
 cohort data used to define the at risk cohort is available.
-If cohortTable = DRUG_ERA, cohortDatabaseSchema is not used
-by assumed to be cdmSchema.  Requires read permissions to this
-database.}
+Requires read permissions to this database.}
 
-\item{cohortTable}{The tablename that contains the at risk cohort.  If
-cohortTable <> DRUG_ERA, then expectation is cohortTable has
+\item{cohortTable}{The tablename that contains the at risk cohort.  cohortTable has
 format of COHORT table: cohort_concept_id, SUBJECT_ID,
 COHORT_START_DATE, COHORT_END_DATE.}
 
 \item{outcomeDatabaseSchema}{The name of the database schema that is the location where
-the data used to define the outcome cohorts is available. If
-cohortTable = CONDITION_ERA, exposureDatabaseSchema is not
-used by assumed to be cdmSchema.  Requires read permissions
-to this database.}
+the data used to define the outcome cohorts is available. 
+Requires read permissions to this database.}
 
-\item{outcomeTable}{The tablename that contains the outcome cohorts.  If
-outcomeTable <> CONDITION_OCCURRENCE, then expectation is
+\item{outcomeTable}{The tablename that contains the outcome cohorts. Expectation is
 outcomeTable has format of COHORT table:
 COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
 COHORT_END_DATE.}
 
-\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
+\item{cdmVersion}{Define the OMOP CDM version used: currently support "4", "5" and "6".}
 
 \item{firstExposureOnly}{Should only the first exposure per subject be included? Note that
 this is typically done in the \code{createStudyPopulation} function,

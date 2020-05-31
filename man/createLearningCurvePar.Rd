@@ -8,7 +8,7 @@ createLearningCurvePar(
   population,
   plpData,
   modelSettings,
-  testSplit = "person",
+  testSplit = "stratified",
   testFraction = 0.25,
   trainFractions = c(0.25, 0.5, 0.75),
   splitSeed = NULL,
@@ -23,7 +23,7 @@ createLearningCurvePar(
   savePlpPlots = F,
   saveEvaluation = F,
   timeStamp = FALSE,
-  analysisId = NULL,
+  analysisId = "lc-",
   cores = NULL
 )
 }
