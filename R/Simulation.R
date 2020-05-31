@@ -128,6 +128,9 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   cohorts$daysFromObsStart <- sample(1:1000,n,replace=TRUE)
   cohorts$daysToCohortEnd <- sample(1:1000,n,replace=TRUE)
   cohorts$daysToObsEnd <- cohorts$daysToCohortEnd + sample(1:1000,n,replace=TRUE)
+  cohorts$ageYear <- sample(0:95,n,replace=TRUE)
+  cohorts$gender <- 8532 #female
+  cohorts$gender[sample((1:nrow(cohorts)), nrow(cohorts)/2)] <- 8507
   
   writeLines("Generating outcomes")
   allOutcomes <- data.frame()
