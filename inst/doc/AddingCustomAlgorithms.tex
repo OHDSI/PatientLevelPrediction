@@ -1,0 +1,617 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Adding Custom Patient-Level Prediction Algorithms},
+  pdfauthor={Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[CO,CE]{Custom Patient-Level Prediction Algorithms}
+\fancyfoot[CO,CE]{PatientLevelPrediction Package Version 3.1.0}
+\fancyfoot[LE,RO]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\title{Adding Custom Patient-Level Prediction Algorithms}
+\author{Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek}
+\date{2020-06-03}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+This vignette describes how you can add your own custom algorithms in
+the Observational Health Data Sciencs and Informatics (OHDSI)
+\href{http://github.com/OHDSI/PatientLevelPrediction}{\texttt{PatientLevelPrediction}}
+package. This allows you to fully leverage the OHDSI
+PatientLevelPrediction framework for model development and validation.
+This vignette assumes you have read and are comfortable with building
+single patient level prediction models as described in the
+\href{https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf}{\texttt{BuildingPredictiveModels}
+vignette}.
+
+\textbf{We invite you to share your new algorithms with the OHDSI
+community through our
+\href{http://github.com/OHDSI/PatientLevelPrediction}{GitHub
+repository}.}
+
+\hypertarget{algorithm-code-structure}{%
+\section{Algorithm Code Structure}\label{algorithm-code-structure}}
+
+Each algorithm in the package should be implemented in its own
+\textless Name\textgreater.R file, e.g.~KNN.R, containing a
+set\textless Name\textgreater{} function and a
+fit\textless Name\textgreater{} function. Furthermore, a corresponding
+predict function in predict.R is needed (if there isn't one available
+that would work, see example at the end of the document). We will now
+describe each of these functions in more detail below.
+
+\hypertarget{set}{%
+\subsection{Set}\label{set}}
+
+The set\textless Name\textgreater{} is a function that takes as input
+the different hyper-parameter values to do a grid search when training.
+The output of the functions needs to be a list as class
+\texttt{modelSettings} containing:
+
+\begin{itemize}
+\tightlist
+\item
+  param - all the combinations of the hyper-parameter values input
+\item
+  model - a string specifying what function to call to fit the model
+\item
+  name - a string containing the name of the model.
+\end{itemize}
+
+For example, if you were adding a model called madeUp that has two
+hyper-parameters then the set function should be:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{setMadeUp <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(}\DataTypeTok{a=}\DecValTok{1}\NormalTok{, }\DataTypeTok{b=}\DecValTok{2}\NormalTok{, }\DataTypeTok{seed=}\OtherTok{NULL}\NormalTok{)\{}
+  \CommentTok{# add input checks here...}
+  
+  \CommentTok{# now create list of all combinations:}
+\NormalTok{  result <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{model=}\StringTok{'fitMadeUp'}\NormalTok{, }\CommentTok{# this will be called to train the made up model}
+                 \DataTypeTok{param=} \KeywordTok{split}\NormalTok{(}\KeywordTok{expand.grid}\NormalTok{(}\DataTypeTok{a=}\NormalTok{a, }
+                                          \DataTypeTok{b=}\NormalTok{b,}
+                                          \DataTypeTok{seed=}\KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.null}\NormalTok{(seed),}\StringTok{'NULL'}\NormalTok{, seed)),}
+                              \DecValTok{1}\OperatorTok{:}\NormalTok{(}\KeywordTok{length}\NormalTok{(a)}\OperatorTok{*}\KeywordTok{length}\NormalTok{(b)  )),}
+                 \DataTypeTok{name=}\StringTok{'Made Up Algorithm'}
+\NormalTok{  )}
+  \KeywordTok{class}\NormalTok{(result) <-}\StringTok{ 'modelSettings'} 
+  
+  \KeywordTok{return}\NormalTok{(result)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{fit}{%
+\subsection{Fit}\label{fit}}
+
+This function should train your custom model for each parameter entry,
+pick the best parameters and train a final model for that setting.
+
+The fit\textless Model\textgreater{} should have as inputs:
+
+\begin{itemize}
+\tightlist
+\item
+  population - the study popualation the model is being developed on
+\item
+  plpData - the plpData object
+\item
+  param - the hyper-parameters as a list of all combinations
+\item
+  quiet - T or F indicating whether to output progress
+\item
+  outcomeId - the outcome id
+\item
+  cohortId - the target population id
+\end{itemize}
+
+The fit function should return a list of class \texttt{plpModel} with
+the following objects:
+
+\begin{itemize}
+\tightlist
+\item
+  model - a trained model
+\item
+  modelSettings - a list containing the model and input param
+\item
+  trainCVAuc - a value with the train AUC value
+\item
+  hyperParamSearch - a dataframe with the hyperparameter grid and
+  corresponding AUCs
+\item
+  metaData - the metaData from the plpData object
+\item
+  populationSettings - the settings used to create the population and
+  define the time-at-risk
+\item
+  outcomeId - the outcomeId being predicted
+\item
+  cohortId - the cohortId corresponding to the target cohort
+\item
+  varImp - a dataframe with the covaraites and a measure of importance
+\item
+  trainingTime - how long it took to develop/evaluate the model
+\item
+  covariateMap - if the plpData are converted to a matrix for model
+  compatibility this tells us what covariate each row in the matrix
+  correpsonds to and is need when implementing the model on new data
+\end{itemize}
+
+The plpModel returned by fit also has a type attribute, this points to
+the predict function, for example
+\texttt{attr(result,\ \textquotesingle{}type\textquotesingle{})\ \textless{}-\ \textquotesingle{}madeup\textquotesingle{}}
+means when the model is applied to new data, the `predict.madeup'
+function in Predict.R is called. if this doesnt exist, then the model
+will fail. Another attribute is the predictionType
+\texttt{attr(result,\ \textquotesingle{}predictionType\textquotesingle{})\ \textless{}-\ \textquotesingle{}binary\textquotesingle{}}
+this is currently not needed but may be important in the future when we
+expand to regression or multiclass classification.
+
+For example:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fitMadeUp <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(population, plpData, param, }\DataTypeTok{quiet=}\NormalTok{F,}
+\NormalTok{                        outcomeId, cohortId, ...)\{}
+  
+  \CommentTok{# **************** code to train the model here}
+  \CommentTok{# trainedModel <- this code should apply each hyper-parameter using the cross validation}
+  \CommentTok{#                 then pick out the best hyper-parameter setting}
+  \CommentTok{#                 and finally fit a model on the whole train data using the }
+  \CommentTok{#                 optimal hyper-parameter settings}
+  \CommentTok{# ****************}
+  
+  \CommentTok{# construct the standard output for a model:}
+\NormalTok{  result <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{model =}\NormalTok{ trainedModel,}
+                 \DataTypeTok{modelSettings =} \KeywordTok{list}\NormalTok{(}\DataTypeTok{model=}\StringTok{'made_up'}\NormalTok{, }\DataTypeTok{modelParameters=}\NormalTok{param),}
+                 \DataTypeTok{trainCVAuc =} \OtherTok{NULL}\NormalTok{,}
+                 \DataTypeTok{hyperParamSearch =}\NormalTok{ hyperSummary,}
+                 \DataTypeTok{metaData =}\NormalTok{ plpData}\OperatorTok{$}\NormalTok{metaData,}
+                 \DataTypeTok{populationSettings =} \KeywordTok{attr}\NormalTok{(population, }\StringTok{'metaData'}\NormalTok{),}
+                 \DataTypeTok{outcomeId=}\NormalTok{outcomeId,}\CommentTok{# can use populationSettings$outcomeId?}
+                 \DataTypeTok{cohortId=}\NormalTok{cohortId,}
+                 \DataTypeTok{varImp =} \OtherTok{NULL}\NormalTok{,}
+                 \DataTypeTok{trainingTime=}\NormalTok{comp,}
+                 \DataTypeTok{covariateMap=}\NormalTok{result}\OperatorTok{$}\NormalTok{map}
+\NormalTok{  )}
+  \KeywordTok{class}\NormalTok{(result) <-}\StringTok{ 'plpModel'}
+  \KeywordTok{attr}\NormalTok{(result, }\StringTok{'type'}\NormalTok{) <-}\StringTok{ 'madeup'}
+  \KeywordTok{attr}\NormalTok{(result, }\StringTok{'predictionType'}\NormalTok{) <-}\StringTok{ 'binary'}
+  \KeywordTok{return}\NormalTok{(result)}
+    
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+You could make the fitMadeUp function cleaner by adding helper function
+in the MadeUp.R file that are called by the fit function. As the end of
+the fit function specified
+\texttt{attr(result,\ \textquotesingle{}type\textquotesingle{})\ \textless{}-\ \textquotesingle{}madeup\textquotesingle{}}
+we also need to make sure there is a \texttt{predict.madeup} function in
+Predict.R:
+
+\hypertarget{predict}{%
+\subsection{Predict}\label{predict}}
+
+The prediction function takes as input the plpModel returned by fit, a
+population and corresponding plpData. It returns a data.frame with the
+columns:
+
+\begin{itemize}
+\tightlist
+\item
+  rowId - the id for each person in the population
+\item
+  value - the predicted risk from the plpModel
+\end{itemize}
+
+If the population contains the columns outcomeCount and indexes, then
+these are also in the output.
+
+For example:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{predict.madeup <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(plpModel,population, plpData, ...)\{ }
+
+  \CommentTok{# ************* code to do prediction for each rowId in population}
+  \CommentTok{# prediction <- code to do prediction here returning columns: rowId }
+  \CommentTok{#               and value (predicted risk)}
+  \CommentTok{#**************}
+  
+\NormalTok{  prediction <-}\StringTok{ }\KeywordTok{merge}\NormalTok{(population, prediction, }\DataTypeTok{by=}\StringTok{'rowId'}\NormalTok{)}
+\NormalTok{  prediction <-}\StringTok{ }\NormalTok{prediction[,}\KeywordTok{colnames}\NormalTok{(prediction)}\OperatorTok{%in%}\KeywordTok{c}\NormalTok{(}\StringTok{'rowId'}\NormalTok{,}\StringTok{'outcomeCount'}\NormalTok{,}
+                                                      \StringTok{'indexes'}\NormalTok{, }\StringTok{'value'}\NormalTok{)] }
+  \KeywordTok{attr}\NormalTok{(prediction, }\StringTok{"metaData"}\NormalTok{) <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{predictionType =} \StringTok{"binary"}\NormalTok{) }
+  \KeywordTok{return}\NormalTok{(prediction)}
+  
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{algorithm-example}{%
+\section{Algorithm Example}\label{algorithm-example}}
+
+Below a fully functional algorithm example is given, however we highly
+recommend you to have a look at the available algorithms in the package.
+
+\hypertarget{set-1}{%
+\subsection{Set}\label{set-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{setMadeUp <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(}\DataTypeTok{a=}\DecValTok{1}\NormalTok{, }\DataTypeTok{b=}\DecValTok{2}\NormalTok{, }\DataTypeTok{seed=}\OtherTok{NULL}\NormalTok{)\{}
+  \CommentTok{# check a is valid positive value}
+  \ControlFlowTok{if}\NormalTok{(}\KeywordTok{missing}\NormalTok{(a))\{}
+    \KeywordTok{stop}\NormalTok{(}\StringTok{'a must be input'}\NormalTok{)}
+\NormalTok{  \}}
+  \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\KeywordTok{class}\NormalTok{(a)}\OperatorTok{%in%}\KeywordTok{c}\NormalTok{(}\StringTok{'numeric'}\NormalTok{,}\StringTok{'integer'}\NormalTok{)\{}
+    \KeywordTok{stop}\NormalTok{(}\StringTok{'a must be numeric'}\NormalTok{)}
+\NormalTok{  \}}
+  \ControlFlowTok{if}\NormalTok{(a }\OperatorTok{<}\StringTok{ }\DecValTok{0}\NormalTok{)\{}
+    \KeywordTok{stop}\NormalTok{(}\StringTok{'a must be positive'}\NormalTok{)}
+\NormalTok{  \}}
+  \CommentTok{# check b is numeric}
+  \ControlFlowTok{if}\NormalTok{(}\KeywordTok{missing}\NormalTok{(b))\{}
+    \KeywordTok{stop}\NormalTok{(}\StringTok{'b must be input'}\NormalTok{)}
+\NormalTok{  \}}
+  \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\KeywordTok{class}\NormalTok{(b)}\OperatorTok{%in%}\KeywordTok{c}\NormalTok{(}\StringTok{'numeric'}\NormalTok{,}\StringTok{'integer'}\NormalTok{)\{}
+    \KeywordTok{stop}\NormalTok{(}\StringTok{'b must be numeric'}\NormalTok{)}
+\NormalTok{  \}}
+  
+  \CommentTok{# now create list of all combinations:}
+\NormalTok{  result <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{model=}\StringTok{'fitMadeUp'}\NormalTok{, }
+                 \DataTypeTok{param=} \KeywordTok{split}\NormalTok{(}\KeywordTok{expand.grid}\NormalTok{(}\DataTypeTok{a=}\NormalTok{a, }
+                                          \DataTypeTok{b=}\NormalTok{b,}
+                                          \DataTypeTok{seed=}\KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.null}\NormalTok{(seed),}\StringTok{'NULL'}\NormalTok{, seed)),}
+                              \DecValTok{1}\OperatorTok{:}\NormalTok{(}\KeywordTok{length}\NormalTok{(a)}\OperatorTok{*}\KeywordTok{length}\NormalTok{(b)  )),}
+                 \DataTypeTok{name=}\StringTok{'Made Up Algorithm'}
+\NormalTok{  )}
+  \KeywordTok{class}\NormalTok{(result) <-}\StringTok{ 'modelSettings'} 
+  
+  \KeywordTok{return}\NormalTok{(result)}
+    
+  
+\ErrorTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{fit-1}{%
+\subsection{Fit}\label{fit-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fitMadeUp <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(population, plpData, param, }\DataTypeTok{quiet=}\NormalTok{F,}
+\NormalTok{                        outcomeId, cohortId, ...)\{}
+    \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\NormalTok{quiet)}
+    \KeywordTok{writeLines}\NormalTok{(}\StringTok{'Training Made Up model'}\NormalTok{)}
+  
+  \ControlFlowTok{if}\NormalTok{(param[[}\DecValTok{1}\NormalTok{]]}\OperatorTok{$}\NormalTok{seed}\OperatorTok{!=}\StringTok{'NULL'}\NormalTok{)}
+    \KeywordTok{set.seed}\NormalTok{(param[[}\DecValTok{1}\NormalTok{]]}\OperatorTok{$}\NormalTok{seed)}
+  
+    \CommentTok{# check plpData is coo format:}
+  \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\StringTok{'ffdf'}\OperatorTok{%in%}\KeywordTok{class}\NormalTok{(plpData}\OperatorTok{$}\NormalTok{covariates) )}
+    \KeywordTok{stop}\NormalTok{(}\StringTok{'This algorithm requires plpData in coo format'}\NormalTok{)}
+  
+\NormalTok{  metaData <-}\StringTok{ }\KeywordTok{attr}\NormalTok{(population, }\StringTok{'metaData'}\NormalTok{)}
+  \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\KeywordTok{is.null}\NormalTok{(population}\OperatorTok{$}\NormalTok{indexes))}
+\NormalTok{    population <-}\StringTok{ }\NormalTok{population[population}\OperatorTok{$}\NormalTok{indexes}\OperatorTok{>}\DecValTok{0}\NormalTok{,]}
+  \KeywordTok{attr}\NormalTok{(population, }\StringTok{'metaData'}\NormalTok{) <-}\StringTok{ }\NormalTok{metaData}
+  
+  \CommentTok{# convert data into sparse R Matrix:}
+\NormalTok{  result <-}\StringTok{ }\KeywordTok{toSparseM}\NormalTok{(plpData,population,}\DataTypeTok{map=}\OtherTok{NULL}\NormalTok{)}
+\NormalTok{  data <-}\StringTok{ }\NormalTok{result}\OperatorTok{$}\NormalTok{data}
+  
+\NormalTok{  data <-}\StringTok{ }\NormalTok{data[population}\OperatorTok{$}\NormalTok{rowId,]}
+  
+  \CommentTok{# set test/train sets (for printing performance as it trains)}
+  \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\NormalTok{quiet)}
+    \KeywordTok{writeLines}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(}\StringTok{'Training made up model on train set containing '}\NormalTok{, }\KeywordTok{nrow}\NormalTok{(population), }
+                      \StringTok{' people with '}\NormalTok{,}\KeywordTok{sum}\NormalTok{(population}\OperatorTok{$}\NormalTok{outcomeCount}\OperatorTok{>}\DecValTok{0}\NormalTok{), }\StringTok{' outcomes'}\NormalTok{))}
+\NormalTok{  start <-}\StringTok{ }\KeywordTok{Sys.time}\NormalTok{()}
+  
+  \CommentTok{#============= STEP 1 ======================================}
+  \CommentTok{# pick the best hyper-params and then do final training on all data...}
+  \KeywordTok{writeLines}\NormalTok{(}\StringTok{'train'}\NormalTok{)}
+\NormalTok{  datas <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{population=}\NormalTok{population, }\DataTypeTok{data=}\NormalTok{data)}
+\NormalTok{  param.sel <-}\StringTok{ }\KeywordTok{lapply}\NormalTok{(param, }\ControlFlowTok{function}\NormalTok{(x) }\KeywordTok{do.call}\NormalTok{(made_up_model, }\KeywordTok{c}\NormalTok{(x,datas)  ))}
+\NormalTok{  hyperSummary <-}\StringTok{ }\KeywordTok{do.call}\NormalTok{(rbind, }\KeywordTok{lapply}\NormalTok{(param.sel, }\ControlFlowTok{function}\NormalTok{(x) x}\OperatorTok{$}\NormalTok{hyperSum))}
+\NormalTok{  hyperSummary <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(hyperSummary)}
+\NormalTok{  hyperSummary}\OperatorTok{$}\NormalTok{auc <-}\StringTok{ }\KeywordTok{unlist}\NormalTok{(}\KeywordTok{lapply}\NormalTok{(param.sel, }\ControlFlowTok{function}\NormalTok{(x) x}\OperatorTok{$}\NormalTok{auc)) }
+\NormalTok{  param.sel <-}\StringTok{ }\KeywordTok{unlist}\NormalTok{(}\KeywordTok{lapply}\NormalTok{(param.sel, }\ControlFlowTok{function}\NormalTok{(x) x}\OperatorTok{$}\NormalTok{auc))}
+\NormalTok{  param <-}\StringTok{ }\NormalTok{param[[}\KeywordTok{which.max}\NormalTok{(param.sel)]]}
+  
+  \CommentTok{# set this so you do a final model train }
+\NormalTok{  param}\OperatorTok{$}\NormalTok{final=T}
+  
+  \KeywordTok{writeLines}\NormalTok{(}\StringTok{'final train'}\NormalTok{)}
+\NormalTok{  trainedModel <-}\StringTok{ }\KeywordTok{do.call}\NormalTok{(made_up_model, }\KeywordTok{c}\NormalTok{(param,datas)  )}\OperatorTok{$}\NormalTok{model}
+  
+\NormalTok{  comp <-}\StringTok{ }\KeywordTok{Sys.time}\NormalTok{() }\OperatorTok{-}\StringTok{ }\NormalTok{start}
+  \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\NormalTok{quiet)}
+    \KeywordTok{writeLines}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(}\StringTok{'Model Made Up trained - took:'}\NormalTok{,  }\KeywordTok{format}\NormalTok{(comp, }\DataTypeTok{digits=}\DecValTok{3}\NormalTok{)))}
+  
+  \CommentTok{# construct the standard output for a model:}
+\NormalTok{  result <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{model =}\NormalTok{ trainedModel,}
+                 \DataTypeTok{modelSettings =} \KeywordTok{list}\NormalTok{(}\DataTypeTok{model=}\StringTok{'made_up'}\NormalTok{, }\DataTypeTok{modelParameters=}\NormalTok{param),}
+                 \DataTypeTok{trainCVAuc =} \OtherTok{NULL}\NormalTok{,}
+                 \DataTypeTok{hyperParamSearch =}\NormalTok{ hyperSummary,}
+                 \DataTypeTok{metaData =}\NormalTok{ plpData}\OperatorTok{$}\NormalTok{metaData,}
+                 \DataTypeTok{populationSettings =} \KeywordTok{attr}\NormalTok{(population, }\StringTok{'metaData'}\NormalTok{),}
+                 \DataTypeTok{outcomeId=}\NormalTok{outcomeId,}\CommentTok{# can use populationSettings$outcomeId?}
+                 \DataTypeTok{cohortId=}\NormalTok{cohortId,}
+                 \DataTypeTok{varImp =} \OtherTok{NULL}\NormalTok{,}
+                 \DataTypeTok{trainingTime=}\NormalTok{comp,}
+                 \DataTypeTok{covariateMap=}\NormalTok{result}\OperatorTok{$}\NormalTok{map}
+\NormalTok{  )}
+  \KeywordTok{class}\NormalTok{(result) <-}\StringTok{ 'plpModel'}
+  \KeywordTok{attr}\NormalTok{(result, }\StringTok{'type'}\NormalTok{) <-}\StringTok{ 'madeup'}
+  \KeywordTok{attr}\NormalTok{(result, }\StringTok{'predictionType'}\NormalTok{) <-}\StringTok{ 'binary'}
+  \KeywordTok{return}\NormalTok{(result)}
+    
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{helpers}{%
+\subsection{Helpers}\label{helpers}}
+
+In the fit model a helper function \texttt{made\_up\_model} is called,
+this is the function that trains a model given the data and population
+(where the popualtion contains a column outcomeCount corresponding to
+the outcome). Both the data and population are ordered the same way:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{made_up_model <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(data, population,}
+                       \DataTypeTok{a=}\DecValTok{1}\NormalTok{,}\DataTypeTok{b=}\DecValTok{1}\NormalTok{, }\DataTypeTok{final=}\NormalTok{F, ...)\{}
+  
+  \KeywordTok{writeLines}\NormalTok{(}\KeywordTok{paste}\NormalTok{(}\StringTok{'Training Made Up model with '}\NormalTok{,}\KeywordTok{length}\NormalTok{(}\KeywordTok{unique}\NormalTok{(population}\OperatorTok{$}\NormalTok{indexes)),}
+                   \StringTok{' fold CV'}\NormalTok{))}
+  \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\KeywordTok{is.null}\NormalTok{(population}\OperatorTok{$}\NormalTok{indexes) }\OperatorTok{&&}\StringTok{ }\NormalTok{final}\OperatorTok{==}\NormalTok{F)\{}
+\NormalTok{    index_vect <-}\StringTok{ }\KeywordTok{unique}\NormalTok{(population}\OperatorTok{$}\NormalTok{indexes)}
+\NormalTok{    perform <-}\StringTok{ }\KeywordTok{c}\NormalTok{()}
+    
+    \CommentTok{# create prediction matrix to store all predictions}
+\NormalTok{    predictionMat <-}\StringTok{ }\NormalTok{population}
+\NormalTok{    predictionMat}\OperatorTok{$}\NormalTok{value <-}\StringTok{ }\DecValTok{0}
+    \KeywordTok{attr}\NormalTok{(predictionMat, }\StringTok{"metaData"}\NormalTok{) <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{predictionType =} \StringTok{"binary"}\NormalTok{)}
+    
+    \ControlFlowTok{for}\NormalTok{(index }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\KeywordTok{length}\NormalTok{(index_vect ))\{}
+      \KeywordTok{writeLines}\NormalTok{(}\KeywordTok{paste}\NormalTok{(}\StringTok{'Fold '}\NormalTok{,index, }\StringTok{' -- with '}\NormalTok{, }\KeywordTok{sum}\NormalTok{(population}\OperatorTok{$}\NormalTok{indexes}\OperatorTok{!=}\NormalTok{index),}
+                       \StringTok{'train rows'}\NormalTok{))}
+\NormalTok{      model <-}\StringTok{ }\NormalTok{madeup}\OperatorTok{::}\KeywordTok{model}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ data[population}\OperatorTok{$}\NormalTok{indexes}\OperatorTok{!=}\NormalTok{index,],}
+                             \DataTypeTok{y=}\NormalTok{ population}\OperatorTok{$}\NormalTok{outcomeCount[population}\OperatorTok{$}\NormalTok{indexes}\OperatorTok{!=}\NormalTok{index],}
+                                  \DataTypeTok{a=}\NormalTok{a, }\DataTypeTok{b=}\NormalTok{b)}
+      
+\NormalTok{      pred <-}\StringTok{ }\NormalTok{stats}\OperatorTok{::}\KeywordTok{predict}\NormalTok{(model, data[population}\OperatorTok{$}\NormalTok{indexes}\OperatorTok{==}\NormalTok{index,])}
+\NormalTok{      prediction <-}\StringTok{ }\NormalTok{population[population}\OperatorTok{$}\NormalTok{indexes}\OperatorTok{==}\NormalTok{index,]}
+\NormalTok{      prediction}\OperatorTok{$}\NormalTok{value <-}\StringTok{ }\NormalTok{pred}
+      \KeywordTok{attr}\NormalTok{(prediction, }\StringTok{"metaData"}\NormalTok{) <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{predictionType =} \StringTok{"binary"}\NormalTok{)}
+\NormalTok{      aucVal <-}\StringTok{ }\KeywordTok{computeAuc}\NormalTok{(prediction)}
+\NormalTok{      perform <-}\StringTok{ }\KeywordTok{c}\NormalTok{(perform,aucVal)}
+      
+      \CommentTok{# add the fold predictions and compute AUC after loop}
+\NormalTok{      predictionMat}\OperatorTok{$}\NormalTok{value[population}\OperatorTok{$}\NormalTok{indexes}\OperatorTok{==}\NormalTok{index] <-}\StringTok{ }\NormalTok{pred}
+      
+\NormalTok{     \}}
+    \CommentTok{##auc <- mean(perform) # want overal rather than mean}
+\NormalTok{    auc <-}\StringTok{ }\KeywordTok{computeAuc}\NormalTok{(predictionMat)}
+    
+\NormalTok{    foldPerm <-}\StringTok{ }\NormalTok{perform}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{    model <-}\StringTok{ }\NormalTok{madeup}\OperatorTok{::}\KeywordTok{model}\NormalTok{(}\DataTypeTok{x=}\NormalTok{ data, }
+                                \DataTypeTok{y=}\NormalTok{ population}\OperatorTok{$}\NormalTok{outcomeCount,}
+                                \DataTypeTok{a=}\NormalTok{a,}\DataTypeTok{b=}\NormalTok{b)}
+    
+\NormalTok{    pred <-}\StringTok{ }\NormalTok{stats}\OperatorTok{::}\KeywordTok{predict}\NormalTok{(model, data)}
+\NormalTok{    prediction <-}\StringTok{ }\NormalTok{population}
+\NormalTok{    prediction}\OperatorTok{$}\NormalTok{value <-}\StringTok{ }\NormalTok{pred}
+    \KeywordTok{attr}\NormalTok{(prediction, }\StringTok{"metaData"}\NormalTok{) <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{predictionType =} \StringTok{"binary"}\NormalTok{) }
+\NormalTok{    auc <-}\StringTok{ }\KeywordTok{computeAuc}\NormalTok{(prediction)}
+\NormalTok{    foldPerm <-}\StringTok{ }\NormalTok{auc}
+\NormalTok{  \}}
+  
+\NormalTok{  result <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{model=}\NormalTok{model,}
+                 \DataTypeTok{auc=}\NormalTok{auc,}
+                 \DataTypeTok{hyperSum =} \KeywordTok{unlist}\NormalTok{(}\KeywordTok{list}\NormalTok{(}\DataTypeTok{a =}\NormalTok{ a, }\DataTypeTok{b =}\NormalTok{ b, }\DataTypeTok{fold_auc=}\NormalTok{foldPerm))}
+\NormalTok{  )}
+  \KeywordTok{return}\NormalTok{(result)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{predict-1}{%
+\subsection{Predict}\label{predict-1}}
+
+The final step is to create a predict function for the model. This gets
+added to the predict.R file. In the example above the type
+\texttt{attr(result,\ \textquotesingle{}type\textquotesingle{})\ \textless{}-\ \textquotesingle{}madeup\textquotesingle{}}
+was madeup, so a \texttt{predict.madeup} function is required to be
+added into the predict.R. The predict function needs to take as input
+the plpModel returned by the fit function, the population to apply the
+model on and the plpData specifying the covariates of the population.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{predict.madeup <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(plpModel,population, plpData, ...)\{ }
+\NormalTok{  result <-}\StringTok{ }\KeywordTok{toSparseM}\NormalTok{(plpData, population, }\DataTypeTok{map=}\NormalTok{plpModel}\OperatorTok{$}\NormalTok{covariateMap)}
+\NormalTok{  data <-}\StringTok{ }\NormalTok{result}\OperatorTok{$}\NormalTok{data[population}\OperatorTok{$}\NormalTok{rowId,]}
+\NormalTok{  prediction <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{rowId=}\NormalTok{population}\OperatorTok{$}\NormalTok{rowId, }
+                           \DataTypeTok{value=}\NormalTok{stats}\OperatorTok{::}\KeywordTok{predict}\NormalTok{(plpModel}\OperatorTok{$}\NormalTok{model, data)}
+\NormalTok{                           )}
+  
+\NormalTok{  prediction <-}\StringTok{ }\KeywordTok{merge}\NormalTok{(population, prediction, }\DataTypeTok{by=}\StringTok{'rowId'}\NormalTok{)}
+\NormalTok{  prediction <-}\StringTok{ }\NormalTok{prediction[,}\KeywordTok{colnames}\NormalTok{(prediction)}\OperatorTok{%in%}
+\StringTok{                           }\KeywordTok{c}\NormalTok{(}\StringTok{'rowId'}\NormalTok{,}\StringTok{'outcomeCount'}\NormalTok{,}\StringTok{'indexes'}\NormalTok{, }\StringTok{'value'}\NormalTok{)] }\CommentTok{# need to fix no index issue}
+  \KeywordTok{attr}\NormalTok{(prediction, }\StringTok{"metaData"}\NormalTok{) <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{predictionType =} \StringTok{"binary"}\NormalTok{) }
+  \KeywordTok{return}\NormalTok{(prediction)}
+  
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+As the madeup model uses the standard R prediction, it has the same
+prediction function as xgboost, so we could have not added a new
+prediction function and instead made the type of the result returned by
+fitMadeUpModel to
+\texttt{attr(result,\ \textquotesingle{}type\textquotesingle{})\ \textless{}-\ \textquotesingle{}xgboost\textquotesingle{}}.
+
+\hypertarget{acknowledgments}{%
+\section{Acknowledgments}\label{acknowledgments}}
+
+Considerable work has been dedicated to provide the
+\texttt{PatientLevelPrediction} package.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{citation}\NormalTok{(}\StringTok{"PatientLevelPrediction"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## To cite PatientLevelPrediction in publications use:
+## 
+## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design and
+## implementation of a standardized framework to generate and evaluate patient-level
+## prediction models using observational healthcare data." _Journal of the American
+## Medical Informatics Association_, *25*(8), 969-975. <URL:
+## https://doi.org/10.1093/jamia/ocy032>.
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Article{,
+##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},
+##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},
+##     journal = {Journal of the American Medical Informatics Association},
+##     volume = {25},
+##     number = {8},
+##     pages = {969-975},
+##     year = {2018},
+##     url = {https://doi.org/10.1093/jamia/ocy032},
+##   }
+\end{verbatim}
+
+\textbf{Please reference this paper if you use the PLP Package in your
+work:}
+
+\href{http://dx.doi.org/10.1093/jamia/ocy032}{Reps JM, Schuemie MJ,
+Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a
+standardized framework to generate and evaluate patient-level prediction
+models using observational healthcare data. J Am Med Inform Assoc.
+2018;25(8):969-975.}
+
+This work is supported in part through the National Science Foundation
+grant IIS 1251151.
+
+\end{document}

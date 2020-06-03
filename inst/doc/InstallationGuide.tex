@@ -1,0 +1,369 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Patient-Level Prediction Installation Guide},
+  pdfauthor={Jenna Reps, Peter R. Rijnbeek},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[CO,CE]{Installation Guide}
+\fancyfoot[CO,CE]{PatientLevelPrediction Package Version 3.1.0}
+\fancyfoot[LE,RO]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\title{Patient-Level Prediction Installation Guide}
+\author{Jenna Reps, Peter R. Rijnbeek}
+\date{2020-06-03}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+This vignette describes how you need to install the Observational Health
+Data Sciencs and Informatics (OHDSI)
+\href{http://github.com/OHDSI/PatientLevelPrediction}{\texttt{PatientLevelPrediction}}
+package under Windows, Mac, and Linux.
+
+\hypertarget{software-prerequisites}{%
+\section{Software Prerequisites}\label{software-prerequisites}}
+
+\hypertarget{windows-users}{%
+\subsection{Windows Users}\label{windows-users}}
+
+Under Windows the OHDSI Patient Level Prediction (PLP) package requires
+installing:
+
+\begin{itemize}
+\tightlist
+\item
+  R (\url{https://cran.cnr.berkeley.edu/} ) - (R \textgreater= 3.3.0,
+  but latest is recommended)
+\item
+  Rstudio (\url{https://www.rstudio.com/} )
+\item
+  Java (\url{http://www.java.com} )
+\item
+  RTools (\url{https://cran.r-project.org/bin/windows/Rtools/})
+\end{itemize}
+
+\hypertarget{maclinux-users}{%
+\subsection{Mac/Linux Users}\label{maclinux-users}}
+
+Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package
+requires installing:
+
+\begin{itemize}
+\tightlist
+\item
+  R (\url{https://cran.cnr.berkeley.edu/} ) - (R \textgreater= 3.3.0,
+  but latest is recommended)
+\item
+  Rstudio (\url{https://www.rstudio.com/} )
+\item
+  Java (\url{http://www.java.com} )
+\item
+  Xcode command line tools(run in terminal: xcode-select --install)
+  {[}MAC USERS ONLY{]}
+\end{itemize}
+
+\hypertarget{installing-the-package}{%
+\section{Installing the Package}\label{installing-the-package}}
+
+The preferred way to install the package is by using drat, which will
+automatically install the latest release and all the latest
+dependencies. If the drat code fails or you do not want the official
+release you could use devtools to install the bleading edge version of
+the package (latest master). Note that the latest master could contain
+bugs, please report them to us if you experience problems.
+
+\hypertarget{installing-patientlevelprediction-using-drat}{%
+\subsection{Installing PatientLevelPrediction using
+drat}\label{installing-patientlevelprediction-using-drat}}
+
+To install using drat run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{install.packages}\NormalTok{(}\StringTok{"drat"}\NormalTok{)}
+\NormalTok{drat}\OperatorTok{::}\KeywordTok{addRepo}\NormalTok{(}\StringTok{"OHDSI"}\NormalTok{)}
+\KeywordTok{install.packages}\NormalTok{(}\StringTok{"PatientLevelPrediction"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{installing-patientlevelprediction-using-devtools}{%
+\subsection{Installing PatientLevelPrediction using
+devtools}\label{installing-patientlevelprediction-using-devtools}}
+
+To install using devtools run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{install.packages}\NormalTok{(}\StringTok{'devtools'}\NormalTok{)}
+\NormalTok{devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{"OHDSI/FeatureExtraction"}\NormalTok{)}
+\NormalTok{devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{'ohdsi/PatientLevelPrediction'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+When installing using devtools make sure to close any other Rstudio
+sessions that are using PatientLevelPrediction or any dependency.
+Keeping Rstudio sessions open can cause locks that prevent the package
+installing.
+
+\hypertarget{creating-python-reticulate-environment}{%
+\section{Creating Python Reticulate
+Environment}\label{creating-python-reticulate-environment}}
+
+Many of the classifiers in the PatientLevelPrediction use a Python back
+end. To set up a python environment run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(PatientLevelPrediction)}
+\NormalTok{reticulate}\OperatorTok{::}\KeywordTok{install_miniconda}\NormalTok{()}
+\KeywordTok{configurePython}\NormalTok{(}\DataTypeTok{envname=}\StringTok{'r-reticulate'}\NormalTok{, }\DataTypeTok{envtype=}\StringTok{'conda'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+To add the R keras interface, in Rstudio run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{"rstudio/keras"}\NormalTok{)}
+\KeywordTok{library}\NormalTok{(keras)}
+\KeywordTok{install_keras}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+Some of the less frequently used classifiers are not installed during
+this set-up to add them run:
+
+For GBM survival:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{reticulate}\OperatorTok{::}\KeywordTok{conda_install}\NormalTok{(}\DataTypeTok{envname=}\StringTok{'r-reticulate'}\NormalTok{, }\DataTypeTok{packages =} \KeywordTok{c}\NormalTok{(}\StringTok{'scikit-survival'}\NormalTok{), }\DataTypeTok{forge =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{pip =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{pip_ignore_installed =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{conda =} \StringTok{"auto"}\NormalTok{, }\DataTypeTok{channel =} \StringTok{'sebp'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+For any of the torch models:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{reticulate}\OperatorTok{::}\KeywordTok{conda_install}\NormalTok{(}\DataTypeTok{envname=}\StringTok{'r-reticulate'}\NormalTok{, }\DataTypeTok{packages =} \KeywordTok{c}\NormalTok{(}\StringTok{'pytorch'}\NormalTok{, }\StringTok{'torchvision'}\NormalTok{, }\StringTok{'cpuonly'}\NormalTok{), }\DataTypeTok{forge =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{pip =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{channel =} \StringTok{'pytorch'}\NormalTok{, }\DataTypeTok{pip_ignore_installed =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{conda =} \StringTok{'auto'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{testing-installation}{%
+\section{Testing installation}\label{testing-installation}}
+
+To test whether the package is installed correctly run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(DatabaseConnector)}
+\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{'sql_server'}\NormalTok{, }
+                                             \DataTypeTok{user =} \StringTok{'username'}\NormalTok{, }
+                                             \DataTypeTok{password =} \StringTok{'hidden'}\NormalTok{, }
+                                             \DataTypeTok{server =} \StringTok{'your server'}\NormalTok{, }
+                                             \DataTypeTok{port =} \StringTok{'your port'}\NormalTok{)}
+\NormalTok{PatientLevelPrediction}\OperatorTok{::}\KeywordTok{checkPlpInstallation}\NormalTok{(}\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }
+                                             \DataTypeTok{python =}\NormalTok{ T)}
+\end{Highlighting}
+\end{Shaded}
+
+To test the installation (excluding python) run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(DatabaseConnector)}
+\NormalTok{connectionDetails <-}\StringTok{ }\KeywordTok{createConnectionDetails}\NormalTok{(}\DataTypeTok{dbms =} \StringTok{'sql_server'}\NormalTok{, }
+                                           \DataTypeTok{user =} \StringTok{'username'}\NormalTok{, }
+                                           \DataTypeTok{password =} \StringTok{'hidden'}\NormalTok{, }
+                                           \DataTypeTok{server =} \StringTok{'your server'}\NormalTok{, }
+                                           \DataTypeTok{port =} \StringTok{'your port'}\NormalTok{)}
+\NormalTok{PatientLevelPrediction}\OperatorTok{::}\KeywordTok{checkPlpInstallation}\NormalTok{(}\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }
+                                             \DataTypeTok{python =}\NormalTok{ F)}
+\end{Highlighting}
+\end{Shaded}
+
+The check can take a while to run since it will build the following
+models in sequence on simulated \url{data:Logistic} Regression,
+RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient
+Boosting. Moreover, it will test the database connection.
+
+\hypertarget{installation-issues}{%
+\section{Installation issues}\label{installation-issues}}
+
+Installation issues need to be posted in our issue tracker:
+\url{http://github.com/OHDSI/PatientLevelPrediction/issues}
+
+The list below provides solutions for some common issues:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  If you have an error when trying to install a package in R saying
+  \textbf{`Dependancy X not available \ldots{}'} then this can sometimes
+  be fixed by running
+  \texttt{install.packages(\textquotesingle{}X\textquotesingle{})} and
+  then once that completes trying to reinstall the package that had the
+  error.
+\item
+  I have found that using the github devtools to install packages can be
+  impacted if you have \textbf{multiple R sessions} open as one session
+  with a library open can causethe library to be locked and this can
+  prevent an install of a package that depends on that library.
+\end{enumerate}
+
+\hypertarget{acknowledgments}{%
+\section{Acknowledgments}\label{acknowledgments}}
+
+Considerable work has been dedicated to provide the
+\texttt{PatientLevelPrediction} package.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{citation}\NormalTok{(}\StringTok{"PatientLevelPrediction"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## To cite PatientLevelPrediction in publications use:
+## 
+## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design and
+## implementation of a standardized framework to generate and evaluate patient-level
+## prediction models using observational healthcare data." _Journal of the American
+## Medical Informatics Association_, *25*(8), 969-975. <URL:
+## https://doi.org/10.1093/jamia/ocy032>.
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Article{,
+##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},
+##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},
+##     journal = {Journal of the American Medical Informatics Association},
+##     volume = {25},
+##     number = {8},
+##     pages = {969-975},
+##     year = {2018},
+##     url = {https://doi.org/10.1093/jamia/ocy032},
+##   }
+\end{verbatim}
+
+\textbf{Please reference this paper if you use the PLP Package in your
+work:}
+
+\href{http://dx.doi.org/10.1093/jamia/ocy032}{Reps JM, Schuemie MJ,
+Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a
+standardized framework to generate and evaluate patient-level prediction
+models using observational healthcare data. J Am Med Inform Assoc.
+2018;25(8):969-975.}
+
+This work is supported in part through the National Science Foundation
+grant IIS 1251151.
+
+\end{document}
