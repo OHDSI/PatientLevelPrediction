@@ -16,20 +16,18 @@ getFilter <- function(summaryTable,input){
   if(input$modelSettingName!='All'){
     ind <- intersect(ind,which(as.character(summaryTable$Model)==input$modelSettingName))
   }
-  if(input$riskWindowStart!='All'){
-    ind <- intersect(ind,which(summaryTable$`TAR start`==input$riskWindowStart))
+  if(input$TAR!='All'){
+    ind <- intersect(ind,which(as.character(summaryTable$TAR)==input$TAR))
   }
-  if(input$riskWindowEnd!='All'){
-    ind <- intersect(ind,which(summaryTable$`TAR end`==input$riskWindowEnd))
-  }
+
   
   return(ind)
 }
 
 
-getPlpResult <- function(result,validation,summaryTable, inputType,filterIndex, selectedRow){
+getPlpResult <- function(result,validation,summaryTable, inputType,trueRow){
   if(inputType == 'plpResult'){
-    i <- filterIndex[selectedRow]
+    i <- trueRow
     if(i ==1){
       tempResult <- result
       tempResult$type <- 'test'
@@ -44,8 +42,8 @@ getPlpResult <- function(result,validation,summaryTable, inputType,filterIndex, 
     tempResult$log <- 'log not available'
   }else if( inputType == 'file') {
     tempResult <- NULL
-    loc <- summaryTable[filterIndex,][selectedRow,]$plpResultLocation
-    locLoaderFunc <- summaryTable[filterIndex,][selectedRow,]$plpResultLoad
+    loc <- summaryTable[trueRow,]$plpResultLocation
+    locLoaderFunc <- summaryTable[trueRow,]$plpResultLoad
     logLocation <- gsub('plpResult','plpLog.txt', gsub('validationResult.rds','plpLog.txt',gsub('plpResult.rds','plpLog.txt', as.character(loc))))
     if(file.exists(logLocation)){
       txt <- readLines(logLocation)
