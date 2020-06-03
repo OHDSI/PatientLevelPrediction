@@ -1,3 +1,10 @@
+PatientLevelPrediction 4.0.0
+======================
+- Andromeda replaced ff data objects
+- added age/gender into cohort
+- fixed python warnings
+- updated shiny plp viewer
+
 PatientLevelPrediction 3.0.16
 ======================
 - Fixed bug when running multiple analyses using a data extraction sample with multiple covariate settings

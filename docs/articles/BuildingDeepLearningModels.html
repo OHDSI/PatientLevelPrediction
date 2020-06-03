@@ -6,18 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Building Deep Learning Models • PatientLevelPrediction</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Building Deep Learning Models">
-<meta property="og:description" content="">
-<meta name="twitter:card" content="summary">
+<meta property="og:description" content="PatientLevelPrediction">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
-<body>
+<body data-spy="scroll" data-target="#toc">
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -30,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
       </span>
     </div>
 
@@ -77,10 +78,10 @@
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
+      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
     </li>
     <li>
-      <a href="../articles/ImplementingExistingModels.html">Implementing Existing Prediction Models using the OHDSI PatientLevelPrediction Framework</a>
+      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -113,13 +114,14 @@
 <!--/.navbar -->
 
       
+
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1>Building Deep Learning Models</h1>
+      <h1 data-toc-skip>Building Deep Learning Models</h1>
                         <h4 class="author">Peter R. Rijnbeek, Seng Chan You, Xiaoyong Pan, Jenna Reps</h4>
             
-            <h4 class="date">2019-05-30</h4>
+            <h4 class="date">2020-06-03</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/BuildingDeepLearningModels.Rmd"><code>vignettes/BuildingDeepLearningModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingDeepLearningModels.Rmd</code></div>
@@ -139,7 +141,7 @@
 <a href="#background" class="anchor"></a>Background</h1>
 <p>Deep Learning models are build by stacking an often large number of neural network layers that perform feature engineering steps, e.g embedding, and are collapsed in a final softmax layer (basically a logistic regression layer). These algorithms need a lot of data to converge to a good representation, but currently the sizes of the EHR databases are growing fast which would make Deep Learning an interesting approach to test within OHDSI’s <a href="https://academic.oup.com/jamia/article/25/8/969/4989437">Patient-Level Prediction Framework</a>. The current implementation allows us to perform research at scale on the value and limitations of Deep Learning using EHR data. For relatively small Target and Outcome cohorts, Deep Learning is most probably not the best choice.</p>
 <p>Most current Deep Learning research is performed in python and we have developed a pipeline to interact with python. Multiple Deep Learning backends have been developed, e.g. Tensorflow, PyTorch, Keras (recently also available in R) etc. In the package we have implemented interaction with Keras in R and PyTorch in Python but we invite the community to add other backends.</p>
-<p>Many network architectures have recently been proposed and we have implemented a number of them, however, this list will grow in the near future. It is important to understand that some of these architectures require a 2D data matrix, i.e. |patient|x|feature|, and others use a 3D data matrix |patient|x|feature|x|time|. The <a href="www.github.com%5Cohdsi%5CFeatureExtraction">FeatureExtraction Package</a> has been extended to enable the extraction of both data formats as will be described with examples below.</p>
+<p>Many network architectures have recently been proposed and we have implemented a number of them, however, this list will grow in the near future. It is important to understand that some of these architectures require a 2D data matrix, i.e. |patient|x|feature|, and others use a 3D data matrix |patient|x|feature|x|time|. The <a href="www.github.com%5Cohdsi%5CFeatureExtraction">FeatureExtraction Package</a> has been extended to enable the extraction of both data formats as will be described with examples below.</p>
 <p>Note that training Deep Learning models is computationally intensive, our implementation therefore supports both GPU and CPU. It will automatically check whether there is GPU or not in your computer. A GPU is highly recommended for Deep Learning!</p>
 </div>
 <div id="non-temporal-architectures" class="section level1">
@@ -157,9 +159,9 @@
 <p>Table 1: Non-Temporal Deep Learning Models Hyper-Parameters</p>
 <table class="table">
 <colgroup>
-<col width="12%">
+<col width="11%">
 <col width="37%">
-<col width="50%">
+<col width="51%">
 </colgroup>
 <thead><tr class="header">
 <th>Name</th>
@@ -179,57 +181,53 @@
 </tr>
 </tbody>
 </table>
-<div id="example" class="section level2">
-<h2 class="hasAnchor">
-<a href="#example" class="anchor"></a>Example</h2>
-<p>The approach for logistic regression (LRTorch) and the Multi-Layer Perceptron (MLPTorch) is identical. Here we will take LRTorch as an example.</p>
+<p>##Example The approach for logistic regression (LRTorch) and the Multi-Layer Perceptron (MLPTorch) is identical. Here we will take LRTorch as an example.</p>
 <p>You need to generate a <code>population</code> and <code>plpData</code> object as described in more detail in <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf"><code>BuildingPredictiveModels</code> vignette</a>.</p>
 <p>Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Random">set.seed</a></span>(<span class="dv">1234</span>)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/data">data</a></span>(plpDataSimulationProfile)
-sampleSize &lt;-<span class="st"> </span><span class="dv">12000</span>
-plpData &lt;-<span class="st"> </span><span class="kw"><a href="../reference/simulatePlpData.html">simulatePlpData</a></span>(
-  plpDataSimulationProfile,
-  <span class="dt">n =</span> sampleSize
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">1234</span>)
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span>(<span class="no">plpDataSimulationProfile</span>)
+<span class="no">sampleSize</span> <span class="kw">&lt;-</span> <span class="fl">12000</span>
+<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/simulatePlpData.html">simulatePlpData</a></span>(
+  <span class="no">plpDataSimulationProfile</span>,
+  <span class="kw">n</span> <span class="kw">=</span> <span class="no">sampleSize</span>
 )
 
-population &lt;-<span class="st"> </span><span class="kw"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span>(
-  plpData,
-  <span class="dt">outcomeId =</span> <span class="dv">2</span>,
-  <span class="dt">binary =</span> <span class="ot">TRUE</span>,
-  <span class="dt">firstExposureOnly =</span> <span class="ot">FALSE</span>,
-  <span class="dt">washoutPeriod =</span> <span class="dv">0</span>,
-  <span class="dt">removeSubjectsWithPriorOutcome =</span> <span class="ot">FALSE</span>,
-  <span class="dt">priorOutcomeLookback =</span> <span class="dv">99999</span>,
-  <span class="dt">requireTimeAtRisk =</span> <span class="ot">FALSE</span>,
-  <span class="dt">minTimeAtRisk =</span> <span class="dv">0</span>,
-  <span class="dt">riskWindowStart =</span> <span class="dv">0</span>,
-  <span class="dt">addExposureDaysToStart =</span> <span class="ot">FALSE</span>,
-  <span class="dt">riskWindowEnd =</span> <span class="dv">365</span>,
-  <span class="dt">addExposureDaysToEnd =</span> <span class="ot">FALSE</span>,
-  <span class="dt">verbosity =</span> <span class="st">"INFO"</span>
-)</code></pre></div>
+<span class="no">population</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span>(
+  <span class="no">plpData</span>,
+  <span class="kw">outcomeId</span> <span class="kw">=</span> <span class="fl">2</span>,
+  <span class="kw">binary</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
+  <span class="kw">firstExposureOnly</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+  <span class="kw">washoutPeriod</span> <span class="kw">=</span> <span class="fl">0</span>,
+  <span class="kw">removeSubjectsWithPriorOutcome</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+  <span class="kw">priorOutcomeLookback</span> <span class="kw">=</span> <span class="fl">99999</span>,
+  <span class="kw">requireTimeAtRisk</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+  <span class="kw">minTimeAtRisk</span> <span class="kw">=</span> <span class="fl">0</span>,
+  <span class="kw">riskWindowStart</span> <span class="kw">=</span> <span class="fl">0</span>,
+  <span class="kw">addExposureDaysToStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+  <span class="kw">riskWindowEnd</span> <span class="kw">=</span> <span class="fl">365</span>,
+  <span class="kw">addExposureDaysToEnd</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+  <span class="kw">verbosity</span> <span class="kw">=</span> <span class="st">"INFO"</span>
+)</pre></body></html></div>
 <p>As an example we will build a LRTorch model. We could specify the stacked autoencoder or the variational autoencoder to be used for reducing the feature dimension as an initial layer, but for this example we do not.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">autoencoder &lt;-<span class="st"> </span><span class="ot">FALSE</span>
-vae &lt;-<span class="st"> </span><span class="ot">FALSE</span></code></pre></div>
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">autoencoder</span> <span class="kw">&lt;-</span> <span class="fl">FALSE</span>
+<span class="no">vae</span> <span class="kw">&lt;-</span> <span class="fl">FALSE</span></pre></body></html></div>
 <p>We added a class_weight for imbalanced data, the default value 0 is the inverse ratio between negatives and positives,-1 applies focal loss.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">class_weight &lt;-<span class="st"> </span><span class="dv">0</span></code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Specify the settings for Logistics regression model using Torch in Python</span>
-model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/setLRTorch.html">setLRTorch</a></span>(<span class="dt">autoencoder=</span>autoencoder, <span class="dt">vae=</span>vae,  <span class="dt">class_weight=</span>class_weight)</code></pre></div>
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">class_weight</span> <span class="kw">&lt;-</span> <span class="fl">0</span></pre></body></html></div>
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="co"># Specify the settings for Logistics regression model using Torch in Python</span>
+<span class="no">model</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setLRTorch.html">setLRTorch</a></span>(<span class="kw">autoencoder</span><span class="kw">=</span><span class="no">autoencoder</span>, <span class="kw">vae</span><span class="kw">=</span><span class="no">vae</span>,  <span class="kw">class_weight</span><span class="kw">=</span><span class="no">class_weight</span>)</pre></body></html></div>
 <p>No we define our modelling parameters.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">testFraction &lt;-<span class="st"> </span><span class="fl">0.2</span>
-testSplit &lt;-<span class="st"> 'person'</span>
-nfold &lt;-<span class="st"> </span><span class="dv">3</span>
-splitSeed &lt;-<span class="st"> </span><span class="dv">1000</span></code></pre></div>
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">testFraction</span> <span class="kw">&lt;-</span> <span class="fl">0.2</span>
+<span class="no">testSplit</span> <span class="kw">&lt;-</span> <span class="st">'person'</span>
+<span class="no">nfold</span> <span class="kw">&lt;-</span> <span class="fl">3</span>
+<span class="no">splitSeed</span> <span class="kw">&lt;-</span> <span class="fl">1000</span></pre></body></html></div>
 <p>And we train and internally validate the model.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span>PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/runPlp">runPlp</a></span>(<span class="dt">population =</span> population, 
-                                          <span class="dt">plpData =</span> plpData, 
-                                          <span class="dt">modelSettings =</span> model,
-                                          <span class="dt">testSplit=</span>testSplit,
-                                          <span class="dt">testFraction=</span>testFraction,
-                                          <span class="dt">nfold=</span>nfold, 
-                                          <span class="dt">splitSeed=</span>splitSeed) </code></pre></div>
-</div>
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">results</span> <span class="kw">&lt;-</span> <span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/runPlp.html">runPlp</a></span>(<span class="kw">population</span> <span class="kw">=</span> <span class="no">population</span>,
+                                          <span class="kw">plpData</span> <span class="kw">=</span> <span class="no">plpData</span>,
+                                          <span class="kw">modelSettings</span> <span class="kw">=</span> <span class="no">model</span>,
+                                          <span class="kw">testSplit</span><span class="kw">=</span><span class="no">testSplit</span>,
+                                          <span class="kw">testFraction</span><span class="kw">=</span><span class="no">testFraction</span>,
+                                          <span class="kw">nfold</span><span class="kw">=</span><span class="no">nfold</span>,
+                                          <span class="kw">splitSeed</span><span class="kw">=</span><span class="no">splitSeed</span>)</pre></body></html></div>
 </div>
 <div id="temporal-architectures" class="section level1">
 <h1 class="hasAnchor">
@@ -294,8 +292,8 @@ This a very big network, see the paper for the topology.
 </ol>
 <table class="table">
 <colgroup>
-<col width="15%">
-<col width="37%">
+<col width="27%">
+<col width="72%">
 </colgroup>
 <thead><tr class="header">
 <th>parameter</th>
@@ -356,8 +354,8 @@ This network looks the same as above but then implemented as GRU
 <p>The following hyper-parameters can be set for these PyTorch models:</p>
 <table class="table">
 <colgroup>
-<col width="15%">
-<col width="37%">
+<col width="27%">
+<col width="72%">
 </colgroup>
 <thead><tr class="header">
 <th>parameter</th>
@@ -382,6 +380,7 @@ This network looks the same as above but then implemented as GRU
 </tr>
 </tbody>
 </table>
+<div style="page-break-after: always;"></div>
 </div>
 <div id="r-keras-cnn" class="section level2">
 <h2 class="hasAnchor">
@@ -396,14 +395,17 @@ Multi-resolution CovNN model (CovNN.R)
 <img src="CovCNN.png">
 </dd>
 </dl></li>
-<li><dl>
+<li>
+<dl>
 <dt>
 Convolution across data and time according(CovNN2.R)
 </dt>
 <dd>
 <img src="covcnn2.png">
 </dd>
-</dl></li>
+</dl>
+<div style="page-break-after: always;"></div>
+</li>
 </ol>
 <p>Furthermore, a custom build RNN is added that uses a variational autoencoder.</p>
 <ol start="3" style="list-style-type: decimal">
@@ -419,8 +421,8 @@ Clinically Informing application based on Recurrent Neural Network (CIReNN.R)
 <p>Table 2: Temporal Deep Learning Models</p>
 <table class="table">
 <colgroup>
-<col width="12%">
-<col width="87%">
+<col width="11%">
+<col width="88%">
 </colgroup>
 <thead><tr class="header">
 <th>Model</th>
@@ -442,70 +444,70 @@ Clinically Informing application based on Recurrent Neural Network (CIReNN.R)
 </tbody>
 </table>
 </div>
-<div id="example-1" class="section level2">
+<div id="example" class="section level2">
 <h2 class="hasAnchor">
-<a href="#example-1" class="anchor"></a>Example</h2>
+<a href="#example" class="anchor"></a>Example</h2>
 <p>We will now show how to use the temporal models by using CNNTorch as an example.</p>
 <p>You need to generate a <code>population</code> and <code>plpData</code> object as described in more detail in <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf"><code>BuildingPredictiveModels</code> vignette</a>.</p>
 <p>Note that for these algorithms you need to extracted temporal data as described in the [FeatureExtraction vignette] (<a href="https://github.com/OHDSI/FeatureExtraction/blob/master/inst/doc/UsingFeatureExtraction.pdf" class="uri">https://github.com/OHDSI/FeatureExtraction/blob/master/inst/doc/UsingFeatureExtraction.pdf</a>) as follows:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">settings &lt;-<span class="st"> </span><span class="kw">createTemporalCovariateSettings</span>(<span class="dt">useConditionEraStart =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useConditionEraOverlap =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useConditionOccurrence =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useConditionEraGroupStart =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useConditionEraGroupOverlap =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useDrugExposure =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useDrugEraStart =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useDrugEraOverlap =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useMeasurement =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useMeasurementValue =</span> <span class="ot">TRUE</span>,
-                                            <span class="dt">useMeasurementRangeGroup =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useProcedureOccurrence =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useDeviceExposure =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">useObservation =</span> <span class="ot">FALSE</span>,
-                                            <span class="dt">excludedCovariateConceptIds =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="dv">316866</span>),
-                                            <span class="dt">addDescendantsToExclude =</span> <span class="ot">TRUE</span>,
-                                            <span class="dt">temporalStartDays =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="dt">from =</span> <span class="op">-</span><span class="dv">365</span>, 
-                                                                    <span class="dt">to =</span> <span class="op">-</span><span class="dv">1</span>, <span class="dt">by =</span> <span class="dv">12</span>), 
-                                            <span class="dt">temporalEndDays =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="dt">from =</span> <span class="op">-</span><span class="dv">353</span>, 
-                                                                    <span class="dt">to =</span> <span class="dv">0</span>, <span class="dt">by =</span> <span class="dv">12</span>), <span class="dv">0</span>))
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">settings</span> <span class="kw">&lt;-</span> <span class="fu">createTemporalCovariateSettings</span>(<span class="kw">useConditionEraStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useConditionEraOverlap</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useConditionOccurrence</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useConditionEraGroupStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useConditionEraGroupOverlap</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useDrugExposure</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useDrugEraStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useDrugEraOverlap</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useMeasurement</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useMeasurementValue</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
+                                            <span class="kw">useMeasurementRangeGroup</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useProcedureOccurrence</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useDeviceExposure</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">useObservation</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
+                                            <span class="kw">excludedCovariateConceptIds</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">316866</span>),
+                                            <span class="kw">addDescendantsToExclude</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
+                                            <span class="kw">temporalStartDays</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="kw">from</span> <span class="kw">=</span> -<span class="fl">365</span>,
+                                                                    <span class="kw">to</span> <span class="kw">=</span> -<span class="fl">1</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="fl">12</span>),
+                                            <span class="kw">temporalEndDays</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="kw">from</span> <span class="kw">=</span> -<span class="fl">353</span>,
+                                                                    <span class="kw">to</span> <span class="kw">=</span> <span class="fl">0</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="fl">12</span>), <span class="fl">0</span>))
 
-plpData &lt;-<span class="st"> </span><span class="kw"><a href="../reference/getPlpData.html">getPlpData</a></span>(<span class="dt">connectionDetails =</span> connectionDetails,
-                        <span class="dt">cdmDatabaseSchema =</span> cdmDatabaseSchema,
-                        <span class="dt">cohortDatabaseSchema =</span> <span class="st">"results"</span>,
-                        <span class="dt">cohortTable =</span> <span class="st">"cohort"</span>,
-                        <span class="dt">cohortId =</span> <span class="dv">11</span>,
-                        <span class="dt">covariateSettings =</span> settings,
-                        <span class="dt">outcomeDatabaseSchema =</span> resultsDatabaseSchema,
-                        <span class="dt">outcomeTable =</span> <span class="st">"cohort"</span>,
-                        <span class="dt">outcomeIds =</span> <span class="dv">25</span>,
-                        <span class="dt">cdmVersion =</span> <span class="dv">5</span>)</code></pre></div>
+<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/getPlpData.html">getPlpData</a></span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
+                        <span class="kw">cdmDatabaseSchema</span> <span class="kw">=</span> <span class="no">cdmDatabaseSchema</span>,
+                        <span class="kw">cohortDatabaseSchema</span> <span class="kw">=</span> <span class="st">"results"</span>,
+                        <span class="kw">cohortTable</span> <span class="kw">=</span> <span class="st">"cohort"</span>,
+                        <span class="kw">cohortId</span> <span class="kw">=</span> <span class="fl">11</span>,
+                        <span class="kw">covariateSettings</span> <span class="kw">=</span> <span class="no">settings</span>,
+                        <span class="kw">outcomeDatabaseSchema</span> <span class="kw">=</span> <span class="no">resultsDatabaseSchema</span>,
+                        <span class="kw">outcomeTable</span> <span class="kw">=</span> <span class="st">"cohort"</span>,
+                        <span class="kw">outcomeIds</span> <span class="kw">=</span> <span class="fl">25</span>,
+                        <span class="kw">cdmVersion</span> <span class="kw">=</span> <span class="fl">5</span>)</pre></body></html></div>
 <p>Each CNN/RNN has several hyper-parameters that can be set as shown in the Tables above, but for this example we take the defaults.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># specify the the CNN</span>
-model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/setCNNTorch.html">setCNNTorch</a></span>(<span class="dt">cnn_type=</span><span class="st">'CNN'</span>)</code></pre></div>
+<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="co"># specify the the CNN</span>
+<span class="no">model</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setCNNTorch.html">setCNNTorch</a></span>(<span class="kw">cnn_type</span><span class="kw">=</span><span class="st">'CNN'</span>)</pre></body></html></div>
 <p>Run the model training, for example with a testFraction = 0.2 and a split by person:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span>PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/runPlp">runPlp</a></span>(population, plpData, model,
-                                          <span class="dt">testSplit=</span><span class="st">'person'</span>,
-                                          <span class="dt">testFraction=</span><span class="fl">0.2</span>,
-                                          <span class="dt">nfold=</span><span class="dv">3</span>, 
-                                          <span class="dt">splitSeed=</span><span class="dv">1000</span>) </code></pre></div>
+<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="no">results</span> <span class="kw">&lt;-</span> <span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/runPlp.html">runPlp</a></span>(<span class="no">population</span>, <span class="no">plpData</span>, <span class="no">model</span>,
+                                          <span class="kw">testSplit</span><span class="kw">=</span><span class="st">'person'</span>,
+                                          <span class="kw">testFraction</span><span class="kw">=</span><span class="fl">0.2</span>,
+                                          <span class="kw">nfold</span><span class="kw">=</span><span class="fl">3</span>,
+                                          <span class="kw">splitSeed</span><span class="kw">=</span><span class="fl">1000</span>)</pre></body></html></div>
 </div>
 </div>
 <div id="apply-the-trained-deep-learning-model" class="section level1">
 <h1 class="hasAnchor">
 <a href="#apply-the-trained-deep-learning-model" class="anchor"></a>Apply the trained Deep Learning model</h1>
 <p>Applying a Deep Learning is identical to the other models in the package:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># load the trained model</span>
-plpModel &lt;-<span class="st"> </span><span class="kw"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"&lt;your model&gt;"</span>)
+<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="co"># load the trained model</span>
+<span class="no">plpModel</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span>(), <span class="st">"&lt;your model&gt;"</span>)
 
 <span class="co"># load the new plpData (should have the same temporal features!) and create the population</span>
-plpData &lt;-<span class="st"> </span><span class="kw"><a href="../reference/loadPlpData.html">loadPlpData</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/getwd">getwd</a></span>(), <span class="st">"&lt;your data&gt;"</span>)
+<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadPlpData.html">loadPlpData</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span>(), <span class="st">"&lt;your data&gt;"</span>)
 
-populationSettings &lt;-<span class="st"> </span>plpModel<span class="op">$</span>populationSettings
-populationSettings<span class="op">$</span>plpData &lt;-<span class="st"> </span>plpData
-population &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/do.call">do.call</a></span>(createStudyPopulation, populationSettings)  
+<span class="no">populationSettings</span> <span class="kw">&lt;-</span> <span class="no">plpModel</span>$<span class="no">populationSettings</span>
+<span class="no">populationSettings</span>$<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="no">plpData</span>
+<span class="no">population</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span>(<span class="no">createStudyPopulation</span>, <span class="no">populationSettings</span>)
 
 <span class="co"># apply the trained model on the new data</span>
-validationResults &lt;-<span class="st"> </span><span class="kw"><a href="../reference/applyModel.html">applyModel</a></span>(population, plpData, plpModel)</code></pre></div>
+<span class="no">validationResults</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/applyModel.html">applyModel</a></span>(<span class="no">population</span>, <span class="no">plpData</span>, <span class="no">plpModel</span>)</pre></body></html></div>
 </div>
 <div id="adding-new-architectures" class="section level1">
 <h1 class="hasAnchor">
@@ -516,16 +518,15 @@ validationResults &lt;-<span class="st"> </span><span class="kw"><a href="../ref
 <h1 class="hasAnchor">
 <a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
 <p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/citation">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</code></pre></div>
+<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
 <pre><code>## 
 ## To cite PatientLevelPrediction in publications use:
 ## 
-## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018).
-## "Design and implementation of a standardized framework to generate
-## and evaluate patient-level prediction models using observational
-## healthcare data." _Journal of the American Medical Informatics
-## Association_, *25*(8), 969-975. &lt;URL:
-## https://doi.org/10.1093/jamia/ocy032&gt;.
+## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design
+## and implementation of a standardized framework to generate and evaluate
+## patient-level prediction models using observational healthcare data."
+## _Journal of the American Medical Informatics Association_, *25*(8),
+## 969-975. &lt;URL: https://doi.org/10.1093/jamia/ocy032&gt;.
 ## 
 ## A BibTeX entry for LaTeX users is
 ## 
@@ -544,34 +545,14 @@ validationResults &lt;-<span class="st"> </span><span class="kw"><a href="../ref
 </div>
   </div>
 
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-        <div id="tocnav">
-      <h2 class="hasAnchor">
-<a href="#tocnav" class="anchor"></a>Contents</h2>
-      <ul class="nav nav-pills nav-stacked">
-<li><a href="#introduction">Introduction</a></li>
-      <li><a href="#background">Background</a></li>
-      <li>
-<a href="#non-temporal-architectures">Non-Temporal Architectures</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#example">Example</a></li>
-      </ul>
-</li>
-      <li>
-<a href="#temporal-architectures">Temporal Architectures</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#pytorch-cnn">PyTorch CNN</a></li>
-      <li><a href="#pytorch-rnn">PyTorch RNN</a></li>
-      <li><a href="#r-keras-cnn">R Keras CNN</a></li>
-      <li><a href="#example-1">Example</a></li>
-      </ul>
-</li>
-      <li><a href="#apply-the-trained-deep-learning-model">Apply the trained Deep Learning model</a></li>
-      <li><a href="#adding-new-architectures">Adding new architectures</a></li>
-      <li><a href="#acknowledgments">Acknowledgments</a></li>
-      </ul>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+
+        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
+    </nav>
 </div>
-      </div>
 
 </div>
+
 
 
       <footer><div class="copyright">
@@ -579,12 +560,14 @@ validationResults &lt;-<span class="st"> </span><span class="kw"><a href="../ref
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
+
       </footer>
 </div>
 
   
+
 
   </body>
 </html>
