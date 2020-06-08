@@ -1,6 +1,6 @@
 # @file randomForest.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -68,7 +68,7 @@ setRandomForest <- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, 
 fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                              outcomeId, cohortId, ...){
   
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   e <- environment()
   
   # check logger
@@ -80,9 +80,8 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   }
   
   # check plpData is libsvm format:
-  if(!'ffdf'%in%class(plpData$covariates)){
-    ParallelLogger::logError('class plpData$covariates: ', class(plpData$covariates))
-    stop('Random forest requires plpData')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
   }
   
   if(colnames(population)[ncol(population)]!='indexes'){

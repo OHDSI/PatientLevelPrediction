@@ -10,6 +10,8 @@ SELECT row_id,
 	cohort_start_date,
 	days_from_obs_start,
 	days_to_cohort_end,
-	days_to_obs_end
+	days_to_obs_end,
+	age_year,
+	gender
 FROM #cohort_person cohort
 ORDER BY subject_id

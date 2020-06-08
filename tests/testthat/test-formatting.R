@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -21,13 +21,18 @@ context("Formatting")
 test_that("toSparseM", {
   
   # testing manually constructed data...
-  covs <- ff::ffdf(rowId=ff::as.ff(c(1,1,1,2,4,4,4,6,6)), # 3 and 5 have nothing
-                   covariateId=ff::ff(c(123,2002,10,123,2002,3,4,9,8)),
-                   covariateValue=ff::ff(rep(1,9)))
-  covref <- ff::ffdf(covariateId=ff::as.ff(c(c(123,2002,3,4,5,6,7,8,9,10))),
-                     covariateName=ff::as.ff(1:10),
-                     analysisId=ff::as.ff(rep(1,10)),
-                     conceptId=ff::as.ff(1:10)) 
+  covs <- data.frame(rowId=c(1,1,1,2,4,4,4,6,6), # 3 and 5 have nothing
+                   covariateId=c(123,2002,10,123,2002,3,4,9,8),
+                   covariateValue=rep(1,9))
+  covref <- data.frame(covariateId=c(123,2002,3,4,5,6,7,8,9,10),
+                     covariateName=1:10,
+                     analysisId=rep(1,10),
+                     conceptId=1:10) 
+  
+  covariateData <- Andromeda::andromeda()
+  covariateData$covariates <- covs
+  covariateData$covariateRef <- covref
+  
   cohorts <- data.frame(rowId=1:6,   
                         subjectId=1:6, 
                         cohortId=rep(1,6),
@@ -46,8 +51,7 @@ test_that("toSparseM", {
   
   FplpData <- list(cohorts=cohorts,
                   outcomes=outcomes,
-                  covariates=covs,
-                  covariateRef=covref)
+                  covariateData=covariateData)
   class(FplpData) <- 'plpData'
   Fpopulation <- createStudyPopulation(plpData=FplpData,requireTimeAtRisk = F,
                                       outcomeId=2,riskWindowStart = 1,
@@ -74,13 +78,16 @@ test_that("toSparseM", {
   expect_that(as.matrix(sparseMat.test2$data), is_equivalent_to(matrix.real2))
   
   # now test the mapping on new people... (testing the prediciton mapping)
-  covs2 <- ff::ffdf(rowId=ff::as.ff(c(1,6,3,3,4,5,5,6,6)), # 3 and 5 have nothing
-                    covariateId=ff::ff(c(10,10,10,123,2002,123,4,123,8)),
-                    covariateValue=ff::ff(rep(1,9)))
+  covs2 <- data.frame(rowId=c(1,6,3,3,4,5,5,6,6), # 3 and 5 have nothing
+                    covariateId=c(10,10,10,123,2002,123,4,123,8),
+                    covariateValue=rep(1,9))
+  covariateData <- Andromeda::andromeda()
+  covariateData$covariates <- covs2
+  covariateData$covariateRef <- covref
+  
   FplpData2 <- list(cohorts=cohorts,
                    outcomes=outcomes,
-                   covariates=covs2,
-                   covariateRef=covref)
+                   covariateData=covariateData)
   attr(FplpData2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
                                                                   targetCount=6,uniquePeople=6,
                                                                   outcomes=2))
@@ -104,19 +111,22 @@ test_that("toSparseM", {
   #=====================================
   # test mapping with no existing map
   # make small dataset to test exact 
+  covariateData2 <- Andromeda::andromeda()
+  covariateData2$covariates <- data.frame(rowId=c(40,40,2),
+                                    covariateId=c(34,21,21),
+                                    covariateValue=rep(1,3))
+  covariateData2$covariateRef <- data.frame(covariateId=c(21,34),
+                                      covariateName=c('test1','test2'),
+                                      analysisId=rep(1,2),
+                                      conceptId=rep(1,2)
+  )
+  
   FplpDataExact <- list(cohorts=data.frame(rowId=c(100,2,40), cohortId=rep(1,3), 
                                           time=rep(700,3), daysFromObsStart=rep(700,3),
                                           daysToCohortEnd=rep(700,3), daysToObsEnd=rep(700,3)),
                        outcomes =data.frame(rowId=c(100), outcomeId=c(2), outcomeCount=c(1),
                                             daysToEvent=c(50)),
-                       covariates=ff::as.ffdf(data.frame(rowId=c(40,40,2),
-                                                         covariateId=c(34,21,21),
-                                                         covariateValue=rep(1,3))),
-                       covariateRef=ff::as.ffdf(data.frame(covariateId=c(21,34),
-                                                           covariateName=c('test1','test2'),
-                                                           analysisId=rep(1,2),
-                                                           conceptId=rep(1,2)
-                       ))
+                      covariateData = covariateData2
   )
   attr(FplpDataExact$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
                                                                       targetCount=6,uniquePeople=6,
@@ -145,19 +155,21 @@ test_that("toSparseM", {
   testthat::expect_equivalent(compTest, compReal)
   
   # test on new data with old map:
+  covariateData2 <- Andromeda::andromeda()
+  covariateData2$covariates <- data.frame(rowId=c(47,26,26),
+                                    covariateId=c(21,21,36),
+                                    covariateValue=rep(1,3))
+  covariateData2$covariateRef <- data.frame(covariateId=c(21,36),
+                                      covariateName=c('test1','test3'),
+                                      analysisId=rep(1,2),
+                                      conceptId=rep(1,2))
+  
   FplpDataExact2 <- list(cohorts=data.frame(rowId=c(1,26,47), cohortId=rep(1,3), 
                                            time=rep(700,3), daysFromObsStart=rep(700,3),
                                            daysToCohortEnd=rep(700,3), daysToObsEnd=rep(700,3)),
                         outcomes =data.frame(rowId=c(1), outcomeId=c(2), outcomeCount=c(1),
                                              daysToEvent=c(50)),
-                        covariates=ff::as.ffdf(data.frame(rowId=c(47,26,26),
-                                                          covariateId=c(21,21,36),
-                                                          covariateValue=rep(1,3))),
-                        covariateRef=ff::as.ffdf(data.frame(covariateId=c(21,36),
-                                                            covariateName=c('test1','test3'),
-                                                            analysisId=rep(1,2),
-                                                            conceptId=rep(1,2)
-                        ))
+                        covariateData = covariateData2
   )
   attr(FplpDataExact2$cohorts, "metaData") <- list(attrition=data.frame(outcomeId=1,description='test',
                                                                        targetCount=20,uniquePeople=20,
@@ -192,7 +204,7 @@ test_that("toSparseM", {
   compTest <- as.matrix(test$data)
   testthat::expect_equal(nrow(compTest), max(population$rowId))
   testthat::expect_equal(ncol(compTest), 
-                         length(unique(ff::as.ram(plpData$covariateRef$covariateId))))
+                         nrow(plpData$covariateData$covariateRef))
   testthat::expect_equal(ncol(compTest), nrow(test$map))
   
 })

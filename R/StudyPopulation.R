@@ -1,6 +1,6 @@
 # @file StudyPopulation.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -88,35 +88,27 @@ createStudyPopulation <- function(plpData,
                                   ...) {
   
   
-  useStartAnchor <- F
-  useEndAnchor <- F
-  
-  if(missing(addExposureDaysToStart)){
+  # If addExposureDaysToStart is specified used it but give warning
+  if(!missing(addExposureDaysToStart)){
     if(is.null(startAnchor)){
-      stop('Need to specify startAnchor') 
+      warning('addExposureDaysToStart is depreciated - please use startAnchor instead') 
+      startAnchor <- ifelse(addExposureDaysToStart, 'cohort end','cohort start')
     } else {
-      if(!startAnchor%in%c('cohort start', 'cohort end')){
-        stop('invalid startAnchor')
-      }
-      useStartAnchor = T
-      addExposureDaysToStart <- ifelse(startAnchor == "cohort end", T, F)
+      warning('addExposureDaysToStart specificed so being used')
+      warning('addExposureDaysToStart is depreciated - please use startAnchor instead') 
+      startAnchor <- ifelse(addExposureDaysToStart, 'cohort end','cohort start')
     }
-  } else {
-    warning('addExposureDaysToStart is depreciated - please use startAnchor instead')
   }
   
-  if(missing(addExposureDaysToEnd)){
+  if(!missing(addExposureDaysToEnd)){
     if(is.null(endAnchor)){
-      stop('Need to specify endAnchor') 
+      warning('addExposureDaysToEnd is depreciated - please use endAnchor instead') 
+      endAnchor <- ifelse(addExposureDaysToEnd, 'cohort end','cohort start')
     } else {
-      if(!endAnchor%in%c('cohort start', 'cohort end')){
-        stop('invalid endAnchor')
-      }
-      useEndAnchor = T
-      addExposureDaysToEnd <- ifelse(endAnchor == "cohort end", T, F)
+      warning('addExposureDaysToEnd specificed so being used')
+      warning('addExposureDaysToEnd is depreciated - please use endAnchor instead') 
+      endAnchor <- ifelse(addExposureDaysToEnd, 'cohort end','cohort start')
     }
-  } else {
-    warning('addExposureDaysToEnd is depreciated - please use endAnchor instead')
   }
   
   if(missing(verbosity)){
@@ -136,7 +128,7 @@ createStudyPopulation <- function(plpData,
   
   
   # parameter checks
-  if(!class(plpData)%in%c('plpData.libsvm','plpData.coo','plpData')){
+  if(!class(plpData)%in%c('plpData')){
     ParallelLogger::logError('Check plpData format')
     stop('Wrong plpData input')
   }
@@ -162,15 +154,19 @@ createStudyPopulation <- function(plpData,
   checkHigherEqual(minTimeAtRisk,0)
   ParallelLogger::logDebug(paste0('riskWindowStart: ', riskWindowStart))
   checkHigherEqual(riskWindowStart,0)
-  ParallelLogger::logDebug(paste0('startAnchor: ', addExposureDaysToStart))
-  checkBoolean(addExposureDaysToStart)
+  ParallelLogger::logDebug(paste0('startAnchor: ', startAnchor))
+  if(!startAnchor%in%c('cohort start', 'cohort end')){
+    stop('Incorrect startAnchor')
+  }
   ParallelLogger::logDebug(paste0('riskWindowEnd: ', riskWindowEnd))
   checkHigherEqual(riskWindowEnd,0)
-  ParallelLogger::logDebug(paste0('endAnchor: ', addExposureDaysToEnd))
-  checkBoolean(addExposureDaysToEnd)
+  ParallelLogger::logDebug(paste0('endAnchor: ', endAnchor))
+  if(!endAnchor%in%c('cohort start', 'cohort end')){
+    stop('Incorrect startAnchor')
+  }
   
   if(requireTimeAtRisk){
-    if(addExposureDaysToStart==addExposureDaysToEnd){
+    if(startAnchor==endAnchor){
       if(minTimeAtRisk>(riskWindowEnd-riskWindowStart)){
         warning('issue: minTimeAtRisk is greater than max possible time-at-risk')
       }
@@ -193,11 +189,9 @@ createStudyPopulation <- function(plpData,
   metaData$requireTimeAtRisk = requireTimeAtRisk
   metaData$minTimeAtRisk=minTimeAtRisk
   metaData$riskWindowStart = riskWindowStart
-  metaData$addExposureDaysToStart = addExposureDaysToStart
-  metaData$startAnchor = ifelse(useStartAnchor, startAnchor, ifelse(addExposureDaysToStart,'cohort end','cohort start'))
+  metaData$startAnchor = startAnchor
   metaData$riskWindowEnd = riskWindowEnd
-  metaData$addExposureDaysToEnd = addExposureDaysToEnd
-  metaData$endAnchor = ifelse(useEndAnchor, endAnchor, ifelse(addExposureDaysToEnd,'cohort end','cohort start'))
+  metaData$endAnchor = endAnchor
   
   # get attriction for outcomeId
   if(!is.null(metaData$attrition$uniquePeople)){
@@ -239,7 +233,7 @@ createStudyPopulation <- function(plpData,
     } else {
       ParallelLogger::logTrace("Removing subjects with prior outcomes (if any)")
       outcomes <- plpData$outcomes[plpData$outcomes$outcomeId == outcomeId, ]
-      if (addExposureDaysToStart) {
+      if (startAnchor == 'cohort end') {
         outcomes <- merge(outcomes, population[, c("rowId","daysToCohortEnd")])
         priorOutcomeRowIds <- outcomes$rowId[outcomes$daysToEvent > -priorOutcomeLookback & outcomes$daysToEvent < outcomes$daysToCohortEnd + riskWindowStart]
       } else {
@@ -254,11 +248,11 @@ createStudyPopulation <- function(plpData,
   }
   # Create risk windows:
   population$riskStart <- riskWindowStart
-  if (addExposureDaysToStart) {
+  if (startAnchor == 'cohort end') {
     population$riskStart <- population$riskStart + population$daysToCohortEnd
   }
   population$riskEnd <- riskWindowEnd
-  if (addExposureDaysToEnd) {
+  if (endAnchor == 'cohort end') {
     population$riskEnd <- population$riskEnd + population$daysToCohortEnd
   }
   #trancate end if it runs over obs date end
@@ -342,15 +336,6 @@ createStudyPopulation <- function(plpData,
   return(population)
 }
 
-limitCovariatesToPopulation <- function(covariates, rowIds) {
-  idx <- !is.na(ffbase::ffmatch(covariates$rowId, rowIds))
-  if(sum(idx)!=0){
-    covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
-  }else{
-    stop('No covariates')
-  }
-  return(covariates)
-}
 
 #' Get the attrition table for a population
 #'

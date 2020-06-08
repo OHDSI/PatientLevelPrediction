@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -15,7 +15,7 @@
 # limitations under the License.
 
 library("testthat")
-context("HelperFunctions.R")
+context("HelperFunctions")
 
 test_that("is_installed", {
   testthat::expect_equal(PatientLevelPrediction:::is_installed('FeatureExtraction'), T)

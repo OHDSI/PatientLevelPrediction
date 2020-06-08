@@ -1,6 +1,6 @@
 # @file naiveBayes.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -44,8 +44,9 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
-  if(!'ffdf'%in%class(plpData$covariates))
-    stop('Need plpData')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
   
   if(colnames(population)[ncol(population)]!='indexes'){
     warning('indexes column not present as last column - setting all index to 1')
@@ -62,7 +63,7 @@ fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
   population$rowIdPython <- population$rowId - 1  # -1 to account for python/r index difference
   pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
   
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   
   # convert plpData in coo to python:
   x <- toSparseM(plpData, population, map = NULL)

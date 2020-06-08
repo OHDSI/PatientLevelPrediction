@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -115,9 +115,7 @@ test_that("population creation parameters", {
                                 requireTimeAtRisk = TRUE,
                                 minTimeAtRisk=365,
                                 riskWindowStart = 0,
-                                addExposureDaysToStart = FALSE,
-                                riskWindowEnd = 365,
-                                addExposureDaysToEnd = FALSE)
+                                riskWindowEnd = 365)
   )
   
   #priorOutcomeLookback >=0
@@ -134,9 +132,7 @@ test_that("population creation parameters", {
                           requireTimeAtRisk = TRUE,
                           minTimeAtRisk=365,
                           riskWindowStart = 0,
-                          addExposureDaysToStart = FALSE,
-                          riskWindowEnd = 365,
-                          addExposureDaysToEnd = F)
+                          riskWindowEnd = 365)
   )
   
   #minTimeAtRisk >=0
@@ -153,9 +149,7 @@ test_that("population creation parameters", {
                           requireTimeAtRisk = T,
                           minTimeAtRisk=-1,
                           riskWindowStart = 0,
-                          addExposureDaysToStart = FALSE,
-                          riskWindowEnd = 365,
-                          addExposureDaysToEnd = F)
+                          riskWindowEnd = 365)
   )
   
   

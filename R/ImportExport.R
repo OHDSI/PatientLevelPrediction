@@ -1,6 +1,6 @@
 # @file ImportExport.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -312,7 +312,8 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
     #update some of the settings and only include variables in the model
 
     covSettings$includedCovariateIds <-  as.double(unique(allVars$covariate_id))
-    covariates <- getPredictionCovariateData(connection = connection,
+    
+    covariateData <- getPredictionCovariateData(connection = connection,
                                                 oracleTempSchema = oracleTempSchema,
                                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                                 cohortTable = cohortTable,#"#cohort_person",
@@ -323,29 +324,23 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
                                              databaseOutput= covariateSettings$databaseOutput)
 
     # clean the model_table... [TODO]
-    covariateRef <- data.frame(covariateId = 1000*(1:length(covariateSettings$modelNames))+covariateSettings$analysisId,
+    covariateData$covariateRef <- data.frame(covariateId = 1000*(1:length(covariateSettings$modelNames))+covariateSettings$analysisId,
                                covariateName = covariateSettings$modelNames,
                                analysisId = rep(covariateSettings$analysisId,length(covariateSettings$modelNames)),
                                conceptId = rep(0, length(covariateSettings$modelNames)))
-    covariateRef <- ff::as.ffdf(covariateRef)
     # Construct analysis reference:
-    analysisRef <- data.frame(analysisId = covariateSettings$analysisId,
+    covariateData$analysisRef <- data.frame(analysisId = covariateSettings$analysisId,
                               analysisName = "Prediction Models",
                               domainId = "Demographics",
                               startDay = 0,
                               endDay = 0,
                               isBinary = "N",
                               missingMeansZero = "N")
-    analysisRef <- ff::as.ffdf(analysisRef)
     # Construct analysis reference:
-    metaData <- list(sql = covariates$sql, call = match.call())
-    result <- list(covariates = covariates$covariates,
-                   covariateRef = covariateRef,
-                   analysisRef = analysisRef,
-                   metaData = metaData)
-    class(result) <- "covariateData"
+    covariateData$metaData <- list(sql = covariates$sql, call = match.call())
+    class(covariateData) <- "covariateData"
 
-    return(result)
+    return(covariateData)
   }
 
   assign(paste0('create',covariateConstructionName,'CovariateSettings'), createCovs,envir = e)
@@ -401,9 +396,12 @@ getPredictionCovariateData <- function(connection,
   sql <- SqlRender::translateSql(sql, targetDialect ='pdw')$sql
 
   # Retrieve the covariate:
-  covariates <- DatabaseConnector::querySql.ffdf(connection, sql)
-  # Convert colum names to camelCase:
-  colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
+  covariateData <- Andromeda::andromeda()
+  DatabaseConnector::querySqlToAndromeda(connection = connection, 
+                                         sql = sql, 
+                                         andromeda = covariateData, 
+                                         andromedaTableName = "covariates",
+                                         snakeCaseToCamelCase = TRUE)
 } else {
   # TO ADD TO A COHORT TABLE
   covariates <- NULL
@@ -428,445 +426,10 @@ getPredictionCovariateData <- function(connection,
   DatabaseConnector::executeSql(connection, sql)
 }
 
-  result <- list(covariates=covariates, 
+  result <- list(covariateData=covariateData, 
                  sql=sql)
   return(result)
 }
 
-#' Apply an existing logistic regression prediction model
-#'
-#' @details
-#' This function is used to create custom covariates corresponding to existing models
-#'
-#' @param modelTable         A dataframe or list of dataframes with columns: modelId, modelCovariateId, coefficientValue all doubles
-#' @param modelNames      A name used in the covariate function names (no spaces)
-#' @param interceptTable     A dataframe or list of dataframes with the columns: modelId, interceptValue
-#' @param covariateTable     A dataframe or list of dataframes with columns: modelCovariateId, covariateId (the mapping of covariate_id to standard covariates)
-#' @param type             The type of model: logistic or linear/score
-#' @param analysisId    The covariate analysis_id (default 112)
-#' @param covariateSettings  The settings for the standard covariates (needs for temporal settings)
-#' @param asFunctions        If T then return two functions
-#' @param customCovariates   enables custome SQL to be used to create custom covariates
-#' @param e              The environment to output the covariate setting functions to
-#' @param covariateValues  boolean Whether to also download the covariates that make up the risk score
-#' @export
-#'
-createExistingModelSql <- function(modelTable, modelNames, interceptTable,
-                                   covariateTable, type='logistic',
-                                   analysisId=112, covariateSettings,
-                                   asFunctions=F, customCovariates=NULL,
-                                   e=environment(),
-                                   covariateValues = F
-){
 
-  # test model inputs
-  #====================================
-  if(!exists("modelTable"))
-    stop('Need to input modelTable')
-  if(!exists("modelNames"))
-    stop('Need to input model names')
-  if(length(modelTable)!=length(modelNames) & class(modelTable)!='data.frame')
-    stop('model names not same length as model table')
-  if(class(modelTable)!='list' & class(modelTable)!='data.frame')
-    stop('wrong modelTable class')
-  if(class(modelNames)!='character')
-    stop('wrong model names class')
-  #====================================
-
-  # create the settings function
-  #====================================
-  createCovs <- function() {
-    createExistingmodelsCovariateSettings <- list(modelTable=modelTable, covariateTable=covariateTable,
-                                                  interceptTable=interceptTable,
-                                                  modelNames=modelNames,
-                                                  analysisId=analysisId,
-                                                  covariateSettings=covariateSettings,
-                                                  customCovariates = customCovariates,
-                                                  type=type,
-                                                  covariateValues  = covariateValues)
-    attr(createExistingmodelsCovariateSettings, "fun") <- paste0('getExistingmodelsCovariateSettings')
-    class(createExistingmodelsCovariateSettings) <- "covariateSettings"
-    return(createExistingmodelsCovariateSettings)
-  }
-
-  getCovs <- function(connection,
-                      oracleTempSchema = NULL,
-                      cdmDatabaseSchema,
-                      cohortTable = "#cohort_person",
-                      cohortId = -1,
-                      cdmVersion = "5",
-                      rowIdField = "subject_id",
-                      covariateSettings,
-                      aggregated = FALSE){
-
-    if (aggregated)
-      stop("Aggregation not supported")
-
-    model_table <- '#model_table'
-    covariate_table <- '#covariate_table'
-
-    if(is.null(covariateSettings$analysisId)){
-      analysisId <- 112
-    }
-
-    interceptTable <- covariateSettings$interceptTable
-    modelTable <- covariateSettings$modelTable
-    covariateTable <- covariateSettings$covariateTable
-
-    # =================================
-    #==================================
-    
-    if(is.null(interceptTable)){
-      interceptTable <- data.frame(modelId=unique(modelTable$modelId), 
-                                   interceptValue=rep(0, length(unique(modelTable$modelId))))
-    }
-    #  INSERT THE INTERCEPTS FOR THE MODELS: MODEL_ID, INTERCEPT_VALUE
-    if(class(interceptTable)=='data.frame'){
-      intercepts <- interceptTable
-    } else{
-      intercepts <- do.call(rbind, interceptTable)
-    }
-
-
-    colnames(intercepts) <- SqlRender::camelCaseToSnakeCase(colnames(intercepts))
-    DatabaseConnector::insertTable(connection, tableName='intercepts', data = intercepts, tempTable = T)
-
-
-    # =================================
-    #==================================
-    #  INSERT THE MODEL TABLE
-
-    # create the table with: model_id, model_covariate_id, coefficientValue
-    if(class(modelTable)=='data.frame'){
-      allVars <- modelTable
-
-    } else{
-      allVars <- do.call(rbind, modelTable)
-    }
-
-    # adding age with 0 coef to make sure everyone gets value
-    allVars <- rbind(allVars[,c('modelId','modelCovariateId','coefficientValue')], data.frame(modelId=unique(allVars$modelId),
-                                         modelCovariateId=rep(-1,length(unique(allVars$modelId))),
-                                         coefficientValue=rep(0,length(unique(allVars$modelId)))
-    ))
-
-
-    # insert the model table
-    colnames(allVars) <- SqlRender::camelCaseToSnakeCase(colnames(allVars))
-    DatabaseConnector::insertTable(connection, tableName='model_table', data = allVars, tempTable = T)
-
-    # =================================
-    #==================================
-    #  INSERT THE COVARIATE TABLE
-
-    # create the table with: modelCovariateId, covariateId
-    if(class(covariateTable)=='data.frame'){
-      allVars <- covariateTable
-
-    } else{
-      allVars <- do.call(rbind, covariateTable)
-    }
-
-    # adding age with 0 coef to make sure everyone gets value
-    allVars <- rbind(allVars, data.frame(modelCovariateId=-1, covariateId=1002))
-
-    # insert the model table
-    colnames(allVars) <- SqlRender::camelCaseToSnakeCase(colnames(allVars))
-    DatabaseConnector::insertTable(connection, tableName='covariate_table', data = allVars, tempTable = T)
-
-
-    # =================================
-    #==================================
-    #  RUN GETPLPDATA (BUT WITHOUT REMOVING THE COVARIATE TABLE)
-    covSettings <- covariateSettings$covariateSettings
-    covSettings$DemographicsAge <- T #making sure to include variable everyone has but setting value to zero
-
-    covSettings$includedCovariateIds <-  as.double(unique(allVars$covariate_id)) #[unique(allVars$covariate_id)!='1002'])
-    covariates <- getExistingmodelsCovariateData(connection = connection,
-                                                 oracleTempSchema = oracleTempSchema,
-                                                 cdmDatabaseSchema = cdmDatabaseSchema,
-                                                 cohortTable = "#cohort_person",
-                                                 cdmVersion = cdmVersion,
-                                                 rowIdField = "row_id",
-                                                 covariateSettings = covSettings,
-                                                 customCovariates = covariateSettings$customCovariates,
-                                                 analysisId = covariateSettings$analysisId,
-                                                 type=covariateSettings$type,
-                                                 covariateValues = covariateSettings$covariateValues)
-
-    # clean the model_table... [TODO]
-    covariateRef <- data.frame(covariateId = 1000*(1:length(covariateSettings$modelNames))+covariateSettings$analysisId,
-                               covariateName = covariateSettings$modelNames,
-                               analysisId = rep(covariateSettings$analysisId,length(covariateSettings$modelNames)),
-                               conceptId = rep(0, length(covariateSettings$modelNames)))
-    covariateRef <- ff::as.ffdf(covariateRef)
-    # Construct analysis reference:
-    analysisRef <- data.frame(analysisId = covariateSettings$analysisId,
-                              analysisName = "Prediction Models",
-                              domainId = "Demographics",
-                              startDay = 0,
-                              endDay = 0,
-                              isBinary = "N",
-                              missingMeansZero = "N")
-    analysisRef <- ff::as.ffdf(analysisRef)
-    # Construct analysis reference:
-    #metaData <- list(sql = sql, call = match.call())
-    metaData <- list()
-    result <- list(covariates = covariates,
-                   covariateRef = covariateRef,
-                   analysisRef = analysisRef,
-                   metaData = metaData)
-    class(result) <- "covariateData"
-
-    return(result)
-  }
-
-  if(asFunctions==T){
-    return(list(createExistingmodelsCovariateSettings=createCovs,
-                getExistingmodelsCovariateSettings=getCovs))
-  }
-
-  assign(paste0('createExistingmodelsCovariateSettings'), createCovs,envir = e)
-  assign(paste0('getExistingmodelsCovariateSettings'), getCovs,envir = e)
-  return(T)
-}
-
-
-
-getExistingmodelsCovariateData <- function(connection,
-                                           oracleTempSchema = NULL,
-                                           cdmDatabaseSchema,
-                                           cohortTable = "#cohort_person",
-                                           cohortId = -1,
-                                           cdmVersion = "5",
-                                           rowIdField = "subject_id",
-                                           covariateSettings,
-                                           customCovariates = NULL,
-                                           aggregated = FALSE,
-                                           analysisId=112,
-                                           type='logistic',
-                                           covariateValues = F) {
-  if (!is(covariateSettings, "covariateSettings")) {
-    stop("Covariate settings object not of type covariateSettings")
-  }
-  if (cdmVersion == "4") {
-    stop("Common Data Model version 4 is not supported")
-  }
-
-  FeatureExtraction::getDbDefaultCovariateData(connection = connection,
-                                               oracleTempSchema = oracleTempSchema,
-                                               cdmDatabaseSchema = cdmDatabaseSchema,
-                                               cohortTable = cohortTable,
-                                               cohortId = cohortId,
-                                               rowIdField = rowIdField,
-                                               covariateSettings = covariateSettings,
-                                               targetCovariateTable = "#cov_temp",
-                                               aggregated = aggregated)
-
-  # add the custom covariates if they are specified
-  if(!is.null(customCovariates)){
-
-    for(sql_i in 1:nrow(customCovariates)){
-
-      # this code will render input sql and insert custome covariates into #cov_temp
-
-      sql <- customCovariates$sql[sql_i]
-      sql <- SqlRender::renderSql(as.character(sql), covariateId = customCovariates$covariateId[sql_i],
-                                  oracleTempSchema = oracleTempSchema,
-                                  cdmDatabaseSchema = cdmDatabaseSchema,
-                                  cohortTable = cohortTable,
-                                  #cohortId = cohortId,
-                                  rowIdField = rowIdField,
-                                  targetCovariateTable = "#cov_temp"
-      )$sql
-      sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"))$sql
-      DatabaseConnector::executeSql(connection, sql)
-    }
-
-
-  }
-
-  # =================================
-  #==================================
-  #  CALCULATE THE RISK
-  writeLines("Calculating the risk scores...")
-
-  if(type=='logistic'){
-    # now sum the temp_covariates table t get val and then 1/(1+exp(-val))
-    sql <- "select row_id, model_id*1000+@analysis_id as covariate_id,
-    1/(1+exp(-1.0*(max(intercept_value)+sum(covariate_value*coefficient_value)))) covariate_value
-    from
-
-    (select #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id,
-    max(#model_table.coefficient_value) as coefficient_value, max(#cov_temp.covariate_value) as covariate_value,
-    max(isnull(#intercepts.intercept_value,0)) as intercept_value
-    from
-    #cov_temp inner join #covariate_table on #cov_temp.covariate_id=#covariate_table.covariate_id
-    inner join #model_table on #covariate_table.model_covariate_id=#model_table.model_covariate_id
-    left outer join #intercepts on #intercepts.model_id=#model_table.model_id
-    group by #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id) temp
-
-    group by row_id,  model_id"}else{
-      sql <- "select row_id, model_id*1000+@analysis_id as covariate_id,
-      (max(intercept_value)+sum(covariate_value*coefficient_value)) covariate_value
-      from
-
-      (select #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id,
-      max(#model_table.coefficient_value) as coefficient_value, max(#cov_temp.covariate_value) as covariate_value,
-      max(isnull(#intercepts.intercept_value,0)) as intercept_value
-      from
-      #cov_temp inner join #covariate_table on #cov_temp.covariate_id=#covariate_table.covariate_id
-      inner join #model_table on #covariate_table.model_covariate_id=#model_table.model_covariate_id
-      left outer join #intercepts on #intercepts.model_id=#model_table.model_id
-      group by #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id) temp
-
-      group by row_id,  model_id"
-  }
-
-  sql <- SqlRender::renderSql(sql,
-                              analysis_id = analysisId
-  )$sql
-  sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"),
-                                 oracleTempSchema = oracleTempSchema)$sql
-
-  # Retrieve the covariate:
-  risks <- DatabaseConnector::querySql.ffdf(connection, sql)
-  # Convert colum names to camelCase:
-  colnames(risks) <- SqlRender::snakeCaseToCamelCase(colnames(risks))
-  
-  riskCovariates <- NULL
-  if(covariateValues){
-    #extract the covariateSummary as well
-    sql <- " select #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id as covariate_id,
-    max(#model_table.coefficient_value) as coefficient_value, max(#cov_temp.covariate_value) as covariate_value
-    from
-    #cov_temp inner join #covariate_table on #cov_temp.covariate_id=#covariate_table.covariate_id
-    inner join #model_table on #covariate_table.model_covariate_id=#model_table.model_covariate_id
-    
-    group by #cov_temp.row_id, #model_table.model_id, #model_table.model_covariate_id"
-    
-    sql <- SqlRender::renderSql(sql,
-                                analysis_id = analysisId
-    )$sql
-    sql <- SqlRender::translateSql(sql, targetDialect =attr(connection,"dbms"),
-                                   oracleTempSchema = oracleTempSchema)$sql
-    
-    # Retrieve the covariate:
-    riskCovariates <- DatabaseConnector::querySql.ffdf(connection, sql)
-    # Convert colum names to camelCase:
-    colnames(riskCovariates) <- SqlRender::snakeCaseToCamelCase(colnames(riskCovariates))
-  }
-
-  # Drop temp tables
-  #sql <- SqlRender::translateSql(sql = todo$sqlCleanup,
-  #                               targetDialect = attr(connection, "dbms"),
-  #                               oracleTempSchema = oracleTempSchema)$sql
-  #DatabaseConnector::executeSql(connection, sql, progressBar = FALSE, reportOverallTime = FALSE)
-
-
-  return(list(risks = risks,
-              covariateValues = riskCovariates))
-}
-
-
-
-
-
-#' Convert matrix into plpData
-#'
-#' @description
-#' Converts a matrix (rows = people, columns=variables) into the standard plpData
-#'
-#' @details
-#' This function converts matrix into plpData
-#'
-#' @param data                          An data.frame or matrix.
-#' @param columnInfo                    A dataframe with three columns, column 1 contains columnId, column 2 contains columnName for each column id and column 3 contains the columnTime - the time prior to index the variable was recorded
-#' @param outcomeId                     The column id containing the outcome
-#' @param outcomeThreshold              The outcome value must be higher or equal to this for the person to have the outcome
-#' @param indexTime                     The time defining the index date
-#' @param includeIndexDay               Boolean - whether to include variables recorded on index date
-#' @examples
-#' #TODO
-#'
-#' @return
-#' Returns an object of class plpData
-#' @export
-toPlpData <- function(data, columnInfo, outcomeId, outcomeThreshold=0.5,
-                      indexTime =0, includeIndexDay=T ){
-
-  if(!class(data)%in%c("data.frame","matrix"))
-    stop('data needs to be matrix of data.frame')
-
-  if(nrow(columnInfo)!=ncol(data))
-    stop('Column Names missing')
-
-  if(missing(outcomeId))
-    stop('outcomeId not entered')
-
-  plpData <- list()
-
-  # first order the column info by columnId
-  columnInfo <- columnInfo[order(columnInfo[,'columnId']), ]
-
-  meltData <- function(i, data, columnInfo, includeIndexDay,indexTime){
-    ind <- columnInfo[,'columnTime']<= (indexTime + ifelse(includeIndexDay,0,-1))
-
-    return(data.frame(rowId=rep(i, sum(ind)),
-                      covariateId=columnInfo[ind, 'columnId'],
-                      covariateValue = unlist(c(data[i,ind]))))
-  }
-
-  melted <- sapply(1:nrow(data), function(x) meltData(x, data,
-                                                      columnInfo,
-                                                      includeIndexDay, indexTime ), simplify = F )
-  melted <- do.call(rbind, melted)
-
-  #remove outcomeId
-  melted <- melted[melted$covariateId!=outcomeId,]
-
-  plpData$covariates <- ff::as.ffdf(melted)
-  rownames(plpData$covariates) <- NULL
-  plpData$covariateRef <-   ff::as.ffdf(data.frame(covariateId = columnInfo[,'columnId'],
-                                                   covariateName = columnInfo[,'columnName'],
-                                                   analysisId = rep(0, nrow(columnInfo)),
-                                                   conceptId = rep(0, nrow(columnInfo))
-  ))
-
-  subjectId <- 1:nrow(data)
-  if(!is.null(rownames(data))){
-    subjectId <- rownames(data)
-  }
-
-  plpData$cohorts <- data.frame(rowId = 1:nrow(data),
-                                subjectId = subjectId,
-                                cohortId = rep(1, nrow(data)),
-                                cohortStartDate = indexTime ,
-                                daysFromObsStart = rep(9999, nrow(data)) ,
-                                daysToCohortEnd = rep(9999, nrow(data)) ,
-                                daysToObsEnd = rep(9999, nrow(data)) )
-
-  attr(plpData$cohorts, "metaData") <- list(cohortId=1,
-                                            outcomeIds=2)
-
-  plpData$outcomes <-  data.frame(rowId = which(data[,outcomeId]>=outcomeThreshold),
-                                  outcomeId = rep(2, length(which(data[,outcomeId]>=outcomeThreshold))),
-                                  daysToEvent = rep( columnInfo$columnTime[columnInfo$columnId==outcomeId]-indexTime,
-                                                     length(which(data[,outcomeId]>=outcomeThreshold)))
-  )
-
-  plpData$metaData <- list(columnInfo=columnInfo,
-                           cohortId=1,
-                           outcomeId=2,
-                           indexTime =indexTime,
-                           includeIndexDay=includeIndexDay,
-                           call=list(1,1,1,1,1,1,1,1,1,
-                                     cdmDatabaseSchema=1,
-                                     studyStartDate=1,
-                                     studyEndDate=1))
-
-  class(plpData) <- 'plpData'
-
-  return(plpData)
-}
 

@@ -1,6 +1,6 @@
 # @file RunMultiplePlp.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -206,6 +206,7 @@ runPlpAnalyses <- function(connectionDetails,
       if(!is.null(plpData)){
         ParallelLogger::logTrace(paste0('Saving data in setting ', i ))
         savePlpData(plpData, referenceTable$plpDataFolder[i])
+        #plpData <- loadPlpData(referenceTable$plpDataFolder[i])
       } else{
         ParallelLogger::logInfo('No plpData - probably empty cohort issue')
       }
@@ -481,9 +482,11 @@ createStudyPopulationSettings <- function(binary = T,
               requireTimeAtRisk = requireTimeAtRisk, 
               minTimeAtRisk = minTimeAtRisk,
               riskWindowStart = riskWindowStart,
-              addExposureDaysToStart = addExposureDaysToStart,
+              startAnchor = ifelse(addExposureDaysToStart,'cohort end','cohort start'),
+              #addExposureDaysToStart = addExposureDaysToStart,
               riskWindowEnd = riskWindowEnd,
-              addExposureDaysToEnd = addExposureDaysToEnd, 
+              #addExposureDaysToEnd = addExposureDaysToEnd, 
+              endAnchor = ifelse(addExposureDaysToEnd,'cohort end','cohort start'),
               verbosity = verbosity)
   }
   

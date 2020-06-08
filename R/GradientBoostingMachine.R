@@ -1,6 +1,6 @@
 # @file gradientBoostingMachine.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -82,6 +82,11 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
 #xgboost
 fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                         outcomeId, cohortId, ...){
+  
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
+  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -95,10 +100,6 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   
   if(param[[1]]$seed!='NULL')
     set.seed(param[[1]]$seed)
-  
-  # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) )
-    stop('This algorithm requires plpData in coo format')
   
   metaData <- attr(population, 'metaData')
   if(!is.null(population$indexes))
@@ -139,9 +140,10 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   
   # get the original feature names:
   varImp$Feature <- as.numeric(varImp$Feature)+1 # adding +1 as xgboost index starts at 0
-  varImp <- merge(result$map, varImp, by.x='newIds', by.y='Feature')
+  varImp <- merge(result$map, varImp, by.x='newCovariateId', by.y='Feature')
   
-  varImp<- merge(ff::as.ram(plpData$covariateRef),varImp,  by.y='oldIds', by.x='covariateId', all=T)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
+  varImp<- merge(covariateRef,varImp,  by.y='oldCovariateId', by.x='covariateId', all=T)
   varImp$Gain[is.na(varImp$Gain)] <- 0
   varImp <- varImp[order(-varImp$Gain),]
   colnames(varImp)[colnames(varImp)=='Gain'] <- 'covariateValue'

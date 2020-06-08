@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -24,13 +24,8 @@ context("SaveLoadPlp")
 test_that("summary.plpData", {
   attr(plpData$outcomes, "metaData")$outcomeIds <- 2
   sum <- summary.plpData(plpData)
-    testthat::expect_equal(class(sum),'summary.plpData')
+  testthat::expect_equal(class(sum),'summary.plpData')
   })
-
-test_that("grepCovariateNames", {
- pat <- grepCovariateNames('nonpattern',plpData)
-  testthat::expect_equal(class(pat),'data.frame')
-})
 
 test_that("getPlpData errors", {
   testthat::expect_error(getPlpData(cohortId = NULL))
@@ -53,6 +48,11 @@ test_that("savePlpDataError", {
   testthat::expect_error(savePlpData(plpData=1, file='testing'))
 })
 
+
+oldCohorts <- plpData$cohorts
+oldOutcomes <- plpData$outcomes
+oldCovariates <- as.data.frame(plpData$covariateData$covariates)
+oldCovariateRef <- as.data.frame(plpData$covariateData$covariateRef)
 test_that("savePlpData", {
   savePlpData(plpData = plpData, 
               file =  file.path(saveLoc,"saveDataTest"), overwrite = T)
@@ -65,11 +65,13 @@ test_that("loadPlpDataError", {
 })
 
 test_that("loadPlpData", {
-  plpDataLoaded <- loadPlpData(file = file.path(saveLoc,"saveDataTest"))
-  testthat::expect_identical(plpDataLoaded$cohorts, plpData$cohorts)
-  testthat::expect_identical(plpDataLoaded$outcomes, plpData$outcomes)
-  testthat::expect_equal(plpDataLoaded$covariates, plpData$covariates)
-  testthat::expect_equal(plpDataLoaded$covariateRef, plpData$covariateRef)
+  plpData <- loadPlpData(file = file.path(saveLoc,"saveDataTest"))
+  testthat::expect_identical(plpData$cohorts, oldCohorts)
+  testthat::expect_identical(plpData$outcomes, oldOutcomes)
+  testthat::expect_equal(as.data.frame(plpData$covariateData$covariates), 
+                         oldCovariates)
+  testthat::expect_equal(as.data.frame(plpData$covariateData$covariateRef), 
+                         oldCovariateRef)
 })
 
 # add tests using simualted data...

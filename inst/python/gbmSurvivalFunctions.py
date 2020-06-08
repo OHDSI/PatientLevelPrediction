@@ -14,7 +14,7 @@ from sklearn.externals.joblib import Memory
 from sklearn.externals import joblib
 
 #================================================================
-def train_gbmsurv(population = None, plpData= None, train = True, modelOutput =None, loss='coxph', learning_rate=0.1, n_estimators=100, criterion='friedman_mse', min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_depth=3, min_impurity_split=None, min_impurity_decrease=0.0, max_features=None, max_leaf_nodes=None, presort='auto', subsample=1.0, dropout_rate=0.0, verbose=0, seed = 1, quiet = True):
+def train_gbmsurv(population = None, plpData= None, train = True, modelOutput =None, loss='coxph', learning_rate=0.1, n_estimators=100, criterion='friedman_mse', min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_depth=3, min_impurity_split=None, min_impurity_decrease=0.0, max_features=None, max_leaf_nodes=None, subsample=1.0, dropout_rate=0.0, verbose=0, seed = 1, quiet = True):
   print("Training python scikit-survial GradientBoostingSurvivalAnalysis model" )
   ytype=np.dtype([('outcome', '?'), ('surv', 'i')])
   y=np.empty(len(population[:,1]),dtype=ytype)
@@ -39,7 +39,7 @@ def train_gbmsurv(population = None, plpData= None, train = True, modelOutput =N
       print("Train set contains %s outcomes " %(np.sum(train_y['outcome'])))
       print("Training fold %s" %(i))
       start_time = timeit.default_timer()	
-      gbmsurv = GradientBoostingSurvivalAnalysis(loss=loss, learning_rate=learning_rate, n_estimators=n_estimators, criterion=criterion, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, min_weight_fraction_leaf=min_weight_fraction_leaf, max_depth=max_depth, min_impurity_split=min_impurity_split, min_impurity_decrease=min_impurity_decrease, random_state=seed, max_features=max_features, max_leaf_nodes=max_leaf_nodes, presort=presort, subsample=subsample, dropout_rate=dropout_rate, verbose=verbose)
+      gbmsurv = GradientBoostingSurvivalAnalysis(loss=loss, learning_rate=learning_rate, n_estimators=n_estimators, criterion=criterion, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, min_weight_fraction_leaf=min_weight_fraction_leaf, max_depth=max_depth, min_impurity_split=min_impurity_split, min_impurity_decrease=min_impurity_decrease, random_state=seed, max_features=max_features, max_leaf_nodes=max_leaf_nodes, subsample=subsample, dropout_rate=dropout_rate, verbose=verbose)
       gbmsurv = gbmsurv.fit(X=train_x, y=train_y)
       end_time = timeit.default_timer()
       print("Training fold took: %.2f s" %(end_time-start_time))
@@ -62,7 +62,7 @@ def train_gbmsurv(population = None, plpData= None, train = True, modelOutput =N
     print("Training final python scikit-survial GradientBoostingSurvivalAnalysis model on all train data...")
     print("X- %s rows and Y %s length" %(X[trainInds,:].shape[0], y[trainInds].shape[0]))
     start_time = timeit.default_timer()	
-    gbmsurv = GradientBoostingSurvivalAnalysis(loss=loss, learning_rate=learning_rate, n_estimators=n_estimators, criterion=criterion, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, min_weight_fraction_leaf=min_weight_fraction_leaf, max_depth=max_depth, min_impurity_split=min_impurity_split, min_impurity_decrease=min_impurity_decrease, random_state=seed, max_features=max_features, max_leaf_nodes=max_leaf_nodes, presort=presort, subsample=subsample, dropout_rate=dropout_rate, verbose=verbose)
+    gbmsurv = GradientBoostingSurvivalAnalysis(loss=loss, learning_rate=learning_rate, n_estimators=n_estimators, criterion=criterion, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, min_weight_fraction_leaf=min_weight_fraction_leaf, max_depth=max_depth, min_impurity_split=min_impurity_split, min_impurity_decrease=min_impurity_decrease, random_state=seed, max_features=max_features, max_leaf_nodes=max_leaf_nodes, subsample=subsample, dropout_rate=dropout_rate, verbose=verbose)
     gbmsurv = gbmsurv.fit(X[trainInds,:], y[trainInds])
     end_time = timeit.default_timer()
     print("Training final took: %.2f s" %(end_time-start_time))

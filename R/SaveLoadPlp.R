@@ -1,6 +1,6 @@
 # @file PlpSaveLoad.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -42,10 +42,7 @@
 #' @param oracleTempSchema             For Oracle only: the name of the database schema where you want
 #'                                     all temporary tables to be managed. Requires create/insert
 #'                                     permissions to this database.
-#' @param cohortId                     A unique identifier to define the at risk cohort.  If
-#'                                     cohortTable = DRUG_ERA, cohortId is a CONCEPT_ID and all
-#'                                     descendant concepts within that CONCEPT_ID will be used to
-#'                                     define the cohort.  If cohortTable <> DRUG_ERA, cohortId is
+#' @param cohortId                     A unique identifier to define the at risk cohort. CohortId is
 #'                                     used to select the cohort_concept_id in the cohort-like table.
 #' @param outcomeIds                   A list of cohort_definition_ids used to define outcomes (-999 mean no outcome gets downloaded).
 #' @param studyStartDate               A calendar date specifying the minimum date that a cohort index
@@ -56,24 +53,18 @@
 #'                                     beyond the study end date will be considered.
 #' @param cohortDatabaseSchema         The name of the database schema that is the location where the
 #'                                     cohort data used to define the at risk cohort is available.
-#'                                     If cohortTable = DRUG_ERA, cohortDatabaseSchema is not used
-#'                                     by assumed to be cdmSchema.  Requires read permissions to this
-#'                                     database.
-#' @param cohortTable                  The tablename that contains the at risk cohort.  If
-#'                                     cohortTable <> DRUG_ERA, then expectation is cohortTable has
+#'                                     Requires read permissions to this database.
+#' @param cohortTable                  The tablename that contains the at risk cohort.  cohortTable has
 #'                                     format of COHORT table: cohort_concept_id, SUBJECT_ID,
 #'                                     COHORT_START_DATE, COHORT_END_DATE.
 #' @param outcomeDatabaseSchema            The name of the database schema that is the location where
-#'                                         the data used to define the outcome cohorts is available. If
-#'                                         cohortTable = CONDITION_ERA, exposureDatabaseSchema is not
-#'                                         used by assumed to be cdmSchema.  Requires read permissions
-#'                                         to this database.
-#' @param outcomeTable                     The tablename that contains the outcome cohorts.  If
-#'                                         outcomeTable <> CONDITION_OCCURRENCE, then expectation is
+#'                                         the data used to define the outcome cohorts is available. 
+#'                                         Requires read permissions to this database.
+#' @param outcomeTable                     The tablename that contains the outcome cohorts. Expectation is
 #'                                         outcomeTable has format of COHORT table:
 #'                                         COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
 #'                                         COHORT_END_DATE.
-#' @param cdmVersion                   Define the OMOP CDM version used: currently support "4" and "5".
+#' @param cdmVersion                   Define the OMOP CDM version used: currently support "4", "5" and "6".
 #' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
 #'                                     but can already be done here for efficiency reasons.
@@ -138,6 +129,7 @@ getPlpData <- function(connectionDetails,
   #ToDo: add other checks the inputs are valid
   
   connection <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(connection))
   dbms <- connectionDetails$dbms
   
   writeLines("\nConstructing the at risk cohort")
@@ -222,7 +214,7 @@ getPlpData <- function(connectionDetails,
                                                    dbms = dbms,
                                                    oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
-  DatabaseConnector::disconnect(connection)
+  #DatabaseConnector::disconnect(connection)
   
   metaData <- covariateData$metaData
   metaData$call <- match.call()
@@ -250,73 +242,21 @@ getPlpData <- function(connectionDetails,
     if(covariateSettings$temporal){
       # make sure time days populated
       if(length(covariateSettings$temporalStartDays)>0){
-        timeReference = ff::as.ffdf(data.frame(timeId=1:length(covariateSettings$temporalStartDays),
+        timeReference = data.frame(timeId=1:length(covariateSettings$temporalStartDays),
                                                startDay = covariateSettings$temporalStartDays, 
-                                               endDay = covariateSettings$temporalEndDays))
+                                               endDay = covariateSettings$temporalEndDays)
       }
     }}
   
 
   result <- list(cohorts = cohorts,
                  outcomes = outcomes,
-                 covariates = covariateData$covariates,
-                 covariateRef = covariateData$covariateRef,
-                 timeRef = timeReference,#covariateData$covariatesContinuous,
-                 analysisRef = covariateData$analysisRef,
+                 covariateData = covariateData,
+                 timeRef = timeReference,
                  metaData = metaData)
   
   class(result) <- "plpData"
   return(result)
-}
-
-
-
-
-#' Get the covaridate data for a cohort table
-#' @description
-#' This function executes some SQL to extract covaraite data for a cohort table
-#'
-#' @details
-#' This function extracts covariate data for a given target popualtion 
-#'
-#' @param connection                   Can also use an existing connection rather than the connectionDetails
-#' @param cdmDatabaseSchema            The name of the database schema that contains the OMOP CDM
-#'                                     instance.  Requires read permissions to this database. On SQL
-#'                                     Server, this should specifiy both the database and the schema,
-#'                                     so for example 'cdm_instance.dbo'.
-#' @param oracleTempSchema             For Oracle only: the name of the database schema where you want
-#'                                     all temporary tables to be managed. Requires create/insert
-#'                                     permissions to this database.
-#' @param cohortTable                  The temp table containing the cohort of people
-#' @param cdmVersion                   The version of the CDM (default 5)
-#' @param covariateSettings            An object of type \code{covariateSettings} as created using the
-#'                                     \code{createCovariateSettings} function in the
-#'                                     \code{FeatureExtraction} package.
-#'
-#' @return
-#' Returns the covariates for the people in the temp table
-#' @export
-getCovariateData <- function(connection,
-                       cdmDatabaseSchema,
-                       oracleTempSchema = cdmDatabaseSchema,
-                       cohortTable = "#cohort_person",
-                       cdmVersion = 5,
-                       covariateSettings) {
-  
-  if(missing(connection)){
-    stop('Need to enter an existing connection')
-  } 
-  
-  writeLines("Extracting covariate data")
-  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
-                                                         oracleTempSchema = oracleTempSchema,
-                                                         cdmDatabaseSchema = cdmDatabaseSchema,
-                                                         cdmVersion = cdmVersion,
-                                                         cohortTable = cohortTable,
-                                                         cohortTableIsTemp = TRUE,
-                                                         rowIdField = "row_id",
-                                                         covariateSettings = covariateSettings)
-  return(covariateData$covariates)
 }
 
 
@@ -345,6 +285,13 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
     stop("Must specify file")
   if (!class(plpData) %in% c("plpData","plpData.libsvm"  ))
     stop("Data not of class plpData")
+  if(dir.exists(file.path(file, "covariates"))){
+    stop('Folder to save covariates already exists...')
+  }
+  
+  if(!dir.exists(file)){
+    dir.create(file)
+  }
   
   # save the actual values in the metaData
   # TODO - only do this if exists in parent or environ
@@ -356,30 +303,9 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
       plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
   }
   
-  if('ffdf'%in%class(plpData$covariates)){
-    covariates <- plpData$covariates
-    covariateRef <- plpData$covariateRef
-    
-    if(!is.null(plpData$analysisRef)){
-      if(!is.null(plpData$timeRef)){
-        analysisRef <- plpData$analysisRef
-        timeRef <- plpData$timeRef
-        ffbase::save.ffdf(covariates, covariateRef,analysisRef,timeRef, dir = file, clone = TRUE, overwrite = overwrite)
-      } else {
-        analysisRef <- plpData$analysisRef
-        ffbase::save.ffdf(covariates, covariateRef,analysisRef, dir = file, clone = TRUE, overwrite = overwrite)
-      }
-    } else {
-      ffbase::save.ffdf(covariates, covariateRef, dir = file, clone = TRUE, overwrite = overwrite)
-    }
-    
-  } else{
-    covariateRef <- plpData$covariateRef
-    analysisRef <- plpData$analysisRef
-    timeRef <- plpData$timeRef
-    ffbase::save.ffdf(covariateRef,analysisRef,timeRef, dir = file, clone = TRUE, overwrite = overwrite)
-    saveRDS(plpData$covariates, file = file.path(file, "covariates.rds"))
-  }
+  #FeatureExtraction::saveCovariateData(covariateData = plpData$covariateData, file = file.path(file, "covariates"))
+  Andromeda::saveAndromeda(plpData$covariateData, file = file.path(file, "covariates"), maintainConnection = T)
+  saveRDS(plpData$timeRef, file = file.path(file, "timeRef.rds"))
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
   saveRDS(plpData$outcomes, file = file.path(file, "outcomes.rds"))
   saveRDS(plpData$metaData, file = file.path(file, "metaData.rds"))
@@ -410,43 +336,14 @@ loadPlpData <- function(file, readOnly = TRUE) {
   if (!file.info(file)$isdir)
     stop(paste("Not a folder", file))
   
-  temp <- setwd(file)
-  absolutePath <- setwd(temp)
-  
-  if(!file.exists(file.path(file, "covariates.rds"))){
-  e <- new.env()
-  ffbase::load.ffdf(absolutePath, e)
-  result <- list(covariates = get("covariates", envir = e),
-                 covariateRef = get("covariateRef", envir = e),
-                 timeRef = get0("timeRef", envir = e,ifnotfound = NULL),
-                 analysisRef = get0("analysisRef", envir = e,ifnotfound = NULL),
+  result <- list(covariateData = FeatureExtraction::loadCovariateData(file = file.path(file, "covariates")),
+                 timeRef = readRDS(file.path(file, "timeRef.rds")),
                  cohorts = readRDS(file.path(file, "cohorts.rds")),
                  outcomes = readRDS(file.path(file, "outcomes.rds")),
                  metaData = readRDS(file.path(file, "metaData.rds")))
   # Open all ffdfs to prevent annoying messages later:
-  open(result$covariates, readonly = readOnly)
-  open(result$covariateRef, readonly = readOnly)
-  if(!is.null(result$timeRef)){open(result$timeRef, readonly = readOnly)}
-  if(!is.null(result$analysisRef)){open(result$analysisRef, readonly = readOnly)}
   class(result) <- "plpData"
-  } else{
-    e <- new.env()
-    ffbase::load.ffdf(absolutePath, e)
-    result <- list(covariates = readRDS(file.path(file, "covariates.rds")),
-                   covariateRef = get("covariateRef", envir = e),
-                   timeRef = get0("timeRef", envir = e,ifnotfound = NULL),
-                   analysisRef = get0("analysisRef", envir = e,ifnotfound = NULL),
-                   cohorts = readRDS(file.path(file, "cohorts.rds")),
-                   outcomes = readRDS(file.path(file, "outcomes.rds")),
-                   metaData = readRDS(file.path(file, "metaData.rds")))
-    # Open all ffdfs to prevent annoying messages later:
-    open(result$covariateRef, readonly = readOnly)
-    if(!is.null(result$timeRef)){open(result$timeRef, readonly = readOnly)}
-    if(!is.null(result$analysisRef)){open(result$analysisRef, readonly = readOnly)}
-    class(result) <- "plpData.libsvm"
-  }
 
-  rm(e)
   return(result)
 }
 
@@ -468,11 +365,13 @@ summary.plpData <- function(object, ...) {
     outcomeCounts$eventCount[i] <- sum(object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i])
     outcomeCounts$personCount[i] <- length(unique(object$outcomes$rowId[object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i]]))
   }
+  
+  covDetails <- FeatureExtraction::summary(object$covariateData)
   result <- list(metaData = append(append(object$metaData, attr(object$cohorts, "metaData")), attr(object$outcomes, "metaData")),
                  people = people,
                  outcomeCounts = outcomeCounts,
-                 covariateCount = nrow(object$covariateRef),
-                 covariateValueCount = nrow(object$covariates))
+                 covariateCount = covDetails$covariateCount,
+                 covariateValueCount = covDetails$covariateValueCount)
   class(result) <- "summary.plpData"
   return(result)
 }
@@ -498,40 +397,6 @@ print.summary.plpData <- function(x, ...) {
   writeLines(paste("Number of non-zero covariate values:", x$covariateValueCount))
 }
 
-#' Extract covariate names
-#'
-#' @description
-#' Extracts covariate names using a regular-expression.
-#'
-#' @details
-#' This function extracts covariate names that match a regular-expression for a
-#' \code{plpData} or \code{covariateData} object.
-#'
-#' @param object    An R object of type \code{plpData} or \code{covariateData}.
-#' @param pattern   A regular expression with which to name covariate names
-#'
-#' @return
-#' Returns a \code{data.frame} containing information about covariates that match a regular
-#' expression.  This \code{data.frame} has the following columns: \describe{
-#' \item{covariateId}{Numerical identifier for use in model fitting using these covariates}
-#' \item{covariateName}{Text identifier} \item{analysisId}{Analysis identifier} \item{conceptId}{OMOP
-#' common data model concept identifier, or 0} }
-#'
-#' @export
-grepCovariateNames <- function(pattern, object) {
-  if (is.null(object$covariateRef)) {
-    stop("object does not contain a covariateRef")
-  }
-  select <- ffbase::ffwhich(object$covariateRef, grepl(pattern, covariateName))
-  if (is.null(select)) {
-    data.frame(covariateId = numeric(0),
-               covariateName = character(0),
-               analysisID = numeric(0),
-               conceptId = numeric(0))
-  } else {
-    ff::as.ram(object$covariateRef[select, ])
-  }
-}
 
 #' Saves the plp model
 #'
@@ -706,7 +571,10 @@ loadPlpModel <- function(dirPath) {
   
   # update the model location to the load dirPath
   result <- updateModelLocation(result, dirPath)
-    
+  
+  # make this backwrds compatible for ffdf:
+  result$predict <- createTransform(result)
+  
   return(result)
 }
 

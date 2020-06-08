@@ -1,6 +1,6 @@
 # @file predict.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -82,9 +82,9 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
 
 # default patient level prediction prediction  
 predict.plp <- function(plpModel,population, plpData, ...){
-  covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
+  covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
   ParallelLogger::logTrace('predict.plp - predictingProbabilities start')
-  prediction <- predictProbabilities(plpModel$model, population, covariates)
+  prediction <- predictProbabilities(plpModel$model, population, covariateData)
   ParallelLogger::logTrace('predict.plp - predictingProbabilities end')
   return(prediction)
 }
@@ -97,7 +97,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
                            value=stats::predict(plpModel$model, data)
   )
   
-  prediction <- merge(population, prediction, by='rowId')
+  prediction <- merge(population, prediction, by='rowId', all.x=T, fill=0)
   prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
   attr(prediction, "metaData") <- list(predictionType = "binary") 
   return(prediction)
@@ -118,7 +118,7 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   } else {  
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
-    included <- newData$map$newIds[newData$map$oldIds%in%included] 
+    included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
     pdata <- reticulate::r_to_py(newData$data[,included])
     fun_predict <- python_predict
   }
@@ -171,7 +171,7 @@ predict.pythonAuto <- function(plpModel, population, plpData){
   } else {  
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
-    included <- newData$map$newIds[newData$map$oldIds%in%included] 
+    included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
     pdata <- reticulate::r_to_py(newData$data[,included])
   }
   
@@ -219,16 +219,19 @@ predict.pythonAuto <- function(plpModel, population, plpData){
 
 
 predict.knn <- function(plpData, population, plpModel, ...){
-  covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
-  prediction <- BigKnn::predictKnn(covariates = covariates,
-                                   cohorts=ff::as.ffdf(population[,!colnames(population)%in%'cohortStartDate']),
+  covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
+  prediction <- BigKnn::predictKnn(covariates = covariateData$covariates,
+                                   cohorts= population[,!colnames(population)%in%'cohortStartDate'],
                                    indexFolder = plpModel$model,
                                    k = plpModel$modelSettings$modelParameters$k,
-                                   weighted = TRUE)
+                                   weighted = TRUE,
+                                   threads = plpModel$modelSettings$threads)
+  
+  # can add: threads = 1 in the future
   
   # return the cohorts as a data frame with the prediction added as 
   # a new column with the column name 'value'
-  prediction <- merge(population, prediction, by='rowId', 
+  prediction <- merge(population, prediction[,c('rowId','value')], by='rowId', 
                       all.x=T, fill=0)
   prediction$value[is.na(prediction$value)] <- 0
   
@@ -257,7 +260,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     prediction$value <- 0
     for(batch in batches){
       pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,,]))
-      if(is.null(dim(as.double(pred)))){
+      if(is.null(dim(pred))){
         prediction$value[batch] <- as.double(pred)
       } else{
         prediction$value[batch] <- as.double(pred[,2])
@@ -472,22 +475,28 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
   if(temporal){
     ParallelLogger::logTrace('temporal')
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
+    ParallelLogger::logDebug('result$data dim: ',paste0(dim(result$data), collapse = '-'))
+    ParallelLogger::logDebug('population dim: ',paste0(dim(population), collapse = '-'))
     data <-result$data[population$rowId,,]
     
+    ParallelLogger::logInfo('running batch prediction')
     batch_size <- min(2000, length(population$rowId))
     maxVal <- length(population$rowId)
     batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
     prediction <- population
     prediction$value <- 0
     for(batch in batches){
+      ParallelLogger::logDebug('batch length: ', length(batch))
       dat <- list()
       length(dat) <- repeats
       for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
       
       pred <- keras::predict_on_batch(plpModel$model, dat)
-      if(is.null(dim(as.double(pred)))){
+      if(is.null(dim(pred))){
+        ParallelLogger::logDebug('Pred length: ', length(pred))
         prediction$value[batch] <- as.double(pred)
       } else{
+        ParallelLogger::logDebug('Pred dim: ', paste0(dim(pred), collapse = '-'))
         prediction$value[batch] <- as.double(pred[,2])
       }
     }
@@ -533,15 +542,15 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
 #' @param population        The population to calculate the prediction for
 #' @param covariates        The covariate part of PlpData containing the covariates for the population
 #' @export
-predictProbabilities <- function(predictiveModel, population, covariates) {
+predictProbabilities <- function(predictiveModel, population, covariateData) {
   start <- Sys.time()
   
-  ParallelLogger::logTrace('predictProbabilities - predictFfdf start')
-  prediction <- predictFfdf(predictiveModel$coefficients,
+  ParallelLogger::logTrace('predictProbabilities - predictAndromeda start')
+  prediction <- predictAndromeda(predictiveModel$coefficients,
                             population,
-                            covariates,
+                            covariateData,
                             predictiveModel$modelType)
-  ParallelLogger::logTrace('predictProbabilities - predictFfdf end')
+  ParallelLogger::logTrace('predictProbabilities - predictAndromeda end')
   prediction$time <- NULL
   attr(prediction, "modelType") <- predictiveModel$modelType
   attr(prediction, "cohortId") <- attr(population, "metadata")$cohortId
@@ -557,7 +566,7 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
 #' @param coefficients   A names numeric vector where the names are the covariateIds, except for the
 #'                       first value which is expected to be the intercept.
 #' @param population       A data frame containing the population to do the prediction for
-#' @param covariates     A data frame or ffdf object containing the covariates with predefined columns
+#' @param covariateData     An andromeda object containing the covariateData with predefined columns
 #'                       (see below).
 #' @param modelType      Current supported types are "logistic", "poisson", "cox" or "survival".
 #'
@@ -571,13 +580,14 @@ predictProbabilities <- function(predictiveModel, population, covariates) {
 #' \verb{covariateValue} \tab(real) \tab The value of the specified covariate \cr }
 #'
 #' @export
-predictFfdf <- function(coefficients, population, covariates, modelType = "logistic") {
+predictAndromeda <- function(coefficients, population, covariateData, modelType = "logistic") {
   if (!(modelType %in% c("logistic", "poisson", "survival","cox"))) {
     stop(paste("Unknown modelType:", modelType))
   }
-  if (class(covariates) != "ffdf") {
-    stop("Covariates should be of type ffdf")
+  if (!FeatureExtraction::isCovariateData(covariateData)){
+    stop("Needs correct covariateData")
   }
+  
   intercept <- coefficients[names(coefficients)%in%'(Intercept)']
   if(length(intercept)==0) intercept <- 0
   coefficients <- coefficients[!names(coefficients)%in%'(Intercept)']
@@ -585,12 +595,17 @@ predictFfdf <- function(coefficients, population, covariates, modelType = "logis
                              covariateId = as.numeric(names(coefficients)))
   coefficients <- coefficients[coefficients$beta != 0, ]
   if(sum(coefficients$beta != 0)>0){
-    prediction <- merge(covariates, ff::as.ffdf(coefficients), by = "covariateId")
-    prediction$value <- prediction$covariateValue * prediction$beta
-    prediction <- bySumFf(prediction$value, prediction$rowId)
-    colnames(prediction) <- c("rowId", "value")
-    # prediction <- merge(population, ff::as.ram(prediction), by = "rowId", all.x = TRUE)
-    prediction <- merge(ff::as.ram(population), prediction, by ="rowId", all.x = TRUE)
+    covariateData$coefficients <- coefficients
+    
+    prediction <- covariateData$covariates %>% 
+      dplyr::inner_join(covariateData$coefficients, by= 'covariateId') %>% 
+      dplyr::mutate(values = covariateValue*beta) %>%
+      dplyr::group_by(rowId) %>%
+      dplyr::summarise(value = sum(values, na.rm = TRUE)) %>%
+      dplyr::select(rowId, value)
+    
+    prediction <- as.data.frame(prediction)
+    prediction <- merge(population, prediction, by ="rowId", all.x = TRUE, fill = 0)
     prediction$value[is.na(prediction$value)] <- 0
     prediction$value <- prediction$value + intercept
   } else{
@@ -610,20 +625,5 @@ predictFfdf <- function(coefficients, population, covariates, modelType = "logis
     }
   }
   return(prediction)
-}
-
-#' Compute sum of values binned by a second variable
-#'
-#' @param values   An ff object containing the numeric values to be summed
-#' @param bins     An ff object containing the numeric values to bin by
-#'
-#' @examples
-#' values <- ff::as.ff(c(1, 1, 2, 2, 1))
-#' bins <- ff::as.ff(c(1, 1, 1, 2, 2))
-#' bySumFf(values, bins)
-#'
-#' @export
-bySumFf <- function(values, bins) {
-  bySum(values, bins)
 }
 

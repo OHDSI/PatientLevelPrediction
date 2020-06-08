@@ -10,21 +10,29 @@
 #' @description
 This creates a setting for fitting a RandomForestQuantileRegressor model.  You need skgarden python install.  To install this open your command line and type: conda install -c conda-forge scikit-garden — setRandomForestQuantileRegressor • PatientLevelPrediction</title>
 
-<!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-<!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<!-- jquery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<!-- Bootstrap -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -32,14 +40,14 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
 
 
 
+
 <meta property="og:title" content="Create setting for RandomForestQuantileRegressor with python scikit-garden (skgarden.quantile.RandomForestQuantileRegressor)
 #' @description
 This creates a setting for fitting a RandomForestQuantileRegressor model.  You need skgarden python install.  To install this open your command line and type: conda install -c conda-forge scikit-garden — setRandomForestQuantileRegressor" />
-
 <meta property="og:description" content="Create setting for RandomForestQuantileRegressor with python scikit-garden (skgarden.quantile.RandomForestQuantileRegressor)
 #' @description
 This creates a setting for fitting a RandomForestQuantileRegressor model.  You need skgarden python install.  To install this open your command line and type: conda install -c conda-forge scikit-garden" />
-<meta name="twitter:card" content="summary" />
+
 
 
 
@@ -53,9 +61,10 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
 <![endif]-->
 
 
+
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -69,7 +78,7 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
       </span>
     </div>
 
@@ -116,10 +125,10 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
+      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
     </li>
     <li>
-      <a href="../articles/ImplementingExistingModels.html">Implementing Existing Prediction Models using the OHDSI PatientLevelPrediction Framework</a>
+      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -136,9 +145,11 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+</li>
+<li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
     <span class="fa fa-github fa-lg"></span>
      
@@ -151,6 +162,7 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -164,19 +176,27 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
     </div>
 
     <div class="ref-description">
-    
     <p>Create setting for RandomForestQuantileRegressor with python scikit-garden (skgarden.quantile.RandomForestQuantileRegressor)
 #' @description
 This creates a setting for fitting a RandomForestQuantileRegressor model.  You need skgarden python install.  To install this open your command line and type: conda install -c conda-forge scikit-garden</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>setRandomForestQuantileRegressor</span>(<span class='kw'>nEstimators</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>100</span>), <span class='kw'>criterion</span> <span class='kw'>=</span> <span class='st'>"mse"</span>,
-  <span class='kw'>maxFeatures</span> <span class='kw'>=</span> -<span class='fl'>1</span>, <span class='kw'>maxDepth</span> <span class='kw'>=</span> <span class='fl'>4</span>, <span class='kw'>minSamplesSplit</span> <span class='kw'>=</span> <span class='fl'>2</span>,
-  <span class='kw'>minSamplesLeaf</span> <span class='kw'>=</span> <span class='fl'>1</span>, <span class='kw'>minWeightFractionLeaf</span> <span class='kw'>=</span> <span class='fl'>0</span>, <span class='kw'>maxLeafNodes</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>bootstrap</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>oobScore</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>warmStart</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='no'>F</span>)</pre>
-    
+    <pre class="usage"><span class='fu'>setRandomForestQuantileRegressor</span>(
+  <span class='kw'>nEstimators</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>100</span>),
+  <span class='kw'>criterion</span> <span class='kw'>=</span> <span class='st'>"mse"</span>,
+  <span class='kw'>maxFeatures</span> <span class='kw'>=</span> -<span class='fl'>1</span>,
+  <span class='kw'>maxDepth</span> <span class='kw'>=</span> <span class='fl'>4</span>,
+  <span class='kw'>minSamplesSplit</span> <span class='kw'>=</span> <span class='fl'>2</span>,
+  <span class='kw'>minSamplesLeaf</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>minWeightFractionLeaf</span> <span class='kw'>=</span> <span class='fl'>0</span>,
+  <span class='kw'>maxLeafNodes</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>bootstrap</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>oobScore</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>warmStart</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='no'>F</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -233,30 +253,24 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
       <td><p>will add</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Pick the hyper-parameters you want to do a grid search for</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><span class='co'># NOT RUN {</span>
-<span class='no'>rfQR</span> <span class='kw'>&lt;-</span> <span class='fu'>setRandomForestQuantileRegressor</span>(<span class='kw'>nEstimators</span> <span class='kw'>=</span><span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>10</span>,<span class='fl'>50</span>,<span class='fl'>100</span>),
- <span class='kw'>maxDepth</span><span class='kw'>=</span><span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>4</span>,<span class='fl'>10</span>,<span class='fl'>17</span>), <span class='kw'>seed</span> <span class='kw'>=</span> <span class='fl'>2</span>)
-<span class='co'># }</span></pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+<span class='no'>rfQR</span> <span class='kw'>&lt;-</span> <span class='fu'>setRandomForestQuantileRegressor</span>(<span class='kw'>nEstimators</span> <span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>10</span>,<span class='fl'>50</span>,<span class='fl'>100</span>),
+ <span class='kw'>maxDepth</span><span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>4</span>,<span class='fl'>10</span>,<span class='fl'>17</span>), <span class='kw'>seed</span> <span class='kw'>=</span> <span class='fl'>2</span>)
+}</div></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#details">Details</a></li>
-      
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
+
 
       <footer>
       <div class="copyright">
@@ -264,13 +278,16 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

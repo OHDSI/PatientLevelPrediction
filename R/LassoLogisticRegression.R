@@ -1,6 +1,6 @@
 # @file lassoLogisticRegression.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -55,9 +55,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   }
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates)){
-    ParallelLogger::logError('Lasso Logistic regression requires plpData in coo format')
-    stop()
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
   }
 
   metaData <- attr(population, 'metaData')
@@ -92,7 +91,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   } else {
     ParallelLogger::logInfo('Creating variable importance data frame')
     #varImp <- varImp[abs(varImp$value)>0,]
-    varImp <- merge(ff::as.ram(plpData$covariateRef), varImp, 
+    varImp <- merge(as.data.frame(plpData$covariateData$covariateRef), varImp, 
                     by='covariateId',all=T)
     varImp$value[is.na(varImp$value)] <- 0
     varImp <- varImp[order(-abs(varImp$value)),]

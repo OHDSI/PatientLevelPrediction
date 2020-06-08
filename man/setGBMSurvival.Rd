@@ -19,7 +19,7 @@ setGBMSurvival(
   minImpurityDecrease = 0,
   maxFeatures = NULL,
   maxLeafNodes = NULL,
-  presort = "auto",
+  presort = NULL,
   subsample = 1,
   dropoutRate = 0,
   seed = NULL,

@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -65,24 +65,11 @@ test_that("predictProbabilities inputs", {
 })
 
 
-test_that("predictFfdf inputs", {
-  # predictFfdf
-  testthat::expect_error(predictFfdf(coefficients=NULL, 
+test_that("predictAndromeda inputs", {
+  testthat::expect_error(predictAndromeda(coefficients=NULL, 
                                      population=population, 
-                                     covariates=NULL, 
+                                     covariateData=NULL, 
                                      modelType = "madeup"))
-  
-})
-
-N <- sample(10,1)
-values <- ff::as.ff(runif(N))
-bins <- ff::as.ff(sample(100,N))
-
-test_that("bySumFf inputs", {
-  testthat::expect_equal(nrow(bySumFf(values, bins)),N)
-  
-  testthat::expect_equal(bySumFf(values, bins)[,2],
-                         ff::as.ram(values)[order(ff::as.ram(bins))])
   
 })
 

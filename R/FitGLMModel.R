@@ -1,6 +1,6 @@
 # @file fitGLMModel.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -58,16 +58,17 @@ fitGLMModel <- function(population,
   }  else {
     colnames(population)[colnames(population) == "outcomeCount"] <- "y"
     
-
-    covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
+    covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
     
-    if (length(includeCovariateIds) != 0) {
-      idx <- !is.na(ffbase::ffmatch(covariates$covariateId, ff::as.ff(includeCovariateIds)))
-      covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
-    }
-    if (length(excludeCovariateIds) != 0) {
-      idx <- is.na(ffbase::ffmatch(covariates$covariateId, ff::as.ff(excludeCovariateIds)))
-      covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
+    # exclude or include covariates
+    if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) != 0)) {
+      covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds) %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+    } else if ( (length(includeCovariateIds) == 0) & (length(excludeCovariateIds) != 0)) { 
+      covariates <- covariateData$covariates %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+    } else if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) == 0)) {
+      covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds)
+    } else {
+      covariates <- covariateData$covariates
     }
     
     if (modelType == "cox"){
@@ -83,14 +84,18 @@ fitGLMModel <- function(population,
     } else {
       addIntercept <- TRUE
     }
-    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = ff::as.ffdf(population[,!colnames(population)%in%c('cohortStartDate')]),
+    
+    covariateData$andromedaPopulation <- population[,!colnames(population)%in%c('cohortStartDate')]
+    
+    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = covariateData$andromedaPopulation,
                                                  covariates = covariates,
                                                  addIntercept = addIntercept,
                                                  modelType = modelTypeToCyclopsModelType(modelType),
-                                                 checkSorting = TRUE,
+                                                 #checkSorting = TRUE,
                                                  checkRowIds = FALSE,
                                                  normalize = NULL,
                                                  quiet = TRUE)
+
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
       Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)}, 

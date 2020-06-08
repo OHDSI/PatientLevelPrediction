@@ -451,7 +451,7 @@ lrModel <- setLassoLogisticRegression()
 The `runPlP` function uses the population, `plpData`, and model settings to train and evaluate the model. We can use the testSplit (person/time) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
   
 ```{r tidy=FALSE,eval=FALSE}
-  lrResults <- runPlp(population, plpData, modelSettings = lrModel, testSplit='person', 
+  lrResults <- runPlp(population, plpData, modelSettings = lrModel, testSplit='stratified', 
   testFraction=0.25, nfold=2, splitSeed = 1234)
 ```
 Under the hood the package will now use the [`Cyclops`](www.github.com/OHDSI/Cyclops) package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc. 
@@ -762,7 +762,7 @@ For example, if we use the following settings for the gradientBoostingMachine: n
 The `runPlP` function uses the population, `plpData`, and model settings to train and evaluate the model. We can use the testSplit (person/time) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
       
 ```{r tidy=FALSE,eval=FALSE}
-    gbmResults <- runPlp(population, plpData, modelSettings = gbmModel, testSplit='person', 
+    gbmResults <- runPlp(population, plpData, modelSettings = gbmModel, testSplit='stratified', 
                          testFraction=0.25, nfold=2, splitSeed = 1234)
 ```
 Under the hood the package will now use the R xgboost package to fit a a gradient boosting machine model using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc. 
