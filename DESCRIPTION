@@ -24,7 +24,7 @@ Depends:
     R (>= 3.3.0),
     DatabaseConnector (>= 3.0.0),
     FeatureExtraction (>= 3.0.0),
-    Cyclops (>= 2.0.0)
+    Cyclops (>= 3.0.0)
 Imports:
     ggplot2,
     gridExtra,
@@ -54,7 +54,7 @@ Imports:
     RJSONIO,
     keras,
     slam,
-    ParallelLogger,
+    ParallelLogger (>= 2.0.0),
     reticulate (> 1.6),
     tools,
     plotly,
@@ -84,8 +84,7 @@ Suggests:
     survminer
 Remotes:
     ohdsi/FeatureExtraction,
-    ohdsi/BigKnn,
-    ohdsi/Andromeda
+    ohdsi/BigKnn
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 7.1.0

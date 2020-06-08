@@ -18,14 +18,16 @@
 
 # recreate the html index when new documentation
 pkgdown::build_site()
+OhdsiRTools::fixHadesLogo()
 
 # Format and check code
 OhdsiRTools::formatRFolder()
 OhdsiRTools::checkUsagePackage("PatientLevelPrediction")
 OhdsiRTools::updateCopyrightYearFolder()
+devtools::spell_check()
 
 # Create manual and vignettes
-system("rm extras/PatientLevelPrediction.pdf")
+unlink("extras/PatientLevelPrediction.pdf")
 system("R CMD Rd2pdf ./ --output=extras/PatientLevelPrediction.pdf")
 
 rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd",

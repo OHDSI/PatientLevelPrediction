@@ -17,7 +17,7 @@ navbar:
     - articles
     - tutorial
     - news
-    right: github
+    right: [hades, github]
   components:
     home:
       icon: fa-home fa-lg
@@ -40,6 +40,9 @@ navbar:
     github:
       icon: fa-github fa-lg
       href: https://github.com/OHDSI/PatientLevelPrediction
+    hades:
+      text: hadesLogo
+      href: https://ohdsi.github.io/Hades
 
 reference:
   - title: "Getting data and creating a study population"
