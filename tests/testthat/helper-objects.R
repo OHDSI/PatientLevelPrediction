@@ -1,12 +1,9 @@
 # this files contains the objects used in the tests:
-
+library(dplyr)
 
 travis <- T
-saveLoc <- getwd()
-if(!dir.exists(file.path(saveLoc,"andromedaTemp"))){
-  dir.create(file.path(saveLoc,"andromedaTemp"), recursive = T)
-}
-options(andromedaTempFolder = file.path(saveLoc,"andromedaTemp"))
+saveLoc <- tempfile("saveLoc")
+dir.create(saveLoc)
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
@@ -64,7 +61,7 @@ population2 <- createStudyPopulation(plpData2,
 lrSet <- setLassoLogisticRegression()
 gbmSet <- setGradientBoostingMachine(ntrees = 50, maxDepth = 3, learnRate = 0.01, seed = 1)
 knnSet <- setKNN(k=100, indexFolder = file.path(saveLoc,"knn"))
-rfSet2 <- setRandomForest(mtries = -1,ntrees = 10, maxDepth = 2, varImp = F, seed=1)
+# rfSet2 <- setRandomForest(mtries = -1,ntrees = 10, maxDepth = 2, varImp = F, seed=1)
 
 
 # RUNPLP - LASSO LR
@@ -147,7 +144,7 @@ populationReal <- createStudyPopulation(plpDataReal,
 
 plpResultReal <- runPlp(population = populationReal,
                         plpData = plpDataReal, 
-                        modelSettings = rfSet2, 
+                        modelSettings = lrSet, 
                         splitSeed = 1,
                         savePlpData = F, 
                         savePlpResult = F, 
@@ -155,5 +152,4 @@ plpResultReal <- runPlp(population = populationReal,
                         savePlpPlots = F, 
                         analysisId = 'gbmReal',
                         saveDirectory =  saveLoc)
-
 
