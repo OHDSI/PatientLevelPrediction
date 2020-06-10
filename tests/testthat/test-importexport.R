@@ -317,10 +317,10 @@ test_that("check transportPlp N is 5", {
 })
 
 test_that("transportModel", {
-  transportModel(plpModel = plpResult$model,outputFolder = file.path(saveLoc,'transportModel'))
-  testthat::expect_equal(dir.exists(file.path(saveLoc,'transportModel')), T)
+  transportModel(plpModel = result$model,outputFolder = file.path(outputFolder,'transportModel'))
+  testthat::expect_equal(dir.exists(file.path(outputFolder,'transportModel')), T)
   
-  tmod <- loadPlpModel(file.path(saveLoc,'transportModel'))
+  tmod <- loadPlpModel(file.path(outputFolder,'transportModel'))
   testthat::expect_equal(tmod$metaData$call$connectionDetails, NULL)
   })
 
@@ -339,7 +339,7 @@ test_that("createLrSql fails", {
 test_that("createLrSql works", {
   
   env <- environment()
-  res <- createLrSql(models = plpResult$model, 
+  res <- createLrSql(models = result$model, 
                      modelNames = 'test', 
                      covariateConstructionName='prediction', 
                      modelTable='#model_table',
