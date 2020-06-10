@@ -15,10 +15,13 @@
 # limitations under the License.
 
 context("ImportExport")
+library(testthat)
 
 # how to test exportPlpDataToCsv?
 
-outputFolder <- './Temp/importexport'
+outputFolder <- tempfile("importExport")
+dir.create(outputFolder)
+
 # Test unit for the creation of the study externalValidatePlp
 model <- list(model='none - validation',
      modelSettings= NULL,
@@ -376,3 +379,6 @@ test_that("getPredictionCovariateData fails", {
                                                     databaseOutput=NULL))
   
 })
+
+
+unlink(outputFolder, recursive = TRUE)
