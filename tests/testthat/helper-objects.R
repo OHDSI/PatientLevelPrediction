@@ -1,12 +1,7 @@
 # this files contains the objects used in the tests:
 
-
 travis <- T
-saveLoc <- getwd()
-if(!dir.exists(file.path(saveLoc,"andromedaTemp"))){
-  dir.create(file.path(saveLoc,"andromedaTemp"), recursive = T)
-}
-options(andromedaTempFolder = file.path(saveLoc,"andromedaTemp"))
+saveLoc <- tempfile()
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests

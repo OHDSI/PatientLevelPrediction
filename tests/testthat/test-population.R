@@ -164,7 +164,9 @@ test_that("population creation parameters", {
                         subjectId=1:20, 
                         cohortId=rep(2,20),
                         time=rep(365,20),
-                        cohortStartDates=rep('2012-04-12',20),
+                        ageYear = rep(18,20),
+                        gender = rep(8507,20),
+                        cohortStartDate=rep('2012-04-12',20),
                         daysFromObsStart=rep(740,20),
                         daysToCohortEnd=rep(1,20),
                         daysToObsEnd=c(40, rep(900,19))
@@ -184,7 +186,7 @@ test_that("population creation parameters", {
                         includeAllOutcomes = T,
                         firstExposureOnly = FALSE,
                         washoutPeriod = 0,
-                        removeSubjectsWithPriorOutcome = F,
+                        removeSubjectsWithPriorOutcome = F, 
                         priorOutcomeLookback = 99999,
                         requireTimeAtRisk = T,
                         minTimeAtRisk=365,
@@ -233,6 +235,30 @@ test_that("population creation parameters", {
   
   # 4 only should be retruned
   expect_equal(Ppop3$rowId[Ppop3$outcomeCount>0], c(4))
+  
+  
+  Ppop5 <- createStudyPopulation(PplpData,
+                                 population = NULL,
+                                 outcomeId = 1,
+                                 binary = T,
+                                 includeAllOutcomes = F,
+                                 firstExposureOnly = FALSE,
+                                 washoutPeriod = 0,
+                                 removeSubjectsWithPriorOutcome = F,
+                                 priorOutcomeLookback = 99999,
+                                 requireTimeAtRisk = T,
+                                 minTimeAtRisk=303,
+                                 riskWindowStart = 62,
+                                 startAnchor = 'cohort start',
+                                 riskWindowEnd = 365,
+                                 endAnchor = 'cohort start')
+  
+  # should have no outcomes
+  expect_equal(is.null(Ppop5), TRUE)
+  
+  
+  atrr <- getAttritionTable(Ppop3)
+  expect_is(atrr, "data.frame")
   
   
 })

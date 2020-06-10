@@ -1,3 +1,10 @@
+PatientLevelPrediction 4.0.1
+======================
+- fixed minor bug with shiny dependency 
+- fixed some tests
+- added standardizedMeanDiff to covariatesummary
+- updated createStudyPopulation to make it cleaner to read and count outcome per TAR
+
 PatientLevelPrediction 4.0.0
 ======================
 - Andromeda replaced ff data objects

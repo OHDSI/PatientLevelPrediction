@@ -126,7 +126,7 @@ fitGLMModel <- function(population,
   outcomeModel$modelStatus <- status
   outcomeModel$populationCounts <- getCounts(population, "Population count")
   if (modelType == "poisson" || modelType == "cox") {
-    timeAtRisk <- data.frame(sum(population$time))
+    timeAtRisk <- data.frame(sum(population$timeAtRisk)) # not sure this is correct?
     outcomeModel$timeAtRisk <- timeAtRisk
   }
   class(outcomeModel) <- "plpModel"

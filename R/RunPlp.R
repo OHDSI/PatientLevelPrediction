@@ -582,7 +582,8 @@ covariateSummary <- function(plpData, population, model = NULL){
     
     allResult <- allResult %>% 
       dplyr::full_join(noout, by ='covariateId') %>%
-      dplyr::full_join(out, by ='covariateId')
+      dplyr::full_join(out, by ='covariateId') %>%
+      dplyr::mutate(StandardizedMeanDiff = (CovariateMeanWithOutcome-CovariateMeanWithNoOutcome)/sqrt(CovariateStDevWithOutcome^2+CovariateStDevWithNoOutcome^2))
     
   }
   
