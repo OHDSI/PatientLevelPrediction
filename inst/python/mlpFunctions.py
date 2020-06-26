@@ -21,7 +21,7 @@ from sklearn.externals.joblib import Memory
 from sklearn.externals import joblib
 
 #================================================================
-def train_mlp(population, plpData, alpha, size, seed, quiet, modelOutput, train):
+def train_mlp(population, plpData, alpha, size, maxIter, tol, learningRateInit, nIterNoChange, beta1, beta2, epsilon, seed, quiet, modelOutput, train):
   print("Training Neural Network model " )
   y = population[:,1]
   X = plpData[population[:,0].astype(int),:]
@@ -45,7 +45,7 @@ def train_mlp(population, plpData, alpha, size, seed, quiet, modelOutput, train)
       # train on fold
       print("Training fold %s" %(i))
       start_time = timeit.default_timer()	
-      mlp = MLPClassifier(activation='logistic', alpha=alpha, learning_rate='adaptive', hidden_layer_sizes=(size, 2), random_state=seed, max_iter=10000, early_stopping=True, n_iter_no_change = 5)
+      mlp = MLPClassifier(activation='logistic', alpha=alpha, learning_rate_init = learningRateInit, hidden_layer_sizes=(size, 2), random_state=seed, max_iter=maxIter, early_stopping=True, n_iter_no_change = nIterNoChange, solver = 'adam', tol= tol, beta_1 = beta1, beta_2 = beta2, epsilon = epsilon )
       mlp = mlp.fit(train_x, train_y)
       end_time = timeit.default_timer()
       print("Training fold took: %.2f s" %(end_time-start_time))

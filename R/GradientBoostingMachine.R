@@ -158,7 +158,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
 
   result <- list(model = trainedModel,
                  modelSettings = list(model='gbm_xgboost', modelParameters=param), #todo get lambda as param
-                 trainCVAuc = NULL,
+                 trainCVAuc = hyperSummary[which.max(param.sel),grep('fold_',(colnames(hyperSummary)))],
                  hyperParamSearch = hyperSummary,
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),

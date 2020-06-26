@@ -1,3 +1,11 @@
+PatientLevelPrediction 4.0.2
+======================
+- fixed bug in preprocessing 
+- added cross validation aucs to LR, GBM, RF and MLP
+- added more settings into MLP
+- added threads option in LR
+
+
 PatientLevelPrediction 4.0.1
 ======================
 - fixed minor bug with shiny dependency 

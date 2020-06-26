@@ -128,10 +128,14 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
                                                                         var=var,
                                                                         modelOutput=outLoc))  ))
   
-  hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
+  cvAuc <- do.call(rbind, lapply(hyperParamSel, function(x) x$aucCV))
+  colnames(cvAuc) <- paste0('fold_auc', 1:ncol(cvAuc))
+  auc <- unlist(lapply(hyperParamSel, function(x) x$auc))
+  
+  hyperSummary <- cbind(do.call(rbind, param), cvAuc, auc= auc)
   
   #now train the final model and return coef
-  bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
+  bestInd <- which.max(abs(auc-0.5))[1]
   finalModel <- do.call(trainDecisionTree, listAppend(param[[bestInd]], list(train=FALSE,
                                                                              population = pPopulation, 
                                                                              plpData = pydata, 
@@ -168,7 +172,7 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
-                 trainCVAuc = hyperParamSel,
+                 trainCVAuc = unlist(cvAuc[bestInd,]),
                  hyperParamSearch = hyperSummary,
                  modelSettings = list(model='fitDecisionTree',modelParameters=param.best),
                  metaData = plpData$metaData,
@@ -221,11 +225,13 @@ trainDecisionTree <- function(population, plpData,
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
     
-    pred$value <- 1-pred$value
+    #pred$value <- 1-pred$value
     auc <- computeAuc(pred)
-    if(!quiet)
-      writeLines(paste0('Model obtained CV AUC of ', auc))
-    return(auc)
+    if(!quiet){writeLines(paste0('Model obtained CV AUC of ', auc))}
+    
+    aucCV <- lapply(1:max(pred$indexes), function(i){computeAuc(pred[pred$indexes==i,])})
+    
+    return(list(auc = auc, aucCV = aucCV))
   }
   
   return(result)

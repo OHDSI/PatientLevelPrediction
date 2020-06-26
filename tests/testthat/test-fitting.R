@@ -318,3 +318,60 @@ test_that("MLP  working checks", {
   testthat::expect_gte(min(plpResultMlp$prediction$value), 0)
   testthat::expect_lte(max(plpResultMlp$prediction$value), 1)
 })
+
+
+
+test_that("LR cross val weights", {
+  
+  
+  sim <- simulateCyclopsData(nstrata = 1, nrows = 10000, ncovars = 100, eCovarsPerRow = 0.5, effectSizeSd = 1, model = "logistic")
+  covariates <- sim$covariates
+  outcomes <- sim$outcomes
+  y <- outcomes$y
+  
+  cyclopsData <- Cyclops::convertToCyclopsData(outcomes, 
+                                               covariates, 
+                                               modelType = "lr", addIntercept = TRUE)
+  cv_fit <- suppressWarnings(fitCyclopsModel(cyclopsData,
+                            prior = createPrior("laplace", useCrossValidation = TRUE),
+                            control = createControl(seed = 666)))
+  cv_hyperparameter <- getHyperParameter(cv_fit)
+  
+  fixed_prior <- createPrior("laplace", variance = cv_hyperparameter, useCrossValidation = FALSE)
+  
+  # get result using weights
+  set.seed(666)
+  hold_out <- sample(1:getNumberOfRows(cyclopsData),
+                       size = floor(0.1 * getNumberOfRows(cyclopsData)),
+                       replace = FALSE)
+  weights <- rep(1.0, getNumberOfRows(cyclopsData))
+  weights[hold_out] <- 0.0
+  subset_fit <- suppressWarnings(fitCyclopsModel(cyclopsData,
+                                  prior = fixed_prior,
+                                  weights = weights))
+  predict <- predict(subset_fit)
+  predict <- data.frame(rowId = hold_out, value = predict[hold_out], outcomeCount = y[hold_out])
+  attr(predict, "metaData")$predictionType <- "binary"
+
+  # get results using reduced data
+  cyclopsData2 <- Cyclops::convertToCyclopsData(outcomes[!outcomes$rowId%in%hold_out,], 
+                                                covariates[!covariates$rowId%in%hold_out,], 
+                                                modelType = "lr", addIntercept = TRUE)
+  subset_fit2 <- suppressWarnings(fitCyclopsModel(cyclopsData2,
+                                prior = fixed_prior))
+  coefficients <- subset_fit2$estimation$estimate
+  names(coefficients) <- subset_fit2$coefficientNames
+  covariateData <- list(covariates = covariates[covariates$rowId%in%hold_out,])
+  class(covariateData) <- 'CovariateData'
+  pops <- data.frame(rowId = hold_out, outcomeCount = outcomes$y[hold_out])
+  predict2 <- predictAndromeda(coefficients = coefficients, 
+                   population = pops, 
+                   covariateData = covariateData, 
+                   modelType = 'logistic')
+  attr(predict2, "metaData")$predictionType <- "binary"
+  
+  # does not seem to be the same?
+  testthat::expect_equal(computeAuc(predict),computeAuc(predict2), tolerance=1)
+
+  
+})

@@ -18,7 +18,7 @@ context("Ensemble")
 
 ensemble <- runEnsembleModel(population = population,
                              dataList = list(plpData, plpData),
-                             modelList = list(lrSet, lrSet),
+                             modelList = list(lrSet, lrSet), # change to get rid of warning?
                              testSplit = "subject",
                              testFraction = 0.2,
                              splitSeed = 1,

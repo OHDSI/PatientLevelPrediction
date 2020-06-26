@@ -89,7 +89,7 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   plpModel <- do.call(fun, args)
   ParallelLogger::logTrace('Returned from classifier function')
   # add pre-processing details
-  plpModel$metaData$preprocessSettings <- attr(plpData$CovariateData, "metaData") 
+  plpModel$metaData$preprocessSettings <- attr(plpData$covariateData, "metaData") 
   
   ParallelLogger::logTrace('Creating prediction function')
   plpModel$predict <- createTransform(plpModel)
@@ -118,16 +118,17 @@ applyTidyCovariateData <- function(covariateData,preprocessSettings){
   writeLines("Removing infrequent and redundant covariates and normalizing")
   start <- Sys.time()       
   
-  covariateData$maxes <- tibble::as_tibble(maxs) %>% dplyr::rename(covariateId = bins) 
+  covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins) 
+  on.exit(covariateData$maxes <- NULL, add = TRUE)
+  
   newCovariateData$covariates <- covariateData$covariates %>%  
     dplyr::filter(!covariateId %in%deletedInfrequentCovariateIds) %>%
     dplyr::filter(!covariateId %in%deleteRedundantCovariateIds) %>%
     dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
-    dplyr::mutate(value = 1.0*covariateValue/maxs) %>%
+    dplyr::mutate(value = 1.0*covariateValue/maxValue) %>%
     dplyr::select(-covariateValue) %>%
     dplyr::rename(covariateValue = value)
   
-  on.exit(covariateData$maxes <- NULL, add = TRUE)
   
   delta <- Sys.time() - start
   writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))

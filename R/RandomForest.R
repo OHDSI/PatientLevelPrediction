@@ -148,7 +148,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   # run rf_plp for each grid search:
   all_auc <- c()
-
+  all_cvAuc <- c()
   for(i in 1:nrow(param)){
     
     # then run standard python code
@@ -165,14 +165,18 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
     
+    aucCV <- lapply(1:max(pred$indexes), function(i){computeAuc(pred[pred$indexes==i,])})
+    aucCV <- unlist(aucCV)
+    all_cvAuc <- rbind(all_cvAuc, aucCV)
+      
     auc <- computeAuc(pred)
     all_auc <- c(all_auc, auc)
     if(!quiet)
       ParallelLogger::logInfo(paste0('Model with settings: ntrees:',param$ntrees[i],' maxDepth: ',param$maxDepth[i], 
                                   'mtry: ', param$mtry[i] , ' obtained AUC of ', auc))
   }
-  
-  hyperSummary <- cbind(param, cv_auc=all_auc)
+  colnames(all_cvAuc) <- paste0('fold_auc', 1:ncol(all_cvAuc))
+  hyperSummary <- cbind(param, all_cvAuc, auc=all_auc)
   
   # now train the final model for the best hyper-parameters previously found
   #reticulate::source_python(system.file(package='PatientLevelPrediction','python','finalRandomForest.py'), envir = e)
@@ -209,7 +213,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   # return model location
   result <- list(model = modelTrained,
-                 trainCVAuc = all_auc[which.max(all_auc)],
+                 trainCVAuc = all_cvAuc[which.max(all_auc),],
                  modelSettings = list(model='randomForest_python',modelParameters=param.best),
                  hyperParamSearch = hyperSummary,
                  metaData = plpData$metaData,

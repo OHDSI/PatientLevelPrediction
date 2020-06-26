@@ -132,6 +132,13 @@ fitGLMModel <- function(population,
   class(outcomeModel) <- "plpModel"
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))
+  
+  
+  #get CV
+  if(modelType == "logistic"){
+    outcomeModel$cv <- getCV(cyclopsData, population, cvVariance = fit$variance)
+  }
+  
   return(outcomeModel)
 }
 
@@ -153,4 +160,35 @@ modelTypeToCyclopsModelType <- function(modelType, stratified=F) {
     stop()
   }
 
+}
+
+
+
+getCV <- function(cyclopsData, 
+                  population,
+                  cvVariance){
+   fixed_prior <- createPrior("laplace", variance = cvVariance, useCrossValidation = FALSE)
+  
+  result <- lapply(1:max(population$indexes), function(i) {
+    hold_out <- population$indexes==i
+    weights <- rep(1.0, getNumberOfRows(cyclopsData))
+    weights[hold_out] <- 0.0
+    subset_fit <- suppressWarnings(fitCyclopsModel(cyclopsData,
+                                  prior = fixed_prior,
+                                  weights = weights))
+    predict <- predict(subset_fit)
+    
+    auc <- aucWithoutCi(predict[hold_out], population$y[hold_out])
+    
+    predCV <- cbind(population[hold_out,c('rowId','y')], 
+          value = predict[hold_out])
+    
+    return(list(out_sample_auc = auc,
+                predCV = predCV,
+                log_likelihood = subset_fit$log_likelihood,
+                log_prior = subset_fit$log_prior,
+                coef = coef(subset_fit)))
+  })
+  
+  
 }
