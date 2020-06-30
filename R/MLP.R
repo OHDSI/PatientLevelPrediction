@@ -132,6 +132,9 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   colnames(cvAuc) <- paste0('fold_auc', 1:ncol(cvAuc))
   auc <- unlist(lapply(hyperParamSel, function(x) x$auc))
   
+  cvPrediction <- lapply(hyperParamSel, function(x) x$prediction )
+  cvPrediction <- cvPrediction[[which.max(auc)[1]]]
+  
   hyperSummary <- cbind(do.call(rbind, param), cvAuc, auc= auc)
   
   #now train the final model and return coef
@@ -173,7 +176,8 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
-                 trainCVAuc = unlist(cvAuc[bestInd,]),
+                 trainCVAuc = list(value = unlist(cvAuc[bestInd,]),
+                                   prediction = cvPrediction),
                  hyperParamSearch = hyperSummary,
                  modelSettings = list(model='fitMLP',modelParameters=param.best),
                  metaData = plpData$metaData,
@@ -228,7 +232,7 @@ trainMLP <- function(plpData, population, size=1, alpha=0.001, maxIter = 2000, t
     
     auc <- computeAuc(pred)
     writeLines(paste0('Model obtained CV AUC of ', auc))
-    return(list(auc = auc, aucCV = aucCV))
+    return(list(auc = auc, aucCV = aucCV, prediction = pred[pred$indexes>0,]))
   }
   
   return(result)

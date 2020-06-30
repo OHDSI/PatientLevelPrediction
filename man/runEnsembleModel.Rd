@@ -46,7 +46,7 @@ sets.  The split is stratified by the class label.}
 \item{testFraction}{The fraction of the data to be used as the test set in the patient split
 evaluation.}
 
-\item{stackerUseCV}{When doing stacking you can either use the train CV predictions to train the stacker (TRUE) or leave 20% of the data to train the stacker}
+\item{stackerUseCV}{When doing stacking you can either use the train CV predictions to train the stacker (TRUE) or leave 20 percent of the data to train the stacker}
 
 \item{splitSeed}{The seed used to split the test/train set when using a person type
 testSplit}

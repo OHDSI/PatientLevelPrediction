@@ -37,7 +37,7 @@
 #'                           sets.  The split is stratified by the class label.
 #' @param testFraction       The fraction of the data to be used as the test set in the patient split
 #'                           evaluation.
-#' @param stackerUseCV       When doing stacking you can either use the train CV predictions to train the stacker (TRUE) or leave 20% of the data to train the stacker                           
+#' @param stackerUseCV       When doing stacking you can either use the train CV predictions to train the stacker (TRUE) or leave 20 percent of the data to train the stacker                           
 #' @param splitSeed          The seed used to split the test/train set when using a person type
 #'                           testSplit
 #' @param nfold              The number of folds used in the cross validation (default 3)
@@ -92,6 +92,16 @@ runEnsembleModel <- function(population,
   
   if(is.null(saveDirectory)){
     saveDirectory <- file.path(getwd(), 'ensemble_models')
+  }
+  
+  # check valid models if using cv stacker
+  if(ensembleStrategy == "stacked" & stackerUseCV){
+    models <- unique(unlist(lapply(modelList, function(x) x$name)))
+    if(length(models)!=sum(models %in% c("AdaBoost","DecisionTree","Neural network",
+                                         "Lasso Logistic Regression","Random forest"))){
+      stop('Incompatible models selected for stacker using CV predictions')
+    }
+    
   }
 
   # check logger
