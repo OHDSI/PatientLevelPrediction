@@ -37,6 +37,7 @@
 #'                           sets.  The split is stratified by the class label.
 #' @param testFraction       The fraction of the data to be used as the test set in the patient split
 #'                           evaluation.
+#' @param stackerUseCV       When doing stacking you can either use the train CV predictions to train the stacker (TRUE) or leave 20% of the data to train the stacker                           
 #' @param splitSeed          The seed used to split the test/train set when using a person type
 #'                           testSplit
 #' @param nfold              The number of folds used in the cross validation (default 3)
@@ -72,6 +73,7 @@ runEnsembleModel <- function(population,
                              modelList,
                              testSplit = "time",
                              testFraction = 0.2,
+                             stackerUseCV = TRUE,
                              splitSeed = NULL,
                              nfold = 3,
                              saveDirectory=NULL,
@@ -106,7 +108,7 @@ runEnsembleModel <- function(population,
   prediction <- population
   
   stackerFraction <- 0
-  if (ensembleStrategy == "stacked") {
+  if (ensembleStrategy == "stacked" & !stackerUseCV) {
     stackerFraction <- 0.2 * (1 - testFraction)
     ParallelLogger::logInfo(paste0(stackerFraction*100,"% of the data in validation set for training logistics regression as the combinator for stacked ensemble!"))
   }
@@ -161,9 +163,12 @@ runEnsembleModel <- function(population,
   names(level1) <- paste0('model_',1:length(level1))
   
   
-  tempres <- lapply(allResults, function(x) as.data.frame(x$performanceEvaluation$evaluationStatistics))
-  trainAUCs <- lapply(tempres, function(x) as.numeric(as.character(tempres$Value[x$Metric=='AUC.auc' & x$Eval=='train'])))
-  trainAUCs <- unlist(trainAUCs)  # overfitting?!
+  #tempres <- lapply(allResults, function(x) as.data.frame(x$performanceEvaluation$evaluationStatistics))
+  #trainAUCs <- lapply(tempres, function(x) as.numeric(as.character(tempres$Value[x$Metric=='AUC.auc' & x$Eval=='train'])))
+  #trainAUCs <- unlist(trainAUCs)  # overfitting?!
+  trainAUCs <- lapply(allResults, function(x) mean(x$model$trainCVAuc$value)) # use CV auc on train data
+  trainAUCs <- unlist(trainAUCs)
+
   
   predictions <- lapply(allResults, function(x) x$prediction[,colnames(x$prediction)%in%c('rowId','indexes','value', 'outcomeCount')])
   prediction <- predictions[[1]]
@@ -173,6 +178,22 @@ runEnsembleModel <- function(population,
     prediction <- merge(prediction, predictions[[i]][,colnames(predictions[[i]])%in%c('rowId',paste0('value_',i))], by='rowId', all.x=T)
   }
   pred_probas <- prediction[,grep('value_',colnames(prediction))] #
+  
+  if(ensembleStrategy == "stacked" & stackerUseCV){
+  # get CV predictions
+  predCVs <- lapply(allResults, function(x) x$model$trainCVAuc$prediction) # use CV auc on train data
+  predCV <- predCVs[[1]]
+  colnames(predCV)[colnames(predCV)=='value'] <- paste0('value_',1)
+  for(i in 2:length(predCVs)){
+    colnames(predCVs[[i]])[colnames(predCVs[[i]])=='value'] <- paste0('value_',i)
+    predCV <- merge(predCV, predCVs[[i]][,colnames(predCVs[[i]])%in%c('rowId',paste0('value_',i))], by='rowId', all.x=T)
+  }
+  
+  # replace predicted risk with CV pred for train set
+  predCV_probas <- predCV[,grep('value_',colnames(predCV))]
+  
+  }
+  
 
   if (ensembleStrategy == "mean") {
     ensem_proba <- rowMeans(pred_probas)
@@ -197,7 +218,20 @@ runEnsembleModel <- function(population,
     level2 <- list(ensembleStrategy = "weighted",
     pfunction = pfunction)
     
-  } else if (ensembleStrategy == "stacked") {
+  }else if (ensembleStrategy == "stacked" & stackerUseCV){
+    dataStack <- as.data.frame(predCV_probas)
+    dataStack$y <- as.matrix(predCV$outcomeCount)
+    ParallelLogger::logInfo("Training Stacker logistic model using CV pred")
+    lr_model <- glm(formula = y ~ ., data = dataStack, family = binomial(link = "logit"))
+    ensem_proba <- predict(lr_model, newdata = data.frame(pred_probas), type = "response")
+    pfunction <- function(x){
+      x <- predict(lr_model, newdata = data.frame(x), type = "response")
+      return(x)
+    }
+    level2 <- list(ensembleStrategy = "stacked CV",
+                   pfunction = pfunction)
+    
+  } else if (ensembleStrategy == "stacked" & !stackerUseCV) {
     nontrain_index <- which(prediction$indexes < 0)
     test_index <- sample(nontrain_index, round(testFraction*nrow(prediction)))
     stacker_index <- setdiff(nontrain_index, test_index)

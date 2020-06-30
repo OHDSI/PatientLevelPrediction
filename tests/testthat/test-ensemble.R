@@ -18,9 +18,10 @@ context("Ensemble")
 
 ensemble <- runEnsembleModel(population = population,
                              dataList = list(plpData, plpData),
-                             modelList = list(lrSet, lrSet), # change to get rid of warning?
+                             modelList = list(lrSet, gbmSet), # change to get rid of warning?
                              testSplit = "subject",
-                             testFraction = 0.2,
+                             testFraction = 0.2, 
+                             stackerUseCV = T,
                              splitSeed = 1,
                              nfold = 3,
                              saveDirectory= saveLoc,

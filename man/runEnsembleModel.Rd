@@ -10,6 +10,7 @@ runEnsembleModel(
   modelList,
   testSplit = "time",
   testFraction = 0.2,
+  stackerUseCV = TRUE,
   splitSeed = NULL,
   nfold = 3,
   saveDirectory = NULL,
@@ -20,7 +21,8 @@ runEnsembleModel(
   saveEvaluation = F,
   analysisId = NULL,
   verbosity = "INFO",
-  ensembleStrategy = "mean"
+  ensembleStrategy = "mean",
+  cores = NULL
 )
 }
 \arguments{
@@ -43,6 +45,8 @@ sets.  The split is stratified by the class label.}
 
 \item{testFraction}{The fraction of the data to be used as the test set in the patient split
 evaluation.}
+
+\item{stackerUseCV}{When doing stacking you can either use the train CV predictions to train the stacker (TRUE) or leave 20% of the data to train the stacker}
 
 \item{splitSeed}{The seed used to split the test/train set when using a person type
 testSplit}
@@ -80,6 +84,8 @@ probability from differnt models 'product' the product rule 'weighted' the
 weighted average probability from different models using train AUC as
 weights. 'stacked' the stakced ensemble trains a logistics regression on
 different models.}
+
+\item{cores}{The number of cores to use when training the ensemble}
 }
 \description{
 #'
