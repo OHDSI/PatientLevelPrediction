@@ -180,6 +180,11 @@ getPlpData <- function(connectionDetails,
                                                          cohortTableIsTemp = TRUE,
                                                          rowIdField = "row_id",
                                                          covariateSettings = covariateSettings)
+  # add indexes for covariate summary
+  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
+  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
+  
+  
   if(max(outcomeIds)!=-999){
   writeLines("Fetching outcomes from server")
   start <- Sys.time()

@@ -150,6 +150,11 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   }
   
  covariateData$coefficients <- NULL
+ 
+ # add indexes for covariate summary
+ RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
+ RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
+ 
   
   # Remove rownames else they will be copied to the ffdf objects:
   metaData = list(cohortIds = 1,
