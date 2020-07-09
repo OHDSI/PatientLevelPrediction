@@ -19,7 +19,7 @@ from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.cross_validation import PredefinedSplit
 #from sklearn.externals.joblib import Memory
 #from sklearn.datasets import load_svmlight_file
-from sklearn.externals import joblib
+import joblib
 #================================================================
 def train_rf(population, plpData, ntrees, max_depth, mtry, included, seed, quiet):
   if quiet==False: 

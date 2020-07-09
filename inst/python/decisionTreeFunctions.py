@@ -17,9 +17,9 @@ from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.feature_selection import SelectFromModel
-from sklearn.externals.joblib import Memory
+from joblib import Memory
 #from sklearn.datasets import load_svmlight_file
-from sklearn.externals import joblib
+import joblib
 
 #================================================================
 def train_decision_tree(population, train, plpData, plot, max_depth, min_samples_split, min_samples_leaf, min_impurity_decrease, class_weight, seed, quiet, varNames, modelOutput):
