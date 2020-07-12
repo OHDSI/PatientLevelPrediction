@@ -97,13 +97,23 @@ evaluatePlp <- function(prediction, plpData){
 
 
   # calibration linear fit- returns gradient, intercept
-  ParallelLogger::logTrace('Calculating Calibration Line')
+  ParallelLogger::logTrace('Calculating Calibration-in-large')
+  calinlarge <- calibrationInLarge(prediction)
+  ParallelLogger::logInfo(paste0('Calibration in large- Mean predicted risk ', round(calinlarge$meanPredictionRisk, digits = 4), ' : observed risk ',round(calinlarge$observedRisk, digits = 4)))
+  
+  ParallelLogger::logTrace('Calculating Weak Calibration')
+  weakCal <- calibrationWeak(prediction)
+  ParallelLogger::logInfo(paste0('Weak calibration intercept: ', 
+                                 round(weakCal$intercept, digits = 4), 
+                                 ' - gradient:',round(weakCal$gradient, digits = 4)))
+  
+  ParallelLogger::logTrace('Calculating Hosmer–Lemeshow Calibration Line')
   calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
-  ParallelLogger::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
+  ParallelLogger::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Hosmer–Lemeshow calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
   # 4) calibrationSummary
   ParallelLogger::logTrace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
   calibrationSummary <- getCalibration(prediction,
-                                       numberOfStrata = 10,
+                                       numberOfStrata = 100,
                                        truncateFraction = 0.01)
   ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
 
@@ -125,8 +135,9 @@ evaluatePlp <- function(prediction, plpData){
                                AUPRC = auprc,
                                BrierScore = brier$brier,	
                                BrierScaled= brier$brierScaled,	
-                               CalibrationIntercept= calLine10$lm[1],	
-                               CalibrationSlope = calLine10$lm[2])
+                               CalibrationIntercept= weakCal$intercept,	
+                               CalibrationSlope = weakCal$gradient,
+                               CalibrationInLarge = calinlarge$meanPredictionRisk/calinlarge$observedRisk)
 
   result <- list(evaluationStatistics= evaluationStatistics,
                  thresholdSummary= thresholdSummary,
@@ -314,6 +325,41 @@ averagePrecision <- function(prediction){
   return(sum(val/(1:n))/P)
 }
 
+
+
+calibrationInLarge <- function(prediction){
+  
+  result <- data.frame(meanPredictionRisk = mean(prediction$value),
+                       observedRisk = sum(prediction$outcomeCount)/nrow(prediction),
+                       N = nrow(prediction)
+  )
+  
+  return(result)
+}
+
+
+calibrationWeak <- function(prediction){
+  
+  #do invert of log function:
+  # log(p/(1-p))
+  
+  # edit the 0 and 1 values
+  prediction$value[prediction$value==0] <- 0.000000000000001
+  prediction$value[prediction$value==1] <- 1-0.000000000000001
+  
+  inverseLog <- log(prediction$value/(1-prediction$value))
+  y <- ifelse(prediction$outcomeCount>0, 1, 0) 
+  
+  intercept <- suppressWarnings(stats::glm(y ~ offset(1*inverseLog), family = 'binomial'))
+  intercept <- intercept$coefficients[1]
+  gradient <- suppressWarnings(stats::glm(y ~ inverseLog+0, family = 'binomial',
+                         offset = rep(intercept,length(inverseLog))))
+  gradient <- gradient$coefficients[1]
+  
+  result <- data.frame(intercept = intercept, gradient = gradient)
+  
+  return(result)
+}
 
 #' Get a sparse summary of the calibration
 #'

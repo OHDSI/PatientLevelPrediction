@@ -98,7 +98,8 @@ runEnsembleModel <- function(population,
   if(ensembleStrategy == "stacked" & stackerUseCV){
     models <- unique(unlist(lapply(modelList, function(x) x$name)))
     if(length(models)!=sum(models %in% c("AdaBoost","DecisionTree","Neural network",
-                                         "Lasso Logistic Regression","Random forest"))){
+                                         "Lasso Logistic Regression","Random forest", 
+                                         "Gradient boosting machine"))){
       stop('Incompatible models selected for stacker using CV predictions')
     }
     
@@ -176,7 +177,7 @@ runEnsembleModel <- function(population,
   #tempres <- lapply(allResults, function(x) as.data.frame(x$performanceEvaluation$evaluationStatistics))
   #trainAUCs <- lapply(tempres, function(x) as.numeric(as.character(tempres$Value[x$Metric=='AUC.auc' & x$Eval=='train'])))
   #trainAUCs <- unlist(trainAUCs)  # overfitting?!
-  trainAUCs <- lapply(allResults, function(x) mean(x$model$trainCVAuc$value)) # use CV auc on train data
+  trainAUCs <- lapply(allResults, function(x) mean(as.matrix(x$model$trainCVAuc$value))) # use CV auc on train data
   trainAUCs <- unlist(trainAUCs)
 
   
