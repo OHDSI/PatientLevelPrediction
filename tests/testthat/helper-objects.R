@@ -1,5 +1,5 @@
 # this files contains the objects used in the tests:
-
+options(andromedaTempFolder = "D:/andromedaTemp")
 travis <- T
 saveLoc <- tempfile()
 

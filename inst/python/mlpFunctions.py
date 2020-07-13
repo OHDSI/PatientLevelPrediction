@@ -16,9 +16,9 @@ import math
 from sklearn.neural_network import MLPClassifier
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.feature_selection import SelectFromModel
-from sklearn.externals.joblib import Memory
+from joblib import Memory
 #from sklearn.datasets import load_svmlight_file
-from sklearn.externals import joblib
+import joblib
 
 #================================================================
 def train_mlp(population, plpData, alpha, size, maxIter, tol, learningRateInit, nIterNoChange, beta1, beta2, epsilon, seed, quiet, modelOutput, train):

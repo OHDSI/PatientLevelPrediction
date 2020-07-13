@@ -121,6 +121,10 @@ plotPlp <- function(result, filename, type='test'){
   plotDemographicSummary(result$performanceEvaluation, 
                          fileName=file.path(filename, 'plots','demographicSummary.pdf'),
                          type = type)
+  # add smooth calibration
+  plotSmoothCalibration(result = result, smooth = 'loess', nKnots = 5, 
+                        type = type, zoom = 'data', fileName = file.path(filename, 'plots','smooothCalibration.pdf') )
+  
   plotSparseCalibration(result$performanceEvaluation, 
                         fileName=file.path(filename, 'plots','sparseCalibration.pdf'), 
                         type = type)
@@ -706,6 +710,7 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
 #' @param bins       The number of bins for the histogram. Default is 20.
 #' @param zoom       Zoom in on the region containing the deciles or on the data. If not specified
 #'                   shows the entire space.
+#' @param sample     If using loess then by default 20,000 patients will be sampled to save time                   
 #' @param fileName   Name of the file where the plot should be saved, for example 'plot.png'. See the
 #'                   function \code{ggsave} in the ggplot2 package for supported file formats.
 #' @return
@@ -721,7 +726,11 @@ plotSmoothCalibration <- function(result,
                                   type = "test",
                                   bins = 20,
                                   zoom = c("none", "deciles", "data"),
+                                  sample = T,
                                   fileName = NULL) {
+  
+  
+  if('prediction'%in%names(result)){
   prediction <- result$prediction
   evaluation <- result$performanceEvaluation
   if(is.null(result$performanceEvaluation$calibrationSummary$Eval)){
@@ -741,12 +750,12 @@ plotSmoothCalibration <- function(result,
 
     if (missing(nKnots)) {
 
-      message("Number of knots for the restricted cubic spline smoothing was automatically set to 5")
+      ParallelLogger::logInfo("Number of knots for the restricted cubic spline smoothing was automatically set to 5")
 
     }
 
-    if (!nKnots %in% 3:5)
-      stop("Number of knots must be between 3 and 5")
+    if (!nKnots %in% 3:20)
+      stop("Number of knots must be between 3 and 20")
   }
 
 
@@ -773,10 +782,25 @@ plotSmoothCalibration <- function(result,
 
 
   if (smooth == "loess") {
+    
+    if(sample){
+      
+      if(length(p)>40000){
+      inds <- unique(c(0,seq(0, length(p), by = floor(length(p)/20000)), 
+                       length(p)))
+      p <- p[inds]
+      y <- y[inds]
+      } else if(length(p)>20000){
+        inds <- sample(length(p), 20000)
+        p <- p[inds]
+        y <- y[inds] 
+      }
+      
+    }
     # loess
 
-    if (length(y) > 5000)
-      message("Number of observations above 5000. Restricted cubic splines smoothing would be preferable")
+    #if (length(y) > 5000)
+    #  message("Number of observations above 5000. Restricted cubic splines smoothing would be preferable")
 
     smoothData <- data.frame(y, p)
     # limits for zoom functionality
@@ -818,31 +842,29 @@ plotSmoothCalibration <- function(result,
 
     expit <- function(x) exp(x)/(1 + exp(x))
     dd <- data.frame(y, p)
-
-    if (nKnots == 5) {
-      smoothFit <- tryCatch(invisible(utils::capture.output(rms::lrm(y ~ rms::rcs(p, 5),
-                                                                     x = T,
-                                                                     y = T))), error = function(e) {
-        warning("Setting number of Knots to 5 led to estimation problems. Switching to nKnots = 4",
-                immediate. = T)
-        tryCatch(invisible(utils::capture.output(rms::lrm(y ~ rms::rcs(p, 4), x = T, y = T))),
-                 error = function(e) {
-          warning("Setting number of Knots to 4 led to estimation problems. Switching to nKnots = 3",
-                  immediate. = T)
-          rms::lrm(y ~ rms::rcs(p, 3), x = T, y = T)
-          })
-      })
-    } else if (nKnots == 4) {
-      smoothFit <- tryCatch(invisible(utils::capture.output(rms::lrm(y ~ rms::rcs(p, 4),
-                                                                     x = T,
-                                                                     y = T))), error = function(e) {
-        warning("Setting number of Knots to 4 led to estimation problems. Switching to nKnots = 3",
-                immediate. = T)
-        rms::lrm(y ~ rms::rcs(p, 3), x = T, y = T)
-      })
-
-    } else {
-      smoothFit <- rms::lrm(y ~ rms::rcs(p, 3), x = T, y = T)
+    
+    smoothFit <- NULL
+    while(nKnots>=3 && is.null(smoothFit)){
+      
+      if(nKnots>3){
+      errorMessage <- paste0("Setting number of Knots to ",nKnots," led to estimation problems. Switching to nKnots = ",nKnots-1)
+      } else{
+        errorMessage <- paste0('Unable to fit model')
+      }
+      
+      formSmooth <- paste0('y ~ rms::rcs(p, nKnots =',nKnots,')')
+      smoothFit <- tryCatch(rms::lrm(stats::as.formula(formSmooth), data = dd, x = T,y = T), 
+                            error = function(e) {
+                              ParallelLogger::logInfo(e)
+                              ParallelLogger::logInfo(errorMessage)
+                              return(NULL)
+      
+    })
+      nKnots <- nKnots-1
+    }
+    
+    if(is.null(smoothFit)){
+      return(NULL)
     }
 
     # create the rcs mapping
@@ -891,6 +913,8 @@ plotSmoothCalibration <- function(result,
 
 
   }
+  
+  
   # construct the plot grid
   if (scatter) {
     smooth_plot <- smooth_plot + ggplot2::geom_point(data = x,
@@ -899,24 +923,88 @@ plotSmoothCalibration <- function(result,
                                                      color = "black",
                                                      size = 2)
   }
-
+  
   # Histogram object detailing the distibution of event/noevent for each probability interval
-
+  
   hist_plot <- ggplot2::ggplot() +
-               ggplot2::geom_histogram(data = subset(prediction, value <= xlim[2]),
-                                       ggplot2::aes(value, y = ..count.., fill = as.character(outcomeCount)),
-                                       bins = bins,
-                                       position = "stack",
-                                       alpha = 0.5,
-                                       boundary = 0,
-                                       closed = "left") +
-               ggplot2::facet_grid(outcomeCount ~ ., scales = "free_y") +
-               ggplot2::scale_fill_discrete(name = "Outcome") +
-               ggplot2::theme(strip.background = ggplot2::element_blank(),
-                              strip.text = ggplot2::element_blank()) +
-               ggplot2::labs(x = "Predicted Probability") +
-               ggplot2::coord_cartesian(xlim = xlim)
-
+    ggplot2::geom_histogram(data = subset(prediction, value <= xlim[2]),
+                            ggplot2::aes(value, y = ..count.., fill = as.character(outcomeCount)),
+                            bins = bins,
+                            position = "stack",
+                            alpha = 0.5,
+                            boundary = 0,
+                            closed = "left") +
+    ggplot2::facet_grid(outcomeCount ~ ., scales = "free_y") +
+    ggplot2::scale_fill_discrete(name = "Outcome") +
+    ggplot2::theme(strip.background = ggplot2::element_blank(),
+                   strip.text = ggplot2::element_blank()) +
+    ggplot2::labs(x = "Predicted Probability") +
+    ggplot2::coord_cartesian(xlim = xlim)
+  
+  } else{
+    # use calibrationSummary
+    sparsePred <- result$performanceEvaluation$calibrationSummary
+    
+    limVal <- max(max(sparsePred$averagePredictedProbability),max(sparsePred$observedIncidence))
+    
+    smooth_plot <- ggplot2::ggplot(data = sparsePred, ggplot2::aes(x = averagePredictedProbability, 
+                                                                   y = observedIncidence)) +
+      ggplot2::stat_smooth(ggplot2::aes(color = "Loess", linetype = "Loess"),
+                           method = "loess",
+                           se = TRUE,
+                           #span = span,
+                           size = 1,
+                           show.legend = F) +
+      ggplot2::geom_segment(ggplot2::aes(x = 0,
+                                         xend = 1,
+                                         y = 0,
+                                         yend = 1,
+                                         color = "Ideal",
+                                         linetype = "Ideal")) +
+      ggplot2::coord_cartesian(xlim = c(0,limVal),
+                               ylim = c(0,limVal)) + 
+      ggplot2::scale_linetype_manual(name = "Models",
+                                     values = c(Loess = "solid",
+                                                Ideal = "dashed")) + 
+      ggplot2::scale_color_manual(name = "Models", values = c(Loess = "blue", Ideal = "red")) + 
+      ggplot2::labs(x = "Predicted Probability", y = "Observed Probability")
+    
+    # construct the plot grid
+    if (scatter) {
+      smooth_plot <- smooth_plot + ggplot2::geom_point(data = sparsePred,
+                                                       ggplot2::aes(x = averagePredictedProbability,
+                                                                    y = observedIncidence),
+                                                       color = "black",
+                                                       size = 2)
+    }
+    
+    # Histogram object detailing the distibution of event/noevent for each probability interval
+    
+    popData1 <- sparsePred[,c('averagePredictedProbability', 'PersonCountWithOutcome')]
+    popData1$Label <- "Outcome"
+    colnames(popData1) <- c('averagePredictedProbability','PersonCount',"Label")
+    popData2 <- sparsePred[,c('averagePredictedProbability', 'PersonCountAtRisk')]
+    popData2$Label <- "No Outcome"
+    popData2$PersonCountAtRisk <- -1*(popData2$PersonCountAtRisk -popData1$PersonCount)
+    colnames(popData2) <- c('averagePredictedProbability','PersonCount',"Label")
+    popData <- rbind(popData1, popData2)
+    popData$averagePredictedProbability <- factor(popData$averagePredictedProbability)
+    hist_plot <- ggplot2::ggplot(popData, ggplot2::aes(y = averagePredictedProbability, x = PersonCount, 
+                                                       fill = Label)) + 
+      ggplot2::geom_bar(data = subset(popData,Label == "Outcome"), stat = "identity") + 
+      ggplot2::geom_bar(data = subset(popData,Label == "No Outcome"), stat = "identity") + 
+      ggplot2::geom_bar(stat = "identity") + 
+      ggplot2::scale_x_continuous(labels = abs) + 
+      #ggplot2::scale_fill_brewer(palette = "Set1") + 
+      ggplot2::coord_flip( ) +
+      ggplot2::theme_bw() + 
+      ggplot2::theme(axis.title.x=ggplot2::element_blank(),
+                     axis.text.x=ggplot2::element_blank(),
+                     axis.ticks.x=ggplot2::element_blank())
+    
+    
+  }
+  
   plot <- cowplot::plot_grid(smooth_plot,
                              hist_plot,
                              ncol = 1,

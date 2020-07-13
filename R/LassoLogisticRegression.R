@@ -108,7 +108,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
               plpData = plpData)
   
   # get cv AUC
-  cvPred <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
+  cvPrediction  <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
   cvPerFold <-  unlist(lapply(modelTrained$cv, function(x){x$out_sample_auc}))
   names(cvPerFold) <- paste0('fold_auc', 1:length(cvPerFold))
   
@@ -118,8 +118,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                       seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
                                       log_likelihood = modelTrained$log_likelihood,
                                       cvPerFold,
-                                      auc = aucWithoutCi(cvPred$value, cvPred$y)),
-                 trainCVAuc = cvPerFold,
+                                      auc = aucWithoutCi(cvPrediction$value, cvPrediction$y)),
+                 trainCVAuc = list(value = cvPerFold, prediction = cvPrediction),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,# can use populationSettings$outcomeId?

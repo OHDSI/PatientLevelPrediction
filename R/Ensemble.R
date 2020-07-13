@@ -37,6 +37,7 @@
 #'                           sets.  The split is stratified by the class label.
 #' @param testFraction       The fraction of the data to be used as the test set in the patient split
 #'                           evaluation.
+#' @param stackerUseCV       When doing stacking you can either use the train CV predictions to train the stacker (TRUE) or leave 20 percent of the data to train the stacker                           
 #' @param splitSeed          The seed used to split the test/train set when using a person type
 #'                           testSplit
 #' @param nfold              The number of folds used in the cross validation (default 3)
@@ -64,6 +65,7 @@
 #'                           weighted average probability from different models using train AUC as
 #'                           weights. 'stacked' the stakced ensemble trains a logistics regression on
 #'                           different models.
+#' @param cores              The number of cores to use when training the ensemble                          
 #'
 #' @export
 runEnsembleModel <- function(population,
@@ -71,6 +73,7 @@ runEnsembleModel <- function(population,
                              modelList,
                              testSplit = "time",
                              testFraction = 0.2,
+                             stackerUseCV = TRUE,
                              splitSeed = NULL,
                              nfold = 3,
                              saveDirectory=NULL,
@@ -81,18 +84,34 @@ runEnsembleModel <- function(population,
                              saveEvaluation = F,
                              analysisId = NULL,
                              verbosity = "INFO",
-                             ensembleStrategy = "mean") {
+                             ensembleStrategy = "mean",
+                             cores = NULL) {
   ExecutionDateTime <- Sys.time()
   if (is.null(analysisId))
     analysisId <- gsub(":", "", gsub("-", "", gsub(" ", "", ExecutionDateTime)))
+  
+  if(is.null(saveDirectory)){
+    saveDirectory <- file.path(getwd(), 'ensemble_models')
+  }
+  
+  # check valid models if using cv stacker
+  if(ensembleStrategy == "stacked" & stackerUseCV){
+    models <- unique(unlist(lapply(modelList, function(x) x$name)))
+    if(length(models)!=sum(models %in% c("AdaBoost","DecisionTree","Neural network",
+                                         "Lasso Logistic Regression","Random forest", 
+                                         "Gradient boosting machine"))){
+      stop('Incompatible models selected for stacker using CV predictions')
+    }
+    
+  }
 
   # check logger
-  if (length(ParallelLogger::getLoggers()) == 0) {
-    logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                        threshold = verbosity,
-                                        appenders = list(ParallelLogger::createFileAppender(layout = ParallelLogger::layoutTimestamp)))
-    ParallelLogger::registerLogger(logger)
-  }
+  logger <- ParallelLogger::createLogger(name = "PAR",
+                                        threshold = verbosity, 
+                                        appenders = list(ParallelLogger::createFileAppender(layout = ParallelLogger::layoutParallel, 
+                                                                                            fileName = file.path(saveDirectory,'parlog.txt'))))
+  ParallelLogger::registerLogger(logger)
+
   
   if(is.null(splitSeed)){
     splitSeed <- sample(1000000, 1)
@@ -100,52 +119,92 @@ runEnsembleModel <- function(population,
   prediction <- population
   
   stackerFraction <- 0
-  if (ensembleStrategy == "stacked") {
+  if (ensembleStrategy == "stacked" & !stackerUseCV) {
     stackerFraction <- 0.2 * (1 - testFraction)
     ParallelLogger::logInfo(paste0(stackerFraction*100,"% of the data in validation set for training logistics regression as the combinator for stacked ensemble!"))
   }
   
-  if(is.null(saveDirectory)){
-    saveDirectory <- file.path(getwd(), 'ensemble_models')
+
+  # create the cluster
+  if(is.null(cores)){
+    ParallelLogger::logInfo(paste0('Number of cores not specified'))
+    cores <- min(parallel::detectCores(), length(dataList))
+    ParallelLogger::logInfo(paste0('Using this many cores ', cores))
+    ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
   }
   
-  trainAUCs <- c()
-
-  # run the models in list one by one.#
-  level1 <- list()
-  length(level1) <- length(modelList)
-  for (Index in seq_along(modelList)) {
-    results <- runPlp(population,
-                      dataList[[Index]],
-                      modelSettings = modelList[[Index]],
-                      testSplit = testSplit,
-                      testFraction = testFraction+stackerFraction,
-                      #trainFraction = trainFraction,
-                      nfold = nfold,
-                      saveDirectory=file.path(saveDirectory,analysisId), 
-                      savePlpData=savePlpData, 
-                      savePlpResult=savePlpResult, 
-                      savePlpPlots = savePlpPlots, 
-                      saveEvaluation = saveEvaluation,
-                      splitSeed = splitSeed,
-                      analysisId = paste0(analysisId,'_',Index))
-    
-    metaData <- attr(results$prediction, 'metaData')
-    level1[[Index]] <- results$model
-    # train auc or test auc?  replace 3,4 with logic 
-    ##trainAUCs <- c(trainAUCs, as.numeric(results$performanceEvaluation$evaluationStatistics[3, 4]))
-    tempres <- as.data.frame(results$performanceEvaluation$evaluationStatistics)
-    trainAUCs <- c(trainAUCs, as.numeric(as.character(tempres$Value[tempres$Metric=='AUC.auc' & tempres$Eval=='train']))) # overfitting?!
-
-    cnames <- c('rowId','value')
-    if(!'indexes'%in%colnames(prediction)){
-      cnames <- c('rowId','indexes','value')
-    }
-    prediction <- merge(prediction, results$prediction[,cnames], by='rowId', all.x=T)
-    colnames(prediction)[ncol(prediction)] <- paste0('value_',Index)
+  cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
+  ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda"))
+  
+  # save the plpDatas - parallel logger means you have to
+  if(!dir.exists(saveDirectory)){dir.create(saveDirectory)}
+  for(i in 1:length(dataList)){
+  savePlpData(dataList[[i]], file = file.path(saveDirectory, paste0('data',i)))
   }
+  
+  # settings:
+  getEnSettings <- function(i){
+    result <- list(population = population,
+                     plpDataLoc = file.path(saveDirectory, paste0('data',i)),
+                     modelSettings = modelList[[i]],
+                     testSplit = testSplit,
+                     testFraction = testFraction+stackerFraction,
+                     nfold = nfold,
+                     saveDirectory=file.path(saveDirectory,analysisId), 
+                     savePlpData=F, 
+                     savePlpResult=savePlpResult, 
+                     savePlpPlots = savePlpPlots, 
+                     saveEvaluation = saveEvaluation,
+                     splitSeed = splitSeed,
+                     analysisId = paste0(analysisId,'_',i))
+    return(result)
+  }
+  enSettings <- lapply(1:length(modelList), getEnSettings)
+  
+  
+  allResults <- ParallelLogger::clusterApply(cluster = cluster, 
+                                             x = enSettings, 
+                                             fun = runPlpE, 
+                                             stopOnError = FALSE,
+                                             progressBar = TRUE)
+  ParallelLogger::stopCluster(cluster)
+  
+  metaData <- attr(allResults[[1]]$prediction, 'metaData')
+  level1 <- lapply(allResults, function(x) x$model)
   names(level1) <- paste0('model_',1:length(level1))
+  
+  
+  #tempres <- lapply(allResults, function(x) as.data.frame(x$performanceEvaluation$evaluationStatistics))
+  #trainAUCs <- lapply(tempres, function(x) as.numeric(as.character(tempres$Value[x$Metric=='AUC.auc' & x$Eval=='train'])))
+  #trainAUCs <- unlist(trainAUCs)  # overfitting?!
+  trainAUCs <- lapply(allResults, function(x) mean(as.matrix(x$model$trainCVAuc$value))) # use CV auc on train data
+  trainAUCs <- unlist(trainAUCs)
+
+  
+  predictions <- lapply(allResults, function(x) x$prediction[,colnames(x$prediction)%in%c('rowId','indexes','value', 'outcomeCount')])
+  prediction <- predictions[[1]]
+  colnames(prediction)[colnames(prediction)=='value'] <- paste0('value_',1)
+  for(i in 2:length(predictions)){
+    colnames(predictions[[i]])[colnames(predictions[[i]])=='value'] <- paste0('value_',i)
+    prediction <- merge(prediction, predictions[[i]][,colnames(predictions[[i]])%in%c('rowId',paste0('value_',i))], by='rowId', all.x=T)
+  }
   pred_probas <- prediction[,grep('value_',colnames(prediction))] #
+  
+  if(ensembleStrategy == "stacked" & stackerUseCV){
+  # get CV predictions
+  predCVs <- lapply(allResults, function(x) x$model$trainCVAuc$prediction) # use CV auc on train data
+  predCV <- predCVs[[1]]
+  colnames(predCV)[colnames(predCV)=='value'] <- paste0('value_',1)
+  for(i in 2:length(predCVs)){
+    colnames(predCVs[[i]])[colnames(predCVs[[i]])=='value'] <- paste0('value_',i)
+    predCV <- merge(predCV, predCVs[[i]][,colnames(predCVs[[i]])%in%c('rowId',paste0('value_',i))], by='rowId', all.x=T)
+  }
+  
+  # replace predicted risk with CV pred for train set
+  predCV_probas <- predCV[,grep('value_',colnames(predCV))]
+  
+  }
+  
 
   if (ensembleStrategy == "mean") {
     ensem_proba <- rowMeans(pred_probas)
@@ -170,7 +229,20 @@ runEnsembleModel <- function(population,
     level2 <- list(ensembleStrategy = "weighted",
     pfunction = pfunction)
     
-  } else if (ensembleStrategy == "stacked") {
+  }else if (ensembleStrategy == "stacked" & stackerUseCV){
+    dataStack <- as.data.frame(predCV_probas)
+    dataStack$y <- as.matrix(predCV$outcomeCount)
+    ParallelLogger::logInfo("Training Stacker logistic model using CV pred")
+    lr_model <- glm(formula = y ~ ., data = dataStack, family = binomial(link = "logit"))
+    ensem_proba <- predict(lr_model, newdata = data.frame(pred_probas), type = "response")
+    pfunction <- function(x){
+      x <- predict(lr_model, newdata = data.frame(x), type = "response")
+      return(x)
+    }
+    level2 <- list(ensembleStrategy = "stacked CV",
+                   pfunction = pfunction)
+    
+  } else if (ensembleStrategy == "stacked" & !stackerUseCV) {
     nontrain_index <- which(prediction$indexes < 0)
     test_index <- sample(nontrain_index, round(testFraction*nrow(prediction)))
     stacker_index <- setdiff(nontrain_index, test_index)
@@ -229,7 +301,7 @@ runEnsembleModel <- function(population,
                              level2=level2),
                   prediction=prediction,
                   performanceEvaluation=performance,
-                  covariateSummary=results$covariateSummary,
+                  covariateSummary=allResults[[1]]$covariateSummary,
                   analysisRef=list(analysisId=analysisId,
                                    analysisName=NULL,#analysisName,
                                    analysisSettings= NULL))
@@ -240,6 +312,14 @@ runEnsembleModel <- function(population,
   } else{
     return(results)
   }
+}
+
+
+runPlpE <- function(settings){
+  settings$plpData <- loadPlpData(settings$plpDataLoc)
+  settings$plpDataLoc <- NULL
+  result <- do.call(runPlp, settings)
+  return(result)
 }
 
 #' Apply trained ensemble model on new data Apply a Patient Level Prediction model on Patient Level

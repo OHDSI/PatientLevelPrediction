@@ -1,3 +1,15 @@
+PatientLevelPrediction 4.0.5
+======================
+- added calibration updates: cal-in-large, weak cal 
+- updated smooth cal plot (sample for speed in big data)
+- defaulted to 100 values in calibrationSummary + updated cal plot
+
+PatientLevelPrediction 4.0.4
+======================
+- fixed backwards compat with normalization
+- fixed python joblib dependancy 
+
+
 PatientLevelPrediction 4.0.2
 ======================
 - fixed bug in preprocessing 

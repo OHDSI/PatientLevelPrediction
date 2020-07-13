@@ -180,8 +180,9 @@ getCV <- function(cyclopsData,
     
     auc <- aucWithoutCi(predict[hold_out], population$y[hold_out])
     
-    predCV <- cbind(population[hold_out,c('rowId','y')], 
+    predCV <- cbind(population[hold_out,c('rowId','indexes','y')], 
           value = predict[hold_out])
+    predCV$outcomeCount <- predCV$y
     
     return(list(out_sample_auc = auc,
                 predCV = predCV,
