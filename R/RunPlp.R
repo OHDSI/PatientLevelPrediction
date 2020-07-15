@@ -549,8 +549,8 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
       result <- covariates %>%
         dplyr::group_by(covariateId,test, outcomeCount) %>%
         dplyr::summarise(CovariateCount = dplyr::n(),
-                         sumVal = sum(covariateValue),
-                         sumSquares = sum(covariateValue^2)) %>%
+                         sumVal = sum(covariateValue,na.rm = TRUE),
+                         sumSquares = sum(covariateValue^2,na.rm = TRUE)) %>%
         dplyr::inner_join(plpData$covariateData$totals, by= c('test', 'outcomeCount')) %>%
         dplyr::mutate(CovariateMean = sumVal/N,
                       CovariateStDev = sqrt(sumSquares/N - (sumVal/N)^2 )) %>% 
@@ -566,8 +566,8 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
       result <- covariates %>%
         dplyr::group_by(covariateId,outcomeCount) %>%
         dplyr::summarise(CovariateCount = dplyr::n(),
-                         sumVal = sum(covariateValue),
-                         sumSquares = sum(covariateValue^2)) %>%
+                         sumVal = sum(covariateValue,na.rm = TRUE),
+                         sumSquares = sum(covariateValue^2,na.rm = TRUE)) %>%
         dplyr::inner_join(plpData$covariateData$totals, by= c( 'outcomeCount')) %>%
         dplyr::mutate(CovariateMean = sumVal/N,
                       CovariateStDev = sqrt(sumSquares/N - (sumVal/N)^2 )) %>% 
@@ -580,8 +580,8 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
     resultAll <-  covariates %>%
       dplyr::group_by(covariateId) %>%
       dplyr::summarise(CovariateCount = dplyr::n(),
-                       sumVal = sum(covariateValue),
-                       sumSquares = sum(covariateValue^2)) %>%
+                       sumVal = sum(covariateValue,na.rm = TRUE),
+                       sumSquares = sum(covariateValue^2,na.rm = TRUE)) %>%
       dplyr::mutate(CovariateMean = 1.0*sumVal/!!N,
                     CovariateStDev = sqrt(sumSquares*1.0/!!N - (sumVal*1.0/!!N)^2 )) %>%
       dplyr::select(covariateId, CovariateCount, CovariateMean, CovariateStDev) %>%
@@ -594,10 +594,10 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
     
     resultAll <-  result %>%
       dplyr::group_by(covariateId) %>%
-      dplyr::summarise(CovariateCount = sum(CovariateCount),
-                       sumValall = sum(sumVal),
-                       sumSquaresall = sum(sumSquares),
-                       Nall = sum(N)) %>%
+      dplyr::summarise(CovariateCount = sum(CovariateCount,na.rm = TRUE),
+                       sumValall = sum(sumVal,na.rm = TRUE),
+                       sumSquaresall = sum(sumSquares,na.rm = TRUE),
+                       Nall = sum(N,na.rm = TRUE)) %>%
       dplyr::mutate(CovariateMean = sumValall/Nall,
                     CovariateStDev = sqrt(sumSquaresall/Nall - (sumValall/Nall)^2)) %>% 
       dplyr::select(covariateId, CovariateCount, CovariateMean, CovariateStDev) 
@@ -607,10 +607,10 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
       
       resultOut <- result %>%
         dplyr::group_by(covariateId, outcomeCount) %>%
-        dplyr::summarise(CovariateCount = sum(CovariateCount),
-                         sumValall = sum(sumVal),
-                         sumSquaresall = sum(sumSquares),
-                         Nall = sum(N)) %>%
+        dplyr::summarise(CovariateCount = sum(CovariateCount,na.rm = TRUE),
+                         sumValall = sum(sumVal,na.rm = TRUE),
+                         sumSquaresall = sum(sumSquares,na.rm = TRUE),
+                         Nall = sum(N,na.rm = TRUE)) %>%
         dplyr::mutate(CovariateMean = sumValall/Nall,
                       CovariateStDev = sqrt(sumSquaresall/Nall - (sumValall/Nall)^2)) 
       
@@ -728,6 +728,8 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
     dplyr::left_join(resultAll, by ='covariateId')
   
   resultAll$covariateValue[is.na(resultAll$covariateValue)] <- 0
+  
+  resultAll[is.na(resultAll)] <- 0
   
   return(resultAll)  
 }
