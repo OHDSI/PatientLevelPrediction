@@ -1161,7 +1161,7 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
     ggplot2::ggtitle("Outcome")
     
  
-  covariateSummary$TrainCovariateMeanWithNoNOutcome[is.na(covariateSummary$TrainCovariateMeanWithNoOutcome)] <- 0
+  covariateSummary$TrainCovariateMeanWithNoOutcome[is.na(covariateSummary$TrainCovariateMeanWithNoOutcome)] <- 0
   covariateSummary$TestCovariateMeanWithNoOutcome[is.na(covariateSummary$TestCovariateMeanWithNoOutcome)] <- 0
   
   plot2 <- ggplot2::ggplot(covariateSummary, 
