@@ -25,6 +25,7 @@ dashboardPage(
       ## Tabs
       addInfo(menuItem("About", tabName = "about"), "aboutInfo"),
       addInfo(menuItem("Proportion", tabName = "proportion"), "proportionInfo"),
+      addInfo(menuItem("Survival", tabName = "survival"), "survivalInfo"),
       addInfo(menuItem("Characterization", tabName = "characterization"), "characterizationInfo"),
       addInfo(menuItem("Distribution", tabName = "distribution"), "distributionInfo"),
       
@@ -47,6 +48,15 @@ dashboardPage(
       conditionalPanel(condition = "input.tabs == 'proportion' && (input.proportionTabsetPanel == 'Figure' )",
                        hr(),
                        checkboxGroupInput("pdatabases", "Database", databases, selected = databases[1])
+      ),
+      
+      
+      # survival
+      conditionalPanel(
+        condition = "input.tabs=='survival'",
+        selectInput("stargetName", "Target", targetCohorts),
+        selectInput("soutcomeName", "Outcome", outcomeCohorts),
+        selectInput("sdatabase", "Database", databases)
       ),
       
       
@@ -143,6 +153,17 @@ dashboardPage(
             )
     )
     ,
+    
+    tabItem(tabName = "survival",
+                box(
+                  width = 12,
+                  br(),
+                  shinycssloaders::withSpinner(plotOutput("survivalPlot"))
+                )
+              
+            
+    ),
+    
     tabItem(tabName = "characterization",
             tabsetPanel(
               id = "characterizationTabsetPanel",

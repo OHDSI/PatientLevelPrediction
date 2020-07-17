@@ -202,6 +202,45 @@ shinyServer(function(input, output, session) {
     
     return(fig)
   })
+  
+  
+  output$survivalPlot <- renderPlot({
+    
+    data <- survival %>% 
+      dplyr::filter(outcomeid == getId(input$soutcomeName)) %>%
+      dplyr::filter(cohortid == getId(input$stargetName)) %>%
+      dplyr::filter(cdmdatabasename == input$sdatabase)
+    
+    data <- data %>% dplyr::mutate(decreaseP = events/(events+natrisk))
+    
+    yaxis <- lapply(unique(data$censoredtime), function(i) 1-sum(data %>% dplyr::filter(censoredtime <= i) %>% dplyr::select(decreaseP)))
+    
+    extra <- data.frame(censoredtime = unique(data$censoredtime),
+                        yaxis = unlist(yaxis))
+    
+    data <- data %>% inner_join(extra, by = 'censoredtime')
+    
+    library(ggplot2)
+    ggplot() +
+      geom_step(data=data, mapping=aes(x=censoredtime, y=yaxis)) +
+      #geom_step(data=d, mapping=aes(x=x, y=y), direction="vh", linetype=3) +
+      geom_point(data=data, mapping=aes(x=censoredtime, y=yaxis), color="red") +
+      geom_vline(xintercept = 365, linetype="dotted", 
+                 color = "black", size=1) +
+      geom_vline(xintercept = 2*365, linetype="dotted", 
+                 color = "black", size=1) +
+      geom_vline(xintercept = 3*365, linetype="dotted", 
+                 color = "black", size=1) + 
+      geom_vline(xintercept = 4*365, linetype="dotted",
+                 color = "black", size=1) +
+      geom_vline(xintercept = 5*365, linetype="dotted", 
+                 color = "black", size=1) +
+      geom_vline(xintercept = 10*365, linetype="dotted", 
+                 color = "black", size=1) +
+      ylim(0, 1) + labs(x = "Time from index (days)",
+                        y = "Outcome free")
+    
+  })
 
   
   output$characterizationTable <- renderDT({
