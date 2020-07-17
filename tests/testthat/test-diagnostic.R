@@ -35,8 +35,8 @@ test_that("test code works when using plpData", {
   #check tar
   
   
-  testthat::expect_equal(test$proportion$TAR[1], paste0('cohort start', ' + ', 1, ' days - ',
+  testthat::expect_equal(unique(test$proportion$TAR)[1], paste0('cohort start', ' + ', 1, ' days - ',
                                                         'cohort start', ' + ', 365, ' days'))
-  testthat::expect_equal(test$proportion$TAR[1], paste0('cohort start', ' + ', 10, ' days - ',
+  testthat::expect_equal(unique(test$proportion$TAR)[2], paste0('cohort start', ' + ', 10, ' days - ',
                                                         'cohort start', ' + ', 730, ' days'))
 })
