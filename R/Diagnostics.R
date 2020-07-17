@@ -194,6 +194,22 @@ diagnostic <- function(plpData = NULL,
                                   outputFolder = outputFolder, 
                                   databaseName = cdmDatabaseName)
   
+  
+  # get survival data:
+  ParallelLogger::logInfo('Calculating survival data')
+  if(file.exists(file.path(outputFolder, 'survival.csv'))){
+    surv <- read.csv(file.path(outputFolder, 'survival.csv')) 
+  } else {
+    surv <- c()
+  }
+  survTemp <- lapply(outcomeIds, function(oi) getSurvival(plpData, outcomeId = oi,
+                                                          cohortId = cohortId, 
+                                                          cdmDatabaseName  = cdmDatabaseName ))
+  surv <- rbind(surv, do.call('rbind', survTemp))
+  if(!is.null(outputFolder)){
+    write.csv(surv, file.path(outputFolder, 'survival.csv'), row.names = F)
+  }
+  
   # do characterisation - needs TAR
   ParallelLogger::logInfo('Calculating proportion and characterizations')
   
@@ -289,8 +305,48 @@ diagnostic <- function(plpData = NULL,
   
   result <- list(distribution = distribution,
                  proportion = proportion,
-                 characterization = characterization)
+                 characterization = characterization,
+                 survival = surv)
   
+  return(result)
+}
+
+
+getSurvival <- function(plpData, outcomeId, cohortId, cdmDatabaseName ){
+
+  object <- plpData$outcome %>% 
+    dplyr::filter(outcomeId == !!outcomeId) %>%
+    dplyr::right_join(plpData$cohort, by ='rowId') %>%
+    dplyr::group_by(rowId) %>%
+    dplyr::summarise(daysToObsEnd = min(daysToObsEnd),
+                     daysToEvent = min(daysToEvent))
+    
+    
+  object$censoredTime <- apply(object[,-1], 1, function(x) min(x, na.rm = T))
+  object$event <- 0
+  object$event[!is.na(object$daysToEvent)] <- ifelse(object$event[!is.na(object$daysToEvent)] <= object$censoredTime[!is.na(object$daysToEvent)], 1,0)
+  
+  
+  result <- object %>% dplyr::group_by(censoredTime) %>%
+    dplyr::summarise(events = sum(event),
+                     censored = length(event)-sum(event))
+  
+  totalCensored <- lapply(unique(object$censoredTime), function(i) sum(result %>% dplyr::filter(censoredTime <= i) %>% dplyr::select(censored)))
+
+  totalCensored <- data.frame(censoredTime = unique(object$censoredTime),
+                              totalCensored = unlist(totalCensored))
+  
+  totalLost <- lapply(unique(object$censoredTime), function(i) sum(result %>% dplyr::filter(censoredTime <= i) %>% dplyr::mutate(lost = censored + events) %>% dplyr::select(lost)))
+  totalLost <- data.frame(censoredTime = unique(object$censoredTime),
+                          nAtRisk = nrow(plpData$cohorts) - unlist(totalLost))
+  
+  result <- result %>% 
+    dplyr::left_join(totalCensored, by ='censoredTime') %>% 
+    dplyr::left_join(totalLost, by ='censoredTime')
+  
+  result$outcomeId <- outcomeId
+  result$cohortId <- cohortId
+  result$cdmDatabaseName <- cdmDatabaseName 
   return(result)
 }
 
