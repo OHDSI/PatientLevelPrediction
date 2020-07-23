@@ -8,21 +8,29 @@
 
 <title>createLearningCurve — createLearningCurve • PatientLevelPrediction</title>
 
-<!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-<!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<!-- jquery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<!-- Bootstrap -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,11 +38,11 @@
 
 
 
-<meta property="og:title" content="createLearningCurve — createLearningCurve" />
 
+<meta property="og:title" content="createLearningCurve — createLearningCurve" />
 <meta property="og:description" content="Creates a learning curve object, which can be plotted using the
  plotLearningCurve() function." />
-<meta name="twitter:card" content="summary" />
+
 
 
 
@@ -48,9 +56,10 @@
 <![endif]-->
 
 
+
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -64,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
       </span>
     </div>
 
@@ -111,10 +120,10 @@
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
+      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
     </li>
     <li>
-      <a href="../articles/ImplementingExistingModels.html">Implementing Existing Prediction Models using the OHDSI PatientLevelPrediction Framework</a>
+      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -131,9 +140,11 @@
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+</li>
+<li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
     <span class="fa fa-github fa-lg"></span>
      
@@ -146,6 +157,7 @@
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -157,18 +169,33 @@
     </div>
 
     <div class="ref-description">
-    
     <p>Creates a learning curve object, which can be plotted using the
  <code><a href='plotLearningCurve.html'>plotLearningCurve()</a></code> function.</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>createLearningCurve</span>(<span class='no'>population</span>, <span class='no'>plpData</span>, <span class='no'>modelSettings</span>, <span class='kw'>testSplit</span> <span class='kw'>=</span> <span class='st'>"person"</span>,
-  <span class='kw'>testFraction</span> <span class='kw'>=</span> <span class='fl'>0.25</span>, <span class='kw'>trainFractions</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>0.25</span>, <span class='fl'>0.5</span>, <span class='fl'>0.75</span>),
-  <span class='kw'>splitSeed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>nfold</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>indexes</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>saveDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>saveModel</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>verbosity</span> <span class='kw'>=</span> <span class='st'>"TRACE"</span>, <span class='kw'>clearffTemp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>minCovariateFraction</span> <span class='kw'>=</span> <span class='fl'>0.001</span>)</pre>
-    
+    <pre class="usage"><span class='fu'>createLearningCurve</span>(
+  <span class='no'>population</span>,
+  <span class='no'>plpData</span>,
+  <span class='no'>modelSettings</span>,
+  <span class='kw'>testSplit</span> <span class='kw'>=</span> <span class='st'>"person"</span>,
+  <span class='kw'>testFraction</span> <span class='kw'>=</span> <span class='fl'>0.25</span>,
+  <span class='kw'>trainFractions</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0.25</span>, <span class='fl'>0.5</span>, <span class='fl'>0.75</span>),
+  <span class='kw'>splitSeed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>nfold</span> <span class='kw'>=</span> <span class='fl'>3</span>,
+  <span class='kw'>indexes</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>verbosity</span> <span class='kw'>=</span> <span class='st'>"TRACE"</span>,
+  <span class='kw'>clearffTemp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>minCovariateFraction</span> <span class='kw'>=</span> <span class='fl'>0.001</span>,
+  <span class='kw'>normalizeData</span> <span class='kw'>=</span> <span class='no'>T</span>,
+  <span class='kw'>saveDirectory</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>getwd</a></span>(),
+  <span class='kw'>savePlpData</span> <span class='kw'>=</span> <span class='no'>F</span>,
+  <span class='kw'>savePlpResult</span> <span class='kw'>=</span> <span class='no'>F</span>,
+  <span class='kw'>savePlpPlots</span> <span class='kw'>=</span> <span class='no'>F</span>,
+  <span class='kw'>saveEvaluation</span> <span class='kw'>=</span> <span class='no'>F</span>,
+  <span class='kw'>timeStamp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>analysisId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -230,16 +257,6 @@ index value of -1 means in the test set, and positive integer represents
 the cross validation fold (default is <code>NULL</code>).</p></td>
     </tr>
     <tr>
-      <th>saveDir</th>
-      <td><p>The path to the directory where the models will be saved
-(if <code>NULL</code>, uses working directory).</p></td>
-    </tr>
-    <tr>
-      <th>saveModel</th>
-      <td><p>Logical indicating whether to save the model once it has
-been trained (default is <code>TRUE</code>).</p></td>
-    </tr>
-    <tr>
       <th>verbosity</th>
       <td><p>Sets the level of the verbosity. If the log level is at or
 higher in priority than the logger threshold, a message will print. The 
@@ -262,41 +279,66 @@ This can be useful, if the fitted models are large.</p></td>
       <td><p>Minimum covariate prevalence in population to
 avoid removal during preprocssing.</p></td>
     </tr>
+    <tr>
+      <th>normalizeData</th>
+      <td><p>Whether to normalise the data</p></td>
+    </tr>
+    <tr>
+      <th>saveDirectory</th>
+      <td><p>Location to save log and results</p></td>
+    </tr>
+    <tr>
+      <th>savePlpData</th>
+      <td><p>Whether to save the plpData</p></td>
+    </tr>
+    <tr>
+      <th>savePlpResult</th>
+      <td><p>Whether to save the plpResult</p></td>
+    </tr>
+    <tr>
+      <th>savePlpPlots</th>
+      <td><p>Whether to save the plp plots</p></td>
+    </tr>
+    <tr>
+      <th>saveEvaluation</th>
+      <td><p>Whether to save the plp performance csv files</p></td>
+    </tr>
+    <tr>
+      <th>timeStamp</th>
+      <td><p>Include a timestamp in the log</p></td>
+    </tr>
+    <tr>
+      <th>analysisId</th>
+      <td><p>The analysis unique identifier</p></td>
+    </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A learning curve object containing the various performance measures
  obtained by the model for each training set fraction. It can be plotted
  using <code>plotLearningCurve</code>.</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><span class='co'># NOT RUN {</span>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
 <span class='co'># define model</span>
-<span class='no'>modelSettings</span> <span class='kw'>=</span> <span class='kw pkg'>PatientLevelPrediction</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/setLassoLogisticRegression'>setLassoLogisticRegression</a></span>()
+<span class='no'>modelSettings</span> <span class='kw'>=</span> <span class='kw pkg'>PatientLevelPrediction</span><span class='kw ns'>::</span><span class='fu'><a href='setLassoLogisticRegression.html'>setLassoLogisticRegression</a></span>()
 
 <span class='co'># create learning curve</span>
-<span class='no'>learningCurve</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>PatientLevelPrediction</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/createLearningCurve'>createLearningCurve</a></span>(<span class='no'>population</span>,
+<span class='no'>learningCurve</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>PatientLevelPrediction</span><span class='kw ns'>::</span><span class='fu'>createLearningCurve</span>(<span class='no'>population</span>,
                                                              <span class='no'>plpData</span>,
                                                              <span class='no'>modelSettings</span>)
 <span class='co'># plot learning curve</span>
-<span class='kw pkg'>PatientLevelPrediction</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/plotLearningCurve'>plotLearningCurve</a></span>(<span class='no'>learningCurve</span>)
-<span class='co'># }</span><div class='input'>
-</div></pre>
+<span class='kw pkg'>PatientLevelPrediction</span><span class='kw ns'>::</span><span class='fu'><a href='plotLearningCurve.html'>plotLearningCurve</a></span>(<span class='no'>learningCurve</span>)
+}</div></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-      
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
+
 
       <footer>
       <div class="copyright">
@@ -304,13 +346,16 @@ avoid removal during preprocssing.</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

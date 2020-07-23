@@ -6,18 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adding Custom Patient-Level Prediction Algorithms • PatientLevelPrediction</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Adding Custom Patient-Level Prediction Algorithms">
-<meta property="og:description" content="">
-<meta name="twitter:card" content="summary">
+<meta property="og:description" content="PatientLevelPrediction">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
-<body>
+<body data-spy="scroll" data-target="#toc">
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -30,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
       </span>
     </div>
 
@@ -77,10 +78,10 @@
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
+      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
     </li>
     <li>
-      <a href="../articles/ImplementingExistingModels.html">Implementing Existing Prediction Models using the OHDSI PatientLevelPrediction Framework</a>
+      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -99,6 +100,9 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+</li>
+<li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
     <span class="fa fa-github fa-lg"></span>
      
@@ -113,13 +117,14 @@
 <!--/.navbar -->
 
       
+
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1>Adding Custom Patient-Level Prediction Algorithms</h1>
+      <h1 data-toc-skip>Adding Custom Patient-Level Prediction Algorithms</h1>
                         <h4 class="author">Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2019-05-30</h4>
+            <h4 class="date">2020-06-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/AddingCustomAlgorithms.Rmd"><code>vignettes/AddingCustomAlgorithms.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomAlgorithms.Rmd</code></div>
@@ -152,21 +157,21 @@
 <li>name - a string containing the name of the model.</li>
 </ul>
 <p>For example, if you were adding a model called madeUp that has two hyper-parameters then the set function should be:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">setMadeUp &lt;-<span class="st"> </span><span class="cf">function</span>(<span class="dt">a=</span><span class="dv">1</span>, <span class="dt">b=</span><span class="dv">2</span>, <span class="dt">seed=</span><span class="ot">NULL</span>){
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="no">setMadeUp</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">a</span><span class="kw">=</span><span class="fl">1</span>, <span class="no">b</span><span class="kw">=</span><span class="fl">2</span>, <span class="no">seed</span><span class="kw">=</span><span class="kw">NULL</span>){
   <span class="co"># add input checks here...</span>
-  
+
   <span class="co"># now create list of all combinations:</span>
-  result &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">model=</span><span class="st">'fitMadeUp'</span>, <span class="co"># this will be called to train the made up model</span>
-                 <span class="dt">param=</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/split">split</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/expand.grid">expand.grid</a></span>(<span class="dt">a=</span>a, 
-                                          <span class="dt">b=</span>b,
-                                          <span class="dt">seed=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/ifelse">ifelse</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/NULL">is.null</a></span>(seed),<span class="st">'NULL'</span>, seed)),
-                              <span class="dv">1</span><span class="op">:</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(a)<span class="op">*</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(b)  )),
-                 <span class="dt">name=</span><span class="st">'Made Up Algorithm'</span>
+  <span class="no">result</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">model</span><span class="kw">=</span><span class="st">'fitMadeUp'</span>, <span class="co"># this will be called to train the made up model</span>
+                 <span class="kw">param</span><span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html">split</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span>(<span class="kw">a</span><span class="kw">=</span><span class="no">a</span>,
+                                          <span class="kw">b</span><span class="kw">=</span><span class="no">b</span>,
+                                          <span class="kw">seed</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">seed</span>),<span class="st">'NULL'</span>, <span class="no">seed</span>)),
+                              <span class="fl">1</span>:(<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">a</span>)*<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">b</span>)  )),
+                 <span class="kw">name</span><span class="kw">=</span><span class="st">'Made Up Algorithm'</span>
   )
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/class">class</a></span>(result) &lt;-<span class="st"> 'modelSettings'</span> 
-  
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/function">return</a></span>(result)
-}</code></pre></div>
+  <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">result</span>) <span class="kw">&lt;-</span> <span class="st">'modelSettings'</span>
+
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">result</span>)
+}</pre></body></html></div>
 </div>
 <div id="fit" class="section level2">
 <h2 class="hasAnchor">
@@ -185,7 +190,7 @@
 <ul>
 <li>model - a trained model</li>
 <li>modelSettings - a list containing the model and input param</li>
-<li>trainCVAac - a value with the train AUC value</li>
+<li>trainCVAuc - a value with the train AUC value</li>
 <li>hyperParamSearch - a dataframe with the hyperparameter grid and corresponding AUCs</li>
 <li>metaData - the metaData from the plpData object</li>
 <li>populationSettings - the settings used to create the population and define the time-at-risk</li>
@@ -195,37 +200,37 @@
 <li>trainingTime - how long it took to develop/evaluate the model</li>
 <li>covariateMap - if the plpData are converted to a matrix for model compatibility this tells us what covariate each row in the matrix correpsonds to and is need when implementing the model on new data</li>
 </ul>
-<p>The plpModle returned by fit also has a type attribute, this points to the predict function, for example <code>attr(result, 'type') &lt;- 'madeup'</code> means when the model is applied to new data, the ‘predict.madeup’ function in Predict.R is called. if this doesnt exist, then the model will fail. Another attribute is the predictionType <code>attr(result, 'predictionType') &lt;- 'binary'</code> this is currently not needed but may be important in the future when we expand to regression or multiclass classification.</p>
+<p>The plpModel returned by fit also has a type attribute, this points to the predict function, for example <code>attr(result, 'type') &lt;- 'madeup'</code> means when the model is applied to new data, the ‘predict.madeup’ function in Predict.R is called. if this doesnt exist, then the model will fail. Another attribute is the predictionType <code>attr(result, 'predictionType') &lt;- 'binary'</code> this is currently not needed but may be important in the future when we expand to regression or multiclass classification.</p>
 <p>For example:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fitMadeUp &lt;-<span class="st"> </span><span class="cf">function</span>(population, plpData, param, <span class="dt">quiet=</span>F,
-                        outcomeId, cohortId, ...){
-  
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">fitMadeUp</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">population</span>, <span class="no">plpData</span>, <span class="no">param</span>, <span class="no">quiet</span><span class="kw">=</span><span class="no">F</span>,
+                        <span class="no">outcomeId</span>, <span class="no">cohortId</span>, <span class="no">...</span>){
+
   <span class="co"># **************** code to train the model here</span>
   <span class="co"># trainedModel &lt;- this code should apply each hyper-parameter using the cross validation</span>
   <span class="co">#                 then pick out the best hyper-parameter setting</span>
   <span class="co">#                 and finally fit a model on the whole train data using the </span>
   <span class="co">#                 optimal hyper-parameter settings</span>
   <span class="co"># ****************</span>
-  
+
   <span class="co"># construct the standard output for a model:</span>
-  result &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">model =</span> trainedModel,
-                 <span class="dt">modelSettings =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">model=</span><span class="st">'made_up'</span>, <span class="dt">modelParameters=</span>param),
-                 <span class="dt">trainCVAuc =</span> <span class="ot">NULL</span>,
-                 <span class="dt">hyperParamSearch =</span> hyperSummary,
-                 <span class="dt">metaData =</span> plpData<span class="op">$</span>metaData,
-                 <span class="dt">populationSettings =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(population, <span class="st">'metaData'</span>),
-                 <span class="dt">outcomeId=</span>outcomeId,<span class="co"># can use populationSettings$outcomeId?</span>
-                 <span class="dt">cohortId=</span>cohortId,
-                 <span class="dt">varImp =</span> <span class="ot">NULL</span>,
-                 <span class="dt">trainingTime=</span>comp,
-                 <span class="dt">covariateMap=</span>result<span class="op">$</span>map
+  <span class="no">result</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">model</span> <span class="kw">=</span> <span class="no">trainedModel</span>,
+                 <span class="kw">modelSettings</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">model</span><span class="kw">=</span><span class="st">'made_up'</span>, <span class="kw">modelParameters</span><span class="kw">=</span><span class="no">param</span>),
+                 <span class="kw">trainCVAuc</span> <span class="kw">=</span> <span class="kw">NULL</span>,
+                 <span class="kw">hyperParamSearch</span> <span class="kw">=</span> <span class="no">hyperSummary</span>,
+                 <span class="kw">metaData</span> <span class="kw">=</span> <span class="no">plpData</span>$<span class="no">metaData</span>,
+                 <span class="kw">populationSettings</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">population</span>, <span class="st">'metaData'</span>),
+                 <span class="kw">outcomeId</span><span class="kw">=</span><span class="no">outcomeId</span>,<span class="co"># can use populationSettings$outcomeId?</span>
+                 <span class="kw">cohortId</span><span class="kw">=</span><span class="no">cohortId</span>,
+                 <span class="kw">varImp</span> <span class="kw">=</span> <span class="kw">NULL</span>,
+                 <span class="kw">trainingTime</span><span class="kw">=</span><span class="no">comp</span>,
+                 <span class="kw">covariateMap</span><span class="kw">=</span><span class="no">result</span>$<span class="no">map</span>
   )
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/class">class</a></span>(result) &lt;-<span class="st"> 'plpModel'</span>
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(result, <span class="st">'type'</span>) &lt;-<span class="st"> 'madeup'</span>
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(result, <span class="st">'predictionType'</span>) &lt;-<span class="st"> 'binary'</span>
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/function">return</a></span>(result)
-    
-}</code></pre></div>
+  <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">result</span>) <span class="kw">&lt;-</span> <span class="st">'plpModel'</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">result</span>, <span class="st">'type'</span>) <span class="kw">&lt;-</span> <span class="st">'madeup'</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">result</span>, <span class="st">'predictionType'</span>) <span class="kw">&lt;-</span> <span class="st">'binary'</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">result</span>)
+
+}</pre></body></html></div>
 <p>You could make the fitMadeUp function cleaner by adding helper function in the MadeUp.R file that are called by the fit function. As the end of the fit function specified <code>attr(result, 'type') &lt;- 'madeup'</code> we also need to make sure there is a <code>predict.madeup</code> function in Predict.R:</p>
 </div>
 <div id="predict" class="section level2">
@@ -238,20 +243,20 @@
 </ul>
 <p>If the population contains the columns outcomeCount and indexes, then these are also in the output.</p>
 <p>For example:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">predict.madeup &lt;-<span class="st"> </span><span class="cf">function</span>(plpModel,population, plpData, ...){ 
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">predict.madeup</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">plpModel</span>,<span class="no">population</span>, <span class="no">plpData</span>, <span class="no">...</span>){
 
   <span class="co"># ************* code to do prediction for each rowId in population</span>
   <span class="co"># prediction &lt;- code to do prediction here returning columns: rowId </span>
   <span class="co">#               and value (predicted risk)</span>
   <span class="co">#**************</span>
-  
-  prediction &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/merge">merge</a></span>(population, prediction, <span class="dt">by=</span><span class="st">'rowId'</span>)
-  prediction &lt;-<span class="st"> </span>prediction[,<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/colnames">colnames</a></span>(prediction)<span class="op">%in%</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">'rowId'</span>,<span class="st">'outcomeCount'</span>,
-                                                      <span class="st">'indexes'</span>, <span class="st">'value'</span>)] 
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(prediction, <span class="st">"metaData"</span>) &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">predictionType =</span> <span class="st">"binary"</span>) 
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/function">return</a></span>(prediction)
-  
-}</code></pre></div>
+
+  <span class="no">prediction</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span>(<span class="no">population</span>, <span class="no">prediction</span>, <span class="kw">by</span><span class="kw">=</span><span class="st">'rowId'</span>)
+  <span class="no">prediction</span> <span class="kw">&lt;-</span> <span class="no">prediction</span>[,<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span>(<span class="no">prediction</span>)<span class="kw">%in%</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'rowId'</span>,<span class="st">'outcomeCount'</span>,
+                                                      <span class="st">'indexes'</span>, <span class="st">'value'</span>)]
+  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">prediction</span>, <span class="st">"metaData"</span>) <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">predictionType</span> <span class="kw">=</span> <span class="st">"binary"</span>)
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">prediction</span>)
+
+}</pre></body></html></div>
 </div>
 </div>
 <div id="algorithm-example" class="section level1">
@@ -261,191 +266,191 @@
 <div id="set-1" class="section level2">
 <h2 class="hasAnchor">
 <a href="#set-1" class="anchor"></a>Set</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">setMadeUp &lt;-<span class="st"> </span><span class="cf">function</span>(<span class="dt">a=</span><span class="dv">1</span>, <span class="dt">b=</span><span class="dv">2</span>, <span class="dt">seed=</span><span class="ot">NULL</span>){
-  <span class="co"># check a is valid positive value</span>
-  <span class="cf">if</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/missing">missing</a></span>(a)){
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/stop">stop</a></span>(<span class="st">'a must be input'</span>)
+<div class="sourceCode" id="cb4"><html><body><pre class="r">setMadeUp &lt;- function(a=1, b=2, seed=NULL){
+  # check a is valid positive value
+  if(missing(a)){
+    stop('a must be input')
   }
-  <span class="cf">if</span>(<span class="op">!</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/class">class</a></span>(a)<span class="op">%in%</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">'numeric'</span>,<span class="st">'integer'</span>){
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/stop">stop</a></span>(<span class="st">'a must be numeric'</span>)
+  if(!class(a)%in%c('numeric','integer'){
+    stop('a must be numeric')
   }
-  <span class="cf">if</span>(a <span class="op">&lt;</span><span class="st"> </span><span class="dv">0</span>){
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/stop">stop</a></span>(<span class="st">'a must be positive'</span>)
+  if(a &lt; 0){
+    stop('a must be positive')
   }
-  <span class="co"># check b is numeric</span>
-  <span class="cf">if</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/missing">missing</a></span>(b)){
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/stop">stop</a></span>(<span class="st">'b must be input'</span>)
+  # check b is numeric
+  if(missing(b)){
+    stop('b must be input')
   }
-  <span class="cf">if</span>(<span class="op">!</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/class">class</a></span>(b)<span class="op">%in%</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">'numeric'</span>,<span class="st">'integer'</span>){
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/stop">stop</a></span>(<span class="st">'b must be numeric'</span>)
+  if(!class(b)%in%c('numeric','integer'){
+    stop('b must be numeric')
   }
   
-  <span class="co"># now create list of all combinations:</span>
-  result &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">model=</span><span class="st">'fitMadeUp'</span>, 
-                 <span class="dt">param=</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/split">split</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/expand.grid">expand.grid</a></span>(<span class="dt">a=</span>a, 
-                                          <span class="dt">b=</span>b,
-                                          <span class="dt">seed=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/ifelse">ifelse</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/NULL">is.null</a></span>(seed),<span class="st">'NULL'</span>, seed)),
-                              <span class="dv">1</span><span class="op">:</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(a)<span class="op">*</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(b)  )),
-                 <span class="dt">name=</span><span class="st">'Made Up Algorithm'</span>
+  # now create list of all combinations:
+  result &lt;- list(model='fitMadeUp', 
+                 param= split(expand.grid(a=a, 
+                                          b=b,
+                                          seed=ifelse(is.null(seed),'NULL', seed)),
+                              1:(length(a)*length(b)  )),
+                 name='Made Up Algorithm'
   )
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/class">class</a></span>(result) &lt;-<span class="st"> 'modelSettings'</span> 
+  class(result) &lt;- 'modelSettings' 
   
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/function">return</a></span>(result)
+  return(result)
     
   
-<span class="er">}</span></code></pre></div>
+}</pre></body></html></div>
 </div>
 <div id="fit-1" class="section level2">
 <h2 class="hasAnchor">
 <a href="#fit-1" class="anchor"></a>Fit</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fitMadeUp &lt;-<span class="st"> </span><span class="cf">function</span>(population, plpData, param, <span class="dt">quiet=</span>F,
-                        outcomeId, cohortId, ...){
-    <span class="cf">if</span>(<span class="op">!</span>quiet)
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/writeLines">writeLines</a></span>(<span class="st">'Training Made Up model'</span>)
-  
-  <span class="cf">if</span>(param[[<span class="dv">1</span>]]<span class="op">$</span>seed<span class="op">!=</span><span class="st">'NULL'</span>)
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Random">set.seed</a></span>(param[[<span class="dv">1</span>]]<span class="op">$</span>seed)
-  
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">fitMadeUp</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">population</span>, <span class="no">plpData</span>, <span class="no">param</span>, <span class="no">quiet</span><span class="kw">=</span><span class="no">F</span>,
+                        <span class="no">outcomeId</span>, <span class="no">cohortId</span>, <span class="no">...</span>){
+    <span class="kw">if</span>(!<span class="no">quiet</span>)
+    <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="st">'Training Made Up model'</span>)
+
+  <span class="kw">if</span>(<span class="no">param</span><span class="kw">[[</span><span class="fl">1</span>]]$<span class="no">seed</span><span class="kw">!=</span><span class="st">'NULL'</span>)
+    <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="no">param</span><span class="kw">[[</span><span class="fl">1</span>]]$<span class="no">seed</span>)
+
     <span class="co"># check plpData is coo format:</span>
-  <span class="cf">if</span>(<span class="op">!</span><span class="st">'ffdf'</span><span class="op">%in%</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/class">class</a></span>(plpData<span class="op">$</span>covariates) )
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/stop">stop</a></span>(<span class="st">'This algorithm requires plpData in coo format'</span>)
-  
-  metaData &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(population, <span class="st">'metaData'</span>)
-  <span class="cf">if</span>(<span class="op">!</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/NULL">is.null</a></span>(population<span class="op">$</span>indexes))
-    population &lt;-<span class="st"> </span>population[population<span class="op">$</span>indexes<span class="op">&gt;</span><span class="dv">0</span>,]
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(population, <span class="st">'metaData'</span>) &lt;-<span class="st"> </span>metaData
-  
+  <span class="kw">if</span>(!<span class="st">'ffdf'</span><span class="kw">%in%</span><span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">plpData</span>$<span class="no">covariates</span>) )
+    <span class="fu"><a href="https://rdrr.io/r/base/stop.html">stop</a></span>(<span class="st">'This algorithm requires plpData in coo format'</span>)
+
+  <span class="no">metaData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">population</span>, <span class="st">'metaData'</span>)
+  <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">population</span>$<span class="no">indexes</span>))
+    <span class="no">population</span> <span class="kw">&lt;-</span> <span class="no">population</span>[<span class="no">population</span>$<span class="no">indexes</span><span class="kw">&gt;</span><span class="fl">0</span>,]
+  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">population</span>, <span class="st">'metaData'</span>) <span class="kw">&lt;-</span> <span class="no">metaData</span>
+
   <span class="co"># convert data into sparse R Matrix:</span>
-  result &lt;-<span class="st"> </span><span class="kw"><a href="../reference/toSparseM.html">toSparseM</a></span>(plpData,population,<span class="dt">map=</span><span class="ot">NULL</span>)
-  data &lt;-<span class="st"> </span>result<span class="op">$</span>data
-  
-  data &lt;-<span class="st"> </span>data[population<span class="op">$</span>rowId,]
-  
+  <span class="no">result</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/toSparseM.html">toSparseM</a></span>(<span class="no">plpData</span>,<span class="no">population</span>,<span class="kw">map</span><span class="kw">=</span><span class="kw">NULL</span>)
+  <span class="no">data</span> <span class="kw">&lt;-</span> <span class="no">result</span>$<span class="no">data</span>
+
+  <span class="no">data</span> <span class="kw">&lt;-</span> <span class="no">data</span>[<span class="no">population</span>$<span class="no">rowId</span>,]
+
   <span class="co"># set test/train sets (for printing performance as it trains)</span>
-  <span class="cf">if</span>(<span class="op">!</span>quiet)
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/writeLines">writeLines</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste0</a></span>(<span class="st">'Training made up model on train set containing '</span>, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/nrow">nrow</a></span>(population), 
-                      <span class="st">' people with '</span>,<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/sum">sum</a></span>(population<span class="op">$</span>outcomeCount<span class="op">&gt;</span><span class="dv">0</span>), <span class="st">' outcomes'</span>))
-  start &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.time">Sys.time</a></span>()
-  
+  <span class="kw">if</span>(!<span class="no">quiet</span>)
+    <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Training made up model on train set containing '</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">population</span>),
+                      <span class="st">' people with '</span>,<span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">population</span>$<span class="no">outcomeCount</span><span class="kw">&gt;</span><span class="fl">0</span>), <span class="st">' outcomes'</span>))
+  <span class="no">start</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span>()
+
   <span class="co">#============= STEP 1 ======================================</span>
   <span class="co"># pick the best hyper-params and then do final training on all data...</span>
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/writeLines">writeLines</a></span>(<span class="st">'train'</span>)
-  datas &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">population=</span>population, <span class="dt">data=</span>data)
-  param.sel &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/lapply">lapply</a></span>(param, <span class="cf">function</span>(x) <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/do.call">do.call</a></span>(made_up_model, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(x,datas)  ))
-  hyperSummary &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/do.call">do.call</a></span>(rbind, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/lapply">lapply</a></span>(param.sel, <span class="cf">function</span>(x) x<span class="op">$</span>hyperSum))
-  hyperSummary &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/as.data.frame">as.data.frame</a></span>(hyperSummary)
-  hyperSummary<span class="op">$</span>auc &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/unlist">unlist</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/lapply">lapply</a></span>(param.sel, <span class="cf">function</span>(x) x<span class="op">$</span>auc)) 
-  param.sel &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/unlist">unlist</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/lapply">lapply</a></span>(param.sel, <span class="cf">function</span>(x) x<span class="op">$</span>auc))
-  param &lt;-<span class="st"> </span>param[[<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/which.min">which.max</a></span>(param.sel)]]
-  
+  <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="st">'train'</span>)
+  <span class="no">datas</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">population</span><span class="kw">=</span><span class="no">population</span>, <span class="kw">data</span><span class="kw">=</span><span class="no">data</span>)
+  <span class="no">param.sel</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span>(<span class="no">param</span>, <span class="kw">function</span>(<span class="no">x</span>) <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span>(<span class="no">made_up_model</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">x</span>,<span class="no">datas</span>)  ))
+  <span class="no">hyperSummary</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span>(<span class="no">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span>(<span class="no">param.sel</span>, <span class="kw">function</span>(<span class="no">x</span>) <span class="no">x</span>$<span class="no">hyperSum</span>))
+  <span class="no">hyperSummary</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span>(<span class="no">hyperSummary</span>)
+  <span class="no">hyperSummary</span>$<span class="no">auc</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span>(<span class="no">param.sel</span>, <span class="kw">function</span>(<span class="no">x</span>) <span class="no">x</span>$<span class="no">auc</span>))
+  <span class="no">param.sel</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span>(<span class="no">param.sel</span>, <span class="kw">function</span>(<span class="no">x</span>) <span class="no">x</span>$<span class="no">auc</span>))
+  <span class="no">param</span> <span class="kw">&lt;-</span> <span class="no">param</span><span class="kw">[[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html">which.max</a></span>(<span class="no">param.sel</span>)]]
+
   <span class="co"># set this so you do a final model train </span>
-  param<span class="op">$</span>final=T
-  
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/writeLines">writeLines</a></span>(<span class="st">'final train'</span>)
-  trainedModel &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/do.call">do.call</a></span>(made_up_model, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(param,datas)  )<span class="op">$</span>model
-  
-  comp &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.time">Sys.time</a></span>() <span class="op">-</span><span class="st"> </span>start
-  <span class="cf">if</span>(<span class="op">!</span>quiet)
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/writeLines">writeLines</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste0</a></span>(<span class="st">'Model Made Up trained - took:'</span>,  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/format">format</a></span>(comp, <span class="dt">digits=</span><span class="dv">3</span>)))
-  
+  <span class="no">param</span>$<span class="no">final</span><span class="kw">=</span><span class="no">T</span>
+
+  <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="st">'final train'</span>)
+  <span class="no">trainedModel</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span>(<span class="no">made_up_model</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">param</span>,<span class="no">datas</span>)  )$<span class="no">model</span>
+
+  <span class="no">comp</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span>() - <span class="no">start</span>
+  <span class="kw">if</span>(!<span class="no">quiet</span>)
+    <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Model Made Up trained - took:'</span>,  <span class="fu"><a href="https://rdrr.io/r/base/format.html">format</a></span>(<span class="no">comp</span>, <span class="kw">digits</span><span class="kw">=</span><span class="fl">3</span>)))
+
   <span class="co"># construct the standard output for a model:</span>
-  result &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">model =</span> trainedModel,
-                 <span class="dt">modelSettings =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">model=</span><span class="st">'made_up'</span>, <span class="dt">modelParameters=</span>param),
-                 <span class="dt">trainCVAuc =</span> <span class="ot">NULL</span>,
-                 <span class="dt">hyperParamSearch =</span> hyperSummary,
-                 <span class="dt">metaData =</span> plpData<span class="op">$</span>metaData,
-                 <span class="dt">populationSettings =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(population, <span class="st">'metaData'</span>),
-                 <span class="dt">outcomeId=</span>outcomeId,<span class="co"># can use populationSettings$outcomeId?</span>
-                 <span class="dt">cohortId=</span>cohortId,
-                 <span class="dt">varImp =</span> <span class="ot">NULL</span>,
-                 <span class="dt">trainingTime=</span>comp,
-                 <span class="dt">covariateMap=</span>result<span class="op">$</span>map
+  <span class="no">result</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">model</span> <span class="kw">=</span> <span class="no">trainedModel</span>,
+                 <span class="kw">modelSettings</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">model</span><span class="kw">=</span><span class="st">'made_up'</span>, <span class="kw">modelParameters</span><span class="kw">=</span><span class="no">param</span>),
+                 <span class="kw">trainCVAuc</span> <span class="kw">=</span> <span class="kw">NULL</span>,
+                 <span class="kw">hyperParamSearch</span> <span class="kw">=</span> <span class="no">hyperSummary</span>,
+                 <span class="kw">metaData</span> <span class="kw">=</span> <span class="no">plpData</span>$<span class="no">metaData</span>,
+                 <span class="kw">populationSettings</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">population</span>, <span class="st">'metaData'</span>),
+                 <span class="kw">outcomeId</span><span class="kw">=</span><span class="no">outcomeId</span>,<span class="co"># can use populationSettings$outcomeId?</span>
+                 <span class="kw">cohortId</span><span class="kw">=</span><span class="no">cohortId</span>,
+                 <span class="kw">varImp</span> <span class="kw">=</span> <span class="kw">NULL</span>,
+                 <span class="kw">trainingTime</span><span class="kw">=</span><span class="no">comp</span>,
+                 <span class="kw">covariateMap</span><span class="kw">=</span><span class="no">result</span>$<span class="no">map</span>
   )
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/class">class</a></span>(result) &lt;-<span class="st"> 'plpModel'</span>
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(result, <span class="st">'type'</span>) &lt;-<span class="st"> 'madeup'</span>
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(result, <span class="st">'predictionType'</span>) &lt;-<span class="st"> 'binary'</span>
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/function">return</a></span>(result)
-    
-}</code></pre></div>
+  <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span>(<span class="no">result</span>) <span class="kw">&lt;-</span> <span class="st">'plpModel'</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">result</span>, <span class="st">'type'</span>) <span class="kw">&lt;-</span> <span class="st">'madeup'</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">result</span>, <span class="st">'predictionType'</span>) <span class="kw">&lt;-</span> <span class="st">'binary'</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">result</span>)
+
+}</pre></body></html></div>
 </div>
 <div id="helpers" class="section level2">
 <h2 class="hasAnchor">
 <a href="#helpers" class="anchor"></a>Helpers</h2>
 <p>In the fit model a helper function <code>made_up_model</code> is called, this is the function that trains a model given the data and population (where the popualtion contains a column outcomeCount corresponding to the outcome). Both the data and population are ordered the same way:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">made_up_model &lt;-<span class="st"> </span><span class="cf">function</span>(data, population,
-                       <span class="dt">a=</span><span class="dv">1</span>,<span class="dt">b=</span><span class="dv">1</span>, <span class="dt">final=</span>F, ...){
-  
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/writeLines">writeLines</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">'Training Made Up model with '</span>,<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/unique">unique</a></span>(population<span class="op">$</span>indexes)),
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">made_up_model</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">data</span>, <span class="no">population</span>,
+                       <span class="no">a</span><span class="kw">=</span><span class="fl">1</span>,<span class="no">b</span><span class="kw">=</span><span class="fl">1</span>, <span class="no">final</span><span class="kw">=</span><span class="no">F</span>, <span class="no">...</span>){
+
+  <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span>(<span class="st">'Training Made Up model with '</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span>(<span class="no">population</span>$<span class="no">indexes</span>)),
                    <span class="st">' fold CV'</span>))
-  <span class="cf">if</span>(<span class="op">!</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/NULL">is.null</a></span>(population<span class="op">$</span>indexes) <span class="op">&amp;&amp;</span><span class="st"> </span>final<span class="op">==</span>F){
-    index_vect &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/unique">unique</a></span>(population<span class="op">$</span>indexes)
-    perform &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>()
-    
+  <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">population</span>$<span class="no">indexes</span>) <span class="kw">&amp;&amp;</span> <span class="no">final</span><span class="kw">==</span><span class="no">F</span>){
+    <span class="no">index_vect</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span>(<span class="no">population</span>$<span class="no">indexes</span>)
+    <span class="no">perform</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>()
+
     <span class="co"># create prediction matrix to store all predictions</span>
-    predictionMat &lt;-<span class="st"> </span>population
-    predictionMat<span class="op">$</span>value &lt;-<span class="st"> </span><span class="dv">0</span>
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(predictionMat, <span class="st">"metaData"</span>) &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">predictionType =</span> <span class="st">"binary"</span>)
-    
-    <span class="cf">for</span>(index <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(index_vect )){
-      <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/writeLines">writeLines</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/paste">paste</a></span>(<span class="st">'Fold '</span>,index, <span class="st">' -- with '</span>, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/sum">sum</a></span>(population<span class="op">$</span>indexes<span class="op">!=</span>index),
+    <span class="no">predictionMat</span> <span class="kw">&lt;-</span> <span class="no">population</span>
+    <span class="no">predictionMat</span>$<span class="no">value</span> <span class="kw">&lt;-</span> <span class="fl">0</span>
+    <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">predictionMat</span>, <span class="st">"metaData"</span>) <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">predictionType</span> <span class="kw">=</span> <span class="st">"binary"</span>)
+
+    <span class="kw">for</span>(<span class="no">index</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">index_vect</span> )){
+      <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span>(<span class="st">'Fold '</span>,<span class="no">index</span>, <span class="st">' -- with '</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">population</span>$<span class="no">indexes</span><span class="kw">!=</span><span class="no">index</span>),
                        <span class="st">'train rows'</span>))
-      model &lt;-<span class="st"> </span>madeup<span class="op">::</span><span class="kw">model</span>(<span class="dt">x =</span> data[population<span class="op">$</span>indexes<span class="op">!=</span>index,],
-                             <span class="dt">y=</span> population<span class="op">$</span>outcomeCount[population<span class="op">$</span>indexes<span class="op">!=</span>index],
-                                  <span class="dt">a=</span>a, <span class="dt">b=</span>b)
-      
-      pred &lt;-<span class="st"> </span>stats<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/stats/topics/predict">predict</a></span>(model, data[population<span class="op">$</span>indexes<span class="op">==</span>index,])
-      prediction &lt;-<span class="st"> </span>population[population<span class="op">$</span>indexes<span class="op">==</span>index,]
-      prediction<span class="op">$</span>value &lt;-<span class="st"> </span>pred
-      <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(prediction, <span class="st">"metaData"</span>) &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">predictionType =</span> <span class="st">"binary"</span>)
-      aucVal &lt;-<span class="st"> </span><span class="kw"><a href="../reference/computeAuc.html">computeAuc</a></span>(prediction)
-      perform &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(perform,aucVal)
-      
+      <span class="no">model</span> <span class="kw">&lt;-</span> <span class="kw pkg">madeup</span><span class="kw ns">::</span><span class="fu">model</span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">data</span>[<span class="no">population</span>$<span class="no">indexes</span><span class="kw">!=</span><span class="no">index</span>,],
+                             <span class="kw">y</span><span class="kw">=</span> <span class="no">population</span>$<span class="no">outcomeCount</span>[<span class="no">population</span>$<span class="no">indexes</span><span class="kw">!=</span><span class="no">index</span>],
+                                  <span class="kw">a</span><span class="kw">=</span><span class="no">a</span>, <span class="kw">b</span><span class="kw">=</span><span class="no">b</span>)
+
+      <span class="no">pred</span> <span class="kw">&lt;-</span> <span class="kw pkg">stats</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span>(<span class="no">model</span>, <span class="no">data</span>[<span class="no">population</span>$<span class="no">indexes</span><span class="kw">==</span><span class="no">index</span>,])
+      <span class="no">prediction</span> <span class="kw">&lt;-</span> <span class="no">population</span>[<span class="no">population</span>$<span class="no">indexes</span><span class="kw">==</span><span class="no">index</span>,]
+      <span class="no">prediction</span>$<span class="no">value</span> <span class="kw">&lt;-</span> <span class="no">pred</span>
+      <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">prediction</span>, <span class="st">"metaData"</span>) <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">predictionType</span> <span class="kw">=</span> <span class="st">"binary"</span>)
+      <span class="no">aucVal</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span>(<span class="no">prediction</span>)
+      <span class="no">perform</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">perform</span>,<span class="no">aucVal</span>)
+
       <span class="co"># add the fold predictions and compute AUC after loop</span>
-      predictionMat<span class="op">$</span>value[population<span class="op">$</span>indexes<span class="op">==</span>index] &lt;-<span class="st"> </span>pred
-      
+      <span class="no">predictionMat</span>$<span class="no">value</span>[<span class="no">population</span>$<span class="no">indexes</span><span class="kw">==</span><span class="no">index</span>] <span class="kw">&lt;-</span> <span class="no">pred</span>
+
      }
-    ##auc &lt;- mean(perform) # want overal rather than mean
-    auc &lt;-<span class="st"> </span><span class="kw"><a href="../reference/computeAuc.html">computeAuc</a></span>(predictionMat)
-    
-    foldPerm &lt;-<span class="st"> </span>perform
-  } <span class="cf">else</span> {
-    model &lt;-<span class="st"> </span>madeup<span class="op">::</span><span class="kw">model</span>(<span class="dt">x=</span> data, 
-                                <span class="dt">y=</span> population<span class="op">$</span>outcomeCount,
-                                <span class="dt">a=</span>a,<span class="dt">b=</span>b)
-    
-    pred &lt;-<span class="st"> </span>stats<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/stats/topics/predict">predict</a></span>(model, data)
-    prediction &lt;-<span class="st"> </span>population
-    prediction<span class="op">$</span>value &lt;-<span class="st"> </span>pred
-    <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(prediction, <span class="st">"metaData"</span>) &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">predictionType =</span> <span class="st">"binary"</span>) 
-    auc &lt;-<span class="st"> </span><span class="kw"><a href="../reference/computeAuc.html">computeAuc</a></span>(prediction)
-    foldPerm &lt;-<span class="st"> </span>auc
+    <span class="co">##auc &lt;- mean(perform) # want overal rather than mean</span>
+    <span class="no">auc</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span>(<span class="no">predictionMat</span>)
+
+    <span class="no">foldPerm</span> <span class="kw">&lt;-</span> <span class="no">perform</span>
+  } <span class="kw">else</span> {
+    <span class="no">model</span> <span class="kw">&lt;-</span> <span class="kw pkg">madeup</span><span class="kw ns">::</span><span class="fu">model</span>(<span class="kw">x</span><span class="kw">=</span> <span class="no">data</span>,
+                                <span class="kw">y</span><span class="kw">=</span> <span class="no">population</span>$<span class="no">outcomeCount</span>,
+                                <span class="kw">a</span><span class="kw">=</span><span class="no">a</span>,<span class="kw">b</span><span class="kw">=</span><span class="no">b</span>)
+
+    <span class="no">pred</span> <span class="kw">&lt;-</span> <span class="kw pkg">stats</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span>(<span class="no">model</span>, <span class="no">data</span>)
+    <span class="no">prediction</span> <span class="kw">&lt;-</span> <span class="no">population</span>
+    <span class="no">prediction</span>$<span class="no">value</span> <span class="kw">&lt;-</span> <span class="no">pred</span>
+    <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">prediction</span>, <span class="st">"metaData"</span>) <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">predictionType</span> <span class="kw">=</span> <span class="st">"binary"</span>)
+    <span class="no">auc</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span>(<span class="no">prediction</span>)
+    <span class="no">foldPerm</span> <span class="kw">&lt;-</span> <span class="no">auc</span>
   }
-  
-  result &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">model=</span>model,
-                 <span class="dt">auc=</span>auc,
-                 <span class="dt">hyperSum =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/unlist">unlist</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">a =</span> a, <span class="dt">b =</span> b, <span class="dt">fold_auc=</span>foldPerm))
+
+  <span class="no">result</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">model</span><span class="kw">=</span><span class="no">model</span>,
+                 <span class="kw">auc</span><span class="kw">=</span><span class="no">auc</span>,
+                 <span class="kw">hyperSum</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">a</span> <span class="kw">=</span> <span class="no">a</span>, <span class="kw">b</span> <span class="kw">=</span> <span class="no">b</span>, <span class="kw">fold_auc</span><span class="kw">=</span><span class="no">foldPerm</span>))
   )
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/function">return</a></span>(result)
-}</code></pre></div>
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">result</span>)
+}</pre></body></html></div>
 </div>
 <div id="predict-1" class="section level2">
 <h2 class="hasAnchor">
 <a href="#predict-1" class="anchor"></a>Predict</h2>
 <p>The final step is to create a predict function for the model. This gets added to the predict.R file. In the example above the type <code>attr(result, 'type') &lt;- 'madeup'</code> was madeup, so a <code>predict.madeup</code> function is required to be added into the predict.R. The predict function needs to take as input the plpModel returned by the fit function, the population to apply the model on and the plpData specifying the covariates of the population.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">predict.madeup &lt;-<span class="st"> </span><span class="cf">function</span>(plpModel,population, plpData, ...){ 
-  result &lt;-<span class="st"> </span><span class="kw"><a href="../reference/toSparseM.html">toSparseM</a></span>(plpData, population, <span class="dt">map=</span>plpModel<span class="op">$</span>covariateMap)
-  data &lt;-<span class="st"> </span>result<span class="op">$</span>data[population<span class="op">$</span>rowId,]
-  prediction &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">rowId=</span>population<span class="op">$</span>rowId, 
-                           <span class="dt">value=</span>stats<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/stats/topics/predict">predict</a></span>(plpModel<span class="op">$</span>model, data)
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">predict.madeup</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">plpModel</span>,<span class="no">population</span>, <span class="no">plpData</span>, <span class="no">...</span>){
+  <span class="no">result</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/toSparseM.html">toSparseM</a></span>(<span class="no">plpData</span>, <span class="no">population</span>, <span class="kw">map</span><span class="kw">=</span><span class="no">plpModel</span>$<span class="no">covariateMap</span>)
+  <span class="no">data</span> <span class="kw">&lt;-</span> <span class="no">result</span>$<span class="no">data</span>[<span class="no">population</span>$<span class="no">rowId</span>,]
+  <span class="no">prediction</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">rowId</span><span class="kw">=</span><span class="no">population</span>$<span class="no">rowId</span>,
+                           <span class="kw">value</span><span class="kw">=</span><span class="kw pkg">stats</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span>(<span class="no">plpModel</span>$<span class="no">model</span>, <span class="no">data</span>)
                            )
-  
-  prediction &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/merge">merge</a></span>(population, prediction, <span class="dt">by=</span><span class="st">'rowId'</span>)
-  prediction &lt;-<span class="st"> </span>prediction[,<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/colnames">colnames</a></span>(prediction)<span class="op">%in%</span>
-<span class="st">                           </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">'rowId'</span>,<span class="st">'outcomeCount'</span>,<span class="st">'indexes'</span>, <span class="st">'value'</span>)] <span class="co"># need to fix no index issue</span>
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/attr">attr</a></span>(prediction, <span class="st">"metaData"</span>) &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">predictionType =</span> <span class="st">"binary"</span>) 
-  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/function">return</a></span>(prediction)
-  
-}</code></pre></div>
+
+  <span class="no">prediction</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span>(<span class="no">population</span>, <span class="no">prediction</span>, <span class="kw">by</span><span class="kw">=</span><span class="st">'rowId'</span>)
+  <span class="no">prediction</span> <span class="kw">&lt;-</span> <span class="no">prediction</span>[,<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span>(<span class="no">prediction</span>)<span class="kw">%in%</span>
+                           <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'rowId'</span>,<span class="st">'outcomeCount'</span>,<span class="st">'indexes'</span>, <span class="st">'value'</span>)] <span class="co"># need to fix no index issue</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span>(<span class="no">prediction</span>, <span class="st">"metaData"</span>) <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">predictionType</span> <span class="kw">=</span> <span class="st">"binary"</span>)
+  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">prediction</span>)
+
+}</pre></body></html></div>
 <p>As the madeup model uses the standard R prediction, it has the same prediction function as xgboost, so we could have not added a new prediction function and instead made the type of the result returned by fitMadeUpModel to <code>attr(result, 'type') &lt;- 'xgboost'</code>.</p>
 </div>
 </div>
@@ -453,16 +458,15 @@
 <h1 class="hasAnchor">
 <a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
 <p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/citation">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</code></pre></div>
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
 <pre><code>## 
 ## To cite PatientLevelPrediction in publications use:
 ## 
-## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018).
-## "Design and implementation of a standardized framework to generate
-## and evaluate patient-level prediction models using observational
-## healthcare data." _Journal of the American Medical Informatics
-## Association_, *25*(8), 969-975. &lt;URL:
-## https://doi.org/10.1093/jamia/ocy032&gt;.
+## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design
+## and implementation of a standardized framework to generate and evaluate
+## patient-level prediction models using observational healthcare data."
+## _Journal of the American Medical Informatics Association_, *25*(8),
+## 969-975. &lt;URL: https://doi.org/10.1093/jamia/ocy032&gt;.
 ## 
 ## A BibTeX entry for LaTeX users is
 ## 
@@ -482,33 +486,14 @@
 </div>
   </div>
 
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-        <div id="tocnav">
-      <h2 class="hasAnchor">
-<a href="#tocnav" class="anchor"></a>Contents</h2>
-      <ul class="nav nav-pills nav-stacked">
-<li><a href="#introduction">Introduction</a></li>
-      <li>
-<a href="#algorithm-code-structure">Algorithm Code Structure</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#set">Set</a></li>
-      <li><a href="#fit">Fit</a></li>
-      <li><a href="#predict">Predict</a></li>
-      </ul>
-</li>
-      <li>
-<a href="#algorithm-example">Algorithm Example</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#set-1">Set</a></li>
-      <li><a href="#fit-1">Fit</a></li>
-      <li><a href="#helpers">Helpers</a></li>
-      <li><a href="#predict-1">Predict</a></li>
-      </ul>
-</li>
-      <li><a href="#acknowledgments">Acknowledgments</a></li>
-      </ul>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+
+        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
+    </nav>
 </div>
-      </div>
 
 </div>
+
 
 
       <footer><div class="copyright">
@@ -516,12 +501,14 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
+
       </footer>
 </div>
 
   
+
 
   </body>
 </html>

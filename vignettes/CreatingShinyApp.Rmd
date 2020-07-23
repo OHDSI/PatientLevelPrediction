@@ -29,7 +29,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Introduction
-In this vignette we will show with example code how to create a shiny app and add the shiny app online for other research around the whole to explore.
+In this vignette we will show with example code how to create a shiny app and add the shiny app online for other researcher around the whole to explore.
 
 There are two ways to create the shiny app:
 1) Using the atlas R generated prediction package 

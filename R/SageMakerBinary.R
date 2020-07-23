@@ -1,6 +1,6 @@
 # @file SageMakerBinary.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -91,7 +91,7 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   
   metaData = plpData$metaData
   populationSettings = attr(population, 'metaData')
-  varImp <- ff::as.ram(plpData$covariateRef)
+  varImp <- as.data.frame(plpData$covariateData$covariateRef)
   
   # create the python object to set variables
   pyt <- reticulate::py

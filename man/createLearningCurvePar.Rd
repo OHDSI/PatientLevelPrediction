@@ -8,14 +8,13 @@ createLearningCurvePar(
   population,
   plpData,
   modelSettings,
-  testSplit = "person",
+  testSplit = "stratified",
   testFraction = 0.25,
   trainFractions = c(0.25, 0.5, 0.75),
   splitSeed = NULL,
   nfold = 3,
   indexes = NULL,
   verbosity = "TRACE",
-  clearffTemp = FALSE,
   minCovariateFraction = 0.001,
   normalizeData = T,
   saveDirectory = getwd(),
@@ -24,7 +23,8 @@ createLearningCurvePar(
   savePlpPlots = F,
   saveEvaluation = F,
   timeStamp = FALSE,
-  analysisId = NULL
+  analysisId = "lc-",
+  cores = NULL
 )
 }
 \arguments{
@@ -77,9 +77,6 @@ levels are:
   \item{\code{FATAL} - be silent except for fatal errors}
 }}
 
-\item{clearffTemp}{Clears the temporary ff-directory after each iteration. 
-This can be useful, if the fitted models are large.}
-
 \item{minCovariateFraction}{Minimum covariate prevalence in population to
 avoid removal during preprocssing.}
 
@@ -98,6 +95,8 @@ avoid removal during preprocssing.}
 \item{timeStamp}{Include a timestamp in the log}
 
 \item{analysisId}{The analysis unique identifier}
+
+\item{cores}{The number of cores to use}
 }
 \value{
 A learning curve object containing the various performance measures

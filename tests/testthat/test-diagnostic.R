@@ -32,4 +32,7 @@ test_that("test code works when using plpData", {
   # check the results are saved into the databaseName directory
   testthat::expect_equal(T, dir.exists(file.path(saveLoc, 'diagnostics')))
   
+  #check tar
+  testthat::expect_equal(test$incidence$riskWindowStart[1], 10)
+  testthat::expect_equal(test$incidence$riskWindowEnd[1], 1*365)
 })

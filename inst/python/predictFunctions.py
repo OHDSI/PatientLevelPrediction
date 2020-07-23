@@ -14,8 +14,8 @@ import sys
 import timeit
 import math
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
-from sklearn.externals.joblib import Memory
-from sklearn.externals import joblib
+from joblib import Memory
+import joblib
 
 def batch(tensor, batch_size = 50):
     """ It is used to create batch samples, each batch has batch_size samples"""

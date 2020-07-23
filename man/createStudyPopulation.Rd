@@ -33,8 +33,7 @@ createStudyPopulation(
 \item{population}{If specified, this population will be used as the starting point instead of the
 cohorts in the \code{plpData} object.}
 
-\item{outcomeId}{The  ID of the outcome. If not specified, no outcome-specific transformations will
-be performed.}
+\item{outcomeId}{The  ID of the outcome.}
 
 \item{binary}{Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)}
 

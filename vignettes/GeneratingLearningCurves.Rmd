@@ -111,7 +111,7 @@ Specify the test split to be used.
 
 ```{r}
 # Use a split by person, alternatively a time split is possible
-testSplit <- 'person'
+testSplit <- 'stratified'
 ```
 
 Create the learning curve object.

@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -15,6 +15,7 @@
 # limitations under the License.
 
 library("testthat")
+context("Keras")
 
 deepSet <- setDeepNN(epochs = 1)
 
@@ -30,7 +31,6 @@ plpResultDeep <- runPlp(population = population,
 
 
 
-context("Keras")
 #TODO: add input checks and test these...
 #options(fftempdir = getwd())
 

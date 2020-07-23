@@ -1,6 +1,6 @@
 # @file RunMultiplePlp.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -48,6 +48,7 @@
 #' @param outcomeTable                   The tablename that contains the outcome cohorts.  Expectation is
 #'                                       outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
 #'                                       SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
+#' @param onlyFetchData                  Only fetches and saves the data object to the output folder without running the analysis.
 #' @param outputFolder                   Name of the folder where all the outputs will written to.
 #' @param modelAnalysisList              A list of objects of type \code{modelSettings} as created using
 #'                                       the \code{\link{createPlpModelSettings}} function.
@@ -82,6 +83,7 @@ runPlpAnalyses <- function(connectionDetails,
                           outcomeDatabaseSchema = cdmDatabaseSchema,
                           outcomeTable = "cohort",
                           cdmVersion = 5,
+                          onlyFetchData = FALSE,
                           outputFolder = "./PlpOutput",
                           modelAnalysisList,
                           cohortIds,
@@ -206,6 +208,7 @@ runPlpAnalyses <- function(connectionDetails,
       if(!is.null(plpData)){
         ParallelLogger::logTrace(paste0('Saving data in setting ', i ))
         savePlpData(plpData, referenceTable$plpDataFolder[i])
+        #plpData <- loadPlpData(referenceTable$plpDataFolder[i])
       } else{
         ParallelLogger::logInfo('No plpData - probably empty cohort issue')
       }
@@ -233,7 +236,7 @@ runPlpAnalyses <- function(connectionDetails,
     }
     
     plpResultFolder = file.path(referenceTable$plpResultFolder[i],'plpResult')
-    if(!dir.exists(plpResultFolder)){
+    if(!dir.exists(plpResultFolder) && !onlyFetchData){
       ParallelLogger::logTrace(paste0('Running runPlp for setting ', i ))
       dir.create(referenceTable$plpResultFolder[i], recursive = T)
       # runPlp and save result to referenceTable$plpResultFolder
@@ -481,9 +484,11 @@ createStudyPopulationSettings <- function(binary = T,
               requireTimeAtRisk = requireTimeAtRisk, 
               minTimeAtRisk = minTimeAtRisk,
               riskWindowStart = riskWindowStart,
-              addExposureDaysToStart = addExposureDaysToStart,
+              startAnchor = ifelse(addExposureDaysToStart,'cohort end','cohort start'),
+              #addExposureDaysToStart = addExposureDaysToStart,
               riskWindowEnd = riskWindowEnd,
-              addExposureDaysToEnd = addExposureDaysToEnd, 
+              #addExposureDaysToEnd = addExposureDaysToEnd, 
+              endAnchor = ifelse(addExposureDaysToEnd,'cohort end','cohort start'),
               verbosity = verbosity)
   }
   

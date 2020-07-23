@@ -1,6 +1,6 @@
 # @file LRTorch.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -33,6 +33,8 @@
 setLRTorch <- function(w_decay=c(0.0005, 0.005), epochs=c(20, 50, 100), seed=NULL, 
                        class_weight = 0, autoencoder = FALSE, vae =FALSE){
   
+  ParallelLogger::logWarn('To use LRTorch you need Torch python libraries \n')
+  ParallelLogger::logWarn("To install tourch run: reticulate::conda_install(envname='r-reticulate', packages = c('pytorch', 'torchvision', 'cpuonly'), forge = TRUE, pip = FALSE, channel = 'pytorch', pip_ignore_installed = TRUE, conda = 'auto')")
   # set seed
   if(is.null(seed[1])){
     seed <- as.integer(sample(100000000,1))
@@ -53,8 +55,9 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
                         outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
-  if(!'ffdf'%in%class(plpData$covariates))
-    stop('Needs plpData')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
   
   if(colnames(population)[ncol(population)]!='indexes'){
     warning('indexes column not present as last column - setting all index to 1')
@@ -97,7 +100,7 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
                                                        train=F,
                                                        modelOutput=outLoc)))
 
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
   covariateRef$included <- incs
   covariateRef$covariateValue <- rep(0, nrow(covariateRef))

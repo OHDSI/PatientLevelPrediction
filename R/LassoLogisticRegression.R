@@ -1,6 +1,6 @@
 # @file lassoLogisticRegression.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -20,13 +20,16 @@
 #'
 #' @param variance   a single value used as the starting value for the automatic lambda search
 #' @param seed       An option to add a seed when training the model
+#' @param threads    An option to set number of threads when training model
 #'
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setLassoLogisticRegression<- function(variance=0.01, seed=NULL){
+setLassoLogisticRegression<- function(variance=0.01, seed=NULL, threads = -1){
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
+  if(!class(threads)%in%c('numeric','NULL','integer'))
+    stop('Invalid threads')
   if(!class(variance) %in% c("numeric", "integer"))
     stop('Variance must be numeric')
   if(variance<0)
@@ -37,7 +40,7 @@ setLassoLogisticRegression<- function(variance=0.01, seed=NULL){
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1]), name="Lasso Logistic Regression")
+  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], threads = threads[1]), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -55,9 +58,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   }
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates)){
-    ParallelLogger::logError('Lasso Logistic regression requires plpData in coo format')
-    stop()
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
   }
 
   metaData <- attr(population, 'metaData')
@@ -77,7 +79,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                                              tolerance  = 2e-07,
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
                                                              selectorType = "byPid",
-                                                             threads=-1,
+                                                             threads= param$threads,
                                                              maxIterations = 3000,
                                                              seed=param$seed))
   
@@ -92,7 +94,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   } else {
     ParallelLogger::logInfo('Creating variable importance data frame')
     #varImp <- varImp[abs(varImp$value)>0,]
-    varImp <- merge(ff::as.ram(plpData$covariateRef), varImp, 
+    varImp <- merge(as.data.frame(plpData$covariateData$covariateRef), varImp, 
                     by='covariateId',all=T)
     varImp$value[is.na(varImp$value)] <- 0
     varImp <- varImp[order(-abs(varImp$value)),]
@@ -105,12 +107,19 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
               population = population, 
               plpData = plpData)
   
+  # get cv AUC
+  cvPrediction  <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
+  cvPerFold <-  unlist(lapply(modelTrained$cv, function(x){x$out_sample_auc}))
+  names(cvPerFold) <- paste0('fold_auc', 1:length(cvPerFold))
+  
   result <- list(model = modelTrained,
                  modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
                  hyperParamSearch = c(priorVariance=modelTrained$priorVariance, 
                                       seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
-                                      log_likelihood = modelTrained$log_likelihood),
-                 trainCVAuc = NULL,
+                                      log_likelihood = modelTrained$log_likelihood,
+                                      cvPerFold,
+                                      auc = aucWithoutCi(cvPrediction$value, cvPrediction$y)),
+                 trainCVAuc = list(value = cvPerFold, prediction = cvPrediction),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,# can use populationSettings$outcomeId?
@@ -125,3 +134,5 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   attr(result, 'predictionType') <- 'binary'
   return(result)
 }
+
+

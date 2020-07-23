@@ -11,8 +11,8 @@ import boto3
 import mxnet as mx
 
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
-from sklearn.externals.joblib import Memory
-from sklearn.externals import joblib
+from joblib import Memory
+import joblib
 
 from sagemaker.amazon.amazon_estimator import get_image_uri
 from sagemaker import get_execution_role

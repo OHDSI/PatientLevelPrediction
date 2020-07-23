@@ -4,12 +4,14 @@
 \alias{setLassoLogisticRegression}
 \title{Create setting for lasso logistic regression}
 \usage{
-setLassoLogisticRegression(variance = 0.01, seed = NULL)
+setLassoLogisticRegression(variance = 0.01, seed = NULL, threads = -1)
 }
 \arguments{
 \item{variance}{a single value used as the starting value for the automatic lambda search}
 
 \item{seed}{An option to add a seed when training the model}
+
+\item{threads}{An option to set number of threads when training model}
 }
 \description{
 Create setting for lasso logistic regression

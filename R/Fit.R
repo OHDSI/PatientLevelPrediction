@@ -1,6 +1,6 @@
 # @file Fit.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -64,35 +64,23 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   if(is.null(modelSettings$model))
     stop('No model specified')
   
-  if('ffdf'%in%class(data$covariates)){
-    plpData <- list(outcomes =data$outcomes,
-                    cohorts = data$cohorts,
-                    covariates =ff::clone(data$covariates),
-                    covariateRef=ff::clone(data$covariateRef),
-                    timeRef=ff::clone(data$timeRef),
-                    metaData=data$metaData
-    )} else{
-      plpData <- data
-    }
-  
-  
+  plpData <- data
   #=========================================================
   # run through pipeline list and apply:
   #=========================================================
   
   # normalise the data:
-  class(plpData) <- c(class(plpData), 'covariateData')
-  removeRedundancy <- ifelse("timeId" %in%colnames(plpData$covariates), F, T)
-  plpData <- FeatureExtraction::tidyCovariateData(covariateData=plpData, 
-                                minFraction = minCovariateFraction,
-                                normalize = normalizeData,
-                                removeRedundancy = removeRedundancy)
-  if(length(plpData$metaData$deletedInfrequentCovariateIds)>0){
-    plpData$covariateRef <- plpData$covariateRef[!ffbase::`%in%`(plpData$covariateRef$covariateId, plpData$metaData$deletedInfrequentCovariateIds), ]
-  }
+  removeRedundancy <- ifelse("timeId" %in%colnames(plpData$covariateData$covariates), F, T)
+  plpData$covariateData <- tryCatch({
+    suppressWarnings(FeatureExtraction::tidyCovariateData(covariateData=data$covariateData, 
+                                                          minFraction = minCovariateFraction,
+                                                          normalize = normalizeData,
+                                                          removeRedundancy = removeRedundancy))
+  })
   
   # get the pre-processing settings
-  ##preprocessSettings <- plpData$metaData  #normFactors, deletedRedundantCovariateIds
+  ##preprocessSettings <- attr(newCovariateData, "metaData")  
+  #   normFactors, deletedRedundantCovariateIds, deletedInfrequentCovariateIds 
   
   # Now apply the classifier:
   fun <- modelSettings$model
@@ -101,9 +89,7 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   plpModel <- do.call(fun, args)
   ParallelLogger::logTrace('Returned from classifier function')
   # add pre-processing details
-  plpModel$metaData$preprocessSettings <- list(normFactors=plpData$metaData$normFactors,
-                                               deletedRedundantCovariateIds=plpData$metaData$deletedRedundantCovariateIds,
-                                               deletedInfrequentCovariateIds=plpData$metaData$deletedInfrequentCovariateIds)
+  plpModel$metaData$preprocessSettings <- attr(plpData$covariateData, "metaData") 
   
   ParallelLogger::logTrace('Creating prediction function')
   plpModel$predict <- createTransform(plpModel)
@@ -115,66 +101,45 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
   
 }
 
-
+#NEED TO UPDATE....
 # fucntion for implementing the pre-processing (normalisation and redundant features removal)
-applyTidyCovariateData <- function(plpData,preprocessSettings){
+applyTidyCovariateData <- function(covariateData,preprocessSettings){
 
-  # clone covariate stuff so it doesnt overwrite
-  covariates <- plpData$covariates
+  if (!FeatureExtraction::isCovariateData(covariateData))
+    stop("Data not of class CovariateData")
+  
+  newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
+                                           analysisRef = covariateData$analysisRef)
   
   maxs <- preprocessSettings$normFactors
-  deleteCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
+  deleteRedundantCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
   deletedInfrequentCovariateIds <- preprocessSettings$deletedInfrequentCovariateIds
-             
-  # remove infreq
-  writeLines("Removing infrequent covariates")
-  start <- Sys.time()
-  if (length(deletedInfrequentCovariateIds) != 0) {
-    idx <- !ffbase::`%in%`(covariates$covariateId, deletedInfrequentCovariateIds)
-    if(sum(idx)>0){
-      covariates <- covariates[idx, ]
-    } else{
-      stop('No covariates left')
-    }
+ 
+  writeLines("Removing infrequent and redundant covariates and normalizing")
+  start <- Sys.time()       
+  
+  if('bins'%in%colnames(maxs)){
+    covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins) %>% 
+      dplyr::rename(maxValue = maxs)
+  } else{
+  covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins)
   }
+  on.exit(covariateData$maxes <- NULL, add = TRUE)
+  
+  newCovariateData$covariates <- covariateData$covariates %>%  
+    dplyr::filter(!covariateId %in%deletedInfrequentCovariateIds) %>%
+    dplyr::filter(!covariateId %in%deleteRedundantCovariateIds) %>%
+    dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
+    dplyr::mutate(value = 1.0*covariateValue/maxValue) %>%
+    dplyr::select(-covariateValue) %>%
+    dplyr::rename(covariateValue = value)
+  
+  
   delta <- Sys.time() - start
-  writeLines(paste("Removing infrequent covariates took", signif(delta, 3), attr(delta, "units")))
-  
-  
-  # do normalisation... preprocessSettings$normFactors 
-  if(!is.null(maxs)){
-    writeLines("Normalizing covariates")
-    start <- Sys.time()
-    ffdfMaxs <- ff::as.ffdf(maxs)
-    names(ffdfMaxs)[names(ffdfMaxs) == "bins"] <- "covariateId"
-    covariates <- ffbase::merge.ffdf(covariates, ffdfMaxs)
-    for (i in bit::chunk(covariates)) {
-      covariates$covariateValue[i] <- covariates$covariateValue[i]/covariates$maxs[i]
-    }
-    covariates$maxs <- NULL
-    delta <- Sys.time() - start
-    writeLines(paste("Normalizing covariates took", signif(delta, 3), attr(delta, "units")))
-  }
-  
-  
-  # remove redundant... preprocessSettings$deletedRedundantCovariateIds
-  writeLines("Removing redundant covariates")
-  start <- Sys.time()
-  if (length(deleteCovariateIds) != 0) {
-    idx <- !ffbase::`%in%`(covariates$covariateId, deleteCovariateIds)
-    if(sum(idx)>0){
-      covariates <- covariates[idx, ]
-    } else{
-      stop('No covariates left')
-    }
-  }
-  delta <- Sys.time() - start
-  writeLines(paste("Removing redundant covariates took", signif(delta, 3), attr(delta, "units")))
-  
-  plpData$covariates <- covariates
+  writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))
   
   # return processed data
-  return(plpData)
+  return(newCovariateData)
 }
 
 # create transformation function
@@ -195,24 +160,12 @@ createTransform <- function(plpModel){
       warning('outcomeId of new data does not match training data or does not exist')
     
     # apply normalsation to new data
-    plpData2 <- list(outcomes =plpData$outcomes,
-                    cohorts = plpData$cohorts,
-                    covariates =ff::clone(plpData$covariates),
-                    covariateRef=ff::clone(plpData $covariateRef),
-                    timeRef=ff::clone(plpData $timeRef),
-                    metaData=plpData$metaData)
-    plpData2$covariates <- limitCovariatesToPopulation(plpData2$covariates, ff::as.ff(population$rowId))
+    plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
     if(!is.null(plpModel$metaData$preprocessSettings)){
-      plpData2 <- applyTidyCovariateData(plpData2,plpModel$metaData$preprocessSettings)
-      if(length(plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)>0){
-        idx <- !ffbase::`%in%`(plpData2$covariateRef$covariateId, plpModel$metaData$preprocessSettings$deletedInfrequentCovariateIds)
-        if(sum(idx)!=0){
-          plpData2$covariateRef <- plpData2$covariateRef[idx, ]
-        } else{warning('All covariateRef removed by deletedInfrequentCovariateIds')}
-      }
+      plpData$covariateData <- applyTidyCovariateData(plpData$covariateData,plpModel$metaData$preprocessSettings)
     }
     pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
-                                                                    plpData=plpData2, 
+                                                                    plpData=plpData, 
                                                                     population=population))
 
     metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],

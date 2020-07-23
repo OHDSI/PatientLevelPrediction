@@ -1,5 +1,5 @@
-pandoc: 1.19.2.1
-pkgdown: 1.3.0
+pandoc: 2.7.3
+pkgdown: 1.5.1
 pkgdown_sha: ~
 articles:
   AddingCustomAlgorithms: AddingCustomAlgorithms.html
@@ -8,9 +8,10 @@ articles:
   BuildingMultiplePredictiveModels: BuildingMultiplePredictiveModels.html
   BuildingPredictiveModels: BuildingPredictiveModels.html
   CreatingNetworkStudies: CreatingNetworkStudies.html
+  CreatingShinyApp: CreatingShinyApp.html
   GeneratingLearningCurves: GeneratingLearningCurves.html
-  ImplementingExistingModels: ImplementingExistingModels.html
   InstallationGuide: InstallationGuide.html
   PatientLevelPrediction: PatientLevelPrediction.html
   Videos: Videos.html
+last_built: 2020-06-08T07:39Z
 

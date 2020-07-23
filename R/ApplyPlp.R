@@ -1,6 +1,6 @@
 # @file packagePlp.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -73,14 +73,19 @@ applyModel <- function(population,
   peopleCount <- nrow(population)
 
   start.pred <- Sys.time()
-  if (!silent)
+  if (!silent){
     ParallelLogger::logInfo(paste("Starting Prediction ", Sys.time(), "for ", peopleCount, " people"))
-
+    
+    if('outcomeCount' %in% colnames(population)){
+      ParallelLogger::logInfo(paste("Outcome count: ", sum(population$outcomeCount>0), " people"))
+    }
+  }
+  
   prediction <- plpModel$predict(plpData = plpData, population = population)
 
-  
+  delta <- start.pred - Sys.time()
   if (!silent)
-    ParallelLogger::logInfo(paste("Prediction completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+    ParallelLogger::logInfo(paste("Prediction completed at ", Sys.time(), " taking ", signif(delta, 3), attr(delta, "units")))
 
 
   if (!"outcomeCount" %in% colnames(prediction))
@@ -125,22 +130,18 @@ applyModel <- function(population,
                                           Eval=rep('validation', nr1),
                                           performance$predictionDistribution)
   
-
+  delta <- start.pred - Sys.time()
   if (!silent)
-    ParallelLogger::logInfo(paste("Evaluation completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+    ParallelLogger::logInfo(paste("Evaluation completed at ", Sys.time(), " taking ", signif(delta, 3), attr(delta, "units") ))
 
   if (!silent)
     ParallelLogger::logInfo(paste("Starting covariate summary at ", Sys.time()))
   start.pred  <- Sys.time()
-  covSum <- covariateSummary(plpData, population)
-  if(exists("plpModel")){
-    if(!is.null(plpModel$varImp)){
-      covSum <- merge(plpModel$varImp[,colnames(plpModel$varImp)!='covariateName'], covSum, by='covariateId', all=T)
-    }
-  }
+  covSum <- covariateSummary(plpData, population, model = plpModel)
   
+  delta <- start.pred - Sys.time()
   if (!silent)
-    ParallelLogger::logInfo(paste("Covariate summary completed at ", Sys.time(), " taking ", start.pred - Sys.time()))
+    ParallelLogger::logInfo(paste("Covariate summary completed at ", Sys.time(), " taking ", signif(delta, 3), attr(delta, "units")))
   
   executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
                                                  packageVersion = utils::packageVersion("PatientLevelPrediction")),

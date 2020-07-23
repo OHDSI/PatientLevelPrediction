@@ -4,7 +4,7 @@ PatientLevelPrediction
 [![Build Status](https://travis-ci.org/OHDSI/PatientLevelPrediction.svg?branch=master)](https://travis-ci.org/OHDSI/PatientLevelPrediction)
 [![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=master)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=master)
 
-PatientLevelPrediction is part of the [OHDSI Methods Library](https://ohdsi.github.io/MethodsLibrary/).
+PatientLevelPrediction is part of [HADES](https://ohdsi.github.io/Hades).
 
 
 Introduction
@@ -77,13 +77,6 @@ Requires R (version 3.3.0 or higher). Installation on Windows requires [RTools](
 The python installation is required for some of the machine learning algorithms. We advise to
 install Python 3.7 using Anaconda (https://www.continuum.io/downloads). 
 
-Dependencies
-============
- * Cyclops
- * DatabaseConnector
- * SqlRender
- * FeatureExtraction
-
 Getting Started
 ===============
 
@@ -110,13 +103,20 @@ In addition we have created vignettes that describe advanced functionality in mo
 
 Package manual: [PatientLevelPrediction.pdf](https://github.com/OHDSI/PatientLevelPrediction/blob/master/extras/PatientLevelPrediction.pdf)
 
-Getting Involved
-===============
-We like to get involved in the development of this package through pull requests to our development branch.
+User Documentation
+==================
+Documentation can be found on the [package website](https://ohdsi.github.io/PatientLevelPrediction).
 
+PDF versions of the documentation are also available, as mentioned above.
 
+Support
+=======
 * Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="https://github.com/OHDSI/PatientLevelPrediction/issues">GitHub issue tracker</a> for all bugs/issues/enhancements
+
+Contributing
+============
+Read [here](https://ohdsi.github.io/Hades/contribute.html) how you can contribute to this package. 
  
 License
 =======

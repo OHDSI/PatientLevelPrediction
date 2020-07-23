@@ -22,7 +22,7 @@ $git_mod = $3;
 
 print "Current git version: $git_major-$git_minor-$git_mod\n";
 
-if ($r_major gt $git_major || $r_minor gt $git_minor || $r_mod gt $git_mod) {
+if ($r_major > $git_major || $r_minor > $git_minor || $r_mod > $git_mod) {
 	$monotonic = 0;
 } else {
 	$monotonic = -1;

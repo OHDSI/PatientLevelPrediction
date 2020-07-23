@@ -1,6 +1,6 @@
 # @file fitGLMModel.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -58,16 +58,17 @@ fitGLMModel <- function(population,
   }  else {
     colnames(population)[colnames(population) == "outcomeCount"] <- "y"
     
-
-    covariates <- limitCovariatesToPopulation(plpData$covariates, ff::as.ff(population$rowId))
+    covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
     
-    if (length(includeCovariateIds) != 0) {
-      idx <- !is.na(ffbase::ffmatch(covariates$covariateId, ff::as.ff(includeCovariateIds)))
-      covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
-    }
-    if (length(excludeCovariateIds) != 0) {
-      idx <- is.na(ffbase::ffmatch(covariates$covariateId, ff::as.ff(excludeCovariateIds)))
-      covariates <- covariates[ffbase::ffwhich(idx, idx == TRUE), ]
+    # exclude or include covariates
+    if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) != 0)) {
+      covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds) %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+    } else if ( (length(includeCovariateIds) == 0) & (length(excludeCovariateIds) != 0)) { 
+      covariates <- covariateData$covariates %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+    } else if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) == 0)) {
+      covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds)
+    } else {
+      covariates <- covariateData$covariates
     }
     
     if (modelType == "cox"){
@@ -83,14 +84,18 @@ fitGLMModel <- function(population,
     } else {
       addIntercept <- TRUE
     }
-    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = ff::as.ffdf(population[,!colnames(population)%in%c('cohortStartDate')]),
+    
+    covariateData$andromedaPopulation <- population[,!colnames(population)%in%c('cohortStartDate')]
+    
+    cyclopsData <- Cyclops::convertToCyclopsData(outcomes = covariateData$andromedaPopulation,
                                                  covariates = covariates,
                                                  addIntercept = addIntercept,
                                                  modelType = modelTypeToCyclopsModelType(modelType),
-                                                 checkSorting = TRUE,
+                                                 #checkSorting = TRUE,
                                                  checkRowIds = FALSE,
                                                  normalize = NULL,
                                                  quiet = TRUE)
+
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
       Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)}, 
@@ -121,12 +126,19 @@ fitGLMModel <- function(population,
   outcomeModel$modelStatus <- status
   outcomeModel$populationCounts <- getCounts(population, "Population count")
   if (modelType == "poisson" || modelType == "cox") {
-    timeAtRisk <- data.frame(sum(population$time))
+    timeAtRisk <- data.frame(sum(population$timeAtRisk)) # not sure this is correct?
     outcomeModel$timeAtRisk <- timeAtRisk
   }
   class(outcomeModel) <- "plpModel"
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))
+  
+  
+  #get CV
+  if(modelType == "logistic"){
+    outcomeModel$cv <- getCV(cyclopsData, population, cvVariance = fit$variance)
+  }
+  
   return(outcomeModel)
 }
 
@@ -148,4 +160,36 @@ modelTypeToCyclopsModelType <- function(modelType, stratified=F) {
     stop()
   }
 
+}
+
+
+
+getCV <- function(cyclopsData, 
+                  population,
+                  cvVariance){
+   fixed_prior <- createPrior("laplace", variance = cvVariance, useCrossValidation = FALSE)
+  
+  result <- lapply(1:max(population$indexes), function(i) {
+    hold_out <- population$indexes==i
+    weights <- rep(1.0, getNumberOfRows(cyclopsData))
+    weights[hold_out] <- 0.0
+    subset_fit <- suppressWarnings(fitCyclopsModel(cyclopsData,
+                                  prior = fixed_prior,
+                                  weights = weights))
+    predict <- predict(subset_fit)
+    
+    auc <- aucWithoutCi(predict[hold_out], population$y[hold_out])
+    
+    predCV <- cbind(population[hold_out,c('rowId','indexes','y')], 
+          value = predict[hold_out])
+    predCV$outcomeCount <- predCV$y
+    
+    return(list(out_sample_auc = auc,
+                predCV = predCV,
+                log_likelihood = subset_fit$log_likelihood,
+                log_prior = subset_fit$log_prior,
+                coef = coef(subset_fit)))
+  })
+  
+  
 }

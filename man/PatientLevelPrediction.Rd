@@ -4,6 +4,3 @@
 \name{PatientLevelPrediction}
 \alias{PatientLevelPrediction}
 \title{PatientLevelPrediction}
-\description{
-PatientLevelPrediction
-}

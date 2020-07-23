@@ -40,16 +40,6 @@ Under Windows the OHDSI Patient Level Prediction (PLP) package requires installi
 * Rstudio (https://www.rstudio.com/  )
 * Java (http://www.java.com )
 * RTools (https://cran.r-project.org/bin/windows/Rtools/) 
-* Anaconda 3.6 (https://www.anaconda.com/download) \- this will require checking your path variable to ensure the correct python is used by R \- more instructions below. For Python you need to make sure it is in the Path: go to my computer -> system properties -> advanced system settings 
-Then at the bottom right you'll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable to add the Anaconda location. In R you need to check the Path is correct: You can access the path variable in R using `Sys.getenv('PATH')`.  This should contain the location of your Anaconda or python 3.6.
-* If you have Anaconda and want to use PyTorch v0.4 (https://pytorch.org) as the backend of deep learning, you can directly use command "conda install pytorch torchvision -c pytorch" for Linux. 
-  Please refers to commands for installing PyTorch (https://pytorch.org) on other develop environments.
-* To add the R keras interface, in Rstudio run:
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-devtools::install_github("rstudio/keras")
-library(keras)
-install_keras()
-```
 
 ## Mac/Linux Users
 Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires installing:
@@ -58,58 +48,8 @@ Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires in
 * Rstudio (https://www.rstudio.com/  )
 * Java (http://www.java.com )
 * Xcode command line tools(run in terminal: xcode-select --install) [MAC USERS ONLY]
-* Python 3.6 (https://www.python.org/downloads/) \- this will require checking your path variable to ensure this version python is added \- more instructions below
-* To add the R keras interface, in Rstudio run:
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-devtools::install_github("rstudio/keras")
-library(keras)
-install_keras()
-```
-
-### Setting up Python for Mac/Linux Users
-After installing python 3.6 check it is working by typing python3 to open python in a terminal.
-
-To get the package dependencies, in a terminal run:
-```
-pip3 install --upgrade pip
-pip3 install -U NumPy
-pip3 install -U SciPy 
-pip3 install -U scikit-learn
-pip3 install -U torch
-pip3 install --upgrade tensorflow 
-pip3 install keras
-```
-Dependent on your permissions you may need to add a sudo command in front of the pip3 commands.
-
-Mac and Linux users need edit the bash profile to add python in their Path by running in the terminal:
-`touch ~/.bash_profile; open ~/.bash_profile;`
-and adding in the location of python 3.6 in the PATH variable.  You can find the location of the python versions by typing this in a terminal:
-
-```
-type -a python
-```
-
-Furthermore, you need to specify in their R environment that R needs to use python 3.6 rather than the default python.
-In a new Rstudio session run this to open the environment file:
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-install.packages(‘usethis’)
-usethis::edit_r_environ()
-```
-
-In the file that opens add and save:
-PATH= {The path containing the python 3}
-
-USESPECIALPYTHONVERSION=“python3.6"
 
 
-
-You now need to compile PythonInR so it uses python 3.6. In a new R studio session run:
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-Sys.setenv('USESPECIALPYTHONVERSION'='python3.6')
-devtools::install_bitbucket("Floooo/PythonInR")
-```
-This should now set the PythonInR package to use your python 3.6.
-Please note: if you update the path while R is open, you will need to shutdown R and reopen before the path is refreshed.
 
 # Installing the Package
 The preferred way to install the package is by using drat, which will automatically install the latest release and all the latest dependencies.
@@ -122,21 +62,50 @@ To install using drat run:
 install.packages("drat")
 drat::addRepo("OHDSI")
 install.packages("PatientLevelPrediction")
+```
 
 ## Installing PatientLevelPrediction using devtools
 To install using devtools run:
 ```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-install.packages("devtools")
-library("devtools")
-install_github("ohdsi/SqlRender") 
-install_github("ohdsi/DatabaseConnectorJars") 
-install_github("ohdsi/DatabaseConnector") 
-install_github("ohdsi/FeatureExtraction")
-install_github("ohdsi/OhdsiSharing") 
-install_github("ohdsi/OhdsiRTools") 
-install_github("ohdsi/BigKnn")  
-install_github("ohdsi/PatientLevelPrediction") 
+install.packages('devtools')
+devtools::install_github("OHDSI/FeatureExtraction")
+devtools::install_github('ohdsi/PatientLevelPrediction')
 ```
+When installing using devtools make sure to close any other Rstudio sessions that are using PatientLevelPrediction or any dependency.  Keeping Rstudio sessions open can cause locks that prevent the package installing.
+
+# Creating Python Reticulate Environment
+
+Many of the classifiers in the PatientLevelPrediction use a Python back end.  To set up a python environment run:
+
+```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
+library(PatientLevelPrediction)
+reticulate::install_miniconda()
+configurePython(envname='r-reticulate', envtype='conda')
+
+```
+
+To add the R keras interface, in Rstudio run:
+
+```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
+devtools::install_github("rstudio/keras")
+library(keras)
+install_keras()
+```
+
+Some of the less frequently used classifiers are not installed during this set-up to add them run:
+
+For GBM survival:
+```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
+reticulate::conda_install(envname='r-reticulate', packages = c('scikit-survival'), forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, conda = "auto", channel = 'sebp')
+
+```
+
+For any of the torch models:
+```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
+reticulate::conda_install(envname='r-reticulate', packages = c('pytorch', 'torchvision', 'cpuonly'), forge = TRUE, pip = FALSE, channel = 'pytorch', pip_ignore_installed = TRUE, conda = 'auto')
+
+```
+
 
 # Testing installation
 To test whether the package is installed correctly run:

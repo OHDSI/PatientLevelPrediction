@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -15,7 +15,7 @@
 # limitations under the License.
 
 library("testthat")
-
+context("Survival")
 coxSet <- setCoxModel()
 
 plpResultCox <- runPlp(population = population,
@@ -30,7 +30,6 @@ plpResultCox <- runPlp(population = population,
 
 
 
-context("Survival")
 #TODO: add input checks and test these...
 #options(fftempdir = getwd())
 
@@ -212,4 +211,5 @@ test_that("GBM survival", {
   
 })
 
-  
+# need to test  
+

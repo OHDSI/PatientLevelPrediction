@@ -14,8 +14,8 @@ import timeit
 import math
 from skgarden.quantile import RandomForestQuantileRegressor
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
-from sklearn.externals.joblib import Memory
-from sklearn.externals import joblib
+from joblib import Memory
+import joblib
 
 #================================================================
 def train_RandomForestQuantileRegressor(population, plpData, train, modelOutput,seed, quiet, n_estimators,criterion,max_features,max_depth,min_samples_split, min_samples_leaf,min_weight_fraction_leaf,max_leaf_nodes, bootstrap,oob_score,warm_start):

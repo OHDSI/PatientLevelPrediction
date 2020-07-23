@@ -1,3 +1,37 @@
+PatientLevelPrediction 4.0.5
+======================
+- added calibration updates: cal-in-large, weak cal 
+- updated smooth cal plot (sample for speed in big data)
+- defaulted to 100 values in calibrationSummary + updated cal plot
+
+PatientLevelPrediction 4.0.4
+======================
+- fixed backwards compat with normalization
+- fixed python joblib dependancy 
+
+
+PatientLevelPrediction 4.0.2
+======================
+- fixed bug in preprocessing 
+- added cross validation aucs to LR, GBM, RF and MLP
+- added more settings into MLP
+- added threads option in LR
+
+
+PatientLevelPrediction 4.0.1
+======================
+- fixed minor bug with shiny dependency 
+- fixed some tests
+- added standardizedMeanDiff to covariatesummary
+- updated createStudyPopulation to make it cleaner to read and count outcome per TAR
+
+PatientLevelPrediction 4.0.0
+======================
+- Andromeda replaced ff data objects
+- added age/gender into cohort
+- fixed python warnings
+- updated shiny plp viewer
+
 PatientLevelPrediction 3.0.16
 ======================
 - Fixed bug when running multiple analyses using a data extraction sample with multiple covariate settings

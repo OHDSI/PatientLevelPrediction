@@ -1,6 +1,6 @@
 # @file gradientBoostingMachine.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -82,6 +82,11 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
 #xgboost
 fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                         outcomeId, cohortId, ...){
+  
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
+  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -95,10 +100,6 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   
   if(param[[1]]$seed!='NULL')
     set.seed(param[[1]]$seed)
-  
-  # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) )
-    stop('This algorithm requires plpData in coo format')
   
   metaData <- attr(population, 'metaData')
   if(!is.null(population$indexes))
@@ -123,10 +124,13 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   hyperSummary <- do.call("rbind", lapply(param.sel, function(x) x$hyperSum))
   hyperSummary <- as.data.frame(hyperSummary)
   hyperSummary$auc <- unlist(lapply(param.sel, function(x) x$auc)) # new edit
-    
+  
+  cvPrediction <- lapply(param.sel, function(x) x$cvPrediction)[[which.max(unlist(lapply(param.sel, function(x) x$auc)))]]
+  
   param.sel <- unlist(lapply(param.sel, function(x) x$auc))
   param <- param[[which.max(param.sel)]]
   param$final=T
+  
   
   #ParallelLogger::logTrace("Final train")
   trainedModel <- do.call("gbm_model2", c(param,datas)  )$model
@@ -139,9 +143,10 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   
   # get the original feature names:
   varImp$Feature <- as.numeric(varImp$Feature)+1 # adding +1 as xgboost index starts at 0
-  varImp <- merge(result$map, varImp, by.x='newIds', by.y='Feature')
+  varImp <- merge(result$map, varImp, by.x='newCovariateId', by.y='Feature')
   
-  varImp<- merge(ff::as.ram(plpData$covariateRef),varImp,  by.y='oldIds', by.x='covariateId', all=T)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
+  varImp<- merge(covariateRef,varImp,  by.y='oldCovariateId', by.x='covariateId', all=T)
   varImp$Gain[is.na(varImp$Gain)] <- 0
   varImp <- varImp[order(-varImp$Gain),]
   colnames(varImp)[colnames(varImp)=='Gain'] <- 'covariateValue'
@@ -156,7 +161,8 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
 
   result <- list(model = trainedModel,
                  modelSettings = list(model='gbm_xgboost', modelParameters=param), #todo get lambda as param
-                 trainCVAuc = NULL,
+                 trainCVAuc = list(value = hyperSummary[which.max(param.sel),grep('fold_',(colnames(hyperSummary)))],
+                                   prediction = cvPrediction),
                  hyperParamSearch = hyperSummary,
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
@@ -196,6 +202,7 @@ gbm_model2 <- function(data, population,
     predictionMat$value <- 0
     attr(predictionMat, "metaData") <- list(predictionType = "binary")
     
+    cvPrediction <- c() 
     for(index in 1:length(index_vect )){
       ParallelLogger::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
       train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
@@ -217,6 +224,7 @@ gbm_model2 <- function(data, population,
       pred <- stats::predict(model, data[population$indexes==index,])
       prediction <- population[population$indexes==index,]
       prediction$value <- pred
+      cvPrediction <- rbind(cvPrediction, prediction)
       attr(prediction, "metaData") <- list(predictionType = "binary")
       aucVal <- computeAuc(prediction)
       perform <- c(perform,aucVal)
@@ -258,6 +266,7 @@ gbm_model2 <- function(data, population,
     attr(prediction, "metaData") <- list(predictionType = "binary") 
     auc <- computeAuc(prediction)
     foldPerm <- auc
+    cvPrediction <- NULL
   }
   param.val <- paste0('maxDepth: ',maxDepth,'-- minRows: ', minRows, 
                       '-- nthread: ', nthread, ' ntrees: ',ntrees, '-- learnRate: ', learnRate)
@@ -266,7 +275,7 @@ gbm_model2 <- function(data, population,
   ParallelLogger::logInfo("==========================================")
   
   result <- list(model=model,
-                 auc=auc,
+                 auc=auc, cvPrediction = cvPrediction,
                  hyperSum = unlist(list(maxDepth = maxDepth, learnRate = learnRate, nthread = nthread, 
                                         minRows = minRows, ntrees = ntrees, fold_auc=foldPerm))
   )

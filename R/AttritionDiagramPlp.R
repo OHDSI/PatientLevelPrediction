@@ -1,6 +1,6 @@
 # @file AttritionDiagramPlp.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -76,8 +76,11 @@ drawAttritionDiagramPlp <- function(attrition,
                targetCount = attrition$targetCount[1],
                uniquePeople = attrition$uniquePeople[1],
                outcomes = attrition$outcomes[1])
-  for (i in 2:nrow(attrition)) {
-    data <- addStep(data, attrition, i)
+  
+  if(nrow(attrition)>1){
+    for (i in 2:nrow(attrition)) {
+      data <- addStep(data, attrition, i)
+    }
   }
   
   

@@ -1,0 +1,18 @@
+<h3>Description</h3>
+  <p> The receiver operating characteristic (ROC) curve shows the trade-off between sensitivity and specificity for all possible risk cutoffs. The area below the curve is a measure of overall discriminative performance. Click <a href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic">here</a> for more information.  </p>
+  
+<h3>Interpretation</h3>
+  <p> If a model is not able to discriminate then the curve will be approximately the x=y line.  A perfectly discriminative model will go up vertically and then across.</p>
+
+<h3>Notes</h3>
+  <p> If the outcome is rare then the ROC curve doesn't provide insight into the precision of the model and a precision recall curve (PRC) should also be inspected. </p>  
+  
+<h3>Definitions</h3>
+  <ul> 
+  <li> Sensitivity - probability that somebody with the outcome will be identified as having the outcome by the model at a specified cutoff (e.g., their predicted risk >= specified cutoff)  
+  </li>
+<li> 
+   Specificity - probability that somebody without the outcome will be identified as a non-outcome by the model at a specified cutoff (e.g., their predicted risk < specified cutoff) </li> 
+   <li> Precision (positive predictive value) - probability that somebody identified by the model as having the outcome at a specified cutoff truly has the outcome 
+   </li>
+  </ul> 
