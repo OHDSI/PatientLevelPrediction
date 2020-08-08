@@ -1,3 +1,8 @@
+PatientLevelPrediction 4.0.6
+======================
+- fixed bug with pdw data extraction due to multiple person_id columns
+- fixed bug in shiny app converting covariate values due to tibble
+
 PatientLevelPrediction 4.0.5
 ======================
 - added calibration updates: cal-in-large, weak cal 
