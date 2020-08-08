@@ -62,7 +62,7 @@ SELECT ROW_NUMBER() OVER (ORDER BY subject_id, cohort_start_date) AS row_id,
 INTO #cohort_person
 
 {@use_sample}?{From ( select *  -- sampdata
-                from ( select *, -- alldata
+                from ( select {@first_only} ? {first_only.*}:{raw_cohorts.*}, p.year_of_birth, p.gender_concept_id, op.observation_period_start_date, op.observation_period_end_date , -- alldata
                 row_number() over (order by (CAST(p.person_id*month(cohort_start_date) AS BIGINT) % 123)*(CAST(year(cohort_start_date)*day(cohort_start_date) AS BIGINT) % 123)) rn
   } 
 

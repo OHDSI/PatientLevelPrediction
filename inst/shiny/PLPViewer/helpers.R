@@ -120,6 +120,7 @@ formatPopSettings <- function(populationSettings){
 
 # format covariate summary table
 formatCovariateTable <- function(covariateSummary){
+  covariateSummary <- as.data.frame(covariateSummary)
   for(coln in c('covariateValue','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','StandardizedMeanDiff')){
     if(sum(colnames(covariateSummary)==coln)>0){
       covariateSummary[,coln] <- format(round(covariateSummary[,coln], 4), nsmall = 4)
