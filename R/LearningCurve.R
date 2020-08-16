@@ -433,6 +433,6 @@ lcWrapper <- function(settings){
     final <- reshape2::dcast(dfr, x~ name)
     return(final)
   } else{
-    return(rep(0,18))
+    return(rep(0,20))
   }
 }
