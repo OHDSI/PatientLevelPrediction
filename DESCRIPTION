@@ -60,7 +60,8 @@ Imports:
     plotly,
     zeallot,
     htmltools,
-    tensorflow
+    tensorflow,
+    benchmarkme
 Suggests:
     shiny,
     DT,
