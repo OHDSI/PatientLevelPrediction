@@ -61,14 +61,14 @@ Imports:
     zeallot,
     htmltools,
     tensorflow,
-    benchmarkme
+    benchmarkme,
+    cowplot
 Suggests:
     shiny,
     DT,
     htmlwidgets (> 0.8),
     shinydashboard,
     shinycssloaders,
-    cowplot,
     testthat,
     pROC,
     gnm,
