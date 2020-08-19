@@ -60,14 +60,15 @@ Imports:
     plotly,
     zeallot,
     htmltools,
-    tensorflow
+    tensorflow,
+    benchmarkme,
+    cowplot
 Suggests:
     shiny,
     DT,
     htmlwidgets (> 0.8),
     shinydashboard,
     shinycssloaders,
-    cowplot,
     testthat,
     pROC,
     gnm,

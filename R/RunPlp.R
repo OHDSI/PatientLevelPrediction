@@ -380,7 +380,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                                                  packageVersion = utils::packageVersion("PatientLevelPrediction")),
                            PlatformDetails= list(platform= R.Version()$platform,
                                                  cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
-                                                 RAM=utils::memory.size()), #  test for non-windows needed
+                                                 RAM=benchmarkme::get_ram()),
                            # Sys.info()
                            TotalExecutionElapsedTime = TotalExecutionElapsedTime,
                            ExecutionDateTime = ExecutionDateTime,

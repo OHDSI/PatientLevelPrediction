@@ -99,7 +99,7 @@ In addition we have created vignettes that describe advanced functionality in mo
 - [Adding Custom Machine Learning Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomAlgorithms.pdf)
 - [Building Deep Learning Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingDeepLearningModels.pdf)
 - [Building Ensemble Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingEnsembleModels.pdf)
-- [Generating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/GeneratingLearningCurves.pdf)
+- [Creating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/CreatingLearningCurves.pdf)
 
 Package manual: [PatientLevelPrediction.pdf](https://github.com/OHDSI/PatientLevelPrediction/blob/master/extras/PatientLevelPrediction.pdf)
 
