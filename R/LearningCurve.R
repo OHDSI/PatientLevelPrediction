@@ -45,6 +45,15 @@
 #' @param testFraction The fraction of the data, which will be used as the 
 #'   testing set in the patient split evaluation.
 #' @param trainFractions A list of training fractions to create models for.
+#'   Note, providing \code{trainEvents} will override your input to
+#'   \code{trainFractions}.
+#' @param trainEvents Events have shown to be determinant of model performance.
+#'   Therefore, it is recommended to provide \code{trainEvents} rather than
+#'   \code{trainFractions}. Note, providing \code{trainEvents} will override
+#'   your input to \code{trainFractions}. The format should be as follows:
+#'   \itemize{
+#'     \item{\code{c(500, 1000, 1500)} - a list of training events}
+#'   }
 #' @param splitSeed The seed used to split the testing and training set when
 #'   using a 'person' type split                  
 #' @param nfold The number of folds used in the cross validation (default = 
@@ -100,13 +109,13 @@ createLearningCurve <- function(population,
                                 testSplit = 'person',
                                 testFraction = 0.25,
                                 trainFractions = c(0.25, 0.50, 0.75),
+                                trainEvents = NULL,
                                 splitSeed = NULL,
                                 nfold = 3,
                                 indexes = NULL,
                                 verbosity = 'TRACE',
                                 clearffTemp = FALSE,
                                 minCovariateFraction = 0.001,
-                                
                                 normalizeData = T,
                                 saveDirectory = getwd(),
                                 savePlpData = F,
@@ -122,6 +131,25 @@ createLearningCurve <- function(population,
   
   # remove all registered loggers
   ParallelLogger::clearLoggers()
+  
+  # if trainEvents is provided override trainFractions input
+  if (!is.null(trainEvents)) {
+    # compute training set fractions from training events
+    samplesRequired <- trainEvents/(sum(population$outcomeCount/nrow(population)))
+    trainFractionsTemp <- samplesRequired/nrow(population)
+    
+    # filter out no. of events that would exceed the available training set size
+    binaryMask <- trainFractionsTemp <= (1.0 - testFraction)
+    
+    # override any input to trainFractions with event-based training fractions
+    trainFractions <- trainFractionsTemp[binaryMask]
+    
+    # Check if any train fractions could be associated with the provided events
+    if(!length(trainFractions)) {
+      # If not, fall back on default train fractions
+      trainFractions <- c(0.25, 0.50, 0.75)
+    }
+  }
   
   # number of training set fractions
   nRuns <- length(trainFractions)
@@ -244,7 +272,15 @@ createLearningCurve <- function(population,
 #' @param testFraction The fraction of the data, which will be used as the 
 #'   testing set in the patient split evaluation.
 #' @param trainFractions A list of training fractions to create models for.
-#' @param splitSeed The seed used to split the testing and training set when
+#'   Note, providing \code{trainEvents} will override your input to
+#'   \code{trainFractions}.
+#' @param trainEvents Events have shown to be determinant of model performance.
+#'   Therefore, it is recommended to provide \code{trainEvents} rather than
+#'   \code{trainFractions}. Note, providing \code{trainEvents} will override
+#'   your input to \code{trainFractions}. The format should be as follows:
+#'   \itemize{
+#'     \item{\code{c(500, 1000, 1500)} - a list of training events}
+#'   }#' @param splitSeed The seed used to split the testing and training set when
 #'   using a 'person' type split                  
 #' @param nfold The number of folds used in the cross validation (default = 
 #'   \code{3}).
@@ -300,6 +336,7 @@ createLearningCurvePar <- function(population,
                                    testSplit = 'stratified',
                                    testFraction = 0.25,
                                    trainFractions = c(0.25, 0.50, 0.75),
+                                   trainEvents = NULL,
                                    splitSeed = NULL,
                                    nfold = 3,
                                    indexes = NULL,
@@ -326,6 +363,25 @@ createLearningCurvePar <- function(population,
   }
   
   savePlpData(plpData, file.path(saveDirectory,'data'))
+  
+  # if trainEvents is provided override trainFractions input
+  if (!is.null(trainEvents)) {
+    # compute training set fractions from training events
+    samplesRequired <- trainEvents/(sum(population$outcomeCount/nrow(population)))
+    trainFractionsTemp <- samplesRequired/nrow(population)
+    
+    # filter out no. of events that would exceed the available training set size
+    binaryMask <- trainFractionsTemp <= (1.0 - testFraction)
+    
+    # override any input to trainFractions with event-based training fractions
+    trainFractions <- trainFractionsTemp[binaryMask]
+    
+    # Check if any train fractions could be associated with the provided events
+    if(!length(trainFractions)) {
+      # If not, fall back on default train fractions
+      trainFractions <- c(0.25, 0.50, 0.75)
+    }
+  }
   
   getLcSettings <- function(i){
     result <-list(population=population,
