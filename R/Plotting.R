@@ -1196,8 +1196,8 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #'   }
 #' @param abscissa Specify the abscissa metric to be plotted:
 #'   \itemize{
+#'     \item{\code{'events'} - use number of events}
 #'     \item{\code{'observations'} - use number of observations}
-#'     \item{\code{'outcomes'} - use number of positive outcomes}
 #'   }
 #' @param plotTitle Title of the learning curve plot.
 #' @param plotSubtitle Subtitle of the learning curve plot.
@@ -1222,7 +1222,7 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #' @export
 plotLearningCurve <- function(learningCurve,
                               metric = "AUROC",
-                              abscissa = "observations",
+                              abscissa = "events",
                               plotTitle = "Learning Curve", 
                               plotSubtitle = NULL,
                               fileName = NULL){
@@ -1267,10 +1267,10 @@ plotLearningCurve <- function(learningCurve,
   
   if (abscissa == "observations") {
     abscissa <- "Observations"
-    abscissaLabel <- "Training set size"
-  } else if (abscissa == "outcomes") {
+    abscissaLabel <- "No. of observations"
+  } else if (abscissa == "events") {
     abscissa <- "Occurrences"
-    abscissaLabel <- "Positive outcomes"
+    abscissaLabel <- "No. of events"
   } else {
     stop("An incorrect abscissa has been specified.")
   }

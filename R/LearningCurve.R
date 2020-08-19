@@ -154,6 +154,7 @@ createLearningCurve <- function(population,
     result <- do.call(runPlp, settings)  
     
     executeTime <- result$executionSummary$TotalExecutionElapsedTime
+    nPredictors <- sum(abs(result$model$model$coefficients) > 0)
     
     result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
 
@@ -171,6 +172,8 @@ createLearningCurve <- function(population,
     df <- df[-grep('auc_',df$name),]
     
     df <- reshape2::dcast(df, x~ name)
+    
+    df$nPredictors <- nPredictors
   
     # return data frame row for each run
     return(df)
@@ -200,8 +203,9 @@ createLearningCurve <- function(population,
     "TrainBrierScore",
     "TrainCalibrationInLarge",
     "TrainCalibrationIntercept",
-    "TrainCalibrationSlope"
-  )
+    "TrainCalibrationSlope",
+    "nPredictors"
+    )
 
   
   endTime <- Sys.time()
@@ -386,7 +390,8 @@ createLearningCurvePar <- function(population,
     "TrainBrierScore",
     "TrainCalibrationInLarge",
     "TrainCalibrationIntercept",
-    "TrainCalibrationSlope"
+    "TrainCalibrationSlope",
+    "nPredictors"
   )
 
   endTime <- Sys.time()
@@ -416,6 +421,8 @@ lcWrapper <- function(settings){
   )
   if(!is.null(result)){
     executeTime = result$executionSummary$TotalExecutionElapsedTime
+    nPredictors <- sum(abs(result$model$model$coefficients) > 0)
+    
     result = as.data.frame(result$performanceEvaluation$evaluationStatistics)
     
     dfr = data.frame( x = settings$trainFraction * 100,
@@ -430,9 +437,14 @@ lcWrapper <- function(settings){
     dfr$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', dfr$name))
     dfr = dfr[-grep('auc_',dfr$name),]
     
-    final <- reshape2::dcast(dfr, x~ name)
+    dfr <- reshape2::dcast(dfr, x~ name)
+    
+    dfr$nPredictors <- nPredictors
+    
+    final <- dfr
+
     return(final)
   } else{
-    return(rep(0,20))
+    return(rep(0,21))
   }
 }

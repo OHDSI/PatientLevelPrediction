@@ -7,7 +7,7 @@
 plotLearningCurve(
   learningCurve,
   metric = "AUROC",
-  abscissa = "observations",
+  abscissa = "events",
   plotTitle = "Learning Curve",
   plotSubtitle = NULL,
   fileName = NULL
@@ -27,8 +27,8 @@ function.}
 
 \item{abscissa}{Specify the abscissa metric to be plotted:
 \itemize{
+  \item{\code{'events'} - use number of events}
   \item{\code{'observations'} - use number of observations}
-  \item{\code{'outcomes'} - use number of positive outcomes}
 }}
 
 \item{plotTitle}{Title of the learning curve plot.}
