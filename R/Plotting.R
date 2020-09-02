@@ -122,8 +122,12 @@ plotPlp <- function(result, filename, type='test'){
                          fileName=file.path(filename, 'plots','demographicSummary.pdf'),
                          type = type)
   # add smooth calibration
+  tryCatch({
   plotSmoothCalibration(result = result, smooth = 'loess', nKnots = 5, 
                         type = type, zoom = 'data', fileName = file.path(filename, 'plots','smooothCalibration.pdf') )
+    }, error = function(e) {
+      return(NULL)
+    }) 
   
   plotSparseCalibration(result$performanceEvaluation, 
                         fileName=file.path(filename, 'plots','sparseCalibration.pdf'), 
