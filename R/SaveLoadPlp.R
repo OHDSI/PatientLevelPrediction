@@ -450,6 +450,9 @@ savePlpModel <- function(plpModel, dirPath){
     if(attr(plpModel, 'type')=='deepMulti'){
       saveRDS(attr(plpModel, 'inputs'), file = file.path(dirPath,  "inputs_attr.rds"))
     }
+  } else if(attr(plpModel, 'type') == "xgboost"){
+    # fixing xgboost save/load issue
+    xgboost::xgb.save(model = plpModel$model, fname = file.path(dirPath, "model"))
   } else {  
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   }
@@ -548,6 +551,9 @@ loadPlpModel <- function(dirPath) {
   
   if(file.exists(file.path(dirPath, "keras_model"))){
     model <- keras::load_model_hdf5(file.path(dirPath, "keras_model"))
+  } else if(readRDS(file.path(dirPath, "attributes.rds"))$type == "xgboost"){
+    # fixing xgboost save/load issue
+    model <- xgboost::xgb.load(file.path(dirPath, "model"))
   } else {  
     model <- readRDS(file.path(dirPath, "model.rds"))
   }
