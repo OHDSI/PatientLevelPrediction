@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-recalibratePlp <- function(plpModel, validationData, testFraction = 25, population, method = c('intercept', 'reestimate', 'intheLarge')){
+recalibratePlp <- function(plpModel, validationData, testFraction = 25, population, method = c('slopeintercept', 'reestimate', 'intheLarge')){
   # check input:
   if (is.null(population))
     stop("NULL population")
@@ -26,18 +26,19 @@ recalibratePlp <- function(plpModel, validationData, testFraction = 25, populati
     stop("Incorrect plpModel class")
   if(!method  %in% c('intercept', 'reestimate'))
     stop("Unknown recalibration method type")
-  if(method == 'intercept'){
-    
+  if(method == 'slopeintercept'){
+    # adjust slope intercept to 1,0
   }
-  if(method == 'intheLarge'){
-    
+  if(method == 'recalibrationintheLarge'){
+    #match avg pred to obs risk, adjust intercept
   }
   if(method == 'reestimate'){
     covs <- plpModel$model$coefficients[plpModel$model$coefficients != 0]
     includeCovariateIds <- names(covs[-1])
-    setLassoRefit <- setLassoLogisticRegression(includeCovariateIds = includeCovariateIds )
+    setLassoRefit <- setLassoLogisticRegression()
     result <- runPlp(population = population, 
                      plpData = validationData, 
+                     includeCovariateIds = includeCovariateIds,
                      modelSettings = setLassoRefit, 
                      testFraction = testFraction )
   }
