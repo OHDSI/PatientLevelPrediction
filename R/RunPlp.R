@@ -78,6 +78,7 @@
 #'                                         }
 #' @param timeStamp                        If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.
 #' @param analysisId                       Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
+#' @param runCovariateSummary              Whether to calculate the mean and sd for each covariate
 #' @param save                             Old input - please now use saveDirectory
 #' @return
 #' An object containing the model or location where the model is save, the data selection settings, the preprocessing
@@ -147,6 +148,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                    saveDirectory=NULL, savePlpData=T,
                    savePlpResult=T, savePlpPlots = T, saveEvaluation = T,
                    verbosity="INFO", timeStamp=FALSE, analysisId=NULL, 
+                   runCovariateSummary = T,
                    save=NULL
 ){
   
@@ -388,20 +390,27 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                            #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )
   
-  ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
-  ParallelLogger::logInfo('This can take a while...')
-  covSummary <- covariateSummary(plpData, population, model)
-  
-  if(saveEvaluation){
-    ParallelLogger::logTrace('Saving covariate summary as csv')
-    if(!dir.exists( file.path(analysisPath, 'evaluation') ))
-      dir.create(file.path(analysisPath, 'evaluation'))
-    tryCatch(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
-             finally= ParallelLogger::logTrace('Saved covariate summary.')
-    )
+  if(runCovariateSummary){
+    ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
+    ParallelLogger::logInfo('This can take a while...')
+    covSummary <- covariateSummary(plpData, population, model)
+    
+    if(saveEvaluation){
+      ParallelLogger::logTrace('Saving covariate summary as csv')
+      if(!dir.exists( file.path(analysisPath, 'evaluation') ))
+        dir.create(file.path(analysisPath, 'evaluation'))
+      tryCatch(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
+               finally= ParallelLogger::logTrace('Saved covariate summary.')
+      )
+    }
+    ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
+    
+  } else{
+    ParallelLogger::logInfo('Skipping covariate summary')
+    covSummary <- NULL
   }
-  ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
   
+
   results <- list(inputSetting=inputSetting,
                   executionSummary=executionSummary,
                   model=model,
