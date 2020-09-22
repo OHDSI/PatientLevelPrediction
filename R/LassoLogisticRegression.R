@@ -21,11 +21,12 @@
 #' @param variance   a single value used as the starting value for the automatic lambda search
 #' @param seed       An option to add a seed when training the model
 #' @param threads    An option to set number of threads when training model
+#' @param useCrossValidation  Set this to FALSE if you want to train a LR with a preset varience
 #'
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setLassoLogisticRegression<- function(variance=0.01, seed=NULL, threads = -1){
+setLassoLogisticRegression<- function(variance=0.01, seed=NULL, threads = -1, useCrossValidation = TRUE){
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
   if(!class(threads)%in%c('numeric','NULL','integer'))
@@ -40,7 +41,8 @@ setLassoLogisticRegression<- function(variance=0.01, seed=NULL, threads = -1){
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], threads = threads[1]), name="Lasso Logistic Regression")
+  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], 
+                                                                threads = threads[1], useCrossValidation=useCrossValidation[1]), name="Lasso Logistic Regression")
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -73,7 +75,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   modelTrained <- fitGLMModel(population,
                                      plpData = plpData,
                                      modelType = "logistic",
-                                     prior = createPrior("laplace",exclude = c(0),useCrossValidation = TRUE),
+                                     prior = createPrior("laplace",exclude = c(0),useCrossValidation = param$useCrossValidation, variance = variance),
                                      control = createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                              startingVariance = variance,
                                                              tolerance  = 2e-07,
@@ -110,7 +112,9 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   # get cv AUC
   cvPrediction  <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
   cvPerFold <-  unlist(lapply(modelTrained$cv, function(x){x$out_sample_auc}))
-  names(cvPerFold) <- paste0('fold_auc', 1:length(cvPerFold))
+  if(length(cvPerFold)>0){
+    names(cvPerFold) <- paste0('fold_auc', 1:length(cvPerFold))
+  }
   
   result <- list(model = modelTrained,
                  modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
@@ -118,7 +122,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                       seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
                                       log_likelihood = modelTrained$log_likelihood,
                                       cvPerFold,
-                                      auc = aucWithoutCi(cvPrediction$value, cvPrediction$y)),
+                                      auc = tryCatch({aucWithoutCi(cvPrediction$value, cvPrediction$y)}, error = function(e) return(NULL))),
                  trainCVAuc = list(value = cvPerFold, prediction = cvPrediction),
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),

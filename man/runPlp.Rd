@@ -24,6 +24,7 @@ runPlp(
   verbosity = "INFO",
   timeStamp = FALSE,
   analysisId = NULL,
+  runCovariateSummary = T,
   save = NULL
 )
 }
@@ -93,6 +94,8 @@ If not set trainFraction is equal to 1 - test}
 \item{timeStamp}{If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.}
 
 \item{analysisId}{Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
+
+\item{runCovariateSummary}{Whether to calculate the mean and sd for each covariate}
 
 \item{save}{Old input - please now use saveDirectory}
 }

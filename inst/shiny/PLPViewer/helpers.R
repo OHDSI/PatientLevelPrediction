@@ -67,7 +67,7 @@ getPlpResult <- function(result,validation,summaryTable, inputType,trueRow){
 formatModSettings <- function(modelSettings){
   modelset <- data.frame(Setting = c('Model',names(modelSettings[[2]])),
                          Value = c(modelSettings[[1]], unlist(lapply(modelSettings[[2]], 
-                                                                     function(x) paste0(x, collapse='')))))
+                                                                     function(x) paste0(x, collapse=',')))))
   row.names(modelset) <- NULL
   return(modelset)
 }
