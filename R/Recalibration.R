@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-recalibratePlp <- function(plpResult, validationData, testFraction = 25, population, method = c('slopeintercept', 'reestimate', 'RecalibrationintheLarge')){
+recalibratePlp <- function(plpResult, validationData, testFraction = 25, population, method = c('RecalibrationintheLarge', 'weakRecalibration', 'reestimate')){
   # check input:
   if (is.null(population))
     stop("NULL population")
@@ -24,39 +24,82 @@ recalibratePlp <- function(plpResult, validationData, testFraction = 25, populat
     stop("Incorrect plpData class")
   if (class(plpResult) != "runPlp")
     stop("plpResult is not of class runPlp")
-  if(!method  %in% c('intercept', 'reestimate'))
-    stop("Unknown recalibration method type")
+  if(!method  %in% c('RecalibrationintheLarge', 'weakRecalibration', 'reestimate'))
+    stop("Unknown recalibration method type. must be of type: RecalibrationintheLarge, weakRecalibration, reestimate")
   if(method == 'RecalibrationintheLarge'){
-    observedFreq <- sum(population$outcomeCount>0) / nrow(population)
-    predictedFreq <- mean(plpResult$prediction$value)
-    misCal <- observedFreq - predictedFreq
+    
+    misCalVal <- applyModel(population=population, plpData = validationData, 
+                                      calculatePerformance = T, plpModel = plpResult$model)
+    misCal <- PatientLevelPrediction:::calibrationInLarge(misCalVal$prediction)
+    obsOdds <- misCal$observedRisk/ (1-misCal$observedRisk)
+    predOdds <- misCal$meanPredictionRisk/ (1 -  misCal$meanPredictionRisk)
+    correctionFactor <- log(obsOdds / predOdds)
     recalResult <- plpResult
-    recalResult$prediction$value
-    recalResult$model$model$coefficients["(Intercept)"] <- plpResult$model$model$coefficients["(Intercept)"] + misCal 
-
-        #recalculate predictions
-    predictionOld <- plpResult$model$predict(plpData = plpData2, population = population2)
-    prediction <- recalResult$model$predict(plpData=plpData2,population=population2)
-    return(recalResult)
+    recalResult$model$model$coefficients["(Intercept)"] <- plpResult$model$model$coefficients["(Intercept)"] + correctionFactor 
+    recalResult$model$predict <- PatientLevelPrediction:::createTransform(recalResult$model)
+    #recalculate predictions
+    
+    
+    result <- applyModel(population=population, plpData = validationData, 
+                               calculatePerformance = T, plpModel = recalResult$model)
+    
+    
+    result$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                                packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                                          PlatformDetails= list(platform= R.Version()$platform,
+                                                                cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                                RAM=utils::memory.size()), #  test for non-windows needed
+                                          # Sys.info()
+                                          TotalExecutionElapsedTime = NULL,
+                                          ExecutionDateTime = Sys.Date())
+    
   }
-  if(method == 'slopeintercept'){
+  
+  if(method == 'weakRecalibration'){
     # adjust slope intercept to 1,0
+    extVal <- PatientLevelPrediction::applyModel(population = population, plpData = validationData, plpModel = plpResult$model)
+    y <- ifelse(population2$outcomeCount>0, 1, 0)
+    inverseLog <- log(extVal$prediction$value/(1-extVal$prediction$value))
+    refit <- suppressWarnings(stats::glm(y ~ inverseLog, family = 'binomial'))
+    recalResult <- plpResult
+    recalResult$model$model$coefficients <- recalResult$model$model$coefficients * refit$coefficients[2]
+    recalResult$model$model$coefficients[1] <- recalResult$model$model$coefficients[1] + refit$coefficients[1]
+    recalResult$model$predict <- PatientLevelPrediction:::createTransform(recalResult$model)
+    #recalculate predictions
+    result <- applyModel(population=population, plpData = validationData, 
+                         calculatePerformance = T, plpModel = recalResult$model)
+    
+    
+    result$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                          packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                                    PlatformDetails= list(platform= R.Version()$platform,
+                                                          cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                          RAM=utils::memory.size()), #  test for non-windows needed
+                                    # Sys.info()
+                                    TotalExecutionElapsedTime = NULL,
+                                    ExecutionDateTime = Sys.Date())
   }
 
   if(method == 'reestimate'){
+    #get selected covariates
     covs <- plpResult$model$model$coefficients[plpResult$model$model$coefficients != 0]
     includeCovariateIds <- names(covs[-1])
-    noShrinkage <- append(0,includeCovariateIds)
+    # check which covariates are included in new data
+    containedIds <- RSQLite::dbGetQuery(validationData$covariateData, "SELECT DISTINCT covariateId FROM covariateRef")
+    setdiff(includeCovariateIds, containedIds$covariateId)
+    noShrinkage <- intersect(includeCovariateIds, containedIds$covariateId)
+    # add intercept
+    noShrinkage <- append(noShrinkage,0, 0)
     setLassoRefit <- setLassoLogisticRegression(includeCovariateIds = includeCovariateIds,
                                                 noShrinkage = noShrinkage)
-    validationData$covariateData$covariates
-    containedIds <- RSQLite::dbGetQuery(validationData$covariateData, "SELECT DISTINCT covariateId FROM covariateRef")
-    setdiff(noShrinkage, containedIds$covariateId)
+    
     result <- runPlp(population = population, 
                      plpData = validationData, 
                      modelSettings = setLassoRefit, 
                      testFraction = testFraction )
   }
+ 
+  class(result) <- 'recalibratePlp'
   return(result)
 }
 
