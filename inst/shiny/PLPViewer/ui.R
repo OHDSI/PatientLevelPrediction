@@ -74,7 +74,7 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                       $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
                                                                                       }, 50);})
                                                                                       "))
-                                                       ),
+                                      ),
                                       
                                       conditionalPanel(condition = "input.menu=='Performance' || input.menu=='Model' || input.menu=='Settings' || input.menu=='Log'",
                                                        
@@ -96,7 +96,7 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                        
                                       )
                                       
-                                  
+                                      
                                     ), # end sidebar
                                     
                                     shinydashboard::dashboardBody(
@@ -135,12 +135,12 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                            style = "font-size:70%")
                                                                                 
                                                                   ))),
-                                                                                
+                                        
                                         
                                         shinydashboard::tabItem(tabName = "Settings",
                                                                 
                                                                 shiny::fluidRow(
-                                                                   
+                                                                  
                                                                   shiny::column(10, style = "background-color:#F3FAFC;",
                                                                                 
                                                                                 # do this inside tabs:
@@ -203,10 +203,10 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                                  #infoBoxOutput("performanceBox"),
                                                                                              )
                                                                                )
-                                                                               )
+                                                                             )
                                                                              
                                                                              
-                                                                               ), # end summary
+                                                                    ), # end summary
                                                                     tabPanel("Discrimination", 
                                                                              
                                                                              shiny::fluidRow(
@@ -257,11 +257,11 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                    shinycssloaders::withSpinner(shiny::plotOutput('demo')))
                                                                              )
                                                                     )
-                                                                                             ))),
+                                                                  ))),
                                         
                                         # 3rd tab
                                         shinydashboard::tabItem(tabName = "Model", 
-                                                               
+                                                                
                                                                 shiny::fluidRow(
                                                                   shinydashboard::box( status = 'info',
                                                                                        title = "Binary", solidHeader = TRUE,
@@ -287,6 +287,6 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                         )
                                         
                                         
-                                                                )
+                                      )
                                     )
-                                    )
+)
