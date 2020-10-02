@@ -2,6 +2,7 @@ library(shinydashboard)
 library(shiny)
 library(DT)
 library(plotly)
+library(shinyWidgets)
 
 addInfo <- function(item, infoId) {
   infoTag <- tags$small(
@@ -23,11 +24,42 @@ dashboardPage(
       id = "tabs",
       ## Tabs
       addInfo(menuItem("About", tabName = "about"), "aboutInfo"),
-      addInfo(menuItem("Incidence", tabName = "incidence"), "incidenceInfo"),
+      addInfo(menuItem("Proportion", tabName = "proportion"), "proportionInfo"),
+      addInfo(menuItem("Survival", tabName = "survival"), "survivalInfo"),
       addInfo(menuItem("Characterization", tabName = "characterization"), "characterizationInfo"),
       addInfo(menuItem("Distribution", tabName = "distribution"), "distributionInfo"),
       
       ## Option panel
+      
+      # propoortion options
+      # characterization options
+      conditionalPanel(
+        condition = "input.tabs=='proportion'",
+        selectInput("ptargetName", "Target", targetCohorts),
+        selectInput("poutcomeName", "Outcome", outcomeCohorts),
+        selectInput("ptar","Time-at-risk",tars),
+        shinyWidgets::switchInput("pgender", "Gender Split",value = TRUE, width = '80%'),
+        shinyWidgets::switchInput("pxyear",value = TRUE, "By year")
+      ),
+      conditionalPanel(
+        condition = "input.tabs=='proportion' && input.proportionTabsetPanel == 'Tables'",
+        selectInput("pdatabase", "Database", databases)),
+      
+      conditionalPanel(condition = "input.tabs == 'proportion' && (input.proportionTabsetPanel == 'Figure' )",
+                       hr(),
+                       checkboxGroupInput("pdatabases", "Database", databases, selected = databases[1])
+      ),
+      
+      
+      # survival
+      conditionalPanel(
+        condition = "input.tabs=='survival'",
+        selectInput("stargetName", "Target", targetCohorts),
+        selectInput("soutcomeName", "Outcome", outcomeCohorts),
+        selectInput("sdatabase", "Database", databases)
+      ),
+      
+      
       # distribution options
       conditionalPanel(
         condition = "input.tabs=='distribution' && input.distributionTabsetPanel == 'Tables'",
@@ -103,9 +135,35 @@ dashboardPage(
       )
     )
     ,
-    tabItem(tabName = "incidence",
-        DTOutput("incidenceTable")
+    tabItem(tabName = "proportion",
+            tabsetPanel(
+              id = "proportionTabsetPanel",
+              tabPanel(
+                "Figure",
+                box(
+                  width = 12,
+                  br(),
+                  shinycssloaders::withSpinner(plotlyOutput("proportionPlot"))
+                )
+              ),
+              tabPanel(
+                "Tables",
+                shinycssloaders::withSpinner(dataTableOutput("proportionTable"))
+              )
+            )
+    )
+    ,
+    
+    tabItem(tabName = "survival",
+                box(
+                  width = 12,
+                  br(),
+                  shinycssloaders::withSpinner(plotOutput("survivalPlot"))
+                )
+              
+            
     ),
+    
     tabItem(tabName = "characterization",
             tabsetPanel(
               id = "characterizationTabsetPanel",

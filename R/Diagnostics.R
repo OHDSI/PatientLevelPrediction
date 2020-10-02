@@ -100,10 +100,10 @@ diagnostic <- function(plpData = NULL,
                        outcomeDatabaseSchema = cohortDatabaseSchema,
                        outcomeTable = cohortTable,
                        cdmVersion = 5,
-                       riskWindowStart = 1,
-                       startAnchor = 'cohort start',
-                       riskWindowEnd = 365,
-                       endAnchor = 'cohort start',
+                       riskWindowStart = c(1,1,1,1,1),
+                       startAnchor = rep('cohort start',5),
+                       riskWindowEnd = c(365,365*2, 365*3,365*4,365*5),
+                       endAnchor = rep('cohort start',5),
                        outputFolder = NULL,
                        sampleSize = NULL,
                        minCellCount = 5){
@@ -120,8 +120,8 @@ diagnostic <- function(plpData = NULL,
   }
   
   #create cohort names csv:
-  if(file.exists(file.path(outputFolder,'nameDetails.csv'))){
-    cohortNames <- read.csv(file.path(outputFolder,'nameDetails.csv'))
+  if(file.exists(file.path(outputFolder,'namesdetails.csv'))){
+    cohortNames <- read.csv(file.path(outputFolder,'namesdetails.csv'))
     
     newNames <- data.frame(ids = c(cohortId,outcomeIds), 
                            names = c(cohortName,outcomeNames))
@@ -136,7 +136,7 @@ diagnostic <- function(plpData = NULL,
                            names = c(cohortName,outcomeNames))
   }
   ParallelLogger::logInfo('Saving cohort names to csv')
-  utils::write.csv(cohortNames, file.path(outputFolder,'nameDetails.csv'), row.names = F)
+  utils::write.csv(cohortNames, file.path(outputFolder,'namesdetails.csv'), row.names = F)
   
   #create settings:
   if(file.exists(file.path(outputFolder,'settings.csv'))){
@@ -194,13 +194,29 @@ diagnostic <- function(plpData = NULL,
                                   outputFolder = outputFolder, 
                                   databaseName = cdmDatabaseName)
   
-  # do characterisation - needs TAR
-  ParallelLogger::logInfo('Calculating incidence and characterizations')
   
-  if(file.exists(file.path(outputFolder, 'incidence.csv'))){
-    incidence <- read.csv(file.path(outputFolder, 'incidence.csv')) 
+  # get survival data:
+  ParallelLogger::logInfo('Calculating survival data')
+  if(file.exists(file.path(outputFolder, 'survival.csv'))){
+    surv <- read.csv(file.path(outputFolder, 'survival.csv')) 
   } else {
-    incidence <- c()
+    surv <- c()
+  }
+  survTemp <- lapply(outcomeIds, function(oi) getSurvival(plpData, outcomeId = oi,
+                                                          cohortId = cohortId, 
+                                                          cdmDatabaseName  = cdmDatabaseName ))
+  surv <- rbind(surv, do.call('rbind', survTemp))
+  if(!is.null(outputFolder)){
+    write.csv(surv, file.path(outputFolder, 'survival.csv'), row.names = F)
+  }
+  
+  # do characterisation - needs TAR
+  ParallelLogger::logInfo('Calculating proportion and characterizations')
+  
+  if(file.exists(file.path(outputFolder, 'proportion.csv'))){
+    proportion <- read.csv(file.path(outputFolder, 'proportion.csv')) 
+  } else {
+    proportion <- c()
   }
   
   if(file.exists(file.path(outputFolder, 'characterization.csv'))){
@@ -231,32 +247,14 @@ diagnostic <- function(plpData = NULL,
                                   riskWindowEnd = riskWindowEnd[j], 
                                   endAnchor = endAnchor[j])
       
-      if(sum(population$outcomeCount>0) < minCellCount){
-        incidenceTemp <-data.frame(analysisId = analysisId,
-                                   databaseName = cdmDatabaseName,
-                                    cohort = cohortId,
-                                    outcome = oi,
-                                    riskWindowStart = riskWindowStart[j], 
-                                    startAnchor = startAnchor[j], 
-                                    riskWindowEnd = riskWindowEnd[j], 
-                                    endAnchor = endAnchor[j],
-                                    Opercent = paste0('< ',round(minCellCount/nrow(population)*100, digits = 2)),
-                                    Tcount = nrow(population),
-                                    Ocount = paste0('< ',minCellCount))
-      } else {
-        incidenceTemp <- data.frame(analysisId = analysisId,
-                                    databaseName = cdmDatabaseName,
-                                     cohort = cohortId,
-                                     outcome = oi,
-                                     riskWindowStart = riskWindowStart[j], 
-                                     startAnchor = startAnchor[j], 
-                                     riskWindowEnd = riskWindowEnd[j], 
-                                     endAnchor = endAnchor[j],
-                                     Opercent = sum(population$outcomeCount>0)/nrow(population)*100,
-                                     Tcount = nrow(population),
-                                     Ocount = sum(population$outcomeCount>0))
-      }
-      incidence <- unique(rbind(incidence, incidenceTemp))
+      proportionTemp <- getProportions(population,
+                                       analysisId = analysisId,
+                                       cdmDatabaseName = cdmDatabaseName,
+                                       cohortId = cohortId,
+                                       outcomeId = oi,
+                                       minCellCount = minCellCount)
+     
+      proportion <- unique(rbind(proportion, proportionTemp))
 
       characterizationTemp <- covariateSummary(plpData = data, 
                                                 population = population)
@@ -292,14 +290,63 @@ diagnostic <- function(plpData = NULL,
   }
   
   if(!is.null(outputFolder)){
-    write.csv(incidence, file.path(outputFolder, 'incidence.csv'), row.names = F)
+    write.csv(proportion, file.path(outputFolder, 'proportion.csv'), row.names = F)
     write.csv(characterization, file.path(outputFolder, 'characterization.csv'), row.names = F)
   }
   
-  result <- list(distribution = distribution,
-                 incidence = incidence,
-                 characterization = characterization)
+  # Add all to zip file -------------------------------------------------------------------------------
+  ParallelLogger::logInfo("Adding results to zip file")
+  zipName <- file.path(outputFolder, paste0("Results_", cdmDatabaseName, ".zip"))
+  files <- list.files(outputFolder, pattern = ".*\\.csv$")
+  oldWd <- setwd(outputFolder)
+  on.exit(setwd(outputFolder), add = TRUE)
+  DatabaseConnector::createZipFile(zipFile = zipName, files = files)
+  ParallelLogger::logInfo("Results are ready for sharing at: ", zipName)
   
+  result <- list(distribution = distribution,
+                 proportion = proportion,
+                 characterization = characterization,
+                 survival = surv)
+  
+  return(result)
+}
+
+
+getSurvival <- function(plpData, outcomeId, cohortId, cdmDatabaseName ){
+
+  object <- plpData$outcome %>% 
+    dplyr::filter(outcomeId == !!outcomeId) %>%
+    dplyr::right_join(plpData$cohort, by ='rowId') %>%
+    dplyr::group_by(rowId) %>%
+    dplyr::summarise(daysToObsEnd = min(daysToObsEnd),
+                     daysToEvent = min(daysToEvent))
+    
+    
+  object$censoredTime <- apply(object[,-1], 1, function(x) min(x, na.rm = T))
+  object$event <- 0
+  object$event[!is.na(object$daysToEvent)] <- ifelse(object$event[!is.na(object$daysToEvent)] <= object$censoredTime[!is.na(object$daysToEvent)], 1,0)
+  
+  
+  result <- object %>% dplyr::group_by(censoredTime) %>%
+    dplyr::summarise(events = sum(event),
+                     censored = length(event)-sum(event))
+  
+  totalCensored <- lapply(unique(object$censoredTime), function(i) sum(result %>% dplyr::filter(censoredTime <= i) %>% dplyr::select(censored)))
+
+  totalCensored <- data.frame(censoredTime = unique(object$censoredTime),
+                              totalCensored = unlist(totalCensored))
+  
+  totalLost <- lapply(unique(object$censoredTime), function(i) sum(result %>% dplyr::filter(censoredTime <= i) %>% dplyr::mutate(lost = censored + events) %>% dplyr::select(lost)))
+  totalLost <- data.frame(censoredTime = unique(object$censoredTime),
+                          nAtRisk = nrow(plpData$cohorts) - unlist(totalLost))
+  
+  result <- result %>% 
+    dplyr::left_join(totalCensored, by ='censoredTime') %>% 
+    dplyr::left_join(totalLost, by ='censoredTime')
+  
+  result$outcomeId <- outcomeId
+  result$cohortId <- cohortId
+  result$cdmDatabaseName <- cdmDatabaseName 
   return(result)
 }
 
@@ -417,5 +464,70 @@ getAnalysisId <- function(settings,
       } else {
         return(settings$analysisId[ind][1])
       }
+}
+
+
+
+getProportions <- function(population, 
+                           analysisId,
+                           cdmDatabaseName,
+                           cohortId,
+                           outcomeId,
+                           minCellCount = NULL){
+  
+  
+  details <- attr(population, 'metaData')
+  
+  TAR <- paste0(details$startAnchor, ' + ', details$riskWindowStart, ' days - ',
+                details$endAnchor, ' + ', details$riskWindowEnd, ' days')
+  
+  
+  result <- population %>% dplyr::mutate(ageGroup = paste0(floor(ageYear/5)*5 ,' - ', (floor(ageYear/5)+1)*5-1 ),
+                               year = substring(cohortStartDate,1,4)) %>%
+    dplyr::group_by(year, ageGroup, gender) %>%
+    dplyr::summarize(N = length(rowId), 
+                     O = sum(outcomeCount>0)
+                     ) %>% 
+    dplyr::select(year, ageGroup, gender, N, O) 
+  
+  # add all years:
+  allYears <- result %>% dplyr::group_by(ageGroup, gender) %>%
+    dplyr::summarize(N = sum(N), 
+                     O = sum(O),
+                     year = 'all'
+    ) %>% dplyr::select(year, ageGroup, gender, N, O) 
+  # add all gender:
+  allGender <- result %>% dplyr::group_by(year, ageGroup) %>%
+    dplyr::summarize(N = sum(N), 
+                     O = sum(O),
+                     gender = -1
+    ) %>% dplyr::select(year, ageGroup, gender, N, O) 
+  
+  # add all gender:
+  allAge <- result %>% dplyr::group_by(year, gender) %>%
+    dplyr::summarize(N = sum(N), 
+                     O = sum(O),
+                     ageGroup = 'all'
+    ) %>% dplyr::select(year, ageGroup, gender, N, O) 
+  
+  result <- rbind(result, allYears, allGender, allAge)
+  
+  result$opercent <- result$O/result$N*100
+  
+  # censor
+  if(!is.null(minCellCount)){
+    result$opercent[result$O < minCellCount] <- -1
+    result$N[result$N<minCellCount] <- paste0('<', minCellCount)
+    result$O[result$O<minCellCount] <- paste0('<', minCellCount)
+    
+  }
+  
+  result$TAR <- TAR 
+  result$analysisId <- analysisId
+  result$cdmDatabaseName <- cdmDatabaseName
+  result$cohortId <- cohortId
+  result$outcomeId <- outcomeId
+  
+  return(result)
 }
   

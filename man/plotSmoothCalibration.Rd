@@ -14,6 +14,7 @@ plotSmoothCalibration(
   type = "test",
   bins = 20,
   zoom = c("none", "deciles", "data"),
+  sample = T,
   fileName = NULL
 )
 }
@@ -38,6 +39,8 @@ computing and lower memory usage.}
 
 \item{zoom}{Zoom in on the region containing the deciles or on the data. If not specified
 shows the entire space.}
+
+\item{sample}{If using loess then by default 20,000 patients will be sampled to save time}
 
 \item{fileName}{Name of the file where the plot should be saved, for example 'plot.png'. See the
 function \code{ggsave} in the ggplot2 package for supported file formats.}

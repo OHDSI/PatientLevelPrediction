@@ -27,6 +27,13 @@ pfi <- function(plpResult, population, plpData, covariates = NULL, cores = NULL,
     covariates <- plpResult$covariateSummary$covariateId[plpResult$covariateSummary$covariateValue!=0]
   }
   
+  ## reduce age/gender/race/ethnicity to one
+  # removeCovs <- plpData$covariateData$covariateRef %>% dplyr::filter(covariateId%in%covariates) %>% dplyr::filter(analysisId %in%c(1,2,3,4)) %>% dplyr::select(covariateId, analysisId)
+  # removeCovs <- removeCovs$covariateId
+  # includeCovs <- removeCovs %>% dplyr::group_by(analysisId) %>% dplyr::summarise(covariateId = min(covariateId))
+  # includeCovs <- includeCovs$covariateId
+  # covariates <- c(covariates[!covariates%in%removeCovs],includeCovs)
+  
   plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
   if(!is.null(plpResult$model$metaData$preprocessSettings)){
     plpData$covariateData <- applyTidyCovariateData(plpData$covariateData,plpResult$model$metaData$preprocessSettings)
@@ -38,8 +45,8 @@ pfi <- function(plpResult, population, plpData, covariates = NULL, cores = NULL,
   auc <- computeAuc(pred)
   
   #do permulation and savePlpData to temp loc
-  #plpDataLocation <- file.path(tempdir(), paste0('data'))
-  plpDataLocation <- file.path('D:/testing', paste0('data'))
+  plpDataLocation <- file.path(tempdir(), paste0('data'))
+  #plpDataLocation <- file.path('D:/testing', paste0('data'))
   savePlpData(plpData, file = plpDataLocation)
   
   if(is.null(cores)){
@@ -124,7 +131,7 @@ permute <- function(plpDataLocation,cId){
     dplyr::select(analysisId) %>% dplyr::collect()
   
   # if analysis id i 4 - then gender - swap with other genders
-  if(!analysisId %in% c(4)){
+  if(!analysisId %in% c(3,4)){
   # select covariateId data
   coi <- plpData$covariateData$covariates %>% dplyr::filter(covariateId == cId) %>% dplyr::collect()
   nSamp <- length(coi$rowId)
@@ -147,6 +154,8 @@ permute <- function(plpDataLocation,cId){
   plpData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(covariateId != cId) %>% dplyr::collect()
   Andromeda::appendToTable(plpData$covariateData$covariates, newData)
   
+  } else{
+    # do some code for the connected variables... 
   }
   
   return(plpData)

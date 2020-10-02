@@ -1,16 +1,16 @@
 ---
-title: "Generating Learning Curves"
-author: "Luis H. John, Xiaoyong Pan, Jenna Reps, Peter R. Rijnbeek"
+title: "Creating Learning Curves"
+author: "Luis H. John, Jenna M. Reps, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
 header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
     - \fancyhead{}
     - \fancyhead[CO,CE]{Generating Learning Curves}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
     - \fancyfoot[LE,RO]{\thepage}
     - \renewcommand{\headrulewidth}{0.4pt}
     - \renewcommand{\footrulewidth}{0.4pt}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
 output:   
   pdf_document:
     includes:
@@ -19,6 +19,8 @@ output:
     toc: yes
   html_document:
     number_sections: yes
+    toc: yes
+  html_notebook: 
     toc: yes
   word_document:
     toc: yes
@@ -40,7 +42,7 @@ if (file.exists(vignetteDataFolder)){
 
 # Introduction
 
-This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to generate learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
+This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
 
 Prediction models will show overly-optimistic performance when predicting on the same data as used for training. Therefore, best-practice is to partition our data into a training set and testing set. We then train our prediction model on the training set portion and asses its ability to generalize to unseen data by measuring its performance on the testing set.
 
@@ -60,9 +62,9 @@ Furthermore, we can observe high bias (underfitting) if a prediction model perfo
 
 ![Prediction model suffering from high bias.](learningCurveBias.png)
 
-# Generating the learning curve
+# Creating the learning curve
 
-Use the [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to generate a `population` and `plpData` object. Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.
+Use the [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create a `population` and `plpData` object. Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.
 
 ```{r eval=FALSE}
 set.seed(1234)
@@ -84,9 +86,7 @@ population <- createStudyPopulation(
   requireTimeAtRisk = FALSE,
   minTimeAtRisk = 0,
   riskWindowStart = 0,
-  addExposureDaysToStart = FALSE,
   riskWindowEnd = 365,
-  addExposureDaysToEnd = FALSE,
   verbosity = "INFO"
 )
 ```
@@ -99,12 +99,14 @@ modelSettings <- setLassoLogisticRegression()
 
 ```
 
-Specify a test fraction and a sequence of training set fractions.
+Specify a test fraction and a sequence of training set fractions. Alternatively, you can provide a sequence of training events instead of the training set fractions. This is recommended, because events are determinant of model performance. Make sure that your training set can provide the number of events specified.
 
 ```{r eval = FALSE}
 testFraction <- 0.2
 trainFractions <- seq(0.1, 0.8, 0.1) # Create eight training set fractions
 
+# alternatively use a sequence of training events by uncommenting the line below.
+# trainEvents <- seq(100, 5000, 100)
 ```
 
 Specify the test split to be used.
@@ -123,16 +125,18 @@ learningCurve <- createLearningCurve(population,
                                      testFraction = 0.2,
                                      verbosity = "TRACE",
                                      trainFractions = trainFractions,
+                                     # trainEvents = trainEvents,
                                      splitSeed = 1000,
                                      saveModel = TRUE)
 ```
 
-Plot the learning curve object (Figure 4). Specify one of the available metrics: `AUROC`, `AUPRC`, `sBrier`.
+Plot the learning curve object (Figure 4). Specify one of the available metrics: `AUROC`, `AUPRC`, `sBrier`. Moreover, you can specify what metric to put on the abscissa, number of `observations` or number of `events`. We recommend the latter, because `events` are determinant of model performance and allow you to better compare learning curves across different prediction problems and databases.
 
 ```{r eval=FALSE}
 plotLearningCurve(
   learningCurve,
-  metric='AUROC',
+  metric = 'AUROC',
+  abscissa = 'events',
   plotTitle = 'Learning Curve',
   plotSubtitle = 'AUROC performance'
 )
@@ -143,9 +147,9 @@ plotLearningCurve(
 
 # Parallel processing
 
-The learning curve object can be created in parallel, which can reduce computation time significantly. Currently this functionality is only available for LASSO logistic regression. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis. Logging and saving functionality is unavailable.
+The learning curve object can be created in parallel, which can reduce computation time significantly. Currently this functionality is only available for LASSO logistic regression and gradient boosting machines. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis.
 
-Use the parallelized version of the learning curve function to create the learning curve object in parallel. R will find the number of available processing cores automatically and register the required parallel backend.
+Use the parallelized version of the learning curve function to create the learning curve object in parallel. R will find the number of available processing cores automatically and register the required parallel backend. Alternatively, you can provide the number of cores you wish to use.
 
 ```{r eval=FALSE}
 learningCurvePar <- createLearningCurvePar(
@@ -154,7 +158,8 @@ learningCurvePar <- createLearningCurvePar(
   modelSettings = modelSettings,
   testSplit = testSplit,
   testFraction = testFraction,
-  trainFractions = trainFractions,
+  trainEvents = trainEvents,
+  cores = 4,
   splitSeed = 1000
 )
 ```
@@ -171,6 +176,11 @@ We have added a demo of the learningcurve:
 ```
 
 Do note that running this demo can take a considerable amount of time (15 min on Quad core running in parallel)!
+
+# Publication
+
+A publication titled 'How little data do we need for patient-level prediction?' uses the learning curve functionality in this package and can be accessed as preprint in the arXiv archives at
+[https://arxiv.org/abs/2008.07361](https://arxiv.org/abs/2008.07361).
 
 # Acknowledgments
 
