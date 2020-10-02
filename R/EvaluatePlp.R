@@ -107,9 +107,9 @@ evaluatePlp <- function(prediction, plpData){
                                  round(weakCal$intercept, digits = 4), 
                                  ' - gradient:',round(weakCal$gradient, digits = 4)))
   
-  ParallelLogger::logTrace('Calculating Hosmer–Lemeshow Calibration Line')
+  ParallelLogger::logTrace('Calculating Hosmer-Lemeshow Calibration Line')
   calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
-  ParallelLogger::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Hosmer–Lemeshow calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
+  ParallelLogger::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Hosmer-Lemeshow calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
   # 4) calibrationSummary
   ParallelLogger::logTrace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
   calibrationSummary <- getCalibration(prediction,
