@@ -81,7 +81,14 @@ evaluatePlp <- function(prediction, plpData){
   ParallelLogger::logTrace('Calculating Brier Score')
   brier <- brierScore(prediction)
   ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
-
+  
+  # using rms::val.prob
+  valProb <- tryCatch(rms::val.prob(prediction$value, prediction$outcomeCount), 
+                      error = function(e){ParallelLogger::logInfo(e); return(list(Eavg = 0, 
+                                                                E90 = 0, 
+                                                                Emax = 0))})
+  
+  
   # 2) thresholdSummary
   # need to update thresholdSummary this with all the requested values
   ParallelLogger::logTrace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
@@ -116,6 +123,7 @@ evaluatePlp <- function(prediction, plpData){
                                        numberOfStrata = 100,
                                        truncateFraction = 0.01)
   ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
+  
 
   # 5) predictionDistribution - done
   ParallelLogger::logTrace(paste0('Calculating Quantiles Started @ ',Sys.time()))
@@ -137,7 +145,10 @@ evaluatePlp <- function(prediction, plpData){
                                BrierScaled= brier$brierScaled,	
                                CalibrationIntercept= weakCal$intercept,	
                                CalibrationSlope = weakCal$gradient,
-                               CalibrationInLarge = calinlarge$meanPredictionRisk/calinlarge$observedRisk)
+                               CalibrationInLarge = calinlarge$meanPredictionRisk/calinlarge$observedRisk,
+                               Emean = valProb['Eavg'],
+                               E90 = valProb['E90'],
+                               Emax = valProb['Emax'])
 
   result <- list(evaluationStatistics= evaluationStatistics,
                  thresholdSummary= thresholdSummary,
