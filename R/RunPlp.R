@@ -579,7 +579,7 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
                          sumSquares = sum(covariateValue^2,na.rm = TRUE)) %>%
         dplyr::inner_join(plpData$covariateData$totals, by= c( 'outcomeCount')) %>%
         dplyr::mutate(CovariateMean = sumVal/N,
-                      CovariateStDev = sqrt(sumSquares/N - (sumVal/N)^2 )) %>% 
+                      CovariateStDev = sqrt(round(sumSquares/N - (sumVal/N)^2 ,6))) %>% 
         dplyr::collect()
       
     }
