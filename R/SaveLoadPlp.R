@@ -723,6 +723,12 @@ formatCovariateSettings <- function(covariateSettings){
     
   } else{
     return(list(cvs = do.call(rbind, lapply(1:length(covariateSettings), function(i){
+      inds <- which(lapply(covariateSettings[[i]], class) == "function")
+      if(length(inds)>0){
+        for(j in inds){
+          covariateSettings[[i]][[j]] <- paste0(deparse(covariateSettings[[i]][[j]]), collapse = " ")
+        }
+      }
     tempResult <- data.frame(names = names(unlist(covariateSettings[[i]])),
                values = unlist(covariateSettings[[i]]))
     tempResult$settingsId <- i

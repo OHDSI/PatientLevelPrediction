@@ -11,7 +11,8 @@ setSVM(
   gamma = c(1e-04, 3e-05, 0.001, 0.01, 0.25),
   shrinking = T,
   coef0 = 0,
-  classWeight = T,
+  classWeight = "balanced",
+  varImp = F,
   seed = NULL
 )
 }
@@ -26,7 +27,9 @@ setSVM(
 
 \item{coef0}{independent term in kernel function. It is only significant in poly/sigmoid.}
 
-\item{classWeight}{Class weight based on imbalance}
+\item{classWeight}{Class weight based on imbalance either 'balanced' or 'none'}
+
+\item{varImp}{Whether to calculate the variable importance using PFI}
 
 \item{seed}{A seed for the model}
 

@@ -16,7 +16,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-recalibratePlp <- function(plpResult, validationData, testFraction = 25, population, method = c('RecalibrationintheLarge', 'weakRecalibration', 'reestimate')){
+#' recalibratePlp
+#'
+#' @description
+#' Train various models using a default parameter gird search or user specified parameters
+#'
+#' @details
+#' The user can define the machine learning model to train (regularised logistic regression, random forest,
+#' gradient boosting machine, neural network and )
+#' 
+#' @param plpResult                        The output from \code{runPlp}
+#' @param population                       The population created using createStudyPopulation() who will have their risks predicted
+#' @param validationData                   An object of type \code{plpData} - the patient level prediction
+#'                                         data extracted from the CDM.
+#' @param testFraction                    Fraction of data to used for internal validation
+#' @param method                          Method used to recalibrate ('RecalibrationintheLarge' or 'weakRecalibration' or 'reestimate')
+#' @return
+#' An object of class \code{runPlp} that is recalibrated on the new data
+#'
+
+#' @export
+recalibratePlp <- function(plpResult,population, validationData, testFraction = 0.25, method = c('RecalibrationintheLarge', 'weakRecalibration', 'reestimate')){
   # check input:
   if (is.null(population))
     stop("NULL population")
@@ -58,7 +78,12 @@ recalibratePlp <- function(plpResult, validationData, testFraction = 25, populat
   if(method == 'weakRecalibration'){
     # adjust slope intercept to 1,0
     extVal <- PatientLevelPrediction::applyModel(population = population, plpData = validationData, plpModel = plpResult$model)
-    y <- ifelse(population2$outcomeCount>0, 1, 0)
+    
+    # edit the 0 and 1 values
+    extVal$prediction$value[extVal$prediction$value==0] <- 0.000000000000001
+    extVal$prediction$value[extVal$prediction$value==1] <- 1-0.000000000000001
+    
+    y <- ifelse(population$outcomeCount>0, 1, 0)
     inverseLog <- log(extVal$prediction$value/(1-extVal$prediction$value))
     refit <- suppressWarnings(stats::glm(y ~ inverseLog, family = 'binomial'))
     recalResult <- plpResult
@@ -86,7 +111,7 @@ recalibratePlp <- function(plpResult, validationData, testFraction = 25, populat
     includeCovariateIds <- names(covs[-1])
     # check which covariates are included in new data
     containedIds <- RSQLite::dbGetQuery(validationData$covariateData, "SELECT DISTINCT covariateId FROM covariateRef")
-    setdiff(includeCovariateIds, containedIds$covariateId)
+    ##setdiff(includeCovariateIds, containedIds$covariateId)
     noShrinkage <- intersect(includeCovariateIds, containedIds$covariateId)
     # add intercept
     noShrinkage <- append(noShrinkage,0, 0)
@@ -96,7 +121,8 @@ recalibratePlp <- function(plpResult, validationData, testFraction = 25, populat
     result <- runPlp(population = population, 
                      plpData = validationData, 
                      modelSettings = setLassoRefit, 
-                     testFraction = testFraction )
+                     testFraction = testFraction, 
+                     savePlpData = F, savePlpResult = F,savePlpPlots = F, saveEvaluation = F)
   }
  
   class(result) <- 'recalibratePlp'
