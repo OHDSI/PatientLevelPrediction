@@ -62,7 +62,8 @@ Imports:
     htmltools,
     tensorflow,
     benchmarkme,
-    cowplot
+    cowplot,
+    rms
 Suggests:
     shiny,
     DT,
@@ -81,7 +82,6 @@ Suggests:
     BigKnn (>= 1.0.0),
     aws.s3,
     devtools,
-    rms,
     survminer
 Remotes:
     ohdsi/FeatureExtraction,
