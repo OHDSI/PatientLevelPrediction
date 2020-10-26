@@ -1,10 +1,13 @@
 language: R
 cache: packages
-sudo: false
+sudo: true
 
 branches:
   except:
     - /^*-v[0-9]/
+
+before_install:
+  - sudo $(which R) CMD javareconf
 
 r_packages:
   - devtools
