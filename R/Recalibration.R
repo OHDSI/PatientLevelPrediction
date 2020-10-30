@@ -98,7 +98,33 @@ recalibratePlp <- function(plpResult, validationData, testFraction = 25, populat
                      modelSettings = setLassoRefit, 
                      testFraction = testFraction )
   }
- 
+  if (method == "populationRisk"){
+    #get dev database (use test or train?)
+    eval <- as.data.frame(plpResult$performanceEvaluation$evaluationStatistics)
+    eval <- eval[eval$Eval %in% c('train',"validation"),]
+    devPopRisk <- as.double(as.character(eval$Value[eval$Metric=='outcomeCount']))/as.double(as.character(eval$Value[eval$Metric=='populationSize']))
+
+    valPopRisk <- sum(population$outcomeCount) / length(population$outcomeCount)
+    correctionFactor <- log(devPopRisk / valPopRisk)
+    recalResult <- plpResult
+    recalResult$model$model$coefficients["(Intercept)"] <- plpResult$model$model$coefficients["(Intercept)"] + correctionFactor 
+    recalResult$model$predict <- PatientLevelPrediction:::createTransform(recalResult$model)
+    #recalculate predictions
+     
+    
+    result <- applyModel(population=population2, plpData = validationData, 
+                         calculatePerformance = T, plpModel = recalResult$model)
+    
+    result$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
+                                                          packageVersion = utils::packageVersion("PatientLevelPrediction")),
+                                    PlatformDetails= list(platform= R.Version()$platform,
+                                                          cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+                                                          RAM=utils::memory.size()), #  test for non-windows needed
+                                    # Sys.info()
+                                    TotalExecutionElapsedTime = NULL,
+                                    ExecutionDateTime = Sys.Date())
+    
+  }
   class(result) <- 'recalibratePlp'
   return(result)
 }
