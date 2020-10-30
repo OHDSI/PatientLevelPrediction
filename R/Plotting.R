@@ -122,8 +122,12 @@ plotPlp <- function(result, filename, type='test'){
                          fileName=file.path(filename, 'plots','demographicSummary.pdf'),
                          type = type)
   # add smooth calibration
+  tryCatch({
   plotSmoothCalibration(result = result, smooth = 'loess', nKnots = 5, 
                         type = type, zoom = 'data', fileName = file.path(filename, 'plots','smooothCalibration.pdf') )
+    }, error = function(e) {
+      return(NULL)
+    }) 
   
   plotSparseCalibration(result$performanceEvaluation, 
                         fileName=file.path(filename, 'plots','sparseCalibration.pdf'), 
@@ -1161,7 +1165,7 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
     ggplot2::ggtitle("Outcome")
     
  
-  covariateSummary$TrainCovariateMeanWithNoNOutcome[is.na(covariateSummary$TrainCovariateMeanWithNoOutcome)] <- 0
+  covariateSummary$TrainCovariateMeanWithNoOutcome[is.na(covariateSummary$TrainCovariateMeanWithNoOutcome)] <- 0
   covariateSummary$TestCovariateMeanWithNoOutcome[is.na(covariateSummary$TestCovariateMeanWithNoOutcome)] <- 0
   
   plot2 <- ggplot2::ggplot(covariateSummary, 
@@ -1196,8 +1200,8 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #'   }
 #' @param abscissa Specify the abscissa metric to be plotted:
 #'   \itemize{
+#'     \item{\code{'events'} - use number of events}
 #'     \item{\code{'observations'} - use number of observations}
-#'     \item{\code{'outcomes'} - use number of positive outcomes}
 #'   }
 #' @param plotTitle Title of the learning curve plot.
 #' @param plotSubtitle Subtitle of the learning curve plot.
@@ -1222,7 +1226,7 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
 #' @export
 plotLearningCurve <- function(learningCurve,
                               metric = "AUROC",
-                              abscissa = "observations",
+                              abscissa = "events",
                               plotTitle = "Learning Curve", 
                               plotSubtitle = NULL,
                               fileName = NULL){
@@ -1267,10 +1271,10 @@ plotLearningCurve <- function(learningCurve,
   
   if (abscissa == "observations") {
     abscissa <- "Observations"
-    abscissaLabel <- "Training set size"
-  } else if (abscissa == "outcomes") {
+    abscissaLabel <- "No. of observations"
+  } else if (abscissa == "events") {
     abscissa <- "Occurrences"
-    abscissaLabel <- "Positive outcomes"
+    abscissaLabel <- "No. of events"
   } else {
     stop("An incorrect abscissa has been specified.")
   }

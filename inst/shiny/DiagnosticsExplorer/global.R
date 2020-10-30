@@ -18,7 +18,7 @@ library(tidyr)
 #library(ggiraph)
 
 
-rm(list=ls()[ls()%in%c('settings', 'namesdetails', 'characterization','distribution','incidence')])
+rm(list=ls()[ls()%in%c('settings', 'namesdetails', 'characterization','distribution','proportion')])
 source("PlotsAndTables.R")
 
 

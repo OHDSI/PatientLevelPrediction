@@ -95,6 +95,7 @@ summaryPlpAnalyses <- function(analysesLocation){
   #========================================
   settings <- read.csv(file.path(analysesLocation,'settings.csv'))
   settings <- settings[,!colnames(settings)%in%c('plpDataFolder','studyPopFile','plpResultFolder')]
+  settings$analysisId <- gsub('Analysis_','', settings$analysisId) # fixing if Analysis_id in settings
   settings$analysisId <- paste0('Analysis_',  settings$analysisId)
   
   analysisIds <- dir(file.path(analysesLocation), recursive = F, full.names = T)
@@ -102,7 +103,9 @@ summaryPlpAnalyses <- function(analysesLocation){
   if(is.null(settings$devDatabase)){
     settings$devDatabase <- 'Missing'
   }
-  settings$valDatabase <- settings$devDatabase
+  if(is.null(settings$valDatabase)){
+    settings$valDatabase <- settings$devDatabase
+  }
   devPerformance <- do.call(rbind,lapply(file.path(analysisIds), getPerformance))
   # updated this for TAR
   devPerformance <- merge(settings[,c('analysisId','modelSettingsId','covariateSettingId', 'cohortName', 'outcomeName',
@@ -177,7 +180,7 @@ getPerformance <- function(analysisLocation){
   
   #if empty do edit?
   
-  res <- tryCatch(reshape2::dcast(res[res$Eval=='test',], analysisId ~ Metric, value.var='Value'),
+  res <- tryCatch(reshape2::dcast(res[res$Eval%in%c('test','validation'),], analysisId ~ Metric, value.var='Value'),
                   error = function(cont) return(NULL))
   if(is.null(res)){
     return(NULL) }

@@ -95,11 +95,17 @@ fitGLMModel <- function(population,
                                                  checkRowIds = FALSE,
                                                  normalize = NULL,
                                                  quiet = TRUE)
-
+  if(prior$useCrossValidation){
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
       Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)}, 
       finally = ParallelLogger::logInfo('Done.'))
+  } else{
+    fit <- tryCatch({
+      ParallelLogger::logInfo('Running Cyclops with fixed varience')
+      Cyclops::fitCyclopsModel(cyclopsData, prior = prior)}, 
+      finally = ParallelLogger::logInfo('Done.')) 
+    }
     if (is.character(fit)) {
       coefficients <- c(0)
        status <- fit
@@ -135,7 +141,7 @@ fitGLMModel <- function(population,
   
   
   #get CV
-  if(modelType == "logistic"){
+  if(modelType == "logistic" && prior$useCrossValidation){
     outcomeModel$cv <- getCV(cyclopsData, population, cvVariance = fit$variance)
   }
   

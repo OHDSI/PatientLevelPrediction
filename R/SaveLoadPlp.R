@@ -450,6 +450,9 @@ savePlpModel <- function(plpModel, dirPath){
     if(attr(plpModel, 'type')=='deepMulti'){
       saveRDS(attr(plpModel, 'inputs'), file = file.path(dirPath,  "inputs_attr.rds"))
     }
+  } else if(attr(plpModel, 'type') == "xgboost"){
+    # fixing xgboost save/load issue
+    xgboost::xgb.save(model = plpModel$model, fname = file.path(dirPath, "model"))
   } else {  
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   }
@@ -548,6 +551,9 @@ loadPlpModel <- function(dirPath) {
   
   if(file.exists(file.path(dirPath, "keras_model"))){
     model <- keras::load_model_hdf5(file.path(dirPath, "keras_model"))
+  } else if(readRDS(file.path(dirPath, "attributes.rds"))$type == "xgboost"){
+    # fixing xgboost save/load issue
+    model <- xgboost::xgb.load(file.path(dirPath, "model"))
   } else {  
     model <- readRDS(file.path(dirPath, "model.rds"))
   }
@@ -706,4 +712,151 @@ loadPlpResult <- function(dirPath){
   
   return(result)
   
+}
+
+
+#result$inputSetting$dataExtrractionSettings$covariateSettings
+formatCovariateSettings <- function(covariateSettings){
+  
+  if(class(covariateSettings) == "covariateSettings"){
+    return(list(cvs = unlist(covariateSettings), fun = attr(covariateSettings,'fun')))
+    
+  } else{
+    return(list(cvs = do.call(rbind, lapply(1:length(covariateSettings), function(i){
+    tempResult <- data.frame(names = names(unlist(covariateSettings[[i]])),
+               values = unlist(covariateSettings[[i]]))
+    tempResult$settingsId <- i
+    return(tempResult)
+    })), 
+    fun = unlist(lapply(covariateSettings, function(x) attr(x,'fun')))
+    )
+    )
+  }
+  
+}
+
+reformatCovariateSettings <- function(covariateSettingsLocation){
+  cs <- read.csv(covariateSettingsLocation, stringsAsFactors=FALSE)
+  fun <- read.csv(gsub('.csv','_fun.csv',covariateSettingsLocation), stringsAsFactors=FALSE)
+  
+  if(sum(colnames(cs)%in%c('X','x'))==2){
+    covariateSettings <- cs$x
+    covariateSettings <- as.list(covariateSettings)
+    names(covariateSettings) <- cs$X
+    attr(covariateSettings,'fun') <- fun$x
+  } else {
+    
+    covariateSettings <- list()
+    length(covariateSettings) <- max(cs$settingsId)
+    
+    for(i in 1:max(cs$settingsId)){
+      covariateSettings[[i]] <- cs$values[cs$settingsId==i]
+      covariateSettings[[i]] <- as.list(covariateSettings[[i]])
+      names(covariateSettings[[i]]) <- cs$names[cs$settingsId==i]
+      attr(covariateSettings[[i]],'fun') <- fun$x[i]
+    }
+    
+  }
+  
+return(covariateSettings)
+}
+
+#' Save parts of the plp result as a csv for transparent sharing
+#'
+#' @details
+#' Saves the main results as a csv (these files can be read by the shiny app)
+#'
+#' @param result                      An object of class runPlp with development or validation results
+#' @param dirPath                     The directory the save the results as csv files
+#' 
+#' @export
+savePlpToCsv <- function(result, dirPath){
+  
+  #inputSetting
+  if(!dir.exists(file.path(dirPath, 'inputSetting'))){dir.create(file.path(dirPath, 'inputSetting'), recursive = T)}
+  write.csv(result$inputSetting$modelSettings$model, file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'), row.names = F)
+  write.csv(result$inputSetting$modelSettings$param, file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
+  write.csv(result$inputSetting$modelSettings$name, file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'), row.names = F)
+  if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings)){
+    write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$cvs, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'), row.names = F)
+    write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$fun, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings_fun.csv'), row.names = F)
+  }
+  write.csv(result$inputSetting$populationSettings$attrition, file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'), row.names = F)
+  result$inputSetting$populationSettings$attrition <- NULL
+  write.csv(result$inputSetting$populationSettings, file = file.path(dirPath, 'inputSetting','populationSettings.csv'), row.names = F)
+  
+  #executionSummary
+  if(!dir.exists(file.path(dirPath, 'executionSummary'))){dir.create(file.path(dirPath, 'executionSummary'), recursive = T)}
+  write.csv(result$executionSummary$PackageVersion, file = file.path(dirPath, 'executionSummary','PackageVersion.csv'), row.names = F)
+  write.csv(unlist(result$executionSummary$PlatformDetails), file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))
+  write.csv(result$executionSummary$TotalExecutionElapsedTime, file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'), row.names = F)
+  write.csv(result$executionSummary$ExecutionDateTime, file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'), row.names = F)
+  
+  #performanceEvaluation
+  if(!dir.exists(file.path(dirPath, 'performanceEvaluation'))){dir.create(file.path(dirPath, 'performanceEvaluation'), recursive = T)}
+  write.csv(result$performanceEvaluation$evaluationStatistics, file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'), row.names = F)
+  write.csv(result$performanceEvaluation$thresholdSummary, file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'), row.names = F)
+  write.csv(result$performanceEvaluation$demographicSummary, file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'), row.names = F)
+  write.csv(result$performanceEvaluation$calibrationSummary, file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'), row.names = F)
+  write.csv(result$performanceEvaluation$predictionDistribution, file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'), row.names = F)
+  
+  #covariateSummary
+  write.csv(result$covariateSummary, file = file.path(dirPath,'covariateSummary.csv'), row.names = F)
+}
+
+#' Loads parts of the plp result saved as csv files for transparent sharing
+#'
+#' @details
+#' Load the main results from csv files into a runPlp object
+#'
+#' @param dirPath                     The directory with the results as csv files
+#' 
+#' @export
+loadPlpFromCsv <- function(dirPath){
+  
+  result <- list()
+  objects <- gsub('.csv','',dir(dirPath))
+  if(sum(!c('covariateSummary','executionSummary','inputSetting','performanceEvaluation')%in%objects)>0){
+    stop('Incorrect csv results file')
+  }
+  
+  length(result) <- length(objects)
+  names(result) <- objects
+  
+  #covariateSummary
+  result$covariateSummary <- read.csv(file = file.path(dirPath,'covariateSummary.csv'))
+
+  #executionSummary
+  result$executionSummary <- list()
+  result$executionSummary$PackageVersion <- tryCatch({as.list(read.csv(file = file.path(dirPath, 'executionSummary','PackageVersion.csv')))}, error = function(e){return(NULL)})
+  result$executionSummary$PlatformDetails <- tryCatch({as.list(read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$x)}, error = function(e){return(NULL)})
+  names(result$executionSummary$PlatformDetails) <- tryCatch({read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$X}, error = function(e){return(NULL)})
+  result$executionSummary$TotalExecutionElapsedTime <- tryCatch({read.csv(file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'))$x}, error = function(e){return(NULL)})
+  result$executionSummary$ExecutionDateTime <- tryCatch({read.csv(file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'))$x}, error = function(e){return(NULL)})
+  
+  #inputSetting
+  result$inputSetting <- list()
+  result$inputSetting$modelSettings$model <- tryCatch({read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'))$x}, error = function(e){return(NULL)})
+  result$inputSetting$modelSettings$param <- tryCatch({as.list(read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_param.csv')))}, error = function(e){return(NULL)})
+  result$inputSetting$modelSettings$name <- tryCatch({read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'))$x}, error = function(e){return(NULL)})
+  
+  result$inputSetting$dataExtrractionSettings$covariateSettings <- tryCatch({reformatCovariateSettings(file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'))}, error = function(e){return(NULL)})
+
+  result$inputSetting$populationSettings <- tryCatch({as.list(read.csv(file = file.path(dirPath, 'inputSetting','populationSettings.csv')))}, error = function(e){return(NULL)})
+  result$inputSetting$populationSettings$attrition <- tryCatch({read.csv(file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'))}, error = function(e){return(NULL)})
+  
+  #performanceEvaluation
+  result$performanceEvaluation <- list()
+  result$performanceEvaluation$evaluationStatistics <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$thresholdSummary <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$demographicSummary <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$calibrationSummary <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$predictionDistribution <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'))}, error = function(e){return(NULL)})
+  
+  result$model$modelSettings <- result$inputSetting$modelSettings
+  result$model$populationSettings <- result$inputSetting$populationSettings
+  result$model$metaData$call$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
+  
+  class(result) <- "runPlp"
+  return(result)
 }

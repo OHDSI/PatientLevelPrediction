@@ -36,8 +36,8 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-  pdftitle={Generating Learning Curves},
-  pdfauthor={Luis H. John, Xiaoyong Pan, Jenna Reps, Peter R. Rijnbeek},
+  pdftitle={Creating Learning Curves},
+  pdfauthor={Luis H. John, Jenna M. Reps, Peter R. Rijnbeek},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
@@ -98,34 +98,30 @@
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-\setcounter{secnumdepth}{5}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhead{}
 \fancyhead[CO,CE]{Generating Learning Curves}
-\fancyfoot[CO,CE]{PatientLevelPrediction Package Version 3.1.0}
 \fancyfoot[LE,RO]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
+\fancyfoot[CO,CE]{PatientLevelPrediction Package Version 4.0.6}
 
-\title{Generating Learning Curves}
-\author{Luis H. John, Xiaoyong Pan, Jenna Reps, Peter R. Rijnbeek}
-\date{2020-06-03}
+\title{Creating Learning Curves}
+\author{Luis H. John, Jenna M. Reps, Peter R. Rijnbeek}
+\date{2020-08-19}
 
 \begin{document}
 \maketitle
 
-{
-\setcounter{tocdepth}{2}
-\tableofcontents
-}
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
 This vignette describes how you can use the Observational Health Data
 Sciences and Informatics (OHDSI)
 \href{http://github.com/OHDSI/PatientLevelPrediction}{\texttt{PatientLevelPrediction}}
-package to generate learning curves. This vignette assumes you have read
+package to create learning curves. This vignette assumes you have read
 and are comfortable with building patient level prediction models as
 described in the
 \href{https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf}{\texttt{BuildingPredictiveModels}
@@ -196,13 +192,13 @@ an alternative approach to consider in this high bias situation.
 \caption{Prediction model suffering from high bias.}
 \end{figure}
 
-\hypertarget{generating-the-learning-curve}{%
-\section{Generating the learning
-curve}\label{generating-the-learning-curve}}
+\hypertarget{creating-the-learning-curve}{%
+\section{Creating the learning
+curve}\label{creating-the-learning-curve}}
 
 Use the
 \href{http://github.com/OHDSI/PatientLevelPrediction}{\texttt{PatientLevelPrediction}}
-package to generate a \texttt{population} and \texttt{plpData} object.
+package to create a \texttt{population} and \texttt{plpData} object.
 Alternatively, you can make use of the data simulator. The following
 code snippet creates a population of 12000 patients.
 
@@ -227,9 +223,7 @@ code snippet creates a population of 12000 patients.
   \DataTypeTok{requireTimeAtRisk =} \OtherTok{FALSE}\NormalTok{,}
   \DataTypeTok{minTimeAtRisk =} \DecValTok{0}\NormalTok{,}
   \DataTypeTok{riskWindowStart =} \DecValTok{0}\NormalTok{,}
-  \DataTypeTok{addExposureDaysToStart =} \OtherTok{FALSE}\NormalTok{,}
   \DataTypeTok{riskWindowEnd =} \DecValTok{365}\NormalTok{,}
-  \DataTypeTok{addExposureDaysToEnd =} \OtherTok{FALSE}\NormalTok{,}
   \DataTypeTok{verbosity =} \StringTok{"INFO"}
 \NormalTok{)}
 \end{Highlighting}
@@ -245,11 +239,18 @@ Specify the prediction algorithm to be used.
 \end{Shaded}
 
 Specify a test fraction and a sequence of training set fractions.
+Alternatively, you can provide a sequence of training events instead of
+the training set fractions. This is recommended, because events are
+determinant of model performance. Make sure that your training set can
+provide the number of events specified.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{testFraction <-}\StringTok{ }\FloatTok{0.2}
 \NormalTok{trainFractions <-}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.8}\NormalTok{, }\FloatTok{0.1}\NormalTok{) }\CommentTok{# Create eight training set fractions}
+
+\CommentTok{# alternatively use a sequence of training events by uncommenting the line below.}
+\CommentTok{# trainEvents <- seq(100, 5000, 100)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -272,19 +273,26 @@ Create the learning curve object.
                                      \DataTypeTok{testFraction =} \FloatTok{0.2}\NormalTok{,}
                                      \DataTypeTok{verbosity =} \StringTok{"TRACE"}\NormalTok{,}
                                      \DataTypeTok{trainFractions =}\NormalTok{ trainFractions,}
+                                     \CommentTok{# trainEvents = trainEvents,}
                                      \DataTypeTok{splitSeed =} \DecValTok{1000}\NormalTok{,}
                                      \DataTypeTok{saveModel =} \OtherTok{TRUE}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 Plot the learning curve object (Figure 4). Specify one of the available
-metrics: \texttt{AUROC}, \texttt{AUPRC}, \texttt{sBrier}.
+metrics: \texttt{AUROC}, \texttt{AUPRC}, \texttt{sBrier}. Moreover, you
+can specify what metric to put on the abscissa, number of
+\texttt{observations} or number of \texttt{events}. We recommend the
+latter, because \texttt{events} are determinant of model performance and
+allow you to better compare learning curves across different prediction
+problems and databases.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{plotLearningCurve}\NormalTok{(}
 \NormalTok{  learningCurve,}
-  \DataTypeTok{metric=}\StringTok{'AUROC'}\NormalTok{,}
+  \DataTypeTok{metric =} \StringTok{'AUROC'}\NormalTok{,}
+  \DataTypeTok{abscissa =} \StringTok{'events'}\NormalTok{,}
   \DataTypeTok{plotTitle =} \StringTok{'Learning Curve'}\NormalTok{,}
   \DataTypeTok{plotSubtitle =} \StringTok{'AUROC performance'}
 \NormalTok{)}
@@ -302,16 +310,16 @@ metrics: \texttt{AUROC}, \texttt{AUPRC}, \texttt{sBrier}.
 
 The learning curve object can be created in parallel, which can reduce
 computation time significantly. Currently this functionality is only
-available for LASSO logistic regression. Depending on the number of
-parallel workers it may require a significant amount of memory. We
-advise to use the parallelized learning curve function for parameter
-search and exploratory data analysis. Logging and saving functionality
-is unavailable.
+available for LASSO logistic regression and gradient boosting machines.
+Depending on the number of parallel workers it may require a significant
+amount of memory. We advise to use the parallelized learning curve
+function for parameter search and exploratory data analysis.
 
 Use the parallelized version of the learning curve function to create
 the learning curve object in parallel. R will find the number of
 available processing cores automatically and register the required
-parallel backend.
+parallel backend. Alternatively, you can provide the number of cores you
+wish to use.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -321,7 +329,8 @@ parallel backend.
   \DataTypeTok{modelSettings =}\NormalTok{ modelSettings,}
   \DataTypeTok{testSplit =}\NormalTok{ testSplit,}
   \DataTypeTok{testFraction =}\NormalTok{ testFraction,}
-  \DataTypeTok{trainFractions =}\NormalTok{ trainFractions,}
+  \DataTypeTok{trainEvents =}\NormalTok{ trainEvents,}
+  \DataTypeTok{cores =} \DecValTok{4}\NormalTok{,}
   \DataTypeTok{splitSeed =} \DecValTok{1000}
 \NormalTok{)}
 \end{Highlighting}
@@ -345,6 +354,14 @@ We have added a demo of the learningcurve:
 Do note that running this demo can take a considerable amount of time
 (15 min on Quad core running in parallel)!
 
+\hypertarget{publication}{%
+\section{Publication}\label{publication}}
+
+A publication titled `How little data do we need for patient-level
+prediction?' uses the learning curve functionality in this package and
+can be accessed as preprint in the arXiv archives at
+\url{https://arxiv.org/abs/2008.07361}.
+
 \hypertarget{acknowledgments}{%
 \section{Acknowledgments}\label{acknowledgments}}
 
@@ -361,11 +378,9 @@ Considerable work has been dedicated to provide the
 ## 
 ## To cite PatientLevelPrediction in publications use:
 ## 
-## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design and
-## implementation of a standardized framework to generate and evaluate patient-level
-## prediction models using observational healthcare data." _Journal of the American
-## Medical Informatics Association_, *25*(8), 969-975. <URL:
-## https://doi.org/10.1093/jamia/ocy032>.
+## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design and implementation of a standardized framework
+## to generate and evaluate patient-level prediction models using observational healthcare data." _Journal of the
+## American Medical Informatics Association_, *25*(8), 969-975. <URL: https://doi.org/10.1093/jamia/ocy032>.
 ## 
 ## A BibTeX entry for LaTeX users is
 ## 
