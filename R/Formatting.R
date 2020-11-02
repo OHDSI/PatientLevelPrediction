@@ -331,12 +331,18 @@ reformatPerformance <- function(train, test, analysisId){
                                       unlist(test$evaluationStatistics[-1]))
                                 )
 
-  nr1 <- nrow(train$thresholdSummary)
-  nr2 <- nrow(test$thresholdSummary)
-  thresholdSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
-                                      train$thresholdSummary),
-                                cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
-                                      test$thresholdSummary))
+
+  if(!is.null(test$thresholdSummary) & !is.null(train$thresholdSummary)){
+    nr1 <- nrow(train$thresholdSummary)
+    nr2 <- nrow(test$thresholdSummary)
+    thresholdSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
+                                    train$thresholdSummary),
+                              cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
+                                    test$thresholdSummary))
+  } else{
+    thresholdSummary <- NULL
+  }
+  
 
   if(!is.null(train$demographicSummary)){
     nr1 <- nrow(train$demographicSummary)
@@ -356,14 +362,17 @@ reformatPerformance <- function(train, test, analysisId){
                               cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
                                     test$calibrationSummary))
 
-  nr1 <- nrow(train$predictionDistribution)
-  nr2 <- nrow(test$predictionDistribution)
-  predictionDistribution <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
+  if(!is.null(train$predictionDistribution) & !is.null(test$predictionDistribution)){
+    nr1 <- nrow(train$predictionDistribution)
+    nr2 <- nrow(test$predictionDistribution)
+    predictionDistribution <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
                                     train$predictionDistribution),
                               cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
                                     test$predictionDistribution))
-
-
+  } else {
+    predictionDistribution <- NULL
+  }
+    
   result <- list(evaluationStatistics=evaluationStatistics,
                  thresholdSummary=thresholdSummary,
                  demographicSummary =demographicSummary,

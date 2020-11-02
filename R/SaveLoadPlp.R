@@ -767,6 +767,7 @@ reformatCovariateSettings <- function(covariateSettingsLocation){
 return(covariateSettings)
 }
 
+
 #' Save parts of the plp result as a csv for transparent sharing
 #'
 #' @details
@@ -781,7 +782,7 @@ savePlpToCsv <- function(result, dirPath){
   #inputSetting
   if(!dir.exists(file.path(dirPath, 'inputSetting'))){dir.create(file.path(dirPath, 'inputSetting'), recursive = T)}
   write.csv(result$inputSetting$modelSettings$model, file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'), row.names = F)
-  write.csv(result$inputSetting$modelSettings$param, file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
+  write.csv(as.data.frame(t(unlist(result$inputSetting$modelSettings$param))), file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
   write.csv(result$inputSetting$modelSettings$name, file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'), row.names = F)
   if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings)){
     write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$cvs, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'), row.names = F)

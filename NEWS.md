@@ -1,3 +1,7 @@
+PatientLevelPrediction 4.2.0
+======================
+- added survival metrics 
+
 PatientLevelPrediction 4.1.0
 ======================
 - added updates and fixes into master from development branch

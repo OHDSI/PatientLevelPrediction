@@ -60,6 +60,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
   #TODO - how to incorporate indexes?
+
   variance <- 0.003
   if(!is.null(param$variance )) variance <- param$variance
   start <- Sys.time()
@@ -115,6 +116,6 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'plp'
-  attr(result, 'predictionType') <- 'binary'
+  attr(result, 'predictionType') <- 'survival'
   return(result)
 }

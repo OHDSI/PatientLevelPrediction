@@ -72,7 +72,7 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
     stop()
   }
   
-  metaData <- list(predictionType="binary",
+  metaData <- list(predictionType = attr(plpModel, 'predictionType'), #"binary", 
                    cohortId = attr(population,'metaData')$cohortId,
                    outcomeId = attr(population,'metaData')$outcomeId)
   
@@ -620,9 +620,9 @@ predictAndromeda <- function(coefficients, population, covariateData, modelType 
     prediction$value <- link(prediction$value)
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     prediction$value <- exp(prediction$value)
-    if(max(prediction$value)>1){
-      prediction$value <- prediction$value/max(prediction$value)
-    }
+    #if(max(prediction$value)>1){
+    #  prediction$value <- prediction$value/max(prediction$value)
+    #}
   }
   return(prediction)
 }

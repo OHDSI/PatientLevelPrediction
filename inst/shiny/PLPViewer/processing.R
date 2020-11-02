@@ -204,11 +204,23 @@ getValidationPerformance <- function(validationLocation){
   if("performanceEvaluation"%in%names(val)){
     valPerformance <- reshape2::dcast(as.data.frame(val$performanceEvaluation$evaluationStatistics), 
                                       analysisId ~ Metric, value.var='Value')
-    TAR <- getTAR(val$model$populationSettings)
+    
+    if(!is.null(val$model$populationSettings)){
+      TAR <- getTAR(val$model$populationSettings)
+    } else{
+      TAR <- getTAR(val$inputSetting$populationSettings)
+    }
+    
   } else {
     valPerformance <- reshape2::dcast(as.data.frame(val[[1]]$performanceEvaluation$evaluationStatistics), 
-                                      analysisId ~ Metric, value.var='Value')  
-    TAR <- getTAR(val[[1]]$model$populationSettings)
+                                      analysisId ~ Metric, value.var='Value') 
+    
+    if(!is.null(val[[1]]$model$populationSettings)){
+      TAR <- getTAR(val[[1]]$model$populationSettings)
+    } else{
+      TAR <- getTAR(val[[1]]$inputSetting$populationSettings)
+    }
+    
   }
   valPerformance$incidence <- as.double(valPerformance$outcomeCount)/as.double(valPerformance$populationSize)*100
   valPerformance[, !colnames(valPerformance)%in%c('analysisId','outcomeCount','populationSize')] <- 

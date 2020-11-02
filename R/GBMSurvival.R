@@ -198,11 +198,11 @@ fitGBMSurvival <- function(population,
   pred[,1] <- pred[,1] + 1 # converting from python to r index
   colnames(pred) <- c('rowId','outcomeBoolean','survivalTime','indexes', 'value')
   pred <- as.data.frame(pred)
-  attr(pred, "metaData") <- list(predictionType="binary")
+  attr(pred, "metaData") <- list(predictionType="survival")
   prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
   # scale the value
-  prediction$value <- prediction$value - min(prediction$value)
-  prediction$value <- prediction$value/max(prediction$value)
+  ##prediction$value <- prediction$value - min(prediction$value)
+  ##prediction$value <- prediction$value/max(prediction$value)
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
