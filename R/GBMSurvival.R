@@ -286,11 +286,16 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
     pred <- as.data.frame(pred)
     pred$outcomeCount <- rep(0, nrow(pred))
     pred$outcomeCount[pred$outcomeBoolean==T ] <- 1
-    attr(pred, "metaData") <- list(predictionType = "binary")
+    attr(pred, "metaData") <- list(predictionType = "survival")
 
-    auc <- computeAuc(pred)
-    writeLines(paste0("CV model obtained CV AUC of ", auc))
-    return(auc)
+    #auc <- computeAuc(pred)
+    S <- survival::Surv(pred$survivalTime,pred$outcomeCount) 
+    p <- pred$value
+    conc <- tryCatch({survival::concordance(S~p, reverse=TRUE)},
+                     error = function(e){ParallelLogger::logError(e); return(0.5)})
+    cStatistic <- round(conc$concordance,5)
+    writeLines(paste0("CV model obtained C-statistic of ", cStatistic))
+    return(cStatistic)
   }
 
   return(result)
@@ -327,7 +332,7 @@ predict.pythonSurvival <- function(plpModel, population, plpData){
   ParallelLogger::logInfo('Returning results...')
   prediction <- result
   prediction <- as.data.frame(prediction)
-  attr(prediction, "metaData") <- list(predictionType="binary")
+  attr(prediction, "metaData") <- list(predictionType="survival")
   if(ncol(prediction)==4){
     colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
   } else {
@@ -338,8 +343,8 @@ predict.pythonSurvival <- function(plpModel, population, plpData){
   prediction$rowId <- prediction$rowId+1
   
   # scale the value 
-  prediction$value <- prediction$value - min(prediction$value)
-  prediction$value <- prediction$value/max(prediction$value)
+  ##prediction$value <- prediction$value - min(prediction$value)
+  ##prediction$value <- prediction$value/max(prediction$value)
   
   # add subjectId and date:
   prediction <- merge(prediction,

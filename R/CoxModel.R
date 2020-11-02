@@ -104,7 +104,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
                  hyperParamSearch = c(priorVariance=modelTrained$priorVariance, 
                                       seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
                                       log_likelihood = modelTrained$log_likelihood),
-                 trainCVAuc = NULL,
+                 trainCVAuc = NULL, # add this?
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,# can use populationSettings$outcomeId?

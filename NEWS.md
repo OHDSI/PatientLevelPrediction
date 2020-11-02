@@ -1,3 +1,7 @@
+PatientLevelPrediction 4.2.1
+======================
+- updated GBMsurvival to use survival metrics and c-stat
+
 PatientLevelPrediction 4.2.0
 ======================
 - added survival metrics 
