@@ -248,11 +248,11 @@ getPerformance <- function(analysisLocation){
   if(sum(colnames(res)=='AUC.auc')==0){
     res$AUC.auc <- res$AUC 
   }
-  if(sum(is.null(res$AUC.auc_ub95ci))>0){
-    nullInd <- is.null(res$AUC.auc_ub95ci)
-    aucs <- res$AUC.auc[nullInd]
-    n1s <- res$populationSize[nullInd]
-    n2s <- res$outcomeCount[nullInd]
+  if(sum(is.null(res$AUC.auc_ub95ci))>0 | sum(is.na(as.double(as.character(res$AUC.auc_ub95ci))))>0){
+    nullInd <- is.null(res$AUC.auc_ub95ci) | is.na(as.double(as.character(res$AUC.auc_ub95ci)))
+    aucs <- as.double(as.character(res$AUC.auc[nullInd]))
+    n1s <- as.double(as.character(res$populationSize[nullInd]))*valPercent/100
+    n2s <- as.double(as.character(res$outcomeCount[nullInd]))*valPercent/100
     res$AUC.auc_ub95ci[nullInd] <- unlist(lapply(1:length(aucs), function(i){getbounds(n1=n1s[i],
                                                                                                   n2 = n2s[i], 
                                                                                                   auc = aucs[i])$ub}))
@@ -309,11 +309,11 @@ getValidationPerformance <- function(validationLocation){
   valPerformance$AUC.auc <- as.double(as.character(valPerformance$AUC.auc ))
   valPerformance$AUC.auc_ub95ci <- as.double(as.character(valPerformance$AUC.auc_ub95ci))
   valPerformance$AUC.auc_lb95ci <- as.double(as.character(valPerformance$AUC.auc_lb95ci))
-  if(sum(is.null(valPerformance$AUC.auc_ub95ci))>0){
-    nullInd <- is.null(valPerformance$AUC.auc_ub95ci)
-    aucs <- valPerformance$AUC.auc[nullInd]
-    n1s <- valPerformance$populationSize[nullInd]
-    n2s <- valPerformance$outcomeCount[nullInd]
+  if(sum(is.null(valPerformance$AUC.auc_ub95ci))>0 | sum(is.na(as.double(as.character(valPerformance$AUC.auc_ub95ci))))>0){
+    nullInd <- is.null(valPerformance$AUC.auc_ub95ci) | is.na(as.double(as.character(valPerformance$AUC.auc_ub95ci)))
+    aucs <- as.double(as.character(valPerformance$AUC.auc[nullInd]))
+    n1s <- as.double(as.character(valPerformance$populationSize[nullInd]))
+    n2s <- as.double(as.character(valPerformance$outcomeCount[nullInd]))
     valPerformance$AUC.auc_ub95ci[nullInd] <- unlist(lapply(1:length(aucs), function(i){getbounds(n1=n1s[i],
                                                                                                   n2 = n2s[i], 
                                                                                                   auc = aucs[i])$ub}))
