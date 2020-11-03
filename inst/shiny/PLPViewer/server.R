@@ -45,10 +45,10 @@ server <- shiny::shinyServer(function(input, output, session) {
                                                  #tags$th(title=active_columns[i], colnames(data)[i])
                                                  tr(apply(data.frame(colnames=c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
                                                                                 'TAR', 'AUC', 'AUPRC', 
-                                                                                'T Size', 'O Count','Val (%)', 'O Incidence (%)'), 
+                                                                                'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp'), 
                                                                      labels=c('Database used to develop the model', 'Database used to evaluate model', 'Target population - the patients you want to predict risk for','Outcome - what you want to predict', 
                                                                      'Model type','Id for the covariate/settings used','Time-at-risk period', 'Area under the reciever operating characteristics (test or validation)', 'Area under the precision recall curve (test or validation)',
-                                                                     'Target population size in the data', 'Outcome count in the data','The percentage of data used to evaluate the model', 'Percentage of target population that have outcome during time-at-risk')), 1,
+                                                                     'Target population size in the data', 'Outcome count in the data','The percentage of data used to evaluate the model', 'Percentage of target population that have outcome during time-at-risk','date and time of execution')), 1,
                                                           function(x) th(title=x[2], x[1])))
                                                )
                                              ))
