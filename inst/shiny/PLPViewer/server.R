@@ -81,7 +81,9 @@ server <- shiny::shinyServer(function(input, output, session) {
   output$covariateTable <- DT::renderDataTable(formatCovSettings(plpResult()$model$metaData$call$covariateSettings))
   output$populationTable <- DT::renderDataTable(formatPopSettings(plpResult()$model$populationSettings))
   
-  
+  output$hpTable <- DT::renderDataTable(DT::datatable(as.data.frame(plpResult()$model$hyperParamSearch),
+                                        options = list(scrollX = TRUE)))
+  output$attritionTable <- DT::renderDataTable(plpResult()$inputSetting$populationSettings$attrition)
   
   
   # prediction text

@@ -162,7 +162,12 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                                    shiny::h3('Covariate Settings: ', 
                                                                                                                              shiny::a("help", href="http://ohdsi.github.io/FeatureExtraction/reference/createCovariateSettings.html", target="_blank") 
                                                                                                                    ),
-                                                                                                                   DT::dataTableOutput('covariateTable'))
+                                                                                                                   DT::dataTableOutput('covariateTable')),
+                                                                                                   
+                                                                                                   shiny::tabPanel("Hyper-parameters", 
+                                                                                                                   DT::dataTableOutput('hpTable')),
+                                                                                                   shiny::tabPanel("Attrition", 
+                                                                                                                   DT::dataTableOutput('attritionTable'))
                                                                                 )
                                                                                 
                                                                   )
