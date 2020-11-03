@@ -1,3 +1,7 @@
+PatientLevelPrediction 4.2.2
+======================
+- updated shiny app added 95% CI to AUC in summary, size is now complete data size and there is a column valPercent that tells what percentage of the data were used for validation 
+
 PatientLevelPrediction 4.2.1
 ======================
 - updated GBMsurvival to use survival metrics and c-stat

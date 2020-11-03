@@ -143,4 +143,16 @@ editCovariates <- function(covs){
     ))
   }
 }
+
+
+# estimate 95CI AUC if missing
+getbounds <- function(n1,n2, auc){
+  q0 <- auc*(1-auc)
+  q1 <- auc/(2-auc)-auc^2
+  q2 <- 2*auc^2/(1+auc)-auc^2
+  
+  se = sqrt((q0+(n1-1)*q1+(n2-1)*q2)/(n1*n2))
+  
+  list(lb=auc-1.96*se, ub=auc+1.96*se)
+}
     

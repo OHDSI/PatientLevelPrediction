@@ -30,9 +30,9 @@ getSummary  <- function(result,inputType,validation){
   #sumTab <- sumTab[,c('analysisId','devDatabase','valDatabase','cohortName','outcomeName','modelSettingName','riskWindowStart', 'riskWindowEnd', 'AUC','AUPRC', 'populationSize','outcomeCount','incidence',
   #                    'addExposureDaysToStart','addExposureDaysToEnd','plpResultLocation', 'plpResultLoad')]
   #colnames(sumTab) <- c('Analysis','Dev', 'Val', 'T', 'O','Model', 'TAR start', 'TAR end', 'AUC','AUPRC', 'T Size','O Count','O Incidence (%)', 'addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')
-  sumTab <- sumTab[,c('devDatabase','valDatabase','cohortName','outcomeName','modelSettingName','covariateSettingId','TAR', 'AUC','AUPRC', 'populationSize','outcomeCount','incidence',
+  sumTab <- sumTab[,c('devDatabase','valDatabase','cohortName','outcomeName','modelSettingName','covariateSettingId','TAR', 'AUC','AUPRC', 'populationSize','outcomeCount','valPercent','incidence',
                       'plpResultLocation', 'plpResultLoad')]
-  colnames(sumTab) <- c('Dev', 'Val', 'T', 'O','Model','covariateSettingId', 'TAR', 'AUC','AUPRC', 'T Size','O Count','O Incidence (%)', 'plpResultLocation', 'plpResultLoad')
+  colnames(sumTab) <- c('Dev', 'Val', 'T', 'O','Model','covariateSettingId', 'TAR', 'AUC','AUPRC', 'T Size','O Count','% used for Eval','O Incidence (%)', 'plpResultLocation', 'plpResultLoad')
   
   return(sumTab)
 } 
@@ -42,7 +42,25 @@ getSummaryFromObject <- function(result,validation=NULL){
   
   TAR <- getTAR(result$model$populationSettings)
   eval <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
-  eval <- eval[eval$Eval %in% c('test',"validation"),]
+  #eval <- eval[eval$Eval %in% c('test',"validation"),]
+  valInd <- eval$Eval %in% c('test',"validation")
+  
+  if(!is.null(eval$AUC.auc_lb95ci)){
+    lb <- signif(as.double(as.character(eval$AUC.auc_lb95ci)),3)
+  } else{
+    lb <- signif(getbounds(n1=as.double(as.character(eval$Value[eval$Metric=='populationSize' & valInd])),
+                    n2 = as.double(as.character(eval$Value[eval$Metric=='outcomeCount' & valInd])), 
+                    auc = as.double(as.character(eval$Value[eval$Metric=='AUC.auc' & valInd])))$lb,3)
+  }
+  if(!is.null(eval$AUC.auc_ub95ci)){
+    ub <- signif(as.double(as.character(eval$AUC.auc_ub95ci)),3)
+  } else{
+    ub <- signif(getbounds(n1=as.double(as.character(eval$Value[eval$Metric=='populationSize' & valInd])),
+                    n2 = as.double(as.character(eval$Value[eval$Metric=='outcomeCount' & valInd])), 
+                    auc = as.double(as.character(eval$Value[eval$Metric=='AUC.auc' & valInd])))$ub,3)
+  }
+
+
   allRes <- data.frame(analysisId = 1,
                        devDatabase = ifelse(is.null(result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema),'Missing',result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema),
                        valDatabase = ifelse(is.null(result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema),'Missing',result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema),
@@ -51,19 +69,39 @@ getSummaryFromObject <- function(result,validation=NULL){
                        modelSettingName = result$model$modelSettings$model,
                        covariateSettingId = 1,
                        TAR = TAR,
-                       AUC = as.double(as.character(eval$Value[eval$Metric=='AUC.auc'])),
-                       AUPRC = as.double(as.character(eval$Value[eval$Metric=='AUPRC'])),
-                       populationSize = as.double(as.character(eval$Value[eval$Metric=='populationSize'])),
-                       outcomeCount = as.double(as.character(eval$Value[eval$Metric=='outcomeCount'])),
-                       incidence = as.double(as.character(eval$Value[eval$Metric=='outcomeCount']))/as.double(as.character(eval$Value[eval$Metric=='populationSize'])),
+                       AUC = paste0(signif(as.double(as.character(eval$Value[eval$Metric=='AUC.auc' & valInd])),3),
+                                    ' (',lb,'-',ub,')'),
+                       AUPRC = signif(as.double(as.character(eval$Value[eval$Metric=='AUPRC' & valInd])),3),
+                       populationSize = sum(as.double(as.character(eval$Value[eval$Metric=='populationSize']))),
+                       outcomeCount = sum(as.double(as.character(eval$Value[eval$Metric=='outcomeCount']))),
+                       valPercent = round(100*sum(as.double(as.character(eval$Value[eval$Metric=='populationSize' & valInd])))/sum(as.double(as.character(eval$Value[eval$Metric=='populationSize'])))),
+                       incidence = signif(100*sum(as.double(as.character(eval$Value[eval$Metric=='outcomeCount'])))/sum(as.double(as.character(eval$Value[eval$Metric=='populationSize']))),3),
                        plpResultLocation = 'NULL', 
                        plpResultLoad = 'NULL'
   )
   
+
   if(!is.null(validation)){
     for(i in 1:length(validation$validation)){
       TAR <- getTAR(validation$validation[[i]]$model$populationSettings)
       eval <- as.data.frame(validation$validation[[i]]$performanceEvaluation$evaluationStatistics)
+      
+      
+      if(!is.null(eval$AUC.auc_lb95ci)){
+        lb <- signif(as.double(as.character(eval$AUC.auc_lb95ci)),3)
+      } else{
+        lb <- signif(getbounds(n1=as.double(as.character(eval$Value[eval$Metric=='populationSize' & valInd])),
+                               n2 = as.double(as.character(eval$Value[eval$Metric=='outcomeCount' & valInd])), 
+                               auc = as.double(as.character(eval$Value[eval$Metric=='AUC.auc' & valInd])))$lb,3)
+      }
+      if(!is.null(eval$AUC.auc_ub95ci)){
+        ub <- signif(as.double(as.character(eval$AUC.auc_ub95ci)),3)
+      } else{
+        ub <- signif(getbounds(n1=as.double(as.character(eval$Value[eval$Metric=='populationSize' & valInd])),
+                               n2 = as.double(as.character(eval$Value[eval$Metric=='outcomeCount' & valInd])), 
+                               auc = as.double(as.character(eval$Value[eval$Metric=='AUC.auc' & valInd])))$ub,3)
+      }
+      
       tempRes <-data.frame(analysisId = 1+i,
                            devDatabase = result$inputSetting$dataExtrractionSettings$cdmDatabaseSchema,
                            valDatabase = names(validation)[i],
@@ -72,11 +110,13 @@ getSummaryFromObject <- function(result,validation=NULL){
                            modelSettingName = result$model$modelSettings$model,
                            covariateSettingId =1,
                            TAR = TAR,
-                           AUC = as.double(as.character(eval$Value[eval$Metric=='AUC.auc'])),
-                           AUPRC = as.double(as.character(eval$Value[eval$Metric=='AUPRC'])),
+                           AUC = paste0(signif(as.double(as.character(eval$Value[eval$Metric=='AUC.auc' & valInd])),3),
+                                        ' (',lb,'-',ub,')'),
+                           AUPRC = signif(as.double(as.character(eval$Value[eval$Metric=='AUPRC'])),3),
                            populationSize = as.double(as.character(eval$Value[eval$Metric=='populationSize'])),
                            outcomeCount = as.double(as.character(eval$Value[eval$Metric=='outcomeCount'])),
-                           incidence = as.double(as.character(eval$Value[eval$Metric=='outcomeCount']))/as.double(as.character(eval$Value[eval$Metric=='populationSize'])),
+                           valPercent = 100,
+                           incidence = signif(100*as.double(as.character(eval$Value[eval$Metric=='outcomeCount']))/as.double(as.character(eval$Value[eval$Metric=='populationSize'])),3),
                            plpResultLocation = 'NULL', 
                            plpResultLoad = 'NULL'
       )
@@ -141,11 +181,11 @@ summaryPlpAnalyses <- function(analysesLocation){
     allPerformance <- devPerformance
   }
   
-  allPerformance$AUC <- as.double(allPerformance$AUC)
-  allPerformance$AUPRC <- as.double(allPerformance$AUPRC)
-  allPerformance$outcomeCount <- as.double(allPerformance$outcomeCount)
-  allPerformance$populationSize <- as.double(allPerformance$populationSize)
-  allPerformance$incidence <- as.double(allPerformance$incidence)
+  #allPerformance$AUC <- as.double(allPerformance$AUC)
+  #allPerformance$AUPRC <- as.double(allPerformance$AUPRC)
+  #allPerformance$outcomeCount <- as.double(allPerformance$outcomeCount)
+  #allPerformance$populationSize <- as.double(allPerformance$populationSize)
+  #allPerformance$incidence <- as.double(allPerformance$incidence)
   return(allPerformance)
 }
 
@@ -159,7 +199,7 @@ getPerformance <- function(analysisLocation){
       analysisId <- strsplit(analysisLocation, '/')[[1]]
       return(data.frame(analysisId=analysisId[length(analysisId)], 
                         AUC=0.000, AUPRC=0, outcomeCount=0,
-                        populationSize=0,incidence=0,plpResultLocation=location, 
+                        populationSize=0,valPercent = 0,incidence=0,plpResultLocation=location, 
                         plpResultLoad='loadPlpResult', TAR = '?'))
     } else {
       require(PatientLevelPrediction)
@@ -177,26 +217,57 @@ getPerformance <- function(analysisLocation){
     res <- as.data.frame(res$performanceEvaluation$evaluationStatistics)
     plpResultLoad <- 'readRDS'
   }
-  
-  #if empty do edit?
-  
+
+  #mave into values:
+  res$Value <- as.double(as.character(res$Value))
+
+  #add valPercent
+  testVal <- res$Value[res$Eval%in%c('test','validation') & res$Metric == 'populationSize'] 
+  res$Value[res$Eval%in%c('test','validation') & res$Metric == 'outcomeCount'] <- ifelse(length(res$Value[res$Eval=='train' & res$Metric == 'outcomeCount'])==0, 0, res$Value[res$Eval=='train' & res$Metric == 'outcomeCount'])+res$Value[res$Eval%in%c('test','validation') & res$Metric == 'outcomeCount']
+  res$Value[res$Eval%in%c('test','validation') & res$Metric == 'populationSize'] <- ifelse(length(res$Value[res$Eval=='train' & res$Metric == 'populationSize'])==0, 0, res$Value[res$Eval=='train' & res$Metric == 'populationSize'])+res$Value[res$Eval%in%c('test','validation') & res$Metric == 'populationSize']
+  if(sum(res$Eval=='test' & res$Metric == 'populationSize')>0){
+    valPercent <- round(100*testVal/res$Value[res$Eval%in%c('test','validation') & res$Metric == 'populationSize'])
+  } else{
+    valPercent <- 100 
+  }
   res <- tryCatch(reshape2::dcast(res[res$Eval%in%c('test','validation'),], analysisId ~ Metric, value.var='Value'),
                   error = function(cont) return(NULL))
   if(is.null(res)){
     return(NULL) }
+
   res <- res[,!colnames(res)%in%c("BrierScore","BrierScaled")]
   res$incidence <- as.double(res$outcomeCount)/as.double(res$populationSize)*100
+  res$valPercent <- valPercent
   res[, !colnames(res)%in%c('analysisId','outcomeCount','populationSize')] <- 
     format(as.double(res[, !colnames(res)%in%c('analysisId','outcomeCount','populationSize')]), digits = 2, scientific = F) 
   res$TAR <- TAR
-  if(sum(colnames(res)=='AUC.auc_ub95ci')>0){
-    res$AUC <- res$AUC.auc
-    #res$AUC <- paste0(res$AUC.auc, ' (', res$AUC.auc_lb95ci,'-', res$AUC.auc_ub95ci,')')
+  #if(sum(colnames(res)=='AUC.auc_ub95ci')>0){
+  #  res$AUC <- res$AUC.auc
+  #}
+  
+  if(sum(colnames(res)=='AUC.auc')==0){
+    res$AUC.auc <- res$AUC 
   }
+  if(sum(is.null(res$AUC.auc_ub95ci))>0){
+    nullInd <- is.null(res$AUC.auc_ub95ci)
+    aucs <- res$AUC.auc[nullInd]
+    n1s <- res$populationSize[nullInd]
+    n2s <- res$outcomeCount[nullInd]
+    res$AUC.auc_ub95ci[nullInd] <- unlist(lapply(1:length(aucs), function(i){getbounds(n1=n1s[i],
+                                                                                                  n2 = n2s[i], 
+                                                                                                  auc = aucs[i])$ub}))
+    res$AUC.auc_lb95ci[nullInd] <- unlist(lapply(1:length(aucs), function(i){getbounds(n1=n1s[i],
+                                                                                                  n2 = n2s[i], 
+                                                                                                  auc = aucs[i])$lb}))
+    
+  }
+  res$AUC <- paste0(signif(as.double(as.character(res$AUC.auc)),3), ' (', signif(as.double(as.character(res$AUC.auc_lb95ci)),3),'-', signif(as.double(as.character(res$AUC.auc_ub95ci)),3),')')
+  res$AUPRC <- signif(as.double(as.character(res$AUPRC,3)))
+  res$incidence <- signif(as.double(as.character(res$incidence,3)))
   
   res$plpResultLocation <- location
   res$plpResultLoad <- plpResultLoad
-  return(res[,c('analysisId', 'AUC', 'AUPRC', 'outcomeCount','populationSize','incidence','plpResultLocation', 'plpResultLoad', 'TAR')])
+  return(res[,c('analysisId', 'AUC', 'AUPRC', 'outcomeCount','populationSize','valPercent','incidence','plpResultLocation', 'plpResultLoad', 'TAR')])
 }
 
 getValidationPerformance <- function(validationLocation){
@@ -222,17 +293,41 @@ getValidationPerformance <- function(validationLocation){
     }
     
   }
-  valPerformance$incidence <- as.double(valPerformance$outcomeCount)/as.double(valPerformance$populationSize)*100
+  #mave into values:
+  valPerformance$outcomeCount <- as.double(as.character(valPerformance$outcomeCount))
+  valPerformance$populationSize <- as.double(as.character(valPerformance$populationSize))
+
+  valPerformance$incidence <- signif(valPerformance$outcomeCount/valPerformance$populationSize*100,3)
+  valPerformance$valPercent <- 100
   valPerformance[, !colnames(valPerformance)%in%c('analysisId','outcomeCount','populationSize')] <- 
     format(as.double(valPerformance[, !colnames(valPerformance)%in%c('analysisId','outcomeCount','populationSize')]), digits = 2, scientific = F) 
   
-  if(sum(colnames(valPerformance)=='AUC.auc_ub95ci')>0){
-    valPerformance$AUC <- valPerformance$AUC.auc
-    #valPerformance$AUC <- paste0(valPerformance$AUC.auc, ' (', valPerformance$AUC.auc_lb95ci,'-', valPerformance$AUC.auc_ub95ci,')')
+  if(sum(colnames(valPerformance)=='AUC.auc')==0){
+    valPerformance$AUC.auc <- valPerformance$AUC
   }
+  # convert to double
+  valPerformance$AUC.auc <- as.double(as.character(valPerformance$AUC.auc ))
+  valPerformance$AUC.auc_ub95ci <- as.double(as.character(valPerformance$AUC.auc_ub95ci))
+  valPerformance$AUC.auc_lb95ci <- as.double(as.character(valPerformance$AUC.auc_lb95ci))
+  if(sum(is.null(valPerformance$AUC.auc_ub95ci))>0){
+    nullInd <- is.null(valPerformance$AUC.auc_ub95ci)
+    aucs <- valPerformance$AUC.auc[nullInd]
+    n1s <- valPerformance$populationSize[nullInd]
+    n2s <- valPerformance$outcomeCount[nullInd]
+    valPerformance$AUC.auc_ub95ci[nullInd] <- unlist(lapply(1:length(aucs), function(i){getbounds(n1=n1s[i],
+                                                                                                  n2 = n2s[i], 
+                                                                                                  auc = aucs[i])$ub}))
+    valPerformance$AUC.auc_lb95ci[nullInd] <- unlist(lapply(1:length(aucs), function(i){getbounds(n1=n1s[i],
+                                                                                                  n2 = n2s[i], 
+                                                                                                  auc = aucs[i])$lb}))
+    
+  }
+  valPerformance$AUC <- paste0(signif(valPerformance$AUC.auc,3), ' (', signif(valPerformance$AUC.auc_lb95ci,3),'-', signif(valPerformance$AUC.auc_ub95ci,3),')')
+  valPerformance$AUPRC <- signif(as.double(as.character(valPerformance$AUPRC,3)))
+  
   valPerformance$analysisId <- strsplit(validationLocation, '/')[[1]][[length(strsplit(validationLocation, '/')[[1]])]]
   valPerformance$valDatabase <- strsplit(validationLocation, '/')[[1]][[length(strsplit(validationLocation, '/')[[1]])-1]]
-  valPerformance <- valPerformance[,c('analysisId','valDatabase', 'AUC', 'AUPRC', 'outcomeCount','populationSize','incidence')]
+  valPerformance <- valPerformance[,c('analysisId','valDatabase', 'AUC', 'AUPRC', 'outcomeCount','populationSize','valPercent','incidence')]
   valPerformance$plpResultLocation <- file.path(validationLocation,'validationResult.rds')
   valPerformance$plpResultLoad <- 'readRDS'
   valPerformance$TAR <- TAR
