@@ -320,6 +320,31 @@ test_that("MLP  working checks", {
 })
 
 
+svmSet <- setSVM(C=1, degree = 1, gamma = 1e-04)
+plpResultSvm <- runPlp(population = population,
+                       plpData = plpData, 
+                       modelSettings = svmSet, 
+                       savePlpData = F, 
+                       savePlpResult = F, 
+                       saveEvaluation = F, 
+                       savePlpPlots = F, 
+                       analysisId = 'svmTest',
+                       saveDirectory =  saveLoc)
+
+test_that("SVM  working checks", {
+  # check same structure
+  testthat::expect_equal(names(plpResultSvm), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultSvm$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultSvm$prediction$value), 0)
+  testthat::expect_lte(max(plpResultSvm$prediction$value), 1)
+})
+
+
 
 test_that("LR cross val weights", {
   

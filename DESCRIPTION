@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 4.0.5
-Date: 2020-07-12
+Version: 4.1.0
+Date: 2020-09-01
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -60,14 +60,15 @@ Imports:
     plotly,
     zeallot,
     htmltools,
-    tensorflow
+    tensorflow,
+    benchmarkme,
+    cowplot
 Suggests:
     shiny,
     DT,
     htmlwidgets (> 0.8),
     shinydashboard,
     shinycssloaders,
-    cowplot,
     testthat,
     pROC,
     gnm,
@@ -87,5 +88,5 @@ Remotes:
     ohdsi/BigKnn
 LinkingTo: Rcpp
 NeedsCompilation: yes
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Encoding: UTF-8

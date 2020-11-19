@@ -163,8 +163,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotPreferencePDF(plpResult()$performanceEvaluation, 
-                        type=plpResult()$type ) #+ 
+      plotPreferencePDF(plpResult()$performanceEvaluation) #+ 
         # ggplot2::geom_vline(xintercept=plotters()$prefthreshold) -- RMS
     }
   })
@@ -173,8 +172,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotPredictedPDF(plpResult()$performanceEvaluation, 
-                       type=plpResult()$type ) # + 
+      plotPredictedPDF(plpResult()$performanceEvaluation) # + 
         #ggplot2::geom_vline(xintercept=plotters()$threshold) -- RMS     
     }
   })
@@ -183,7 +181,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotPredictionDistribution(plpResult()$performanceEvaluation, type=plpResult()$type )
+      plotPredictionDistribution(plpResult()$performanceEvaluation)
     }
   })
   
@@ -191,7 +189,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotSparseCalibration2(plpResult()$performanceEvaluation, type=plpResult()$type )
+      plotSparseCalibration2(plpResult()$performanceEvaluation)
     }
   })
   
@@ -199,8 +197,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      tryCatch(plotDemographicSummary(plpResult()$performanceEvaluation, 
-                                      type=plpResult()$type ),
+      tryCatch(plotDemographicSummary(plpResult()$performanceEvaluation),
                error= function(cond){return(NULL)})
     }
   })
