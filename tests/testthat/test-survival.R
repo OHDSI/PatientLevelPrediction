@@ -204,6 +204,9 @@ setGBMSurv <- setGBMSurvival(loss = 'coxph',
                              seed = NULL, 
                              quiet = F)
 
+# PatientLevelPrediction::getThresholdSummary(prediction) R/EvaluatePlp.R:96:4
+# error arguments imply differing number of rows: 200, 168
+# using binary metrics still...
 plpResultGBMSurv <- runPlp(population = population,
                        plpData = plpData, 
                        modelSettings = setGBMSurv, 

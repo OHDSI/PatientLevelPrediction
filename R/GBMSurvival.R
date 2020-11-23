@@ -220,7 +220,7 @@ fitGBMSurvival <- function(population,
                  predictionTrain=prediction)
   class(result) <- "plpModel"
   attr(result, "type") <- "pythonSurvival"
-  attr(result, "predictionType") <- "binary"
+  attr(result, "predictionType") <- "survival"
 
 
   return(result)

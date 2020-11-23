@@ -35,6 +35,7 @@
 #' @param includePredictionDistribution  Whether to include the predictionDistribution
 #' @param includeCovariateSummary      Whether to include the covariateSummary
 #' @param save                         Whether to save the result or just return the transportable object
+#' @param reduceSize                   Remove parts of runPlp object that are not needed but take up space
 #'
 #' @examples
 #' \dontrun{
@@ -47,7 +48,8 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
                          outputFolder, n=NULL,includeEvaluationStatistics=T,
                          includeThresholdSummary=T, includeDemographicSummary=T,
                          includeCalibrationSummary =T, includePredictionDistribution=T,
-                         includeCovariateSummary=T, save=T){
+                         includeCovariateSummary=T, save=T,
+                         reduceSize = F){
 
   # remove any sensitive data:
   plpResult$inputSetting$dataExtrractionSettings <- NULL 
@@ -60,6 +62,14 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
   plpResult$model$metaData$call$baseUrl <- NULL
   plpResult$model$metaData$modelName <- modelName
   plpResult$model$index <- NULL
+  if(!is.null(plpResult$model$trainCVAuc)){
+    plpResult$model$trainCVAuc <- NULL # newly added 
+  }
+  if(class(plpResult$model$model)%in%c('list',"plpModel")){
+    if(!is.null(plpResult$model$model$cv)){
+      plpResult$model$model$cv <- NULL # newly added 
+    }
+  }
   plpResult$prediction <- NULL
   if(!is.null(plpResult$model$predict)){
     mod <- get("plpModel", envir = environment(plpResult$model$predict))
@@ -70,8 +80,23 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
     mod$metaData$call$cdmDatabaseSchema <- 'Missing'
     mod$metaData$call$cohortDatabaseSchema <- 'Missing'
     mod$metaData$call$baseUrl <- NULL
+    if(!is.null(mod$trainCVAuc)){
+      mod$trainCVAuc <- NULL
+    }
+    if(class(mod$model)=='list'){
+      if(!is.null(mod$model$cv)){
+        mod$model$cv <- NULL
+      }
+    }
+    mod$varImp <- mod$varImp[mod$varImp$covariateValue!=0,]  #remove non-zero
     
     assign("plpModel", mod, envir = environment(plpResult$model$predict))
+  }
+  
+  if(reduceSize){
+    plpResult$model$covariateMap <- NULL
+    plpResult$model$varImp <- NULL
+    plpResult$model$metaData$preprocessSettings <- NULL
   }
 
   if(!includeEvaluationStatistics)

@@ -1,6 +1,6 @@
 {DEFAULT @cdm_version = '5'}
 
-SELECT row_id,
+SELECT cast(row_id as int) row_id,
 	subject_id,
 {@cdm_version == "4"} ? {	
 	cohort_concept_id AS cohort_id,
