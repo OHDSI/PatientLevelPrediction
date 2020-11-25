@@ -126,9 +126,9 @@ applyModel <- function(population,
                                           Eval=rep('validation', nr1),
                                           performance$calibrationSummary)
   nr1 <- nrow(performance$predictionDistribution)
-  performance$predictionDistribution <- cbind(analysisId=rep(analysisId,nr1),
+  performance$predictionDistribution <- tryCatch({cbind(analysisId=rep(analysisId,nr1),
                                           Eval=rep('validation', nr1),
-                                          performance$predictionDistribution)
+                                          performance$predictionDistribution)}, error = function(e){return(NULL)})
   
   delta <- start.pred - Sys.time()
   if (!silent)
