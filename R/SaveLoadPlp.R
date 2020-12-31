@@ -456,7 +456,8 @@ savePlpModel <- function(plpModel, dirPath){
   } else {  
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   }
-  saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
+  #saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
+  saveRDS(NULL, file = file.path(dirPath, "transform.rds"))
   saveRDS(plpModel$index, file = file.path(dirPath, "index.rds"))
   saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
   saveRDS(plpModel$hyperParamSearch, file = file.path(dirPath, "hyperParamSearch.rds"))

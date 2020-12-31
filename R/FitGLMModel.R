@@ -135,6 +135,16 @@ fitGLMModel <- function(population,
     timeAtRisk <- data.frame(sum(population$timeAtRisk)) # not sure this is correct?
     outcomeModel$timeAtRisk <- timeAtRisk
   }
+  if (modelType == "cox" || modelType == "survival") {
+    #baselineHazard <- tryCatch({Cyclops:::survfit.cyclopsFit(fit, type = "aalen")},
+    #                           error = function(e) {paste0(e); return(NULL)})
+    baselineHazard <- tryCatch({survival::survfit(fit, type = "aalen")},
+                               error = function(e) {ParallelLogger::logInfo(e); return(NULL)})
+    if(is.null(baselineHazard)){
+      ParallelLogger::logInfo('No baseline hazard function returned')
+    }
+    outcomeModel$baselineHazard <- baselineHazard
+  }
   class(outcomeModel) <- "plpModel"
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste("Fitting model took", signif(delta, 3), attr(delta, "units")))

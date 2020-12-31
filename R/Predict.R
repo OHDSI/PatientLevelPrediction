@@ -74,7 +74,8 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
   
   metaData <- list(predictionType = attr(plpModel, 'predictionType'), #"binary", 
                    cohortId = attr(population,'metaData')$cohortId,
-                   outcomeId = attr(population,'metaData')$outcomeId)
+                   outcomeId = attr(population,'metaData')$outcomeId,
+                   timepoint = attr(population,'metaData')$riskWindowEnd)
   
   attr(prediction, "metaData") <- metaData
   return(prediction)
@@ -86,6 +87,14 @@ predict.plp <- function(plpModel,population, plpData, ...){
   ParallelLogger::logTrace('predict.plp - predictingProbabilities start')
   prediction <- predictProbabilities(plpModel$model, population, covariateData)
   ParallelLogger::logTrace('predict.plp - predictingProbabilities end')
+  
+  # add baselineHazard function
+  if(!is.null(plpModel$model$baselineHazard)){
+    time <- attr(population,'metaData')$riskWindowEnd
+    bhind <- which.min(abs(plpModel$model$baselineHazard$time-time))
+    prediction$value <- 1-plpModel$model$baselineHazard$surv[bhind]^prediction$value
+  }
+  
   return(prediction)
 }
 
@@ -555,6 +564,10 @@ predictProbabilities <- function(predictiveModel, population, covariateData) {
   attr(prediction, "modelType") <- predictiveModel$modelType
   attr(prediction, "cohortId") <- attr(population, "metadata")$cohortId
   attr(prediction, "outcomeId") <- attr(population, "metadata")$outcomeId
+  
+  if (predictiveModel$modelType %in% c("survival", "cox")) {
+    attr(prediction, "timepoint") <- attr(population, "metadata")$riskWindowEnd
+  }
   
   delta <- Sys.time() - start
   ParallelLogger::logInfo("Prediction took ", signif(delta, 3), " ", attr(delta, "units"))

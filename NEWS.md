@@ -1,3 +1,7 @@
+PatientLevelPrediction 4.2.6
+======================
+- added baseline risk to Cox model 
+
 PatientLevelPrediction 4.2.3
 ======================
 - updated shiny: added attrition and hyper-parameter grid search into settings

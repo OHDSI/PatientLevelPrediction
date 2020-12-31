@@ -168,7 +168,8 @@ evaluatePlp <- function(prediction, plpData){
 
     #============================
     
-    timepoint <- max(prediction$survivalTime)
+    timepoint <- attr(prediction, 'metaData')$timepoint #max(prediction$survivalTime)
+    ParallelLogger::logInfo(paste0('Evaluating survival model at time: ', timepoint, ' days'))
     
     #t <- apply(cbind(prediction$daysToCohortEnd, prediction$survivalTime), 1, min)
     t <- prediction$survivalTime
@@ -798,20 +799,22 @@ getDemographicSummary <- function(prediction, plpData, type = 'binary', timepoin
         
         tempDemo <- demographicSum %>% dplyr::filter(genGroup == gen & ageGroup == age)
         
-        t1 <- tempDemo %>% dplyr::select(t)
-        y1 <- tempDemo %>% dplyr::select(y)
-        p1 <- tempDemo %>% dplyr::select(value)
-        
-        out <- tryCatch({summary(survival::survfit(survival::Surv(t1$t, y1$y) ~ 1), times = timepoint)},
-                        error = function(e){ParallelLogger::logError(e); return(NULL)})
-        demoTemp <- c(genGroup = gen, ageGroup = age, 
-                      PersonCountAtRisk = length(p1$value),
-                      PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
-                      observedRisk = 1-out$surv, 
-                      averagePredictedProbability = mean(p1$value, na.rm = T),
-                      StDevPredictedProbability = sd(p1$value, na.rm = T))
-        
-        demographicData <- rbind(demographicData, demoTemp)
+        if(nrow(tempDemo)>0){
+          t1 <- tempDemo %>% dplyr::select(t)
+          y1 <- tempDemo %>% dplyr::select(y)
+          p1 <- tempDemo %>% dplyr::select(value)
+          
+          out <- tryCatch({summary(survival::survfit(survival::Surv(t1$t, y1$y) ~ 1), times = timepoint)},
+                          error = function(e){ParallelLogger::logError(e); return(NULL)})
+          demoTemp <- c(genGroup = gen, ageGroup = age, 
+                        PersonCountAtRisk = length(p1$value),
+                        PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
+                        observedRisk = 1-out$surv, 
+                        averagePredictedProbability = mean(p1$value, na.rm = T),
+                        StDevPredictedProbability = sd(p1$value, na.rm = T))
+          
+          demographicData <- rbind(demographicData, demoTemp)
+        }
         
       }
       

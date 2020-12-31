@@ -174,7 +174,7 @@ createTransform <- function(plpModel){
                      studyEndDate = do.call(paste,list(plpModel$metaData$call$studyEndDate)),
                      cohortId = plpModel$cohortId,
                      outcomeId = plpModel$outcomeId,
-                     predictionType ='binary'
+                     predictionType = attr(plpModel, 'predictionType') #'binary'
     )
     attr(pred, 'metaData') <- metaData
     return(pred)

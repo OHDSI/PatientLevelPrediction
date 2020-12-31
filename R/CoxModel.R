@@ -77,6 +77,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
                                                       maxIterations = 3000,
                                                       seed=param$seed))
   
+  
   # TODO get optimal lambda value
   
   comp <- Sys.time() - start

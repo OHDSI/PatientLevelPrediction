@@ -348,7 +348,7 @@ predict.pythonSurvival <- function(plpModel, population, plpData){
   
   # add subjectId and date:
   prediction <- merge(prediction,
-                      population[,c('rowId','subjectId','cohortStartDate')], 
+                      population[,c('rowId','subjectId','cohortStartDate', 'survivalTime')], 
                       by='rowId')
   return(prediction)
 }
