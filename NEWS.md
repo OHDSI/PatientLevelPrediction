@@ -1,3 +1,8 @@
+PatientLevelPrediction 4.2.7
+======================
+- fixed Cox model calibration plots
+- fixed int64 conversion bug
+
 PatientLevelPrediction 4.2.6
 ======================
 - added baseline risk to Cox model 

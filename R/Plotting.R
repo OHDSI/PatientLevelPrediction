@@ -664,7 +664,7 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
   x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence', 'PersonCountAtRisk')]
   
   
-  cis <- apply(x, 1, function(x) binom.test(x[2]*x[3], x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
+  cis <- apply(x, 1, function(x) binom.test(round(x[2]*x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
   x$lci <- cis[1,]  
   x$uci <- cis[2,]
   

@@ -605,10 +605,12 @@ predictAndromeda <- function(coefficients, population, covariateData, modelType 
   if(length(intercept)==0) intercept <- 0
   coefficients <- coefficients[!names(coefficients)%in%'(Intercept)']
   coefficients <- data.frame(beta = as.numeric(coefficients),
-                             covariateId = as.numeric(names(coefficients)))
+                             covariateId = bit64::as.integer64(names(coefficients)) #!@ modified 
+                             )
   coefficients <- coefficients[coefficients$beta != 0, ]
   if(sum(coefficients$beta != 0)>0){
     covariateData$coefficients <- coefficients
+    on.exit(covariateData$coefficients <- NULL, add = TRUE)
     
     prediction <- covariateData$covariates %>% 
       dplyr::inner_join(covariateData$coefficients, by= 'covariateId') %>% 

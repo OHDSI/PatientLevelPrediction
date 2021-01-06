@@ -235,6 +235,7 @@ evaluatePlp <- function(prediction, plpData){
     groups<-Hmisc::cut2(prediction$value,g=100)
     n.groups<-length(levels(groups))
     pred<-tapply(prediction$value,groups,mean)
+    sizesN<-tapply(prediction$value,groups,length)
     obs.q<-NULL
     obs.lower.q<-NULL
     obs.upper.q<-NULL
@@ -260,7 +261,8 @@ evaluatePlp <- function(prediction, plpData){
                                      averagePredictedProbability = pred,
                                      observedIncidence = obs.q,
                                      observedIncidenceLB = obs.lower.q,
-                                     observedIncidenceUB = obs.upper.q)
+                                     observedIncidenceUB = obs.upper.q,
+                                     PersonCountAtRisk = sizesN) # added
     
     # add demographic calibration
     demographicSummary <- NULL
