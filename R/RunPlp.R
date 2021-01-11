@@ -733,7 +733,7 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
   
   resultAll <- plpData$covariateData$covariateRef %>% dplyr::collect() %>%
     dplyr::left_join(variableImportance, 
-                     by ='covariateId') %>%
+                     by =c('covariateId', 'analysisId', 'conceptId')) %>%
     dplyr::left_join(resultAll, by ='covariateId')
   
   resultAll$covariateValue[is.na(resultAll$covariateValue)] <- 0
