@@ -84,7 +84,8 @@ evaluatePlp <- function(prediction, plpData){
     ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
     
     # using rms::val.prob
-    valProb <- tryCatch(rms::val.prob(prediction$value, prediction$outcomeCount), 
+    indValProb <- prediction$value>0 & prediction$value < 1
+    valProb <- tryCatch(rms::val.prob(prediction$value[indValProb], prediction$outcomeCount[indValProb]), 
                         error = function(e){ParallelLogger::logInfo(e); return(list(Eavg = 0, 
                                                                                     E90 = 0, 
                                                                                     Emax = 0))})
@@ -232,7 +233,12 @@ evaluatePlp <- function(prediction, plpData){
     # add calibration
     # add in calibration for  survival 
     S<- survival::Surv(t, y) 
-    groups<-Hmisc::cut2(prediction$value,g=100)
+    if(length(unique(prediction$value))<=100){
+      gval <- 10
+    } else{
+      gval <- 100
+    }
+    groups<-Hmisc::cut2(prediction$value,g=gval)
     n.groups<-length(levels(groups))
     pred<-tapply(prediction$value,groups,mean)
     sizesN<-tapply(prediction$value,groups,length)
@@ -602,17 +608,17 @@ getCalibration <- function(prediction,
 #'
 #' @export
 getThresholdSummary <- function(prediction){
-
+  
   # do input checks
   if(nrow(prediction)<1){
     warning('sparse roc not calculated due to empty dataset')
     return(NULL)
   }
-
+  
   n <- nrow(prediction)
   P <- sum(prediction$outcomeCount>0)
   N <- n - P
-
+  
   if(N==0){
     warning('Number of negatives is zero')
     return(NULL)
@@ -621,52 +627,43 @@ getThresholdSummary <- function(prediction){
     warning('Number of positives is zero')
     return(NULL)
   }
-
+  
   # add the preference score:
   proportion <- sum(prediction$outcomeCount)/nrow(prediction)
   # ISSUE WITH CAL # remove any predictions of 1
   prediction$value[prediction$value==1] <- 0.99999999
   x <- exp(log(prediction$value/(1 - prediction$value)) - log(proportion/(1 - proportion)))
   prediction$preferenceScore <- x/(x + 1)
-
-  # get 100 points of distribution:
-  # get the predictionThreshold and preferenceThreshold
-  # add top 100 risk as well (for high ppv)
-  predictionThreshold <- sort(c(prediction$value[order(-prediction$value)][1:100], 
-                              stats::quantile(prediction$value, probs=seq(0,0.99,0.01),na.rm=TRUE)))
-  preferenceThreshold <- sort(c(prediction$preferenceScore[order(-prediction$preferenceScore)][1:100],
-                              stats::quantile(prediction$preferenceScore, seq(0,0.99,0.01),na.rm=TRUE)))
   
-  # fix quantile bug when not enought unique values - this seems to get rid of issue
-  for (val in names(table(predictionThreshold))[table(predictionThreshold)>1])
-    predictionThreshold[predictionThreshold==val] <- as.double(val)
-
-  # get the outcomeCount ordered by predicted value
-  lab.order <- prediction$outcomeCount[order(-prediction$value)]
-  valueOrdered <- prediction$value[order(-prediction$value)]
-  # fix some rounding issue bug
-  valueOrdered <-round(valueOrdered, digits = 15)
-  predictionThreshold <- round(predictionThreshold, digits=15)
-  # get the indexes for the predictionThreshold
-  indexesOfInt <- sapply(predictionThreshold, function(x) min(which(valueOrdered<=x)))
-
-  #TODO: FIGURE THIS BUG OUT # remove infs caused by R bug?
-  if(sum(is.infinite(indexesOfInt))>0){
-    imputeInd <- sapply(which(is.infinite(indexesOfInt)), function(x) max(which(which(!is.infinite(indexesOfInt))<x)))
-    indexesOfInt[which(is.infinite(indexesOfInt))] <- indexesOfInt[imputeInd]
+  
+  # sort prediction
+  prediction <- prediction[order(-prediction$value),]
+  
+  # create indexes
+  if(length(prediction$preferenceScore)>100){
+    indexesOfInt <- c(1:100,seq(1, length(prediction$preferenceScore),floor(length(prediction$preferenceScore)/100 )),length(prediction$preferenceScore))
+  } else{
+    indexesOfInt <- 1:length(prediction$preferenceScore)
   }
-  ##indexesOfInt <- indexesOfInt[!is.infinite(indexesOfInt)]
-
+  pt <- unique(prediction$value[indexesOfInt])
+  #pt <- pt[!pt==min(prediction$value)] # remove min as nothing will be < the min
+  indexesOfInt <- unique(unlist(lapply(pt, function(pt) max(which(prediction$value>=pt))))) # made this >= to match net benefit 
+  
+  # get thresholds
+  predictionThreshold = prediction$value[indexesOfInt]
+  preferenceThreshold = prediction$preferenceScore[indexesOfInt]
+  
   # improve speed create vector with cum sum
+  lab.order <- ifelse(prediction$outcomeCount>0,1,0)
   temp.cumsum <- rep(0, length(lab.order))
   temp.cumsum[lab.order==0] <- 1:sum(lab.order==0)
   temp.cumsum[lab.order==1] <- which(lab.order==1, arr.ind=T)-1:sum(lab.order==1)
   TP <- sapply(indexesOfInt, function(x) x-temp.cumsum[x])
   FP <- sapply(indexesOfInt, function(x) temp.cumsum[x])
-
+  
   TN <- N-FP
   FN <- P-TP
-
+  
   positiveCount <- TP+FP
   negativeCount <- TN+FN
   trueCount <- TP+FN
@@ -675,7 +672,7 @@ getThresholdSummary <- function(prediction){
   trueNegativeCount <- TN
   falsePositiveCount <- FP
   falseNegativeCount <- FN
-
+  
   f1Score <- f1Score(TP,TN,FN,FP)
   accuracy <- accuracy(TP,TN,FN,FP)
   sensitivity <- sensitivity(TP,TN,FN,FP)
@@ -689,7 +686,7 @@ getThresholdSummary <- function(prediction){
   positiveLikelihoodRatio <- positiveLikelihoodRatio(TP,TN,FN,FP)
   negativeLikelihoodRatio <- negativeLikelihoodRatio(TP,TN,FN,FP)
   diagnosticOddsRatio <- diagnosticOddsRatio(TP,TN,FN,FP)
-
+  
   return(data.frame(predictionThreshold=predictionThreshold,
                     preferenceThreshold=preferenceThreshold,
                     positiveCount=positiveCount,
@@ -712,7 +709,7 @@ getThresholdSummary <- function(prediction){
                     negativeLikelihoodRatio=negativeLikelihoodRatio,
                     diagnosticOddsRatio=diagnosticOddsRatio
   ))
-
+  
 }
 
 
@@ -764,33 +761,34 @@ getPredictionDistribution <- function(prediction){
 
 getDemographicSummary <- function(prediction, plpData, type = 'binary', timepoint = NULL){
   
-  demographicData <- plpData$cohorts %>% dplyr::mutate(ageId = floor(ageYear/5),
-                                                       ageGroup = paste0('Age group: ', floor(ageYear/5)*5, '-',floor(ageYear/5)*5+4),
-                                                       genId = gender,
-                                                       genGroup = ifelse(gender==8507, 'Male', 'Female')) %>%
-    dplyr::select(rowId,ageId,ageGroup,genId,genGroup ) %>%
-    dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime','daysToCohortEnd')], by='rowId')
+  demographicData <- plpData$cohorts %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
+                                                       ageGroup = paste0('Age group: ', floor(.data$ageYear/5)*5, '-',floor(.data$ageYear/5)*5+4),
+                                                       genId = .data$gender,
+                                                       genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
+    dplyr::select(.data$rowId,.data$ageId,.data$ageGroup,.data$genId,.data$genGroup ) %>%
+    #dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime','daysToCohortEnd')], by='rowId')
+    dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
   
   if(type == 'binary'){
     demographicData <- demographicData %>%
-      dplyr::group_by(ageGroup,genGroup)  %>%
-      dplyr::summarise(PersonCountAtRisk = length(outcomeCount), 
-                       PersonCountWithOutcome = sum(outcomeCount),
-                       averagePredictedProbability = mean(value, na.rm = T),
-                       StDevPredictedProbability = sd(value, na.rm = T),
-                       MinPredictedProbability =stats::quantile(value, probs = 0),
-                       P25PredictedProbability =stats::quantile(value, probs = 0.25),
-                       P50PredictedProbability =stats::quantile(value, probs = 0.50),
-                       P75PredictedProbability =stats::quantile(value, probs = 0.75),
-                       MaxPredictedProbability =stats::quantile(value, probs = 1),
+      dplyr::group_by(.data$ageGroup,.data$genGroup)  %>%
+      dplyr::summarise(PersonCountAtRisk = length(.data$outcomeCount), 
+                       PersonCountWithOutcome = sum(.data$outcomeCount),
+                       averagePredictedProbability = mean(.data$value, na.rm = T),
+                       StDevPredictedProbability = sd(.data$value, na.rm = T),
+                       MinPredictedProbability =stats::quantile(.data$value, probs = 0),
+                       P25PredictedProbability =stats::quantile(.data$value, probs = 0.25),
+                       P50PredictedProbability =stats::quantile(.data$value, probs = 0.50),
+                       P75PredictedProbability =stats::quantile(.data$value, probs = 0.75),
+                       MaxPredictedProbability =stats::quantile(.data$value, probs = 1),
       )
   } else{
     
     if(is.null(timepoint)){
       timepoint <- max(demographicData$survivalTime)
     }
-    demographicSum <- demographicData %>% dplyr::mutate(t = survivalTime,#t = apply(cbind(daysToCohortEnd, survivalTime), 1, min),
-                                      y = ifelse(outcomeCount > 0, 1, 0))
+    demographicSum <- demographicData %>% dplyr::mutate(t = .data$survivalTime,#t = apply(cbind(daysToCohortEnd, survivalTime), 1, min),
+                                      y = ifelse(.data$outcomeCount > 0, 1, 0))
     
     gen <- unique(demographicData$genGroup)
     ageGroup <- unique(demographicData$ageGroup)
@@ -799,12 +797,12 @@ getDemographicSummary <- function(prediction, plpData, type = 'binary', timepoin
     for(gen in gen){
       for(age in ageGroup){
         
-        tempDemo <- demographicSum %>% dplyr::filter(genGroup == gen & ageGroup == age)
+        tempDemo <- demographicSum %>% dplyr::filter(.data$genGroup == gen & .data$ageGroup == age)
         
         if(nrow(tempDemo)>0){
-          t1 <- tempDemo %>% dplyr::select(t)
-          y1 <- tempDemo %>% dplyr::select(y)
-          p1 <- tempDemo %>% dplyr::select(value)
+          t1 <- tempDemo %>% dplyr::select(.data$t)
+          y1 <- tempDemo %>% dplyr::select(.data$y)
+          p1 <- tempDemo %>% dplyr::select(.data$value)
           
           out <- tryCatch({summary(survival::survfit(survival::Surv(t1$t, y1$y) ~ 1), times = timepoint)},
                           error = function(e){ParallelLogger::logError(e); return(NULL)})
@@ -1315,7 +1313,7 @@ if (graph == TRUE) {
     legendwidth <- NULL
     legendpattern <- NULL
     ymax = max(interv[predictors], na.rm = TRUE)
-    plot(x = nb$threshold, y = nb$all, type = "n", 
+    graphics::plot(x = nb$threshold, y = nb$all, type = "n", 
          xlim = c(xstart, xstop), ylim = c(ymin, ymax), 
          xlab = "Threshold probability", ylab = paste("Net reduction in interventions per", 
                                                       interventionper, "patients"))

@@ -74,6 +74,8 @@ setSagemakerBinary<- function(classifier='xgboost',
 fitSagemaker <- function(population, plpData, param, quiet=F,
                          outcomeId, cohortId, ...){
   
+  train_sagemaker <- function(){return(NULL)}
+  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -191,6 +193,8 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
 
 
 predict.sagemaker <- function(plpModel, population, plpData){
+  
+  sagemaker_predict <- function(){return(NULL)}
   
   bucket <- Sys.getenv('s3_bucket') 
   #roleArn <- Sys.getenv('aws_role_arn')

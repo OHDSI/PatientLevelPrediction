@@ -243,6 +243,8 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
                              maxLeafNodes = NULL,
                              subsample = 1,
                              dropoutRate = 0) {
+  
+  train_gbmsurv <- function(){return(NULL)}
 
   e <- environment()
   # then run standard python code
@@ -304,6 +306,8 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
 
 
 predict.pythonSurvival <- function(plpModel, population, plpData){
+  
+  python_predict_survival <- function(){NULL}
   
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)

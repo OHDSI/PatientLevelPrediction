@@ -50,13 +50,13 @@ recalibratePlp <- function(plpResult,population, validationData, testFraction = 
     
     misCalVal <- applyModel(population=population, plpData = validationData, 
                                       calculatePerformance = T, plpModel = plpResult$model)
-    misCal <- PatientLevelPrediction:::calibrationInLarge(misCalVal$prediction)
+    misCal <- calibrationInLarge(misCalVal$prediction)
     obsOdds <- misCal$observedRisk/ (1-misCal$observedRisk)
     predOdds <- misCal$meanPredictionRisk/ (1 -  misCal$meanPredictionRisk)
     correctionFactor <- log(obsOdds / predOdds)
     recalResult <- plpResult
     recalResult$model$model$coefficients["(Intercept)"] <- plpResult$model$model$coefficients["(Intercept)"] + correctionFactor 
-    recalResult$model$predict <- PatientLevelPrediction:::createTransform(recalResult$model)
+    recalResult$model$predict <- createTransform(recalResult$model)
     #recalculate predictions
     
     
@@ -89,7 +89,7 @@ recalibratePlp <- function(plpResult,population, validationData, testFraction = 
     recalResult <- plpResult
     recalResult$model$model$coefficients <- recalResult$model$model$coefficients * refit$coefficients[2]
     recalResult$model$model$coefficients[1] <- recalResult$model$model$coefficients[1] + refit$coefficients[1]
-    recalResult$model$predict <- PatientLevelPrediction:::createTransform(recalResult$model)
+    recalResult$model$predict <- createTransform(recalResult$model)
     #recalculate predictions
     result <- applyModel(population=population, plpData = validationData, 
                          calculatePerformance = T, plpModel = recalResult$model)

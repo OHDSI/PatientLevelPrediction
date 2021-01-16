@@ -93,19 +93,23 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   # TODO get optimal lambda value
   ParallelLogger::logTrace('Returned from fitting to LassoLogisticRegression')
   comp <- Sys.time() - start
-  varImp <- data.frame(covariateId=names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'], 
+  varImp <- data.frame(covariateId=bit64::as.integer64(names(modelTrained$coefficients))[names(modelTrained$coefficients)!='(Intercept)'], 
                        value=modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
   if(sum(abs(varImp$value)>0)==0){
     ParallelLogger::logWarn('No non-zero coefficients')
     varImp <- NULL
   } else {
     ParallelLogger::logInfo('Creating variable importance data frame')
-    #varImp <- varImp[abs(varImp$value)>0,]
-    varImp <- merge(as.data.frame(plpData$covariateData$covariateRef), varImp, 
-                    by='covariateId',all=T)
-    varImp$value[is.na(varImp$value)] <- 0
-    varImp <- varImp[order(-abs(varImp$value)),]
-    colnames(varImp)[colnames(varImp)=='value'] <- 'covariateValue'
+    
+    plpData$covariateData$varImp <- varImp
+    on.exit(plpData$covariateData$varImp <- NULL, add = T)
+    
+    varImp <- plpData$covariateData$covariateRef %>% 
+      dplyr::left_join(plpData$covariateData$varImp) %>%
+      dplyr::mutate(covariateValue = ifelse(is.na(.data$value), 0, .data$value)) %>%
+      dplyr::select(-.data$value) %>%
+      dplyr::arrange(-abs(.data$covariateValue)) %>%
+      dplyr::collect()
   }
   
   #get prediction on test set:

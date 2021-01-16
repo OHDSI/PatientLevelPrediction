@@ -1,3 +1,13 @@
+PatientLevelPrediction 4.2.8
+======================
+- fixed bug (identified by Chungsoo) in covariateSummary
+- fixed bug with thresholdSummary
+- edited threshold summary function to make it cleaner
+- added to ensemble where you can combine multiple models into an ensemble
+- cleaned up the notes and tests
+- updated simulated data covariateId in tests to use integer64
+- fixed description imports (and sorted them)
+
 PatientLevelPrediction 4.2.7
 ======================
 - fixed Cox model calibration plots

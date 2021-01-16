@@ -351,6 +351,7 @@ test_that("LR cross val weights", {
   
   sim <- simulateCyclopsData(nstrata = 1, nrows = 10000, ncovars = 100, eCovarsPerRow = 0.5, effectSizeSd = 1, model = "logistic")
   covariates <- sim$covariates
+  covariates$covariateId <- bit64::as.integer64(covariates$covariateId)
   outcomes <- sim$outcomes
   y <- outcomes$y
   

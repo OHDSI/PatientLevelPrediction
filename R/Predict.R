@@ -115,6 +115,9 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
 
 predict.pythonReticulate <- function(plpModel, population, plpData){
   
+  
+  python_predict <- python_predict_temporal <- function(){return(NULL)}
+  
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
   
@@ -172,6 +175,8 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
 }
 
 predict.pythonAuto <- function(plpModel, population, plpData){
+  
+  python_predict <- function(){return(NULL)}
   
   ParallelLogger::logInfo('Mapping covariates...')
   if(!is.null(plpData$timeRef)){
@@ -391,6 +396,9 @@ predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
 }
 
 predict.deepEnsemble <- function(plpModel, population, plpData,   ...){
+  
+  mu <- function(){return(NULL)}
+  
   temporal <- !is.null(plpData$timeRef)
   ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
   if(temporal){
@@ -549,7 +557,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using
 #'                          \code{\link{fitPlp}}.
 #' @param population        The population to calculate the prediction for
-#' @param covariates        The covariate part of PlpData containing the covariates for the population
+#' @param covariateData        The covariateData containing the covariates for the population
 #' @export
 predictProbabilities <- function(predictiveModel, population, covariateData) {
   start <- Sys.time()
@@ -614,10 +622,10 @@ predictAndromeda <- function(coefficients, population, covariateData, modelType 
     
     prediction <- covariateData$covariates %>% 
       dplyr::inner_join(covariateData$coefficients, by= 'covariateId') %>% 
-      dplyr::mutate(values = covariateValue*beta) %>%
-      dplyr::group_by(rowId) %>%
-      dplyr::summarise(value = sum(values, na.rm = TRUE)) %>%
-      dplyr::select(rowId, value)
+      dplyr::mutate(values = .data$covariateValue*.data$beta) %>%
+      dplyr::group_by(.data$rowId) %>%
+      dplyr::summarise(value = sum(.data$values, na.rm = TRUE)) %>%
+      dplyr::select(.data$rowId, .data$value)
     
     prediction <- as.data.frame(prediction)
     prediction <- merge(population, prediction, by ="rowId", all.x = TRUE, fill = 0)

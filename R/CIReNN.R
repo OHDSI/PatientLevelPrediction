@@ -256,6 +256,9 @@ trainCIReNN<-function(plpData, population,
                       vaeBatchSize = 100L, vaeLatentDim = 10L, vaeIntermediateDim = 256L, 
                       vaeEpoch = 100L, vaeEpislonStd = 1.0, useGPU = FALSE, maxGPUs = 2,
                       seed=NULL, train=TRUE){
+  
+  mu <- function(){return(NULL)}
+  
   output_dim = 2 #output dimension for outcomes
   num_MC_samples = 100 #sample number for MC sampling in Bayesian Deep Learning Prediction
   if(outcomeWeight == 0) outcomeWeight = round(sum(population$outcomeCount==0)/sum(population$outcomeCount>=1),1) #if outcome weight = 0, then it means balanced weight
@@ -631,7 +634,7 @@ trainCIReNN<-function(plpData, population,
       val_rows<-sample(1:length(population$indexes), valN, replace=FALSE)
       train_rows <- c(1:length(population$indexes))[-val_rows]
       
-      sampling_generator<-function(data, population, batchSize, train_rows){
+      sampling_generator2<-function(data, population, batchSize, train_rows){
         function(){
           gc()
           rows<-sample(train_rows, batchSize, replace=FALSE)
@@ -640,7 +643,7 @@ trainCIReNN<-function(plpData, population,
       }
       
       
-      history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
+      history <- model %>% keras::fit_generator(sampling_generator2(data,population,batchSize,train_rows),
                                                 steps_per_epoch = nrow(population[-val_rows,])/batchSize,
                                                 epochs=epochs,
                                                 validation_data=list(as.array(data[val_rows,,]), 
@@ -865,6 +868,9 @@ custom_loss <- function(sigma){
 createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earlyStoppingPatience, earlyStoppingMinDelta,
                                 train_rows=NULL,index=NULL,lr,decay,
                                 units,recurrentDropout,numberOfRNNLayer,layerDropout, useGPU = useGPU, maxGPUs = maxGPUs){
+  
+  mu <- function(){return(NULL)}
+  
   if(useGPU){
     ##GRU layer
     layerInput <- keras::layer_input(shape = c(dim(plpData)[2],dim(plpData)[3]))
@@ -965,7 +971,7 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earl
     val_rows<-sample(1:length(population$indexes), valN, replace=FALSE)
     train_rows <- c(1:length(population$indexes))[-val_rows]
     
-    sampling_generator<-function(data, population, batchSize, train_rows){
+    sampling_generator2<-function(data, population, batchSize, train_rows){
       function(){
         gc()
         rows<-sample(train_rows, batchSize, replace=FALSE)
@@ -974,7 +980,7 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earl
     }
     
     
-    history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
+    history <- model %>% keras::fit_generator(sampling_generator2(data,population,batchSize,train_rows),
                                               steps_per_epoch = nrow(population[-val_rows,])/batchSize,
                                               epochs=epochs,
                                               validation_data=list(as.array(data[val_rows,,]),

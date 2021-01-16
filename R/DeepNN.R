@@ -342,7 +342,7 @@ trainDeepNN<-function(plpData, population,
     val_rows<-sample(1:nrow(population), valN, replace=FALSE)
     train_rows <- c(1:nrow(population))[-val_rows]
     
-    sampling_generator<-function(data, population, batch_size, train_rows){
+    sampling_generator2<-function(data, population, batch_size, train_rows){
       function(){
         gc()
         rows<-sample(train_rows, batch_size, replace=FALSE)
@@ -352,7 +352,7 @@ trainDeepNN<-function(plpData, population,
       }
     }
 
-    history <- model %>% keras::fit_generator(sampling_generator(plpData,population,batch_size,train_rows),
+    history <- model %>% keras::fit_generator(sampling_generator2(plpData,population,batch_size,train_rows),
                                               steps_per_epoch = nrow(population)/batch_size,
                                               epochs=epochs,
                                               validation_data=list(as.array(plpData[val_rows,,]),

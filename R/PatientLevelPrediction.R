@@ -17,6 +17,8 @@
 # limitations under the License.
 
 #' PatientLevelPrediction
+#' 
+#' @description A package for running predictions using data in the OMOP CDM
 #'
 #' @docType package
 #' @name PatientLevelPrediction
@@ -30,10 +32,12 @@
 #' @importFrom magrittr %>%
 #' @importFrom foreach %dopar% %do%
 #' @importFrom graphics lines par
+#' @importFrom rlang .data
 #' @import Cyclops
 #' @import DatabaseConnector
 #' @import FeatureExtraction
 #' @import plotly
+#' @import bit64
 #' @useDynLib PatientLevelPrediction
 NULL
 

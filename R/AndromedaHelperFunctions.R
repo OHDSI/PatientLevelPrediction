@@ -21,7 +21,7 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
-  newCovariateData$covariates <- covariateData$covariates %>% dplyr::filter(rowId %in% rowIds)
+  newCovariateData$covariates <- covariateData$covariates %>% dplyr::filter(.data$rowId %in% rowIds)
   class(newCovariateData) <- "CovariateData"
   ParallelLogger::logInfo(paste0('Finished limiting covariate data to population...'))
   return(newCovariateData)
@@ -35,17 +35,17 @@ calculatePrevs <- function(plpData, population){
   
   # add population to sqllite
   population <- tibble::as_tibble(population)
-  plpData$covariateData$population <- population %>% dplyr::select(rowId, outcomeCount)
+  plpData$covariateData$population <- population %>% dplyr::select(.data$rowId, .data$outcomeCount)
   
-  outCount <- nrow(plpData$covariateData$population %>% dplyr::filter(outcomeCount == 1))
-  nonOutCount <- nrow(plpData$covariateData$population %>% dplyr::filter(outcomeCount == 0))
+  outCount <- nrow(plpData$covariateData$population %>% dplyr::filter(.data$outcomeCount == 1))
+  nonOutCount <- nrow(plpData$covariateData$population %>% dplyr::filter(.data$outcomeCount == 0))
   
   # join covariate with label
   prevs <- plpData$covariateData$covariates %>% dplyr::inner_join(plpData$covariateData$population) %>%
-    dplyr::group_by(covariateId) %>% 
-    dplyr::summarise(prev.out = 1.0*sum(outcomeCount==1, na.rm = TRUE)/outCount,
-              prev.noout = 1.0*sum(outcomeCount==0, na.rm = TRUE)/nonOutCount) %>%
-    dplyr::select(covariateId, prev.out, prev.noout)
+    dplyr::group_by(.data$covariateId) %>% 
+    dplyr::summarise(prev.out = 1.0*sum(.data$outcomeCount==1, na.rm = TRUE)/outCount,
+              prev.noout = 1.0*sum(.data$outcomeCount==0, na.rm = TRUE)/nonOutCount) %>%
+    dplyr::select(.data$covariateId, .data$prev.out, .data$prev.noout)
   
   #clear up data
   ##plpData$covariateData$population <- NULL

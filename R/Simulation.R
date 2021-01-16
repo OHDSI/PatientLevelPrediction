@@ -84,6 +84,7 @@
 #' @param plpDataSimulationProfile   An object of type \code{plpDataSimulationProfile} as generated
 #'                                   using the \cr\code{createplpDataSimulationProfile} function.
 #' @param n                          The size of the population to be generated.
+#' @param useInt64                   Make the covariateIds int64
 #'
 #' @details
 #' This function generates simulated data that is in many ways similar to the original data on which
@@ -94,12 +95,12 @@
 #' An object of type \code{plpData}.
 #'
 #' @export
-simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
+simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
   writeLines("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariatePrevalence
   
-  personsPerCov <- rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
+  personsPerCov <- stats::rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
   personsPerCov[personsPerCov > n] <- n
   rowId <- sapply(personsPerCov, function(x, n) sample.int(size = x, n), n = n)
   rowId <- do.call("c", rowId)
@@ -109,7 +110,10 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                                                                      personsPerCov[x]),
                         personsPerCov = personsPerCov,
                         covariateIds = covariateIds)
-  covariateId <- do.call("c", covariateId)
+  if(useInt64){
+    covariateId <- bit64::as.integer64(do.call("c", covariateId))
+    plpDataSimulationProfile$covariateRef$covariateId <- bit64::as.integer64(plpDataSimulationProfile$covariateRef$covariateId)
+  }
   covariateValue <- rep(1, length(covariateId))
   covariateData <- Andromeda::andromeda(covariates = data.frame(rowId = rowId,
                                                                 covariateId = covariateId,

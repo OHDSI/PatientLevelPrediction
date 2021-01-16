@@ -127,16 +127,16 @@ permute <- function(plpDataLocation,cId){
   
   #get analysisId
   analysisId <- plpData$covariateData$covariateRef %>% 
-    dplyr::filter(covariateId == cId) %>%
-    dplyr::select(analysisId) %>% dplyr::collect()
+    dplyr::filter(.data$covariateId == cId) %>%
+    dplyr::select(.data$analysisId) %>% dplyr::collect()
   
   # if analysis id i 4 - then gender - swap with other genders
   if(!analysisId %in% c(3,4)){
   # select covariateId data
-  coi <- plpData$covariateData$covariates %>% dplyr::filter(covariateId == cId) %>% dplyr::collect()
+  coi <- plpData$covariateData$covariates %>% dplyr::filter(.data$covariateId == cId) %>% dplyr::collect()
   nSamp <- length(coi$rowId)
   
-  roi <- plpData$covariateData$covariates %>% dplyr::distinct(rowId) %>% dplyr::collect()
+  roi <- plpData$covariateData$covariates %>% dplyr::distinct(.data$rowId) %>% dplyr::collect()
   ncoi <- roi$rowId[!roi$rowId%in%coi$rowId]
   repN <- length(ncoi)
   
@@ -151,7 +151,7 @@ permute <- function(plpDataLocation,cId){
   newData <- tibble::as_tibble(cbind(rowId = replacement,coi[ind,-1]))
   
   #plpData$covariateData$covariates <- union_all(plpData$covariateData$covariates %>% filter(covariateId != cId), newData, copy = T)
-  plpData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(covariateId != cId) %>% dplyr::collect()
+  plpData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$covariateId != cId) %>% dplyr::collect()
   Andromeda::appendToTable(plpData$covariateData$covariates, newData)
   
   } else{

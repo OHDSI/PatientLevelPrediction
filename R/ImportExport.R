@@ -362,7 +362,8 @@ createLrSql <- function(models, modelNames, covariateConstructionName='predictio
                               isBinary = "N",
                               missingMeansZero = "N")
     # Construct analysis reference:
-    covariateData$metaData <- list(sql = covariates$sql, call = match.call())
+    ##covariateData$metaData <- list(sql = covariates$sql, call = match.call())
+    covariateData$metaData <- list(call = match.call())
     class(covariateData) <- "covariateData"
 
     return(covariateData)

@@ -204,6 +204,8 @@ trainDecisionTree <- function(population, plpData,
                               seed =NULL,
                               train=TRUE, plot=F,quiet=F, var, modelOutput){
   
+  train_decision_tree <- function(){return(NULL)}
+  
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','decisionTreeFunctions.py'), envir = e)
   

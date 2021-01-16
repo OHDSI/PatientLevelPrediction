@@ -66,7 +66,10 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   
   writeLines("\nChecking R population")
   set.seed(1234)
-  data(plpDataSimulationProfile)
+  
+  plpDataSimulationProfile <- NULL
+  e <- environment()
+  data(plpDataSimulationProfile, envir = e)
   sampleSize <- 2000
   plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
   
@@ -264,8 +267,8 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   writeLines("- Done")
   
   writeLines("\nChecking support for large data objects")
-  x <- ff::as.ffdf(data.frame(a = 1:100, b = "test"))
-  if (nrow(x) != 100)
+  x <- Andromeda::andromeda(test = data.frame(a = 1:100, b = "test"))
+  if(!"Andromeda" %in% class(x))
     outCode <- outCode*43
   writeLines("- Done")
   

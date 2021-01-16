@@ -322,6 +322,69 @@ runPlpE <- function(settings){
   return(result)
 }
 
+
+#' Combine models into an Ensemble
+#'
+#' @param runPlpList             The runPlp results for the different models to combine
+#' @param weighted               If F then mean across models is used, if T must input weights or AUC weighting is used
+#' @param weights                A vector of length(runPlpList) with the weights to assign each model
+#' 
+#' @export
+createEnsemble <- function(runPlpList,
+                           weighted = F,
+                           weights = NULL){
+  
+  if(!is.null(weights) & weighted){
+    if(length(weights) != length(runPlpList)){
+      stop('Weights not same length as runPlpList')
+    }
+  }
+  
+  # extract models
+  modelList <- lapply(runPlpList, function(x) x$model)
+  names(modelList) <- paste0('model_',1:length(modelList))
+  
+  if(!weighted){
+    
+    ensembleStrategy = "mean"
+    weights2 <- rep(1, length(runPlpList))/length(runPlpList) 
+    
+  } else if(is.null(weights)){
+    ensembleStrategy = "weightedAUC"
+    
+    #use AUC weights
+    getAUC <- function(x){
+      x <- as.data.frame(x$evaluationStatistics)
+      as.double(as.character(x$Value[x$Eval=='test' & x$Metric=='AUC.auc']))
+    }
+    weights2 <- unlist(lapply(runPlpList, function(x) getAUC(x$performanceEvaluation)))
+    weights2 <- abs(weights2-0.5)/sum(abs(weights2-0.5))
+    ParallelLogger::logInfo(paste0('AUC Weights:', paste0(weights2, collapse = ',')))
+  
+  } else {
+    ensembleStrategy = "weightedCustom"
+    weights2 <- weights
+    ParallelLogger::logInfo(paste0('Manual Weights:', paste0(weights2, collapse = ',')))
+  }
+  
+  pfunction <- function(x, weights = weights2){
+    ParallelLogger::logInfo(paste0('Weights:', paste0(weights, collapse = ',')))
+    x <- rowSums(t(t(as.matrix(x)) * weights))
+    return(x)
+  }
+  
+  combinator  <- list(ensembleStrategy = ensembleStrategy,
+                      pfunction = pfunction)
+  
+  model=list(level1=modelList,
+             level2=combinator)
+  
+  result <- list(model = model)
+  class(result) <- c('ensemblePlp')
+  return(result)
+}
+
+
 #' Apply trained ensemble model on new data Apply a Patient Level Prediction model on Patient Level
 #' Prediction Data and get the predicted risk in [0,1] for each person in the population. If the user
 #' inputs a population with an outcomeCount column then the function also returns the evaluation of

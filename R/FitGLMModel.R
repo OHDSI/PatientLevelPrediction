@@ -62,11 +62,11 @@ fitGLMModel <- function(population,
     
     # exclude or include covariates
     if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) != 0)) {
-      covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds) %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+      covariates <- covariateData$covariates %>% dplyr::filter(.data$covariateId %in%includeCovariateIds) %>% dplyr::filter(!.data$covariateId %in%excludeCovariateIds)
     } else if ( (length(includeCovariateIds) == 0) & (length(excludeCovariateIds) != 0)) { 
-      covariates <- covariateData$covariates %>% dplyr::filter(!covariateId %in%excludeCovariateIds)
+      covariates <- covariateData$covariates %>% dplyr::filter(!.data$covariateId %in%excludeCovariateIds)
     } else if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) == 0)) {
-      covariates <- covariateData$covariates %>% dplyr::filter(covariateId %in%includeCovariateIds)
+      covariates <- covariateData$covariates %>% dplyr::filter(.data$covariateId %in%includeCovariateIds)
     } else {
       covariates <- covariateData$covariates
     }
@@ -183,16 +183,16 @@ modelTypeToCyclopsModelType <- function(modelType, stratified=F) {
 getCV <- function(cyclopsData, 
                   population,
                   cvVariance){
-   fixed_prior <- createPrior("laplace", variance = cvVariance, useCrossValidation = FALSE)
+   fixed_prior <- Cyclops::createPrior("laplace", variance = cvVariance, useCrossValidation = FALSE)
   
   result <- lapply(1:max(population$indexes), function(i) {
     hold_out <- population$indexes==i
-    weights <- rep(1.0, getNumberOfRows(cyclopsData))
+    weights <- rep(1.0, Cyclops::getNumberOfRows(cyclopsData))
     weights[hold_out] <- 0.0
-    subset_fit <- suppressWarnings(fitCyclopsModel(cyclopsData,
+    subset_fit <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData,
                                   prior = fixed_prior,
                                   weights = weights))
-    predict <- predict(subset_fit)
+    predict <- stats::predict(subset_fit)
     
     auc <- aucWithoutCi(predict[hold_out], population$y[hold_out])
     
@@ -204,7 +204,7 @@ getCV <- function(cyclopsData,
                 predCV = predCV,
                 log_likelihood = subset_fit$log_likelihood,
                 log_prior = subset_fit$log_prior,
-                coef = coef(subset_fit)))
+                coef = stats::coef(subset_fit)))
   })
   
   

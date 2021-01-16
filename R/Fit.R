@@ -119,20 +119,20 @@ applyTidyCovariateData <- function(covariateData,preprocessSettings){
   start <- Sys.time()       
   
   if('bins'%in%colnames(maxs)){
-    covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins) %>% 
-      dplyr::rename(maxValue = maxs)
+    covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = .data$bins) %>% 
+      dplyr::rename(maxValue = .data$maxs)
   } else{
   covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins)
   }
   on.exit(covariateData$maxes <- NULL, add = TRUE)
   
   newCovariateData$covariates <- covariateData$covariates %>%  
-    dplyr::filter(!covariateId %in%deletedInfrequentCovariateIds) %>%
-    dplyr::filter(!covariateId %in%deleteRedundantCovariateIds) %>%
+    dplyr::filter(! .data$covariateId %in%deletedInfrequentCovariateIds) %>%
+    dplyr::filter(! .data$covariateId %in%deleteRedundantCovariateIds) %>%
     dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
-    dplyr::mutate(value = 1.0*covariateValue/maxValue) %>%
-    dplyr::select(-covariateValue) %>%
-    dplyr::rename(covariateValue = value)
+    dplyr::mutate(value = 1.0*.data$covariateValue/.data$maxValue) %>%
+    dplyr::select(- .data$covariateValue) %>%
+    dplyr::rename(covariateValue = .data$value)
   
   
   delta <- Sys.time() - start

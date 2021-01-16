@@ -68,6 +68,9 @@ setRandomForest <- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, 
 fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                              outcomeId, cohortId, ...){
   
+  # remove binding note
+  rf_var_imp <- train_rf <- final_rf <- function(){return(NULL)}
+  
   covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   e <- environment()
   

@@ -17,6 +17,8 @@ setSVM(
 )
 }
 \arguments{
+\item{kernel}{Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.}
+
 \item{C}{penalty parameter C of the error term.}
 
 \item{degree}{degree of kernel function is significant only in poly, rbf, sigmoid}
@@ -32,8 +34,6 @@ setSVM(
 \item{varImp}{Whether to calculate the variable importance using PFI}
 
 \item{seed}{A seed for the model}
-
-\item{kernal}{Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.}
 }
 \description{
 Create setting for SVM with python
