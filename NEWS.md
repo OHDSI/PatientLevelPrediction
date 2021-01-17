@@ -1,3 +1,9 @@
+PatientLevelPrediction 4.2.9
+======================
+- cleaned all checks 
+- fixed bug in python toSparseMatrix
+- fixed warning in studyPop
+
 PatientLevelPrediction 4.2.8
 ======================
 - fixed bug (identified by Chungsoo) in covariateSummary

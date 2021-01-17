@@ -453,7 +453,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
 }
 
-#'
+#' @method summary runPlp
 #' @export
 summary.runPlp <- function(object, ...) {
   

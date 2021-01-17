@@ -229,7 +229,7 @@ createStudyPopulation <- function(plpData,
     dplyr::filter(.data$daysToEvent >= .data$tarStart & .data$daysToEvent <= .data$tarEnd)  
   
   # prevent warnings when no results left
-  if(nrow(outcomeTAR)>0){
+  if(nrow(as.data.frame(outcomeTAR))>0){
   outcomeTAR <- outcomeTAR %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise(first = min(.data$daysToEvent),
@@ -299,7 +299,7 @@ createStudyPopulation <- function(plpData,
       dplyr::select(.data$rowId, .data$daysToEvent, .data$tarStart) %>% 
       dplyr::filter(.data$daysToEvent < .data$tarStart)  
     
-    if(nrow(outcomeBefore)>0){
+    if(nrow(as.data.frame(outcomeBefore))>0){
       outcomeBefore %>%
         dplyr::group_by(.data$rowId) %>%
         dplyr::summarise(first = min(.data$daysToEvent))  %>% 

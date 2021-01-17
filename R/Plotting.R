@@ -936,10 +936,11 @@ plotSmoothCalibration <- function(result,
   }
   
   # Histogram object detailing the distibution of event/noevent for each probability interval
-  
+  count <- NULL
   hist_plot <- ggplot2::ggplot() +
     ggplot2::geom_histogram(data = prediction[prediction$value <= xlim[2],],
-                            ggplot2::aes(.data$value, y = ..count.., fill = as.character(.data$outcomeCount)), #MAYBE ISSUE
+                            ggplot2::aes(.data$value, y = ggplot2::after_stat(count), 
+                                         fill = as.character(.data$outcomeCount)), #MAYBE ISSUE
                             bins = bins,
                             position = "stack",
                             alpha = 0.5,

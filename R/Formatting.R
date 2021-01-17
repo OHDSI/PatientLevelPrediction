@@ -75,14 +75,18 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
                                j=1,
                                x=0,
                                dims=c(maxX,maxY))
-  convertData1 <- function(batch) {
-    data <<- data + Matrix::sparseMatrix(i=as.data.frame(batch %>% select(.data$rowId))$rowId,
+  
+  dataEnv <- environment()
+  convertData1 <- function(batch,dataEnv) {
+    data <- get("data", envir = dataEnv)
+    data <- data + Matrix::sparseMatrix(i=as.data.frame(batch %>% select(.data$rowId))$rowId,
                                          j=as.data.frame(batch %>% select(.data$covariateId))$covariateId,
                                          x=as.data.frame(batch %>% select(.data$covariateValue))$covariateValue,
                                          dims=c(maxX,maxY))
+    assign("data", data, envir = dataEnv)
     return(NULL)
   }
-  Andromeda::batchApply(newcovariateData$covariates, convertData1, batchSize = 100000)
+  Andromeda::batchApply(newcovariateData$covariates, convertData1, batchSize = 100000, dataEnv = dataEnv)
   
   } else {
     ParallelLogger::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
@@ -268,19 +272,24 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
   # source the python fucntion
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','TorchMap.py'), envir = e)
-  dataPlp <<- map_python_initiate(maxCol = as.integer(maxCol), 
-                                  maxRow = as.integer(maxRow), 
-                                  maxT= as.integer(maxT))
   
-  convertData <- function(batch, temporal=T) {
+  dataEnv <- e # adding to remove <<- 
+  #dataPlp <<- map_python_initiate(maxCol = as.integer(maxCol), 
+  dataPlp <- map_python_initiate(maxCol = as.integer(maxCol), 
+                                         maxRow = as.integer(maxRow), 
+                                         maxT= as.integer(maxT))
+  
+  convertData <- function(batch, temporal=T, dataEnv) {
     if(temporal){
-      dataPlp <<- map_python(matrix = dataPlp ,
-                             datas = as.matrix(as.data.frame(batch %>% dplyr::select(.data$rowId,.data$covariateId,.data$timeId,.data$covariateValue))),
-                             maxCol = as.integer(maxCol),
-                             maxRow = as.integer(maxRow),
-                             maxT = as.integer(maxT))
+      #dataPlp <<- map_python(matrix = dataPlp ,
+      dataEnv$dataPlp <- map_python(matrix = dataEnv$dataPlp,
+                                    datas = as.matrix(as.data.frame(batch %>% dplyr::select(.data$rowId,.data$covariateId,.data$timeId,.data$covariateValue))),
+                                    maxCol = as.integer(maxCol),
+                                    maxRow = as.integer(maxRow),
+                                    maxT = as.integer(maxT))
     }else{
-      dataPlp <<- map_python(matrix = dataPlp ,
+     # dataPlp <<- map_python(matrix = dataPlp ,
+      dataEnv$dataPlp <- map_python(matrix = dataEnv$dataPlp,
                              datas = as.matrix(as.data.frame(batch %>% dplyr::select(.data$rowId,.data$covariateId,.data$covariateValue))),
                              maxCol = as.integer(maxCol),
                              maxRow = as.integer(maxRow),
@@ -293,31 +302,34 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
     # add the age and non-temporal data
     timeIds <- unique(plpData$timeRef$timeId)
     for(timeId in timeIds){
-      tempData <- addAgeTemp(timeId, plpData)
+      tempData <- addAgeTemp(timeId, newcovariateData)
       if(!is.null(tempData)){
-        Andromeda::batchApply(newcovariateData$covariates, convertData,temporal =T, batchSize = 100000)
+        Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
       }
-      tempData <- addNonAgeTemp(timeId,plpData.mapped)
+      #tempData <- addNonAgeTemp(timeId,plpData.mapped) - what is plpData.mapped?
+      tempData <- addNonAgeTemp(timeId, newcovariateData)
       if(!is.null(tempData)){
-        Andromeda::batchApply(newcovariateData$covariates, convertData,temporal =T, batchSize = 100000)
+        Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
       }
-      rm(tempData)
+      tempData <- NULL
     }
     
     # add the rest
     tempData <- newcovariateData$covariates %>%
       dplyr::filter(.data$timeId!=0) %>%
       dplyr::filter(!is.na(.data$timeId))
-    Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000)
+    Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
+    tempData <- NULL
   } else {
     Andromeda::batchApply(newcovariateData$covariates, convertData,
-                          temporal =F, batchSize = 100000)
+                          temporal =F, batchSize = 100000, dataEnv=dataEnv)
   }
-  result <- dataPlp
-  dataPlp <<- NULL
+  ##result <- dataEnv$dataPlp
+  ##dataPlp <<- NULL
+  ##dataEnv$dataPlp <- NULL
   ParallelLogger::logTrace(paste0('Sparse python tensor converted'))                            
   
-  result <- list(data=result,
+  result <- list(data=dataPlp,
                  covariateRef=as.data.frame(newcovariateData$covariateRef),
                  map=as.data.frame(newcovariateData$mapping))
   return(result)

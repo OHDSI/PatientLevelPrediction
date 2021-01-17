@@ -353,8 +353,6 @@ loadPlpData <- function(file, readOnly = TRUE) {
 }
 
 
-
-#'
 #' @export
 print.plpData <- function(x, ...) {
   writeLines("plpData object")
@@ -363,9 +361,9 @@ print.plpData <- function(x, ...) {
   writeLines(paste("Outcome concept ID(s):", paste(attr(x$outcomes, "metaData")$outcomeIds, collapse = ",")))
 }
 
-#'
+#' @method summary plpData
 #' @export
-summary.plpData <- function(object, ...) {
+summary.plpData <- function(object,...){
   people <- length(unique(object$cohorts$subjectId))
   outcomeCounts <- data.frame(outcomeId = attr(object$outcomes, "metaData")$outcomeIds,
                               eventCount = 0,
