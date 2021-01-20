@@ -1,3 +1,9 @@
+PatientLevelPrediction 4.2.10
+======================
+- fixed deepNN index issue (reported on github - thanks dapritchard)
+- add compression to python pickles
+- removed requirement to have outcomeCount for prediction with python models
+
 PatientLevelPrediction 4.2.9
 ======================
 - cleaned all checks 

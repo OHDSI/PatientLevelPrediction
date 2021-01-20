@@ -269,7 +269,7 @@ trainDeepNN<-function(plpData, population,
       prediction <- population[population$indexes==index,]
       prediction$value <- 0
       for(batch in batches){
-        pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],][batch,]))
+        pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],][batch,,drop=FALSE]))
         prediction$value[batch] <- pred[,2]
       }
       
@@ -367,7 +367,7 @@ trainDeepNN<-function(plpData, population,
     prediction <- population
     prediction$value <- 0
     for(batch in batches){
-      pred <- keras::predict_proba(model, as.array(plpData[batch,]))
+      pred <- keras::predict_proba(model, as.array(plpData[batch,,drop=FALSE]))
       prediction$value[batch] <- pred[,2]
     }
     
@@ -531,7 +531,7 @@ transferLearning <- function(plpResult,
   prediction <- population
   prediction$value <- 0
   for(batch in batches){
-    pred <- model$predict(as.array(data[batch,,]))
+    pred <- model$predict(as.array(data[batch,,drop=FALSE])) # added drop=FALSE
     prediction$value[batch] <- pred[,2]
   }
   

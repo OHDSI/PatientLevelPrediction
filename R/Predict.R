@@ -135,15 +135,10 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
     fun_predict <- python_predict
   }
   
-  # save population
-  if('indexes'%in%colnames(population)){
-    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-    pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
-    
-  } else {
-    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-    pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount')])
-  }
+  population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+  namesInd <- c('rowIdPython','rowId')%in%colnames(population)
+  namesInd <- c('rowIdPython','rowId')[namesInd]
+  pPopulation <- as.matrix(population[,namesInd])
   
   # run the python predict code:
   ParallelLogger::logInfo('Executing prediction...')
@@ -158,19 +153,16 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   prediction <- result
   prediction <- as.data.frame(prediction)
   attr(prediction, "metaData") <- list(predictionType="binary")
-  if(ncol(prediction)==4){
-    colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
-  } else {
-    colnames(prediction) <- c('rowId','outcomeCount', 'value')
-  }
+  colnames(prediction) <- c(namesInd, 'value')
   
   # add 1 to rowId from python:
-  prediction$rowId <- prediction$rowId+1
+  ##prediction$rowId <- prediction$rowId+1
   
   # add subjectId and date:
-  prediction <- merge(prediction,
-                      population[,c('rowId','subjectId','cohortStartDate')], 
+  prediction <- merge(prediction[,colnames(prediction)!='rowIdPython'],
+                      population, 
                       by='rowId')
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')]
   return(prediction)
 }
 
@@ -189,15 +181,10 @@ predict.pythonAuto <- function(plpModel, population, plpData){
     pdata <- reticulate::r_to_py(newData$data[,included])
   }
   
-  # save population
-  if('indexes'%in%colnames(population)){
-    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-    pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount','indexes')])
-    
-  } else {
-    population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-    pPopulation <- as.matrix(population[,c('rowIdPython','outcomeCount')])
-  }
+  population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
+  namesInd <- c('rowIdPython','rowId')%in%colnames(population)
+  namesInd <- c('rowIdPython','rowId')[namesInd]
+  pPopulation <- as.matrix(population[,namesInd])
   
   # run the python predict code:
   ParallelLogger::logInfo('Executing prediction...')
@@ -214,19 +201,12 @@ predict.pythonAuto <- function(plpModel, population, plpData){
   prediction <- result
   prediction <- as.data.frame(prediction)
   attr(prediction, "metaData") <- list(predictionType="binary")
-  if(ncol(prediction)==4){
-    colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
-  } else {
-    colnames(prediction) <- c('rowId','outcomeCount', 'value')
-  }
+  colnames(prediction) <- c(namesInd, 'value')
   
-  # add 1 to rowId from python:
-  prediction$rowId <- prediction$rowId+1
-  
-  # add subjectId and date:
-  prediction <- merge(prediction,
-                      population[,c('rowId','subjectId','cohortStartDate')], 
+  prediction <- merge(prediction[,colnames(prediction)!='rowIdPython'],
+                      population, 
                       by='rowId')
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')]
   return(prediction)
 }
 
