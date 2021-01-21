@@ -256,7 +256,23 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                    side = "right",
                                                                                                    shinycssloaders::withSpinner(shiny::plotOutput('demo')))
                                                                              )
-                                                                    )
+                                                                    ),
+                                                                    tabPanel("Validation",
+                                                                             shiny::div(DT::dataTableOutput('validationTable'), 
+                                                                                        style = "font-size:70%; padding-bottom:20px"),
+                                                                             
+                                                                             shiny::fluidRow(
+                                                                               shinydashboard::box(status = 'info',
+                                                                                                   title = actionLink("rocHelp","Roc Plot", icon = icon("info")),
+                                                                                                   solidHeader = TRUE,
+                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput('valRoc'))),
+                                                                               shinydashboard::box(status = 'info',
+                                                                                                   title = actionLink("calHelp","Calibration Plot", icon = icon("info")),
+                                                                                                   solidHeader = TRUE,
+                                                                                                   side = "right",
+                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput('valCal')))
+                                                                             )
+                                                                    ) 
                                                                                              ))),
                                         
                                         # 3rd tab
