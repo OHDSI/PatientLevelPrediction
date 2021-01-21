@@ -232,7 +232,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   valResult <- shiny::reactive({
     valtemplist <- list()
     valTable <- validationTable()
-    rows <- valSelectedRow()
+    rows <- sort(valSelectedRow())
     names <- valTable[rows, "Val"]
     for (i in 1:length(rows)){
       valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType, rows[i])
