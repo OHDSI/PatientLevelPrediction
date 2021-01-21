@@ -213,8 +213,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   # validation table and selection
   validationTable <- shiny::reactive(dplyr::filter(summaryTable[filterIndex(),],
-                                                   Analysis == summaryTable[filterIndex(),'Analysis'][trueRow()],
-                                                   Val != summaryTable[filterIndex(),'Val'][trueRow()]))
+                                                   Analysis == summaryTable[filterIndex(),'Analysis'][trueRow()]))
   
   output$validationTable <- DT::renderDataTable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC)), rownames= FALSE)
   
