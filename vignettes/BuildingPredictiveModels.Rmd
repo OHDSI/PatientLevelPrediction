@@ -23,14 +23,11 @@ output:
     number_sections: yes
     toc: yes
 ---
-  <!--
-  %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Building patient-level predictive models}
--->
 <!--
-  %\VignetteEngine{knitr}
+%\VignetteEngine{knitr}
 %\VignetteIndexEntry{Building patient-level predictive models}
 -->
+
   
 ```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
 library(PatientLevelPrediction)

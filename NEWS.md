@@ -1,3 +1,8 @@
+PatientLevelPrediction 4.3.1
+======================
+- fixed r check vignette issues 
+- added conda install to test 
+
 PatientLevelPrediction 4.3.0
 ======================
 - finalised permutation feature importance

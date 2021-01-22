@@ -31,6 +31,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+    
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: "latest"
+          activate-environment: r-reticulate
+      
+      - name: python dependencies  
+        run: conda install --name r-reticulate numpy scipy scikit-learn pandas pydotplus joblib 
+        run: conda install --name r-reticulate -c conda-forge keras
+        run: conda install --name r-reticulate -c conda-forge tensorflow
+        run: conda install --name r-reticulate -c sebp scikit-survival
 
       - uses: r-lib/actions/setup-r@v1
         with:
