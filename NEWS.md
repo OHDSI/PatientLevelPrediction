@@ -1,3 +1,7 @@
+PatientLevelPrediction 4.3.0
+======================
+- finalised permutation feature importance
+
 PatientLevelPrediction 4.2.10
 ======================
 - fixed deepNN index issue (reported on github - thanks dapritchard)
