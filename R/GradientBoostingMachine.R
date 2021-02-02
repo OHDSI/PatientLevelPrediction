@@ -35,6 +35,8 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
                                   maxDepth=c(4,6,17), minRows=2, learnRate=c(0.005, 0.01,0.1),
                                   seed= NULL){
   
+  ensure_installed("xgboost")
+  
   if(length(nthread)>1)
     stop(paste('nthreads must be length 1'))
   if(!class(seed)%in%c('numeric','NULL', 'integer'))

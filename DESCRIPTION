@@ -69,7 +69,6 @@ Imports:
     tools,
     utils,
     viridisLite,
-    xgboost,
     zeallot
 Suggests:
     aws.s3,
@@ -89,7 +88,8 @@ Suggests:
     shinydashboard,
     SparseM,
     survminer,
-    testthat
+    testthat,
+    xgboost
 Remotes:
     ohdsi/FeatureExtraction,
     ohdsi/BigKnn
