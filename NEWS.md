@@ -1,3 +1,7 @@
+PatientLevelPrediction 4.3.2
+======================
+- fixed csv result saving bug when no model param
+
 PatientLevelPrediction 4.3.1
 ======================
 - fixed r check vignette issues 
