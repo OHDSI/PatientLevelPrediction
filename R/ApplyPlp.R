@@ -112,9 +112,10 @@ applyModel <- function(population,
                                                Value = unlist(performance$evaluationStatistics[-1])
                                                )
   nr1 <- nrow(performance$thresholdSummary)
-  performance$thresholdSummary <- cbind(analysisId=rep(analysisId,nr1),
+  performance$thresholdSummary <- tryCatch({cbind(analysisId=rep(analysisId,nr1),
                                               Eval=rep('validation', nr1),
-                                              performance$thresholdSummary)
+                                              performance$thresholdSummary)}, 
+                                           error = function(e){return(NULL)})
   nr1 <- nrow(performance$demographicSummary)
   if(!is.null(performance$demographicSummary)){
   performance$demographicSummary <- cbind(analysisId=rep(analysisId,nr1),
