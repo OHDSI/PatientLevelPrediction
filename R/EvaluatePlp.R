@@ -232,7 +232,7 @@ evaluatePlp <- function(prediction, plpData){
     
     # add calibration
     # add in calibration for  survival 
-    S<- survival::Surv(t, y) 
+    S <- survival::Surv(t, y) 
     if(length(unique(prediction$value))<=100){
       gval <- 10
     } else{
@@ -247,7 +247,10 @@ evaluatePlp <- function(prediction, plpData){
     obs.upper.q<-NULL
     avPred <- NULL
     for (q in 1:n.groups){
-      KM<-survival::survfit(S ~ 1,sub=groups==levels(groups)[q])
+      KM <- tryCatch({survival::survfit(S ~ 1,sub=groups==levels(groups)[q])},
+                    error = function(e){ParallelLogger::logError(e); return(list(surv = 0,
+                                                                                 upper = 0,
+                                                                                 lower = 0 ))})
       obs.q<-c(obs.q,max(1-KM$surv))  # maximum OK because of prediction_horizon
       obs.lower.q<-c(obs.lower.q,obs.lower<-max(1-KM$upper))
       obs.upper.q<-c(obs.upper.q,obs.upper<-max(1-KM$lower))

@@ -362,7 +362,7 @@ reformatPerformance <- function(train, test, analysisId){
   }
   
 
-  if(!is.null(train$demographicSummary)){
+  if(!is.null(train$demographicSummary) & !is.null(test$demographicSummary)){
     nr1 <- nrow(train$demographicSummary)
     nr2 <- nrow(test$demographicSummary)
     demographicSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
