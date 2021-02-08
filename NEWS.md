@@ -1,3 +1,7 @@
+PatientLevelPrediction 4.3.3
+======================
+- Reduced imports by adding code to install some dependencies when used
+
 PatientLevelPrediction 4.3.2
 ======================
 - fixed csv result saving bug when no model param

@@ -63,6 +63,8 @@ setGBMSurvival <- function(loss = 'coxph',
                            dropoutRate = 0,
                            seed = NULL,
                            quiet = F) {
+  
+  ensure_installed("survAUC")
 
   if (!class(seed) %in% c("numeric", "NULL", "integer"))
     stop("Invalid seed")

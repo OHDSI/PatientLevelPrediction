@@ -19,6 +19,14 @@ ensure_installed <- function(pkg) {
       message(msg, "\nWould you like to install it?")
       if (utils::menu(c("Yes", "No")) == 1) {
         if(pkg%in%c('BigKnn')){
+          
+          # add code to check for devtools...
+          dvtCheck <- tryCatch(utils::packageVersion('devtools'), 
+                      error = function(e) NA)
+          if(is.na(dvtCheck)){
+            utils::install.packages('devtools')
+          }
+          
           devtools::install_github(paste0('OHDSI/',pkg))
         }else{
           utils::install.packages(pkg)

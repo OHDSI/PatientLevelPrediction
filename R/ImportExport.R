@@ -388,7 +388,7 @@ getPredictionCovariateData <- function(connection,
                                        aggregated = FALSE,
                                        analysisId=111,
                                        databaseOutput=NULL) {
-  if (!is(covariateSettings, "covariateSettings")) {
+  if (!"covariateSettings" %in% class(covariateSettings)) {
     stop("Covariate settings object not of type covariateSettings")
   }
   if (cdmVersion == "4") {

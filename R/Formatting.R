@@ -79,9 +79,9 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
   dataEnv <- environment()
   convertData1 <- function(batch,dataEnv) {
     data <- get("data", envir = dataEnv)
-    data <- data + Matrix::sparseMatrix(i=as.data.frame(batch %>% select(.data$rowId))$rowId,
-                                         j=as.data.frame(batch %>% select(.data$covariateId))$covariateId,
-                                         x=as.data.frame(batch %>% select(.data$covariateValue))$covariateValue,
+    data <- data + Matrix::sparseMatrix(i=as.data.frame(batch %>% dplyr::select(.data$rowId))$rowId,
+                                         j=as.data.frame(batch %>% dplyr::select(.data$covariateId))$covariateId,
+                                         x=as.data.frame(batch %>% dplyr::select(.data$covariateValue))$covariateValue,
                                          dims=c(maxX,maxY))
     assign("data", data, envir = dataEnv)
     return(NULL)
@@ -140,7 +140,7 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
           dplyr::filter(.data$timeId == i) 
         Andromeda::batchApply(tempCovs, convertData, batchSize = 100000, dataEnv=dataEnv)
         
-        data_array<-slam::as.simple_sparse_array(dataPlp)
+        data_array <- slam::as.simple_sparse_array(dataPlp)
         # remove dataPlp
         #dataPlp <<- NULL
         ParallelLogger::logTrace(paste0('Dim of data_array: ', paste0(dim(data_array), collapse='-')))
@@ -157,9 +157,9 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
       }
       #binding arrays along the dimesion
       if(i==min(plpData$timeRef$timeId)) {
-        result_array<-data_array
+        result_array <- data_array
       }else{
-        result_array<-slam::abind_simple_sparse_array(result_array,data_array,MARGIN=2L)
+        result_array <- slam::abind_simple_sparse_array(result_array,data_array,MARGIN=2L)
       }
     }
     data <- result_array

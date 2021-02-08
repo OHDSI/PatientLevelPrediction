@@ -43,6 +43,9 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
                             outcomeDefinition = NULL,
                             outputLocation=file.path(getwd(), 'plp_report.docx'),
                             save= T){
+  
+  ensure_installed("officer")
+  ensure_installed("diagram")
 
   if(is.null(plpResult)){
     stop('plpResult needs to be input')
@@ -544,6 +547,9 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                                      includeAttritionPlot=TRUE,
                                      outputLocation=file.path(getwd(), 'plp_journal_document.docx'),
                                      save = T){
+  
+  ensure_installed("officer")
+  ensure_installed("diagram")
 
   if(is.null(plpResult)){
     stop('plpResult needs to be input')

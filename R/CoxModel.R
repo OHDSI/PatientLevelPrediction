@@ -25,6 +25,9 @@
 #' model.lr <- setCoxModel()
 #' @export
 setCoxModel<- function(variance=0.01, seed=NULL){
+  
+  ensure_installed("survAUC")
+  
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
   if(!class(variance) %in% c("numeric", "integer"))

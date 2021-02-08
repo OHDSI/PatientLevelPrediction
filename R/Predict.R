@@ -234,6 +234,8 @@ predict.knn <- function(plpData, population, plpModel, ...){
 
 
 predict.deep <- function(plpModel, population, plpData,   ...){
+  ensure_installed("plyr")
+  
   temporal <- !is.null(plpData$timeRef)
   ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
   if(temporal){
@@ -284,6 +286,8 @@ predict.deep <- function(plpModel, population, plpData,   ...){
 }
 
 predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
+  ensure_installed("plyr")
+  
   temporal <- !is.null(plpData$timeRef)
   ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
   if(temporal){
@@ -376,6 +380,7 @@ predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
 }
 
 predict.deepEnsemble <- function(plpModel, population, plpData,   ...){
+  ensure_installed("plyr")
   
   mu <- function(){return(NULL)}
   

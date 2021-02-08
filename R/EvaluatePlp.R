@@ -163,6 +163,8 @@ evaluatePlp <- function(prediction, plpData){
   
   if(type == "survival"){
     
+    ensure_installed("survAUC")
+    
     if(is.null(prediction$survivalTime)){
       stop('No survival time column present')
     }

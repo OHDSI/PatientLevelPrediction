@@ -36,6 +36,8 @@ setDeepNN <- function(units=list(c(128, 64), 128), layer_dropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcome_weight = c(1.0), batch_size = c(100), 
                       epochs= c(100),  seed=NULL  ){
   
+  ensure_installed("keras")
+  
   # if(class(indexFolder)!='character')
   #     stop('IndexFolder must be a character')
   # if(length(indexFolder)>1)

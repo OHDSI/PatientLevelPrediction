@@ -45,6 +45,8 @@ setCovNN <- function(batchSize = 1000,
                      seed=NULL  ){
   #[TODO: add input checks...]
   
+  ensure_installed("keras")
+  
   if(!is.null(seed)){
     warning('seed currently not implemented in CovNN')
   }

@@ -553,8 +553,10 @@ loadPlpModel <- function(dirPath) {
                            error=function(e) NULL) 
   
   if(file.exists(file.path(dirPath, "keras_model"))){
+    ensure_installed("keras")
     model <- keras::load_model_hdf5(file.path(dirPath, "keras_model"))
   } else if(readRDS(file.path(dirPath, "attributes.rds"))$type == "xgboost"){
+    ensure_installed("xgboost")
     # fixing xgboost save/load issue
     model <- xgboost::xgb.load(file.path(dirPath, "model"))
   } else {  
