@@ -574,7 +574,7 @@ getCalibration <- function(prediction,
   strataData <- merge(strataData,averagePredictedProbability)
 
   StDevPredictedProbability <- stats::aggregate(prediction$value, list(prediction$predictionThreshold),
-                                                sd)
+                                                stats::sd)
   colnames(StDevPredictedProbability) <- c('predictionThreshold', 'StDevPredictedProbability')
   strataData <- merge(strataData, StDevPredictedProbability)
 
@@ -745,7 +745,7 @@ getPredictionDistribution <- function(prediction){
                                                   mean)
   colnames(averagePredictedProbability) <- c('class', 'averagePredictedProbability')
   StDevPredictedProbability <- stats::aggregate(prediction$value, list(prediction$outcomeCount),
-                                                sd)
+                                                stats::sd)
   colnames(StDevPredictedProbability) <- c('class', 'StDevPredictedProbability')
 
   predictionDistribution <- merge(predictionDistribution,averagePredictedProbability )
@@ -780,7 +780,7 @@ getDemographicSummary <- function(prediction, plpData, type = 'binary', timepoin
       dplyr::summarise(PersonCountAtRisk = length(.data$outcomeCount), 
                        PersonCountWithOutcome = sum(.data$outcomeCount),
                        averagePredictedProbability = mean(.data$value, na.rm = T),
-                       StDevPredictedProbability = sd(.data$value, na.rm = T),
+                       StDevPredictedProbability = stats::sd(.data$value, na.rm = T),
                        MinPredictedProbability =stats::quantile(.data$value, probs = 0),
                        P25PredictedProbability =stats::quantile(.data$value, probs = 0.25),
                        P50PredictedProbability =stats::quantile(.data$value, probs = 0.50),
@@ -816,7 +816,7 @@ getDemographicSummary <- function(prediction, plpData, type = 'binary', timepoin
                         PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
                         observedRisk = 1-out$surv, 
                         averagePredictedProbability = mean(p1$value, na.rm = T),
-                        StDevPredictedProbability = sd(p1$value, na.rm = T))
+                        StDevPredictedProbability = stats::sd(p1$value, na.rm = T))
           
           demographicData <- rbind(demographicData, demoTemp)
         }
@@ -1324,12 +1324,12 @@ if (graph == TRUE) {
                                                       interventionper, "patients"))
     for (m in 1:pred.n) {
       if (smooth == TRUE) {
-        lines(interv$threshold, data.matrix(interv[paste(predictors[m], 
+        graphics::lines(interv$threshold, data.matrix(interv[paste(predictors[m], 
                                                          "_sm", sep = "")]), col = m, 
               lty = 2)
       }
       else {
-        lines(interv$threshold, data.matrix(interv[predictors[m]]), 
+        graphics::lines(interv$threshold, data.matrix(interv[predictors[m]]), 
               col = m, lty = 2)
       }
       legendlabel <- c(legendlabel, predictors[m])
@@ -1351,12 +1351,12 @@ if (graph == TRUE) {
     graphics::lines(x = nb$threshold, y = nb$none, lwd = 2)
     for (m in 1:pred.n) {
       if (smooth == TRUE) {
-        lines(nb$threshold, data.matrix(nb[paste(predictors[m], 
+        graphics::lines(nb$threshold, data.matrix(nb[paste(predictors[m], 
                                                  "_sm", sep = "")]), col = m, 
               lty = 2)
       }
       else {
-        lines(nb$threshold, data.matrix(nb[predictors[m]]), 
+        graphics::lines(nb$threshold, data.matrix(nb[predictors[m]]), 
               col = m, lty = 2)
       }
       legendlabel <- c(legendlabel, predictors[m])

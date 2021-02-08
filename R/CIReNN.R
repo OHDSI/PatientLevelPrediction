@@ -176,7 +176,7 @@ fitCIReNN <- function(plpData,population, param, search='grid', quiet=F,
     vaeEncoder  <- vae[[2]]
     
     #Embedding by using VAE encoder
-    data <- plyr::aaply(as.array(data), 2, function(x) predict(vaeEncoder, x, batch_size = param$vaeBatchSize))
+    data <- plyr::aaply(as.array(data), 2, function(x) stats::predict(vaeEncoder, x, batch_size = param$vaeBatchSize))
     data <- aperm(data, perm = c(2,1,3))#rearrange of dimension
     
     ##Check the performance of vae
@@ -267,6 +267,7 @@ trainCIReNN<-function(plpData, population,
                       seed=NULL, train=TRUE){
   
   mu <- function(){return(NULL)}
+  sigma <- function(){return(NULL)}
   
   output_dim = 2 #output dimension for outcomes
   num_MC_samples = 100 #sample number for MC sampling in Bayesian Deep Learning Prediction
@@ -481,11 +482,11 @@ trainCIReNN<-function(plpData, population,
           for(batch in batches){
             MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
             for (k in 1:num_MC_samples){
-              MC_samples[k,, ] = predict(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
+              MC_samples[k,, ] = stats::predict(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
                 #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
             }
             pred <- apply(MC_samples[,,output_dim], 2, mean)
-            epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, var)
+            epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, stats::var)
             logVar = MC_samples[, , output_dim * 2]
             
             if(length(dim(logVar))<=1){
@@ -709,11 +710,11 @@ trainCIReNN<-function(plpData, population,
         for(batch in batches){
           MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
           for (k in 1:num_MC_samples){
-            MC_samples[k,, ] = predict(model, as.array(plpData[batch,,]))
+            MC_samples[k,, ] = stats::predict(model, as.array(plpData[batch,,]))
             #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
           }
           pred <- apply(MC_samples[,,output_dim], 2, mean)
-          epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, var)
+          epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, stats::var)
           logVar = MC_samples[, , output_dim * 2]
           if(length(dim(logVar)) <= 1){
             aleatoricUncertainty = exp(mean(logVar))
@@ -918,6 +919,7 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earl
                                 units,recurrentDropout,numberOfRNNLayer,layerDropout, useGPU = useGPU, maxGPUs = maxGPUs){
   
   mu <- function(){return(NULL)}
+  sigma <- function(){return(NULL)}
   
   if(useGPU){
     ##GRU layer
@@ -981,7 +983,7 @@ createEnsembleNetwork<-function(train, plpData,population,batchSize,epochs, earl
   #if(useGPU & (maxGPUs>1) ) model <- keras::multi_gpu_model(model,gpus = maxGPUs) 
   
   model %>% keras::compile(
-    loss = custom_loss(sigma),
+    loss = custom_loss(!!sigma),
     optimizer = keras::optimizer_rmsprop(lr = lr,decay = decay)
   )
   

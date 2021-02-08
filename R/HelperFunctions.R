@@ -77,7 +77,7 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   
   plpDataSimulationProfile <- NULL
   e <- environment()
-  data(plpDataSimulationProfile, envir = e)
+  utils::data(plpDataSimulationProfile, envir = e)
   sampleSize <- 2000
   plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
   

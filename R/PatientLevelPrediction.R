@@ -23,16 +23,9 @@
 #' @docType package
 #' @name PatientLevelPrediction
 #' @importFrom Rcpp evalCpp
-#' @importFrom stats binom.test lm printCoefmat rpois runif sd aggregate binomial glm predict sigma var
-#' @importFrom utils write.csv write.table data ? read.csv
-#' @importFrom grDevices dev.control dev.off pdf recordPlot rgb
 #' @importFrom magrittr %>%
-#' @importFrom graphics lines par
 #' @importFrom rlang .data
-#' @import Cyclops
-#' @import DatabaseConnector
 #' @import FeatureExtraction
-#' @import bit64
 #' @useDynLib PatientLevelPrediction
 NULL
 

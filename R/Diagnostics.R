@@ -121,7 +121,7 @@ diagnostic <- function(plpData = NULL,
   
   #create cohort names csv:
   if(file.exists(file.path(outputFolder,'namesdetails.csv'))){
-    cohortNames <- read.csv(file.path(outputFolder,'namesdetails.csv'))
+    cohortNames <- utils::read.csv(file.path(outputFolder,'namesdetails.csv'))
     
     newNames <- data.frame(ids = c(cohortId,outcomeIds), 
                            names = c(cohortName,outcomeNames))
@@ -140,7 +140,7 @@ diagnostic <- function(plpData = NULL,
   
   #create settings:
   if(file.exists(file.path(outputFolder,'settings.csv'))){
-    settings <- read.csv(file.path(outputFolder,'settings.csv'))
+    settings <- utils::read.csv(file.path(outputFolder,'settings.csv'))
   } else{
     settings <- c()
   }
@@ -162,7 +162,7 @@ diagnostic <- function(plpData = NULL,
   }
   
   ParallelLogger::logInfo('Saving settings to csv')
-  write.csv(settings, file.path(outputFolder,'settings.csv'), row.names = F)
+  utils::write.csv(settings, file.path(outputFolder,'settings.csv'), row.names = F)
   
   
   if(is.null(plpData)){
@@ -198,7 +198,7 @@ diagnostic <- function(plpData = NULL,
   # get survival data:
   ParallelLogger::logInfo('Calculating survival data')
   if(file.exists(file.path(outputFolder, 'survival.csv'))){
-    surv <- read.csv(file.path(outputFolder, 'survival.csv')) 
+    surv <- utils::read.csv(file.path(outputFolder, 'survival.csv')) 
   } else {
     surv <- c()
   }
@@ -207,20 +207,20 @@ diagnostic <- function(plpData = NULL,
                                                           cdmDatabaseName  = cdmDatabaseName ))
   surv <- rbind(surv, do.call('rbind', survTemp))
   if(!is.null(outputFolder)){
-    write.csv(surv, file.path(outputFolder, 'survival.csv'), row.names = F)
+    utils::write.csv(surv, file.path(outputFolder, 'survival.csv'), row.names = F)
   }
   
   # do characterisation - needs TAR
   ParallelLogger::logInfo('Calculating proportion and characterizations')
   
   if(file.exists(file.path(outputFolder, 'proportion.csv'))){
-    proportion <- read.csv(file.path(outputFolder, 'proportion.csv')) 
+    proportion <- utils::read.csv(file.path(outputFolder, 'proportion.csv')) 
   } else {
     proportion <- c()
   }
   
   if(file.exists(file.path(outputFolder, 'characterization.csv'))){
-    characterization <- read.csv(file.path(outputFolder, 'characterization.csv')) 
+    characterization <- utils::read.csv(file.path(outputFolder, 'characterization.csv')) 
   } else {
     characterization <- c()
   }
@@ -290,8 +290,8 @@ diagnostic <- function(plpData = NULL,
   }
   
   if(!is.null(outputFolder)){
-    write.csv(proportion, file.path(outputFolder, 'proportion.csv'), row.names = F)
-    write.csv(characterization, file.path(outputFolder, 'characterization.csv'), row.names = F)
+    utils::write.csv(proportion, file.path(outputFolder, 'proportion.csv'), row.names = F)
+    utils::write.csv(characterization, file.path(outputFolder, 'characterization.csv'), row.names = F)
   }
   
   # Add all to zip file -------------------------------------------------------------------------------
@@ -360,7 +360,7 @@ getDistribution <- function(cohort,
   outcomesIds <- unique(outcomes$outcomeId)
   
   if(file.exists(file.path(outputFolder, 'distribution.csv'))){
-    result <- read.csv(file.path(outputFolder, 'distribution.csv'))
+    result <- utils::read.csv(file.path(outputFolder, 'distribution.csv'))
   } else{
     result <- c()
   }
@@ -369,7 +369,7 @@ getDistribution <- function(cohort,
     oi <- outcomesIds[i]
     ind <- outcomes$outcomeId==oi & outcomes$daysToEvent >= 0
     if(sum(ind)>0){
-      afterC <- aggregate(x = outcomes$daysToEvent[ind], 
+      afterC <- stats::aggregate(x = outcomes$daysToEvent[ind], 
                           by = list(outcomes$rowId[ind]),
                           FUN = min)
       colnames(afterC) <- c('rowId','daysToOutcomeAfterMin')
@@ -380,7 +380,7 @@ getDistribution <- function(cohort,
     
     ind <- outcomes$outcomeId==oi & outcomes$daysToEvent < 0
     if(sum(ind)>0){
-      beforeC <- aggregate(x = abs(outcomes$daysToEvent[ind]), 
+      beforeC <- stats::aggregate(x = abs(outcomes$daysToEvent[ind]), 
                            by = list(outcomes$rowId[ind]),
                            FUN = min)
       colnames(beforeC) <- c('rowId','daysToOutcomeBeforeMin')
@@ -402,7 +402,7 @@ getDistribution <- function(cohort,
   }
   
   if(!is.null(outputFolder)){
-    write.csv(result, file.path(outputFolder, 'distribution.csv'), row.names = F)
+    utils::write.csv(result, file.path(outputFolder, 'distribution.csv'), row.names = F)
   }
   
   return(result)

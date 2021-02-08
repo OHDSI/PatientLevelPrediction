@@ -397,7 +397,7 @@ print.summary.plpData <- function(x, ...) {
   rownames(outcomeCounts) <- outcomeCounts$outcomeId
   outcomeCounts$outcomeId <- NULL
   colnames(outcomeCounts) <- c("Event count", "Person count")
-  printCoefmat(outcomeCounts)
+  stats::printCoefmat(outcomeCounts)
   writeLines("")
   writeLines("Covariates:")
   writeLines(paste("Number of covariates:", x$covariateCount))

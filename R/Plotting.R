@@ -287,7 +287,7 @@ plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
   for(i in 1:length(x$predictionThreshold)){
     if(i!=length(x$predictionThreshold)){
       upper <- x$predictionThreshold[i+1]} else {upper <- min(x$predictionThreshold[i]+0.01,1)}
-  val <- x$predictionThreshold[i]+runif(x$out[i])*(upper-x$predictionThreshold[i])
+  val <- x$predictionThreshold[i]+stats::runif(x$out[i])*(upper-x$predictionThreshold[i])
   vals <- c(val, vals)
   }
   vals[!is.na(vals)]
@@ -296,7 +296,7 @@ plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
   for(i in 1:length(x$predictionThreshold)){
     if(i!=length(x$predictionThreshold)){
       upper <- x$predictionThreshold[i+1]} else {upper <- min(x$predictionThreshold[i]+0.01,1)}
-    val2 <- x$predictionThreshold[i]+runif(x$nout[i])*(upper-x$predictionThreshold[i])
+    val2 <- x$predictionThreshold[i]+stats::runif(x$nout[i])*(upper-x$predictionThreshold[i])
     vals2 <- c(val2, vals2)
   }
   vals2[!is.na(vals2)]
@@ -353,7 +353,7 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
   for(i in 1:length(x$preferenceThreshold)){
     if(i!=length(x$preferenceThreshold)){
     upper <- x$preferenceThreshold[i+1]} else {upper <- 1}
-    val <- x$preferenceThreshold[i]+runif(x$out[i])*(upper-x$preferenceThreshold[i])
+    val <- x$preferenceThreshold[i]+stats::runif(x$out[i])*(upper-x$preferenceThreshold[i])
     vals <- c(val, vals)
   }
   vals[!is.na(vals)]
@@ -362,7 +362,7 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
   for(i in 1:length(x$preferenceThreshold)){
     if(i!=length(x$preferenceThreshold)){
       upper <- x$preferenceThreshold[i+1]} else {upper <- 1}
-    val2 <- x$preferenceThreshold[i]+runif(x$nout[i])*(upper-x$preferenceThreshold[i])
+    val2 <- x$preferenceThreshold[i]+stats::runif(x$nout[i])*(upper-x$preferenceThreshold[i])
     vals2 <- c(val2, vals2)
   }
   vals2[!is.na(vals2)]
@@ -671,7 +671,7 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
   x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence', 'PersonCountAtRisk')]
   
   
-  cis <- apply(x, 1, function(x) binom.test(round(x[2]*x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
+  cis <- apply(x, 1, function(x) stats::binom.test(round(x[2]*x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
   x$lci <- cis[1,]  
   x$uci <- cis[2,]
   

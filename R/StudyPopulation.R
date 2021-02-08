@@ -414,7 +414,7 @@ getCounts2 <- function(cohort,outcomes, description = "") {
   persons <- length(unique(cohort$subjectId))
   targets <- nrow(cohort)
   
-  outcomes <- aggregate(cbind(count = outcomeId) ~ outcomeId, 
+  outcomes <- stats::aggregate(cbind(count = outcomeId) ~ outcomeId, 
                         data = outcomes, 
                         FUN = function(x){NROW(x)})
   

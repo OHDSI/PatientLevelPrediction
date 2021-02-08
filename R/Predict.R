@@ -245,7 +245,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
     data <-result$data[population$rowId,,]
     if(!is.null(plpModel$useVae)){
       if(plpModel$useVae==TRUE){
-        data<- plyr::aaply(as.array(data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
+        data<- plyr::aaply(as.array(data), 2, function(x) stats::predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
         data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
       }}
     
@@ -297,7 +297,7 @@ predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
     data <-result$data[population$rowId,,]
     if(!is.null(plpModel$useVae)){
       if(plpModel$useVae==TRUE){
-        data<- plyr::aaply(as.array(data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
+        data<- plyr::aaply(as.array(data), 2, function(x) stats::predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
         data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
       }}
     
@@ -314,11 +314,11 @@ predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
       pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,,]))
       MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
       for (k in 1:num_MC_samples){
-        MC_samples[k,, ] = predict(plpModel$model, as.array(data[batch,,]))
+        MC_samples[k,, ] = stats::predict(plpModel$model, as.array(data[batch,,]))
         #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
       }
       pred <- apply(MC_samples[,,output_dim], 2, mean)
-      epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, var)
+      epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, stats::var)
       logVar = MC_samples[, , output_dim * 2]
       if(length(dim(logVar))<=1){
         aleatoricUncertainty = exp(mean(logVar))
@@ -352,11 +352,11 @@ predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
       output_dim =2
       MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
       for (k in 1:num_MC_samples){
-        MC_samples[k,, ] = predict(plpModel$model, as.array(data[batch,,]))
+        MC_samples[k,, ] = stats::predict(plpModel$model, as.array(data[batch,,]))
         #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
       }
       pred <- apply(MC_samples[,,output_dim], 2, mean)
-      epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, var)
+      epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, stats::var)
       logVar = MC_samples[, , output_dim * 2]
       if(length(dim(logVar))<=1){
         aleatoricUncertainty = exp(mean(logVar))
@@ -383,6 +383,7 @@ predict.deepEnsemble <- function(plpModel, population, plpData,   ...){
   ensure_installed("plyr")
   
   mu <- function(){return(NULL)}
+  sigma <- function(){return(NULL)}
   
   temporal <- !is.null(plpData$timeRef)
   ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
@@ -393,7 +394,7 @@ predict.deepEnsemble <- function(plpModel, population, plpData,   ...){
     data <-result$data[population$rowId,,]
     if(!is.null(plpModel$useVae)){
       if(plpModel$useVae==TRUE){
-        data<- plyr::aaply(as.array(data), 2, function(x) predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
+        data<- plyr::aaply(as.array(data), 2, function(x) stats::predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
         data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
       }}
     

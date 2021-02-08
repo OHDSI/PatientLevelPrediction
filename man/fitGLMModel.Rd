@@ -10,10 +10,10 @@ fitGLMModel(
   modelType = "logistic",
   excludeCovariateIds = c(),
   includeCovariateIds = c(),
-  prior = createPrior("laplace", useCrossValidation = TRUE),
-  control = createControl(cvType = "auto", fold = 3, startingVariance = 0.01, tolerance
-    = 2e-06, cvRepetitions = 1, selectorType = "byPid", noiseLevel = "silent", threads =
-    -1, maxIterations = 3000)
+  prior = Cyclops::createPrior("laplace", useCrossValidation = TRUE),
+  control = Cyclops::createControl(cvType = "auto", fold = 3, startingVariance = 0.01,
+    tolerance = 2e-06, cvRepetitions = 1, selectorType = "byPid", noiseLevel = "silent",
+    threads = -1, maxIterations = 3000)
 )
 }
 \arguments{

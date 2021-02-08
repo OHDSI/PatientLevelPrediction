@@ -23,15 +23,15 @@ BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 VignetteBuilder: knitr
 Depends:
     R (>= 3.3.0),
-    DatabaseConnector (>= 3.0.0),
-    FeatureExtraction (>= 3.0.0),
-    Cyclops (>= 3.0.0)
+    FeatureExtraction (>= 3.0.0)
 Imports:
     Andromeda,
     AUC,
     benchmarkme,
     bit64,
-    cowplot,    
+    cowplot,
+    Cyclops (>= 3.0.0),
+    DatabaseConnector (>= 3.0.0),
     dplyr,
     ggplot2,
     gridExtra,

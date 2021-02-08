@@ -233,10 +233,10 @@ runEnsembleModel <- function(population,
     dataStack <- as.data.frame(predCV_probas)
     dataStack$y <- as.matrix(predCV$outcomeCount)
     ParallelLogger::logInfo("Training Stacker logistic model using CV pred")
-    lr_model <- glm(formula = y ~ ., data = dataStack, family = binomial(link = "logit"))
-    ensem_proba <- predict(lr_model, newdata = data.frame(pred_probas), type = "response")
+    lr_model <- stats::glm(formula = y ~ ., data = dataStack, family = stats::binomial(link = "logit"))
+    ensem_proba <- stats::predict(lr_model, newdata = data.frame(pred_probas), type = "response")
     pfunction <- function(x){
-      x <- predict(lr_model, newdata = data.frame(x), type = "response")
+      x <- stats::predict(lr_model, newdata = data.frame(x), type = "response")
       return(x)
     }
     level2 <- list(ensembleStrategy = "stacked CV",
@@ -252,10 +252,10 @@ runEnsembleModel <- function(population,
     dataStack <- as.data.frame(stacker_prob)
     dataStack$y <- stacker_y
     ParallelLogger::logInfo("Training Stacker logistic model")
-    lr_model <- glm(formula = y ~ ., data = dataStack, family = binomial(link = "logit"))
-    ensem_proba <- predict(lr_model, newdata = data.frame(pred_probas), type = "response")
+    lr_model <- stats::glm(formula = y ~ ., data = dataStack, family = stats::binomial(link = "logit"))
+    ensem_proba <- stats::predict(lr_model, newdata = data.frame(pred_probas), type = "response")
     pfunction <- function(x){
-      x <- predict(lr_model, newdata = data.frame(x), type = "response")
+      x <- stats::predict(lr_model, newdata = data.frame(x), type = "response")
       return(x)
     }
     level2 <- list(ensembleStrategy = "stacked",
