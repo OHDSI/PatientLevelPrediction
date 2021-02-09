@@ -26,7 +26,6 @@ Depends:
     FeatureExtraction (>= 3.0.0)
 Imports:
     Andromeda,
-    AUC,
     benchmarkme,
     bit64,
     cowplot,
@@ -56,6 +55,7 @@ Imports:
     utils,
     zeallot
 Suggests:
+    AUC,
     aws.s3,
     BigKnn (>= 1.0.0),
     devtools,

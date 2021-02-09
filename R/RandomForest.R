@@ -120,12 +120,14 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   prediction <- population
   x <- toSparseM(plpData,population,map=NULL, temporal = F)
 
+  ParallelLogger::logInfo('Sourcing python code')
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','randomForestFunctions.py'), envir = e)
+  ParallelLogger::logInfo('Converting to python data')
   data <- reticulate::r_to_py(x$data)
   
   #do var imp
   if(param$varImp[1]==T){
-    
+    ParallelLogger::logInfo('Applying Variable Importance')
     # python checked in .set 
     varImp <- rf_var_imp(population = pPopulation,
                              plpData = data, 
@@ -145,6 +147,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   # save the model to outLoc
   outLoc <- createTempModelLoc()
+  ParallelLogger::logInfo(paste0('Saving temp model to: ', outLoc))
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))

@@ -57,18 +57,18 @@ evaluatePlp <- function(prediction, plpData){
     
     # auc
     ParallelLogger::logTrace('Calculating AUC')
-    if(sum(prediction$outcomeCount>0) < 1000){
+    ##if(sum(prediction$outcomeCount>0) < 1000){
       auc <- computeAuc(prediction, confidenceInterval = T)
       ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
       ParallelLogger::logInfo(sprintf('%-20s%.2f', '95% lower AUC: ', auc[2]*100))
       ParallelLogger::logInfo(sprintf('%-20s%.2f', '95% upper AUC: ', auc[3]*100))
-    } else{
-      # speed issues with big data so using AUC package
-      auc <- data.frame(auc = AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount))),
-                        auc_lb95ci = NA,
-                        auc_ub95ci = NA)
-      ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
-    }
+    ##} else{
+    ##  # speed issues with big data so using AUC package
+    ##  auc <- data.frame(auc = AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount))),
+    ##                    auc_lb95ci = NA,
+    ##                    auc_ub95ci = NA)
+    ##  ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
+    ##}
     
     # auprc
     ParallelLogger::logTrace('Calculating AUPRC')
