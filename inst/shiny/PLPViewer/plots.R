@@ -54,6 +54,7 @@ plotShiny <- function(eval){
 getORC <- function(eval, pointOfInterest){
   
   data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
+  data <- data[order(data$predictionThreshold),]
   pointOfInterest <- data[pointOfInterest,]
   
   threshold <- pointOfInterest$predictionThreshold

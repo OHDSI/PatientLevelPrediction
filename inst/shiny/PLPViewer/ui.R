@@ -60,20 +60,7 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                        shiny::sliderInput("slider1", 
                                                                           shiny::span("Threshold: ", shiny::textOutput('threshold'), style="color:white;font-family: Arial;font-size:14px;"), 
                                                                           min = 1, max = 100, value = 50, ticks = F
-                                                       ),
-                                                       
-                                                       shiny::splitLayout(
-                                                         cellWidths = c('10%', '80%', '10%'),
-                                                         shiny::span(shiny::h5(strong('0')), style="color:white"),
-                                                         shiny::h5(' '),
-                                                         shiny::span(shiny::h5(strong('1')), style="color:white")
-                                                       ),
-                                                       shiny::tags$script(shiny::HTML("
-                                                                                      $(document).ready(function() {setTimeout(function() {
-                                                                                      supElement = document.getElementById('slider1').parentElement;
-                                                                                      $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
-                                                                                      }, 50);})
-                                                                                      "))
+                                                       )
                                       ),
                                       
                                       conditionalPanel(condition = "input.menu=='Performance' || input.menu=='Model' || input.menu=='Settings' || input.menu=='Log'",

@@ -160,6 +160,18 @@ server <- shiny::shinyServer(function(input, output, session) {
          NPV = TN/(TN+FN) )
   })
   
+  # update threshold slider based on results size
+  shiny::observe({ 
+    if(!is.null(plpResult()$performanceEvaluation)){
+      n <- nrow(plpResult()$performanceEvaluation$thresholdSummary[plpResult()$performanceEvaluation$thresholdSummary$Eval%in%c('test','validation'),])
+    }else{
+      n <- 100
+    }
+
+      shiny::updateSliderInput(session, inputId = "slider1", 
+                        min = 1, max = n, value = round(n/2))
+  })
+  
   
   # preference plot
   output$prefdist <- shiny::renderPlot({
