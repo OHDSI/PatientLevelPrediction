@@ -51,6 +51,9 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     ParallelLogger::registerLogger(logger)
   }
   
+  ParallelLogger::logInfo(paste0('starting toSparseM'))
+  
+  
   ParallelLogger::logDebug(paste0('covariates nrow: ', nrow(plpData$covariateData$covariates)))
   ParallelLogger::logDebug(paste0('covariateRef nrow: ', nrow(plpData$covariateData$covariateRef)))
   
@@ -71,6 +74,7 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
   
   # chunk then add
   if(!temporal){
+    ParallelLogger::logInfo(paste0('toSparseM non temporal used'))
   data <- Matrix::sparseMatrix(i=1,
                                j=1,
                                x=0,
@@ -89,6 +93,8 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
   Andromeda::batchApply(newcovariateData$covariates, convertData1, batchSize = 100000, dataEnv = dataEnv)
   
   } else {
+    ParallelLogger::logInfo(paste0('toSparseM temporal used'))
+    
     ParallelLogger::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
     ParallelLogger::logTrace(paste0('Max time:', max(plpData$timeRef$timeId)))
     
@@ -167,6 +173,8 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
   
   ParallelLogger::logDebug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
 
+  ParallelLogger::logInfo(paste0('finishing toSparseM'))
+  
   result <- list(data=data,
                  covariateRef=as.data.frame(newcovariateData$covariateRef),
                  map=as.data.frame(newcovariateData$mapping))
@@ -179,6 +187,7 @@ MapCovariates <- function(covariateData,population, mapping){
   
   # to remove check notes
   #covariateId <- oldCovariateId <- newCovariateId <- NULL
+  ParallelLogger::logInfo(paste0('starting MapCovariates'))
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
@@ -205,6 +214,8 @@ MapCovariates <- function(covariateData,population, mapping){
   covariateData$mapping <- NULL
   
   newCovariateData$mapping <- mapping
+  
+  ParallelLogger::logInfo(paste0('finished MapCovariates'))
   
   return(newCovariateData)
 }
@@ -338,6 +349,8 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
 
 # reformat the evaluation
 reformatPerformance <- function(train, test, analysisId){
+  
+  ParallelLogger::logInfo(paste0('starting reformatPerformance'))
 
   nr1 <- length(unlist(train$evaluationStatistics[-1]))
   nr2 <- length(unlist(test$evaluationStatistics[-1]))
