@@ -28,7 +28,6 @@ Imports:
     Andromeda,
     benchmarkme,
     bit64,
-    cowplot,
     Cyclops (>= 3.0.0),
     DatabaseConnector (>= 3.0.0),
     dplyr,

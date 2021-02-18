@@ -1017,12 +1017,17 @@ plotSmoothCalibration <- function(result,
     
   }
   
-  plot <- cowplot::plot_grid(smooth_plot,
-                             hist_plot,
-                             ncol = 1,
-                             axis = "lr",
-                             align = "v",
-                             rel_heights = c(1, 0.6))
+  plot <- gridExtra::grid.arrange(smooth_plot,
+                                  hist_plot,
+                                  ncol = 1,
+                                  heights=c(2,1))
+  
+  #plot <- cowplot::plot_grid(smooth_plot,
+  #                           hist_plot,
+  #                           ncol = 1,
+  #                           axis = "lr",
+  #                           align = "v",
+  #                           rel_heights = c(1, 0.6))
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
   return(plot)
