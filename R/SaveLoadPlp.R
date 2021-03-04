@@ -212,6 +212,9 @@ getPlpData <- function(connectionDetails,
   } else {
     outcomes <- NULL
   }
+
+  
+  
   
   # Remove temp tables:
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
@@ -271,7 +274,7 @@ getPlpData <- function(connectionDetails,
 #' \code{savePlpData} saves an object of type plpData to folder.
 #'
 #' @param plpData   An object of type \code{plpData} as generated using
-#'                           \code{getDbPlpData}.
+#'                           \code{getPlpData}.
 #' @param file               The name of the folder where the data will be written. The folder should
 #'                           not yet exist.
 #' @param envir              The environment for to evaluate variables when saving
@@ -346,7 +349,7 @@ loadPlpData <- function(file, readOnly = TRUE) {
                  cohorts = readRDS(file.path(file, "cohorts.rds")),
                  outcomes = readRDS(file.path(file, "outcomes.rds")),
                  metaData = readRDS(file.path(file, "metaData.rds")))
-  # Open all ffdfs to prevent annoying messages later:
+
   class(result) <- "plpData"
 
   return(result)

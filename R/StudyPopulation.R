@@ -23,7 +23,7 @@
 #' a risk window, and determining which outcomes fall inside the risk window.
 #'
 #' @param plpData      An object of type \code{plpData} as generated using
-#'                              \code{getDbplpData}.
+#'                              \code{getplpData}.
 #' @param population            If specified, this population will be used as the starting point instead of the
 #'                              cohorts in the \code{plpData} object.
 #' @param binary                Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)                              
@@ -253,7 +253,6 @@ createStudyPopulation <- function(plpData,
                      uniquePeople = length(unique(.data$subjectId)),
                      outcomes = sum(!is.na(.data$first)))  
   metaData$attrition <- rbind(metaData$attrition, attrRow)
-
   
   if (firstExposureOnly) {
     ParallelLogger::logTrace(paste("Restricting to first exposure"))
