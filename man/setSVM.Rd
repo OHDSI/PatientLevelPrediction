@@ -11,11 +11,14 @@ setSVM(
   gamma = c(1e-04, 3e-05, 0.001, 0.01, 0.25),
   shrinking = T,
   coef0 = 0,
-  classWeight = T,
+  classWeight = "balanced",
+  varImp = F,
   seed = NULL
 )
 }
 \arguments{
+\item{kernel}{Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.}
+
 \item{C}{penalty parameter C of the error term.}
 
 \item{degree}{degree of kernel function is significant only in poly, rbf, sigmoid}
@@ -26,11 +29,11 @@ setSVM(
 
 \item{coef0}{independent term in kernel function. It is only significant in poly/sigmoid.}
 
-\item{classWeight}{Class weight based on imbalance}
+\item{classWeight}{Class weight based on imbalance either 'balanced' or 'none'}
+
+\item{varImp}{Whether to calculate the variable importance using PFI}
 
 \item{seed}{A seed for the model}
-
-\item{kernal}{Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.}
 }
 \description{
 Create setting for SVM with python

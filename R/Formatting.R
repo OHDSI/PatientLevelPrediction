@@ -51,6 +51,9 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
     ParallelLogger::registerLogger(logger)
   }
   
+  ParallelLogger::logInfo(paste0('starting toSparseM'))
+  
+  
   ParallelLogger::logDebug(paste0('covariates nrow: ', nrow(plpData$covariateData$covariates)))
   ParallelLogger::logDebug(paste0('covariateRef nrow: ', nrow(plpData$covariateData$covariateRef)))
   
@@ -60,38 +63,45 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
                                  population, 
                                  mapping=map)
   
-  ParallelLogger::logDebug(paste0('Max covariateId in covariates: ',as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(covariateId, na.rm=T)))))
+  ParallelLogger::logDebug(paste0('Max covariateId in covariates: ',as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(.data$covariateId, na.rm=T)))))
   ParallelLogger::logDebug(paste0('# covariates in covariateRef: ', nrow(newcovariateData$covariateRef)))
-  ParallelLogger::logDebug(paste0('Max rowId in covariates: ', as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(rowId, na.rm=T)))))
+  ParallelLogger::logDebug(paste0('Max rowId in covariates: ', as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(.data$rowId, na.rm=T)))))
 
-  maxY <- as.data.frame(newcovariateData$mapping %>% dplyr::summarise(max=max(newCovariateId, na.rm = TRUE)))$max
+  maxY <- as.data.frame(newcovariateData$mapping %>% dplyr::summarise(max=max(.data$newCovariateId, na.rm = TRUE)))$max
   ParallelLogger::logDebug(paste0('Max newCovariateId in mapping: ',maxY))
   maxX <- max(population$rowId)
   ParallelLogger::logDebug(paste0('Max rowId in population: ',maxX))
   
   # chunk then add
   if(!temporal){
+    ParallelLogger::logInfo(paste0('toSparseM non temporal used'))
   data <- Matrix::sparseMatrix(i=1,
                                j=1,
                                x=0,
                                dims=c(maxX,maxY))
-  convertData <- function(batch) {
-    data <<- data + Matrix::sparseMatrix(i=as.data.frame(batch %>% select(rowId))$rowId,
-                                         j=as.data.frame(batch %>% select(covariateId))$covariateId,
-                                         x=as.data.frame(batch %>% select(covariateValue))$covariateValue,
+  
+  dataEnv <- environment()
+  convertData1 <- function(batch,dataEnv) {
+    data <- get("data", envir = dataEnv)
+    data <- data + Matrix::sparseMatrix(i=as.data.frame(batch %>% dplyr::select(.data$rowId))$rowId,
+                                         j=as.data.frame(batch %>% dplyr::select(.data$covariateId))$covariateId,
+                                         x=as.data.frame(batch %>% dplyr::select(.data$covariateValue))$covariateValue,
                                          dims=c(maxX,maxY))
+    assign("data", data, envir = dataEnv)
     return(NULL)
   }
-  Andromeda::batchApply(newcovariateData$covariates, convertData, batchSize = 100000)
+  Andromeda::batchApply(newcovariateData$covariates, convertData1, batchSize = 100000, dataEnv = dataEnv)
   
   } else {
+    ParallelLogger::logInfo(paste0('toSparseM temporal used'))
+    
     ParallelLogger::logTrace(paste0('Min time:', min(plpData$timeRef$timeId)))
     ParallelLogger::logTrace(paste0('Max time:', max(plpData$timeRef$timeId)))
     
     # do we want to use for(i in sort(plpData$timeRef$timeId)){ ?
     for(i in min(plpData$timeRef$timeId):max(plpData$timeRef$timeId)){
       
-      if(nrow(newcovariateData$covariates %>% dplyr::filter(timeId==i))>0){
+      if(nrow(newcovariateData$covariates %>% dplyr::filter(.data$timeId==i))>0){
         ParallelLogger::logTrace(paste0('Found covariates for timeId ', i))
         
  
@@ -132,11 +142,11 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
         
         # add non temporal covs
         tempCovs <- newcovariateData$covariates %>% 
-          dplyr::filter(!is.na(timeId)) %>% 
-          dplyr::filter(timeId == i) 
+          dplyr::filter(!is.na(.data$timeId)) %>% 
+          dplyr::filter(.data$timeId == i) 
         Andromeda::batchApply(tempCovs, convertData, batchSize = 100000, dataEnv=dataEnv)
         
-        data_array<-slam::as.simple_sparse_array(dataPlp)
+        data_array <- slam::as.simple_sparse_array(dataPlp)
         # remove dataPlp
         #dataPlp <<- NULL
         ParallelLogger::logTrace(paste0('Dim of data_array: ', paste0(dim(data_array), collapse='-')))
@@ -153,9 +163,9 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
       }
       #binding arrays along the dimesion
       if(i==min(plpData$timeRef$timeId)) {
-        result_array<-data_array
+        result_array <- data_array
       }else{
-        result_array<-slam::abind_simple_sparse_array(result_array,data_array,MARGIN=2L)
+        result_array <- slam::abind_simple_sparse_array(result_array,data_array,MARGIN=2L)
       }
     }
     data <- result_array
@@ -163,6 +173,8 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
   
   ParallelLogger::logDebug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
 
+  ParallelLogger::logInfo(paste0('finishing toSparseM'))
+  
   result <- list(data=data,
                  covariateRef=as.data.frame(newcovariateData$covariateRef),
                  map=as.data.frame(newcovariateData$mapping))
@@ -173,13 +185,17 @@ toSparseM <- function(plpData,population, map=NULL, temporal=F){
 # restricts to pop and saves/creates mapping
 MapCovariates <- function(covariateData,population, mapping){
   
+  # to remove check notes
+  #covariateId <- oldCovariateId <- newCovariateId <- NULL
+  ParallelLogger::logInfo(paste0('starting MapCovariates'))
+  
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
   
   # restrict to population for speed
   ParallelLogger::logTrace('restricting to population for speed and mapping')
   if(is.null(mapping)){
-    mapping <- data.frame(oldCovariateId = as.data.frame(covariateData$covariateRef %>% dplyr::select(covariateId)),
+    mapping <- data.frame(oldCovariateId = as.data.frame(covariateData$covariateRef %>% dplyr::select(.data$covariateId)),
                           newCovariateId = 1:nrow(covariateData$covariateRef))
   }
   if(sum(colnames(mapping)%in%c('oldCovariateId','newCovariateId'))!=2){
@@ -190,14 +206,16 @@ MapCovariates <- function(covariateData,population, mapping){
   # assign new ids :
   newCovariateData$covariates <- covariateData$covariates %>%
     dplyr::inner_join(covariateData$population) %>% 
-    dplyr::rename(oldCovariateId = covariateId) %>% 
+    dplyr::rename(oldCovariateId = .data$covariateId) %>% 
     dplyr::inner_join(covariateData$mapping) %>% 
-    dplyr::select(-oldCovariateId)  %>%
-    dplyr::rename(covariateId = newCovariateId)
+    dplyr::select(- .data$oldCovariateId)  %>%
+    dplyr::rename(covariateId = .data$newCovariateId)
   covariateData$population <- NULL
   covariateData$mapping <- NULL
   
   newCovariateData$mapping <- mapping
+  
+  ParallelLogger::logInfo(paste0('finished MapCovariates'))
   
   return(newCovariateData)
 }
@@ -232,6 +250,9 @@ MapCovariates <- function(covariateData,population, mapping){
 #'
 #' @export
 toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
+  
+  map_python_initiate <- map_python <- function(){return(NULL)}
+  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -244,38 +265,43 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
                                          population, 
                                          mapping=map)
   
-  ParallelLogger::logDebug(paste0('Max ',as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(covariateId, na.rm=T)))))
+  ParallelLogger::logDebug(paste0('Max ',as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(.data$covariateId, na.rm=T)))))
   ParallelLogger::logDebug(paste0('# cols: ', nrow(newcovariateData$covariateRef)))
-  ParallelLogger::logDebug(paste0('Max rowId: ', as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(rowId, na.rm=T)))))
+  ParallelLogger::logDebug(paste0('Max rowId: ', as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(.data$rowId, na.rm=T)))))
   
   ParallelLogger::logTrace(paste0('Converting data into python sparse matrix...'))
   
   maxT <- NULL
   if(temporal){
-    maxT <- as.data.frame(newcovariateData$covariates$timeId %>% dplyr::summarise(max = max(id, na.rm=T)))
+    maxT <- as.data.frame(newcovariateData$covariates$timeId %>% dplyr::summarise(max = max(.data$id, na.rm=T)))
     ParallelLogger::logDebug(paste0('Max timeId: ', maxT))
   }
   
-  maxCol <- as.data.frame(newcovariateData$mapping %>% dplyr::summarise(max=max(newCovariateId,na.rm = TRUE)))$max
+  maxCol <- as.data.frame(newcovariateData$mapping %>% dplyr::summarise(max=max(.data$newCovariateId,na.rm = TRUE)))$max
   maxRow <- max(population$rowId)
   
   # source the python fucntion
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','TorchMap.py'), envir = e)
-  dataPlp <<- map_python_initiate(maxCol = as.integer(maxCol), 
-                                  maxRow = as.integer(maxRow), 
-                                  maxT= as.integer(maxT))
   
-  convertData <- function(batch, temporal=T) {
+  dataEnv <- e # adding to remove <<- 
+  #dataPlp <<- map_python_initiate(maxCol = as.integer(maxCol), 
+  dataPlp <- map_python_initiate(maxCol = as.integer(maxCol), 
+                                         maxRow = as.integer(maxRow), 
+                                         maxT= as.integer(maxT))
+  
+  convertData <- function(batch, temporal=T, dataEnv) {
     if(temporal){
-      dataPlp <<- map_python(matrix = dataPlp ,
-                             datas = as.matrix(as.data.frame(batch %>% dplyr::select(rowId,covariateId,timeId,covariateValue))),
-                             maxCol = as.integer(maxCol),
-                             maxRow = as.integer(maxRow),
-                             maxT = as.integer(maxT))
+      #dataPlp <<- map_python(matrix = dataPlp ,
+      dataEnv$dataPlp <- map_python(matrix = dataEnv$dataPlp,
+                                    datas = as.matrix(as.data.frame(batch %>% dplyr::select(.data$rowId,.data$covariateId,.data$timeId,.data$covariateValue))),
+                                    maxCol = as.integer(maxCol),
+                                    maxRow = as.integer(maxRow),
+                                    maxT = as.integer(maxT))
     }else{
-      dataPlp <<- map_python(matrix = dataPlp ,
-                             datas = as.matrix(as.data.frame(batch %>% dplyr::select(rowId,covariateId,covariateValue))),
+     # dataPlp <<- map_python(matrix = dataPlp ,
+      dataEnv$dataPlp <- map_python(matrix = dataEnv$dataPlp,
+                             datas = as.matrix(as.data.frame(batch %>% dplyr::select(.data$rowId,.data$covariateId,.data$covariateValue))),
                              maxCol = as.integer(maxCol),
                              maxRow = as.integer(maxRow),
                              maxT = NULL) 
@@ -287,31 +313,34 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
     # add the age and non-temporal data
     timeIds <- unique(plpData$timeRef$timeId)
     for(timeId in timeIds){
-      tempData <- addAgeTemp(timeId, plpData)
+      tempData <- addAgeTemp(timeId, newcovariateData)
       if(!is.null(tempData)){
-        Andromeda::batchApply(newcovariateData$covariates, convertData,temporal =T, batchSize = 100000)
+        Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
       }
-      tempData <- addNonAgeTemp(timeId,plpData.mapped)
+      #tempData <- addNonAgeTemp(timeId,plpData.mapped) - what is plpData.mapped?
+      tempData <- addNonAgeTemp(timeId, newcovariateData)
       if(!is.null(tempData)){
-        Andromeda::batchApply(newcovariateData$covariates, convertData,temporal =T, batchSize = 100000)
+        Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
       }
-      rm(tempData)
+      tempData <- NULL
     }
     
     # add the rest
     tempData <- newcovariateData$covariates %>%
-      dplyr::filter(timeId!=0) %>%
-      dplyr::filter(!is.na(timeId))
-    Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000)
+      dplyr::filter(.data$timeId!=0) %>%
+      dplyr::filter(!is.na(.data$timeId))
+    Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
+    tempData <- NULL
   } else {
     Andromeda::batchApply(newcovariateData$covariates, convertData,
-                          temporal =F, batchSize = 100000)
+                          temporal =F, batchSize = 100000, dataEnv=dataEnv)
   }
-  result <- dataPlp
-  dataPlp <<- NULL
+  ##result <- dataEnv$dataPlp
+  ##dataPlp <<- NULL
+  ##dataEnv$dataPlp <- NULL
   ParallelLogger::logTrace(paste0('Sparse python tensor converted'))                            
   
-  result <- list(data=result,
+  result <- list(data=dataPlp,
                  covariateRef=as.data.frame(newcovariateData$covariateRef),
                  map=as.data.frame(newcovariateData$mapping))
   return(result)
@@ -320,6 +349,8 @@ toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, python
 
 # reformat the evaluation
 reformatPerformance <- function(train, test, analysisId){
+  
+  ParallelLogger::logInfo(paste0('starting reformatPerformance'))
 
   nr1 <- length(unlist(train$evaluationStatistics[-1]))
   nr2 <- length(unlist(test$evaluationStatistics[-1]))
@@ -331,14 +362,20 @@ reformatPerformance <- function(train, test, analysisId){
                                       unlist(test$evaluationStatistics[-1]))
                                 )
 
-  nr1 <- nrow(train$thresholdSummary)
-  nr2 <- nrow(test$thresholdSummary)
-  thresholdSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
-                                      train$thresholdSummary),
-                                cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
-                                      test$thresholdSummary))
 
-  if(!is.null(train$demographicSummary)){
+  if(!is.null(test$thresholdSummary) & !is.null(train$thresholdSummary)){
+    nr1 <- nrow(train$thresholdSummary)
+    nr2 <- nrow(test$thresholdSummary)
+    thresholdSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
+                                    train$thresholdSummary),
+                              cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
+                                    test$thresholdSummary))
+  } else{
+    thresholdSummary <- NULL
+  }
+  
+
+  if(!is.null(train$demographicSummary) & !is.null(test$demographicSummary)){
     nr1 <- nrow(train$demographicSummary)
     nr2 <- nrow(test$demographicSummary)
     demographicSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
@@ -356,14 +393,17 @@ reformatPerformance <- function(train, test, analysisId){
                               cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
                                     test$calibrationSummary))
 
-  nr1 <- nrow(train$predictionDistribution)
-  nr2 <- nrow(test$predictionDistribution)
-  predictionDistribution <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
+  if(!is.null(train$predictionDistribution) & !is.null(test$predictionDistribution)){
+    nr1 <- nrow(train$predictionDistribution)
+    nr2 <- nrow(test$predictionDistribution)
+    predictionDistribution <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
                                     train$predictionDistribution),
                               cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
                                     test$predictionDistribution))
-
-
+  } else {
+    predictionDistribution <- NULL
+  }
+    
   result <- list(evaluationStatistics=evaluationStatistics,
                  thresholdSummary=thresholdSummary,
                  demographicSummary =demographicSummary,
@@ -380,16 +420,16 @@ addAgeTemp <- function(timeId, newcovariateData, timeRef){
   startDay <- as.data.frame(timeRef[timeRef$timeId==timeId,])$startDay
   
   ageId <- as.data.frame(newcovariateData$mapping %>% 
-    dplyr::filter(oldCovariateId == 1002) %>%
-    dplyr::select(newCovariateId))$newCovariateId
+    dplyr::filter(.data$oldCovariateId == 1002) %>%
+    dplyr::select(.data$newCovariateId))$newCovariateId
   
   ageData <- newcovariateData$covariates%>% # changed from plpData$covariateData
-    dplyr::filter(covariateId == ageId) %>%
-    dplyr::mutate(covariateValueNew = covariateValue*365 + startDay,
+    dplyr::filter(.data$covariateId == ageId) %>%
+    dplyr::mutate(covariateValueNew = .data$covariateValue*365 + startDay,
                   timeId = timeId) %>%
-    dplyr::select(-covariateValue) %>%
-    dplyr::rename(covariateValue = covariateValueNew) %>%
-    dplyr::select(rowId,covariateId,covariateValue, timeId)
+    dplyr::select(- .data$covariateValue) %>%
+    dplyr::rename(covariateValue = .data$covariateValueNew) %>%
+    dplyr::select(.data$rowId,.data$covariateId,.data$covariateValue, .data$timeId)
   
   if(nrow(ageData)==0){
     return(NULL)
@@ -401,14 +441,14 @@ addAgeTemp <- function(timeId, newcovariateData, timeRef){
 addNonAgeTemp <- function(timeId, newcovariateData){
 
   ageId <- as.data.frame(newcovariateData$mapping %>% 
-                           dplyr::filter(oldCovariateId == 1002) %>%
-                           dplyr::select(newCovariateId))$newCovariateId
+                           dplyr::filter(.data$oldCovariateId == 1002) %>%
+                           dplyr::select(.data$newCovariateId))$newCovariateId
   
   otherTempCovs <- newcovariateData$covariates%>% 
-    dplyr::filter(is.na(timeId)) %>%
-    dplyr::filter(covariateId != ageId) %>%
+    dplyr::filter(is.na(.data$timeId)) %>%
+    dplyr::filter(.data$covariateId != ageId) %>%
     dplyr::mutate(timeId = timeId) %>%
-    dplyr::select(rowId,covariateId,covariateValue,timeId)
+    dplyr::select(.data$rowId,.data$covariateId,.data$covariateValue,.data$timeId)
   
   if(nrow(otherTempCovs)==0){
     return(NULL)

@@ -34,7 +34,7 @@ def python_predict_temporal(population, plpData, model_loc, dense, autoencoder):
   print("Applying Python Model") 
   print("Loading Data...")
   # load data + train,test indexes + validation index
-  y=population[:,1]
+  #y=population[:,1]
   
   ###########################################################################	
   # uf dense convert 
@@ -76,7 +76,7 @@ def python_predict(population, plpData, model_loc, dense, autoencoder):
   print("Applying Python Model") 
   print("Loading Data...")
   # load data + train,test indexes + validation index
-  y=population[:,1]
+  #y=population[:,1]
   X = plpData[population[:,0].astype(int),:]
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
@@ -133,7 +133,7 @@ def python_predict_garden(population, plpData, model_loc,quantile=None):
   print("Applying Python Model") 
   print("Loading Data...")
   # load data + train,test indexes + validation index
-  y=population[:,1]
+  #y=population[:,1]
   X = plpData[population[:,0].astype(int),:]
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))

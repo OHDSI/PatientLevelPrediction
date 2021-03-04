@@ -70,7 +70,7 @@ def train_adaboost(population, plpData, train, n_estimators, learning_rate, mode
     if not os.path.exists(modelOutput):
       os.makedirs(modelOutput)
     print("Model saved to: %s" %(modelOutput)	)
-    joblib.dump(adab, os.path.join(modelOutput,"model.pkl")) 
+    joblib.dump(adab, os.path.join(modelOutput,"model.pkl"), compress = True) 
     pred = adab.predict_proba(X[trainInds,:])[:,1]
     pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
     prediction = np.append(population[population[:,population.shape[1]-1] > 0,:],pred, axis=1)

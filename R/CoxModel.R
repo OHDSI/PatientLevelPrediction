@@ -25,6 +25,9 @@
 #' model.lr <- setCoxModel()
 #' @export
 setCoxModel<- function(variance=0.01, seed=NULL){
+  
+  ensure_installed("survAUC")
+  
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
   if(!class(variance) %in% c("numeric", "integer"))
@@ -60,14 +63,15 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
   #TODO - how to incorporate indexes?
+
   variance <- 0.003
   if(!is.null(param$variance )) variance <- param$variance
   start <- Sys.time()
   modelTrained <- fitGLMModel(population,
                               plpData = plpData,
                               modelType = "cox",
-                              prior = createPrior("laplace",useCrossValidation = TRUE),
-                              control = createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
+                              prior = Cyclops::createPrior("laplace",useCrossValidation = TRUE),
+                              control = Cyclops::createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                       startingVariance = variance,
                                                       tolerance  = 2e-07,
                                                       cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
@@ -75,6 +79,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
                                                       threads=-1,
                                                       maxIterations = 3000,
                                                       seed=param$seed))
+  
   
   # TODO get optimal lambda value
   
@@ -103,7 +108,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
                  hyperParamSearch = c(priorVariance=modelTrained$priorVariance, 
                                       seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
                                       log_likelihood = modelTrained$log_likelihood),
-                 trainCVAuc = NULL,
+                 trainCVAuc = NULL, # add this?
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,# can use populationSettings$outcomeId?
@@ -115,6 +120,6 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'plp'
-  attr(result, 'predictionType') <- 'binary'
+  attr(result, 'predictionType') <- 'survival'
   return(result)
 }

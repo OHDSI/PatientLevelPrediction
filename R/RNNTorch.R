@@ -138,6 +138,7 @@ fitRNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 
 trainRNNTorch <- function(plpData, population, epochs=50, hidden_size = 100, seed=0, class_weight= 0, type = 'RNN', train=TRUE, modelOutput, quiet=F){
 
+  train_deeptorch <- function(){return(NULL)}
   python_dir <- system.file(package='PatientLevelPrediction','python')
   
   e <- environment()

@@ -1,3 +1,67 @@
+PatientLevelPrediction 4.3.3
+======================
+- Reduced imports by adding code to install some dependencies when used
+
+PatientLevelPrediction 4.3.2
+======================
+- fixed csv result saving bug when no model param
+
+PatientLevelPrediction 4.3.1
+======================
+- fixed r check vignette issues 
+- added conda install to test 
+
+PatientLevelPrediction 4.3.0
+======================
+- finalised permutation feature importance
+
+PatientLevelPrediction 4.2.10
+======================
+- fixed deepNN index issue (reported on github - thanks dapritchard)
+- add compression to python pickles
+- removed requirement to have outcomeCount for prediction with python models
+
+PatientLevelPrediction 4.2.9
+======================
+- cleaned all checks 
+- fixed bug in python toSparseMatrix
+- fixed warning in studyPop
+
+PatientLevelPrediction 4.2.8
+======================
+- fixed bug (identified by Chungsoo) in covariateSummary
+- fixed bug with thresholdSummary
+- edited threshold summary function to make it cleaner
+- added to ensemble where you can combine multiple models into an ensemble
+- cleaned up the notes and tests
+- updated simulated data covariateId in tests to use integer64
+- fixed description imports (and sorted them)
+
+PatientLevelPrediction 4.2.7
+======================
+- fixed Cox model calibration plots
+- fixed int64 conversion bug
+
+PatientLevelPrediction 4.2.6
+======================
+- added baseline risk to Cox model 
+
+PatientLevelPrediction 4.2.3
+======================
+- updated shiny: added attrition and hyper-parameter grid search into settings
+
+PatientLevelPrediction 4.2.2
+======================
+- updated shiny app added 95% CI to AUC in summary, size is now complete data size and there is a column valPercent that tells what percentage of the data were used for validation 
+
+PatientLevelPrediction 4.2.1
+======================
+- updated GBMsurvival to use survival metrics and c-stat
+
+PatientLevelPrediction 4.2.0
+======================
+- added survival metrics 
+
 PatientLevelPrediction 4.1.0
 ======================
 - added updates and fixes into master from development branch

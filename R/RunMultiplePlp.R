@@ -65,6 +65,7 @@
 #' @param splitSeed                      The seed used for the randomization into test/train
 #' @param nfold                          Number of folds used to do cross validation
 #' @param verbosity                      The logging level
+#' @param settings                       Specify the T, O, population, covariate and model settings
 #' 
 #' @return
 #' A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
@@ -98,7 +99,8 @@ runPlpAnalyses <- function(connectionDetails,
                           testFraction = 0.25,
                           splitSeed = NULL,
                           nfold = 3,
-                          verbosity = "INFO") {
+                          verbosity = "INFO",
+                          settings = NULL) {
   
   # start log:
   clearLoggerType("Multple PLP Log")
@@ -178,6 +180,16 @@ runPlpAnalyses <- function(connectionDetails,
       }
     onames <- data.frame(outcomeId=outcomeIds, outcomeName=outcomeNames)
     referenceTable <- merge(referenceTable, onames, by='outcomeId', all.x=T)
+  }
+  
+  # if settings are there restrict to these:
+  if(!is.null(settings)){
+    if(nrow(settings) != 0){
+    ParallelLogger::logInfo('Restricting to specified settings...')
+    referenceTable <- merge(settings, referenceTable, by = c('cohortId', 
+                                           'outcomeId', 'populationSettingId',
+                                           'modelSettingId', 'covariateSettingId'))
+    }
   }
   
   if(!file.exists(file.path(outputFolder,'settings.csv'))){
@@ -678,6 +690,9 @@ loadPredictionAnalysisList <- function(predictionAnalysisListFile){
   )
   
   runPlpAnalyses <- list(modelAnalysisList = modelAnalysisList,
+                         settings = tryCatch({as.data.frame(do.call(rbind, lapply(json$settings, unlist)))
+                           }, 
+                                             error = function(e){return(NULL)}),
                          cohortIds = json$targetIds,
                          cohortNames = getCohortNames(json, json$targetIds),
                          outcomeIds = json$outcomeIds,

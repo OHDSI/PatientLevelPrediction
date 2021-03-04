@@ -64,7 +64,9 @@ Therefore, it is recommended to provide \code{trainEvents} rather than
 your input to \code{trainFractions}. The format should be as follows:
 \itemize{
   \item{\code{c(500, 1000, 1500)} - a list of training events}
-}#' @param splitSeed The seed used to split the testing and training set when
+}}
+
+\item{splitSeed}{The seed used to split the testing and training set when
 using a 'person' type split}
 
 \item{nfold}{The number of folds used in the cross validation (default = 

@@ -201,6 +201,8 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
 trainMLP <- function(plpData, population, size=1, alpha=0.001, maxIter = 2000, tol = 0.0001, 
                      learningRateInit = 0.001, nIterNoChange=10, beta1 =0.9, beta2=0.999, epsilon =0.00000001,
                      seed=NULL, train=TRUE, quiet=F, modelOutput){
+  
+  train_mlp <- function(){return(NULL)}
 
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','mlpFunctions.py'), envir = e)

@@ -214,6 +214,8 @@ trainRandomForestQuantileRegressor <- function(population, plpData, seed = NULL,
                              oobScore = FALSE,
                              warmStart = FALSE) {
   
+  train_RandomForestQuantileRegressor <- function(){return(NULL)}
+  
   e <- environment()
   # then run standard python code
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','gardenFunctions.py'), envir = e)
@@ -264,6 +266,8 @@ trainRandomForestQuantileRegressor <- function(population, plpData, seed = NULL,
 
 
 predict.pythonGarden <- function(plpModel, population, plpData){
+  
+  python_predict_garden <- function(){return(NULL)}
   
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
