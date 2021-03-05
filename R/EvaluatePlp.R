@@ -1378,3 +1378,32 @@ results$net.benefit = nb
 results$interventions.avoided = interv
 return(results)
 }
+
+#' Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome
+#' as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/
+#' 
+#' @details
+#' Calculate the model-based concordance
+#'
+#' @param prediction         the prediction object found in the plpResult object
+#' 
+#' @return
+#' model-based concordance value
+#'
+#' @export
+ 
+modelBasedConcordance <- function(plpResult){
+  if (!length(plpResult$prediction$value >0)){
+    stop("Prediction object not found")
+  }
+  prediction <- plpResult$prediction$value
+  n<-length(prediction)
+  ord<-order(prediction)
+  prediction<-prediction[ord]
+  q.hat<-1-prediction
+  V1<-(prediction*(cumsum(q.hat)-q.hat)+q.hat*(sum(prediction)-cumsum(prediction)))/(n-1)
+  V2<-(prediction*(sum(q.hat)-q.hat)+q.hat*(sum(prediction)-prediction))/(n-1)
+  mb.c<-sum(V1)/sum(V2)
+  return(mb.c)
+}
+
