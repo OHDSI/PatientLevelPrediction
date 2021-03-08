@@ -415,8 +415,8 @@ configurePython <- function(envname='PLP', envtype=NULL){
     }
     packages <- c('numpy', 'scikit-learn','scipy', 'pandas','pydotplus','keras')
     ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))
-    reticulate::virtualenv_install(envname=envname, packages = packages, forge = TRUE, pip = TRUE,
-                              pip_ignore_installed = TRUE)
+    reticulate::virtualenv_install(envname=envname, packages = packages, 
+                                   ignore_installed = TRUE)
   }
   
   return(location)
