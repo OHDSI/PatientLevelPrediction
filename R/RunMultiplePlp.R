@@ -215,7 +215,7 @@ runPlpAnalyses <- function(connectionDetails,
         
       plpData <- tryCatch(do.call(getPlpData, plpDataSettings),
                finally= ParallelLogger::logTrace('Done plpData.'),
-               error= function(cond){ParallelLogger::logTrace(paste0('Error with getPlpData:',cond));return(NULL)})
+               error= function(cond){ParallelLogger::logInfo(paste0('Error with getPlpData:',cond));return(NULL)})
   
       if(!is.null(plpData)){
         ParallelLogger::logTrace(paste0('Saving data in setting ', i ))
