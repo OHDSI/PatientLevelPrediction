@@ -25,7 +25,7 @@ output:
 ---
 <!--
 %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Demo Videos}
+%\VignetteIndexEntry{Best Practices}
 -->
 
 ## Best practice publications using the OHDSI PatientLevelPrediction framework
