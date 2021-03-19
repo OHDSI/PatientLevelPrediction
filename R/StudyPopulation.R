@@ -388,8 +388,8 @@ createStudyPopulation <- function(plpData,
 
     # check outcome still there
     if(sum(!is.na(population$daysToEvent))==0){
-      return(NULL)
       ParallelLogger::logWarn('No outcomes left...')
+      return(NULL)
     }
   
   population <- as.data.frame(population)
