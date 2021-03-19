@@ -1,3 +1,7 @@
+PatientLevelPrediction 4.3.5
+======================
+- fixed missing priorOutcomeLookback from createStudyPopulation
+
 PatientLevelPrediction 4.3.3
 ======================
 - Reduced imports by adding code to install some dependencies when used

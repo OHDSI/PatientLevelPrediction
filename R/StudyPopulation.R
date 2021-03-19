@@ -296,7 +296,7 @@ createStudyPopulation <- function(plpData,
       dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
       dplyr::filter(outcomeId == get('oId'))  %>% 
       dplyr::select(.data$rowId, .data$daysToEvent, .data$tarStart) %>% 
-      dplyr::filter(.data$daysToEvent < .data$tarStart)  
+      dplyr::filter(.data$daysToEvent < .data$tarStart & .data$daysToEvent > -get('priorOutcomeLookback') ) 
     
     if(nrow(as.data.frame(outcomeBefore))>0){
       outcomeBefore %>%
