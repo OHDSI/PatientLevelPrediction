@@ -121,7 +121,7 @@ diagnostic <- function(plpData = NULL,
   
   #create cohort names csv:
   if(file.exists(file.path(outputFolder,'namesdetails.csv'))){
-    cohortNames <- read.csv(file.path(outputFolder,'namesdetails.csv'))
+    cohortNames <- utils::read.csv(file.path(outputFolder,'namesdetails.csv'))
     
     newNames <- data.frame(ids = c(cohortId,outcomeIds), 
                            names = c(cohortName,outcomeNames))
@@ -140,7 +140,7 @@ diagnostic <- function(plpData = NULL,
   
   #create settings:
   if(file.exists(file.path(outputFolder,'settings.csv'))){
-    settings <- read.csv(file.path(outputFolder,'settings.csv'))
+    settings <- utils::read.csv(file.path(outputFolder,'settings.csv'))
   } else{
     settings <- c()
   }
@@ -162,7 +162,7 @@ diagnostic <- function(plpData = NULL,
   }
   
   ParallelLogger::logInfo('Saving settings to csv')
-  write.csv(settings, file.path(outputFolder,'settings.csv'), row.names = F)
+  utils::write.csv(settings, file.path(outputFolder,'settings.csv'), row.names = F)
   
   
   if(is.null(plpData)){
@@ -198,7 +198,7 @@ diagnostic <- function(plpData = NULL,
   # get survival data:
   ParallelLogger::logInfo('Calculating survival data')
   if(file.exists(file.path(outputFolder, 'survival.csv'))){
-    surv <- read.csv(file.path(outputFolder, 'survival.csv')) 
+    surv <- utils::read.csv(file.path(outputFolder, 'survival.csv')) 
   } else {
     surv <- c()
   }
@@ -207,20 +207,20 @@ diagnostic <- function(plpData = NULL,
                                                           cdmDatabaseName  = cdmDatabaseName ))
   surv <- rbind(surv, do.call('rbind', survTemp))
   if(!is.null(outputFolder)){
-    write.csv(surv, file.path(outputFolder, 'survival.csv'), row.names = F)
+    utils::write.csv(surv, file.path(outputFolder, 'survival.csv'), row.names = F)
   }
   
   # do characterisation - needs TAR
   ParallelLogger::logInfo('Calculating proportion and characterizations')
   
   if(file.exists(file.path(outputFolder, 'proportion.csv'))){
-    proportion <- read.csv(file.path(outputFolder, 'proportion.csv')) 
+    proportion <- utils::read.csv(file.path(outputFolder, 'proportion.csv')) 
   } else {
     proportion <- c()
   }
   
   if(file.exists(file.path(outputFolder, 'characterization.csv'))){
-    characterization <- read.csv(file.path(outputFolder, 'characterization.csv')) 
+    characterization <- utils::read.csv(file.path(outputFolder, 'characterization.csv')) 
   } else {
     characterization <- c()
   }
@@ -290,8 +290,8 @@ diagnostic <- function(plpData = NULL,
   }
   
   if(!is.null(outputFolder)){
-    write.csv(proportion, file.path(outputFolder, 'proportion.csv'), row.names = F)
-    write.csv(characterization, file.path(outputFolder, 'characterization.csv'), row.names = F)
+    utils::write.csv(proportion, file.path(outputFolder, 'proportion.csv'), row.names = F)
+    utils::write.csv(characterization, file.path(outputFolder, 'characterization.csv'), row.names = F)
   }
   
   # Add all to zip file -------------------------------------------------------------------------------
@@ -315,11 +315,11 @@ diagnostic <- function(plpData = NULL,
 getSurvival <- function(plpData, outcomeId, cohortId, cdmDatabaseName ){
 
   object <- plpData$outcome %>% 
-    dplyr::filter(outcomeId == !!outcomeId) %>%
+    dplyr::filter(.data$outcomeId == !!outcomeId) %>%
     dplyr::right_join(plpData$cohort, by ='rowId') %>%
-    dplyr::group_by(rowId) %>%
-    dplyr::summarise(daysToObsEnd = min(daysToObsEnd),
-                     daysToEvent = min(daysToEvent))
+    dplyr::group_by(.data$rowId) %>%
+    dplyr::summarise(daysToObsEnd = min(.data$daysToObsEnd),
+                     daysToEvent = min(.data$daysToEvent))
     
     
   object$censoredTime <- apply(object[,-1], 1, function(x) min(x, na.rm = T))
@@ -327,16 +327,16 @@ getSurvival <- function(plpData, outcomeId, cohortId, cdmDatabaseName ){
   object$event[!is.na(object$daysToEvent)] <- ifelse(object$event[!is.na(object$daysToEvent)] <= object$censoredTime[!is.na(object$daysToEvent)], 1,0)
   
   
-  result <- object %>% dplyr::group_by(censoredTime) %>%
-    dplyr::summarise(events = sum(event),
-                     censored = length(event)-sum(event))
+  result <- object %>% dplyr::group_by(.data$censoredTime) %>%
+    dplyr::summarise(events = sum(.data$event),
+                     censored = length(.data$event)-sum(.data$event))
   
-  totalCensored <- lapply(unique(object$censoredTime), function(i) sum(result %>% dplyr::filter(censoredTime <= i) %>% dplyr::select(censored)))
+  totalCensored <- lapply(unique(object$censoredTime), function(i) sum(result %>% dplyr::filter(.data$censoredTime <= i) %>% dplyr::select(.data$censored)))
 
   totalCensored <- data.frame(censoredTime = unique(object$censoredTime),
                               totalCensored = unlist(totalCensored))
   
-  totalLost <- lapply(unique(object$censoredTime), function(i) sum(result %>% dplyr::filter(censoredTime <= i) %>% dplyr::mutate(lost = censored + events) %>% dplyr::select(lost)))
+  totalLost <- lapply(unique(object$censoredTime), function(i) sum(result %>% dplyr::filter(.data$censoredTime <= i) %>% dplyr::mutate(lost = .data$censored + .data$events) %>% dplyr::select(.data$lost)))
   totalLost <- data.frame(censoredTime = unique(object$censoredTime),
                           nAtRisk = nrow(plpData$cohorts) - unlist(totalLost))
   
@@ -360,7 +360,7 @@ getDistribution <- function(cohort,
   outcomesIds <- unique(outcomes$outcomeId)
   
   if(file.exists(file.path(outputFolder, 'distribution.csv'))){
-    result <- read.csv(file.path(outputFolder, 'distribution.csv'))
+    result <- utils::read.csv(file.path(outputFolder, 'distribution.csv'))
   } else{
     result <- c()
   }
@@ -369,7 +369,7 @@ getDistribution <- function(cohort,
     oi <- outcomesIds[i]
     ind <- outcomes$outcomeId==oi & outcomes$daysToEvent >= 0
     if(sum(ind)>0){
-      afterC <- aggregate(x = outcomes$daysToEvent[ind], 
+      afterC <- stats::aggregate(x = outcomes$daysToEvent[ind], 
                           by = list(outcomes$rowId[ind]),
                           FUN = min)
       colnames(afterC) <- c('rowId','daysToOutcomeAfterMin')
@@ -380,7 +380,7 @@ getDistribution <- function(cohort,
     
     ind <- outcomes$outcomeId==oi & outcomes$daysToEvent < 0
     if(sum(ind)>0){
-      beforeC <- aggregate(x = abs(outcomes$daysToEvent[ind]), 
+      beforeC <- stats::aggregate(x = abs(outcomes$daysToEvent[ind]), 
                            by = list(outcomes$rowId[ind]),
                            FUN = min)
       colnames(beforeC) <- c('rowId','daysToOutcomeBeforeMin')
@@ -402,7 +402,7 @@ getDistribution <- function(cohort,
   }
   
   if(!is.null(outputFolder)){
-    write.csv(result, file.path(outputFolder, 'distribution.csv'), row.names = F)
+    utils::write.csv(result, file.path(outputFolder, 'distribution.csv'), row.names = F)
   }
   
   return(result)
@@ -424,10 +424,10 @@ getQuantiles <- function(distribution, year= 'all'){
   } 
   quants <- data.frame(
     year = year,
-    daysFromObsStart = quantile(distribution$daysFromObsStart, seq(0,1,0.01)),
-    daysToObsEnd = quantile(distribution$daysToObsEnd, seq(0,1,0.01)),
-    daysToOutcomeAfterMin = quantile(distribution$daysToOutcomeAfterMin[!is.na(distribution$daysToOutcomeAfterMin)], seq(0,1,0.01)),
-    daysToOutcomeBeforeMin = quantile(distribution$daysToOutcomeBeforeMin[!is.na(distribution$daysToOutcomeBeforeMin)], seq(0,1,0.01))
+    daysFromObsStart = stats::quantile(distribution$daysFromObsStart, seq(0,1,0.01)),
+    daysToObsEnd = stats::quantile(distribution$daysToObsEnd, seq(0,1,0.01)),
+    daysToOutcomeAfterMin = stats::quantile(distribution$daysToOutcomeAfterMin[!is.na(distribution$daysToOutcomeAfterMin)], seq(0,1,0.01)),
+    daysToOutcomeBeforeMin = stats::quantile(distribution$daysToOutcomeBeforeMin[!is.na(distribution$daysToOutcomeBeforeMin)], seq(0,1,0.01))
   )
   heading <- data.frame(
     year = year,
@@ -482,33 +482,33 @@ getProportions <- function(population,
                 details$endAnchor, ' + ', details$riskWindowEnd, ' days')
   
   
-  result <- population %>% dplyr::mutate(ageGroup = paste0(floor(ageYear/5)*5 ,' - ', (floor(ageYear/5)+1)*5-1 ),
-                               year = substring(cohortStartDate,1,4)) %>%
-    dplyr::group_by(year, ageGroup, gender) %>%
-    dplyr::summarize(N = length(rowId), 
-                     O = sum(outcomeCount>0)
+  result <- population %>% dplyr::mutate(ageGroup = paste0(floor(.data$ageYear/5)*5 ,' - ', (floor(.data$ageYear/5)+1)*5-1 ),
+                               year = substring(.data$cohortStartDate,1,4)) %>%
+    dplyr::group_by(.data$year, .data$ageGroup, .data$gender) %>%
+    dplyr::summarize(N = length(.data$rowId), 
+                     O = sum(.data$outcomeCount>0)
                      ) %>% 
-    dplyr::select(year, ageGroup, gender, N, O) 
+    dplyr::select(.data$year, .data$ageGroup, .data$gender, .data$N, .data$O) 
   
   # add all years:
-  allYears <- result %>% dplyr::group_by(ageGroup, gender) %>%
-    dplyr::summarize(N = sum(N), 
-                     O = sum(O),
+  allYears <- result %>% dplyr::group_by(.data$ageGroup, .data$gender) %>%
+    dplyr::summarize(N = sum(.data$N), 
+                     O = sum(.data$O),
                      year = 'all'
-    ) %>% dplyr::select(year, ageGroup, gender, N, O) 
+    ) %>% dplyr::select(.data$year, .data$ageGroup, .data$gender, .data$N, .data$O) 
   # add all gender:
-  allGender <- result %>% dplyr::group_by(year, ageGroup) %>%
-    dplyr::summarize(N = sum(N), 
-                     O = sum(O),
+  allGender <- result %>% dplyr::group_by(.data$year, .data$ageGroup) %>%
+    dplyr::summarize(N = sum(.data$N), 
+                     O = sum(.data$O),
                      gender = -1
-    ) %>% dplyr::select(year, ageGroup, gender, N, O) 
+    ) %>% dplyr::select(.data$year, .data$ageGroup, .data$gender, .data$N, .data$O) 
   
   # add all gender:
-  allAge <- result %>% dplyr::group_by(year, gender) %>%
-    dplyr::summarize(N = sum(N), 
-                     O = sum(O),
+  allAge <- result %>% dplyr::group_by(.data$year, .data$gender) %>%
+    dplyr::summarize(N = sum(.data$N), 
+                     O = sum(.data$O),
                      ageGroup = 'all'
-    ) %>% dplyr::select(year, ageGroup, gender, N, O) 
+    ) %>% dplyr::select(.data$year, .data$ageGroup, .data$gender, .data$N, .data$O) 
   
   result <- rbind(result, allYears, allGender, allAge)
   

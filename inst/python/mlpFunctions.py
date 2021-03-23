@@ -72,7 +72,7 @@ def train_mlp(population, plpData, alpha, size, maxIter, tol, learningRateInit, 
     if not os.path.exists(modelOutput):
       os.makedirs(modelOutput)
     print("Model saved to: %s" %(modelOutput))
-    joblib.dump(mlp, os.path.join(modelOutput,"model.pkl"))
+    joblib.dump(mlp, os.path.join(modelOutput,"model.pkl"), compress = True)
     pred = mlp.predict_proba(X[trainInds,:])[:,1]
     pred.shape = (population[trainInds,:].shape[0], 1)
     prediction = np.append(population[trainInds,:],pred, axis=1)

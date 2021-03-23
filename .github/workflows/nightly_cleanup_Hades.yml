@@ -1,0 +1,18 @@
+name: 'nightly artifacts cleanup'
+on:
+  schedule:
+    - cron: '0 1 * * *' # every night at 1 am UTC
+
+jobs:
+  remove-old-artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Remove old artifacts
+      uses: c-hive/gha-remove-artifacts@v1
+      with:
+        age: '7 days'
+        # Optional inputs
+        # skip-tags: true
+        skip-recent: 1

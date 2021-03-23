@@ -7,6 +7,8 @@
 setLassoLogisticRegression(
   variance = 0.01,
   seed = NULL,
+  includeCovariateIds = c(),
+  noShrinkage = c(0),
   threads = -1,
   useCrossValidation = TRUE
 )
@@ -15,6 +17,10 @@ setLassoLogisticRegression(
 \item{variance}{a single value used as the starting value for the automatic lambda search}
 
 \item{seed}{An option to add a seed when training the model}
+
+\item{includeCovariateIds}{a set of covariate IDS to limit the analysis to}
+
+\item{noShrinkage}{a set of covariates whcih are to be forced to be included in the final model. default is the intercept}
 
 \item{threads}{An option to set number of threads when training model}
 

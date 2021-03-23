@@ -23,7 +23,7 @@
 #' a risk window, and determining which outcomes fall inside the risk window.
 #'
 #' @param plpData      An object of type \code{plpData} as generated using
-#'                              \code{getDbplpData}.
+#'                              \code{getplpData}.
 #' @param population            If specified, this population will be used as the starting point instead of the
 #'                              cohorts in the \code{plpData} object.
 #' @param binary                Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)                              
@@ -50,6 +50,7 @@
 #'                               \item{ERROR}{Show error messages}
 #'                               \item{FATAL}{Be silent except for fatal errors} 
 #'                               }
+#' @param restrictTarToCohortEnd If using a survival model and you want the time-at-risk to end at the cohort end date set this to T
 #' @param addExposureDaysToStart DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.
 #' @param addExposureDaysToEnd   DEPRECATED: Add the length of exposure the risk window? Use \code{endAnchor} instead.
 #' @param ...                   Other inputs
@@ -82,6 +83,7 @@ createStudyPopulation <- function(plpData,
                                   riskWindowEnd = 365,
                                   endAnchor = "cohort start",
                                   verbosity = "INFO",
+                                  restrictTarToCohortEnd = F,
                                   addExposureDaysToStart,
                                   addExposureDaysToEnd,
                                   ...) {
@@ -151,6 +153,8 @@ createStudyPopulation <- function(plpData,
   checkBoolean(requireTimeAtRisk)
   ParallelLogger::logDebug(paste0('minTimeAtRisk: ', minTimeAtRisk))
   checkHigherEqual(minTimeAtRisk,0)
+  ParallelLogger::logDebug(paste0('restrictTarToCohortEnd: ', restrictTarToCohortEnd))
+  checkBoolean(restrictTarToCohortEnd)
   ParallelLogger::logDebug(paste0('riskWindowStart: ', riskWindowStart))
   checkHigherEqual(riskWindowStart,0)
   ParallelLogger::logDebug(paste0('startAnchor: ', startAnchor))
@@ -215,23 +219,37 @@ createStudyPopulation <- function(plpData,
   population <- population %>% 
     dplyr::mutate(startAnchor = startAnchor, startDay = riskWindowStart,
                   endAnchor = endAnchor, endDay = riskWindowEnd) %>%
-    dplyr::mutate(tarStart = ifelse(startAnchor == 'cohort start', startDay, startDay+ daysToCohortEnd),
-                  tarEnd = ifelse(endAnchor == 'cohort start', endDay, endDay+ daysToCohortEnd))  %>%
-    dplyr::mutate(tarEnd = ifelse(tarEnd>daysToObsEnd, daysToObsEnd,tarEnd ))
+    dplyr::mutate(tarStart = ifelse(.data$startAnchor == 'cohort start', .data$startDay, .data$startDay+ .data$daysToCohortEnd),
+                  tarEnd = ifelse(.data$endAnchor == 'cohort start', .data$endDay, .data$endDay+ .data$daysToCohortEnd))  %>%
+    dplyr::mutate(tarEnd = ifelse(.data$tarEnd>.data$daysToObsEnd, .data$daysToObsEnd,.data$tarEnd ))
     
+  
+  # censor at cohortEndDate:
+  if(max(population$daysToCohortEnd)>0 & restrictTarToCohortEnd){
+    ParallelLogger::logInfo('Restricting tarEnd to end of target cohort')
+    population <- population %>% dplyr::mutate(tarEnd = ifelse(.data$tarEnd>.data$daysToCohortEnd, .data$daysToCohortEnd,.data$tarEnd ))
+  }
     
   
   # get the outcomes during TAR
   outcomeTAR <- population %>% 
     dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
-    dplyr::filter(outcomeId == get('oId'))  %>% 
-    dplyr::select(rowId, daysToEvent, tarStart, tarEnd) %>% 
-    dplyr::filter(daysToEvent >= tarStart & daysToEvent <= tarEnd)  %>%
-    dplyr::group_by(rowId) %>%
-    dplyr::summarise(first = min(daysToEvent),
-                     ocount = length(unique(daysToEvent)))  %>% 
-    dplyr::select(rowId, first, ocount)
+    dplyr::filter(.data$outcomeId == get('oId'))  %>% 
+    dplyr::select(.data$rowId, .data$daysToEvent, .data$tarStart, .data$tarEnd) %>% 
+    dplyr::filter(.data$daysToEvent >= .data$tarStart & .data$daysToEvent <= .data$tarEnd)  
   
+  # prevent warnings when no results left
+  if(nrow(as.data.frame(outcomeTAR))>0){
+  outcomeTAR <- outcomeTAR %>%
+    dplyr::group_by(.data$rowId) %>%
+    dplyr::summarise(first = min(.data$daysToEvent),
+                     ocount = length(unique(.data$daysToEvent)))  %>% 
+    dplyr::select(.data$rowId, .data$first, .data$ocount)
+  } else {
+    outcomeTAR <- outcomeTAR %>% 
+      dplyr::mutate(first = 0, ocount = 0) %>% 
+      dplyr::select(.data$rowId, .data$first, .data$ocount) 
+  }
   
   population <- population %>%
     dplyr::left_join(outcomeTAR, by = 'rowId')
@@ -241,26 +259,25 @@ createStudyPopulation <- function(plpData,
   attrRow <- population %>% dplyr::group_by() %>%
     dplyr::summarise(outcomeId = get('oId'),
                      description = 'Initial plpData cohort or population',
-                     targetCount = length(rowId),
-                     uniquePeople = length(unique(subjectId)),
-                     outcomes = sum(!is.na(first)))  
+                     targetCount = length(.data$rowId),
+                     uniquePeople = length(unique(.data$subjectId)),
+                     outcomes = sum(!is.na(.data$first)))  
   metaData$attrition <- rbind(metaData$attrition, attrRow)
-
   
   if (firstExposureOnly) {
     ParallelLogger::logTrace(paste("Restricting to first exposure"))
     
     population <- population %>%
-      dplyr::arrange(subjectId,cohortStartDate) %>%
-      dplyr::group_by(subjectId) %>%
-      dplyr::filter(dplyr::row_number(subjectId)==1)
+      dplyr::arrange(.data$subjectId,.data$cohortStartDate) %>%
+      dplyr::group_by(.data$subjectId) %>%
+      dplyr::filter(dplyr::row_number(.data$subjectId)==1)
     
     attrRow <- population %>% dplyr::group_by() %>%
       dplyr::summarise(outcomeId = get('oId'),
                        description = 'First Exposure',
-                       targetCount = length(rowId),
-                       uniquePeople = length(unique(subjectId)),
-                       outcomes = sum(!is.na(first)))  
+                       targetCount = length(.data$rowId),
+                       uniquePeople = length(unique(.data$subjectId)),
+                       outcomes = sum(!is.na(.data$first)))  
     metaData$attrition <- rbind(metaData$attrition, attrRow)
   }
 
@@ -270,14 +287,14 @@ createStudyPopulation <- function(plpData,
     msg <- paste("At least", washoutPeriod, "days of observation prior")
     population <- population %>%
       dplyr::mutate(washoutPeriod = washoutPeriod) %>%
-      dplyr::filter(daysFromObsStart >= washoutPeriod)
+      dplyr::filter(.data$daysFromObsStart >= .data$washoutPeriod)
     
     attrRow <- population %>% dplyr::group_by() %>%
       dplyr::summarise(outcomeId = get('oId'),
                        description = msg,
-                       targetCount = length(rowId),
-                       uniquePeople = length(unique(subjectId)),
-                       outcomes = sum(!is.na(first)))  
+                       targetCount = length(.data$rowId),
+                       uniquePeople = length(unique(.data$subjectId)),
+                       outcomes = sum(!is.na(.data$first)))  
     metaData$attrition <- rbind(metaData$attrition, attrRow)
   }
   
@@ -288,21 +305,25 @@ createStudyPopulation <- function(plpData,
     outcomeBefore <- population %>% 
       dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
       dplyr::filter(outcomeId == get('oId'))  %>% 
-      dplyr::select(rowId, daysToEvent, tarStart) %>% 
-      dplyr::filter(daysToEvent < tarStart)  %>%
-      dplyr::group_by(rowId) %>%
-      dplyr::summarise(first = min(daysToEvent))  %>% 
-      dplyr::select(rowId)
+      dplyr::select(.data$rowId, .data$daysToEvent, .data$tarStart) %>% 
+      dplyr::filter(.data$daysToEvent < .data$tarStart)  
+    
+    if(nrow(as.data.frame(outcomeBefore))>0){
+      outcomeBefore %>%
+        dplyr::group_by(.data$rowId) %>%
+        dplyr::summarise(first = min(.data$daysToEvent))  %>% 
+        dplyr::select(.data$rowId)
+    }
       
     population <- population %>%
-      dplyr::filter(!rowId %in% outcomeBefore$rowId )
+      dplyr::filter(!.data$rowId %in% outcomeBefore$rowId )
       
       attrRow <- population %>% dplyr::group_by() %>%
         dplyr::summarise(outcomeId = get('oId'),
                          description = "No prior outcome",
-                         targetCount = length(rowId),
-                         uniquePeople = length(unique(subjectId)),
-                         outcomes = sum(!is.na(first)))  
+                         targetCount = length(.data$rowId),
+                         uniquePeople = length(unique(.data$subjectId)),
+                         outcomes = sum(!is.na(.data$first)))  
       metaData$attrition <- rbind(metaData$attrition, attrRow)
   }
   
@@ -313,14 +334,14 @@ createStudyPopulation <- function(plpData,
       
       
       population <- population %>%
-        dplyr::filter(!is.na(first) | tarEnd >= tarStart + minTimeAtRisk )
+        dplyr::filter(!is.na(.data$first) | .data$tarEnd >= .data$tarStart + minTimeAtRisk )
       
       attrRow <- population %>% dplyr::group_by() %>%
         dplyr::summarise(outcomeId = get('oId'),
                          description = "Removing non-outcome subjects with insufficient time at risk (if any)",
-                         targetCount = length(rowId),
-                         uniquePeople = length(unique(subjectId)),
-                         outcomes = sum(!is.na(first)))  
+                         targetCount = length(.data$rowId),
+                         uniquePeople = length(unique(.data$subjectId)),
+                         outcomes = sum(!is.na(.data$first)))  
       metaData$attrition <- rbind(metaData$attrition, attrRow)
 
     }
@@ -328,14 +349,14 @@ createStudyPopulation <- function(plpData,
       ParallelLogger::logTrace("Removing subjects with insufficient time at risk (if any)")
       
       population <- population %>%
-        dplyr::filter( tarEnd >= tarStart + minTimeAtRisk )
+        dplyr::filter( .data$tarEnd >= .data$tarStart + minTimeAtRisk )
       
       attrRow <- population %>% dplyr::group_by() %>%
         dplyr::summarise(outcomeId = get('oId'),
                          description = "Removing subjects with insufficient time at risk (if any)",
-                         targetCount = length(rowId),
-                         uniquePeople = length(unique(subjectId)),
-                         outcomes = sum(!is.na(first)))  
+                         targetCount = length(.data$rowId),
+                         uniquePeople = length(unique(.data$subjectId)),
+                         outcomes = sum(!is.na(.data$first)))  
       metaData$attrition <- rbind(metaData$attrition, attrRow)
       
     }
@@ -344,14 +365,14 @@ createStudyPopulation <- function(plpData,
     ParallelLogger::logTrace("Removing subjects with no time at risk (if any)")
     
     population <- population %>%
-      dplyr::filter( tarEnd >= tarStart )
+      dplyr::filter( .data$tarEnd >= .data$tarStart )
     
     attrRow <- population %>% dplyr::group_by() %>%
       dplyr::summarise(outcomeId = get('oId'),
                        description = "Removing subjects with no time at risk (if any))",
-                       targetCount = length(rowId),
-                       uniquePeople = length(unique(subjectId)),
-                       outcomes = sum(!is.na(first)))  
+                       targetCount = length(.data$rowId),
+                       uniquePeople = length(unique(.data$subjectId)),
+                       outcomes = sum(!is.na(.data$first)))  
     metaData$attrition <- rbind(metaData$attrition, attrRow)
   }
   
@@ -360,20 +381,20 @@ createStudyPopulation <- function(plpData,
   if(binary){
     ParallelLogger::logInfo("Outcome is 0 or 1")
   population <- population %>%
-    dplyr::mutate(outcomeCount = ifelse(is.na(ocount),0,1))
+    dplyr::mutate(outcomeCount = ifelse(is.na(.data$ocount),0,1))
   } else{
     ParallelLogger::logTrace("Outcome is count")
     population <- population %>%
-      dplyr::mutate(outcomeCount = ifelse(is.na(ocount),0,ocount))
+      dplyr::mutate(outcomeCount = ifelse(is.na(.data$ocount),0,.data$ocount))
   }
   
   population <- population %>%
-    dplyr::mutate(timeAtRisk = tarEnd - tarStart + 1 ,
-                  survivalTime = ifelse(outcomeCount == 0, tarEnd -tarStart + 1, first - tarStart + 1),
-                  daysToEvent = first) %>%
-    dplyr::select(rowId, subjectId, cohortId, cohortStartDate, daysFromObsStart,
-                  daysToCohortEnd, daysToObsEnd, ageYear, gender,
-                  outcomeCount, timeAtRisk, daysToEvent, survivalTime)
+    dplyr::mutate(timeAtRisk = .data$tarEnd - .data$tarStart + 1 ,
+                  survivalTime = ifelse(.data$outcomeCount == 0, .data$tarEnd -.data$tarStart + 1, .data$first - .data$tarStart + 1),
+                  daysToEvent = .data$first) %>%
+    dplyr::select(.data$rowId, .data$subjectId, .data$cohortId, .data$cohortStartDate, .data$daysFromObsStart,
+                  .data$daysToCohortEnd, .data$daysToObsEnd, .data$ageYear, .data$gender,
+                  .data$outcomeCount, .data$timeAtRisk, .data$daysToEvent, .data$survivalTime)
 
     # check outcome still there
     if(sum(!is.na(population$daysToEvent))==0){
@@ -385,28 +406,6 @@ createStudyPopulation <- function(plpData,
   
   attr(population, "metaData") <- metaData
   return(population)
-}
-
-
-#' Get the attrition table for a population
-#'
-#' @param object   Either an object of type \code{plpData}, a population object generated by functions
-#'                     like \code{createStudyPopulation}, or an object of type \code{outcomeModel}.
-#'
-#' @return
-#' A data frame specifying the number of people and exposures in the population after specific steps of filtering.
-#'
-#'
-#' @export
-getAttritionTable <- function(object) {
-  if (is(object, "plpData")) {
-    object = object$cohorts
-  }
-  if (methods::is(object, "outcomeModel")){
-    return(object$attrition)
-  } else {
-    return(attr(object, "metaData")$attrition)
-  }
 }
 
 
@@ -424,7 +423,7 @@ getCounts2 <- function(cohort,outcomes, description = "") {
   persons <- length(unique(cohort$subjectId))
   targets <- nrow(cohort)
   
-  outcomes <- aggregate(cbind(count = outcomeId) ~ outcomeId, 
+  outcomes <- stats::aggregate(cbind(count = outcomeId) ~ outcomeId, 
                         data = outcomes, 
                         FUN = function(x){NROW(x)})
   

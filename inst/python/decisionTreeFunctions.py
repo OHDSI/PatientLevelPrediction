@@ -88,7 +88,7 @@ def train_decision_tree(population, train, plpData, plot, max_depth, min_samples
       os.makedirs(modelOutput)
     if quiet==False:
       print("Model saved to: %s" %(modelOutput)	)
-    joblib.dump(dt, os.path.join(modelOutput,"model.pkl"))
+    joblib.dump(dt, os.path.join(modelOutput,"model.pkl"), compress = True)
     test_pred = dt.predict_proba(X[trainInds,:])[:,1]
     test_pred.shape = (population[trainInds,:].shape[0], 1)
     prediction = np.append(population[trainInds,:],test_pred, axis=1)

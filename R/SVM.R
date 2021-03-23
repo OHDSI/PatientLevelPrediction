@@ -17,7 +17,7 @@
 # limitations under the License.
 
 #' Create setting for SVM with python
-#' @param kernal        Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.
+#' @param kernel        Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.
 #' @param C             penalty parameter C of the error term.        
 #' @param degree        degree of kernel function is significant only in poly, rbf, sigmoid
 #' @param gamma         kernel coefficient for rbf and poly, by default 1/n_features will be taken.
@@ -90,6 +90,7 @@ fitSVM <- function(population,
                         cohortId,
                         ...) {
   
+
   # check covariate data
   if (!FeatureExtraction::isCovariateData(plpData$covariateData))
     stop("Needs correct covariateData")
@@ -197,6 +198,8 @@ fitSVM <- function(population,
 trainSVM <- function(population, plpData,
                      kernel='rbf', C= 1, degree= 3, gamma=3e-05, shrinking = T, coef0=0.0,classWeight = T, varImp = T,
                      seed = NULL, train = TRUE, modelLocation=NULL, quiet=FALSE) {
+  # remove global binding issue
+  train_svm <- function(){return(NULL)}
   
   e <- environment()
   # then run standard python code

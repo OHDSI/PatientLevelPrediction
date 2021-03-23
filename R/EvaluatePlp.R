@@ -23,14 +23,14 @@
 #' @details
 #' The function calculates various metrics to measure the performance of the model
 #' @param prediction                         The patient level prediction model's prediction
-#' @param plpData                            The patient level prediction data
+#' @param plpData                            Redundant - no longer used
 #' @return
 #' A list containing the performance values
 #'
 
 #' @export
-evaluatePlp <- function(prediction, plpData){
-
+evaluatePlp <- function(prediction, plpData = NULL){
+  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -42,109 +42,267 @@ evaluatePlp <- function(prediction, plpData){
   # checking inputs
   #========================================
   type <- attr(prediction, "metaData")$predictionType
-  if (type != "binary") {
-    stop('Currently only support binary classification models')
+  if (!type %in% c("binary","survival")) {
+    stop('Currently only support binary or survival classification models')
   }
-
+  
   if(is.null(prediction$outcomeCount)){
     stop('No outcomeCount column present')
   }
   if(length(unique(prediction$value))==1){
     stop('Cannot evaluate as predictions all the same value')
   }
-  #============================
-
-  # auc
-  ParallelLogger::logTrace('Calculating AUC')
-  if(sum(prediction$outcomeCount>0) < 1000){
-    auc <- computeAuc(prediction, confidenceInterval = T)
-    ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
-    ParallelLogger::logInfo(sprintf('%-20s%.2f', '95% lower AUC: ', auc[2]*100))
-    ParallelLogger::logInfo(sprintf('%-20s%.2f', '95% upper AUC: ', auc[3]*100))
-  } else{
-    # speed issues with big data so using AUC package
-    auc <- data.frame(auc = AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount))),
-                      auc_lb95ci = NA,
-                      auc_ub95ci = NA)
-    ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
+  
+  if(type == "binary"){
+    
+    # auc
+    ParallelLogger::logTrace('Calculating AUC')
+    ##if(sum(prediction$outcomeCount>0) < 1000){
+      auc <- computeAuc(prediction, confidenceInterval = T)
+      ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
+      ParallelLogger::logInfo(sprintf('%-20s%.2f', '95% lower AUC: ', auc[2]*100))
+      ParallelLogger::logInfo(sprintf('%-20s%.2f', '95% upper AUC: ', auc[3]*100))
+    ##} else{
+    ##  # speed issues with big data so using AUC package
+    ##  auc <- data.frame(auc = AUC::auc(AUC::roc(prediction$value, factor(prediction$outcomeCount))),
+    ##                    auc_lb95ci = NA,
+    ##                    auc_ub95ci = NA)
+    ##  ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUC: ', auc[1]*100))
+    ##}
+    
+    # auprc
+    ParallelLogger::logTrace('Calculating AUPRC')
+    positive <- prediction$value[prediction$outcomeCount == 1]
+    negative <- prediction$value[prediction$outcomeCount == 0]
+    pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
+    auprc <- pr$auc.integral
+    ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
+    
+    # brier scores-returnss; brier, brierScaled
+    ParallelLogger::logTrace('Calculating Brier Score')
+    brier <- brierScore(prediction)
+    ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
+    
+    # using rms::val.prob
+    indValProb <- prediction$value>0 & prediction$value < 1
+    valProb <- tryCatch(rms::val.prob(prediction$value[indValProb], prediction$outcomeCount[indValProb]), 
+                        error = function(e){ParallelLogger::logInfo(e); return(list(Eavg = 0, 
+                                                                                    E90 = 0, 
+                                                                                    Emax = 0))})
+    
+    
+    # 2) thresholdSummary
+    # need to update thresholdSummary this with all the requested values
+    ParallelLogger::logTrace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
+    thresholdSummary <- getThresholdSummary(prediction) # rename and edit this
+    
+    ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
+    
+    # 3) demographicSummary
+    ParallelLogger::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
+    demographicSummary <- tryCatch(getDemographicSummary(prediction = prediction),
+                                   error= function(cond){return(NULL)})
+    ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
+    
+    
+    # calibration linear fit- returns gradient, intercept
+    ParallelLogger::logTrace('Calculating Calibration-in-large')
+    calinlarge <- calibrationInLarge(prediction)
+    ParallelLogger::logInfo(paste0('Calibration in large- Mean predicted risk ', round(calinlarge$meanPredictionRisk, digits = 4), ' : observed risk ',round(calinlarge$observedRisk, digits = 4)))
+    
+    ParallelLogger::logTrace('Calculating Weak Calibration')
+    weakCal <- calibrationWeak(prediction)
+    ParallelLogger::logInfo(paste0('Weak calibration intercept: ', 
+                                   round(weakCal$intercept, digits = 4), 
+                                   ' - gradient:',round(weakCal$gradient, digits = 4)))
+    
+    ParallelLogger::logTrace('Calculating Hosmer-Lemeshow Calibration Line')
+    calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
+    ParallelLogger::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Hosmer-Lemeshow calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
+    # 4) calibrationSummary
+    ParallelLogger::logTrace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
+    calibrationSummary <- getCalibration(prediction,
+                                         numberOfStrata = 100,
+                                         truncateFraction = 0.01)
+    ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
+    
+    
+    # 5) predictionDistribution - done
+    ParallelLogger::logTrace(paste0('Calculating Quantiles Started @ ',Sys.time()))
+    predictionDistribution <- getPredictionDistribution(prediction)
+    ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
+    
+    # Extra: Average Precision
+    aveP.val <- averagePrecision(prediction)
+    ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Average Precision: ', aveP.val))
+    
+    # evaluationStatistics:
+    evaluationStatistics <- list(analysisId= attr(prediction, "metaData")$analysisId,
+                                 populationSize = nrow(prediction),
+                                 outcomeCount = sum(prediction$outcomeCount),
+                                 # need to add analysisId to metaData!
+                                 AUC= auc,
+                                 AUPRC = auprc,
+                                 BrierScore = brier$brier,	
+                                 BrierScaled= brier$brierScaled,	
+                                 CalibrationIntercept= weakCal$intercept,	
+                                 CalibrationSlope = weakCal$gradient,
+                                 CalibrationInLarge = calinlarge$meanPredictionRisk/calinlarge$observedRisk,
+                                 Emean = valProb['Eavg'],
+                                 E90 = valProb['E90'],
+                                 Emax = valProb['Emax'])
+    
+    result <- list(evaluationStatistics= evaluationStatistics,
+                   thresholdSummary= thresholdSummary,
+                   demographicSummary = demographicSummary,
+                   calibrationSummary = calibrationSummary,
+                   predictionDistribution = predictionDistribution
+    )
   }
-
-  # auprc
-  ParallelLogger::logTrace('Calculating AUPRC')
-  positive <- prediction$value[prediction$outcomeCount == 1]
-  negative <- prediction$value[prediction$outcomeCount == 0]
-  pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
-  auprc <- pr$auc.integral
-  ParallelLogger::logInfo(sprintf('%-20s%.2f', 'AUPRC: ', auprc*100))
   
-  # brier scores-returnss; brier, brierScaled
-  ParallelLogger::logTrace('Calculating Brier Score')
-  brier <- brierScore(prediction)
-  ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
-
-  # 2) thresholdSummary
-  # need to update thresholdSummary this with all the requested values
-  ParallelLogger::logTrace(paste0('Calulating Threshold summary Started @ ',Sys.time()))
-  thresholdSummary <-getThresholdSummary(prediction) # rename and edit this
-
-  ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
   
-  # 3) demographicSummary
-  ParallelLogger::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
-  demographicSummary <- tryCatch(getDemographicSummary(prediction, plpData),
-                                 error= function(cond){return(NULL)})
-  ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
+  if(type == "survival"){
+    
+    ensure_installed("survAUC")
+    
+    if(is.null(prediction$survivalTime)){
+      stop('No survival time column present')
+    }
 
+    #============================
+    
+    timepoint <- attr(prediction, 'metaData')$timepoint #max(prediction$survivalTime)
+    ParallelLogger::logInfo(paste0('Evaluating survival model at time: ', timepoint, ' days'))
+    
+    #t <- apply(cbind(prediction$daysToCohortEnd, prediction$survivalTime), 1, min)
+    t <- prediction$survivalTime
+    y <- ifelse(prediction$outcomeCount > 0, 1, 0)
 
-  # calibration linear fit- returns gradient, intercept
-  ParallelLogger::logTrace('Calculating Calibration-in-large')
-  calinlarge <- calibrationInLarge(prediction)
-  ParallelLogger::logInfo(paste0('Calibration in large- Mean predicted risk ', round(calinlarge$meanPredictionRisk, digits = 4), ' : observed risk ',round(calinlarge$observedRisk, digits = 4)))
+    S<- survival::Surv(t, y) 
+    p <- prediction$value
+    
+    
+    out <- tryCatch({summary(survival::survfit(survival::Surv(t, y) ~ 1), times = timepoint)},
+                    error = function(e){ParallelLogger::logError(e); return(NULL)})
+    survVal <- 1-out$surv
+    meanSurvivalTime <- mean(t)
+    
+    # add c-stat
+    ParallelLogger::logTrace('Calculating C-statistic')
   
-  ParallelLogger::logTrace('Calculating Weak Calibration')
-  weakCal <- calibrationWeak(prediction)
-  ParallelLogger::logInfo(paste0('Weak calibration intercept: ', 
-                                 round(weakCal$intercept, digits = 4), 
-                                 ' - gradient:',round(weakCal$gradient, digits = 4)))
+    conc <- tryCatch({survival::concordance(S~p, reverse=TRUE)},
+                     error = function(e){ParallelLogger::logError(e); return(NULL)})
+    cStatistic <- 0
+    cStatistic_l95CI <- 0
+    cStatistic_u95CI <- 0
+    
+    if(!is.null(conc)){
+      cStatistic <- round(conc$concordance,5)
+      c.se<-sqrt(conc$var)
+      cStatistic_l95CI <- round(conc$concordance+stats::qnorm(.025)*c.se,3)
+      cStatistic_u95CI <- round(conc$concordance+stats::qnorm(.975)*c.se,3)
+    }
+    ParallelLogger::logInfo(paste0('C-statistic: ',cStatistic, ' (',cStatistic_l95CI ,'-', cStatistic_u95CI ,')'))
+
+
+    # add e-stat
+    w<- tryCatch({rms::val.surv(est.surv=1-p,S=S,
+                                u=timepoint, 
+                                fun=function(pr)log(-log(pr)))},
+                 error = function(e){ParallelLogger::logError(e); return(NULL)})
+    
+    eStatistic <- -1
+    eStatistic90 <- -1
+    if(!is.null(w)){
+      eStatistic<-mean(abs(w$actual - w$p))
+      eStatistic90<-stats::quantile((abs(w$actual - w$p)),0.9)
+      
+    }
+    ParallelLogger::logInfo(paste0('E-statistic: ',eStatistic))
+    ParallelLogger::logInfo(paste0('E-statistic 90%: ',eStatistic90))
+
+    
+    # add netbenefit
+    preddat <- data.frame(p = p/max(p), t=t, y=y)
+    results = tryCatch({stdca(data=preddat, outcome="y", ttoutcome="t", timepoint=timepoint,  
+                              predictors="p", xstart = 0.001, xstop = min(max(p),0.99), xby = 0.001, smooth=F)},
+                       error = function(e){ParallelLogger::logError(e); return(NULL)})
+    nbSummary <- NULL
+    if(!is.null(results)){
+      nbSummary <- results$net.benefit
+    }
+    
+    # add calibration
+    # add in calibration for  survival 
+    S <- survival::Surv(t, y) 
+    if(length(unique(prediction$value))<=100){
+      gval <- 10
+    } else{
+      gval <- 100
+    }
+    groups<-Hmisc::cut2(prediction$value,g=gval)
+    n.groups<-length(levels(groups))
+    pred<-tapply(prediction$value,groups,mean)
+    sizesN<-tapply(prediction$value,groups,length)
+    obs.q<-NULL
+    obs.lower.q<-NULL
+    obs.upper.q<-NULL
+    avPred <- NULL
+    for (q in 1:n.groups){
+      KM <- tryCatch({survival::survfit(S ~ 1,sub=groups==levels(groups)[q])},
+                    error = function(e){ParallelLogger::logError(e); return(list(surv = 0,
+                                                                                 upper = 0,
+                                                                                 lower = 0 ))})
+      obs.q<-c(obs.q,max(1-KM$surv))  # maximum OK because of prediction_horizon
+      obs.lower.q<-c(obs.lower.q,obs.lower<-max(1-KM$upper))
+      obs.upper.q<-c(obs.upper.q,obs.upper<-max(1-KM$lower))
+    }
+    
+    midpoints <- function(x, dp=6){
+      if(length(grep(',',x))>0){
+      lower <- as.double(gsub('\\[','',gsub('\\(','',strsplit(x, ',')[[1]][1])))
+      upper <- as.double(gsub('\\]','',gsub('\\)','',strsplit(x, ',')[[1]][2])))
+      return(round(lower+(upper-lower)/2, dp))
+      } else{
+        return(as.double(x))
+      }
+    }
+    
+    calibrationSummary <- data.frame(predictionThreshold = unlist(lapply(levels(groups), midpoints)),
+                                     averagePredictedProbability = pred,
+                                     observedIncidence = obs.q,
+                                     observedIncidenceLB = obs.lower.q,
+                                     observedIncidenceUB = obs.upper.q,
+                                     PersonCountAtRisk = sizesN) # added
+    
+    # add demographic calibration
+    demographicSummary <- NULL
+    demographicSummary <- getDemographicSummary(prediction = prediction, 
+                                                type = 'survival', timepoint = timepoint)
+
+    
+    evaluationStatistics <- list(analysisId= attr(prediction, "metaData")$analysisId,
+                                 timepoint = timepoint,
+                                   populationSize = nrow(prediction),
+                                   outcomeCount = sum(prediction$outcomeCount),
+                                   meanSurvivalTime = meanSurvivalTime,
+                                   survival = survVal,
+                                   cStatistic= cStatistic,
+                                 cStatistic_l95CI = cStatistic_l95CI,
+                                 cStatistic_u95CI = cStatistic_u95CI,
+                                   eStatistic = eStatistic,
+                                   eStatistic90 = eStatistic90)
+      
+    
+    result <- list(evaluationStatistics= evaluationStatistics,
+                   demographicSummary = demographicSummary,
+                   calibrationSummary = calibrationSummary,
+                   thresholdSummary = nbSummary
+    )
+    
+  }
   
-  ParallelLogger::logTrace('Calculating Hosmer-Lemeshow Calibration Line')
-  calLine10 <- calibrationLine(prediction, numberOfStrata = 10)
-  ParallelLogger::logInfo(sprintf('%-20s%.2f%-20s%.2f', 'Hosmer-Lemeshow calibration gradient: ', calLine10$lm[2], ' intercept: ',calLine10$lm[1]))
-  # 4) calibrationSummary
-  ParallelLogger::logTrace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
-  calibrationSummary <- getCalibration(prediction,
-                                       numberOfStrata = 100,
-                                       truncateFraction = 0.01)
-  ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
-
-  # 5) predictionDistribution - done
-  ParallelLogger::logTrace(paste0('Calculating Quantiles Started @ ',Sys.time()))
-  predictionDistribution <- getPredictionDistribution(prediction)
-  ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
-
-  # Extra: Average Precision
-  aveP.val <- averagePrecision(prediction)
-  ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Average Precision: ', aveP.val))
-
-  # evaluationStatistics:
-  evaluationStatistics <- list(analysisId= attr(prediction, "metaData")$analysisId,
-                               populationSize = nrow(prediction),
-                               outcomeCount = sum(prediction$outcomeCount),
-                               # need to add analysisId to metaData!
-                               AUC= auc,
-                               AUPRC = auprc,
-                               BrierScore = brier$brier,	
-                               BrierScaled= brier$brierScaled,	
-                               CalibrationIntercept= weakCal$intercept,	
-                               CalibrationSlope = weakCal$gradient,
-                               CalibrationInLarge = calinlarge$meanPredictionRisk/calinlarge$observedRisk)
-
-  result <- list(evaluationStatistics= evaluationStatistics,
-                 thresholdSummary= thresholdSummary,
-                 demographicSummary = demographicSummary,
-                 calibrationSummary = calibrationSummary,
-                 predictionDistribution = predictionDistribution
-  )
+  
   class(result) <- 'plpEvaluation'
   return(result)
 
@@ -416,7 +574,7 @@ getCalibration <- function(prediction,
   strataData <- merge(strataData,averagePredictedProbability)
 
   StDevPredictedProbability <- stats::aggregate(prediction$value, list(prediction$predictionThreshold),
-                                                sd)
+                                                stats::sd)
   colnames(StDevPredictedProbability) <- c('predictionThreshold', 'StDevPredictedProbability')
   strataData <- merge(strataData, StDevPredictedProbability)
 
@@ -455,17 +613,17 @@ getCalibration <- function(prediction,
 #'
 #' @export
 getThresholdSummary <- function(prediction){
-
+  
   # do input checks
   if(nrow(prediction)<1){
     warning('sparse roc not calculated due to empty dataset')
     return(NULL)
   }
-
+  
   n <- nrow(prediction)
   P <- sum(prediction$outcomeCount>0)
   N <- n - P
-
+  
   if(N==0){
     warning('Number of negatives is zero')
     return(NULL)
@@ -474,52 +632,43 @@ getThresholdSummary <- function(prediction){
     warning('Number of positives is zero')
     return(NULL)
   }
-
+  
   # add the preference score:
   proportion <- sum(prediction$outcomeCount)/nrow(prediction)
   # ISSUE WITH CAL # remove any predictions of 1
   prediction$value[prediction$value==1] <- 0.99999999
   x <- exp(log(prediction$value/(1 - prediction$value)) - log(proportion/(1 - proportion)))
   prediction$preferenceScore <- x/(x + 1)
-
-  # get 100 points of distribution:
-  # get the predictionThreshold and preferenceThreshold
-  # add top 100 risk as well (for high ppv)
-  predictionThreshold <- sort(c(prediction$value[order(-prediction$value)][1:100], 
-                              stats::quantile(prediction$value, probs=seq(0,0.99,0.01),na.rm=TRUE)))
-  preferenceThreshold <- sort(c(prediction$preferenceScore[order(-prediction$preferenceScore)][1:100],
-                              stats::quantile(prediction$preferenceScore, seq(0,0.99,0.01),na.rm=TRUE)))
   
-  # fix quantile bug when not enought unique values - this seems to get rid of issue
-  for (val in names(table(predictionThreshold))[table(predictionThreshold)>1])
-    predictionThreshold[predictionThreshold==val] <- as.double(val)
-
-  # get the outcomeCount ordered by predicted value
-  lab.order <- prediction$outcomeCount[order(-prediction$value)]
-  valueOrdered <- prediction$value[order(-prediction$value)]
-  # fix some rounding issue bug
-  valueOrdered <-round(valueOrdered, digits = 10)
-  predictionThreshold <- round(predictionThreshold, digits=10)
-  # get the indexes for the predictionThreshold
-  indexesOfInt <- sapply(predictionThreshold, function(x) min(which(valueOrdered<=x)))
-
-  #TODO: FIGURE THIS BUG OUT # remove infs caused by R bug?
-  if(sum(is.infinite(indexesOfInt))>0){
-    imputeInd <- sapply(which(is.infinite(indexesOfInt)), function(x) max(which(which(!is.infinite(indexesOfInt))<x)))
-    indexesOfInt[which(is.infinite(indexesOfInt))] <- indexesOfInt[imputeInd]
+  
+  # sort prediction
+  prediction <- prediction[order(-prediction$value),]
+  
+  # create indexes
+  if(length(prediction$preferenceScore)>100){
+    indexesOfInt <- c(1:100,seq(1, length(prediction$preferenceScore),floor(length(prediction$preferenceScore)/100 )),length(prediction$preferenceScore))
+  } else{
+    indexesOfInt <- 1:length(prediction$preferenceScore)
   }
-  ##indexesOfInt <- indexesOfInt[!is.infinite(indexesOfInt)]
-
+  pt <- unique(prediction$value[indexesOfInt])
+  #pt <- pt[!pt==min(prediction$value)] # remove min as nothing will be < the min
+  indexesOfInt <- unique(unlist(lapply(pt, function(pt) max(which(prediction$value>=pt))))) # made this >= to match net benefit 
+  
+  # get thresholds
+  predictionThreshold = prediction$value[indexesOfInt]
+  preferenceThreshold = prediction$preferenceScore[indexesOfInt]
+  
   # improve speed create vector with cum sum
+  lab.order <- ifelse(prediction$outcomeCount>0,1,0)
   temp.cumsum <- rep(0, length(lab.order))
   temp.cumsum[lab.order==0] <- 1:sum(lab.order==0)
   temp.cumsum[lab.order==1] <- which(lab.order==1, arr.ind=T)-1:sum(lab.order==1)
   TP <- sapply(indexesOfInt, function(x) x-temp.cumsum[x])
   FP <- sapply(indexesOfInt, function(x) temp.cumsum[x])
-
+  
   TN <- N-FP
   FN <- P-TP
-
+  
   positiveCount <- TP+FP
   negativeCount <- TN+FN
   trueCount <- TP+FN
@@ -528,7 +677,7 @@ getThresholdSummary <- function(prediction){
   trueNegativeCount <- TN
   falsePositiveCount <- FP
   falseNegativeCount <- FN
-
+  
   f1Score <- f1Score(TP,TN,FN,FP)
   accuracy <- accuracy(TP,TN,FN,FP)
   sensitivity <- sensitivity(TP,TN,FN,FP)
@@ -542,7 +691,7 @@ getThresholdSummary <- function(prediction){
   positiveLikelihoodRatio <- positiveLikelihoodRatio(TP,TN,FN,FP)
   negativeLikelihoodRatio <- negativeLikelihoodRatio(TP,TN,FN,FP)
   diagnosticOddsRatio <- diagnosticOddsRatio(TP,TN,FN,FP)
-
+  
   return(data.frame(predictionThreshold=predictionThreshold,
                     preferenceThreshold=preferenceThreshold,
                     positiveCount=positiveCount,
@@ -565,7 +714,7 @@ getThresholdSummary <- function(prediction){
                     negativeLikelihoodRatio=negativeLikelihoodRatio,
                     diagnosticOddsRatio=diagnosticOddsRatio
   ))
-
+  
 }
 
 
@@ -596,7 +745,7 @@ getPredictionDistribution <- function(prediction){
                                                   mean)
   colnames(averagePredictedProbability) <- c('class', 'averagePredictedProbability')
   StDevPredictedProbability <- stats::aggregate(prediction$value, list(prediction$outcomeCount),
-                                                sd)
+                                                stats::sd)
   colnames(StDevPredictedProbability) <- c('class', 'StDevPredictedProbability')
 
   predictionDistribution <- merge(predictionDistribution,averagePredictedProbability )
@@ -615,26 +764,74 @@ getPredictionDistribution <- function(prediction){
   return(predictionDistribution)
 }
 
-getDemographicSummary <- function(prediction, plpData){
-  
+getDemographicSummary <- function(prediction, type = 'binary', timepoint = NULL){
 
-  demographicData <- plpData$cohorts %>% dplyr::mutate(ageId = floor(ageYear/5),
-                                    ageGroup = paste0('Age group: ', floor(ageYear/5)*5, '-',floor(ageYear/5)*5+4),
-                                    genId = gender,
-                                    genGroup = ifelse(gender==8507, 'Male', 'Female')) %>%
-    dplyr::select(rowId,ageId,ageGroup,genId,genGroup ) %>%
-    dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount')], by='rowId') %>%
-    dplyr::group_by(ageGroup,genGroup)  %>%
-    dplyr::summarise(PersonCountAtRisk = length(outcomeCount), 
-                     PersonCountWithOutcome = sum(outcomeCount),
-                     averagePredictedProbability = mean(value, na.rm = T),
-                     StDevPredictedProbability = sd(value, na.rm = T),
-                     MinPredictedProbability =stats::quantile(value, probs = 0),
-                     P25PredictedProbability =stats::quantile(value, probs = 0.25),
-                     P50PredictedProbability =stats::quantile(value, probs = 0.50),
-                     P75PredictedProbability =stats::quantile(value, probs = 0.75),
-                     MaxPredictedProbability =stats::quantile(value, probs = 1),
-                     )
+  #demographicData <- plpData$cohorts %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
+  demographicData <- prediction[,c('rowId','ageYear','gender')] %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
+                                                       ageGroup = paste0('Age group: ', floor(.data$ageYear/5)*5, '-',floor(.data$ageYear/5)*5+4),
+                                                       genId = .data$gender,
+                                                       genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
+    dplyr::select(.data$rowId,.data$ageId,.data$ageGroup,.data$genId,.data$genGroup ) %>%
+    #dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime','daysToCohortEnd')], by='rowId')
+    dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
+  
+  if(type == 'binary'){
+    demographicData <- demographicData %>%
+      dplyr::group_by(.data$ageGroup,.data$genGroup)  %>%
+      dplyr::summarise(PersonCountAtRisk = length(.data$outcomeCount), 
+                       PersonCountWithOutcome = sum(.data$outcomeCount),
+                       averagePredictedProbability = mean(.data$value, na.rm = T),
+                       StDevPredictedProbability = stats::sd(.data$value, na.rm = T),
+                       MinPredictedProbability =stats::quantile(.data$value, probs = 0),
+                       P25PredictedProbability =stats::quantile(.data$value, probs = 0.25),
+                       P50PredictedProbability =stats::quantile(.data$value, probs = 0.50),
+                       P75PredictedProbability =stats::quantile(.data$value, probs = 0.75),
+                       MaxPredictedProbability =stats::quantile(.data$value, probs = 1),
+      )
+  } else{
+    
+    if(is.null(timepoint)){
+      timepoint <- max(demographicData$survivalTime)
+    }
+    demographicSum <- demographicData %>% dplyr::mutate(t = .data$survivalTime,#t = apply(cbind(daysToCohortEnd, survivalTime), 1, min),
+                                      y = ifelse(.data$outcomeCount > 0, 1, 0))
+    
+    gen <- unique(demographicData$genGroup)
+    ageGroup <- unique(demographicData$ageGroup)
+    
+    demographicData <- NULL
+    for(gen in gen){
+      for(age in ageGroup){
+        
+        tempDemo <- demographicSum %>% dplyr::filter(.data$genGroup == gen & .data$ageGroup == age)
+        
+        if(nrow(tempDemo)>0){
+          t1 <- tempDemo %>% dplyr::select(.data$t)
+          y1 <- tempDemo %>% dplyr::select(.data$y)
+          p1 <- tempDemo %>% dplyr::select(.data$value)
+          
+          out <- tryCatch({summary(survival::survfit(survival::Surv(t1$t, y1$y) ~ 1), times = timepoint)},
+                          error = function(e){ParallelLogger::logError(e); return(NULL)})
+          demoTemp <- c(genGroup = gen, ageGroup = age, 
+                        PersonCountAtRisk = length(p1$value),
+                        PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
+                        observedRisk = 1-out$surv, 
+                        averagePredictedProbability = mean(p1$value, na.rm = T),
+                        StDevPredictedProbability = stats::sd(p1$value, na.rm = T))
+          
+          demographicData <- rbind(demographicData, demoTemp)
+        }
+        
+      }
+      
+    }
+    demographicData <- as.data.frame(demographicData)
+    demographicData$averagePredictedProbability <- as.double(as.character(demographicData$averagePredictedProbability ))
+    demographicData$StDevPredictedProbability <- as.double(as.character(demographicData$StDevPredictedProbability ))
+    demographicData$PersonCountAtRisk <- as.double(as.character(demographicData$PersonCountAtRisk ))
+    demographicData$PersonCountWithOutcome <- as.double(as.character(demographicData$PersonCountWithOutcome ))
+    
+  }
   
   demographicData <- as.data.frame(demographicData)
   
@@ -962,3 +1159,252 @@ diagnosticOddsRatio <- function(TP,TN,FN,FP){
   if(class(TN)!='numeric') stop('Incorrect TN class')
   if(class(FN)!='numeric') stop('Incorrect FN class')
   ((TP/(TP+FN))/(FP/(FP+TN)))/((FN/(TP+FN))/(TN/(FP+TN)))}
+
+
+
+
+
+# taken from the dca package @ http://www.danieldsjoberg.com/dca/articles/survival-outcomes.html
+
+stdca <- function (data, outcome, ttoutcome, timepoint, predictors, xstart = 0.01, 
+                   xstop = 0.99, xby = 0.01, ymin = -0.05, probability = NULL, 
+                   harm = NULL, graph = TRUE, intervention = FALSE, interventionper = 100, 
+                   smooth = FALSE, loess.span = 0.1, cmprsk = FALSE) 
+{
+  data = data[stats::complete.cases(data[c(outcome, ttoutcome, 
+                                           predictors)]), c(outcome, ttoutcome, predictors)]
+  if ((length(data[!(data[outcome] == 0 | data[outcome] == 
+                     1), outcome]) > 0) & cmprsk == FALSE) {
+    stop("outcome must be coded as 0 and 1")
+  }
+  if (class(data) != "data.frame") {
+    stop("Input data must be class data.frame")
+  }
+  if (xstart < 0 | xstart > 1) {
+    stop("xstart must lie between 0 and 1")
+  }
+  if (xstop < 0 | xstop > 1) {
+    stop("xstop must lie between 0 and 1")
+  }
+  if (xby <= 0 | xby >= 1) {
+    stop("xby must lie between 0 and 1")
+  }
+  if (xstart >= xstop) {
+    stop("xstop must be larger than xstart")
+  }
+  pred.n = length(predictors)
+  if (length(probability) > 0 & pred.n != length(probability)) {
+    stop("Number of probabilities specified must be the same as the number of predictors being checked.")
+  }
+  if (length(harm) > 0 & pred.n != length(harm)) {
+    stop("Number of harms specified must be the same as the number of predictors being checked.")
+  }
+  if (length(harm) == 0) {
+    harm = rep(0, pred.n)
+  }
+  if (length(probability) == 0) {
+    probability = rep(TRUE, pred.n)
+  }
+  if (length(predictors[predictors == "all" | predictors == 
+                        "none"])) {
+    stop("Prediction names cannot be equal to all or none.")
+  }
+  for (m in 1:pred.n) {
+    if (probability[m] != TRUE & probability[m] != FALSE) {
+      stop("Each element of probability vector must be TRUE or FALSE")
+    }
+    if (probability[m] == TRUE & (max(data[predictors[m]]) > 
+                                  1 | min(data[predictors[m]]) < 0)) {
+      stop(paste(predictors[m], "must be between 0 and 1 OR sepcified as a non-probability in the probability option", 
+                 sep = " "))
+    }
+    if (probability[m] == FALSE) {
+      model = NULL
+      pred = NULL
+      model = survival::coxph(survival::Surv(data.matrix(data[ttoutcome]), 
+                                             data.matrix(data[outcome])) ~ data.matrix(data[predictors[m]]))
+      surv.data = data.frame(0)
+      pred = data.frame(1 - c(summary(survival::survfit(model, 
+                                                        newdata = surv.data), time = timepoint)$surv))
+      names(pred) = predictors[m]
+      data = cbind(data[names(data) != predictors[m]], 
+                   pred)
+      print(paste(predictors[m], "converted to a probability with Cox regression. Due to linearity and proportional hazards assumption, miscalibration may occur.", 
+                  sep = " "))
+    }
+  }
+  N = dim(data)[1]
+  if (cmprsk == FALSE) {
+    km.cuminc = survival::survfit(survival::Surv(data.matrix(data[ttoutcome]), #fixed missing survival::
+                                                 data.matrix(data[outcome])) ~ 1)
+    pd = 1 - summary(km.cuminc, times = timepoint)$surv
+  }
+  else {
+    #cr.cuminc = cmprsk::cuminc(data[[ttoutcome]], data[[outcome]])
+    #pd = cmprsk::timepoints(cr.cuminc, times = timepoint)$est[1]
+    stop('not supported')
+  }
+  nb = data.frame(seq(from = xstart, to = xstop, by = xby))
+  names(nb) = "threshold"
+  interv = nb
+  error = NULL
+  nb["all"] = pd - (1 - pd) * nb$threshold/(1 - nb$threshold)
+  nb["none"] = 0
+  for (m in 1:pred.n) {
+    nb[predictors[m]] = NA
+    for (t in 1:length(nb$threshold)) {
+      px = sum(data[predictors[m]] > nb$threshold[t])/N
+      if (px == 0) {
+        error = rbind(error, paste(predictors[m], ": No observations with risk greater than ", 
+                                   nb$threshold[t] * 100, "%", sep = ""))
+        break
+      }
+      else {
+        if (cmprsk == FALSE) {
+          km.cuminc = survival::survfit(survival::Surv(data.matrix(data[data[predictors[m]] > 
+                                                                          nb$threshold[t], ttoutcome]), data.matrix(data[data[predictors[m]] > 
+                                                                                                                           nb$threshold[t], outcome])) ~ 1)
+          pdgivenx = (1 - summary(km.cuminc, times = timepoint)$surv)
+          if (length(pdgivenx) == 0) {
+            error = rbind(error, paste(predictors[m], 
+                                       ": No observations with risk greater than ", 
+                                       nb$threshold[t] * 100, "% that have followup through the timepoint selected", 
+                                       sep = ""))
+            break
+          }
+        }
+        else {
+          #cr.cuminc = cmprsk::cuminc(data[[ttoutcome]][data[[predictors[m]]] > 
+          #                                               nb$threshold[t]], data[[outcome]][data[[predictors[m]]] > 
+          #                                                                                   nb$threshold[t]])
+          #pdgivenx = cmprsk::timepoints(cr.cuminc, times = timepoint)$est[1]
+          #if (is.na(pdgivenx)) {
+          #  error = rbind(error, paste(predictors[m], 
+          #                             ": No observations with risk greater than ", 
+          #                             nb$threshold[t] * 100, "% that have followup through the timepoint selected", 
+          #                             sep = ""))
+          #  break
+          stop('not supported')
+        }
+      }
+      nb[t, predictors[m]] = pdgivenx * px - (1 - pdgivenx) * 
+        px * nb$threshold[t]/(1 - nb$threshold[t]) - 
+        harm[m]
+    }
+  interv[predictors[m]] = (nb[predictors[m]] - nb["all"]) * 
+    interventionper/(interv$threshold/(1 - interv$threshold))
+}
+if (length(error) > 0) {
+  print(paste(error, ", and therefore net benefit not calculable in this range.", 
+              sep = ""))
+}
+for (m in 1:pred.n) {
+  if (smooth == TRUE) {
+    lws = stats::loess(data.matrix(nb[!is.na(nb[[predictors[m]]]), 
+                                      predictors[m]]) ~ data.matrix(nb[!is.na(nb[[predictors[m]]]), 
+                                                                       "threshold"]), span = loess.span)
+    nb[!is.na(nb[[predictors[m]]]), paste(predictors[m], 
+                                          "_sm", sep = "")] = lws$fitted
+    lws = stats::loess(data.matrix(interv[!is.na(nb[[predictors[m]]]), 
+                                          predictors[m]]) ~ data.matrix(interv[!is.na(nb[[predictors[m]]]), 
+                                                                               "threshold"]), span = loess.span)
+    interv[!is.na(nb[[predictors[m]]]), paste(predictors[m], 
+                                              "_sm", sep = "")] = lws$fitted
+  }
+}
+if (graph == TRUE) {
+  if (intervention == TRUE) {
+    legendlabel <- NULL
+    legendcolor <- NULL
+    legendwidth <- NULL
+    legendpattern <- NULL
+    ymax = max(interv[predictors], na.rm = TRUE)
+    graphics::plot(x = nb$threshold, y = nb$all, type = "n", 
+         xlim = c(xstart, xstop), ylim = c(ymin, ymax), 
+         xlab = "Threshold probability", ylab = paste("Net reduction in interventions per", 
+                                                      interventionper, "patients"))
+    for (m in 1:pred.n) {
+      if (smooth == TRUE) {
+        graphics::lines(interv$threshold, data.matrix(interv[paste(predictors[m], 
+                                                         "_sm", sep = "")]), col = m, 
+              lty = 2)
+      }
+      else {
+        graphics::lines(interv$threshold, data.matrix(interv[predictors[m]]), 
+              col = m, lty = 2)
+      }
+      legendlabel <- c(legendlabel, predictors[m])
+      legendcolor <- c(legendcolor, m)
+      legendwidth <- c(legendwidth, 1)
+      legendpattern <- c(legendpattern, 2)
+    }
+  }
+  else {
+    legendlabel <- c("None", "All")
+    legendcolor <- c(17, 8)
+    legendwidth <- c(2, 2)
+    legendpattern <- c(1, 1)
+    ymax = max(nb[names(nb) != "threshold"], na.rm = TRUE)
+    graphics::plot(x = nb$threshold, y = nb$all, type = "l", 
+                   col = 8, lwd = 2, xlim = c(xstart, xstop), ylim = c(ymin, 
+                                                                       ymax), xlab = "Threshold probability", 
+                   ylab = "Net benefit")
+    graphics::lines(x = nb$threshold, y = nb$none, lwd = 2)
+    for (m in 1:pred.n) {
+      if (smooth == TRUE) {
+        graphics::lines(nb$threshold, data.matrix(nb[paste(predictors[m], 
+                                                 "_sm", sep = "")]), col = m, 
+              lty = 2)
+      }
+      else {
+        graphics::lines(nb$threshold, data.matrix(nb[predictors[m]]), 
+              col = m, lty = 2)
+      }
+      legendlabel <- c(legendlabel, predictors[m])
+      legendcolor <- c(legendcolor, m)
+      legendwidth <- c(legendwidth, 1)
+      legendpattern <- c(legendpattern, 2)
+    }
+  }
+  graphics::legend("topright", legendlabel, cex = 0.8, 
+                   col = legendcolor, lwd = legendwidth, lty = legendpattern)
+}
+results = list()
+results$N = N
+results$predictors = data.frame(cbind(predictors, harm, probability))
+names(results$predictors) = c("predictor", "harm.applied", 
+                              "probability")
+results$interventions.avoided.per = interventionper
+results$net.benefit = nb
+results$interventions.avoided = interv
+return(results)
+}
+
+#' Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome
+#' as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/
+#' 
+#' @details
+#' Calculate the model-based concordance
+#'
+#' @param prediction         the prediction object found in the plpResult object
+#' 
+#' @return
+#' model-based concordance value
+#'
+#' @export
+ 
+modelBasedConcordance <- function(prediction){
+  if (!length(prediction$value >0)){
+    stop("Prediction object not found")
+  }
+  prediction <- prediction$value
+  n<-length(prediction)
+  ord<-order(prediction)
+  prediction<-prediction[ord]
+  q.hat<-1-prediction
+  V1<-(prediction*(cumsum(q.hat)-q.hat)+q.hat*(sum(prediction)-cumsum(prediction)))/(n-1)
+  V2<-(prediction*(sum(q.hat)-q.hat)+q.hat*(sum(prediction)-prediction))/(n-1)
+  mb.c<-sum(V1)/sum(V2)
+  return(mb.c)
+}
+

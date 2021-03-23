@@ -1,12 +1,12 @@
 ---
 title: "Building Deep Learning Models"
 author: 'Peter R. Rijnbeek, Seng Chan You, Xiaoyong Pan, Jenna Reps'
-date: '`r Sys.Date()`'
+date: "`r Sys.Date()`"
 header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
     - \fancyhead{}
-    - \fancyhead[CO,CE]{Building Deep Learning Models}
+    - \fancyhead[CO,CE]{Custom Patient-Level Prediction Algorithms}
     - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
     - \fancyfoot[LE,RO]{\thepage}
     - \renewcommand{\headrulewidth}{0.4pt}
@@ -18,9 +18,12 @@ output:
   html_document:
     number_sections: yes
     toc: yes
-  word_document:
-    toc: yes
 ---
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Building Deep Learning Models}
+-->
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

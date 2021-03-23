@@ -34,7 +34,8 @@ server <- shiny::shinyServer(function(input, output, session) {
                                                            rownames= FALSE, selection = 'single',
                                              extensions = 'Buttons', options = list(
                                                dom = 'Blfrtip' , 
-                                               buttons = c(I('colvis'), 'copy', 'excel', 'pdf' ) 
+                                               buttons = c(I('colvis'), 'copy', 'excel', 'pdf' ),
+                                               scrollX = TRUE
                                                #pageLength = 100, lengthMenu=c(10, 50, 100,200)
                                              ),
                                              
@@ -44,10 +45,10 @@ server <- shiny::shinyServer(function(input, output, session) {
                                                  #tags$th(title=active_columns[i], colnames(data)[i])
                                                  tr(apply(data.frame(colnames=c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
                                                                                 'TAR', 'AUC', 'AUPRC', 
-                                                                                'T Size', 'O Count', 'O Incidence (%)'), 
+                                                                                'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp'), 
                                                                      labels=c('Database used to develop the model', 'Database used to evaluate model', 'Target population - the patients you want to predict risk for','Outcome - what you want to predict', 
                                                                      'Model type','Id for the covariate/settings used','Time-at-risk period', 'Area under the reciever operating characteristics (test or validation)', 'Area under the precision recall curve (test or validation)',
-                                                                     'Target population size of test or validation set', 'Outcome count in test or validation set', 'Percentage of target population that have outcome during time-at-risk')), 1,
+                                                                     'Target population size in the data', 'Outcome count in the data','The percentage of data used to evaluate the model', 'Percentage of target population that have outcome during time-at-risk','date and time of execution')), 1,
                                                           function(x) th(title=x[2], x[1])))
                                                )
                                              ))
@@ -89,7 +90,9 @@ server <- shiny::shinyServer(function(input, output, session) {
   output$covariateTable <- DT::renderDataTable(formatCovSettings(plpResult()$model$metaData$call$covariateSettings))
   output$populationTable <- DT::renderDataTable(formatPopSettings(plpResult()$model$populationSettings))
   
-  
+  output$hpTable <- DT::renderDataTable(DT::datatable(as.data.frame(plpResult()$model$hyperParamSearch),
+                                        options = list(scrollX = TRUE)))
+  output$attritionTable <- DT::renderDataTable(plpResult()$inputSetting$populationSettings$attrition)
   
   
   # prediction text
@@ -164,6 +167,18 @@ server <- shiny::shinyServer(function(input, output, session) {
          Specificity = TN/(TN+FP),
          PPV = TP/(TP+FP),
          NPV = TN/(TN+FN) )
+  })
+  
+  # update threshold slider based on results size
+  shiny::observe({ 
+    if(!is.null(plpResult()$performanceEvaluation)){
+      n <- nrow(plpResult()$performanceEvaluation$thresholdSummary[plpResult()$performanceEvaluation$thresholdSummary$Eval%in%c('test','validation'),])
+    }else{
+      n <- 100
+    }
+
+      shiny::updateSliderInput(session, inputId = "slider1", 
+                        min = 1, max = n, value = round(n/2))
   })
   
   

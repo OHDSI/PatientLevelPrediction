@@ -223,6 +223,9 @@ createLearningCurve <- function(population,
     "TestCalibrationInLarge",
     "TestCalibrationIntercept",
     "TestCalibrationSlope",
+    "TestE90",
+    "TestEave",
+    "TestEmax",
     "outcomeCountTest",
     "popSizeTest",
     "TrainROC",
@@ -232,6 +235,9 @@ createLearningCurve <- function(population,
     "TrainCalibrationInLarge",
     "TrainCalibrationIntercept",
     "TrainCalibrationSlope",
+    "TrainE90",
+    "TrainEave",
+    "TrainEmax",
     "nPredictors"
     )
 
@@ -280,7 +286,8 @@ createLearningCurve <- function(population,
 #'   your input to \code{trainFractions}. The format should be as follows:
 #'   \itemize{
 #'     \item{\code{c(500, 1000, 1500)} - a list of training events}
-#'   }#' @param splitSeed The seed used to split the testing and training set when
+#'   }
+#' @param splitSeed The seed used to split the testing and training set when
 #'   using a 'person' type split                  
 #' @param nfold The number of folds used in the cross validation (default = 
 #'   \code{3}).
@@ -438,6 +445,9 @@ createLearningCurvePar <- function(population,
     "TestCalibrationInLarge",
     "TestCalibrationIntercept",
     "TestCalibrationSlope",
+    "TestE90",
+    "TestEave",
+    "TestEmax",
     "outcomeCountTest",
     "popSizeTest",
     "TrainROC",
@@ -447,6 +457,9 @@ createLearningCurvePar <- function(population,
     "TrainCalibrationInLarge",
     "TrainCalibrationIntercept",
     "TrainCalibrationSlope",
+    "TrainE90",
+    "TrainEave",
+    "TrainEmax",
     "nPredictors"
   )
 

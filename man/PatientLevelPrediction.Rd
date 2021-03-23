@@ -4,3 +4,6 @@
 \name{PatientLevelPrediction}
 \alias{PatientLevelPrediction}
 \title{PatientLevelPrediction}
+\description{
+A package for running predictions using data in the OMOP CDM
+}

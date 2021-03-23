@@ -43,6 +43,9 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
                             outcomeDefinition = NULL,
                             outputLocation=file.path(getwd(), 'plp_report.docx'),
                             save= T){
+  
+  ensure_installed("officer")
+  ensure_installed("diagram")
 
   if(is.null(plpResult)){
     stop('plpResult needs to be input')
@@ -408,8 +411,8 @@ createPlpReport <- function(plpResult=NULL, plpValidation=NULL,
 # and the tar information extracted from the population
 plotPlpProblem <- function(plpResult){
 
-  pdf(NULL)
-  dev.control(displaylist="enable")
+  grDevices::pdf(NULL)
+  grDevices::dev.control(displaylist="enable")
 
   minTar <- plpResult$inputSetting$populationSettings$minTimeAtRisk
   minObs <- plpResult$inputSetting$populationSettings$washoutPeriod
@@ -422,9 +425,9 @@ plotPlpProblem <- function(plpResult){
 
   targetx <- 0.3
   widthTargetx <- 0.15
-  par(mar = c(1, 1, 1, 1))
+  graphics::par(mar = c(1, 1, 1, 1))
   diagram::openplotmat()
-  lines(c(0,targetx-widthTargetx), c(0.5,0.5), type='l', lty = 1, col=1)
+  graphics::lines(c(0,targetx-widthTargetx), c(0.5,0.5), type='l', lty = 1, col=1)
   tryCatch(
     diagram::straightarrow(from = c(targetx-widthTargetx,0.55), to = c(0,0.55), lty = 1, lcol=1)
   )
@@ -435,14 +438,14 @@ plotPlpProblem <- function(plpResult){
   diagram::textrect(c(targetx,0.5), widthTargetx, 0.05,lab = paste0("Target:",target), box.col = "lightblue",
                     shadow.col = "darkblue", shadow.size = 0.005, cex = 1.2)
 
-  lines(c(targetx+widthTargetx,1),c(0.5,0.5), type='l', lty = 3)
+  graphics::lines(c(targetx+widthTargetx,1),c(0.5,0.5), type='l', lty = 3)
   tryCatch(
   diagram::straightarrow(from = c(0.95,0.5), to = c(1,0.5), lty = 3, lcol = 1)
   )
   diagram::textempty(c(0.90, 0.5), 0.5, 0.05,lab = "Time", cex = 0.8 )
 
-  lines(c(targetx-widthTargetx,targetx-widthTargetx),c(0.5-0.05,0.41), type='l', lty = 1)
-  lines(c(targetx+widthTargetx,targetx+widthTargetx),c(0.5-0.05,0.36), type='l', lty = 1)
+  graphics::lines(c(targetx-widthTargetx,targetx-widthTargetx),c(0.5-0.05,0.41), type='l', lty = 1)
+  graphics::lines(c(targetx+widthTargetx,targetx+widthTargetx),c(0.5-0.05,0.36), type='l', lty = 1)
   diagram::textempty(c(targetx-widthTargetx, 0.4), 0.10, 0.05,lab = "start-date", cex = 0.8 )
   diagram::textempty(c(targetx+widthTargetx, 0.35), 0.10, 0.05,lab = "end-date", cex = 0.8 )
   # 0.127 -- 0.275
@@ -458,12 +461,12 @@ plotPlpProblem <- function(plpResult){
   if(tarend <tarstart)
     tarend <- tarstart + 0.001
   # add tar
-  lines(c(tarstart,tarend),c(0.6,0.6), type='l', lty = 1)
-  lines(c(tarstart,tarstart),c(0.59,0.61), type='l', lty = 1)
+  graphics::lines(c(tarstart,tarend),c(0.6,0.6), type='l', lty = 1)
+  graphics::lines(c(tarstart,tarstart),c(0.59,0.61), type='l', lty = 1)
   startText <- ifelse(startAnchor == 'cohort end', paste0('end-date+ ',riskWindowStart ,'day/s'),paste0('start-date+ ',riskWindowStart ,'day/s'))
   diagram::textempty(c(tarstart-0.1,0.64), 0.10, 0.05,lab = startText, cex = 0.8 )
 
-  lines(c(tarend,tarend),c(0.59,0.61), type='l', lty = 1)
+  graphics::lines(c(tarend,tarend),c(0.59,0.61), type='l', lty = 1)
   endText <- ifelse(endAnchor == 'cohort end', paste0('end-date+ ',riskWindowEnd ,'day/s'),paste0('start-date+ ',riskWindowEnd ,'day/s'))
   diagram::textempty(c(tarend-0.1,0.64), 0.10, 0.05,lab = endText, cex = 0.8 )
 
@@ -471,8 +474,8 @@ plotPlpProblem <- function(plpResult){
 
   diagram::textellipse(c(tarstart+(tarend-tarstart)*0.6,0.5), 0.1, 0.03,lab = paste0('outcome:',outcome), box.col = "yellow", cex = 0.8 )
 
-  result <- recordPlot()
-  invisible(dev.off())
+  result <- grDevices::recordPlot()
+  invisible(grDevices::dev.off())
 
   return(result)
 }
@@ -544,6 +547,9 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
                                      includeAttritionPlot=TRUE,
                                      outputLocation=file.path(getwd(), 'plp_journal_document.docx'),
                                      save = T){
+  
+  ensure_installed("officer")
+  ensure_installed("diagram")
 
   if(is.null(plpResult)){
     stop('plpResult needs to be input')
@@ -731,7 +737,7 @@ createPlpJournalDocument <- function(plpResult=NULL, plpValidation=NULL,
     # save predictionPlot?
     grDevices::png(filename='temp.png')
     print(predictionPlot)
-    dev.off()
+    grDevices::dev.off()
     doc <- doc %>% officer::body_add_img(src = 'temp.png', width = 4.5, height = 4)
     unlink('temp.png')
     

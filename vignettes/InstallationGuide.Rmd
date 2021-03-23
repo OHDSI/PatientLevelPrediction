@@ -23,8 +23,8 @@ output:
     number_sections: yes
     toc: yes
 ---
-  <!--
-  %\VignetteEngine{knitr}
+<!--
+%\VignetteEngine{knitr}
 %\VignetteIndexEntry{Installation guide}
 -->
 

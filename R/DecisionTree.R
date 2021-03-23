@@ -118,7 +118,9 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   pydata <- reticulate::r_to_py(x$data)
   
   # feed into variable names for tree plot...
-  var <- suppressWarnings(ff::as.ram(plpData$covariateRef$covariateName))
+  var <- plpData$covariateData$covariateRef %>% dplyr::select(.data$covariateName) %>% dplyr::collect()
+  var <- var$covariateName
+  #var <- suppressWarnings(ff::as.ram(plpData$covariateRef$covariateName))
   
   hyperParamSel <- lapply(param, function(x) do.call(trainDecisionTree, 
                                                      listAppend(x, list(train=TRUE,
@@ -203,6 +205,8 @@ trainDecisionTree <- function(population, plpData,
                               minImpurityDecrease=10^-7,classWeight='None',
                               seed =NULL,
                               train=TRUE, plot=F,quiet=F, var, modelOutput){
+  
+  train_decision_tree <- function(){return(NULL)}
   
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','decisionTreeFunctions.py'), envir = e)

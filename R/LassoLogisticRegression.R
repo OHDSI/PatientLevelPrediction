@@ -20,13 +20,16 @@
 #'
 #' @param variance   a single value used as the starting value for the automatic lambda search
 #' @param seed       An option to add a seed when training the model
+#' @param includeCovariateIds a set of covariate IDS to limit the analysis to
+#' @param noShrinkage a set of covariates whcih are to be forced to be included in the final model. default is the intercept 
 #' @param threads    An option to set number of threads when training model
 #' @param useCrossValidation  Set this to FALSE if you want to train a LR with a preset varience
-#'
+#' 
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setLassoLogisticRegression<- function(variance=0.01, seed=NULL, threads = -1, useCrossValidation = TRUE){
+setLassoLogisticRegression<- function(variance=0.01, seed=NULL, includeCovariateIds = c(), noShrinkage = c(0), threads = -1, useCrossValidation = TRUE){
+
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
   if(!class(threads)%in%c('numeric','NULL','integer'))
@@ -41,8 +44,8 @@ setLassoLogisticRegression<- function(variance=0.01, seed=NULL, threads = -1, us
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], 
-                                                                threads = threads[1], useCrossValidation=useCrossValidation[1]), name="Lasso Logistic Regression")
+  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], includeCovariateIds = includeCovariateIds, noShrinkage = noShrinkage, threads = threads[1], useCrossValidation=useCrossValidation[1]), name="Lasso Logistic Regression")
+
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -50,7 +53,6 @@ setLassoLogisticRegression<- function(variance=0.01, seed=NULL, threads = -1, us
 
 fitLassoLogisticRegression<- function(population, plpData, param, search='adaptive', 
                      outcomeId, cohortId, trace=F,...){
-  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -71,12 +73,15 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   #TODO - how to incorporate indexes?
   variance <- 0.003
   if(!is.null(param$variance )) variance <- param$variance
+  includeCovariateIds <- param$includeCovariateIds
   start <- Sys.time()
+  noShrinkage <- param$noShrinkage
   modelTrained <- fitGLMModel(population,
-                                     plpData = plpData,
+                                     plpData = plpData, 
+                                     includeCovariateIds = includeCovariateIds,
                                      modelType = "logistic",
-                                     prior = createPrior("laplace",exclude = c(0),useCrossValidation = param$useCrossValidation, variance = variance),
-                                     control = createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
+                                     prior = Cyclops::createPrior("laplace",exclude = c(0),useCrossValidation = param$useCrossValidation, variance = variance),
+                                     control = Cyclops::createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                              startingVariance = variance,
                                                              tolerance  = 2e-07,
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
@@ -88,19 +93,23 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   # TODO get optimal lambda value
   ParallelLogger::logTrace('Returned from fitting to LassoLogisticRegression')
   comp <- Sys.time() - start
-  varImp <- data.frame(covariateId=names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'], 
+  varImp <- data.frame(covariateId=bit64::as.integer64(names(modelTrained$coefficients))[names(modelTrained$coefficients)!='(Intercept)'], 
                        value=modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
   if(sum(abs(varImp$value)>0)==0){
     ParallelLogger::logWarn('No non-zero coefficients')
     varImp <- NULL
   } else {
     ParallelLogger::logInfo('Creating variable importance data frame')
-    #varImp <- varImp[abs(varImp$value)>0,]
-    varImp <- merge(as.data.frame(plpData$covariateData$covariateRef), varImp, 
-                    by='covariateId',all=T)
-    varImp$value[is.na(varImp$value)] <- 0
-    varImp <- varImp[order(-abs(varImp$value)),]
-    colnames(varImp)[colnames(varImp)=='value'] <- 'covariateValue'
+    
+    plpData$covariateData$varImp <- varImp
+    on.exit(plpData$covariateData$varImp <- NULL, add = T)
+    
+    varImp <- plpData$covariateData$covariateRef %>% 
+      dplyr::left_join(plpData$covariateData$varImp) %>%
+      dplyr::mutate(covariateValue = ifelse(is.na(.data$value), 0, .data$value)) %>%
+      dplyr::select(-.data$value) %>%
+      dplyr::arrange(-abs(.data$covariateValue)) %>%
+      dplyr::collect()
   }
   
   #get prediction on test set:

@@ -23,6 +23,10 @@ output:
     number_sections: yes
     toc: yes
 ---
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Creating Shiny App}
+-->
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

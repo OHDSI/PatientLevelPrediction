@@ -236,7 +236,7 @@ test_that("population creation parameters", {
   # 4 only should be retruned
   expect_equal(Ppop3$rowId[Ppop3$outcomeCount>0], c(4))
   
-  
+  # creates min warning due to no data...
   Ppop5 <- createStudyPopulation(PplpData,
                                  population = NULL,
                                  outcomeId = 1,
@@ -257,8 +257,8 @@ test_that("population creation parameters", {
   expect_equal(is.null(Ppop5), TRUE)
   
   
-  atrr <- getAttritionTable(Ppop3)
-  expect_is(atrr, "data.frame")
+  #atrr <- getAttritionTable(Ppop3)
+  #expect_is(atrr, "data.frame")
   
   
 })
