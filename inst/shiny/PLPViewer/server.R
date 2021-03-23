@@ -30,7 +30,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   #print(summaryTable)
   
   # need to remove over columns:
-  output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable[filterIndex(),!colnames(summaryTable)%in%c('addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')],
+  output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable[filterIndex(),!colnames(summaryTable)%in%c('Analysis','addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')],
                                                            rownames= FALSE, selection = 'single',
                                              extensions = 'Buttons', options = list(
                                                dom = 'Blfrtip' , 
@@ -66,6 +66,15 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(plpResult()$covariateSummary),
                                                               nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0)))
+  # Download plpresult
+  output$plpResult <- shiny::downloadHandler(
+    filename = function(){
+      "plpResult.rds"
+    },
+    content = function(file) {
+      saveRDS(plpResult(), file)
+    }
+  )
   
   # Downloadable csv of model ----
   output$downloadData <- shiny::downloadHandler(
@@ -217,6 +226,55 @@ server <- shiny::shinyServer(function(input, output, session) {
     }
   })
   
+  # validation table and selection
+  validationTable <- shiny::reactive(dplyr::filter(summaryTable[filterIndex(),],
+                                                   Analysis == summaryTable[filterIndex(),'Analysis'][trueRow()]))
+  
+  output$validationTable <- DT::renderDataTable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC)), rownames= FALSE)
+  
+  valFilterIndex <- shiny::reactive({getFilter(validationTable(), input)})
+  valSelectedRow <- shiny::reactive({
+    if(is.null(input$validationTable_rows_selected[1])){
+      return(1)
+    }else{
+      # return(input$validationTable_rows_selected[1])
+      return(input$validationTable_rows_selected)
+    }
+  })
+  
+  # plots for the validation section. todo: add the development?
+  
+  valResult <- shiny::reactive({
+    valtemplist <- list()
+    valTable <- validationTable()
+    rows <- sort(valSelectedRow())
+    names <- valTable[rows, "Val"]
+    for (i in 1:length(rows)){
+      valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType, rows[i])
+    }
+    list(valtemplist, names)
+  })
+  
+  valPlots <- shiny::reactive({
+    results <- valResult()
+    if(is.null(results[[1]][[1]]$performanceEvaluation)){
+      # list(valRocPlot= NULL, valCalPlot = NULL)
+      return(NULL)
+    } else{
+      
+      valCalPlot <- PredictionComparison::plotMultipleCal(results[[1]], names = results[[2]])
+      valRocPlot <- PredictionComparison::plotMultipleRoc(results[[1]], names = results[[2]], grid = F)
+      list(valRocPlot= valRocPlot, valCalPlot = valCalPlot)
+      
+    }
+  })
+  
+  output$valRoc <- shiny::renderPlot({
+    try(valPlots()$valRocPlot)
+  })
+  output$valCal <- shiny::renderPlot({
+    try(valPlots()$valCalPlot)
+  })
   
   
   # Do the tables and plots:
