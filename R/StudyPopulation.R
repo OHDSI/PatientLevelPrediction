@@ -50,6 +50,7 @@
 #'                               \item{ERROR}{Show error messages}
 #'                               \item{FATAL}{Be silent except for fatal errors} 
 #'                               }
+#' @param restrictTarToCohortEnd If using a survival model and you want the time-at-risk to end at the cohort end date set this to T
 #' @param addExposureDaysToStart DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.
 #' @param addExposureDaysToEnd   DEPRECATED: Add the length of exposure the risk window? Use \code{endAnchor} instead.
 #' @param ...                   Other inputs
@@ -82,6 +83,7 @@ createStudyPopulation <- function(plpData,
                                   riskWindowEnd = 365,
                                   endAnchor = "cohort start",
                                   verbosity = "INFO",
+                                  restrictTarToCohortEnd = F,
                                   addExposureDaysToStart,
                                   addExposureDaysToEnd,
                                   ...) {
@@ -151,6 +153,8 @@ createStudyPopulation <- function(plpData,
   checkBoolean(requireTimeAtRisk)
   ParallelLogger::logDebug(paste0('minTimeAtRisk: ', minTimeAtRisk))
   checkHigherEqual(minTimeAtRisk,0)
+  ParallelLogger::logDebug(paste0('restrictTarToCohortEnd: ', restrictTarToCohortEnd))
+  checkBoolean(restrictTarToCohortEnd)
   ParallelLogger::logDebug(paste0('riskWindowStart: ', riskWindowStart))
   checkHigherEqual(riskWindowStart,0)
   ParallelLogger::logDebug(paste0('startAnchor: ', startAnchor))
@@ -219,6 +223,12 @@ createStudyPopulation <- function(plpData,
                   tarEnd = ifelse(.data$endAnchor == 'cohort start', .data$endDay, .data$endDay+ .data$daysToCohortEnd))  %>%
     dplyr::mutate(tarEnd = ifelse(.data$tarEnd>.data$daysToObsEnd, .data$daysToObsEnd,.data$tarEnd ))
     
+  
+  # censor at cohortEndDate:
+  if(max(population$daysToCohortEnd)>0 & restrictTarToCohortEnd){
+    ParallelLogger::logInfo('Restricting tarEnd to end of target cohort')
+    population <- population %>% dplyr::mutate(tarEnd = ifelse(.data$tarEnd>.data$daysToCohortEnd, .data$daysToCohortEnd,.data$tarEnd ))
+  }
     
   
   # get the outcomes during TAR

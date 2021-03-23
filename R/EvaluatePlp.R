@@ -23,14 +23,14 @@
 #' @details
 #' The function calculates various metrics to measure the performance of the model
 #' @param prediction                         The patient level prediction model's prediction
-#' @param plpData                            The patient level prediction data
+#' @param plpData                            Redundant - no longer used
 #' @return
 #' A list containing the performance values
 #'
 
 #' @export
-evaluatePlp <- function(prediction, plpData){
-
+evaluatePlp <- function(prediction, plpData = NULL){
+  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -100,7 +100,7 @@ evaluatePlp <- function(prediction, plpData){
     
     # 3) demographicSummary
     ParallelLogger::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
-    demographicSummary <- tryCatch(getDemographicSummary(prediction, plpData),
+    demographicSummary <- tryCatch(getDemographicSummary(prediction = prediction),
                                    error= function(cond){return(NULL)})
     ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
     
@@ -277,7 +277,7 @@ evaluatePlp <- function(prediction, plpData){
     
     # add demographic calibration
     demographicSummary <- NULL
-    demographicSummary <- getDemographicSummary(prediction, plpData, 
+    demographicSummary <- getDemographicSummary(prediction = prediction, 
                                                 type = 'survival', timepoint = timepoint)
 
     
@@ -764,9 +764,10 @@ getPredictionDistribution <- function(prediction){
   return(predictionDistribution)
 }
 
-getDemographicSummary <- function(prediction, plpData, type = 'binary', timepoint = NULL){
-  
-  demographicData <- plpData$cohorts %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
+getDemographicSummary <- function(prediction, type = 'binary', timepoint = NULL){
+
+  #demographicData <- plpData$cohorts %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
+  demographicData <- prediction[,c('rowId','ageYear','gender')] %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
                                                        ageGroup = paste0('Age group: ', floor(.data$ageYear/5)*5, '-',floor(.data$ageYear/5)*5+4),
                                                        genId = .data$gender,
                                                        genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
@@ -1392,11 +1393,11 @@ return(results)
 #'
 #' @export
  
-modelBasedConcordance <- function(plpResult){
-  if (!length(plpResult$prediction$value >0)){
+modelBasedConcordance <- function(prediction){
+  if (!length(prediction$value >0)){
     stop("Prediction object not found")
   }
-  prediction <- plpResult$prediction$value
+  prediction <- prediction$value
   n<-length(prediction)
   ord<-order(prediction)
   prediction<-prediction[ord]

@@ -1,3 +1,11 @@
+PatientLevelPrediction 4.4.0
+======================
+- Removed plpData from evaluation 
+- Added recalibration into externalVal
+- Updated shiny app for recalibration
+- Added population creation setting to use cohortEndDate as timeAtRisk end 
+- fixed tests
+
 PatientLevelPrediction 4.3.3
 ======================
 - Reduced imports by adding code to install some dependencies when used
