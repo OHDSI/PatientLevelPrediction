@@ -209,11 +209,48 @@ server <- shiny::shinyServer(function(input, output, session) {
     }
   })
   
+  #=======================
+  # cal for different evals
+  
+  output$recalSelect = renderUI({
+    types <- unique(plpResult()$performanceEvaluation$calibrationSummary$Eval)
+    selectInput('recal', 'Type:', types)
+  })
+  
+  output$calTable <- shiny::renderTable({
+    if(is.null(plpResult()$performanceEvaluation)){
+      return(NULL)
+    } else{
+      data <- plpResult()$performanceEvaluation$evaluationStatistics
+      data <- as.data.frame(data)
+      
+      data$Metric <- as.character(data$Metric)
+      data$Value <- as.double(as.character(data$Value))
+      
+      ind <- data$Metric %in% c('CalibrationIntercept', 
+                        'CalibrationSlope',
+                        'CalibrationInLarge',
+                        'Emean',
+                         'E90',
+                         'Emax', 
+                        'correctionFactor',
+                        'adjustGradient',
+                        'adjustIntercept')
+      
+      result <- reshape2::dcast(data[ind,],
+                      Eval ~ Metric, value.var = 'Value')
+      row.names(result) <- NULL
+      result
+      
+    }
+  })
+  
   output$cal <- shiny::renderPlot({
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotSparseCalibration2(plpResult()$performanceEvaluation)
+      plotSparseCalibration2(evaluation = plpResult()$performanceEvaluation, 
+                             type = input$recal)
     }
   })
   
@@ -221,11 +258,49 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      tryCatch(plotDemographicSummary(plpResult()$performanceEvaluation),
+      tryCatch(plotDemographicSummary(evaluation = plpResult()$performanceEvaluation, 
+                                      type = input$recal),
                error= function(cond){return(NULL)})
     }
   })
   
+  #=======================
+  
+  
+  
+  #=======================
+  # NETBENEFIT
+  
+  output$nbSelect = renderUI({
+    types <- unique(plpResult()$performanceEvaluation$thresholdSummary$Eval)
+    selectInput('nbSelect', 'Type:', types)
+  })
+  
+  output$nbTable <- shiny::renderTable({
+    if(is.null(plpResult()$performanceEvaluation)){
+      return(NULL)
+    } else{
+      result <- extractNetBenefit(performanceEvaluation = plpResult()$performanceEvaluation, 
+                        type=input$nbSelect)
+      unique(result)
+    }
+  })
+  
+  output$nbPlot <- shiny::renderPlot({
+    if(is.null(plpResult()$performanceEvaluation)){
+      return(NULL)
+    } else{
+      result <- extractNetBenefit(performanceEvaluation = plpResult()$performanceEvaluation, 
+                                  type=input$nbSelect)
+      result <- unique(result)
+      plot(result$pt, result$netBenefit)
+    }
+  })
+  
+  #=======================
+  
+  
+  #=======================
   # validation table and selection
   validationTable <- shiny::reactive(dplyr::filter(summaryTable[filterIndex(),],
                                                    Analysis == summaryTable[filterIndex(),'Analysis'][trueRow()]))
@@ -250,22 +325,21 @@ server <- shiny::shinyServer(function(input, output, session) {
     rows <- sort(valSelectedRow())
     names <- valTable[rows, "Val"]
     for (i in 1:length(rows)){
-      valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType, rows[i])
+      valtemplist[[i]] <- getPlpResult(result,validation,valTable, 'file', rows[i])
     }
-    list(valtemplist, names)
+    list(results = valtemplist, databaseName = names)
   })
   
   valPlots <- shiny::reactive({
     results <- valResult()
-    if(is.null(results[[1]][[1]]$performanceEvaluation)){
-      # list(valRocPlot= NULL, valCalPlot = NULL)
+    if(is.null(valResult()$results[[1]]$performanceEvaluation)){
       return(NULL)
     } else{
-      
-      valCalPlot <- PredictionComparison::plotMultipleCal(results[[1]], names = results[[2]])
-      valRocPlot <- PredictionComparison::plotMultipleRoc(results[[1]], names = results[[2]], grid = F)
+      valCalPlot <- plotCals(evaluationList = valResult()$results, 
+                             modelNames =  valResult()$databaseName)
+      valRocPlot <- plotRocs(evaluationList = valResult()$results, 
+                             modelNames = valResult()$databaseName)
       list(valRocPlot= valRocPlot, valCalPlot = valCalPlot)
-      
     }
   })
   
@@ -275,6 +349,10 @@ server <- shiny::shinyServer(function(input, output, session) {
   output$valCal <- shiny::renderPlot({
     try(valPlots()$valCalPlot)
   })
+  #=======================
+  
+  
+  
   
   
   # Do the tables and plots:
