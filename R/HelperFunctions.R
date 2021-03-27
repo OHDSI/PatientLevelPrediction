@@ -19,6 +19,14 @@ ensure_installed <- function(pkg) {
       message(msg, "\nWould you like to install it?")
       if (utils::menu(c("Yes", "No")) == 1) {
         if(pkg%in%c('BigKnn')){
+          
+          # add code to check for devtools...
+          dvtCheck <- tryCatch(utils::packageVersion('devtools'), 
+                      error = function(e) NA)
+          if(is.na(dvtCheck)){
+            utils::install.packages('devtools')
+          }
+          
           devtools::install_github(paste0('OHDSI/',pkg))
         }else{
           utils::install.packages(pkg)
@@ -66,7 +74,10 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   
   writeLines("\nChecking R population")
   set.seed(1234)
-  data(plpDataSimulationProfile)
+  
+  plpDataSimulationProfile <- NULL
+  e <- environment()
+  utils::data(plpDataSimulationProfile, envir = e)
   sampleSize <- 2000
   plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
   
@@ -264,8 +275,8 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   writeLines("- Done")
   
   writeLines("\nChecking support for large data objects")
-  x <- ff::as.ffdf(data.frame(a = 1:100, b = "test"))
-  if (nrow(x) != 100)
+  x <- Andromeda::andromeda(test = data.frame(a = 1:100, b = "test"))
+  if(!"Andromeda" %in% class(x))
     outCode <- outCode*43
   writeLines("- Done")
   
@@ -384,7 +395,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
   
   if(envtype=='conda'){
     pEnvironments <- reticulate::conda_list()
-    if(envname%in%pEnvironments$name){
+    if(length(pEnvironments) > 0 && envname %in% pEnvironments$name){
       warning(paste0('Conda environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
@@ -396,7 +407,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
                               pip_ignore_installed = TRUE, conda = "auto")
   } else {
     pEnvironments <- reticulate::virtualenv_list()
-    if(envname%in%pEnvironments$name){
+    if(length(pEnvironments) > 0 && envname %in% pEnvironments$name){
       warning(paste0('Python environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))

@@ -70,7 +70,7 @@ def train_gbmsurv(population = None, plpData= None, train = True, modelOutput =N
     if not os.path.exists(modelOutput):
       os.makedirs(modelOutput)
     print("Model saved to: %s" %(modelOutput)	)
-    joblib.dump(gbmsurv, os.path.join(modelOutput,"model.pkl")) 
+    joblib.dump(gbmsurv, os.path.join(modelOutput,"model.pkl"), compress = True) 
     pred = gbmsurv.predict(X[trainInds,:].toarray())
     pred = pred.flatten()
     rowCount = np.sum(trainInds)

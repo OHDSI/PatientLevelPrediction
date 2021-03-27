@@ -45,6 +45,8 @@ setCovNN <- function(batchSize = 1000,
                      seed=NULL  ){
   #[TODO: add input checks...]
   
+  ensure_installed("keras")
+  
   if(!is.null(seed)){
     warning('seed currently not implemented in CovNN')
   }
@@ -471,7 +473,7 @@ trainCovNN<-function(plpData, population,
     train_rows <- c(1:length(population$indexes))[-val_rows]
     
     
-    sampling_generator<-function(data, population, batchSize, train_rows){
+    sampling_generator2<-function(data, population, batchSize, train_rows){
       function(){
         gc()
         rows<-sample(train_rows, batchSize, replace=FALSE)
@@ -488,7 +490,7 @@ trainCovNN<-function(plpData, population,
       ParallelLogger::logInfo('Reduce batchSize to training size')
     }
     
-    history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
+    history <- model %>% keras::fit_generator(sampling_generator2(data,population,batchSize,train_rows),
                                               steps_per_epoch = length(train_rows)/batchSize,
                                               epochs=epochs,
                                               validation_data=list(list(as.array(data[val_rows,,]), 

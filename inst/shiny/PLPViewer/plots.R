@@ -54,6 +54,7 @@ plotShiny <- function(eval){
 getORC <- function(eval, pointOfInterest){
   
   data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
+  data <- data[order(data$predictionThreshold),]
   pointOfInterest <- data[pointOfInterest,]
   
   threshold <- pointOfInterest$predictionThreshold
@@ -421,17 +422,17 @@ plotSparseCalibration2 <- function(evaluation,
                    axis.ticks.x=ggplot2::element_blank())
   
   # testting whether this is installed in shinydeploy
-  #plot <- gridExtra::grid.arrange(smooth_plot,
-  #                                hist_plot,
-  #                                ncol = 1,
-  #                                heights=c(2,1))
+  plot <- gridExtra::grid.arrange(smooth_plot,
+                                  hist_plot,
+                                  ncol = 1,
+                                  heights=c(2,1))
   
-  plot <- cowplot::plot_grid(smooth_plot,
-                             hist_plot,
-                             ncol = 1,
-                             axis = "lr",
-                             align = "v",
-                             rel_heights = c(1, 0.6))
+  #plot <- cowplot::plot_grid(smooth_plot,
+  #                           hist_plot,
+  #                           ncol = 1,
+  #                           axis = "lr",
+  #                           align = "v",
+  #                           rel_heights = c(1, 0.6))
   
   if (!is.null(fileName))
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)

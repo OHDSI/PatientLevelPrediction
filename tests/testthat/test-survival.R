@@ -37,13 +37,31 @@ plpResultCox <- runPlp(population = population,
 test_that("Cox working checks", {
   
   # check same structure
-  testthat::expect_equal(names(plpResult), 
-                         names(plpResultCox))
+  #testthat::expect_equal(names(plpResult), 
+  #                       names(plpResultCox))
   
   # check prediction same size as pop
   testthat::expect_equal(nrow(plpResultCox$prediction), nrow(population))
 
 
+})
+
+test_that("Survival evaluation", {
+  
+  # check same structure
+  testthat::expect_identical("evaluationStatistics"%in%names(plpResultCox$performanceEvaluation),
+                         T)
+  testthat::expect_identical("demographicSummary"%in%names(plpResultCox$performanceEvaluation),
+                             T)
+  testthat::expect_identical("calibrationSummary"%in%names(plpResultCox$performanceEvaluation),
+                             T)
+  testthat::expect_identical("thresholdSummary"%in%names(plpResultCox$performanceEvaluation),
+                             T)
+  ev <- plpResultCox$performanceEvaluation$evaluationStatistics
+  ev <- as.data.frame(ev)
+  testthat::expect_identical("eStatistic"%in%ev$Metric, T)
+  testthat::expect_identical("cStatistic"%in%ev$Metric, T)
+  
 })
 
 
@@ -186,6 +204,9 @@ setGBMSurv <- setGBMSurvival(loss = 'coxph',
                              seed = NULL, 
                              quiet = F)
 
+# PatientLevelPrediction::getThresholdSummary(prediction) R/EvaluatePlp.R:96:4
+# error arguments imply differing number of rows: 200, 168
+# using binary metrics still...
 plpResultGBMSurv <- runPlp(population = population,
                        plpData = plpData, 
                        modelSettings = setGBMSurv, 

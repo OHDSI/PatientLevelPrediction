@@ -68,7 +68,7 @@ fitAdaBoost <- function(population,
                         outcomeId,
                         cohortId,
                         ...) {
-
+  
   # check covariate data
   if (!FeatureExtraction::isCovariateData(plpData$covariateData))
     stop("Needs correct covariateData")
@@ -173,6 +173,10 @@ fitAdaBoost <- function(population,
 
 trainAdaBoost <- function(population, plpData, nEstimators = 50, learningRate = 1, seed = NULL, train = TRUE, modelLocation=NULL, quiet=FALSE) {
 
+  # remove global binding issue
+  train_adaboost <- function(){return(NULL)}
+  
+  
   e <- environment()
   # then run standard python code
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','adaBoostFunctions.py'), envir = e)

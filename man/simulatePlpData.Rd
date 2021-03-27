@@ -4,13 +4,15 @@
 \alias{simulatePlpData}
 \title{Generate simulated data}
 \usage{
-simulatePlpData(plpDataSimulationProfile, n = 10000)
+simulatePlpData(plpDataSimulationProfile, n = 10000, useInt64 = T)
 }
 \arguments{
 \item{plpDataSimulationProfile}{An object of type \code{plpDataSimulationProfile} as generated
 using the \cr\code{createplpDataSimulationProfile} function.}
 
 \item{n}{The size of the population to be generated.}
+
+\item{useInt64}{Make the covariateIds int64}
 }
 \value{
 An object of type \code{plpData}.

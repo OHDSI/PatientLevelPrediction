@@ -28,7 +28,7 @@ createStudyPopulation(
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
-\code{getDbplpData}.}
+\code{getplpData}.}
 
 \item{population}{If specified, this population will be used as the starting point instead of the
 cohorts in the \code{plpData} object.}
