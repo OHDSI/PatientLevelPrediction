@@ -40,13 +40,14 @@ setLassoLogisticRegression<- function(variance=0.01, seed=NULL, includeCovariate
     stop('Variance must be >= 0')
   if(!is.numeric(upperLimit) | !is.numeric(lowerLimit))
     stop('Grid search limits must be numeric')
-  
+  if(upperLimit <= lowerLimit)
+    stop('upperLimit must be greater than lowerLimit')
   # set seed
   if(is.null(seed[1])){
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], includeCovariateIds = includeCovariateIds, noShrinkage = noShrinkage, threads = threads[1], useCrossValidation=useCrossValidation[1]), upperLimit = upperLimit, lowerLimit = lowerLimit, name="Lasso Logistic Regression")
+  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], includeCovariateIds = includeCovariateIds, noShrinkage = noShrinkage, threads = threads[1], useCrossValidation=useCrossValidation[1], upperLimit = upperLimit, lowerLimit = lowerLimit), name="Lasso Logistic Regression")
 
   class(result) <- 'modelSettings' 
   
@@ -88,8 +89,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                      control = Cyclops::createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                              startingVariance = variance,
                                                              tolerance  = 2e-07,
-                                                             # lowerLimit = lowerLimit,
-                                                             # upperLimit = upperLimit,
+                                                             lowerLimit = lowerLimit,
+                                                             upperLimit = upperLimit,
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
                                                              selectorType = "byPid",
                                                              threads= param$threads,

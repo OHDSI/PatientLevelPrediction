@@ -77,6 +77,7 @@ test_that("fitting", {
   testthat::expect_error(setLassoLogisticRegression(seed = 'F'))
   testthat::expect_error(setLassoLogisticRegression(upperLimit = 'F'))
   testthat::expect_error(setLassoLogisticRegression(lowerLimit = 'F'))
+  testthat::expect_error(setLassoLogisticRegression(upperLimit = 0.5,lowerLimit = 1))
   
   
   #=====================================
