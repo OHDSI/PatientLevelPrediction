@@ -407,16 +407,16 @@ configurePython <- function(envname='PLP', envtype=NULL){
                               pip_ignore_installed = TRUE, conda = "auto")
   } else {
     pEnvironments <- reticulate::virtualenv_list()
-    if(length(pEnvironments) > 0 && envname %in% pEnvironments$name){
+    if(length(pEnvironments) > 0 && envname %in% pEnvironments){
       warning(paste0('Python environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))
-      location <- reticulate::virtualenv_create(envname=envname, packages = "python")
+      location <- reticulate::virtualenv_create(envname=envname)
     }
     packages <- c('numpy', 'scikit-learn','scipy', 'pandas','pydotplus','keras')
     ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))
-    reticulate::virtualenv_install(envname=envname, packages = packages, forge = TRUE, pip = TRUE,
-                              pip_ignore_installed = TRUE)
+    reticulate::virtualenv_install(envname=envname, packages = packages, 
+                                   ignore_installed = TRUE)
   }
   
   return(location)
