@@ -28,7 +28,7 @@
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setLassoLogisticRegression<- function(variance=0.01, seed=NULL, includeCovariateIds = c(), noShrinkage = c(0), threads = -1, useCrossValidation = TRUE){
+setLassoLogisticRegression<- function(variance=0.01, seed=NULL, includeCovariateIds = c(), noShrinkage = c(0), threads = -1, useCrossValidation = TRUE, upperLimit = 20, lowerLimit = 0.01){
 
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
@@ -38,13 +38,15 @@ setLassoLogisticRegression<- function(variance=0.01, seed=NULL, includeCovariate
     stop('Variance must be numeric')
   if(variance<0)
     stop('Variance must be >= 0')
+  if(!is.numeric(upperLimit) | !is.numeric(lowerLimit))
+    stop('Grid search limits must be numeric')
   
   # set seed
   if(is.null(seed[1])){
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], includeCovariateIds = includeCovariateIds, noShrinkage = noShrinkage, threads = threads[1], useCrossValidation=useCrossValidation[1]), name="Lasso Logistic Regression")
+  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], includeCovariateIds = includeCovariateIds, noShrinkage = noShrinkage, threads = threads[1], useCrossValidation=useCrossValidation[1]), upperLimit = upperLimit, lowerLimit = lowerLimit, name="Lasso Logistic Regression")
 
   class(result) <- 'modelSettings' 
   
@@ -74,6 +76,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   variance <- 0.003
   if(!is.null(param$variance )) variance <- param$variance
   includeCovariateIds <- param$includeCovariateIds
+  lowerLimit <- param$lowerLimit
+  upperLimit <- param$upperLimit
   start <- Sys.time()
   noShrinkage <- param$noShrinkage
   modelTrained <- fitGLMModel(population,
@@ -84,6 +88,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                      control = Cyclops::createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                              startingVariance = variance,
                                                              tolerance  = 2e-07,
+                                                             # lowerLimit = lowerLimit,
+                                                             # upperLimit = upperLimit,
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
                                                              selectorType = "byPid",
                                                              threads= param$threads,
@@ -128,6 +134,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   result <- list(model = modelTrained,
                  modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
                  hyperParamSearch = c(priorVariance=modelTrained$priorVariance, 
+                                      upperLimit = upperLimit,
+                                      lowerLimt = lowerLimit,
                                       seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
                                       log_likelihood = modelTrained$log_likelihood,
                                       cvPerFold,
