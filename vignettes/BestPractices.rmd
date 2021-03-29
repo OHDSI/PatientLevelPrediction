@@ -1,0 +1,214 @@
+---
+title: "Best Practice Research"
+author: "Jenna Reps, Peter R. Rijnbeek"
+date: '`r Sys.Date()`'
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead{}
+    - \fancyhead[CO,CE]{Installation Guide}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[LE,RO]{\thepage}
+    - \renewcommand{\headrulewidth}{0.4pt}
+    - \renewcommand{\footrulewidth}{0.4pt}
+output:
+  pdf_document:
+    includes:
+      in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Best Practices}
+-->
+
+## Best practice publications using the OHDSI PatientLevelPrediction framework
+
+<table>
+<tr>
+<th>
+Topic
+</th>
+<th>
+Research Summary
+</th>
+<th>
+Link
+</th>
+</tr>
+
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Comparison of cohort vs case-control design
+</td>
+<td>
+In review
+</td>
+</tr>
+
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Addressing loss to follow-up (right censoring)	
+</td>
+<td>
+<a href='https://link.springer.com/article/10.1186/s12911-021-01408-x'>Paper link</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Investigating how to address left censoring in features construction
+</td>
+<td>
+<a href='https://assets.researchsquare.com/files/rs-227607/v1/8280dd89-dbb6-43d2-9d57-bc621e9b112b.pdf'>Paper link</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Data Creation	
+</td>
+<td>
+Impact of over/under-sampling
+</td>
+<td>
+TODO
+</td>
+</tr>
+
+<tr>
+<td>
+Data Creation	
+</td>
+<td>
+Impact of phenotypes
+</td>
+<td>
+TODO
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+How much data do we need for prediction - Learning curves at scale
+</td>
+<td>
+<a href='https://arxiv.org/abs/2008.07361'>Paper link</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+What impact does test/train/validation design have on model performance
+</td>
+<td>
+<a href=''>In review</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+What is the impact of the classifier 
+</td>
+<td>
+<a href='https://academic.oup.com/jamia/article/25/8/969/4989437?login=true'>Paper link</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+Can we find hyper-parameter combinations per classifier that consistently lead to good performing models when using claims/EHR data?	
+</td>
+<td>
+<a href=''>TODO</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+How to improve models transportability?
+</td>
+<td>
+<a href=''>In review</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+How should we present models? (e.g., new visualizations)
+</td>
+<td>
+<a href='https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1'>Paper Link</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+How to interpret external validation performance (can we figure out why the performance drops or stays consistent)?	
+</td>
+<td>
+<a href=''>TODO</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+Recalibration methods	
+</td>
+<td>
+<a href=''>TODO</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+Evaluation	Is there a way to automatically simplify models?	
+</td>
+<td>
+<a href=''>TODO</a>
+</td>
+</tr>
+</table>
+    

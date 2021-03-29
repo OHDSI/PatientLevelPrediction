@@ -395,7 +395,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
   
   if(envtype=='conda'){
     pEnvironments <- reticulate::conda_list()
-    if(envname%in%pEnvironments$name){
+    if(length(pEnvironments) > 0 && envname %in% pEnvironments$name){
       warning(paste0('Conda environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
@@ -407,7 +407,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
                               pip_ignore_installed = TRUE, conda = "auto")
   } else {
     pEnvironments <- reticulate::virtualenv_list()
-    if(envname%in%pEnvironments$name){
+    if(length(pEnvironments) > 0 && envname %in% pEnvironments$name){
       warning(paste0('Python environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))
