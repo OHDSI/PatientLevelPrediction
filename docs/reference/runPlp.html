@@ -77,7 +77,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
       </span>
     </div>
 
@@ -109,6 +109,9 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -121,13 +124,13 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -141,12 +144,15 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
@@ -201,6 +207,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
   <span class='kw'>verbosity</span> <span class='kw'>=</span> <span class='st'>"INFO"</span>,
   <span class='kw'>timeStamp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>analysisId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>runCovariateSummary</span> <span class='kw'>=</span> <span class='no'>T</span>,
   <span class='kw'>save</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
 )</pre>
 
@@ -307,6 +314,10 @@ If not set trainFraction is equal to 1 - test</p></td>
     <tr>
       <th>analysisId</th>
       <td><p>Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.</p></td>
+    </tr>
+    <tr>
+      <th>runCovariateSummary</th>
+      <td><p>Whether to calculate the mean and sd for each covariate</p></td>
     </tr>
     <tr>
       <th>save</th>

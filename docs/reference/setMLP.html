@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
       </span>
     </div>
 
@@ -104,6 +104,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -116,13 +119,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -136,12 +139,15 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
@@ -171,7 +177,18 @@
     <p>Create setting for neural network model with python</p>
     </div>
 
-    <pre class="usage"><span class='fu'>setMLP</span>(<span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>4</span>, <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fl'>1e-05</span>, <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+    <pre class="usage"><span class='fu'>setMLP</span>(
+  <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>4</span>,
+  <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0.3</span>, <span class='fl'>0.01</span>, <span class='fl'>0.001</span>, <span class='fl'>1e-06</span>),
+  <span class='kw'>maxIter</span> <span class='kw'>=</span> <span class='fl'>2000</span>,
+  <span class='kw'>tol</span> <span class='kw'>=</span> <span class='fl'>1e-04</span>,
+  <span class='kw'>learningRateInit</span> <span class='kw'>=</span> <span class='fl'>0.001</span>,
+  <span class='kw'>nIterNoChange</span> <span class='kw'>=</span> <span class='fl'>10</span>,
+  <span class='kw'>beta1</span> <span class='kw'>=</span> <span class='fl'>0.9</span>,
+  <span class='kw'>beta2</span> <span class='kw'>=</span> <span class='fl'>0.999</span>,
+  <span class='kw'>epsilon</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>, <span class='fl'>0.1</span>, <span class='fl'>1e-08</span>),
+  <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -183,6 +200,34 @@
     <tr>
       <th>alpha</th>
       <td><p>The l2 regularisation</p></td>
+    </tr>
+    <tr>
+      <th>maxIter</th>
+      <td><p>Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations.</p></td>
+    </tr>
+    <tr>
+      <th>tol</th>
+      <td><p>Tolerance for the optimization</p></td>
+    </tr>
+    <tr>
+      <th>learningRateInit</th>
+      <td><p>The initial learning rate used. It controls the step-size in updating the weights.</p></td>
+    </tr>
+    <tr>
+      <th>nIterNoChange</th>
+      <td><p>Maximum number of epochs to not meet tol improvement.</p></td>
+    </tr>
+    <tr>
+      <th>beta1</th>
+      <td><p>Exponential decay rate for estimates of first moment vector in adam, should be in [0, 1).</p></td>
+    </tr>
+    <tr>
+      <th>beta2</th>
+      <td><p>Exponential decay rate for estimates of second moment vector in adam, should be in [0, 1).</p></td>
+    </tr>
+    <tr>
+      <th>epsilon</th>
+      <td><p>Value for numerical stability in adam.</p></td>
     </tr>
     <tr>
       <th>seed</th>

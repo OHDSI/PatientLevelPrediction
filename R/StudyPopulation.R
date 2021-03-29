@@ -306,7 +306,7 @@ createStudyPopulation <- function(plpData,
       dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
       dplyr::filter(outcomeId == get('oId'))  %>% 
       dplyr::select(.data$rowId, .data$daysToEvent, .data$tarStart) %>% 
-      dplyr::filter(.data$daysToEvent < .data$tarStart)  
+      dplyr::filter(.data$daysToEvent < .data$tarStart & .data$daysToEvent > -get('priorOutcomeLookback') ) 
     
     if(nrow(as.data.frame(outcomeBefore))>0){
       outcomeBefore %>%
@@ -398,8 +398,8 @@ createStudyPopulation <- function(plpData,
 
     # check outcome still there
     if(sum(!is.na(population$daysToEvent))==0){
-      return(NULL)
       ParallelLogger::logWarn('No outcomes left...')
+      return(NULL)
     }
   
   population <- as.data.frame(population)

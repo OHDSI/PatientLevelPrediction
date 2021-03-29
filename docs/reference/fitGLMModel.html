@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
       </span>
     </div>
 
@@ -104,6 +104,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -116,13 +119,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -136,12 +139,15 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
@@ -177,10 +183,10 @@
   <span class='kw'>modelType</span> <span class='kw'>=</span> <span class='st'>"logistic"</span>,
   <span class='kw'>excludeCovariateIds</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(),
   <span class='kw'>includeCovariateIds</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(),
-  <span class='kw'>prior</span> <span class='kw'>=</span> <span class='fu'>createPrior</span>(<span class='st'>"laplace"</span>, <span class='kw'>useCrossValidation</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>),
-  <span class='kw'>control</span> <span class='kw'>=</span> <span class='fu'>createControl</span>(<span class='kw'>cvType</span> <span class='kw'>=</span> <span class='st'>"auto"</span>, <span class='kw'>fold</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>startingVariance</span> <span class='kw'>=</span> <span class='fl'>0.01</span>, <span class='kw'>tolerance</span>
-    <span class='kw'>=</span> <span class='fl'>2e-06</span>, <span class='kw'>cvRepetitions</span> <span class='kw'>=</span> <span class='fl'>1</span>, <span class='kw'>selectorType</span> <span class='kw'>=</span> <span class='st'>"byPid"</span>, <span class='kw'>noiseLevel</span> <span class='kw'>=</span> <span class='st'>"silent"</span>, <span class='kw'>threads</span> <span class='kw'>=</span>
-    -<span class='fl'>1</span>, <span class='kw'>maxIterations</span> <span class='kw'>=</span> <span class='fl'>3000</span>)
+  <span class='kw'>prior</span> <span class='kw'>=</span> <span class='kw pkg'>Cyclops</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/Cyclops/man/createPrior.html'>createPrior</a></span>(<span class='st'>"laplace"</span>, <span class='kw'>useCrossValidation</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>),
+  <span class='kw'>control</span> <span class='kw'>=</span> <span class='kw pkg'>Cyclops</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/Cyclops/man/createControl.html'>createControl</a></span>(<span class='kw'>cvType</span> <span class='kw'>=</span> <span class='st'>"auto"</span>, <span class='kw'>fold</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>startingVariance</span> <span class='kw'>=</span> <span class='fl'>0.01</span>,
+    <span class='kw'>tolerance</span> <span class='kw'>=</span> <span class='fl'>2e-06</span>, <span class='kw'>cvRepetitions</span> <span class='kw'>=</span> <span class='fl'>1</span>, <span class='kw'>selectorType</span> <span class='kw'>=</span> <span class='st'>"byPid"</span>, <span class='kw'>noiseLevel</span> <span class='kw'>=</span> <span class='st'>"silent"</span>,
+    <span class='kw'>threads</span> <span class='kw'>=</span> -<span class='fl'>1</span>, <span class='kw'>maxIterations</span> <span class='kw'>=</span> <span class='fl'>3000</span>)
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -193,7 +199,7 @@
     <tr>
       <th>plpData</th>
       <td><p>An object of type <code>plpData</code> as generated using
-<code>getDbPlpData</code>.</p></td>
+<code>getPlpData</code>.</p></td>
     </tr>
     <tr>
       <th>modelType</th>
