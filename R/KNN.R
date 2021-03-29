@@ -1,6 +1,6 @@
 # @file knn.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -20,13 +20,14 @@
 #'
 #' @param k         The number of neighbors to consider 
 #' @param indexFolder The directory where the results and intermediate steps are output
+#' @param threads   The number of threads to use when applying big knn
 #'
 #' @examples
 #' \dontrun{
 #' model.knn <- setKNN(k=10000)
 #' }
 #' @export
-setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
+setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
   ensure_installed("BigKnn")
   if(class(indexFolder)!='character')
     stop('IndexFolder must be a character')
@@ -38,7 +39,7 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
   if(length(k)>1)
     stop('k can only be a single value')
   
-  result <- list(model='fitKNN', param=list(k=k, indexFolder=indexFolder),
+  result <- list(model='fitKNN', param=list(k=k, indexFolder=indexFolder, threads=threads),
                  name='KNN'
   )
   class(result) <- 'modelSettings' 
@@ -46,10 +47,10 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn')  ){
   return(result)
 }
 fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...){
-  # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) )
-    stop('KNN requires plpData in coo format')
-  
+
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
   metaData <- attr(population, 'metaData')
   if(!is.null(population$indexes))
     population <- population[population$indexes>0,]
@@ -59,25 +60,33 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
   k <- param$k
   if(is.null(k))
     k <- 10
+  if(is.null(param$threads)){
+    param$threads<- 1
+  }
   indexFolder <- param$indexFolder
   
-  #clone data to prevent accidentally deleting plpData 
-  covariates <- ff::clone(plpData$covariates)
-  covariates <- limitCovariatesToPopulation(covariates, ff::as.ff(population$rowId))
+  #removed as done in BigKnn
+  #covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
   
   population$y <- population$outcomeCount
   population$y[population$y>0] <- 1
   
   # create the model in indexFolder
-  BigKnn::buildKnn(outcomes = ff::as.ffdf(population[,c('rowId','y')]),
-                   covariates = ff::as.ffdf(covariates),
-                   indexFolder = indexFolder)
+  #BigKnn::buildKnn(population = population[,c('rowId','y')],
+  #                 covariateData = covariateData,
+  #                 indexFolder = indexFolder)
+  
+  BigKnn::buildKnnFromPlpData(plpData = plpData,
+                                  population = population,
+                                  indexFolder = indexFolder,
+                                  overwrite = TRUE)
+  
   
   comp <- Sys.time() - start
   if(!quiet)
     writeLines(paste0('Model knn trained - took:',  format(comp, digits=3)))
   
-  varImp<- ff::as.ram(plpData$covariateRef)
+  varImp<- as.data.frame(plpData$covariateData$covariateRef)
   varImp$covariateValue <- rep(0, nrow(varImp))
   
   prediction <- predict.knn(plpData=plpData, 
@@ -85,14 +94,17 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
                             plpModel=list(model=indexFolder,
                                           modelSettings = list(model='knn',
                                                                modelParameters=list(k=k),
-                                                               indexFolder=indexFolder
+                                                               indexFolder=indexFolder,
+                                                               threads = param$threads
                                           )))
+  
   
   result <- list(model = indexFolder,
                  trainCVAuc = NULL,    # did I actually save this!?
                  modelSettings = list(model='knn',
                                       modelParameters=list(k=k),
-                                      indexFolder=indexFolder
+                                      indexFolder=indexFolder,
+                                      threads = param$threads
                  ),
                  hyperParamSearch = unlist(param),
                  metaData = plpData$metaData,

@@ -8,14 +8,14 @@ createLearningCurvePar(
   population,
   plpData,
   modelSettings,
-  testSplit = "person",
+  testSplit = "stratified",
   testFraction = 0.25,
   trainFractions = c(0.25, 0.5, 0.75),
+  trainEvents = NULL,
   splitSeed = NULL,
   nfold = 3,
   indexes = NULL,
   verbosity = "TRACE",
-  clearffTemp = FALSE,
   minCovariateFraction = 0.001,
   normalizeData = T,
   saveDirectory = getwd(),
@@ -24,7 +24,8 @@ createLearningCurvePar(
   savePlpPlots = F,
   saveEvaluation = F,
   timeStamp = FALSE,
-  analysisId = NULL
+  analysisId = "lc-",
+  cores = NULL
 )
 }
 \arguments{
@@ -53,7 +54,17 @@ stratified by the class label.}
 \item{testFraction}{The fraction of the data, which will be used as the 
 testing set in the patient split evaluation.}
 
-\item{trainFractions}{A list of training fractions to create models for.}
+\item{trainFractions}{A list of training fractions to create models for.
+Note, providing \code{trainEvents} will override your input to
+\code{trainFractions}.}
+
+\item{trainEvents}{Events have shown to be determinant of model performance.
+Therefore, it is recommended to provide \code{trainEvents} rather than
+\code{trainFractions}. Note, providing \code{trainEvents} will override
+your input to \code{trainFractions}. The format should be as follows:
+\itemize{
+  \item{\code{c(500, 1000, 1500)} - a list of training events}
+}}
 
 \item{splitSeed}{The seed used to split the testing and training set when
 using a 'person' type split}
@@ -77,9 +88,6 @@ levels are:
   \item{\code{FATAL} - be silent except for fatal errors}
 }}
 
-\item{clearffTemp}{Clears the temporary ff-directory after each iteration. 
-This can be useful, if the fitted models are large.}
-
 \item{minCovariateFraction}{Minimum covariate prevalence in population to
 avoid removal during preprocssing.}
 
@@ -98,6 +106,8 @@ avoid removal during preprocssing.}
 \item{timeStamp}{Include a timestamp in the log}
 
 \item{analysisId}{The analysis unique identifier}
+
+\item{cores}{The number of cores to use}
 }
 \value{
 A learning curve object containing the various performance measures

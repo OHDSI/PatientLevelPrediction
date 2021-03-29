@@ -14,9 +14,9 @@ output:
     number_sections: yes
     toc: yes
 ---
-  <!--
-  %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Building patient-level predictive models}
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Making  patient-level predictive network study packages}
 -->
   
   ```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
@@ -166,96 +166,6 @@ submitResults(exportFolder=outputLocation,
 ```
 
 
-# Example Code To Make Package For External Validation of Existing Model Converted to PLP framework
-First you need to make a copy of the PatientLevelPrediciton skeleton package found here:
-
-Add the modelTable, covariateTable and interceptTable into inst/extdata as csv files as described in the AddingExistingModels.pdf. Now you want to add the cohorts (generally the parameterized sql required to create one or more target and outcome cohorts). This should be added into the inst/sql/sql_server directory of your package.  If you are using atlas to create the cohorts then you can use: `OhdsiRTools::insertCirceDefinitionInPackage()`.  The settings for the cohort creation are defined in the inst/extdata directory in the file cohort_details.csv.  this file contains two columns: cohortName and cohortId.  The cohortName should contain the name of the sql file of the cohort in inst/sql/sql_server (e.g., a file called "targetCohort.sql" has the name "targetCohort") and the cohortId is the default cohort_definition_id that will be used when people run the study corresponding to this cohort.  The main.R file in the extras directory contains the vanilla code to run a study with the model eported into the package and the cohort files added.
-
-```{r tidy=TRUE,eval=FALSE}
-library(PatientLevelPrediction)
-library(FeatureExtraction)
-# input settings for person running the study
-connectionDetails <- ' '
-cdmDatabaseSchema <- 'their_cdm_database'
-databaseName <- 'Name for database'
-cohortDatabaseSchema <- 'a_database_with_write_priv'
-cohortTable <- 'package_table'
-outputLocation <- 'location to save results'
-  
-cohortDetails <- createCohort(connectionDetails = connectionDetails, 
-                              cdmDatabaseSchema = cdmDatabaseSchema, 
-                              cohortDatabaseSchema = cohortDatabaseSchema, 
-                              cohortTable = cohortTable, 
-             package = 'Your Package Name')
-
-# load the model details and insert into function to run exisitng model
-modelTable <- loadPlpResult(system.file("extdata/modelTable", 
-                            package = 'Your Package Name'))
-covariateTable <- loadPlpResult(system.file("extdata/covariateTable", 
-                                    package = 'Your Package Name'))
-interceptTable <- loadPlpResult(system.file("extdata/interceptTable", 
-                                    package = 'Your Package Name'))
-#enter the model type - e.g., score/logistic
-type <- 'score'
-# add the covariates used in the covariateTable and the temporal information
-# e.g., if you used age, gender and mediumTermLookback conditionEraGroups 
-# where you want 100 day lookback
-covariateSettings <- createCovariateSettings(useDemographicsGender = T, 
-                                             useDemographicsAge = T, 
-                                             useConditionGroupEraMediumTerm = T, 
-                                             mediumTermStartDays = -100)
-result <- evaluateExistingModel(modelTable = modelTable, 
-                                covariateTable = covariateTable, 
-                                interceptTable = interceptTable, 
-                                type = type, 
-                                covariateSettings = covariateSettings, 
-                                riskWindowStart = 1, 
-                                riskWindowEnd = 365, 
-                                requireTimeAtRisk = T, 
-                                minTimeAtRisk = 364, 
-                                includeAllOutcomes = T, 
-                                removeSubjectsWithPriorOutcome = T,
-                                connectionDetails = connectionDetails, 
-                                cdmDatabaseSchema = cdmDatabaseSchema, 
-                                cohortDatabaseSchema = cohortDatabaseSchema, 
-                                outcomeDatabaseSchema = cohortDatabaseSchema, 
-                                cohortTable = cohortTable, 
-                                outcomeTable = cohortTable, 
-                                cohortId = target_cohort_id, 
-                                outcomeId = outcome_cohort_id)
-
-# save results to standard output
-resultLoc <- standardOutput(result = result, 
-               outputLocation = outputLocation ,
-               studyName = 'external validation of ...',
-               databaseName = databaseName,
-               cohortName = 'your cohortName',
-               outcomeName = 'your outcomeName')
-
-# package results ready to submit
-packageResults(mainFolder=resultLoc,
-               includeROCplot= T,
-               includeCalibrationPlot = T,
-               includePRPlot = T,
-               includeTable1 = F,
-               includeThresholdSummary =T,
-               includeDemographicSummary = T,
-               includeCalibrationSummary = T,
-               includePredictionDistribution =T,
-               includeCovariateSummary = F,
-               removeLessThanN = F,
-               N = 10)
-
-```
-Where the target_cohort_id and outcome_cohort_id should correspond to the cohort_details.csv file.
-
-
-Finally get the implementor to check the export file created by the code into te outputLocation and to submit the results but running:
-```{r tidy=TRUE,eval=FALSE}
-submitResults(exportFolder=outputLocation,
-              dbName=databaseName, key, secret)
-
-```
 
 # Useful PatientLevelPrediction Functions
 The functions to aid the creation of a network study are:
@@ -263,13 +173,7 @@ The functions to aid the creation of a network study are:
 |Function|	Description|	Usage|
 |--------|-------------|-------|
 |`checkPlpInstall()`	|This function checks the connection, and various aspects of the PLP package to check it is set up correctly|	This should be run with the appropriate settings to check the contributor is set up correctly for the study|
-|`createCohorts()`	|This function requires a connection, cohort ids and cdm/work database details then creates any cohort in the inst/sql/sql_server.  It then summarises the cohorts.	|This should be used to create and check any target/outcome cohorts for the study.  The cohort summary should be emailed to the study creator.|
 |`getPlpData()`|	This function extracts the data from the cdm for model development|	This should be used if developing new models|
 |`runPlp()`|	This function trains and tests a new PLP model|	This should be used if developing new models|
-|`exportPlpResult()`|	This function exports the output of runPlp into an R package while removing sensitive objects |	This should be used when saving a model into a study package to validate the model|
+|`transportPlp()`|	This function exports the output of runPlp into an R package while removing sensitive objects |	This should be used when saving a model into a study package to validate the model|
 |`externalValidatePlp()`	|This function requires the user to inpute an existing model and then extracts the required data on a new database and applies/evaluates the model.	|This should be used if validating a PLP model|
-|`evaluateExistingModel()` |	This function enables existing models to be added into the PLP framework|	This should be used if validating an existing model by converting it into the PLP framework.|
-|`getTable1()`	|This function creates the table 1 characteristic for journal papers|	This should be used to characterise the data for any study|
-|`standardOutput()` |	This function saves the model development/evaluation as the standard package output|	This should be used to save the study results|
-|`packageResults()`|	This function takes a folder with standard output as input, removes sensitive data and moves the remaining data into a zipped file |	This should be used to package up the study results|
-|`submitResults()`|	This sends a zipped file to the OHDSI amazon repository|	This should be run after a study (once the zipped file has been checked) to submit the results for a data site to the study creator|

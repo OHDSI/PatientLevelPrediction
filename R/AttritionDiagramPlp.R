@@ -1,6 +1,6 @@
 # @file AttritionDiagramPlp.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -76,8 +76,11 @@ drawAttritionDiagramPlp <- function(attrition,
                targetCount = attrition$targetCount[1],
                uniquePeople = attrition$uniquePeople[1],
                outcomes = attrition$outcomes[1])
-  for (i in 2:nrow(attrition)) {
-    data <- addStep(data, attrition, i)
+  
+  if(nrow(attrition)>1){
+    for (i in 2:nrow(attrition)) {
+      data <- addStep(data, attrition, i)
+    }
   }
   
   
@@ -137,14 +140,14 @@ drawAttritionDiagramPlp <- function(attrition,
     p <- p + ggplot2::geom_rect(ggplot2::aes_string(xmin = x - (boxWidth/2) + shadowOffset,
                                                     ymin = y - (boxHeight/2) - shadowOffset,
                                                     xmax = x + (boxWidth/2) + shadowOffset,
-                                                    ymax = y + (boxHeight/2) - shadowOffset), fill = rgb(0,
+                                                    ymax = y + (boxHeight/2) - shadowOffset), fill = grDevices::rgb(0,
                                                                                                          0,
                                                                                                          0,
                                                                                                          alpha = 0.2))
     p <- p + ggplot2::geom_rect(ggplot2::aes_string(xmin = x - (boxWidth/2),
                                                     ymin = y - (boxHeight/2),
                                                     xmax = x + (boxWidth/2),
-                                                    ymax = y + (boxHeight/2)), fill = rgb(0.94,
+                                                    ymax = y + (boxHeight/2)), fill = grDevices::rgb(0.94,
                                                                                           0.94,
                                                                                           0.94), color = "black")
     return(p)

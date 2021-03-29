@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -96,7 +96,7 @@ test_that("plotSmoothCalibration", {
                                 bins = 20,
                                 zoom = "none",
                                 fileName = NULL)
-  testthat::expect_s3_class(test, 'ggplot')
+  testthat::expect_s3_class(test, c( "gtable", "gTree",  "grob",   "gDesc" ))
   
   # this fails:
   #test2 <- plotSmoothCalibration(result = plpResultReal,

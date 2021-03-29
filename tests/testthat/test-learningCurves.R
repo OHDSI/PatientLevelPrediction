@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -27,11 +27,10 @@ test_that("learningCurvePar", {
   learningCurvePar <- createLearningCurvePar(population = population, 
                                        plpData = plpData, 
                                        modelSettings = lrSet, 
-                                       testSplit = 'time', 
+                                       testSplit = 'stratified', 
                                        testFraction = 0.25, 
                                        trainFractions = c(0.5,0.6), 
                                        nfold = 3, 
-                                       clearffTemp = T, 
                                        analysisId = 'learningCurvePar',
                                        saveDirectory =  saveLoc
   )

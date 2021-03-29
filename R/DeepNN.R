@@ -1,6 +1,6 @@
 # @file DeepNN.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -35,6 +35,8 @@
 setDeepNN <- function(units=list(c(128, 64), 128), layer_dropout=c(0.2),
                       lr =c(1e-4), decay=c(1e-5), outcome_weight = c(1.0), batch_size = c(100), 
                       epochs= c(100),  seed=NULL  ){
+  
+  ensure_installed("keras")
   
   # if(class(indexFolder)!='character')
   #     stop('IndexFolder must be a character')
@@ -103,8 +105,9 @@ setDeepNN <- function(units=list(c(128, 64), 128), layer_dropout=c(0.2),
 fitDeepNN <- function(plpData,population, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) )
-    stop('DeepNN requires plpData in coo format')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop('DeepNN requires correct covariateData')
+  }
   if(!is.null(plpData$timeRef)){
     warning('Data temporal but deepNN uses non-temporal data...')
   }
@@ -135,7 +138,7 @@ fitDeepNN <- function(plpData,population, param, search='grid', quiet=F,
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
   finalModel<-do.call(trainDeepNN, c(param[[bestInd]],datas, train=FALSE))
   
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
   covariateRef$included <- incs
   covariateRef$covariateValue <- rep(0, nrow(covariateRef))
@@ -268,7 +271,7 @@ trainDeepNN<-function(plpData, population,
       prediction <- population[population$indexes==index,]
       prediction$value <- 0
       for(batch in batches){
-        pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],][batch,]))
+        pred <- keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],][batch,,drop=FALSE]))
         prediction$value[batch] <- pred[,2]
       }
       
@@ -341,7 +344,7 @@ trainDeepNN<-function(plpData, population,
     val_rows<-sample(1:nrow(population), valN, replace=FALSE)
     train_rows <- c(1:nrow(population))[-val_rows]
     
-    sampling_generator<-function(data, population, batch_size, train_rows){
+    sampling_generator2<-function(data, population, batch_size, train_rows){
       function(){
         gc()
         rows<-sample(train_rows, batch_size, replace=FALSE)
@@ -351,7 +354,7 @@ trainDeepNN<-function(plpData, population,
       }
     }
 
-    history <- model %>% keras::fit_generator(sampling_generator(plpData,population,batch_size,train_rows),
+    history <- model %>% keras::fit_generator(sampling_generator2(plpData,population,batch_size,train_rows),
                                               steps_per_epoch = nrow(population)/batch_size,
                                               epochs=epochs,
                                               validation_data=list(as.array(plpData[val_rows,,]),
@@ -366,7 +369,7 @@ trainDeepNN<-function(plpData, population,
     prediction <- population
     prediction$value <- 0
     for(batch in batches){
-      pred <- keras::predict_proba(model, as.array(plpData[batch,]))
+      pred <- keras::predict_proba(model, as.array(plpData[batch,,drop=FALSE]))
       prediction$value[batch] <- pred[,2]
     }
     
@@ -530,7 +533,7 @@ transferLearning <- function(plpResult,
   prediction <- population
   prediction$value <- 0
   for(batch in batches){
-    pred <- model$predict(as.array(data[batch,,]))
+    pred <- model$predict(as.array(data[batch,,drop=FALSE])) # added drop=FALSE
     prediction$value[batch] <- pred[,2]
   }
   

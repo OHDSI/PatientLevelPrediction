@@ -1,6 +1,6 @@
 # @file SageMakerBinary.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -74,6 +74,8 @@ setSagemakerBinary<- function(classifier='xgboost',
 fitSagemaker <- function(population, plpData, param, quiet=F,
                          outcomeId, cohortId, ...){
   
+  train_sagemaker <- function(){return(NULL)}
+  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -91,7 +93,7 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
   
   metaData = plpData$metaData
   populationSettings = attr(population, 'metaData')
-  varImp <- ff::as.ram(plpData$covariateRef)
+  varImp <- as.data.frame(plpData$covariateData$covariateRef)
   
   # create the python object to set variables
   pyt <- reticulate::py
@@ -191,6 +193,8 @@ fitSagemaker <- function(population, plpData, param, quiet=F,
 
 
 predict.sagemaker <- function(plpModel, population, plpData){
+  
+  sagemaker_predict <- function(){return(NULL)}
   
   bucket <- Sys.getenv('s3_bucket') 
   #roleArn <- Sys.getenv('aws_role_arn')

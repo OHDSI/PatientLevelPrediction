@@ -4,12 +4,14 @@
 \alias{setKNN}
 \title{Create setting for knn model}
 \usage{
-setKNN(k = 1000, indexFolder = file.path(getwd(), "knn"))
+setKNN(k = 1000, indexFolder = file.path(getwd(), "knn"), threads = 1)
 }
 \arguments{
 \item{k}{The number of neighbors to consider}
 
 \item{indexFolder}{The directory where the results and intermediate steps are output}
+
+\item{threads}{The number of threads to use when applying big knn}
 }
 \description{
 Create setting for knn model

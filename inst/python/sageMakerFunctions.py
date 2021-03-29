@@ -2,8 +2,8 @@ import sagemaker
 from sagemaker.transformer import Transformer
 import numpy as np
 import scipy.sparse
-from sklearn.externals import joblib
-from sklearn.externals.joblib import Memory
+import joblib
+from joblib import Memory
 import StringIO
 import boto3
 import os

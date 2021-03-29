@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -15,6 +15,7 @@
 # limitations under the License.
 
 library("testthat")
+context("Torch")
 
 lrtSet <- setLRTorch(w_decay=0.0005, 
                      epochs=1, 
@@ -35,7 +36,6 @@ plpResultLrt <- runPlp(population = population,
 
 
 
-context("Torch")
 #TODO: add input checks and test these...
 #options(fftempdir = getwd())
 

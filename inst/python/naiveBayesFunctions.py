@@ -16,9 +16,9 @@ import math
 from sklearn.naive_bayes import GaussianNB #BernoulliNB
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.feature_selection import SelectFromModel#from sklearn.cross_validation import PredefinedSplit
-from sklearn.externals.joblib import Memory
+from joblib import Memory
 #from sklearn.datasets import load_svmlight_file
-from sklearn.externals import joblib
+import joblib
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
@@ -81,7 +81,7 @@ def train_naive_bayes(population, plpData, modelOutput, variableNumber, quiet):
   if not os.path.exists(modelOutput):
     os.makedirs(modelOutput)
   print("Model saved to: %s" %(modelOutput)	)
-  joblib.dump(gnb, os.path.join(modelOutput,"model.pkl"))  
+  joblib.dump(gnb, os.path.join(modelOutput,"model.pkl"), compress = True)  
   # merge pred with indexes[testInd,:]
   test_pred = gnb.predict_proba(X)[:,1]
   test_pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)

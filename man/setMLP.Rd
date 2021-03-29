@@ -4,12 +4,37 @@
 \alias{setMLP}
 \title{Create setting for neural network model with python}
 \usage{
-setMLP(size = 4, alpha = 1e-05, seed = NULL)
+setMLP(
+  size = 4,
+  alpha = c(0.3, 0.01, 0.001, 1e-06),
+  maxIter = 2000,
+  tol = 1e-04,
+  learningRateInit = 0.001,
+  nIterNoChange = 10,
+  beta1 = 0.9,
+  beta2 = 0.999,
+  epsilon = c(1, 0.1, 1e-08),
+  seed = NULL
+)
 }
 \arguments{
 \item{size}{The number of hidden nodes}
 
 \item{alpha}{The l2 regularisation}
+
+\item{maxIter}{Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations.}
+
+\item{tol}{Tolerance for the optimization}
+
+\item{learningRateInit}{The initial learning rate used. It controls the step-size in updating the weights.}
+
+\item{nIterNoChange}{Maximum number of epochs to not meet tol improvement.}
+
+\item{beta1}{Exponential decay rate for estimates of first moment vector in adam, should be in [0, 1).}
+
+\item{beta2}{Exponential decay rate for estimates of second moment vector in adam, should be in [0, 1).}
+
+\item{epsilon}{Value for numerical stability in adam.}
 
 \item{seed}{A seed for the model}
 }

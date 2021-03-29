@@ -1,6 +1,6 @@
 # @file LearningCurve.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -45,6 +45,15 @@
 #' @param testFraction The fraction of the data, which will be used as the 
 #'   testing set in the patient split evaluation.
 #' @param trainFractions A list of training fractions to create models for.
+#'   Note, providing \code{trainEvents} will override your input to
+#'   \code{trainFractions}.
+#' @param trainEvents Events have shown to be determinant of model performance.
+#'   Therefore, it is recommended to provide \code{trainEvents} rather than
+#'   \code{trainFractions}. Note, providing \code{trainEvents} will override
+#'   your input to \code{trainFractions}. The format should be as follows:
+#'   \itemize{
+#'     \item{\code{c(500, 1000, 1500)} - a list of training events}
+#'   }
 #' @param splitSeed The seed used to split the testing and training set when
 #'   using a 'person' type split                  
 #' @param nfold The number of folds used in the cross validation (default = 
@@ -100,13 +109,13 @@ createLearningCurve <- function(population,
                                 testSplit = 'person',
                                 testFraction = 0.25,
                                 trainFractions = c(0.25, 0.50, 0.75),
+                                trainEvents = NULL,
                                 splitSeed = NULL,
                                 nfold = 3,
                                 indexes = NULL,
                                 verbosity = 'TRACE',
                                 clearffTemp = FALSE,
                                 minCovariateFraction = 0.001,
-                                
                                 normalizeData = T,
                                 saveDirectory = getwd(),
                                 savePlpData = F,
@@ -122,6 +131,25 @@ createLearningCurve <- function(population,
   
   # remove all registered loggers
   ParallelLogger::clearLoggers()
+  
+  # if trainEvents is provided override trainFractions input
+  if (!is.null(trainEvents)) {
+    # compute training set fractions from training events
+    samplesRequired <- trainEvents/(sum(population$outcomeCount/nrow(population)))
+    trainFractionsTemp <- samplesRequired/nrow(population)
+    
+    # filter out no. of events that would exceed the available training set size
+    binaryMask <- trainFractionsTemp <= (1.0 - testFraction)
+    
+    # override any input to trainFractions with event-based training fractions
+    trainFractions <- trainFractionsTemp[binaryMask]
+    
+    # Check if any train fractions could be associated with the provided events
+    if(!length(trainFractions)) {
+      # If not, fall back on default train fractions
+      trainFractions <- c(0.25, 0.50, 0.75)
+    }
+  }
   
   # number of training set fractions
   nRuns <- length(trainFractions)
@@ -154,6 +182,7 @@ createLearningCurve <- function(population,
     result <- do.call(runPlp, settings)  
     
     executeTime <- result$executionSummary$TotalExecutionElapsedTime
+    nPredictors <- sum(abs(result$model$model$coefficients) > 0)
     
     result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
 
@@ -171,6 +200,8 @@ createLearningCurve <- function(population,
     df <- df[-grep('auc_',df$name),]
     
     df <- reshape2::dcast(df, x~ name)
+    
+    df$nPredictors <- nPredictors
   
     # return data frame row for each run
     return(df)
@@ -189,17 +220,26 @@ createLearningCurve <- function(population,
     "TestPR",
     "TestBrierScaled",
     "TestBrierScore",
+    "TestCalibrationInLarge",
     "TestCalibrationIntercept",
     "TestCalibrationSlope",
+    "TestE90",
+    "TestEave",
+    "TestEmax",
     "outcomeCountTest",
     "popSizeTest",
     "TrainROC",
     "TrainPR",
     "TrainBrierScaled",
     "TrainBrierScore",
+    "TrainCalibrationInLarge",
     "TrainCalibrationIntercept",
-    "TrainCalibrationSlope"
-  )
+    "TrainCalibrationSlope",
+    "TrainE90",
+    "TrainEave",
+    "TrainEmax",
+    "nPredictors"
+    )
 
   
   endTime <- Sys.time()
@@ -238,6 +278,15 @@ createLearningCurve <- function(population,
 #' @param testFraction The fraction of the data, which will be used as the 
 #'   testing set in the patient split evaluation.
 #' @param trainFractions A list of training fractions to create models for.
+#'   Note, providing \code{trainEvents} will override your input to
+#'   \code{trainFractions}.
+#' @param trainEvents Events have shown to be determinant of model performance.
+#'   Therefore, it is recommended to provide \code{trainEvents} rather than
+#'   \code{trainFractions}. Note, providing \code{trainEvents} will override
+#'   your input to \code{trainFractions}. The format should be as follows:
+#'   \itemize{
+#'     \item{\code{c(500, 1000, 1500)} - a list of training events}
+#'   }
 #' @param splitSeed The seed used to split the testing and training set when
 #'   using a 'person' type split                  
 #' @param nfold The number of folds used in the cross validation (default = 
@@ -256,8 +305,6 @@ createLearningCurve <- function(population,
 #'     \item{\code{ERROR} - show error messages}
 #'     \item{\code{FATAL} - be silent except for fatal errors}
 #'   }
-#' @param clearffTemp Clears the temporary ff-directory after each iteration. 
-#'   This can be useful, if the fitted models are large.
 #' @param minCovariateFraction Minimum covariate prevalence in population to
 #'   avoid removal during preprocssing.
 #' @param normalizeData Whether to normalise the data
@@ -268,6 +315,7 @@ createLearningCurve <- function(population,
 #' @param saveEvaluation Whether to save the plp performance csv files
 #' @param timeStamp Include a timestamp in the log
 #' @param analysisId The analysis unique identifier
+#' @param cores The number of cores to use
 #' @return A learning curve object containing the various performance measures
 #'  obtained by the model for each training set fraction. It can be plotted
 #'  using \code{plotLearningCurve}.
@@ -292,14 +340,14 @@ createLearningCurve <- function(population,
 createLearningCurvePar <- function(population,
                                    plpData,
                                    modelSettings,
-                                   testSplit = 'person',
+                                   testSplit = 'stratified',
                                    testFraction = 0.25,
                                    trainFractions = c(0.25, 0.50, 0.75),
+                                   trainEvents = NULL,
                                    splitSeed = NULL,
                                    nfold = 3,
                                    indexes = NULL,
                                    verbosity = 'TRACE',
-                                   clearffTemp = FALSE,
                                    minCovariateFraction = 0.001,
                                    normalizeData = T,
                                    saveDirectory = getwd(),
@@ -308,74 +356,84 @@ createLearningCurvePar <- function(population,
                                    savePlpPlots = F,
                                    saveEvaluation = F,
                                    timeStamp = FALSE,
-                                   analysisId = NULL) {
+                                   analysisId = 'lc-',
+                                   cores = NULL) {
   
-  # register a parallel backend
-  registerParallelBackend()
-  
-  # verify that a parallel backend has been registered
-  setup_parallel()
-  
-  ParallelLogger::logInfo('Started to run in parallel, this can take a while...')
-  
-  # record global start time
   ExecutionDateTime <- Sys.time()
   
-  # store a copy of the original population
-  originalPopulation <- population
-  
-  learningCurve <- foreach::foreach(
-    i = 1:length(trainFractions),
-    .combine = rbind,
-    .errorhandling = "remove",
-    .packages = c("doParallel",
-                  "PatientLevelPrediction")
-  ) %dopar% {
-    
-    result <- runPlp(population = originalPopulation, 
-                     plpData = plpData, 
-                     minCovariateFraction = minCovariateFraction,
-                     normalizeData = normalizeData,
-                     modelSettings = modelSettings,
-                     testSplit = testSplit,
-                     testFraction = testFraction,
-                     trainFraction = trainFractions[i],
-                     splitSeed = splitSeed,
-                     nfold = nfold,
-                     indexes = indexes,
-                     saveDirectory = saveDirectory,
-                     savePlpData = savePlpData,
-                     savePlpResult = savePlpResult,
-                     savePlpPlots = savePlpPlots,
-                     saveEvaluation = saveEvaluation,
-                     verbosity = verbosity,
-                     timeStamp = timeStamp,
-                     analysisId = paste(analysisId, '_', i)
-    )  
-    
-    executeTime <- result$executionSummary$TotalExecutionElapsedTime
-    
-    result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
-    
-    df <- data.frame( x = trainFractions[i] * 100,
-                      name = c('executionTime',paste0(result$Eval, result$Metric)), 
-                      value = c(as.double(executeTime) ,as.double(as.character(result$Value)))
-    )
-    df$name <- as.character(df$name)
-    df$name[df$name == 'trainAUC.auc'] <- 'trainAUCROC'
-    df$name[df$name == 'testAUC.auc'] <- 'testAUCROC'
-    df$name[df$name == 'trainpopulationSize'] <- 'popSizeTrain'
-    df$name[df$name == 'trainoutcomeCount'] <- 'outcomeCountTrain'
-    df$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', df$name))
-    
-    df <- df[-grep('auc_',df$name),]
-    
-    df <- reshape2::dcast(df, x~ name)
-    
-    return(df)
-
+  if(testSplit == 'person'){
+    testSplit <- 'stratified'
   }
-  names(learningCurve) <- c(
+  
+  if(!dir.exists(saveDirectory)){
+    dir.create(saveDirectory, recursive = T)
+  }
+  
+  savePlpData(plpData, file.path(saveDirectory,'data'))
+  
+  # if trainEvents is provided override trainFractions input
+  if (!is.null(trainEvents)) {
+    # compute training set fractions from training events
+    samplesRequired <- trainEvents/(sum(population$outcomeCount/nrow(population)))
+    trainFractionsTemp <- samplesRequired/nrow(population)
+    
+    # filter out no. of events that would exceed the available training set size
+    binaryMask <- trainFractionsTemp <= (1.0 - testFraction)
+    
+    # override any input to trainFractions with event-based training fractions
+    trainFractions <- trainFractionsTemp[binaryMask]
+    
+    # Check if any train fractions could be associated with the provided events
+    if(!length(trainFractions)) {
+      # If not, fall back on default train fractions
+      trainFractions <- c(0.25, 0.50, 0.75)
+    }
+  }
+  
+  getLcSettings <- function(i){
+    result <-list(population=population,
+                  plpData= file.path(saveDirectory,'data'),
+                  minCovariateFraction=minCovariateFraction,
+                  normalizeData=normalizeData,
+                  modelSettings=modelSettings,
+                  testSplit = testSplit,
+                  testFraction=testFraction,
+                  trainFraction=trainFractions[i],
+                  splitSeed=splitSeed,
+                  nfold=nfold,
+                  indexes=indexes,
+                  saveDirectory=saveDirectory,
+                  savePlpData=savePlpData,
+                  savePlpResult=savePlpResult,
+                  savePlpPlots=savePlpPlots,
+                  saveEvaluation=saveEvaluation,
+                  verbosity = verbosity,
+                  timeStamp = timeStamp,
+                  analysisId= paste0(analysisId,i))
+    return(result)
+  }
+  lcSettings <- lapply(1:length(trainFractions), getLcSettings)
+  
+  if(is.null(cores)){
+    ParallelLogger::logInfo(paste0('Number of cores not specified'))
+    cores <- parallel::detectCores()
+    ParallelLogger::logInfo(paste0('Using all ', cores))
+    ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
+  }
+  
+  cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
+  ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda"))
+  
+  learningCurve <- ParallelLogger::clusterApply(cluster = cluster, 
+                                                x = lcSettings, 
+                                                fun = lcWrapper, 
+                                                stopOnError = FALSE,
+                                                progressBar = TRUE)
+  ParallelLogger::stopCluster(cluster)
+  
+  learningCurve <- do.call(rbind, learningCurve)
+  
+  colnames(learningCurve) <- c(
     "Fraction",
     "Time",
     "Occurrences",
@@ -384,26 +442,78 @@ createLearningCurvePar <- function(population,
     "TestPR",
     "TestBrierScaled",
     "TestBrierScore",
+    "TestCalibrationInLarge",
     "TestCalibrationIntercept",
     "TestCalibrationSlope",
+    "TestE90",
+    "TestEave",
+    "TestEmax",
     "outcomeCountTest",
     "popSizeTest",
     "TrainROC",
     "TrainPR",
     "TrainBrierScaled",
     "TrainBrierScore",
+    "TrainCalibrationInLarge",
     "TrainCalibrationIntercept",
-    "TrainCalibrationSlope"
+    "TrainCalibrationSlope",
+    "TrainE90",
+    "TrainEave",
+    "TrainEmax",
+    "nPredictors"
   )
-  
+
   endTime <- Sys.time()
   TotalExecutionElapsedTime <-
     as.numeric(difftime(endTime, ExecutionDateTime,
                         units = "secs"))
   ParallelLogger::logInfo('Finished in ', round(TotalExecutionElapsedTime), ' secs.')
   
-  # de-register the parallel backend by registering a sequential backend
-  registerSequentialBackend()
-  
   return(learningCurve)
+}
+
+
+
+
+lcWrapper <- function(settings){
+  plpData <- PatientLevelPrediction::loadPlpData(settings$plpData)
+  settings$plpData <- plpData
+  result <- tryCatch({do.call(runPlp, settings)},
+                     warning = function(war) {
+                       ParallelLogger::logInfo(paste0('a warning: ', war))
+                       return(NULL)
+                     }, 
+                     error = function(err) {
+                       ParallelLogger::logError(paste0('an error: ', err))
+                       return(NULL)
+                     }       
+  )
+  if(!is.null(result)){
+    executeTime = result$executionSummary$TotalExecutionElapsedTime
+    nPredictors <- sum(abs(result$model$model$coefficients) > 0)
+    
+    result = as.data.frame(result$performanceEvaluation$evaluationStatistics)
+    
+    dfr = data.frame( x = settings$trainFraction * 100,
+                      name = c('executionTime',paste0(result$Eval, result$Metric)), 
+                      value = c(as.double(executeTime) ,as.double(as.character(result$Value)))
+    )
+    dfr$name = as.character(dfr$name)
+    dfr$name[dfr$name == 'trainAUC.auc'] = 'trainAUCROC'
+    dfr$name[dfr$name == 'testAUC.auc'] = 'testAUCROC'
+    dfr$name[dfr$name == 'trainpopulationSize'] = 'popSizeTrain'
+    dfr$name[dfr$name == 'trainoutcomeCount'] = 'outcomeCountTrain'
+    dfr$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', dfr$name))
+    dfr = dfr[-grep('auc_',dfr$name),]
+    
+    dfr <- reshape2::dcast(dfr, x~ name)
+    
+    dfr$nPredictors <- nPredictors
+    
+    final <- dfr
+
+    return(final)
+  } else{
+    return(rep(0,21))
+  }
 }

@@ -4,12 +4,12 @@
 \alias{evaluatePlp}
 \title{evaluatePlp}
 \usage{
-evaluatePlp(prediction, plpData)
+evaluatePlp(prediction, plpData = NULL)
 }
 \arguments{
 \item{prediction}{The patient level prediction model's prediction}
 
-\item{plpData}{The patient level prediction data}
+\item{plpData}{Redundant - no longer used}
 }
 \value{
 A list containing the performance values

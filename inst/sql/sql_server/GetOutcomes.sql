@@ -1,6 +1,6 @@
 /************************************************************************
 @file GetOutcomes.sql
-Copyright 2019 Observational Health Data Sciences and Informatics
+Copyright 2020 Observational Health Data Sciences and Informatics
 This file is part of CohortMethod
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ limitations under the License.
 {@outcome_table == 'condition_era' } ? {
 
 {@cdm_version == '6' } ? {
-SELECT DISTINCT row_id,
+SELECT DISTINCT cast(row_id as int) row_id,
 	ancestor_concept_id AS outcome_id,
 	DATEDIFF(DAY, cohort_start_date, condition_era_start_datetime) AS days_to_event
 FROM #cohort_person cohort_person
@@ -38,7 +38,7 @@ INNER JOIN (
 WHERE DATEDIFF(DAY, condition_era_start_datetime, cohort_start_date) <= days_from_obs_start
 	AND DATEDIFF(DAY, cohort_start_date, condition_era_start_datetime) <= days_to_obs_end} : {
 	
-	SELECT DISTINCT row_id,
+	SELECT DISTINCT cast(row_id as int) row_id,
 	ancestor_concept_id AS outcome_id,
 	DATEDIFF(DAY, cohort_start_date, condition_era_start_date) AS days_to_event
 FROM #cohort_person cohort_person
@@ -59,7 +59,7 @@ WHERE DATEDIFF(DAY, condition_era_start_date, cohort_start_date) <= days_from_ob
 	
 	
 } : {
-SELECT DISTINCT row_id,
+SELECT DISTINCT cast(row_id as int) row_id,
 {@cdm_version == "4"} ? {	
 	outcome.cohort_concept_id AS outcome_id,
 } : {

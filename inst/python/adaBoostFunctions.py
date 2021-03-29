@@ -16,9 +16,9 @@ import math
 from sklearn.ensemble import AdaBoostClassifier
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.feature_selection import SelectFromModel
-from sklearn.externals.joblib import Memory
+from joblib import Memory
 #from sklearn.datasets import load_svmlight_file
-from sklearn.externals import joblib
+import joblib
 
 #================================================================
 def train_adaboost(population, plpData, train, n_estimators, learning_rate, modelOutput, seed, quiet):
@@ -70,7 +70,7 @@ def train_adaboost(population, plpData, train, n_estimators, learning_rate, mode
     if not os.path.exists(modelOutput):
       os.makedirs(modelOutput)
     print("Model saved to: %s" %(modelOutput)	)
-    joblib.dump(adab, os.path.join(modelOutput,"model.pkl")) 
+    joblib.dump(adab, os.path.join(modelOutput,"model.pkl"), compress = True) 
     pred = adab.predict_proba(X[trainInds,:])[:,1]
     pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
     prediction = np.append(population[population[:,population.shape[1]-1] > 0,:],pred, axis=1)

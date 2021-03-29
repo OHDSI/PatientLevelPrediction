@@ -14,6 +14,7 @@ runPlpAnalyses(
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "cohort",
   cdmVersion = 5,
+  onlyFetchData = FALSE,
   outputFolder = "./PlpOutput",
   modelAnalysisList,
   cohortIds,
@@ -28,7 +29,8 @@ runPlpAnalyses(
   testFraction = 0.25,
   splitSeed = NULL,
   nfold = 3,
-  verbosity = "INFO"
+  verbosity = "INFO",
+  settings = NULL
 )
 }
 \arguments{
@@ -66,6 +68,8 @@ SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 \item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and
 "5".}
 
+\item{onlyFetchData}{Only fetches and saves the data object to the output folder without running the analysis.}
+
 \item{outputFolder}{Name of the folder where all the outputs will written to.}
 
 \item{modelAnalysisList}{A list of objects of type \code{modelSettings} as created using
@@ -96,6 +100,8 @@ the \code{\link{createPlpModelSettings}} function.}
 \item{nfold}{Number of folds used to do cross validation}
 
 \item{verbosity}{The logging level}
+
+\item{settings}{Specify the T, O, population, covariate and model settings}
 }
 \value{
 A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier

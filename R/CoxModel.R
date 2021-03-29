@@ -1,6 +1,6 @@
 # @file lassoCoxModel.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -25,6 +25,9 @@
 #' model.lr <- setCoxModel()
 #' @export
 setCoxModel<- function(variance=0.01, seed=NULL){
+  
+  ensure_installed("survAUC")
+  
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
   if(!class(variance) %in% c("numeric", "integer"))
@@ -50,7 +53,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
   }
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates)){
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
     ParallelLogger::logError('Cox regression requires plpData in coo format')
     stop()
   }
@@ -60,14 +63,15 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
   #TODO - how to incorporate indexes?
+
   variance <- 0.003
   if(!is.null(param$variance )) variance <- param$variance
   start <- Sys.time()
   modelTrained <- fitGLMModel(population,
                               plpData = plpData,
                               modelType = "cox",
-                              prior = createPrior("laplace",useCrossValidation = TRUE),
-                              control = createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
+                              prior = Cyclops::createPrior("laplace",useCrossValidation = TRUE),
+                              control = Cyclops::createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                       startingVariance = variance,
                                                       tolerance  = 2e-07,
                                                       cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
@@ -75,6 +79,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
                                                       threads=-1,
                                                       maxIterations = 3000,
                                                       seed=param$seed))
+  
   
   # TODO get optimal lambda value
   
@@ -86,7 +91,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
     varImp <- NULL
   } else {
     #varImp <- varImp[abs(varImp$value)>0,]
-    varImp <- merge(ff::as.ram(plpData$covariateRef), varImp, 
+    varImp <- merge(as.data.frame(plpData$covariateData$covariateRef), varImp, 
                     by='covariateId',all=T)
     varImp$value[is.na(varImp$value)] <- 0
     varImp <- varImp[order(-abs(varImp$value)),]
@@ -103,7 +108,7 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
                  hyperParamSearch = c(priorVariance=modelTrained$priorVariance, 
                                       seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
                                       log_likelihood = modelTrained$log_likelihood),
-                 trainCVAuc = NULL,
+                 trainCVAuc = NULL, # add this?
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,# can use populationSettings$outcomeId?
@@ -115,6 +120,6 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
   )
   class(result) <- 'plpModel'
   attr(result, 'type') <- 'plp'
-  attr(result, 'predictionType') <- 'binary'
+  attr(result, 'predictionType') <- 'survival'
   return(result)
 }

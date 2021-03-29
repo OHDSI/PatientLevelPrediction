@@ -1,6 +1,6 @@
 # @file PlpSaveLoad.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -42,10 +42,7 @@
 #' @param oracleTempSchema             For Oracle only: the name of the database schema where you want
 #'                                     all temporary tables to be managed. Requires create/insert
 #'                                     permissions to this database.
-#' @param cohortId                     A unique identifier to define the at risk cohort.  If
-#'                                     cohortTable = DRUG_ERA, cohortId is a CONCEPT_ID and all
-#'                                     descendant concepts within that CONCEPT_ID will be used to
-#'                                     define the cohort.  If cohortTable <> DRUG_ERA, cohortId is
+#' @param cohortId                     A unique identifier to define the at risk cohort. CohortId is
 #'                                     used to select the cohort_concept_id in the cohort-like table.
 #' @param outcomeIds                   A list of cohort_definition_ids used to define outcomes (-999 mean no outcome gets downloaded).
 #' @param studyStartDate               A calendar date specifying the minimum date that a cohort index
@@ -56,24 +53,18 @@
 #'                                     beyond the study end date will be considered.
 #' @param cohortDatabaseSchema         The name of the database schema that is the location where the
 #'                                     cohort data used to define the at risk cohort is available.
-#'                                     If cohortTable = DRUG_ERA, cohortDatabaseSchema is not used
-#'                                     by assumed to be cdmSchema.  Requires read permissions to this
-#'                                     database.
-#' @param cohortTable                  The tablename that contains the at risk cohort.  If
-#'                                     cohortTable <> DRUG_ERA, then expectation is cohortTable has
+#'                                     Requires read permissions to this database.
+#' @param cohortTable                  The tablename that contains the at risk cohort.  cohortTable has
 #'                                     format of COHORT table: cohort_concept_id, SUBJECT_ID,
 #'                                     COHORT_START_DATE, COHORT_END_DATE.
 #' @param outcomeDatabaseSchema            The name of the database schema that is the location where
-#'                                         the data used to define the outcome cohorts is available. If
-#'                                         cohortTable = CONDITION_ERA, exposureDatabaseSchema is not
-#'                                         used by assumed to be cdmSchema.  Requires read permissions
-#'                                         to this database.
-#' @param outcomeTable                     The tablename that contains the outcome cohorts.  If
-#'                                         outcomeTable <> CONDITION_OCCURRENCE, then expectation is
+#'                                         the data used to define the outcome cohorts is available. 
+#'                                         Requires read permissions to this database.
+#' @param outcomeTable                     The tablename that contains the outcome cohorts. Expectation is
 #'                                         outcomeTable has format of COHORT table:
 #'                                         COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
 #'                                         COHORT_END_DATE.
-#' @param cdmVersion                   Define the OMOP CDM version used: currently support "4" and "5".
+#' @param cdmVersion                   Define the OMOP CDM version used: currently support "4", "5" and "6".
 #' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
 #'                                     but can already be done here for efficiency reasons.
@@ -138,6 +129,7 @@ getPlpData <- function(connectionDetails,
   #ToDo: add other checks the inputs are valid
   
   connection <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(connection))
   dbms <- connectionDetails$dbms
   
   writeLines("\nConstructing the at risk cohort")
@@ -188,6 +180,11 @@ getPlpData <- function(connectionDetails,
                                                          cohortTableIsTemp = TRUE,
                                                          rowIdField = "row_id",
                                                          covariateSettings = covariateSettings)
+  # add indexes for covariate summary
+  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
+  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
+  
+  
   if(max(outcomeIds)!=-999){
   writeLines("Fetching outcomes from server")
   start <- Sys.time()
@@ -215,6 +212,9 @@ getPlpData <- function(connectionDetails,
   } else {
     outcomes <- NULL
   }
+
+  
+  
   
   # Remove temp tables:
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
@@ -222,7 +222,7 @@ getPlpData <- function(connectionDetails,
                                                    dbms = dbms,
                                                    oracleTempSchema = oracleTempSchema)
   DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
-  DatabaseConnector::disconnect(connection)
+  #DatabaseConnector::disconnect(connection)
   
   metaData <- covariateData$metaData
   metaData$call <- match.call()
@@ -250,73 +250,21 @@ getPlpData <- function(connectionDetails,
     if(covariateSettings$temporal){
       # make sure time days populated
       if(length(covariateSettings$temporalStartDays)>0){
-        timeReference = ff::as.ffdf(data.frame(timeId=1:length(covariateSettings$temporalStartDays),
+        timeReference = data.frame(timeId=1:length(covariateSettings$temporalStartDays),
                                                startDay = covariateSettings$temporalStartDays, 
-                                               endDay = covariateSettings$temporalEndDays))
+                                               endDay = covariateSettings$temporalEndDays)
       }
     }}
   
 
   result <- list(cohorts = cohorts,
                  outcomes = outcomes,
-                 covariates = covariateData$covariates,
-                 covariateRef = covariateData$covariateRef,
-                 timeRef = timeReference,#covariateData$covariatesContinuous,
-                 analysisRef = covariateData$analysisRef,
+                 covariateData = covariateData,
+                 timeRef = timeReference,
                  metaData = metaData)
   
   class(result) <- "plpData"
   return(result)
-}
-
-
-
-
-#' Get the covaridate data for a cohort table
-#' @description
-#' This function executes some SQL to extract covaraite data for a cohort table
-#'
-#' @details
-#' This function extracts covariate data for a given target popualtion 
-#'
-#' @param connection                   Can also use an existing connection rather than the connectionDetails
-#' @param cdmDatabaseSchema            The name of the database schema that contains the OMOP CDM
-#'                                     instance.  Requires read permissions to this database. On SQL
-#'                                     Server, this should specifiy both the database and the schema,
-#'                                     so for example 'cdm_instance.dbo'.
-#' @param oracleTempSchema             For Oracle only: the name of the database schema where you want
-#'                                     all temporary tables to be managed. Requires create/insert
-#'                                     permissions to this database.
-#' @param cohortTable                  The temp table containing the cohort of people
-#' @param cdmVersion                   The version of the CDM (default 5)
-#' @param covariateSettings            An object of type \code{covariateSettings} as created using the
-#'                                     \code{createCovariateSettings} function in the
-#'                                     \code{FeatureExtraction} package.
-#'
-#' @return
-#' Returns the covariates for the people in the temp table
-#' @export
-getCovariateData <- function(connection,
-                       cdmDatabaseSchema,
-                       oracleTempSchema = cdmDatabaseSchema,
-                       cohortTable = "#cohort_person",
-                       cdmVersion = 5,
-                       covariateSettings) {
-  
-  if(missing(connection)){
-    stop('Need to enter an existing connection')
-  } 
-  
-  writeLines("Extracting covariate data")
-  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
-                                                         oracleTempSchema = oracleTempSchema,
-                                                         cdmDatabaseSchema = cdmDatabaseSchema,
-                                                         cdmVersion = cdmVersion,
-                                                         cohortTable = cohortTable,
-                                                         cohortTableIsTemp = TRUE,
-                                                         rowIdField = "row_id",
-                                                         covariateSettings = covariateSettings)
-  return(covariateData$covariates)
 }
 
 
@@ -326,7 +274,7 @@ getCovariateData <- function(connection,
 #' \code{savePlpData} saves an object of type plpData to folder.
 #'
 #' @param plpData   An object of type \code{plpData} as generated using
-#'                           \code{getDbPlpData}.
+#'                           \code{getPlpData}.
 #' @param file               The name of the folder where the data will be written. The folder should
 #'                           not yet exist.
 #' @param envir              The environment for to evaluate variables when saving
@@ -345,6 +293,13 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
     stop("Must specify file")
   if (!class(plpData) %in% c("plpData","plpData.libsvm"  ))
     stop("Data not of class plpData")
+  if(dir.exists(file.path(file, "covariates"))){
+    stop('Folder to save covariates already exists...')
+  }
+  
+  if(!dir.exists(file)){
+    dir.create(file)
+  }
   
   # save the actual values in the metaData
   # TODO - only do this if exists in parent or environ
@@ -356,30 +311,9 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
       plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
   }
   
-  if('ffdf'%in%class(plpData$covariates)){
-    covariates <- plpData$covariates
-    covariateRef <- plpData$covariateRef
-    
-    if(!is.null(plpData$analysisRef)){
-      if(!is.null(plpData$timeRef)){
-        analysisRef <- plpData$analysisRef
-        timeRef <- plpData$timeRef
-        ffbase::save.ffdf(covariates, covariateRef,analysisRef,timeRef, dir = file, clone = TRUE, overwrite = overwrite)
-      } else {
-        analysisRef <- plpData$analysisRef
-        ffbase::save.ffdf(covariates, covariateRef,analysisRef, dir = file, clone = TRUE, overwrite = overwrite)
-      }
-    } else {
-      ffbase::save.ffdf(covariates, covariateRef, dir = file, clone = TRUE, overwrite = overwrite)
-    }
-    
-  } else{
-    covariateRef <- plpData$covariateRef
-    analysisRef <- plpData$analysisRef
-    timeRef <- plpData$timeRef
-    ffbase::save.ffdf(covariateRef,analysisRef,timeRef, dir = file, clone = TRUE, overwrite = overwrite)
-    saveRDS(plpData$covariates, file = file.path(file, "covariates.rds"))
-  }
+  #FeatureExtraction::saveCovariateData(covariateData = plpData$covariateData, file = file.path(file, "covariates"))
+  Andromeda::saveAndromeda(plpData$covariateData, file = file.path(file, "covariates"), maintainConnection = T)
+  saveRDS(plpData$timeRef, file = file.path(file, "timeRef.rds"))
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
   saveRDS(plpData$outcomes, file = file.path(file, "outcomes.rds"))
   saveRDS(plpData$metaData, file = file.path(file, "metaData.rds"))
@@ -410,45 +344,17 @@ loadPlpData <- function(file, readOnly = TRUE) {
   if (!file.info(file)$isdir)
     stop(paste("Not a folder", file))
   
-  temp <- setwd(file)
-  absolutePath <- setwd(temp)
-  
-  if(!file.exists(file.path(file, "covariates.rds"))){
-  e <- new.env()
-  ffbase::load.ffdf(absolutePath, e)
-  result <- list(covariates = get("covariates", envir = e),
-                 covariateRef = get("covariateRef", envir = e),
-                 timeRef = get0("timeRef", envir = e,ifnotfound = NULL),
-                 analysisRef = get0("analysisRef", envir = e,ifnotfound = NULL),
+  result <- list(covariateData = FeatureExtraction::loadCovariateData(file = file.path(file, "covariates")),
+                 timeRef = readRDS(file.path(file, "timeRef.rds")),
                  cohorts = readRDS(file.path(file, "cohorts.rds")),
                  outcomes = readRDS(file.path(file, "outcomes.rds")),
                  metaData = readRDS(file.path(file, "metaData.rds")))
-  # Open all ffdfs to prevent annoying messages later:
-  open(result$covariates, readonly = readOnly)
-  open(result$covariateRef, readonly = readOnly)
-  if(!is.null(result$timeRef)){open(result$timeRef, readonly = readOnly)}
-  if(!is.null(result$analysisRef)){open(result$analysisRef, readonly = readOnly)}
-  class(result) <- "plpData"
-  } else{
-    e <- new.env()
-    ffbase::load.ffdf(absolutePath, e)
-    result <- list(covariates = readRDS(file.path(file, "covariates.rds")),
-                   covariateRef = get("covariateRef", envir = e),
-                   timeRef = get0("timeRef", envir = e,ifnotfound = NULL),
-                   analysisRef = get0("analysisRef", envir = e,ifnotfound = NULL),
-                   cohorts = readRDS(file.path(file, "cohorts.rds")),
-                   outcomes = readRDS(file.path(file, "outcomes.rds")),
-                   metaData = readRDS(file.path(file, "metaData.rds")))
-    # Open all ffdfs to prevent annoying messages later:
-    open(result$covariateRef, readonly = readOnly)
-    if(!is.null(result$timeRef)){open(result$timeRef, readonly = readOnly)}
-    if(!is.null(result$analysisRef)){open(result$analysisRef, readonly = readOnly)}
-    class(result) <- "plpData.libsvm"
-  }
 
-  rm(e)
+  class(result) <- "plpData"
+
   return(result)
 }
+
 
 #' @export
 print.plpData <- function(x, ...) {
@@ -458,8 +364,9 @@ print.plpData <- function(x, ...) {
   writeLines(paste("Outcome concept ID(s):", paste(attr(x$outcomes, "metaData")$outcomeIds, collapse = ",")))
 }
 
+#' @method summary plpData
 #' @export
-summary.plpData <- function(object, ...) {
+summary.plpData <- function(object,...){
   people <- length(unique(object$cohorts$subjectId))
   outcomeCounts <- data.frame(outcomeId = attr(object$outcomes, "metaData")$outcomeIds,
                               eventCount = 0,
@@ -468,11 +375,13 @@ summary.plpData <- function(object, ...) {
     outcomeCounts$eventCount[i] <- sum(object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i])
     outcomeCounts$personCount[i] <- length(unique(object$outcomes$rowId[object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i]]))
   }
+  
+  covDetails <- FeatureExtraction::summary(object$covariateData)
   result <- list(metaData = append(append(object$metaData, attr(object$cohorts, "metaData")), attr(object$outcomes, "metaData")),
                  people = people,
                  outcomeCounts = outcomeCounts,
-                 covariateCount = nrow(object$covariateRef),
-                 covariateValueCount = nrow(object$covariates))
+                 covariateCount = covDetails$covariateCount,
+                 covariateValueCount = covDetails$covariateValueCount)
   class(result) <- "summary.plpData"
   return(result)
 }
@@ -491,47 +400,13 @@ print.summary.plpData <- function(x, ...) {
   rownames(outcomeCounts) <- outcomeCounts$outcomeId
   outcomeCounts$outcomeId <- NULL
   colnames(outcomeCounts) <- c("Event count", "Person count")
-  printCoefmat(outcomeCounts)
+  stats::printCoefmat(outcomeCounts)
   writeLines("")
   writeLines("Covariates:")
   writeLines(paste("Number of covariates:", x$covariateCount))
   writeLines(paste("Number of non-zero covariate values:", x$covariateValueCount))
 }
 
-#' Extract covariate names
-#'
-#' @description
-#' Extracts covariate names using a regular-expression.
-#'
-#' @details
-#' This function extracts covariate names that match a regular-expression for a
-#' \code{plpData} or \code{covariateData} object.
-#'
-#' @param object    An R object of type \code{plpData} or \code{covariateData}.
-#' @param pattern   A regular expression with which to name covariate names
-#'
-#' @return
-#' Returns a \code{data.frame} containing information about covariates that match a regular
-#' expression.  This \code{data.frame} has the following columns: \describe{
-#' \item{covariateId}{Numerical identifier for use in model fitting using these covariates}
-#' \item{covariateName}{Text identifier} \item{analysisId}{Analysis identifier} \item{conceptId}{OMOP
-#' common data model concept identifier, or 0} }
-#'
-#' @export
-grepCovariateNames <- function(pattern, object) {
-  if (is.null(object$covariateRef)) {
-    stop("object does not contain a covariateRef")
-  }
-  select <- ffbase::ffwhich(object$covariateRef, grepl(pattern, covariateName))
-  if (is.null(select)) {
-    data.frame(covariateId = numeric(0),
-               covariateName = character(0),
-               analysisID = numeric(0),
-               conceptId = numeric(0))
-  } else {
-    ff::as.ram(object$covariateRef[select, ])
-  }
-}
 
 #' Saves the plp model
 #'
@@ -580,10 +455,14 @@ savePlpModel <- function(plpModel, dirPath){
     if(attr(plpModel, 'type')=='deepMulti'){
       saveRDS(attr(plpModel, 'inputs'), file = file.path(dirPath,  "inputs_attr.rds"))
     }
+  } else if(attr(plpModel, 'type') == "xgboost"){
+    # fixing xgboost save/load issue
+    xgboost::xgb.save(model = plpModel$model, fname = file.path(dirPath, "model"))
   } else {  
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   }
-  saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
+  #saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
+  saveRDS(NULL, file = file.path(dirPath, "transform.rds"))
   saveRDS(plpModel$index, file = file.path(dirPath, "index.rds"))
   saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
   saveRDS(plpModel$hyperParamSearch, file = file.path(dirPath, "hyperParamSearch.rds"))
@@ -677,7 +556,12 @@ loadPlpModel <- function(dirPath) {
                            error=function(e) NULL) 
   
   if(file.exists(file.path(dirPath, "keras_model"))){
+    ensure_installed("keras")
     model <- keras::load_model_hdf5(file.path(dirPath, "keras_model"))
+  } else if(readRDS(file.path(dirPath, "attributes.rds"))$type == "xgboost"){
+    ensure_installed("xgboost")
+    # fixing xgboost save/load issue
+    model <- xgboost::xgb.load(file.path(dirPath, "model"))
   } else {  
     model <- readRDS(file.path(dirPath, "model.rds"))
   }
@@ -706,7 +590,10 @@ loadPlpModel <- function(dirPath) {
   
   # update the model location to the load dirPath
   result <- updateModelLocation(result, dirPath)
-    
+  
+  # make this backwrds compatible for ffdf:
+  result$predict <- createTransform(result)
+  
   return(result)
 }
 
@@ -833,4 +720,167 @@ loadPlpResult <- function(dirPath){
   
   return(result)
   
+}
+
+
+#result$inputSetting$dataExtrractionSettings$covariateSettings
+formatCovariateSettings <- function(covariateSettings){
+  
+  if(class(covariateSettings) == "covariateSettings"){
+    return(list(cvs = unlist(covariateSettings), fun = attr(covariateSettings,'fun')))
+    
+  } else{
+    return(list(cvs = do.call(rbind, lapply(1:length(covariateSettings), function(i){
+      inds <- which(lapply(covariateSettings[[i]], class) == "function")
+      if(length(inds)>0){
+        for(j in inds){
+          covariateSettings[[i]][[j]] <- paste0(deparse(covariateSettings[[i]][[j]]), collapse = " ")
+        }
+      }
+    tempResult <- data.frame(names = names(unlist(covariateSettings[[i]])),
+               values = unlist(covariateSettings[[i]]))
+    tempResult$settingsId <- i
+    return(tempResult)
+    })), 
+    fun = unlist(lapply(covariateSettings, function(x) attr(x,'fun')))
+    )
+    )
+  }
+  
+}
+
+reformatCovariateSettings <- function(covariateSettingsLocation){
+  # adding this to stop warnings when files does not exist
+  if(!file.exists(covariateSettingsLocation)){
+    return(NULL)
+  }
+  cs <- utils::read.csv(covariateSettingsLocation, stringsAsFactors=FALSE)
+  fun <- utils::read.csv(gsub('.csv','_fun.csv',covariateSettingsLocation), stringsAsFactors=FALSE)
+  
+  if(sum(colnames(cs)%in%c('X','x'))==2){
+    covariateSettings <- cs$x
+    covariateSettings <- as.list(covariateSettings)
+    names(covariateSettings) <- cs$X
+    attr(covariateSettings,'fun') <- fun$x
+  } else {
+    
+    covariateSettings <- list()
+    length(covariateSettings) <- max(cs$settingsId)
+    
+    for(i in 1:max(cs$settingsId)){
+      covariateSettings[[i]] <- cs$values[cs$settingsId==i]
+      covariateSettings[[i]] <- as.list(covariateSettings[[i]])
+      names(covariateSettings[[i]]) <- cs$names[cs$settingsId==i]
+      attr(covariateSettings[[i]],'fun') <- fun$x[i]
+    }
+    
+  }
+  
+return(covariateSettings)
+}
+
+
+#' Save parts of the plp result as a csv for transparent sharing
+#'
+#' @details
+#' Saves the main results as a csv (these files can be read by the shiny app)
+#'
+#' @param result                      An object of class runPlp with development or validation results
+#' @param dirPath                     The directory the save the results as csv files
+#' 
+#' @export
+savePlpToCsv <- function(result, dirPath){
+  
+  #inputSetting
+  if(!dir.exists(file.path(dirPath, 'inputSetting'))){dir.create(file.path(dirPath, 'inputSetting'), recursive = T)}
+  utils::write.csv(result$inputSetting$modelSettings$model, file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'), row.names = F)
+  
+  if(!is.null(result$inputSetting$modelSettings$param)){
+    utils::write.csv(as.data.frame(t(unlist(result$inputSetting$modelSettings$param))), file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
+  }else{
+    utils::write.csv(NULL, file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
+  }
+  utils::write.csv(result$inputSetting$modelSettings$name, file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'), row.names = F)
+  if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings)){
+    utils::write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$cvs, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'), row.names = F)
+    utils::write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$fun, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings_fun.csv'), row.names = F)
+  }
+  utils::write.csv(result$inputSetting$populationSettings$attrition, file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'), row.names = F)
+  result$inputSetting$populationSettings$attrition <- NULL
+  utils::write.csv(result$inputSetting$populationSettings, file = file.path(dirPath, 'inputSetting','populationSettings.csv'), row.names = F)
+  
+  #executionSummary
+  if(!dir.exists(file.path(dirPath, 'executionSummary'))){dir.create(file.path(dirPath, 'executionSummary'), recursive = T)}
+  utils::write.csv(result$executionSummary$PackageVersion, file = file.path(dirPath, 'executionSummary','PackageVersion.csv'), row.names = F)
+  utils::write.csv(unlist(result$executionSummary$PlatformDetails), file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))
+  utils::write.csv(result$executionSummary$TotalExecutionElapsedTime, file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'), row.names = F)
+  utils::write.csv(result$executionSummary$ExecutionDateTime, file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'), row.names = F)
+  
+  #performanceEvaluation
+  if(!dir.exists(file.path(dirPath, 'performanceEvaluation'))){dir.create(file.path(dirPath, 'performanceEvaluation'), recursive = T)}
+  utils::write.csv(result$performanceEvaluation$evaluationStatistics, file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$thresholdSummary, file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$demographicSummary, file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$calibrationSummary, file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$predictionDistribution, file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'), row.names = F)
+  
+  #covariateSummary
+  utils::write.csv(result$covariateSummary, file = file.path(dirPath,'covariateSummary.csv'), row.names = F)
+}
+
+#' Loads parts of the plp result saved as csv files for transparent sharing
+#'
+#' @details
+#' Load the main results from csv files into a runPlp object
+#'
+#' @param dirPath                     The directory with the results as csv files
+#' 
+#' @export
+loadPlpFromCsv <- function(dirPath){
+  
+  result <- list()
+  objects <- gsub('.csv','',dir(dirPath))
+  if(sum(!c('covariateSummary','executionSummary','inputSetting','performanceEvaluation')%in%objects)>0){
+    stop('Incorrect csv results file')
+  }
+  
+  length(result) <- length(objects)
+  names(result) <- objects
+  
+  #covariateSummary
+  result$covariateSummary <- utils::read.csv(file = file.path(dirPath,'covariateSummary.csv'))
+
+  #executionSummary
+  result$executionSummary <- list()
+  result$executionSummary$PackageVersion <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'executionSummary','PackageVersion.csv')))}, error = function(e){return(NULL)})
+  result$executionSummary$PlatformDetails <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$x)}, error = function(e){return(NULL)})
+  names(result$executionSummary$PlatformDetails) <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$X}, error = function(e){return(NULL)})
+  result$executionSummary$TotalExecutionElapsedTime <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'))$x}, error = function(e){return(NULL)})
+  result$executionSummary$ExecutionDateTime <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'))$x}, error = function(e){return(NULL)})
+  
+  #inputSetting
+  result$inputSetting <- list()
+  result$inputSetting$modelSettings$model <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'))$x}, error = function(e){return(NULL)})
+  result$inputSetting$modelSettings$param <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_param.csv')))}, error = function(e){return(NULL)})
+  result$inputSetting$modelSettings$name <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'))$x}, error = function(e){return(NULL)})
+  
+  result$inputSetting$dataExtrractionSettings$covariateSettings <- tryCatch({reformatCovariateSettings(file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'))}, error = function(e){return(NULL)})
+
+  result$inputSetting$populationSettings <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'inputSetting','populationSettings.csv')))}, error = function(e){return(NULL)})
+  result$inputSetting$populationSettings$attrition <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'))}, error = function(e){return(NULL)})
+  
+  #performanceEvaluation
+  result$performanceEvaluation <- list()
+  result$performanceEvaluation$evaluationStatistics <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$thresholdSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$demographicSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$calibrationSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$predictionDistribution <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'))}, error = function(e){return(NULL)})
+  
+  result$model$modelSettings <- result$inputSetting$modelSettings
+  result$model$populationSettings <- result$inputSetting$populationSettings
+  result$model$metaData$call$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
+  
+  class(result) <- "runPlp"
+  return(result)
 }

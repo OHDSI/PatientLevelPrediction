@@ -80,7 +80,7 @@ The fit function should return a list of class `plpModel` with the following obj
 
  * model \- a trained model
  * modelSettings \- a list containing the model and input param
- * trainCVAac \- a value with the train AUC value 
+ * trainCVAuc \- a value with the train AUC value 
  * hyperParamSearch \- a dataframe with the hyperparameter grid and corresponding AUCs
  * metaData \- the metaData from the plpData object
  * populationSettings \- the settings used to create the population and define the time\-at\-risk
@@ -90,7 +90,7 @@ The fit function should return a list of class `plpModel` with the following obj
  * trainingTime \- how long it took to develop/evaluate the model
  * covariateMap \- if the plpData are converted to a matrix for model compatibility this tells us what covariate each row in the matrix correpsonds to and is need when implementing the model on new data
  
-The plpModle returned by fit also has a type attribute, this points to the predict function, for example `attr(result, 'type') <- 'madeup'` means when the model is applied to new data, the 'predict.madeup' function in Predict.R is called.  if this doesnt exist, then the model will fail.  Another attribute is the predictionType `attr(result, 'predictionType') <- 'binary'` this is currently not needed but may be important in the future when we expand to regression or multiclass classification.
+The plpModel returned by fit also has a type attribute, this points to the predict function, for example `attr(result, 'type') <- 'madeup'` means when the model is applied to new data, the 'predict.madeup' function in Predict.R is called.  if this doesnt exist, then the model will fail.  Another attribute is the predictionType `attr(result, 'predictionType') <- 'binary'` this is currently not needed but may be important in the future when we expand to regression or multiclass classification.
 
 For example:
 

@@ -1,6 +1,6 @@
 # @file MLPTorch.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -55,8 +55,9 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
                    outcomeId, cohortId, ...){
   
   # check plpData is libsvm format or convert if needed
-  if(!'ffdf'%in%class(plpData$covariates))
-    stop('Needs plpData')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
   
   # check population has indexes column, which is used to split training with different folds and testing set
   if(colnames(population)[ncol(population)]!='indexes'){
@@ -100,7 +101,7 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
                                                              modelOutput=outLoc,
                                                              quiet = quiet)))
 
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
   covariateRef$included <- incs
   covariateRef$covariateValue <- rep(0, nrow(covariateRef))
@@ -145,6 +146,8 @@ fitMLPTorch <- function(population, plpData, param, search='grid', quiet=F,
 trainMLPTorch <- function(population, plpData, modelOutput, size=200, epochs=100, w_decay = 0.001, seed=0, class_weight = 0, train=TRUE, 
                           mlp_type = 'MLP', autoencoder = FALSE, vae = FALSE, quiet= FALSE){
 
+  train_deeptorch <- function(){return(NULL)}
+  
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','deepTorchFunctions.py'), envir = e)
   

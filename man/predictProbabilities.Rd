@@ -4,7 +4,7 @@
 \alias{predictProbabilities}
 \title{Create predictive probabilities}
 \usage{
-predictProbabilities(predictiveModel, population, covariates)
+predictProbabilities(predictiveModel, population, covariateData)
 }
 \arguments{
 \item{predictiveModel}{An object of type \code{predictiveModel} as generated using
@@ -12,7 +12,7 @@ predictProbabilities(predictiveModel, population, covariates)
 
 \item{population}{The population to calculate the prediction for}
 
-\item{covariates}{The covariate part of PlpData containing the covariates for the population}
+\item{covariateData}{The covariateData containing the covariates for the population}
 }
 \value{
 The value column in the result data.frame is: logistic: probabilities of the outcome, poisson:

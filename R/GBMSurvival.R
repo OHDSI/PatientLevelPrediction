@@ -1,6 +1,6 @@
 # @file GBMSurvival.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -58,11 +58,13 @@ setGBMSurvival <- function(loss = 'coxph',
                            minImpurityDecrease = 0,
                            maxFeatures = NULL,
                            maxLeafNodes = NULL,
-                           presort = 'auto',
+                           presort = NULL,
                            subsample = 1,
                            dropoutRate = 0,
                            seed = NULL,
                            quiet = F) {
+  
+  ensure_installed("survAUC")
 
   if (!class(seed) %in% c("numeric", "NULL", "integer"))
     stop("Invalid seed")
@@ -77,9 +79,13 @@ setGBMSurvival <- function(loss = 'coxph',
   if (min(nEstimators) < 1)
     stop("nEstimators must be greater than or equal to 1")
   
+  if(!is.null(presort)){
+    ParallelLogger::logWarn('presort has been depreciated - it will not be used')
+  }
+  
   # add check and warn if dependancy not available...
   ParallelLogger::logInfo('To use GBM survival models you need scikit-survival python library.  To set up open the command line and enter: "conda install -c sebp scikit-survival"')
-  
+  # reticulate::conda_install(envname='r-reticulate', packages = c('scikit-survival'), forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, conda = "auto", channel = 'sebp')
   if(is.null(minImpuritySplit)){
     minImpuritySplit <- 'NULL'
   }
@@ -107,14 +113,13 @@ setGBMSurvival <- function(loss = 'coxph',
                                            minImpurityDecrease = minImpurityDecrease,
                                            maxFeatures = maxFeatures,
                                            maxLeafNodes = maxLeafNodes,
-                                           presort = presort,
                                            subsample = subsample,
                                            dropoutRate = dropoutRate ,
                                            seed = seed[1]), 1:(length(nEstimators) * length(learningRate) *
                                                                  length(loss) * length(criterion)*length(minSamplesSplit)*
                                                                  length(minSamplesLeaf) * length(minWeightFractionLeaf)*length(maxDepth)*
                                                                  length(minImpuritySplit) * length(minImpurityDecrease)*length(maxFeatures)*
-                                                                 length(maxLeafNodes) * length(presort)*length(subsample)*
+                                                                 length(maxLeafNodes) *length(subsample)*
                                                                  length(dropoutRate))),
                  name = "GBMSurvival")
   class(result) <- "modelSettings"
@@ -130,10 +135,10 @@ fitGBMSurvival <- function(population,
                         outcomeId,
                         cohortId,
                         ...) {
-
-  # check plpData is libsvm format or convert if needed
-  if (!"ffdf" %in% class(plpData$covariates))
-    stop("Needs plpData")
+  
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
+  }
 
   if (colnames(population)[ncol(population)] != "indexes") {
     warning("indexes column not present as last column - setting all index to 1")
@@ -178,7 +183,7 @@ fitGBMSurvival <- function(population,
   varImp <- finalModel[[2]]
   varImp[is.na(varImp)] <- 0
   
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
   covariateRef$covariateValue <- unlist(varImp)
@@ -195,11 +200,11 @@ fitGBMSurvival <- function(population,
   pred[,1] <- pred[,1] + 1 # converting from python to r index
   colnames(pred) <- c('rowId','outcomeBoolean','survivalTime','indexes', 'value')
   pred <- as.data.frame(pred)
-  attr(pred, "metaData") <- list(predictionType="binary")
+  attr(pred, "metaData") <- list(predictionType="survival")
   prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
   # scale the value
-  prediction$value <- prediction$value - min(prediction$value)
-  prediction$value <- prediction$value/max(prediction$value)
+  ##prediction$value <- prediction$value - min(prediction$value)
+  ##prediction$value <- prediction$value/max(prediction$value)
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
@@ -217,7 +222,7 @@ fitGBMSurvival <- function(population,
                  predictionTrain=prediction)
   class(result) <- "plpModel"
   attr(result, "type") <- "pythonSurvival"
-  attr(result, "predictionType") <- "binary"
+  attr(result, "predictionType") <- "survival"
 
 
   return(result)
@@ -238,9 +243,10 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
                              minImpurityDecrease = 0,
                              maxFeatures = NULL,
                              maxLeafNodes = NULL,
-                             presort = 'auto',
                              subsample = 1,
                              dropoutRate = 0) {
+  
+  train_gbmsurv <- function(){return(NULL)}
 
   e <- environment()
   # then run standard python code
@@ -274,7 +280,6 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
                           min_impurity_decrease = minImpurityDecrease,
                           max_features = maxFeatures,
                           max_leaf_nodes = maxLeafNodes,
-                          presort = as.character(presort),
                           subsample = subsample,
                           dropout_rate = dropoutRate)
   
@@ -285,11 +290,16 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
     pred <- as.data.frame(pred)
     pred$outcomeCount <- rep(0, nrow(pred))
     pred$outcomeCount[pred$outcomeBoolean==T ] <- 1
-    attr(pred, "metaData") <- list(predictionType = "binary")
+    attr(pred, "metaData") <- list(predictionType = "survival")
 
-    auc <- computeAuc(pred)
-    writeLines(paste0("CV model obtained CV AUC of ", auc))
-    return(auc)
+    #auc <- computeAuc(pred)
+    S <- survival::Surv(pred$survivalTime,pred$outcomeCount) 
+    p <- pred$value
+    conc <- tryCatch({survival::concordance(S~p, reverse=TRUE)},
+                     error = function(e){ParallelLogger::logError(e); return(0.5)})
+    cStatistic <- round(conc$concordance,5)
+    writeLines(paste0("CV model obtained C-statistic of ", cStatistic))
+    return(cStatistic)
   }
 
   return(result)
@@ -298,6 +308,8 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
 
 
 predict.pythonSurvival <- function(plpModel, population, plpData){
+  
+  python_predict_survival <- function(){NULL}
   
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
@@ -326,7 +338,7 @@ predict.pythonSurvival <- function(plpModel, population, plpData){
   ParallelLogger::logInfo('Returning results...')
   prediction <- result
   prediction <- as.data.frame(prediction)
-  attr(prediction, "metaData") <- list(predictionType="binary")
+  attr(prediction, "metaData") <- list(predictionType="survival")
   if(ncol(prediction)==4){
     colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
   } else {
@@ -337,12 +349,12 @@ predict.pythonSurvival <- function(plpModel, population, plpData){
   prediction$rowId <- prediction$rowId+1
   
   # scale the value 
-  prediction$value <- prediction$value - min(prediction$value)
-  prediction$value <- prediction$value/max(prediction$value)
+  ##prediction$value <- prediction$value - min(prediction$value)
+  ##prediction$value <- prediction$value/max(prediction$value)
   
   # add subjectId and date:
   prediction <- merge(prediction,
-                      population[,c('rowId','subjectId','cohortStartDate')], 
+                      population[,c('rowId','subjectId','cohortStartDate', 'survivalTime', 'gender', 'ageYear')], 
                       by='rowId')
   return(prediction)
 }

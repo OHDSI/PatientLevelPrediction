@@ -1,6 +1,6 @@
 # @file RunPlp.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -78,6 +78,7 @@
 #'                                         }
 #' @param timeStamp                        If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.
 #' @param analysisId                       Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
+#' @param runCovariateSummary              Whether to calculate the mean and sd for each covariate
 #' @param save                             Old input - please now use saveDirectory
 #' @return
 #' An object containing the model or location where the model is save, the data selection settings, the preprocessing
@@ -147,6 +148,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                    saveDirectory=NULL, savePlpData=T,
                    savePlpResult=T, savePlpPlots = T, saveEvaluation = T,
                    verbosity="INFO", timeStamp=FALSE, analysisId=NULL, 
+                   runCovariateSummary = T,
                    save=NULL
 ){
   
@@ -204,7 +206,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   ParallelLogger::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
-  ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateRef)))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateData$covariateRef)))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))
   
@@ -297,7 +299,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                     error = function(e) {
                       stop(paste0(e))},
                     finally = {
-                      ParallelLogger::logTrace('Done.')})
+                      ParallelLogger::logTrace('Done fitting.')})
   model$analysisId <- analysisId # adding this so we can link validation to models
   
   # get train prediction and remove it from model
@@ -313,7 +315,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                                         population = populationTest, #population, 
                                         plpData = plpData, 
                                         index = NULL), 
-                             finally = ParallelLogger::logTrace('Done.'))
+                             finally = ParallelLogger::logTrace('Done predict.'))
   
   prediction <- rbind(predictionTest, predictionTrain[,colnames(predictionTest)])
   
@@ -380,7 +382,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                                                  packageVersion = utils::packageVersion("PatientLevelPrediction")),
                            PlatformDetails= list(platform= R.Version()$platform,
                                                  cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
-                                                 RAM=utils::memory.size()), #  test for non-windows needed
+                                                 RAM=benchmarkme::get_ram()),
                            # Sys.info()
                            TotalExecutionElapsedTime = TotalExecutionElapsedTime,
                            ExecutionDateTime = ExecutionDateTime,
@@ -388,39 +390,27 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                            #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )
   
-  ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
-  ParallelLogger::logInfo('This can take a while...')
-  covSummary <- covariateSummary(plpData, population)
-  if(exists("model")){
-    if(!is.null(model$varImp)){
-      covSummary <- merge(model$varImp[,colnames(model$varImp)!='covariateName'], covSummary, by='covariateId', all=T)
+  if(runCovariateSummary){
+    ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
+    ParallelLogger::logInfo('This can take a while...')
+    covSummary <- covariateSummary(plpData, population, model)
+    
+    if(saveEvaluation){
+      ParallelLogger::logTrace('Saving covariate summary as csv')
+      if(!dir.exists( file.path(analysisPath, 'evaluation') ))
+        dir.create(file.path(analysisPath, 'evaluation'))
+      tryCatch(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
+               finally= ParallelLogger::logTrace('Saved covariate summary.')
+      )
     }
-  }
-  trainCovariateSummary <- covariateSummary(plpData, population[population$index>0,])
-  trainCovariateSummary <- trainCovariateSummary[,colnames(trainCovariateSummary)!='covariateName']
-  colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'] <- paste0('Train',colnames(trainCovariateSummary)[colnames(trainCovariateSummary)!='covariateId'])
-  testCovariateSummary <- covariateSummary(plpData, population[population$index<0,])
-  testCovariateSummary <- testCovariateSummary[,colnames(testCovariateSummary)!='covariateName']
-  colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'] <- paste0('Test',colnames(testCovariateSummary)[colnames(testCovariateSummary)!='covariateId'])
-  covSummary <- merge(covSummary,trainCovariateSummary, by='covariateId', all=T)
-  covSummary <- merge(covSummary,testCovariateSummary, by='covariateId', all=T)
-  
-  # make covariateValue 0 if NA
-  if('covariateValue'%in%colnames(covSummary)){
-    covSummary$covariateValue[is.na(covSummary$covariateValue)] <- 0
+    ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
+    
+  } else{
+    ParallelLogger::logInfo('Skipping covariate summary')
+    covSummary <- NULL
   }
   
-  
-  if(saveEvaluation){
-    ParallelLogger::logTrace('Saving covariate summary as csv')
-    if(!dir.exists( file.path(analysisPath, 'evaluation') ))
-      dir.create(file.path(analysisPath, 'evaluation'))
-    tryCatch(utils::write.csv(covSummary, file.path(analysisPath, 'evaluation', 'covariateSummary.csv'), row.names=F ),
-             finally= ParallelLogger::logTrace('Saved covariate summary.')
-    )
-  }
-  ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
-  
+
   results <- list(inputSetting=inputSetting,
                   executionSummary=executionSummary,
                   model=model,
@@ -449,9 +439,7 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   }
   
   
-  if(verbosity!="NONE"){
-    ParallelLogger::logInfo(paste0('Log saved to ',logFileName))  
-  }
+  ParallelLogger::logInfo(paste0('Log saved to ',logFileName))  
   ParallelLogger::logInfo("Run finished successfully.")
   
   # stop logger
@@ -465,13 +453,13 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   
 }
 
-
+#' @method summary runPlp
 #' @export
-summary.plpModel <- function(object, ...) {
+summary.runPlp <- function(object, ...) {
   
-  if(object$model$modelSettings$model=="lr_lasso")
+  if(object$model$modelSettings$model=="lr_lasso"){
     hyper <-  paste0("The final model hyper-parameters were - variance: ",format(as.double(object$model$hyperParamSearch['priorVariance']), digits = 5))
-  if(is.null(object$model$hyperParamSearch)){
+  } else if(is.null(object$model$hyperParamSearch)){
     hyper <- 'No hyper-parameters...'
   } else {
     finalmod <- object$model$hyperParamSearch[which.max(object$model$hyperParamSearch$cv_auc),]
@@ -510,10 +498,10 @@ summary.plpModel <- function(object, ...) {
                  BrierScore = object$performanceEvaluation$evaluationStatistics[brierScoreInd,'Value'],
                  BrierScaled = object$performanceEvaluation$evaluationStatistics[brierScaledInd,'Value'],
                  CalibrationIntercept = object$performanceEvaluation$evaluationStatistics[calibrationInterceptInd,'Value'],
-                 CalibrationSlope = object$performanceEvaluation$evaluationStatistics[calibrationSlope,'Value']
+                 CalibrationSlope = object$performanceEvaluation$evaluationStatistics[calibrationSlopeInd,'Value']
                  
   )
-  class(result) <- "summary.plpModel"
+  class(result) <- "summary.runPlp"
   return(result)
 }
 
@@ -524,96 +512,264 @@ summary.plpModel <- function(object, ...) {
 # CovariateCountWithNoOutcome	CovariateMeanWithOutcome	
 # CovariateMeanWithNoOutcome	CovariateStDevWithOutcome	
 # CovariateStDevWithNoOutcome	CovariateStandardizedMeanDifference
-covariateSummary <- function(plpData, population){
+covariateSummary <- function(plpData, population = NULL, model = NULL){
   #===========================
   # all 
   #===========================
-  ppl <- ff::as.ff(population$rowId)
-  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- plpData$covariates[idx, ]
+  if(!is.null(model$varImp)){
+    variableImportance <- tibble::as_tibble(model$varImp[,!colnames(model$varImp)%in%c('covariateName','analysisId', 'conceptId')])
+  } else{
+    variableImportance <- tibble::tibble(covariateId = bit64::as.integer64(1),
+                                         covariateValue = 0)
+  }
   
-  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
-  grp_qty <- bySumFf(covariates$ones, covariates$covariateId)
-  
-  allPeople <- data.frame(covariateId=ff::as.ram(grp_qty$bins), 
-                          CovariateCount=ff::as.ram(grp_qty$sums))
-  
-  #===========================
-  # outcome prevs
-  #===========================
-  ppl <- ff::as.ff(population$rowId[population$outcomeCount==1])
-  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- plpData$covariates[idx, ]
-  
-  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
-  covariates$squared <- covariates$covariateValue^2
-  
-  lengths <- bySumFf(covariates$ones, covariates$covariateId)
-  sumval <- bySumFf(covariates$covariateValue, covariates$covariateId)
-  sumvalsquared <- bySumFf(covariates$squared, covariates$covariateId)
-  outPeople <- data.frame(covariateId=lengths$bins, 
-                          CovariateCountWithOutcome=lengths$sums,
-                          CovariateMeanWithOutcome=sumval$sums/length(ppl),
-                          CovariateStDevWithOutcome=  sqrt( (sumvalsquared$sums-(sumval$sums^2)/length(ppl) )/(length(ppl)-1)  ))
-  
-  #===========================
-  # non-outcome prevs
-  #===========================
-  ppl <- ff::as.ff(population$rowId[population$outcomeCount==0])
-  idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
-  idx <- ffbase::ffwhich(idx, !is.na(idx))
-  covariates <- plpData$covariates[idx, ]
+  # create population with index rowId
+  if(!is.null(population)){
+    if('indexes' %in% colnames(population)){
+      plpData$covariateData$population <- population %>%
+        dplyr::mutate(test = .data$indexes<0) %>%
+        dplyr::select(.data$rowId, .data$test, .data$outcomeCount )
+    } else{
+      plpData$covariateData$population <- population %>%
+        dplyr::select(.data$rowId, .data$outcomeCount)
+    }
+    
+  } else{
+    plpData$covariateData$population <- plpData$cohorts  %>%
+      dplyr::select(.data$rowId)
+  }
+  RSQLite::dbExecute(plpData$covariateData, "CREATE INDEX pop_rowId ON population(rowId)")
+  on.exit(plpData$covariateData$population <- NULL, add = TRUE)
   
   
-  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
-  covariates$squared <- covariates$covariateValue^2
   
-  lengths <- bySumFf(covariates$ones, covariates$covariateId)
-  sumval <- bySumFf(covariates$covariateValue, covariates$covariateId)
-  sumvalsquared <- bySumFf(covariates$squared, covariates$covariateId)
-  noOutPeople <- data.frame(covariateId=lengths$bins, 
-                            CovariateCountWithNoOutcome=lengths$sums,
-                            CovariateMeanWithNoOutcome=sumval$sums/length(ppl),
-                            CovariateStDevWithNoOutcome=  sqrt( (sumvalsquared$sums-(sumval$sums^2)/length(ppl) )/(length(ppl)-1)  ))
+  # now join cov and pop
+  covariates <- plpData$covariateData$covariates %>% 
+    dplyr::inner_join(plpData$covariateData$population, by= 'rowId')
   
-  # now merge the predictors with prev.out and prev.noout
-  prevs <- merge(merge(allPeople,outPeople, all=T), noOutPeople, all=T)
-  prevs[is.na(prevs)] <- 0
+  # now group by covariateId and groupVal to get sum and square sums
+  if(!is.null(population)){
+    
+    if('indexes' %in% colnames(population)){
+      plpData$covariateData$totals <- plpData$covariateData$population %>% 
+        dplyr::group_by(.data$test, .data$outcomeCount) %>%
+        dplyr::summarise(N = dplyr::n())
+      
+      result <- covariates %>%
+        dplyr::group_by(.data$covariateId,.data$test, .data$outcomeCount) %>%
+        dplyr::summarise(CovariateCount = dplyr::n(),
+                         sumVal = sum(.data$covariateValue,na.rm = TRUE),
+                         sumSquares = sum(.data$covariateValue^2,na.rm = TRUE)) %>%
+        dplyr::inner_join(plpData$covariateData$totals, by= c('test', 'outcomeCount')) %>%
+        dplyr::mutate(CovariateMean = .data$sumVal/.data$N,
+                      CovariateStDev = sqrt(.data$sumSquares/.data$N - (.data$sumVal/.data$N)^2 )) %>% 
+        dplyr::collect()
+      
+      
+    } else {
+      
+      plpData$covariateData$totals <- plpData$covariateData$population %>% 
+        dplyr::group_by(.data$outcomeCount) %>%
+        dplyr::summarise(N = dplyr::n())
+      
+      result <- covariates %>%
+        dplyr::group_by(.data$covariateId,.data$outcomeCount) %>%
+        dplyr::summarise(CovariateCount = dplyr::n(),
+                         sumVal = sum(.data$covariateValue,na.rm = TRUE),
+                         sumSquares = sum(.data$covariateValue^2,na.rm = TRUE)) %>%
+        dplyr::inner_join(plpData$covariateData$totals, by= c( 'outcomeCount')) %>%
+        dplyr::mutate(CovariateMean = .data$sumVal/.data$N,
+                      CovariateStDev = sqrt(round(.data$sumSquares/.data$N - (.data$sumVal/.data$N)^2 ,6))) %>% 
+        dplyr::collect()
+      
+    }
+  }else{
+    # get all results:
+    N <- nrow(plpData$cohorts)
+    resultAll <-  covariates %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(CovariateCount = dplyr::n(),
+                       sumVal = sum(.data$covariateValue,na.rm = TRUE),
+                       sumSquares = sum(.data$covariateValue^2,na.rm = TRUE)) %>%
+      dplyr::mutate(CovariateMean = 1.0*.data$sumVal/!!N,
+                    CovariateStDev = sqrt(.data$sumSquares*1.0/!!N - (.data$sumVal*1.0/!!N)^2 )) %>%
+      dplyr::select(.data$covariateId, .data$CovariateCount, .data$CovariateMean, .data$CovariateStDev) %>%
+      dplyr::collect()
+    
+  }
   
-  prevs <- merge(ff::as.ram(plpData$covariateRef[,c('covariateName','covariateId')]), prevs, by='covariateId')
   
-  # adding CovariateStandardizedMeanDifference
-  prevs$StandardizedMeanDiff <- (prevs$CovariateMeanWithOutcome - prevs$CovariateMeanWithNoOutcome)/sqrt(prevs$CovariateStDevWithNoOutcome^2 + prevs$CovariateStDevWithOutcome^2 )
-  prevs$StandardizedMeanDiff[is.na(prevs$StandardizedMeanDiff)] <- 0 
-  prevs$StandardizedMeanDiff[is.infinite(prevs$StandardizedMeanDiff)] <- 0 
+  if(!is.null(population)){
+    
+    resultAll <-  result %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(CovariateCount = sum(.data$CovariateCount,na.rm = TRUE),
+                       sumValall = sum(.data$sumVal,na.rm = TRUE),
+                       sumSquaresall = sum(.data$sumSquares,na.rm = TRUE),
+                       Nall = sum(.data$N,na.rm = TRUE)) %>%
+      dplyr::mutate(CovariateMean = .data$sumValall/.data$Nall,
+                    CovariateStDev = sqrt(.data$sumSquaresall/.data$Nall - (.data$sumValall/.data$Nall)^2)) %>% 
+      dplyr::select(.data$covariateId, .data$CovariateCount, .data$CovariateMean, .data$CovariateStDev) 
+    
+    
+    if('indexes' %in% colnames(population)){
+      
+      resultOut <- result %>%
+        dplyr::group_by(.data$covariateId, .data$outcomeCount) %>%
+        dplyr::summarise(CovariateCount = sum(.data$CovariateCount,na.rm = TRUE),
+                         sumValall = sum(.data$sumVal,na.rm = TRUE),
+                         sumSquaresall = sum(.data$sumSquares,na.rm = TRUE),
+                         Nall = sum(.data$N,na.rm = TRUE)) %>%
+        dplyr::mutate(CovariateMean = .data$sumValall/.data$Nall,
+                      CovariateStDev = sqrt(.data$sumSquaresall/.data$Nall - (.data$sumValall/.data$Nall)^2)) 
+      
+      resultOut1 <- resultOut %>% 
+        dplyr::filter(.data$outcomeCount == 0) %>%
+        dplyr::mutate(CovariateCountWithNoOutcome = .data$CovariateCount,
+                      CovariateMeanWithNoOutcome = .data$CovariateMean,
+                      CovariateStDevWithNoOutcome = .data$CovariateStDev) %>%
+        dplyr::select(.data$covariateId, 
+                      .data$CovariateCountWithNoOutcome, 
+                      .data$CovariateMeanWithNoOutcome,
+                      .data$CovariateStDevWithNoOutcome)
+      
+      resultOut2 <- resultOut %>% 
+        dplyr::filter(.data$outcomeCount == 1) %>%
+        dplyr::mutate(CovariateCountWithOutcome = .data$CovariateCount,
+                      CovariateMeanWithOutcome = .data$CovariateMean,
+                      CovariateStDevWithOutcome = .data$CovariateStDev) %>%
+        dplyr::select(.data$covariateId, 
+                      .data$CovariateCountWithOutcome, 
+                      .data$CovariateMeanWithOutcome,
+                      .data$CovariateStDevWithOutcome)
+      
+      resultAll <- resultAll %>%
+        dplyr::left_join(resultOut1, by = 'covariateId') %>%
+        dplyr::left_join(resultOut2, by = 'covariateId')
+      
+      resultAll <- resultAll %>% dplyr::mutate(StandardizedMeanDiff = (.data$CovariateMeanWithOutcome - .data$CovariateMeanWithNoOutcome)/sqrt(.data$CovariateStDevWithOutcome^2 + .data$CovariateStDevWithNoOutcome^2) )
+      
+      resultSplit1 <- result %>% 
+        dplyr::filter(.data$outcomeCount == 0 & .data$test == TRUE) %>%
+        dplyr::mutate(TestCovariateCountWithNoOutcome = .data$CovariateCount,
+                      TestCovariateMeanWithNoOutcome = .data$CovariateMean,
+                      TestCovariateStDevWithNoOutcome = .data$CovariateStDev) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(.data$covariateId, 
+                      .data$TestCovariateCountWithNoOutcome, 
+                      .data$TestCovariateMeanWithNoOutcome,
+                      .data$TestCovariateStDevWithNoOutcome)
+      
+      resultSplit2 <- result %>% 
+        dplyr::filter(.data$outcomeCount == 0 & .data$test == FALSE) %>%
+        dplyr::mutate(TrainCovariateCountWithNoOutcome = .data$CovariateCount,
+                      TrainCovariateMeanWithNoOutcome = .data$CovariateMean,
+                      TrainCovariateStDevWithNoOutcome = .data$CovariateStDev) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(.data$covariateId, 
+                      .data$TrainCovariateCountWithNoOutcome, 
+                      .data$TrainCovariateMeanWithNoOutcome,
+                      .data$TrainCovariateStDevWithNoOutcome)
+      
+      resultSplit3 <- result %>% 
+        dplyr::filter(.data$outcomeCount == 1 & .data$test == TRUE) %>%
+        dplyr::mutate(TestCovariateCountWithOutcome = .data$CovariateCount,
+                      TestCovariateMeanWithOutcome = .data$CovariateMean,
+                      TestCovariateStDevWithOutcome = .data$CovariateStDev) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(.data$covariateId, 
+                      .data$TestCovariateCountWithOutcome, 
+                      .data$TestCovariateMeanWithOutcome,
+                      .data$TestCovariateStDevWithOutcome)
+      
+      resultSplit4 <- result %>% 
+        dplyr::filter(.data$outcomeCount == 1 & .data$test == FALSE) %>%
+        dplyr::mutate(TrainCovariateCountWithOutcome = .data$CovariateCount,
+                      TrainCovariateMeanWithOutcome = .data$CovariateMean,
+                      TrainCovariateStDevWithOutcome = .data$CovariateStDev) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(.data$covariateId, 
+                      .data$TrainCovariateCountWithOutcome, 
+                      .data$TrainCovariateMeanWithOutcome,
+                      .data$TrainCovariateStDevWithOutcome)
+      
+      resultAll <- resultAll %>%
+        dplyr::left_join(resultSplit1, by = 'covariateId') %>%
+        dplyr::left_join(resultSplit2, by = 'covariateId') %>%
+        dplyr::left_join(resultSplit3, by = 'covariateId') %>%
+        dplyr::left_join(resultSplit4, by = 'covariateId')
+      
+    } else{
+      
+      resultOut1 <- result %>% 
+        dplyr::filter(.data$outcomeCount == 0) %>%
+        dplyr::mutate(CovariateCountWithNoOutcome = .data$CovariateCount,
+                      CovariateMeanWithNoOutcome = .data$CovariateMean,
+                      CovariateStDevWithNoOutcome = .data$CovariateStDev) %>%
+        dplyr::select(.data$covariateId, 
+                      .data$CovariateCountWithNoOutcome, 
+                      .data$CovariateMeanWithNoOutcome,
+                      .data$CovariateStDevWithNoOutcome)
+      
+      resultOut2 <- result %>% 
+        dplyr::filter(.data$outcomeCount == 1) %>%
+        dplyr::mutate(CovariateCountWithOutcome = .data$CovariateCount,
+                      CovariateMeanWithOutcome = .data$CovariateMean,
+                      CovariateStDevWithOutcome = .data$CovariateStDev) %>%
+        dplyr::select(.data$covariateId, 
+                      .data$CovariateCountWithOutcome, 
+                      .data$CovariateMeanWithOutcome,
+                      .data$CovariateStDevWithOutcome)
+      
+      resultAll <- resultAll %>%
+        dplyr::left_join(resultOut1, by = 'covariateId') %>%
+        dplyr::left_join(resultOut2, by = 'covariateId')
+      
+      resultAll <- resultAll %>% dplyr::mutate(StandardizedMeanDiff = (.data$CovariateMeanWithOutcome - .data$CovariateMeanWithNoOutcome)/sqrt(.data$CovariateStDevWithOutcome^2 + .data$CovariateStDevWithNoOutcome^2) )
+      
+    }
+  }
   
-  return(prevs)
+  plpData$covariateData$variableImportance <- variableImportance
+  on.exit(plpData$covariateData$variableImportance <- NULL, add = TRUE)
   
+  resultAll <- plpData$covariateData$covariateRef  %>%
+    dplyr::left_join(plpData$covariateData$variableImportance, 
+                     by ='covariateId') %>% 
+    dplyr::collect() %>%
+    dplyr::left_join(resultAll, by ='covariateId')
+  
+  resultAll$covariateValue[is.na(resultAll$covariateValue)] <- 0
+  
+  resultAll[is.na(resultAll)] <- 0
+  
+  return(resultAll)  
 }
 
 characterize <- function(plpData, population, N=1){
-  #===========================
-  # all 
-  #===========================
-  popCount <- nrow(plpData$cohorts)
+
   if(!missing(population)){
-    ppl <- ff::as.ff(population$rowId)
-    idx <- ffbase::ffmatch(x = plpData$covariates$rowId, table = ppl)
-    idx <- ffbase::ffwhich(idx, !is.na(idx))
-    covariates <- plpData$covariates[idx, ]
-    popCount <- nrow(population)
+  plpData$covariateData$population <- tibble::as_tibble(population) %>% 
+    dplyr::select(.data$rowId, .data$outcomeCount)
+  on.exit(plpData$covariateData$population <- NULL, add = TRUE)
+  # restrict to pop
+  covariates <- plpData$covariateData$covariates %>% 
+    dplyr::inner_join(plpData$covariateData$population)
+  } else{
+    covariates <- plpData$covariateData$covariates
   }
   
-  covariates$ones <- ff::as.ff(rep(1, length(covariates$covariateValue)))
-  grp_qty <- bySumFf(covariates$ones, covariates$covariateId)
   
-  ind <- ff::as.ram(grp_qty)>=N
-  
-  allPeople <- data.frame(covariateId=ff::as.ram(grp_qty$bins)[ind], 
-                          CovariateCount=ff::as.ram(grp_qty$sums)[ind],
-                          CovariateFraction = ff::as.ram(grp_qty$sums)[ind]/popCount)
+  popSize <- as.data.frame(covariates %>% dplyr::select(.data$rowId) %>% 
+    dplyr::summarise(counts = dplyr::n_distinct(.data$rowId)))$counts
+
+  allPeople <- covariates %>% 
+    dplyr::group_by(.data$covariateId) %>%
+    dplyr::summarise(CovariateCount = dplyr::n(),
+                     CovariateFraction = 1.0*dplyr::n()/popSize) %>%
+    dplyr::filter(.data$CovariateCount >= N) %>%
+    dplyr::select(.data$covariateId, .data$CovariateCount,.data$CovariateFraction)
+  allPeople <- as.data.frame(allPeople)
   
   return(allPeople)
 }

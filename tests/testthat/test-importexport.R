@@ -1,4 +1,4 @@
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-context("ImportExport.R")
+context("ImportExport")
 
 # how to test exportPlpDataToCsv?
 
@@ -374,86 +374,5 @@ test_that("getPredictionCovariateData fails", {
                                                     aggregated = FALSE,
                                                     analysisId=111,
                                                     databaseOutput=NULL))
-  
-})
-
-
-test_that("createExistingModelSq fails", {
-  covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
-  testthat::expect_error(createExistingModelSql(modelNames = NULL, interceptTable = NULL,
-                                                covariateTable, type='logistic',
-                                                analysisId=112, covariateSettings,
-                                                asFunctions=F, customCovariates=NULL,
-                                                e=environment(),
-                                                covariateValues = F
-  ))
-  
-  testthat::expect_error(createExistingModelSql(modelTable = NULL, interceptTable = NULL,
-                                                covariateTable, type='logistic',
-                                                analysisId=112, covariateSettings,
-                                                asFunctions=F, customCovariates=NULL,
-                                                e=environment(),
-                                                covariateValues = F
-  ))
-  
-})
-
-
-test_that("createExistingModelSq worls", {
-  env <- environment()
-  res <- createExistingModelSql(modelTable = data.frame(modelId=1,
-                                                        modelCovariateId=rep(-1,1),
-                                                        coefficientValue=rep(0,1)), 
-                                modelNames = 'Testing', 
-                                interceptTable = NULL,
-                                covariateTable = data.frame(modelCovariateId=-1, covariateId=1002), 
-                                type='logistic',
-                                analysisId=112, 
-                                covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T),
-                                asFunctions=F, 
-                                customCovariates=NULL,
-                                e=env,
-                                covariateValues = F)
-
-testthat::expect_equal(res, T)
-testthat::expect_equal(exists('createExistingmodelsCovariateSettings', envir = env), T)
-testthat::expect_equal(exists('getExistingmodelsCovariateSettings', envir = env), T)
-})
-
-test_that("getExistingmodelsCovariateData fails", {
-# getExistingmodelsCovariateData
-  covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
-  testthat::expect_error(PatientLevelPrediction:::getExistingmodelsCovariateData(covariateSettings= NULL))
-  testthat::expect_error(PatientLevelPrediction:::getExistingmodelsCovariateData(covariateSettings= covariateSettings,
-                                                                                 cdmVersion = "4"))
-})
-
-test_that("toPlpData", {
-  
-  # CHeCKING THE CONVERSION FROM MATRIX TO PLPDATA
-  
-  nppl <- 10
-  ncov <- 10
-  data <- matrix(runif(nppl*ncov), ncol=ncov)
-  
-  columnInfo <- data.frame(columnId=1:ncov, 
-                           columnName = paste0('column',1:ncov), 
-                           columnTime = c(rep(-1, ncov-1),0)
-  )
-  outcomeId <- ncov
-  
-  # check input fails
-  options(fftempdir = getwd())
-  testData <- toPlpData(data, columnInfo, outcomeId, outcomeThreshold=0.5,
-                                                indexTime =0, includeIndexDay=T )
-  
-  # should convert all the entries 10 variables per 10 people = 100 rows
-  testthat::expect_equal(nrow(ff::as.ram(testData$covariates)), nppl*(ncov-1))
-  testthat::expect_equal(nrow(ff::as.ram(testData$covariateRef)), nrow(columnInfo))
-  testthat::expect_equal(nrow(testData$cohorts), nppl)
-  testthat::expect_equal(nrow(testData$outcomes), sum(data[,ncov]>=0.5))
-  
-  ## Now test the failed inputs...
-  # [TODO]
   
 })

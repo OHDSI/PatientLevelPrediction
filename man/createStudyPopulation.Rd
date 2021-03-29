@@ -21,6 +21,7 @@ createStudyPopulation(
   riskWindowEnd = 365,
   endAnchor = "cohort start",
   verbosity = "INFO",
+  restrictTarToCohortEnd = F,
   addExposureDaysToStart,
   addExposureDaysToEnd,
   ...
@@ -28,13 +29,12 @@ createStudyPopulation(
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
-\code{getDbplpData}.}
+\code{getplpData}.}
 
 \item{population}{If specified, this population will be used as the starting point instead of the
 cohorts in the \code{plpData} object.}
 
-\item{outcomeId}{The  ID of the outcome. If not specified, no outcome-specific transformations will
-be performed.}
+\item{outcomeId}{The  ID of the outcome.}
 
 \item{binary}{Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)}
 
@@ -71,6 +71,8 @@ date for a person to be included in the cohort.}
 \item{ERROR}{Show error messages}
 \item{FATAL}{Be silent except for fatal errors} 
 }}
+
+\item{restrictTarToCohortEnd}{If using a survival model and you want the time-at-risk to end at the cohort end date set this to T}
 
 \item{addExposureDaysToStart}{DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.}
 

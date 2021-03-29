@@ -19,6 +19,7 @@ evaluateMultiplePlp(
   oracleTempSchema = NULL,
   verbosity = "INFO",
   keepPrediction = F,
+  recalibrate = NULL,
   sampleSize = NULL
 )
 }
@@ -58,6 +59,8 @@ evaluateMultiplePlp(
 }}
 
 \item{keepPrediction}{Whether to keep the predicitons for the new data}
+
+\item{recalibrate}{A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')}
 
 \item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
 }

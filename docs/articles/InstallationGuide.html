@@ -6,18 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Patient-Level Prediction Installation Guide • PatientLevelPrediction</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Patient-Level Prediction Installation Guide">
-<meta property="og:description" content="">
-<meta name="twitter:card" content="summary">
+<meta property="og:description" content="PatientLevelPrediction">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
-<body>
+<body data-spy="scroll" data-target="#toc">
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -30,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
       </span>
     </div>
 
@@ -77,10 +78,10 @@
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
+      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
     </li>
     <li>
-      <a href="../articles/ImplementingExistingModels.html">Implementing Existing Prediction Models using the OHDSI PatientLevelPrediction Framework</a>
+      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -99,6 +100,9 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+</li>
+<li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
     <span class="fa fa-github fa-lg"></span>
      
@@ -113,13 +117,14 @@
 <!--/.navbar -->
 
       
+
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1>Patient-Level Prediction Installation Guide</h1>
+      <h1 data-toc-skip>Patient-Level Prediction Installation Guide</h1>
                         <h4 class="author">Jenna Reps, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2019-05-30</h4>
+            <h4 class="date">2020-06-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/InstallationGuide.Rmd"><code>vignettes/InstallationGuide.Rmd</code></a></small>
       <div class="hidden name"><code>InstallationGuide.Rmd</code></div>
@@ -149,13 +154,7 @@
 <li>Rstudio (<a href="https://www.rstudio.com/" class="uri">https://www.rstudio.com/</a> )</li>
 <li>Java (<a href="http://www.java.com" class="uri">http://www.java.com</a> )</li>
 <li>RTools (<a href="https://cran.r-project.org/bin/windows/Rtools/" class="uri">https://cran.r-project.org/bin/windows/Rtools/</a>)</li>
-<li>Anaconda 3.6 (<a href="https://www.anaconda.com/download" class="uri">https://www.anaconda.com/download</a>) - this will require checking your path variable to ensure the correct python is used by R - more instructions below. For Python you need to make sure it is in the Path: go to my computer -&gt; system properties -&gt; advanced system settings Then at the bottom right you’ll see a button: Environmental Variables, clicking on that will enable you to edit the PATH variable to add the Anaconda location. In R you need to check the Path is correct: You can access the path variable in R using <code><a href="https://www.rdocumentation.org/packages/base/topics/Sys.getenv">Sys.getenv('PATH')</a></code>. This should contain the location of your Anaconda or python 3.6.</li>
-<li>If you have Anaconda and want to use PyTorch v0.4 (<a href="https://pytorch.org" class="uri">https://pytorch.org</a>) as the backend of deep learning, you can directly use command “conda install pytorch torchvision -c pytorch” for Linux. Please refers to commands for installing PyTorch (<a href="https://pytorch.org" class="uri">https://pytorch.org</a>) on other develop environments.</li>
-<li>To add the R keras interface, in Rstudio run:</li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/devtools/topics/install_github">install_github</a></span>(<span class="st">"rstudio/keras"</span>)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(keras)
-<span class="kw">install_keras</span>()</code></pre></div>
 </div>
 <div id="maclinux-users" class="section level2">
 <h2 class="hasAnchor">
@@ -166,37 +165,7 @@
 <li>Rstudio (<a href="https://www.rstudio.com/" class="uri">https://www.rstudio.com/</a> )</li>
 <li>Java (<a href="http://www.java.com" class="uri">http://www.java.com</a> )</li>
 <li>Xcode command line tools(run in terminal: xcode-select –install) [MAC USERS ONLY]</li>
-<li>Python 3.6 (<a href="https://www.python.org/downloads/" class="uri">https://www.python.org/downloads/</a>) - this will require checking your path variable to ensure this version python is added - more instructions below</li>
-<li>To add the R keras interface, in Rstudio run:</li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/devtools/topics/install_github">install_github</a></span>(<span class="st">"rstudio/keras"</span>)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(keras)
-<span class="kw">install_keras</span>()</code></pre></div>
-<div id="setting-up-python-for-maclinux-users" class="section level3">
-<h3 class="hasAnchor">
-<a href="#setting-up-python-for-maclinux-users" class="anchor"></a>Setting up Python for Mac/Linux Users</h3>
-<p>After installing python 3.6 check it is working by typing python3 to open python in a terminal.</p>
-<p>To get the package dependencies, in a terminal run:</p>
-<pre><code>pip3 install --upgrade pip
-pip3 install -U NumPy
-pip3 install -U SciPy 
-pip3 install -U scikit-learn
-pip3 install -U torch
-pip3 install --upgrade tensorflow 
-pip3 install keras</code></pre>
-<p>Dependent on your permissions you may need to add a sudo command in front of the pip3 commands.</p>
-<p>Mac and Linux users need edit the bash profile to add python in their Path by running in the terminal: <code>touch ~/.bash_profile; open ~/.bash_profile;</code> and adding in the location of python 3.6 in the PATH variable. You can find the location of the python versions by typing this in a terminal:</p>
-<pre><code>type -a python</code></pre>
-<p>Furthermore, you need to specify in their R environment that R needs to use python 3.6 rather than the default python. In a new Rstudio session run this to open the environment file:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/install.packages">install.packages</a></span>(‘usethis’)
-usethis<span class="op">::</span><span class="kw"><a href="https://usethis.r-lib.org/reference/edit.html">edit_r_environ</a></span>()</code></pre></div>
-<p>In the file that opens add and save: PATH= {The path containing the python 3}</p>
-<p>USESPECIALPYTHONVERSION=“python3.6”</p>
-<p>You now need to compile PythonInR so it uses python 3.6. In a new R studio session run:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Sys.setenv">Sys.setenv</a></span>(<span class="st">'USESPECIALPYTHONVERSION'</span>=<span class="st">'python3.6'</span>)
-devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/devtools/topics/install_bitbucket">install_bitbucket</a></span>(<span class="st">"Floooo/PythonInR"</span>)</code></pre></div>
-<p>This should now set the PythonInR package to use your python 3.6. Please note: if you update the path while R is open, you will need to shutdown R and reopen before the path is refreshed.</p>
-</div>
 </div>
 </div>
 <div id="installing-the-package" class="section level1">
@@ -207,45 +176,58 @@ devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumen
 <h2 class="hasAnchor">
 <a href="#installing-patientlevelprediction-using-drat" class="anchor"></a>Installing PatientLevelPrediction using drat</h2>
 <p>To install using drat run:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/install.packages">install.packages</a></span>(<span class="st">"drat"</span>)
-drat<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/drat/topics/addRepo">addRepo</a></span>(<span class="st">"OHDSI"</span>)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/install.packages">install.packages</a></span>(<span class="st">"PatientLevelPrediction"</span>)
-
-## Installing PatientLevelPrediction using devtools
-To install using devtools run<span class="op">:</span></code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/install.packages">install.packages</a></span>(<span class="st">"devtools"</span>)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(<span class="st">"devtools"</span>)
-<span class="kw">install_github</span>(<span class="st">"ohdsi/SqlRender"</span>) 
-<span class="kw">install_github</span>(<span class="st">"ohdsi/DatabaseConnectorJars"</span>) 
-<span class="kw">install_github</span>(<span class="st">"ohdsi/DatabaseConnector"</span>) 
-<span class="kw">install_github</span>(<span class="st">"ohdsi/FeatureExtraction"</span>)
-<span class="kw">install_github</span>(<span class="st">"ohdsi/OhdsiSharing"</span>) 
-<span class="kw">install_github</span>(<span class="st">"ohdsi/OhdsiRTools"</span>) 
-<span class="kw">install_github</span>(<span class="st">"ohdsi/BigKnn"</span>)  
-<span class="kw">install_github</span>(<span class="st">"ohdsi/PatientLevelPrediction"</span>) </code></pre></div>
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"drat"</span>)
+<span class="kw pkg">drat</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/drat/man/addRepo.html">addRepo</a></span>(<span class="st">"OHDSI"</span>)
+<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
 </div>
+<div id="installing-patientlevelprediction-using-devtools" class="section level2">
+<h2 class="hasAnchor">
+<a href="#installing-patientlevelprediction-using-devtools" class="anchor"></a>Installing PatientLevelPrediction using devtools</h2>
+<p>To install using devtools run:</p>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">'devtools'</span>)
+<span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"OHDSI/FeatureExtraction"</span>)
+<span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">'ohdsi/PatientLevelPrediction'</span>)</pre></body></html></div>
+<p>When installing using devtools make sure to close any other Rstudio sessions that are using PatientLevelPrediction or any dependency. Keeping Rstudio sessions open can cause locks that prevent the package installing.</p>
+</div>
+</div>
+<div id="creating-python-reticulate-environment" class="section level1">
+<h1 class="hasAnchor">
+<a href="#creating-python-reticulate-environment" class="anchor"></a>Creating Python Reticulate Environment</h1>
+<p>Many of the classifiers in the PatientLevelPrediction use a Python back end. To set up a python environment run:</p>
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">PatientLevelPrediction</span>)
+<span class="kw pkg">reticulate</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/reticulate/man/install_miniconda.html">install_miniconda</a></span>()
+<span class="fu"><a href="../reference/configurePython.html">configurePython</a></span>(<span class="kw">envname</span><span class="kw">=</span><span class="st">'r-reticulate'</span>, <span class="kw">envtype</span><span class="kw">=</span><span class="st">'conda'</span>)</pre></body></html></div>
+<p>To add the R keras interface, in Rstudio run:</p>
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"rstudio/keras"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">keras</span>)
+<span class="fu"><a href="https://rdrr.io/pkg/keras/man/install_keras.html">install_keras</a></span>()</pre></body></html></div>
+<p>Some of the less frequently used classifiers are not installed during this set-up to add them run:</p>
+<p>For GBM survival:</p>
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="kw pkg">reticulate</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/reticulate/man/conda-tools.html">conda_install</a></span>(<span class="kw">envname</span><span class="kw">=</span><span class="st">'r-reticulate'</span>, <span class="kw">packages</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'scikit-survival'</span>), <span class="kw">forge</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">pip</span> <span class="kw">=</span> <span class="fl">FALSE</span>, <span class="kw">pip_ignore_installed</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">conda</span> <span class="kw">=</span> <span class="st">"auto"</span>, <span class="kw">channel</span> <span class="kw">=</span> <span class="st">'sebp'</span>)</pre></body></html></div>
+<p>For any of the torch models:</p>
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="kw pkg">reticulate</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/reticulate/man/conda-tools.html">conda_install</a></span>(<span class="kw">envname</span><span class="kw">=</span><span class="st">'r-reticulate'</span>, <span class="kw">packages</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'pytorch'</span>, <span class="st">'torchvision'</span>, <span class="st">'cpuonly'</span>), <span class="kw">forge</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">pip</span> <span class="kw">=</span> <span class="fl">FALSE</span>, <span class="kw">channel</span> <span class="kw">=</span> <span class="st">'pytorch'</span>, <span class="kw">pip_ignore_installed</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">conda</span> <span class="kw">=</span> <span class="st">'auto'</span>)</pre></body></html></div>
 </div>
 <div id="testing-installation" class="section level1">
 <h1 class="hasAnchor">
 <a href="#testing-installation" class="anchor"></a>Testing installation</h1>
 <p>To test whether the package is installed correctly run:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(DatabaseConnector)
-connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectionDetails</span>(<span class="dt">dbms =</span> <span class="st">'sql_server'</span>, 
-                                             <span class="dt">user =</span> <span class="st">'username'</span>, 
-                                             <span class="dt">password =</span> <span class="st">'hidden'</span>, 
-                                             <span class="dt">server =</span> <span class="st">'your server'</span>, 
-                                             <span class="dt">port =</span> <span class="st">'your port'</span>)
-PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/checkPlpInstallation">checkPlpInstallation</a></span>(<span class="dt">connectionDetails =</span> connectionDetails, 
-                                             <span class="dt">python =</span> T)</code></pre></div>
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">DatabaseConnector</span>)
+<span class="no">connectionDetails</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/DatabaseConnector/man/createConnectionDetails.html">createConnectionDetails</a></span>(<span class="kw">dbms</span> <span class="kw">=</span> <span class="st">'sql_server'</span>,
+                                             <span class="kw">user</span> <span class="kw">=</span> <span class="st">'username'</span>,
+                                             <span class="kw">password</span> <span class="kw">=</span> <span class="st">'hidden'</span>,
+                                             <span class="kw">server</span> <span class="kw">=</span> <span class="st">'your server'</span>,
+                                             <span class="kw">port</span> <span class="kw">=</span> <span class="st">'your port'</span>)
+<span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/checkPlpInstallation.html">checkPlpInstallation</a></span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
+                                             <span class="kw">python</span> <span class="kw">=</span> <span class="no">T</span>)</pre></body></html></div>
 <p>To test the installation (excluding python) run:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(DatabaseConnector)
-connectionDetails &lt;-<span class="st"> </span><span class="kw">createConnectionDetails</span>(<span class="dt">dbms =</span> <span class="st">'sql_server'</span>, 
-                                           <span class="dt">user =</span> <span class="st">'username'</span>, 
-                                           <span class="dt">password =</span> <span class="st">'hidden'</span>, 
-                                           <span class="dt">server =</span> <span class="st">'your server'</span>, 
-                                           <span class="dt">port =</span> <span class="st">'your port'</span>)
-PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/PatientLevelPrediction/topics/checkPlpInstallation">checkPlpInstallation</a></span>(<span class="dt">connectionDetails =</span> connectionDetails, 
-                                             <span class="dt">python =</span> F)</code></pre></div>
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">DatabaseConnector</span>)
+<span class="no">connectionDetails</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/DatabaseConnector/man/createConnectionDetails.html">createConnectionDetails</a></span>(<span class="kw">dbms</span> <span class="kw">=</span> <span class="st">'sql_server'</span>,
+                                           <span class="kw">user</span> <span class="kw">=</span> <span class="st">'username'</span>,
+                                           <span class="kw">password</span> <span class="kw">=</span> <span class="st">'hidden'</span>,
+                                           <span class="kw">server</span> <span class="kw">=</span> <span class="st">'your server'</span>,
+                                           <span class="kw">port</span> <span class="kw">=</span> <span class="st">'your port'</span>)
+<span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/checkPlpInstallation.html">checkPlpInstallation</a></span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
+                                             <span class="kw">python</span> <span class="kw">=</span> <span class="no">F</span>)</pre></body></html></div>
 <p>The check can take a while to run since it will build the following models in sequence on simulated <a href="data:Logistic" class="uri">data:Logistic</a> Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.</p>
 </div>
 <div id="installation-issues" class="section level1">
@@ -254,7 +236,7 @@ PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https:
 <p>Installation issues need to be posted in our issue tracker: <a href="http://github.com/OHDSI/PatientLevelPrediction/issues" class="uri">http://github.com/OHDSI/PatientLevelPrediction/issues</a></p>
 <p>The list below provides solutions for some common issues:</p>
 <ol style="list-style-type: decimal">
-<li><p>If you have an error when trying to install a package in R saying <strong>‘Dependancy X not available …’</strong> then this can sometimes be fixed by running <code><a href="https://www.rdocumentation.org/packages/utils/topics/install.packages">install.packages('X')</a></code> and then once that completes trying to reinstall the package that had the error.</p></li>
+<li><p>If you have an error when trying to install a package in R saying <strong>‘Dependancy X not available …’</strong> then this can sometimes be fixed by running <code><a href="https://rdrr.io/r/utils/install.packages.html">install.packages('X')</a></code> and then once that completes trying to reinstall the package that had the error.</p></li>
 <li><p>I have found that using the github devtools to install packages can be impacted if you have <strong>multiple R sessions</strong> open as one session with a library open can causethe library to be locked and this can prevent an install of a package that depends on that library.</p></li>
 </ol>
 </div>
@@ -262,16 +244,15 @@ PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https:
 <h1 class="hasAnchor">
 <a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
 <p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/citation">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</code></pre></div>
+<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
 <pre><code>## 
 ## To cite PatientLevelPrediction in publications use:
 ## 
-## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018).
-## "Design and implementation of a standardized framework to generate
-## and evaluate patient-level prediction models using observational
-## healthcare data." _Journal of the American Medical Informatics
-## Association_, *25*(8), 969-975. &lt;URL:
-## https://doi.org/10.1093/jamia/ocy032&gt;.
+## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design
+## and implementation of a standardized framework to generate and evaluate
+## patient-level prediction models using observational healthcare data."
+## _Journal of the American Medical Informatics Association_, *25*(8),
+## 969-975. &lt;URL: https://doi.org/10.1093/jamia/ocy032&gt;.
 ## 
 ## A BibTeX entry for LaTeX users is
 ## 
@@ -291,31 +272,14 @@ PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https:
 </div>
   </div>
 
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-        <div id="tocnav">
-      <h2 class="hasAnchor">
-<a href="#tocnav" class="anchor"></a>Contents</h2>
-      <ul class="nav nav-pills nav-stacked">
-<li><a href="#introduction">Introduction</a></li>
-      <li>
-<a href="#software-prerequisites">Software Prerequisites</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#windows-users">Windows Users</a></li>
-      <li><a href="#maclinux-users">Mac/Linux Users</a></li>
-      </ul>
-</li>
-      <li>
-<a href="#installing-the-package">Installing the Package</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#installing-patientlevelprediction-using-drat">Installing PatientLevelPrediction using drat</a></li>
-      </ul>
-</li>
-      <li><a href="#testing-installation">Testing installation</a></li>
-      <li><a href="#installation-issues">Installation issues</a></li>
-      <li><a href="#acknowledgments">Acknowledgments</a></li>
-      </ul>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+
+        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
+    </nav>
 </div>
-      </div>
 
 </div>
+
 
 
       <footer><div class="copyright">
@@ -323,12 +287,14 @@ PatientLevelPrediction<span class="op">::</span><span class="kw"><a href="https:
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
+
       </footer>
 </div>
 
   
+
 
   </body>
 </html>

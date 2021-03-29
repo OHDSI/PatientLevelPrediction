@@ -23,8 +23,8 @@ output:
     number_sections: yes
     toc: yes
 ---
-  <!--
-  %\VignetteEngine{knitr}
+<!--
+%\VignetteEngine{knitr}
 %\VignetteIndexEntry{Building multiple patient-level predictive models}
 -->
 
@@ -119,8 +119,8 @@ modelAnalysisList <- createPlpModelSettings(modelList = modelList,
 ```  
 
 # Running multiple models
-As we will be downloading loads of data in the multiple plp analysis it is useful to set fftempdir to a directory with write access and plenty of space.
-`options(fftempdir = 'T:/fftemp')`
+As we will be downloading loads of data in the multiple plp analysis it is useful to set the Andromeda temp folder to a directory with write access and plenty of space.
+`options(andromedaTempFolder = "c:/andromedaTemp")`
 
 To run the study requires setting up a connectionDetails object
 
@@ -167,7 +167,7 @@ allresults <- runPlpAnalyses(connectionDetails = connectionDetails,
                            maxSampleSize = NULL,
                            minCovariateFraction = 0,
                            normalizeData = T,
-                           testSplit = "person",
+                           testSplit = "stratified",
                            testFraction = 0.25,
                            splitSeed = NULL,
                            nfold = 3,

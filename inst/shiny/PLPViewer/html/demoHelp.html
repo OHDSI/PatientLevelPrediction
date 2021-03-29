@@ -1,0 +1,8 @@
+<h3>Description</h3>
+  <p> The demographic calibration plots show how closely the predicted risk matched the true observed risk for each age/gender strata.  We partition the patients into age and gender groups, then calculate the mean predicted risk within each age/gender group and the fraction of patients within the group that actually had the outcome during the time-at-risk (observed risk).  We then plot the observed and predicted risk for each age group split by gender.  </p>
+  
+<h3>Interpretation</h3>
+  <p> If a model is well calibrated the mean predicted risk should be approximately the same as the observed risk for each age/gender.  Therefore, the observed risk and predicted risk plots should overlap.  If there is deviation between the predicted risk and observed risk for a certain age group, then this tells us the model is not well calibrated for that age group.  This may indicate the need to fit a model specifically for that age group if there is sufficient data.</p>
+  
+<p> In addition, this plot shows us the age trend of risk  (e.g., you can see whether the risk increases as patients age) and it shows us how males and females differ in terms of risk of the outcome during the time-at-risk.</p> 
+

@@ -1,6 +1,6 @@
 # @file CovNN.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -45,6 +45,8 @@ setCovNN <- function(batchSize = 1000,
                      seed=NULL  ){
   #[TODO: add input checks...]
   
+  ensure_installed("keras")
+  
   if(!is.null(seed)){
     warning('seed currently not implemented in CovNN')
   }
@@ -73,8 +75,8 @@ setCovNN <- function(batchSize = 1000,
 fitCovNN <- function(plpData,population, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates) )
-    stop('CovNN requires plpData in coo format')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData))
+    stop("Needs correct covariateData")
   if(is.null(plpData$timeRef)){
     stop('Data not temporal...')
   }
@@ -108,7 +110,7 @@ fitCovNN <- function(plpData,population, param, search='grid', quiet=F,
   bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
   finalModel<-do.call(trainCovNN, c(param[[bestInd]],datas, train=FALSE))
   
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef)) 
   covariateRef$included <- incs
   covariateRef$covariateValue <- rep(0, nrow(covariateRef))
@@ -471,7 +473,7 @@ trainCovNN<-function(plpData, population,
     train_rows <- c(1:length(population$indexes))[-val_rows]
     
     
-    sampling_generator<-function(data, population, batchSize, train_rows){
+    sampling_generator2<-function(data, population, batchSize, train_rows){
       function(){
         gc()
         rows<-sample(train_rows, batchSize, replace=FALSE)
@@ -488,7 +490,7 @@ trainCovNN<-function(plpData, population,
       ParallelLogger::logInfo('Reduce batchSize to training size')
     }
     
-    history <- model %>% keras::fit_generator(sampling_generator(data,population,batchSize,train_rows),
+    history <- model %>% keras::fit_generator(sampling_generator2(data,population,batchSize,train_rows),
                                               steps_per_epoch = length(train_rows)/batchSize,
                                               epochs=epochs,
                                               validation_data=list(list(as.array(data[val_rows,,]), 

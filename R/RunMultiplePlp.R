@@ -1,6 +1,6 @@
 # @file RunMultiplePlp.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -48,6 +48,7 @@
 #' @param outcomeTable                   The tablename that contains the outcome cohorts.  Expectation is
 #'                                       outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
 #'                                       SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
+#' @param onlyFetchData                  Only fetches and saves the data object to the output folder without running the analysis.
 #' @param outputFolder                   Name of the folder where all the outputs will written to.
 #' @param modelAnalysisList              A list of objects of type \code{modelSettings} as created using
 #'                                       the \code{\link{createPlpModelSettings}} function.
@@ -64,6 +65,7 @@
 #' @param splitSeed                      The seed used for the randomization into test/train
 #' @param nfold                          Number of folds used to do cross validation
 #' @param verbosity                      The logging level
+#' @param settings                       Specify the T, O, population, covariate and model settings
 #' 
 #' @return
 #' A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
@@ -82,6 +84,7 @@ runPlpAnalyses <- function(connectionDetails,
                           outcomeDatabaseSchema = cdmDatabaseSchema,
                           outcomeTable = "cohort",
                           cdmVersion = 5,
+                          onlyFetchData = FALSE,
                           outputFolder = "./PlpOutput",
                           modelAnalysisList,
                           cohortIds,
@@ -96,7 +99,8 @@ runPlpAnalyses <- function(connectionDetails,
                           testFraction = 0.25,
                           splitSeed = NULL,
                           nfold = 3,
-                          verbosity = "INFO") {
+                          verbosity = "INFO",
+                          settings = NULL) {
   
   # start log:
   clearLoggerType("Multple PLP Log")
@@ -178,6 +182,16 @@ runPlpAnalyses <- function(connectionDetails,
     referenceTable <- merge(referenceTable, onames, by='outcomeId', all.x=T)
   }
   
+  # if settings are there restrict to these:
+  if(!is.null(settings)){
+    if(nrow(settings) != 0){
+    ParallelLogger::logInfo('Restricting to specified settings...')
+    referenceTable <- merge(settings, referenceTable, by = c('cohortId', 
+                                           'outcomeId', 'populationSettingId',
+                                           'modelSettingId', 'covariateSettingId'))
+    }
+  }
+  
   if(!file.exists(file.path(outputFolder,'settings.csv'))){
     ParallelLogger::logTrace(paste0('Writing settings csv to ',file.path(outputFolder,'settings.csv') ))
     utils::write.csv(referenceTable,
@@ -201,11 +215,12 @@ runPlpAnalyses <- function(connectionDetails,
         
       plpData <- tryCatch(do.call(getPlpData, plpDataSettings),
                finally= ParallelLogger::logTrace('Done plpData.'),
-               error= function(cond){ParallelLogger::logTrace(paste0('Error with getPlpData:',cond));return(NULL)})
+               error= function(cond){ParallelLogger::logInfo(paste0('Error with getPlpData:',cond));return(NULL)})
   
       if(!is.null(plpData)){
         ParallelLogger::logTrace(paste0('Saving data in setting ', i ))
         savePlpData(plpData, referenceTable$plpDataFolder[i])
+        #plpData <- loadPlpData(referenceTable$plpDataFolder[i])
       } else{
         ParallelLogger::logInfo('No plpData - probably empty cohort issue')
       }
@@ -233,7 +248,7 @@ runPlpAnalyses <- function(connectionDetails,
     }
     
     plpResultFolder = file.path(referenceTable$plpResultFolder[i],'plpResult')
-    if(!dir.exists(plpResultFolder)){
+    if(!dir.exists(plpResultFolder) && !onlyFetchData){
       ParallelLogger::logTrace(paste0('Running runPlp for setting ', i ))
       dir.create(referenceTable$plpResultFolder[i], recursive = T)
       # runPlp and save result to referenceTable$plpResultFolder
@@ -481,9 +496,11 @@ createStudyPopulationSettings <- function(binary = T,
               requireTimeAtRisk = requireTimeAtRisk, 
               minTimeAtRisk = minTimeAtRisk,
               riskWindowStart = riskWindowStart,
-              addExposureDaysToStart = addExposureDaysToStart,
+              startAnchor = ifelse(addExposureDaysToStart,'cohort end','cohort start'),
+              #addExposureDaysToStart = addExposureDaysToStart,
               riskWindowEnd = riskWindowEnd,
-              addExposureDaysToEnd = addExposureDaysToEnd, 
+              #addExposureDaysToEnd = addExposureDaysToEnd, 
+              endAnchor = ifelse(addExposureDaysToEnd,'cohort end','cohort start'),
               verbosity = verbosity)
   }
   
@@ -525,6 +542,7 @@ createStudyPopulationSettings <- function(binary = T,
 #'                                         \item{FATAL}{Be silent except for fatal errors}
 #'                                         }
 #' @param keepPrediction                   Whether to keep the predicitons for the new data                                         
+#' @param recalibrate                      A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')
 #' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
 #' 
 #' @export 
@@ -542,6 +560,7 @@ evaluateMultiplePlp <- function(analysesLocation,
                                 oracleTempSchema = NULL,
                                 verbosity = 'INFO',
                                 keepPrediction = F,
+                                recalibrate = NULL,
                                 sampleSize = NULL){
   
   clearLoggerType("Multple Evaluate PLP Log")
@@ -585,6 +604,7 @@ evaluateMultiplePlp <- function(analysesLocation,
                                                     oracleTempSchema = oracleTempSchema,
                                                     verbosity = verbosity, 
                                                     keepPrediction = keepPrediction,
+                                                    recalibrate = recalibrate,
                                                     sampleSize=sampleSize),
                                 error = function(cont){ParallelLogger::logInfo(paste0('Error: ',cont ))
                                   ;return(NULL)})
@@ -673,6 +693,9 @@ loadPredictionAnalysisList <- function(predictionAnalysisListFile){
   )
   
   runPlpAnalyses <- list(modelAnalysisList = modelAnalysisList,
+                         settings = tryCatch({as.data.frame(do.call(rbind, lapply(json$settings, unlist)))
+                           }, 
+                                             error = function(e){return(NULL)}),
                          cohortIds = json$targetIds,
                          cohortNames = getCohortNames(json, json$targetIds),
                          outcomeIds = json$outcomeIds,

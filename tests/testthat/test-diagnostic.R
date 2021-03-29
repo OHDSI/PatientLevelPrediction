@@ -18,18 +18,25 @@ context("Diagnostic")
 
 test_that("test code works when using plpData", {
   test <- diagnostic(plpData = plpData, cdmDatabaseName = 'madeup', 
-                     riskWindowStart = 10, 
-                     startAnchor = 'cohort start', 
-                     riskWindowEnd = 1*365,
-                     endAnchor = 'cohort start',
+                     riskWindowStart = c(1,10), 
+                     startAnchor = rep('cohort start',2), 
+                     riskWindowEnd = c(365, 730),
+                     endAnchor = rep('cohort start',2),
                      outputFolder = file.path(saveLoc, 'diagnostics'))
   #check results are a list
   testthat::expect_equal(class(test), 'list')
                          
   # check list names
-  testthat::expect_equal(sum(names(test)%in%c('distribution','incidence','characterization')), 3)
+  testthat::expect_equal(sum(names(test)%in%c('distribution','proportion','characterization')), 3)
   
   # check the results are saved into the databaseName directory
   testthat::expect_equal(T, dir.exists(file.path(saveLoc, 'diagnostics')))
   
+  #check tar
+  
+  
+  testthat::expect_equal(unique(test$proportion$TAR)[1], paste0('cohort start', ' + ', 1, ' days - ',
+                                                        'cohort start', ' + ', 365, ' days'))
+  testthat::expect_equal(unique(test$proportion$TAR)[2], paste0('cohort start', ' + ', 10, ' days - ',
+                                                        'cohort start', ' + ', 730, ' days'))
 })

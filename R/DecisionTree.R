@@ -1,6 +1,6 @@
 # @file DecisionTree.R
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -86,8 +86,9 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
                              outcomeId, cohortId , ...){
   
   # check plpData is libsvm format or convert if needed
-  if(!'ffdf'%in%class(plpData$covariates))
-    stop('Needs plpData')
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop('Needs correct covariateData')
+  }
   
   if(colnames(population)[ncol(population)]!='indexes'){
     warning('indexes column not present as last column - setting all index to 1')
@@ -117,7 +118,9 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   pydata <- reticulate::r_to_py(x$data)
   
   # feed into variable names for tree plot...
-  var <- suppressWarnings(ff::as.ram(plpData$covariateRef$covariateName))
+  var <- plpData$covariateData$covariateRef %>% dplyr::select(.data$covariateName) %>% dplyr::collect()
+  var <- var$covariateName
+  #var <- suppressWarnings(ff::as.ram(plpData$covariateRef$covariateName))
   
   hyperParamSel <- lapply(param, function(x) do.call(trainDecisionTree, 
                                                      listAppend(x, list(train=TRUE,
@@ -127,10 +130,17 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
                                                                         var=var,
                                                                         modelOutput=outLoc))  ))
   
-  hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
+  cvAuc <- do.call(rbind, lapply(hyperParamSel, function(x) x$aucCV))
+  colnames(cvAuc) <- paste0('fold_auc', 1:ncol(cvAuc))
+  auc <- unlist(lapply(hyperParamSel, function(x) x$auc))
+  
+  cvPrediction <- lapply(hyperParamSel, function(x) x$prediction )
+  cvPrediction <- cvPrediction[[which.max(auc)[1]]]
+  
+  hyperSummary <- cbind(do.call(rbind, param), cvAuc, auc= auc)
   
   #now train the final model and return coef
-  bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
+  bestInd <- which.max(abs(auc-0.5))[1]
   finalModel <- do.call(trainDecisionTree, listAppend(param[[bestInd]], list(train=FALSE,
                                                                              population = pPopulation, 
                                                                              plpData = pydata, 
@@ -144,7 +154,7 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   varImp <- finalModel[[2]]
   varImp[is.na(varImp)] <- 0
   
-  covariateRef <- ff::as.ram(plpData$covariateRef)
+  covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
   covariateRef$covariateValue <- varImp
@@ -167,7 +177,8 @@ fitDecisionTree <- function(population, plpData, param, search='grid', quiet=F,
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
-                 trainCVAuc = hyperParamSel,
+                 trainCVAuc = list(value = unlist(cvAuc[bestInd,]),
+                                   prediction = cvPrediction),
                  hyperParamSearch = hyperSummary,
                  modelSettings = list(model='fitDecisionTree',modelParameters=param.best),
                  metaData = plpData$metaData,
@@ -195,6 +206,8 @@ trainDecisionTree <- function(population, plpData,
                               seed =NULL,
                               train=TRUE, plot=F,quiet=F, var, modelOutput){
   
+  train_decision_tree <- function(){return(NULL)}
+  
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','decisionTreeFunctions.py'), envir = e)
   
@@ -220,11 +233,13 @@ trainDecisionTree <- function(population, plpData,
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
     
-    pred$value <- 1-pred$value
+    #pred$value <- 1-pred$value
     auc <- computeAuc(pred)
-    if(!quiet)
-      writeLines(paste0('Model obtained CV AUC of ', auc))
-    return(auc)
+    if(!quiet){writeLines(paste0('Model obtained CV AUC of ', auc))}
+    
+    aucCV <- lapply(1:max(pred$indexes), function(i){computeAuc(pred[pred$indexes==i,])})
+    
+    return(list(auc = auc, aucCV = aucCV, prediction = pred[pred$indexes>0,]))
   }
   
   return(result)

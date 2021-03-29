@@ -1,6 +1,6 @@
 # @file PackageMaintenance
 #
-# Copyright 2019 Observational Health Data Sciences and Informatics
+# Copyright 2020 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -18,14 +18,16 @@
 
 # recreate the html index when new documentation
 pkgdown::build_site()
+OhdsiRTools::fixHadesLogo()
 
 # Format and check code
 OhdsiRTools::formatRFolder()
 OhdsiRTools::checkUsagePackage("PatientLevelPrediction")
 OhdsiRTools::updateCopyrightYearFolder()
+devtools::spell_check()
 
 # Create manual and vignettes
-system("rm extras/PatientLevelPrediction.pdf")
+unlink("extras/PatientLevelPrediction.pdf")
 system("R CMD Rd2pdf ./ --output=extras/PatientLevelPrediction.pdf")
 
 rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd",
@@ -36,12 +38,6 @@ rmarkdown::render("vignettes/BuildingPredictiveModels.Rmd",
 
 rmarkdown::render("vignettes/BuildingMultiplePredictiveModels.Rmd",
                   output_file = "../inst/doc/BuildingMultiplePredictiveModels.pdf",
-                  rmarkdown::pdf_document(latex_engine = "pdflatex",
-                                          toc = TRUE,
-                                          number_sections = TRUE))
-
-rmarkdown::render("vignettes/ImplementingExistingModels.Rmd",
-                  output_file = "../inst/doc/ImplementingExistingModels.pdf",
                   rmarkdown::pdf_document(latex_engine = "pdflatex",
                                           toc = TRUE,
                                           number_sections = TRUE))

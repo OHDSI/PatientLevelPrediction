@@ -1,0 +1,420 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Making patient-level predictive network study packages},
+  pdfauthor={Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs}
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+
+\title{Making patient-level predictive network study packages}
+\author{Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek}
+\date{2020-06-03}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\newpage
+
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+The OHDSI Patient Level Prediction (PLP) package provides the framework
+to implement prediction models at scale. This can range from developing
+a large number of models across sites (methodology and study design
+insight) to extensive external validation of existing models in the
+OHDSI PLP framework (model insight). This vignette describes how you can
+use the \texttt{PatientLevelPrediction} package to create a network
+study package.
+
+\hypertarget{running-a-network-study-process}{%
+\section{Running a Network study
+Process}\label{running-a-network-study-process}}
+
+\hypertarget{step-1-developing-the-study}{%
+\subsection{Step 1 -- developing the
+study}\label{step-1-developing-the-study}}
+
+\begin{itemize}
+\tightlist
+\item
+  Design the study: target/outcome cohort logic, concept sets for
+  medical definitions, settings for developing new model or validation
+  of adding existing models to framework. Suggestion: look in literature
+  for validated definitions.
+\item
+  Write a protocol that motivates the study and provides full details
+  (sufficient for people to replicate the study in the future).
+\item
+  Write an R package for implementing the study across diverse
+  computational environments {[}see guidance below for structure of
+  package and use the skeleton github package here: \ldots{} {]}
+\end{itemize}
+
+\hypertarget{step-2-implementing-the-study-part-1}{%
+\subsection{Step 2 -- implementing the study part
+1}\label{step-2-implementing-the-study-part-1}}
+
+\begin{itemize}
+\tightlist
+\item
+  Get contributors to install the package and dependencies. Ensure the
+  package is installed correctly by running the checkInstall functions.
+\item
+  Get contributors to run the createCohort function to inspect the
+  target/outcome definitions. If the definitions are not suitable for a
+  site, go back to step 1 and revise the cohort definitions.
+\end{itemize}
+
+\hypertarget{step-3-implementing-the-study-part-2-make-sure-package-checks-outputs-the-package-is-functioning-as-planned-and-the-definitions-are-valid-across-sites}{%
+\subsection{Step 3 -- implementing the study part 2 {[}make sure package
+checks outputs the package is functioning as planned and the definitions
+are valid across
+sites{]}}\label{step-3-implementing-the-study-part-2-make-sure-package-checks-outputs-the-package-is-functioning-as-planned-and-the-definitions-are-valid-across-sites}}
+
+\begin{itemize}
+\tightlist
+\item
+  Get contributors to run the main.R with the settings configured to
+  their environment
+\item
+  Get the contributors to submit the results
+\end{itemize}
+
+\hypertarget{step-4-publication}{%
+\subsection{Step 4 -- Publication}\label{step-4-publication}}
+
+\begin{itemize}
+\tightlist
+\item
+  The study creator has the first option to be first author, if he/she
+  does not wish to be first author then he/she can pick the most
+  suitable person from the contributors. All contributors will be listed
+  as authors on the paper. The last author will be the person who
+  lead/managed the study, if this was the first author then the first
+  author can pick the most suitable last author. All authors between the
+  first and last author will be alphabetical by last name.
+\end{itemize}
+
+\hypertarget{package-skeleton---file-structure}{%
+\section{Package Skeleton - File
+Structure}\label{package-skeleton---file-structure}}
+
+\begin{itemize}
+\tightlist
+\item
+  DESCRIPTION -- This file describes the R package and the dependencies
+\item
+  NAMESPACE -- This file is created automatically by Roxygen
+\item
+  Readme.md -- This file should provide the step by step guidance on
+  implementing the package
+\item
+  R
+\item
+  helpers.r -- all the custom functions used by the package should be in
+  this file (e.g., checkInstall)
+\item
+  main.r -- this file will call the functions in helpers.r to execute
+  the full study
+\item
+  submit.r -- this file will be called at the end the submit the
+  compressed folder to the study creator/manager.
+\item
+  Man -- this folder will contain the documentation for the functions in
+  helpers.r (this should be automatically generated by roxygen)
+\item
+  Inst
+\item
+  sql/sql\_sever
+
+  \begin{itemize}
+  \tightlist
+  \item
+    targetCohort -- the target cohort parameterised sql code
+  \item
+    outcomeCohort -- the outcome cohort parameterised sql code
+  \end{itemize}
+\item
+  extdata -- place any data required for the package here
+\item
+  plp\_models -- place any PLP models here
+\item
+  existing\_models -- place the files for existing models here
+\item
+  Extras
+\end{itemize}
+
+\hypertarget{package-skeleton---output-of-running-package}{%
+\section{Package Skeleton - Output of Running
+Package}\label{package-skeleton---output-of-running-package}}
+
+The output should contain three folders inside the study directory such
+as
+\texttt{outputLoc\ \textless{}-\ (file.path(getwd(),\ paste0(studyName\_database\_date)))}:
+* Plots -- containing the test/train or validation ROC plot, calibration
+plot, precision recall plot and optionally the demographic calibration
+plot. * Results -- The output of running savePlpResult * Summary -- a
+summary csv of performance and the table 1 csv
+
+Then there should also be a zip file of the folder in the working
+directory containing the same folders and files but with sensitive
+results removed (this will be created using the packageResults
+function). Once the contributor has inspected the zipped file and is
+happy with the content being shared, he/she can then finally run the
+submit function with the details provided in the readme.md.
+
+\hypertarget{example-code-to-make-package-for-external-validation-of-plp-model}{%
+\section{Example Code To Make Package For External Validation of PLP
+Model}\label{example-code-to-make-package-for-external-validation-of-plp-model}}
+
+First you need to make a copy of the PatientLevelPrediciton skeleton
+package found here:
+
+Assuming you ran a sucessful PatientLevelPrediction model development
+and saved the output of \texttt{runPlp()} to to location `goodModel' in
+your working directory then:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(PatientLevelPrediction)}
+\NormalTok{plpResult <-}\StringTok{ }\KeywordTok{loadPlpResult}\NormalTok{(}\StringTok{"goodModel"}\NormalTok{)}
+
+\CommentTok{# add the model to the skeleton package with sensitive information removed}
+\KeywordTok{exportPlpResult}\NormalTok{(}\DataTypeTok{plpResult =}\NormalTok{ plpResult, }\DataTypeTok{modelName =} \StringTok{"Model Name"}\NormalTok{, }\DataTypeTok{packageName =} \StringTok{"Your Package Name"}\NormalTok{, }
+    \DataTypeTok{gitHubLocation =} \StringTok{"location/of/github"}\NormalTok{, }\DataTypeTok{includeEvaluationStatistics =}\NormalTok{ T, }\DataTypeTok{includeThresholdSummary =}\NormalTok{ T, }
+    \DataTypeTok{includeDemographicSummary =}\NormalTok{ T, }\DataTypeTok{includeCalibrationSummary =}\NormalTok{ T, }\DataTypeTok{includePredictionDistribution =}\NormalTok{ T, }
+    \DataTypeTok{includeCovariateSummary =}\NormalTok{ F)}
+\end{Highlighting}
+\end{Shaded}
+
+Now you want to add the cohorts (generally the parameterized sql
+required to create one or more target and outcome cohorts). This should
+be added into the inst/sql/sql\_server directory of your package. If you
+are using atlas to create the cohorts then you can use:
+\texttt{OhdsiRTools::insertCirceDefinitionInPackage()}. The settings for
+the cohort creation are defined in the inst/extdata directory in the
+file cohort\_details.csv. this file contains two columns: cohortName and
+cohortId. The cohortName should contain the name of the sql file of the
+cohort in inst/sql/sql\_server (e.g., a file called ``targetCohort.sql''
+has the name ``targetCohort'') and the cohortId is the default
+cohort\_definition\_id that will be used when people run the study
+corresponding to this cohort. The main.R file in the extras directory
+contains the vanilla code to run a study with the model eported into the
+package and the cohort files added.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(PatientLevelPrediction)}
+\CommentTok{# input settings for person running the study}
+\NormalTok{connectionDetails <-}\StringTok{ " "}
+\NormalTok{cdmDatabaseSchema <-}\StringTok{ "their_cdm_database"}
+\NormalTok{databaseName <-}\StringTok{ "Name for database"}
+\NormalTok{cohortDatabaseSchema <-}\StringTok{ "a_database_with_write_priv"}
+\NormalTok{cohortTable <-}\StringTok{ "package_table"}
+\NormalTok{outputLocation <-}\StringTok{ "location to save results"}
+
+\NormalTok{cohortDetails <-}\StringTok{ }\KeywordTok{createCohort}\NormalTok{(}\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }\DataTypeTok{cdmDatabaseSchema =}\NormalTok{ cdmDatabaseSchema, }
+    \DataTypeTok{cohortDatabaseSchema =}\NormalTok{ cohortDatabaseSchema, }\DataTypeTok{cohortTable =}\NormalTok{ cohortTable, }\DataTypeTok{package =} \StringTok{"Your Package Name"}\NormalTok{)}
+
+\NormalTok{plpResult <-}\StringTok{ }\KeywordTok{loadPlpResult}\NormalTok{(}\KeywordTok{system.file}\NormalTok{(}\StringTok{"model"}\NormalTok{, }\DataTypeTok{package =} \StringTok{"Your Package Name"}\NormalTok{))}
+\NormalTok{result <-}\StringTok{ }\KeywordTok{externalValidatePlp}\NormalTok{(}\DataTypeTok{plpResult =}\NormalTok{ plpResult, }\DataTypeTok{connectionDetails =}\NormalTok{ connectionDetails, }\DataTypeTok{validationSchemaTarget =}\NormalTok{ cohortDatabaseSchema, }
+    \DataTypeTok{validationSchemaOutcome =}\NormalTok{ cohortDatabaseSchema, }\DataTypeTok{validationSchemaCdm =}\NormalTok{ cdmDatabaseSchema, }\DataTypeTok{validationTableTarget =}\NormalTok{ cohortTable, }
+    \DataTypeTok{validationTableOutcome =}\NormalTok{ cohortTable, }\DataTypeTok{validationIdTarget =}\NormalTok{ target_cohort_id, }\DataTypeTok{validationIdOutcome =}\NormalTok{ outcome_cohort_id)}
+
+\CommentTok{# save results to standard output}
+\NormalTok{resultLoc <-}\StringTok{ }\KeywordTok{standardOutput}\NormalTok{(}\DataTypeTok{result =}\NormalTok{ result, }\DataTypeTok{outputLocation =}\NormalTok{ outputLocation, }\DataTypeTok{studyName =} \StringTok{"external validation of ... model"}\NormalTok{, }
+    \DataTypeTok{databaseName =}\NormalTok{ databaseName, }\DataTypeTok{cohortName =} \StringTok{"your cohortName"}\NormalTok{, }\DataTypeTok{outcomeName =} \StringTok{"your outcomeName"}\NormalTok{)}
+
+\CommentTok{# package results ready to submit}
+\KeywordTok{packageResults}\NormalTok{(}\DataTypeTok{mainFolder =}\NormalTok{ resultLoc, }\DataTypeTok{includeROCplot =}\NormalTok{ T, }\DataTypeTok{includeCalibrationPlot =}\NormalTok{ T, }\DataTypeTok{includePRPlot =}\NormalTok{ T, }
+    \DataTypeTok{includeTable1 =}\NormalTok{ F, }\DataTypeTok{includeThresholdSummary =}\NormalTok{ T, }\DataTypeTok{includeDemographicSummary =}\NormalTok{ T, }\DataTypeTok{includeCalibrationSummary =}\NormalTok{ T, }
+    \DataTypeTok{includePredictionDistribution =}\NormalTok{ T, }\DataTypeTok{includeCovariateSummary =}\NormalTok{ F, }\DataTypeTok{removeLessThanN =}\NormalTok{ F, }\DataTypeTok{N =} \DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Where the target\_cohort\_id and outcome\_cohort\_id should correspond
+to the cohort\_details.csv file.
+
+We recommend getting the network implementors to submit their results of
+\texttt{createCohort()} before continuing with the study to ensure
+definitions run across the network. After running the rest of main.R the
+implementor should inspect the files in the export folder created by the
+package to ensure there isn't sensitive data remaining. Once checked the
+implementor can run submit.R to send the results to the study organisor.
+The submit.R file is:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{submitResults}\NormalTok{(}\DataTypeTok{exportFolder =}\NormalTok{ outputLocation, }\DataTypeTok{dbName =}\NormalTok{ databaseName, key, secret)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{useful-patientlevelprediction-functions}{%
+\section{Useful PatientLevelPrediction
+Functions}\label{useful-patientlevelprediction-functions}}
+
+The functions to aid the creation of a network study are:
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.26\columnwidth}\raggedright
+Function\strut
+\end{minipage} & \begin{minipage}[b]{0.42\columnwidth}\raggedright
+Description\strut
+\end{minipage} & \begin{minipage}[b]{0.23\columnwidth}\raggedright
+Usage\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\texttt{checkPlpInstall()}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+This function checks the connection, and various aspects of the PLP
+package to check it is set up correctly\strut
+\end{minipage} & \begin{minipage}[t]{0.23\columnwidth}\raggedright
+This should be run with the appropriate settings to check the
+contributor is set up correctly for the study\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\texttt{getPlpData()}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+This function extracts the data from the cdm for model development\strut
+\end{minipage} & \begin{minipage}[t]{0.23\columnwidth}\raggedright
+This should be used if developing new models\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\texttt{runPlp()}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+This function trains and tests a new PLP model\strut
+\end{minipage} & \begin{minipage}[t]{0.23\columnwidth}\raggedright
+This should be used if developing new models\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\texttt{transportPlp()}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+This function exports the output of runPlp into an R package while
+removing sensitive objects\strut
+\end{minipage} & \begin{minipage}[t]{0.23\columnwidth}\raggedright
+This should be used when saving a model into a study package to validate
+the model\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\texttt{externalValidatePlp()}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+This function requires the user to inpute an existing model and then
+extracts the required data on a new database and applies/evaluates the
+model.\strut
+\end{minipage} & \begin{minipage}[t]{0.23\columnwidth}\raggedright
+This should be used if validating a PLP model\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+\end{document}

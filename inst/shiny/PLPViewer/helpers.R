@@ -16,20 +16,18 @@ getFilter <- function(summaryTable,input){
   if(input$modelSettingName!='All'){
     ind <- intersect(ind,which(as.character(summaryTable$Model)==input$modelSettingName))
   }
-  if(input$riskWindowStart!='All'){
-    ind <- intersect(ind,which(summaryTable$`TAR start`==input$riskWindowStart))
+  if(input$TAR!='All'){
+    ind <- intersect(ind,which(as.character(summaryTable$TAR)==input$TAR))
   }
-  if(input$riskWindowEnd!='All'){
-    ind <- intersect(ind,which(summaryTable$`TAR end`==input$riskWindowEnd))
-  }
+
   
   return(ind)
 }
 
 
-getPlpResult <- function(result,validation,summaryTable, inputType,filterIndex, selectedRow){
+getPlpResult <- function(result,validation,summaryTable, inputType,trueRow){
   if(inputType == 'plpResult'){
-    i <- filterIndex[selectedRow]
+    i <- trueRow
     if(i ==1){
       tempResult <- result
       tempResult$type <- 'test'
@@ -44,8 +42,8 @@ getPlpResult <- function(result,validation,summaryTable, inputType,filterIndex, 
     tempResult$log <- 'log not available'
   }else if( inputType == 'file') {
     tempResult <- NULL
-    loc <- summaryTable[filterIndex,][selectedRow,]$plpResultLocation
-    locLoaderFunc <- summaryTable[filterIndex,][selectedRow,]$plpResultLoad
+    loc <- summaryTable[trueRow,]$plpResultLocation
+    locLoaderFunc <- summaryTable[trueRow,]$plpResultLoad
     logLocation <- gsub('plpResult','plpLog.txt', gsub('validationResult.rds','plpLog.txt',gsub('plpResult.rds','plpLog.txt', as.character(loc))))
     if(file.exists(logLocation)){
       txt <- readLines(logLocation)
@@ -69,7 +67,7 @@ getPlpResult <- function(result,validation,summaryTable, inputType,filterIndex, 
 formatModSettings <- function(modelSettings){
   modelset <- data.frame(Setting = c('Model',names(modelSettings[[2]])),
                          Value = c(modelSettings[[1]], unlist(lapply(modelSettings[[2]], 
-                                                                     function(x) paste0(x, collapse='')))))
+                                                                     function(x) paste0(x, collapse=',')))))
   row.names(modelset) <- NULL
   return(modelset)
 }
@@ -122,6 +120,7 @@ formatPopSettings <- function(populationSettings){
 
 # format covariate summary table
 formatCovariateTable <- function(covariateSummary){
+  covariateSummary <- as.data.frame(covariateSummary)
   for(coln in c('covariateValue','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','StandardizedMeanDiff')){
     if(sum(colnames(covariateSummary)==coln)>0){
       covariateSummary[,coln] <- format(round(covariateSummary[,coln], 4), nsmall = 4)
@@ -144,4 +143,6 @@ editCovariates <- function(covs){
     ))
   }
 }
+
+
     
