@@ -207,7 +207,12 @@ weakRecalibration <- function(prediction){
     timepoint <- ifelse(is.null(attr(prediction, "timePoint")), 365, attr(prediction, "timePoint"))
     ParallelLogger::logInfo(paste0('recal initial timepoint: ',timepoint))
     
-    lp <- log(log(1-prediction$value)/log(baseline)) + offset
+    if(!is.null(baseline)){
+      lp <- log(log(1-prediction$value)/log(baseline)) + offset
+    } else{
+      lp <- log(prediction$value)
+    }
+    
     
     t <- apply(cbind(prediction$daysToCohortEnd, prediction$survivalTime), 1, min)
     y <- ifelse(prediction$outcomeCount>0,1,0)  # observed outcome
@@ -219,6 +224,7 @@ weakRecalibration <- function(prediction){
     h.slope <- max(survival::basehaz(f.slope)$hazard)  # maximum OK because of prediction_horizon
     lp.slope <- stats::predict(f.slope)
     prediction$value <- 1-exp(-h.slope*exp(lp.slope))
+    # 1-h.slope^exp(lp.slope)
     
     return(list(prediction = prediction, 
                 type = 'weakRecalibration',
@@ -239,7 +245,20 @@ inverseLog <- function(values){
   return(res)
 }
 
-
+#' addRecalibration
+#'
+#' @description
+#' Adds the recalibration results to the main results
+#'
+#' @details
+#' Append the recalibration results into the main results
+#' 
+#' @param performanceEvaluation           The main result performanceEvaluation
+#' @param recalibration                   The recalibration result
+#' @return
+#' An object of class \code{runPlp} that is recalibrated on the new data
+#'
+#' @export
 addRecalibration <- function(performanceEvaluation, recalibration){
   
   if(!is.null(recalibration$demographicSummary)){

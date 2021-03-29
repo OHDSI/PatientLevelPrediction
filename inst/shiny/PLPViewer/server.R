@@ -65,7 +65,9 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   
   output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(plpResult()$covariateSummary),
-                                                              nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0)))
+                                                              nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0),
+                                                              intercept = ifelse(is.null(plpResult()$model$model$coefficients[1]),0,plpResult()$model$model$coefficients[1])))
+  
   # Download plpresult
   output$plpResult <- shiny::downloadHandler(
     filename = function(){
