@@ -1,6 +1,9 @@
-PatientLevelPrediction 4.3.5
-======================
-- fixed missing priorOutcomeLookback from createStudyPopulation
+- Removed plpData from evaluation 
+- Added recalibration into externalVal
+- Updated shiny app for recalibration
+- Added population creation setting to use cohortEndDate as timeAtRisk end 
+- fixed tests
+
 
 PatientLevelPrediction 4.3.3
 ======================

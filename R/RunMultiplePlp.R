@@ -215,7 +215,7 @@ runPlpAnalyses <- function(connectionDetails,
         
       plpData <- tryCatch(do.call(getPlpData, plpDataSettings),
                finally= ParallelLogger::logTrace('Done plpData.'),
-               error= function(cond){ParallelLogger::logTrace(paste0('Error with getPlpData:',cond));return(NULL)})
+               error= function(cond){ParallelLogger::logInfo(paste0('Error with getPlpData:',cond));return(NULL)})
   
       if(!is.null(plpData)){
         ParallelLogger::logTrace(paste0('Saving data in setting ', i ))
@@ -542,6 +542,7 @@ createStudyPopulationSettings <- function(binary = T,
 #'                                         \item{FATAL}{Be silent except for fatal errors}
 #'                                         }
 #' @param keepPrediction                   Whether to keep the predicitons for the new data                                         
+#' @param recalibrate                      A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')
 #' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
 #' 
 #' @export 
@@ -559,6 +560,7 @@ evaluateMultiplePlp <- function(analysesLocation,
                                 oracleTempSchema = NULL,
                                 verbosity = 'INFO',
                                 keepPrediction = F,
+                                recalibrate = NULL,
                                 sampleSize = NULL){
   
   clearLoggerType("Multple Evaluate PLP Log")
@@ -602,6 +604,7 @@ evaluateMultiplePlp <- function(analysesLocation,
                                                     oracleTempSchema = oracleTempSchema,
                                                     verbosity = verbosity, 
                                                     keepPrediction = keepPrediction,
+                                                    recalibrate = recalibrate,
                                                     sampleSize=sampleSize),
                                 error = function(cont){ParallelLogger::logInfo(paste0('Error: ',cont ))
                                   ;return(NULL)})

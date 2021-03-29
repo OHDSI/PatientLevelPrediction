@@ -18,6 +18,7 @@ externalValidatePlp(
   oracleTempSchema = NULL,
   verbosity = "INFO",
   keepPrediction = F,
+  recalibrate = NULL,
   sampleSize = NULL,
   outputFolder
 )
@@ -56,6 +57,8 @@ externalValidatePlp(
 }}
 
 \item{keepPrediction}{Whether to keep the predicitons for the new data}
+
+\item{recalibrate}{A vector of characters specifying the recalibration method to apply}
 
 \item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
 

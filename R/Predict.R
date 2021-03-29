@@ -93,6 +93,10 @@ predict.plp <- function(plpModel,population, plpData, ...){
     time <- attr(population,'metaData')$riskWindowEnd
     bhind <- which.min(abs(plpModel$model$baselineHazard$time-time))
     prediction$value <- 1-plpModel$model$baselineHazard$surv[bhind]^prediction$value
+    
+    attr(prediction, "baselineHazard") <- plpModel$model$baselineHazard$surv[bhind]
+    attr(prediction, "timePoint") <- time
+    attr(prediction, "offset") <- 0
   }
   
   return(prediction)
