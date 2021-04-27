@@ -24,11 +24,19 @@
 #' @param noShrinkage a set of covariates whcih are to be forced to be included in the final model. default is the intercept 
 #' @param threads    An option to set number of threads when training model
 #' @param useCrossValidation  Set this to FALSE if you want to train a LR with a preset varience
+#' @param upperLimit  Upper prior variance limit for grid-search
+#' @param lowerLimit  Lower prior variance limit for grid-search
 #' 
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setLassoLogisticRegression<- function(variance=0.01, seed=NULL, includeCovariateIds = c(), noShrinkage = c(0), threads = -1, useCrossValidation = TRUE, upperLimit = 20, lowerLimit = 0.01){
+setLassoLogisticRegression<- function(variance=0.01, seed=NULL, 
+                                      includeCovariateIds = c(), 
+                                      noShrinkage = c(0), 
+                                      threads = -1, 
+                                      useCrossValidation = TRUE, 
+                                      upperLimit = 20, 
+                                      lowerLimit = 0.01){
 
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')

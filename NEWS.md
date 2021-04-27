@@ -1,9 +1,18 @@
+PatientLevelPrediction 4.3.7
+======================
+- updated calibration slope
+- fixed missing age/gender in prediction
+- fixed shiny intercept bug
+- fixed diagnostic
+- fixed missing covariateSettings in  load cvs plp
+
+PatientLevelPrediction 4.3.6
+======================
 - Removed plpData from evaluation 
 - Added recalibration into externalVal
 - Updated shiny app for recalibration
 - Added population creation setting to use cohortEndDate as timeAtRisk end 
 - fixed tests
-
 
 PatientLevelPrediction 4.3.3
 ======================

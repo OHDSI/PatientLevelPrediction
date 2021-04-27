@@ -111,7 +111,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
   )
   
   prediction <- merge(population, prediction, by='rowId', all.x=T, fill=0)
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')] # need to fix no index issue
   attr(prediction, "metaData") <- list(predictionType = "binary") 
   return(prediction)
   
@@ -166,7 +166,7 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   prediction <- merge(prediction[,colnames(prediction)!='rowIdPython'],
                       population, 
                       by='rowId')
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')]
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')]
   return(prediction)
 }
 
@@ -210,7 +210,7 @@ predict.pythonAuto <- function(plpModel, population, plpData){
   prediction <- merge(prediction[,colnames(prediction)!='rowIdPython'],
                       population, 
                       by='rowId')
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')]
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')]
   return(prediction)
 }
 
@@ -267,7 +267,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
       }
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')] # need to fix no index issue
     return(prediction)
   } else{
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
@@ -283,7 +283,7 @@ predict.deep <- function(plpModel, population, plpData,   ...){
       prediction$value[batch] <- as.double(pred[,2])
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')] # need to fix no index issue
     return(prediction)
     
   }
@@ -339,7 +339,7 @@ predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
     }
     prediction$value[prediction$value>1] <- 1
     prediction$value[prediction$value<0] <- 0
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value',
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender',
                                                         'epistemicUncertainty', 'aleatoricUncertainty')] # need to fix no index issue
     return(prediction)
   } else{
@@ -376,7 +376,7 @@ predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
     }
     prediction$value[prediction$value>1] <- 1
     prediction$value[prediction$value<0] <- 0
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value',
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender',
                                                         'epistemicUncertainty', 'aleatoricUncertainty')] # need to fix no index issue
     return(prediction)
     
@@ -466,7 +466,7 @@ predict.deepEnsemble <- function(plpModel, population, plpData,   ...){
       prediction$sigmas[batch] <- c(sigmaResult)
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value', 'sigmas')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value', 'sigmas','ageYear', 'gender')] # need to fix no index issue
     if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
     return(prediction)
     
@@ -508,7 +508,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       }
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')] # need to fix no index issue
     return(prediction)
   } else{
     result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
@@ -528,7 +528,7 @@ predict.deepMulti <- function(plpModel, population, plpData,   ...){
       prediction$value[batch] <- as.double(pred)
     }
     
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')] # need to fix no index issue
     return(prediction)
     
   }
