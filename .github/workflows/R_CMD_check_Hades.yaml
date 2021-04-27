@@ -49,7 +49,7 @@ jobs:
     
       - uses: conda-incubator/setup-miniconda@v2
         with:
-          miniconda-version: "latest"
+          python-version: "3.7"
           activate-environment: r-reticulate
       
       - name: python main dependencies  

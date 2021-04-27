@@ -65,6 +65,7 @@ Suggests:
     htmltools,
     keras,
     knitr,
+    markdown,
     Metrics,
     officer,
     plotly,
