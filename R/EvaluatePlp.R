@@ -23,14 +23,14 @@
 #' @details
 #' The function calculates various metrics to measure the performance of the model
 #' @param prediction                         The patient level prediction model's prediction
-#' @param plpData                            The patient level prediction data
+#' @param plpData                            Redundant - no longer used
 #' @return
 #' A list containing the performance values
 #'
 
 #' @export
-evaluatePlp <- function(prediction, plpData){
-
+evaluatePlp <- function(prediction, plpData = NULL){
+  
   # check logger
   if(length(ParallelLogger::getLoggers())==0){
     logger <- ParallelLogger::createLogger(name = "SIMPLE",
@@ -100,8 +100,8 @@ evaluatePlp <- function(prediction, plpData){
     
     # 3) demographicSummary
     ParallelLogger::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
-    demographicSummary <- tryCatch(getDemographicSummary(prediction, plpData),
-                                   error= function(cond){return(NULL)})
+    demographicSummary <- tryCatch(getDemographicSummary(prediction = prediction),
+                                   error= function(e){ParallelLogger::logInfo(e);return(NULL)})
     ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
     
     
@@ -109,6 +109,10 @@ evaluatePlp <- function(prediction, plpData){
     ParallelLogger::logTrace('Calculating Calibration-in-large')
     calinlarge <- calibrationInLarge(prediction)
     ParallelLogger::logInfo(paste0('Calibration in large- Mean predicted risk ', round(calinlarge$meanPredictionRisk, digits = 4), ' : observed risk ',round(calinlarge$observedRisk, digits = 4)))
+    
+    calinlargeInt <- calibrationInLargeIntercept(prediction)
+    ParallelLogger::logInfo(paste0('Calibration in large- Intercept ', round(calinlargeInt, digits = 4)))
+    
     
     ParallelLogger::logTrace('Calculating Weak Calibration')
     weakCal <- calibrationWeak(prediction)
@@ -148,6 +152,7 @@ evaluatePlp <- function(prediction, plpData){
                                  CalibrationIntercept= weakCal$intercept,	
                                  CalibrationSlope = weakCal$gradient,
                                  CalibrationInLarge = calinlarge$meanPredictionRisk/calinlarge$observedRisk,
+                                 CalibrationInLargeInt = calinlargeInt,
                                  Emean = valProb['Eavg'],
                                  E90 = valProb['E90'],
                                  Emax = valProb['Emax'])
@@ -277,7 +282,7 @@ evaluatePlp <- function(prediction, plpData){
     
     # add demographic calibration
     demographicSummary <- NULL
-    demographicSummary <- getDemographicSummary(prediction, plpData, 
+    demographicSummary <- getDemographicSummary(prediction = prediction, 
                                                 type = 'survival', timepoint = timepoint)
 
     
@@ -495,8 +500,7 @@ calibrationInLarge <- function(prediction){
   return(result)
 }
 
-
-calibrationWeak <- function(prediction){
+calibrationInLargeIntercept <- function(prediction){
   
   #do invert of log function:
   # log(p/(1-p))
@@ -510,11 +514,33 @@ calibrationWeak <- function(prediction){
   
   intercept <- suppressWarnings(stats::glm(y ~ offset(1*inverseLog), family = 'binomial'))
   intercept <- intercept$coefficients[1]
-  gradient <- suppressWarnings(stats::glm(y ~ inverseLog+0, family = 'binomial',
-                         offset = rep(intercept,length(inverseLog))))
-  gradient <- gradient$coefficients[1]
+
+  return(intercept)
+}
+
+
+calibrationWeak <- function(prediction){
   
-  result <- data.frame(intercept = intercept, gradient = gradient)
+  #do invert of log function:
+  # log(p/(1-p))
+  
+  # edit the 0 and 1 values
+  prediction$value[prediction$value==0] <- 0.000000000000001
+  prediction$value[prediction$value==1] <- 1-0.000000000000001
+  
+  inverseLog <- log(prediction$value/(1-prediction$value))
+  y <- ifelse(prediction$outcomeCount>0, 1, 0) 
+  
+  #intercept <- suppressWarnings(stats::glm(y ~ offset(1*inverseLog), family = 'binomial'))
+  #intercept <- intercept$coefficients[1]
+  #gradient <- suppressWarnings(stats::glm(y ~ inverseLog+0, family = 'binomial',
+  #                       offset = rep(intercept,length(inverseLog))))
+  #gradient <- gradient$coefficients[1]
+  
+  vals <- suppressWarnings(stats::glm(y ~ inverseLog, family = 'binomial'))
+  
+  result <- data.frame(intercept = vals$coefficients[1], 
+                       gradient = vals$coefficients[2])
   
   return(result)
 }
@@ -764,15 +790,16 @@ getPredictionDistribution <- function(prediction){
   return(predictionDistribution)
 }
 
-getDemographicSummary <- function(prediction, plpData, type = 'binary', timepoint = NULL){
-  
-  demographicData <- plpData$cohorts %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
+getDemographicSummary <- function(prediction, type = 'binary', timepoint = NULL){
+
+  #demographicData <- plpData$cohorts %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
+  demographicData <- prediction[,c('rowId','ageYear','gender')] %>% dplyr::mutate(ageId = floor(.data$ageYear/5),
                                                        ageGroup = paste0('Age group: ', floor(.data$ageYear/5)*5, '-',floor(.data$ageYear/5)*5+4),
                                                        genId = .data$gender,
                                                        genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
     dplyr::select(.data$rowId,.data$ageId,.data$ageGroup,.data$genId,.data$genGroup ) %>%
     #dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime','daysToCohortEnd')], by='rowId')
-    dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
+    dplyr::inner_join(prediction[,colnames(prediction)%in%c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
   
   if(type == 'binary'){
     demographicData <- demographicData %>%
@@ -1378,3 +1405,32 @@ results$net.benefit = nb
 results$interventions.avoided = interv
 return(results)
 }
+
+#' Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome
+#' as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/
+#' 
+#' @details
+#' Calculate the model-based concordance
+#'
+#' @param prediction         the prediction object found in the plpResult object
+#' 
+#' @return
+#' model-based concordance value
+#'
+#' @export
+ 
+modelBasedConcordance <- function(prediction){
+  if (!length(prediction$value >0)){
+    stop("Prediction object not found")
+  }
+  prediction <- prediction$value
+  n<-length(prediction)
+  ord<-order(prediction)
+  prediction<-prediction[ord]
+  q.hat<-1-prediction
+  V1<-(prediction*(cumsum(q.hat)-q.hat)+q.hat*(sum(prediction)-cumsum(prediction)))/(n-1)
+  V2<-(prediction*(sum(q.hat)-q.hat)+q.hat*(sum(prediction)-prediction))/(n-1)
+  mb.c<-sum(V1)/sum(V2)
+  return(mb.c)
+}
+

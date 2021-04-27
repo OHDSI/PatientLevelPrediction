@@ -727,7 +727,8 @@ loadPlpResult <- function(dirPath){
 formatCovariateSettings <- function(covariateSettings){
   
   if(class(covariateSettings) == "covariateSettings"){
-    return(list(cvs = unlist(covariateSettings), fun = attr(covariateSettings,'fun')))
+    return(list(cvs = data.frame(X = names(unlist(covariateSettings)), x= unlist(covariateSettings)), 
+                fun = attr(covariateSettings,'fun')))
     
   } else{
     return(list(cvs = do.call(rbind, lapply(1:length(covariateSettings), function(i){
@@ -762,6 +763,7 @@ reformatCovariateSettings <- function(covariateSettingsLocation){
     covariateSettings <- as.list(covariateSettings)
     names(covariateSettings) <- cs$X
     attr(covariateSettings,'fun') <- fun$x
+    class(covariateSettings) <- 'covariateSettings'
   } else {
     
     covariateSettings <- list()

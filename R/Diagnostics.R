@@ -157,7 +157,7 @@ diagnostic <- function(plpData = NULL,
                                  riskWindowEnd = riskWindowEnd[i],
                                  endAnchor = endAnchor[i]
       )
-      settings <- rbind(settings, settingsTemp)
+      settings <- unique(rbind(settings, settingsTemp))
     }
   }
   
@@ -202,10 +202,11 @@ diagnostic <- function(plpData = NULL,
   } else {
     surv <- c()
   }
-  survTemp <- lapply(outcomeIds, function(oi) getSurvival(plpData, outcomeId = oi,
+  survTemp <- lapply(outcomeIds, function(oi) getSurvival(plpData = data, 
+                                                          outcomeId = oi,
                                                           cohortId = cohortId, 
                                                           cdmDatabaseName  = cdmDatabaseName ))
-  surv <- rbind(surv, do.call('rbind', survTemp))
+  surv <- unique(rbind(surv, do.call('rbind', survTemp)))
   if(!is.null(outputFolder)){
     utils::write.csv(surv, file.path(outputFolder, 'survival.csv'), row.names = F)
   }
@@ -314,9 +315,9 @@ diagnostic <- function(plpData = NULL,
 
 getSurvival <- function(plpData, outcomeId, cohortId, cdmDatabaseName ){
 
-  object <- plpData$outcome %>% 
+  object <- plpData$outcomes %>% 
     dplyr::filter(.data$outcomeId == !!outcomeId) %>%
-    dplyr::right_join(plpData$cohort, by ='rowId') %>%
+    dplyr::right_join(plpData$cohorts, by ='rowId') %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise(daysToObsEnd = min(.data$daysToObsEnd),
                      daysToEvent = min(.data$daysToEvent))
@@ -397,7 +398,7 @@ getDistribution <- function(cohort,
     tempResult$outcomeId <- oi
     tempResult$targetId <- cohortId
     
-    result <- rbind(result, tempResult)
+    result <- unique(rbind(result, tempResult))
  
   }
   

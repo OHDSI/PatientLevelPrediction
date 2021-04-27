@@ -5,24 +5,17 @@
 \title{recalibratePlp}
 \usage{
 recalibratePlp(
-  plpResult,
-  population,
-  validationData,
-  testFraction = 0.25,
-  method = c("RecalibrationintheLarge", "weakRecalibration", "reestimate")
+  prediction,
+  analysisId,
+  method = c("recalibrationintheLarge", "weakRecalibration")
 )
 }
 \arguments{
-\item{plpResult}{The output from \code{runPlp}}
+\item{prediction}{A prediction dataframe}
 
-\item{population}{The population created using createStudyPopulation() who will have their risks predicted}
+\item{analysisId}{The model analysisId}
 
-\item{validationData}{An object of type \code{plpData} - the patient level prediction
-data extracted from the CDM.}
-
-\item{testFraction}{Fraction of data to used for internal validation}
-
-\item{method}{Method used to recalibrate ('RecalibrationintheLarge' or 'weakRecalibration' or 'reestimate')}
+\item{method}{Method used to recalibrate ('recalibrationintheLarge' or 'weakRecalibration' )}
 }
 \value{
 An object of class \code{runPlp} that is recalibrated on the new data
