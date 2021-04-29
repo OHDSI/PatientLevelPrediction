@@ -97,23 +97,23 @@ jobs:
           remotes::install_deps(dependencies = TRUE, INSTALL_opts=c("--no-multiarch"))
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
-		
+
      - name: Install covr
         if: runner.os == 'macOS'
         run: |
           remotes::install_cran("covr")
         shell: Rscript {0}
-        
+
       - name: Remove check folder if exists
         if: runner.os == 'macOS'
         run: unlink("check", recursive = TRUE)
         shell: Rscript {0}
-    
+
       - name: use r-reticulate environment
         run: |
           reticulate::use_condaenv("r-reticulate", required = TRUE)
         shell: Rscript {0}
-        
+
       - name: Check
         env:
           _R_CHECK_CRAN_INCOMING_REMOTE_: false
@@ -126,14 +126,14 @@ jobs:
         with:
           name: ${{ runner.os }}-r${{ matrix.config.r }}-results
           path: check
-          
+
        - name: Upload source package
          if: success() && runner.os == 'macOS' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
          uses: actions/upload-artifact@v2
          with:
            name: package_tarball
            path: check/*.tar.gz
-      
+
        - name: Test coverage
          if: runner.os == 'macOS'
          run: covr::codecov()
@@ -144,7 +144,7 @@ jobs:
     needs: R-CMD-Check
     
     runs-on: macOS-latest
-    
+
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
