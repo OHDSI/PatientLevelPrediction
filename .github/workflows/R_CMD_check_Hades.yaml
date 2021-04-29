@@ -96,9 +96,19 @@ jobs:
         run: |
           remotes::install_deps(dependencies = TRUE, INSTALL_opts=c("--no-multiarch"))
           remotes::install_cran("rcmdcheck")
+        shell: Rscript {0}
+		
+     - name: Install covr
+        if: runner.os == 'macOS'
+        run: |
           remotes::install_cran("covr")
         shell: Rscript {0}
         
+      - name: Remove check folder if exists
+        if: runner.os == 'macOS'
+        run: unlink("check", recursive = TRUE)
+        shell: Rscript {0}
+    
       - name: use r-reticulate environment
         run: |
           reticulate::use_condaenv("r-reticulate", required = TRUE)
@@ -117,20 +127,84 @@ jobs:
           name: ${{ runner.os }}-r${{ matrix.config.r }}-results
           path: check
           
-      - name: Test coverage
-        if: runner.os == 'Windows'
-        run: covr::codecov()
-        shell: Rscript {0}
+       - name: Upload source package
+         if: success() && runner.os == 'macOS' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+         uses: actions/upload-artifact@v2
+         with:
+           name: package_tarball
+           path: check/*.tar.gz
+      
+       - name: Test coverage
+         if: runner.os == 'macOS'
+         run: covr::codecov()
+         shell: Rscript {0}
+
 
   Release:
     needs: R-CMD-Check
+    
+    runs-on: macOS-latest
+    
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-    runs-on: ubuntu-20.04
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
 
     steps:
-      - name: First
-        if: ${{ github.event_name != 'pull_request' && github.branch == 'master' }}
+      
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0    
+
+      - name: Check if version has increased
         run: |
-          perl compare_version --tag && \
-          bash deploy.sh && \
+          echo "new_version="$(perl compare_versions --tag) >> $GITHUB_ENV
+          
+      - name: Display new version number
+        if: ${{ env.new_version != '' }}
+        run: |
+          echo "${{ env.new_version }}" 
+          
+      - name: Create release
+        if: ${{ env.new_version != '' }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} 
+        with:
+          tag_name: ${{ env.new_version }}
+          release_name: Release ${{ env.new_version }}
+          body: |
+            See NEWS.md for release notes.
+          draft: false
+          prerelease: false
+          
+      - uses: r-lib/actions/setup-r@v1
+        if: ${{ env.new_version != '' }}
+        
+      - name: Install drat
+        if: ${{ env.new_version != '' }}
+        run: |
+          install.packages('drat')
+        shell: Rscript {0}
+        
+      - name: Remove any tarballs that already exists
+        if: ${{ env.new_version != '' }}
+        run: |
+          rm -f *.tar.gz
+          
+      - name: Download package tarball
+        if: ${{ env.new_version != '' }}
+        uses: actions/download-artifact@v2
+        with:
+          name: package_tarball    
+          
+      - name: Push to drat
+        if: ${{ env.new_version != '' }}
+        run: |
+          bash deploy.sh
+
+      - name: Push to BroadSea
+        if: ${{ env.new_version != '' }}
+        run: |
           curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/broadsea-methodslibrary/trigger/f0b51cec-4027-4781-9383-4b38b42dd4f5/
+          
