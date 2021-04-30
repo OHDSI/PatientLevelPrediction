@@ -138,7 +138,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     if(mean(varImp)==0)
       stop('No important variables - seems to be an issue with the data')
     
-    incRInd <- which(varImp>mean(varImp), arr.ind=T)
+    incRInd <- which(varImp>=mean(varImp), arr.ind=T)
     
     # save mapping, missing, indexes
   } else{

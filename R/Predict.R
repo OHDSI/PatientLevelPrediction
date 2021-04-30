@@ -105,7 +105,7 @@ predict.plp <- function(plpModel,population, plpData, ...){
 # for gxboost
 predict.xgboost <- function(plpModel,population, plpData, ...){ 
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
-  data <- result$data[population$rowId,]
+  data <- result$data[population$rowId,, drop = F]
   prediction <- data.frame(rowId=population$rowId,
                            value=stats::predict(plpModel$model, data)
   )
@@ -135,7 +135,7 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
     included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
-    pdata <- reticulate::r_to_py(newData$data[,included])
+    pdata <- reticulate::r_to_py(newData$data[,included, drop = F])
     fun_predict <- python_predict
   }
   

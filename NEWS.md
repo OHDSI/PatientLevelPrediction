@@ -1,3 +1,9 @@
+PatientLevelPrediction 4.3.8
+======================
+- fixed bug when normalize data is false
+- fixed bugs when single feature (gbm + python)
+- updated GBM 
+
 PatientLevelPrediction 4.3.7
 ======================
 - updated calibration slope
