@@ -158,7 +158,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                            value=stats::predict(trainedModel, data)
   )
   prediction <- merge(population, prediction, by='rowId')
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear','gender')] # need to fix no index issue
   attr(prediction, "metaData") <- list(predictionType = "binary") 
 
   result <- list(model = trainedModel,

@@ -9,8 +9,6 @@ $r_major = $1;
 $r_minor = $2;
 $r_mod = $3;
 
-print "New R version: $r_major-$r_minor-$r_mod\n";
-
 open(GIT_VERSION, "git describe --tags |");
 $git = <GIT_VERSION>;
 close(GIT_VERSION);
@@ -20,49 +18,10 @@ $git_major = $1;
 $git_minor = $2;
 $git_mod = $3;
 
-print "Current git version: $git_major-$git_minor-$git_mod\n";
-
 if ($r_major > $git_major || $r_minor > $git_minor || $r_mod > $git_mod) {
-	$monotonic = 0;
+	$new_version = "v$r_major.$r_minor.$r_mod";
 } else {
-	$monotonic = -1;
+	$new_version = "";
 }
 
-if ($monotonic != 0) {
-	print "Non-monotonically increasing versions numbers\n";
-}
-
-if ($monotonic == 0 & $ARGV[0] eq "--tag") {
-
-	open(GIT_TAG, "git tag v$r_major.$r_minor.$r_mod |");
-
-	$fail = 0;
-	while ($line = <GIT_TAG>) {
-		if ($line =~ /fatal/) {
-			$fail = 1;
-		}
-		print "tag: $line";
-	} # TODO Check for errors
-	close(GIT_TAG);
-	print "tag: END\n\n";
-
-	if ($fail eq 1) {
-		exit(-1);
-	}
-
-	$cmd = "git config user.name \"Marc A. Suchard\"; " .
-	       "git config user.email \"msuchard@ucla.edu\"; " .
-	       "git tag v$r_major.$r_minor.$r_mod ; " .
-	       "git push -q https://\$GH_TOKEN\@github.com/OHDSI/\$PKG_NAME.git --tags";
-
-	print "cmd: $cmd\n";
-
-	open(GIT_PUSH, "$cmd |");
-	while ($line = <GIT_PUSH>) {
-		print "push: $line";
-	} # TODO Check for errors
-	close(GIT_PUSH);
-	print "push: END\n\n";
-}
-
-exit($monotonic);
+print($new_version);

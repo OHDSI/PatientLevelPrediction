@@ -257,8 +257,8 @@ test_that("population creation parameters", {
   expect_equal(is.null(Ppop5), TRUE)
   
   
-  atrr <- getAttritionTable(Ppop3)
-  expect_is(atrr, "data.frame")
+  #atrr <- getAttritionTable(Ppop3)
+  #expect_is(atrr, "data.frame")
   
   
 })

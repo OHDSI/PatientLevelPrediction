@@ -44,7 +44,8 @@
 #'                                         \item{ERROR}{Show error messages}
 #'                                         \item{FATAL}{Be silent except for fatal errors}
 #'                                         }
-#' @param keepPrediction                   Whether to keep the predicitons for the new data                                         
+#' @param keepPrediction                   Whether to keep the predicitons for the new data   
+#' @param recalibrate                      A vector of characters specifying the recalibration method to apply                 
 #' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
 #' @param outputFolder                     If you want to save the results enter the directory to save here
 #' 
@@ -62,6 +63,7 @@ externalValidatePlp <- function(plpResult,
                                 validationIdTarget = NULL, validationIdOutcome = NULL,
                                 oracleTempSchema=NULL,#validationSchemaCdm,
                                 verbosity="INFO", keepPrediction=F,
+                                recalibrate = NULL,
                                 sampleSize = NULL,
                                 outputFolder){
   
@@ -179,6 +181,21 @@ externalValidatePlp <- function(plpResult,
       results[[i]] <- applyModel(population=newData$population, plpData = newData$plpData, 
                                                          calculatePerformance = T, plpModel = plpResult$model)
       
+      if(!is.null(recalibrate)){
+        ParallelLogger::logInfo('Recalibrating')
+        for(k in 1:length(recalibrate)){
+          if(recalibrate[k] %in% c('RecalibrationintheLarge', 'weakRecalibration')){
+            ParallelLogger::logInfo(paste0('Using method ', recalibrate[k]))
+            recal <- recalibratePlp(results[[i]]$prediction, analysisId = plpResult$model$analysisId,
+                                    method = recalibrate[k])
+            
+            results[[i]]$prediction <- recal$prediction
+            results[[i]]$performanceEvaluation <- addRecalibration(results[[i]]$performanceEvaluation, 
+                                                                   recalibration = recal)
+          }
+          
+        }
+      }
       
       if(!keepPrediction){
         results[[i]]$prediction <- NULL

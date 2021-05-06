@@ -221,6 +221,7 @@ createLearningCurve <- function(population,
     "TestBrierScaled",
     "TestBrierScore",
     "TestCalibrationInLarge",
+    "TestCalibrationInLargeIntercept",
     "TestCalibrationIntercept",
     "TestCalibrationSlope",
     "TestE90",
@@ -233,6 +234,7 @@ createLearningCurve <- function(population,
     "TrainBrierScaled",
     "TrainBrierScore",
     "TrainCalibrationInLarge",
+    "TrainCalibrationInLargeIntercept",
     "TrainCalibrationIntercept",
     "TrainCalibrationSlope",
     "TrainE90",
@@ -443,6 +445,7 @@ createLearningCurvePar <- function(population,
     "TestBrierScaled",
     "TestBrierScore",
     "TestCalibrationInLarge",
+    "TestCalibrationInLargeIntercept",
     "TestCalibrationIntercept",
     "TestCalibrationSlope",
     "TestE90",
@@ -455,6 +458,7 @@ createLearningCurvePar <- function(population,
     "TrainBrierScaled",
     "TrainBrierScore",
     "TrainCalibrationInLarge",
+    "TrainCalibrationInLargeIntercept",
     "TrainCalibrationIntercept",
     "TrainCalibrationSlope",
     "TrainE90",
@@ -514,6 +518,6 @@ lcWrapper <- function(settings){
 
     return(final)
   } else{
-    return(rep(0,21))
+    return(rep(0,29))
   }
 }

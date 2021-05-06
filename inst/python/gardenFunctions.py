@@ -12,7 +12,7 @@ import os
 import sys
 import timeit
 import math
-from skgarden.quantile import RandomForestQuantileRegressor
+from skgarden import RandomForestQuantileRegressor
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 from joblib import Memory
 import joblib
@@ -67,7 +67,7 @@ def train_RandomForestQuantileRegressor(population, plpData, train, modelOutput,
     if not os.path.exists(modelOutput):
       os.makedirs(modelOutput)
     print("Model saved to: %s" %(modelOutput)	)
-    joblib.dump(tmodel, os.path.join(modelOutput,"model.pkl")) 
+    joblib.dump(tmodel, os.path.join(modelOutput,"model.pkl"), compress = True) 
     pred = tmodel.predict(csr_matrix(X[trainInds,:]))[:,0]
     pred.shape = (population[population[:,population.shape[1]-1] > 0,:].shape[0], 1)
     prediction = np.append(population[population[:,population.shape[1]-1] > 0,:],pred, axis=1)
