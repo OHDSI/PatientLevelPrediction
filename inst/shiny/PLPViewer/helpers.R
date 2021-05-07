@@ -24,8 +24,15 @@ getFilter <- function(summaryTable,input){
   return(ind)
 }
 
-
-getPlpResult <- function(result,validation,summaryTable, inputType,trueRow){
+# need to add mySchema and connectionDetails to input
+getPlpResult <- function(result,validation,summaryTable, inputType,trueRow, mySchema = NULL, connectionDetails = NULL){
+  
+  if(result == 'database'){
+    tempResult <- loadPlpFromDb(summaryTable[trueRow,], mySchema, connectionDetails)
+    return(tempResult)
+  }
+  
+  
   if(inputType == 'plpResult'){
     i <- trueRow
     if(i ==1){

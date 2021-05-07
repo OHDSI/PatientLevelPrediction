@@ -30,7 +30,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   #print(summaryTable)
   
   # need to remove over columns:
-  output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable[filterIndex(),!colnames(summaryTable)%in%c('Analysis','addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')],
+  output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable[filterIndex(),!colnames(summaryTable)%in%c('Analysis','analysisId','resultId','researcherId','addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')],
                                                            rownames= FALSE, selection = 'single',
                                              extensions = 'Buttons', options = list(
                                                dom = 'Blfrtip' , 
@@ -57,7 +57,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   )
                                              
   
-  plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,trueRow())})
+  plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,trueRow(),mySchema = mySchema, connectionDetails = connectionDetails)})
   
   # covariate table
   output$modelView <- DT::renderDataTable(editCovariates(plpResult()$covariateSummary)$table,  
