@@ -83,9 +83,10 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
 
 # default patient level prediction prediction  
 predict.plp <- function(plpModel,population, plpData, ...){
-  covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
+  ## done in transform covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
   ParallelLogger::logTrace('predict.plp - predictingProbabilities start')
-  prediction <- predictProbabilities(plpModel$model, population, covariateData)
+  prediction <- predictProbabilities(plpModel$model, population, 
+                                     plpData$covariateData)
   ParallelLogger::logTrace('predict.plp - predictingProbabilities end')
   
   # add baselineHazard function
@@ -217,8 +218,8 @@ predict.pythonAuto <- function(plpModel, population, plpData){
 
 
 predict.knn <- function(plpData, population, plpModel, ...){
-  covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
-  prediction <- BigKnn::predictKnn(covariates = covariateData$covariates,
+  ##covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
+  prediction <- BigKnn::predictKnn(covariates = plpData$covariateData$covariates,
                                    cohorts= population[,!colnames(population)%in%'cohortStartDate'],
                                    indexFolder = plpModel$model,
                                    k = plpModel$modelSettings$modelParameters$k,

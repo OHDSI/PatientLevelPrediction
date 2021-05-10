@@ -81,6 +81,17 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   if(!is.null(population$indexes))
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
+  
+  #restrict to pop
+  if(length(population$rowId)<200000){
+    plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, 
+                                                         population$rowId)
+  } else{
+    plpData$covariateData <- batchRestrict(plpData$covariateData, 
+                                           data.frame(rowId = population$rowId), 
+                                           sizeN = 10000000)
+  }
+  
   #TODO - how to incorporate indexes?
   variance <- 0.003
   if(!is.null(param$variance )) variance <- param$variance

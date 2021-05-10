@@ -1,3 +1,11 @@
+PatientLevelPrediction 4.3.9
+======================
+- updated andromeda functions - restrict to pop and tidy covs for speed
+- quick fix for GBM survival predicting negative values
+- fixed occasional demoSum error for survival models
+- updated index creation to use Andromeda function
+
+
 PatientLevelPrediction 4.3.8
 ======================
 - fixed bug when normalize data is false

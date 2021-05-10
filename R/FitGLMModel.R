@@ -60,8 +60,8 @@ fitGLMModel <- function(population,
   }  else {
     colnames(population)[colnames(population) == "outcomeCount"] <- "y"
     
-    covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
-    
+    covariateData <- plpData$covariateData
+      
     # exclude or include covariates
     if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) != 0)) {
       covariates <- covariateData$covariates %>% dplyr::filter(.data$covariateId %in%includeCovariateIds) %>% dplyr::filter(!.data$covariateId %in%excludeCovariateIds)

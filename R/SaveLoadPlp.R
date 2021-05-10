@@ -180,11 +180,14 @@ getPlpData <- function(connectionDetails,
                                                          cohortTableIsTemp = TRUE,
                                                          rowIdField = "row_id",
                                                          covariateSettings = covariateSettings)
-  # add indexes for covariate summary
-  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
-  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
-  
-  
+  # add indexes for tidyCov + covariate summary
+  Andromeda::createIndex(covariateData$covariates, c('rowId'),
+                         indexName = 'covariates_rowId')
+  Andromeda::createIndex(covariateData$covariates, c('covariateId'),
+                         indexName = 'covariates_covariateId')
+  Andromeda::createIndex(covariateData$covariates, c('covariateId', 'covariateValue'),
+                         indexName = 'covariates_covariateId_value')
+
   if(max(outcomeIds)!=-999){
   writeLines("Fetching outcomes from server")
   start <- Sys.time()
