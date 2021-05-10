@@ -1,19 +1,23 @@
 source("processing.R")
+library(dplyr)
 
 # EDIT FOR REPO OR DATABASE
 useDatabase <- F
+pathToMd <- ifelse( useDatabase==F, "./www/shinyDescription.md" ,"./www/libraryDescription.md")
 
 # set default
-mySchema<- NULL
+# mySchema<- 
 connectionDetails <- NULL
 
 if(useDatabase){
   source("repositoryExtras.R")
   result <- 'database'
   validation <- NULL
-  connectionDetails <- DatabaseConnector::createConnectionDetails() # fill
-  mySchema <- 'add schema'
-
+  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = 'postgresql',   
+                                                                  user = Sys.getenv("covid19vaccinationplpdbUser"), 
+                                                                  password = Sys.getenv("covid19vaccinationplpdbPw"),
+                                                                  server = 'shinydb.cqnqzwtn5s1q.us-east-1.rds.amazonaws.com/shinydb') # fill
+  mySchema <- 'covid_vaccination_plp'
   summaryTable <- getDbSummary(connectionDetails, mySchema)
   
 } else{

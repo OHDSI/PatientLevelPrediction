@@ -19,15 +19,12 @@
 library(shiny)
 library(plotly)
 library(shinycssloaders)
-
 source("helpers.R")
 source("plots.R")
 
 server <- shiny::shinyServer(function(input, output, session) {
   session$onSessionEnded(shiny::stopApp)
   filterIndex <- shiny::reactive({getFilter(summaryTable,input)})
-  
-  #print(summaryTable)
   
   # need to remove over columns:
   output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable[filterIndex(),!colnames(summaryTable)%in%c('Analysis','analysisId','resultId','researcherId','addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')],
@@ -58,7 +55,30 @@ server <- shiny::shinyServer(function(input, output, session) {
                                              
   
   plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,trueRow(),mySchema = mySchema, connectionDetails = connectionDetails)})
-  
+  #=============
+  # sidebar menu
+  #=============
+  if(useDatabase == F){
+    output$sidebarMenu <- shinydashboard::renderMenu(shinydashboard::sidebarMenu(id ='menu',
+                                addInfo(shinydashboard::menuItem("Description", tabName = "Description", icon = shiny::icon("home")), "DescriptionInfo"),
+                                addInfo(shinydashboard::menuItem("Summary", tabName = "Summary", icon = shiny::icon("table")), "SummaryInfo"),
+                                # addInfo(shinydashboard::menuItem("Performance", tabName = "Performance", icon = shiny::icon("bar-chart")), "PerformanceInfo"),
+                                addInfo(shinydashboard::menuItem("Model", tabName = "Model", icon = shiny::icon("clipboard")), "ModelInfo"),
+                                # addInfo(shinydashboard::menuItem("Settings", tabName = "Settings", icon = shiny::icon("cog")), "SettingsInfo"),
+                                addInfo(shinydashboard::menuItem("Log", tabName = "Log", icon = shiny::icon("list")), "LogInfo"),
+                                # addInfo(shinydashboard::menuItem("Data Info", tabName = "DataInfo", icon = shiny::icon("database")), "DataInfoInfo"),
+                                addInfo(shinydashboard::menuItem("Help", tabName = "Help", icon = shiny::icon("info")), "HelpInfo")
+    ))
+  } else {
+    output$sidebarMenu <- shinydashboard::renderMenu(shinydashboard::sidebarMenu(id ='menu',
+                               addInfo(shinydashboard::menuItem("Description", tabName = "Description", icon = shiny::icon("home")), "DescriptionInfo"),
+                               addInfo(shinydashboard::menuItem("Library", tabName = "Summary", icon = shiny::icon("table")), "SummaryInfo"),
+                               # addInfo(shinydashboard::menuItem("Performance", tabName = "Performance", icon = shiny::icon("bar-chart")), "PerformanceInfo"),
+                               addInfo(shinydashboard::menuItem("Model", tabName = "Model", icon = shiny::icon("clipboard")), "ModelInfo"),
+                               # addInfo(shinydashboard::menuItem("Settings", tabName = "Settings", icon = shiny::icon("cog")), "SettingsInfo"),
+                               addInfo(shinydashboard::menuItem("Help", tabName = "Help", icon = shiny::icon("info")), "HelpInfo")
+    ))
+  }
   # covariate table
   output$modelView <- DT::renderDataTable(editCovariates(plpResult()$covariateSummary)$table,  
                                           colnames = editCovariates(plpResult()$covariateSummary)$colnames)
@@ -225,10 +245,8 @@ server <- shiny::shinyServer(function(input, output, session) {
     } else{
       data <- plpResult()$performanceEvaluation$evaluationStatistics
       data <- as.data.frame(data)
-      
       data$Metric <- as.character(data$Metric)
       data$Value <- as.double(as.character(data$Value))
-      
       ind <- data$Metric %in% c('CalibrationIntercept', 
                         'CalibrationSlope',
                         'CalibrationInLarge',
@@ -309,6 +327,20 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   output$validationTable <- DT::renderDataTable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC)), rownames= FALSE)
   
+  #===============
+  # database info
+  #===============
+  # if(useDatabase == T){
+  #   output$databaseInfo <- shiny::reactive(
+  #     # sql <-paste0("SELECT database_name, database_acronym, 
+  #     #              database_type FROM @my_schema.databases 
+  #     #              WHERE database_acronym IN (",knitr::combine_words(trimws(validationTable()$Dev), before = "'", after = "'", and = ','),")" ),
+  #     sql <-paste0("SELECT database_name, database_acronym, database_type FROM @my_schema.databases WHERE database_acronym IN (1,2,3)" ),
+  #     sql <- SqlRender::render(sql = sql, my_schema = mySchema),
+  #     databaseInfo <- DatabaseConnector::querySql(connection = con, sql = sql, snakeCaseToCamelCase = T),
+  #     print(researcherInfo)
+  #     # DT::renderDataTable(DBI::dbGetQuery(conn = con, )
+  # )}
   valFilterIndex <- shiny::reactive({getFilter(validationTable(), input)})
   valSelectedRow <- shiny::reactive({
     if(is.null(input$validationTable_rows_selected[1])){
@@ -353,10 +385,11 @@ server <- shiny::shinyServer(function(input, output, session) {
   })
   #=======================
   
-  
-  
-  
-  
+  #=======================
+  # get researcher info
+  #=======================
+  # output$researcher <- shiny::reactive(plpResult()$researcher)
+  # print(plpResult()$researcher)
   # Do the tables and plots:
   
   output$performance <- shiny::renderTable(performance()$performance, 
