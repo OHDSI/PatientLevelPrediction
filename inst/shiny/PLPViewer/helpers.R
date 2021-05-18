@@ -25,10 +25,13 @@ getFilter <- function(summaryTable,input){
 }
 
 # need to add mySchema and connectionDetails to input
-getPlpResult <- function(result,validation,summaryTable, inputType,trueRow, mySchema = NULL, connectionDetails = NULL){
+getPlpResult <- function(result, validation,summaryTable, inputType,trueRow, mySchema = NULL, connectionDetails = NULL){
   
   if(result == 'database'){
-    tempResult <- loadPlpFromDb(summaryTable[trueRow,], mySchema, connectionDetails)
+    print("correct place")
+    print(trueRow)
+    print(summaryTable[trueRow,])
+    tempResult <- loadPlpFromDb(summaryTable[trueRow,], mySchema, con)
     return(tempResult)
   }
   

@@ -21,10 +21,9 @@ editTar <- function(summaryTable){
 }
 
 
-getDbSummary <- function(connectionDetails, mySchema ){
+getDbSummary <- function(con, mySchema ){
+print("gettingDb summary")
 
-con <- DatabaseConnector::connect(connectionDetails)
-on.exit(DatabaseConnector::disconnect(con))
 
 sql <- "SELECT distinct results.result_id, results.model_id as analysis_id, 
                 results.researcher_id, 
@@ -48,7 +47,7 @@ sql <- "SELECT distinct results.result_id, results.model_id as analysis_id,
          results.population_setting_id = models.population_setting_id and
          results.database_id = models.database_id
          
-     LEFT JOIN (SELECT cohort_id, cohort_name FROM @my_schema.cohorts) AS targets ON results.target_id = targets.cohort_id
+    LEFT JOIN (SELECT cohort_id, cohort_name FROM @my_schema.cohorts) AS targets ON results.target_id = targets.cohort_id
     LEFT JOIN (SELECT cohort_id, cohort_name FROM @my_schema.cohorts) AS outcomes ON results.outcome_id = outcomes.cohort_id
     LEFT JOIN @my_schema.databases ON results.database_id = databases.database_id 
     LEFT JOIN @my_schema.tars ON results.tar_id = tars.tar_id
@@ -56,14 +55,11 @@ sql <- "SELECT distinct results.result_id, results.model_id as analysis_id,
     LEFT JOIN (SELECT result_id, value AS auprc FROM @my_schema.evaluation_statistics where metric = 'AUPRC' and eval in ('test','validation') ) AS auprcResult ON results.result_id = auprcResult.result_id
     LEFT JOIN (SELECT result_id, sum(value) AS population_size FROM @my_schema.evaluation_statistics where metric = 'populationSize' group by result_id) AS nResult ON results.result_id = nResult.result_id
     LEFT JOIN (SELECT result_id, sum(value) AS outcome_count FROM @my_schema.evaluation_statistics where metric = 'outcomeCount' group by result_id) AS oResult ON results.result_id = oResult.result_id
-    LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.evaluation_statistics where metric = 'populationSize' and eval = 'test') AS nTest ON results.result_id = nTest.result_id
-    
-                                ;"
+    LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.evaluation_statistics where metric = 'populationSize' and eval = 'test') AS nTest ON results.result_id = nTest.result_id;"
 
 sql <- SqlRender::render(sql = sql, my_schema = mySchema)
 
-summaryTable <- DatabaseConnector::querySql(connection =  con, sql = sql, snakeCaseToCamelCase = T)
-
+summaryTable <- DatabaseConnector::querySql(connection =  con, sql = sql, snakeCaseToCamelCase = T) 
 
 summaryTable$t <- trimws(summaryTable$t)
 summaryTable$o <- trimws(summaryTable$o)
@@ -82,10 +78,11 @@ colnames(summaryTable) <- editColnames(cnames = colnames(summaryTable),
 
 summaryTable$timeStamp <- 0
 summaryTable$Analysis <- summaryTable$analysisId
-
+print("got db summary")
 return(summaryTable[,c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
                        'TAR', 'AUC', 'AUPRC', 
                        'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp', 'analysisId', 'researcherId', 'resultId', 'Analysis')])
+
 }
 
 
@@ -93,6 +90,7 @@ return(summaryTable[,c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
 getResult <- function(con, tableName, resultId, mySchema){
   sql <- "SELECT * FROM @my_schema.@table_name WHERE result_id = @result_id"
   sql <- SqlRender::render(sql = sql, 
+                           
                            my_schema = mySchema,
                            table_name = tableName,
                            result_id = resultId)
@@ -110,10 +108,14 @@ getResult <- function(con, tableName, resultId, mySchema){
 #' @param chosenRow  The row from the summaryTable of the selected result
 #' 
 #' @export
-loadPlpFromDb <- function(chosenRow, mySchema, connectionDetails){
   
-  con <- DatabaseConnector::connect(connectionDetails)
-  on.exit(DatabaseConnector::disconnect(con))
+loadPlpFromDb <- function(chosenRow, mySchema, connectionDetails){
+  logger <- ParallelLogger::createLogger(name = "SIMPLE",
+                                         threshold = "INFO",
+                                         appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
+  ParallelLogger::registerLogger(logger)
+  # con <- DatabaseConnector::connect(connectionDetails)
+  # on.exit(DatabaseConnector::disconnect(con))
   
   resultId <- chosenRow$resultId
   modelId <- chosenRow$analysisId
@@ -124,24 +126,30 @@ loadPlpFromDb <- function(chosenRow, mySchema, connectionDetails){
   sql <- SqlRender::render(sql = sql, 
                            my_schema = mySchema,
                            model_id = modelId)
+  ParallelLogger::logInfo("starting population")
   ids <- DatabaseConnector::querySql(connection = con,
                                      sql = sql, 
                                      snakeCaseToCamelCase = T)
+  ParallelLogger::logInfo("finishing population")
+  
   modSetId <- ids$populationSettingId
   covSetId <- ids$modelSettingId
   popSetId <- ids$covariateSettingId
   
   #covariateSummary
   sql <- "SELECT * FROM @my_schema.covariate_summary WHERE result_id = @result_id;"
+  ParallelLogger::logInfo("starting covsum")
   sql <- SqlRender::render(sql = sql, 
                            my_schema = mySchema,
                            result_id = resultId)
   result$covariateSummary <- DatabaseConnector::querySql(connection = con,
                                                          sql = sql, 
                                                          snakeCaseToCamelCase = T)
+  ParallelLogger::logInfo("finishing covsum")
+  
   colnames(result$covariateSummary) <- editColnames(colnames(result$covariateSummary), c('CovariateCount', "CovariateMean", "CovariateStDev", 
                                                                                          "CovariateCountWithNoOutcome","CovariateMeanWithNoOutcome",      
-                                                                                          "CovariateStDevWithNoOutcome" ,     "CovariateCountWithOutcome" ,      
+                                                                                         "CovariateStDevWithNoOutcome" ,     "CovariateCountWithOutcome" ,      
                                                                                          "CovariateMeanWithOutcome" ,        "CovariateStDevWithOutcome",       
                                                                                          "StandardizedMeanDiff" ,            "TestCovariateCountWithNoOutcome", 
                                                                                          "TestCovariateMeanWithNoOutcome",   "TestCovariateStDevWithNoOutcome", 
@@ -159,14 +167,19 @@ loadPlpFromDb <- function(chosenRow, mySchema, connectionDetails){
   sql <- SqlRender::render(sql = sql, 
                            my_schema = mySchema,
                            model_setting_id = modSetId)
+  ParallelLogger::logInfo("start modeSet")
   tempModSettings <- DatabaseConnector::querySql(connection = con, sql = sql)
+  ParallelLogger::logInfo("end modeSet")
+  
   result$inputSetting$modelSettings <- RJSONIO::fromJSON(tempModSettings$MODEL_SETTINGS_JSON)
   
   sql <- "SELECT * FROM @my_schema.covariate_settings WHERE covariate_setting_id = @covariate_setting_id"
   sql <- SqlRender::render(sql = sql, 
                            my_schema = mySchema,
                            covariate_setting_id = covSetId)
+  ParallelLogger::logInfo("start covSet")
   tempCovSettings <- DatabaseConnector::querySql(connection = con, sql = sql)
+  ParallelLogger::logInfo("end covSet")
   result$inputSetting$dataExtrractionSettings$covariateSettings <- RJSONIO::fromJSON(tempCovSettings$COVARIATE_SETTINGS_JSON)
   
   if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings$endDays)){
@@ -175,10 +188,12 @@ loadPlpFromDb <- function(chosenRow, mySchema, connectionDetails){
   
   
   sql <- "SELECT * FROM @my_schema.population_settings WHERE population_setting_id = @population_setting_id"
+  ParallelLogger::logInfo("start popSet")
   sql <- SqlRender::render(sql = sql, 
                            my_schema = mySchema,
                            population_setting_id = popSetId)
   tempPopSettings<- DatabaseConnector::querySql(connection = con, sql = sql)
+  ParallelLogger::logInfo("end popSet")
   result$inputSetting$populationSettings <- RJSONIO::fromJSON(tempPopSettings$POPULATION_SETTINGS_JSON)
   
   result$inputSetting$populationSettings$attrition <- do.call(cbind, result$inputSetting$populationSettings$attrition)
@@ -218,9 +233,11 @@ loadPlpFromDb <- function(chosenRow, mySchema, connectionDetails){
   result$model$metaData$call$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
   
   sql <- "SELECT researcher_name, researcher_email FROM @my_schema.researchers WHERE researcher_id = @researcher_id"
+  ParallelLogger::logInfo("start researchers")
   sql <- SqlRender::render(sql = sql, 
                            my_schema = mySchema,
                            researcher_id = researcherId)   
+  ParallelLogger::logInfo("end researchers")
   result$researcherInfo <- DatabaseConnector::querySql(connection = con, sql = sql, snakeCaseToCamelCase = T)
   result$model_id <- modelId
   
@@ -233,4 +250,82 @@ loadPlpFromDb <- function(chosenRow, mySchema, connectionDetails){
   class(result) <- "runPlp"
   return(result)
 }
+
+#' Extract the validations from the predictionLibrary database
+#'
+#' @details
+#' Load the validation results from database.
+#' 
+#' @param chosenRow  The row from the summaryTable of the selected result
+#' 
+#' @export# 
+getValSummary <- function(con, mySchema, modelId ){
+  print("getting Val summary")
+  # con <- DatabaseConnector::connect(connectionDetails)
+  # on.exit(DatabaseConnector::disconnect(con))
+
+  sql <- "SELECT results.result_id, results.model_id as analysis_id, 
+                results.researcher_id, 
+                                databases.database_acronym AS Dev, 
+                                databases.database_acronym AS Val,
+                                targets.cohort_name AS T, outcomes.cohort_name AS O,
+   models.model_name AS model, 
+   models.covariate_setting_id, 
+   tars.tar_start_day, tars.tar_start_anchor, tars.tar_end_day, tars.tar_end_anchor,
+   ROUND(aucResult.auc, 3) as auc,
+   ROUND(auprcResult.auprc,4) as auprc,
+   nResult.population_size, 
+   oResult.outcome_count,
+   ROUND(nTest.test_size*100.0/nResult.population_size, 1) as eval_percent,
+   ROUND(oResult.outcome_count*100.0/nResult.population_size,4) as outcome_percent
+   
+   FROM @my_schema.results INNER JOIN @my_schema.models 
+    ON results.target_id = models.target_id and 
+         results.outcome_id = models.outcome_id and 
+         results.tar_id = models.tar_id and
+         results.population_setting_id = models.population_setting_id and
+         models.model_id = @model_id
+         
+    LEFT JOIN (SELECT cohort_id, cohort_name FROM @my_schema.cohorts) AS targets ON results.target_id = targets.cohort_id
+    LEFT JOIN (SELECT cohort_id, cohort_name FROM @my_schema.cohorts) AS outcomes ON results.outcome_id = outcomes.cohort_id
+    LEFT JOIN @my_schema.databases ON results.database_id = databases.database_id 
+    LEFT JOIN @my_schema.tars ON results.tar_id = tars.tar_id
+    LEFT JOIN (SELECT result_id, value AS auc FROM @my_schema.evaluation_statistics where metric = 'AUC.auc' and eval in ('test','validation') ) AS aucResult ON results.result_id = aucResult.result_id
+    LEFT JOIN (SELECT result_id, value AS auprc FROM @my_schema.evaluation_statistics where metric = 'AUPRC' and eval in ('test','validation') ) AS auprcResult ON results.result_id = auprcResult.result_id
+    LEFT JOIN (SELECT result_id, sum(value) AS population_size FROM @my_schema.evaluation_statistics where metric = 'populationSize' group by result_id) AS nResult ON results.result_id = nResult.result_id
+    LEFT JOIN (SELECT result_id, sum(value) AS outcome_count FROM @my_schema.evaluation_statistics where metric = 'outcomeCount' group by result_id) AS oResult ON results.result_id = oResult.result_id
+    LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.evaluation_statistics where metric = 'populationSize' and eval = 'test') AS nTest ON results.result_id = nTest.result_id;"
+  
+  sql <- SqlRender::render(sql = sql, my_schema = mySchema, model_id = modelId)
+  print(modelId)
+  valTable <- DatabaseConnector::querySql(connection =  con, sql = sql, snakeCaseToCamelCase = T) 
+  
+  valTable$t <- trimws(valTable$t)
+  valTable$o <- trimws(valTable$o)
+  
+  valTable <- valTable %>% 
+    dplyr::rename(`Covariate setting` = covariateSettingId) %>%
+    dplyr::rename(`T Size` = populationSize) %>% 
+    dplyr::rename(`O Count` = outcomeCount) %>%
+    dplyr::rename(`Val (%)` = evalPercent) %>%
+    dplyr::rename(`O Incidence (%)` = outcomePercent)
+  
+  valTable <- editTar(valTable)
+  
+  colnames(valTable) <- editColnames(cnames = colnames(valTable), 
+                                         edits = c('AUC','AUPRC', 'T', 'O', 'Dev','Val', 'TAR', 'Model'))
+  
+  valTable$timeStamp <- 0
+  valTable$Analysis <- valTable$analysisId
+  print("got db summary")
+  return(valTable[,c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
+                         'TAR', 'AUC', 'AUPRC', 
+                         'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp', 'analysisId', 'researcherId', 'resultId', 'Analysis')])
+  
+}
+
+
+
+
+
 

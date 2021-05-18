@@ -53,8 +53,6 @@ server <- shiny::shinyServer(function(input, output, session) {
                                              )
   )
                                              
-  
-  plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,trueRow(),mySchema = mySchema, connectionDetails = connectionDetails)})
   #=============
   # sidebar menu
   #=============
@@ -79,6 +77,10 @@ server <- shiny::shinyServer(function(input, output, session) {
                                addInfo(shinydashboard::menuItem("Help", tabName = "Help", icon = shiny::icon("info")), "HelpInfo")
     ))
   }
+  
+  # this loads all the results
+  plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,trueRow(),mySchema = mySchema, connectionDetails = connectionDetails)})
+  
   # covariate table
   output$modelView <- DT::renderDataTable(editCovariates(plpResult()$covariateSummary)$table,  
                                           colnames = editCovariates(plpResult()$covariateSummary)$colnames)
@@ -322,20 +324,24 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   #=======================
   # validation table and selection
+  if (useDatabase == F){
   validationTable <- shiny::reactive(dplyr::filter(summaryTable[filterIndex(),],
                                                    Analysis == summaryTable[filterIndex(),'Analysis'][trueRow()]))
-  
+  }
+  else{
+    # validationTable <- shiny::reactive(getValSummary(con, mySchema, summaryTable[filterIndex(),'Analysis'][trueRow()]))
+    validationTable <- shiny::reactive(getValSummary(con, mySchema, 2))
+  }
   output$validationTable <- DT::renderDataTable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC)), rownames= FALSE)
   
   #===============
   # database info
   #===============
   # if(useDatabase == T){
-  #   output$databaseInfo <- shiny::reactive(
-  #     # sql <-paste0("SELECT database_name, database_acronym, 
-  #     #              database_type FROM @my_schema.databases 
-  #     #              WHERE database_acronym IN (",knitr::combine_words(trimws(validationTable()$Dev), before = "'", after = "'", and = ','),")" ),
-  #     sql <-paste0("SELECT database_name, database_acronym, database_type FROM @my_schema.databases WHERE database_acronym IN (1,2,3)" ),
+    # output$databaseInfo <- shiny::reactive(
+  #     sql <-paste0("SELECT * FROM @my_schema.databases
+  #                  WHERE database_acronym IN (",knitr::combine_words(trimws(validationTable()$Dev), before = "'", after = "'", and = ','),")" ),
+  # #     sql <-paste0("SELECT database_name, database_acronym, database_type FROM @my_schema.databases WHERE database_acronym IN (1,2,3)" ),
   #     sql <- SqlRender::render(sql = sql, my_schema = mySchema),
   #     databaseInfo <- DatabaseConnector::querySql(connection = con, sql = sql, snakeCaseToCamelCase = T),
   #     print(researcherInfo)
@@ -351,16 +357,17 @@ server <- shiny::shinyServer(function(input, output, session) {
     }
   })
   
-  # plots for the validation section. todo: add the development?
+  # plots for the validation section.
   
   valResult <- shiny::reactive({
     valtemplist <- list()
     valTable <- validationTable()
     rows <- sort(valSelectedRow())
+    print(rows)
     names <- valTable[rows, "Val"]
     for (i in 1:length(rows)){
-      valtemplist[[i]] <- getPlpResult(result,validation,valTable, 'file', rows[i])
-    }
+      valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType, i, mySchema = mySchema, connectionDetails = connectionDetails)
+      }
     list(results = valtemplist, databaseName = names)
   })
   
