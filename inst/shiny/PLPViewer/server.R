@@ -24,8 +24,7 @@ source("plots.R")
 
 server <- shiny::shinyServer(function(input, output, session) {
   session$onSessionEnded(shiny::stopApp)
-  on.exit(DatabaseConnector::disconnect(con))
-  
+
   filterIndex <- shiny::reactive({getFilter(summaryTable,input)})
   
   # need to remove over columns:
