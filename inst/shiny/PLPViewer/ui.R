@@ -284,13 +284,13 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                           title = "Developer Info",
                                                                                                           solidHeader = TRUE,
                                                                                                           side = "right",
+                                                                                                          shiny::tableOutput('researcherInfo')
                                                                                                           )))
                                         ))),
 
                                         
                                         # 3rd tab
                                         shinydashboard::tabItem(tabName = "Model", 
-                                                                
                                                                 shiny::fluidRow(
                                                                   shinydashboard::box( status = 'info',
                                                                                        title = "Binary", solidHeader = TRUE,

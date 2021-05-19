@@ -24,6 +24,8 @@ source("plots.R")
 
 server <- shiny::shinyServer(function(input, output, session) {
   session$onSessionEnded(shiny::stopApp)
+  on.exit(DatabaseConnector::disconnect(con))
+  
   filterIndex <- shiny::reactive({getFilter(summaryTable,input)})
   
   # need to remove over columns:
@@ -79,17 +81,22 @@ server <- shiny::shinyServer(function(input, output, session) {
   }
   
   # this loads all the results
-  plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,trueRow(),mySchema = mySchema, connectionDetails = connectionDetails)})
-  
+  plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType, val = F, trueRow(),mySchema = mySchema, connectionDetails = connectionDetails)})
+
+  covariateSummary <- shiny::reactive(
+     if(input$menu == "Model"){
+      covariateSummary <- loadCovSumFromDb(summaryTable[trueRow(),], mySchema, con)
+      return(covariateSummary)
+     }
+  )
   # covariate table
-  output$modelView <- DT::renderDataTable(editCovariates(plpResult()$covariateSummary)$table,  
-                                          colnames = editCovariates(plpResult()$covariateSummary)$colnames)
-  
-  
-  output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(plpResult()$covariateSummary),
-                                                              nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0),
+  output$modelView <- DT::renderDataTable(editCovariates(covariateSummary())$table,
+                                          colnames = editCovariates(covariateSummary())$colnames)
+
+  output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(covariateSummary()),
+                                                              nonZeroCount = sum(covariateSummary()$covariateValue!=0),
                                                               intercept = ifelse(class(plpResult()$model$model)=='character' || !'model '%in% names(plpResult()$model),0,plpResult()$model$model$coefficients[1])))
-  
+
   # Download plpresult
   output$plpResult <- shiny::downloadHandler(
     filename = function(){
@@ -99,16 +106,16 @@ server <- shiny::shinyServer(function(input, output, session) {
       saveRDS(plpResult(), file)
     }
   )
-  
+
   # Downloadable csv of model ----
   output$downloadData <- shiny::downloadHandler(
     filename = function(){'model.csv'},
     content = function(file) {
-      write.csv(plpResult()$covariateSummary[,c('covariateName','covariateValue','CovariateCount','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome' )]
+      write.csv(covariateSummary()[,c('covariateName','covariateValue','CovariateCount','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome' )]
                 , file, row.names = FALSE)
     }
   )
-  
+
   # input tables
   output$modelTable <- DT::renderDataTable(formatModSettings(plpResult()$model$modelSettings  ))
   output$covariateTable <- DT::renderDataTable(formatCovSettings(plpResult()$model$metaData$call$covariateSettings))
@@ -117,18 +124,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   output$hpTable <- DT::renderDataTable(DT::datatable(as.data.frame(plpResult()$model$hyperParamSearch),
                                         options = list(scrollX = TRUE)))
   output$attritionTable <- DT::renderDataTable(plpResult()$inputSetting$populationSettings$attrition)
-  
-  
-  # prediction text
-  #output$info <- shiny::renderUI(shiny::HTML(paste0(shiny::strong('Model: '), summaryTable[trueRow(),'Model'], ' with covariate setting id ',summaryTable[trueRow(),'covariateSettingId'] , '<br/>',
-  #                                                  shiny::strong('Question:'), ' Within ', summaryTable[trueRow(),'T'],
-  #                                        ' predict who will develop ',  summaryTable[trueRow(),'O'],
-  #                                        ' during ',summaryTable[trueRow(),'TAR'], '<br/>',
-  #                                        ' Developed in database: ', shiny::strong(summaryTable[trueRow(),'Dev']), ' and ',
-  #                                        ' validated in database:  ', shiny::strong(summaryTable[trueRow(),'Val'])
-  #                                 ))
-  #)
-  
+
   output$sideSettings  <- shiny::renderTable(t(data.frame(Development = as.character(summaryTable[trueRow(),'Dev']), 
                                                         Validation = as.character(summaryTable[trueRow(),'Val']),
                                                         Model = as.character(summaryTable[trueRow(),'Model']))), rownames = T, colnames = F)
@@ -337,16 +333,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   #===============
   # database info
   #===============
-  # if(useDatabase == T){
-    # output$databaseInfo <- shiny::reactive(
-  #     sql <-paste0("SELECT * FROM @my_schema.databases
-  #                  WHERE database_acronym IN (",knitr::combine_words(trimws(validationTable()$Dev), before = "'", after = "'", and = ','),")" ),
-  # #     sql <-paste0("SELECT database_name, database_acronym, database_type FROM @my_schema.databases WHERE database_acronym IN (1,2,3)" ),
-  #     sql <- SqlRender::render(sql = sql, my_schema = mySchema),
-  #     databaseInfo <- DatabaseConnector::querySql(connection = con, sql = sql, snakeCaseToCamelCase = T),
-  #     print(researcherInfo)
-  #     # DT::renderDataTable(DBI::dbGetQuery(conn = con, )
-  # )}
+
   valFilterIndex <- shiny::reactive({getFilter(validationTable(), input)})
   valSelectedRow <- shiny::reactive({
     if(is.null(input$validationTable_rows_selected[1])){
@@ -366,7 +353,8 @@ server <- shiny::shinyServer(function(input, output, session) {
     print(rows)
     names <- valTable[rows, "Val"]
     for (i in 1:length(rows)){
-      valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType, i, mySchema = mySchema, connectionDetails = connectionDetails)
+      valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType, i, val = T, 
+                                       mySchema = mySchema, connectionDetails = connectionDetails)
       }
     list(results = valtemplist, databaseName = names)
   })
@@ -390,13 +378,12 @@ server <- shiny::shinyServer(function(input, output, session) {
   output$valCal <- shiny::renderPlot({
     try(valPlots()$valCalPlot)
   })
-  #=======================
-  
+
   #=======================
   # get researcher info
   #=======================
-  # output$researcher <- shiny::reactive(plpResult()$researcher)
-  # print(plpResult()$researcher)
+  output$researcherInfo <- shiny::renderTable(plpResult()$researcherInfo)
+
   # Do the tables and plots:
   
   output$performance <- shiny::renderTable(performance()$performance, 
@@ -425,9 +412,9 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   # covariate model plots
   covs <- shiny::reactive({
-    if(is.null(plpResult()$covariateSummary))
+    if(is.null(covariateSummary()))
       return(NULL)
-    plotCovariateSummary(formatCovariateTable(plpResult()$covariateSummary))
+    plotCovariateSummary(formatCovariateTable(covariateSummary()))
   })
   
   output$covariateSummaryBinary <- plotly::renderPlotly({ covs()$binary })
@@ -482,24 +469,28 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   
   # SELECTING RESULTS - for PERFORMANCE/MODEl
-  ##selectedRow <- shiny::reactiveVal(value = 1)
-  trueRow <- shiny::reactiveVal(value = 1)
+    trueRow <- shiny::reactiveVal(value = 1)
   
-  # row selection updates dropdowns
+  # # row selection updates dropdowns
   shiny::observeEvent(input$summaryTable_rows_selected,{
     #selectedRow(input$summaryTable_rows_selected)
+    oldTrueRow <- trueRow()
     trueRow(filterIndex()[input$summaryTable_rows_selected])
-    shiny::updateSelectInput(session, "selectResult",
+    if (oldTrueRow != trueRow()){
+        shiny::updateSelectInput(session, "selectResult",
                            selected = myResultList[[trueRow()]]
                            )
+    }
   })
-  
+  # 
   #drop downs update row and other drop down
   sumProxy <- DT::dataTableProxy("summaryTable", session = session)
 
   shiny::observeEvent(input$selectResult,{
     val <- which(myResultList==input$selectResult)
-    trueRow(val)
+    if (val != trueRow()){
+        trueRow(val)
+      }
     DT::selectRows(sumProxy, which(filterIndex()==val)) # reset filter here?
   })
   
