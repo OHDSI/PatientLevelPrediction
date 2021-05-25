@@ -22,9 +22,8 @@ editTar <- function(summaryTable){
 
 
 getDbSummary <- function(con, mySchema ){
-    print("gettingDb summary")
-    
-    
+    ParallelLogger::logInfo("gettingDb summary")
+
     sql <- "SELECT distinct results.result_id, results.model_id as analysis_id, 
                     results.researcher_id, 
                                     databases.database_acronym AS Dev, 
@@ -59,7 +58,8 @@ getDbSummary <- function(con, mySchema ){
     
     sql <- SqlRender::render(sql = sql, my_schema = mySchema)
     
-    summaryTable <- DatabaseConnector::querySql(connection =  con, sql = sql, snakeCaseToCamelCase = T) 
+    summaryTable <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+    colnames(summaryTable) <- SqlRender::snakeCaseToCamelCase(colnames(summaryTable))
     
     summaryTable$t <- trimws(summaryTable$t)
     summaryTable$o <- trimws(summaryTable$o)
@@ -78,7 +78,7 @@ getDbSummary <- function(con, mySchema ){
     
     summaryTable$timeStamp <- 0
     summaryTable$Analysis <- summaryTable$analysisId
-    print("got db summary")
+    ParallelLogger::logInfo("Got db summary")
     return(summaryTable[,c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
                            'TAR', 'AUC', 'AUPRC', 
                            'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp', 'analysisId', 'researcherId', 'resultId', 'Analysis')])
@@ -94,9 +94,7 @@ getDbSummary <- function(con, mySchema ){
 #' 
 #' @export# 
 getValSummary <- function(con, mySchema, modelId ){
-  print("getting Val summary")
-  # con <- DatabaseConnector::connect(connectionDetails)
-  # on.exit(DatabaseConnector::disconnect(con))
+  ParallelLogger::logInfo("getting Val summary")
   
   sql <- "SELECT results.result_id, results.model_id as analysis_id, 
                 results.researcher_id, 
@@ -131,8 +129,9 @@ getValSummary <- function(con, mySchema, modelId ){
     LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.evaluation_statistics where metric = 'populationSize' and eval = 'test') AS nTest ON results.result_id = nTest.result_id;"
   
   sql <- SqlRender::render(sql = sql, my_schema = mySchema, model_id = modelId)
-  print(modelId)
-  valTable <- DatabaseConnector::querySql(connection =  con, sql = sql, snakeCaseToCamelCase = T) 
+  
+  valTable <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(valTable) <- SqlRender::snakeCaseToCamelCase(colnames(valTable))
   
   valTable$t <- trimws(valTable$t)
   valTable$o <- trimws(valTable$o)
@@ -151,7 +150,7 @@ getValSummary <- function(con, mySchema, modelId ){
   
   valTable$timeStamp <- 0
   valTable$Analysis <- valTable$analysisId
-  print("got db summary")
+  ParallelLogger::logInfo("got db summary")
   return(valTable[,c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
                      'TAR', 'AUC', 'AUPRC', 
                      'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp', 'analysisId', 'researcherId', 'resultId', 'Analysis')])
@@ -166,8 +165,8 @@ getResult <- function(con, tableName, resultId, mySchema){
                            table_name = tableName,
                            result_id = resultId)
   
-  result <- DatabaseConnector::querySql(connection = con, sql = sql, snakeCaseToCamelCase = T)
-  
+  result <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(result) <- SqlRender::snakeCaseToCamelCase(colnames(result))
   return(result)
 }
 
@@ -181,7 +180,6 @@ getResult <- function(con, tableName, resultId, mySchema){
 #' @export
   
 loadPlpFromDb <- function(chosenRow, mySchema, con, val = F){
- 
   resultId <- chosenRow$resultId
   modelId <- chosenRow$analysisId
   researcherId <- chosenRow$researcherId
@@ -194,9 +192,10 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F){
                              my_schema = mySchema,
                              model_id = modelId)
     ParallelLogger::logInfo("starting population")
-    ids <- DatabaseConnector::querySql(connection = con,
-                                       sql = sql, 
-                                       snakeCaseToCamelCase = T)
+
+    ids <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+    colnames(ids) <- SqlRender::snakeCaseToCamelCase(colnames(ids))
+    
     ParallelLogger::logInfo("finishing population")
     
     modSetId <- ids$populationSettingId
@@ -215,19 +214,19 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F){
                              my_schema = mySchema,
                              model_setting_id = modSetId)
     ParallelLogger::logInfo("start modeSet")
-    tempModSettings <- DatabaseConnector::querySql(connection = con, sql = sql)
+    tempModSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql)
     ParallelLogger::logInfo("end modeSet")
     
-    result$inputSetting$modelSettings <- RJSONIO::fromJSON(tempModSettings$MODEL_SETTINGS_JSON)
+    result$inputSetting$modelSettings <- RJSONIO::fromJSON(tempModSettings$model_settings_json)
     
     sql <- "SELECT * FROM @my_schema.covariate_settings WHERE covariate_setting_id = @covariate_setting_id"
     sql <- SqlRender::render(sql = sql, 
                              my_schema = mySchema,
                              covariate_setting_id = covSetId)
     ParallelLogger::logInfo("start covSet")
-    tempCovSettings <- DatabaseConnector::querySql(connection = con, sql = sql)
+    tempCovSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql)
     ParallelLogger::logInfo("end covSet")
-    result$inputSetting$dataExtrractionSettings$covariateSettings <- RJSONIO::fromJSON(tempCovSettings$COVARIATE_SETTINGS_JSON)
+    result$inputSetting$dataExtrractionSettings$covariateSettings <- RJSONIO::fromJSON(tempCovSettings$covariate_settings_json)
     
     if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings$endDays)){
       class(result$inputSetting$dataExtrractionSettings$covariateSettings) <- 'covariateSettings'
@@ -239,9 +238,9 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F){
     sql <- SqlRender::render(sql = sql, 
                              my_schema = mySchema,
                              population_setting_id = popSetId)
-    tempPopSettings<- DatabaseConnector::querySql(connection = con, sql = sql)
+    tempPopSettings<- DatabaseConnector::dbGetQuery(conn =  con, statement = sql)
     ParallelLogger::logInfo("end popSet")
-    result$inputSetting$populationSettings <- RJSONIO::fromJSON(tempPopSettings$POPULATION_SETTINGS_JSON)
+    result$inputSetting$populationSettings <- RJSONIO::fromJSON(tempPopSettings$population_settings_json)
     
     result$inputSetting$populationSettings$attrition <- do.call(cbind, result$inputSetting$populationSettings$attrition)
     
@@ -287,7 +286,10 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F){
                            my_schema = mySchema,
                            researcher_id = researcherId)   
   
-  result$researcherInfo <- DatabaseConnector::querySql(connection = con, sql = sql, snakeCaseToCamelCase = T)
+  result$researcherInfo <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(result$researcherInfo) <- SqlRender::snakeCaseToCamelCase(colnames(result$researcherInfo))
+  
+  
   ParallelLogger::logInfo("end researchers")
   result$model_id <- modelId
   
@@ -321,9 +323,9 @@ loadCovSumFromDb <- function(chosenRow, mySchema, con){
   sql <- SqlRender::render(sql = sql,
                            my_schema = mySchema,
                            result_id = resultId)
-  covariateSummary <- DatabaseConnector::querySql(connection = con,
-                                                  sql = sql,
-                                                  snakeCaseToCamelCase = T)
+
+  covariateSummary <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(covariateSummary) <- SqlRender::snakeCaseToCamelCase(colnames(covariateSummary))
   
   
   colnames(covariateSummary) <- editColnames(colnames(covariateSummary), c('CovariateCount', "CovariateMean", "CovariateStDev",

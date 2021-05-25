@@ -282,11 +282,8 @@ server <- shiny::shinyServer(function(input, output, session) {
   })
   
   #=======================
-  
-  
-  
-  #=======================
   # NETBENEFIT
+  #=======================
   
   output$nbSelect = renderUI({
     types <- unique(plpResult()$performanceEvaluation$thresholdSummary$Eval)
@@ -315,10 +312,8 @@ server <- shiny::shinyServer(function(input, output, session) {
   })
   
   #=======================
-  
-  
-  #=======================
   # validation table and selection
+  #=======================
   if (useDatabase == F){
   validationTable <- shiny::reactive(dplyr::filter(summaryTable[filterIndex(),],
                                                    Analysis == summaryTable[filterIndex(),'Analysis'][trueRow()]))
@@ -344,15 +339,15 @@ server <- shiny::shinyServer(function(input, output, session) {
   })
   
   # plots for the validation section.
-  
+  # should make this store the loaded ones to save time
+  valtemplist <- list()
   valResult <- shiny::reactive({
-    valtemplist <- list()
+    
     valTable <- validationTable()
     rows <- sort(valSelectedRow())
-    print(rows)
     names <- valTable[rows, "Val"]
     for (i in 1:length(rows)){
-      valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType, i, val = T, 
+      valtemplist[[rows[i]]] <- getPlpResult(result,validation,valTable, inputType, i, val = T, 
                                        mySchema = mySchema, connectionDetails = connectionDetails)
       }
     list(results = valtemplist, databaseName = names)

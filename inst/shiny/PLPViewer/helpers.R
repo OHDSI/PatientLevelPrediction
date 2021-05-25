@@ -28,9 +28,7 @@ getFilter <- function(summaryTable,input){
 getPlpResult <- function(result, validation,summaryTable, inputType,trueRow, val = F, mySchema = NULL, connectionDetails = NULL){
   
   if(result == 'database'){
-
     tempResult <- loadPlpFromDb(summaryTable[trueRow,], mySchema, con, val = val)
-    saveRDS(tempResult, "plpResult.rds")
     return(tempResult)
   }
   

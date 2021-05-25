@@ -10,35 +10,28 @@ useDatabase <- T
 pathToMd <- ifelse(useDatabase==F, "./www/shinyDescription.md" ,"./www/libraryDescription.md")
 
 # set default
-# mySchema<- 
-connectionDetails <- NULL
+mySchema <- 'covid_vaccination_plp'
 
 if(useDatabase){
   source("repositoryExtras.R")
   result <- 'database'
   validation <- NULL
-  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = 'postgresql',
-                                                                  user = Sys.getenv("covid19vaccinationplpdbUser"),
-                                                                  password = Sys.getenv("covid19vaccinationplpdbPw"),
-                                                                  server = 'shinydb.cqnqzwtn5s1q.us-east-1.rds.amazonaws.com/shinydb') # fill
-  mySchema <- 'covid_vaccination_plp'
-  # con <- pool::dbPool(drv = DatabaseConnector::DatabaseConnectorDriver(),
-  #                                dbms = "postgresql",
-  #                                server ="shinydb.cqnqzwtn5s1q.us-east-1.rds.amazonaws.com/shinydb",
-  #                                # port = Sys.getenv("shinydbPort"),
-  #                                user = Sys.getenv("covid19vaccinationplpdbUser"),
-  #                                password = Sys.getenv("covid19vaccinationplpdbPw"))
-  # 
-  # # onStop(function() {
-  #   if (DBI::dbIsValid(con)) {
-  #     writeLines("Closing connection pool")
-  #     pool::poolClose(con)
-  #   }
-  # })
-  con <- DatabaseConnector::connect(connectionDetails)
-  # on.exit(DatabaseConnector::disconnect(con))
+  con <- pool::dbPool(drv = DatabaseConnector::DatabaseConnectorDriver(),
+                                 dbms = "postgresql",
+                                 server ="shinydb.cqnqzwtn5s1q.us-east-1.rds.amazonaws.com/shinydb",
+                                 # port = Sys.getenv("shinydbPort"),
+                                 user = Sys.getenv("covid19vaccinationplpdbUser"),
+                                 password = Sys.getenv("covid19vaccinationplpdbPw"))
+
+  onStop(function() {
+    if (DBI::dbIsValid(con)) {
+      writeLines("Closing connection pool")
+      pool::poolClose(con)
+    }
+  })
+  
   summaryTable <- getDbSummary(con = con, mySchema = mySchema)
-  # 
+
 } else{
   if(is.null(.GlobalEnv$shinySettings$result)){
     result <- 'data'
