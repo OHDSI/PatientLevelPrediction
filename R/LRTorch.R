@@ -144,6 +144,8 @@ fitLRTorch <- function(population, plpData, param, search='grid', quiet=F,
 
 trainLRTorch <- function(population, plpData, modelOutput, epochs=100, w_decay = 0.001, seed=0, class_weight = 0, train=TRUE, autoencoder = FALSE, vae =FALSE, quiet){
   
+  train_deeptorch <- function(){return(NULL)}
+  
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','deepTorchFunctions.py'), envir = e)
   

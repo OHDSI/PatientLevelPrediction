@@ -25,6 +25,11 @@ output:
   word_document:
     toc: yes
 ---
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Creating Learning Curves}
+-->
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

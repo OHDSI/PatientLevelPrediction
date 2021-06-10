@@ -73,7 +73,7 @@ whether the prediction problem is worth executing." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
       </span>
     </div>
 
@@ -105,6 +105,9 @@ whether the prediction problem is worth executing." />
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -117,13 +120,13 @@ whether the prediction problem is worth executing." />
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -137,12 +140,15 @@ whether the prediction problem is worth executing." />
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
@@ -188,10 +194,10 @@ whether the prediction problem is worth executing.</p>
   <span class='kw'>outcomeDatabaseSchema</span> <span class='kw'>=</span> <span class='no'>cohortDatabaseSchema</span>,
   <span class='kw'>outcomeTable</span> <span class='kw'>=</span> <span class='no'>cohortTable</span>,
   <span class='kw'>cdmVersion</span> <span class='kw'>=</span> <span class='fl'>5</span>,
-  <span class='kw'>riskWindowStart</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-  <span class='kw'>startAnchor</span> <span class='kw'>=</span> <span class='st'>"cohort start"</span>,
-  <span class='kw'>riskWindowEnd</span> <span class='kw'>=</span> <span class='fl'>365</span>,
-  <span class='kw'>endAnchor</span> <span class='kw'>=</span> <span class='st'>"cohort start"</span>,
+  <span class='kw'>riskWindowStart</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>),
+  <span class='kw'>startAnchor</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='st'>"cohort start"</span>, <span class='fl'>5</span>),
+  <span class='kw'>riskWindowEnd</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>365</span>, <span class='fl'>365</span> * <span class='fl'>2</span>, <span class='fl'>365</span> * <span class='fl'>3</span>, <span class='fl'>365</span> * <span class='fl'>4</span>, <span class='fl'>365</span> * <span class='fl'>5</span>),
+  <span class='kw'>endAnchor</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='st'>"cohort start"</span>, <span class='fl'>5</span>),
   <span class='kw'>outputFolder</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>sampleSize</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>minCellCount</span> <span class='kw'>=</span> <span class='fl'>5</span>

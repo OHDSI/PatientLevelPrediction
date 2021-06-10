@@ -1,7 +1,7 @@
 # this files contains the objects used in the tests:
-options(andromedaTempFolder = "D:/andromedaTemp")
 travis <- T
 saveLoc <- tempfile()
+
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
@@ -23,8 +23,8 @@ plpData3 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
 plpData3$timeRef <- data.frame(timeId = 1:3, startDay = 1:3, endDay = 1:3)
 plpData3$covariateData$covariatesOld <- plpData3$covariateData$covariates
 plpData3$covariateData$covariates <- plpData3$covariateData$covariatesOld %>% 
-  dplyr::filter(covariateId <= 20 ) %>%
-  dplyr::mutate(timeId = 1+covariateId*rowId%%3)
+  dplyr::filter(.data$covariateId <= 20 ) %>%
+  dplyr::mutate(timeId = 1+.data$covariateId*.data$rowId%%3)
 
 
 # POPULATION

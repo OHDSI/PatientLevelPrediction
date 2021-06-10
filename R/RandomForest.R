@@ -68,6 +68,9 @@ setRandomForest <- function(mtries=-1,ntrees=500,maxDepth=c(4,10,17), varImp=T, 
 fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
                              outcomeId, cohortId, ...){
   
+  # remove binding note
+  rf_var_imp <- train_rf <- final_rf <- function(){return(NULL)}
+  
   covariateRef <- as.data.frame(plpData$covariateData$covariateRef)
   e <- environment()
   
@@ -117,12 +120,14 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   prediction <- population
   x <- toSparseM(plpData,population,map=NULL, temporal = F)
 
+  ParallelLogger::logInfo('Sourcing python code')
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','randomForestFunctions.py'), envir = e)
+  ParallelLogger::logInfo('Converting to python data')
   data <- reticulate::r_to_py(x$data)
   
   #do var imp
   if(param$varImp[1]==T){
-    
+    ParallelLogger::logInfo('Applying Variable Importance')
     # python checked in .set 
     varImp <- rf_var_imp(population = pPopulation,
                              plpData = data, 
@@ -133,7 +138,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     if(mean(varImp)==0)
       stop('No important variables - seems to be an issue with the data')
     
-    incRInd <- which(varImp>mean(varImp), arr.ind=T)
+    incRInd <- which(varImp>=mean(varImp), arr.ind=T)
     
     # save mapping, missing, indexes
   } else{
@@ -142,6 +147,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   
   # save the model to outLoc
   outLoc <- createTempModelLoc()
+  ParallelLogger::logInfo(paste0('Saving temp model to: ', outLoc))
   # clear the existing model pickles
   for(file in dir(outLoc))
     file.remove(file.path(outLoc,file))

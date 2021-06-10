@@ -3,12 +3,13 @@
 .travis.yml
 standalone
 ^\.travis\.yml$
-man/CohortMethod.pdf
-man/balanceScatterPlot.png
-man/ps.png
 deploy.sh
 extras
 man-roxygen
 xgboost
 compare_versions
 .github
+docs/*
+_pkgdown.yml
+
+

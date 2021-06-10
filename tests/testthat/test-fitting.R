@@ -75,7 +75,10 @@ test_that("fitting", {
   testthat::expect_length(model_set,3)
   testthat::expect_error(setLassoLogisticRegression(variance = -3))
   testthat::expect_error(setLassoLogisticRegression(seed = 'F'))
-
+  testthat::expect_error(setLassoLogisticRegression(upperLimit = 'F'))
+  testthat::expect_error(setLassoLogisticRegression(lowerLimit = 'F'))
+  testthat::expect_error(setLassoLogisticRegression(upperLimit = 0.5,lowerLimit = 1))
+  
   
   #=====================================
   # checking Cox Regression 
@@ -349,32 +352,33 @@ test_that("SVM  working checks", {
 test_that("LR cross val weights", {
   
   
-  sim <- simulateCyclopsData(nstrata = 1, nrows = 10000, ncovars = 100, eCovarsPerRow = 0.5, effectSizeSd = 1, model = "logistic")
+  sim <- Cyclops::simulateCyclopsData(nstrata = 1, nrows = 10000, ncovars = 100, eCovarsPerRow = 0.5, effectSizeSd = 1, model = "logistic")
   covariates <- sim$covariates
+  covariates$covariateId <- bit64::as.integer64(covariates$covariateId)
   outcomes <- sim$outcomes
   y <- outcomes$y
   
   cyclopsData <- Cyclops::convertToCyclopsData(outcomes, 
                                                covariates, 
                                                modelType = "lr", addIntercept = TRUE)
-  cv_fit <- suppressWarnings(fitCyclopsModel(cyclopsData,
-                            prior = createPrior("laplace", useCrossValidation = TRUE),
-                            control = createControl(seed = 666)))
-  cv_hyperparameter <- getHyperParameter(cv_fit)
+  cv_fit <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData,
+                            prior = Cyclops::createPrior("laplace", useCrossValidation = TRUE),
+                            control = Cyclops::createControl(seed = 666)))
+  cv_hyperparameter <- Cyclops::getHyperParameter(cv_fit)
   
-  fixed_prior <- createPrior("laplace", variance = cv_hyperparameter, useCrossValidation = FALSE)
+  fixed_prior <- Cyclops::createPrior("laplace", variance = cv_hyperparameter, useCrossValidation = FALSE)
   
   # get result using weights
   set.seed(666)
-  hold_out <- sample(1:getNumberOfRows(cyclopsData),
-                       size = floor(0.1 * getNumberOfRows(cyclopsData)),
+  hold_out <- sample(1:Cyclops::getNumberOfRows(cyclopsData),
+                       size = floor(0.1 * Cyclops::getNumberOfRows(cyclopsData)),
                        replace = FALSE)
-  weights <- rep(1.0, getNumberOfRows(cyclopsData))
+  weights <- rep(1.0, Cyclops::getNumberOfRows(cyclopsData))
   weights[hold_out] <- 0.0
-  subset_fit <- suppressWarnings(fitCyclopsModel(cyclopsData,
+  subset_fit <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData,
                                   prior = fixed_prior,
                                   weights = weights))
-  predict <- predict(subset_fit)
+  predict <- stats::predict(subset_fit)
   predict <- data.frame(rowId = hold_out, value = predict[hold_out], outcomeCount = y[hold_out])
   attr(predict, "metaData")$predictionType <- "binary"
 
@@ -382,7 +386,7 @@ test_that("LR cross val weights", {
   cyclopsData2 <- Cyclops::convertToCyclopsData(outcomes[!outcomes$rowId%in%hold_out,], 
                                                 covariates[!covariates$rowId%in%hold_out,], 
                                                 modelType = "lr", addIntercept = TRUE)
-  subset_fit2 <- suppressWarnings(fitCyclopsModel(cyclopsData2,
+  subset_fit2 <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData2,
                                 prior = fixed_prior))
   coefficients <- subset_fit2$estimation$estimate
   names(coefficients) <- subset_fit2$coefficientNames

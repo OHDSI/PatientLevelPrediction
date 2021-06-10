@@ -30,11 +30,12 @@ server <- shiny::shinyServer(function(input, output, session) {
   #print(summaryTable)
   
   # need to remove over columns:
-  output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable[filterIndex(),!colnames(summaryTable)%in%c('addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')],
+  output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable[filterIndex(),!colnames(summaryTable)%in%c('Analysis','addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')],
                                                            rownames= FALSE, selection = 'single',
                                              extensions = 'Buttons', options = list(
                                                dom = 'Blfrtip' , 
-                                               buttons = c(I('colvis'), 'copy', 'excel', 'pdf' ) 
+                                               buttons = c(I('colvis'), 'copy', 'excel', 'pdf' ),
+                                               scrollX = TRUE
                                                #pageLength = 100, lengthMenu=c(10, 50, 100,200)
                                              ),
                                              
@@ -44,10 +45,10 @@ server <- shiny::shinyServer(function(input, output, session) {
                                                  #tags$th(title=active_columns[i], colnames(data)[i])
                                                  tr(apply(data.frame(colnames=c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
                                                                                 'TAR', 'AUC', 'AUPRC', 
-                                                                                'T Size', 'O Count', 'O Incidence (%)'), 
+                                                                                'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp'), 
                                                                      labels=c('Database used to develop the model', 'Database used to evaluate model', 'Target population - the patients you want to predict risk for','Outcome - what you want to predict', 
                                                                      'Model type','Id for the covariate/settings used','Time-at-risk period', 'Area under the reciever operating characteristics (test or validation)', 'Area under the precision recall curve (test or validation)',
-                                                                     'Target population size of test or validation set', 'Outcome count in test or validation set', 'Percentage of target population that have outcome during time-at-risk')), 1,
+                                                                     'Target population size in the data', 'Outcome count in the data','The percentage of data used to evaluate the model', 'Percentage of target population that have outcome during time-at-risk','date and time of execution')), 1,
                                                           function(x) th(title=x[2], x[1])))
                                                )
                                              ))
@@ -64,7 +65,18 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   
   output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(plpResult()$covariateSummary),
-                                                              nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0)))
+                                                              nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0),
+                                                              intercept = ifelse(class(plpResult()$model$model)=='character' || !'model '%in% names(plpResult()$model),0,plpResult()$model$model$coefficients[1])))
+  
+  # Download plpresult
+  output$plpResult <- shiny::downloadHandler(
+    filename = function(){
+      "plpResult.rds"
+    },
+    content = function(file) {
+      saveRDS(plpResult(), file)
+    }
+  )
   
   # Downloadable csv of model ----
   output$downloadData <- shiny::downloadHandler(
@@ -80,7 +92,9 @@ server <- shiny::shinyServer(function(input, output, session) {
   output$covariateTable <- DT::renderDataTable(formatCovSettings(plpResult()$model$metaData$call$covariateSettings))
   output$populationTable <- DT::renderDataTable(formatPopSettings(plpResult()$model$populationSettings))
   
-  
+  output$hpTable <- DT::renderDataTable(DT::datatable(as.data.frame(plpResult()$model$hyperParamSearch),
+                                        options = list(scrollX = TRUE)))
+  output$attritionTable <- DT::renderDataTable(plpResult()$inputSetting$populationSettings$attrition)
   
   
   # prediction text
@@ -157,6 +171,18 @@ server <- shiny::shinyServer(function(input, output, session) {
          NPV = TN/(TN+FN) )
   })
   
+  # update threshold slider based on results size
+  shiny::observe({ 
+    if(!is.null(plpResult()$performanceEvaluation)){
+      n <- nrow(plpResult()$performanceEvaluation$thresholdSummary[plpResult()$performanceEvaluation$thresholdSummary$Eval%in%c('test','validation'),])
+    }else{
+      n <- 100
+    }
+
+      shiny::updateSliderInput(session, inputId = "slider1", 
+                        min = 1, max = n, value = round(n/2))
+  })
+  
   
   # preference plot
   output$prefdist <- shiny::renderPlot({
@@ -185,11 +211,48 @@ server <- shiny::shinyServer(function(input, output, session) {
     }
   })
   
+  #=======================
+  # cal for different evals
+  
+  output$recalSelect = renderUI({
+    types <- unique(plpResult()$performanceEvaluation$calibrationSummary$Eval)
+    selectInput('recal', 'Type:', types)
+  })
+  
+  output$calTable <- shiny::renderTable({
+    if(is.null(plpResult()$performanceEvaluation)){
+      return(NULL)
+    } else{
+      data <- plpResult()$performanceEvaluation$evaluationStatistics
+      data <- as.data.frame(data)
+      
+      data$Metric <- as.character(data$Metric)
+      data$Value <- as.double(as.character(data$Value))
+      
+      ind <- data$Metric %in% c('CalibrationIntercept', 
+                        'CalibrationSlope',
+                        'CalibrationInLarge',
+                        'Emean',
+                         'E90',
+                         'Emax', 
+                        'correctionFactor',
+                        'adjustGradient',
+                        'adjustIntercept')
+      
+      result <- reshape2::dcast(data[ind,],
+                      Eval ~ Metric, value.var = 'Value')
+      row.names(result) <- NULL
+      result
+      
+    }
+  })
+  
   output$cal <- shiny::renderPlot({
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotSparseCalibration2(plpResult()$performanceEvaluation)
+      plotSparseCalibration2(evaluation = plpResult()$performanceEvaluation, 
+                             type = input$recal)
     }
   })
   
@@ -197,10 +260,100 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      tryCatch(plotDemographicSummary(plpResult()$performanceEvaluation),
+      tryCatch(plotDemographicSummary(evaluation = plpResult()$performanceEvaluation, 
+                                      type = input$recal),
                error= function(cond){return(NULL)})
     }
   })
+  
+  #=======================
+  
+  
+  
+  #=======================
+  # NETBENEFIT
+  
+  output$nbSelect = renderUI({
+    types <- unique(plpResult()$performanceEvaluation$thresholdSummary$Eval)
+    selectInput('nbSelect', 'Type:', types)
+  })
+  
+  output$nbTable <- shiny::renderTable({
+    if(is.null(plpResult()$performanceEvaluation)){
+      return(NULL)
+    } else{
+      result <- extractNetBenefit(performanceEvaluation = plpResult()$performanceEvaluation, 
+                        type=input$nbSelect)
+      unique(result)
+    }
+  })
+  
+  output$nbPlot <- shiny::renderPlot({
+    if(is.null(plpResult()$performanceEvaluation)){
+      return(NULL)
+    } else{
+      result <- extractNetBenefit(performanceEvaluation = plpResult()$performanceEvaluation, 
+                                  type=input$nbSelect)
+      result <- unique(result)
+      plot(result$pt, result$netBenefit)
+    }
+  })
+  
+  #=======================
+  
+  
+  #=======================
+  # validation table and selection
+  validationTable <- shiny::reactive(dplyr::filter(summaryTable[filterIndex(),],
+                                                   Analysis == summaryTable[filterIndex(),'Analysis'][trueRow()]))
+  
+  output$validationTable <- DT::renderDataTable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC)), rownames= FALSE)
+  
+  valFilterIndex <- shiny::reactive({getFilter(validationTable(), input)})
+  valSelectedRow <- shiny::reactive({
+    if(is.null(input$validationTable_rows_selected[1])){
+      return(1)
+    }else{
+      # return(input$validationTable_rows_selected[1])
+      return(input$validationTable_rows_selected)
+    }
+  })
+  
+  # plots for the validation section. todo: add the development?
+  
+  valResult <- shiny::reactive({
+    valtemplist <- list()
+    valTable <- validationTable()
+    rows <- sort(valSelectedRow())
+    names <- valTable[rows, "Val"]
+    for (i in 1:length(rows)){
+      valtemplist[[i]] <- getPlpResult(result,validation,valTable, 'file', rows[i])
+    }
+    list(results = valtemplist, databaseName = names)
+  })
+  
+  valPlots <- shiny::reactive({
+    results <- valResult()
+    if(is.null(valResult()$results[[1]]$performanceEvaluation)){
+      return(NULL)
+    } else{
+      valCalPlot <- plotCals(evaluationList = valResult()$results, 
+                             modelNames =  valResult()$databaseName)
+      valRocPlot <- plotRocs(evaluationList = valResult()$results, 
+                             modelNames = valResult()$databaseName)
+      list(valRocPlot= valRocPlot, valCalPlot = valCalPlot)
+    }
+  })
+  
+  output$valRoc <- shiny::renderPlot({
+    try(valPlots()$valRocPlot)
+  })
+  output$valCal <- shiny::renderPlot({
+    try(valPlots()$valCalPlot)
+  })
+  #=======================
+  
+  
   
   
   

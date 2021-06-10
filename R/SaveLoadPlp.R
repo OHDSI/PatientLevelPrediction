@@ -180,11 +180,14 @@ getPlpData <- function(connectionDetails,
                                                          cohortTableIsTemp = TRUE,
                                                          rowIdField = "row_id",
                                                          covariateSettings = covariateSettings)
-  # add indexes for covariate summary
-  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
-  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
-  
-  
+  # add indexes for tidyCov + covariate summary
+  Andromeda::createIndex(covariateData$covariates, c('rowId'),
+                         indexName = 'covariates_rowId')
+  Andromeda::createIndex(covariateData$covariates, c('covariateId'),
+                         indexName = 'covariates_covariateId')
+  Andromeda::createIndex(covariateData$covariates, c('covariateId', 'covariateValue'),
+                         indexName = 'covariates_covariateId_value')
+
   if(max(outcomeIds)!=-999){
   writeLines("Fetching outcomes from server")
   start <- Sys.time()
@@ -212,6 +215,9 @@ getPlpData <- function(connectionDetails,
   } else {
     outcomes <- NULL
   }
+
+  
+  
   
   # Remove temp tables:
   renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
@@ -271,7 +277,7 @@ getPlpData <- function(connectionDetails,
 #' \code{savePlpData} saves an object of type plpData to folder.
 #'
 #' @param plpData   An object of type \code{plpData} as generated using
-#'                           \code{getDbPlpData}.
+#'                           \code{getPlpData}.
 #' @param file               The name of the folder where the data will be written. The folder should
 #'                           not yet exist.
 #' @param envir              The environment for to evaluate variables when saving
@@ -346,11 +352,12 @@ loadPlpData <- function(file, readOnly = TRUE) {
                  cohorts = readRDS(file.path(file, "cohorts.rds")),
                  outcomes = readRDS(file.path(file, "outcomes.rds")),
                  metaData = readRDS(file.path(file, "metaData.rds")))
-  # Open all ffdfs to prevent annoying messages later:
+
   class(result) <- "plpData"
 
   return(result)
 }
+
 
 #' @export
 print.plpData <- function(x, ...) {
@@ -360,8 +367,9 @@ print.plpData <- function(x, ...) {
   writeLines(paste("Outcome concept ID(s):", paste(attr(x$outcomes, "metaData")$outcomeIds, collapse = ",")))
 }
 
+#' @method summary plpData
 #' @export
-summary.plpData <- function(object, ...) {
+summary.plpData <- function(object,...){
   people <- length(unique(object$cohorts$subjectId))
   outcomeCounts <- data.frame(outcomeId = attr(object$outcomes, "metaData")$outcomeIds,
                               eventCount = 0,
@@ -395,7 +403,7 @@ print.summary.plpData <- function(x, ...) {
   rownames(outcomeCounts) <- outcomeCounts$outcomeId
   outcomeCounts$outcomeId <- NULL
   colnames(outcomeCounts) <- c("Event count", "Person count")
-  printCoefmat(outcomeCounts)
+  stats::printCoefmat(outcomeCounts)
   writeLines("")
   writeLines("Covariates:")
   writeLines(paste("Number of covariates:", x$covariateCount))
@@ -456,7 +464,8 @@ savePlpModel <- function(plpModel, dirPath){
   } else {  
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   }
-  saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
+  #saveRDS(plpModel$predict, file = file.path(dirPath, "transform.rds"))
+  saveRDS(NULL, file = file.path(dirPath, "transform.rds"))
   saveRDS(plpModel$index, file = file.path(dirPath, "index.rds"))
   saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
   saveRDS(plpModel$hyperParamSearch, file = file.path(dirPath, "hyperParamSearch.rds"))
@@ -550,8 +559,10 @@ loadPlpModel <- function(dirPath) {
                            error=function(e) NULL) 
   
   if(file.exists(file.path(dirPath, "keras_model"))){
+    ensure_installed("keras")
     model <- keras::load_model_hdf5(file.path(dirPath, "keras_model"))
   } else if(readRDS(file.path(dirPath, "attributes.rds"))$type == "xgboost"){
+    ensure_installed("xgboost")
     # fixing xgboost save/load issue
     model <- xgboost::xgb.load(file.path(dirPath, "model"))
   } else {  
@@ -719,10 +730,17 @@ loadPlpResult <- function(dirPath){
 formatCovariateSettings <- function(covariateSettings){
   
   if(class(covariateSettings) == "covariateSettings"){
-    return(list(cvs = unlist(covariateSettings), fun = attr(covariateSettings,'fun')))
+    return(list(cvs = data.frame(X = names(unlist(covariateSettings)), x= unlist(covariateSettings)), 
+                fun = attr(covariateSettings,'fun')))
     
   } else{
     return(list(cvs = do.call(rbind, lapply(1:length(covariateSettings), function(i){
+      inds <- which(lapply(covariateSettings[[i]], class) == "function")
+      if(length(inds)>0){
+        for(j in inds){
+          covariateSettings[[i]][[j]] <- paste0(deparse(covariateSettings[[i]][[j]]), collapse = " ")
+        }
+      }
     tempResult <- data.frame(names = names(unlist(covariateSettings[[i]])),
                values = unlist(covariateSettings[[i]]))
     tempResult$settingsId <- i
@@ -736,14 +754,19 @@ formatCovariateSettings <- function(covariateSettings){
 }
 
 reformatCovariateSettings <- function(covariateSettingsLocation){
-  cs <- read.csv(covariateSettingsLocation, stringsAsFactors=FALSE)
-  fun <- read.csv(gsub('.csv','_fun.csv',covariateSettingsLocation), stringsAsFactors=FALSE)
+  # adding this to stop warnings when files does not exist
+  if(!file.exists(covariateSettingsLocation)){
+    return(NULL)
+  }
+  cs <- utils::read.csv(covariateSettingsLocation, stringsAsFactors=FALSE)
+  fun <- utils::read.csv(gsub('.csv','_fun.csv',covariateSettingsLocation), stringsAsFactors=FALSE)
   
   if(sum(colnames(cs)%in%c('X','x'))==2){
     covariateSettings <- cs$x
     covariateSettings <- as.list(covariateSettings)
     names(covariateSettings) <- cs$X
     attr(covariateSettings,'fun') <- fun$x
+    class(covariateSettings) <- 'covariateSettings'
   } else {
     
     covariateSettings <- list()
@@ -761,6 +784,7 @@ reformatCovariateSettings <- function(covariateSettingsLocation){
 return(covariateSettings)
 }
 
+
 #' Save parts of the plp result as a csv for transparent sharing
 #'
 #' @details
@@ -774,34 +798,39 @@ savePlpToCsv <- function(result, dirPath){
   
   #inputSetting
   if(!dir.exists(file.path(dirPath, 'inputSetting'))){dir.create(file.path(dirPath, 'inputSetting'), recursive = T)}
-  write.csv(result$inputSetting$modelSettings$model, file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'), row.names = F)
-  write.csv(result$inputSetting$modelSettings$param, file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
-  write.csv(result$inputSetting$modelSettings$name, file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'), row.names = F)
-  if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings)){
-    write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$cvs, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'), row.names = F)
-    write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$fun, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings_fun.csv'), row.names = F)
+  utils::write.csv(result$inputSetting$modelSettings$model, file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'), row.names = F)
+  
+  if(!is.null(result$inputSetting$modelSettings$param)){
+    utils::write.csv(as.data.frame(t(unlist(result$inputSetting$modelSettings$param))), file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
+  }else{
+    utils::write.csv(NULL, file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
   }
-  write.csv(result$inputSetting$populationSettings$attrition, file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'), row.names = F)
+  utils::write.csv(result$inputSetting$modelSettings$name, file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'), row.names = F)
+  if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings)){
+    utils::write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$cvs, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'), row.names = F)
+    utils::write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$fun, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings_fun.csv'), row.names = F)
+  }
+  utils::write.csv(result$inputSetting$populationSettings$attrition, file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'), row.names = F)
   result$inputSetting$populationSettings$attrition <- NULL
-  write.csv(result$inputSetting$populationSettings, file = file.path(dirPath, 'inputSetting','populationSettings.csv'), row.names = F)
+  utils::write.csv(result$inputSetting$populationSettings, file = file.path(dirPath, 'inputSetting','populationSettings.csv'), row.names = F)
   
   #executionSummary
   if(!dir.exists(file.path(dirPath, 'executionSummary'))){dir.create(file.path(dirPath, 'executionSummary'), recursive = T)}
-  write.csv(result$executionSummary$PackageVersion, file = file.path(dirPath, 'executionSummary','PackageVersion.csv'), row.names = F)
-  write.csv(unlist(result$executionSummary$PlatformDetails), file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))
-  write.csv(result$executionSummary$TotalExecutionElapsedTime, file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'), row.names = F)
-  write.csv(result$executionSummary$ExecutionDateTime, file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'), row.names = F)
+  utils::write.csv(result$executionSummary$PackageVersion, file = file.path(dirPath, 'executionSummary','PackageVersion.csv'), row.names = F)
+  utils::write.csv(unlist(result$executionSummary$PlatformDetails), file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))
+  utils::write.csv(result$executionSummary$TotalExecutionElapsedTime, file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'), row.names = F)
+  utils::write.csv(result$executionSummary$ExecutionDateTime, file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'), row.names = F)
   
   #performanceEvaluation
   if(!dir.exists(file.path(dirPath, 'performanceEvaluation'))){dir.create(file.path(dirPath, 'performanceEvaluation'), recursive = T)}
-  write.csv(result$performanceEvaluation$evaluationStatistics, file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'), row.names = F)
-  write.csv(result$performanceEvaluation$thresholdSummary, file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'), row.names = F)
-  write.csv(result$performanceEvaluation$demographicSummary, file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'), row.names = F)
-  write.csv(result$performanceEvaluation$calibrationSummary, file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'), row.names = F)
-  write.csv(result$performanceEvaluation$predictionDistribution, file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$evaluationStatistics, file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$thresholdSummary, file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$demographicSummary, file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$calibrationSummary, file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$predictionDistribution, file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'), row.names = F)
   
   #covariateSummary
-  write.csv(result$covariateSummary, file = file.path(dirPath,'covariateSummary.csv'), row.names = F)
+  utils::write.csv(result$covariateSummary, file = file.path(dirPath,'covariateSummary.csv'), row.names = F)
 }
 
 #' Loads parts of the plp result saved as csv files for transparent sharing
@@ -824,34 +853,34 @@ loadPlpFromCsv <- function(dirPath){
   names(result) <- objects
   
   #covariateSummary
-  result$covariateSummary <- read.csv(file = file.path(dirPath,'covariateSummary.csv'))
+  result$covariateSummary <- utils::read.csv(file = file.path(dirPath,'covariateSummary.csv'))
 
   #executionSummary
   result$executionSummary <- list()
-  result$executionSummary$PackageVersion <- tryCatch({as.list(read.csv(file = file.path(dirPath, 'executionSummary','PackageVersion.csv')))}, error = function(e){return(NULL)})
-  result$executionSummary$PlatformDetails <- tryCatch({as.list(read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$x)}, error = function(e){return(NULL)})
-  names(result$executionSummary$PlatformDetails) <- tryCatch({read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$X}, error = function(e){return(NULL)})
-  result$executionSummary$TotalExecutionElapsedTime <- tryCatch({read.csv(file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'))$x}, error = function(e){return(NULL)})
-  result$executionSummary$ExecutionDateTime <- tryCatch({read.csv(file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'))$x}, error = function(e){return(NULL)})
+  result$executionSummary$PackageVersion <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'executionSummary','PackageVersion.csv')))}, error = function(e){return(NULL)})
+  result$executionSummary$PlatformDetails <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$x)}, error = function(e){return(NULL)})
+  names(result$executionSummary$PlatformDetails) <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$X}, error = function(e){return(NULL)})
+  result$executionSummary$TotalExecutionElapsedTime <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'))$x}, error = function(e){return(NULL)})
+  result$executionSummary$ExecutionDateTime <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'))$x}, error = function(e){return(NULL)})
   
   #inputSetting
   result$inputSetting <- list()
-  result$inputSetting$modelSettings$model <- tryCatch({read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'))$x}, error = function(e){return(NULL)})
-  result$inputSetting$modelSettings$param <- tryCatch({as.list(read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_param.csv')))}, error = function(e){return(NULL)})
-  result$inputSetting$modelSettings$name <- tryCatch({read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'))$x}, error = function(e){return(NULL)})
+  result$inputSetting$modelSettings$model <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'))$x}, error = function(e){return(NULL)})
+  result$inputSetting$modelSettings$param <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_param.csv')))}, error = function(e){return(NULL)})
+  result$inputSetting$modelSettings$name <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'))$x}, error = function(e){return(NULL)})
   
   result$inputSetting$dataExtrractionSettings$covariateSettings <- tryCatch({reformatCovariateSettings(file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'))}, error = function(e){return(NULL)})
 
-  result$inputSetting$populationSettings <- tryCatch({as.list(read.csv(file = file.path(dirPath, 'inputSetting','populationSettings.csv')))}, error = function(e){return(NULL)})
-  result$inputSetting$populationSettings$attrition <- tryCatch({read.csv(file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'))}, error = function(e){return(NULL)})
+  result$inputSetting$populationSettings <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'inputSetting','populationSettings.csv')))}, error = function(e){return(NULL)})
+  result$inputSetting$populationSettings$attrition <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'))}, error = function(e){return(NULL)})
   
   #performanceEvaluation
   result$performanceEvaluation <- list()
-  result$performanceEvaluation$evaluationStatistics <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'))}, error = function(e){return(NULL)})
-  result$performanceEvaluation$thresholdSummary <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'))}, error = function(e){return(NULL)})
-  result$performanceEvaluation$demographicSummary <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'))}, error = function(e){return(NULL)})
-  result$performanceEvaluation$calibrationSummary <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'))}, error = function(e){return(NULL)})
-  result$performanceEvaluation$predictionDistribution <- tryCatch({read.csv(file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$evaluationStatistics <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$thresholdSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$demographicSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$calibrationSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$predictionDistribution <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'))}, error = function(e){return(NULL)})
   
   result$model$modelSettings <- result$inputSetting$modelSettings
   result$model$populationSettings <- result$inputSetting$populationSettings

@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 4.1.0
-Date: 2020-09-01
+Version: 4.3.9
+Date: 2021-05-07
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -20,69 +20,70 @@ Description: A package for creating patient level prediction models. Given a
 License: Apache License 2.0
 URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/PatientLevelPrediction
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
+VignetteBuilder: knitr
 Depends:
     R (>= 3.3.0),
-    DatabaseConnector (>= 3.0.0),
-    FeatureExtraction (>= 3.0.0),
-    Cyclops (>= 3.0.0)
+    FeatureExtraction (>= 3.0.0)
 Imports:
+    Andromeda,
+    benchmarkme,
+    bit64,
+    Cyclops (>= 3.0.0),
+    DatabaseConnector (>= 3.0.0),
+    dplyr,
     ggplot2,
     gridExtra,
-    PRROC,
+    Hmisc,
     magrittr,
-    foreach,
-    doParallel,
-    dplyr,
-    bit,
-    Andromeda,
-    plyr,
-    survAUC,
+    Matrix,
+    parallel,
+    ParallelLogger (>= 2.0.0),
+    PRROC,
     Rcpp (>= 0.11.2),
+    reshape2,
+    reticulate (> 1.16),
+    rlang,
+    rms,
+    RSQLite,
+    slam,
     SqlRender (>= 1.1.3),
     survival,
-    xgboost,
-    Matrix,
-    AUC,
-    utils,
-    methods,
-    reshape2,
-    officer,
-    diagram,
+    tibble,
     tidyr,
-    viridisLite,
-    RCurl,
-    RJSONIO,
-    keras,
-    slam,
-    ParallelLogger (>= 2.0.0),
-    reticulate (> 1.6),
     tools,
-    plotly,
-    zeallot,
-    htmltools,
-    tensorflow,
-    benchmarkme,
-    cowplot
+    utils,
+    zeallot
 Suggests:
-    shiny,
+    AUC,
+    aws.s3,
+    BigKnn (>= 1.0.0),
+    devtools,
+    diagram, 
     DT,
-    htmlwidgets (> 0.8),
-    shinydashboard,
-    shinycssloaders,
-    testthat,
-    pROC,
     gnm,
+    htmlwidgets (> 0.8),
+    htmltools,
+    keras,
     knitr,
+    markdown,
+    Metrics,
+    officer,
+    plotly,
+    plyr,  
+    pROC,
+    R6,
+    ResourceSelection,
     rmarkdown,
     scoring,
-    Metrics,
+    shiny,
+    shinycssloaders,
+    shinydashboard,
     SparseM,
-    ResourceSelection,
-    BigKnn (>= 1.0.0),
-    aws.s3,
-    devtools,
-    rms,
-    survminer
+    survAUC,
+    survminer,
+    tensorflow,
+    testthat,
+    xgboost (> 1.3.2.1)
 Remotes:
     ohdsi/FeatureExtraction,
     ohdsi/BigKnn

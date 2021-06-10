@@ -43,6 +43,9 @@ setNaiveBayes <- function(variableNumber=2000){
 fitNaiveBayes <- function(population, plpData, param, search='grid', quiet=F,
                       outcomeId, cohortId, ...){
   
+  # remove global binding issue
+  train_naive_bayes <- function(){return(NULL)}
+  
   # check plpData is libsvm format or convert if needed
   if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
     stop("Needs correct covariateData")

@@ -35,6 +35,8 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
                                   maxDepth=c(4,6,17), minRows=2, learnRate=c(0.005, 0.01,0.1),
                                   seed= NULL){
   
+  ensure_installed("xgboost")
+  
   if(length(nthread)>1)
     stop(paste('nthreads must be length 1'))
   if(!class(seed)%in%c('numeric','NULL', 'integer'))
@@ -112,7 +114,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   data <- result$data
   
   # now get population of interest
-  data <- data[population$rowId,]
+  data <- data[population$rowId, , drop = F]
   
   # set test/train sets (for printing performance as it trains)
   ParallelLogger::logInfo(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
@@ -139,7 +141,18 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   if(!quiet)
     ParallelLogger::logInfo(paste0('Model GBM trained - took:',  format(comp, digits=3)))
   
-  varImp <- xgboost::xgb.importance(model =trainedModel)
+  varImp <- tryCatch({xgboost::xgb.importance(model =trainedModel)},
+                     error = function(e){
+                       ParallelLogger::logInfo(e);
+                       return(NULL)
+                       })
+  
+  # adding this for single variable models
+  if(is.null(varImp)){
+    varImp <- data.frame(Feature = (1:ncol(data))-1, 
+                         Gain = rep(0, ncol(data))
+                         )
+  }
   
   # get the original feature names:
   varImp$Feature <- as.numeric(varImp$Feature)+1 # adding +1 as xgboost index starts at 0
@@ -156,7 +169,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
                            value=stats::predict(trainedModel, data)
   )
   prediction <- merge(population, prediction, by='rowId')
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear','gender')] # need to fix no index issue
   attr(prediction, "metaData") <- list(predictionType = "binary") 
 
   result <- list(model = trainedModel,
@@ -205,23 +218,29 @@ gbm_model2 <- function(data, population,
     cvPrediction <- c() 
     for(index in 1:length(index_vect )){
       ParallelLogger::logInfo(paste('Fold ',index, ' -- with ', sum(population$indexes!=index),'train rows'))
-      train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,], label=population$outcomeCount[population$indexes!=index])
-      test <- xgboost::xgb.DMatrix(data = data[population$indexes==index,], label=population$outcomeCount[population$indexes==index])
+      train <- xgboost::xgb.DMatrix(data = data[population$indexes!=index,, drop = F], label=population$outcomeCount[population$indexes!=index])
+      test <- xgboost::xgb.DMatrix(data = data[population$indexes==index,, drop = F], label=population$outcomeCount[population$indexes==index])
       watchlist <- list(train=train, test=test)
       
       model <- xgboost::xgb.train(data = train, 
-                                  max.depth = maxDepth, 
-                                  eta = learnRate, 
-                                  nthread = nthread, 
-                                  min_child_weight = minRows,
-                                  nround = ntrees,
+                                  params = list(booster =  'gbtree',
+                                                max_depth = maxDepth,
+                                                eta = learnRate, 
+                                                min_child_weight = minRows,
+                                                
+                                                objective = "binary:logistic",
+                                                #eval.metric = "logloss"
+                                                base_score = sum(population$outcomeCount[population$indexes==index])/length(population$outcomeCount[population$indexes==index]),
+                                                eval.metric = "auc"),
+                                                
+                                  nthread = nthread, #?
+                                  nrounds = ntrees,
                                   watchlist = watchlist,
-                                  objective = "binary:logistic",
-                                  eval.metric = "logloss", eval.metric = "auc",
                                   print_every_n=10,
-                                  early_stopping_rounds = earlyStopRound)
+                                  early_stopping_rounds = earlyStopRound,
+                                  maximize =T)
       
-      pred <- stats::predict(model, data[population$indexes==index,])
+      pred <- stats::predict(model, data[population$indexes==index,, drop = F])
       prediction <- population[population$indexes==index,]
       prediction$value <- pred
       cvPrediction <- rbind(cvPrediction, prediction)
@@ -243,22 +262,28 @@ gbm_model2 <- function(data, population,
     
     if(!is.null(earlyStopRound)){
       ind <- (1:nrow(population))%in%sample(nrow(population), floor(nrow(population)*0.9))
-      train <- xgboost::xgb.DMatrix(data = data[ind,], label=population$outcomeCount[ind])
-      test <- xgboost::xgb.DMatrix(data = data[!ind,], label=population$outcomeCount[!ind])
+      train <- xgboost::xgb.DMatrix(data = data[ind,, drop = F], label=population$outcomeCount[ind])
+      test <- xgboost::xgb.DMatrix(data = data[!ind,, drop = F], label=population$outcomeCount[!ind])
       watchlist <- list(train=train, test=test)
     }
       
     model <- xgboost::xgb.train(data = train, 
-                                max.depth = maxDepth, 
-                                eta = learnRate, 
-                                nthread = nthread, 
-                                min_child_weight = minRows,
-                                nround = ntrees,
+                                params = list(booster =  'gbtree',
+                                              max_depth = maxDepth,
+                                              eta = learnRate, 
+                                              min_child_weight = minRows,
+                                              
+                                              objective = "binary:logistic",
+                                              #eval.metric = "logloss"
+                                              base_score = sum(population$outcomeCount)/length(population$outcomeCount),
+                                              eval.metric = "auc"),
+                                
+                                nthread = nthread, #?
+                                nrounds = ntrees,
                                 watchlist = watchlist,
-                                objective = "binary:logistic",
-                                eval.metric = "logloss", eval.metric = "auc",
                                 print_every_n=10,
-                                early_stopping_rounds = earlyStopRound)
+                                early_stopping_rounds = earlyStopRound,
+                                maximize =T)
     
     pred <- stats::predict(model, data)
     prediction <- population
