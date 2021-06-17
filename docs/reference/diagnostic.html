@@ -73,7 +73,7 @@ whether the prediction problem is worth executing." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -81,7 +81,7 @@ whether the prediction problem is worth executing." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -152,7 +152,7 @@ whether the prediction problem is worth executing." />
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -179,29 +179,29 @@ whether the prediction problem is worth executing." />
 whether the prediction problem is worth executing.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>diagnostic</span>(
-  <span class='kw'>plpData</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>cdmDatabaseName</span>,
-  <span class='no'>connectionDetails</span>,
-  <span class='no'>cdmDatabaseSchema</span>,
-  <span class='kw'>oracleTempSchema</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>cohortId</span>,
-  <span class='kw'>cohortName</span> <span class='kw'>=</span> <span class='no'>cohortId</span>,
-  <span class='no'>outcomeIds</span>,
-  <span class='kw'>outcomeNames</span> <span class='kw'>=</span> <span class='no'>outcomeIds</span>,
-  <span class='no'>cohortDatabaseSchema</span>,
-  <span class='kw'>cohortTable</span> <span class='kw'>=</span> <span class='st'>"cohort"</span>,
-  <span class='kw'>outcomeDatabaseSchema</span> <span class='kw'>=</span> <span class='no'>cohortDatabaseSchema</span>,
-  <span class='kw'>outcomeTable</span> <span class='kw'>=</span> <span class='no'>cohortTable</span>,
-  <span class='kw'>cdmVersion</span> <span class='kw'>=</span> <span class='fl'>5</span>,
-  <span class='kw'>riskWindowStart</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>),
-  <span class='kw'>startAnchor</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='st'>"cohort start"</span>, <span class='fl'>5</span>),
-  <span class='kw'>riskWindowEnd</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>365</span>, <span class='fl'>365</span> * <span class='fl'>2</span>, <span class='fl'>365</span> * <span class='fl'>3</span>, <span class='fl'>365</span> * <span class='fl'>4</span>, <span class='fl'>365</span> * <span class='fl'>5</span>),
-  <span class='kw'>endAnchor</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span>(<span class='st'>"cohort start"</span>, <span class='fl'>5</span>),
-  <span class='kw'>outputFolder</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>sampleSize</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>minCellCount</span> <span class='kw'>=</span> <span class='fl'>5</span>
-)</pre>
+    <pre class="usage"><span class='fu'>diagnostic</span><span class='op'>(</span>
+  plpData <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>cdmDatabaseName</span>,
+  <span class='va'>connectionDetails</span>,
+  <span class='va'>cdmDatabaseSchema</span>,
+  oracleTempSchema <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>cohortId</span>,
+  cohortName <span class='op'>=</span> <span class='va'>cohortId</span>,
+  <span class='va'>outcomeIds</span>,
+  outcomeNames <span class='op'>=</span> <span class='va'>outcomeIds</span>,
+  <span class='va'>cohortDatabaseSchema</span>,
+  cohortTable <span class='op'>=</span> <span class='st'>"cohort"</span>,
+  outcomeDatabaseSchema <span class='op'>=</span> <span class='va'>cohortDatabaseSchema</span>,
+  outcomeTable <span class='op'>=</span> <span class='va'>cohortTable</span>,
+  cdmVersion <span class='op'>=</span> <span class='fl'>5</span>,
+  riskWindowStart <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span><span class='op'>)</span>,
+  startAnchor <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span><span class='op'>(</span><span class='st'>"cohort start"</span>, <span class='fl'>5</span><span class='op'>)</span>,
+  riskWindowEnd <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>365</span>, <span class='fl'>365</span> <span class='op'>*</span> <span class='fl'>2</span>, <span class='fl'>365</span> <span class='op'>*</span> <span class='fl'>3</span>, <span class='fl'>365</span> <span class='op'>*</span> <span class='fl'>4</span>, <span class='fl'>365</span> <span class='op'>*</span> <span class='fl'>5</span><span class='op'>)</span>,
+  endAnchor <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span><span class='op'>(</span><span class='st'>"cohort start"</span>, <span class='fl'>5</span><span class='op'>)</span>,
+  outputFolder <span class='op'>=</span> <span class='cn'>NULL</span>,
+  sampleSize <span class='op'>=</span> <span class='cn'>NULL</span>,
+  minCellCount <span class='op'>=</span> <span class='fl'>5</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -330,9 +330,10 @@ follow-up time distribution, time-to-event information, characteriszation detail
 observation time distribution.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='co'>#******** EXAMPLE 1 ********* </span>
-}</div></pre>
+<span class='op'>}</span> 
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -348,7 +349,7 @@ observation time distribution.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

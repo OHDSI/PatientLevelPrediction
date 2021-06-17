@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -151,7 +151,7 @@
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -177,37 +177,26 @@
     <p>Train various models using a default parameter gird search or user specified parameters</p>
     </div>
 
-    <pre class="usage"><span class='fu'>recalibratePlp</span>(
-  <span class='no'>plpResult</span>,
-  <span class='no'>population</span>,
-  <span class='no'>validationData</span>,
-  <span class='kw'>testFraction</span> <span class='kw'>=</span> <span class='fl'>0.25</span>,
-  <span class='kw'>method</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"RecalibrationintheLarge"</span>, <span class='st'>"weakRecalibration"</span>, <span class='st'>"reestimate"</span>)
-)</pre>
+    <pre class="usage"><span class='fu'>recalibratePlp</span><span class='op'>(</span>
+  <span class='va'>prediction</span>,
+  <span class='va'>analysisId</span>,
+  method <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"recalibrationintheLarge"</span>, <span class='st'>"weakRecalibration"</span><span class='op'>)</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>plpResult</th>
-      <td><p>The output from <code>runPlp</code></p></td>
+      <th>prediction</th>
+      <td><p>A prediction dataframe</p></td>
     </tr>
     <tr>
-      <th>population</th>
-      <td><p>The population created using createStudyPopulation() who will have their risks predicted</p></td>
-    </tr>
-    <tr>
-      <th>validationData</th>
-      <td><p>An object of type <code>plpData</code> - the patient level prediction
-data extracted from the CDM.</p></td>
-    </tr>
-    <tr>
-      <th>testFraction</th>
-      <td><p>Fraction of data to used for internal validation</p></td>
+      <th>analysisId</th>
+      <td><p>The model analysisId</p></td>
     </tr>
     <tr>
       <th>method</th>
-      <td><p>Method used to recalibrate ('RecalibrationintheLarge' or 'weakRecalibration' or 'reestimate')</p></td>
+      <td><p>Method used to recalibrate ('recalibrationintheLarge' or 'weakRecalibration' )</p></td>
     </tr>
     </table>
 
@@ -234,7 +223,7 @@ gradient boosting machine, neural network and )</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
