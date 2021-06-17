@@ -1,3 +1,9 @@
+PatientLevelPrediction 4.3.10
+======================
+- save xgboost model as json file for transparency
+- set connectionDetails to NULL in getPlpData
+
+
 PatientLevelPrediction 4.3.9
 ======================
 - updated andromeda functions - restrict to pop and tidy covs for speed
