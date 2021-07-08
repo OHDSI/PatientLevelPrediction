@@ -10,15 +10,17 @@ useDatabase <- T
 pathToMd <- ifelse(useDatabase==F, "./www/shinyDescription.md" ,"./www/libraryDescription.md")
 
 # set default
-mySchema <- 'covid_vaccination_plp'
+##Sys.getenv("shinydbDatabase")
+mySchema <- Sys.getenv("covid19vaccinationplpdbSchema")
 
 if(useDatabase){
   source("repositoryExtras.R")
   result <- 'database'
   validation <- NULL
+  
   con <- pool::dbPool(drv = DatabaseConnector::DatabaseConnectorDriver(),
                                  dbms = "postgresql",
-                                 server ="shinydb.cqnqzwtn5s1q.us-east-1.rds.amazonaws.com/shinydb",
+                                 server = Sys.getenv("shinydbServer"),
                                  # port = Sys.getenv("shinydbPort"),
                                  user = Sys.getenv("covid19vaccinationplpdbUser"),
                                  password = Sys.getenv("covid19vaccinationplpdbPw"))
