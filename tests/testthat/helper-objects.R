@@ -1,3 +1,18 @@
+# Download the PostreSQL driver ---------------------------
+# If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
+jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
+if (jarFolder == "") {
+  tempJarFolder <- tempfile("jdbcDrivers")
+  dir.create(tempJarFolder)
+  Sys.setenv("DATABASECONNECTOR_JAR_FOLDER" = tempJarFolder)
+  downloadJdbcDrivers("postgresql")
+  
+  withr::defer({
+    unlink(tempJarFolder, recursive = TRUE, force = TRUE)
+    Sys.unsetenv("DATABASECONNECTOR_JAR_FOLDER")
+  }, testthat::teardown_env())
+}
+
 # this files contains the objects used in the tests:
 travis <- T
 saveLoc <- tempfile()
