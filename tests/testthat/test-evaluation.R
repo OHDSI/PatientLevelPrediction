@@ -29,6 +29,17 @@ test_that("evaluatePlp", {
   testthat::expect_equal(names(eval), c('evaluationStatistics', 'thresholdSummary', 'demographicSummary', 'calibrationSummary', 'predictionDistribution') )
 })
 
+test_that("modelBasedConcordance", {
+  concordance <- PatientLevelPrediction::modelBasedConcordance(prediction = plpResult$prediction)
+  testthat::expect_is(concordance, "numeric")
+})
+
+test_that("evaluatePlp_survival"){
+  eval <- evaluatePlp(prediction = plpResult2$prediction, plpData = plpData)
+  testthat::expect_equal(class(eval), 'plpEvaluation')
+  testthat::expect_equal(names(eval), c('evaluationStatistics', 'thresholdSummary', 'demographicSummary', 'calibrationSummary') )
+}
+
 test_that("AUROC", {
   Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
   attr(Eprediction, "metaData") <- list(predictionType = "binary")

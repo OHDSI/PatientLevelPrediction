@@ -21,7 +21,7 @@ context("AndromedaHelperFunctions")
 
 test_that("calculatePrevs", {
   THpop <- data.frame(rowId = 1:10,
-                    outcomeCount = c(rep(0,5), rep(1,5)))
+                      outcomeCount = c(rep(0,5), rep(1,5)))
   N <- sample(9,1)
   covariates <- data.frame(rowId = sample(10, N),
                            covariateId = c(rep(101, N)))
@@ -33,6 +33,14 @@ test_that("calculatePrevs", {
   testthat::expect_equal(THres$covariateId, 101)
   testthat::expect_equal(THres$prev.out, sum(merge(THpop, as.data.frame(THcovariates$covariates), by='rowId')[,2]==1)/5)
   testthat::expect_equal(THres$prev.noout, sum(merge(THpop, as.data.frame(THcovariates$covariates), by='rowId')[,2]==0)/5)
+  
+})
+
+# batcheRestrict test 
+test_that("batchRestrict", {
+  
+  covariateData <- PatientLevelPrediction:::batchRestrict(plpData4$covariateData, population4, sizeN = 10000000)
+  expect_is(covariateData, 'CovariateData')
   
 })
 
