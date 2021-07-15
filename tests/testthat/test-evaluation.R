@@ -37,7 +37,7 @@ test_that("modelBasedConcordance", {
 test_that("evaluatePlp_survival", {
   eval <- evaluatePlp(prediction = plpResult2$prediction, plpData = plpData)
   testthat::expect_equal(class(eval), 'plpEvaluation')
-  testthat::expect_equal(names(eval), c('evaluationStatistics', 'thresholdSummary', 'demographicSummary', 'calibrationSummary') )
+  testthat::expect_equal(names(eval), c('evaluationStatistics', 'demographicSummary', 'calibrationSummary', 'thresholdSummary') )
 })
 
 test_that("AUROC", {

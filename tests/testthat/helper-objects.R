@@ -105,7 +105,7 @@ plpResult <- runPlp(population = population,
                     analysisId = 'lrTest',
                     saveDirectory =  saveLoc)
 
-# RUNPLP - LASSO LR
+# RUNPLP - survival Cox
 plpResult2 <- runPlp(population = population,
                     plpData = plpData, 
                     modelSettings = surv, 
