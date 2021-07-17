@@ -60,6 +60,9 @@ jobs:
       
       - name: python scikit-survival dependencies    
         run: conda install --name r-reticulate -c sebp scikit-survival
+       
+      - name: python torch 
+        run: conda install --name r-reticulate pytorch-cpu torchvision-cpu -c pytorch
 
       - uses: r-lib/actions/setup-r@v1
         with:
