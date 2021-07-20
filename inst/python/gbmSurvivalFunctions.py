@@ -10,8 +10,8 @@ import timeit
 import math
 from sksurv.ensemble import GradientBoostingSurvivalAnalysis
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
-from sklearn.externals.joblib import Memory
-from sklearn.externals import joblib
+from joblib import Memory
+import joblib
 
 #================================================================
 def train_gbmsurv(population = None, plpData= None, train = True, modelOutput =None, loss='coxph', learning_rate=0.1, n_estimators=100, criterion='friedman_mse', min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_depth=3, min_impurity_split=None, min_impurity_decrease=0.0, max_features=None, max_leaf_nodes=None, subsample=1.0, dropout_rate=0.0, verbose=0, seed = 1, quiet = True):
@@ -70,7 +70,7 @@ def train_gbmsurv(population = None, plpData= None, train = True, modelOutput =N
     if not os.path.exists(modelOutput):
       os.makedirs(modelOutput)
     print("Model saved to: %s" %(modelOutput)	)
-    joblib.dump(gbmsurv, os.path.join(modelOutput,"model.pkl")) 
+    joblib.dump(gbmsurv, os.path.join(modelOutput,"model.pkl"), compress = True) 
     pred = gbmsurv.predict(X[trainInds,:].toarray())
     pred = pred.flatten()
     rowCount = np.sum(trainInds)

@@ -18,9 +18,10 @@ context("Ensemble")
 
 ensemble <- runEnsembleModel(population = population,
                              dataList = list(plpData, plpData),
-                             modelList = list(lrSet, lrSet),
+                             modelList = list(lrSet, gbmSet), # change to get rid of warning?
                              testSplit = "subject",
-                             testFraction = 0.2,
+                             testFraction = 0.2, 
+                             stackerUseCV = T,
                              splitSeed = 1,
                              nfold = 3,
                              saveDirectory= saveLoc,
@@ -38,6 +39,24 @@ test_that("run ensemble model", {
   testthat::expect_s3_class(ensemble, 'ensemblePlp')
   })
 
+test_that("combine mean ensemble model works", {
+  comEn <- createEnsemble(runPlpList = list(plpResult,plpDataReal))
+  testthat::expect_s3_class(comEn, 'ensemblePlp')
+})
+
+test_that("combine AUC ensemble model works", {
+  comEn <- createEnsemble(runPlpList = list(plpResult,plpDataReal), weighted = T)
+  testthat::expect_s3_class(comEn, 'ensemblePlp')
+})
+
+test_that("combine manual weights ensemble model works", {
+  comEn <- createEnsemble(runPlpList = list(plpResult,plpDataReal), weighted = T, weights = runif(2))
+  testthat::expect_s3_class(comEn, 'ensemblePlp')
+})
+
+test_that("combine ensemble model fails when weights too long", {
+  testthat::expect_error(createEnsemble(runPlpList = list(plpResult,plpDataReal), weighted = T, weights = runif(3)))
+})
 
 
 test_that("apply ensemble model", {

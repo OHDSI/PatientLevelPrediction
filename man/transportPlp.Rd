@@ -16,7 +16,8 @@ transportPlp(
   includeCalibrationSummary = T,
   includePredictionDistribution = T,
   includeCovariateSummary = T,
-  save = T
+  save = T,
+  reduceSize = F
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ folder does not yet exist it will be created.}
 \item{includeCovariateSummary}{Whether to include the covariateSummary}
 
 \item{save}{Whether to save the result or just return the transportable object}
+
+\item{reduceSize}{Remove parts of runPlp object that are not needed but take up space}
 }
 \description{
 Transports a plpResult to a new location and removed sensitive data

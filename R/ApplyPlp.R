@@ -112,9 +112,10 @@ applyModel <- function(population,
                                                Value = unlist(performance$evaluationStatistics[-1])
                                                )
   nr1 <- nrow(performance$thresholdSummary)
-  performance$thresholdSummary <- cbind(analysisId=rep(analysisId,nr1),
+  performance$thresholdSummary <- tryCatch({cbind(analysisId=rep(analysisId,nr1),
                                               Eval=rep('validation', nr1),
-                                              performance$thresholdSummary)
+                                              performance$thresholdSummary)}, 
+                                           error = function(e){return(NULL)})
   nr1 <- nrow(performance$demographicSummary)
   if(!is.null(performance$demographicSummary)){
   performance$demographicSummary <- cbind(analysisId=rep(analysisId,nr1),
@@ -126,9 +127,9 @@ applyModel <- function(population,
                                           Eval=rep('validation', nr1),
                                           performance$calibrationSummary)
   nr1 <- nrow(performance$predictionDistribution)
-  performance$predictionDistribution <- cbind(analysisId=rep(analysisId,nr1),
+  performance$predictionDistribution <- tryCatch({cbind(analysisId=rep(analysisId,nr1),
                                           Eval=rep('validation', nr1),
-                                          performance$predictionDistribution)
+                                          performance$predictionDistribution)}, error = function(e){return(NULL)})
   
   delta <- start.pred - Sys.time()
   if (!silent)
@@ -250,7 +251,13 @@ similarPlpData <- function(plpModel=NULL,
   dataOptions$sampleSize <- sample
   
   if(class(dataOptions$covariateSettings)=="covariateSettings"){
-    dataOptions$covariateSettings$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
+    
+    if(attr(dataOptions$covariateSettings, "fun") == 'getDbDefaultCovariateData'){
+      dataOptions$covariateSettings$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
+    }
+    
+    dataOptions$covariateSettings <- updatingCovariateCohort(dataOptions$covariateSettings, newCohortDatabaseSchema, newCohortTable)
+    
   } else {
     # figure out how to modify the multiple settings
     for(i in 1:length(dataOptions$covariateSettings)){
@@ -258,11 +265,8 @@ similarPlpData <- function(plpModel=NULL,
       if(type=="getDbDefaultCovariateData"){ # modify standard
         dataOptions$covariateSettings[[i]]$includedCovariateIds <-  plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
       }
-      if(type=="getCohortCovariateData"){ # modify custom cohort
-        #{TODO: update settings here...}
-        dataOptions$covariateSettings[[i]]$cohortDatabaseSchema <-newCohortDatabaseSchema
-        dataOptions$covariateSettings[[i]]$cohortTable <- newCohortTable
-      }
+      
+      dataOptions$covariateSettings[[i]] <- updatingCovariateCohort(dataOptions$covariateSettings[[i]], newCohortDatabaseSchema, newCohortTable)
     }
   }
   ParallelLogger::logTrace('Adding new settings if set...')
@@ -295,7 +299,10 @@ similarPlpData <- function(plpModel=NULL,
   
   plpData <- do.call(getPlpData, dataOptions)
   
-  if(!createPopulation) return(plpData)
+  if(!createPopulation){
+    ParallelLogger::logTrace('Skipping population - only returning plpData')
+    return(plpData)
+  }
   
   # get the popualtion
   ParallelLogger::logTrace('Loading model population settings')
@@ -310,4 +317,16 @@ similarPlpData <- function(plpModel=NULL,
   ParallelLogger::logTrace('Returning population and plpData for new data using model settings')
   return(list(population=population,
               plpData=plpData))
+}
+
+
+# this code updates the covariate cohort settings
+updatingCovariateCohort <- function(covariateSettings, newCohortDatabaseSchema, newCohortTable){
+  if('cohortDatabaseSchema' %in% names(covariateSettings)){
+    covariateSettings$cohortDatabaseSchema <- newCohortDatabaseSchema
+  }
+  if('cohortTable' %in% names(covariateSettings)){
+    covariateSettings$cohortTable <- newCohortTable
+  }
+  return(covariateSettings)
 }

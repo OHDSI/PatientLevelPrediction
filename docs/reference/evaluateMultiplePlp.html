@@ -73,7 +73,7 @@ validates the models on new data" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -81,7 +81,7 @@ validates the models on new data" />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -105,6 +105,9 @@ validates the models on new data" />
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -117,13 +120,13 @@ validates the models on new data" />
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -137,16 +140,19 @@ validates the models on new data" />
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -173,23 +179,24 @@ validates the models on new data" />
 validates the models on new data</p>
     </div>
 
-    <pre class="usage"><span class='fu'>evaluateMultiplePlp</span>(
-  <span class='no'>analysesLocation</span>,
-  <span class='no'>outputLocation</span>,
-  <span class='no'>connectionDetails</span>,
-  <span class='no'>validationSchemaTarget</span>,
-  <span class='no'>validationSchemaOutcome</span>,
-  <span class='no'>validationSchemaCdm</span>,
-  <span class='no'>databaseNames</span>,
-  <span class='no'>validationTableTarget</span>,
-  <span class='no'>validationTableOutcome</span>,
-  <span class='kw'>validationIdTarget</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>validationIdOutcome</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>oracleTempSchema</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>verbosity</span> <span class='kw'>=</span> <span class='st'>"INFO"</span>,
-  <span class='kw'>keepPrediction</span> <span class='kw'>=</span> <span class='no'>F</span>,
-  <span class='kw'>sampleSize</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre>
+    <pre class="usage"><span class='fu'>evaluateMultiplePlp</span><span class='op'>(</span>
+  <span class='va'>analysesLocation</span>,
+  <span class='va'>outputLocation</span>,
+  <span class='va'>connectionDetails</span>,
+  <span class='va'>validationSchemaTarget</span>,
+  <span class='va'>validationSchemaOutcome</span>,
+  <span class='va'>validationSchemaCdm</span>,
+  <span class='va'>databaseNames</span>,
+  <span class='va'>validationTableTarget</span>,
+  <span class='va'>validationTableOutcome</span>,
+  validationIdTarget <span class='op'>=</span> <span class='cn'>NULL</span>,
+  validationIdOutcome <span class='op'>=</span> <span class='cn'>NULL</span>,
+  oracleTempSchema <span class='op'>=</span> <span class='cn'>NULL</span>,
+  verbosity <span class='op'>=</span> <span class='st'>"INFO"</span>,
+  keepPrediction <span class='op'>=</span> <span class='cn'>F</span>,
+  recalibrate <span class='op'>=</span> <span class='cn'>NULL</span>,
+  sampleSize <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -258,6 +265,10 @@ validates the models on new data</p>
       <td><p>Whether to keep the predicitons for the new data</p></td>
     </tr>
     <tr>
+      <th>recalibrate</th>
+      <td><p>A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')</p></td>
+    </tr>
+    <tr>
       <th>sampleSize</th>
       <td><p>If not NULL, the number of people to sample from the target cohort</p></td>
     </tr>
@@ -283,7 +294,7 @@ are found and the connection and database settings for the new data</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

@@ -21,9 +21,70 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
-  newCovariateData$covariates <- covariateData$covariates %>% dplyr::filter(rowId %in% rowIds)
+  
+  covariateData$pop <- data.frame(rowId = rowIds)
+  Andromeda::createIndex(tbl = covariateData$pop, columnNames = 'rowId', 
+                         indexName = 'pop_rowIds')
+  
+  on.exit(covariateData$pop <- NULL, add = T)
+  
+  newCovariateData$covariates <- covariateData$covariates %>% 
+    dplyr::inner_join(covariateData$pop, by = 'rowId')
+  Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
+                         indexName = 'covariates_ncovariateIds')
+  
   class(newCovariateData) <- "CovariateData"
   ParallelLogger::logInfo(paste0('Finished limiting covariate data to population...'))
+  return(newCovariateData)
+}
+
+
+
+batchRestrict <- function(covariateData, population, sizeN = 10000000){
+  
+  ParallelLogger::logInfo('Due to data size using batchRestrict to limit covariate data to population')
+  
+  start <- Sys.time()
+  
+  newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
+                                           analysisRef = covariateData$analysisRef)
+  
+  maxRows <- RSQLite::dbGetQuery(covariateData, 
+                                 "SELECT count(*) as n FROM covariates;")
+  
+  steps <- ceiling(maxRows$n/sizeN)
+  
+  
+  pb <- txtProgressBar(style = 3)
+  
+  for(i in 1:steps){
+    setTxtProgressBar(pb, i/steps)
+    
+    offset <- ((i-1)*sizeN)
+    limit <- sizeN
+    
+    tempData <- RSQLite::dbGetQuery(covariateData, 
+                                    paste0("SELECT * FROM covariates LIMIT ",limit," OFFSET ",offset," ;"))
+    
+    filtered <- tempData %>% dplyr::inner_join(population, by = 'rowId')
+    
+    if(i==1){
+      newCovariateData$covariates <- filtered
+    } else{
+      Andromeda::appendToTable(tbl = newCovariateData$covariates, 
+                               data = filtered)
+    }
+  }
+  close(pb)
+  
+  Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
+                         indexName = 'covariates_ncovariateIds')
+  
+  class(newCovariateData) <- "CovariateData"
+  
+  timeTaken <- as.numeric(Sys.time() - start, units = "mins")
+  ParallelLogger::logInfo(paste0('Limiting covariate data took: ', timeTaken, ' mins'))
+  
   return(newCovariateData)
 }
 
@@ -35,17 +96,17 @@ calculatePrevs <- function(plpData, population){
   
   # add population to sqllite
   population <- tibble::as_tibble(population)
-  plpData$covariateData$population <- population %>% dplyr::select(rowId, outcomeCount)
+  plpData$covariateData$population <- population %>% dplyr::select(.data$rowId, .data$outcomeCount)
   
-  outCount <- nrow(plpData$covariateData$population %>% dplyr::filter(outcomeCount == 1))
-  nonOutCount <- nrow(plpData$covariateData$population %>% dplyr::filter(outcomeCount == 0))
+  outCount <- nrow(plpData$covariateData$population %>% dplyr::filter(.data$outcomeCount == 1))
+  nonOutCount <- nrow(plpData$covariateData$population %>% dplyr::filter(.data$outcomeCount == 0))
   
   # join covariate with label
   prevs <- plpData$covariateData$covariates %>% dplyr::inner_join(plpData$covariateData$population) %>%
-    dplyr::group_by(covariateId) %>% 
-    dplyr::summarise(prev.out = 1.0*sum(outcomeCount==1, na.rm = TRUE)/outCount,
-              prev.noout = 1.0*sum(outcomeCount==0, na.rm = TRUE)/nonOutCount) %>%
-    dplyr::select(covariateId, prev.out, prev.noout)
+    dplyr::group_by(.data$covariateId) %>% 
+    dplyr::summarise(prev.out = 1.0*sum(.data$outcomeCount==1, na.rm = TRUE)/outCount,
+              prev.noout = 1.0*sum(.data$outcomeCount==0, na.rm = TRUE)/nonOutCount) %>%
+    dplyr::select(.data$covariateId, .data$prev.out, .data$prev.noout)
   
   #clear up data
   ##plpData$covariateData$population <- NULL

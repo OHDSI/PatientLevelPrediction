@@ -39,7 +39,9 @@ test_that("toSparseM", {
                         cohortStartDate= rep('2007-12-28 00:00:00.0',6),
                         daysFromObsStart= c(500,50,500,500,500,500),
                         daysToCohortEnd= rep(200,6),
-                        daysToObsEnd=rep(200,6))
+                        daysToObsEnd=rep(200,6),
+                        ageYear = rep(25, 6),
+                        gender = rep(8507, 6))
   
   attr(cohorts, "metaData") <- list(attrition=data.frame(outcomeId=2,description='test',
                                                          targetCount=6,uniquePeople=6,
@@ -121,9 +123,13 @@ test_that("toSparseM", {
                                       conceptId=rep(1,2)
   )
   
-  FplpDataExact <- list(cohorts=data.frame(rowId=c(100,2,40), cohortId=rep(1,3), 
+  FplpDataExact <- list(cohorts=data.frame(rowId=c(100,2,40), 
+                                           subjectId=c(100,2,40), 
+                                           cohortStartDate= rep('2007-12-28 00:00:00.0',3),
+                                           cohortId=rep(1,3), 
                                           time=rep(700,3), daysFromObsStart=rep(700,3),
-                                          daysToCohortEnd=rep(700,3), daysToObsEnd=rep(700,3)),
+                                          daysToCohortEnd=rep(700,3), daysToObsEnd=rep(700,3),
+                                          ageYear = rep(40,3), gender=rep(8507,3)),
                        outcomes =data.frame(rowId=c(100), outcomeId=c(2), outcomeCount=c(1),
                                             daysToEvent=c(50)),
                       covariateData = covariateData2
@@ -164,9 +170,13 @@ test_that("toSparseM", {
                                       analysisId=rep(1,2),
                                       conceptId=rep(1,2))
   
-  FplpDataExact2 <- list(cohorts=data.frame(rowId=c(1,26,47), cohortId=rep(1,3), 
+  FplpDataExact2 <- list(cohorts=data.frame(rowId=c(1,26,47), 
+                                            subjectId=c(100,2,40), 
+                                            cohortStartDate= rep('2007-12-28 00:00:00.0',3),
+                                            cohortId=rep(1,3), 
                                            time=rep(700,3), daysFromObsStart=rep(700,3),
-                                           daysToCohortEnd=rep(700,3), daysToObsEnd=rep(700,3)),
+                                           daysToCohortEnd=rep(700,3), daysToObsEnd=rep(700,3),
+                                           ageYear = rep(40,3), gender=rep(8507,3)),
                         outcomes =data.frame(rowId=c(1), outcomeId=c(2), outcomeCount=c(1),
                                              daysToEvent=c(50)),
                         covariateData = covariateData2

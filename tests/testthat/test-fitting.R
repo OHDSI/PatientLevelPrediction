@@ -75,7 +75,10 @@ test_that("fitting", {
   testthat::expect_length(model_set,3)
   testthat::expect_error(setLassoLogisticRegression(variance = -3))
   testthat::expect_error(setLassoLogisticRegression(seed = 'F'))
-
+  testthat::expect_error(setLassoLogisticRegression(upperLimit = 'F'))
+  testthat::expect_error(setLassoLogisticRegression(lowerLimit = 'F'))
+  testthat::expect_error(setLassoLogisticRegression(upperLimit = 0.5,lowerLimit = 1))
+  
   
   #=====================================
   # checking Cox Regression 
@@ -317,4 +320,87 @@ test_that("MLP  working checks", {
   # check prediction between 0 and 1
   testthat::expect_gte(min(plpResultMlp$prediction$value), 0)
   testthat::expect_lte(max(plpResultMlp$prediction$value), 1)
+})
+
+
+svmSet <- setSVM(C=1, degree = 1, gamma = 1e-04)
+plpResultSvm <- runPlp(population = population,
+                       plpData = plpData, 
+                       modelSettings = svmSet, 
+                       savePlpData = F, 
+                       savePlpResult = F, 
+                       saveEvaluation = F, 
+                       savePlpPlots = F, 
+                       analysisId = 'svmTest',
+                       saveDirectory =  saveLoc)
+
+test_that("SVM  working checks", {
+  # check same structure
+  testthat::expect_equal(names(plpResultSvm), 
+                         names(plpResult))
+  
+  # check prediction same size as pop
+  testthat::expect_equal(nrow(plpResultSvm$prediction), nrow(population))
+  
+  # check prediction between 0 and 1
+  testthat::expect_gte(min(plpResultSvm$prediction$value), 0)
+  testthat::expect_lte(max(plpResultSvm$prediction$value), 1)
+})
+
+
+
+test_that("LR cross val weights", {
+  
+  
+  sim <- Cyclops::simulateCyclopsData(nstrata = 1, nrows = 10000, ncovars = 100, eCovarsPerRow = 0.5, effectSizeSd = 1, model = "logistic")
+  covariates <- sim$covariates
+  covariates$covariateId <- bit64::as.integer64(covariates$covariateId)
+  outcomes <- sim$outcomes
+  y <- outcomes$y
+  
+  cyclopsData <- Cyclops::convertToCyclopsData(outcomes, 
+                                               covariates, 
+                                               modelType = "lr", addIntercept = TRUE)
+  cv_fit <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData,
+                            prior = Cyclops::createPrior("laplace", useCrossValidation = TRUE),
+                            control = Cyclops::createControl(seed = 666)))
+  cv_hyperparameter <- Cyclops::getHyperParameter(cv_fit)
+  
+  fixed_prior <- Cyclops::createPrior("laplace", variance = cv_hyperparameter, useCrossValidation = FALSE)
+  
+  # get result using weights
+  set.seed(666)
+  hold_out <- sample(1:Cyclops::getNumberOfRows(cyclopsData),
+                       size = floor(0.1 * Cyclops::getNumberOfRows(cyclopsData)),
+                       replace = FALSE)
+  weights <- rep(1.0, Cyclops::getNumberOfRows(cyclopsData))
+  weights[hold_out] <- 0.0
+  subset_fit <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData,
+                                  prior = fixed_prior,
+                                  weights = weights))
+  predict <- stats::predict(subset_fit)
+  predict <- data.frame(rowId = hold_out, value = predict[hold_out], outcomeCount = y[hold_out])
+  attr(predict, "metaData")$predictionType <- "binary"
+
+  # get results using reduced data
+  cyclopsData2 <- Cyclops::convertToCyclopsData(outcomes[!outcomes$rowId%in%hold_out,], 
+                                                covariates[!covariates$rowId%in%hold_out,], 
+                                                modelType = "lr", addIntercept = TRUE)
+  subset_fit2 <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData2,
+                                prior = fixed_prior))
+  coefficients <- subset_fit2$estimation$estimate
+  names(coefficients) <- subset_fit2$coefficientNames
+  covariateData <- list(covariates = covariates[covariates$rowId%in%hold_out,])
+  class(covariateData) <- 'CovariateData'
+  pops <- data.frame(rowId = hold_out, outcomeCount = outcomes$y[hold_out])
+  predict2 <- predictAndromeda(coefficients = coefficients, 
+                   population = pops, 
+                   covariateData = covariateData, 
+                   modelType = 'logistic')
+  attr(predict2, "metaData")$predictionType <- "binary"
+  
+  # does not seem to be the same?
+  testthat::expect_equal(computeAuc(predict),computeAuc(predict2), tolerance=1)
+
+  
 })

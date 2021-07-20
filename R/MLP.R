@@ -19,6 +19,13 @@
 #' Create setting for neural network model with python 
 #' @param size       The number of hidden nodes
 #' @param alpha      The l2 regularisation
+#' @param maxIter    Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations.
+#' @param tol        Tolerance for the optimization
+#' @param learningRateInit  The initial learning rate used. It controls the step-size in updating the weights.
+#' @param nIterNoChange     Maximum number of epochs to not meet tol improvement.
+#' @param beta1    Exponential decay rate for estimates of first moment vector in adam, should be in [0, 1).
+#' @param beta2    Exponential decay rate for estimates of second moment vector in adam, should be in [0, 1).
+#' @param epsilon  Value for numerical stability in adam.
 #' @param seed       A seed for the model 
 #'
 #' @examples
@@ -26,7 +33,9 @@
 #' model.mlp <- setMLP(size=4, alpha=0.00001, seed=NULL)
 #' }
 #' @export
-setMLP <- function(size=4, alpha=0.00001, seed=NULL){
+setMLP <- function(size=4, alpha=c(0.3,0.01,0.001,0.000001), maxIter = 2000, tol = 0.0001, 
+                   learningRateInit = 0.001, nIterNoChange = 10,
+                   beta1 = 0.9, beta2 = 0.999, epsilon = c(1,0.1,0.00000001), seed=NULL){
   
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
@@ -39,8 +48,21 @@ setMLP <- function(size=4, alpha=0.00001, seed=NULL){
   if(min(alpha) <= 0)
     stop('alpha must be greater that 0')
   
-  # test python is available and the required dependancies are there:
-  ##checkPython()
+  if(!class(maxIter)%in%c('numeric','integer'))
+    stop('Invalid maxIter')
+  if(!class(tol)%in%c('numeric','integer'))
+    stop('Invalid tol')
+  if(!class(learningRateInit)%in%c('numeric','integer'))
+    stop('Invalid learningRateInit')
+  if(!class(nIterNoChange)%in%c('numeric','integer'))
+    stop('Invalid nIterNoChange') 
+  
+  if(!class(beta1)%in%c('numeric','integer'))
+    stop('Invalid beta1') 
+  if(!class(beta2)%in%c('numeric','integer'))
+    stop('Invalid beta2') 
+  if(!class(epsilon)%in%c('numeric','integer'))
+    stop('Invalid epsilon') 
   
   # set seed
   if(is.null(seed[1])){
@@ -50,8 +72,15 @@ setMLP <- function(size=4, alpha=0.00001, seed=NULL){
   result <- list(model='fitMLP', 
                  param= split(expand.grid(size=size, 
                                           alpha=alpha,
+                                          maxIter = maxIter,
+                                          tol = tol,
+                                          learningRateInit = learningRateInit,
+                                          nIterNoChange = nIterNoChange,
+                                          beta1 = beta1,
+                                          beta2 = beta2,
+                                          epsilon = epsilon,
                                           seed=seed[1]),
-                              1:(length(size)*length(alpha))  ),
+                              1:(length(size)*length(alpha)*length(maxIter)*length(tol)*length(learningRateInit)*length(nIterNoChange)*length(beta1)*length(beta2)*length(epsilon))  ),
                  name='Neural network')
   class(result) <- 'modelSettings' 
   
@@ -99,10 +128,17 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
                                                                           modelOutput = outLoc)  )))
 
   
-  hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
+  cvAuc <- do.call(rbind, lapply(hyperParamSel, function(x) x$aucCV))
+  colnames(cvAuc) <- paste0('fold_auc', 1:ncol(cvAuc))
+  auc <- unlist(lapply(hyperParamSel, function(x) x$auc))
+  
+  cvPrediction <- lapply(hyperParamSel, function(x) x$prediction )
+  cvPrediction <- cvPrediction[[which.max(auc)[1]]]
+  
+  hyperSummary <- cbind(do.call(rbind, param), cvAuc, auc= auc)
   
   #now train the final model and return coef
-  bestInd <- which.max(abs(unlist(hyperParamSel)-0.5))[1]
+  bestInd <- which.max(abs(auc - 0.5))[1]
   finalModel <- do.call(trainMLP, listAppend(param[[bestInd]], 
                                              list(plpData = pydata,
                                                   population = pPopulation,
@@ -140,7 +176,8 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
-                 trainCVAuc = hyperParamSel,
+                 trainCVAuc = list(value = unlist(cvAuc[bestInd,]),
+                                   prediction = cvPrediction),
                  hyperParamSearch = hyperSummary,
                  modelSettings = list(model='fitMLP',modelParameters=param.best),
                  metaData = plpData$metaData,
@@ -161,7 +198,11 @@ fitMLP <- function(population, plpData, param, search='grid', quiet=F,
 }
 
 
-trainMLP <- function(plpData, population, size=1, alpha=0.001, seed=NULL, train=TRUE, quiet=F, modelOutput){
+trainMLP <- function(plpData, population, size=1, alpha=0.001, maxIter = 2000, tol = 0.0001, 
+                     learningRateInit = 0.001, nIterNoChange=10, beta1 =0.9, beta2=0.999, epsilon =0.00000001,
+                     seed=NULL, train=TRUE, quiet=F, modelOutput){
+  
+  train_mlp <- function(){return(NULL)}
 
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','mlpFunctions.py'), envir = e)
@@ -170,6 +211,13 @@ trainMLP <- function(plpData, population, size=1, alpha=0.001, seed=NULL, train=
                       plpData = plpData, 
                       alpha =alpha, 
                       size = as.integer(size), 
+                      maxIter = as.integer(maxIter),
+                      tol = tol, 
+                      learningRateInit = learningRateInit,
+                      nIterNoChange = as.integer(nIterNoChange),
+                      beta1 = beta1, 
+                      beta2 = beta2, 
+                      epsilon = epsilon,
                       seed = as.integer(seed), 
                       quiet = quiet, 
                       modelOutput = modelOutput,
@@ -181,9 +229,12 @@ trainMLP <- function(plpData, population, size=1, alpha=0.001, seed=NULL, train=
     colnames(pred) <- c('rowId','outcomeCount','indexes', 'value')
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType="binary")
+    
+    aucCV <- lapply(1:max(pred$indexes), function(i){computeAuc(pred[pred$indexes==i,])})
+    
     auc <- computeAuc(pred)
     writeLines(paste0('Model obtained CV AUC of ', auc))
-    return(auc)
+    return(list(auc = auc, aucCV = aucCV, prediction = pred[pred$indexes>0,]))
   }
   
   return(result)

@@ -37,6 +37,8 @@ viewPlps <- function(result, validation=NULL){
   ensure_installed("shinycssloaders")
   ensure_installed("DT")
   ensure_installed("htmlwidgets")
+  ensure_installed("shinyWidgets")
+  ensure_installed("plotly")
  
   appDir <- system.file("shiny", "PLPViewer", package = "PatientLevelPrediction")
   shinySettings <- list(result = result, validation = validation)

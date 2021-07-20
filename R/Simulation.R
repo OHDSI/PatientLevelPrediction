@@ -84,6 +84,7 @@
 #' @param plpDataSimulationProfile   An object of type \code{plpDataSimulationProfile} as generated
 #'                                   using the \cr\code{createplpDataSimulationProfile} function.
 #' @param n                          The size of the population to be generated.
+#' @param useInt64                   Make the covariateIds int64
 #'
 #' @details
 #' This function generates simulated data that is in many ways similar to the original data on which
@@ -94,12 +95,12 @@
 #' An object of type \code{plpData}.
 #'
 #' @export
-simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
+simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
   writeLines("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariatePrevalence
   
-  personsPerCov <- rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
+  personsPerCov <- stats::rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
   personsPerCov[personsPerCov > n] <- n
   rowId <- sapply(personsPerCov, function(x, n) sample.int(size = x, n), n = n)
   rowId <- do.call("c", rowId)
@@ -109,7 +110,10 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                                                                      personsPerCov[x]),
                         personsPerCov = personsPerCov,
                         covariateIds = covariateIds)
-  covariateId <- do.call("c", covariateId)
+  if(useInt64){
+    covariateId <- bit64::as.integer64(do.call("c", covariateId))
+    plpDataSimulationProfile$covariateRef$covariateId <- bit64::as.integer64(plpDataSimulationProfile$covariateRef$covariateId)
+  }
   covariateValue <- rep(1, length(covariateId))
   covariateData <- Andromeda::andromeda(covariates = data.frame(rowId = rowId,
                                                                 covariateId = covariateId,
@@ -122,7 +126,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   writeLines("Generating cohorts")
   cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), cohortId = 1)
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
-  r <- runif(n)
+  r <- stats::runif(n)
   cohorts$time <- as.numeric(as.character(cut(r, breaks = c(0, breaks), labels = names(breaks))))
   cohorts$cohortStartDate <- sample(-1000:1000,n,replace=TRUE) + as.Date("2010-01-01")
   cohorts$daysFromObsStart <- sample(1:1000,n,replace=TRUE)
@@ -141,15 +145,20 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                                    modelType = "poisson")
     outcomes <- merge(prediction, cohorts[, c("rowId", "time")])
     outcomes$value <- outcomes$value * outcomes$time  #Value is lambda
-    outcomes$outcomeCount <- as.numeric(rpois(n, outcomes$value))
+    outcomes$outcomeCount <- as.numeric(stats::rpois(n, outcomes$value))
     outcomes <- outcomes[outcomes$outcomeCount != 0, ]
     outcomes$outcomeId <- plpDataSimulationProfile$metaData$outcomeIds[i]
-    outcomes$daysToEvent <- round(runif(nrow(outcomes), 0, outcomes$time))
+    outcomes$daysToEvent <- round(stats::runif(nrow(outcomes), 0, outcomes$time))
     outcomes <- outcomes[, c("rowId", "outcomeId", "outcomeCount", "daysToEvent")]
     allOutcomes <- rbind(allOutcomes, outcomes)
   }
   
  covariateData$coefficients <- NULL
+ 
+ # add indexes for covariate summary
+ RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
+ RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
+ 
   
   # Remove rownames else they will be copied to the ffdf objects:
   metaData = list(cohortIds = 1,
@@ -164,7 +173,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   metaData$call$outcomeTable = NULL
   metaData$call$cohortTable = NULL
   metaData$call$cdmVersion = 5
-  metaData$call$covariateSettings = NULL
+  #metaData$call$covariateSettings = FeatureExtraction::createDefaultCovariateSettings()
 
   metaData$cohortId = 1
   metaData$outcomeIds = c(2,3)

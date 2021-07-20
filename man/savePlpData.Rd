@@ -8,7 +8,7 @@ savePlpData(plpData, file, envir = NULL, overwrite = F)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
-\code{getDbPlpData}.}
+\code{getPlpData}.}
 
 \item{file}{The name of the folder where the data will be written. The folder should
 not yet exist.}

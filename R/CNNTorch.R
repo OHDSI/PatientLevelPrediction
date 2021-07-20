@@ -141,6 +141,8 @@ fitCNNTorch <- function(population, plpData, param, search='grid', quiet=F,
 
 trainCNNTorch <- function(plpData, population, epochs=50, nbfilters = 16, seed=0, class_weight= 0, type = 'CNN', train=TRUE, modelOutput, quiet=F){
   
+  train_deeptorch <- function(){return(NULL)}
+  
   python_dir <- system.file(package='PatientLevelPrediction','python')
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','deepTorchFunctions.py'), envir = e)

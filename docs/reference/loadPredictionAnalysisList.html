@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -104,6 +104,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -116,13 +119,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -136,16 +139,19 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -171,7 +177,7 @@
     <p>Load the multiple prediction json settings from a file</p>
     </div>
 
-    <pre class="usage"><span class='fu'>loadPredictionAnalysisList</span>(<span class='no'>predictionAnalysisListFile</span>)</pre>
+    <pre class="usage"><span class='fu'>loadPredictionAnalysisList</span><span class='op'>(</span><span class='va'>predictionAnalysisListFile</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -188,20 +194,22 @@
 that can be combined with connection settings to run a multiple prediction study</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='no'>predictionAnalysisList</span> <span class='kw'>&lt;-</span> <span class='fu'>loadPredictionAnalysisList</span>(<span class='st'>'./predictionStudyAnalyses.json'</span>)
-<span class='no'>predictionAnalysisList</span>$<span class='no'>connectionDetails</span> <span class='kw'>=</span> <span class='no'>connectionDetails</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>cdmDatabaseSchema</span> <span class='kw'>=</span> <span class='no'>cdmDatabaseSchema</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>cdmDatabaseName</span> <span class='kw'>=</span> <span class='no'>cdmDatabaseName</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>oracleTempSchema</span> <span class='kw'>=</span> <span class='no'>oracleTempSchema</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>cohortDatabaseSchema</span> <span class='kw'>=</span> <span class='no'>cohortDatabaseSchema</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>cohortTable</span> <span class='kw'>=</span> <span class='no'>cohortTable</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>outcomeDatabaseSchema</span> <span class='kw'>=</span> <span class='no'>outcomeDatabaseSchema</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>outcomeTable</span> <span class='kw'>=</span> <span class='no'>outcomeTable</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>cdmVersion</span> <span class='kw'>=</span> <span class='no'>cdmVersion</span>
-<span class='no'>predictionAnalysisList</span>$<span class='no'>outputFolder</span> <span class='kw'>=</span> <span class='no'>outputFolder</span>
-<span class='no'>result</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/do.call.html'>do.call</a></span>(<span class='no'>runPlpAnalyses</span>, <span class='no'>predictionAnalysisList</span>)
-}</div></pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='va'>predictionAnalysisList</span> <span class='op'>&lt;-</span> <span class='fu'>loadPredictionAnalysisList</span><span class='op'>(</span><span class='st'>'./predictionStudyAnalyses.json'</span><span class='op'>)</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>connectionDetails</span> <span class='op'>=</span> <span class='va'>connectionDetails</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>cdmDatabaseSchema</span> <span class='op'>=</span> <span class='va'>cdmDatabaseSchema</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>cdmDatabaseName</span> <span class='op'>=</span> <span class='va'>cdmDatabaseName</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>oracleTempSchema</span> <span class='op'>=</span> <span class='va'>oracleTempSchema</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>cohortDatabaseSchema</span> <span class='op'>=</span> <span class='va'>cohortDatabaseSchema</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>cohortTable</span> <span class='op'>=</span> <span class='va'>cohortTable</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>outcomeDatabaseSchema</span> <span class='op'>=</span> <span class='va'>outcomeDatabaseSchema</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>outcomeTable</span> <span class='op'>=</span> <span class='va'>outcomeTable</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>cdmVersion</span> <span class='op'>=</span> <span class='va'>cdmVersion</span>
+<span class='va'>predictionAnalysisList</span><span class='op'>$</span><span class='va'>outputFolder</span> <span class='op'>=</span> <span class='va'>outputFolder</span>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/do.call.html'>do.call</a></span><span class='op'>(</span><span class='va'>runPlpAnalyses</span>, <span class='va'>predictionAnalysisList</span><span class='op'>)</span>
+<span class='op'>}</span>
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -217,7 +225,7 @@ that can be combined with connection settings to run a multiple prediction study
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

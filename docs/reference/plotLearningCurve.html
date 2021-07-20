@@ -73,7 +73,7 @@ from createLearningCurve." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -81,7 +81,7 @@ from createLearningCurve." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -105,6 +105,9 @@ from createLearningCurve." />
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -117,13 +120,13 @@ from createLearningCurve." />
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -137,16 +140,19 @@ from createLearningCurve." />
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -173,14 +179,14 @@ from createLearningCurve." />
 from <code>createLearningCurve</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>plotLearningCurve</span>(
-  <span class='no'>learningCurve</span>,
-  <span class='kw'>metric</span> <span class='kw'>=</span> <span class='st'>"AUROC"</span>,
-  <span class='kw'>abscissa</span> <span class='kw'>=</span> <span class='st'>"observations"</span>,
-  <span class='kw'>plotTitle</span> <span class='kw'>=</span> <span class='st'>"Learning Curve"</span>,
-  <span class='kw'>plotSubtitle</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>fileName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre>
+    <pre class="usage"><span class='fu'>plotLearningCurve</span><span class='op'>(</span>
+  <span class='va'>learningCurve</span>,
+  metric <span class='op'>=</span> <span class='st'>"AUROC"</span>,
+  abscissa <span class='op'>=</span> <span class='st'>"events"</span>,
+  plotTitle <span class='op'>=</span> <span class='st'>"Learning Curve"</span>,
+  plotSubtitle <span class='op'>=</span> <span class='cn'>NULL</span>,
+  fileName <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -202,8 +208,8 @@ function.</p></td>
     <tr>
       <th>abscissa</th>
       <td><p>Specify the abscissa metric to be plotted:</p><ul>
+<li><p><code>'events'</code> - use number of events</p></li>
 <li><p><code>'observations'</code> - use number of observations</p></li>
-<li><p><code>'outcomes'</code> - use number of positive outcomes</p></li>
 </ul></td>
     </tr>
     <tr>
@@ -228,14 +234,16 @@ formats.</p></td>
 file in a different format.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='co'># create learning curve object</span>
-<span class='no'>learningCurve</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='createLearningCurve.html'>createLearningCurve</a></span>(<span class='no'>population</span>,
-                                     <span class='no'>plpData</span>,
-                                     <span class='no'>modelSettings</span>)
+<span class='va'>learningCurve</span> <span class='op'>&lt;-</span> <span class='fu'><a href='createLearningCurve.html'>createLearningCurve</a></span><span class='op'>(</span><span class='va'>population</span>,
+                                     <span class='va'>plpData</span>,
+                                     <span class='va'>modelSettings</span><span class='op'>)</span>
 <span class='co'># plot the learning curve</span>
-<span class='fu'>plotLearningCurve</span>(<span class='no'>learningCurve</span>)
-}</div></pre>
+<span class='fu'>plotLearningCurve</span><span class='op'>(</span><span class='va'>learningCurve</span><span class='op'>)</span>
+<span class='op'>}</span>
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -251,7 +259,7 @@ file in a different format.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

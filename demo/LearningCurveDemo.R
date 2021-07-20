@@ -1,13 +1,10 @@
 library(PatientLevelPrediction)
 
-# We need to have a writable folder for the ff objects
-checkffFolder()
-
 # This demo will generate a learning curve using 8 training set sizes
 # Dependent on your system it can take some time to run
 # If you have multiple cores we suggest to use them
 
-selection <- readline(prompt="Do you like to demo the parallel version (y/n):")
+selection <- readline(prompt="Would you like to demo the parallel version (y/n):")
 
 # Generate simulated plpData
 data(plpDataSimulationProfile)
@@ -30,9 +27,7 @@ population <- createStudyPopulation(
   requireTimeAtRisk = FALSE,
   minTimeAtRisk = 0,
   riskWindowStart = 0,
-  addExposureDaysToStart = FALSE,
   riskWindowEnd = 365,
-  addExposureDaysToEnd = FALSE,
   verbosity = "INFO"
 )
 
@@ -41,10 +36,10 @@ modelSettings <- setLassoLogisticRegression()
 
 # Specify a test fraction and a sequence of training set fractions
 testFraction <- 0.2
-trainFractions <- seq(0.1, 0.8, 0.1)
+trainEvents <- seq(100, 800, 100)
 
 # Specify the test split to be used
-testSplit <- 'person'
+testSplit <- 'stratified'
 
 # Create the learning curve object
 if (selection != "y" &&
@@ -55,16 +50,16 @@ if (selection != "y" &&
     modelSettings = modelSettings,
     testFraction = testFraction,
     verbosity = "TRACE",
-    trainFractions = trainFractions,
-    splitSeed = 1000,
-    saveModel = TRUE
-  )
+    trainEvents = trainEvents,
+    splitSeed = 1000
+)
   
   # plot the learning curve by specify one of the available metrics: 
   # 'AUROC', 'AUPRC', 'sBrier'.
   plotLearningCurve(
     learningCurve,
     metric = "AUROC",
+    abscissa = "events",
     plotTitle = "Learning Curve",
     plotSubtitle = "AUROC performance"
   )
@@ -76,7 +71,7 @@ if (selection != "y" &&
     plpData = plpData,
     modelSettings = modelSettings,
     testFraction = 0.2,
-    trainFractions = trainFractions,
+    trainEvents = trainEvents,
     splitSeed = 1000
   )
   
@@ -84,6 +79,7 @@ if (selection != "y" &&
   plotLearningCurve(
     learningCurvePar,
     metric = "AUROC",
+    abscissa = "events",
     plotTitle = "Learning Curve Parallel",
     plotSubtitle = "AUROC performance"
   )

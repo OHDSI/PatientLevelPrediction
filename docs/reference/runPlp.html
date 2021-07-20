@@ -77,7 +77,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -85,7 +85,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -109,6 +109,9 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -121,13 +124,13 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -141,16 +144,19 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -181,28 +187,29 @@ based on index year - older in training, newer in validation) or both (same as y
 no overlaps in patients within training set and validaiton set - any overlaps are removed from validation set)</p>
     </div>
 
-    <pre class="usage"><span class='fu'>runPlp</span>(
-  <span class='no'>population</span>,
-  <span class='no'>plpData</span>,
-  <span class='kw'>minCovariateFraction</span> <span class='kw'>=</span> <span class='fl'>0.001</span>,
-  <span class='kw'>normalizeData</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='no'>modelSettings</span>,
-  <span class='kw'>testSplit</span> <span class='kw'>=</span> <span class='st'>"stratified"</span>,
-  <span class='kw'>testFraction</span> <span class='kw'>=</span> <span class='fl'>0.25</span>,
-  <span class='kw'>trainFraction</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>splitSeed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>nfold</span> <span class='kw'>=</span> <span class='fl'>3</span>,
-  <span class='kw'>indexes</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>saveDirectory</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>savePlpData</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>savePlpResult</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>savePlpPlots</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>saveEvaluation</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>verbosity</span> <span class='kw'>=</span> <span class='st'>"INFO"</span>,
-  <span class='kw'>timeStamp</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>analysisId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>save</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre>
+    <pre class="usage"><span class='fu'>runPlp</span><span class='op'>(</span>
+  <span class='va'>population</span>,
+  <span class='va'>plpData</span>,
+  minCovariateFraction <span class='op'>=</span> <span class='fl'>0.001</span>,
+  normalizeData <span class='op'>=</span> <span class='cn'>T</span>,
+  <span class='va'>modelSettings</span>,
+  testSplit <span class='op'>=</span> <span class='st'>"stratified"</span>,
+  testFraction <span class='op'>=</span> <span class='fl'>0.25</span>,
+  trainFraction <span class='op'>=</span> <span class='cn'>NULL</span>,
+  splitSeed <span class='op'>=</span> <span class='cn'>NULL</span>,
+  nfold <span class='op'>=</span> <span class='fl'>3</span>,
+  indexes <span class='op'>=</span> <span class='cn'>NULL</span>,
+  saveDirectory <span class='op'>=</span> <span class='cn'>NULL</span>,
+  savePlpData <span class='op'>=</span> <span class='cn'>T</span>,
+  savePlpResult <span class='op'>=</span> <span class='cn'>T</span>,
+  savePlpPlots <span class='op'>=</span> <span class='cn'>T</span>,
+  saveEvaluation <span class='op'>=</span> <span class='cn'>T</span>,
+  verbosity <span class='op'>=</span> <span class='st'>"INFO"</span>,
+  timeStamp <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  analysisId <span class='op'>=</span> <span class='cn'>NULL</span>,
+  runCovariateSummary <span class='op'>=</span> <span class='cn'>T</span>,
+  save <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -309,6 +316,10 @@ If not set trainFraction is equal to 1 - test</p></td>
       <td><p>Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.</p></td>
     </tr>
     <tr>
+      <th>runCovariateSummary</th>
+      <td><p>Whether to calculate the mean and sd for each covariate</p></td>
+    </tr>
+    <tr>
       <th>save</th>
       <td><p>Old input - please now use saveDirectory</p></td>
     </tr>
@@ -333,53 +344,54 @@ the cohprt dates.  The user can then specify whether they wish to exclude patien
 during the whole risk period, cohort period or experienced the outcome prior to the risk period.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='co'>#******** EXAMPLE 1 ********* </span>
 <span class='co'>#load plpData:</span>
-<span class='no'>plpData</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='loadPlpData.html'>loadPlpData</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'home'</span>,<span class='st'>'data'</span>))
+<span class='va'>plpData</span> <span class='op'>&lt;-</span> <span class='fu'><a href='loadPlpData.html'>loadPlpData</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'home'</span>,<span class='st'>'data'</span><span class='op'>)</span><span class='op'>)</span>
 
 <span class='co'>#create study population to develop model on</span>
 <span class='co'>#require minimum of 365 days observation prior to at risk start</span>
 <span class='co'>#no prior outcome and person must be observed for 365 after index (minTimeAtRisk)</span>
 <span class='co'>#with risk window from 0 to 365 days after index</span>
-<span class='no'>population</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='createStudyPopulation.html'>createStudyPopulation</a></span>(<span class='no'>plpData</span>,<span class='kw'>outcomeId</span><span class='kw'>=</span><span class='fl'>2042</span>,
-                                    <span class='kw'>firstExposureOnly</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-                                    <span class='kw'>washoutPeriod</span> <span class='kw'>=</span> <span class='fl'>365</span>,
-                                    <span class='kw'>removeSubjectsWithPriorOutcome</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-                                    <span class='kw'>priorOutcomeLookback</span> <span class='kw'>=</span> <span class='fl'>99999</span>,
-                                    <span class='kw'>requireTimeAtRisk</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-                                    <span class='kw'>minTimeAtRisk</span><span class='kw'>=</span><span class='fl'>365</span>,
-                                    <span class='kw'>riskWindowStart</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-                                    <span class='kw'>addExposureDaysToStart</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-                                    <span class='kw'>riskWindowEnd</span> <span class='kw'>=</span> <span class='fl'>365</span>,
-                                    <span class='kw'>addExposureDaysToEnd</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='va'>population</span> <span class='op'>&lt;-</span> <span class='fu'><a href='createStudyPopulation.html'>createStudyPopulation</a></span><span class='op'>(</span><span class='va'>plpData</span>,outcomeId<span class='op'>=</span><span class='fl'>2042</span>,
+                                    firstExposureOnly <span class='op'>=</span> <span class='cn'>FALSE</span>,
+                                    washoutPeriod <span class='op'>=</span> <span class='fl'>365</span>,
+                                    removeSubjectsWithPriorOutcome <span class='op'>=</span> <span class='cn'>TRUE</span>,
+                                    priorOutcomeLookback <span class='op'>=</span> <span class='fl'>99999</span>,
+                                    requireTimeAtRisk <span class='op'>=</span> <span class='cn'>TRUE</span>,
+                                    minTimeAtRisk<span class='op'>=</span><span class='fl'>365</span>,
+                                    riskWindowStart <span class='op'>=</span> <span class='fl'>0</span>,
+                                    addExposureDaysToStart <span class='op'>=</span> <span class='cn'>FALSE</span>,
+                                    riskWindowEnd <span class='op'>=</span> <span class='fl'>365</span>,
+                                    addExposureDaysToEnd <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
 
 <span class='co'>#lasso logistic regression predicting outcome 200 in cohorts 10 </span>
 <span class='co'>#using no feature selection with a time split evaluation with 30% in test set</span>
 <span class='co'>#70% in train set where the model hyper-parameters are selected using 3-fold cross validation:</span>
 <span class='co'>#and results are saved to file.path('C:','User','home')</span>
-<span class='no'>model.lr</span> <span class='kw'>&lt;-</span> <span class='fu'>lassoLogisticRegression.set</span>()
-<span class='no'>mod.lr</span> <span class='kw'>&lt;-</span> <span class='fu'>runPlp</span>(<span class='kw'>population</span><span class='kw'>=</span><span class='no'>population</span>,
-                        <span class='kw'>plpData</span><span class='kw'>=</span> <span class='no'>plpData</span>, <span class='kw'>minCovariateFraction</span> <span class='kw'>=</span> <span class='fl'>0.001</span>,
-                        <span class='kw'>modelSettings</span> <span class='kw'>=</span> <span class='no'>model.lr</span> ,
-                        <span class='kw'>testSplit</span> <span class='kw'>=</span> <span class='st'>'time'</span>, <span class='kw'>testFraction</span><span class='kw'>=</span><span class='fl'>0.3</span>,
-                        <span class='kw'>nfold</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>indexes</span><span class='kw'>=</span><span class='kw'>NULL</span>,
-                        <span class='kw'>saveDirectory</span> <span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'myPredictionName'</span>),
-                        <span class='kw'>verbosity</span><span class='kw'>=</span><span class='st'>'INFO'</span>)
-
+<span class='va'>model.lr</span> <span class='op'>&lt;-</span> <span class='fu'>lassoLogisticRegression.set</span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>mod.lr</span> <span class='op'>&lt;-</span> <span class='fu'>runPlp</span><span class='op'>(</span>population<span class='op'>=</span><span class='va'>population</span>,
+                        plpData<span class='op'>=</span> <span class='va'>plpData</span>, minCovariateFraction <span class='op'>=</span> <span class='fl'>0.001</span>,
+                        modelSettings <span class='op'>=</span> <span class='va'>model.lr</span> ,
+                        testSplit <span class='op'>=</span> <span class='st'>'time'</span>, testFraction<span class='op'>=</span><span class='fl'>0.3</span>, 
+                        nfold<span class='op'>=</span><span class='fl'>3</span>, indexes<span class='op'>=</span><span class='cn'>NULL</span>,
+                        saveDirectory <span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'myPredictionName'</span><span class='op'>)</span>,
+                        verbosity<span class='op'>=</span><span class='st'>'INFO'</span><span class='op'>)</span>
+ 
 <span class='co'>#******** EXAMPLE 2 *********                                               </span>
 <span class='co'># Gradient boosting machine with a grid search to select hyper parameters  </span>
 <span class='co'># using the test/train/folds created for the lasso logistic regression above                       </span>
-<span class='no'>model.gbm</span> <span class='kw'>&lt;-</span> <span class='fu'>gradientBoostingMachine.set</span>(<span class='kw'>rsampRate</span><span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0.5</span>,<span class='fl'>0.9</span>,<span class='fl'>1</span>),<span class='kw'>csampRate</span><span class='kw'>=</span><span class='fl'>1</span>,
-                           <span class='kw'>ntrees</span><span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>10</span>,<span class='fl'>100</span>), <span class='kw'>bal</span><span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='no'>F</span>,<span class='no'>T</span>),
-                           <span class='kw'>max_depth</span><span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>4</span>,<span class='fl'>5</span>), <span class='kw'>learn_rate</span><span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0.1</span>,<span class='fl'>0.01</span>))
-<span class='no'>mod.gbm</span> <span class='kw'>&lt;-</span> <span class='fu'>runPlp</span>(<span class='kw'>population</span><span class='kw'>=</span><span class='no'>population</span>,
-                        <span class='kw'>plpData</span><span class='kw'>=</span> <span class='no'>plpData</span>,
-                        <span class='kw'>modelSettings</span> <span class='kw'>=</span> <span class='no'>model.gbm</span>,
-                        <span class='kw'>testSplit</span> <span class='kw'>=</span> <span class='st'>'time'</span>, <span class='kw'>testFraction</span><span class='kw'>=</span><span class='fl'>0.3</span>,
-                        <span class='kw'>nfold</span><span class='kw'>=</span><span class='fl'>3</span>, <span class='kw'>indexes</span><span class='kw'>=</span><span class='no'>mod.lr</span>$<span class='no'>indexes</span>,
-                        <span class='kw'>saveDirectory</span> <span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'myPredictionName2'</span>))
-}</div></pre>
+<span class='va'>model.gbm</span> <span class='op'>&lt;-</span> <span class='fu'>gradientBoostingMachine.set</span><span class='op'>(</span>rsampRate<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.5</span>,<span class='fl'>0.9</span>,<span class='fl'>1</span><span class='op'>)</span>,csampRate<span class='op'>=</span><span class='fl'>1</span>, 
+                           ntrees<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>10</span>,<span class='fl'>100</span><span class='op'>)</span>, bal<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='cn'>F</span>,<span class='cn'>T</span><span class='op'>)</span>,
+                           max_depth<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>4</span>,<span class='fl'>5</span><span class='op'>)</span>, learn_rate<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.1</span>,<span class='fl'>0.01</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>mod.gbm</span> <span class='op'>&lt;-</span> <span class='fu'>runPlp</span><span class='op'>(</span>population<span class='op'>=</span><span class='va'>population</span>,
+                        plpData<span class='op'>=</span> <span class='va'>plpData</span>,
+                        modelSettings <span class='op'>=</span> <span class='va'>model.gbm</span>,
+                        testSplit <span class='op'>=</span> <span class='st'>'time'</span>, testFraction<span class='op'>=</span><span class='fl'>0.3</span>, 
+                        nfold<span class='op'>=</span><span class='fl'>3</span>, indexes<span class='op'>=</span><span class='va'>mod.lr</span><span class='op'>$</span><span class='va'>indexes</span>,
+                        saveDirectory <span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'myPredictionName2'</span><span class='op'>)</span><span class='op'>)</span>
+<span class='op'>}</span> 
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -395,7 +407,7 @@ during the whole risk period, cohort period or experienced the outcome prior to 
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

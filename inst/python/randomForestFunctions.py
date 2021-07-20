@@ -19,7 +19,7 @@ from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.cross_validation import PredefinedSplit
 #from sklearn.externals.joblib import Memory
 #from sklearn.datasets import load_svmlight_file
-from sklearn.externals import joblib
+import joblib
 #================================================================
 def train_rf(population, plpData, ntrees, max_depth, mtry, included, seed, quiet):
   if quiet==False: 
@@ -99,7 +99,7 @@ def final_rf(population, plpData, ntrees, max_depth, mtry, included, modelOutput
   if quiet==False:  
     print("Model saved to: %s" %(modelOutput)	)
   
-  joblib.dump(rf, os.path.join(modelOutput,"model.pkl"))
+  joblib.dump(rf, os.path.join(modelOutput,"model.pkl"), compress = True)
   
   # merge pred with indexes[testInd,:]
   train_pred = rf.predict_proba(train_x)[:,1]

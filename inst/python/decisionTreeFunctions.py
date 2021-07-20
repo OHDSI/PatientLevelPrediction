@@ -17,9 +17,9 @@ from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
 #from sklearn.feature_selection import SelectFromModel
-from sklearn.externals.joblib import Memory
+from joblib import Memory
 #from sklearn.datasets import load_svmlight_file
-from sklearn.externals import joblib
+import joblib
 
 #================================================================
 def train_decision_tree(population, train, plpData, plot, max_depth, min_samples_split, min_samples_leaf, min_impurity_decrease, class_weight, seed, quiet, varNames, modelOutput):
@@ -88,7 +88,7 @@ def train_decision_tree(population, train, plpData, plot, max_depth, min_samples
       os.makedirs(modelOutput)
     if quiet==False:
       print("Model saved to: %s" %(modelOutput)	)
-    joblib.dump(dt, os.path.join(modelOutput,"model.pkl"))
+    joblib.dump(dt, os.path.join(modelOutput,"model.pkl"), compress = True)
     test_pred = dt.predict_proba(X[trainInds,:])[:,1]
     test_pred.shape = (population[trainInds,:].shape[0], 1)
     prediction = np.append(population[trainInds,:],test_pred, axis=1)

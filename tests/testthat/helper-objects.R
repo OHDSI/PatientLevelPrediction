@@ -1,9 +1,26 @@
-# this files contains the objects used in the tests:
-library(dplyr)
 
+# Download the PostreSQL driver ---------------------------
+# If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
+jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
+if (jarFolder == "") {
+  tempJarFolder <- tempfile("jdbcDrivers")
+  dir.create(tempJarFolder)
+  Sys.setenv("DATABASECONNECTOR_JAR_FOLDER" = tempJarFolder)
+  downloadJdbcDrivers("postgresql")
+  
+  withr::defer({
+    unlink(tempJarFolder, recursive = TRUE, force = TRUE)
+    Sys.unsetenv("DATABASECONNECTOR_JAR_FOLDER")
+  }, testthat::teardown_env())
+}
+
+
+# this files contains the objects used in the tests:
 travis <- T
+
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
+
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
@@ -25,8 +42,11 @@ plpData3 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
 plpData3$timeRef <- data.frame(timeId = 1:3, startDay = 1:3, endDay = 1:3)
 plpData3$covariateData$covariatesOld <- plpData3$covariateData$covariates
 plpData3$covariateData$covariates <- plpData3$covariateData$covariatesOld %>% 
-  dplyr::filter(covariateId <= 20 ) %>%
-  dplyr::mutate(timeId = 1+covariateId*rowId%%3)
+  dplyr::filter(.data$covariateId <= 20 ) %>%
+  dplyr::mutate(timeId = 1+.data$covariateId*.data$rowId%%3)
+
+sampleSize4 <- 10000
+plpData4 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize4)
 
 
 # POPULATION
@@ -56,12 +76,27 @@ population2 <- createStudyPopulation(plpData2,
                                      riskWindowEnd = 365,
                                      endAnchor = 'cohort start')
 
+population4 <- createStudyPopulation(plpData4,
+                                     outcomeId = 2,
+                                     firstExposureOnly = FALSE,
+                                     washoutPeriod = 0,
+                                     removeSubjectsWithPriorOutcome = FALSE,
+                                     priorOutcomeLookback = 99999,
+                                     requireTimeAtRisk = T,
+                                     minTimeAtRisk=10,
+                                     riskWindowStart = 0,
+                                     startAnchor = 'cohort start',
+                                     riskWindowEnd = 365,
+                                     endAnchor = 'cohort start')
+
 
 # MODEL SETTINGS
 lrSet <- setLassoLogisticRegression()
 gbmSet <- setGradientBoostingMachine(ntrees = 50, maxDepth = 3, learnRate = 0.01, seed = 1)
 knnSet <- setKNN(k=100, indexFolder = file.path(saveLoc,"knn"))
-# rfSet2 <- setRandomForest(mtries = -1,ntrees = 10, maxDepth = 2, varImp = F, seed=1)
+rfSet2 <- setRandomForest(mtries = -1,ntrees = 10, maxDepth = 2, varImp = F, seed=1)
+surv <- PatientLevelPrediction::setCoxModel(variance = 0.01, seed = 1)
+
 
 
 # RUNPLP - LASSO LR
@@ -74,6 +109,18 @@ plpResult <- runPlp(population = population,
                     savePlpPlots = F, 
                     analysisId = 'lrTest',
                     saveDirectory =  saveLoc)
+
+# RUNPLP - survival Cox
+plpResult2 <- runPlp(population = population,
+                    plpData = plpData, 
+                    modelSettings = surv, 
+                    savePlpData = F, 
+                    savePlpResult = F, 
+                    saveEvaluation = F, 
+                    savePlpPlots = F, 
+                    analysisId = 'survTest',
+                    saveDirectory =  saveLoc)
+
 
 
 # learningCurve 

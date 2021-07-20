@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -63,6 +63,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -75,13 +78,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -95,16 +98,19 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -118,13 +124,13 @@
 
       
 
-      </header><div class="row">
+      </header><script src="CreatingShinyApp_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Creating Shiny App</h1>
                         <h4 class="author">Jenna Reps</h4>
             
-            <h4 class="date">2020-06-08</h4>
+            <h4 class="date">2021-06-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/CreatingShinyApp.Rmd"><code>vignettes/CreatingShinyApp.Rmd</code></a></small>
       <div class="hidden name"><code>CreatingShinyApp.Rmd</code></div>
@@ -133,6 +139,10 @@
 
     
     
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Creating Shiny App}
+-->
 <div id="introduction" class="section level1">
 <h1 class="hasAnchor">
 <a href="#introduction" class="anchor"></a>Introduction</h1>
@@ -147,37 +157,39 @@
 <h2 class="hasAnchor">
 <a href="#step-1-run-the-model-development-package-to-get-results" class="anchor"></a>Step 1: Run the model development package to get results</h2>
 <p>To create a shiny app project via the Atlas auto-generated prediction R package you named ‘myPackage’ you need to run the execute function:</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">myPackage</span>)
-<span class="kw pkg">myPackage</span><span class="kw ns">::</span><span class="fu">execute</span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
-        <span class="kw">cdmDatabaseSchema</span> <span class="kw">=</span> <span class="st">'myDatabaseSchema.dbo'</span>,
-        <span class="kw">cdmDatabaseName</span> <span class="kw">=</span> <span class="st">'MyDatabase'</span>,
-        <span class="kw">cohortDatabaseSchema</span> <span class="kw">=</span> <span class="st">'myDatabaseSchema.ohdsi_results'</span>,
-        <span class="kw">cohortTable</span> <span class="kw">=</span> <span class="st">'cohort'</span>,
-        <span class="kw">outputFolder</span> <span class="kw">=</span> <span class="st">'C:/myResults'</span>,
-        <span class="kw">createProtocol</span> <span class="kw">=</span> <span class="no">F</span>,
-        <span class="kw">createCohorts</span> <span class="kw">=</span> <span class="no">F</span>,
-        <span class="kw">runAnalyses</span> <span class="kw">=</span> <span class="no">T</span>,
-        <span class="kw">createResultsDoc</span> <span class="kw">=</span> <span class="no">F</span>,
-        <span class="kw">packageResults</span> <span class="kw">=</span> <span class="no">F</span>,
-        <span class="kw">createValidationPackage</span> <span class="kw">=</span> <span class="no">F</span>,
-        <span class="kw">minCellCount</span><span class="kw">=</span> <span class="fl">5</span>,
-        <span class="kw">createShiny</span> <span class="kw">=</span> <span class="no">F</span>,
-        <span class="kw">createJournalDocument</span> <span class="kw">=</span> <span class="no">F</span>,
-        <span class="kw">analysisIdDocument</span> <span class="kw">=</span> <span class="fl">1</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">myPackage</span><span class="op">)</span>
+<span class="fu">myPackage</span><span class="fu">::</span><span class="fu">execute</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,
+        cdmDatabaseSchema <span class="op">=</span> <span class="st">'myDatabaseSchema.dbo'</span>,
+        cdmDatabaseName <span class="op">=</span> <span class="st">'MyDatabase'</span>,
+        cohortDatabaseSchema <span class="op">=</span> <span class="st">'myDatabaseSchema.ohdsi_results'</span>,
+        cohortTable <span class="op">=</span> <span class="st">'cohort'</span>,
+        outputFolder <span class="op">=</span> <span class="st">'C:/myResults'</span>,
+        createProtocol <span class="op">=</span> <span class="cn">F</span>,
+        createCohorts <span class="op">=</span> <span class="cn">F</span>,
+        runAnalyses <span class="op">=</span> <span class="cn">T</span>,
+        createResultsDoc <span class="op">=</span> <span class="cn">F</span>,
+        packageResults <span class="op">=</span> <span class="cn">F</span>,
+        createValidationPackage <span class="op">=</span> <span class="cn">F</span>, 
+        minCellCount<span class="op">=</span> <span class="fl">5</span>,
+        createShiny <span class="op">=</span> <span class="cn">F</span>,
+        createJournalDocument <span class="op">=</span> <span class="cn">F</span>,
+        analysisIdDocument <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
 <p>This will extract data based on the settings you supplied in the Atlas prediction design from cohort tables already generated in your CDM database schema. The PatientLevelPrediction framework will then run and develop/evaluate models saving the results to the location specified by outputFolder (e.g., ‘C:/myResults’).</p>
 </div>
 <div id="step-2-create-the-shiny-app" class="section level2">
 <h2 class="hasAnchor">
 <a href="#step-2-create-the-shiny-app" class="anchor"></a>Step 2: Create the shiny app</h2>
 <p>To create a shiny app project with these results you can then simply run:</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="kw pkg">myPackage</span><span class="kw ns">::</span><span class="fu">execute</span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
-        <span class="kw">cdmDatabaseSchema</span> <span class="kw">=</span> <span class="st">'myDatabaseSchema.dbo'</span>,
-        <span class="kw">cdmDatabaseName</span> <span class="kw">=</span> <span class="st">'MyDatabase'</span>,
-        <span class="kw">cohortDatabaseSchema</span> <span class="kw">=</span> <span class="st">'myDatabaseSchema.ohdsi_results'</span>,
-        <span class="kw">cohortTable</span> <span class="kw">=</span> <span class="st">'cohort'</span>,
-        <span class="kw">outputFolder</span> <span class="kw">=</span> <span class="st">'C:/myResults'</span>,
-        <span class="kw">minCellCount</span><span class="kw">=</span> <span class="fl">5</span>,
-        <span class="kw">createShiny</span> <span class="kw">=</span> <span class="no">T</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">myPackage</span><span class="fu">::</span><span class="fu">execute</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,
+        cdmDatabaseSchema <span class="op">=</span> <span class="st">'myDatabaseSchema.dbo'</span>,
+        cdmDatabaseName <span class="op">=</span> <span class="st">'MyDatabase'</span>,
+        cohortDatabaseSchema <span class="op">=</span> <span class="st">'myDatabaseSchema.ohdsi_results'</span>,
+        cohortTable <span class="op">=</span> <span class="st">'cohort'</span>,
+        outputFolder <span class="op">=</span> <span class="st">'C:/myResults'</span>,
+        minCellCount<span class="op">=</span> <span class="fl">5</span>,
+        createShiny <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></code></pre></div>
 <p>making sure the outputFolder is the same location used when you ran the analysis. This code populates a shiny app project with the results but removes sensitive date such as connection settings, the cdmDatabaseSchema setting, the predicton matrix and any sensitive counts less than ‘minCellCount’ from the covariate summary and performance evalaution.</p>
 <p>The shiny app project populated with the model development results can then be found at ‘[outputFolder]/ShinyApp’ e.g., ‘C:/myResults/ShinyApp’.</p>
 <div id="testing-optional-but-recommended" class="section level3">
@@ -196,177 +208,181 @@
 <h1 class="hasAnchor">
 <a href="#atlas-external-validation" class="anchor"></a>Atlas External Validation</h1>
 <p>To include external validation results you can use the Atlas generated R study package to create the external validation package:</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="kw pkg">myPackage</span><span class="kw ns">::</span><span class="fu">execute</span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
-        <span class="kw">cdmDatabaseSchema</span> <span class="kw">=</span> <span class="st">'myDatabaseSchema.dbo'</span>,
-        <span class="kw">cdmDatabaseName</span> <span class="kw">=</span> <span class="st">'MyDatabase'</span>,
-        <span class="kw">cohortDatabaseSchema</span> <span class="kw">=</span> <span class="st">'myDatabaseSchema.ohdsi_results'</span>,
-        <span class="kw">cohortTable</span> <span class="kw">=</span> <span class="st">'cohort'</span>,
-        <span class="kw">outputFolder</span> <span class="kw">=</span> <span class="st">'C:/myResults'</span>,
-        <span class="kw">createValidationPackage</span> <span class="kw">=</span> <span class="no">T</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">myPackage</span><span class="fu">::</span><span class="fu">execute</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,
+        cdmDatabaseSchema <span class="op">=</span> <span class="st">'myDatabaseSchema.dbo'</span>,
+        cdmDatabaseName <span class="op">=</span> <span class="st">'MyDatabase'</span>,
+        cohortDatabaseSchema <span class="op">=</span> <span class="st">'myDatabaseSchema.ohdsi_results'</span>,
+        cohortTable <span class="op">=</span> <span class="st">'cohort'</span>,
+        outputFolder <span class="op">=</span> <span class="st">'C:/myResults'</span>,
+        createValidationPackage <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></code></pre></div>
 <p>This will create a new R package inside the ‘outputFolder’ location with the word ‘Validation’ appended the name of your development package. For example, if your ‘outputFolder’ was ‘C:/myResults’ and your development package was named ‘myPackage’ then the validation package will be found at: ‘C:/myResults/myPackageValidation’. When running the valdiation package make sure to set the ‘outputFolder’ to the Validation folder within your model development outputFolder location:</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="kw pkg">myPackageValidation</span><span class="kw ns">::</span><span class="fu">execute</span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
-                 <span class="kw">databaseName</span> <span class="kw">=</span> <span class="no">databaseName</span>,
-                 <span class="kw">cdmDatabaseSchema</span> <span class="kw">=</span> <span class="no">cdmDatabaseSchema</span>,
-                 <span class="kw">cohortDatabaseSchema</span> <span class="kw">=</span> <span class="no">cohortDatabaseSchema</span>,
-                 <span class="kw">oracleTempSchema</span> <span class="kw">=</span> <span class="no">oracleTempSchema</span>,
-                 <span class="kw">cohortTable</span> <span class="kw">=</span> <span class="no">cohortTable</span>,
-                 <span class="kw">outputFolder</span> <span class="kw">=</span> <span class="st">'C:/myResults/Validation'</span>,
-                 <span class="kw">createCohorts</span> <span class="kw">=</span> <span class="no">T</span>,
-                 <span class="kw">runValidation</span> <span class="kw">=</span> <span class="no">T</span>,
-                 <span class="kw">packageResults</span> <span class="kw">=</span> <span class="no">F</span>,
-                 <span class="kw">minCellCount</span> <span class="kw">=</span> <span class="fl">5</span>,
-                 <span class="kw">sampleSize</span> <span class="kw">=</span> <span class="kw">NULL</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">myPackageValidation</span><span class="fu">::</span><span class="fu">execute</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,
+                 databaseName <span class="op">=</span> <span class="va">databaseName</span>,
+                 cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,
+                 cohortDatabaseSchema <span class="op">=</span> <span class="va">cohortDatabaseSchema</span>,
+                 oracleTempSchema <span class="op">=</span> <span class="va">oracleTempSchema</span>,
+                 cohortTable <span class="op">=</span> <span class="va">cohortTable</span>,
+                 outputFolder <span class="op">=</span> <span class="st">'C:/myResults/Validation'</span>,
+                 createCohorts <span class="op">=</span> <span class="cn">T</span>,
+                 runValidation <span class="op">=</span> <span class="cn">T</span>,
+                 packageResults <span class="op">=</span> <span class="cn">F</span>,
+                 minCellCount <span class="op">=</span> <span class="fl">5</span>,
+                 sampleSize <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
 <p>Now you can rerun Steps 2-3 to populate the shiny app project that will also include the validation results (as long as the validation results are in the Validation folder found in the Step 1 outputFolder location e.g., in ‘C:/myResults/Validation’).</p>
 </div>
 <div id="combining-multiple-atlas-results-into-one-shiny-app" class="section level1">
 <h1 class="hasAnchor">
 <a href="#combining-multiple-atlas-results-into-one-shiny-app" class="anchor"></a>Combining multiple atlas results into one shiny app:</h1>
 <p>The code below can be used to combine multiple Atlas packages’ results into one shiny app:</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">populateMultipleShinyApp</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">shinyDirectory</span>,
-                             <span class="no">resultDirectory</span>,
-                             <span class="no">minCellCount</span> <span class="kw">=</span> <span class="fl">10</span>,
-                             <span class="no">databaseName</span> <span class="kw">=</span> <span class="st">'sharable name of development data'</span>){
-
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">populateMultipleShinyApp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">shinyDirectory</span>,
+                             <span class="va">resultDirectory</span>,
+                             <span class="va">minCellCount</span> <span class="op">=</span> <span class="fl">10</span>,
+                             <span class="va">databaseName</span> <span class="op">=</span> <span class="st">'sharable name of development data'</span><span class="op">)</span><span class="op">{</span>
+  
   <span class="co">#check inputs</span>
-  <span class="kw">if</span>(<span class="fu"><a href="https://rdrr.io/r/base/missing.html">missing</a></span>(<span class="no">shinyDirectory</span>)){
-    <span class="no">shinyDirectory</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"shiny"</span>, <span class="st">"PLPViewer"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"SkeletonPredictionStudy"</span>)
-  }
-  <span class="kw">if</span>(<span class="fu"><a href="https://rdrr.io/r/base/missing.html">missing</a></span>(<span class="no">resultDirectory</span>)){
-    <span class="fu"><a href="https://rdrr.io/r/base/stop.html">stop</a></span>(<span class="st">'Need to enter the resultDirectory'</span>)
-  }
+  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/missing.html">missing</a></span><span class="op">(</span><span class="va">shinyDirectory</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+    <span class="va">shinyDirectory</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"shiny"</span>, <span class="st">"PLPViewer"</span>, package <span class="op">=</span> <span class="st">"SkeletonPredictionStudy"</span><span class="op">)</span>
+  <span class="op">}</span>
+  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/missing.html">missing</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+    <span class="kw"><a href="https://rdrr.io/r/base/stop.html">stop</a></span><span class="op">(</span><span class="st">'Need to enter the resultDirectory'</span><span class="op">)</span>
+  <span class="op">}</span>
+  
 
-
-    <span class="kw">for</span>(<span class="no">i</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">resultDirectory</span>)){
-      <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>])){
-        <span class="fu"><a href="https://rdrr.io/r/base/stop.html">stop</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span>(<span class="st">'resultDirectory '</span>,<span class="no">i</span>,<span class="st">' does not exist'</span>))
-      }
-    }
-
-  <span class="no">outputDirectory</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">shinyDirectory</span>,<span class="st">'data'</span>)
-
+    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+        <span class="kw"><a href="https://rdrr.io/r/base/stop.html">stop</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">'resultDirectory '</span>,<span class="va">i</span>,<span class="st">' does not exist'</span><span class="op">)</span><span class="op">)</span>
+      <span class="op">}</span>
+    <span class="op">}</span>
+  
+  <span class="va">outputDirectory</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">shinyDirectory</span>,<span class="st">'data'</span><span class="op">)</span>
+  
   <span class="co"># create the shiny data folder</span>
-  <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span>(<span class="no">outputDirectory</span>)){
-    <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span>(<span class="no">outputDirectory</span>, <span class="kw">recursive</span> <span class="kw">=</span> <span class="no">T</span>)
-  }
-
-
+  <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="va">outputDirectory</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+    <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">outputDirectory</span>, recursive <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>
+  <span class="op">}</span>
+  
+  
   <span class="co"># need to edit settings ...</span>
-  <span class="no">files</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>()
-  <span class="kw">for</span>(<span class="no">i</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">resultDirectory</span>)){
+  <span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">)</span>
+  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
   <span class="co"># copy the settings csv</span>
-  <span class="no">file</span> <span class="kw">&lt;-</span> <span class="kw pkg">utils</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="st">'settings.csv'</span>))
-  <span class="no">file</span>$<span class="no">analysisId</span> <span class="kw">&lt;-</span> <span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="no">file</span>$<span class="no">analysisId</span>)+<span class="no">i</span>
-  <span class="no">files</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span>(<span class="no">files</span>, <span class="no">file</span>)
-  }
-  <span class="kw pkg">utils</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html">write.csv</a></span>(<span class="no">files</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">outputDirectory</span>,<span class="st">'settings.csv'</span>), <span class="kw">row.names</span> <span class="kw">=</span> <span class="no">F</span>)
-
-  <span class="kw">for</span>(<span class="no">i</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">resultDirectory</span>)){
+  <span class="va">file</span> <span class="op">&lt;-</span> <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">'settings.csv'</span><span class="op">)</span><span class="op">)</span>
+  <span class="va">file</span><span class="op">$</span><span class="va">analysisId</span> <span class="op">&lt;-</span> <span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="va">file</span><span class="op">$</span><span class="va">analysisId</span><span class="op">)</span><span class="op">+</span><span class="va">i</span>
+  <span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span><span class="op">(</span><span class="va">files</span>, <span class="va">file</span><span class="op">)</span>
+  <span class="op">}</span>
+  <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html">write.csv</a></span><span class="op">(</span><span class="va">files</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="st">'settings.csv'</span><span class="op">)</span>, row.names <span class="op">=</span> <span class="cn">F</span><span class="op">)</span>
+  
+  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
   <span class="co"># copy each analysis as a rds file and copy the log</span>
-  <span class="no">files</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">dir</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>], <span class="kw">full.names</span> <span class="kw">=</span> <span class="no">F</span>)
-  <span class="no">files</span> <span class="kw">&lt;-</span> <span class="no">files</span>[<span class="fu"><a href="https://rdrr.io/r/base/grep.html">grep</a></span>(<span class="st">'Analysis'</span>, <span class="no">files</span>)]
-  <span class="kw">for</span>(<span class="no">file</span> <span class="kw">in</span> <span class="no">files</span>){
-
-    <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">outputDirectory</span>,<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>)))){
-      <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">outputDirectory</span>,<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>)))
-    }
-
-    <span class="kw">if</span>(<span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'plpResult'</span>))){
-      <span class="no">res</span> <span class="kw">&lt;-</span> <span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'plpResult'</span>))
-      <span class="no">res</span> <span class="kw">&lt;-</span> <span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/transportPlp.html">transportPlp</a></span>(<span class="no">res</span>, <span class="kw">n</span><span class="kw">=</span> <span class="no">minCellCount</span>,
-                                                  <span class="kw">save</span> <span class="kw">=</span> <span class="no">F</span>, <span class="kw">dataName</span> <span class="kw">=</span> <span class="no">databaseName</span>[<span class="no">i</span>])
-
-      <span class="no">res</span>$<span class="no">covariateSummary</span> <span class="kw">&lt;-</span> <span class="no">res</span>$<span class="no">covariateSummary</span>[<span class="no">res</span>$<span class="no">covariateSummary</span>$<span class="no">covariateValue</span><span class="kw">!=</span><span class="fl">0</span>,]
-      <span class="no">covSet</span> <span class="kw">&lt;-</span> <span class="no">res</span>$<span class="no">model</span>$<span class="no">metaData</span>$<span class="no">call</span>$<span class="no">covariateSettings</span>
-      <span class="no">res</span>$<span class="no">model</span>$<span class="no">metaData</span> <span class="kw">&lt;-</span> <span class="kw">NULL</span>
-      <span class="no">res</span>$<span class="no">model</span>$<span class="no">metaData</span>$<span class="no">call</span>$<span class="no">covariateSettings</span> <span class="kw">&lt;-</span> <span class="no">covSet</span>
-      <span class="no">res</span>$<span class="no">model</span>$<span class="no">predict</span> <span class="kw">&lt;-</span> <span class="kw">NULL</span>
-      <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">evaluationStatistics</span>)){
-      <span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">evaluationStatistics</span>[,<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>)
-      } <span class="kw">else</span>{
-        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'-ev'</span>))
-      }
-      <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">thresholdSummary</span>)){
-      <span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">thresholdSummary</span>[,<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>)
-      }<span class="kw">else</span>{
-        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'-thres'</span>))
-      }
-      <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">demographicSummary</span>)){
-      <span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">demographicSummary</span>[,<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>)
-      } <span class="kw">else</span>{
-        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'-dem'</span>))
-      }
-      <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">calibrationSummary</span>)){
-      <span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">calibrationSummary</span>[,<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>)
-      }<span class="kw">else</span>{
-        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'-cal'</span>))
-      }
-      <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span>(<span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">predictionDistribution</span>)){
-      <span class="no">res</span>$<span class="no">performanceEvaluation</span>$<span class="no">predictionDistribution</span>[,<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>)
-      }<span class="kw">else</span>{
-        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'-dist'</span>))
-      }
-      <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span>(<span class="no">res</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">outputDirectory</span>,<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>), <span class="st">'plpResult.rds'</span>))
-    }
-    <span class="kw">if</span>(<span class="fu"><a href="https://rdrr.io/r/base/files.html">file.exists</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'plpLog.txt'</span>))){
-      <span class="fu"><a href="https://rdrr.io/r/base/files.html">file.copy</a></span>(<span class="kw">from</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="no">file</span>, <span class="st">'plpLog.txt'</span>),
-                <span class="kw">to</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">outputDirectory</span>,<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>,<span class="fl">1000</span>*<span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="no">file</span>))+<span class="no">i</span>), <span class="st">'plpLog.txt'</span>))
-    }
-  }
-  }
-
-
-
-  <span class="kw">for</span>(<span class="no">i</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">resultDirectory</span>)){
+  <span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">dir</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, full.names <span class="op">=</span> <span class="cn">F</span><span class="op">)</span>
+  <span class="va">files</span> <span class="op">&lt;-</span> <span class="va">files</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grep</a></span><span class="op">(</span><span class="st">'Analysis'</span>, <span class="va">files</span><span class="op">)</span><span class="op">]</span>
+  <span class="kw">for</span><span class="op">(</span><span class="va">file</span> <span class="kw">in</span> <span class="va">files</span><span class="op">)</span><span class="op">{</span>
+    
+    <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
+    <span class="op">}</span>
+    
+    <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'plpResult'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'plpResult'</span><span class="op">)</span><span class="op">)</span>
+      <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/transportPlp.html">transportPlp</a></span><span class="op">(</span><span class="va">res</span>, n<span class="op">=</span> <span class="va">minCellCount</span>, 
+                                                  save <span class="op">=</span> <span class="cn">F</span>, dataName <span class="op">=</span> <span class="va">databaseName</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span>
+      
+      <span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span><span class="op">[</span><span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span><span class="op">$</span><span class="va">covariateValue</span><span class="op">!=</span><span class="fl">0</span>,<span class="op">]</span>
+      <span class="va">covSet</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">metaData</span><span class="op">$</span><span class="va">call</span><span class="op">$</span><span class="va">covariateSettings</span>
+      <span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">metaData</span> <span class="op">&lt;-</span> <span class="cn">NULL</span>
+      <span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">metaData</span><span class="op">$</span><span class="va">call</span><span class="op">$</span><span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="va">covSet</span>
+      <span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">predict</span> <span class="op">&lt;-</span> <span class="cn">NULL</span>
+      <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">evaluationStatistics</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">evaluationStatistics</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span>
+      <span class="op">}</span> <span class="kw">else</span><span class="op">{</span>
+        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'-ev'</span><span class="op">)</span><span class="op">)</span>
+      <span class="op">}</span>
+      <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">thresholdSummary</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">thresholdSummary</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span>
+      <span class="op">}</span><span class="kw">else</span><span class="op">{</span>
+        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'-thres'</span><span class="op">)</span><span class="op">)</span>
+      <span class="op">}</span>
+      <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">demographicSummary</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">demographicSummary</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span>
+      <span class="op">}</span> <span class="kw">else</span><span class="op">{</span>
+        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'-dem'</span><span class="op">)</span><span class="op">)</span>
+      <span class="op">}</span>
+      <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">calibrationSummary</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">calibrationSummary</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span>
+      <span class="op">}</span><span class="kw">else</span><span class="op">{</span>
+        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'-cal'</span><span class="op">)</span><span class="op">)</span>
+      <span class="op">}</span>
+      <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">predictionDistribution</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="va">res</span><span class="op">$</span><span class="va">performanceEvaluation</span><span class="op">$</span><span class="va">predictionDistribution</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span>
+      <span class="op">}</span><span class="kw">else</span><span class="op">{</span>
+        <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'-dist'</span><span class="op">)</span><span class="op">)</span>
+      <span class="op">}</span>
+      <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span><span class="op">(</span><span class="va">res</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span>, <span class="st">'plpResult.rds'</span><span class="op">)</span><span class="op">)</span>
+    <span class="op">}</span>
+    <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html">file.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'plpLog.txt'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+      <span class="fu"><a href="https://rdrr.io/r/base/files.html">file.copy</a></span><span class="op">(</span>from <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'plpLog.txt'</span><span class="op">)</span>, 
+                to <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="fl">1000</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>,<span class="va">file</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="va">i</span><span class="op">)</span>, <span class="st">'plpLog.txt'</span><span class="op">)</span><span class="op">)</span>
+    <span class="op">}</span>
+  <span class="op">}</span>
+  <span class="op">}</span>
+  
+  
+  
+  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
   <span class="co"># copy any validation results</span>
-  <span class="kw">if</span>(<span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="st">'Validation'</span>))){
-    <span class="no">valFolders</span> <span class="kw">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">dir</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="st">'Validation'</span>), <span class="kw">full.names</span> <span class="kw">=</span> <span class="no">F</span>)
-
-    <span class="kw">if</span>(<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">valFolders</span>)<span class="kw">&gt;</span><span class="fl">0</span>){
+  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">'Validation'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+    <span class="va">valFolders</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">dir</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">'Validation'</span><span class="op">)</span>, full.names <span class="op">=</span> <span class="cn">F</span><span class="op">)</span>
+    
+    <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">valFolders</span><span class="op">)</span><span class="op">&gt;</span><span class="fl">0</span><span class="op">)</span><span class="op">{</span>
       <span class="co"># move each of the validation rds</span>
-      <span class="kw">for</span>(<span class="no">valFolder</span> <span class="kw">in</span> <span class="no">valFolders</span>){
-
+      <span class="kw">for</span><span class="op">(</span><span class="va">valFolder</span> <span class="kw">in</span> <span class="va">valFolders</span><span class="op">)</span><span class="op">{</span>
+        
         <span class="co"># get the analysisIds</span>
-        <span class="no">valSubfolders</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">dir</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="st">'Validation'</span>,<span class="no">valFolder</span>), <span class="kw">full.names</span> <span class="kw">=</span> <span class="no">F</span>)
-        <span class="kw">if</span>(<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">valSubfolders</span>)<span class="kw">!=</span><span class="fl">0</span>){
-          <span class="kw">for</span>(<span class="no">valSubfolder</span> <span class="kw">in</span> <span class="no">valSubfolders</span> ){
-            <span class="no">valSubfolderUpdate</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'Analysis_'</span>, <span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span>(<span class="st">'Analysis_'</span>,<span class="st">''</span>, <span class="no">valSubfolder</span>))*<span class="fl">1000</span>+<span class="no">i</span>)
-            <span class="no">valOut</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">valFolder</span>,<span class="no">valSubfolderUpdate</span>)
-            <span class="no">valOutOld</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">valFolder</span>,<span class="no">valSubfolder</span>)
-            <span class="kw">if</span>(!<span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">outputDirectory</span>,<span class="st">'Validation'</span>,<span class="no">valOut</span>))){
-              <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">outputDirectory</span>,<span class="st">'Validation'</span>,<span class="no">valOut</span>), <span class="kw">recursive</span> <span class="kw">=</span> <span class="no">T</span>)
-            }
-
-
-            <span class="kw">if</span>(<span class="fu"><a href="https://rdrr.io/r/base/files.html">file.exists</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="st">'Validation'</span>,<span class="no">valOutOld</span>, <span class="st">'validationResult.rds'</span>))){
-              <span class="no">res</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">resultDirectory</span>[<span class="no">i</span>],<span class="st">'Validation'</span>,<span class="no">valOutOld</span>, <span class="st">'validationResult.rds'</span>))
-              <span class="no">res</span> <span class="kw">&lt;-</span> <span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/transportPlp.html">transportPlp</a></span>(<span class="no">res</span>, <span class="kw">n</span><span class="kw">=</span> <span class="no">minCellCount</span>,
-                                                          <span class="kw">save</span> <span class="kw">=</span> <span class="no">F</span>, <span class="kw">dataName</span> <span class="kw">=</span> <span class="no">databaseName</span>[<span class="no">i</span>])
-              <span class="no">res</span>$<span class="no">covariateSummary</span> <span class="kw">&lt;-</span> <span class="no">res</span>$<span class="no">covariateSummary</span>[<span class="no">res</span>$<span class="no">covariateSummary</span>$<span class="no">covariateValue</span><span class="kw">!=</span><span class="fl">0</span>,]
-              <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span>(<span class="no">res</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">outputDirectory</span>,<span class="st">'Validation'</span>,<span class="no">valOut</span>, <span class="st">'validationResult.rds'</span>))
-            }
-          }
-        }
-
-      }
-
-    }
-
-  }
-  }
-
-  <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">outputDirectory</span>)
-
-}</pre></body></html></div>
+        <span class="va">valSubfolders</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">dir</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">'Validation'</span>,<span class="va">valFolder</span><span class="op">)</span>, full.names <span class="op">=</span> <span class="cn">F</span><span class="op">)</span>
+        <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">valSubfolders</span><span class="op">)</span><span class="op">!=</span><span class="fl">0</span><span class="op">)</span><span class="op">{</span>
+          <span class="kw">for</span><span class="op">(</span><span class="va">valSubfolder</span> <span class="kw">in</span> <span class="va">valSubfolders</span> <span class="op">)</span><span class="op">{</span>
+            <span class="va">valSubfolderUpdate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">'Analysis_'</span>, <span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">'Analysis_'</span>,<span class="st">''</span>, <span class="va">valSubfolder</span><span class="op">)</span><span class="op">)</span><span class="op">*</span><span class="fl">1000</span><span class="op">+</span><span class="va">i</span><span class="op">)</span>
+            <span class="va">valOut</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">valFolder</span>,<span class="va">valSubfolderUpdate</span><span class="op">)</span>
+            <span class="va">valOutOld</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">valFolder</span>,<span class="va">valSubfolder</span><span class="op">)</span>
+            <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="st">'Validation'</span>,<span class="va">valOut</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+              <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="st">'Validation'</span>,<span class="va">valOut</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>
+            <span class="op">}</span>
+            
+            
+            <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html">file.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">'Validation'</span>,<span class="va">valOutOld</span>, <span class="st">'validationResult.rds'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+              <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">'Validation'</span>,<span class="va">valOutOld</span>, <span class="st">'validationResult.rds'</span><span class="op">)</span><span class="op">)</span>
+              <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/transportPlp.html">transportPlp</a></span><span class="op">(</span><span class="va">res</span>, n<span class="op">=</span> <span class="va">minCellCount</span>, 
+                                                          save <span class="op">=</span> <span class="cn">F</span>, dataName <span class="op">=</span> <span class="va">databaseName</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span>
+              <span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span><span class="op">[</span><span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span><span class="op">$</span><span class="va">covariateValue</span><span class="op">!=</span><span class="fl">0</span>,<span class="op">]</span>
+              <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span><span class="op">(</span><span class="va">res</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="st">'Validation'</span>,<span class="va">valOut</span>, <span class="st">'validationResult.rds'</span><span class="op">)</span><span class="op">)</span>
+            <span class="op">}</span>
+          <span class="op">}</span>
+        <span class="op">}</span>
+        
+      <span class="op">}</span>
+      
+    <span class="op">}</span>
+    
+  <span class="op">}</span>
+  <span class="op">}</span>
+  
+  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">outputDirectory</span><span class="op">)</span>
+  
+<span class="op">}</span></code></pre></div>
 <div id="example-code-to-combine-multiple-results" class="section level2">
 <h2 class="hasAnchor">
 <a href="#example-code-to-combine-multiple-results" class="anchor"></a>Example code to combine multiple results</h2>
 <p>The following code will combine the results found in ‘C:/myResults’, ‘C:/myResults2’ and ‘C:/myResults3’ into the shiny project at ‘C:/R/library/myPackage/shiny/PLPViewer’:</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="fu">populateMultipleShinyApp</span>(<span class="kw">shinyDirectory</span> <span class="kw">=</span> <span class="st">'C:/R/library/myPackage/shiny/PLPViewer'</span>,
-                                     <span class="kw">resultDirectory</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'C:/myResults'</span>,
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">populateMultipleShinyApp</span><span class="op">(</span>shinyDirectory <span class="op">=</span> <span class="st">'C:/R/library/myPackage/shiny/PLPViewer'</span>,
+                                     resultDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'C:/myResults'</span>,
                                                          <span class="st">'C:/myResults2'</span>,
-                                                         <span class="st">'C:/myResults3'</span>),
-                                     <span class="kw">minCellCount</span> <span class="kw">=</span> <span class="fl">0</span>,
-                                     <span class="kw">databaseName</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'database1'</span>,<span class="st">'database2'</span>,<span class="st">'database3'</span>))</pre></body></html></div>
+                                                         <span class="st">'C:/myResults3'</span><span class="op">)</span>,
+                                     minCellCount <span class="op">=</span> <span class="fl">0</span>,
+                                     databaseName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'database1'</span>,<span class="st">'database2'</span>,<span class="st">'database3'</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
 <div id="manual-app-creation" class="section level1">
@@ -378,7 +394,8 @@
 <h1 class="hasAnchor">
 <a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
 <p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
 <pre><code>## 
 ## To cite PatientLevelPrediction in publications use:
 ## 
@@ -420,7 +437,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

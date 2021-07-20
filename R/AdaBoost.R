@@ -68,7 +68,7 @@ fitAdaBoost <- function(population,
                         outcomeId,
                         cohortId,
                         ...) {
-
+  
   # check covariate data
   if (!FeatureExtraction::isCovariateData(plpData$covariateData))
     stop("Needs correct covariateData")
@@ -102,11 +102,20 @@ fitAdaBoost <- function(population,
                                                                       population=pPopulation, 
                                                                       plpData=data,
                                                                       quiet=quiet))))
-  hyperSummary <- cbind(do.call(rbind, param), unlist(hyperParamSel))
+  
+  
+  cvAuc <- do.call(rbind, lapply(hyperParamSel, function(x) x$aucCV))
+  colnames(cvAuc) <- paste0('fold_auc', 1:ncol(cvAuc))
+  auc <- unlist(lapply(hyperParamSel, function(x) x$auc))
+  
+  cvPrediction <- lapply(hyperParamSel, function(x) x$prediction )
+  cvPrediction <- cvPrediction[[which.max(auc)[1]]]
+  
+  hyperSummary <- cbind(do.call(rbind, param), cvAuc, auc= auc)
 
   writeLines('Training Final')
   # now train the final model and return coef
-  bestInd <- which.max(abs(unlist(hyperParamSel) - 0.5))[1]
+  bestInd <- which.max(abs(auc - 0.5))[1]
   finalModel <- do.call(trainAdaBoost, listAppend(param[[bestInd]], 
                                          list(train = FALSE, 
                                          modelLocation=outLoc, 
@@ -140,7 +149,8 @@ fitAdaBoost <- function(population,
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
-                 trainCVAuc = hyperParamSel,
+                 trainCVAuc = list(value = unlist(cvAuc[bestInd,]),
+                                   prediction = cvPrediction),#hyperParamSel,
                  hyperParamSearch = hyperSummary,
                  modelSettings = list(model = "fitAdaBoost", modelParameters = param.best),
                  metaData = plpData$metaData,
@@ -163,6 +173,10 @@ fitAdaBoost <- function(population,
 
 trainAdaBoost <- function(population, plpData, nEstimators = 50, learningRate = 1, seed = NULL, train = TRUE, modelLocation=NULL, quiet=FALSE) {
 
+  # remove global binding issue
+  train_adaboost <- function(){return(NULL)}
+  
+  
   e <- environment()
   # then run standard python code
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','adaBoostFunctions.py'), envir = e)
@@ -182,10 +196,12 @@ trainAdaBoost <- function(population, plpData, nEstimators = 50, learningRate = 
     colnames(pred) <- c("rowId", "outcomeCount", "indexes", "value")
     pred <- as.data.frame(pred)
     attr(pred, "metaData") <- list(predictionType = "binary")
+    
+    aucCV <- lapply(1:max(pred$indexes), function(i){computeAuc(pred[pred$indexes==i,])})
 
     auc <- computeAuc(pred)
     writeLines(paste0("CV model obtained CV AUC of ", auc))
-    return(auc)
+    return(list(auc = auc, aucCV = aucCV, prediction = pred[pred$indexes>0,]))
   }
 
   return(result)

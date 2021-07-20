@@ -29,6 +29,17 @@ test_that("evaluatePlp", {
   testthat::expect_equal(names(eval), c('evaluationStatistics', 'thresholdSummary', 'demographicSummary', 'calibrationSummary', 'predictionDistribution') )
 })
 
+test_that("modelBasedConcordance", {
+  concordance <- PatientLevelPrediction::modelBasedConcordance(prediction = plpResult$prediction)
+  testthat::expect_is(concordance, "numeric")
+})
+
+test_that("evaluatePlp_survival", {
+  eval <- evaluatePlp(prediction = plpResult2$prediction, plpData = plpData)
+  testthat::expect_equal(class(eval), 'plpEvaluation')
+  testthat::expect_equal(names(eval), c('evaluationStatistics', 'demographicSummary', 'calibrationSummary', 'thresholdSummary') )
+})
+
 test_that("AUROC", {
   Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
   attr(Eprediction, "metaData") <- list(predictionType = "binary")
@@ -283,15 +294,15 @@ test_that("getThresholdSummary", {
   Eprediction <- data.frame(value= runif(100), outcomeCount =round(runif(100)))
   thresSum <- getThresholdSummary(Eprediction)
   
-  expect_that(nrow(thresSum), equals(200))
+  expect_that(nrow(thresSum), equals(length(unique(Eprediction$value)))) 
   expect_that(ncol(thresSum), equals(23))
   
   expect_that(thresSum$truePositiveCount+thresSum$falseNegativeCount, 
-              equals(rep(sum(Eprediction$outcomeCount),200)))
+              equals(rep(sum(Eprediction$outcomeCount),length(thresSum$truePositiveCount))))
   
   expect_that(thresSum$truePositiveCount+thresSum$falsePositiveCount+
               thresSum$trueNegativeCount+thresSum$falseNegativeCount, 
-              equals(rep(nrow(Eprediction),200)))
+              equals(rep(nrow(Eprediction),length(thresSum$truePositiveCount))))
 })
 
 

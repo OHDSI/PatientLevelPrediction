@@ -60,21 +60,8 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                        shiny::sliderInput("slider1", 
                                                                           shiny::span("Threshold: ", shiny::textOutput('threshold'), style="color:white;font-family: Arial;font-size:14px;"), 
                                                                           min = 1, max = 100, value = 50, ticks = F
-                                                       ),
-                                                       
-                                                       shiny::splitLayout(
-                                                         cellWidths = c('10%', '80%', '10%'),
-                                                         shiny::span(shiny::h5(strong('0')), style="color:white"),
-                                                         shiny::h5(' '),
-                                                         shiny::span(shiny::h5(strong('1')), style="color:white")
-                                                       ),
-                                                       shiny::tags$script(shiny::HTML("
-                                                                                      $(document).ready(function() {setTimeout(function() {
-                                                                                      supElement = document.getElementById('slider1').parentElement;
-                                                                                      $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
-                                                                                      }, 50);})
-                                                                                      "))
-                                                       ),
+                                                       )
+                                      ),
                                       
                                       conditionalPanel(condition = "input.menu=='Performance' || input.menu=='Model' || input.menu=='Settings' || input.menu=='Log'",
                                                        
@@ -96,7 +83,7 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                        
                                       )
                                       
-                                  
+                                      
                                     ), # end sidebar
                                     
                                     shinydashboard::dashboardBody(
@@ -135,12 +122,12 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                            style = "font-size:70%")
                                                                                 
                                                                   ))),
-                                                                                
+                                        
                                         
                                         shinydashboard::tabItem(tabName = "Settings",
                                                                 
                                                                 shiny::fluidRow(
-                                                                   
+                                                                  
                                                                   shiny::column(10, style = "background-color:#F3FAFC;",
                                                                                 
                                                                                 # do this inside tabs:
@@ -162,7 +149,12 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                                    shiny::h3('Covariate Settings: ', 
                                                                                                                              shiny::a("help", href="http://ohdsi.github.io/FeatureExtraction/reference/createCovariateSettings.html", target="_blank") 
                                                                                                                    ),
-                                                                                                                   DT::dataTableOutput('covariateTable'))
+                                                                                                                   DT::dataTableOutput('covariateTable')),
+                                                                                                   
+                                                                                                   shiny::tabPanel("Hyper-parameters", 
+                                                                                                                   DT::dataTableOutput('hpTable')),
+                                                                                                   shiny::tabPanel("Attrition", 
+                                                                                                                   DT::dataTableOutput('attritionTable'))
                                                                                 )
                                                                                 
                                                                   )
@@ -203,10 +195,10 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                                  #infoBoxOutput("performanceBox"),
                                                                                              )
                                                                                )
-                                                                               )
+                                                                             )
                                                                              
                                                                              
-                                                                               ), # end summary
+                                                                    ), # end summary
                                                                     tabPanel("Discrimination", 
                                                                              
                                                                              shiny::fluidRow(
@@ -245,6 +237,20 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                              
                                                                     ),
                                                                     tabPanel("Calibration", 
+                                                                             
+                                                                             shiny::fluidRow(
+                                                                               shinydashboard::box(status = 'info', width = 3,
+                                                                                                   title = 'Settings',
+                                                                                                   solidHeader = TRUE,
+                                                                                                   uiOutput('recalSelect')
+                                                                               ),
+                                                                               shinydashboard::box(status = 'info', width = 9,
+                                                                                                   title = 'Summary',
+                                                                                                   solidHeader = TRUE,
+                                                                                                   shiny::tableOutput('calTable')
+                                                                               )
+                                                                             ),
+                                                                             
                                                                              shiny::fluidRow(
                                                                                shinydashboard::box(status = 'info',
                                                                                                    title = actionLink("calHelp","Calibration Plot", icon = icon("info")),
@@ -256,12 +262,58 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                    side = "right",
                                                                                                    shinycssloaders::withSpinner(shiny::plotOutput('demo')))
                                                                              )
-                                                                    )
+
+                                                                    ),
+                                                                    
+                                                                    tabPanel("Net Benefit", 
+                                                                             
+                                                                             shiny::fluidRow(
+                                                                               shinydashboard::box(status = 'info', width = 12,
+                                                                                                   title = 'Settings',
+                                                                                                   solidHeader = TRUE,
+                                                                                                   uiOutput('nbSelect')
+                                                                               )
+                                                                               
+                                                                             ),
+                                                                             
+                                                                             shiny::fluidRow(
+                                                                               shinydashboard::box(status = 'info', width = 6,
+                                                                                                   title = 'Net Benefit Plot',
+                                                                                                   solidHeader = TRUE,
+                                                                                                   side = "right",
+                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput('nbPlot'))),
+                                                                               
+                                                                               shinydashboard::box(status = 'info', width = 6,
+                                                                                                   title = 'Summary',
+                                                                                                   solidHeader = TRUE,
+                                                                                                   shiny::tableOutput('nbTable')
+                                                                               )
+                                                                             )
+                                                                             
+                                                                    ),
+                                                                    
+                                                                    tabPanel("Validation",
+                                                                             shiny::div(DT::dataTableOutput('validationTable'), 
+                                                                                        style = "font-size:70%; padding-bottom:20px"),
+                                                                             
+                                                                             shiny::fluidRow(
+                                                                               shinydashboard::box(status = 'info',
+                                                                                                   title = actionLink("rocHelp","Roc Plot", icon = icon("info")),
+                                                                                                   solidHeader = TRUE,
+                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput('valRoc'))),
+                                                                               shinydashboard::box(status = 'info',
+                                                                                                   title = actionLink("calHelp","Calibration Plot", icon = icon("info")),
+                                                                                                   solidHeader = TRUE,
+                                                                                                   side = "right",
+                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput('valCal')))
+                                                                             )
+                                                                    ) 
                                                                                              ))),
+
                                         
                                         # 3rd tab
                                         shinydashboard::tabItem(tabName = "Model", 
-                                                               
+                                                                
                                                                 shiny::fluidRow(
                                                                   shinydashboard::box( status = 'info',
                                                                                        title = "Binary", solidHeader = TRUE,
@@ -287,6 +339,6 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                         )
                                         
                                         
-                                                                )
+                                      )
                                     )
-                                    )
+)

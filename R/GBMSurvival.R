@@ -63,6 +63,8 @@ setGBMSurvival <- function(loss = 'coxph',
                            dropoutRate = 0,
                            seed = NULL,
                            quiet = F) {
+  
+  ensure_installed("survAUC")
 
   if (!class(seed) %in% c("numeric", "NULL", "integer"))
     stop("Invalid seed")
@@ -198,11 +200,11 @@ fitGBMSurvival <- function(population,
   pred[,1] <- pred[,1] + 1 # converting from python to r index
   colnames(pred) <- c('rowId','outcomeBoolean','survivalTime','indexes', 'value')
   pred <- as.data.frame(pred)
-  attr(pred, "metaData") <- list(predictionType="binary")
+  attr(pred, "metaData") <- list(predictionType="survival")
   prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
-  # scale the value
-  prediction$value <- prediction$value - min(prediction$value)
-  prediction$value <- prediction$value/max(prediction$value)
+  
+  # negative values happening? quick fix for now
+  prediction$value[prediction$value < 0 ] <- 0
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
@@ -220,7 +222,7 @@ fitGBMSurvival <- function(population,
                  predictionTrain=prediction)
   class(result) <- "plpModel"
   attr(result, "type") <- "pythonSurvival"
-  attr(result, "predictionType") <- "binary"
+  attr(result, "predictionType") <- "survival"
 
 
   return(result)
@@ -243,6 +245,8 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
                              maxLeafNodes = NULL,
                              subsample = 1,
                              dropoutRate = 0) {
+  
+  train_gbmsurv <- function(){return(NULL)}
 
   e <- environment()
   # then run standard python code
@@ -286,11 +290,16 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
     pred <- as.data.frame(pred)
     pred$outcomeCount <- rep(0, nrow(pred))
     pred$outcomeCount[pred$outcomeBoolean==T ] <- 1
-    attr(pred, "metaData") <- list(predictionType = "binary")
+    attr(pred, "metaData") <- list(predictionType = "survival")
 
-    auc <- computeAuc(pred)
-    writeLines(paste0("CV model obtained CV AUC of ", auc))
-    return(auc)
+    #auc <- computeAuc(pred)
+    S <- survival::Surv(pred$survivalTime,pred$outcomeCount) 
+    p <- pred$value
+    conc <- tryCatch({survival::concordance(S~p, reverse=TRUE)},
+                     error = function(e){ParallelLogger::logError(e); return(0.5)})
+    cStatistic <- round(conc$concordance,5)
+    writeLines(paste0("CV model obtained C-statistic of ", cStatistic))
+    return(cStatistic)
   }
 
   return(result)
@@ -299,6 +308,8 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
 
 
 predict.pythonSurvival <- function(plpModel, population, plpData){
+  
+  python_predict_survival <- function(){NULL}
   
   e <- environment()
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
@@ -327,7 +338,7 @@ predict.pythonSurvival <- function(plpModel, population, plpData){
   ParallelLogger::logInfo('Returning results...')
   prediction <- result
   prediction <- as.data.frame(prediction)
-  attr(prediction, "metaData") <- list(predictionType="binary")
+  attr(prediction, "metaData") <- list(predictionType="survival")
   if(ncol(prediction)==4){
     colnames(prediction) <- c('rowId','outcomeCount','indexes', 'value')
   } else {
@@ -337,13 +348,12 @@ predict.pythonSurvival <- function(plpModel, population, plpData){
   # add 1 to rowId from python:
   prediction$rowId <- prediction$rowId+1
   
-  # scale the value 
-  prediction$value <- prediction$value - min(prediction$value)
-  prediction$value <- prediction$value/max(prediction$value)
+  # fix negative value issue
+  prediction$value[prediction$value < 0 ] <- 0
   
   # add subjectId and date:
   prediction <- merge(prediction,
-                      population[,c('rowId','subjectId','cohortStartDate')], 
+                      population[,c('rowId','subjectId','cohortStartDate', 'survivalTime', 'gender', 'ageYear')], 
                       by='rowId')
   return(prediction)
 }

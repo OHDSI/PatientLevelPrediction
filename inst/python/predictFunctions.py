@@ -14,8 +14,8 @@ import sys
 import timeit
 import math
 from scipy.sparse import coo_matrix,csr_matrix,vstack,hstack
-from sklearn.externals.joblib import Memory
-from sklearn.externals import joblib
+from joblib import Memory
+import joblib
 
 def batch(tensor, batch_size = 50):
     """ It is used to create batch samples, each batch has batch_size samples"""
@@ -34,7 +34,7 @@ def python_predict_temporal(population, plpData, model_loc, dense, autoencoder):
   print("Applying Python Model") 
   print("Loading Data...")
   # load data + train,test indexes + validation index
-  y=population[:,1]
+  #y=population[:,1]
   
   ###########################################################################	
   # uf dense convert 
@@ -76,7 +76,7 @@ def python_predict(population, plpData, model_loc, dense, autoencoder):
   print("Applying Python Model") 
   print("Loading Data...")
   # load data + train,test indexes + validation index
-  y=population[:,1]
+  #y=population[:,1]
   X = plpData[population[:,0].astype(int),:]
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
@@ -133,7 +133,7 @@ def python_predict_garden(population, plpData, model_loc,quantile=None):
   print("Applying Python Model") 
   print("Loading Data...")
   # load data + train,test indexes + validation index
-  y=population[:,1]
+  #y=population[:,1]
   X = plpData[population[:,0].astype(int),:]
   # load index file
   print("population loaded- %s rows and %s columns" %(np.shape(population)[0], np.shape(population)[1]))
