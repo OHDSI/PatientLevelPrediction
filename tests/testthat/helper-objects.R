@@ -1,3 +1,4 @@
+
 # Download the PostreSQL driver ---------------------------
 # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
 jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
@@ -13,9 +14,12 @@ if (jarFolder == "") {
   }, testthat::teardown_env())
 }
 
+
 # this files contains the objects used in the tests:
 travis <- T
-saveLoc <- tempfile()
+
+saveLoc <- tempfile("saveLoc")
+dir.create(saveLoc)
 
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -92,6 +96,7 @@ gbmSet <- setGradientBoostingMachine(ntrees = 50, maxDepth = 3, learnRate = 0.01
 knnSet <- setKNN(k=100, indexFolder = file.path(saveLoc,"knn"))
 rfSet2 <- setRandomForest(mtries = -1,ntrees = 10, maxDepth = 2, varImp = F, seed=1)
 surv <- PatientLevelPrediction::setCoxModel(variance = 0.01, seed = 1)
+
 
 
 # RUNPLP - LASSO LR
@@ -186,7 +191,7 @@ populationReal <- createStudyPopulation(plpDataReal,
 
 plpResultReal <- runPlp(population = populationReal,
                         plpData = plpDataReal, 
-                        modelSettings = rfSet2, 
+                        modelSettings = lrSet, 
                         splitSeed = 1,
                         savePlpData = F, 
                         savePlpResult = F, 
@@ -194,5 +199,4 @@ plpResultReal <- runPlp(population = populationReal,
                         savePlpPlots = F, 
                         analysisId = 'gbmReal',
                         saveDirectory =  saveLoc)
-
 

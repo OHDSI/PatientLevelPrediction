@@ -15,10 +15,13 @@
 # limitations under the License.
 
 context("ImportExport")
+library(testthat)
 
 # how to test exportPlpDataToCsv?
 
-outputFolder <- './Temp/importexport'
+outputFolder <- tempfile("importExport")
+dir.create(outputFolder)
+
 # Test unit for the creation of the study externalValidatePlp
 model <- list(model='none - validation',
      modelSettings= NULL,
@@ -314,10 +317,9 @@ test_that("check transportPlp N is 5", {
 })
 
 test_that("transportModel", {
-  transportModel(plpModel = plpResult$model,outputFolder = file.path(saveLoc,'transportModel'))
-  testthat::expect_equal(dir.exists(file.path(saveLoc,'transportModel')), T)
+  transportModel(plpModel = result$model,outputFolder = file.path(outputFolder,'transportModel'))
+  testthat::expect_equal(dir.exists(file.path(outputFolder,'transportModel')), T)
   
-  tmod <- loadPlpModel(file.path(saveLoc,'transportModel'))
+  tmod <- loadPlpModel(file.path(outputFolder,'transportModel'))
   testthat::expect_equal(tmod$metaData$call$connectionDetails, NULL)
   })
-
