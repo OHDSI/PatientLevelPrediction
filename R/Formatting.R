@@ -221,6 +221,132 @@ MapCovariates <- function(covariateData,population, mapping){
 }
 
 
+
+#' Convert the plpData in COO format into a sparse python matrix using torch.sparse
+#'
+#' @description
+#' Converts the standard plpData to a sparse matrix firectly into python
+#'
+#' @details
+#' This function converts the covariate file from ffdf in COO format into a sparse matrix from
+#' the package Matrix
+#' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction
+#'                                      data extracted from the CDM.
+#' @param population                    The population to include in the matrix
+#' @param map                           A covariate map (telling us the column number for covariates)
+#' @param temporal                      Whether to include timeId into tensor
+#' @param pythonExePath                 Location of python exe you want to use
+#' @examples
+#' #TODO
+#'
+#' @return
+#' Returns a list, containing the python object name of the sparse matrix, the plpData covariateRef
+#' and a data.frame named map that tells us what covariate corresponds to each column
+#' This object is a list with the following components: \describe{
+#' \item{data}{The python object name containing a sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.}
+#' \item{covariateRef}{The plpData covariateRef.}
+#' \item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.}
+#' }
+#'
+#' @export
+toSparseTorchPython <- function(plpData,population, map=NULL, temporal=F, pythonExePath=NULL){
+  
+  map_python_initiate <- map_python <- function(){return(NULL)}
+  
+  # check logger
+  if(length(ParallelLogger::getLoggers())==0){
+    logger <- ParallelLogger::createLogger(name = "SIMPLE",
+                                           threshold = "INFO",
+                                           appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
+    ParallelLogger::registerLogger(logger)
+  }
+  
+  newcovariateData <- MapCovariates(plpData$covariateData,
+                                         population, 
+                                         mapping=map)
+  
+  ParallelLogger::logDebug(paste0('Max ',as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(.data$covariateId, na.rm=T)))))
+  ParallelLogger::logDebug(paste0('# cols: ', nrow(newcovariateData$covariateRef)))
+  ParallelLogger::logDebug(paste0('Max rowId: ', as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(.data$rowId, na.rm=T)))))
+  
+  ParallelLogger::logTrace(paste0('Converting data into python sparse matrix...'))
+  
+  maxT <- NULL
+  if(temporal){
+    maxT <- as.data.frame(newcovariateData$covariates$timeId %>% dplyr::summarise(max = max(.data$id, na.rm=T)))
+    ParallelLogger::logDebug(paste0('Max timeId: ', maxT))
+  }
+  
+  maxCol <- as.data.frame(newcovariateData$mapping %>% dplyr::summarise(max=max(.data$newCovariateId,na.rm = TRUE)))$max
+  maxRow <- max(population$rowId)
+  
+  # source the python fucntion
+  e <- environment()
+  reticulate::source_python(system.file(package='PatientLevelPrediction','python','TorchMap.py'), envir = e)
+  
+  dataEnv <- e # adding to remove <<- 
+  #dataPlp <<- map_python_initiate(maxCol = as.integer(maxCol), 
+  dataPlp <- map_python_initiate(maxCol = as.integer(maxCol), 
+                                         maxRow = as.integer(maxRow), 
+                                         maxT= as.integer(maxT))
+  
+  convertData <- function(batch, temporal=T, dataEnv) {
+    if(temporal){
+      #dataPlp <<- map_python(matrix = dataPlp ,
+      dataEnv$dataPlp <- map_python(matrix = dataEnv$dataPlp,
+                                    datas = as.matrix(as.data.frame(batch %>% dplyr::select(.data$rowId,.data$covariateId,.data$timeId,.data$covariateValue))),
+                                    maxCol = as.integer(maxCol),
+                                    maxRow = as.integer(maxRow),
+                                    maxT = as.integer(maxT))
+    }else{
+     # dataPlp <<- map_python(matrix = dataPlp ,
+      dataEnv$dataPlp <- map_python(matrix = dataEnv$dataPlp,
+                             datas = as.matrix(as.data.frame(batch %>% dplyr::select(.data$rowId,.data$covariateId,.data$covariateValue))),
+                             maxCol = as.integer(maxCol),
+                             maxRow = as.integer(maxRow),
+                             maxT = NULL) 
+    }
+    return(NULL)
+  }
+  
+  if(temporal==T){
+    # add the age and non-temporal data
+    timeIds <- unique(plpData$timeRef$timeId)
+    for(timeId in timeIds){
+      tempData <- addAgeTemp(timeId, newcovariateData)
+      if(!is.null(tempData)){
+        Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
+      }
+      #tempData <- addNonAgeTemp(timeId,plpData.mapped) - what is plpData.mapped?
+      tempData <- addNonAgeTemp(timeId, newcovariateData)
+      if(!is.null(tempData)){
+        Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
+      }
+      tempData <- NULL
+    }
+    
+    # add the rest
+    tempData <- newcovariateData$covariates %>%
+      dplyr::filter(.data$timeId!=0) %>%
+      dplyr::filter(!is.na(.data$timeId))
+    Andromeda::batchApply(tempData, convertData,temporal =T, batchSize = 100000, dataEnv=dataEnv)
+    tempData <- NULL
+  } else {
+    Andromeda::batchApply(newcovariateData$covariates, convertData,
+                          temporal =F, batchSize = 100000, dataEnv=dataEnv)
+  }
+  ##result <- dataEnv$dataPlp
+  ##dataPlp <<- NULL
+  ##dataEnv$dataPlp <- NULL
+  ParallelLogger::logTrace(paste0('Sparse python tensor converted'))                            
+  
+  result <- list(data=dataPlp,
+                 covariateRef=as.data.frame(newcovariateData$covariateRef),
+                 map=as.data.frame(newcovariateData$mapping))
+  return(result)
+}
+
+
 # reformat the evaluation
 reformatPerformance <- function(train, test, analysisId){
   

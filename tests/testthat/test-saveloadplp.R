@@ -157,10 +157,7 @@ test_that("loadPlpResult", {
       plpResultLoaded$model[[ind]] <- NULL
     }
   }
-  # make sure preds are the same
-  #pred <- plpResult$model$predict(plpData = plpData, population = population)
-  #pred2 <- plpResultLoaded$model$predict(plpData = plpData, population = population)
-  #testthat::expect_equal(pred, pred2) 
+  #testthat::expect_equal(plpResultLoaded$model, plpResult$model) predict different?
   testthat::expect_identical(plpResultLoaded$analysisRef, plpResult$analysisRef)
   testthat::expect_identical(plpResultLoaded$covariateSummary, plpResult$covariateSummary)
   testthat::expect_identical(plpResultLoaded$executionSummary, plpResult$executionSummary)
