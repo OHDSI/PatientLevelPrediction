@@ -54,15 +54,9 @@ jobs:
       
       - name: python main dependencies  
         run: conda install --name r-reticulate numpy scipy scikit-learn pandas pydotplus joblib 
-       
-      - name: python keras and tensorflow dependencies   
-        run: conda install --name r-reticulate -c conda-forge keras tensorflow
       
       - name: python scikit-survival dependencies    
         run: conda install --name r-reticulate -c sebp scikit-survival
-       
-      - name: python torch 
-        run: conda install --name r-reticulate -c conda-forge pytorch-cpu
 
       - uses: r-lib/actions/setup-r@v1
         with:
