@@ -21,6 +21,9 @@ travis <- T
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
+# configure and activate python
+PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
+PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
@@ -191,7 +194,7 @@ populationReal <- createStudyPopulation(plpDataReal,
 
 plpResultReal <- runPlp(population = populationReal,
                         plpData = plpDataReal, 
-                        modelSettings = lrSet, 
+                        modelSettings = rfSet2, 
                         splitSeed = 1,
                         savePlpData = F, 
                         savePlpResult = F, 
