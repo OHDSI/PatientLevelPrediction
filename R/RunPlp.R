@@ -543,42 +543,71 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
   
   
   
-  # now join cov and pop
-  covariates <- plpData$covariateData$covariates %>% 
-    dplyr::inner_join(plpData$covariateData$population, by= 'rowId')
+
+  #=== editing this to use batch join when data are large
+  populationN <- plpData$covariateData$population %>% dplyr::collect()
+  
+  if(length(populationN$rowId)<200000){
+
+    plpData$covariateData$newCovariates <- plpData$covariateData$covariates %>% 
+      dplyr::inner_join(plpData$covariateData$population, by= 'rowId')
+    on.exit(plpData$covariateData$newCovariates <- NULL, add = TRUE)
+    
+    
+  } else{
+    newData <- batchRestrict(plpData$covariateData, 
+                                populationN, 
+                                sizeN = 10000000)
+
+    plpData$covariateData$newCovariates <- newData$covariates
+    on.exit(plpData$covariateData$newCovariates <- NULL, add = TRUE)
+  }
+  
+  
+  #====
   
   # now group by covariateId and groupVal to get sum and square sums
   if(!is.null(population)){
     
     if('indexes' %in% colnames(population)){
+      Andromeda::createIndex(plpData$covariateData$newCovariates, c('covariateId','test','outcomeCount'),
+                             indexName = 'newCovariates_covId_test_out')
+      #RSQLite::dbExecute(plpData$covariateData, 
+      #                   "CREATE INDEX newCovariates_covId_test_out ON newCovariates(covariateId,test,outcomeCount)")
+      
+      
       plpData$covariateData$totals <- plpData$covariateData$population %>% 
         dplyr::group_by(.data$test, .data$outcomeCount) %>%
         dplyr::summarise(N = dplyr::n())
       
-      result <- covariates %>%
+      result <- plpData$covariateData$newCovariates %>%
         dplyr::group_by(.data$covariateId,.data$test, .data$outcomeCount) %>%
         dplyr::summarise(CovariateCount = dplyr::n(),
                          sumVal = sum(.data$covariateValue,na.rm = TRUE),
                          sumSquares = sum(.data$covariateValue^2,na.rm = TRUE)) %>%
         dplyr::inner_join(plpData$covariateData$totals, by= c('test', 'outcomeCount')) %>%
-        dplyr::mutate(CovariateMean = .data$sumVal/.data$N,
+        dplyr::mutate(CovariateMean = 1.0*.data$sumVal/.data$N,
                       CovariateStDev = sqrt(.data$sumSquares/.data$N - (.data$sumVal/.data$N)^2 )) %>% 
         dplyr::collect()
       
       
     } else {
+      Andromeda::createIndex(plpData$covariateData$newCovariates, c('covariateId','outcomeCount'),
+                             indexName = 'newCovariates_covId_out')
+      #RSQLite::dbExecute(plpData$covariateData, 
+      #                   "CREATE INDEX newCovariates_covId_out ON newCovariates(covariateId,outcomeCount)")
       
       plpData$covariateData$totals <- plpData$covariateData$population %>% 
         dplyr::group_by(.data$outcomeCount) %>%
         dplyr::summarise(N = dplyr::n())
       
-      result <- covariates %>%
+      result <- plpData$covariateData$newCovariates %>%
         dplyr::group_by(.data$covariateId,.data$outcomeCount) %>%
         dplyr::summarise(CovariateCount = dplyr::n(),
                          sumVal = sum(.data$covariateValue,na.rm = TRUE),
                          sumSquares = sum(.data$covariateValue^2,na.rm = TRUE)) %>%
         dplyr::inner_join(plpData$covariateData$totals, by= c( 'outcomeCount')) %>%
-        dplyr::mutate(CovariateMean = .data$sumVal/.data$N,
+        dplyr::mutate(CovariateMean = 1.0*.data$sumVal/.data$N,
                       CovariateStDev = sqrt(round(.data$sumSquares/.data$N - (.data$sumVal/.data$N)^2 ,6))) %>% 
         dplyr::collect()
       
@@ -586,7 +615,7 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
   }else{
     # get all results:
     N <- nrow(plpData$cohorts)
-    resultAll <-  covariates %>%
+    resultAll <-  plpData$covariateData$newCovariates %>%
       dplyr::group_by(.data$covariateId) %>%
       dplyr::summarise(CovariateCount = dplyr::n(),
                        sumVal = sum(.data$covariateValue,na.rm = TRUE),
@@ -607,7 +636,7 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
                        sumValall = sum(.data$sumVal,na.rm = TRUE),
                        sumSquaresall = sum(.data$sumSquares,na.rm = TRUE),
                        Nall = sum(.data$N,na.rm = TRUE)) %>%
-      dplyr::mutate(CovariateMean = .data$sumValall/.data$Nall,
+      dplyr::mutate(CovariateMean = 1.0*.data$sumValall/.data$Nall,
                     CovariateStDev = sqrt(.data$sumSquaresall/.data$Nall - (.data$sumValall/.data$Nall)^2)) %>% 
       dplyr::select(.data$covariateId, .data$CovariateCount, .data$CovariateMean, .data$CovariateStDev) 
     
@@ -620,7 +649,7 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
                          sumValall = sum(.data$sumVal,na.rm = TRUE),
                          sumSquaresall = sum(.data$sumSquares,na.rm = TRUE),
                          Nall = sum(.data$N,na.rm = TRUE)) %>%
-        dplyr::mutate(CovariateMean = .data$sumValall/.data$Nall,
+        dplyr::mutate(CovariateMean = 1.0*.data$sumValall/.data$Nall,
                       CovariateStDev = sqrt(.data$sumSquaresall/.data$Nall - (.data$sumValall/.data$Nall)^2)) 
       
       resultOut1 <- resultOut %>% 

@@ -83,9 +83,10 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
 
 # default patient level prediction prediction  
 predict.plp <- function(plpModel,population, plpData, ...){
-  covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
+  ## done in transform covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
   ParallelLogger::logTrace('predict.plp - predictingProbabilities start')
-  prediction <- predictProbabilities(plpModel$model, population, covariateData)
+  prediction <- predictProbabilities(plpModel$model, population, 
+                                     plpData$covariateData)
   ParallelLogger::logTrace('predict.plp - predictingProbabilities end')
   
   # add baselineHazard function
@@ -105,7 +106,7 @@ predict.plp <- function(plpModel,population, plpData, ...){
 # for gxboost
 predict.xgboost <- function(plpModel,population, plpData, ...){ 
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
-  data <- result$data[population$rowId,]
+  data <- result$data[population$rowId,, drop = F]
   prediction <- data.frame(rowId=population$rowId,
                            value=stats::predict(plpModel$model, data)
   )
@@ -135,7 +136,7 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
     included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
-    pdata <- reticulate::r_to_py(newData$data[,included])
+    pdata <- reticulate::r_to_py(newData$data[,included, drop = F])
     fun_predict <- python_predict
   }
   
@@ -217,8 +218,8 @@ predict.pythonAuto <- function(plpModel, population, plpData){
 
 
 predict.knn <- function(plpData, population, plpModel, ...){
-  covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
-  prediction <- BigKnn::predictKnn(covariates = covariateData$covariates,
+  ##covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
+  prediction <- BigKnn::predictKnn(covariates = plpData$covariateData$covariates,
                                    cohorts= population[,!colnames(population)%in%'cohortStartDate'],
                                    indexFolder = plpModel$model,
                                    k = plpModel$modelSettings$modelParameters$k,

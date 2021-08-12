@@ -63,6 +63,16 @@ fitCoxModel<- function(population, plpData, param, search='adaptive',
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
   #TODO - how to incorporate indexes?
+  
+  #restrict to pop
+  if(length(population$rowId)<200000){
+    plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, 
+                                                         population$rowId)
+  } else{
+    plpData$covariateData <- batchRestrict(plpData$covariateData, 
+                                           data.frame(rowId = population$rowId), 
+                                           sizeN = 10000000)
+  }
 
   variance <- 0.003
   if(!is.null(param$variance )) variance <- param$variance

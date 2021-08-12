@@ -202,9 +202,9 @@ fitGBMSurvival <- function(population,
   pred <- as.data.frame(pred)
   attr(pred, "metaData") <- list(predictionType="survival")
   prediction <- merge(population, pred[,c('rowId', 'value')], by='rowId')
-  # scale the value
-  ##prediction$value <- prediction$value - min(prediction$value)
-  ##prediction$value <- prediction$value/max(prediction$value)
+  
+  # negative values happening? quick fix for now
+  prediction$value[prediction$value < 0 ] <- 0
   
   # return model location (!!!NEED TO ADD CV RESULTS HERE)
   result <- list(model = modelTrained,
@@ -348,9 +348,8 @@ predict.pythonSurvival <- function(plpModel, population, plpData){
   # add 1 to rowId from python:
   prediction$rowId <- prediction$rowId+1
   
-  # scale the value 
-  ##prediction$value <- prediction$value - min(prediction$value)
-  ##prediction$value <- prediction$value/max(prediction$value)
+  # fix negative value issue
+  prediction$value[prediction$value < 0 ] <- 0
   
   # add subjectId and date:
   prediction <- merge(prediction,
