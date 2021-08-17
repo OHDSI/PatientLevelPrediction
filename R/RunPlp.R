@@ -59,7 +59,9 @@
 #'                                         split evaluation.
 #' @param trainFraction                    A real number between 0 and 1 indicating the train set fraction of the data.
 #'                                         If not set trainFraction is equal to 1 - test
-#' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit                  
+#' @param splitSeed                        The seed used to split the test/train set when using a person type testSplit
+#' @param evalAgePop                       Additionally evaluate the fitted model in age stratified subgroups of full population,
+#'                                         e.g. to evaluate in 0-64 years and 65-100 years provide: list(c(0, 64), c(65, 100))                  
 #' @param nfold                            The number of folds used in the cross validation (default 3)
 #' @param indexes                          A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)
 #' @param saveDirectory                    The path to the directory where the results will be saved (if NULL uses working directory)
@@ -147,7 +149,8 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
                    testSplit = 'stratified', testFraction=0.25, trainFraction = NULL, splitSeed=NULL, nfold=3, indexes=NULL,
                    saveDirectory=NULL, savePlpData=T,
                    savePlpResult=T, savePlpPlots = T, saveEvaluation = T,
-                   verbosity="INFO", timeStamp=FALSE, analysisId=NULL, 
+                   verbosity="INFO", timeStamp=FALSE, analysisId=NULL,
+                   evalAgePop=NULL,
                    runCovariateSummary = T,
                    save=NULL
 ){
@@ -305,63 +308,87 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   # get train prediction and remove it from model
   predictionTrain <- model$predictionTrain
   model$predictionTrain <- NULL
+
+  # create a list of populations where the first item is the full population
+  allPopulations <- list()
   
-  # create test subset of population
-  populationTest <- population[population$indexes<0,]
-  attr(populationTest, 'metaData') <- attr(population, 'metaData')
-  # calculate metrics
-  ParallelLogger::logTrace('Prediction')
-  predictionTest <- tryCatch(predictPlp(plpModel = model, 
-                                        population = populationTest, #population, 
-                                        plpData = plpData, 
-                                        index = NULL), 
-                             finally = ParallelLogger::logTrace('Done predict.'))
+  # create test subset of population and assign to first element of list
+  allPopulations[[1]] <- population[population$indexes<0,]
+  attr(allPopulations[[1]], 'metaData') <- attr(population, 'metaData')
   
-  prediction <- rbind(predictionTest, predictionTrain[,colnames(predictionTest)])
-  
-  ParallelLogger::logDebug(paste0('prediction null: ', is.null(prediction)))
-  ParallelLogger::logDebug(paste0('prediction unique values: ', length(unique(prediction$value))))
-  if(ifelse(is.null(prediction), FALSE, length(unique(prediction$value))>1)){
-    
-    # add analysisID
-    attr(prediction, "metaData")$analysisId <- analysisId
-    
-    ParallelLogger::logInfo('Train set evaluation')
-    performance.train <- evaluatePlp(prediction[prediction$indexes>0,], plpData)
-    ParallelLogger::logTrace('Done.')
-    ParallelLogger::logInfo('Test set evaluation')
-    performance.test <- evaluatePlp(prediction[prediction$indexes<0,], plpData)
-    ParallelLogger::logTrace('Done.')
-    
-    # now combine the test and train data and add analysisId
-    performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
-    
-    if(saveEvaluation){
-      ParallelLogger::logTrace('Saving evaluation csv files')
-      if(!dir.exists( file.path(analysisPath, 'evaluation') ))
-        dir.create(file.path(analysisPath, 'evaluation'))
-      tryCatch(utils::write.csv(performance$evaluationStatistics, file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'), row.names=F ),
-               finally= ParallelLogger::logTrace('Saved EvaluationStatistics.')
-      )
-      tryCatch(utils::write.csv(performance$thresholdSummary, file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'), row.names=F ),
-               finally= ParallelLogger::logTrace('Saved ThresholdSummary.')
-      )
-      tryCatch(utils::write.csv(performance$demographicSummary, file.path(analysisPath, 'evaluation', 'demographicSummary.csv'), row.names=F),
-               finally= ParallelLogger::logTrace('Saved DemographicSummary.')
-      )
-      tryCatch(utils::write.csv(performance$calibrationSummary, file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'), row.names=F),
-               finally= ParallelLogger::logTrace('Saved CalibrationSummary.')
-      )
-      tryCatch(utils::write.csv(performance$predictionDistribution, file.path(analysisPath, 'evaluation', 'predictionDistribution.csv'), row.names=F),
-               finally= ParallelLogger::logTrace('Saved PredictionDistribution.')
-      )
+  # evaluate performance in age groups
+  if(!is.null(evalAgePop)) {
+    # add age-restricted populations derived from full population
+    for (i in 1:length(evalAgePop)) {
+      allPopulations[[i+1]] <- allPopulations[[1]] %>%
+        dplyr::filter(ageYear >= evalAgePop[[i]][1],
+                      ageYear <= evalAgePop[[i]][2])
+      attr(allPopulations[[i+1]], 'metaData') <- attr(population, 'metaData')
     }
+  }
+  
+  # a list of performance evaluation objects to be returned
+  performances <- list()
+  predictions <- list()
+  for (i in 1:length(allPopulations)) {
+  
+    # calculate metrics
+    ParallelLogger::logTrace('Prediction')
+    predictionTest <- tryCatch(predictPlp(plpModel = model, 
+                                          population = allPopulations[[i]], #population, 
+                                          plpData = plpData, 
+                                          index = NULL), 
+                               finally = ParallelLogger::logTrace('Done predict.'))
     
-  }else{
-    ParallelLogger::logWarn(paste0('Evaluation not possible as prediciton NULL or all the same values'))
-    performance.test <- NULL
-    performance.train <- NULL
-    performance <- NULL
+    prediction <- rbind(predictionTest, predictionTrain[,colnames(predictionTest)])
+    
+    ParallelLogger::logDebug(paste0('prediction null: ', is.null(prediction)))
+    ParallelLogger::logDebug(paste0('prediction unique values: ', length(unique(prediction$value))))
+    if(ifelse(is.null(prediction), FALSE, length(unique(prediction$value))>1)){
+      
+      # add analysisID
+      attr(prediction, "metaData")$analysisId <- analysisId
+      
+      ParallelLogger::logInfo('Train set evaluation')
+      performance.train <- evaluatePlp(prediction[prediction$indexes>0,], plpData)
+      ParallelLogger::logTrace('Done.')
+      ParallelLogger::logInfo('Test set evaluation')
+      performance.test <- evaluatePlp(prediction[prediction$indexes<0,], plpData)
+      ParallelLogger::logTrace('Done.')
+      
+      # now combine the test and train data and add analysisId
+      performance <- reformatPerformance(train=performance.train, test=performance.test, analysisId)
+      
+      # save only the evaluation of full population to csv when i = 1
+      if(saveEvaluation & i == 1){
+        ParallelLogger::logTrace('Saving evaluation csv files')
+        if(!dir.exists( file.path(analysisPath, 'evaluation') ))
+          dir.create(file.path(analysisPath, 'evaluation'))
+        tryCatch(utils::write.csv(performance$evaluationStatistics, file.path(analysisPath, 'evaluation', 'evaluationStatistics.csv'), row.names=F ),
+                 finally= ParallelLogger::logTrace('Saved EvaluationStatistics.')
+        )
+        tryCatch(utils::write.csv(performance$thresholdSummary, file.path(analysisPath, 'evaluation', 'thresholdSummary.csv'), row.names=F ),
+                 finally= ParallelLogger::logTrace('Saved ThresholdSummary.')
+        )
+        tryCatch(utils::write.csv(performance$demographicSummary, file.path(analysisPath, 'evaluation', 'demographicSummary.csv'), row.names=F),
+                 finally= ParallelLogger::logTrace('Saved DemographicSummary.')
+        )
+        tryCatch(utils::write.csv(performance$calibrationSummary, file.path(analysisPath, 'evaluation', 'calibrationSummary.csv'), row.names=F),
+                 finally= ParallelLogger::logTrace('Saved CalibrationSummary.')
+        )
+        tryCatch(utils::write.csv(performance$predictionDistribution, file.path(analysisPath, 'evaluation', 'predictionDistribution.csv'), row.names=F),
+                 finally= ParallelLogger::logTrace('Saved PredictionDistribution.')
+        )
+      }
+      
+    }else{
+      ParallelLogger::logWarn(paste0('Evaluation not possible as prediciton NULL or all the same values'))
+      performance.test <- NULL
+      performance.train <- NULL
+      performance <- NULL
+    }
+    performances[[i]] <- performance
+    predictions[[i]] <- prediction
   }
   
   # log the end time:
@@ -414,16 +441,22 @@ runPlp <- function(population, plpData,  minCovariateFraction = 0.001, normalize
   results <- list(inputSetting=inputSetting,
                   executionSummary=executionSummary,
                   model=model,
-                  prediction=prediction,
-                  performanceEvaluation=performance,
+                  prediction=predictions[[1]],
+                  performanceEvaluation=performances[[1]],
                   covariateSummary=covSummary,
                   analysisRef=list(analysisId=analysisId,
                                    analysisName=NULL,#analysisName,
                                    analysisSettings= NULL))
+  # add evalAgePop to results
+  if (!is.null(evalAgePop)) {
+    results <- c(results, evalAgePop=list(performances[2:length(performances)]))
+    results <- c(results, evalAgePred=list(predictions[2:length(predictions)]))
+  }
+  
   class(results) <- c('runPlp')
   
   # save the plots?
-  if(savePlpPlots & !is.null(performance)){
+  if(savePlpPlots & !is.null(performances[[1]])){
     plotPlp(result = results, filename = file.path(analysisPath))
   }
   

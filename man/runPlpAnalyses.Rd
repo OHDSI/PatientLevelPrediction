@@ -28,6 +28,7 @@ runPlpAnalyses(
   testSplit = "person",
   testFraction = 0.25,
   splitSeed = NULL,
+  evalAgePop = NULL,
   nfold = 3,
   verbosity = "INFO",
   settings = NULL
@@ -96,6 +97,9 @@ the \code{\link{createPlpModelSettings}} function.}
 \item{testFraction}{Fraction of data to use as test set}
 
 \item{splitSeed}{The seed used for the randomization into test/train}
+
+\item{evalAgePop}{Additionally evaluate the fitted model in age stratified subgroups of full population,
+e.g. to evaluate in 0-64 years and 65-100 years provide: list(c(0, 64), c(65, 100))}
 
 \item{nfold}{Number of folds used to do cross validation}
 

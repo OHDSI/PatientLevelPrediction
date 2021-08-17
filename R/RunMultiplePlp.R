@@ -63,6 +63,8 @@
 #' @param testSplit                      How to split into test/train (time or person)
 #' @param testFraction                   Fraction of data to use as test set
 #' @param splitSeed                      The seed used for the randomization into test/train
+#' @param evalAgePop                     Additionally evaluate the fitted model in age stratified subgroups of full population,
+#'                                       e.g. to evaluate in 0-64 years and 65-100 years provide: list(c(0, 64), c(65, 100))
 #' @param nfold                          Number of folds used to do cross validation
 #' @param verbosity                      The logging level
 #' @param settings                       Specify the T, O, population, covariate and model settings
@@ -98,6 +100,7 @@ runPlpAnalyses <- function(connectionDetails,
                           testSplit = "person",
                           testFraction = 0.25,
                           splitSeed = NULL,
+                          evalAgePop = NULL,
                           nfold = 3,
                           verbosity = "INFO",
                           settings = NULL) {
@@ -150,7 +153,7 @@ runPlpAnalyses <- function(connectionDetails,
                            testFraction = testFraction,
                            splitSeed = splitSeed,
                            nfold = nfold,
-                           verbosity = verbosity )
+                           verbosity = verbosity)
 
   if (!dir.exists(outputFolder)){
     dir.create(outputFolder)
@@ -262,6 +265,7 @@ runPlpAnalyses <- function(connectionDetails,
       runPlpSettings$modelSettings <- modelAnalysisList$models[[referenceTable$modelSettingId[i]]]
       runPlpSettings$plpData <- plpData
       runPlpSettings$population <- population
+      runPlpSettings$evalAgePop <- evalAgePop
       runPlpSettings$saveDirectory <- gsub(paste0('/Analysis_',referenceTable$analysisId[i]),'',referenceTable$plpResultFolder[i])
       runPlpSettings$analysisId <- paste0('Analysis_',referenceTable$analysisId[i])
       runPlpSettings$savePlpData <- F

@@ -24,6 +24,7 @@ runPlp(
   verbosity = "INFO",
   timeStamp = FALSE,
   analysisId = NULL,
+  evalAgePop = NULL,
   runCovariateSummary = T,
   save = NULL
 )
@@ -94,6 +95,9 @@ If not set trainFraction is equal to 1 - test}
 \item{timeStamp}{If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.}
 
 \item{analysisId}{Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
+
+\item{evalAgePop}{Additionally evaluate the fitted model in age stratified subgroups of full population,
+e.g. to evaluate in 0-64 years and 65-100 years provide: list(c(0, 64), c(65, 100))}
 
 \item{runCovariateSummary}{Whether to calculate the mean and sd for each covariate}
 
