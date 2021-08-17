@@ -733,7 +733,7 @@ loadPlpResult <- function(dirPath){
     result <- c(result, evalAgePop = list(readRDS(file = file.path(dirPath, "evalAgePop.rds"))))
   }
   if(file.exists(file.path(dirPath, "evalAgePred.rds"))) {
-    result<- c(result, evalAgePred = readRDS(file = file.path(dirPath, "evalAgePred.rds")))
+    result<- c(result, evalAgePred = list(readRDS(file = file.path(dirPath, "evalAgePred.rds"))))
   }
   
   class(result) <- "runPlp"
