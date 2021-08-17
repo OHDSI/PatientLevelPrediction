@@ -695,7 +695,12 @@ savePlpResult <- function(result, dirPath){
   #saveRDS(result$performanceEvaluationTrain, file = file.path(dirPath, "performanceEvaluationTrain.rds"))
   saveRDS(result$covariateSummary, file = file.path(dirPath, "covariateSummary.rds"))
   
-  
+  if(exists('evalAgePop', where=result)) {
+    saveRDS(result$evalAgePop, file = file.path(dirPath, "evalAgePop.rds"))
+  }
+  if(exists("evalAgePred", where=result)) {
+    saveRDS(result$evalAgePred, file = file.path(dirPath, "evalAgePred.rds"))
+  }
 }
 
 #' Loads the evalaution dataframe
@@ -722,6 +727,15 @@ loadPlpResult <- function(dirPath){
                  #performanceEvaluationTrain= readRDS(file.path(dirPath, "performanceEvaluationTrain.rds")),
                  covariateSummary = readRDS(file.path(dirPath, "covariateSummary.rds"))
   )
+  
+  # if evaluation in age strata has been performed, load the relevant list items
+  if(file.exists(file.path(dirPath, 'evalAgePop.rds'))) {
+    result <- c(result, evalAgePop = list(readRDS(file = file.path(dirPath, "evalAgePop.rds"))))
+  }
+  if(file.exists(file.path(dirPath, "evalAgePred.rds"))) {
+    result<- c(result, evalAgePred = readRDS(file = file.path(dirPath, "evalAgePred.rds")))
+  }
+  
   class(result) <- "runPlp"
   
   return(result)
