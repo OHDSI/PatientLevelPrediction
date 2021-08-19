@@ -101,7 +101,15 @@ test_that("recalibratePlpRefit", {
   # add more test...
 })
 
-
+test_that("differentialRecalibration",{
+  testDiffRecal <- differentialRecalibration(validationResult, plpResult)
+  noRecal <- differentialRecalibration(plpResult, plpResult)
+  expect_equal(noRecal$prediction$prediction$value, plpResult$prediction$value)
+  expect_equal(length(testDiffRecal$prediction$prediction$value), length(validationResult$prediction$value))
+  notBinary <- validationResult
+  attr(notBinary$prediction, "metaData")$predictionType = "survival"
+  expect_error(differentialRecalibration(notBinary, plpResult))
+})
 
 
 

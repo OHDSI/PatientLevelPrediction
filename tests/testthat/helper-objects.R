@@ -73,7 +73,15 @@ plpResult <- runPlp(population = population,
                     analysisId = 'lrTest',
                     saveDirectory =  saveLoc)
 
-
+validationResult <- runPlp(population = population2,
+                           plpData = plpData2, 
+                           modelSettings = lrSet, 
+                           savePlpData = F, 
+                           savePlpResult = F, 
+                           saveEvaluation = F, 
+                           savePlpPlots = F, 
+                           analysisId = 'lrTest',
+                           saveDirectory =  saveLoc)
 # learningCurve 
 learningCurve <- createLearningCurve(population = population, 
                                      plpData = plpData, 

@@ -100,11 +100,10 @@ recalibratePlpRefit <- function(plpModel,
 #' recalibratePlp
 #'
 #' @description
-#' Train various models using a default parameter gird search or user specified parameters
+#' Recalibrate models using a various different methods 
 #'
 #' @details
-#' The user can define the machine learning model to train (regularised logistic regression, random forest,
-#' gradient boosting machine, neural network and )
+#' The user can recalibrate plp models using one of three different methods
 #' 
 #' @param prediction                      A prediction dataframe
 #' @param analysisId                      The model analysisId
@@ -243,6 +242,51 @@ logFunct <- function(values){
 inverseLog <- function(values){
   res <- log(values/(1-values))
   return(res)
+}
+
+#' differentialRecalibration
+#'
+#' @description
+#' Recalibrate models using the difference in event rates between development and validation
+#'
+#' @details
+#' Use the differential event rates to adjust the calibration of a model
+#' 
+#' @param validationResult             The validation result that is to be adjusted
+#' @param originalPlpResult            The development result to be used to adjust
+#' @return
+#' An object of class \code{runPlp} that is recalibrated using the differential event rates
+#'
+
+#' @export
+
+differentialRecalibration <- function(validationResult, originalPlpResult){
+  if(attr(validationResult$prediction, "metaData")$predictionType == 'binary'){
+    #get event rate in validation set
+    valEval <- as.data.frame(validationResult$performanceEvaluation$evaluationStatistics)
+    valRate <- as.numeric(valEval$Value[valEval$Metric=='outcomeCount']) / as.numeric(valEval$Value[valEval$Metric=='populationSize'])
+    #get event rate in development set
+    devEval <- as.data.frame(originalPlpResult$performanceEvaluation$evaluationStatistics)
+    devRate <- as.numeric(devEval$Value[devEval$Metric=='outcomeCount']) / as.numeric(devEval$Value[valEval$Metric=='populationSize'])
+    
+    #create the ratios
+    valRatio <- valRate/ (1-valRate)
+    devRatio <- devRate/ (1 -  devRate)
+    
+    #calculate correction factor
+    correctionFactor <- log(valRatio / devRatio)
+    
+    validationResult$prediction$value = logFunct(inverseLog(validationResult$prediction$value) + correctionFactor)
+    
+    return(list(prediction = validationResult,
+                type = 'differentialRecalibration',
+                correctionFactor = correctionFactor))
+  }
+  
+  if(attr(validationResult, "metaData")$predictionType == 'survival'){
+    ParallelLogger::logError('Survival differential recalibration not currently available')
+  }
+  
 }
 
 #' addRecalibration
