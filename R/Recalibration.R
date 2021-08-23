@@ -134,7 +134,9 @@ recalibratePlp <- function(prediction, analysisId,
   result$prediction <- result$prediction[,c('rowId', 'value')]
   colnames(result$prediction)[2] <- paste0(result$type, 'Value')
 
+  metaDataTemp <- attr(prediction, "metaData")
   prediction <- merge(prediction, result$prediction, by = 'rowId')
+  attr(prediction, "metaData") <- metaDataTemp
   
   recalibrateResult$evaluationStatistics <- rbind(recalibrateResult$evaluationStatistics,
                                                   data.frame(analysisId = analysisId,
