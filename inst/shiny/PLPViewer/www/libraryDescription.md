@@ -1,35 +1,21 @@
-### This is a alpha version of the OHDSI/EHDEN Prediction model Library
+### OHDSI PatientLevelPrediction Model Repository
 
-This contains a demo version of the Patient-Level Prediction Model Library
+This shiny application is an interface for viewing, uploading and downloading healthcare prediction models. 
 
-This library will contain every model developed or validated within the OHDSI PLP Framework. It will be a centralised, versioned repository that will give users the ability to explore the models, interactively examine the results, download and validate different models. Including the cohorts used for each setting. 
+Our aim is to improve the reproducibility and transparency of prediction models.  Reproducibiliy is improved by the ability to access code that can be run against any OMOP common data model data to implement and evaluate any model in this repository. Transparency is improved by providing all the details for the model development and performance within the app. This will help us decide which models to trust by examining extensive external validation results. 
 
-The library will also provide a place to upload results of validations or model developments to then be included in the library itself.
+### How to use?
 
-### Aims
-The motivation for this project is to increase the trust, reproducibility and ease of understanding of PLP research.
+Click on the 'Library' option in the left-hand menu to explore the models in the repository.  You can select a model to explore further by selecting the corresponding row in the library table.  This will then populate the settings/performance/model views.
 
-This will be done by centralising all published models to improve accessibility. The library will provide a single location to find the models, rather than the current method of each study having its own unique shiny application.
-The models will be version controlled, so if i model is updated after publication of a journal paper, both the original evidence and the newer version will remain accessible.
+### How to download a model?
 
-Further for methods researchers it will provide an easy way to find models, that were developed on similar data to their own,  to test out new model development methods and metrics.
+Click on the 'download development' to download an R package that can be executed on any OMOP common data model data to replicate the model development process in your data.   Click the 'download validation' to download an R package that can be executed on any OMOP common data model data to validate the choosen model in your data.  You can then upload the new model or validation results to the repo.
 
-### Usage instructions ###
-To use the app navigate to the Library tab which will show all the models that have been developed within the OHDSI PLP framework. The table displays information about the model setting, performance and number of external validations. Once you have found the model you are interested in select the model and then you can then select the model by clicking it, then navigating to the tabs labelled: 
- - Development Settings 
- - Summary 
- - Discrimination 
- - Calibration
+### How to upload results?
 
-will provide you with the ability to interactively explore the internal validation of the model and provide info on various features of the model development.
- 
-Under the validation tab, there is information available on the different external validations that have been performed for your chosen model. These can be selected and the metrics and plots will update to allow for easy performance comparison.
+Click the 'upload' left-hand menu option, fill out the form and click submit.  The results will be reviewed and you will recieve and email once the results are in the repository.
 
-### Proposed Developments
-- create database to store model information to increase speed of application (in process)
-- add ability to upload development/validation (in process)
-- add ability to download validation packages (in process)
-- add versioning to support research reproducibility (completed, github/zenodo dependant)
-- add fingerprinting to models to check the correct model/cohorts have been used
-- add user accounts with different access levels
-=======
+### Questions?
+
+Please send any questions to: ...@...com

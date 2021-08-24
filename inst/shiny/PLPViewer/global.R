@@ -6,21 +6,25 @@ logger <- ParallelLogger::createLogger(name = "SIMPLE",
                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
 ParallelLogger::registerLogger(logger)
 # EDIT FOR REPO OR DATABASE
-useDatabase <- T
+useDatabase <- F
 pathToMd <- ifelse(useDatabase==F, "./www/shinyDescription.md" ,"./www/libraryDescription.md")
 
 # set default
 ##Sys.getenv("shinydbDatabase")
 mySchema <- Sys.getenv("covid19vaccinationplpdbSchema")
+con = NULL
+connectionDetails = NULL
 
 if(useDatabase){
-  source("repositoryExtras.R")
+  source("databaseExtras.R")
   result <- 'database'
   validation <- NULL
   
   con <- pool::dbPool(drv = DatabaseConnector::DatabaseConnectorDriver(),
                                  dbms = "postgresql",
-                                 server = Sys.getenv("shinydbServer"),
+                      server = paste(Sys.getenv("shinydbServer"),
+                            Sys.getenv("shinydbDatabase"),
+                            sep = "/"),
                                  # port = Sys.getenv("shinydbPort"),
                                  user = Sys.getenv("covid19vaccinationplpdbUser"),
                                  password = Sys.getenv("covid19vaccinationplpdbPw"))
@@ -60,14 +64,4 @@ if(useDatabase){
   summaryTable <- getSummary(result, inputType, validation)
   
 }
-
-
-myResultList <- lapply(1:nrow(summaryTable), function(i){paste( 'Dev:', as.character(summaryTable$Dev[i]),
-                                                                '- Val:',as.character(summaryTable$Val[i]),
-                                                                 '-T:', as.character(summaryTable$T[i]),
-                                                               '- O:',as.character(summaryTable$O[i]),
-                                                               '- TAR:', as.character(summaryTable$TAR[i]),
-                                                               '- Model:', as.character(summaryTable$Model[i]),
-                                                               'Predictor:', as.character(summaryTable$covariateSettingId[i]))})
-
 

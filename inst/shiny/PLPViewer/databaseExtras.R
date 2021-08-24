@@ -98,7 +98,7 @@ getValSummary <- function(con, mySchema, modelId ){
   
   sql <- "SELECT results.result_id, results.model_id as analysis_id, 
                 results.researcher_id, 
-                                databases.database_acronym AS Dev, 
+                                --databases.database_acronym AS Dev, 
                                 databases.database_acronym AS Val,
                                 targets.cohort_name AS T, outcomes.cohort_name AS O,
    models.model_name AS model, 
@@ -109,11 +109,13 @@ getValSummary <- function(con, mySchema, modelId ){
    nResult.population_size, 
    oResult.outcome_count,
    ROUND(nTest.test_size*100.0/nResult.population_size, 1) as eval_percent,
-   ROUND(oResult.outcome_count*100.0/nResult.population_size,4) as outcome_percent
+   ROUND(oResult.outcome_count*100.0/nResult.population_size,4) as outcome_percent,
+   ROUND(calibration_in_large, 3) as calibration_in_large
    
    FROM @my_schema.results INNER JOIN @my_schema.models 
-    ON results.target_id = models.target_id and 
-         results.outcome_id = models.outcome_id and 
+    ON 
+         --results.target_id = models.target_id and 
+         --results.outcome_id = models.outcome_id and 
          results.tar_id = models.tar_id and
          results.population_setting_id = models.population_setting_id and
          models.model_id = @model_id
@@ -124,6 +126,9 @@ getValSummary <- function(con, mySchema, modelId ){
     LEFT JOIN @my_schema.tars ON results.tar_id = tars.tar_id
     LEFT JOIN (SELECT result_id, value AS auc FROM @my_schema.evaluation_statistics where metric = 'AUC.auc' and eval in ('test','validation') ) AS aucResult ON results.result_id = aucResult.result_id
     LEFT JOIN (SELECT result_id, value AS auprc FROM @my_schema.evaluation_statistics where metric = 'AUPRC' and eval in ('test','validation') ) AS auprcResult ON results.result_id = auprcResult.result_id
+    
+    LEFT JOIN (SELECT result_id, value AS calibration_in_large FROM @my_schema.evaluation_statistics where metric = 'CalibrationInLarge' and eval in ('test','validation') ) AS CalibrationInLargeResult ON results.result_id = CalibrationInLargeResult.result_id
+
     LEFT JOIN (SELECT result_id, sum(value) AS population_size FROM @my_schema.evaluation_statistics where metric = 'populationSize' group by result_id) AS nResult ON results.result_id = nResult.result_id
     LEFT JOIN (SELECT result_id, sum(value) AS outcome_count FROM @my_schema.evaluation_statistics where metric = 'outcomeCount' group by result_id) AS oResult ON results.result_id = oResult.result_id
     LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.evaluation_statistics where metric = 'populationSize' and eval = 'test') AS nTest ON results.result_id = nTest.result_id;"
@@ -145,14 +150,17 @@ getValSummary <- function(con, mySchema, modelId ){
   
   valTable <- editTar(valTable)
   
+  #colnames(valTable) <- editColnames(cnames = colnames(valTable), 
+  #                                   edits = c('AUC','AUPRC', 'T', 'O', 'Dev','Val', 'TAR', 'Model'))
   colnames(valTable) <- editColnames(cnames = colnames(valTable), 
-                                     edits = c('AUC','AUPRC', 'T', 'O', 'Dev','Val', 'TAR', 'Model'))
+                                     edits = c('AUC','AUPRC', 'T', 'O','Val', 'TAR', 'Model'))
   
   valTable$timeStamp <- 0
   valTable$Analysis <- valTable$analysisId
   ParallelLogger::logInfo("got db summary")
-  return(valTable[,c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
-                     'TAR', 'AUC', 'AUPRC', 
+  #return(valTable[,c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
+  return(valTable[,c('Val', 'T','O', 'Model','Covariate setting',
+                     'TAR', 'AUC', 'AUPRC', 'calibrationInLarge',
                      'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp', 'analysisId', 'researcherId', 'resultId', 'Analysis')])
   
 }
@@ -294,7 +302,13 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F){
   result$model_id <- modelId
   
   # add intercept
-  result$model$model <- list(coefficient = 0)
+  ParallelLogger::logInfo("start intercept")
+  sql <- "SELECT intercept FROM @my_schema.models WHERE model_id = @model_id"
+  sql <- SqlRender::render(sql = sql, 
+                           my_schema = mySchema,
+                           model_id = modelId)
+  coefficient <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  result$model$model <- list(coefficient = coefficient$intercept[1])
   
   #hack so the check in plot,utlipl.. doesnt break it
   result$analysisRef <- ""
@@ -318,13 +332,14 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F){
 loadCovSumFromDb <- function(chosenRow, mySchema, con){
   ParallelLogger::logInfo("starting covsum")
   resultId <- chosenRow$resultId
-  sql <- "SELECT * FROM @my_schema.covariate_summary WHERE result_id = @result_id;"
+  sql <- "SELECT * FROM @my_schema.covariate_summary WHERE result_id = @result_id;" 
   
   sql <- SqlRender::render(sql = sql,
                            my_schema = mySchema,
                            result_id = resultId)
 
   covariateSummary <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  print(colnames(covariateSummary))
   colnames(covariateSummary) <- SqlRender::snakeCaseToCamelCase(colnames(covariateSummary))
   
   
