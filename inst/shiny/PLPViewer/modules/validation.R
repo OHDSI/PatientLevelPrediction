@@ -47,7 +47,9 @@ validationServer <- function(id,
       #output$validationTable <- DT::renderDataTable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC)), rownames= FALSE)
       output$validationTable <- DT::renderDataTable({
         if(nrow(validationTable())>0){
-          validationTable()[,c('Analysis','T','O', 'Val', 'AUC','calibrationInLarge', 'T Size', 'O Count','Val (%)')]
+          
+          cind <- c('Analysis','T','O', 'Val', 'AUC','calibrationInLarge', 'T Size', 'O Count','Val (%)')%in%colnames(validationTable())
+          validationTable()[,c('Analysis','T','O', 'Val', 'AUC','calibrationInLarge', 'T Size', 'O Count','Val (%)')[cind]]
         } else{
           NULL
         }

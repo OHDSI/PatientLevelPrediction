@@ -67,7 +67,6 @@ nbServer <- function(id, plpResult) {
           ind <- !is.na(result$netBenefit) & is.finite(result$netBenefit) & !is.null(result$netBenefit) & is.finite(result$pt)
           
           df2 <- reshape2::melt(result, id.vars = 'pt')
-          print(df2)
           
           ggplot2::ggplot(df2, ggplot2::aes(x=pt, y=value, 
                                             group=variable, 

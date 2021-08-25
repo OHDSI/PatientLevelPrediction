@@ -44,9 +44,13 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
       output$modelView <- DT::renderDataTable(editCovariates(covariateSummary())$table,
                                               colnames = editCovariates(covariateSummary())$colnames)
       
+      
+      
+
+      
       output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(covariateSummary()),
                                                                   nonZeroCount = sum(covariateSummary()$covariateValue!=0),
-                                                                  intercept = ifelse(class(plpResult()$model$model)=='character' || !'model '%in% names(plpResult()$model),plpResult()$model$model$coefficient[1],plpResult()$model$model$coefficient[1])))
+                                                                  intercept = getIntercept(plpResult())))
       
       # covariate model plots
       covs <- shiny::reactive({
@@ -186,4 +190,23 @@ plotCovariateSummary <- function(covariateSummary){
   
   return(list(binary=binary,
               meas = meas))
+}
+
+
+
+getIntercept <- function(plpResult){
+  
+  if('model'%in%names(plpResult)){
+    
+    if('model'%in%names(plpResult$model)){
+      
+      if('coefficients'%in%names(plpResult$model$model)){
+        
+        return(plpResult$model$model$coefficients[1])
+        
+      }
+      
+    }
+  }
+  return(0)
 }
