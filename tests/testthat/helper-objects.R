@@ -72,7 +72,7 @@ plpResult <- runPlp(population = population,
                     savePlpPlots = F, 
                     analysisId = 'lrTest',
                     saveDirectory =  saveLoc)
-
+#this is a hack to test the differentialRecalibration
 validationResult <- runPlp(population = population2,
                            plpData = plpData2, 
                            modelSettings = lrSet, 
