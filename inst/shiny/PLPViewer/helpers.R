@@ -24,8 +24,15 @@ getFilter <- function(summaryTable,input){
   return(ind)
 }
 
-
-getPlpResult <- function(result,validation,summaryTable, inputType,trueRow){
+# need to add mySchema and connectionDetails to input
+getPlpResult <- function(result, validation,summaryTable, inputType,trueRow, val = F, mySchema = NULL, connectionDetails = NULL){
+  
+  if(result == 'database'){
+    tempResult <- loadPlpFromDb(summaryTable[trueRow,], mySchema, con, val = val)
+    return(tempResult)
+  }
+  
+  
   if(inputType == 'plpResult'){
     i <- trueRow
     if(i ==1){
@@ -144,5 +151,13 @@ editCovariates <- function(covs){
   }
 }
 
-
+addInfo <- function(item, infoId) {
+  infoTag <- tags$small(class = "badge pull-right action-button",
+                        style = "padding: 1px 6px 2px 6px; background-color: steelblue;",
+                        type = "button", 
+                        id = infoId,
+                        "i")
+  item$children[[1]]$children <- append(item$children[[1]]$children, list(infoTag))
+  return(item)
+}
     
