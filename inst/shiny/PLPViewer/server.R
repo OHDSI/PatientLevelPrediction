@@ -89,13 +89,14 @@ server <- shiny::shinyServer(function(input, output, session) {
      }
   )
   # covariate table
-  output$modelView <- DT::renderDataTable(editCovariates(covariateSummary())$table,
-                                          colnames = editCovariates(covariateSummary())$colnames)
-
-  output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(covariateSummary()),
-                                                              nonZeroCount = sum(covariateSummary()$covariateValue!=0),
-                                                              intercept = ifelse(class(plpResult()$model$model)=='character' || !'model '%in% names(plpResult()$model),0,plpResult()$model$model$coefficients[1])))
-
+  output$modelView <- DT::renderDataTable(editCovariates(plpResult()$covariateSummary)$table,  
+                                          colnames = editCovariates(plpResult()$covariateSummary)$colnames)
+  
+  
+  output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(plpResult()$covariateSummary),
+                                                              nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0),
+                                                              intercept = ifelse(class(plpResult()$model$model)=='character' || !'model' %in% names(plpResult()$model),0,plpResult()$model$model$coefficients[1])))
+  
   # Download plpresult
   output$plpResult <- shiny::downloadHandler(
     filename = function(){
@@ -248,8 +249,8 @@ server <- shiny::shinyServer(function(input, output, session) {
                         'CalibrationSlope',
                         'CalibrationInLarge',
                         'Emean',
-                         'E90',
-                         'Emax', 
+                         'E90','E90.E90',
+                         'Emax', 'Emax.Emax',
                         'correctionFactor',
                         'adjustGradient',
                         'adjustIntercept')

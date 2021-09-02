@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -151,7 +151,7 @@
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -177,27 +177,28 @@
     <p>Create a study population</p>
     </div>
 
-    <pre class="usage"><span class='fu'>createStudyPopulation</span>(
-  <span class='no'>plpData</span>,
-  <span class='kw'>population</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>outcomeId</span>,
-  <span class='kw'>binary</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>includeAllOutcomes</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>firstExposureOnly</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>washoutPeriod</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>removeSubjectsWithPriorOutcome</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>priorOutcomeLookback</span> <span class='kw'>=</span> <span class='fl'>99999</span>,
-  <span class='kw'>requireTimeAtRisk</span> <span class='kw'>=</span> <span class='no'>F</span>,
-  <span class='kw'>minTimeAtRisk</span> <span class='kw'>=</span> <span class='fl'>365</span>,
-  <span class='kw'>riskWindowStart</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>startAnchor</span> <span class='kw'>=</span> <span class='st'>"cohort start"</span>,
-  <span class='kw'>riskWindowEnd</span> <span class='kw'>=</span> <span class='fl'>365</span>,
-  <span class='kw'>endAnchor</span> <span class='kw'>=</span> <span class='st'>"cohort start"</span>,
-  <span class='kw'>verbosity</span> <span class='kw'>=</span> <span class='st'>"INFO"</span>,
-  <span class='no'>addExposureDaysToStart</span>,
-  <span class='no'>addExposureDaysToEnd</span>,
-  <span class='no'>...</span>
-)</pre>
+    <pre class="usage"><span class='fu'>createStudyPopulation</span><span class='op'>(</span>
+  <span class='va'>plpData</span>,
+  population <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>outcomeId</span>,
+  binary <span class='op'>=</span> <span class='cn'>T</span>,
+  includeAllOutcomes <span class='op'>=</span> <span class='cn'>T</span>,
+  firstExposureOnly <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  washoutPeriod <span class='op'>=</span> <span class='fl'>0</span>,
+  removeSubjectsWithPriorOutcome <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  priorOutcomeLookback <span class='op'>=</span> <span class='fl'>99999</span>,
+  requireTimeAtRisk <span class='op'>=</span> <span class='cn'>F</span>,
+  minTimeAtRisk <span class='op'>=</span> <span class='fl'>365</span>,
+  riskWindowStart <span class='op'>=</span> <span class='fl'>0</span>,
+  startAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>,
+  riskWindowEnd <span class='op'>=</span> <span class='fl'>365</span>,
+  endAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>,
+  verbosity <span class='op'>=</span> <span class='st'>"INFO"</span>,
+  restrictTarToCohortEnd <span class='op'>=</span> <span class='cn'>F</span>,
+  <span class='va'>addExposureDaysToStart</span>,
+  <span class='va'>addExposureDaysToEnd</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -278,6 +279,10 @@ date for a person to be included in the cohort.</p></td>
 </ul></td>
     </tr>
     <tr>
+      <th>restrictTarToCohortEnd</th>
+      <td><p>If using a survival model and you want the time-at-risk to end at the cohort end date set this to T</p></td>
+    </tr>
+    <tr>
       <th>addExposureDaysToStart</th>
       <td><p>DEPRECATED: Add the length of exposure the start of the risk window? Use <code>startAnchor</code> instead.</p></td>
     </tr>
@@ -293,7 +298,7 @@ date for a person to be included in the cohort.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A data frame specifying the study population. This data frame will have the following columns:</p><dl'>
+    <p>A data frame specifying the study population. This data frame will have the following columns:</p><dl>
 <dt>rowId</dt><dd><p>A unique identifier for an exposure</p></dd>
 <dt>subjectId</dt><dd><p>The person ID of the subject</p></dd>
 <dt>cohortStartdate</dt><dd><p>The index date</p></dd>
@@ -323,7 +328,7 @@ a risk window, and determining which outcomes fall inside the risk window.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

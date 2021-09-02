@@ -839,14 +839,17 @@ getDemographicSummary <- function(prediction, type = 'binary', timepoint = NULL)
           
           out <- tryCatch({summary(survival::survfit(survival::Surv(t1$t, y1$y) ~ 1), times = timepoint)},
                           error = function(e){ParallelLogger::logError(e); return(NULL)})
-          demoTemp <- c(genGroup = gen, ageGroup = age, 
-                        PersonCountAtRisk = length(p1$value),
-                        PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
-                        observedRisk = 1-out$surv, 
-                        averagePredictedProbability = mean(p1$value, na.rm = T),
-                        StDevPredictedProbability = stats::sd(p1$value, na.rm = T))
           
-          demographicData <- rbind(demographicData, demoTemp)
+          if(!is.null(out)){
+            demoTemp <- c(genGroup = gen, ageGroup = age, 
+                          PersonCountAtRisk = length(p1$value),
+                          PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
+                          observedRisk = 1-out$surv, 
+                          averagePredictedProbability = mean(p1$value, na.rm = T),
+                          StDevPredictedProbability = stats::sd(p1$value, na.rm = T))
+            
+            demographicData <- rbind(demographicData, demoTemp)
+          }
         }
         
       }

@@ -81,7 +81,7 @@ the prediction (AUC, brier score, calibration)" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -89,7 +89,7 @@ the prediction (AUC, brier score, calibration)" />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -160,7 +160,7 @@ the prediction (AUC, brier score, calibration)" />
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -192,13 +192,13 @@ inputs a population with an outcomeCount column then the function also returns t
 the prediction (AUC, brier score, calibration)</p>
     </div>
 
-    <pre class="usage"><span class='fu'>applyEnsembleModel</span>(
-  <span class='no'>population</span>,
-  <span class='no'>dataList</span>,
-  <span class='no'>ensembleModel</span>,
-  <span class='kw'>analysisId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>calculatePerformance</span> <span class='kw'>=</span> <span class='no'>T</span>
-)</pre>
+    <pre class="usage"><span class='fu'>applyEnsembleModel</span><span class='op'>(</span>
+  <span class='va'>population</span>,
+  <span class='va'>dataList</span>,
+  <span class='va'>ensembleModel</span>,
+  analysisId <span class='op'>=</span> <span class='cn'>NULL</span>,
+  calculatePerformance <span class='op'>=</span> <span class='cn'>T</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -227,28 +227,29 @@ the prediction (AUC, brier score, calibration)</p>
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='co'># load the model and data</span>
-<span class='no'>plpData</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='loadPlpData.html'>loadPlpData</a></span>(<span class='st'>"plpdata/"</span>)
-<span class='no'>results</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>PatientLevelPrediction</span><span class='kw ns'>::</span><span class='fu'><a href='runEnsembleModel.html'>runEnsembleModel</a></span>(<span class='no'>population</span>,
-                                                    <span class='kw'>dataList</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>plpData</span>, <span class='no'>plpData</span>),
-                                                    <span class='kw'>modelList</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>model</span>, <span class='no'>model</span>),
-                                                    <span class='kw'>testSplit</span> <span class='kw'>=</span> <span class='st'>"person"</span>,
-                                                    <span class='kw'>testFraction</span> <span class='kw'>=</span> <span class='fl'>0.2</span>,
-                                                    <span class='kw'>nfold</span> <span class='kw'>=</span> <span class='fl'>3</span>,
-                                                    <span class='kw'>splitSeed</span> <span class='kw'>=</span> <span class='fl'>1000</span>,
-                                                    <span class='kw'>ensembleStrategy</span> <span class='kw'>=</span> <span class='st'>"stacked"</span>)
+<span class='va'>plpData</span> <span class='op'>&lt;-</span> <span class='fu'><a href='loadPlpData.html'>loadPlpData</a></span><span class='op'>(</span><span class='st'>"plpdata/"</span><span class='op'>)</span>
+<span class='va'>results</span> <span class='op'>&lt;-</span> <span class='fu'>PatientLevelPrediction</span><span class='fu'>::</span><span class='fu'><a href='runEnsembleModel.html'>runEnsembleModel</a></span><span class='op'>(</span><span class='va'>population</span>,
+                                                    dataList <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>plpData</span>, <span class='va'>plpData</span><span class='op'>)</span>,
+                                                    modelList <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>model</span>, <span class='va'>model</span><span class='op'>)</span>,
+                                                    testSplit <span class='op'>=</span> <span class='st'>"person"</span>,
+                                                    testFraction <span class='op'>=</span> <span class='fl'>0.2</span>,
+                                                    nfold <span class='op'>=</span> <span class='fl'>3</span>,
+                                                    splitSeed <span class='op'>=</span> <span class='fl'>1000</span>,
+                                                    ensembleStrategy <span class='op'>=</span> <span class='st'>"stacked"</span><span class='op'>)</span>
 <span class='co'># use the same population settings as the model:</span>
-<span class='no'>populationSettings</span> <span class='kw'>&lt;-</span> <span class='no'>plpModel</span>$<span class='no'>populationSettings</span>
-<span class='no'>populationSettings</span>$<span class='no'>plpData</span> <span class='kw'>&lt;-</span> <span class='no'>plpData</span>
-<span class='no'>population</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/do.call.html'>do.call</a></span>(<span class='no'>createStudyPopulation</span>, <span class='no'>populationSettings</span>)
+<span class='va'>populationSettings</span> <span class='op'>&lt;-</span> <span class='va'>plpModel</span><span class='op'>$</span><span class='va'>populationSettings</span>
+<span class='va'>populationSettings</span><span class='op'>$</span><span class='va'>plpData</span> <span class='op'>&lt;-</span> <span class='va'>plpData</span>
+<span class='va'>population</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/do.call.html'>do.call</a></span><span class='op'>(</span><span class='va'>createStudyPopulation</span>, <span class='va'>populationSettings</span><span class='op'>)</span>
 
 <span class='co'># get the prediction, please make sure the ensemble strategy for training and apply is the same:</span>
-<span class='no'>prediction</span> <span class='kw'>&lt;-</span> <span class='fu'>applyEnsembleModel</span>(<span class='no'>population</span>,
-                                 <span class='kw'>dataList</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>plpData</span>, <span class='no'>plpData</span>),
-                                 <span class='kw'>ensembleModel</span> <span class='kw'>=</span> <span class='no'>results</span>,
-                                 <span class='kw'>analysisId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)$<span class='no'>prediction</span>
-}</div></pre>
+<span class='va'>prediction</span> <span class='op'>&lt;-</span> <span class='fu'>applyEnsembleModel</span><span class='op'>(</span><span class='va'>population</span>,
+                                 dataList <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>plpData</span>, <span class='va'>plpData</span><span class='op'>)</span>,
+                                 ensembleModel <span class='op'>=</span> <span class='va'>results</span>,
+                                 analysisId <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span><span class='op'>$</span><span class='va'>prediction</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -264,7 +265,7 @@ the prediction (AUC, brier score, calibration)</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

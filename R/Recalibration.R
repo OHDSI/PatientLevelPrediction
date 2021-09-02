@@ -288,7 +288,7 @@ addRecalibration <- function(performanceEvaluation, recalibration){
     performanceEvaluation$evaluationStatistics <- rbind(performanceEvaluation$evaluationStatistics ,
                                                        recalibration$evaluationStatistics )
   }
-
+  
   return(performanceEvaluation)
 }
 

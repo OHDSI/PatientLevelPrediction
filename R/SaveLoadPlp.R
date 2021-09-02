@@ -180,11 +180,14 @@ getPlpData <- function(connectionDetails,
                                                          cohortTableIsTemp = TRUE,
                                                          rowIdField = "row_id",
                                                          covariateSettings = covariateSettings)
-  # add indexes for covariate summary
-  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
-  RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
-  
-  
+  # add indexes for tidyCov + covariate summary
+  Andromeda::createIndex(covariateData$covariates, c('rowId'),
+                         indexName = 'covariates_rowId')
+  Andromeda::createIndex(covariateData$covariates, c('covariateId'),
+                         indexName = 'covariates_covariateId')
+  Andromeda::createIndex(covariateData$covariates, c('covariateId', 'covariateValue'),
+                         indexName = 'covariates_covariateId_value')
+
   if(max(outcomeIds)!=-999){
   writeLines("Fetching outcomes from server")
   start <- Sys.time()
@@ -226,7 +229,7 @@ getPlpData <- function(connectionDetails,
   
   metaData <- covariateData$metaData
   metaData$call <- match.call()
-  metaData$call$connectionDetails = connectionDetails
+  metaData$call$connectionDetails = NULL
   metaData$call$connection = NULL
   metaData$call$cdmDatabaseSchema = cdmDatabaseSchema
   metaData$call$oracleTempSchema = oracleTempSchema
@@ -457,7 +460,7 @@ savePlpModel <- function(plpModel, dirPath){
     }
   } else if(attr(plpModel, 'type') == "xgboost"){
     # fixing xgboost save/load issue
-    xgboost::xgb.save(model = plpModel$model, fname = file.path(dirPath, "model"))
+    xgboost::xgb.save(model = plpModel$model, fname = file.path(dirPath, "model.json"))
   } else {  
   saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
   }
@@ -560,8 +563,11 @@ loadPlpModel <- function(dirPath) {
     model <- keras::load_model_hdf5(file.path(dirPath, "keras_model"))
   } else if(readRDS(file.path(dirPath, "attributes.rds"))$type == "xgboost"){
     ensure_installed("xgboost")
-    # fixing xgboost save/load issue
-    model <- xgboost::xgb.load(file.path(dirPath, "model"))
+    if('model' %in% dir(dirPath)){
+      model <- xgboost::xgb.load(file.path(dirPath, "model"))
+    } else{
+      model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
+    }
   } else {  
     model <- readRDS(file.path(dirPath, "model.rds"))
   }

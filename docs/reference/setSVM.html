@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -151,7 +151,7 @@
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -177,17 +177,17 @@
     <p>Create setting for SVM with python</p>
     </div>
 
-    <pre class="usage"><span class='fu'>setSVM</span>(
-  <span class='kw'>kernel</span> <span class='kw'>=</span> <span class='st'>"rbf"</span>,
-  <span class='kw'>C</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>, <span class='fl'>0.9</span>, <span class='fl'>2</span>, <span class='fl'>0.1</span>),
-  <span class='kw'>degree</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>, <span class='fl'>3</span>, <span class='fl'>5</span>),
-  <span class='kw'>gamma</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1e-04</span>, <span class='fl'>3e-05</span>, <span class='fl'>0.001</span>, <span class='fl'>0.01</span>, <span class='fl'>0.25</span>),
-  <span class='kw'>shrinking</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>coef0</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>classWeight</span> <span class='kw'>=</span> <span class='st'>"balanced"</span>,
-  <span class='kw'>varImp</span> <span class='kw'>=</span> <span class='no'>F</span>,
-  <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre>
+    <pre class="usage"><span class='fu'>setSVM</span><span class='op'>(</span>
+  kernel <span class='op'>=</span> <span class='st'>"rbf"</span>,
+  C <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>0.9</span>, <span class='fl'>2</span>, <span class='fl'>0.1</span><span class='op'>)</span>,
+  degree <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>3</span>, <span class='fl'>5</span><span class='op'>)</span>,
+  gamma <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1e-04</span>, <span class='fl'>3e-05</span>, <span class='fl'>0.001</span>, <span class='fl'>0.01</span>, <span class='fl'>0.25</span><span class='op'>)</span>,
+  shrinking <span class='op'>=</span> <span class='cn'>T</span>,
+  coef0 <span class='op'>=</span> <span class='fl'>0</span>,
+  classWeight <span class='op'>=</span> <span class='st'>"balanced"</span>,
+  varImp <span class='op'>=</span> <span class='cn'>F</span>,
+  seed <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -232,9 +232,10 @@
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='no'>model.svm</span> <span class='kw'>&lt;-</span> <span class='fu'>setSVM</span>(<span class='kw'>kernel</span><span class='kw'>=</span><span class='st'>'rbf'</span>, <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
-}</div></pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='va'>model.svm</span> <span class='op'>&lt;-</span> <span class='fu'>setSVM</span><span class='op'>(</span>kernel<span class='op'>=</span><span class='st'>'rbf'</span>, seed <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -250,7 +251,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
