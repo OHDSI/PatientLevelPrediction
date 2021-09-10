@@ -1437,3 +1437,19 @@ modelBasedConcordance <- function(prediction){
   return(mb.c)
 }
 
+#' Evaluate a subgroup of the population
+#' 
+#' @details
+#' run evaluatePlp in a specific subgroup
+#'
+#' @param prediction         the prediction object found in the plpResult object
+#' @param subPopulation      the subPopulation of interestof type 'population' 
+#' @return
+#' plpResult evaluation object for the subgroup
+#'
+#' @export
+subgroupEvaluation <- function(prediction, subPopulation){
+  subPrediction <- prediction[prediction$subjectId %in% subPopulation$subjectId,]
+  result <- evaluatePlp(subPrediction)
+  return(result)
+}
