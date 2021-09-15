@@ -1453,3 +1453,64 @@ subgroupEvaluation <- function(prediction, subPopulation){
   result <- evaluatePlp(subPrediction)
   return(result)
 }
+
+#' run multiple evaluations of the population
+#' 
+#' @details
+#' create subgroups on database instance and run the subgroup analyses
+#' 
+#' @param plpResult                    The result of running runPlp()
+#' @param connectionDetails            An R object of type\cr\code{connectionDetails} created using the
+#'                                     function \code{createConnectionDetails} in the
+#'                                     \code{DatabaseConnector} package.
+#' @param cdmDatabaseSchema            The name of the database schema that contains the OMOP CDM
+#'                                     instance.  Requires read permissions to this database. On SQL
+#'                                     Server, this should specifiy both the database and the schema,
+#'                                     so for example 'cdm_instance.dbo'.
+#' @param cohortDatabaseSchema         The name of the database schema that is the location where the
+#'                                     cohort data used to define the at risk cohort is available.
+#'                                     Requires read permissions to this database. 
+#' @param cohortJsonFiles              Location of the files containing the JSON files for the desired subgroup cohorts
+#' @param outputFolder                 The folder to save the results too
+#' 
+#' @return
+#' plpResult evaluation object for the subgroup
+#'
+#' @export
+createEvaluateSubgroup <- function(plpResult,connectionDetails, cdmDatabaseSchema, cohortDatabaseSchema, cohortJsonFiles, outputFolder){
+  # First construct a data frame with the cohorts to generate
+  cohortsToCreate <- CohortGenerator::createEmptyCohortSet()
+  for (i in 1:length(cohortJsonFiles)) {
+    cohortJsonFileName <- cohortJsonFiles[i]
+    cohortFullName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
+    cohortJson <- CohortGenerator::readCirceExpressionJsonFile(cohortJsonFileName)
+    cohortExpression <- CohortGenerator::createCirceExpressionFromFile(cohortJsonFileName)
+    cohortsToCreate <- rbind(cohortsToCreate, data.frame(cohortId = i,
+                                                         cohortFullName = cohortFullName, 
+                                                         sql = CirceR::buildCohortQuery(cohortExpression, 
+                                                                                        options = CirceR::createGenerateOptions(generateStats = FALSE)),
+                                                         json = cohortJson,
+                                                         stringsAsFactors = FALSE))
+  }
+  
+  # Generate the cohort set against Eunomia. 
+  # cohortsGenerated contains a list of the cohortIds 
+  # successfully generated against the CDM
+  cohortsGenerated <- CohortGenerator::generateCohortSet(connectionDetails = connectionDetails(),
+                                                         cdmDatabaseSchema = cdmDatabaseSchema,
+                                                         cohortDatabaseSchema = cohortDatabaseSchema,
+                                                         cohortTable = "temp_cohort",
+                                                         cohortSet = cohortsToCreate,
+                                                         createCohortTable = TRUE,
+                                                         incremental = FALSE,
+                                                         incrementalFolder = file.path(outputFolder, "RecordKeeping"),
+                                                         inclusionStatisticsFolder = outputFolder)
+  prediction <- plpResult$prediction
+  for (cohortId in cohortsToCreate$cohortId){
+    getPatientIdsSql <- SqlRender::render("SELECT COHORT_DEFINITION_ID,  SUBJECT_ID FROM @cohortDatabaseScema.temp_cohort WHERE COHORT_DEFINITION_ID = @cohortId", cohortDatabaseSchema, cohortId )
+    patientSubset <- DatabaseConnector::querySql(connection, getPatientIdsSql)
+    result <- subgroupEvaluation(prediction, subPopulation = patientSubset)
+    saveRDS(result, file = file.path(outputFolder, paste0(cohortsToCreate$cohortFullName[cohortsToCreate$cohortId == cohortId], ".rds")))
+  }
+  
+}
