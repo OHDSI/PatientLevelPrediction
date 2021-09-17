@@ -1477,16 +1477,18 @@ subgroupEvaluation <- function(prediction, subPopulation){
 #' plpResult evaluation object for the subgroup
 #'
 #' @export
-createEvaluateSubgroup <- function(plpResult,connectionDetails = NULL, connection = NULL, cdmDatabaseSchema, cohortDatabaseSchema, cohortJsonDirectory, outputFolder){
+createEvaluateSubgroup <- function(plpResult,connectionDetails = NULL, connection = NULL,
+                                   cdmDatabaseSchema, cohortDatabaseSchema,
+                                   cohortTable, cohortJsonDirectory, outputFolder){
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
   }
   # First construct a data frame with the cohorts to generate
   cohortsToCreate <- CohortGenerator::createEmptyCohortSet()
-  # cohortJsonFiles <- list.files(cohortJsonDirectory, full.names = T)
+  cohortJsonFiles <- list.files(cohortJsonDirectory, full.names = T)
   #test with celecoxib patients
-  cohortJsonFiles <- list.files(path = system.file("cohorts", package = "CohortGenerator"), full.names = TRUE)
+  # cohortJsonFiles <- list.files(path = system.file("cohorts", package = "CohortGenerator"), full.names = TRUE)
   
   for (i in 1:length(cohortJsonFiles)) {
     cohortJsonFileName <- cohortJsonFiles[i]
@@ -1504,19 +1506,19 @@ createEvaluateSubgroup <- function(plpResult,connectionDetails = NULL, connectio
   # Generate the cohort set against Eunomia. 
   # cohortsGenerated contains a list of the cohortIds 
   # successfully generated against the CDM
-  cohortsGenerated <- CohortGenerator::generateCohortSet(connection = connection,
+  cohortsGenerated <- CohortGenerator::generateCohortSet(connectionDetails = connectionDetails,
                                                          cdmDatabaseSchema = cdmDatabaseSchema,
                                                          cohortDatabaseSchema = cohortDatabaseSchema,
-                                                         cohortTable = "temp_cohort",
+                                                         cohortTable = cohortTable,
                                                          cohortSet = cohortsToCreate,
-                                                         createCohortTable = FALSE,
+                                                         createCohortTable = TRUE,
                                                          incremental = FALSE,
                                                          incrementalFolder = file.path(outputFolder, "RecordKeeping"),
                                                          inclusionStatisticsFolder = outputFolder)
   prediction <- plpResult$prediction
   for (cohortId in cohortsToCreate$cohortId){
-    getPatientIdsSql <- SqlRender::render("SELECT COHORT_DEFINITION_ID,  SUBJECT_ID FROM @cohortDatabaseSchema.cohort WHERE COHORT_DEFINITION_ID = @cohortId", cohortDatabaseSchema = cohortDatabaseSchema, cohortId = cohortId )
-    patientSubset <- DatabaseConnector::querySql(connection, getPatientIdsSql)
+    getPatientIdsSql <- SqlRender::render("SELECT COHORT_DEFINITION_ID,  SUBJECT_ID FROM @cohortDatabaseSchema.@cohortTable WHERE COHORT_DEFINITION_ID = @cohortId", cohortDatabaseSchema = cohortDatabaseSchema, cohortTable = cohortTable, cohortId = cohortId )
+    patientSubset <- DatabaseConnector::querySql(connection, getPatientIdsSql, snakeCaseToCamelCase = T)
     result <- subgroupEvaluation(prediction, subPopulation = patientSubset)
     saveRDS(result, file = file.path(outputFolder, paste0(cohortsToCreate$cohortFullName[cohortsToCreate$cohortId == cohortId], ".rds")))
   }
