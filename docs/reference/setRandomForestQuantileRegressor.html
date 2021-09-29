@@ -78,7 +78,7 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -86,7 +86,7 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -157,7 +157,7 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -187,21 +187,21 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
 This creates a setting for fitting a RandomForestQuantileRegressor model.  You need skgarden python install.  To install this open your command line and type: conda install -c conda-forge scikit-garden</p>
     </div>
 
-    <pre class="usage"><span class='fu'>setRandomForestQuantileRegressor</span>(
-  <span class='kw'>nEstimators</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>100</span>),
-  <span class='kw'>criterion</span> <span class='kw'>=</span> <span class='st'>"mse"</span>,
-  <span class='kw'>maxFeatures</span> <span class='kw'>=</span> -<span class='fl'>1</span>,
-  <span class='kw'>maxDepth</span> <span class='kw'>=</span> <span class='fl'>4</span>,
-  <span class='kw'>minSamplesSplit</span> <span class='kw'>=</span> <span class='fl'>2</span>,
-  <span class='kw'>minSamplesLeaf</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-  <span class='kw'>minWeightFractionLeaf</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>maxLeafNodes</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>bootstrap</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>oobScore</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>warmStart</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='no'>F</span>
-)</pre>
+    <pre class="usage"><span class='fu'>setRandomForestQuantileRegressor</span><span class='op'>(</span>
+  nEstimators <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>100</span><span class='op'>)</span>,
+  criterion <span class='op'>=</span> <span class='st'>"mse"</span>,
+  maxFeatures <span class='op'>=</span> <span class='op'>-</span><span class='fl'>1</span>,
+  maxDepth <span class='op'>=</span> <span class='fl'>4</span>,
+  minSamplesSplit <span class='op'>=</span> <span class='fl'>2</span>,
+  minSamplesLeaf <span class='op'>=</span> <span class='fl'>1</span>,
+  minWeightFractionLeaf <span class='op'>=</span> <span class='fl'>0</span>,
+  maxLeafNodes <span class='op'>=</span> <span class='cn'>NULL</span>,
+  bootstrap <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  oobScore <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  warmStart <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  seed <span class='op'>=</span> <span class='cn'>NULL</span>,
+  quiet <span class='op'>=</span> <span class='cn'>F</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -265,10 +265,11 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
     <p>Pick the hyper-parameters you want to do a grid search for</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='no'>rfQR</span> <span class='kw'>&lt;-</span> <span class='fu'>setRandomForestQuantileRegressor</span>(<span class='kw'>nEstimators</span> <span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>10</span>,<span class='fl'>50</span>,<span class='fl'>100</span>),
- <span class='kw'>maxDepth</span><span class='kw'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>4</span>,<span class='fl'>10</span>,<span class='fl'>17</span>), <span class='kw'>seed</span> <span class='kw'>=</span> <span class='fl'>2</span>)
-}</div></pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='va'>rfQR</span> <span class='op'>&lt;-</span> <span class='fu'>setRandomForestQuantileRegressor</span><span class='op'>(</span>nEstimators <span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>10</span>,<span class='fl'>50</span>,<span class='fl'>100</span><span class='op'>)</span>,
+ maxDepth<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>4</span>,<span class='fl'>10</span>,<span class='fl'>17</span><span class='op'>)</span>, seed <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -284,7 +285,7 @@ This creates a setting for fitting a RandomForestQuantileRegressor model.  You n
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

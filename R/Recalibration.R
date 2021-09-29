@@ -108,20 +108,20 @@ recalibratePlpRefit <- function(plpModel,
 #' 
 #' @param prediction                      A prediction dataframe
 #' @param analysisId                      The model analysisId
-#' @param method                          Method used to recalibrate ('recalibrationintheLarge' or 'weakRecalibration' )
+#' @param method                          Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )
 #' @return
 #' An object of class \code{runPlp} that is recalibrated on the new data
 #'
 
 #' @export
 recalibratePlp <- function(prediction, analysisId,
-                           method = c('recalibrationintheLarge', 'weakRecalibration')){
+                           method = c('recalibrationInTheLarge', 'weakRecalibration')){
   # check input:
     if (class(prediction) != 'data.frame')
       stop("Incorrect prediction") 
   
   if(!method  %in% c('recalibrationInTheLarge', 'weakRecalibration'))
-    stop("Unknown recalibration method type. must be of type: RecalibrationintheLarge, weakRecalibration")
+    stop("Unknown recalibration method type. must be of type: recalibrationInTheLarge, weakRecalibration")
   
   
   result <- do.call(method, list(prediction = prediction))
@@ -134,7 +134,9 @@ recalibratePlp <- function(prediction, analysisId,
   result$prediction <- result$prediction[,c('rowId', 'value')]
   colnames(result$prediction)[2] <- paste0(result$type, 'Value')
 
+  metaDataTemp <- attr(prediction, "metaData")
   prediction <- merge(prediction, result$prediction, by = 'rowId')
+  attr(prediction, "metaData") <- metaDataTemp
   
   recalibrateResult$evaluationStatistics <- rbind(recalibrateResult$evaluationStatistics,
                                                   data.frame(analysisId = analysisId,
@@ -162,7 +164,7 @@ recalibrationInTheLarge <- function(prediction){
     prediction$value = logFunct(inverseLog(prediction$value) + correctionFactor)
     
     return(list(prediction = prediction,
-                type = 'recalibrationintheLarge',
+                type = 'recalibrationInTheLarge',
                 correctionFactor = correctionFactor))
   }
   
@@ -288,7 +290,7 @@ addRecalibration <- function(performanceEvaluation, recalibration){
     performanceEvaluation$evaluationStatistics <- rbind(performanceEvaluation$evaluationStatistics ,
                                                        recalibration$evaluationStatistics )
   }
-
+  
   return(performanceEvaluation)
 }
 

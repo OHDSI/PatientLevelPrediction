@@ -91,12 +91,27 @@ test_that("plotSmoothCalibration", {
                                 smooth = "loess",
                                 span = 1,
                                 nKnots = 5,
-                                scatter = F,
+                                scatter = T,
                                 type = "test",
                                 bins = 20,
                                 zoom = "none",
                                 fileName = NULL)
   testthat::expect_s3_class(test, c( "gtable", "gTree",  "grob",   "gDesc" ))
+  
+  pred <- plpResult$prediction
+  plpResult$prediction <- NULL
+  test2 <- plotSmoothCalibration(plpResult,
+                        smooth = "loess",
+                        span = 1,
+                        nKnots = 5,
+                        scatter = T,
+                        type = "test",
+                        bins = 20,
+                        zoom = "data",
+                        sample = T,
+                        fileName = NULL) 
+  testthat::expect_s3_class(test2, c( "gtable", "gTree",  "grob",   "gDesc" ))
+  plpResult$prediction <- pred
   
   # this fails:
   #test2 <- plotSmoothCalibration(result = plpResultReal,

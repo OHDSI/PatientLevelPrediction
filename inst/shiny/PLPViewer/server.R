@@ -34,7 +34,7 @@ source("modules/download.R")
 
 server <- shiny::shinyServer(function(input, output, session) {
   session$onSessionEnded(shiny::stopApp)
-  
+
   #=============
   # sidebar menu
   #=============
@@ -56,7 +56,7 @@ server <- shiny::shinyServer(function(input, output, session) {
       if(!is.null(studyId)){
         summaryTable <- summaryTable[summaryTable$studyId == studyId, ]
       }
-      
+
       })
     
     output$sidebarMenu <- shinydashboard::renderMenu(shinydashboard::sidebarMenu(id ='menu',
