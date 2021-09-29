@@ -39,6 +39,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   # sidebar menu
   #=============
   if(useDatabase == F){
+    
     output$sidebarMenu <- shinydashboard::renderMenu(shinydashboard::sidebarMenu(id ='menu',
                                                                                  addInfo(shinydashboard::menuItem("Description", tabName = "Description", icon = shiny::icon("home")), "DescriptionInfo"),
                                                                                  addInfo(shinydashboard::menuItem("Results", tabName = "Summary", icon = shiny::icon("table")), "SummaryInfo"),
@@ -47,6 +48,17 @@ server <- shiny::shinyServer(function(input, output, session) {
                                                                                  addInfo(shinydashboard::menuItem("Help", tabName = "Help", icon = shiny::icon("info")), "HelpInfo")
     ))
   } else {
+    
+    shiny::observe({
+      studyId <- shiny::parseQueryString(session$clientData$url_search)[['studyId']]
+      
+      print(paste0('StudyId: ', studyId))
+      if(!is.null(studyId)){
+        summaryTable <- summaryTable[summaryTable$studyId == studyId, ]
+      }
+      
+      })
+    
     output$sidebarMenu <- shinydashboard::renderMenu(shinydashboard::sidebarMenu(id ='menu',
                                                                                  addInfo(shinydashboard::menuItem("Description", tabName = "Description", icon = shiny::icon("home")), "DescriptionInfo"),
                                                                                  addInfo(shinydashboard::menuItem("Results", tabName = "Summary", icon = shiny::icon("table")), "SummaryInfo"),
@@ -75,7 +87,9 @@ server <- shiny::shinyServer(function(input, output, session) {
                                              val = F, 
                                              resultRow,
                                              mySchema = mySchema, 
-                                             connectionDetails = connectionDetails)})
+                                             connectionDetails = connectionDetails,
+                                             targetDialect = targetDialect, 
+                                             myTableAppend = myTableAppend)})
   
   
   # ===========================================
@@ -88,7 +102,9 @@ server <- shiny::shinyServer(function(input, output, session) {
                          resultRow, 
                          mySchema, 
                          con,
-                         inputSingleView = input$singleView) 
+                         inputSingleView = input$singleView,
+                         myTableAppend = myTableAppend, 
+                         targetDialect = targetDialect) 
   
   setingsServer('settings', 
                 plpResult)
@@ -115,7 +131,9 @@ server <- shiny::shinyServer(function(input, output, session) {
                    resultRow = resultRow,
                    con = con, 
                    mySchema = mySchema,
-                   connectionDetails = connectionDetails) 
+                   connectionDetails = connectionDetails,
+                   myTableAppend = myTableAppend, 
+                   targetDialect = targetDialect) 
   
   
   downloadServer('download')

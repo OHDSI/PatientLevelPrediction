@@ -3,7 +3,7 @@ summaryViewer <- function(id) {
   DT::dataTableOutput(ns('summaryTable'))
 }
 
-summaryServer <- function(id, summaryTable, cNamesExclude = c('Analysis','analysisId','resultId','researcherId','addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')) {
+summaryServer <- function(id, summaryTable, cNamesExclude = c('studyId','Analysis','analysisId','resultId','researcherId','addExposureDaysToStart','addExposureDaysToEnd', 'plpResultLocation', 'plpResultLoad')) {
   shiny::moduleServer(
     id,
     function(input, output, session) {

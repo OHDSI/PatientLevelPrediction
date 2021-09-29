@@ -1,19 +1,3 @@
-
-# this checked whether input is valid analysis location or plpResult
-checkPlpInput <- function(result){
-  if(class(result)=='runPlp'){
-    return('plpResult')
-  } else if(ifelse(class(result)=='character', dir.exists(result),F)){
-    return('file')
-  } else if(sum(names(result)%in%c("prediction","performanceEvaluation","inputSetting","executionSummary","model","analysisRef","covariateSummary"))==7){
-    return('plpNoClass')
-  } else {
-    stop('Incorrect class for input result')
-  }
-}
-
-
-
 getSummary  <- function(result,inputType,validation){
   if(inputType == 'plpResult' || inputType == 'plpNoClass'){
     sumTab <- getSummaryFromObject(result,validation)

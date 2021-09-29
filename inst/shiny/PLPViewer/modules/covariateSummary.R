@@ -24,7 +24,9 @@ covariateSummaryViewer <- function(id) {
 }
 
 covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySchema, con,
-                                   inputSingleView) {
+                                   inputSingleView,
+                                   myTableAppend = '', 
+                                   targetDialect = NULL) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -32,7 +34,7 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
         covariateSummary <- shiny::reactive({
           if(inputSingleView == "Model"){
           if(is.null(plpResult()$covariateSummary)){
-            covariateSummary <- loadCovSumFromDb(summaryTable[resultRow(),], mySchema, con)
+            covariateSummary <- loadCovSumFromDb(summaryTable[resultRow(),], mySchema, con, myTableAppend, targetDialect)
             return(covariateSummary)
           } else{
             return(plpResult()$covariateSummary)
@@ -200,9 +202,9 @@ getIntercept <- function(plpResult){
     
     if('model'%in%names(plpResult$model)){
       
-      if('coefficients'%in%names(plpResult$model$model)){
+      if('coefficient'%in%names(plpResult$model$model)){
         
-        return(plpResult$model$model$coefficients[1])
+        return(plpResult$model$model$coefficient[1])
         
       }
       
