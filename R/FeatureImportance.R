@@ -54,7 +54,7 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
   if(!is.null(plpResult$model$metaData$preprocessSettings)){
     plpData$covariateData <- applyTidyCovariateData(plpData$covariateData,plpResult$model$metaData$preprocessSettings)
   }
-  pred <- do.call(paste0('predict.',attr(plpResult$model, 'type')), list(plpModel=plpResult$model,
+  pred <- do.call(paste0('predict_',attr(plpResult$model, 'type')), list(plpModel=plpResult$model,
                                                                   plpData=plpData, 
                                                                   population=population))
   attr(pred, "metaData")$predictionType <-  "binary"
@@ -131,7 +131,7 @@ permutePerf <- function(settings){
     ParallelLogger::logInfo(paste0('Calculating prediction for permutation of covariate: ',settings$covariateId))
     
     # need to stop preprocessing and do it once...
-    pred <- do.call(paste0('predict.',attr(settings$plpModel, 'type')), 
+    pred <- do.call(paste0('predict_',attr(settings$plpModel, 'type')), 
                     list(plpModel=settings$plpModel,
                          plpData=plpData, 
                          population=settings$population))

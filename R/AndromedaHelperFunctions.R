@@ -55,10 +55,10 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   steps <- ceiling(maxRows$n/sizeN)
   
   
-  pb <- txtProgressBar(style = 3)
+  pb <- utils::txtProgressBar(style = 3)
   
   for(i in 1:steps){
-    setTxtProgressBar(pb, i/steps)
+    utils::setTxtProgressBar(pb, i/steps)
     
     offset <- ((i-1)*sizeN)
     limit <- sizeN

@@ -307,7 +307,7 @@ trainGBMSurvival <- function(population, plpData, seed = NULL, train = TRUE,
 
 
 
-predict.pythonSurvival <- function(plpModel, population, plpData){
+predict_pythonSurvival <- function(plpModel, population, plpData){
   
   python_predict_survival <- function(){NULL}
   

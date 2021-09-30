@@ -1,3 +1,10 @@
+PatientLevelPrediction 4.4.0
+======================
+- added database result storage 
+- added interface to database results in shiny
+- merged in shinyRepo that changed the shiny app to make it modular and added new features
+- removed deep learning as this is being added into new OHDSI package DeepPatientLevelPrediction
+
 PatientLevelPrediction 4.3.10
 ======================
 - save xgboost model as json file for transparency

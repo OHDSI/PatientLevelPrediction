@@ -82,12 +82,12 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
 }
 
 # default patient level prediction prediction  
-predict.plp <- function(plpModel,population, plpData, ...){
+predict_plp <- function(plpModel,population, plpData, ...){
   ## done in transform covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
-  ParallelLogger::logTrace('predict.plp - predictingProbabilities start')
+  ParallelLogger::logTrace('predict_plp - predictingProbabilities start')
   prediction <- predictProbabilities(plpModel$model, population, 
                                      plpData$covariateData)
-  ParallelLogger::logTrace('predict.plp - predictingProbabilities end')
+  ParallelLogger::logTrace('predict_plp - predictingProbabilities end')
   
   # add baselineHazard function
   if(!is.null(plpModel$model$baselineHazard)){
@@ -104,7 +104,7 @@ predict.plp <- function(plpModel,population, plpData, ...){
 }
 
 # for gxboost
-predict.xgboost <- function(plpModel,population, plpData, ...){ 
+predict_xgboost <- function(plpModel,population, plpData, ...){ 
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
   data <- result$data[population$rowId,, drop = F]
   prediction <- data.frame(rowId=population$rowId,
@@ -118,7 +118,7 @@ predict.xgboost <- function(plpModel,population, plpData, ...){
   
 }
 
-predict.pythonReticulate <- function(plpModel, population, plpData){
+predict_pythonReticulate <- function(plpModel, population, plpData){
   
   
   python_predict <- python_predict_temporal <- function(){return(NULL)}
@@ -128,17 +128,17 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   
   
   ParallelLogger::logInfo('Mapping covariates...')
-  if(!is.null(plpData$timeRef)){
-    pdata <- toSparseTorchPython(plpData,population, map=plpModel$covariateMap, temporal=T)
-    pdata <- pdata$data
-    fun_predict <- python_predict_temporal
-  } else {  
+  #if(!is.null(plpData$timeRef)){
+  #  pdata <- toSparseTorchPython(plpData,population, map=plpModel$covariateMap, temporal=T)
+  #  pdata <- pdata$data
+  #  fun_predict <- python_predict_temporal
+  #} else {  
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
     included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
     pdata <- reticulate::r_to_py(newData$data[,included, drop = F])
     fun_predict <- python_predict
-  }
+  #}
   
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
   namesInd <- c('rowIdPython','rowId')%in%colnames(population)
@@ -171,7 +171,7 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   return(prediction)
 }
 
-predict.knn <- function(plpData, population, plpModel, ...){
+predict_knn <- function(plpData, population, plpModel, ...){
   ##covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
   prediction <- BigKnn::predictKnn(covariates = plpData$covariateData$covariates,
                                    cohorts= population[,!colnames(population)%in%'cohortStartDate'],

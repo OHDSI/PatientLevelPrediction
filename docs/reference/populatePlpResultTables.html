@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a study population — createStudyPopulation • PatientLevelPrediction</title>
+<title>Populate the PatientLevelPrediction results tables — populatePlpResultTables • PatientLevelPrediction</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Create a study population — createStudyPopulation" />
-<meta property="og:description" content="Create a study population" />
+<meta property="og:title" content="Populate the PatientLevelPrediction results tables — populatePlpResultTables" />
+<meta property="og:description" content="This function formats and uploads results that have been generated via an ATLAS prediction package into a database" />
 
 
 
@@ -168,150 +168,157 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a study population</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/StudyPopulation.R'><code>R/StudyPopulation.R</code></a></small>
-    <div class="hidden name"><code>createStudyPopulation.Rd</code></div>
+    <h1>Populate the PatientLevelPrediction results tables</h1>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/uploadPlpDbResults.R'><code>R/uploadPlpDbResults.R</code></a></small>
+    <div class="hidden name"><code>populatePlpResultTables.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Create a study population</p>
+    <p>This function formats and uploads results that have been generated via an ATLAS prediction package into a database</p>
     </div>
 
-    <pre class="usage"><span class='fu'>createStudyPopulation</span><span class='op'>(</span>
-  <span class='va'>plpData</span>,
-  population <span class='op'>=</span> <span class='cn'>NULL</span>,
-  <span class='va'>outcomeId</span>,
-  binary <span class='op'>=</span> <span class='cn'>T</span>,
-  includeAllOutcomes <span class='op'>=</span> <span class='cn'>T</span>,
-  firstExposureOnly <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  washoutPeriod <span class='op'>=</span> <span class='fl'>0</span>,
-  removeSubjectsWithPriorOutcome <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  priorOutcomeLookback <span class='op'>=</span> <span class='fl'>99999</span>,
-  requireTimeAtRisk <span class='op'>=</span> <span class='cn'>F</span>,
-  minTimeAtRisk <span class='op'>=</span> <span class='fl'>365</span>,
-  riskWindowStart <span class='op'>=</span> <span class='fl'>0</span>,
-  startAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>,
-  riskWindowEnd <span class='op'>=</span> <span class='fl'>365</span>,
-  endAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>,
-  verbosity <span class='op'>=</span> <span class='st'>"INFO"</span>,
-  restrictTarToCohortEnd <span class='op'>=</span> <span class='cn'>F</span>,
-  <span class='va'>addExposureDaysToStart</span>,
-  <span class='va'>addExposureDaysToEnd</span>,
-  <span class='va'>...</span>
+    <pre class="usage"><span class='fu'>populatePlpResultTables</span><span class='op'>(</span>
+  <span class='va'>conn</span>,
+  <span class='va'>resultSchema</span>,
+  stringAppendToTables <span class='op'>=</span> <span class='st'>""</span>,
+  targetDialect <span class='op'>=</span> <span class='st'>"postgresql"</span>,
+  tempEmulationSchema <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"sqlRenderTempEmulationSchema"</span><span class='op'>)</span>,
+  <span class='va'>packageName</span>,
+  <span class='va'>studyJsonList</span>,
+  studyName <span class='op'>=</span> <span class='st'>""</span>,
+  studyDescription <span class='op'>=</span> <span class='st'>""</span>,
+  researcherName <span class='op'>=</span> <span class='st'>""</span>,
+  researcherEmail <span class='op'>=</span> <span class='st'>""</span>,
+  researcherOrg <span class='op'>=</span> <span class='st'>""</span>,
+  databaseName <span class='op'>=</span> <span class='cn'>NULL</span>,
+  databaseAcronym <span class='op'>=</span> <span class='cn'>NULL</span>,
+  databaseVersion <span class='op'>=</span> <span class='fl'>1</span>,
+  databaseDescription <span class='op'>=</span> <span class='cn'>NULL</span>,
+  databaseType <span class='op'>=</span> <span class='cn'>NULL</span>,
+  valDatabases <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>ccae <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>name <span class='op'>=</span> <span class='st'>"CCAE"</span>, description <span class='op'>=</span> <span class='st'>""</span>, version <span class='op'>=</span> <span class='fl'>1</span>, type <span class='op'>=</span>
+    <span class='st'>"US Claims"</span><span class='op'>)</span><span class='op'>)</span>,
+  resultLocation <span class='op'>=</span> <span class='cn'>NULL</span>,
+  resultPattern <span class='op'>=</span> <span class='st'>""</span>,
+  validationLocation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='va'>resultLocation</span>, <span class='st'>"Validation"</span><span class='op'>)</span>,
+  addInternalValidation <span class='op'>=</span> <span class='cn'>T</span>,
+  addExternalValidation <span class='op'>=</span> <span class='cn'>T</span>,
+  gsubVal <span class='op'>=</span> <span class='cn'>NULL</span>,
+  removePattern <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>plpData</th>
-      <td><p>An object of type <code>plpData</code> as generated using
-<code>getplpData</code>.</p></td>
+      <th>conn</th>
+      <td><p>A connection to a database created by using the
+function <code>connect</code> in the
+<code>DatabaseConnector</code> package.</p></td>
     </tr>
     <tr>
-      <th>population</th>
-      <td><p>If specified, this population will be used as the starting point instead of the
-cohorts in the <code>plpData</code> object.</p></td>
+      <th>resultSchema</th>
+      <td><p>(string) The name of the database schema that the result tables will be created.</p></td>
     </tr>
     <tr>
-      <th>outcomeId</th>
-      <td><p>The  ID of the outcome.</p></td>
+      <th>stringAppendToTables</th>
+      <td><p>(string) A string that appends to the PatientLevelPrediction result tables</p></td>
     </tr>
     <tr>
-      <th>binary</th>
-      <td><p>Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)</p></td>
+      <th>targetDialect</th>
+      <td><p>(string) The database management system being used</p></td>
     </tr>
     <tr>
-      <th>includeAllOutcomes</th>
-      <td><p>(binary) indicating whether to include people with outcomes who are not observed for the whole at risk period</p></td>
+      <th>tempEmulationSchema</th>
+      <td><p>(string) The temp schema used when the database management system is oracle</p></td>
     </tr>
     <tr>
-      <th>firstExposureOnly</th>
-      <td><p>Should only the first exposure per subject be included? Note that
-this is typically done in the <code>createStudyPopulation</code> function,</p></td>
+      <th>packageName</th>
+      <td><p>(string) The name of the ATLAS R package used to generate the results (this is used to extract cohort jsons)</p></td>
     </tr>
     <tr>
-      <th>washoutPeriod</th>
-      <td><p>The mininum required continuous observation time prior to index
-date for a person to be included in the cohort.</p></td>
+      <th>studyJsonList</th>
+      <td><p>(list) A list of lists per cohort with the cohort_name, cohort_id and cohort_json</p></td>
     </tr>
     <tr>
-      <th>removeSubjectsWithPriorOutcome</th>
-      <td><p>Remove subjects that have the outcome prior to the risk window start?</p></td>
+      <th>studyName</th>
+      <td><p>(string) A reference study name</p></td>
     </tr>
     <tr>
-      <th>priorOutcomeLookback</th>
-      <td><p>How many days should we look back when identifying prior outcomes?</p></td>
+      <th>studyDescription</th>
+      <td><p>(string) A description of the study</p></td>
     </tr>
     <tr>
-      <th>requireTimeAtRisk</th>
-      <td><p>Should subject without time at risk be removed?</p></td>
+      <th>researcherName</th>
+      <td><p>(string) Name of the researcher who developed the study</p></td>
     </tr>
     <tr>
-      <th>minTimeAtRisk</th>
-      <td><p>The minimum number of days at risk required to be included</p></td>
+      <th>researcherEmail</th>
+      <td><p>(string) Email of the researcher who developed the study</p></td>
     </tr>
     <tr>
-      <th>riskWindowStart</th>
-      <td><p>The start of the risk window (in days) relative to the <code>startAnchor</code>.</p></td>
+      <th>researcherOrg</th>
+      <td><p>(string) Organisation of the researcher who developed the study</p></td>
     </tr>
     <tr>
-      <th>startAnchor</th>
-      <td><p>The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".</p></td>
+      <th>databaseName</th>
+      <td><p>(string) name of the database used to develop the model/s</p></td>
     </tr>
     <tr>
-      <th>riskWindowEnd</th>
-      <td><p>The end of the risk window (in days) relative to the <code>endAnchor</code> parameter</p></td>
+      <th>databaseAcronym</th>
+      <td><p>(string) acronym of the database used to develop the model/s</p></td>
     </tr>
     <tr>
-      <th>endAnchor</th>
-      <td><p>The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".</p></td>
+      <th>databaseVersion</th>
+      <td><p>(int) Version of the database used to develop the model/s</p></td>
     </tr>
     <tr>
-      <th>verbosity</th>
-      <td><p>Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:</p><ul>
-<li><p>DEBUGHighest verbosity showing all debug statements</p></li>
-<li><p>TRACEShowing information about start and end of steps</p></li>
-<li><p>INFOShow informative information (Default)</p></li>
-<li><p>WARNShow warning messages</p></li>
-<li><p>ERRORShow error messages</p></li>
-<li><p>FATALBe silent except for fatal errors</p></li>
-</ul></td>
+      <th>databaseDescription</th>
+      <td><p>(string) Description of the database used to develop the model/s</p></td>
     </tr>
     <tr>
-      <th>restrictTarToCohortEnd</th>
-      <td><p>If using a survival model and you want the time-at-risk to end at the cohort end date set this to T</p></td>
+      <th>databaseType</th>
+      <td><p>(string) Type of the database used to develop the model/s (e.g., claims)</p></td>
     </tr>
     <tr>
-      <th>addExposureDaysToStart</th>
-      <td><p>DEPRECATED: Add the length of exposure the start of the risk window? Use <code>startAnchor</code> instead.</p></td>
+      <th>valDatabases</th>
+      <td><p>(list) A named list with details of the external validation databases.  Needs to contain: name, description, version, type.</p></td>
     </tr>
     <tr>
-      <th>addExposureDaysToEnd</th>
-      <td><p>DEPRECATED: Add the length of exposure the risk window? Use <code>endAnchor</code> instead.</p></td>
+      <th>resultLocation</th>
+      <td><p>(string) location of directory where the main package results were saved</p></td>
     </tr>
     <tr>
-      <th>...</th>
-      <td><p>Other inputs</p></td>
+      <th>resultPattern</th>
+      <td><p>(string) A string to match to select models of interest</p></td>
+    </tr>
+    <tr>
+      <th>validationLocation</th>
+      <td><p>(string) location of directory where the validation package results were saved</p></td>
+    </tr>
+    <tr>
+      <th>addInternalValidation</th>
+      <td><p>(boolean) Whether the internval validation results should be uploaded</p></td>
+    </tr>
+    <tr>
+      <th>addExternalValidation</th>
+      <td><p>(boolean) Whether the externval validation results should be uploaded</p></td>
+    </tr>
+    <tr>
+      <th>gsubVal</th>
+      <td><p>(string) Remove patterns from the result name</p></td>
+    </tr>
+    <tr>
+      <th>removePattern</th>
+      <td><p>(string) Restrict to result names with this pattern</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A data frame specifying the study population. This data frame will have the following columns:</p><dl>
-<dt>rowId</dt><dd><p>A unique identifier for an exposure</p></dd>
-<dt>subjectId</dt><dd><p>The person ID of the subject</p></dd>
-<dt>cohortStartdate</dt><dd><p>The index date</p></dd>
-<dt>outcomeCount</dt><dd><p>The number of outcomes observed during the risk window</p></dd>
-<dt>timeAtRisk</dt><dd><p>The number of days in the risk window</p></dd>
-<dt>survivalTime</dt><dd><p>The number of days until either the outcome or the end of the risk window</p></dd>
-
-</dl>
-
+    <p>Returns NULL but uploads all the results in resultLocation to the PatientLevelPrediction result tables in resultSchema</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Create a study population by enforcing certain inclusion and exclusion criteria, defining
-a risk window, and determining which outcomes fall inside the risk window.</p>
+    <p>This function can be used upload PatientLevelPrediction results into a database</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

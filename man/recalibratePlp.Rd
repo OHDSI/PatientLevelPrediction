@@ -7,7 +7,7 @@
 recalibratePlp(
   prediction,
   analysisId,
-  method = c("recalibrationintheLarge", "weakRecalibration")
+  method = c("recalibrationInTheLarge", "weakRecalibration")
 )
 }
 \arguments{
@@ -15,7 +15,7 @@ recalibratePlp(
 
 \item{analysisId}{The model analysisId}
 
-\item{method}{Method used to recalibrate ('recalibrationintheLarge' or 'weakRecalibration' )}
+\item{method}{Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )}
 }
 \value{
 An object of class \code{runPlp} that is recalibrated on the new data

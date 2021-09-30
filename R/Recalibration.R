@@ -71,12 +71,15 @@ recalibratePlpRefit <- function(plpModel,
                                         analysisId = plpModel$analysisId, 
                                         eval = 'recalibrationRefit')
   
+  metaData <- attr(result$prediction, "metaData") # new code
+  
   prediction <- result$prediction[,c('rowId', 'value')]
   colnames(prediction)[2] <- 'reestimateValue'
   oldPred <- applyModel(population = newPopulation, plpData = newData, 
                         plpModel = plpModel, calculatePerformance = F)
   prediction <- merge(oldPred, prediction, by = 'rowId')
-
+  attr(prediction, "metaData") <- metaData # new code
+  
   adjust <- result$covariateSummary[,c('covariateValue', 'covariateId')]
   adjust <- adjust[adjust$covariateValue != 0, ]
   newIntercept <- result$model$model$coefficients[names(result$model$model$coefficients) == '(Intercept)']

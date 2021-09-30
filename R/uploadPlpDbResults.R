@@ -998,19 +998,19 @@ addTar <- function(conn, resultSchema, targetDialect,
 
 
 getCohortFromList <- function(jsonList, cohortId){
-  cohortToCreate <- NULL
+  
   #cohort_name, cohort_id and cohort_json
   ParallelLogger::logInfo(paste0('Adding cohorts from input list'))
   id <- which(unlist(lapply(jsonList, function(x){x$cohort_id == cohortId})))[1]
   
   json <- jsonList[[id]]$cohort_json
   
-  cohortToCreate <- data.frame(name = jsonList[[id]]$cohort_name,
-                                cohortId = jsonList[[id]]$cohort_id,
-                                atlasId = jsonList[[id]]$cohort_id)
+  details <- data.frame(name = jsonList[[id]]$cohort_name,
+                        cohortId = jsonList[[id]]$cohort_id,
+                        atlasId = jsonList[[id]]$cohort_id)
   
   return(list(json = json,
-              cohortTocreate = cohortTocreate))
+              cohortTocreate = details))
 }
 
 getCohortFromPackage <- function(packageName, cohortId){
@@ -2059,7 +2059,7 @@ addDemographicSummary <- function(conn, resultSchema, targetDialect,
     
     # REMOVE existing result
     if(exists){
-      sql <- "delete from @result_schems.@table_name where result_id = @result_id;"
+      sql <- "delete from @result_schema.@table_name where result_id = @result_id;"
       sql <- SqlRender::render(sql, 
                                result_schema = resultSchema,
                                result_id = resultId,

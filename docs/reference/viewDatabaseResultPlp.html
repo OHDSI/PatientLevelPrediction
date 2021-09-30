@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Calculate all measures for sparse ROC — getThresholdSummary • PatientLevelPrediction</title>
+<title>open a local shiny app for viewing the result of a PLP analyses from a database — viewDatabaseResultPlp • PatientLevelPrediction</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Calculate all measures for sparse ROC — getThresholdSummary" />
-<meta property="og:description" content="Calculate all measures for sparse ROC" />
+<meta property="og:title" content="open a local shiny app for viewing the result of a PLP analyses from a database — viewDatabaseResultPlp" />
+<meta property="og:description" content="open a local shiny app for viewing the result of a PLP analyses from a database" />
 
 
 
@@ -168,34 +168,61 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Calculate all measures for sparse ROC</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/EvaluatePlp.R'><code>R/EvaluatePlp.R</code></a></small>
-    <div class="hidden name"><code>getThresholdSummary.Rd</code></div>
+    <h1>open a local shiny app for viewing the result of a PLP analyses from a database</h1>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/ViewShinyPlp.R'><code>R/ViewShinyPlp.R</code></a></small>
+    <div class="hidden name"><code>viewDatabaseResultPlp.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Calculate all measures for sparse ROC</p>
+    <p>open a local shiny app for viewing the result of a PLP analyses from a database</p>
     </div>
 
-    <pre class="usage"><span class='fu'>getThresholdSummary</span><span class='op'>(</span><span class='va'>prediction</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>viewDatabaseResultPlp</span><span class='op'>(</span>
+  <span class='va'>mySchema</span>,
+  <span class='va'>myServer</span>,
+  <span class='va'>myUser</span>,
+  <span class='va'>myPassword</span>,
+  <span class='va'>myDbms</span>,
+  myPort <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>myTableAppend</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>prediction</th>
-      <td><p>A prediction object as generated using the
-<code><a href='predictProbabilities.html'>predictProbabilities</a></code> function.</p></td>
+      <th>mySchema</th>
+      <td><p>Database result schema containing the result tables</p></td>
+    </tr>
+    <tr>
+      <th>myServer</th>
+      <td><p>server with the result database</p></td>
+    </tr>
+    <tr>
+      <th>myUser</th>
+      <td><p>Username for the connection to the result database</p></td>
+    </tr>
+    <tr>
+      <th>myPassword</th>
+      <td><p>Password for the connection to the result database</p></td>
+    </tr>
+    <tr>
+      <th>myDbms</th>
+      <td><p>database management system for the result database</p></td>
+    </tr>
+    <tr>
+      <th>myPort</th>
+      <td><p>Port for the connection to the result database</p></td>
+    </tr>
+    <tr>
+      <th>myTableAppend</th>
+      <td><p>A string appended to the results tables (optional)</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>A data.frame with all the measures</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Calculates the TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
-from a predition object</p>
+    <p>Opens a shiny app for viewing the results of the models from a database</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

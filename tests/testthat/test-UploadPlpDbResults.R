@@ -22,7 +22,7 @@ conn <- DatabaseConnector::connect(connectionDetails)
 
 randVar <- rawToChar(as.raw(sample(c(65:90,97:122), 5, replace=T)))
 appendRandom <- function(x, rand = randVar){
-  return(paste(rand, x, sep='_'))
+  return(paste(rand, x, sep=''))
 }
 
 
@@ -33,12 +33,11 @@ test_that("database creation", {
                         targetDialect = 'postgresql',
                         deleteExistingTables = T, 
                         createTables = T,
-                        stringAppendToTables = appendRandom('test_'))
+                        stringAppendToTables = appendRandom('test'))
   
   tableNames <- DatabaseConnector::getTableNames(connection = conn, databaseSchema = ohdsiDatabaseSchema)
-  DatabaseConnector::executeSql(conn, sql)
   # check the results table is created
-  testthat::expect_true(paste0(toupper(appendRandom('test_')),'_RESULTS') %in% tableNames)
+  testthat::expect_true(paste0(toupper(appendRandom('test')),'_RESULTS') %in% tableNames)
 
 })
 
@@ -48,14 +47,22 @@ test_that("results uploaded to database", {
   resultsLoc <- file.path(saveLoc,'dbUp')
   
   # save main result
+  plpResult$inputSetting$dataExtrractionSettings$cohortId <- 1
+  plpResult$inputSetting$dataExtrractionSettings$outcomeId <- 2
+  plpResult$inputSetting$cohortId <- 1
+  plpResult$inputSetting$outcomeId <- 2
+  
   savePlpResult(plpResult, file.path(resultsLoc, 'Analysis_1','plpResult'))
   # save validation
-  saveRDS(plpResult, file.path(resultsLoc,'Validation','test', 'Analysis_1'))
+  if(!dir.exists(file.path(resultsLoc,'Validation','test', 'Analysis_1'))){
+    dir.create(file.path(resultsLoc,'Validation','test', 'Analysis_1'), recursive = T)
+  }
+  saveRDS(plpResult, file.path(resultsLoc,'Validation','test', 'Analysis_1', 'validationResult.rds'))
 
   # add results:
   populatePlpResultTables(conn = conn, 
                           resultSchema = ohdsiDatabaseSchema, 
-                          stringAppendToTables = appendRandom('test_'),
+                          stringAppendToTables = appendRandom('test'),
                           targetDialect = 'postgresql',
                           studyJsonList = list(list(cohort_name = 'blank1', cohort_id = 1, cohort_json = 'bla'),
                                                list(cohort_name = 'blank2', cohort_id = 2, cohort_json = 'bla'),
@@ -75,8 +82,8 @@ test_that("results uploaded to database", {
                                                           version = 1,
                                                           type = 'claims')),
                           resultLocation = resultsLoc,
-                          resultPattern = '',
-                          validationLocation = file.path(resultLocation,'Validation'),
+                          resultPattern = 'Analysis',
+                          validationLocation = file.path(resultsLoc,'Validation'),
                           addInternalValidation = T,
                           addExternalValidation = T,
                           gsubVal = NULL,
@@ -101,12 +108,11 @@ test_that("database deletion", {
                         targetDialect = 'postgresql',
                         deleteExistingTables = T, 
                         createTables = F,
-                        stringAppendToTables = appendRandom('test_'))
+                        stringAppendToTables = appendRandom('test'))
   
   tableNames <- DatabaseConnector::getTableNames(connection = conn, databaseSchema = ohdsiDatabaseSchema)
-  DatabaseConnector::executeSql(conn, sql)
   # check the results table is then deleted
-  testthat::expect_false(paste0(toupper(appendRandom('test_')),'_RESULTS') %in% tableNames)
+  testthat::expect_false(paste0(toupper(appendRandom('test')),'_RESULTS') %in% tableNames)
   
   
 })

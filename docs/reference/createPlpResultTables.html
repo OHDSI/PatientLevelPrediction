@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Calculate all measures for sparse ROC — getThresholdSummary • PatientLevelPrediction</title>
+<title>Create the results tables to store PatientLevelPrediction models and results into a database — createPlpResultTables • PatientLevelPrediction</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Calculate all measures for sparse ROC — getThresholdSummary" />
-<meta property="og:description" content="Calculate all measures for sparse ROC" />
+<meta property="og:title" content="Create the results tables to store PatientLevelPrediction models and results into a database — createPlpResultTables" />
+<meta property="og:description" content="This function executes a large set of SQL statements to create tables that can store models and results" />
 
 
 
@@ -168,34 +168,71 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Calculate all measures for sparse ROC</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/EvaluatePlp.R'><code>R/EvaluatePlp.R</code></a></small>
-    <div class="hidden name"><code>getThresholdSummary.Rd</code></div>
+    <h1>Create the results tables to store PatientLevelPrediction models and results into a database</h1>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/uploadPlpDbResults.R'><code>R/uploadPlpDbResults.R</code></a></small>
+    <div class="hidden name"><code>createPlpResultTables.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Calculate all measures for sparse ROC</p>
+    <p>This function executes a large set of SQL statements to create tables that can store models and results</p>
     </div>
 
-    <pre class="usage"><span class='fu'>getThresholdSummary</span><span class='op'>(</span><span class='va'>prediction</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>createPlpResultTables</span><span class='op'>(</span>
+  <span class='va'>conn</span>,
+  <span class='va'>resultSchema</span>,
+  targetDialect <span class='op'>=</span> <span class='st'>"postgresql"</span>,
+  deleteExistingTables <span class='op'>=</span> <span class='cn'>T</span>,
+  createTables <span class='op'>=</span> <span class='cn'>T</span>,
+  stringAppendToTables <span class='op'>=</span> <span class='st'>""</span>,
+  tempEmulationSchema <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"sqlRenderTempEmulationSchema"</span><span class='op'>)</span>,
+  testFile <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>prediction</th>
-      <td><p>A prediction object as generated using the
-<code><a href='predictProbabilities.html'>predictProbabilities</a></code> function.</p></td>
+      <th>conn</th>
+      <td><p>A connection to a database created by using the
+function <code>connect</code> in the
+<code>DatabaseConnector</code> package.</p></td>
+    </tr>
+    <tr>
+      <th>resultSchema</th>
+      <td><p>The name of the database schema that the result tables will be created.</p></td>
+    </tr>
+    <tr>
+      <th>targetDialect</th>
+      <td><p>The database management system being used</p></td>
+    </tr>
+    <tr>
+      <th>deleteExistingTables</th>
+      <td><p>If true any existing tables matching the PatientLevelPrediction result tables names will be deleted</p></td>
+    </tr>
+    <tr>
+      <th>createTables</th>
+      <td><p>If true the PatientLevelPrediction result tables will be created</p></td>
+    </tr>
+    <tr>
+      <th>stringAppendToTables</th>
+      <td><p>A string that appends to the PatientLevelPrediction result tables</p></td>
+    </tr>
+    <tr>
+      <th>tempEmulationSchema</th>
+      <td><p>The temp schema used when the database management system is oracle</p></td>
+    </tr>
+    <tr>
+      <th>testFile</th>
+      <td><p>(used for testing) The location of an sql file with the table creation code</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A data.frame with all the measures</p>
+    <p>Returns NULL but creates the required tables into the specified database schema.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Calculates the TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
-from a predition object</p>
+    <p>This function can be used to create (or delete) PatientLevelPrediction result tables</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
