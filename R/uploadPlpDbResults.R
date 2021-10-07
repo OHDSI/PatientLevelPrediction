@@ -465,7 +465,9 @@ populatePlpResultTables <- function(conn,
             
             # remove pattern
             if(!is.null(removePattern)){
-              valMods <- valMods[-grep(removePattern, valMods$validationResultsEdit),]
+              if(length(grep(removePattern, valMods$validationResultsEdit))>0){
+                valMods <- valMods[-grep(removePattern, valMods$validationResultsEdit),]
+              }
             }
             
             # restrict to analysis

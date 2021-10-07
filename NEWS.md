@@ -1,3 +1,8 @@
+PatientLevelPrediction 4.4.1
+======================
+- shiny can now read csv results
+- objects loaded via loadPlpFromCsv() can be saved using savePlpResult()
+
 PatientLevelPrediction 4.4.0
 ======================
 - added database result storage 

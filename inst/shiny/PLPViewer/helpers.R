@@ -10,14 +10,6 @@ getPlpResult <- function(result,
                          targetDialect = NULL, 
                          myTableAppend = NULL){
   
-  ##if(class(resultRow)%in%c("integer","numeric")){
-  ##  ind <- resultRow
-  #} else if(length(resultRow())>0){
-  ##  ind <- resultRow()
-  ##} else{
-  ##  ind <- NULL
-  ##}
-
 ##ind <- resultRow()
 
   if(!is.null(resultRow())){
@@ -42,10 +34,17 @@ getPlpResult <- function(result,
     tempResult$type <- 'validation'
     tempResult$log <- 'log not available'
   }else if( inputType == 'file') {
+    
+    # support rds, csv and runPlp objects
     tempResult <- NULL
     loc <- summaryTable[resultRow(),]$plpResultLocation
     locLoaderFunc <- summaryTable[resultRow(),]$plpResultLoad
-    logLocation <- gsub('plpResult','plpLog.txt', gsub('validationResult.rds','plpLog.txt',gsub('plpResult.rds','plpLog.txt', as.character(loc))))
+    
+    if(locLoaderFunc ==  'loadPlpFromCsv'){
+      logLocation <- file.path(loc,'plpLog.txt')
+    } else{
+      logLocation <- gsub('plpResult','plpLog.txt', gsub('validationResult.rds','plpLog.txt',gsub('plpResult.rds','plpLog.txt', as.character(loc))))
+    }
     if(file.exists(logLocation)){
       txt <- readLines(logLocation)
     } else{

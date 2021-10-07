@@ -528,6 +528,10 @@ loadPlpFromCsv <- function(dirPath){
   result$model$populationSettings <- result$inputSetting$populationSettings
   result$model$metaData$call$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
   
+  # add the model class 
+  class(result$model) <- "plpModel"
+  attr(result$model, "type") <- 'missing'
+  
   class(result) <- "runPlp"
   return(result)
 }
