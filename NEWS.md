@@ -1,3 +1,8 @@
+PatientLevelPrediction 4.4.2
+======================
+- revised toSparseM() to do conversion in one go but check RAM availablility beforehand.
+- removed temporal plpData conversion in toSparseM (this will be done in DeepPatientLevelPrediction)
+
 PatientLevelPrediction 4.4.1
 ======================
 - shiny can now read csv results
