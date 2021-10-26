@@ -676,7 +676,7 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
         dplyr::left_join(resultOut1, by = 'covariateId') %>%
         dplyr::left_join(resultOut2, by = 'covariateId')
       
-      resultAll <- resultAll %>% dplyr::mutate(StandardizedMeanDiff = (.data$CovariateMeanWithOutcome - .data$CovariateMeanWithNoOutcome)/sqrt(.data$CovariateStDevWithOutcome^2 + .data$CovariateStDevWithNoOutcome^2) )
+      resultAll <- resultAll %>% dplyr::mutate(StandardizedMeanDiff = (.data$CovariateMeanWithOutcome - .data$CovariateMeanWithNoOutcome)/sqrt((.data$CovariateStDevWithOutcome^2 + .data$CovariateStDevWithNoOutcome^2)/2) )
       
       resultSplit1 <- result %>% 
         dplyr::filter(.data$outcomeCount == 0 & .data$test == TRUE) %>%
@@ -754,7 +754,7 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
         dplyr::left_join(resultOut1, by = 'covariateId') %>%
         dplyr::left_join(resultOut2, by = 'covariateId')
       
-      resultAll <- resultAll %>% dplyr::mutate(StandardizedMeanDiff = (.data$CovariateMeanWithOutcome - .data$CovariateMeanWithNoOutcome)/sqrt(.data$CovariateStDevWithOutcome^2 + .data$CovariateStDevWithNoOutcome^2) )
+      resultAll <- resultAll %>% dplyr::mutate(StandardizedMeanDiff = (.data$CovariateMeanWithOutcome - .data$CovariateMeanWithNoOutcome)/sqrt((.data$CovariateStDevWithOutcome^2 + .data$CovariateStDevWithNoOutcome^2)/2) )
       
     }
   }
