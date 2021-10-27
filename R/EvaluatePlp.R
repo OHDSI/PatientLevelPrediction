@@ -89,7 +89,7 @@ evaluatePlp <- function(prediction, plpData = NULL){
                         error = function(e){ParallelLogger::logInfo(e); return(list(Eavg = 0, 
                                                                                     E90 = 0, 
                                                                                     Emax = 0))})
-    
+    ici <- ici(prediction)
     
     # 2) thresholdSummary
     # need to update thresholdSummary this with all the requested values
@@ -155,7 +155,8 @@ evaluatePlp <- function(prediction, plpData = NULL){
                                  CalibrationInLargeInt = calinlargeInt,
                                  Emean = valProb['Eavg'],
                                  E90 = valProb['E90'],
-                                 Emax = valProb['Emax'])
+                                 Emax = valProb['Emax'],
+                                 ICI = ici)
     
     result <- list(evaluationStatistics= evaluationStatistics,
                    thresholdSummary= thresholdSummary,
@@ -1437,3 +1438,24 @@ modelBasedConcordance <- function(prediction){
   return(mb.c)
 }
 
+#' Calculate the Integrated Calibration Information from Austin and Steyerberg
+#' https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281
+#' 
+#' @details
+#' Calculate the Integrated Calibration Information
+#'
+#' @param prediction         the prediction object found in the plpResult object
+#' 
+#' @return
+#' Integrated Calibration Information
+#'
+#' @export
+
+ici <- function(prediction){
+  loess.calibrate <- stats::loess(prediction$outcomeCount ~ prediction$value)
+  # Estimate loess-based smoothed calibration curve
+  P.calibrate <- stats::predict (loess.calibrate, newdata = prediction$value)
+  # This is the point on the loess calibration curve corresponding to a given predicted probability.
+  ICI <- mean (abs(P.calibrate - prediction$value))
+  return(ICI)
+}
