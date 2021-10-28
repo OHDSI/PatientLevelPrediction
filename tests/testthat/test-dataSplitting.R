@@ -133,13 +133,16 @@ test_that("Data splitting by subject", {
 
 # test that people are not in multiple folds
   DSpopulation3 <- data.frame(rowId=1:200,subjectId = rep(1:50,4), outcomeCount=c(rep(1,42),rep(0,158)))
-  test <- subjectSplitter(DSpopulation3, test=0.2, nfold=3)
+  test <- subjectSplitter(DSpopulation3, test=0.25, nfold=3)
   test <- merge(DSpopulation3, test)
 
   expect_equal(unique(table(test$subjectId[test$index==-1])), 4)
   expect_equal(unique(table(test$subjectId[test$index==2])), 4)
   expect_equal(unique(table(test$subjectId[test$index==3])), 4)
   expect_equal(unique(table(test$subjectId[test$index==1])), 4)
+  
+# test that no subject is not assigned a fold
+  expect_equal(sum(test$index==0), 0)
 
 
 })
