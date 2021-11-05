@@ -1452,10 +1452,25 @@ modelBasedConcordance <- function(prediction){
 #' @export
 
 ici <- function(prediction){
-  loess.calibrate <- stats::loess(prediction$outcomeCount ~ prediction$value)
-  # Estimate loess-based smoothed calibration curve
-  P.calibrate <- stats::predict (loess.calibrate, newdata = prediction$value)
-  # This is the point on the loess calibration curve corresponding to a given predicted probability.
-  ICI <- mean (abs(P.calibrate - prediction$value))
-  return(ICI)
+  #remove na
+  if(sum(!is.finite(prediction$value))>0){
+    prediction <- prediction[is.finite(prediction$value),]
+  }
+  loess.calibrate <- tryCatch({stats::loess(prediction$outcomeCount ~ prediction$value)}, 
+                              warning = function(w){ParallelLogger::logInfo(w)},
+                              error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+                              )
+  if(!is.null(loess.calibrate)){
+    # Estimate loess-based smoothed calibration curve
+    P.calibrate <- tryCatch({stats::predict(loess.calibrate, newdata = prediction$value)}, 
+                            warning = function(w){ParallelLogger::logInfo(w)},
+                            error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+    )
+    if(!is.null(P.calibrate)){
+      # This is the point on the loess calibration curve corresponding to a given predicted probability.
+      ICI <- mean (abs(P.calibrate - prediction$value))
+      return(ICI)
+    }
+  }
+  return(-1)
 }

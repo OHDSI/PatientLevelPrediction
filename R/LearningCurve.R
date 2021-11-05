@@ -227,6 +227,7 @@ createLearningCurve <- function(population,
     "TestE90",
     "TestEave",
     "TestEmax",
+    "TestICI",
     "outcomeCountTest",
     "popSizeTest",
     "TrainROC",
@@ -240,6 +241,7 @@ createLearningCurve <- function(population,
     "TrainE90",
     "TrainEave",
     "TrainEmax",
+    "TrainICI",
     "nPredictors"
     )
 
@@ -451,6 +453,7 @@ createLearningCurvePar <- function(population,
     "TestE90",
     "TestEave",
     "TestEmax",
+    "TestICI",
     "outcomeCountTest",
     "popSizeTest",
     "TrainROC",
@@ -464,6 +467,7 @@ createLearningCurvePar <- function(population,
     "TrainE90",
     "TrainEave",
     "TrainEmax",
+    "TrainICI",
     "nPredictors"
   )
 
