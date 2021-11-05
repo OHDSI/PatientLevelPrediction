@@ -20,6 +20,8 @@ setIterativeHardThresholding(
 \item{seed}{An option to add a seed when training the model}
 
 \item{exclude}{A vector of numbers or covariateId names to exclude from prior}
+
+\item{fitBestSubset}{Logical: Fit final subset with no regularization}
 }
 \description{
 Create setting for lasso logistic regression

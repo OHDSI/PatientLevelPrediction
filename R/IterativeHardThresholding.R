@@ -77,7 +77,7 @@ fitIterativeHardThresholding<- function(population, plpData, param, search='adap
                               prior = IterativeHardThresholding::createIhtPrior(K  = param$K, 
                                                                                 penalty = param$penalty, 
                                                                                 exclude = param$exclude),
-                              control = createControl()
+                              control = Cyclops::createControl()
                               
                               )
                               
