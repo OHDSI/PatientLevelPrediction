@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -104,6 +104,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -116,13 +119,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -136,16 +139,19 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -171,7 +177,16 @@
     <p>Create setting for lasso logistic regression</p>
     </div>
 
-    <pre class="usage"><span class='fu'>setLassoLogisticRegression</span>(<span class='kw'>variance</span> <span class='kw'>=</span> <span class='fl'>0.01</span>, <span class='kw'>seed</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+    <pre class="usage"><span class='fu'>setLassoLogisticRegression</span><span class='op'>(</span>
+  variance <span class='op'>=</span> <span class='fl'>0.01</span>,
+  seed <span class='op'>=</span> <span class='cn'>NULL</span>,
+  includeCovariateIds <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>)</span>,
+  noShrinkage <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0</span><span class='op'>)</span>,
+  threads <span class='op'>=</span> <span class='op'>-</span><span class='fl'>1</span>,
+  useCrossValidation <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  upperLimit <span class='op'>=</span> <span class='fl'>20</span>,
+  lowerLimit <span class='op'>=</span> <span class='fl'>0.01</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -184,11 +199,36 @@
       <th>seed</th>
       <td><p>An option to add a seed when training the model</p></td>
     </tr>
+    <tr>
+      <th>includeCovariateIds</th>
+      <td><p>a set of covariate IDS to limit the analysis to</p></td>
+    </tr>
+    <tr>
+      <th>noShrinkage</th>
+      <td><p>a set of covariates whcih are to be forced to be included in the final model. default is the intercept</p></td>
+    </tr>
+    <tr>
+      <th>threads</th>
+      <td><p>An option to set number of threads when training model</p></td>
+    </tr>
+    <tr>
+      <th>useCrossValidation</th>
+      <td><p>Set this to FALSE if you want to train a LR with a preset varience</p></td>
+    </tr>
+    <tr>
+      <th>upperLimit</th>
+      <td><p>Upper prior variance limit for grid-search</p></td>
+    </tr>
+    <tr>
+      <th>lowerLimit</th>
+      <td><p>Lower prior variance limit for grid-search</p></td>
+    </tr>
     </table>
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>model.lr</span> <span class='kw'>&lt;-</span> <span class='fu'>setLassoLogisticRegression</span>()</div></pre>
+    <pre class="examples"><div class='input'><span class='va'>model.lr</span> <span class='op'>&lt;-</span> <span class='fu'>setLassoLogisticRegression</span><span class='op'>(</span><span class='op'>)</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -204,7 +244,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

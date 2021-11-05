@@ -24,11 +24,19 @@
 #' @param noShrinkage a set of covariates whcih are to be forced to be included in the final model. default is the intercept 
 #' @param threads    An option to set number of threads when training model
 #' @param useCrossValidation  Set this to FALSE if you want to train a LR with a preset varience
+#' @param upperLimit  Upper prior variance limit for grid-search
+#' @param lowerLimit  Lower prior variance limit for grid-search
 #' 
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setLassoLogisticRegression<- function(variance=0.01, seed=NULL, includeCovariateIds = c(), noShrinkage = c(0), threads = -1, useCrossValidation = TRUE){
+setLassoLogisticRegression<- function(variance=0.01, seed=NULL, 
+                                      includeCovariateIds = c(), 
+                                      noShrinkage = c(0), 
+                                      threads = -1, 
+                                      useCrossValidation = TRUE, 
+                                      upperLimit = 20, 
+                                      lowerLimit = 0.01){
 
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
@@ -38,13 +46,16 @@ setLassoLogisticRegression<- function(variance=0.01, seed=NULL, includeCovariate
     stop('Variance must be numeric')
   if(variance<0)
     stop('Variance must be >= 0')
-  
+  if(!is.numeric(upperLimit) | !is.numeric(lowerLimit))
+    stop('Grid search limits must be numeric')
+  if(upperLimit <= lowerLimit)
+    stop('upperLimit must be greater than lowerLimit')
   # set seed
   if(is.null(seed[1])){
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], includeCovariateIds = includeCovariateIds, noShrinkage = noShrinkage, threads = threads[1], useCrossValidation=useCrossValidation[1]), name="Lasso Logistic Regression")
+  result <- list(model='fitLassoLogisticRegression', param=list(variance=variance, seed=seed[1], includeCovariateIds = includeCovariateIds, noShrinkage = noShrinkage, threads = threads[1], useCrossValidation=useCrossValidation[1], upperLimit = upperLimit, lowerLimit = lowerLimit), name="Lasso Logistic Regression")
 
   class(result) <- 'modelSettings' 
   
@@ -70,10 +81,23 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   if(!is.null(population$indexes))
     population <- population[population$indexes>0,]
   attr(population, 'metaData') <- metaData
+  
+  #restrict to pop
+  if(length(population$rowId)<200000){
+    plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, 
+                                                         population$rowId)
+  } else{
+    plpData$covariateData <- batchRestrict(plpData$covariateData, 
+                                           data.frame(rowId = population$rowId), 
+                                           sizeN = 10000000)
+  }
+  
   #TODO - how to incorporate indexes?
   variance <- 0.003
   if(!is.null(param$variance )) variance <- param$variance
   includeCovariateIds <- param$includeCovariateIds
+  lowerLimit <- param$lowerLimit
+  upperLimit <- param$upperLimit
   start <- Sys.time()
   noShrinkage <- param$noShrinkage
   modelTrained <- fitGLMModel(population,
@@ -84,6 +108,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
                                      control = Cyclops::createControl(noiseLevel = ifelse(trace,"quiet","silent"), cvType = "auto",
                                                              startingVariance = variance,
                                                              tolerance  = 2e-07,
+                                                             lowerLimit = lowerLimit,
+                                                             upperLimit = upperLimit,
                                                              cvRepetitions = 1, fold=ifelse(!is.null(population$indexes),max(population$indexes),1),
                                                              selectorType = "byPid",
                                                              threads= param$threads,
@@ -114,7 +140,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   
   #get prediction on test set:
   ParallelLogger::logInfo('Getting predictions on train set')
-  prediction <- predict.plp(plpModel=list(model = modelTrained),
+  prediction <- predict_plp(plpModel=list(model = modelTrained),
               population = population, 
               plpData = plpData)
   
@@ -128,6 +154,8 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   result <- list(model = modelTrained,
                  modelSettings = list(model='lr_lasso', modelParameters=param), #todo get lambda as param
                  hyperParamSearch = c(priorVariance=modelTrained$priorVariance, 
+                                      upperLimit = upperLimit,
+                                      lowerLimt = lowerLimit,
                                       seed=ifelse(is.null(param$seed), 'NULL', param$seed  ), 
                                       log_likelihood = modelTrained$log_likelihood,
                                       cvPerFold,

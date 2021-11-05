@@ -16,6 +16,7 @@ navbar:
     - reference
     - articles
     - tutorial
+    - bestpractice
     - news
     right: [hades, github]
   components:
@@ -31,6 +32,9 @@ navbar:
     videos:
       text: Videos
       href: articles/Videos.html
+    bestpractice:
+      text: Best Practices
+      href: articles/BestPractices.html
     news:
       text: Changelog
       href: news/index.html

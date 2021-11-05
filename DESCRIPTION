@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 4.3.5
-Date: 2021-03-11
+Version: 4.4.2
+Date: 2021-10-08
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -41,7 +41,7 @@ Imports:
     PRROC,
     Rcpp (>= 0.11.2),
     reshape2,
-    reticulate (> 1.6),
+    reticulate (> 1.16),
     rlang,
     rms,
     RSQLite,
@@ -66,6 +66,8 @@ Suggests:
     iterativeHardThresholding,
     keras,
     knitr,
+    markdown,
+    memuse,
     Metrics,
     officer,
     plotly,
@@ -73,6 +75,7 @@ Suggests:
     pROC,
     R6,
     ResourceSelection,
+    RJSONIO,
     rmarkdown,
     scoring,
     shiny,
@@ -89,7 +92,8 @@ Suggests:
     survminer,
     tensorflow,
     testthat,
-    xgboost
+    withr,
+    xgboost (> 1.3.2.1)
 Remotes:
     ohdsi/FeatureExtraction,
     ohdsi/BigKnn,

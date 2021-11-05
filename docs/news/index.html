@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
       </span>
     </div>
 
@@ -79,7 +79,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -103,6 +103,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -115,13 +118,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -135,16 +138,19 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -165,6 +171,220 @@
       <small>Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
+    <div id="patientlevelprediction-440" class="section level1">
+<h1 class="page-header" data-toc-text="4.4.0">
+<a href="#patientlevelprediction-440" class="anchor"></a>PatientLevelPrediction 4.4.0</h1>
+<ul>
+<li>added database result storage</li>
+<li>added interface to database results in shiny</li>
+<li>merged in shinyRepo that changed the shiny app to make it modular and added new features</li>
+<li>removed deep learning as this is being added into new OHDSI package DeepPatientLevelPrediction</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-4310" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.10">
+<a href="#patientlevelprediction-4310" class="anchor"></a>PatientLevelPrediction 4.3.10</h1>
+<ul>
+<li>save xgboost model as json file for transparency</li>
+<li>set connectionDetails to NULL in getPlpData</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-439" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.9">
+<a href="#patientlevelprediction-439" class="anchor"></a>PatientLevelPrediction 4.3.9</h1>
+<ul>
+<li>updated andromeda functions - restrict to pop and tidy covs for speed</li>
+<li>quick fix for GBM survival predicting negative values</li>
+<li>fixed occasional demoSum error for survival models</li>
+<li>updated index creation to use Andromeda function</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-438" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.8">
+<a href="#patientlevelprediction-438" class="anchor"></a>PatientLevelPrediction 4.3.8</h1>
+<ul>
+<li>fixed bug when normalize data is false</li>
+<li>fixed bugs when single feature (gbm + python)</li>
+<li>updated GBM</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-437" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.7">
+<a href="#patientlevelprediction-437" class="anchor"></a>PatientLevelPrediction 4.3.7</h1>
+<ul>
+<li>updated calibration slope</li>
+<li>fixed missing age/gender in prediction</li>
+<li>fixed shiny intercept bug</li>
+<li>fixed diagnostic</li>
+<li>fixed missing covariateSettings in load cvs plp</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-436" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.6">
+<a href="#patientlevelprediction-436" class="anchor"></a>PatientLevelPrediction 4.3.6</h1>
+<ul>
+<li>Removed plpData from evaluation</li>
+<li>Added recalibration into externalVal</li>
+<li>Updated shiny app for recalibration</li>
+<li>Added population creation setting to use cohortEndDate as timeAtRisk end</li>
+<li>fixed tests</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-433" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.3">
+<a href="#patientlevelprediction-433" class="anchor"></a>PatientLevelPrediction 4.3.3</h1>
+<ul>
+<li>Reduced imports by adding code to install some dependencies when used</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-432" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.2">
+<a href="#patientlevelprediction-432" class="anchor"></a>PatientLevelPrediction 4.3.2</h1>
+<ul>
+<li>fixed csv result saving bug when no model param</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-431" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.1">
+<a href="#patientlevelprediction-431" class="anchor"></a>PatientLevelPrediction 4.3.1</h1>
+<ul>
+<li>fixed r check vignette issues</li>
+<li>added conda install to test</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-430" class="section level1">
+<h1 class="page-header" data-toc-text="4.3.0">
+<a href="#patientlevelprediction-430" class="anchor"></a>PatientLevelPrediction 4.3.0</h1>
+<ul>
+<li>finalised permutation feature importance</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-4210" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.10">
+<a href="#patientlevelprediction-4210" class="anchor"></a>PatientLevelPrediction 4.2.10</h1>
+<ul>
+<li>fixed deepNN index issue (reported on github - thanks dapritchard)</li>
+<li>add compression to python pickles</li>
+<li>removed requirement to have outcomeCount for prediction with python models</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-429" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.9">
+<a href="#patientlevelprediction-429" class="anchor"></a>PatientLevelPrediction 4.2.9</h1>
+<ul>
+<li>cleaned all checks</li>
+<li>fixed bug in python toSparseMatrix</li>
+<li>fixed warning in studyPop</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-428" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.8">
+<a href="#patientlevelprediction-428" class="anchor"></a>PatientLevelPrediction 4.2.8</h1>
+<ul>
+<li>fixed bug (identified by Chungsoo) in covariateSummary</li>
+<li>fixed bug with thresholdSummary</li>
+<li>edited threshold summary function to make it cleaner</li>
+<li>added to ensemble where you can combine multiple models into an ensemble</li>
+<li>cleaned up the notes and tests</li>
+<li>updated simulated data covariateId in tests to use integer64</li>
+<li>fixed description imports (and sorted them)</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-427" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.7">
+<a href="#patientlevelprediction-427" class="anchor"></a>PatientLevelPrediction 4.2.7</h1>
+<ul>
+<li>fixed Cox model calibration plots</li>
+<li>fixed int64 conversion bug</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-426" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.6">
+<a href="#patientlevelprediction-426" class="anchor"></a>PatientLevelPrediction 4.2.6</h1>
+<ul>
+<li>added baseline risk to Cox model</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-423" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.3">
+<a href="#patientlevelprediction-423" class="anchor"></a>PatientLevelPrediction 4.2.3</h1>
+<ul>
+<li>updated shiny: added attrition and hyper-parameter grid search into settings</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-422" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.2">
+<a href="#patientlevelprediction-422" class="anchor"></a>PatientLevelPrediction 4.2.2</h1>
+<ul>
+<li>updated shiny app added 95% CI to AUC in summary, size is now complete data size and there is a column valPercent that tells what percentage of the data were used for validation</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-421" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.1">
+<a href="#patientlevelprediction-421" class="anchor"></a>PatientLevelPrediction 4.2.1</h1>
+<ul>
+<li>updated GBMsurvival to use survival metrics and c-stat</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-420" class="section level1">
+<h1 class="page-header" data-toc-text="4.2.0">
+<a href="#patientlevelprediction-420" class="anchor"></a>PatientLevelPrediction 4.2.0</h1>
+<ul>
+<li>added survival metrics</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-410" class="section level1">
+<h1 class="page-header" data-toc-text="4.1.0">
+<a href="#patientlevelprediction-410" class="anchor"></a>PatientLevelPrediction 4.1.0</h1>
+<ul>
+<li>added updates and fixes into master from development branch</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-406" class="section level1">
+<h1 class="page-header" data-toc-text="4.0.6">
+<a href="#patientlevelprediction-406" class="anchor"></a>PatientLevelPrediction 4.0.6</h1>
+<ul>
+<li>fixed bug with pdw data extraction due to multiple person_id columns</li>
+<li>fixed bug in shiny app converting covariate values due to tibble</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-405" class="section level1">
+<h1 class="page-header" data-toc-text="4.0.5">
+<a href="#patientlevelprediction-405" class="anchor"></a>PatientLevelPrediction 4.0.5</h1>
+<ul>
+<li>added calibration updates: cal-in-large, weak cal</li>
+<li>updated smooth cal plot (sample for speed in big data)</li>
+<li>defaulted to 100 values in calibrationSummary + updated cal plot</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-404" class="section level1">
+<h1 class="page-header" data-toc-text="4.0.4">
+<a href="#patientlevelprediction-404" class="anchor"></a>PatientLevelPrediction 4.0.4</h1>
+<ul>
+<li>fixed backwards compat with normalization</li>
+<li>fixed python joblib dependancy</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-402" class="section level1">
+<h1 class="page-header" data-toc-text="4.0.2">
+<a href="#patientlevelprediction-402" class="anchor"></a>PatientLevelPrediction 4.0.2</h1>
+<ul>
+<li>fixed bug in preprocessing</li>
+<li>added cross validation aucs to LR, GBM, RF and MLP</li>
+<li>added more settings into MLP</li>
+<li>added threads option in LR</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-401" class="section level1">
+<h1 class="page-header" data-toc-text="4.0.1">
+<a href="#patientlevelprediction-401" class="anchor"></a>PatientLevelPrediction 4.0.1</h1>
+<ul>
+<li>fixed minor bug with shiny dependency</li>
+<li>fixed some tests</li>
+<li>added standardizedMeanDiff to covariatesummary</li>
+<li>updated createStudyPopulation to make it cleaner to read and count outcome per TAR</li>
+</ul>
+</div>
     <div id="patientlevelprediction-400" class="section level1">
 <h1 class="page-header" data-toc-text="4.0.0">
 <a href="#patientlevelprediction-400" class="anchor"></a>PatientLevelPrediction 4.0.0</h1>
@@ -330,7 +550,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

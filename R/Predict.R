@@ -82,11 +82,12 @@ predictPlp <- function(plpModel, population, plpData,  index=NULL){
 }
 
 # default patient level prediction prediction  
-predict.plp <- function(plpModel,population, plpData, ...){
-  covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
-  ParallelLogger::logTrace('predict.plp - predictingProbabilities start')
-  prediction <- predictProbabilities(plpModel$model, population, covariateData)
-  ParallelLogger::logTrace('predict.plp - predictingProbabilities end')
+predict_plp <- function(plpModel,population, plpData, ...){
+  ## done in transform covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
+  ParallelLogger::logTrace('predict_plp - predictingProbabilities start')
+  prediction <- predictProbabilities(plpModel$model, population, 
+                                     plpData$covariateData)
+  ParallelLogger::logTrace('predict_plp - predictingProbabilities end')
   
   # add baselineHazard function
   if(!is.null(plpModel$model$baselineHazard)){
@@ -103,21 +104,21 @@ predict.plp <- function(plpModel,population, plpData, ...){
 }
 
 # for gxboost
-predict.xgboost <- function(plpModel,population, plpData, ...){ 
+predict_xgboost <- function(plpModel,population, plpData, ...){ 
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
-  data <- result$data[population$rowId,]
+  data <- result$data[population$rowId,, drop = F]
   prediction <- data.frame(rowId=population$rowId,
                            value=stats::predict(plpModel$model, data)
   )
   
   prediction <- merge(population, prediction, by='rowId', all.x=T, fill=0)
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')] # need to fix no index issue
   attr(prediction, "metaData") <- list(predictionType = "binary") 
   return(prediction)
   
 }
 
-predict.pythonReticulate <- function(plpModel, population, plpData){
+predict_pythonReticulate <- function(plpModel, population, plpData){
   
   
   python_predict <- python_predict_temporal <- function(){return(NULL)}
@@ -127,17 +128,17 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   
   
   ParallelLogger::logInfo('Mapping covariates...')
-  if(!is.null(plpData$timeRef)){
-    pdata <- toSparseTorchPython(plpData,population, map=plpModel$covariateMap, temporal=T)
-    pdata <- pdata$data
-    fun_predict <- python_predict_temporal
-  } else {  
+  #if(!is.null(plpData$timeRef)){
+  #  pdata <- toSparseTorchPython(plpData,population, map=plpModel$covariateMap, temporal=T)
+  #  pdata <- pdata$data
+  #  fun_predict <- python_predict_temporal
+  #} else {  
     newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
     included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
     included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
-    pdata <- reticulate::r_to_py(newData$data[,included])
+    pdata <- reticulate::r_to_py(newData$data[,included, drop = F])
     fun_predict <- python_predict
-  }
+  #}
   
   population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
   namesInd <- c('rowIdPython','rowId')%in%colnames(population)
@@ -166,59 +167,13 @@ predict.pythonReticulate <- function(plpModel, population, plpData){
   prediction <- merge(prediction[,colnames(prediction)!='rowIdPython'],
                       population, 
                       by='rowId')
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')]
+  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value','ageYear', 'gender')]
   return(prediction)
 }
 
-predict.pythonAuto <- function(plpModel, population, plpData){
-  
-  python_predict <- function(){return(NULL)}
-  
-  ParallelLogger::logInfo('Mapping covariates...')
-  if(!is.null(plpData$timeRef)){
-    pdata <- toSparseTorchPython(plpData,population, map=plpModel$covariateMap, temporal=T)
-    pdata <- pdata$data
-  } else {  
-    newData <- toSparseM(plpData, population, map=plpModel$covariateMap)
-    included <- plpModel$varImp$covariateId[plpModel$varImp$included>0] # does this include map?
-    included <- newData$map$newCovariateId[newData$map$oldCovariateId%in%included] 
-    pdata <- reticulate::r_to_py(newData$data[,included])
-  }
-  
-  population$rowIdPython <- population$rowId-1 # -1 to account for python/r index difference
-  namesInd <- c('rowIdPython','rowId')%in%colnames(population)
-  namesInd <- c('rowIdPython','rowId')[namesInd]
-  pPopulation <- as.matrix(population[,namesInd])
-  
-  # run the python predict code:
-  ParallelLogger::logInfo('Executing prediction...')
-  e <- environment()
-  reticulate::source_python(system.file(package='PatientLevelPrediction','python','predictFunctions.py'), envir = e)
-  
-  result <- python_predict(population = pPopulation, 
-                           plpData = pdata, 
-                           model_loc = plpModel$model,
-                           dense = ifelse(is.null(plpModel$dense),0,plpModel$dense),
-                           autoencoder = T)
-  #get the prediction from python and reformat:
-  ParallelLogger::logInfo('Returning results...')
-  prediction <- result
-  prediction <- as.data.frame(prediction)
-  attr(prediction, "metaData") <- list(predictionType="binary")
-  colnames(prediction) <- c(namesInd, 'value')
-  
-  prediction <- merge(prediction[,colnames(prediction)!='rowIdPython'],
-                      population, 
-                      by='rowId')
-  prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')]
-  return(prediction)
-}
-
-
-
-predict.knn <- function(plpData, population, plpModel, ...){
-  covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
-  prediction <- BigKnn::predictKnn(covariates = covariateData$covariates,
+predict_knn <- function(plpData, population, plpModel, ...){
+  ##covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
+  prediction <- BigKnn::predictKnn(covariates = plpData$covariateData$covariates,
                                    cohorts= population[,!colnames(population)%in%'cohortStartDate'],
                                    indexFolder = plpModel$model,
                                    k = plpModel$modelSettings$modelParameters$k,
@@ -234,304 +189,6 @@ predict.knn <- function(plpData, population, plpModel, ...){
   prediction$value[is.na(prediction$value)] <- 0
   
   return(prediction)
-}
-
-
-predict.deep <- function(plpModel, population, plpData,   ...){
-  ensure_installed("plyr")
-  
-  temporal <- !is.null(plpData$timeRef)
-  ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
-  if(temporal){
-    ParallelLogger::logTrace('temporal')
-    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
-    
-    data <-result$data[population$rowId,,]
-    if(!is.null(plpModel$useVae)){
-      if(plpModel$useVae==TRUE){
-        data<- plyr::aaply(as.array(data), 2, function(x) stats::predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
-        data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
-      }}
-    
-    batch_size <- min(2000, length(population$rowId))
-    maxVal <- length(population$rowId)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    for(batch in batches){
-      pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,,]))
-      if(is.null(dim(pred))){
-        prediction$value[batch] <- as.double(pred)
-      } else{
-        prediction$value[batch] <- as.double(pred[,2])
-      }
-    }
-    
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
-    return(prediction)
-  } else{
-    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
-    data <-result$data[population$rowId,]
-    
-    batch_size <- min(2000, length(population$rowId))
-    maxVal <- length(population$rowId)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    for(batch in batches){
-      pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,]))
-      prediction$value[batch] <- as.double(pred[,2])
-    }
-    
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
-    return(prediction)
-    
-  }
-}
-
-predict.BayesianDeep <- function(plpModel, population, plpData,   ...){
-  ensure_installed("plyr")
-  
-  temporal <- !is.null(plpData$timeRef)
-  ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
-  if(temporal){
-    ParallelLogger::logTrace('temporal')
-    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
-    
-    data <-result$data[population$rowId,,]
-    if(!is.null(plpModel$useVae)){
-      if(plpModel$useVae==TRUE){
-        data<- plyr::aaply(as.array(data), 2, function(x) stats::predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
-        data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
-      }}
-    
-    batch_size <- min(2000, length(population$rowId))
-    maxVal <- length(population$rowId)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    prediction$epistemicUncertainty <- 0
-    prediction$aleatoricUncertainty <- 0
-    for(batch in batches){
-      num_MC_samples = 100
-      output_dim = 2
-      pred <- keras::predict_on_batch(plpModel$model, as.array(data[batch,,]))
-      MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
-      for (k in 1:num_MC_samples){
-        MC_samples[k,, ] = stats::predict(plpModel$model, as.array(data[batch,,]))
-        #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
-      }
-      pred <- apply(MC_samples[,,output_dim], 2, mean)
-      epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, stats::var)
-      logVar = MC_samples[, , output_dim * 2]
-      if(length(dim(logVar))<=1){
-        aleatoricUncertainty = exp(mean(logVar))
-      }else{
-        aleatoricUncertainty = exp(colMeans(logVar))
-        
-      }
-      prediction$value[batch] <- pred
-      prediction$epistemicUncertainty[batch] = epistemicUncertainty
-      prediction$aleatoricUncertainty[batch] = aleatoricUncertainty
-      #writeLines(paste0(dim(pred[,2]), collapse='-'))
-      #writeLines(paste0(pred[1,2], collapse='-'))
-      
-    }
-    prediction$value[prediction$value>1] <- 1
-    prediction$value[prediction$value<0] <- 0
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value',
-                                                        'epistemicUncertainty', 'aleatoricUncertainty')] # need to fix no index issue
-    return(prediction)
-  } else{
-    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
-    data <-result$data[population$rowId,]
-    
-    batch_size <- min(2000, length(population$rowId))
-    maxVal <- length(population$rowId)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    for(batch in batches){
-      num_MC_samples = 100
-      output_dim =2
-      MC_samples <- array(0, dim = c(num_MC_samples, length(batch), 2 * output_dim))
-      for (k in 1:num_MC_samples){
-        MC_samples[k,, ] = stats::predict(plpModel$model, as.array(data[batch,,]))
-        #keras::predict_proba(model, as.array(plpData[population$rowId[population$indexes==index],,][batch,,]))
-      }
-      pred <- apply(MC_samples[,,output_dim], 2, mean)
-      epistemicUncertainty <- apply(MC_samples[,,output_dim], 2, stats::var)
-      logVar = MC_samples[, , output_dim * 2]
-      if(length(dim(logVar))<=1){
-        aleatoricUncertainty = exp(mean(logVar))
-      }else{
-        aleatoricUncertainty = exp(colMeans(logVar))
-        
-      }
-      prediction$value[batch] <- pred
-      prediction$epistemicUncertainty[batch] = epistemicUncertainty
-      prediction$aleatoricUncertainty[batch] = aleatoricUncertainty
-      #writeLines(paste0(dim(pred[,2]), collapse='-'))
-      #writeLines(paste0(pred[1,2], collapse='-'))
-    }
-    prediction$value[prediction$value>1] <- 1
-    prediction$value[prediction$value<0] <- 0
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value',
-                                                        'epistemicUncertainty', 'aleatoricUncertainty')] # need to fix no index issue
-    return(prediction)
-    
-  }
-}
-
-predict.deepEnsemble <- function(plpModel, population, plpData,   ...){
-  ensure_installed("plyr")
-  
-  mu <- function(){return(NULL)}
-  sigma <- function(){return(NULL)}
-  
-  temporal <- !is.null(plpData$timeRef)
-  ParallelLogger::logDebug(paste0('timeRef null: ',is.null(plpData$timeRef)))
-  if(temporal){
-    ParallelLogger::logTrace('temporal')
-    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
-    
-    data <-result$data[population$rowId,,]
-    if(!is.null(plpModel$useVae)){
-      if(plpModel$useVae==TRUE){
-        data<- plyr::aaply(as.array(data), 2, function(x) stats::predict(plpModel$vaeEncoder, x, batch_size = plpModel$vaeBatchSize))
-        data<-aperm(data, perm = c(2,1,3))#rearrange of dimension
-      }}
-    
-    batch_size <- min(2000, length(population$rowId))
-    maxVal <- length(population$rowId)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    
-    prediction$sigmas <- 0
-    for(batch in batches){
-      for (i in seq(plpModel$modelSettings$modelParameters$numberOfEnsembleNetwork)){
-        if(i==1){
-          muMatrix <- data.frame()
-          sigmaMatrix <-data.frame()
-        }
-        c(mu,sigma) %<-% plpModel$model[[i]](inputs=list(as.array(data[batch,,])))
-        muMatrix<-rbind(muMatrix,t(as.data.frame(mu[,2])))
-        sigmaMatrix<-rbind(sigmaMatrix,t(as.data.frame(sigma[,2])))
-      }
-      
-      muMean <- apply(muMatrix,2,mean)
-      muSq <- muMatrix^2
-      sigmaSq <- sigmaMatrix^2
-      sigmaMean <- apply(sigmaMatrix,2,mean)
-      sigmaResult=apply(muSq+sigmaSq,2, mean)- muMean^2
-      
-      prediction$value[batch] <- c(muMean)
-      prediction$sigmas[batch] <- c(sigmaResult)
-    }
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value', 'sigmas')] # need to fix no index issue
-    #If the prediction value is negative, please add values to make all the values to positive. 
-    if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
-    return(prediction)
-    
-  } else{
-    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
-    data <-result$data[population$rowId,]
-    
-    batch_size <- min(2000, length(population$rowId))
-    maxVal <- length(population$rowId)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    
-    prediction$sigmas <- 0
-    for(batch in batches){
-      for (i in seq(plpModel$modelSettings$modelParameters$numberOfEnsembleNetwork)){
-        if(i==1){
-          muMatrix <- data.frame()
-          sigmaMatrix <-data.frame()
-        }
-        c(mu,sigma) %<-% plpModel$model[[i]](inputs=list(as.array(data[batch,,])))
-        muMatrix<-rbind(muMatrix,t(as.data.frame(mu[,2])))
-        sigmaMatrix<-rbind(sigmaMatrix,t(as.data.frame(sigma[,2])))
-      }
-      
-      muMean <- apply(muMatrix,2,mean)
-      muSq <- muMatrix^2
-      sigmaSq <- sigmaMatrix^2
-      sigmaMean <- apply(sigmaMatrix,2,mean)
-      sigmaResult=apply(muSq+sigmaSq,2, mean)- muMean^2
-      
-      prediction$value[batch] <- c(muMean)
-      prediction$sigmas[batch] <- c(sigmaResult)
-    }
-    
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value', 'sigmas')] # need to fix no index issue
-    if(min(prediction$value)<0){prediction$value = prediction$value+ (min(prediction$value)* (-1))  }
-    return(prediction)
-    
-  }
-}
-
-predict.deepMulti <- function(plpModel, population, plpData,   ...){
-  
-  repeats <- attr(plpModel, 'inputs')
-  
-  temporal <- !is.null(plpData$timeRef)
-  ParallelLogger::logDebug('timeRef null: ',paste0(is.null(plpData$timeRef)))
-  if(temporal){
-    ParallelLogger::logTrace('temporal')
-    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=T)
-    ParallelLogger::logDebug('result$data dim: ',paste0(dim(result$data), collapse = '-'))
-    ParallelLogger::logDebug('population dim: ',paste0(dim(population), collapse = '-'))
-    data <-result$data[population$rowId,,]
-    
-    ParallelLogger::logInfo('running batch prediction')
-    batch_size <- min(2000, length(population$rowId))
-    maxVal <- length(population$rowId)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    for(batch in batches){
-      ParallelLogger::logDebug('batch length: ', length(batch))
-      dat <- list()
-      length(dat) <- repeats
-      for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
-      
-      pred <- keras::predict_on_batch(plpModel$model, dat)
-      if(is.null(dim(pred))){
-        ParallelLogger::logDebug('Pred length: ', length(pred))
-        prediction$value[batch] <- as.double(pred)
-      } else{
-        ParallelLogger::logDebug('Pred dim: ', paste0(dim(pred), collapse = '-'))
-        prediction$value[batch] <- as.double(pred[,2])
-      }
-    }
-    
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
-    return(prediction)
-  } else{
-    result<-toSparseM(plpData,population,map=plpModel$covariateMap, temporal=F)
-    data <-result$data[population$rowId,]
-    
-    batch_size <- min(2000, length(population$rowId))
-    maxVal <- length(population$rowId)
-    batches <- lapply(1:ceiling(maxVal/batch_size), function(x) ((x-1)*batch_size+1):min((x*batch_size),maxVal))
-    prediction <- population
-    prediction$value <- 0
-    for(batch in batches){
-      dat <- list()
-      length(dat) <- repeats
-      for( i in 1:repeats) {dat[[i]] <- as.array(data[batch,,])}
-      
-      pred <- keras::predict_on_batch(plpModel$model, dat)
-      prediction$value[batch] <- as.double(pred)
-    }
-    
-    prediction <- prediction[,colnames(prediction)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','indexes', 'value')] # need to fix no index issue
-    return(prediction)
-    
-  }
 }
 
 

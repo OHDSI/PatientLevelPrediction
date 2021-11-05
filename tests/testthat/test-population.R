@@ -23,20 +23,20 @@ context("Population")
 test_that("population creation parameters", {
   
   studyPopulation <- createStudyPopulation(plpData,
-                        outcomeId = 3,
-                        binary = TRUE,
-                        includeAllOutcomes = F,
-                        firstExposureOnly = FALSE,
-                        washoutPeriod = 0,
-                        removeSubjectsWithPriorOutcome = FALSE,
-                        priorOutcomeLookback = 99999,
-                        requireTimeAtRisk = FALSE,
-                        minTimeAtRisk=0,
-                        riskWindowStart = 0,
-                        startAnchor = 'cohort start',
-                        riskWindowEnd = 365,
-                        endAnchor = 'cohort start')
-
+                                           outcomeId = 3,
+                                           binary = TRUE,
+                                           includeAllOutcomes = F,
+                                           firstExposureOnly = FALSE,
+                                           washoutPeriod = 0,
+                                           removeSubjectsWithPriorOutcome = FALSE,
+                                           priorOutcomeLookback = 99999,
+                                           requireTimeAtRisk = FALSE,
+                                           minTimeAtRisk=0,
+                                           riskWindowStart = 0,
+                                           startAnchor = 'cohort start',
+                                           riskWindowEnd = 365,
+                                           endAnchor = 'cohort start')
+  
   #plpData = plpData
   expect_is(studyPopulation, "data.frame")
   
@@ -82,6 +82,23 @@ test_that("population creation parameters", {
   expect_gt(nrOutcomes3,0)
   expect_true(nrOutcomes3 <= nrOutcomes1) 
   
+  expect_warning(
+    createStudyPopulation(plpData,
+                          outcomeId = 3,
+                          binary = TRUE,
+                          includeAllOutcomes = F,
+                          firstExposureOnly = TRUE,
+                          washoutPeriod = 0,
+                          removeSubjectsWithPriorOutcome = FALSE,
+                          priorOutcomeLookback = 99999,
+                          requireTimeAtRisk = TRUE,
+                          minTimeAtRisk= 999999,
+                          riskWindowStart = 0,
+                          startAnchor = 'cohort start',
+                          riskWindowEnd = 365,
+                          endAnchor = 'cohort start')
+  )
+  
   #washoutPeriod
   studyPopulation <- createStudyPopulation(plpData,
                                            outcomeId = 3,
@@ -103,19 +120,19 @@ test_that("population creation parameters", {
   
   #washoutPeriod >=0
   expect_error(
-                createStudyPopulation(plpData,
-                                population = NULL,
-                                outcomeId = 3,
-                                binary = TRUE,
-                                includeAllOutcomes = F,
-                                firstExposureOnly = FALSE,
-                                washoutPeriod = -1,
-                                removeSubjectsWithPriorOutcome = TRUE,
-                                priorOutcomeLookback = 99999,
-                                requireTimeAtRisk = TRUE,
-                                minTimeAtRisk=365,
-                                riskWindowStart = 0,
-                                riskWindowEnd = 365)
+    createStudyPopulation(plpData,
+                          population = NULL,
+                          outcomeId = 3,
+                          binary = TRUE,
+                          includeAllOutcomes = F,
+                          firstExposureOnly = FALSE,
+                          washoutPeriod = -1,
+                          removeSubjectsWithPriorOutcome = TRUE,
+                          priorOutcomeLookback = 99999,
+                          requireTimeAtRisk = TRUE,
+                          minTimeAtRisk=365,
+                          riskWindowStart = 0,
+                          riskWindowEnd = 365)
   )
   
   #priorOutcomeLookback >=0
@@ -152,6 +169,83 @@ test_that("population creation parameters", {
                           riskWindowEnd = 365)
   )
   
+  # if addExposureDaysToStart is specified used it but give warning
+  expect_warning(
+    createStudyPopulation(plpData,
+                          outcomeId = 3,
+                          binary = TRUE,
+                          includeAllOutcomes = F,
+                          firstExposureOnly = TRUE,
+                          washoutPeriod = 365,
+                          removeSubjectsWithPriorOutcome = FALSE,
+                          priorOutcomeLookback = 99999,
+                          requireTimeAtRisk = FALSE,
+                          minTimeAtRisk=365,
+                          riskWindowStart = 0,
+                          startAnchor = NULL,
+                          riskWindowEnd = 365,
+                          endAnchor = NULL,
+                          addExposureDaysToStart = TRUE,
+                          addExposureDaysToEnd = TRUE)
+  )
+  
+  # Incorrect verbosity string
+  
+  # if addExposureDaysToStart is specified used it but give warning
+  expect_error(
+    createStudyPopulation(plpData,
+                          outcomeId = 3,
+                          binary = TRUE,
+                          includeAllOutcomes = F,
+                          firstExposureOnly = TRUE,
+                          washoutPeriod = 365,
+                          removeSubjectsWithPriorOutcome = FALSE,
+                          priorOutcomeLookback = 99999,
+                          requireTimeAtRisk = FALSE,
+                          minTimeAtRisk=365,
+                          riskWindowStart = 0,
+                          startAnchor = 'cohort start',
+                          riskWindowEnd = 365,
+                          endAnchor = 'cohort end', 
+                          verbosity = 'IMFO')
+  )
+  
+  # Incorrect startAnchor
+  expect_error(
+    createStudyPopulation(plpData,
+                          outcomeId = 3,
+                          binary = TRUE,
+                          includeAllOutcomes = F,
+                          firstExposureOnly = TRUE,
+                          washoutPeriod = 365,
+                          removeSubjectsWithPriorOutcome = FALSE,
+                          priorOutcomeLookback = 99999,
+                          requireTimeAtRisk = FALSE,
+                          minTimeAtRisk=365,
+                          riskWindowStart = 0,
+                          startAnchor = 'cohort stard',
+                          riskWindowEnd = 365,
+                          endAnchor = 'cohort end')
+  )
+  
+  # Incorrect endAnchor
+  expect_error(
+    createStudyPopulation(plpData,
+                          outcomeId = 3,
+                          binary = TRUE,
+                          includeAllOutcomes = F,
+                          firstExposureOnly = TRUE,
+                          washoutPeriod = 365,
+                          removeSubjectsWithPriorOutcome = FALSE,
+                          priorOutcomeLookback = 99999,
+                          requireTimeAtRisk = FALSE,
+                          minTimeAtRisk=365,
+                          riskWindowStart = 0,
+                          startAnchor = 'cohort start',
+                          riskWindowEnd = 365,
+                          endAnchor = 'cohort ent')
+  )
+  
   
   # check outcomes that only have partial timeatrisk are included:
   
@@ -170,7 +264,7 @@ test_that("population creation parameters", {
                         daysFromObsStart=rep(740,20),
                         daysToCohortEnd=rep(1,20),
                         daysToObsEnd=c(40, rep(900,19))
-                        )
+  )
   PplpData <- plpData
   PplpData$outcomes <- outcomes
   PplpData$cohorts <- cohorts
@@ -180,58 +274,58 @@ test_that("population creation parameters", {
                                                                   outcomes=3))
   
   Ppop <- createStudyPopulation(PplpData,
-                        population = NULL,
-                        outcomeId = 1,
-                        binary = T,
-                        includeAllOutcomes = T,
-                        firstExposureOnly = FALSE,
-                        washoutPeriod = 0,
-                        removeSubjectsWithPriorOutcome = F, 
-                        priorOutcomeLookback = 99999,
-                        requireTimeAtRisk = T,
-                        minTimeAtRisk=365,
-                        riskWindowStart = 0,
-                        startAnchor = 'cohort start',
-                        riskWindowEnd = 365,
-                        endAnchor = 'cohort start')
+                                population = NULL,
+                                outcomeId = 1,
+                                binary = T,
+                                includeAllOutcomes = T,
+                                firstExposureOnly = FALSE,
+                                washoutPeriod = 0,
+                                removeSubjectsWithPriorOutcome = F, 
+                                priorOutcomeLookback = 99999,
+                                requireTimeAtRisk = T,
+                                minTimeAtRisk=365,
+                                riskWindowStart = 0,
+                                startAnchor = 'cohort start',
+                                riskWindowEnd = 365,
+                                endAnchor = 'cohort start')
   
   # person 1 and 4 should be retruned
   expect_equal(Ppop$rowId[Ppop$outcomeCount>0], c(1,4))
   
   Ppop2 <- createStudyPopulation(PplpData,
-                               population = NULL,
-                               outcomeId = 1,
-                               binary = T,
-                               includeAllOutcomes = T,
-                               firstExposureOnly = F,
-                               washoutPeriod = 0,
-                               removeSubjectsWithPriorOutcome = T,
-                               priorOutcomeLookback = 99999,
-                               requireTimeAtRisk = T,
-                               minTimeAtRisk=365,
-                               riskWindowStart = 0,
-                               startAnchor = 'cohort start',
-                               riskWindowEnd = 365,
-                               endAnchor = 'cohort start')
+                                 population = NULL,
+                                 outcomeId = 1,
+                                 binary = T,
+                                 includeAllOutcomes = T,
+                                 firstExposureOnly = F,
+                                 washoutPeriod = 0,
+                                 removeSubjectsWithPriorOutcome = T,
+                                 priorOutcomeLookback = 99999,
+                                 requireTimeAtRisk = T,
+                                 minTimeAtRisk=365,
+                                 riskWindowStart = 0,
+                                 startAnchor = 'cohort start',
+                                 riskWindowEnd = 365,
+                                 endAnchor = 'cohort start')
   
   # person 4 only as person 1 has it before
   expect_equal(Ppop2$rowId[Ppop2$outcomeCount>0], c(4))
   
   Ppop3 <- createStudyPopulation(PplpData,
-                               population = NULL,
-                               outcomeId = 1,
-                               binary = T,
-                               includeAllOutcomes = F,
-                               firstExposureOnly = FALSE,
-                               washoutPeriod = 0,
-                               removeSubjectsWithPriorOutcome = F,
-                               priorOutcomeLookback = 99999,
-                               requireTimeAtRisk = T,
-                               minTimeAtRisk=365,
-                               riskWindowStart = 0,
-                               startAnchor = 'cohort start',
-                               riskWindowEnd = 365,
-                               endAnchor = 'cohort start')
+                                 population = NULL,
+                                 outcomeId = 1,
+                                 binary = T,
+                                 includeAllOutcomes = F,
+                                 firstExposureOnly = FALSE,
+                                 washoutPeriod = 0,
+                                 removeSubjectsWithPriorOutcome = F,
+                                 priorOutcomeLookback = 99999,
+                                 requireTimeAtRisk = T,
+                                 minTimeAtRisk=365,
+                                 riskWindowStart = 0,
+                                 startAnchor = 'cohort start',
+                                 riskWindowEnd = 365,
+                                 endAnchor = 'cohort start')
   
   # 4 only should be retruned
   expect_equal(Ppop3$rowId[Ppop3$outcomeCount>0], c(4))

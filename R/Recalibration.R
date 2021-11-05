@@ -71,12 +71,15 @@ recalibratePlpRefit <- function(plpModel,
                                         analysisId = plpModel$analysisId, 
                                         eval = 'recalibrationRefit')
   
+  metaData <- attr(result$prediction, "metaData") # new code
+  
   prediction <- result$prediction[,c('rowId', 'value')]
   colnames(prediction)[2] <- 'reestimateValue'
   oldPred <- applyModel(population = newPopulation, plpData = newData, 
                         plpModel = plpModel, calculatePerformance = F)
   prediction <- merge(oldPred, prediction, by = 'rowId')
-
+  attr(prediction, "metaData") <- metaData # new code
+  
   adjust <- result$covariateSummary[,c('covariateValue', 'covariateId')]
   adjust <- adjust[adjust$covariateValue != 0, ]
   newIntercept <- result$model$model$coefficients[names(result$model$model$coefficients) == '(Intercept)']
@@ -108,20 +111,20 @@ recalibratePlpRefit <- function(plpModel,
 #' 
 #' @param prediction                      A prediction dataframe
 #' @param analysisId                      The model analysisId
-#' @param method                          Method used to recalibrate ('recalibrationintheLarge' or 'weakRecalibration' )
+#' @param method                          Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )
 #' @return
 #' An object of class \code{runPlp} that is recalibrated on the new data
 #'
 
 #' @export
 recalibratePlp <- function(prediction, analysisId,
-                           method = c('recalibrationintheLarge', 'weakRecalibration')){
+                           method = c('recalibrationInTheLarge', 'weakRecalibration')){
   # check input:
     if (class(prediction) != 'data.frame')
       stop("Incorrect prediction") 
   
   if(!method  %in% c('recalibrationInTheLarge', 'weakRecalibration'))
-    stop("Unknown recalibration method type. must be of type: RecalibrationintheLarge, weakRecalibration")
+    stop("Unknown recalibration method type. must be of type: recalibrationInTheLarge, weakRecalibration")
   
   
   result <- do.call(method, list(prediction = prediction))
@@ -134,7 +137,9 @@ recalibratePlp <- function(prediction, analysisId,
   result$prediction <- result$prediction[,c('rowId', 'value')]
   colnames(result$prediction)[2] <- paste0(result$type, 'Value')
 
+  metaDataTemp <- attr(prediction, "metaData")
   prediction <- merge(prediction, result$prediction, by = 'rowId')
+  attr(prediction, "metaData") <- metaDataTemp
   
   recalibrateResult$evaluationStatistics <- rbind(recalibrateResult$evaluationStatistics,
                                                   data.frame(analysisId = analysisId,
@@ -162,7 +167,7 @@ recalibrationInTheLarge <- function(prediction){
     prediction$value = logFunct(inverseLog(prediction$value) + correctionFactor)
     
     return(list(prediction = prediction,
-                type = 'recalibrationintheLarge',
+                type = 'recalibrationInTheLarge',
                 correctionFactor = correctionFactor))
   }
   
@@ -207,7 +212,12 @@ weakRecalibration <- function(prediction){
     timepoint <- ifelse(is.null(attr(prediction, "timePoint")), 365, attr(prediction, "timePoint"))
     ParallelLogger::logInfo(paste0('recal initial timepoint: ',timepoint))
     
-    lp <- log(log(1-prediction$value)/log(baseline)) + offset
+    if(!is.null(baseline)){
+      lp <- log(log(1-prediction$value)/log(baseline)) + offset
+    } else{
+      lp <- log(prediction$value)
+    }
+    
     
     t <- apply(cbind(prediction$daysToCohortEnd, prediction$survivalTime), 1, min)
     y <- ifelse(prediction$outcomeCount>0,1,0)  # observed outcome
@@ -219,6 +229,7 @@ weakRecalibration <- function(prediction){
     h.slope <- max(survival::basehaz(f.slope)$hazard)  # maximum OK because of prediction_horizon
     lp.slope <- stats::predict(f.slope)
     prediction$value <- 1-exp(-h.slope*exp(lp.slope))
+    # 1-h.slope^exp(lp.slope)
     
     return(list(prediction = prediction, 
                 type = 'weakRecalibration',
@@ -239,7 +250,20 @@ inverseLog <- function(values){
   return(res)
 }
 
-
+#' addRecalibration
+#'
+#' @description
+#' Adds the recalibration results to the main results
+#'
+#' @details
+#' Append the recalibration results into the main results
+#' 
+#' @param performanceEvaluation           The main result performanceEvaluation
+#' @param recalibration                   The recalibration result
+#' @return
+#' An object of class \code{runPlp} that is recalibrated on the new data
+#'
+#' @export
 addRecalibration <- function(performanceEvaluation, recalibration){
   
   if(!is.null(recalibration$demographicSummary)){
@@ -269,7 +293,7 @@ addRecalibration <- function(performanceEvaluation, recalibration){
     performanceEvaluation$evaluationStatistics <- rbind(performanceEvaluation$evaluationStatistics ,
                                                        recalibration$evaluationStatistics )
   }
-
+  
   return(performanceEvaluation)
 }
 

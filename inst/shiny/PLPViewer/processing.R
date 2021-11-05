@@ -1,19 +1,3 @@
-
-# this checked whether input is valid analysis location or plpResult
-checkPlpInput <- function(result){
-  if(class(result)=='runPlp'){
-    return('plpResult')
-  } else if(ifelse(class(result)=='character', dir.exists(result),F)){
-    return('file')
-  } else if(sum(names(result)%in%c("prediction","performanceEvaluation","inputSetting","executionSummary","model","analysisRef","covariateSummary"))==7){
-    return('plpNoClass')
-  } else {
-    stop('Incorrect class for input result')
-  }
-}
-
-
-
 getSummary  <- function(result,inputType,validation){
   if(inputType == 'plpResult' || inputType == 'plpNoClass'){
     sumTab <- getSummaryFromObject(result,validation)
@@ -197,35 +181,67 @@ summaryPlpAnalyses <- function(analysesLocation){
 }
 
 getPerformance <- function(analysisLocation){
-  location <- file.path(analysisLocation, 'plpResult.rds')
-  if(!file.exists(location)){
-    # check for PLP file instead 
-    locationPlp <- file.path(analysisLocation, 'plpResult')
-    if(!dir.exists(locationPlp)){
-      
-      analysisId <- strsplit(analysisLocation, '/')[[1]]
-      return(data.frame(analysisId=analysisId[length(analysisId)], 
-                        AUC=0.000, AUPRC=0, outcomeCount=0,
-                        populationSize=0,valPercent = 0,incidence=0, timeStamp = as.Date('1900-01-01'),
-                        plpResultLocation=location, 
-                        plpResultLoad='loadPlpResult', TAR = '?'))
-    } else {
-      require(PatientLevelPrediction)
-      res <- loadPlpResult(file.path(analysisLocation,'plpResult'))
-      timeV <- res$executionSummary$ExecutionDateTime
-      TAR <- getTAR(res$model$populationSettings)
-      res <- as.data.frame(res$performanceEvaluation$evaluationStatistics)
-      location <- file.path(analysisLocation, 'plpResult')
-      plpResultLoad <- 'loadPlpResult'
-      
+  
+  getType <- function(analysisLocation){
+    
+    if(file.exists(file.path(analysisLocation, 'plpResult.rds'))){
+      return('rds')
     }
-  } else{
+    
+    if(dir.exists(file.path(analysisLocation, 'plpResult'))){
+      return('runPlp')
+    }
+    
+    if(dir.exists(file.path(analysisLocation, 'performanceEvaluation'))){
+      return('csv')
+    }
+    
+    return('none')
+    
+  }
+  
+  
+  type <- getType(analysisLocation) # csv, rds, runPlp
+  print(type)
+  
+  if(type == 'csv'){
+    
+    require(PatientLevelPrediction)
+    res <- loadPlpFromCsv(file.path(analysisLocation))
+    timeV <- res$executionSummary$ExecutionDateTime
+    TAR <- getTAR(res$model$populationSettings)
+    res <- as.data.frame(res$performanceEvaluation$evaluationStatistics)
+    location <- file.path(analysisLocation)
+    plpResultLoad <- 'loadPlpFromCsv'
+    
+  } else if(type == 'rds'){
+    
     # read rds here
     res <- readRDS(file.path(analysisLocation,'plpResult.rds'))
     timeV <- res$executionSummary$ExecutionDateTime
     TAR <- getTAR(res$model$populationSettings)
     res <- as.data.frame(res$performanceEvaluation$evaluationStatistics)
+    location <- file.path(analysisLocation, 'plpResult.rds')
     plpResultLoad <- 'readRDS'
+    
+  } else if(type == 'runPlp'){
+    require(PatientLevelPrediction)
+    res <- loadPlpResult(file.path(analysisLocation,'plpResult'))
+    timeV <- res$executionSummary$ExecutionDateTime
+    TAR <- getTAR(res$model$populationSettings)
+    res <- as.data.frame(res$performanceEvaluation$evaluationStatistics)
+    location <- file.path(analysisLocation, 'plpResult')
+    plpResultLoad <- 'loadPlpResult'
+    
+  } else{
+    # return empty result
+    analysisId <- strsplit(analysisLocation, '/')[[1]]
+    result <- data.frame(analysisId=analysisId[length(analysisId)], 
+                         AUC=0.000, AUPRC=0, outcomeCount=0,
+                         populationSize=0,valPercent = 0,incidence=0, timeStamp = as.Date('1900-01-01'),
+                         plpResultLocation='', 
+                         plpResultLoad='loadPlpResult', TAR = '?')
+    return(result)
   }
 
   #mave into values:
@@ -248,12 +264,7 @@ getPerformance <- function(analysisLocation){
   res <- res[,!colnames(res)%in%c("BrierScore","BrierScaled")]
   res$incidence <- as.double(res$outcomeCount)/as.double(res$populationSize)*100
   res$valPercent <- valPercent
-  #res[, !colnames(res)%in%c('analysisId','outcomeCount','populationSize')] <- 
-  #  format(as.double(res[, !colnames(res)%in%c('analysisId','outcomeCount','populationSize')]), digits = 2, scientific = F) 
   res$TAR <- TAR
-  #if(sum(colnames(res)=='AUC.auc_ub95ci')>0){
-  #  res$AUC <- res$AUC.auc
-  #}
   
   if(sum(colnames(res)=='AUC.auc')==0){
     res$AUC.auc <- res$AUC 
@@ -282,7 +293,19 @@ getPerformance <- function(analysisLocation){
 }
 
 getValidationPerformance <- function(validationLocation){
-  val <- readRDS(file.path(validationLocation,'validationResult.rds'))
+  
+  if(file.exists(file.path(validationLocation,'validationResult.rds'))){
+    val <- readRDS(file.path(validationLocation,'validationResult.rds'))
+    plpResultLocation <- file.path(validationLocation,'validationResult.rds')
+    plpResultLoad <- 'readRDS'
+  } else{ # try csv loader
+    require(PatientLevelPrediction)
+    val  <- loadPlpFromCsv(validationLocation)
+    plpResultLocation <- file.path(validationLocation)
+    plpResultLoad <- 'loadPlpFromCsv'
+  }
+  
+  
   if("performanceEvaluation"%in%names(val)){
     timeV <- val$executionSummary$ExecutionDateTime
     valPerformance <- reshape2::dcast(as.data.frame(val$performanceEvaluation$evaluationStatistics), 
@@ -313,9 +336,7 @@ getValidationPerformance <- function(validationLocation){
   valPerformance$incidence <- signif(valPerformance$outcomeCount/valPerformance$populationSize*100,3)
   valPerformance$timeStamp <- as.Date(ifelse(is.null(timeV), '1900-01-01', as.character(timeV)))
   valPerformance$valPercent <- 100
-  #valPerformance[, !colnames(valPerformance)%in%c('analysisId','outcomeCount','populationSize')] <- 
-  #  format(as.double(valPerformance[, !colnames(valPerformance)%in%c('analysisId','outcomeCount','populationSize')]), digits = 2, scientific = F) 
-  
+
   if(sum(colnames(valPerformance)=='AUC.auc')==0){
     valPerformance$AUC.auc <- valPerformance$AUC
   }
@@ -342,11 +363,9 @@ getValidationPerformance <- function(validationLocation){
   valPerformance$analysisId <- strsplit(validationLocation, '/')[[1]][[length(strsplit(validationLocation, '/')[[1]])]]
   valPerformance$valDatabase <- strsplit(validationLocation, '/')[[1]][[length(strsplit(validationLocation, '/')[[1]])-1]]
   valPerformance <- valPerformance[,c('analysisId','valDatabase', 'AUC', 'AUPRC', 'outcomeCount','populationSize','valPercent','incidence','timeStamp')]
-  valPerformance$plpResultLocation <- file.path(validationLocation,'validationResult.rds')
-  valPerformance$plpResultLoad <- 'readRDS'
+  valPerformance$plpResultLocation <- plpResultLocation
+  valPerformance$plpResultLoad <- plpResultLoad
   valPerformance$TAR <- TAR
-  #valPerformance$rocplot <- file.path(validationLocation,'plots','sparseROC.pdf')
-  #valPerformance$calplot <- file.path(validationLocation,'plots','sparseCalibrationConventional.pdf')
   return(valPerformance)
 }
 

@@ -118,7 +118,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
   ParallelLogger::logTrace('Mapping R data to python')
   #x <- toSparsePython2(plpData,population, map=NULL)
   prediction <- population
-  x <- toSparseM(plpData,population,map=NULL, temporal = F)
+  x <- toSparseM(plpData,population,map=NULL)
 
   ParallelLogger::logInfo('Sourcing python code')
   reticulate::source_python(system.file(package='PatientLevelPrediction','python','randomForestFunctions.py'), envir = e)
@@ -138,7 +138,7 @@ fitRandomForest <- function(population, plpData, param, search='grid', quiet=F,
     if(mean(varImp)==0)
       stop('No important variables - seems to be an issue with the data')
     
-    incRInd <- which(varImp>mean(varImp), arr.ind=T)
+    incRInd <- which(varImp>=mean(varImp), arr.ind=T)
     
     # save mapping, missing, indexes
   } else{

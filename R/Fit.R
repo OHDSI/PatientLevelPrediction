@@ -78,9 +78,8 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
                                                           removeRedundancy = removeRedundancy))
   })
   
-  # get the pre-processing settings
-  ##preprocessSettings <- attr(newCovariateData, "metaData")  
-  #   normFactors, deletedRedundantCovariateIds, deletedInfrequentCovariateIds 
+  Andromeda::createIndex(plpData$covariateData$covariates, c('rowId'),
+                         indexName = 'restrict_pop_rowId') # is this needed now?
   
   # Now apply the classifier:
   fun <- modelSettings$model
@@ -114,26 +113,51 @@ applyTidyCovariateData <- function(covariateData,preprocessSettings){
   maxs <- preprocessSettings$normFactors
   deleteRedundantCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
   deletedInfrequentCovariateIds <- preprocessSettings$deletedInfrequentCovariateIds
- 
-  writeLines("Removing infrequent and redundant covariates and normalizing")
+  
+  # --- added for speed
+  deleteCovariateIds <- c(deleteRedundantCovariateIds,deletedInfrequentCovariateIds)
+  temp <- covariateData$covariateRef %>% dplyr::collect()
+  allCovariateIds <- temp$covariateId
+  covariateData$includeCovariates <- data.frame(covariateId = allCovariateIds[!allCovariateIds%in%deleteCovariateIds])
+  Andromeda::createIndex(covariateData$includeCovariates, c('covariateId'),
+                         indexName = 'includeCovariates_covariateId')
+  on.exit(covariateData$includeCovariates <- NULL, add = TRUE)
+  # ---
+
+  ParallelLogger::logInfo("Removing infrequent and redundant covariates and normalizing")
   start <- Sys.time()       
   
-  if('bins'%in%colnames(maxs)){
-    covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = .data$bins) %>% 
-      dplyr::rename(maxValue = .data$maxs)
+  if(!is.null(maxs)){
+    if('bins'%in%colnames(maxs)){
+      covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = .data$bins) %>% 
+        dplyr::rename(maxValue = .data$maxs)
+    } else{
+      covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins)
+    }
+    on.exit(covariateData$maxes <- NULL, add = TRUE)
+    
+    # --- added for speed
+    Andromeda::createIndex(covariateData$maxes, c('covariateId'),
+                           indexName = 'maxes_covariateId')
+    # ---
+    
+    newCovariateData$covariates <- covariateData$covariates %>%  
+      dplyr::inner_join(covariateData$includeCovariates, by='covariateId') %>% # added as join
+      dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
+      dplyr::mutate(value = 1.0*.data$covariateValue/.data$maxValue) %>%
+      dplyr::select(- .data$covariateValue) %>%
+      dplyr::rename(covariateValue = .data$value)
   } else{
-  covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins)
+    newCovariateData$covariates <- covariateData$covariates %>% 
+      dplyr::inner_join(covariateData$includeCovariates, by='covariateId')
   }
-  on.exit(covariateData$maxes <- NULL, add = TRUE)
   
-  newCovariateData$covariates <- covariateData$covariates %>%  
-    dplyr::filter(! .data$covariateId %in%deletedInfrequentCovariateIds) %>%
-    dplyr::filter(! .data$covariateId %in%deleteRedundantCovariateIds) %>%
-    dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
-    dplyr::mutate(value = 1.0*.data$covariateValue/.data$maxValue) %>%
-    dplyr::select(- .data$covariateValue) %>%
-    dplyr::rename(covariateValue = .data$value)
+  # adding index for restrict to pop
+  Andromeda::createIndex(newCovariateData$covariates, c('rowId'),
+                         indexName = 'ncovariates_rowId')
   
+  
+  class(newCovariateData) <- "CovariateData"
   
   delta <- Sys.time() - start
   writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))
@@ -160,11 +184,21 @@ createTransform <- function(plpModel){
       warning('outcomeId of new data does not match training data or does not exist')
     
     # apply normalsation to new data
-    plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
     if(!is.null(plpModel$metaData$preprocessSettings)){
       plpData$covariateData <- applyTidyCovariateData(plpData$covariateData,plpModel$metaData$preprocessSettings)
     }
-    pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
+    
+    if(length(population$rowId)<200000){
+      plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, 
+                                                           population$rowId)
+    } else{
+      plpData$covariateData <- batchRestrict(plpData$covariateData, 
+                                             data.frame(rowId = population$rowId), 
+                                             sizeN = 10000000)
+    }
+    
+    
+    pred <- do.call(paste0('predict_',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData, 
                                                                     population=population))
 

@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -63,6 +63,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -75,13 +78,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -95,16 +98,19 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -118,13 +124,13 @@
 
       
 
-      </header><div class="row">
+      </header><script src="BuildingDeepLearningModels_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Building Deep Learning Models</h1>
                         <h4 class="author">Peter R. Rijnbeek, Seng Chan You, Xiaoyong Pan, Jenna Reps</h4>
             
-            <h4 class="date">2020-06-08</h4>
+            <h4 class="date">2021-09-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/BuildingDeepLearningModels.Rmd"><code>vignettes/BuildingDeepLearningModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingDeepLearningModels.Rmd</code></div>
@@ -133,6 +139,10 @@
 
     
     
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Building Deep Learning Models}
+-->
 <div id="introduction" class="section level1">
 <h1 class="hasAnchor">
 <a href="#introduction" class="anchor"></a>Introduction</h1>
@@ -187,50 +197,56 @@
 <p>##Example The approach for logistic regression (LRTorch) and the Multi-Layer Perceptron (MLPTorch) is identical. Here we will take LRTorch as an example.</p>
 <p>You need to generate a <code>population</code> and <code>plpData</code> object as described in more detail in <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf"><code>BuildingPredictiveModels</code> vignette</a>.</p>
 <p>Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">1234</span>)
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span>(<span class="no">plpDataSimulationProfile</span>)
-<span class="no">sampleSize</span> <span class="kw">&lt;-</span> <span class="fl">12000</span>
-<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/simulatePlpData.html">simulatePlpData</a></span>(
-  <span class="no">plpDataSimulationProfile</span>,
-  <span class="kw">n</span> <span class="kw">=</span> <span class="no">sampleSize</span>
-)
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">plpDataSimulationProfile</span><span class="op">)</span>
+<span class="va">sampleSize</span> <span class="op">&lt;-</span> <span class="fl">12000</span>
+<span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulatePlpData.html">simulatePlpData</a></span><span class="op">(</span>
+  <span class="va">plpDataSimulationProfile</span>,
+  n <span class="op">=</span> <span class="va">sampleSize</span>
+<span class="op">)</span>
 
-<span class="no">population</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span>(
-  <span class="no">plpData</span>,
-  <span class="kw">outcomeId</span> <span class="kw">=</span> <span class="fl">2</span>,
-  <span class="kw">binary</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-  <span class="kw">firstExposureOnly</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">washoutPeriod</span> <span class="kw">=</span> <span class="fl">0</span>,
-  <span class="kw">removeSubjectsWithPriorOutcome</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">priorOutcomeLookback</span> <span class="kw">=</span> <span class="fl">99999</span>,
-  <span class="kw">requireTimeAtRisk</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">minTimeAtRisk</span> <span class="kw">=</span> <span class="fl">0</span>,
-  <span class="kw">riskWindowStart</span> <span class="kw">=</span> <span class="fl">0</span>,
-  <span class="kw">addExposureDaysToStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">riskWindowEnd</span> <span class="kw">=</span> <span class="fl">365</span>,
-  <span class="kw">addExposureDaysToEnd</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">verbosity</span> <span class="kw">=</span> <span class="st">"INFO"</span>
-)</pre></body></html></div>
+<span class="va">population</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span><span class="op">(</span>
+  <span class="va">plpData</span>,
+  outcomeId <span class="op">=</span> <span class="fl">2</span>,
+  binary <span class="op">=</span> <span class="cn">TRUE</span>,
+  firstExposureOnly <span class="op">=</span> <span class="cn">FALSE</span>,
+  washoutPeriod <span class="op">=</span> <span class="fl">0</span>,
+  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">FALSE</span>,
+  priorOutcomeLookback <span class="op">=</span> <span class="fl">99999</span>,
+  requireTimeAtRisk <span class="op">=</span> <span class="cn">FALSE</span>,
+  minTimeAtRisk <span class="op">=</span> <span class="fl">0</span>,
+  riskWindowStart <span class="op">=</span> <span class="fl">0</span>,
+  addExposureDaysToStart <span class="op">=</span> <span class="cn">FALSE</span>,
+  riskWindowEnd <span class="op">=</span> <span class="fl">365</span>,
+  addExposureDaysToEnd <span class="op">=</span> <span class="cn">FALSE</span>,
+  verbosity <span class="op">=</span> <span class="st">"INFO"</span>
+<span class="op">)</span></code></pre></div>
 <p>As an example we will build a LRTorch model. We could specify the stacked autoencoder or the variational autoencoder to be used for reducing the feature dimension as an initial layer, but for this example we do not.</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">autoencoder</span> <span class="kw">&lt;-</span> <span class="fl">FALSE</span>
-<span class="no">vae</span> <span class="kw">&lt;-</span> <span class="fl">FALSE</span></pre></body></html></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">autoencoder</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span>
+<span class="va">vae</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></code></pre></div>
 <p>We added a class_weight for imbalanced data, the default value 0 is the inverse ratio between negatives and positives,-1 applies focal loss.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">class_weight</span> <span class="kw">&lt;-</span> <span class="fl">0</span></pre></body></html></div>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="co"># Specify the settings for Logistics regression model using Torch in Python</span>
-<span class="no">model</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setLRTorch.html">setLRTorch</a></span>(<span class="kw">autoencoder</span><span class="kw">=</span><span class="no">autoencoder</span>, <span class="kw">vae</span><span class="kw">=</span><span class="no">vae</span>,  <span class="kw">class_weight</span><span class="kw">=</span><span class="no">class_weight</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">class_weight</span> <span class="op">&lt;-</span> <span class="fl">0</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Specify the settings for Logistics regression model using Torch in Python</span>
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">setLRTorch</span><span class="op">(</span>autoencoder<span class="op">=</span><span class="va">autoencoder</span>, vae<span class="op">=</span><span class="va">vae</span>,  class_weight<span class="op">=</span><span class="va">class_weight</span><span class="op">)</span></code></pre></div>
 <p>No we define our modelling parameters.</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">testFraction</span> <span class="kw">&lt;-</span> <span class="fl">0.2</span>
-<span class="no">testSplit</span> <span class="kw">&lt;-</span> <span class="st">'person'</span>
-<span class="no">nfold</span> <span class="kw">&lt;-</span> <span class="fl">3</span>
-<span class="no">splitSeed</span> <span class="kw">&lt;-</span> <span class="fl">1000</span></pre></body></html></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">testFraction</span> <span class="op">&lt;-</span> <span class="fl">0.2</span>
+<span class="va">testSplit</span> <span class="op">&lt;-</span> <span class="st">'person'</span>
+<span class="va">nfold</span> <span class="op">&lt;-</span> <span class="fl">3</span>
+<span class="va">splitSeed</span> <span class="op">&lt;-</span> <span class="fl">1000</span></code></pre></div>
 <p>And we train and internally validate the model.</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">results</span> <span class="kw">&lt;-</span> <span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/runPlp.html">runPlp</a></span>(<span class="kw">population</span> <span class="kw">=</span> <span class="no">population</span>,
-                                          <span class="kw">plpData</span> <span class="kw">=</span> <span class="no">plpData</span>,
-                                          <span class="kw">modelSettings</span> <span class="kw">=</span> <span class="no">model</span>,
-                                          <span class="kw">testSplit</span><span class="kw">=</span><span class="no">testSplit</span>,
-                                          <span class="kw">testFraction</span><span class="kw">=</span><span class="no">testFraction</span>,
-                                          <span class="kw">nfold</span><span class="kw">=</span><span class="no">nfold</span>,
-                                          <span class="kw">splitSeed</span><span class="kw">=</span><span class="no">splitSeed</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/runPlp.html">runPlp</a></span><span class="op">(</span>population <span class="op">=</span> <span class="va">population</span>, 
+                                          plpData <span class="op">=</span> <span class="va">plpData</span>, 
+                                          modelSettings <span class="op">=</span> <span class="va">model</span>,
+                                          testSplit<span class="op">=</span><span class="va">testSplit</span>,
+                                          testFraction<span class="op">=</span><span class="va">testFraction</span>,
+                                          nfold<span class="op">=</span><span class="va">nfold</span>, 
+                                          splitSeed<span class="op">=</span><span class="va">splitSeed</span><span class="op">)</span> </code></pre></div>
 </div>
 <div id="temporal-architectures" class="section level1">
 <h1 class="hasAnchor">
@@ -453,64 +469,68 @@ Clinically Informing application based on Recurrent Neural Network (CIReNN.R)
 <p>We will now show how to use the temporal models by using CNNTorch as an example.</p>
 <p>You need to generate a <code>population</code> and <code>plpData</code> object as described in more detail in <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf"><code>BuildingPredictiveModels</code> vignette</a>.</p>
 <p>Note that for these algorithms you need to extracted temporal data as described in the [FeatureExtraction vignette] (<a href="https://github.com/OHDSI/FeatureExtraction/blob/master/inst/doc/UsingFeatureExtraction.pdf" class="uri">https://github.com/OHDSI/FeatureExtraction/blob/master/inst/doc/UsingFeatureExtraction.pdf</a>) as follows:</p>
-<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">settings</span> <span class="kw">&lt;-</span> <span class="fu">createTemporalCovariateSettings</span>(<span class="kw">useConditionEraStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useConditionEraOverlap</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useConditionOccurrence</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useConditionEraGroupStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useConditionEraGroupOverlap</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useDrugExposure</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useDrugEraStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useDrugEraOverlap</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useMeasurement</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useMeasurementValue</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-                                            <span class="kw">useMeasurementRangeGroup</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useProcedureOccurrence</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useDeviceExposure</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">useObservation</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-                                            <span class="kw">excludedCovariateConceptIds</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">316866</span>),
-                                            <span class="kw">addDescendantsToExclude</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-                                            <span class="kw">temporalStartDays</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="kw">from</span> <span class="kw">=</span> -<span class="fl">365</span>,
-                                                                    <span class="kw">to</span> <span class="kw">=</span> -<span class="fl">1</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="fl">12</span>),
-                                            <span class="kw">temporalEndDays</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span>(<span class="kw">from</span> <span class="kw">=</span> -<span class="fl">353</span>,
-                                                                    <span class="kw">to</span> <span class="kw">=</span> <span class="fl">0</span>, <span class="kw">by</span> <span class="kw">=</span> <span class="fl">12</span>), <span class="fl">0</span>))
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu">createTemporalCovariateSettings</span><span class="op">(</span>useConditionEraStart <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useConditionEraOverlap <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useConditionOccurrence <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useConditionEraGroupStart <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useConditionEraGroupOverlap <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useDrugExposure <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useDrugEraStart <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useDrugEraOverlap <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useMeasurement <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useMeasurementValue <span class="op">=</span> <span class="cn">TRUE</span>,
+                                            useMeasurementRangeGroup <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useProcedureOccurrence <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useDeviceExposure <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            useObservation <span class="op">=</span> <span class="cn">FALSE</span>,
+                                            excludedCovariateConceptIds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">316866</span><span class="op">)</span>,
+                                            addDescendantsToExclude <span class="op">=</span> <span class="cn">TRUE</span>,
+                                            temporalStartDays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span>from <span class="op">=</span> <span class="op">-</span><span class="fl">365</span>, 
+                                                                    to <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, by <span class="op">=</span> <span class="fl">12</span><span class="op">)</span>, 
+                                            temporalEndDays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span>from <span class="op">=</span> <span class="op">-</span><span class="fl">353</span>, 
+                                                                    to <span class="op">=</span> <span class="fl">0</span>, by <span class="op">=</span> <span class="fl">12</span><span class="op">)</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>
 
-<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/getPlpData.html">getPlpData</a></span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
-                        <span class="kw">cdmDatabaseSchema</span> <span class="kw">=</span> <span class="no">cdmDatabaseSchema</span>,
-                        <span class="kw">cohortDatabaseSchema</span> <span class="kw">=</span> <span class="st">"results"</span>,
-                        <span class="kw">cohortTable</span> <span class="kw">=</span> <span class="st">"cohort"</span>,
-                        <span class="kw">cohortId</span> <span class="kw">=</span> <span class="fl">11</span>,
-                        <span class="kw">covariateSettings</span> <span class="kw">=</span> <span class="no">settings</span>,
-                        <span class="kw">outcomeDatabaseSchema</span> <span class="kw">=</span> <span class="no">resultsDatabaseSchema</span>,
-                        <span class="kw">outcomeTable</span> <span class="kw">=</span> <span class="st">"cohort"</span>,
-                        <span class="kw">outcomeIds</span> <span class="kw">=</span> <span class="fl">25</span>,
-                        <span class="kw">cdmVersion</span> <span class="kw">=</span> <span class="fl">5</span>)</pre></body></html></div>
+<span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getPlpData.html">getPlpData</a></span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,
+                        cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,
+                        cohortDatabaseSchema <span class="op">=</span> <span class="st">"results"</span>,
+                        cohortTable <span class="op">=</span> <span class="st">"cohort"</span>,
+                        cohortId <span class="op">=</span> <span class="fl">11</span>,
+                        covariateSettings <span class="op">=</span> <span class="va">settings</span>,
+                        outcomeDatabaseSchema <span class="op">=</span> <span class="va">resultsDatabaseSchema</span>,
+                        outcomeTable <span class="op">=</span> <span class="st">"cohort"</span>,
+                        outcomeIds <span class="op">=</span> <span class="fl">25</span>,
+                        cdmVersion <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></code></pre></div>
 <p>Each CNN/RNN has several hyper-parameters that can be set as shown in the Tables above, but for this example we take the defaults.</p>
-<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="co"># specify the the CNN</span>
-<span class="no">model</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setCNNTorch.html">setCNNTorch</a></span>(<span class="kw">cnn_type</span><span class="kw">=</span><span class="st">'CNN'</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># specify the the CNN</span>
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">setCNNTorch</span><span class="op">(</span>cnn_type<span class="op">=</span><span class="st">'CNN'</span><span class="op">)</span></code></pre></div>
 <p>Run the model training, for example with a testFraction = 0.2 and a split by person:</p>
-<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="no">results</span> <span class="kw">&lt;-</span> <span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/runPlp.html">runPlp</a></span>(<span class="no">population</span>, <span class="no">plpData</span>, <span class="no">model</span>,
-                                          <span class="kw">testSplit</span><span class="kw">=</span><span class="st">'person'</span>,
-                                          <span class="kw">testFraction</span><span class="kw">=</span><span class="fl">0.2</span>,
-                                          <span class="kw">nfold</span><span class="kw">=</span><span class="fl">3</span>,
-                                          <span class="kw">splitSeed</span><span class="kw">=</span><span class="fl">1000</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/runPlp.html">runPlp</a></span><span class="op">(</span><span class="va">population</span>, <span class="va">plpData</span>, <span class="va">model</span>,
+                                          testSplit<span class="op">=</span><span class="st">'person'</span>,
+                                          testFraction<span class="op">=</span><span class="fl">0.2</span>,
+                                          nfold<span class="op">=</span><span class="fl">3</span>, 
+                                          splitSeed<span class="op">=</span><span class="fl">1000</span><span class="op">)</span> </code></pre></div>
 </div>
 </div>
 <div id="apply-the-trained-deep-learning-model" class="section level1">
 <h1 class="hasAnchor">
 <a href="#apply-the-trained-deep-learning-model" class="anchor"></a>Apply the trained Deep Learning model</h1>
 <p>Applying a Deep Learning is identical to the other models in the package:</p>
-<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="co"># load the trained model</span>
-<span class="no">plpModel</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span>(), <span class="st">"&lt;your model&gt;"</span>)
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># load the trained model</span>
+<span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"&lt;your model&gt;"</span><span class="op">)</span>
 
 <span class="co"># load the new plpData (should have the same temporal features!) and create the population</span>
-<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadPlpData.html">loadPlpData</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span>(), <span class="st">"&lt;your data&gt;"</span>)
+<span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpData.html">loadPlpData</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"&lt;your data&gt;"</span><span class="op">)</span>
 
-<span class="no">populationSettings</span> <span class="kw">&lt;-</span> <span class="no">plpModel</span>$<span class="no">populationSettings</span>
-<span class="no">populationSettings</span>$<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="no">plpData</span>
-<span class="no">population</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span>(<span class="no">createStudyPopulation</span>, <span class="no">populationSettings</span>)
+<span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="va">plpModel</span><span class="op">$</span><span class="va">populationSettings</span>
+<span class="va">populationSettings</span><span class="op">$</span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="va">plpData</span>
+<span class="va">population</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">createStudyPopulation</span>, <span class="va">populationSettings</span><span class="op">)</span>  
 
 <span class="co"># apply the trained model on the new data</span>
-<span class="no">validationResults</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/applyModel.html">applyModel</a></span>(<span class="no">population</span>, <span class="no">plpData</span>, <span class="no">plpModel</span>)</pre></body></html></div>
+<span class="va">validationResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/applyModel.html">applyModel</a></span><span class="op">(</span><span class="va">population</span>, <span class="va">plpData</span>, <span class="va">plpModel</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="adding-new-architectures" class="section level1">
 <h1 class="hasAnchor">
@@ -521,7 +541,8 @@ Clinically Informing application based on Recurrent Neural Network (CIReNN.R)
 <h1 class="hasAnchor">
 <a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
 <p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
-<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
 <pre><code>## 
 ## To cite PatientLevelPrediction in publications use:
 ## 
@@ -563,7 +584,7 @@ Clinically Informing application based on Recurrent Neural Network (CIReNN.R)
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

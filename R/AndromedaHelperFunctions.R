@@ -21,9 +21,70 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
-  newCovariateData$covariates <- covariateData$covariates %>% dplyr::filter(.data$rowId %in% rowIds)
+  
+  covariateData$pop <- data.frame(rowId = rowIds)
+  Andromeda::createIndex(tbl = covariateData$pop, columnNames = 'rowId', 
+                         indexName = 'pop_rowIds')
+  
+  on.exit(covariateData$pop <- NULL, add = T)
+  
+  newCovariateData$covariates <- covariateData$covariates %>% 
+    dplyr::inner_join(covariateData$pop, by = 'rowId')
+  Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
+                         indexName = 'covariates_ncovariateIds')
+  
   class(newCovariateData) <- "CovariateData"
   ParallelLogger::logInfo(paste0('Finished limiting covariate data to population...'))
+  return(newCovariateData)
+}
+
+
+
+batchRestrict <- function(covariateData, population, sizeN = 10000000){
+  
+  ParallelLogger::logInfo('Due to data size using batchRestrict to limit covariate data to population')
+  
+  start <- Sys.time()
+  
+  newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
+                                           analysisRef = covariateData$analysisRef)
+  
+  maxRows <- RSQLite::dbGetQuery(covariateData, 
+                                 "SELECT count(*) as n FROM covariates;")
+  
+  steps <- ceiling(maxRows$n/sizeN)
+  
+  
+  pb <- utils::txtProgressBar(style = 3)
+  
+  for(i in 1:steps){
+    utils::setTxtProgressBar(pb, i/steps)
+    
+    offset <- ((i-1)*sizeN)
+    limit <- sizeN
+    
+    tempData <- RSQLite::dbGetQuery(covariateData, 
+                                    paste0("SELECT * FROM covariates LIMIT ",limit," OFFSET ",offset," ;"))
+    
+    filtered <- tempData %>% dplyr::inner_join(population, by = 'rowId')
+    
+    if(i==1){
+      newCovariateData$covariates <- filtered
+    } else{
+      Andromeda::appendToTable(tbl = newCovariateData$covariates, 
+                               data = filtered)
+    }
+  }
+  close(pb)
+  
+  Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
+                         indexName = 'covariates_ncovariateIds')
+  
+  class(newCovariateData) <- "CovariateData"
+  
+  timeTaken <- as.numeric(Sys.time() - start, units = "mins")
+  ParallelLogger::logInfo(paste0('Limiting covariate data took: ', timeTaken, ' mins'))
+  
   return(newCovariateData)
 }
 

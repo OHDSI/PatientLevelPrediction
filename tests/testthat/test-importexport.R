@@ -15,10 +15,13 @@
 # limitations under the License.
 
 context("ImportExport")
+library(testthat)
 
 # how to test exportPlpDataToCsv?
 
-outputFolder <- './Temp/importexport'
+outputFolder <- tempfile("importExport")
+dir.create(outputFolder)
+
 # Test unit for the creation of the study externalValidatePlp
 model <- list(model='none - validation',
      modelSettings= NULL,
@@ -314,65 +317,9 @@ test_that("check transportPlp N is 5", {
 })
 
 test_that("transportModel", {
-  transportModel(plpModel = plpResult$model,outputFolder = file.path(saveLoc,'transportModel'))
-  testthat::expect_equal(dir.exists(file.path(saveLoc,'transportModel')), T)
+  transportModel(plpModel = result$model,outputFolder = file.path(outputFolder,'transportModel'))
+  testthat::expect_equal(dir.exists(file.path(outputFolder,'transportModel')), T)
   
-  tmod <- loadPlpModel(file.path(saveLoc,'transportModel'))
+  tmod <- loadPlpModel(file.path(outputFolder,'transportModel'))
   testthat::expect_equal(tmod$metaData$call$connectionDetails, NULL)
   })
-
-test_that("createLrSql fails", {
-  testthat::expect_error(createLrSql(modelNames=NULL, covariateConstructionName='prediction', 
-                                     modelTable='#model_table',
-                                     analysisId=111, e=environment(),
-                                     databaseOutput=NULL))
-  
-  testthat::expect_error(createLrSql(models=NULL, covariateConstructionName='prediction', 
-                                     modelTable='#model_table',
-                                     analysisId=111, e=environment(),
-                                     databaseOutput=NULL))
-  })
-
-test_that("createLrSql works", {
-  
-  env <- environment()
-  res <- createLrSql(models = plpResult$model, 
-                     modelNames = 'test', 
-                     covariateConstructionName='prediction', 
-                     modelTable='#model_table',
-                     analysisId=111, 
-                     e=env,
-                     databaseOutput=NULL)
-  
-  testthat::expect_equal(res, T)
-  testthat::expect_equal(exists('createpredictionCovariateSettings', envir = env), T)
-  testthat::expect_equal(exists('getpredictionCovariateSettings', envir = env), T)
-})
-
-test_that("getPredictionCovariateData fails", {
-  covariateSettings <- FeatureExtraction::createDefaultCovariateSettings()
-  testthat::expect_error(getPredictionCovariateData(connection =NULL,
-                                                                oracleTempSchema = NULL,
-                                                                cdmDatabaseSchema = NULL,
-                                                                cohortTable = "#cohort_person",
-                                                                cohortId = -1,
-                                                                cdmVersion = "5",
-                                                                rowIdField = "subject_id",
-                                                                covariateSettings= NULL,
-                                                                aggregated = FALSE,
-                                                                analysisId=111,
-                                                                databaseOutput=NULL))
-  
-  testthat::expect_error(getPredictionCovariateData(connection =NULL,
-                                                    oracleTempSchema = NULL,
-                                                    cdmDatabaseSchema = NULL,
-                                                    cohortTable = "#cohort_person",
-                                                    cohortId = -1,
-                                                    cdmVersion = "4",
-                                                    rowIdField = "subject_id",
-                                                    covariateSettings=  covariateSettings,
-                                                    aggregated = FALSE,
-                                                    analysisId=111,
-                                                    databaseOutput=NULL))
-  
-})

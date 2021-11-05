@@ -29,36 +29,10 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// bySum
-DataFrame bySum(List ffValues, List ffBins);
-RcppExport SEXP _PatientLevelPrediction_bySum(SEXP ffValuesSEXP, SEXP ffBinsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type ffValues(ffValuesSEXP);
-    Rcpp::traits::input_parameter< List >::type ffBins(ffBinsSEXP);
-    rcpp_result_gen = Rcpp::wrap(bySum(ffValues, ffBins));
-    return rcpp_result_gen;
-END_RCPP
-}
-// byMax
-DataFrame byMax(List ffValues, List ffBins);
-RcppExport SEXP _PatientLevelPrediction_byMax(SEXP ffValuesSEXP, SEXP ffBinsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type ffValues(ffValuesSEXP);
-    Rcpp::traits::input_parameter< List >::type ffBins(ffBinsSEXP);
-    rcpp_result_gen = Rcpp::wrap(byMax(ffValues, ffBins));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_PatientLevelPrediction_aucWithCi", (DL_FUNC) &_PatientLevelPrediction_aucWithCi, 2},
     {"_PatientLevelPrediction_aucWithoutCi", (DL_FUNC) &_PatientLevelPrediction_aucWithoutCi, 2},
-    {"_PatientLevelPrediction_bySum", (DL_FUNC) &_PatientLevelPrediction_bySum, 2},
-    {"_PatientLevelPrediction_byMax", (DL_FUNC) &_PatientLevelPrediction_byMax, 2},
     {NULL, NULL, 0}
 };
 

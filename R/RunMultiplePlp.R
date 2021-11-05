@@ -186,6 +186,13 @@ runPlpAnalyses <- function(connectionDetails,
   if(!is.null(settings)){
     if(nrow(settings) != 0){
     ParallelLogger::logInfo('Restricting to specified settings...')
+      
+      # if transpose fix it 
+      if(sum(row.names(settings)%in%c('cohortId', 'outcomeId', 'populationSettingId',
+                                  'modelSettingId', 'covariateSettingId'))==5){
+        settings <- t(settings)
+      }
+      
     referenceTable <- merge(settings, referenceTable, by = c('cohortId', 
                                            'outcomeId', 'populationSettingId',
                                            'modelSettingId', 'covariateSettingId'))

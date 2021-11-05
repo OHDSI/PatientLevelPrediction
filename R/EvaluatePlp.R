@@ -101,7 +101,7 @@ evaluatePlp <- function(prediction, plpData = NULL){
     # 3) demographicSummary
     ParallelLogger::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
     demographicSummary <- tryCatch(getDemographicSummary(prediction = prediction),
-                                   error= function(cond){return(NULL)})
+                                   error= function(e){ParallelLogger::logInfo(e);return(NULL)})
     ParallelLogger::logTrace(paste0('Completed @ ',Sys.time()))
     
     
@@ -109,6 +109,10 @@ evaluatePlp <- function(prediction, plpData = NULL){
     ParallelLogger::logTrace('Calculating Calibration-in-large')
     calinlarge <- calibrationInLarge(prediction)
     ParallelLogger::logInfo(paste0('Calibration in large- Mean predicted risk ', round(calinlarge$meanPredictionRisk, digits = 4), ' : observed risk ',round(calinlarge$observedRisk, digits = 4)))
+    
+    calinlargeInt <- calibrationInLargeIntercept(prediction)
+    ParallelLogger::logInfo(paste0('Calibration in large- Intercept ', round(calinlargeInt, digits = 4)))
+    
     
     ParallelLogger::logTrace('Calculating Weak Calibration')
     weakCal <- calibrationWeak(prediction)
@@ -148,6 +152,7 @@ evaluatePlp <- function(prediction, plpData = NULL){
                                  CalibrationIntercept= weakCal$intercept,	
                                  CalibrationSlope = weakCal$gradient,
                                  CalibrationInLarge = calinlarge$meanPredictionRisk/calinlarge$observedRisk,
+                                 CalibrationInLargeInt = calinlargeInt,
                                  Emean = valProb['Eavg'],
                                  E90 = valProb['E90'],
                                  Emax = valProb['Emax'])
@@ -495,8 +500,7 @@ calibrationInLarge <- function(prediction){
   return(result)
 }
 
-
-calibrationWeak <- function(prediction){
+calibrationInLargeIntercept <- function(prediction){
   
   #do invert of log function:
   # log(p/(1-p))
@@ -510,11 +514,33 @@ calibrationWeak <- function(prediction){
   
   intercept <- suppressWarnings(stats::glm(y ~ offset(1*inverseLog), family = 'binomial'))
   intercept <- intercept$coefficients[1]
-  gradient <- suppressWarnings(stats::glm(y ~ inverseLog+0, family = 'binomial',
-                         offset = rep(intercept,length(inverseLog))))
-  gradient <- gradient$coefficients[1]
+
+  return(intercept)
+}
+
+
+calibrationWeak <- function(prediction){
   
-  result <- data.frame(intercept = intercept, gradient = gradient)
+  #do invert of log function:
+  # log(p/(1-p))
+  
+  # edit the 0 and 1 values
+  prediction$value[prediction$value==0] <- 0.000000000000001
+  prediction$value[prediction$value==1] <- 1-0.000000000000001
+  
+  inverseLog <- log(prediction$value/(1-prediction$value))
+  y <- ifelse(prediction$outcomeCount>0, 1, 0) 
+  
+  #intercept <- suppressWarnings(stats::glm(y ~ offset(1*inverseLog), family = 'binomial'))
+  #intercept <- intercept$coefficients[1]
+  #gradient <- suppressWarnings(stats::glm(y ~ inverseLog+0, family = 'binomial',
+  #                       offset = rep(intercept,length(inverseLog))))
+  #gradient <- gradient$coefficients[1]
+  
+  vals <- suppressWarnings(stats::glm(y ~ inverseLog, family = 'binomial'))
+  
+  result <- data.frame(intercept = vals$coefficients[1], 
+                       gradient = vals$coefficients[2])
   
   return(result)
 }
@@ -773,7 +799,7 @@ getDemographicSummary <- function(prediction, type = 'binary', timepoint = NULL)
                                                        genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
     dplyr::select(.data$rowId,.data$ageId,.data$ageGroup,.data$genId,.data$genGroup ) %>%
     #dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime','daysToCohortEnd')], by='rowId')
-    dplyr::inner_join(prediction[,c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
+    dplyr::inner_join(prediction[,colnames(prediction)%in%c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
   
   if(type == 'binary'){
     demographicData <- demographicData %>%
@@ -812,14 +838,17 @@ getDemographicSummary <- function(prediction, type = 'binary', timepoint = NULL)
           
           out <- tryCatch({summary(survival::survfit(survival::Surv(t1$t, y1$y) ~ 1), times = timepoint)},
                           error = function(e){ParallelLogger::logError(e); return(NULL)})
-          demoTemp <- c(genGroup = gen, ageGroup = age, 
-                        PersonCountAtRisk = length(p1$value),
-                        PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
-                        observedRisk = 1-out$surv, 
-                        averagePredictedProbability = mean(p1$value, na.rm = T),
-                        StDevPredictedProbability = stats::sd(p1$value, na.rm = T))
           
-          demographicData <- rbind(demographicData, demoTemp)
+          if(!is.null(out)){
+            demoTemp <- c(genGroup = gen, ageGroup = age, 
+                          PersonCountAtRisk = length(p1$value),
+                          PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
+                          observedRisk = 1-out$surv, 
+                          averagePredictedProbability = mean(p1$value, na.rm = T),
+                          StDevPredictedProbability = stats::sd(p1$value, na.rm = T))
+            
+            demographicData <- rbind(demographicData, demoTemp)
+          }
         }
         
       }

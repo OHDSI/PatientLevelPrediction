@@ -10,7 +10,9 @@ setLassoLogisticRegression(
   includeCovariateIds = c(),
   noShrinkage = c(0),
   threads = -1,
-  useCrossValidation = TRUE
+  useCrossValidation = TRUE,
+  upperLimit = 20,
+  lowerLimit = 0.01
 )
 }
 \arguments{
@@ -25,6 +27,10 @@ setLassoLogisticRegression(
 \item{threads}{An option to set number of threads when training model}
 
 \item{useCrossValidation}{Set this to FALSE if you want to train a LR with a preset varience}
+
+\item{upperLimit}{Upper prior variance limit for grid-search}
+
+\item{lowerLimit}{Lower prior variance limit for grid-search}
 }
 \description{
 Create setting for lasso logistic regression

@@ -75,7 +75,10 @@ test_that("fitting", {
   testthat::expect_length(model_set,3)
   testthat::expect_error(setLassoLogisticRegression(variance = -3))
   testthat::expect_error(setLassoLogisticRegression(seed = 'F'))
-
+  testthat::expect_error(setLassoLogisticRegression(upperLimit = 'F'))
+  testthat::expect_error(setLassoLogisticRegression(lowerLimit = 'F'))
+  testthat::expect_error(setLassoLogisticRegression(upperLimit = 0.5,lowerLimit = 1))
+  
   
   #=====================================
   # checking Cox Regression 

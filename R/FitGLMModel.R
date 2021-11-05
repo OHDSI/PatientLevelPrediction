@@ -42,6 +42,8 @@ fitGLMModel <- function(population,
                             control = Cyclops::createControl(cvType = "auto",
                                                     fold=3,
                                                     startingVariance = 0.01,
+                                                    lowerLimit = 0.01,
+                                                    upperLimit = 20,
                                                     tolerance  = 2e-06,
                                                     cvRepetitions = 1,
                                                     selectorType = "byPid",
@@ -58,8 +60,8 @@ fitGLMModel <- function(population,
   }  else {
     colnames(population)[colnames(population) == "outcomeCount"] <- "y"
     
-    covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
-    
+    covariateData <- plpData$covariateData
+      
     # exclude or include covariates
     if ( (length(includeCovariateIds) != 0) & (length(excludeCovariateIds) != 0)) {
       covariates <- covariateData$covariates %>% dplyr::filter(.data$covariateId %in%includeCovariateIds) %>% dplyr::filter(!.data$covariateId %in%excludeCovariateIds)

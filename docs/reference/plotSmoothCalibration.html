@@ -75,7 +75,7 @@ was defined: from utopia to empirical data&quot; (2016)" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
       </span>
     </div>
 
@@ -83,7 +83,7 @@ was defined: from utopia to empirical data&quot; (2016)" />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -107,6 +107,9 @@ was defined: from utopia to empirical data&quot; (2016)" />
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -119,13 +122,13 @@ was defined: from utopia to empirical data&quot; (2016)" />
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -139,16 +142,19 @@ was defined: from utopia to empirical data&quot; (2016)" />
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -176,17 +182,18 @@ was defined: from utopia to empirical data" (2016)</h1>
 was defined: from utopia to empirical data" (2016)</p>
     </div>
 
-    <pre class="usage"><span class='fu'>plotSmoothCalibration</span>(
-  <span class='no'>result</span>,
-  <span class='kw'>smooth</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"loess"</span>, <span class='st'>"rcs"</span>),
-  <span class='kw'>span</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-  <span class='kw'>nKnots</span> <span class='kw'>=</span> <span class='fl'>5</span>,
-  <span class='kw'>scatter</span> <span class='kw'>=</span> <span class='no'>F</span>,
-  <span class='kw'>type</span> <span class='kw'>=</span> <span class='st'>"test"</span>,
-  <span class='kw'>bins</span> <span class='kw'>=</span> <span class='fl'>20</span>,
-  <span class='kw'>zoom</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"none"</span>, <span class='st'>"deciles"</span>, <span class='st'>"data"</span>),
-  <span class='kw'>fileName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre>
+    <pre class="usage"><span class='fu'>plotSmoothCalibration</span><span class='op'>(</span>
+  <span class='va'>result</span>,
+  smooth <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"loess"</span>, <span class='st'>"rcs"</span><span class='op'>)</span>,
+  span <span class='op'>=</span> <span class='fl'>1</span>,
+  nKnots <span class='op'>=</span> <span class='fl'>5</span>,
+  scatter <span class='op'>=</span> <span class='cn'>F</span>,
+  type <span class='op'>=</span> <span class='st'>"test"</span>,
+  bins <span class='op'>=</span> <span class='fl'>20</span>,
+  zoom <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"none"</span>, <span class='st'>"deciles"</span>, <span class='st'>"data"</span><span class='op'>)</span>,
+  sample <span class='op'>=</span> <span class='cn'>T</span>,
+  fileName <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -229,6 +236,10 @@ computing and lower memory usage.</p></td>
 shows the entire space.</p></td>
     </tr>
     <tr>
+      <th>sample</th>
+      <td><p>If using loess then by default 20,000 patients will be sampled to save time</p></td>
+    </tr>
+    <tr>
       <th>fileName</th>
       <td><p>Name of the file where the plot should be saved, for example 'plot.png'. See the
 function <code>ggsave</code> in the ggplot2 package for supported file formats.</p></td>
@@ -237,7 +248,7 @@ function <code>ggsave</code> in the ggplot2 package for supported file formats.<
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A cowplot object. Use the <code>cowplot::save_plot</code> function to save to file in a different format.</p>
+    <p>A cowplot object. Use the <code><a href='https://wilkelab.org/cowplot/reference/save_plot.html'>cowplot::save_plot</a></code> function to save to file in a different format.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Create a plot showing the smoothed calibration #'</p>
@@ -257,7 +268,7 @@ function <code>ggsave</code> in the ggplot2 package for supported file formats.<
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

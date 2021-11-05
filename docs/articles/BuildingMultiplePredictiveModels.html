@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -63,6 +63,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -75,13 +78,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -95,16 +98,19 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -118,13 +124,13 @@
 
       
 
-      </header><div class="row">
+      </header><script src="BuildingMultiplePredictiveModels_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Automatically Build Multiple Patient-Level Predictive Models</h1>
                         <h4 class="author">Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2020-06-08</h4>
+            <h4 class="date">2021-09-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/BuildingMultiplePredictiveModels.Rmd"><code>vignettes/BuildingMultiplePredictiveModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingMultiplePredictiveModels.Rmd</code></div>
@@ -133,10 +139,10 @@
 
     
     
-<p><!--
-  %\VignetteEngine{knitr}
+<!--
+%\VignetteEngine{knitr}
 %\VignetteIndexEntry{Building multiple patient-level predictive models}
---></p>
+-->
 <div id="introduction" class="section level1">
 <h1 class="hasAnchor">
 <a href="#introduction" class="anchor"></a>Introduction</h1>
@@ -158,73 +164,77 @@
 <li>study population 3: does impose the restriction that persons who do not experience the outcome need to be observed for the full time-at-risk period (requireTimeAtRisk = T) and allows persons that had the outcome before (removeSubjectsWithPriorOutcome = F)</li>
 </ul>
 <p>The create a study population setting list we use the function <code>createStudyPopulationSettings</code> as described below:</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="co"># define all study population settings</span>
-<span class="no">studyPop1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span>(<span class="kw">binary</span> <span class="kw">=</span> <span class="no">T</span>,
-                                          <span class="kw">includeAllOutcomes</span> <span class="kw">=</span> <span class="no">F</span>,
-                                          <span class="kw">removeSubjectsWithPriorOutcome</span> <span class="kw">=</span> <span class="no">T</span>,
-                                          <span class="kw">priorOutcomeLookback</span> <span class="kw">=</span> <span class="fl">99999</span>,
-                                          <span class="kw">requireTimeAtRisk</span> <span class="kw">=</span> <span class="no">T</span>,
-                                          <span class="kw">minTimeAtRisk</span><span class="kw">=</span><span class="fl">364</span>,
-                                          <span class="kw">riskWindowStart</span> <span class="kw">=</span> <span class="fl">1</span>,
-                                          <span class="kw">riskWindowEnd</span> <span class="kw">=</span> <span class="fl">365</span>,
-                                          <span class="kw">verbosity</span> <span class="kw">=</span> <span class="st">"INFO"</span>)
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># define all study population settings</span>
+<span class="va">studyPop1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span>binary <span class="op">=</span> <span class="cn">T</span>,
+                                          includeAllOutcomes <span class="op">=</span> <span class="cn">F</span>,
+                                          removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">T</span>,
+                                          priorOutcomeLookback <span class="op">=</span> <span class="fl">99999</span>,
+                                          requireTimeAtRisk <span class="op">=</span> <span class="cn">T</span>,
+                                          minTimeAtRisk<span class="op">=</span><span class="fl">364</span>,
+                                          riskWindowStart <span class="op">=</span> <span class="fl">1</span>,
+                                          riskWindowEnd <span class="op">=</span> <span class="fl">365</span>,
+                                          verbosity <span class="op">=</span> <span class="st">"INFO"</span><span class="op">)</span>
 
-<span class="no">studyPop2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span>(<span class="kw">binary</span> <span class="kw">=</span> <span class="no">T</span>,
-                                           <span class="kw">includeAllOutcomes</span> <span class="kw">=</span> <span class="no">F</span>,
-                                           <span class="kw">removeSubjectsWithPriorOutcome</span> <span class="kw">=</span> <span class="no">T</span>,
-                                           <span class="kw">priorOutcomeLookback</span> <span class="kw">=</span> <span class="fl">99999</span>,
-                                           <span class="kw">requireTimeAtRisk</span> <span class="kw">=</span> <span class="no">F</span>,
-                                           <span class="kw">minTimeAtRisk</span><span class="kw">=</span><span class="fl">364</span>,
-                                           <span class="kw">riskWindowStart</span> <span class="kw">=</span> <span class="fl">1</span>,
-                                           <span class="kw">riskWindowEnd</span> <span class="kw">=</span> <span class="fl">365</span>,
-                                           <span class="kw">verbosity</span> <span class="kw">=</span> <span class="st">"INFO"</span>)
+<span class="va">studyPop2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span>binary <span class="op">=</span> <span class="cn">T</span>,
+                                           includeAllOutcomes <span class="op">=</span> <span class="cn">F</span>,
+                                           removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">T</span>,
+                                           priorOutcomeLookback <span class="op">=</span> <span class="fl">99999</span>,
+                                           requireTimeAtRisk <span class="op">=</span> <span class="cn">F</span>,
+                                           minTimeAtRisk<span class="op">=</span><span class="fl">364</span>,
+                                           riskWindowStart <span class="op">=</span> <span class="fl">1</span>,
+                                           riskWindowEnd <span class="op">=</span> <span class="fl">365</span>,
+                                           verbosity <span class="op">=</span> <span class="st">"INFO"</span><span class="op">)</span>
 
-<span class="no">studyPop3</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span>(<span class="kw">binary</span> <span class="kw">=</span> <span class="no">T</span>,
-                                           <span class="kw">includeAllOutcomes</span> <span class="kw">=</span> <span class="no">F</span>,
-                                           <span class="kw">removeSubjectsWithPriorOutcome</span> <span class="kw">=</span> <span class="no">F</span>,
-                                           <span class="kw">priorOutcomeLookback</span> <span class="kw">=</span> <span class="fl">99999</span>,
-                                           <span class="kw">requireTimeAtRisk</span> <span class="kw">=</span> <span class="no">T</span>,
-                                           <span class="kw">minTimeAtRisk</span><span class="kw">=</span><span class="fl">364</span>,
-                                           <span class="kw">riskWindowStart</span> <span class="kw">=</span> <span class="fl">1</span>,
-                                           <span class="kw">riskWindowEnd</span> <span class="kw">=</span> <span class="fl">365</span>,
-                                           <span class="kw">verbosity</span> <span class="kw">=</span> <span class="st">"INFO"</span>)
-
+<span class="va">studyPop3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span>binary <span class="op">=</span> <span class="cn">T</span>,
+                                           includeAllOutcomes <span class="op">=</span> <span class="cn">F</span>,
+                                           removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">F</span>,
+                                           priorOutcomeLookback <span class="op">=</span> <span class="fl">99999</span>,
+                                           requireTimeAtRisk <span class="op">=</span> <span class="cn">T</span>,
+                                           minTimeAtRisk<span class="op">=</span><span class="fl">364</span>,
+                                           riskWindowStart <span class="op">=</span> <span class="fl">1</span>,
+                                           riskWindowEnd <span class="op">=</span> <span class="fl">365</span>,
+                                           verbosity <span class="op">=</span> <span class="st">"INFO"</span><span class="op">)</span>
+                                           
 <span class="co"># combine these in a population setting list</span>
-<span class="no">populationSettingList</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="no">studyPop1</span>,<span class="no">studyPop2</span>,<span class="no">studyPop3</span>)</pre></body></html></div>
+<span class="va">populationSettingList</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">studyPop1</span>,<span class="va">studyPop2</span>,<span class="va">studyPop3</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="covariate-settings" class="section level2">
 <h2 class="hasAnchor">
 <a href="#covariate-settings" class="anchor"></a>Covariate settings</h2>
 <p>The covariate settings are created using <code>createCovariateSettings</code>. We can create multiple covariate settings and then combine them in a list:</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">covSet1</span> <span class="kw">&lt;-</span> <span class="fu">createCovariateSettings</span>(<span class="kw">useDemographicsGender</span> <span class="kw">=</span> <span class="no">T</span>,
-                                   <span class="kw">useDemographicsAgeGroup</span> <span class="kw">=</span> <span class="no">T</span>,
-                                   <span class="kw">useConditionGroupEraAnyTimePrior</span> <span class="kw">=</span> <span class="no">T</span>,
-                                   <span class="kw">useDrugGroupEraAnyTimePrior</span> <span class="kw">=</span> <span class="no">T</span>)
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">covSet1</span> <span class="op">&lt;-</span> <span class="fu">createCovariateSettings</span><span class="op">(</span>useDemographicsGender <span class="op">=</span> <span class="cn">T</span>, 
+                                   useDemographicsAgeGroup <span class="op">=</span> <span class="cn">T</span>, 
+                                   useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">T</span>,
+                                   useDrugGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>
 
-<span class="no">covSet2</span> <span class="kw">&lt;-</span> <span class="fu">createCovariateSettings</span>(<span class="kw">useDemographicsGender</span> <span class="kw">=</span> <span class="no">T</span>,
-                                   <span class="kw">useDemographicsAgeGroup</span> <span class="kw">=</span> <span class="no">T</span>,
-                                   <span class="kw">useConditionGroupEraAnyTimePrior</span> <span class="kw">=</span> <span class="no">T</span>,
-                                   <span class="kw">useDrugGroupEraAnyTimePrior</span> <span class="kw">=</span> <span class="no">F</span>)
+<span class="va">covSet2</span> <span class="op">&lt;-</span> <span class="fu">createCovariateSettings</span><span class="op">(</span>useDemographicsGender <span class="op">=</span> <span class="cn">T</span>, 
+                                   useDemographicsAgeGroup <span class="op">=</span> <span class="cn">T</span>, 
+                                   useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">T</span>,
+                                   useDrugGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">F</span><span class="op">)</span>
 
-<span class="no">covariateSettingList</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="no">covSet1</span>, <span class="no">covSet2</span>)</pre></body></html></div>
+<span class="va">covariateSettingList</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">covSet1</span>, <span class="va">covSet2</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="algorithm-settings" class="section level2">
 <h2 class="hasAnchor">
 <a href="#algorithm-settings" class="anchor"></a>Algorithm settings</h2>
 <p>The model settings requires running the setModel functions for the machine learning algorithms of interest and specifying the hyper-parameter search and then combining these into a list. For example, if we wanted to try a logistic regression, gradient boosting machine and ada boost model then:</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">gbm</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setGradientBoostingMachine.html">setGradientBoostingMachine</a></span>()
-<span class="no">lr</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setLassoLogisticRegression.html">setLassoLogisticRegression</a></span>()
-<span class="no">ada</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setAdaBoost.html">setAdaBoost</a></span>()
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">gbm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setGradientBoostingMachine.html">setGradientBoostingMachine</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">lr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">ada</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setAdaBoost.html">setAdaBoost</a></span><span class="op">(</span><span class="op">)</span>
 
-<span class="no">modelList</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="no">gbm</span>, <span class="no">lr</span>, <span class="no">ada</span>)</pre></body></html></div>
+<span class="va">modelList</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">gbm</span>, <span class="va">lr</span>, <span class="va">ada</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="model-analysis-list" class="section level2">
 <h2 class="hasAnchor">
 <a href="#model-analysis-list" class="anchor"></a>Model analysis list</h2>
 <p>To create the complete plp model settings use <code>createPlpModelSettings</code> to combine the population, covariate and model settings.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">modelAnalysisList</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/createPlpModelSettings.html">createPlpModelSettings</a></span>(<span class="kw">modelList</span> <span class="kw">=</span> <span class="no">modelList</span>,
-                                   <span class="kw">covariateSettingList</span> <span class="kw">=</span> <span class="no">covariateSettingList</span>,
-                                   <span class="kw">populationSettingList</span> <span class="kw">=</span> <span class="no">populationSettingList</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">modelAnalysisList</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createPlpModelSettings.html">createPlpModelSettings</a></span><span class="op">(</span>modelList <span class="op">=</span> <span class="va">modelList</span>, 
+                                   covariateSettingList <span class="op">=</span> <span class="va">covariateSettingList</span>,
+                                   populationSettingList <span class="op">=</span> <span class="va">populationSettingList</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
 <div id="running-multiple-models" class="section level1">
@@ -232,45 +242,48 @@
 <a href="#running-multiple-models" class="anchor"></a>Running multiple models</h1>
 <p>As we will be downloading loads of data in the multiple plp analysis it is useful to set the Andromeda temp folder to a directory with write access and plenty of space. <code><a href="https://rdrr.io/r/base/options.html">options(andromedaTempFolder = "c:/andromedaTemp")</a></code></p>
 <p>To run the study requires setting up a connectionDetails object</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">dbms</span> <span class="kw">&lt;-</span> <span class="st">"your dbms"</span>
-<span class="no">user</span> <span class="kw">&lt;-</span> <span class="st">"your username"</span>
-<span class="no">pw</span> <span class="kw">&lt;-</span> <span class="st">"your password"</span>
-<span class="no">server</span> <span class="kw">&lt;-</span> <span class="st">"your server"</span>
-<span class="no">port</span> <span class="kw">&lt;-</span> <span class="st">"your port"</span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">dbms</span> <span class="op">&lt;-</span> <span class="st">"your dbms"</span>
+<span class="va">user</span> <span class="op">&lt;-</span> <span class="st">"your username"</span>
+<span class="va">pw</span> <span class="op">&lt;-</span> <span class="st">"your password"</span>
+<span class="va">server</span> <span class="op">&lt;-</span> <span class="st">"your server"</span>
+<span class="va">port</span> <span class="op">&lt;-</span> <span class="st">"your port"</span>
 
-<span class="no">connectionDetails</span> <span class="kw">&lt;-</span> <span class="kw pkg">DatabaseConnector</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/DatabaseConnector/man/createConnectionDetails.html">createConnectionDetails</a></span>(<span class="kw">dbms</span> <span class="kw">=</span> <span class="no">dbms</span>,
-                                                                <span class="kw">server</span> <span class="kw">=</span> <span class="no">server</span>,
-                                                                <span class="kw">user</span> <span class="kw">=</span> <span class="no">user</span>,
-                                                                <span class="kw">password</span> <span class="kw">=</span> <span class="no">pw</span>,
-                                                                <span class="kw">port</span> <span class="kw">=</span> <span class="no">port</span>)</pre></body></html></div>
+<span class="va">connectionDetails</span> <span class="op">&lt;-</span> <span class="fu">DatabaseConnector</span><span class="fu">::</span><span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html">createConnectionDetails</a></span><span class="op">(</span>dbms <span class="op">=</span> <span class="va">dbms</span>,
+                                                                server <span class="op">=</span> <span class="va">server</span>,
+                                                                user <span class="op">=</span> <span class="va">user</span>,
+                                                                password <span class="op">=</span> <span class="va">pw</span>,
+                                                                port <span class="op">=</span> <span class="va">port</span><span class="op">)</span></code></pre></div>
 <p>Next you need to specify the cdmDatabaseSchema where your cdm database is found and workDatabaseSchema where your target population and outcome cohorts are and you need to specify a label for the database name: a string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported).</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">cdmDatabaseSchema</span> <span class="kw">&lt;-</span> <span class="st">"your cdmDatabaseSchema"</span>
-<span class="no">workDatabaseSchema</span> <span class="kw">&lt;-</span> <span class="st">"your workDatabaseSchema"</span>
-<span class="no">cdmDatabaseName</span> <span class="kw">&lt;-</span> <span class="st">"your cdmDatabaseName"</span></pre></body></html></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">cdmDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"your cdmDatabaseSchema"</span>
+<span class="va">workDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"your workDatabaseSchema"</span>
+<span class="va">cdmDatabaseName</span> <span class="op">&lt;-</span> <span class="st">"your cdmDatabaseName"</span></code></pre></div>
 <p>Now you can run the multiple patient-level prediction analysis by specifying the target cohort ids and outcome ids</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">allresults</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/runPlpAnalyses.html">runPlpAnalyses</a></span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
-                           <span class="kw">cdmDatabaseSchema</span> <span class="kw">=</span> <span class="no">cdmDatabaseSchema</span>,
-                           <span class="kw">cdmDatabaseName</span> <span class="kw">=</span> <span class="no">cdmDatabaseName</span>,
-                           <span class="kw">oracleTempSchema</span> <span class="kw">=</span> <span class="no">cdmDatabaseSchema</span>,
-                           <span class="kw">cohortDatabaseSchema</span> <span class="kw">=</span> <span class="no">workDatabaseSchema</span>,
-                           <span class="kw">cohortTable</span> <span class="kw">=</span> <span class="st">"your cohort table"</span>,
-                           <span class="kw">outcomeDatabaseSchema</span> <span class="kw">=</span> <span class="no">workDatabaseSchema</span>,
-                           <span class="kw">outcomeTable</span> <span class="kw">=</span> <span class="st">"your cohort table"</span>,
-                           <span class="kw">cdmVersion</span> <span class="kw">=</span> <span class="fl">5</span>,
-                           <span class="kw">outputFolder</span> <span class="kw">=</span> <span class="st">"./PlpMultiOutput"</span>,
-                           <span class="kw">modelAnalysisList</span> <span class="kw">=</span> <span class="no">modelAnalysisList</span>,
-                           <span class="kw">cohortIds</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">2484</span>,<span class="fl">6970</span>),
-                           <span class="kw">cohortNames</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'visit 2010'</span>,<span class="st">'test cohort'</span>),
-                           <span class="kw">outcomeIds</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">7331</span>,<span class="fl">5287</span>),
-                           <span class="kw">outcomeNames</span> <span class="kw">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'outcome 1'</span>,<span class="st">'outcome 2'</span>),
-                           <span class="kw">maxSampleSize</span> <span class="kw">=</span> <span class="kw">NULL</span>,
-                           <span class="kw">minCovariateFraction</span> <span class="kw">=</span> <span class="fl">0</span>,
-                           <span class="kw">normalizeData</span> <span class="kw">=</span> <span class="no">T</span>,
-                           <span class="kw">testSplit</span> <span class="kw">=</span> <span class="st">"stratified"</span>,
-                           <span class="kw">testFraction</span> <span class="kw">=</span> <span class="fl">0.25</span>,
-                           <span class="kw">splitSeed</span> <span class="kw">=</span> <span class="kw">NULL</span>,
-                           <span class="kw">nfold</span> <span class="kw">=</span> <span class="fl">3</span>,
-                           <span class="kw">verbosity</span> <span class="kw">=</span> <span class="st">"INFO"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">allresults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlpAnalyses.html">runPlpAnalyses</a></span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,
+                           cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,
+                           cdmDatabaseName <span class="op">=</span> <span class="va">cdmDatabaseName</span>,
+                           oracleTempSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,
+                           cohortDatabaseSchema <span class="op">=</span> <span class="va">workDatabaseSchema</span>,
+                           cohortTable <span class="op">=</span> <span class="st">"your cohort table"</span>,
+                           outcomeDatabaseSchema <span class="op">=</span> <span class="va">workDatabaseSchema</span>,
+                           outcomeTable <span class="op">=</span> <span class="st">"your cohort table"</span>,
+                           cdmVersion <span class="op">=</span> <span class="fl">5</span>,
+                           outputFolder <span class="op">=</span> <span class="st">"./PlpMultiOutput"</span>,
+                           modelAnalysisList <span class="op">=</span> <span class="va">modelAnalysisList</span>,
+                           cohortIds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">2484</span>,<span class="fl">6970</span><span class="op">)</span>,
+                           cohortNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'visit 2010'</span>,<span class="st">'test cohort'</span><span class="op">)</span>,
+                           outcomeIds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">7331</span>,<span class="fl">5287</span><span class="op">)</span>,
+                           outcomeNames <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'outcome 1'</span>,<span class="st">'outcome 2'</span><span class="op">)</span>,
+                           maxSampleSize <span class="op">=</span> <span class="cn">NULL</span>,
+                           minCovariateFraction <span class="op">=</span> <span class="fl">0</span>,
+                           normalizeData <span class="op">=</span> <span class="cn">T</span>,
+                           testSplit <span class="op">=</span> <span class="st">"stratified"</span>,
+                           testFraction <span class="op">=</span> <span class="fl">0.25</span>,
+                           splitSeed <span class="op">=</span> <span class="cn">NULL</span>,
+                           nfold <span class="op">=</span> <span class="fl">3</span>,
+                           verbosity <span class="op">=</span> <span class="st">"INFO"</span><span class="op">)</span></code></pre></div>
 <p>This will then save all the plpData objects from the study into “./PlpMultiOutput/plpData”, the populations for the analysis into “./PlpMultiOutput/population” and the results into “./PlpMultiOutput/Result”. The csv named settings.csv found in “./PlpMultiOutput” has a row for each prediction model developed and points to the plpData and population used for the model development, it also has descriptions of the cohorts and settings if these are input by the user.</p>
 <p>Note that if for some reason the run is interrupted, e.g. because of an error, a new call to <code>RunPlpAnalyses</code> will continue and not restart until you remove the output folder.</p>
 </div>
@@ -278,32 +291,35 @@
 <h1 class="hasAnchor">
 <a href="#validating-multiple-models" class="anchor"></a>Validating multiple models</h1>
 <p>If you have access to multiple databases on the same server in different schemas you could evaluate accross these using this call:</p>
-<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">val</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/evaluateMultiplePlp.html">evaluateMultiplePlp</a></span>(<span class="kw">analysesLocation</span> <span class="kw">=</span> <span class="st">"./PlpMultiOutput"</span>,
-                           <span class="kw">outputLocation</span> <span class="kw">=</span> <span class="st">"./PlpMultiOutput/validation"</span>,
-                           <span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
-                           <span class="kw">validationSchemaTarget</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">'new_database_1.dbo'</span>,
-                                                              <span class="st">'new_database_2.dbo'</span>),
-                           <span class="kw">validationSchemaOutcome</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">'new_database_1.dbo'</span>,
-                                                              <span class="st">'new_database_2.dbo'</span>),
-                           <span class="kw">validationSchemaCdm</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">'new_database_1.dbo'</span>,
-                                                              <span class="st">'new_database_2.dbo'</span>),
-                           <span class="kw">databaseNames</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">'database1'</span>,<span class="st">'database2'</span>),
-                           <span class="kw">validationTableTarget</span> <span class="kw">=</span> <span class="st">'your new cohort table'</span>,
-                           <span class="kw">validationTableOutcome</span> <span class="kw">=</span> <span class="st">'your new cohort table'</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evaluateMultiplePlp.html">evaluateMultiplePlp</a></span><span class="op">(</span>analysesLocation <span class="op">=</span> <span class="st">"./PlpMultiOutput"</span>,
+                           outputLocation <span class="op">=</span> <span class="st">"./PlpMultiOutput/validation"</span>,
+                           connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
+                           validationSchemaTarget <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">'new_database_1.dbo'</span>,
+                                                              <span class="st">'new_database_2.dbo'</span><span class="op">)</span>,
+                           validationSchemaOutcome <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">'new_database_1.dbo'</span>,
+                                                              <span class="st">'new_database_2.dbo'</span><span class="op">)</span>,
+                           validationSchemaCdm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">'new_database_1.dbo'</span>,
+                                                              <span class="st">'new_database_2.dbo'</span><span class="op">)</span>, 
+                           databaseNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'database1'</span>,<span class="st">'database2'</span><span class="op">)</span>,
+                           validationTableTarget <span class="op">=</span> <span class="st">'your new cohort table'</span>,
+                           validationTableOutcome <span class="op">=</span> <span class="st">'your new cohort table'</span><span class="op">)</span></code></pre></div>
 <p>This then saves the external validation results in the validation folder of the main study (the outputLocation you used in runPlpAnalyses).</p>
 </div>
 <div id="viewing-the-results" class="section level1">
 <h1 class="hasAnchor">
 <a href="#viewing-the-results" class="anchor"></a>Viewing the results</h1>
 <p>To view the results for the multiple prediction analysis:</p>
-<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="fu"><a href="../reference/viewMultiplePlp.html">viewMultiplePlp</a></span>(<span class="kw">analysesLocation</span><span class="kw">=</span><span class="st">"./PlpMultiOutput"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/viewMultiplePlp.html">viewMultiplePlp</a></span><span class="op">(</span>analysesLocation<span class="op">=</span><span class="st">"./PlpMultiOutput"</span><span class="op">)</span></code></pre></div>
 <p>If the validation directory in “./PlpMultiOutput” has results, the external validation will also be displayed.</p>
 </div>
 <div id="acknowledgments" class="section level1">
 <h1 class="hasAnchor">
 <a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
 <p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
-<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
 <pre><code>## 
 ## To cite PatientLevelPrediction in publications use:
 ## 
@@ -345,7 +361,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

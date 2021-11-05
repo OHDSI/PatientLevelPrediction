@@ -89,7 +89,7 @@ fitKNN <- function(plpData,population, param, quiet=T, cohortId, outcomeId, ...)
   varImp<- as.data.frame(plpData$covariateData$covariateRef)
   varImp$covariateValue <- rep(0, nrow(varImp))
   
-  prediction <- predict.knn(plpData=plpData, 
+  prediction <- predict_knn(plpData=plpData, 
                             population = population, 
                             plpModel=list(model=indexFolder,
                                           modelSettings = list(model='knn',

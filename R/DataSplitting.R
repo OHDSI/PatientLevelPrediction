@@ -330,11 +330,13 @@ subjectSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, see
   nonPplGroup <- rep(0, length(nonPpl))
   
   # set test set (index=-1)
-  testInd <- 1:round(length(nonPpl) * test)
+  # use floor(x + 0.5) to get rounding to nearest integer 
+  # instead of to nearest even number when x is .5
+  testInd <- 1:floor(length(nonPpl) * test + 0.5) 
   nonPplGroup[testInd] <- -1
   
   # set train set (index>0)
-  trainInd <- round(length(nonPpl) * test + length(nonPpl) * (1-train-test) + 1):length(nonPpl) 
+  trainInd <- floor(length(nonPpl) * test + length(nonPpl) * (1-train-test) + 1.5):length(nonPpl) 
   reps <- floor(length(trainInd)/nfold)
   leftOver <- length(trainInd)%%nfold
   if (leftOver > 0){
@@ -346,9 +348,9 @@ subjectSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, see
   
   # same for outcome = 1
   outPplGroup <- rep(0, length(outPpl))
-  testInd <- 1:round(length(outPpl) * test)
+  testInd <- 1:floor(length(outPpl) * test + 0.5)
   outPplGroup[testInd] <- -1
-  trainInd <- round(length(outPpl) * test + length(outPpl) * (1-train-test) + 1):length(outPpl)
+  trainInd <- floor(length(outPpl) * test + length(outPpl) * (1-train-test) + 1.5):length(outPpl)
   reps <- floor(length(trainInd)/nfold)
   leftOver <- length(trainInd)%%nfold
   if (leftOver > 0){

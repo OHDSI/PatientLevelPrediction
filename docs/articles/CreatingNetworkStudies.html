@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -63,6 +63,9 @@
       <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
     </li>
     <li>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
+    </li>
+    <li>
       <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
@@ -75,13 +78,13 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
+    </li>
+    <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
-      <a href="../articles/GeneratingLearningCurves.html">Generating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -95,16 +98,19 @@
   <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
 </li>
 <li>
+  <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -118,13 +124,13 @@
 
       
 
-      </header><div class="row">
+      </header><script src="CreatingNetworkStudies_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Making patient-level predictive network study packages</h1>
                         <h4 class="author">Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2020-06-08</h4>
+            <h4 class="date">2021-09-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/CreatingNetworkStudies.Rmd"><code>vignettes/CreatingNetworkStudies.Rmd</code></a></small>
       <div class="hidden name"><code>CreatingNetworkStudies.Rmd</code></div>
@@ -133,10 +139,10 @@
 
     
     
-<p><!--
-  %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Building patient-level predictive models}
---></p>
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Making  patient-level predictive network study packages}
+-->
 <div style="page-break-after: always;"></div>
 <div id="introduction" class="section level1">
 <h1 class="hasAnchor">
@@ -215,46 +221,49 @@
 <a href="#example-code-to-make-package-for-external-validation-of-plp-model" class="anchor"></a>Example Code To Make Package For External Validation of PLP Model</h1>
 <p>First you need to make a copy of the PatientLevelPrediciton skeleton package found here:</p>
 <p>Assuming you ran a sucessful PatientLevelPrediction model development and saved the output of <code><a href="../reference/runPlp.html">runPlp()</a></code> to to location ‘goodModel’ in your working directory then:</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">PatientLevelPrediction</span>)
-<span class="no">plpResult</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span>(<span class="st">"goodModel"</span>)
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction">PatientLevelPrediction</a></span><span class="op">)</span>
+<span class="va">plpResult</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="st">"goodModel"</span><span class="op">)</span>
 
 <span class="co"># add the model to the skeleton package with sensitive information removed</span>
-<span class="fu">exportPlpResult</span>(<span class="kw">plpResult</span> <span class="kw">=</span> <span class="no">plpResult</span>, <span class="kw">modelName</span> <span class="kw">=</span> <span class="st">"Model Name"</span>, <span class="kw">packageName</span> <span class="kw">=</span> <span class="st">"Your Package Name"</span>,
-    <span class="kw">gitHubLocation</span> <span class="kw">=</span> <span class="st">"location/of/github"</span>, <span class="kw">includeEvaluationStatistics</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">includeThresholdSummary</span> <span class="kw">=</span> <span class="no">T</span>,
-    <span class="kw">includeDemographicSummary</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">includeCalibrationSummary</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">includePredictionDistribution</span> <span class="kw">=</span> <span class="no">T</span>,
-    <span class="kw">includeCovariateSummary</span> <span class="kw">=</span> <span class="no">F</span>)</pre></body></html></div>
+<span class="fu">exportPlpResult</span><span class="op">(</span>plpResult <span class="op">=</span> <span class="va">plpResult</span>, modelName <span class="op">=</span> <span class="st">"Model Name"</span>, packageName <span class="op">=</span> <span class="st">"Your Package Name"</span>, 
+    gitHubLocation <span class="op">=</span> <span class="st">"location/of/github"</span>, includeEvaluationStatistics <span class="op">=</span> <span class="cn">T</span>, includeThresholdSummary <span class="op">=</span> <span class="cn">T</span>, 
+    includeDemographicSummary <span class="op">=</span> <span class="cn">T</span>, includeCalibrationSummary <span class="op">=</span> <span class="cn">T</span>, includePredictionDistribution <span class="op">=</span> <span class="cn">T</span>, 
+    includeCovariateSummary <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></code></pre></div>
 <p>Now you want to add the cohorts (generally the parameterized sql required to create one or more target and outcome cohorts). This should be added into the inst/sql/sql_server directory of your package. If you are using atlas to create the cohorts then you can use: <code>OhdsiRTools::insertCirceDefinitionInPackage()</code>. The settings for the cohort creation are defined in the inst/extdata directory in the file cohort_details.csv. this file contains two columns: cohortName and cohortId. The cohortName should contain the name of the sql file of the cohort in inst/sql/sql_server (e.g., a file called “targetCohort.sql” has the name “targetCohort”) and the cohortId is the default cohort_definition_id that will be used when people run the study corresponding to this cohort. The main.R file in the extras directory contains the vanilla code to run a study with the model eported into the package and the cohort files added.</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">PatientLevelPrediction</span>)
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction">PatientLevelPrediction</a></span><span class="op">)</span>
 <span class="co"># input settings for person running the study</span>
-<span class="no">connectionDetails</span> <span class="kw">&lt;-</span> <span class="st">" "</span>
-<span class="no">cdmDatabaseSchema</span> <span class="kw">&lt;-</span> <span class="st">"their_cdm_database"</span>
-<span class="no">databaseName</span> <span class="kw">&lt;-</span> <span class="st">"Name for database"</span>
-<span class="no">cohortDatabaseSchema</span> <span class="kw">&lt;-</span> <span class="st">"a_database_with_write_priv"</span>
-<span class="no">cohortTable</span> <span class="kw">&lt;-</span> <span class="st">"package_table"</span>
-<span class="no">outputLocation</span> <span class="kw">&lt;-</span> <span class="st">"location to save results"</span>
+<span class="va">connectionDetails</span> <span class="op">&lt;-</span> <span class="st">" "</span>
+<span class="va">cdmDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"their_cdm_database"</span>
+<span class="va">databaseName</span> <span class="op">&lt;-</span> <span class="st">"Name for database"</span>
+<span class="va">cohortDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"a_database_with_write_priv"</span>
+<span class="va">cohortTable</span> <span class="op">&lt;-</span> <span class="st">"package_table"</span>
+<span class="va">outputLocation</span> <span class="op">&lt;-</span> <span class="st">"location to save results"</span>
 
-<span class="no">cohortDetails</span> <span class="kw">&lt;-</span> <span class="fu">createCohort</span>(<span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>, <span class="kw">cdmDatabaseSchema</span> <span class="kw">=</span> <span class="no">cdmDatabaseSchema</span>,
-    <span class="kw">cohortDatabaseSchema</span> <span class="kw">=</span> <span class="no">cohortDatabaseSchema</span>, <span class="kw">cohortTable</span> <span class="kw">=</span> <span class="no">cohortTable</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"Your Package Name"</span>)
+<span class="va">cohortDetails</span> <span class="op">&lt;-</span> <span class="fu">createCohort</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>, 
+    cohortDatabaseSchema <span class="op">=</span> <span class="va">cohortDatabaseSchema</span>, cohortTable <span class="op">=</span> <span class="va">cohortTable</span>, package <span class="op">=</span> <span class="st">"Your Package Name"</span><span class="op">)</span>
 
-<span class="no">plpResult</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"model"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"Your Package Name"</span>))
-<span class="no">result</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/externalValidatePlp.html">externalValidatePlp</a></span>(<span class="kw">plpResult</span> <span class="kw">=</span> <span class="no">plpResult</span>, <span class="kw">connectionDetails</span> <span class="kw">=</span> <span class="no">connectionDetails</span>,
-    <span class="kw">validationSchemaTarget</span> <span class="kw">=</span> <span class="no">cohortDatabaseSchema</span>, <span class="kw">validationSchemaOutcome</span> <span class="kw">=</span> <span class="no">cohortDatabaseSchema</span>,
-    <span class="kw">validationSchemaCdm</span> <span class="kw">=</span> <span class="no">cdmDatabaseSchema</span>, <span class="kw">validationTableTarget</span> <span class="kw">=</span> <span class="no">cohortTable</span>,
-    <span class="kw">validationTableOutcome</span> <span class="kw">=</span> <span class="no">cohortTable</span>, <span class="kw">validationIdTarget</span> <span class="kw">=</span> <span class="no">target_cohort_id</span>,
-    <span class="kw">validationIdOutcome</span> <span class="kw">=</span> <span class="no">outcome_cohort_id</span>)
+<span class="va">plpResult</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"model"</span>, package <span class="op">=</span> <span class="st">"Your Package Name"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/externalValidatePlp.html">externalValidatePlp</a></span><span class="op">(</span>plpResult <span class="op">=</span> <span class="va">plpResult</span>, connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
+    validationSchemaTarget <span class="op">=</span> <span class="va">cohortDatabaseSchema</span>, validationSchemaOutcome <span class="op">=</span> <span class="va">cohortDatabaseSchema</span>, 
+    validationSchemaCdm <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>, validationTableTarget <span class="op">=</span> <span class="va">cohortTable</span>, 
+    validationTableOutcome <span class="op">=</span> <span class="va">cohortTable</span>, validationIdTarget <span class="op">=</span> <span class="va">target_cohort_id</span>, 
+    validationIdOutcome <span class="op">=</span> <span class="va">outcome_cohort_id</span><span class="op">)</span>
 
 <span class="co"># save results to standard output</span>
-<span class="no">resultLoc</span> <span class="kw">&lt;-</span> <span class="fu">standardOutput</span>(<span class="kw">result</span> <span class="kw">=</span> <span class="no">result</span>, <span class="kw">outputLocation</span> <span class="kw">=</span> <span class="no">outputLocation</span>, <span class="kw">studyName</span> <span class="kw">=</span> <span class="st">"external validation of ... model"</span>,
-    <span class="kw">databaseName</span> <span class="kw">=</span> <span class="no">databaseName</span>, <span class="kw">cohortName</span> <span class="kw">=</span> <span class="st">"your cohortName"</span>, <span class="kw">outcomeName</span> <span class="kw">=</span> <span class="st">"your outcomeName"</span>)
+<span class="va">resultLoc</span> <span class="op">&lt;-</span> <span class="fu">standardOutput</span><span class="op">(</span>result <span class="op">=</span> <span class="va">result</span>, outputLocation <span class="op">=</span> <span class="va">outputLocation</span>, studyName <span class="op">=</span> <span class="st">"external validation of ... model"</span>, 
+    databaseName <span class="op">=</span> <span class="va">databaseName</span>, cohortName <span class="op">=</span> <span class="st">"your cohortName"</span>, outcomeName <span class="op">=</span> <span class="st">"your outcomeName"</span><span class="op">)</span>
 
 <span class="co"># package results ready to submit</span>
-<span class="fu">packageResults</span>(<span class="kw">mainFolder</span> <span class="kw">=</span> <span class="no">resultLoc</span>, <span class="kw">includeROCplot</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">includeCalibrationPlot</span> <span class="kw">=</span> <span class="no">T</span>,
-    <span class="kw">includePRPlot</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">includeTable1</span> <span class="kw">=</span> <span class="no">F</span>, <span class="kw">includeThresholdSummary</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">includeDemographicSummary</span> <span class="kw">=</span> <span class="no">T</span>,
-    <span class="kw">includeCalibrationSummary</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">includePredictionDistribution</span> <span class="kw">=</span> <span class="no">T</span>, <span class="kw">includeCovariateSummary</span> <span class="kw">=</span> <span class="no">F</span>,
-    <span class="kw">removeLessThanN</span> <span class="kw">=</span> <span class="no">F</span>, <span class="kw">N</span> <span class="kw">=</span> <span class="fl">10</span>)</pre></body></html></div>
+<span class="fu">packageResults</span><span class="op">(</span>mainFolder <span class="op">=</span> <span class="va">resultLoc</span>, includeROCplot <span class="op">=</span> <span class="cn">T</span>, includeCalibrationPlot <span class="op">=</span> <span class="cn">T</span>, 
+    includePRPlot <span class="op">=</span> <span class="cn">T</span>, includeTable1 <span class="op">=</span> <span class="cn">F</span>, includeThresholdSummary <span class="op">=</span> <span class="cn">T</span>, includeDemographicSummary <span class="op">=</span> <span class="cn">T</span>, 
+    includeCalibrationSummary <span class="op">=</span> <span class="cn">T</span>, includePredictionDistribution <span class="op">=</span> <span class="cn">T</span>, includeCovariateSummary <span class="op">=</span> <span class="cn">F</span>, 
+    removeLessThanN <span class="op">=</span> <span class="cn">F</span>, N <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></code></pre></div>
 <p>Where the target_cohort_id and outcome_cohort_id should correspond to the cohort_details.csv file.</p>
 <p>We recommend getting the network implementors to submit their results of <code>createCohort()</code> before continuing with the study to ensure definitions run across the network. After running the rest of main.R the implementor should inspect the files in the export folder created by the package to ensure there isn’t sensitive data remaining. Once checked the implementor can run submit.R to send the results to the study organisor. The submit.R file is:</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu">submitResults</span>(<span class="kw">exportFolder</span> <span class="kw">=</span> <span class="no">outputLocation</span>, <span class="kw">dbName</span> <span class="kw">=</span> <span class="no">databaseName</span>, <span class="no">key</span>, <span class="no">secret</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">submitResults</span><span class="op">(</span>exportFolder <span class="op">=</span> <span class="va">outputLocation</span>, dbName <span class="op">=</span> <span class="va">databaseName</span>, <span class="va">key</span>, <span class="va">secret</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="useful-patientlevelprediction-functions" class="section level1">
 <h1 class="hasAnchor">
@@ -317,7 +326,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

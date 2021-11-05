@@ -1,4 +1,49 @@
+PatientLevelPrediction 4.4.2
+======================
+- revised toSparseM() to do conversion in one go but check RAM availablility beforehand.
+- removed temporal plpData conversion in toSparseM (this will be done in DeepPatientLevelPrediction)
+
+PatientLevelPrediction 4.4.1
+======================
+- shiny can now read csv results
+- objects loaded via loadPlpFromCsv() can be saved using savePlpResult()
+
 PatientLevelPrediction 4.4.0
+======================
+- added database result storage 
+- added interface to database results in shiny
+- merged in shinyRepo that changed the shiny app to make it modular and added new features
+- removed deep learning as this is being added into new OHDSI package DeepPatientLevelPrediction
+
+PatientLevelPrediction 4.3.10
+======================
+- save xgboost model as json file for transparency
+- set connectionDetails to NULL in getPlpData
+
+
+PatientLevelPrediction 4.3.9
+======================
+- updated andromeda functions - restrict to pop and tidy covs for speed
+- quick fix for GBM survival predicting negative values
+- fixed occasional demoSum error for survival models
+- updated index creation to use Andromeda function
+
+
+PatientLevelPrediction 4.3.8
+======================
+- fixed bug when normalize data is false
+- fixed bugs when single feature (gbm + python)
+- updated GBM 
+
+PatientLevelPrediction 4.3.7
+======================
+- updated calibration slope
+- fixed missing age/gender in prediction
+- fixed shiny intercept bug
+- fixed diagnostic
+- fixed missing covariateSettings in  load cvs plp
+
+PatientLevelPrediction 4.3.6
 ======================
 - Removed plpData from evaluation 
 - Added recalibration into externalVal

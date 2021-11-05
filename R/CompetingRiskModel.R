@@ -92,7 +92,7 @@ fitCompetingRiskModell<- function(population, plpData, param, search='adaptive',
   }
   
   #get prediction on test set:
-  prediction <- predict.plp(plpModel=list(model = modelTrained),
+  prediction <- predict_plp(plpModel=list(model = modelTrained),
                             population = population, 
                             plpData = plpData)
   

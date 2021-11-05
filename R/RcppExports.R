@@ -9,11 +9,3 @@ aucWithoutCi <- function(propensityScores, treatment) {
     .Call('_PatientLevelPrediction_aucWithoutCi', PACKAGE = 'PatientLevelPrediction', propensityScores, treatment)
 }
 
-bySum <- function(ffValues, ffBins) {
-    .Call('_PatientLevelPrediction_bySum', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
-}
-
-byMax <- function(ffValues, ffBins) {
-    .Call('_PatientLevelPrediction_byMax', PACKAGE = 'PatientLevelPrediction', ffValues, ffBins)
-}
-
