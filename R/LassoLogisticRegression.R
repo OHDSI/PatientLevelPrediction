@@ -99,7 +99,7 @@ fitLassoLogisticRegression<- function(population, plpData, param, search='adapti
   lowerLimit <- param$lowerLimit
   upperLimit <- param$upperLimit
   start <- Sys.time()
-  noShrinkage <- param$noShrinkage
+  noShrinkage <- param$noShrinkage  # does this get used??
   modelTrained <- fitGLMModel(population,
                                      plpData = plpData, 
                                      includeCovariateIds = includeCovariateIds,
