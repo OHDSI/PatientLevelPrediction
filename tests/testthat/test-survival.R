@@ -64,7 +64,8 @@ test_that("Survival evaluation", {
   
 })
 
-
+# make sure python deps are installed:
+reticulate::conda_install(envname = 'r-reticulate', packages = 'scikit-survival', channel = 'sebp')
 
 test_that("GBM survival errors", {
   

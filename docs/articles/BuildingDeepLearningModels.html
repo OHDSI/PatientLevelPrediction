@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
       </span>
     </div>
 
@@ -130,7 +130,7 @@
       <h1 data-toc-skip>Building Deep Learning Models</h1>
                         <h4 class="author">Peter R. Rijnbeek, Seng Chan You, Xiaoyong Pan, Jenna Reps</h4>
             
-            <h4 class="date">2021-06-17</h4>
+            <h4 class="date">2021-09-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/BuildingDeepLearningModels.Rmd"><code>vignettes/BuildingDeepLearningModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingDeepLearningModels.Rmd</code></div>
@@ -231,7 +231,7 @@
 <code class="sourceCode R"><span class="va">class_weight</span> <span class="op">&lt;-</span> <span class="fl">0</span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Specify the settings for Logistics regression model using Torch in Python</span>
-<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setLRTorch.html">setLRTorch</a></span><span class="op">(</span>autoencoder<span class="op">=</span><span class="va">autoencoder</span>, vae<span class="op">=</span><span class="va">vae</span>,  class_weight<span class="op">=</span><span class="va">class_weight</span><span class="op">)</span></code></pre></div>
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">setLRTorch</span><span class="op">(</span>autoencoder<span class="op">=</span><span class="va">autoencoder</span>, vae<span class="op">=</span><span class="va">vae</span>,  class_weight<span class="op">=</span><span class="va">class_weight</span><span class="op">)</span></code></pre></div>
 <p>No we define our modelling parameters.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">testFraction</span> <span class="op">&lt;-</span> <span class="fl">0.2</span>
@@ -504,7 +504,7 @@ Clinically Informing application based on Recurrent Neural Network (CIReNN.R)
 <p>Each CNN/RNN has several hyper-parameters that can be set as shown in the Tables above, but for this example we take the defaults.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># specify the the CNN</span>
-<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setCNNTorch.html">setCNNTorch</a></span><span class="op">(</span>cnn_type<span class="op">=</span><span class="st">'CNN'</span><span class="op">)</span></code></pre></div>
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">setCNNTorch</span><span class="op">(</span>cnn_type<span class="op">=</span><span class="st">'CNN'</span><span class="op">)</span></code></pre></div>
 <p>Run the model training, for example with a testFraction = 0.2 and a split by person:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/runPlp.html">runPlp</a></span><span class="op">(</span><span class="va">population</span>, <span class="va">plpData</span>, <span class="va">model</span>,

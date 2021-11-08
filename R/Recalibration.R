@@ -71,12 +71,15 @@ recalibratePlpRefit <- function(plpModel,
                                         analysisId = plpModel$analysisId, 
                                         eval = 'recalibrationRefit')
   
+  metaData <- attr(result$prediction, "metaData") # new code
+  
   prediction <- result$prediction[,c('rowId', 'value')]
   colnames(prediction)[2] <- 'reestimateValue'
   oldPred <- applyModel(population = newPopulation, plpData = newData, 
                         plpModel = plpModel, calculatePerformance = F)
   prediction <- merge(oldPred, prediction, by = 'rowId')
-
+  attr(prediction, "metaData") <- metaData # new code
+  
   adjust <- result$covariateSummary[,c('covariateValue', 'covariateId')]
   adjust <- adjust[adjust$covariateValue != 0, ]
   newIntercept <- result$model$model$coefficients[names(result$model$model$coefficients) == '(Intercept)']
@@ -108,20 +111,20 @@ recalibratePlpRefit <- function(plpModel,
 #' 
 #' @param prediction                      A prediction dataframe
 #' @param analysisId                      The model analysisId
-#' @param method                          Method used to recalibrate ('recalibrationintheLarge' or 'weakRecalibration' )
+#' @param method                          Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )
 #' @return
 #' An object of class \code{runPlp} that is recalibrated on the new data
 #'
 
 #' @export
 recalibratePlp <- function(prediction, analysisId,
-                           method = c('recalibrationintheLarge', 'weakRecalibration')){
+                           method = c('recalibrationInTheLarge', 'weakRecalibration')){
   # check input:
     if (class(prediction) != 'data.frame')
       stop("Incorrect prediction") 
   
   if(!method  %in% c('recalibrationInTheLarge', 'weakRecalibration'))
-    stop("Unknown recalibration method type. must be of type: RecalibrationintheLarge, weakRecalibration")
+    stop("Unknown recalibration method type. must be of type: recalibrationInTheLarge, weakRecalibration")
   
   
   result <- do.call(method, list(prediction = prediction))
@@ -134,7 +137,9 @@ recalibratePlp <- function(prediction, analysisId,
   result$prediction <- result$prediction[,c('rowId', 'value')]
   colnames(result$prediction)[2] <- paste0(result$type, 'Value')
 
+  metaDataTemp <- attr(prediction, "metaData")
   prediction <- merge(prediction, result$prediction, by = 'rowId')
+  attr(prediction, "metaData") <- metaDataTemp
   
   recalibrateResult$evaluationStatistics <- rbind(recalibrateResult$evaluationStatistics,
                                                   data.frame(analysisId = analysisId,
@@ -162,7 +167,7 @@ recalibrationInTheLarge <- function(prediction){
     prediction$value = logFunct(inverseLog(prediction$value) + correctionFactor)
     
     return(list(prediction = prediction,
-                type = 'recalibrationintheLarge',
+                type = 'recalibrationInTheLarge',
                 correctionFactor = correctionFactor))
   }
   
@@ -288,36 +293,8 @@ addRecalibration <- function(performanceEvaluation, recalibration){
     performanceEvaluation$evaluationStatistics <- rbind(performanceEvaluation$evaluationStatistics ,
                                                        recalibration$evaluationStatistics )
   }
-
-  if (method == "populationRisk"){
-    #get dev database (use test or train?)
-    eval <- as.data.frame(plpResult$performanceEvaluation$evaluationStatistics)
-    eval <- eval[eval$Eval %in% c('train',"validation"),]
-    devPopRisk <- as.double(as.character(eval$Value[eval$Metric=='outcomeCount']))/as.double(as.character(eval$Value[eval$Metric=='populationSize']))
-
-    valPopRisk <- sum(population$outcomeCount) / length(population$outcomeCount)
-    correctionFactor <- log(devPopRisk / valPopRisk)
-    recalResult <- plpResult
-    recalResult$model$model$coefficients["(Intercept)"] <- plpResult$model$model$coefficients["(Intercept)"] + correctionFactor 
-    recalResult$model$predict <- PatientLevelPrediction:::createTransform(recalResult$model)
-    #recalculate predictions
-     
-    
-    result <- applyModel(population=population2, plpData = validationData, 
-                         calculatePerformance = T, plpModel = recalResult$model)
-    
-    result$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
-                                                          packageVersion = utils::packageVersion("PatientLevelPrediction")),
-                                    PlatformDetails= list(platform= R.Version()$platform,
-                                                          cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
-                                                          RAM=utils::memory.size()), #  test for non-windows needed
-                                    # Sys.info()
-                                    TotalExecutionElapsedTime = NULL,
-                                    ExecutionDateTime = Sys.Date())
-    
-  }
-  class(result) <- 'recalibratePlp'
-  return(result)
+  
+  return(performanceEvaluation)
 }
 
 

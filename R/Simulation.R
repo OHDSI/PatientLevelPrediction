@@ -173,7 +173,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
   metaData$call$outcomeTable = NULL
   metaData$call$cohortTable = NULL
   metaData$call$cdmVersion = 5
-  metaData$call$covariateSettings = NULL
+  #metaData$call$covariateSettings = FeatureExtraction::createDefaultCovariateSettings()
 
   metaData$cohortId = 1
   metaData$outcomeIds = c(2,3)
