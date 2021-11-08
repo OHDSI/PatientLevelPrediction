@@ -5,10 +5,11 @@
 \title{Create setting for lasso logistic regression}
 \usage{
 setIterativeHardThresholding(
-  K,
+  K = 10,
   penalty = "bic",
   seed = NULL,
   exclude = NULL,
+  forceIntercept = F,
   fitBestSubset = FALSE
 )
 }
@@ -20,6 +21,8 @@ setIterativeHardThresholding(
 \item{seed}{An option to add a seed when training the model}
 
 \item{exclude}{A vector of numbers or covariateId names to exclude from prior}
+
+\item{forceIntercept}{Logical: Force intercept coefficient into regularization}
 
 \item{fitBestSubset}{Logical: Fit final subset with no regularization}
 }

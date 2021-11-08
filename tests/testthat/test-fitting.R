@@ -333,7 +333,7 @@ test_that("MLP  working checks", {
 })
 
 
-ihtSet <- setIterativeHardThresholding(K = 3)
+ihtSet <- setIterativeHardThresholding(K = 3, forceIntercept = T) # removing warning by forcing intercept in reg
 plpResultIht <- runPlp(population = population,
                        plpData = plpData, 
                        modelSettings = ihtSet, 
@@ -358,7 +358,7 @@ test_that("IHT  working checks", {
   
   # check that selected covariates less than K
   testthat::expect_lte(nrow(plpResultIht$model$varImp[plpResultIht$model$varImp$covariateValue != 0.0,]), ihtSet$param$K)
-    
+})    
   
  svmSet <- setSVM(C=1, degree = 1, gamma = 1e-04)
  plpResultSvm <- runPlp(population = population,

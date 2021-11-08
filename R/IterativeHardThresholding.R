@@ -22,16 +22,24 @@
 #' @param penalty        Specifies the IHT penalty; possible values are `BIC` or `AIC` or a numeric value
 #' @param seed           An option to add a seed when training the model
 #' @param exclude        A vector of numbers or covariateId names to exclude from prior
+#' @param forceIntercept Logical: Force intercept coefficient into regularization
 #' @param fitBestSubset  Logical: Fit final subset with no regularization 
 #'
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setIterativeHardThresholding<- function(K, penalty = "bic", seed = NULL, exclude = NULL, fitBestSubset = FALSE){
+setIterativeHardThresholding<- function(K = 10, penalty = "bic", seed = NULL, exclude = NULL, 
+                                        forceIntercept = F,
+                                        fitBestSubset = FALSE){
+  
+  ensure_installed("IterativeHardThresholding")
+  
   if(K<1)
     stop('Invalid maximum number of predictors')
   if(!(penalty %in% c("aic", "bic") || is.numeric(penalty)))
     stop('Penalty must be "aic", "bic" or numeric')
+  if(!is.logical(forceIntercept))
+    stop("forceIntercept must be of type: logical")
   if(!is.logical(fitBestSubset))
     stop("fitBestSubset must be of type: logical")
   if(!class(seed)%in%c('numeric','NULL','integer'))
@@ -42,7 +50,9 @@ setIterativeHardThresholding<- function(K, penalty = "bic", seed = NULL, exclude
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitIterativeHardThresholding', param=list(K = K, penalty = penalty, seed=seed[1], exclude = exclude), name="Iterative Hard Thresholding")
+  result <- list(model='fitIterativeHardThresholding', param=list(K = K, penalty = penalty, seed=seed[1], exclude = exclude, 
+                                                                  forceIntercept = forceIntercept,
+                                                                  fitBestSubset = fitBestSubset), name="Iterative Hard Thresholding")
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -60,9 +70,8 @@ fitIterativeHardThresholding<- function(population, plpData, param, search='adap
   }
   
   # check plpData is coo format:
-  if(!'ffdf'%in%class(plpData$covariates)){
-    ParallelLogger::logError('Iterative Hard Thresholding requires plpData in coo format')
-    stop()
+  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+    stop("Needs correct covariateData")
   }
   
   metaData <- attr(population, 'metaData')
@@ -76,7 +85,9 @@ fitIterativeHardThresholding<- function(population, plpData, param, search='adap
                               modelType = "logistic", 
                               prior = IterativeHardThresholding::createIhtPrior(K  = param$K, 
                                                                                 penalty = param$penalty, 
-                                                                                exclude = param$exclude),
+                                                                                exclude = param$exclude,
+                                                                                forceIntercept = param$forceIntercept,
+                                                                                fitBestSubset = param$fitBestSubset),
                               control = Cyclops::createControl()
                               
                               )
@@ -85,29 +96,34 @@ fitIterativeHardThresholding<- function(population, plpData, param, search='adap
   # TODO get optimal lambda value
   ParallelLogger::logTrace('Returned from fitting to LassoLogisticRegression')
   comp <- Sys.time() - start
-  varImp <- data.frame(covariateId=names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'], 
+  varImp <- data.frame(covariateId=bit64::as.integer64(names(modelTrained$coefficients))[names(modelTrained$coefficients)!='(Intercept)'], 
                        value=modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
   if(sum(abs(varImp$value)>0)==0){
     ParallelLogger::logWarn('No non-zero coefficients')
     varImp <- NULL
   } else {
     ParallelLogger::logInfo('Creating variable importance data frame')
-    #varImp <- varImp[abs(varImp$value)>0,]
-    varImp <- merge(ff::as.ram(plpData$covariateRef), varImp, 
-                    by='covariateId',all=T)
-    varImp$value[is.na(varImp$value)] <- 0
-    varImp <- varImp[order(-abs(varImp$value)),]
-    colnames(varImp)[colnames(varImp)=='value'] <- 'covariateValue'
+    
+    plpData$covariateData$varImp <- varImp
+    on.exit(plpData$covariateData$varImp <- NULL, add = T)
+    
+    varImp <- plpData$covariateData$covariateRef %>% 
+      dplyr::left_join(plpData$covariateData$varImp) %>%
+      dplyr::mutate(covariateValue = ifelse(is.na(.data$value), 0, .data$value)) %>%
+      dplyr::select(-.data$value) %>%
+      dplyr::arrange(-abs(.data$covariateValue)) %>%
+      dplyr::collect()
   }
   
   #get prediction on test set:
   ParallelLogger::logInfo('Getting predictions on train set')
-  prediction <- predict.plp(plpModel=list(model = modelTrained),
+  prediction <- predict_plp(plpModel=list(model = modelTrained),
                             population = population, 
                             plpData = plpData)
   
   result <- list(model = modelTrained,
                  modelSettings = list(model='iht', modelParameters=param), #todo get lambda as param
+                 hyperParamSearch = NULL, #todo
                  metaData = plpData$metaData,
                  populationSettings = attr(population, 'metaData'),
                  outcomeId=outcomeId,# can use populationSettings$outcomeId?
