@@ -77,7 +77,6 @@
 #' @param covariateSettings            An object of type \code{covariateSettings} as created using the
 #'                                     \code{createCovariateSettings} function in the
 #'                                     \code{FeatureExtraction} package.
-#' @param excludeDrugsFromCovariates   A redundant option                                     
 #'
 #' @return
 #' Returns an object of type \code{plpData}, containing information on the cohorts, their
@@ -109,8 +108,7 @@ getPlpData <- function(connectionDetails,
                        firstExposureOnly = FALSE,
                        washoutPeriod = 0,
                        sampleSize = NULL,
-                       covariateSettings,
-                       excludeDrugsFromCovariates = FALSE) {
+                       covariateSettings) {
   if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
     stop("Study start date must have format YYYYMMDD")
   if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)

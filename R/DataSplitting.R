@@ -1,5 +1,5 @@
-# @file dataSplitting.R
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# @file DataSplitting.R
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -15,81 +15,239 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Split data into random subsets stratified by class
+
+#' Create the settings for defining how the plpData are split into test/validation/train sets using 
+#' default splitting functions (either random stratified by outcome, time or subject splitting).
 #'
 #' @details
-#' Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId belongs to the test
-#' set and a positive integer index value indicating the rowId's cross valiation fold within the train
-#' set.
+#' Returns an object of class \code{splitSettings} that specifies the splitting function that will be called and the settings
 #'
-#' @param population   An object created using createStudyPopulation().
-#' @param test         A real number between 0 and 1 indicating the test set fraction of the data
-#' @param train        A real number between 0 and 1 indicating the train set fraction of the data.
-#'                     If not set train is equal to 1 - test
-#' @param nfold        An integer >= 1 specifying the number of folds used in cross validation
-#' @param seed         If set a fixed seed is used, otherwise a random split is performed
+#' @param testFraction         (numeric) A real number between 0 and 1 indicating the test set fraction of the data
+#' @param trainFraction        (numeric) A real number between 0 and 1 indicating the train set fraction of the data.
+#'                             If not set train is equal to 1 - test
+#' @param nfold             (numeric) An integer > 1 specifying the number of folds used in cross validation
+#' @param splitSeed         (numeric) A seed to use when splitting the data for reproducibility (if not set a random number will be generated)
+#' @param type              (character) Choice of:  \itemize{
+#'                                         \item{'stratified'}{ Each data point is randomly assigned into the test or a train fold set but this is done stratified such that the outcome rate is consistent in each partition }
+#'                                         \item{'time')}{ Older data are assigned into the training set and newer data are assigned into the test set}
+#'                                         \item{'subject'}{ Data are partitioned by subject, if a subject is in the data more than once, all the data points for the subject are assigned either into the test data or into the train data (not both).}
+#'                                         } 
 #'
 #' @return
-#' A dataframe containing the columns: rowId and index
+#' An object of class \code{splitSettings}
 #' @export
-personSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL){
-  .Deprecated("randomSplitter")
-  result <- randomSplitter(population=population, test = test, train = train, nfold = nfold, seed = seed)
+createDefaultSplitSetting <- function(testFraction=0.25, 
+                                  trainFraction = 0.75, 
+                                  splitSeed=sample(100000,1), 
+                                  nfold=3,
+                               type = 'stratified'){
+  
+  checkIsClass(testFraction, c('numeric','integer'))
+  checkHigherEqual(testFraction,0)
+  checkHigher(-1*testFraction,-1)
+  
+  checkIsClass(trainFraction, c('numeric','integer'))
+  checkHigher(trainFraction,0)
+  checkHigherEqual(-1*trainFraction,-1)
+  
+  checkIsClass(nfold, c('numeric','integer'))
+  checkHigher(nfold, 1)
+  
+  checkIsClass(splitSeed, c('numeric','integer'))
+  
+  # add type check
+  checkIsClass(type, c("character"))
+  if(!type %in% c('stratified','time','subject')){
+    ParallelLogger::logError("Invalid type setting.  Pick from: 'stratified','time','subject'")
+  }
+  
+  splitSettings <- list(test = testFraction,
+                       train = trainFraction,
+                       seed = splitSeed,
+                       nfold =  nfold)
+  
+  if(type == 'stratified'){
+    attr(splitSettings, "fun") <- "randomSplitter"
+  }
+  if(type == 'time'){
+    attr(splitSettings, "fun") <- "timeSplitter"
+  }
+  if(type == 'subject'){
+    attr(splitSettings, "fun") <- "subjectSplitter"
+  }
+  class(splitSettings) <- "splitSettings"
+  return(splitSettings)
+}
+
+
+# may want to remove 94 -126 as this makes it less flexible
+
+#' Split the plpData into test/train sets using a splitting settings of class \code{splitSettings}
+#'
+#' @details
+#' Returns a list containing the training data (Train) and optionally the test data (Test).  Train is an Andromeda object containing
+#' \itemize{\item{covariates}{ a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the train data }
+#'          \item{covariateRef}{ a table with the covariate information}
+#'          \item{labels)}{ a table (rowId, outcomeCount, ...) for each data point in the train data (outcomeCount is the class label) }
+#'          \item{folds}{ a table (rowId, index) specifying which training fold each data point is in.}
+#'          } 
+#' Test is an Andromeda object containing
+#' \itemize{\item{covariates}{ a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the test data }
+#'          \item{covariateRef}{ a table with the covariate information}
+#'          \item{labels)}{ a table (rowId, outcomeCount, ...) for each data point in the test data (outcomeCount is the class label) }
+#'          } 
+#' 
+#' 
+#'
+#' @param plpData                          An object of type \code{plpData} - the patient level prediction
+#'                                         data extracted from the CDM.
+#' @param population                       The population created using \code{createStudyPopulation} that define who will be used to develop the model
+#' @param splitSettings                    An object of type \code{splitSettings} specifying the split - the default can be created using \code{createDefaultSplitSetting}
+#'                                         
+#'
+#' @return
+#' An object of class \code{splitSettings}
+#' @export
+splitData <- function(plpData = plpData,
+                      population = population,
+                      splitSettings = splitSettings){
+  
+  fun <- attr(splitSettings, "fun")
+  args <- list(population = population,
+               splitSettings = splitSettings)
+  splitId <- do.call(eval(parse(text = fun)), args)
+
+  # now separate the data:
+  if(length(splitId$index<0)==0){
+    # NO TEST SET
+    trainId <- splitId[splitId$index>0,]
+    trainData <- list()
+    trainData$labels <- population %>% dplyr::filter(.data$rowId %in% trainId$rowId)
+    trainData$folds <- trainId
+  
+    #restrict to trainIds
+    if(length(trainId$rowId)<200000){
+      trainData$covariateData <- limitCovariatesToPopulation(
+        plpData$covariateData, 
+        trainId$rowId
+        )
+    } else{
+      trainData$covariateData <- batchRestrict(
+        plpData$covariateData, 
+        data.frame(rowId = trainId$rowId), 
+        sizeN = 10000000
+        )
+    }
+    
+    #trainData$covariateData <- Andromeda::andromeda()
+    #trainData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% trainId$rowId)
+    #trainData$covariateData$covariateRef <- plpData$covariateRef
+    attr(trainData, "metaData") <- list(
+      outcomeId = attr(population, "metaData")$outcomeId,
+      cohortId = attr(plpData, "metaData")$call$cohortId,
+      cdmDatabaseSchema = attr(plpData, "metaData")$call$cdmDatabaseSchema,
+      plpDataSettings = list(
+        firstExposureOnly = attr(plpData, "metaData")$firstExposureOnly, 
+        washoutPeriod = attr(plpData, "metaData")$washoutPeriod, 
+        sampleSize = attr(plpData, "metaData")$sampleSize,
+        studyStartDate =  attr(plpData, "metaData")$studyStartDate,
+        studyEndDate = attr(plpData, "metaData")$studyEndDate
+      ),
+      covariateSettings = attr(plpData, "metaData")$call$covariateSettings,
+      populationSettings = attr(population, "metaData")$populationSettings,
+      attrition = attr(population, "metaData")$attrition,
+      splitSettings = splitSettings
+    )
+    class(trainData$covariateData) <- "CovariateData"
+    
+    result <- list(Train =  trainData)
+    
+  }else{
+    trainId <- splitId[splitId$index>0,]
+    trainData <- list()
+    trainData$labels <- population %>% dplyr::filter(.data$rowId %in% trainId$rowId)
+    trainData$folds <- trainId
+    #trainData$covariateData <- Andromeda::andromeda()
+    #trainData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% trainId$rowId)
+    #trainData$covariateData$covariateRef <- plpData$covariateRef
+    #restrict to trainIds
+    if(length(trainId$rowId)<200000){
+      trainData$covariateData <- limitCovariatesToPopulation(
+        plpData$covariateData, 
+        trainId$rowId
+      )
+    } else{
+      trainData$covariateData <- batchRestrict(
+        plpData$covariateData, 
+        data.frame(rowId = trainId$rowId), 
+        sizeN = 10000000
+        )
+    }
+    attr(trainData, "metaData") <- list(
+      outcomeId = attr(population, "metaData")$outcomeId,
+      cohortId = attr(plpData, "metaData")$call$cohortId,
+      cdmDatabaseSchema = attr(plpData, "metaData")$call$cdmDatabaseSchema,
+      plpDataSettings = list(
+        firstExposureOnly = attr(plpData, "metaData")$firstExposureOnly, 
+        washoutPeriod = attr(plpData, "metaData")$washoutPeriod, 
+        sampleSize = attr(plpData, "metaData")$sampleSize,
+        studyStartDate =  attr(plpData, "metaData")$studyStartDate,
+        studyEndDate = attr(plpData, "metaData")$studyEndDate
+      ),
+      covariateSettings = attr(plpData, "metaData")$call$covariateSettings,
+      populationSettings = attr(population, "metaData")$populationSettings,
+      attrition = attr(population, "metaData")$attrition,
+      splitSettings = splitSettings
+      )
+    class(trainData$covariateData) <- "CovariateData"
+    
+    testId <- splitId[splitId$index<0,]
+    testData <- list()
+    testData$labels <- population %>% dplyr::filter(.data$rowId %in% testId$rowId)
+    #testData$covariateData <- Andromeda::andromeda()
+    #testData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% testId$rowId)
+    #testData$covariateData$covariateRef <- plpData$covariateRef
+    if(length(testIdId$rowId)<200000){
+      testIdData$covariateData <- limitCovariatesToPopulation(
+        plpData$covariateData, 
+        testId$rowId
+      )
+    } else{
+      trainData$covariateData <- batchRestrict(plpData$covariateData, 
+        data.frame(rowId = testId$rowId), 
+        sizeN = 10000000)
+    }
+    class(testData$covariateData) <- "CovariateData"
+    
+    result <- list(
+      Train =  trainData,
+      Test = testData
+      )
+  }
+  
+  class(result) <- 'splitData'
   return(result)
 }
 
-#' Split data into random subsets stratified by class
-#'
-#' @details
-#' Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId belongs to the test
-#' set and a positive integer index value indicating the rowId's cross valiation fold within the train
-#' set.
-#'
-#' @param population   An object created using createStudyPopulation().
-#' @param test         A real number between 0 and 1 indicating the test set fraction of the data
-#' @param train        A real number between 0 and 1 indicating the train set fraction of the data.
-#'                     If not set train is equal to 1 - test
-#' @param nfold        An integer >= 1 specifying the number of folds used in cross validation
-#' @param seed         If set a fixed seed is used, otherwise a random split is performed
-#'
-#' @return
-#' A dataframe containing the columns: rowId and index
-#' @export
-randomSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
 
-  # check logger
-  if(length(ParallelLogger::getLoggers())==0){
-    logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                        threshold = "INFO",
-                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
-    ParallelLogger::registerLogger(logger)
-  }
+randomSplitter <- function(population, splitSettings) {
+  
+  test <- splitSettings$test
+  train <- splitSettings$train 
+  nfold <- splitSettings$nfold
+  seed <- splitSettings$seed
+  
+  checkInputsSplit(test, train, nfold, seed)
 
   # parameter checking
   if (!is.null(seed))
     set.seed(seed)
 
-  if (!class(nfold) %in% c("numeric","integer") | nfold < 1) {
-    stop("nfold must be an integer 1 or greater")
-  }
-
-  if (!class(test) %in% c("numeric","integer") | test <= 0 | test >= 1) {
-    stop("test must be between 0 and 1")
-  }
-  
-  if (is.null(train)) {
-    train <- 1 - test
-  }
-  
-  if (!class(train) %in% c("numeric","integer") | train <= 0 | train > 1-test) {
-    stop("train must be between 0 and 1-test")
-  }
-
   if (length(table(population$outcomeCount)) <= 1 | sum(population$outcomeCount > 0) < 10) {
     stop("Outcome only occurs in fewer than 10 people or only one class")
   }
 
-  if (floor(sum(population$outcomeCount > 0) * test/nfold) == 0) {
+  if (floor(sum(population$outcomeCount > 0) * train/nfold) < 10) {
     stop("Insufficient outcomes for choosen nfold value, please reduce")
   }
   
@@ -115,8 +273,10 @@ randomSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   nonPpl.group <- rep(0, length(nonPpl))
   
   # set test set (index=-1)
-  test.ind <- 1:floor(length(nonPpl) * test)
-  nonPpl.group[test.ind] <- -1
+  if(test>0){
+    test.ind <- 1:floor(length(nonPpl) * test)
+    nonPpl.group[test.ind] <- -1
+  }
   
   # set train set (index>0)
   train.ind <- (floor(length(nonPpl) * test) + round(length(nonPpl) * (1-train-test)) + 1):length(nonPpl) 
@@ -129,8 +289,10 @@ randomSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
     
   # same for outcome = 1
   outPpl.group <- rep(0, length(outPpl))
-  test.ind <- 1:floor(length(outPpl) * test)
-  outPpl.group[test.ind] <- -1
+  if(test>0){
+    test.ind <- 1:floor(length(outPpl) * test)
+    outPpl.group[test.ind] <- -1
+  }
   train.ind <- (floor(length(outPpl) * test) + round(length(outPpl) * (1-train-test)) + 1):length(outPpl)
   reps <- floor(length(train.ind)/nfold)
   leftOver <- length(train.ind)%%nfold
@@ -152,51 +314,27 @@ randomSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed
   return(split)
 }
 
-#' Split test/train data by time and then partitions training set into random folds stratified by
-#' class
-#'
-#' @details
-#' Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId belongs to the test
-#' set and a positive integer index value indicating the rowId's cross valiation fold within the train
-#' set.
-#'
-#' @param population   An object created using createStudyPopulation().
-#' @param test         A real number between 0 and 1 indicating the test set fraction of the data
-#' @param train        A real number between 0 and 1 indicating the training set fraction of the data
-#' @param nfold        An integer >= 1 specifying the number of folds used in cross validation
-#' @param seed         If set a fixed seed is used, otherwise a random split is performed
-#'
-#' @return
-#' A dataframe containing the columns: rowId and index
-#' @export
-timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
-
-  if(length(ParallelLogger::getLoggers())==0){
-    logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                        threshold = "INFO",
-                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
-    ParallelLogger::registerLogger(logger)
-  }
+timeSplitter <- function(population, splitSettings) {
+  
+  test <- splitSettings$test
+  train <- splitSettings$train 
+  nfold <- splitSettings$nfold
+  seed <- splitSettings$seed
+  
+  checkInputsSplit(test, train, nfold, seed)
   
   # parameter checking
   if (!is.null(seed))
     set.seed(seed)
-  if (!class(nfold) %in% c("numeric","integer") | nfold < 1) {
-    stop("nfold must be an integer 1 or greater")
-  }
-  
-  if (!class(test) %in% c("numeric","integer") | test <= 0 | test >= 1) {
-    stop("test must be between 0 and 1")
-  }
-  
-  if (is.null(train)) {
-    train <- 1 - test
-  }
   
   dates <- as.Date(population$cohortStartDate, format = "%Y-%m-%d")
   # find date that test frac have greater than - set dates older than this to this date
   dates.ord <- dates[order(dates)]
-  testDate <- dates.ord[round(length(dates.ord) * (1 - test))]
+  if(test>0){
+    testDate <- dates.ord[round(length(dates.ord) * (1 - test))]
+  } else{
+    testDate <- dates.ord[length(dates.ord)] # if no test use all for train
+  }
 
   outPpl <- data.frame(rowId = population$rowId[population$outcomeCount == 1],
                        date = dates[population$outcomeCount ==
@@ -246,60 +384,23 @@ timeSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed =
 }
 
 
-
-#' Split data when patients are in the data multiple times such that the same patient is always either in the 
-#' train set or the test set (the same patient cannot be in both the test and train set at different times)
-#'
-#' @details
-#' Returns a dataframe of rowIds and indexes with a -1 index indicating the rowId belongs to the test
-#' set and a positive integer index value indicating the rowId's cross valiation fold within the train
-#' set.
-#'
-#' @param population   An object created using createStudyPopulation().
-#' @param test         A real number between 0 and 1 indicating the test set fraction of the data
-#' @param train        A real number between 0 and 1 indicating the train set fraction of the data.
-#'                     If not set train is equal to 1 - test
-#' @param nfold        An integer >= 1 specifying the number of folds used in cross validation
-#' @param seed         If set a fixed seed is used, otherwise a random split is performed
-#'
-#' @return
-#' A dataframe containing the columns: rowId and index
-#' @export
-subjectSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, seed = NULL) {
+subjectSplitter <- function(population, splitSettings) {
+  test <- splitSettings$test
+  train <- splitSettings$train 
+  nfold <- splitSettings$nfold
+  seed <- splitSettings$seed
   
-  # check logger
-  if(length(ParallelLogger::getLoggers())==0){
-    logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                           threshold = "INFO",
-                                           appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
-    ParallelLogger::registerLogger(logger)
-  }
-  
+  checkInputsSplit(test, train, nfold, seed)
+    
   # parameter checking
   if (!is.null(seed))
     set.seed(seed)
-  
-  if (!class(nfold) %in% c("numeric","integer") | nfold < 1) {
-    stop("nfold must be an integer 1 or greater")
-  }
-  
-  if (!class(test) %in% c("numeric","integer") | test <= 0 | test >= 1) {
-    stop("test must be between 0 and 1")
-  }
-  
-  if (is.null(train)) {
-    train <- 1 - test
-  }
-  
-  if (!class(train) %in% c("numeric","integer") | train <= 0 | train > 1-test) {
-    stop("train must be between 0 and 1-test")
-  }
   
   if (length(table(population$outcomeCount)) <= 1 | sum(population$outcomeCount > 0) < 10) {
     stop("Outcome only occurs in fewer than 10 people or only one class")
   }
   
-  if (floor(sum(population$outcomeCount > 0) * test/nfold) == 0) {
+  if (floor(sum(population$outcomeCount > 0) * train/nfold) < 10) {
     stop("Insufficient outcomes for choosen nfold value, please reduce")
   }
   
@@ -320,20 +421,19 @@ subjectSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, see
   nonPpl <- setdiff(unique(population$subjectId), outPpl)
   
   # give random number to all and shuffle then assign to test/train/cv if using set.seed() then use
-  # permutation <- stats::runif(length(nonPpl)+length(outPpl)) and nonPpl <-
-  # nonPpl[order(permutation[1:length(nonPpl)])] and outPpl <-
-  # outPpl[order(permutation[(1+length(nonPpl)):length(permutation)])]
   nonPpl <- nonPpl[order(stats::runif(length(nonPpl)))]
   outPpl <- outPpl[order(stats::runif(length(outPpl)))]
   
   # default all to not included (index=0)
   nonPplGroup <- rep(0, length(nonPpl))
   
+  if(test>0){
   # set test set (index=-1)
   # use floor(x + 0.5) to get rounding to nearest integer 
   # instead of to nearest even number when x is .5
-  testInd <- 1:floor(length(nonPpl) * test + 0.5) 
-  nonPplGroup[testInd] <- -1
+    testInd <- 1:floor(length(nonPpl) * test + 0.5) 
+    nonPplGroup[testInd] <- -1
+  }
   
   # set train set (index>0)
   trainInd <- floor(length(nonPpl) * test + length(nonPpl) * (1-train-test) + 1.5):length(nonPpl) 
@@ -348,8 +448,10 @@ subjectSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, see
   
   # same for outcome = 1
   outPplGroup <- rep(0, length(outPpl))
-  testInd <- 1:floor(length(outPpl) * test + 0.5)
-  outPplGroup[testInd] <- -1
+  if(test>0){
+    testInd <- 1:floor(length(outPpl) * test + 0.5)
+    outPplGroup[testInd] <- -1
+  }
   trainInd <- floor(length(outPpl) * test + length(outPpl) * (1-train-test) + 1.5):length(outPpl)
   reps <- floor(length(trainInd)/nfold)
   leftOver <- length(trainInd)%%nfold
@@ -374,4 +476,23 @@ subjectSplitter <- function(population, test = 0.3, train = NULL, nfold = 3, see
   
   # return index vector
   return(split)
+}
+
+checkInputsSplit <- function(test, train, nfold, seed){
+  ParallelLogger::logDebug(paste0('test: ', test))
+  checkIsClass(test, c('numeric','integer'))
+  checkHigherEqual(test,0)
+  checkHigher(-1*test,-1)
+  
+  ParallelLogger::logDebug(paste0('train: ', train))
+  checkIsClass(train, c('numeric','integer'))
+  checkHigherEqual(train,0)
+  checkHigher(-1*train,-1)
+  
+  ParallelLogger::logDebug(paste0('nfold: ', nfold))
+  checkIsClass(nfold, c('numeric','integer'))
+  checkHigher(nfold, 1)
+  
+  ParallelLogger::logInfo(paste0('seed: ', seed))
+  checkIsClass(seed, c('numeric','integer'))
 }

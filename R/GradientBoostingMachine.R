@@ -67,14 +67,30 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitGradientBoostingMachine', 
-                 param= split(expand.grid(ntrees=ntrees, earlyStopRound=earlyStopRound,
-                                          maxDepth=maxDepth, minRows=minRows, 
-                                          learnRate=learnRate, nthread=nthread,
-                                          seed= seed[1] ),
-                              1:(length(ntrees)*length(maxDepth)*length(minRows)*length(learnRate)*length(earlyStopRound)  )),
-                 name='Gradient boosting machine'
+  
+  param <- split(
+    expand.grid(
+      ntrees=ntrees, 
+      earlyStopRound=earlyStopRound,
+      maxDepth=maxDepth, 
+      minRows=minRows, 
+      learnRate=learnRate
+      ),
+    1:(length(ntrees)*length(maxDepth)*length(minRows)*length(learnRate)*length(earlyStopRound))
   )
+  
+  attr(param, 'settings') <- list(
+    modeType = 'GBM',
+    seed = seed[1],
+    modelName = "Gradient Boosting Machine",
+    threads = nthread[1]
+  )
+  
+  result <- list(
+    fitFunction = "fitGradientBoostingMachine",
+    param = param
+  )
+
   class(result) <- 'modelSettings' 
   
   return(result)
@@ -82,47 +98,37 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
 
 
 #xgboost
-fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
-                        outcomeId, cohortId, ...){
+fitGradientBoostingMachine <- function(trainData, param, search = 'grid'){
   
-  if (!FeatureExtraction::isCovariateData(plpData$covariateData)){
+  if (!FeatureExtraction::isCovariateData(trainData$covariateData)){
     stop("Needs correct covariateData")
   }
   
-  # check logger
-  if(length(ParallelLogger::getLoggers())==0){
-    logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                        threshold = "INFO",
-                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
-    ParallelLogger::registerLogger(logger)
-  }
+  settings <- attr(param, 'settings')
+  ParallelLogger::logInfo(paste0('Training ', settings$modelName))
   
-  if(!quiet)
-    ParallelLogger::logTrace('Training GBM model')
-  
-  if(param[[1]]$seed!='NULL')
-    set.seed(param[[1]]$seed)
-  
-  metaData <- attr(population, 'metaData')
-  if(!is.null(population$indexes))
-    population <- population[population$indexes>0,]
-  attr(population, 'metaData') <- metaData
-  #TODO - how to incorporate indexes?
+  set.seed(settings$seed)
   
   # convert data into sparse Matrix:
-  result <- toSparseM(plpData,population,map=NULL)
-  data <- result$data
+  result <- toSparseM(
+    trainData,
+    map=NULL
+    )
   
-  # now get population of interest
-  data <- data[population$rowId, , drop = F]
+  dataMatrix <- result$data
+  labels <- result$labels
   
   # set test/train sets (for printing performance as it trains)
-  ParallelLogger::logInfo(paste0('Training gradient boosting machine model on train set containing ', nrow(population), ' people with ',sum(population$outcomeCount>0), ' outcomes'))
   start <- Sys.time()
   
   # pick the best hyper-params and then do final training on all data...
-  datas <- list(data=data, population=population)
-  param.sel <- lapply(param, function(x) do.call("gbm_model2", c(datas,x)  ))
+  datas <- list(
+    data = data, 
+    labels = labels
+    )
+  
+  param.sel <- lapply(param, function(x) do.call("gbm_model", c(datas,x)  ))
+  
   hyperSummary <- do.call("rbind", lapply(param.sel, function(x) x$hyperSum))
   hyperSummary <- as.data.frame(hyperSummary)
   hyperSummary$auc <- unlist(lapply(param.sel, function(x) x$auc)) # new edit
@@ -135,13 +141,13 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   
   
   #ParallelLogger::logTrace("Final train")
-  trainedModel <- do.call("gbm_model2", c(param,datas)  )$model
+  trainedModel <- do.call("gbm_model", c(param,datas)  )$model
   
   comp <- Sys.time() - start
   if(!quiet)
     ParallelLogger::logInfo(paste0('Model GBM trained - took:',  format(comp, digits=3)))
   
-  varImp <- tryCatch({xgboost::xgb.importance(model =trainedModel)},
+  varImp <- tryCatch({xgboost::xgb.importance(model = trainedModel)},
                      error = function(e){
                        ParallelLogger::logInfo(e);
                        return(NULL)
@@ -192,25 +198,24 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   return(result)
 }
 
-gbm_model2 <- function(data, population,
+gbm_model <- function(data, labels,
                        maxDepth=6, minRows=20, nthread=20,
                        ntrees=100, learnRate=0.1, final=F, earlyStopRound=NULL, ...){
   
   if(missing(final)){
     final <- F
   }
-  if(missing(population)){
-    stop('No population')
+  if(missing(labels)){
+    stop('No labels')
   }
-  if(!is.null(population$indexes) && final==F){
-    ParallelLogger::logInfo(paste0("Training GBM with ",length(unique(population$indexes))," fold CV"))
-    index_vect <- unique(population$indexes)
+  if(!is.null(labels$index) && final==F){
+    ParallelLogger::logInfo(paste0("Training GBM with ",length(unique(labels$index))," fold CV"))
+    index_vect <- unique(labels$index)
     ParallelLogger::logDebug(paste0('index vect: ', paste0(index_vect, collapse='-')))
     perform <- c()
     
     # create prediction matrix to store all predictions
-    predictionMat <- population
-    ParallelLogger::logDebug(paste0('population nrow: ', nrow(population)))
+    predictionMat <- labels
     
     predictionMat$value <- 0
     attr(predictionMat, "metaData") <- list(predictionType = "binary")

@@ -25,8 +25,7 @@
 #' The user can define the machine learning model to train (regularised logistic regression, random forest,
 #' gradient boosting machine, neural network and )
 #' 
-#' @param population                       The population created using createStudyPopulation() who will have their risks predicted
-#' @param data                             An object of type \code{plpData} - the patient level prediction
+#' @param trainData                        An object of type \code{TrainData} created using \code{splitData}
 #'                                         data extracted from the CDM.
 #' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
@@ -36,10 +35,7 @@
 #'                                         \item{GLMclassifier ()}{ A generalised linear model}
 #'                                         \item{KNNclassifier()}{ A KNN model}
 #'                                         }
-#' @param cohortId                         Id of study cohort
-#' @param outcomeId                        Id of outcome cohort
-#' @param minCovariateFraction             The minimum fraction of the target popualtion who have a variable for it to be included in the model training 
-#' @param normalizeData                    Whether to normalise the data before model fitting
+#' @param search                           The search strategy for the hyper-parameter selection (currently not used)                                        
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
@@ -52,48 +48,52 @@
 #' \item{trainingTime}{The time taken to train the classifier}
 #'
 #'
-
 #' @export
-fitPlp <- function(population, data,   modelSettings,#featureSettings, 
-                   cohortId, outcomeId, minCovariateFraction=0.001, normalizeData=T){
+fitPlp <- function(
+  trainData,   
+  modelSettings,
+  search = "grid")
+  {
   
-  if(is.null(population))
-    stop('Population is NULL')
-  if(is.null(data))
-    stop('plpData is NULL')
+  if(is.null(trainData))
+    stop('trainData is NULL')
+  if(is.null(trainData$covariateData))
+    stop('covariateData is NULL')
+  checkIsClass(trainData$covariateData, 'covariateData')
   if(is.null(modelSettings$model))
     stop('No model specified')
+  checkIsClass(modelSettings, 'modelSettings')
   
-  plpData <- data
   #=========================================================
   # run through pipeline list and apply:
   #=========================================================
-  
-  # normalise the data:
-  removeRedundancy <- ifelse("timeId" %in%colnames(plpData$covariateData$covariates), F, T)
-  plpData$covariateData <- tryCatch({
-    suppressWarnings(FeatureExtraction::tidyCovariateData(covariateData=data$covariateData, 
-                                                          minFraction = minCovariateFraction,
-                                                          normalize = normalizeData,
-                                                          removeRedundancy = removeRedundancy))
-  })
-  
-  Andromeda::createIndex(plpData$covariateData$covariates, c('rowId'),
-                         indexName = 'restrict_pop_rowId') # is this needed now?
+
+  # add index here or somewhere else?
+  #Andromeda::createIndex(trainData$covariateData$covariates, c('rowId'),
+  #                       indexName = 'restrict_pop_rowId') # is this needed now?
   
   # Now apply the classifier:
-  fun <- modelSettings$model
-  args <- list(plpData =plpData,param =modelSettings$param, 
-               population=population, cohortId=cohortId, outcomeId=outcomeId)
+  fun <- modelSettings$fitFunction
+  args <- list(
+    trainData = trainData,
+    param = modelSettings$param,
+    search = search
+    )
   plpModel <- do.call(fun, args)
   ParallelLogger::logTrace('Returned from classifier function')
-  # add pre-processing details
-  plpModel$metaData$preprocessSettings <- attr(plpData$covariateData, "metaData") 
+  
+  # add pre-processing details TODO expand this
+  plpModel$metaData$preprocessSettings <- attr(trainData$covariateData, "metaData") 
+  
+  #plpModel$settings$dataExtraction <- list(cohortId, outcomeId, covariateSettings)
+  #plpModel$settings$population <- populationSettings
+  #plpModel$settings$featureEngineering <- ...
+  #plpModel$settings$preprocess <- ...
+  #plpModel$dataInfo$attrition <- ...
+  # save all seeds
   
   ParallelLogger::logTrace('Creating prediction function')
   plpModel$predict <- createTransform(plpModel)
-  ParallelLogger::logTrace('Adding index')
-  plpModel$index <- population$indexes  ##?- dont think we need this, just the seed instead
   class(plpModel) <- 'plpModel'
   
   return(plpModel)
@@ -102,10 +102,13 @@ fitPlp <- function(population, data,   modelSettings,#featureSettings,
 
 #NEED TO UPDATE....
 # fucntion for implementing the pre-processing (normalisation and redundant features removal)
-applyTidyCovariateData <- function(covariateData,preprocessSettings){
+applyTidyCovariateData <- function(
+  covariateData,
+  preprocessSettings
+)
+{
 
-  if (!FeatureExtraction::isCovariateData(covariateData))
-    stop("Data not of class CovariateData")
+  if(!FeatureExtraction::isCovariateData(covariateData)){stop("Data not of class CovariateData")}
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
@@ -153,8 +156,11 @@ applyTidyCovariateData <- function(covariateData,preprocessSettings){
   }
   
   # adding index for restrict to pop
-  Andromeda::createIndex(newCovariateData$covariates, c('rowId'),
-                         indexName = 'ncovariates_rowId')
+  Andromeda::createIndex(
+    newCovariateData$covariates, 
+    c('rowId'),
+    indexName = 'ncovariates_rowId'
+    )
   
   
   class(newCovariateData) <- "CovariateData"

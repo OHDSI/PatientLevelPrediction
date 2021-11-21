@@ -51,14 +51,6 @@ applyModel <- function(population,
                        databaseOutput = NULL,
                        silent = F) {
   
-  # check logger
-  if(length(ParallelLogger::getLoggers())==0){
-    logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                        threshold = "INFO",
-                                        appenders = list(ParallelLogger::createConsoleAppender(layout = 'layoutTimestamp')))
-    ParallelLogger::registerLogger(logger)
-  }
-  
   # check input:
   if (is.null(population))
     stop("NULL population")
@@ -97,39 +89,13 @@ applyModel <- function(population,
   if (!silent)
     ParallelLogger::logInfo(paste("Starting evaulation at ", Sys.time()))
 
-  performance <- evaluatePlp(prediction, plpData)
+  performance <- evaluatePlp(prediction)
 
-  # reformatting the performance 
+  # add analysis to results
   analysisId <-   '000000'
   if(!is.null(plpModel$analysisId)){
     analysisId <-   plpModel$analysisId
   }
-  
-  nr1 <- length(unlist(performance$evaluationStatistics[-1]))
-  performance$evaluationStatistics <- cbind(analysisId= rep(analysisId,nr1),
-                                               Eval=rep('validation', nr1),
-                                               Metric = names(unlist(performance$evaluationStatistics[-1])),
-                                               Value = unlist(performance$evaluationStatistics[-1])
-                                               )
-  nr1 <- nrow(performance$thresholdSummary)
-  performance$thresholdSummary <- tryCatch({cbind(analysisId=rep(analysisId,nr1),
-                                              Eval=rep('validation', nr1),
-                                              performance$thresholdSummary)}, 
-                                           error = function(e){return(NULL)})
-  nr1 <- nrow(performance$demographicSummary)
-  if(!is.null(performance$demographicSummary)){
-  performance$demographicSummary <- cbind(analysisId=rep(analysisId,nr1),
-                                        Eval=rep('validation', nr1),
-                                        performance$demographicSummary)
-  }
-  nr1 <- nrow(performance$calibrationSummary)
-  performance$calibrationSummary <- cbind(analysisId=rep(analysisId,nr1),
-                                          Eval=rep('validation', nr1),
-                                          performance$calibrationSummary)
-  nr1 <- nrow(performance$predictionDistribution)
-  performance$predictionDistribution <- tryCatch({cbind(analysisId=rep(analysisId,nr1),
-                                          Eval=rep('validation', nr1),
-                                          performance$predictionDistribution)}, error = function(e){return(NULL)})
   
   delta <- start.pred - Sys.time()
   if (!silent)
@@ -157,12 +123,12 @@ applyModel <- function(population,
                  performanceEvaluation = performance,
                  inputSetting = list(outcomeId=attr(population, "metaData")$outcomeId,
                                  cohortId= plpData$metaData$call$cohortId,
-                                 database = plpData$metaData$call$cdmDatabaseSchema),
+                                 database = plpData$metaData$call$cdmDatabaseSchema), # add covariate/pop/model settings
                  executionSummary = executionSummary,
                  model = list(model='applying plp model',
                               modelAnalysisId = plpModel$analysisId,
                               modelSettings = plpModel$modelSettings),
-                 analysisRef=list(analysisId=NULL,
+                 analysisRef=list(analysisId = plpModel$analysisId,
                                   analysisName=NULL,
                                   analysisSettings= NULL),
                  covariateSummary=covSum)
@@ -315,8 +281,8 @@ similarPlpData <- function(plpModel=NULL,
   
   # return the popualtion and plpData for the new database
   ParallelLogger::logTrace('Returning population and plpData for new data using model settings')
-  return(list(population=population,
-              plpData=plpData))
+  return(list(population = population,
+              plpData = plpData))
 }
 
 

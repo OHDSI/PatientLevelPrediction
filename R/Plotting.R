@@ -24,9 +24,7 @@
 #'
 #' @param plpData               The plpData object returned by running getPlpData()
 #' @param outcomeId             The cohort id corresponding to the outcome 
-#' @param removeSubjectsWithPriorOutcome  Remove patients who have had the outcome before their target cohort index date from the plot
-#' @param riskWindowStart       (integer) The time-at-risk starts at target cohort index date plus this value
-#' @param riskWindowEnd       (integer) The time-at-risk ends at target cohort index date plus this value 
+#' @param populationSettings    The population settings created using \code{createStudyPopulationSettings}
 #' @param riskTable           (binary) Whether to include a table at the bottom  of the plot showing the number of people at risk over time
 #' @param confInt             (binary) Whether to include a confidence interval
 #' @param yLabel              (string) The label for the y-axis         
@@ -35,13 +33,27 @@
 #' TRUE if it ran 
 #'
 #' @export
-outcomeSurvivalPlot <- function(plpData, outcomeId,
-                                removeSubjectsWithPriorOutcome = T,  
-                                riskWindowStart = 1, 
-                                riskWindowEnd = 3650,
-                                riskTable = T,
-                                confInt= T, 
-                                yLabel = 'Fraction of those who are outcome free in target population'){
+outcomeSurvivalPlot <- function(
+  plpData, 
+  outcomeId,
+  populationSettings = createStudyPopulationSettings(
+    binary = T,
+    includeAllOutcomes = T,
+    firstExposureOnly = FALSE,
+    washoutPeriod = 0,
+    removeSubjectsWithPriorOutcome = TRUE,
+    priorOutcomeLookback = 99999,
+    requireTimeAtRisk = F,
+    riskWindowStart = 1,
+    startAnchor = 'cohort start',
+    riskWindowEnd = 3650,
+    endAnchor = "cohort start"
+  ),
+  riskTable = T,
+  confInt= T, 
+  yLabel = 'Fraction of those who are outcome free in target population'
+)
+{
   
   ensure_installed("survminer")
   if(missing(plpData)){
@@ -57,33 +69,42 @@ outcomeSurvivalPlot <- function(plpData, outcomeId,
     stop('outcome id not in data')
   }
   
+  populationSettings$plpData <- plpData 
+  populationSettings$outcomeId <- outcomeId
   
-  pop <- createStudyPopulation(plpData = plpData, outcomeId = outcomeId, 
-                                                       removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome, 
-                                                       requireTimeAtRisk = F, 
-                                                       riskWindowStart = riskWindowStart, riskWindowEnd = riskWindowEnd)
-  pop$daysToEvent[is.na(pop$daysToEvent)] <- pop$survivalTime[is.na(pop$daysToEvent)]
-  sv <- survival::survfit(survival::Surv(daysToEvent, outcomeCount)~cohortId,#riskDecile, 
-                          pop, 
-                          conf.int = TRUE)
-  if(!is.null(sv$surv)){
-    yliml <- min(sv$surv)
+  population <- do.call(
+    what = 'createStudyPopulation',
+    args = populationSettings
+    )
+  
+  population$daysToEvent[is.na(population$daysToEvent)] <- population$survivalTime[is.na(population$daysToEvent)]
+  survivalFit <- survival::survfit(
+    survival::Surv(daysToEvent, outcomeCount)~cohortId,
+    #riskDecile, 
+    population, 
+    conf.int = TRUE
+  )
+  
+  if(!is.null(survivalFit$surv)){
+    yliml <- min(survivalFit$surv)
   } else{
     yliml <- 0.5
   }
   
-  res <- survminer::ggsurvplot(fit=sv, 
-                               data = pop,
-                               risk.table = riskTable,
-                               pval = F,
-                               xlim = c(0,3650), ylim=c(yliml*0.95,1),
-                               conf.int = confInt,
-                               ggtheme = ggplot2::theme_minimal(),
-                               risk.table.y.text.col = T,
-                               risk.table.y.text = FALSE,
-                               ylab = yLabel
+  result <- survminer::ggsurvplot(
+    fit=survivalFit, 
+    data = population,
+    risk.table = riskTable,
+    pval = F,
+    xlim = c(0,populationSettings$riskWindowEnd), 
+    ylim = c(yliml*0.95,1),
+    conf.int = confInt,
+    ggtheme = ggplot2::theme_minimal(),
+    risk.table.y.text.col = T,
+    risk.table.y.text = FALSE,
+    ylab = yLabel
   )
-  return(res)
+  return(result)
 }
 
 
@@ -92,113 +113,81 @@ outcomeSurvivalPlot <- function(plpData, outcomeId,
 #' @details
 #' Create a directory with all the plots
 #'
-#' @param result                Object returned by the runPlp() function
-#' @param filename              Name of the file where the plot should be saved, for example
-#'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
-#'                              supported file formats.
-#' @param type                  Evaluation data type either 'test', 'val' or 'train'                            
+#' @param plpResult               Object returned by the runPlp() function
+#' @param saveLocation            Name of the directory where the plots should be saved
+#' @param typeColumn              The name of the column specifying the evaluation type 
+#'                                (to stratify the plots)                           
 #'
 #' @return
 #' TRUE if it ran 
 #'
 #' @export
-plotPlp <- function(result, filename, type='test'){
+plotPlp <- function(
+  plpResult, 
+  saveLocation, 
+  typeColumn = 'evaluation',
+  ){
   
   # check inputs
-  
-  if(!dir.exists(file.path(filename, 'plots'))){dir.create(file.path(filename, 'plots'), recursive =T)}
+  if(!dir.exists(saveLocation)){
+    dir.create(saveLocation, recursive =T)
+  }
   
   # run each of the plots:
-  plotSparseRoc(result$performanceEvaluation, 
-                fileName=file.path(filename, 'plots','sparseROC.pdf'), 
-                type = type)
+  plotSparseRoc(
+    plpResult = plpResult,
+    typeColumn = typeColumn,
+    saveLocation = saveLocation,
+    fileName = 'sparseROC.pdf'
+  )
+  
   plotPredictedPDF(result$performanceEvaluation, 
                    fileName=file.path(filename, 'plots','predictedPDF.pdf'),
-                   type = type)
+                   type = evalType)
   plotPreferencePDF(result$performanceEvaluation, 
                     fileName=file.path(filename, 'plots','preferencePDF.pdf'), 
-                    type = type)
+                    type = evalType)
   plotPrecisionRecall(result$performanceEvaluation, 
                       fileName=file.path(filename, 'plots','precisionRecall.pdf'), 
-                      type = type)
+                      type = evalType)
   plotF1Measure(result$performanceEvaluation, 
                 fileName=file.path(filename, 'plots','f1Measure.pdf'), 
-                type = type)
+                type = evalType)
   plotDemographicSummary(result$performanceEvaluation, 
                          fileName=file.path(filename, 'plots','demographicSummary.pdf'),
-                         type = type)
+                         type = evalType)
   # add smooth calibration
   tryCatch({
   plotSmoothCalibration(result = result, smooth = 'loess', nKnots = 5, 
-                        type = type, zoom = 'data', fileName = file.path(filename, 'plots','smooothCalibration.pdf') )
+                        type = evalType, zoom = 'data', fileName = file.path(filename, 'plots','smooothCalibration.pdf') )
     }, error = function(e) {
       return(NULL)
     }) 
   
   plotSparseCalibration(result$performanceEvaluation, 
                         fileName=file.path(filename, 'plots','sparseCalibration.pdf'), 
-                        type = type)
+                        type = evalType)
   plotSparseCalibration2(result$performanceEvaluation, 
                         fileName=file.path(filename, 'plots','sparseCalibrationConventional.pdf'), 
-                        type = type)
+                        type = evalType)
   plotPredictionDistribution(result$performanceEvaluation, 
                              fileName=file.path(filename, 'plots','predictionDistribution.pdf'), 
-                             type = type)
+                             type = evalType)
   
-  plotVariableScatterplot(result$covariateSummary, 
-                          fileName=file.path(filename, 'plots','variableScatterplot.pdf'))
+  plotVariableScatterplot(
+    result$covariateSummary, 
+    fileName=file.path(filename, 'plots','variableScatterplot.pdf')
+  )
+  
   if(type%in%c('test','train')){
-    plotGeneralizability(result$covariateSummary, 
-                               fileName=file.path(filename, 'plots','generalizability.pdf'))
+    plotGeneralizability(
+      result$covariateSummary, 
+      fileName=file.path(filename, 'plots','generalizability.pdf')
+    )
   }
   
   return(TRUE)
 }
-
-#' Plot the ROC curve
-#'
-#' @details
-#' Create a plot showing the Receiver Operator Characteristics (ROC) curve.
-#'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
-#' @param fileName              Name of the file where the plot should be saved, for example
-#'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
-#'                              supported file formats.
-#'
-#' @return
-#' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
-#' format.
-#'
-#' @export
-plotRoc <- function(prediction, fileName = NULL) {
-  if (attr(prediction, "metaData")$predictionType != "binary")
-    stop("Plotting the ROC curve is only implemented for binary classification models")
-  
-  prediction <- prediction[order(-prediction$value), c("value", "outcomeCount")]
-  prediction$sens <- cumsum(prediction$outcomeCount)/sum(prediction$outcomeCount)
-  prediction$fpRate <- cumsum(prediction$outcomeCount == 0)/sum(prediction$outcomeCount == 0)
-  data <- stats::aggregate(fpRate ~ sens, data = prediction, min)
-  data <- stats::aggregate(sens ~ fpRate, data = data, min)
-  data <- rbind(data, data.frame(fpRate = 1, sens = 1))
-  if (nrow(data) < 10000) {
-    # Turn it into a step function:
-    steps <- data.frame(sens = data$sens[1:(nrow(data) - 1)],
-                        fpRate = data$fpRate[2:nrow(data)] - 1e-09)
-    data <- rbind(data, steps)
-    data <- data[order(data$sens, data$fpRate), ]
-  }
-  plot <- ggplot2::ggplot(data, ggplot2::aes(x = .data$fpRate, y = .data$sens)) +
-    ggplot2::geom_abline(intercept = 0, slope = 1) +
-    ggplot2::geom_area(color = grDevices::rgb(0, 0, 0.8, alpha = 0.8),
-                       fill = grDevices::rgb(0, 0, 0.8, alpha = 0.4)) +
-    ggplot2::scale_x_continuous("1 - specificity") +
-    ggplot2::scale_y_continuous("Sensitivity")
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
-}
-
 
 
 
@@ -212,10 +201,10 @@ plotRoc <- function(prediction, fileName = NULL) {
 #' @details
 #' Create a plot showing the Receiver Operator Characteristics (ROC) curve.
 #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -224,33 +213,57 @@ plotRoc <- function(prediction, fileName = NULL) {
 #' format.
 #'
 #' @export
-plotSparseRoc <- function(evaluation,type='test', fileName=NULL){
+plotSparseRoc <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
+  fileName = 'roc.png'
+){
   
-  if(is.null(evaluation$thresholdSummary$Eval)){
-    evaluation$thresholdSummary$Eval <- type
-  }
-  ind <- evaluation$thresholdSummary$Eval==type
+  evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary[,typeColumn])
   
-  x<- evaluation$thresholdSummary[ind,c('falsePositiveRate','sensitivity')]
-  x <- x[order(x$falsePositiveRate, x$sensitivity),]
+  plots <- list()
+  length(plots) <- length(evalTypes)
   
-  # add the bit to get the step
-  stepsExtra <- cbind(x[-1,1], x[-nrow(x),2])
-  colnames( stepsExtra) <- colnames(x)
-  x <- rbind(c(1,1), x, stepsExtra, c(0,0))
-  x <- x[order(x$falsePositiveRate, x$sensitivity),]
-  
-  #plot <- ggplot2::ggplot(x, ggplot2::aes(x$falsePositiveRate, x$sensitivity)) +
-  plot <- ggplot2::ggplot(x, ggplot2::aes(.data$falsePositiveRate, .data$sensitivity)) +
-    ggplot2::geom_polygon(fill = "blue", alpha = 0.2) +
-    ggplot2::geom_line(size=1) +
-    ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
-    ggplot2::scale_x_continuous("1 - specificity", limits=c(0,1)) +
-    ggplot2::scale_y_continuous("Sensitivity", limits=c(0,1))
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+    x <- plpResult$performanceEvaluation$thresholdSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(.data$falsePositiveRate, .data$sensitivity)
     
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
+    #x <- thresholdSummary[,c('falsePositiveRate','sensitivity')]
+    x <- x[order(x$falsePositiveRate, x$sensitivity),]
+    
+    # add the bit to get the step
+    stepsExtra <- cbind(x[-1,1], x[-nrow(x),2])
+    colnames( stepsExtra) <- colnames(x)
+    x <- rbind(c(1,1), x, stepsExtra, c(0,0))
+    x <- x[order(x$falsePositiveRate, x$sensitivity),]
+    
+    plots[[i]] <- ggplot2::ggplot(
+      x, 
+      ggplot2::aes(
+        .data$falsePositiveRate, 
+        .data$sensitivity
+        )
+    ) +
+      ggplot2::geom_polygon(fill = "blue", alpha = 0.2) +
+      ggplot2::geom_line(size=1) +
+      ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
+      ggplot2::scale_x_continuous("1 - specificity", limits=c(0,1)) +
+      ggplot2::scale_y_continuous("Sensitivity", limits=c(0,1)) + 
+      ggplot2::ggtitle(evalType)
+  }
+  
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 
@@ -259,10 +272,10 @@ plotSparseRoc <- function(evaluation,type='test', fileName=NULL){
 #' @details
 #' Create a plot showing the predicted probability density function, showing prediction overlap between true and false cases
 #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -271,14 +284,31 @@ plotSparseRoc <- function(evaluation,type='test', fileName=NULL){
 #' format.
 #'
 #' @export
-plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
-  if(is.null(evaluation$thresholdSummary$Eval)){
-    evaluation$thresholdSummary$Eval <- type
-  }
-  ind <- evaluation$thresholdSummary$Eval==type
+plotPredictedPDF <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL, 
+  fileName = 'PredictedPDF.png'
+  )
+  {
   
-  x<- evaluation$thresholdSummary[ind,c('predictionThreshold','truePositiveCount','trueNegativeCount',
-                                     'falsePositiveCount','falseNegativeCount')]
+  evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary[,typeColumn])
+  
+  plots <- list()
+  length(plots) <- length(evalTypes)
+  
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+    x <- plpResult$performanceEvaluation$thresholdSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(
+        .data$predictionThreshold,
+        .data$truePositiveCount,
+        .data$trueNegativeCount,
+        .data$falsePositiveCount,
+        .data$falseNegativeCount
+      )
+  
   x<- x[order(x$predictionThreshold,-x$truePositiveCount, -x$falsePositiveCount),]
   x$out <- c(x$truePositiveCount[-length(x$truePositiveCount)]-x$truePositiveCount[-1], x$truePositiveCount[length(x$truePositiveCount)])
   x$nout <- c(x$falsePositiveCount[-length(x$falsePositiveCount)]-x$falsePositiveCount[-1], x$falsePositiveCount[length(x$falsePositiveCount)])
@@ -305,17 +335,24 @@ plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
              data.frame(variable=rep('No outcome',length(vals2)), value=vals2)
   )
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x=.data$value,
+  plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(x=.data$value,
                                           group=.data$variable,
                                           fill=.data$variable)) +
     ggplot2::geom_density(ggplot2::aes(x=.data$value, fill=.data$variable), alpha=.3) +
     ggplot2::scale_x_continuous("Prediction Threshold")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("Density") + 
     ggplot2::guides(fill=ggplot2::guide_legend(title="Class"))
+  }
   
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 
@@ -325,10 +362,10 @@ plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
 #' @details
 #' Create a plot showing the preference score probability density function, showing prediction overlap between true and false cases
 #' #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -337,14 +374,30 @@ plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
 #' format.
 #'
 #' @export
-plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
-  if(is.null(evaluation$thresholdSummary$Eval)){
-    evaluation$thresholdSummary$Eval <- type
-  }
-  ind <- evaluation$thresholdSummary$Eval==type
+plotPreferencePDF <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
+  fileName = 'plotPreferencePDF.png'
+){
   
-  x<- evaluation$thresholdSummary[ind,c('preferenceThreshold','truePositiveCount','trueNegativeCount',
-                                     'falsePositiveCount','falseNegativeCount')]
+  evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary[,typeColumn])
+  
+  plots <- list()
+  length(plots) <- length(evalTypes)
+  
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+    x <- plpResult$performanceEvaluation$thresholdSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(
+        .data$preferenceThreshold,
+        .data$truePositiveCount,
+        .data$trueNegativeCount,
+        .data$falsePositiveCount,
+        .data$falseNegativeCount
+      )
+  
   x<- x[order(x$preferenceThreshold,-x$truePositiveCount),]
   x$out <- c(x$truePositiveCount[-length(x$truePositiveCount)]-x$truePositiveCount[-1], x$truePositiveCount[length(x$truePositiveCount)])
   x$nout <- c(x$falsePositiveCount[-length(x$falsePositiveCount)]-x$falsePositiveCount[-1], x$falsePositiveCount[length(x$falsePositiveCount)])
@@ -371,7 +424,7 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
              data.frame(variable=rep('No outcome',length(vals2)), value=vals2)
   )
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(x=.data$value,
+  plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(x=.data$value,
                                           group=.data$variable,
                                           fill=.data$variable)) +
     ggplot2::geom_density(ggplot2::aes(x=.data$value, fill=.data$variable), alpha=.3) +
@@ -379,9 +432,17 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
     ggplot2::scale_y_continuous("Density") + 
     ggplot2::guides(fill=ggplot2::guide_legend(title="Class"))
   
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
+  }
+  
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 
@@ -391,10 +452,10 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
 #' @details
 #' Create a plot showing the precision-recall curve using the sparse thresholdSummary data frame
 #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -403,29 +464,54 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
 #' format.
 #'
 #' @export
-plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
-  if(is.null(evaluation$thresholdSummary$Eval)){
-    evaluation$thresholdSummary$Eval <- type
+plotPrecisionRecall <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
+  fileName = 'roc.png'
+){
+  
+  evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary[,typeColumn])
+  
+  plots <- list()
+  length(plots) <- length(evalTypes)
+  
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+    
+    N <- sum(plpResult$performanceEvaluation$thresholdSummary %>% 
+        dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+        dplyr::select(.data$PersonCountAtRisk) %>% 
+        dplyr::pull(), na.rm = T)
+    
+    O <- sum(plpResult$performanceEvaluation$thresholdSummary %>% 
+        dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+        dplyr::select(.data$PersonCountWithOutcome) %>% 
+        dplyr::pull(), na.rm = T)
+    
+    inc <- O/N
+    
+    x <- plpResult$performanceEvaluation$thresholdSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(.data$positivePredictiveValue, .data$sensitivity)
+    
+    plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(.data$sensitivity, .data$positivePredictiveValue)) +
+      ggplot2::geom_line(size=1) +
+      ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
+      ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
+      ggplot2::geom_hline(yintercept = inc, linetype="dashed", 
+        color = "red", size=1) 
   }
-  ind <- evaluation$thresholdSummary$Eval==type
   
-  N <- sum(evaluation$calibrationSummary$PersonCountAtRisk, na.rm = T)
-  O <- sum(evaluation$calibrationSummary$PersonCountWithOutcome, na.rm=T)
-  inc <- O/N
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
   
-  x<- evaluation$thresholdSummary[ind,c('positivePredictiveValue', 'sensitivity')]
-  #x <- rbind(c(0,1), x, c(1,0))
-  
-  plot <- ggplot2::ggplot(x, ggplot2::aes(.data$sensitivity, .data$positivePredictiveValue)) +
-    ggplot2::geom_line(size=1) +
-    ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
-    ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
-    ggplot2::geom_hline(yintercept = inc, linetype="dashed", 
-                        color = "red", size=1) 
-  
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 
@@ -435,10 +521,10 @@ plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
 #' @details
 #' Create a plot showing the F1 measure efficiency frontier using the sparse thresholdSummary data frame
 #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -447,29 +533,46 @@ plotPrecisionRecall <- function(evaluation, type='test', fileName=NULL){
 #' format.
 #'
 #' @export
-plotF1Measure <- function(evaluation,type='test', fileName=NULL){
-  if(is.null(evaluation$thresholdSummary$Eval)){
-    evaluation$thresholdSummary$Eval <- type
-  }
-  ind <- evaluation$thresholdSummary$Eval==type
+plotF1Measure <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
+  fileName = 'roc.png'
+){
+  evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary[,typeColumn])
   
-  x<- evaluation$thresholdSummary[ind,c('predictionThreshold', 'f1Score')]
-  #x <- rbind(c(0,1), x, c(1,0))
+  plots <- list()
+  length(plots) <- length(evalTypes)
   
+  for(i in 1:length(evalTypes)){
+    
+    evalType <- evalTypes[i]
+    
+    x <- plpResult$performanceEvaluation$thresholdSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(.data$fpredictionThreshold, .data$f1Score)
+    
   if(sum(is.nan(x$f1Score))>0){
     x <- x[!is.nan(x$f1Score),]
     if(nrow(x)==0){return(NULL)}
   }
   
-  plot <- ggplot2::ggplot(x, ggplot2::aes(.data$predictionThreshold, .data$f1Score)) +
+  plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(.data$predictionThreshold, .data$f1Score)) +
     ggplot2::geom_line(size=1) +
     ggplot2::geom_point(size=1) +
     ggplot2::scale_x_continuous("predictionThreshold")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("F1Score")#, limits=c(0,1))
+  }
   
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 
@@ -482,10 +585,10 @@ plotF1Measure <- function(evaluation,type='test', fileName=NULL){
 #' @details
 #' Create a plot showing the Observed vs. expected incidence, by age and gender
 #' #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -494,16 +597,31 @@ plotF1Measure <- function(evaluation,type='test', fileName=NULL){
 #' format.
 #'
 #' @export
-plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
-  if (!all(is.na(evaluation$demographicSummary$averagePredictedProbability))){
-    if(is.null(evaluation$demographicSummary$Eval)){
-      evaluation$demographicSummary$Eval <- type
-    }
-    ind <- evaluation$demographicSummary$Eval==type
-    x<- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability',
-                                            'PersonCountAtRisk', 'PersonCountWithOutcome')]
-
-    
+plotDemographicSummary <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
+  fileName = 'roc.png'
+)
+{
+  
+  evalTypes <- unique(plpResult$performanceEvaluation$demographicSummary[,typeColumn])
+  
+  plots <- list()
+  length(plots) <- length(evalTypes)
+  
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+    x <- plpResult$performanceEvaluation$demographicSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(
+        .data$ageGroup,
+        .data$genGroup,
+        .data$averagePredictedProbability,
+        .data$PersonCountAtRisk, 
+        .data$PersonCountWithOutcome
+        )
+  
     # remove -1 values:
     x$averagePredictedProbability[is.na(x$averagePredictedProbability)] <- 0
     x <- x[x$PersonCountWithOutcome != -1,]
@@ -512,7 +630,6 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
     }
     
     x$observed <- x$PersonCountWithOutcome/x$PersonCountAtRisk
-    
     
     x <- x[,colnames(x)%in%c('ageGroup','genGroup','averagePredictedProbability','observed')]
     
@@ -530,7 +647,15 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
     x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
     
     # 1.96*StDevPredictedProbability
-    ci <- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
+    ci <- plpResult$performanceEvaluation$demographicSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(
+        .data$ageGroup,
+        .data$genGroup,
+        .data$averagePredictedProbability,
+        .data$StDevPredictedProbability
+      )
+    
     ci$StDevPredictedProbability[is.na(ci$StDevPredictedProbability)] <- 1
     ci$lower <- ci$averagePredictedProbability-1.96*ci$StDevPredictedProbability
     ci$lower[ci$lower <0] <- 0
@@ -543,12 +668,10 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
                                    " 45-49"," 50-54"," 55-59"," 60-64"," 65-69"," 70-74",
                                    " 75-79"," 80-84"," 85-89"," 90-94"," 95-99","-1"),ordered=TRUE)
     
-    
-    
     x <- merge(x, ci[,c('ageGroup','genGroup','lower','upper')], by=c('ageGroup','genGroup'))
     x <- x[!is.na(x$value),]
     
-    plot <- ggplot2::ggplot(data=x, 
+    plots[[i]] <- ggplot2::ggplot(data=x, 
                             ggplot2::aes(x=.data$age, 
                                          group=interaction(.data$variable,.data$genGroup))) +
 
@@ -561,7 +684,6 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
                            fill="blue", alpha=0.2) +
       ggplot2::facet_grid(.~ .data$genGroup, scales = "free") +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
-      #ggplot2::coord_flip() +
       ggplot2::scale_y_continuous("Fraction") +
       ggplot2::scale_x_discrete("Age") +
       ggplot2::scale_color_manual(values = c("royalblue4","red"),
@@ -569,11 +691,17 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
                                   labels = c("Expected", "Observed")) +
 
       ggplot2::guides(linetype=FALSE)
-    
-    if (!is.null(fileName))
-      ggplot2::ggsave(fileName, plot, width = 7, height = 4.5, dpi = 400)
-    return(plot)
   }
+  
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 
@@ -585,10 +713,10 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
 #' @details
 #' Create a plot showing the calibration
 #' #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -597,13 +725,24 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
 #' format.
 #'
 #' @export
-plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
-  if(is.null(evaluation$calibrationSummary$Eval)){
-    evaluation$calibrationSummary$Eval <- type
-  }
-  ind <- evaluation$calibrationSummary$Eval==type
+plotSparseCalibration <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
+  fileName = 'roc.png'
+){
   
-  x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence')]
+  evalTypes <- unique(plpResult$performanceEvaluation$calibrationSummary[,typeColumn])
+  
+  plots <- list()
+  length(plots) <- length(evalTypes)
+  
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+    x <- plpResult$performanceEvaluation$calibrationSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(.data$averagePredictedProbability, .data$observedIncidence)
+
   maxVal <- max(x$averagePredictedProbability,x$observedIncidence)
   model <- stats::lm(observedIncidence~averagePredictedProbability, data=x)
   res <- model$coefficients
@@ -619,7 +758,7 @@ plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
   
   x <- cbind(x, cis)
   # TODO: CHECK INPUT
-  plot <- ggplot2::ggplot(data=x,
+  plots[[i]] <- ggplot2::ggplot(data=x,
                           ggplot2::aes(x=.data$averagePredictedProbability, 
                                        y=.data$observedIncidence
                                        )) +
@@ -634,12 +773,17 @@ plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
                          color='darkblue') +
     ggplot2::scale_x_continuous("Average Predicted Probability") +
     ggplot2::scale_y_continuous("Observed Fraction With Outcome")
+  }
 
-    
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
   
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
-  return(plot)
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 #=============
@@ -650,10 +794,10 @@ plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
 #' @details
 #' Create a plot showing the calibration
 #' #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -662,41 +806,54 @@ plotSparseCalibration <- function(evaluation, type='test', fileName=NULL){
 #' format.
 #'
 #' @export
-plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
-  if(is.null(evaluation$calibrationSummary$Eval)){
-    evaluation$calibrationSummary$Eval <- type
-  }
-  ind <- evaluation$calibrationSummary$Eval==type
+plotSparseCalibration2 <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
+  fileName = 'roc.png'
+){
   
-  x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence', 'PersonCountAtRisk')]
+  evalTypes <- unique(plpResult$performanceEvaluation$calibrationSummary[,typeColumn])
   
+  plots <- list()
+  length(plots) <- length(evalTypes)
   
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+    x <- plpResult$performanceEvaluation$calibrationSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(.data$averagePredictedProbability, .data$observedIncidence, .data$PersonCountAtRisk)
+
   cis <- apply(x, 1, function(x) stats::binom.test(round(x[2]*x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
   x$lci <- cis[1,]  
   x$uci <- cis[2,]
   
   maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence))*1.1
   
-  # limits <- ggplot2::aes(ymax = x$uci, ymin= x$lci)
   limits <- ggplot2::aes(ymax = .data$uci, ymin= .data$lci)
   
-  plot <- ggplot2::ggplot(data=x,
+  plots[[i]] <- ggplot2::ggplot(data=x,
                           ggplot2::aes(x=.data$averagePredictedProbability, y=.data$observedIncidence
                           )) +
     ggplot2::geom_point(size=2, color='black') +
     ggplot2::geom_errorbar(limits) +
-    #ggplot2::geom_smooth(method=lm, se=F, colour='darkgrey') +
     ggplot2::geom_line(colour='darkgrey') +
     ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 5, size=0.4,
                          show.legend = TRUE) +
     ggplot2::scale_x_continuous("Average Predicted Probability") +
     ggplot2::scale_y_continuous("Observed Fraction With Outcome") +
     ggplot2::coord_cartesian(xlim = c(0, maxes), ylim=c(0,maxes)) 
+  }
   
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
   
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
-  return(plot)
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 #=============
@@ -707,7 +864,7 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
 #'
 #' @details
 #' Create a plot showing the smoothed calibration #'
-#' @param result     The result of running \code{\link{runPlp}} function. An object containing the
+#' @param plpResult  The result of running \code{\link{runPlp}} function. An object containing the
 #'                   model or location where the model is save, the data selection settings, the
 #'                   preprocessing and training settings as well as various performance measures
 #'                   obtained by the model.
@@ -722,14 +879,16 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
 #' @param zoom       Zoom in on the region containing the deciles or on the data. If not specified
 #'                   shows the entire space.
 #' @param sample     If using loess then by default 20,000 patients will be sampled to save time                   
-#' @param fileName   Name of the file where the plot should be saved, for example 'plot.png'. See the
-#'                   function \code{ggsave} in the ggplot2 package for supported file formats.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
+#'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
+#'                              supported file formats.
 #' @return
-#' A cowplot object. Use the \code{cowplot::save_plot} function to save to file in a different format.
+#' A ggplot object.
 #'
 #' @export
-
-plotSmoothCalibration <- function(result,
+plotSmoothCalibration <- function(plpResult,
                                   smooth = c("loess", "rcs"),
                                   span = 1,
                                   nKnots = 5,
@@ -740,22 +899,25 @@ plotSmoothCalibration <- function(result,
                                   sample = T,
                                   fileName = NULL) {
   
+  evalTypes <- unique(plpResult$performanceEvaluation$calibrationSummary[,typeColumn])
   
-  if('prediction'%in%names(result)){
-  prediction <- result$prediction
-  evaluation <- result$performanceEvaluation
-  if(is.null(result$performanceEvaluation$calibrationSummary$Eval)){
-    result$performanceEvaluation$calibrationSummary$Eval <- type
-  }
-  ind <- result$performanceEvaluation$calibrationSummary$Eval == type
-  x <- evaluation$calibrationSummary[ind, c("averagePredictedProbability", "observedIncidence")]
+  plots <- list()
+  length(plots) <- length(evalTypes)
+  
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+  
+  
+  if('prediction'%in%names(plpResult)){
+    
+    x <- plpResult$performanceEvaluation$calibrationSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+      dplyr::select(.data$averagePredictedProbability, .data$observedIncidence)
+    
+    prediction <-  plpResult$prediction %>% dplyr::filter(.data[[typeColumn]] == evalType)
+  
   maxVal <- max(x$averagePredictedProbability, x$observedIncidence)
   maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence))
-  type <- ifelse(is.null(prediction$indexes), "apply", "test")
-
-  if (type == "test")
-    ind <- prediction$indexes < 0  # select the cases in the test set
- else ind <- rep(T, length(prediction$outcomeCount))  # in case of applyMOdel
 
   if (smooth == "rcs") {
 
@@ -770,8 +932,8 @@ plotSmoothCalibration <- function(result,
   }
 
 
-  y <- prediction$outcomeCount[ind]
-  p <- prediction$value[ind]
+  y <- prediction$outcomeCount
+  p <- prediction$value
 
   nma <- !is.na(p + y)  # select only non-missing cases
   sumNA <- sum(!nma)
@@ -830,24 +992,39 @@ plotSmoothCalibration <- function(result,
     }
     # the main plot object, this one uses Loess regression
     smooth_plot <- ggplot2::ggplot(data = smoothData, ggplot2::aes(x = .data$p, y = .data$y)) +
-                   ggplot2::stat_smooth(ggplot2::aes(color = "Loess", linetype = "Loess"),
-                                        method = "loess",
-                                        se = TRUE,
-                                        span = span,
-                                        size = 1,
-                                        show.legend = F) +
-                   ggplot2::geom_segment(ggplot2::aes(x = 0,
-                                                      xend = 1,
-                                                      y = 0,
-                                                      yend = 1,
-                                                      color = "Ideal",
-                                                      linetype = "Ideal")) +
-                   # ggplot2::scale_y_continuous(limits = c(0,1)) +
-
-    ggplot2::coord_cartesian(xlim = xlim,
-                             ylim = ylim) + ggplot2::scale_linetype_manual(name = "Models",
-                                                                                        values = c(Loess = "solid",
-                                                                                                   Ideal = "dashed")) + ggplot2::scale_color_manual(name = "Models", values = c(Loess = "blue", Ideal = "red")) + ggplot2::labs(x = "Predicted Probability", y = "Observed Probability")
+      ggplot2::stat_smooth(ggplot2::aes(color = "Loess", linetype = "Loess"),
+        method = "loess",
+        se = TRUE,
+        span = span,
+        size = 1,
+        show.legend = F) +
+      ggplot2::geom_segment(ggplot2::aes(x = 0,
+        xend = 1,
+        y = 0,
+        yend = 1,
+        color = "Ideal",
+        linetype = "Ideal")) +
+      # ggplot2::scale_y_continuous(limits = c(0,1)) +
+      
+      ggplot2::coord_cartesian(
+        xlim = xlim,
+        ylim = ylim
+        ) + 
+      ggplot2::scale_linetype_manual(
+        name = "Models",
+          values = c(
+            Loess = "solid",
+            Ideal = "dashed")
+        ) + 
+      ggplot2::scale_color_manual(
+        name = "Models", 
+        values = c(Loess = "blue", Ideal = "red")
+        ) + 
+      ggplot2::labs(
+        x = "Predicted Probability", 
+        y = "Observed Probability"
+        )
+  
   } else {
     # Restricted cubic splines
 
@@ -953,9 +1130,10 @@ plotSmoothCalibration <- function(result,
     ggplot2::labs(x = "Predicted Probability") +
     ggplot2::coord_cartesian(xlim = xlim)
   
-  } else{
+  }else{
     # use calibrationSummary
-    sparsePred <- result$performanceEvaluation$calibrationSummary
+    sparsePred <- plpResult$performanceEvaluation$calibrationSummary %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType)
     
     limVal <- max(max(sparsePred$averagePredictedProbability),max(sparsePred$observedIncidence))
     
@@ -1017,20 +1195,20 @@ plotSmoothCalibration <- function(result,
     
   }
   
-  plot <- gridExtra::grid.arrange(smooth_plot,
+  plots[[i]] <- gridExtra::grid.arrange(smooth_plot,
                                   hist_plot,
                                   ncol = 1,
                                   heights=c(2,1))
   
-  #plot <- cowplot::plot_grid(smooth_plot,
-  #                           hist_plot,
-  #                           ncol = 1,
-  #                           axis = "lr",
-  #                           align = "v",
-  #                           rel_heights = c(1, 0.6))
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
+  }
+  
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 
@@ -1042,10 +1220,10 @@ plotSmoothCalibration <- function(result,
 #' @details
 #' Create a plot showing the side-by-side boxplots of prediction distribution, by class
 #' #'
-#' @param evaluation            A prediction object as generated using the
-#'                              \code{\link{runPlp}} function.
-#' @param type                  options: 'train' or test'
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn            The name of the column specifying the evaluation type
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -1054,22 +1232,29 @@ plotSmoothCalibration <- function(result,
 #' format.
 #'
 #' @export
-plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
-  if(is.null(evaluation$predictionDistribution$Eval)){
-    evaluation$predictionDistribution$Eval <- type
-  }
-  ind <- evaluation$predictionDistribution$Eval==type
-  x<- evaluation$predictionDistribution[ind,]
-
-  #(x=Class, y=predictedProbabllity sequence:  min->P05->P25->Median->P75->P95->max)
+plotPredictionDistribution <- function(
+  plpResult,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
+  fileName = 'PredictionDistribution.png'
+){
   
+  evalTypes <- unique(plpResult$performanceEvaluation$predictionDistribution[,typeColumn])
+  
+  plots <- list()
+  length(plots) <- length(evalTypes)
+  
+  for(i in 1:length(evalTypes)){
+    evalType <- evalTypes[i]
+    x <- plpResult$performanceEvaluation$predictionDistribution %>% 
+      dplyr::filter(.data[[typeColumn]] == evalType) 
   
   non05 <- x$P05PredictedProbability[x$class==0]
   non95 <- x$P95PredictedProbability[x$class==0]
   one05 <- x$P05PredictedProbability[x$class==1]
   one95 <- x$P95PredictedProbability[x$class==1]
   
-  plot <-   ggplot2::ggplot(x, ggplot2::aes(x=as.factor(.data$class),
+  plots[[i]] <-   ggplot2::ggplot(x, ggplot2::aes(x=as.factor(.data$class),
                                             ymin=.data$MinPredictedProbability,
                                             lower=.data$P25PredictedProbability,
                                             middle=.data$MedianPredictedProbability,
@@ -1089,11 +1274,17 @@ plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
                                      xend = 2.1, yend = one05)) +
     ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one95, 
                                        xend = 2.1, yend = one95))
+  }
   
+  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
   
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  return(plot)
+  if (!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive = T)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(invisible(plot))
 }
 
 
@@ -1109,7 +1300,8 @@ plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
 #' #'
 #' @param covariateSummary      A prediction object as generated using the
 #'                              \code{\link{runPlp}} function.
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -1118,7 +1310,12 @@ plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
 #' format.
 #'
 #' @export
-plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
+plotVariableScatterplot <- function(
+  covariateSummary, 
+  saveLocation = NULL,
+  fileName = 'VariableScatterplot.png'
+  )
+  {
   
   # remove the non-incidence variables from the plot
   covariateSummary <- covariateSummary[covariateSummary$CovariateMeanWithNoOutcome <= 1,]
@@ -1138,8 +1335,9 @@ plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
     ggplot2::scale_x_continuous("Non-outcome Covariate Mean") + 
     ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
     ggplot2::theme(legend.position="none")
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
+  
+  if (!is.null(saveLocation))
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 3.5, dpi = 400)
   return(plot)
 }
 
@@ -1151,7 +1349,8 @@ plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
 #' #'
 #' @param covariateSummary      A prediction object as generated using the
 #'                              \code{\link{runPlp}} function.
-#' @param fileName              Name of the file where the plot should be saved, for example
+#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param fileName              Name of the file to save to plot, for example
 #'                              'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 #'                              supported file formats.
 #'
@@ -1160,7 +1359,10 @@ plotVariableScatterplot <- function(covariateSummary, fileName=NULL){
 #' format.
 #'
 #' @export
-plotGeneralizability<- function(covariateSummary, fileName=NULL){
+plotGeneralizability <- function(
+  covariateSummary, 
+  saveLocation = NULL,
+  fileName = 'Generalizability.png'){
   
   covariateSummary$TrainCovariateMeanWithOutcome[is.na(covariateSummary$TrainCovariateMeanWithOutcome)] <- 0
   covariateSummary$TestCovariateMeanWithOutcome[is.na(covariateSummary$TestCovariateMeanWithOutcome)] <- 0
@@ -1192,8 +1394,9 @@ plotGeneralizability<- function(covariateSummary, fileName=NULL){
     ggplot2::ggtitle("No Outcome")
   
   plot <- gridExtra::grid.arrange(plot1, plot2, ncol=2)
-  if (!is.null(fileName))
-    ggplot2::ggsave(fileName, plot, width = 5, height = 3.5, dpi = 400)
+  
+  if (!is.null(saveLocation))
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 3.5, dpi = 400)
   return(plot)
 }
 

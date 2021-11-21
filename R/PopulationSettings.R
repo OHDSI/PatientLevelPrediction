@@ -16,6 +16,69 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+#' create the study population settings
+#'
+#' @details
+#' Takes as input the inputs to create study population
+#' @param binary                Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)                              
+#' @param includeAllOutcomes    (binary) indicating whether to include people with outcomes who are not observed for the whole at risk period
+#' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
+#'                                     this is typically done in the \code{createStudyPopulation} function,
+#' @param washoutPeriod                The mininum required continuous observation time prior to index
+#'                                     date for a person to be included in the cohort.
+#' @param removeSubjectsWithPriorOutcome  Remove subjects that have the outcome prior to the risk window start?
+#' @param priorOutcomeLookback            How many days should we look back when identifying prior outcomes?
+#' @param requireTimeAtRisk      Should subject without time at risk be removed?
+#' @param minTimeAtRisk          The minimum number of days at risk required to be included
+#' @param riskWindowStart        The start of the risk window (in days) relative to the index date (+
+#'                               days of exposure if the \code{addExposureDaysToStart} parameter is
+#'                               specified).
+#' @param startAnchor	           The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".
+#' @param riskWindowEnd          The end of the risk window (in days) relative to the index data (+
+#'                               days of exposure if the \code{addExposureDaysToEnd} parameter is
+#'                               specified).
+#' @param endAnchor              The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".
+#' @param restrictTarToCohortEnd If using a survival model and you want the time-at-risk to end at the cohort end date set this to T
+#' @return
+#' A list containing all the settings required for creating the study population
+#' @export
+createStudyPopulationSettings <- function(
+  binary = T,
+  includeAllOutcomes = T,
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  removeSubjectsWithPriorOutcome = TRUE,
+  priorOutcomeLookback = 99999,
+  requireTimeAtRisk = T,
+  minTimeAtRisk=364,
+  riskWindowStart = 1,
+  startAnchor = 'cohort start',
+  riskWindowEnd = 365,
+  endAnchor = "cohort start",
+  restrictTarToCohortEnd = F
+){
+  
+  result <- list(
+    binary = binary,
+    includeAllOutcomes = includeAllOutcomes,
+    firstExposureOnly = firstExposureOnly,
+    washoutPeriod = washoutPeriod,
+    removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome,
+    priorOutcomeLookback = priorOutcomeLookback,
+    requireTimeAtRisk = requireTimeAtRisk, 
+    minTimeAtRisk = minTimeAtRisk,
+    riskWindowStart = riskWindowStart,
+    startAnchor = startAnchor,
+    riskWindowEnd = riskWindowEnd,
+    endAnchor = endAnchor, 
+    restrictTarToCohortEnd = restrictTarToCohortEnd)
+  
+  class(result) <- 'populationSettings'
+  return(result)
+  
+}
+
 #' Create a study population
 #'
 #' @details
@@ -41,18 +104,7 @@
 #' @param startAnchor	           The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".
 #' @param riskWindowEnd          The end of the risk window (in days) relative to the \code{endAnchor} parameter
 #' @param endAnchor              The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".
-#' @param verbosity              Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
-#'                               \itemize{
-#'                               \item{DEBUG}{Highest verbosity showing all debug statements}
-#'                               \item{TRACE}{Showing information about start and end of steps}
-#'                               \item{INFO}{Show informative information (Default)}
-#'                               \item{WARN}{Show warning messages}
-#'                               \item{ERROR}{Show error messages}
-#'                               \item{FATAL}{Be silent except for fatal errors} 
-#'                               }
 #' @param restrictTarToCohortEnd If using a survival model and you want the time-at-risk to end at the cohort end date set this to T
-#' @param addExposureDaysToStart DEPRECATED: Add the length of exposure the start of the risk window? Use \code{startAnchor} instead.
-#' @param addExposureDaysToEnd   DEPRECATED: Add the length of exposure the risk window? Use \code{endAnchor} instead.
 #' @param ...                   Other inputs
 #'
 #' @return
@@ -82,10 +134,7 @@ createStudyPopulation <- function(plpData,
                                   startAnchor = "cohort start",
                                   riskWindowEnd = 365,
                                   endAnchor = "cohort start",
-                                  verbosity = "INFO",
                                   restrictTarToCohortEnd = F,
-                                  addExposureDaysToStart,
-                                  addExposureDaysToEnd,
                                   ...) {
   
   
@@ -111,22 +160,6 @@ createStudyPopulation <- function(plpData,
       endAnchor <- ifelse(addExposureDaysToEnd, 'cohort end','cohort start')
     }
   }
-  
-  if(missing(verbosity)){
-    verbosity <- "INFO"
-  } else{
-    if(!verbosity%in%c("DEBUG","TRACE","INFO","WARN","FATAL","ERROR")){
-      stop('Incorrect verbosity string')
-    }
-  }
-  # check logger
-  if(length(ParallelLogger::getLoggers())==0){
-    logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                        threshold = verbosity,
-                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
-    ParallelLogger::registerLogger(logger)
-  }
-  
   
   # parameter checks
   if(!class(plpData)%in%c('plpData')){
@@ -176,6 +209,9 @@ createStudyPopulation <- function(plpData,
     }
   }
   
+  ParallelLogger::logDebug(paste0('restrictTarToCohortEnd: ', restrictTarToCohortEnd))
+  checkBoolean(restrictTarToCohortEnd)
+  
   if (is.null(population)) {
     population <- plpData$cohorts
   }
@@ -183,18 +219,22 @@ createStudyPopulation <- function(plpData,
   # save the metadata
   metaData <- attr(population, "metaData")
   metaData$outcomeId <- outcomeId
-  metaData$binary <- binary
-  metaData$includeAllOutcomes <- includeAllOutcomes
-  metaData$firstExposureOnly = firstExposureOnly
-  metaData$washoutPeriod = washoutPeriod
-  metaData$removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome
-  metaData$priorOutcomeLookback = priorOutcomeLookback
-  metaData$requireTimeAtRisk = requireTimeAtRisk
-  metaData$minTimeAtRisk=minTimeAtRisk
-  metaData$riskWindowStart = riskWindowStart
-  metaData$startAnchor = startAnchor
-  metaData$riskWindowEnd = riskWindowEnd
-  metaData$endAnchor = endAnchor
+  metaData$populationSettings <- list(
+    binary = binary,
+    includeAllOutcomes = includeAllOutcomes,
+    firstExposureOnly = firstExposureOnly,
+    washoutPeriod = washoutPeriod,
+    removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome,
+    priorOutcomeLookback = priorOutcomeLookback,
+    requireTimeAtRisk = requireTimeAtRisk, 
+    minTimeAtRisk = minTimeAtRisk,
+    riskWindowStart = riskWindowStart,
+    startAnchor = startAnchor,
+    riskWindowEnd = riskWindowEnd,
+    endAnchor = endAnchor,
+    restrictTarToCohortEnd = restrictTarToCohortEnd
+  )
+  
   
   # set the existing attrition
   if(is.null(metaData$attrition)){
