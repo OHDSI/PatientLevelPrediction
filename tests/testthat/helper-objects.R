@@ -36,61 +36,60 @@ sampleSize <- 2500+sample(1000,1)
 plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
 #plpData$metaData$cohortId <- plpData$metaData$cohortIds
 
+# POPULATION
+populationSettings <- createStudyPopulationSettings(
+  firstExposureOnly = FALSE,
+  washoutPeriod = 0,
+  removeSubjectsWithPriorOutcome = FALSE,
+  priorOutcomeLookback = 99999,
+  requireTimeAtRisk = T,
+  minTimeAtRisk=10,
+  riskWindowStart = 0,
+  startAnchor = 'cohort start',
+  riskWindowEnd = 365,
+  endAnchor = 'cohort start')
+
+population <- createStudyPopulation(
+  plpData = plpData,
+  outcomeId = 2, 
+  populationSettings = populationSettings
+  )
+
+createTrainData <- function(plpData, population){
+  trainData <- list()
+  trainData$covariateData <- Andromeda::copyAndromeda(plpData$covariateData)
+  trainData$labels <- population %>% dplyr::select(.data$rowId, .data$outcomeCount, .data$survivalTime)
+  trainData$folds <- data.frame(
+    rowId = population$rowId,
+    index = sample(3, nrow(population), replace = T)
+  )
+  
+  attr(trainData, "metaData")$outcomeId <- 2
+  attr(trainData, "metaData")$cohortId <- 1
+
+  class(trainData$covariateData) <- 'CovariateData'
+  
+  return(trainData)
+}
+
+
 sampleSize2 <- 1000+sample(1000,1)
 plpData2 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
-#plpData2$metaData$cohortId <- plpData2$metaData$cohortIds
 
-# temporal - make less covs?
-plpData3 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
-plpData3$timeRef <- data.frame(timeId = 1:3, startDay = 1:3, endDay = 1:3)
-plpData3$covariateData$covariatesOld <- plpData3$covariateData$covariates
-plpData3$covariateData$covariates <- plpData3$covariateData$covariatesOld %>% 
-  dplyr::filter(.data$covariateId <= 20 ) %>%
-  dplyr::mutate(timeId = 1+.data$covariateId*.data$rowId%%3)
+population2 <- createStudyPopulation(
+  plpData = plpData2,
+  outcomeId = 2, 
+  populationSettings = populationSettings
+)
 
-sampleSize4 <- 10000
-plpData4 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize4)
+sampleSizeBig <- 10000
+plpDataBig <- simulatePlpData(plpDataSimulationProfile, n = sampleSizeBig)
 
-
-# POPULATION
-population <- createStudyPopulation(plpData,
-                                    outcomeId = 2,
-                                    firstExposureOnly = FALSE,
-                                    washoutPeriod = 0,
-                                    removeSubjectsWithPriorOutcome = FALSE,
-                                    priorOutcomeLookback = 99999,
-                                    requireTimeAtRisk = T,
-                                    minTimeAtRisk=10,
-                                    riskWindowStart = 0,
-                                    startAnchor = 'cohort start',
-                                    riskWindowEnd = 365,
-                                    endAnchor = 'cohort start')
-
-population2 <- createStudyPopulation(plpData2,
-                                     outcomeId = 2,
-                                     firstExposureOnly = FALSE,
-                                     washoutPeriod = 0,
-                                     removeSubjectsWithPriorOutcome = FALSE,
-                                     priorOutcomeLookback = 99999,
-                                     requireTimeAtRisk = T,
-                                     minTimeAtRisk=10,
-                                     riskWindowStart = 0,
-                                     startAnchor = 'cohort start',
-                                     riskWindowEnd = 365,
-                                     endAnchor = 'cohort start')
-
-population4 <- createStudyPopulation(plpData4,
-                                     outcomeId = 2,
-                                     firstExposureOnly = FALSE,
-                                     washoutPeriod = 0,
-                                     removeSubjectsWithPriorOutcome = FALSE,
-                                     priorOutcomeLookback = 99999,
-                                     requireTimeAtRisk = T,
-                                     minTimeAtRisk=10,
-                                     riskWindowStart = 0,
-                                     startAnchor = 'cohort start',
-                                     riskWindowEnd = 365,
-                                     endAnchor = 'cohort start')
+populationBig <- createStudyPopulation(
+  plpData = plpDataBig,
+  outcomeId = 2, 
+  populationSettings = populationSettings
+)
 
 
 # MODEL SETTINGS
@@ -103,7 +102,7 @@ surv <- PatientLevelPrediction::setCoxModel(variance = 0.01, seed = 1)
 
 
 # RUNPLP - LASSO LR
-plpResult <- runPlp(population = population,
+plpResult <- runPlp(population = population, 
                     plpData = plpData, 
                     modelSettings = lrSet, 
                     savePlpData = F, 
@@ -124,20 +123,6 @@ plpResult2 <- runPlp(population = population,
                     analysisId = 'survTest',
                     saveDirectory =  saveLoc)
 
-
-
-# learningCurve 
-learningCurve <- createLearningCurve(population = population, 
-                                     plpData = plpData, 
-                                     modelSettings = lrSet, 
-                                     testSplit = 'time', 
-                                     testFraction = 0.25, 
-                                     trainFractions = c(0.5,0.6), 
-                                     nfold = 3, 
-                                     clearffTemp = T, 
-                                     analysisId = 'learningCurve',
-                                     saveDirectory =  saveLoc
-)
 
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

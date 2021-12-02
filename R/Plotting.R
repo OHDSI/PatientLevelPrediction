@@ -114,7 +114,7 @@ outcomeSurvivalPlot <- function(
 #' Create a directory with all the plots
 #'
 #' @param plpResult               Object returned by the runPlp() function
-#' @param saveLocation            Name of the directory where the plots should be saved
+#' @param saveLocation            Name of the directory where the plots should be saved (NULL means no saving)
 #' @param typeColumn              The name of the column specifying the evaluation type 
 #'                                (to stratify the plots)                           
 #'
@@ -124,13 +124,15 @@ outcomeSurvivalPlot <- function(
 #' @export
 plotPlp <- function(
   plpResult, 
-  saveLocation, 
-  typeColumn = 'evaluation',
+  saveLocation = NULL, 
+  typeColumn = 'evaluation'
   ){
   
   # check inputs
-  if(!dir.exists(saveLocation)){
-    dir.create(saveLocation, recursive =T)
+  if(!is.null(saveLocation)){
+    if(!dir.exists(saveLocation)){
+      dir.create(saveLocation, recursive =T)
+    }
   }
   
   # run each of the plots:
@@ -141,52 +143,75 @@ plotPlp <- function(
     fileName = 'sparseROC.pdf'
   )
   
-  plotPredictedPDF(result$performanceEvaluation, 
-                   fileName=file.path(filename, 'plots','predictedPDF.pdf'),
-                   type = evalType)
-  plotPreferencePDF(result$performanceEvaluation, 
-                    fileName=file.path(filename, 'plots','preferencePDF.pdf'), 
-                    type = evalType)
-  plotPrecisionRecall(result$performanceEvaluation, 
-                      fileName=file.path(filename, 'plots','precisionRecall.pdf'), 
-                      type = evalType)
-  plotF1Measure(result$performanceEvaluation, 
-                fileName=file.path(filename, 'plots','f1Measure.pdf'), 
-                type = evalType)
-  plotDemographicSummary(result$performanceEvaluation, 
-                         fileName=file.path(filename, 'plots','demographicSummary.pdf'),
-                         type = evalType)
+  plotPredictedPDF(
+    result$performanceEvaluation, 
+    saveLocation = saveLocation, 
+    fileName = 'predictedPDF.pdf',
+    type = typeColumn)
+  plotPreferencePDF(
+    result$performanceEvaluation, 
+    saveLocation = saveLocation, 
+    fileName = 'preferencePDF.pdf', 
+    type = typeColumn)
+  plotPrecisionRecall(
+    result$performanceEvaluation, 
+    saveLocation = saveLocation, 
+    fileName = 'precisionRecall.pdf', 
+    type = typeColumn)
+  plotF1Measure(
+    result$performanceEvaluation, 
+    saveLocation = saveLocation,
+    fileName = 'f1Measure.pdf', 
+    type = typeColumn)
+  plotDemographicSummary(
+    result$performanceEvaluation, 
+    saveLocation = saveLocation, 
+    fileName = 'demographicSummary.pdf',
+    type = typeColumn)
+  
   # add smooth calibration
   tryCatch({
   plotSmoothCalibration(result = result, smooth = 'loess', nKnots = 5, 
-                        type = evalType, zoom = 'data', fileName = file.path(filename, 'plots','smooothCalibration.pdf') )
+                        type = typeColumn, zoom = 'data', 
+    saveLocation = saveLocation,
+    fileName = 'smooothCalibration.pdf'
+    )
     }, error = function(e) {
       return(NULL)
     }) 
   
-  plotSparseCalibration(result$performanceEvaluation, 
-                        fileName=file.path(filename, 'plots','sparseCalibration.pdf'), 
-                        type = evalType)
-  plotSparseCalibration2(result$performanceEvaluation, 
-                        fileName=file.path(filename, 'plots','sparseCalibrationConventional.pdf'), 
-                        type = evalType)
-  plotPredictionDistribution(result$performanceEvaluation, 
-                             fileName=file.path(filename, 'plots','predictionDistribution.pdf'), 
-                             type = evalType)
+  plotSparseCalibration(
+    result$performanceEvaluation, 
+    saveLocation = saveLocation, 
+    fileName = 'sparseCalibration.pdf', 
+    type = typeColumn)
+  plotSparseCalibration2(
+    result$performanceEvaluation,
+    saveLocation = saveLocation, 
+    fileName = 'sparseCalibrationConventional.pdf', 
+    type = typeColumn)
+  plotPredictionDistribution(
+    result$performanceEvaluation, 
+    saveLocation = saveLocation, 
+    fileName = 'predictionDistribution.pdf', 
+    type = typeColumn)
   
   plotVariableScatterplot(
-    result$covariateSummary, 
-    fileName=file.path(filename, 'plots','variableScatterplot.pdf')
+    result$covariateSummary,
+    saveLocation = saveLocation, 
+    fileName = 'variableScatterplot.pdf'
   )
   
-  if(type%in%c('test','train')){
+  
+  if(sum(c('TrainCovariateMeanWithNoOutcome', 'TestCovariateMeanWithNoOutcome') %in% colnames(result$covariateSummary))==2){
     plotGeneralizability(
       result$covariateSummary, 
-      fileName=file.path(filename, 'plots','generalizability.pdf')
+      saveLocation = saveLocation, 
+      fileName = 'generalizability.pdf'
     )
   }
   
-  return(TRUE)
+  return(invisible(TRUE))
 }
 
 
@@ -897,6 +922,8 @@ plotSmoothCalibration <- function(plpResult,
                                   bins = 20,
                                   zoom = c("none", "deciles", "data"),
                                   sample = T,
+  typeColumn = 'evaluation',
+  saveLocation = NULL,
                                   fileName = NULL) {
   
   evalTypes <- unique(plpResult$performanceEvaluation$calibrationSummary[,typeColumn])
@@ -1400,118 +1427,4 @@ plotGeneralizability <- function(
   return(plot)
 }
 
-#' @title plotLearningCurve
-#'
-#' @description Create a plot of the learning curve using the object returned
-#' from \code{createLearningCurve}.
-#'
-#' @param learningCurve An object returned by \code{\link{createLearningCurve}}
-#'   function.
-#' @param metric Specifies the metric to be plotted:
-#'   \itemize{
-#'     \item{\code{'AUROC'} - use the area under the Receiver Operating
-#'       Characteristic curve}
-#'     \item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
-#'     \item{\code{'sBrier'} - use the scaled Brier score}
-#'   }
-#' @param abscissa Specify the abscissa metric to be plotted:
-#'   \itemize{
-#'     \item{\code{'events'} - use number of events}
-#'     \item{\code{'observations'} - use number of observations}
-#'   }
-#' @param plotTitle Title of the learning curve plot.
-#' @param plotSubtitle Subtitle of the learning curve plot.
-#' @param fileName Filename of plot to be saved, for example \code{'plot.png'}.
-#'   See the function \code{ggsave} in the ggplot2 package for supported file 
-#'   formats.
-#'
-#' @return
-#' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to 
-#' file in a different format.
-#' 
-#' @examples
-#' \dontrun{
-#' # create learning curve object
-#' learningCurve <- createLearningCurve(population,
-#'                                      plpData,
-#'                                      modelSettings)
-#' # plot the learning curve
-#' plotLearningCurve(learningCurve)
-#' }
-#' 
-#' @export
-plotLearningCurve <- function(learningCurve,
-                              metric = "AUROC",
-                              abscissa = "events",
-                              plotTitle = "Learning Curve", 
-                              plotSubtitle = NULL,
-                              fileName = NULL){
-  
-  # fix no visible binding for global variable
-  Dataset <- AUROC <- AUPRC <- sBrier <- NULL
-  
-  tidyLearningCurve <- NULL
-  yAxisRsnge <- NULL
-  y <- NULL
-  
-  # check for performance metric to plot
-  if(metric == "AUROC") {
-    # tidy up dataframe
-    tidyLearningCurve <- learningCurve %>%
-      dplyr::rename(Training = .data$TrainROC, Testing = .data$TestROC) %>%
-      tidyr::gather(Dataset, AUROC, c(.data$Training, .data$Testing), factor_key = FALSE)
-    
-    # define plot properties
-    yAxisRange <- c(0.5, 1.0)
-    y <- "AUROC"
-    
-  } else if (metric == "AUPRC") {
-    # tidy up dataframe
-    tidyLearningCurve <- learningCurve %>%
-      dplyr::rename(Training = .data$TrainPR, Testing = .data$TestPR) %>%
-      tidyr::gather(Dataset, AUPRC, c(.data$Training, .data$Testing), factor_key = FALSE)
-    
-    # define plot properties
-    yAxisRange <- c(0.0, 1.0)
-    y <- "AUPRC"
-    
-  } else if (metric == "sBrier") {
-    # tidy up dataframe
-    tidyLearningCurve <- learningCurve %>%
-      dplyr::rename(Training = .data$TrainBrierScaled, Testing = .data$TestBrierScaled) %>%
-      tidyr::gather(Dataset, sBrier, c(.data$Training, .data$Testing), factor_key = FALSE)
-    
-    # define plot properties
-    yAxisRange <- c(0.0, 1.0)
-    y <- "sBrier"
-  } else {
-    stop("An incorrect metric has been specified.")
-  }
-  
-  if (abscissa == "observations") {
-    abscissa <- "Observations"
-    abscissaLabel <- "No. of observations"
-  } else if (abscissa == "events") {
-    abscissa <- "Occurrences"
-    abscissaLabel <- "No. of events"
-  } else {
-    stop("An incorrect abscissa has been specified.")
-  }
-  
-  # create plot object
-  plot <- tidyLearningCurve %>%
-    ggplot2::ggplot(ggplot2::aes_string(x = abscissa, y = y,
-                                        col = "Dataset")) +
-    ggplot2::geom_line() +
-    ggplot2::coord_cartesian(ylim = yAxisRange, expand = FALSE) +
-    ggplot2::labs(title = plotTitle, subtitle = plotSubtitle, 
-                  x = abscissaLabel) +
-    ggplot2::theme_light()
-  
-  # save plot, if fucntion call provides a file name
-  if ((!is.null(fileName)) & (is.character(fileName))) {
-    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
-  }
-  
-  return(plot)
-}
+

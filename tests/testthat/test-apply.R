@@ -84,6 +84,28 @@ test_that("similarPlpData inputs", {
                                         sample=NULL, 
                                         createPopulation= T))
   
+  # test it runs:
+  similarRealData <- similarPlpData(plpModel= plpResultReal$model,
+    createCohorts = F,
+    newConnectionDetails = connectionDetails,
+    newCdmDatabaseSchema = cdmDatabaseSchema,
+    newCohortDatabaseSchema = ohdsiDatabaseSchema,
+    newCohortTable = 'cohorts',
+    newCohortId = 1,
+    newOutcomeDatabaseSchema = ohdsiDatabaseSchema,
+    newOutcomeTable = 'outs_test',
+    newOutcomeId = 2,
+    newOracleTempSchema = NULL,
+    sample = 100, 
+    createPopulation= T)
+  
+  expect_equal(
+    plpDataReal$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull(),
+    similarRealData$plpData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()
+  )
+  
+  expect_true('population' %in% names(similarRealData))
+  
 })
 
 

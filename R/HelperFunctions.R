@@ -42,7 +42,8 @@ ensure_installed <- function(pkg) {
 
 createTempModelLoc <- function(){
   repeat{
-    loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
+    loc <- paste(tempdir(), paste0('python_models_',sample(10002323,1)), sep = '\\')
+    #loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
     if(!dir.exists(loc)){
       return(loc)
     }

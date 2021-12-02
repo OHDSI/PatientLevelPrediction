@@ -100,6 +100,7 @@ diagnostic <- function(plpData = NULL,
                        outcomeDatabaseSchema = cohortDatabaseSchema,
                        outcomeTable = cohortTable,
                        cdmVersion = 5,
+  # populationSettingsList = ,
                        riskWindowStart = c(1,1,1,1,1),  # population setting list?
                        startAnchor = rep('cohort start',5),
                        riskWindowEnd = c(365,365*2, 365*3,365*4,365*5),

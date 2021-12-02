@@ -32,20 +32,22 @@
 #' @return
 #' An object of class \code{sampleSettings}
 #' @export
-createSampleSettings(type = 'none',
-                     numberOutcomestoNonOutcomes,
+createSampleSettings <- function(type = 'none',
+                     numberOutcomestoNonOutcomes = 1,
                      sampleSeed = sample(10000,1)){
   
-  if(!missing(numberOutcomestoNonOutcomes)){
-    checkIsClass(numberOutcomestoNonOutcomes, c('numeric','integer'))
-    checkHigher(numberOutcomestoNonOutcomes,0)
-  }
-  if(!missing(sampleSeed)){
-    checkIsClass(sampleSeed, c('numeric','integer'))
-    checkHigher(sampleSeed,0)
+  checkIsClass(numberOutcomestoNonOutcomes, c('numeric','integer'))
+  checkHigher(numberOutcomestoNonOutcomes,0)
+  checkIsClass(sampleSeed, c('numeric','integer'))
+  checkIsClass(type, c('character'))
+  if(! type %in% c('none', 'underSample', 'overSample')){
+    stop('Incorrect type.  Pick: none/underSample/overSample')
   }
   
-  sampleSettings <- list(numberOutcomestoNonOutcomes = numberOutcomestoNonOutcomes)
+  sampleSettings <- list(
+    numberOutcomestoNonOutcomes = numberOutcomestoNonOutcomes,
+    sampleSeed  = sampleSeed 
+    )
   
   if(type == 'none'){
     attr(sampleSettings, "fun") <- "sameData"
@@ -139,10 +141,18 @@ underSampleData <- function(trainData, sampleSettings){
   sampleTrainData$labels <- trainData$labels %>% dplyr::filter(.data$rowId %in% pplOfInterest)
   sampleTrainData$folds <- trainData$folds %>% dplyr::filter(.data$rowId %in% pplOfInterest)
   
+
+  
   sampleTrainData$covariateData <- Andromeda::andromeda()
   sampleTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef
   sampleTrainData$covariateData$covariates <- trainData$covariateData$covariates %>% 
     dplyr::filter(.data$rowId %in% pplOfInterest)
+  
+  #update metaData$populationSize = nrow(trainData$labels)
+  metaData <- attr(trainData$covariateData, 'metaData')
+  metaData$populationSize = nrow(sampleTrainData$labels)
+  attr(sampleTrainData$covariateData, 'metaData') <- metaData
+  
   class(sampleTrainData$covariateData) <- 'covariateData'
   
   return(sampleTrainData)
@@ -152,5 +162,5 @@ overSampleData <- function(trainData, sampleSettings){
   
   #TODO
   
-  return(sampleTrainData)
+  return(trainData)
 }

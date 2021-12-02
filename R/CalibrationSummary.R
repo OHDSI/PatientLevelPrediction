@@ -15,20 +15,20 @@
 #' @return
 #' A dataframe with the calibration summary
 #' @export
-getCalibrationSummary(
+getCalibrationSummary <- function(
   prediction = prediction,
   predictionType = type,
   typeColumn = typeColumn,
-  numberOfStrata,
-  truncateFraction
-){
+  numberOfStrata = 100,
+  truncateFraction = 0.05
+  ){
   evaluation <- do.call(
     what = paste0('getCalibrationSummary_', predictionType), 
     args = list(
       prediction = prediction, 
       evalColumn = typeColumn,
-      numberOfStrata = 100,
-      truncateFraction = 0.01,
+      numberOfStrata = numberOfStrata,
+      truncateFraction = truncateFraction,
       timepoint = attr(prediction, 'metaData')$timepoint
     )
   )
@@ -37,11 +37,11 @@ getCalibrationSummary(
 }
 
 
-getCalibration_binary <- function(
+getCalibrationSummary_binary <- function(
   prediction,
   evalColumn,
   numberOfStrata = 10,
-  truncateFraction = 0.01,
+  truncateFraction = 0.05,
   ...) {
   
   result <- c()
@@ -121,7 +121,7 @@ getCalibration_binary <- function(
 
 
 
-getCalibration_survival <- function(
+getCalibrationSummary_survival <- function(
   prediction,
   evalColumn,
   numberOfStrata = 10,
@@ -137,11 +137,14 @@ getCalibration_survival <- function(
     predictionOfInterest <- prediction %>% dplyr::filter(.data[[evalColumn]] == evalType)
     
   # add in calibration for  survival 
+    t <- predictionOfInterest$survivalTime
+    y <- ifelse(predictionOfInterest$outcomeCount > 0, 1, 0)
+    
   S <- survival::Surv(t, y) 
-  if(length(unique(predictionOfInterest$value))<=100){
+  if(length(unique(predictionOfInterest$value)) <= numberOfStrata){
     gval <- 10
   } else{
-    gval <- 100
+    gval <- numberOfStrata
   }
   groups<-Hmisc::cut2(predictionOfInterest$value,g=gval)
   n.groups<-length(levels(groups))
@@ -186,7 +189,7 @@ getCalibration_survival <- function(
     PersonCountAtRisk = sizesN
   ) 
   
-  return <- rbind(
+  result <- rbind(
     result,
     calibrationSummary
   )

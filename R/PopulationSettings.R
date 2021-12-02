@@ -51,7 +51,7 @@ createStudyPopulationSettings <- function(
   removeSubjectsWithPriorOutcome = TRUE,
   priorOutcomeLookback = 99999,
   requireTimeAtRisk = T,
-  minTimeAtRisk=364,
+  minTimeAtRisk = 364,
   riskWindowStart = 1,
   startAnchor = 'cohort start',
   riskWindowEnd = 365,
@@ -59,6 +59,68 @@ createStudyPopulationSettings <- function(
   restrictTarToCohortEnd = F
 ){
   
+  checkIsClass(binary, "logical")
+  checkNotNull(binary)
+  
+  checkIsClass(includeAllOutcomes, "logical")
+  checkNotNull(includeAllOutcomes)
+  
+  checkIsClass(firstExposureOnly, "logical")
+  checkNotNull(firstExposureOnly)
+  
+  checkIsClass(washoutPeriod, c("numeric", "integer"))
+  checkNotNull(washoutPeriod)
+  checkHigherEqual(washoutPeriod, 0)
+  
+  checkIsClass(removeSubjectsWithPriorOutcome, "logical")
+  checkNotNull(removeSubjectsWithPriorOutcome)
+  
+  checkIsClass(priorOutcomeLookback, c("numeric", "integer"))
+  checkNotNull(priorOutcomeLookback)
+  checkHigherEqual(priorOutcomeLookback, 0)
+  
+  checkIsClass(requireTimeAtRisk, "logical")
+  checkNotNull(requireTimeAtRisk)
+  
+  if(requireTimeAtRisk){
+    checkIsClass(minTimeAtRisk, c("numeric", "integer"))
+    checkNotNull(minTimeAtRisk)
+    checkHigherEqual(minTimeAtRisk, 0)
+  }
+  
+  checkIsClass(riskWindowStart, c("numeric", "integer"))
+  checkNotNull(riskWindowStart)
+  
+  checkIsClass(startAnchor, c("character"))
+  checkNotNull(startAnchor)
+  if(!startAnchor%in%c('cohort start', 'cohort end')){
+    stop('Incorrect startAnchor')
+  }
+  
+  checkIsClass(riskWindowEnd, c("numeric", "integer"))
+  checkNotNull(riskWindowEnd)
+  
+  checkIsClass(endAnchor, c("character"))
+  checkNotNull(endAnchor)
+  if(!endAnchor%in%c('cohort start', 'cohort end')){
+    stop('Incorrect endAnchor')
+  }
+  
+  if(startAnchor == endAnchor){
+    checkHigherEqual(riskWindowEnd, riskWindowStart)
+  }
+
+  checkIsClass(restrictTarToCohortEnd, "logical")
+  checkNotNull(restrictTarToCohortEnd)
+  
+  if(requireTimeAtRisk){
+    if(startAnchor==endAnchor){
+      if(minTimeAtRisk>(riskWindowEnd-riskWindowStart)){
+        warning('issue: minTimeAtRisk is greater than max possible time-at-risk')
+      }
+    }
+  }
+
   result <- list(
     binary = binary,
     includeAllOutcomes = includeAllOutcomes,
@@ -87,24 +149,10 @@ createStudyPopulationSettings <- function(
 #'
 #' @param plpData      An object of type \code{plpData} as generated using
 #'                              \code{getplpData}.
+#' @param outcomeId             The  ID of the outcome.
+#' @param populationSettings    An object of class populationSettings created using \code{createPopulationSettings}
 #' @param population            If specified, this population will be used as the starting point instead of the
 #'                              cohorts in the \code{plpData} object.
-#' @param binary                Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)                              
-#' @param outcomeId             The  ID of the outcome.
-#' @param includeAllOutcomes    (binary) indicating whether to include people with outcomes who are not observed for the whole at risk period
-#' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
-#'                                     this is typically done in the \code{createStudyPopulation} function,
-#' @param washoutPeriod                The mininum required continuous observation time prior to index
-#'                                     date for a person to be included in the cohort.
-#' @param removeSubjectsWithPriorOutcome  Remove subjects that have the outcome prior to the risk window start?
-#' @param priorOutcomeLookback            How many days should we look back when identifying prior outcomes?
-#' @param requireTimeAtRisk      Should subject without time at risk be removed?
-#' @param minTimeAtRisk          The minimum number of days at risk required to be included
-#' @param riskWindowStart        The start of the risk window (in days) relative to the \code{startAnchor}.
-#' @param startAnchor	           The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".
-#' @param riskWindowEnd          The end of the risk window (in days) relative to the \code{endAnchor} parameter
-#' @param endAnchor              The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".
-#' @param restrictTarToCohortEnd If using a survival model and you want the time-at-risk to end at the cohort end date set this to T
 #' @param ...                   Other inputs
 #'
 #' @return
@@ -119,47 +167,28 @@ createStudyPopulationSettings <- function(
 #' }
 #'
 #' @export
-createStudyPopulation <- function(plpData,
-                                  population = NULL,
-                                  outcomeId,
-                                  binary = T,
-                                  includeAllOutcomes = T,
-                                  firstExposureOnly = FALSE,
-                                  washoutPeriod = 0,
-                                  removeSubjectsWithPriorOutcome = TRUE,
-                                  priorOutcomeLookback = 99999,
-                                  requireTimeAtRisk = F,
-                                  minTimeAtRisk=365, # outcome nonoutcome
-                                  riskWindowStart = 0,
-                                  startAnchor = "cohort start",
-                                  riskWindowEnd = 365,
-                                  endAnchor = "cohort start",
-                                  restrictTarToCohortEnd = F,
-                                  ...) {
+createStudyPopulation <- function(
+  plpData,
+  outcomeId,
+  populationSettings,
+  population = NULL
+  ) {
   
+  checkIsClass(populationSettings, 'populationSettings')
   
-  # If addExposureDaysToStart is specified used it but give warning
-  if(!missing(addExposureDaysToStart)){
-    if(is.null(startAnchor)){
-      warning('addExposureDaysToStart is depreciated - please use startAnchor instead') 
-      startAnchor <- ifelse(addExposureDaysToStart, 'cohort end','cohort start')
-    } else {
-      warning('addExposureDaysToStart specificed so being used')
-      warning('addExposureDaysToStart is depreciated - please use startAnchor instead') 
-      startAnchor <- ifelse(addExposureDaysToStart, 'cohort end','cohort start')
-    }
-  }
-  
-  if(!missing(addExposureDaysToEnd)){
-    if(is.null(endAnchor)){
-      warning('addExposureDaysToEnd is depreciated - please use endAnchor instead') 
-      endAnchor <- ifelse(addExposureDaysToEnd, 'cohort end','cohort start')
-    } else {
-      warning('addExposureDaysToEnd specificed so being used')
-      warning('addExposureDaysToEnd is depreciated - please use endAnchor instead') 
-      endAnchor <- ifelse(addExposureDaysToEnd, 'cohort end','cohort start')
-    }
-  }
+  binary <- populationSettings$binary
+  includeAllOutcomes <- populationSettings$includeAllOutcomes
+  firstExposureOnly <- populationSettings$firstExposureOnly
+  washoutPeriod <- populationSettings$washoutPeriod 
+  removeSubjectsWithPriorOutcome <- populationSettings$removeSubjectsWithPriorOutcome
+  priorOutcomeLookback <- populationSettings$priorOutcomeLookback
+  requireTimeAtRisk <- populationSettings$requireTimeAtRisk
+  minTimeAtRisk <- populationSettings$minTimeAtRisk
+  riskWindowStart <- populationSettings$riskWindowStart
+  startAnchor <- populationSettings$startAnchor
+  riskWindowEnd <- populationSettings$riskWindowEnd
+  endAnchor <- populationSettings$endAnchor
+  restrictTarToCohortEnd <- populationSettings$restrictTarToCohortEnd
   
   # parameter checks
   if(!class(plpData)%in%c('plpData')){
@@ -168,50 +197,22 @@ createStudyPopulation <- function(plpData,
   }
   ParallelLogger::logDebug(paste0('outcomeId: ', outcomeId))
   checkNotNull(outcomeId)
+  
   ParallelLogger::logDebug(paste0('binary: ', binary))
-  checkBoolean(binary)
   ParallelLogger::logDebug(paste0('includeAllOutcomes: ', includeAllOutcomes))
-  checkBoolean(includeAllOutcomes)
   ParallelLogger::logDebug(paste0('firstExposureOnly: ', firstExposureOnly))
-  checkBoolean(firstExposureOnly)
   ParallelLogger::logDebug(paste0('washoutPeriod: ', washoutPeriod))
-  checkHigherEqual(washoutPeriod,0)
   ParallelLogger::logDebug(paste0('removeSubjectsWithPriorOutcome: ', removeSubjectsWithPriorOutcome))
-  checkBoolean(removeSubjectsWithPriorOutcome)
-  if (removeSubjectsWithPriorOutcome){
-    ParallelLogger::logDebug(paste0('priorOutcomeLookback: ', priorOutcomeLookback))
-    checkHigher(priorOutcomeLookback,0)
-  }
+  ParallelLogger::logDebug(paste0('priorOutcomeLookback: ', priorOutcomeLookback))
   ParallelLogger::logDebug(paste0('requireTimeAtRisk: ', requireTimeAtRisk))
-  checkBoolean(requireTimeAtRisk)
   ParallelLogger::logDebug(paste0('minTimeAtRisk: ', minTimeAtRisk))
-  checkHigherEqual(minTimeAtRisk,0)
   ParallelLogger::logDebug(paste0('restrictTarToCohortEnd: ', restrictTarToCohortEnd))
-  checkBoolean(restrictTarToCohortEnd)
   ParallelLogger::logDebug(paste0('riskWindowStart: ', riskWindowStart))
-  checkHigherEqual(riskWindowStart,0)
   ParallelLogger::logDebug(paste0('startAnchor: ', startAnchor))
-  if(!startAnchor%in%c('cohort start', 'cohort end')){
-    stop('Incorrect startAnchor')
-  }
   ParallelLogger::logDebug(paste0('riskWindowEnd: ', riskWindowEnd))
-  checkHigherEqual(riskWindowEnd,0)
   ParallelLogger::logDebug(paste0('endAnchor: ', endAnchor))
-  if(!endAnchor%in%c('cohort start', 'cohort end')){
-    stop('Incorrect startAnchor')
-  }
-  
-  if(requireTimeAtRisk){
-    if(startAnchor==endAnchor){
-      if(minTimeAtRisk>(riskWindowEnd-riskWindowStart)){
-        warning('issue: minTimeAtRisk is greater than max possible time-at-risk')
-      }
-    }
-  }
-  
   ParallelLogger::logDebug(paste0('restrictTarToCohortEnd: ', restrictTarToCohortEnd))
-  checkBoolean(restrictTarToCohortEnd)
-  
+
   if (is.null(population)) {
     population <- plpData$cohorts
   }
@@ -219,22 +220,7 @@ createStudyPopulation <- function(plpData,
   # save the metadata
   metaData <- attr(population, "metaData")
   metaData$outcomeId <- outcomeId
-  metaData$populationSettings <- list(
-    binary = binary,
-    includeAllOutcomes = includeAllOutcomes,
-    firstExposureOnly = firstExposureOnly,
-    washoutPeriod = washoutPeriod,
-    removeSubjectsWithPriorOutcome = removeSubjectsWithPriorOutcome,
-    priorOutcomeLookback = priorOutcomeLookback,
-    requireTimeAtRisk = requireTimeAtRisk, 
-    minTimeAtRisk = minTimeAtRisk,
-    riskWindowStart = riskWindowStart,
-    startAnchor = startAnchor,
-    riskWindowEnd = riskWindowEnd,
-    endAnchor = endAnchor,
-    restrictTarToCohortEnd = restrictTarToCohortEnd
-  )
-  
+  metaData$populationSettings <- populationSettings
   
   # set the existing attrition
   if(is.null(metaData$attrition)){

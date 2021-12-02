@@ -4,20 +4,10 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(
-  population,
-  data,
-  modelSettings,
-  cohortId,
-  outcomeId,
-  minCovariateFraction = 0.001,
-  normalizeData = T
-)
+fitPlp(trainData, modelSettings, search = "grid")
 }
 \arguments{
-\item{population}{The population created using createStudyPopulation() who will have their risks predicted}
-
-\item{data}{An object of type \code{plpData} - the patient level prediction
+\item{trainData}{An object of type \code{TrainData} created using \code{splitData}
 data extracted from the CDM.}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
@@ -29,13 +19,7 @@ data extracted from the CDM.}
 \item{KNNclassifier()}{ A KNN model}
 }}
 
-\item{cohortId}{Id of study cohort}
-
-\item{outcomeId}{Id of outcome cohort}
-
-\item{minCovariateFraction}{The minimum fraction of the target popualtion who have a variable for it to be included in the model training}
-
-\item{normalizeData}{Whether to normalise the data before model fitting}
+\item{search}{The search strategy for the hyper-parameter selection (currently not used)}
 }
 \value{
 An object of class \code{plpModel} containing:

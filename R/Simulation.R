@@ -84,7 +84,6 @@
 #' @param plpDataSimulationProfile   An object of type \code{plpDataSimulationProfile} as generated
 #'                                   using the \cr\code{createplpDataSimulationProfile} function.
 #' @param n                          The size of the population to be generated.
-#' @param useInt64                   Make the covariateIds int64
 #'
 #' @details
 #' This function generates simulated data that is in many ways similar to the original data on which
@@ -95,7 +94,7 @@
 #' An object of type \code{plpData}.
 #'
 #' @export
-simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
+simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
   writeLines("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariatePrevalence
@@ -105,15 +104,12 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
   rowId <- sapply(personsPerCov, function(x, n) sample.int(size = x, n), n = n)
   rowId <- do.call("c", rowId)
   covariateIds <- as.numeric(names(covariatePrevalence))
-  covariateId <- sapply(1:length(personsPerCov),
+  covariateId <- unlist(sapply(1:length(personsPerCov),
                         function(x, personsPerCov, covariateIds) rep(covariateIds[x],
                                                                      personsPerCov[x]),
                         personsPerCov = personsPerCov,
-                        covariateIds = covariateIds)
-  if(useInt64){
-    covariateId <- bit64::as.integer64(do.call("c", covariateId))
-    plpDataSimulationProfile$covariateRef$covariateId <- bit64::as.integer64(plpDataSimulationProfile$covariateRef$covariateId)
-  }
+                        covariateIds = covariateIds))
+
   covariateValue <- rep(1, length(covariateId))
   covariateData <- Andromeda::andromeda(covariates = data.frame(rowId = rowId,
                                                                 covariateId = covariateId,
@@ -139,7 +135,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
   writeLines("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
-    prediction <- predictAndromeda(plpDataSimulationProfile$outcomeModels[[i]],
+    prediction <- predictCyclopsType(plpDataSimulationProfile$outcomeModels[[i]],
                                    cohorts,
                                    covariateData,
                                    modelType = "poisson")

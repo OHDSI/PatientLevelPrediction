@@ -12,7 +12,7 @@
 #' The 0.00, 0.1, 0.25, 0.5, 0.75, 0.9, 1.00 quantile pf the prediction,
 #' the mean and standard deviation per class
 #' @export
-getPredictionDistribution(
+getPredictionDistribution <- function(
   prediction = prediction,
   predictionType = type,
   typeColumn = typeColumn
@@ -108,5 +108,6 @@ getPredictionDistribution_binary <- function(prediction, evalColumn, ...){
 
 
 getPredictionDistribution_survival <- function(prediction, evalColumn, timepoint, ...){
+  ParallelLogger::logWarn('PredictionDistribution not available for survival models')
   return(NULL)
 }

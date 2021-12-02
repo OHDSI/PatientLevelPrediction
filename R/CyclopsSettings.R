@@ -32,7 +32,7 @@ setLassoLogisticRegression<- function(
   }
   checkIsClass(threads, c('numeric','integer'))
   checkIsClass(variance, c('numeric','integer'))
-  checkHigherEqual(-variance, 0)
+  checkHigherEqual(variance, 0)
   
   checkIsClass(lowerLimit, c('numeric','integer'))
   checkIsClass(upperLimit, c('numeric','integer'))
@@ -40,17 +40,21 @@ setLassoLogisticRegression<- function(
   checkHigherEqual(upperLimit, lowerLimit)
     
   param <- list(
-    priorType =  "laplace",
-    forceIntercept = forceIntercept,
-    variance = variance, 
+    priorParams = list(
+      priorType =  "laplace",
+      forceIntercept = forceIntercept,
+      variance = variance, 
+      exclude = noShrinkage
+      ),
     includeCovariateIds = includeCovariateIds, 
     upperLimit = upperLimit, 
-    lowerLimit = lowerLimit,
-    exclude = noShrinkage
+    lowerLimit = lowerLimit
     )
   
   attr(param, 'settings') <- list(
-    modeType = 'logistic',
+    priorfunction = 'Cyclops::createPrior',
+    crossValidationInPrior = T,
+    modelType = 'logistic',
     addIntercept = T,
     useControl = T,
     seed = seed[1],
@@ -107,7 +111,7 @@ setCoxModel<- function(
   }
   checkIsClass(threads, c('numeric','integer'))
   checkIsClass(variance, c('numeric','integer'))
-  checkHigherEqual(-variance, 0)
+  checkHigherEqual(variance, 0)
   
   checkIsClass(lowerLimit, c('numeric','integer'))
   checkIsClass(upperLimit, c('numeric','integer'))
@@ -117,16 +121,20 @@ setCoxModel<- function(
   #selectorType = "byRow",
 
   param <- list(
-    priorType =  "laplace",
-    variance = variance, 
+    priorParams = list(
+      priorType =  "laplace",
+      variance = variance, 
+      exclude = noShrinkage
+    ),
     includeCovariateIds = includeCovariateIds, 
     upperLimit = upperLimit, 
-    lowerLimit = lowerLimit,
-    exclude = noShrinkage
+    lowerLimit = lowerLimit
   )
   
   attr(param, 'settings') <- list(
-    modeType = 'cox',
+    priorfunction = 'Cyclops::createPrior',
+    crossValidationInPrior = T,
+    modelType = 'cox',
     addIntercept = F,
     useControl = T,
     seed = seed[1],
@@ -155,13 +163,28 @@ setCoxModel<- function(
 #' @param exclude        A vector of numbers or covariateId names to exclude from prior
 #' @param forceIntercept Logical: Force intercept coefficient into regularization
 #' @param fitBestSubset  Logical: Fit final subset with no regularization 
+#' @param initialRidgeVariance  integer
+#' @param tolerance      numeric
+#' @param maxIterations  integer
+#' @param threshold      numeric
+#' @param delta          numeric
 #'
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setIterativeHardThresholding<- function(K = 10, penalty = "bic", seed = NULL, exclude = NULL, 
+setIterativeHardThresholding<- function(
+  K = 10, 
+  penalty = "bic", 
+  seed = sample(100000,1), 
+  exclude = c(), 
   forceIntercept = F,
-  fitBestSubset = FALSE){
+  fitBestSubset = FALSE,
+  initialRidgeVariance = 10000,
+  tolerance = 1e-08,
+  maxIterations = 10000,
+  threshold = 1e-06, 
+  delta = 0
+  ){
   
   ensure_installed("IterativeHardThresholding")
   
@@ -175,28 +198,44 @@ setIterativeHardThresholding<- function(K = 10, penalty = "bic", seed = NULL, ex
     stop("fitBestSubset must be of type: logical")
   if(!class(seed)%in%c('numeric','NULL','integer'))
     stop('Invalid seed')
-  
+
+
   # set seed
   if(is.null(seed[1])){
     seed <- as.integer(sample(100000000,1))
   }
   
-  result <- list(model='fitIterativeHardThresholding', param=list(K = K, penalty = penalty, seed=seed[1], exclude = exclude, 
-    forceIntercept = forceIntercept,
-    fitBestSubset = fitBestSubset), name="Iterative Hard Thresholding")
-  class(result) <- 'modelSettings' 
+  param <- list(
+    priorParams = list(
+      K = K,
+      penalty = penalty, 
+      exclude = noShrinkage,
+      forceIntercept = forceIntercept,
+      fitBestSubset = fitBestSubset,
+      initialRidgeVariance = initialRidgeVariance,
+      tolerance = tolerance[1], 
+      maxIterations = maxIterations[1], 
+      threshold = threshold, 
+      delta = delta
+    )
+  )
+  
+  attr(param, 'settings') <- list(
+    priorfunction = 'IterativeHardThresholding::createIhtPrior',
+    crossValidationInPrior = F,
+    modelType = 'logistic',
+    addIntercept = F,
+    useControl = F,
+    seed = seed[1],
+    name = "Iterative Hard Thresholding"
+  )
+  
+  result <- list(
+    fitFunction = "fitCyclopsModel",
+    param = param
+  )
+  class(result) <- "modelSettings"
   
   return(result)
 }
 
-modelTrained <- fitGLMModel(population = population,
-  plpData = plpData,
-  modelType = "logistic", 
-  prior = IterativeHardThresholding::createIhtPrior(K  = param$K, 
-    penalty = param$penalty, 
-    exclude = param$exclude,
-    forceIntercept = param$forceIntercept,
-    fitBestSubset = param$fitBestSubset),
-  control = Cyclops::createControl()
-  
-)

@@ -1,4 +1,4 @@
-getEvaluationStatistics(
+getEvaluationStatistics <- function(
   prediction = prediction, 
   predictionType = type,
   typeColumn = typeColumn
@@ -21,7 +21,7 @@ getEvaluationStatistics(
 getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(prediction[,evalColumn] %>% pull())
   
   for(evalType in evalTypes){
     
@@ -75,14 +75,14 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
     # using rms::val.prob
     indValProb <- predictionOfInterest$value>0 & predictionOfInterest$value < 1
     valProb <- tryCatch(rms::val.prob(predictionOfInterest$value[indValProb], predictionOfInterest$outcomeCount[indValProb]), 
-      error = function(e){ParallelLogger::logInfo(e); return(list(Eavg = 0, 
+      error = function(e){ParallelLogger::logInfo(e); return(c(Eavg = 0, 
         E90 = 0, 
         Emax = 0))})
     result <- rbind(
       result, 
-      c(evalType, 'Eavg', valProb$Eavg),
-      c(evalType, 'E90', valProb$E90),
-      c(evalType, 'Emax', valProb$Emax)
+      c(evalType, 'Eavg', valProb['Eavg']),
+      c(evalType, 'E90', valProb['E90']),
+      c(evalType, 'Emax', valProb['Emax'])
     )
     ici <- ici(prediction)
     result <- rbind(
@@ -198,7 +198,7 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
     
     if(!is.null(conc)){
       cStatistic <- round(conc$concordance,5)
-      c.se<-sqrt(conc$var)
+      c.se <- sqrt(conc$var)
       cStatistic_l95CI <- round(conc$concordance+stats::qnorm(.025)*c.se,3)
       cStatistic_u95CI <- round(conc$concordance+stats::qnorm(.975)*c.se,3)
     }
@@ -258,7 +258,7 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
 #' @export
 computeAuc <- function(prediction,
   confidenceInterval = FALSE) {
-  if (attr(prediction, "metaData")$predictionType != "binary")
+  if (attr(prediction, "metaData")$modelType != "binary")
     stop("Computing AUC is only implemented for binary classification models")
   
   if (confidenceInterval) {
@@ -270,47 +270,6 @@ computeAuc <- function(prediction,
   }
 }
 
-#' Compute the area under the ROC curve
-#'
-#' @details
-#' Computes the area under the ROC curve for the predicted probabilities, given the true observed
-#' outcomes.
-#'
-#' @param prediction           A vector with the predicted hazard rate.
-#' @param status               A vector with the status of 1 (event) or 0 (no event).
-#' @param time                 Only for survival models: a vector with the time to event or censor
-#'                             (which ever comes first).
-#' @param confidenceInterval   Should 95 percebt confidence intervals be computed?
-#' @param timePoint            Only for survival models: time point when the AUC should be evaluated
-#' @param modelType            Type of model. Currently supported are "logistic" and "survival".
-#'
-#' @export
-computeAucFromDataFrames <- function(prediction,
-  status,
-  time = NULL,
-  confidenceInterval = FALSE,
-  timePoint,
-  modelType = "logistic") {
-  if (modelType == "survival" & confidenceInterval)
-    stop("Currently not supporting confidence intervals for survival models")
-  
-  if (modelType == "survival") {
-    Surv.rsp <- survival::Surv(time, status)
-    Surv.rsp.new <- Surv.rsp
-    if (missing(timePoint))
-      timePoint <- max(time[status == 1])
-    auc <- survAUC::AUC.uno(Surv.rsp, Surv.rsp.new, prediction, timePoint)$auc
-    return(auc * auc)
-  } else {
-    if (confidenceInterval) {
-      auc <- aucWithCi(prediction, status)
-      return(data.frame(auc = auc[1], auc_lb95ci = auc[2], auc_lb95ci = auc[3]))
-    } else {
-      auc <- aucWithoutCi(prediction, status)
-      return(auc)
-    }
-  }
-}
 
 #' brierScore
 #'

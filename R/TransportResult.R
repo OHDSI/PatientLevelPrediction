@@ -52,51 +52,14 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
                          reduceSize = F){
 
   # remove any sensitive data:
-  plpResult$inputSetting$dataExtrractionSettings <- NULL 
-  plpResult$executionSummary$Log <- NULL
-  plpResult$model$metaData$call$connectionDetails <- NULL
-  plpResult$model$metaData$call$cdmDatabaseSchema <- dataName
-  plpResult$model$metaData$call$cohortDatabaseSchema <- NULL
-  plpResult$model$metaData$call$outcomeDatabaseSchema <- NULL
-  plpResult$model$metaData$call$oracleTempSchema <- NULL
-  plpResult$model$metaData$call$baseUrl <- NULL
-  plpResult$model$metaData$modelName <- modelName
-  plpResult$model$index <- NULL
-  if(!is.null(plpResult$model$trainCVAuc)){
-    plpResult$model$trainCVAuc <- NULL # newly added 
-  }
-  if(class(plpResult$model$model)%in%c('list',"plpModel")){
-    if(!is.null(plpResult$model$model$cv)){
-      plpResult$model$model$cv <- NULL # newly added 
-    }
-  }
+  
   plpResult$prediction <- NULL
-  if(!is.null(plpResult$model$predict)){
-    mod <- get("plpModel", envir = environment(plpResult$model$predict))
-    mod$index <- NULL
-    mod$metaData$call$connectionDetails <- NULL
-    mod$metaData$call$oracleTempSchema <- NULL
-    mod$metaData$call$outcomeDatabaseSchema <-'Missing'
-    mod$metaData$call$cdmDatabaseSchema <- 'Missing'
-    mod$metaData$call$cohortDatabaseSchema <- 'Missing'
-    mod$metaData$call$baseUrl <- NULL
-    if(!is.null(mod$trainCVAuc)){
-      mod$trainCVAuc <- NULL
-    }
-    if(class(mod$model)=='list'){
-      if(!is.null(mod$model$cv)){
-        mod$model$cv <- NULL
-      }
-    }
-    mod$varImp <- mod$varImp[mod$varImp$covariateValue!=0,]  #remove non-zero
-    
-    assign("plpModel", mod, envir = environment(plpResult$model$predict))
-  }
+  plpResult$model$predict <- NULL
+  
+  #plpModel$settings$plpDataSettings
   
   if(reduceSize){
-    plpResult$model$covariateMap <- NULL
-    plpResult$model$varImp <- NULL
-    plpResult$model$metaData$preprocessSettings <- NULL
+    plpResult$model$covariateImportance <- plpResult$model$covariateImportance %>% dplyr::filter(.data$covariateValue != 0)
   }
 
   if(!includeEvaluationStatistics)
@@ -121,7 +84,7 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
       plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk[is.na(plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk)] <- 0
       plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome[is.na(plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome)] <- 0
       
-      removeInd <- plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk< n |
+      removeInd <- plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk < n |
         plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome < n 
       plpResult$performanceEvaluation$demographicSummary$PersonCountAtRisk[removeInd] <- -1
       plpResult$performanceEvaluation$demographicSummary$PersonCountWithOutcome[removeInd] <- -1
@@ -149,10 +112,9 @@ transportPlp <- function(plpResult,modelName=NULL, dataName=NULL,
   #save to the output location
   if(save){
     savePlpResult(plpResult, outputFolder)
-    return(NULL)
   }
   
-  return(plpResult)
+  return(invisible(plpResult))
 
 }
 
@@ -181,17 +143,7 @@ transportModel <- function(plpModel,outputFolder){
   plpModel$metaData$call$outcomeDatabaseSchema <- NULL
   plpModel$metaData$call$oracleTempSchema <- NULL
 
-  # remove any sensitive data:
-  if(!is.null(plpModel$predict)){
-    mod <- get("plpModel", envir = environment(plpModel$predict))
-    mod$index <- NULL
-    mod$metaData$call$connectionDetails <- NULL
-    mod$metaData$call$oracleTempSchema <- NULL
-    mod$metaData$call$outcomeDatabaseSchema <-'Missing'
-    mod$metaData$call$cdmDatabaseSchema <- 'Missing'
-    mod$metaData$call$cohortDatabaseSchema <- 'Missing'
-    assign("plpModel", mod, envir = environment(plpModel$predict))
-  }
+  plpModel$predict <- NULL
 
   #save to the output location
   savePlpModel(plpModel, outputFolder)

@@ -51,41 +51,67 @@ CREATE TABLE @my_schema.@string_to_appendmodel_settings(
     model_settings_json VARCHAR(MAX)
 );
 
-CREATE TABLE @my_schema.@string_to_appendtraining_settings( -- new
-    training_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    test_split VARCHAR(100),
-	test_fraction float,
-	nfold int,
-	split_seed bigint
+CREATE TABLE @my_schema.@string_to_appendsplit_settings( -- was training_settings
+    split_setting_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    split_settings_json VARCHAR(MAX)
+);
+
+CREATE TABLE @my_schema.@string_to_appendplp_data_settings( -- new
+    plp_data_setting_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    plp_data_settings_json VARCHAR(MAX)
+);
+
+CREATE TABLE @my_schema.@string_to_appendfeature_engineering_settings( -- new
+    feature_engineering_setting_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    feature_engineering_settings_json VARCHAR(MAX)
+);
+
+CREATE TABLE @my_schema.@string_to_appendtidy_covariates_settings( -- new
+    tidy_covariates_setting_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    tidy_covariates_settings_json VARCHAR(MAX)
+);
+
+CREATE TABLE @my_schema.@string_to_appendsample_settings( -- new
+    sample_setting_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    sample_settings_json VARCHAR(MAX)
 );
 
 CREATE TABLE  @my_schema.@string_to_appendmodels (
     model_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	analysis_id varchar(50),
+	  analysis_id varchar(50),
     model_name CHAR(50) NOT NULL,
     target_id int NOT NULL,
     outcome_id int NOT NULL,
     tar_id int NOT NULL,
-	population_setting_id int NOT NULL,
-	model_setting_id int NOT NULL,
-	covariate_setting_id int NOT NULL,
+    plp_data_setting_id int NOT NULL, -- new
+	  population_setting_id int NOT NULL,
+	  model_setting_id int NOT NULL,
+	  covariate_setting_id int NOT NULL,
+	  sample_setting_id int NOT NULL, -- new
+	  split_setting_id int NOT NULL, -- new
+	  feature_engineering_setting_id int NOT NULL, -- new
+	  tidy_covariates_setting_id int NOT NULL, -- new
+	  require_dense_matrix char(1), -- new
     researcher_id int NOT NULL,
     database_id int NOT NULL,
-	hyper_param_search VARCHAR(MAX), -- new this contains the hyperparameter performances
+	  hyper_param_search VARCHAR(MAX), -- new this contains the hyperparameter performances
     plp_model_file char(50) NOT NULL,
-	execution_date_time DATETIME2,
-	training_id int NOT NULL, -- new
-	training_time VARCHAR(100), -- new
-	intercept float,
+	  execution_date_time DATETIME2,
+	  training_time VARCHAR(100), -- previously new
+	  intercept float,
     FOREIGN KEY (target_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (outcome_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (researcher_id) REFERENCES @my_schema.@string_to_appendresearchers(researcher_id),
     FOREIGN KEY (database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id),
-	FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
-	FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id),
+	  FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
+	  FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id),
     FOREIGN KEY (model_setting_id) REFERENCES @my_schema.@string_to_appendmodel_settings(model_setting_id),
-	FOREIGN KEY (covariate_setting_id) REFERENCES @my_schema.@string_to_appendcovariate_settings(covariate_setting_id),
-	FOREIGN KEY (training_id) REFERENCES @my_schema.@string_to_appendtraining_settings(training_id)
+	  FOREIGN KEY (covariate_setting_id) REFERENCES @my_schema.@string_to_appendcovariate_settings(covariate_setting_id),
+	  FOREIGN KEY (sample_setting_id) REFERENCES @my_schema.@string_to_appendsample_settings(sample_setting_id)  -- new
+	  FOREIGN KEY (split_setting_id) REFERENCES @my_schema.@string_to_appendsplit_settings(split_setting_id)  -- new
+	  FOREIGN KEY (plp_data_setting_id) REFERENCES @my_schema.@string_to_appendplp_data_settings(plp_data_setting_id) -- new
+	  FOREIGN KEY (feature_engineering_setting_id) REFERENCES @my_schema.@string_to_appendfeature_engineering_settings(feature_engineering_setting_id) -- new
+	  FOREIGN KEY (tidy_covariates_setting_id) REFERENCES @my_schema.@string_to_appendtidy_covariates_settings(tidy_covariates_setting_id) -- new
 );
 
 CREATE TABLE @my_schema.@string_to_appendstudy_models (
@@ -112,7 +138,7 @@ CREATE TABLE  @my_schema.@string_to_appendresults (
     target_id int NOT NULL,
     outcome_id int NOT NULL,
     tar_id int NOT NULL,
-	population_setting_id int NOT NULL,
+	  population_setting_id int NOT NULL,
     execution_date_time DATETIME2,
     plp_version char(10),
     FOREIGN KEY (model_id) REFERENCES @my_schema.@string_to_appendmodels(model_id),
@@ -121,12 +147,12 @@ CREATE TABLE  @my_schema.@string_to_appendresults (
     FOREIGN KEY (target_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (outcome_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
-	FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id)
+	  FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id)
 );
 
 CREATE TABLE @my_schema.@string_to_appendprediction_distribution (
     --distribution_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	result_id int NOT NULL,
+	  result_id int NOT NULL,
     eval char(10),
     class_label int,
     person_count int,
@@ -213,7 +239,7 @@ CREATE TABLE @my_schema.@string_to_appendevaluation_statistics (
     --evaluation_stat_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
 	result_id int NOT NULL,
 	eval char(10),
-    metric varchar(50),
+  metric varchar(50),
 	value float,
     FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
 );

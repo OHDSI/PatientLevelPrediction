@@ -61,7 +61,7 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
   return(result)
 }
 
-fitKNN <- function(trainData, param, search = 'none'){
+fitKNN <- function(trainData, param, search = 'none', analysisId ){
 
   if (!FeatureExtraction::isCovariateData(trainData$covariateData)){
     stop("Needs correct covariateData")
@@ -113,7 +113,7 @@ fitKNN <- function(trainData, param, search = 'none'){
       )
     )
   
-  prediction$evalType <- 'Train'
+  prediction$evaluationType <- 'Train'
   
   result <- list(
     model = indexFolder,
@@ -135,6 +135,7 @@ fitKNN <- function(trainData, param, search = 'none'){
     ),
     
     trainDetails = list(
+      analysisId = analysisId,
       outcomeId = attr(trainData, "metaData")$populationSettings$outcomeId,
       cohortId = attr(trainData, "metaData")$call$cohortId,
       trainingTime = comp,
@@ -147,10 +148,37 @@ fitKNN <- function(trainData, param, search = 'none'){
   
   
   class(result) <- 'plpModel'
-  attr(result, 'type') <- 'knn'
-  attr(result, 'predictionType') <- 'binary'
+  attr(result, 'predictionFunction') <- 'predictKnn'
+  attr(result, 'modelType') <- 'binary'
   return(result)
 }
 
+
+predictKnn <- function(
+  plpModel, 
+  covariateData, 
+  cohort
+){
+  
+  prediction <- BigKnn::predictKnn(
+    covariates = covaraiteData$covariates,
+    cohort = cohort[,!colnames(cohort)%in%'cohortStartDate'],
+    indexFolder = model$model,
+    k = model$modelSettings$modelParameters$k,
+    weighted = TRUE,
+    threads = plpModel$modelSettings$threads
+  )
+  
+  # can add: threads = 1 in the future
+  
+  # return the cohorts as a data frame with the prediction added as 
+  # a new column with the column name 'value'
+  prediction <- merge(cohort, prediction[,c('rowId','value')], by='rowId', 
+    all.x=T, fill=0)
+  prediction$value[is.na(prediction$value)] <- 0
+  
+  return(prediction)
+  
+}
 
 

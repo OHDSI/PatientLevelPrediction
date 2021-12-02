@@ -54,12 +54,7 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
   if(is.null(plpData$metaData$call$sampleSize)){  # fixed a bug when sampleSize is NULL
     plpData$metaData$call$sampleSize <- 'NULL'
   }
-  for(i in 2:length(plpData$metaData$call)){
-    if(!is.null(plpData$metaData$call[[i]]))
-      plpData$metaData$call[[i]] <- eval(plpData$metaData$call[[i]], envir = envir)
-  }
   
-  #FeatureExtraction::saveCovariateData(covariateData = plpData$covariateData, file = file.path(file, "covariates"))
   Andromeda::saveAndromeda(plpData$covariateData, file = file.path(file, "covariates"), maintainConnection = T)
   saveRDS(plpData$timeRef, file = file.path(file, "timeRef.rds"))
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
@@ -125,68 +120,54 @@ savePlpModel <- function(plpModel, dirPath){
   # If model is saved on hard drive move it...
   #============================================================
   moveFile <- moveHdModel(plpModel, dirPath )
-  if(!moveFile){
-    ParallelLogger::logError('Moving model files error')
+
+  if(!is.null(moveFile)){
+    plpModel$model <- moveFile
   }
   #============================================================
-    
 
   # if deep (keras) then save hdfs
-  if(attr(plpModel, 'type') == "xgboost"){
+  if(attr(plpModel, 'predictionFunction') == "predictXgboost"){
     # fixing xgboost save/load issue
     xgboost::xgb.save(model = plpModel$model, fname = file.path(dirPath, "model.json"))
-  } else {  
-    saveRDS(plpModel$model, file = file.path(dirPath, "model.rds"))
-  }
-  saveRDS(NULL, file = file.path(dirPath, "transform.rds"))
-  saveRDS(plpModel$index, file = file.path(dirPath, "index.rds"))
-  saveRDS(plpModel$trainCVAuc, file = file.path(dirPath, "trainCVAuc.rds"))
-  saveRDS(plpModel$hyperParamSearch, file = file.path(dirPath, "hyperParamSearch.rds"))
-  saveRDS(plpModel$modelSettings, file = file.path(dirPath,  "modelSettings.rds"))
-  saveRDS(plpModel$metaData, file = file.path(dirPath, "metaData.rds"))
-  saveRDS(plpModel$populationSettings, file = file.path(dirPath, "populationSettings.rds"))
-  saveRDS(plpModel$trainingTime, file = file.path(dirPath,  "trainingTime.rds"))
-  saveRDS(plpModel$varImp, file = file.path(dirPath,  "varImp.rds"))
-  saveRDS(plpModel$dense, file = file.path(dirPath,  "dense.rds"))
-  saveRDS(plpModel$cohortId, file = file.path(dirPath,  "cohortId.rds"))
-  saveRDS(plpModel$outcomeId, file = file.path(dirPath,  "outcomeId.rds"))
-  saveRDS(plpModel$analysisId, file = file.path(dirPath,  "analysisId.rds"))
-  #if(!is.null(plpModel$covariateMap))
-  saveRDS(plpModel$covariateMap, file = file.path(dirPath,  "covariateMap.rds"))
+    plpModel$model <- NULL
+  } 
   
-  attributes <- list(type=attr(plpModel, 'type'), predictionType=attr(plpModel, 'predictionType') )
+  saveRDS(plpModel, file = file.path(dirPath, "plpModel.rds"))
+  
+  attributes <- list(
+    predictionFunction = attr(plpModel, 'predictionFunction'), 
+    modelType = attr(plpModel, 'modelType') 
+    )
   saveRDS(attributes, file = file.path(dirPath,  "attributes.rds"))
   
 }
 
-moveHdModel <- function(plpModel, dirPath ){
-  #==================================================================
-  # if python then move pickle
-  #==================================================================
-  if(attr(plpModel, 'type') %in% c('pythonOld','pythonReticulate', 'pythonAuto') ){
-    if(!dir.exists(file.path(dirPath,'python_model')))
-      dir.create(file.path(dirPath,'python_model'))
-    for(file in dir(plpModel$model)){   #DOES THIS CORRECTLY TRANSFER AUTOENCODER BITS?
-      file.copy(file.path(plpModel$model,file), 
-                file.path(dirPath,'python_model'), overwrite=TRUE,  recursive = FALSE,
-                copy.mode = TRUE, copy.date = FALSE)
-    }
+moveModelFile <- function(plpModel, dirPath ){
+  
+  if(grep('sklearn', tolower(attr(plpModel, 'predictionFunction')))){
+    saveName <- 'sklearn_model'
+  } else if(grep('knn', tolower(attr(plpModel, 'predictionFunction')))){
+    saveName <- 'knn_model'
+  } else{
+    return(NULL)
+  }
+
+  if(!dir.exists(file.path(dirPath, saveName))){
+    dir.create(file.path(dirPath, saveName))
   }
   
-  #==================================================================
-  # if knn then move model
-  #==================================================================
-  if(attr(plpModel, 'type') =='knn'){
-    if(!dir.exists(file.path(dirPath,'knn_model')))
-      dir.create(file.path(dirPath,'knn_model'))
-    for(file in dir(plpModel$model)){
-      file.copy(file.path(plpModel$model,file), 
-                file.path(dirPath,'knn_model'), overwrite=TRUE,  recursive = FALSE,
-                copy.mode = TRUE, copy.date = FALSE)
-    }
+  for(file in dir(plpModel$model)){   
+    file.copy(
+      file.path(plpModel$model,file), 
+      file.path(dirPath,saveName), 
+      overwrite=TRUE,  
+      recursive = FALSE,
+      copy.mode = TRUE, 
+      copy.date = FALSE)
   }
   
-  return(TRUE)
+  return(invisible(file.path(dirPath,saveName)))
 }
 
 #' loads the plp model
@@ -203,73 +184,44 @@ loadPlpModel <- function(dirPath) {
   if (!file.info(dirPath)$isdir)
     stop(paste("Not a folder", dirPath))
   
-  hyperParamSearch <- tryCatch(readRDS(file.path(dirPath, "hyperParamSearch.rds")),
+  plpModel <- tryCatch(readRDS(file.path(dirPath, "plpModel.rds")),
                                error=function(e) NULL)
-  # add in these as they got dropped
-  outcomeId <- tryCatch(readRDS(file.path(dirPath, "outcomeId.rds")),
-                        error=function(e) NULL)
-  cohortId <- tryCatch(readRDS(file.path(dirPath, "cohortId.rds")),
-                       error=function(e) NULL)  
-  dense <- tryCatch(readRDS(file.path(dirPath, "dense.rds")),
-                    error=function(e) NULL)  
-  covariateMap <- tryCatch(readRDS(file.path(dirPath, "covariateMap.rds")),
-                           error=function(e) NULL) 
-  analysisId <- tryCatch(readRDS(file.path(dirPath, "analysisId.rds")),
-                           error=function(e) NULL) 
-  
-  if(readRDS(file.path(dirPath, "attributes.rds"))$type == "xgboost"){
-    ensure_installed("xgboost")
-    if('model' %in% dir(dirPath)){
-      model <- xgboost::xgb.load(file.path(dirPath, "model"))
-    } else{
-      model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
-    }
-  } else {  
-    model <- readRDS(file.path(dirPath, "model.rds"))
-  }
-  
-  result <- list(model = model,
-                 modelSettings = readRDS(file.path(dirPath, "modelSettings.rds")),
-                 hyperParamSearch = hyperParamSearch,
-                 trainCVAuc = readRDS(file.path(dirPath, "trainCVAuc.rds")),
-                 metaData = readRDS(file.path(dirPath, "metaData.rds")),
-                 populationSettings= readRDS(file.path(dirPath, "populationSettings.rds")),
-                 outcomeId = outcomeId,
-                 cohortId = cohortId,
-                 varImp = readRDS(file.path(dirPath, "varImp.rds")),
-                 trainingTime = readRDS(file.path(dirPath, "trainingTime.rds")),
-                 covariateMap =covariateMap,
-                 predict = readRDS(file.path(dirPath, "transform.rds")),
-                 index = readRDS(file.path(dirPath, "index.rds")),
-                 dense = dense,
-                 analysisId = analysisId)
   
   attributes <- readRDS(file.path(dirPath, "attributes.rds"))
-  attr(result, 'type') <- attributes$type
-  attr(result, 'predictionType') <- attributes$predictionType
-  class(result) <- "plpModel"
+  
+  if(attributes$predictionFunction == "predictXgboost"){
+    ensure_installed("xgboost")
+    if('model' %in% dir(dirPath)){
+      plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model"))
+    } else{
+      plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
+    }
+  } 
+  
+  attr(plpModel, 'modelType') <- attributes$modelType
+  attr(plpModel, 'predictionFunction') <- attributes$predictionFunction
+  class(plpModel) <- "plpModel"
   
   # update the model location to the load dirPath
-  result <- updateModelLocation(result, dirPath)
+  plpModel <- updateModelLocation(plpModel, dirPath)
   
   # make this backwrds compatible for ffdf:
-  result$predict <- createTransform(result)
+  plpModel$predict <- createTransform(plpModel)
   
-  return(result)
+  return(plpModel)
 }
 
 updateModelLocation  <- function(plpModel, dirPath){
-  type <- attr(plpModel, 'type')
-  # if python update the location
-  if( type %in% c('pythonOld','pythonReticulate', 'pythonAuto')){
-    plpModel$model <- file.path(dirPath,'python_model')
-    ##plpModel$predict <- createTransform(plpModel)
+  
+  if(grep('sklearn', tolower(attr(plpModel, 'predictionFunction')))){
+    saveName <- 'sklearn_model'
+  } else if(grep('knn', tolower(attr(plpModel, 'predictionFunction')))){
+    saveName <- 'knn_model'
+  } else{
+    return(NULL)
   }
-  # if knn update the locaiton - TODO !!!!!!!!!!!!!!
-  if( type =='knn'){
-    plpModel$model <- file.path(dirPath,'knn_model')
-    ##plpModel$predict <- createTransform(plpModel)
-  }
+  
+  plpModel$model <- file.path(dirPath,saveName)
   
   return(plpModel) 
 }
@@ -326,14 +278,8 @@ savePlpResult <- function(result, dirPath){
   if(!dir.exists(dirPath)) dir.create(dirPath, recursive = T)
   
   savePlpModel(result$model, dirPath=file.path(dirPath,'model') )
-  saveRDS(result$analysisRef, file = file.path(dirPath, "analysisRef.rds"))
-  saveRDS(result$inputSetting, file = file.path(dirPath, "inputSetting.rds"))
-  saveRDS(result$executionSummary, file = file.path(dirPath, "executionSummary.rds"))
-  saveRDS(result$prediction, file = file.path(dirPath, "prediction.rds"))
-  saveRDS(result$performanceEvaluation, file = file.path(dirPath, "performanceEvaluation.rds"))
-  #saveRDS(result$performanceEvaluationTrain, file = file.path(dirPath, "performanceEvaluationTrain.rds"))
-  saveRDS(result$covariateSummary, file = file.path(dirPath, "covariateSummary.rds"))
-  
+  result$model <- NULL
+  saveRDS(result, file = file.path(dirPath, "runPlp.rds"))
   
 }
 
@@ -351,16 +297,9 @@ loadPlpResult <- function(dirPath){
   if (!file.info(dirPath)$isdir)
     stop(paste("Not a folder", dirPath))
   
-  
-  result <- list(model = loadPlpModel(file.path(dirPath, "model")),
-                 analysisRef = readRDS(file.path(dirPath, "analysisRef.rds")),
-                 inputSetting = readRDS(file.path(dirPath, "inputSetting.rds")),
-                 executionSummary = readRDS(file.path(dirPath, "executionSummary.rds")),
-                 prediction = readRDS(file.path(dirPath, "prediction.rds")),
-                 performanceEvaluation = readRDS(file.path(dirPath, "performanceEvaluation.rds")),
-                 #performanceEvaluationTrain= readRDS(file.path(dirPath, "performanceEvaluationTrain.rds")),
-                 covariateSummary = readRDS(file.path(dirPath, "covariateSummary.rds"))
-  )
+  result <- readRDS(file.path(dirPath, "runPlp.rds"))
+  result$model = loadPlpModel(file.path(dirPath, "model"))
+
   class(result) <- "runPlp"
   
   return(result)
@@ -438,23 +377,29 @@ return(covariateSettings)
 #' @export
 savePlpToCsv <- function(result, dirPath){
   
-  #inputSetting
-  if(!dir.exists(file.path(dirPath, 'inputSetting'))){dir.create(file.path(dirPath, 'inputSetting'), recursive = T)}
-  utils::write.csv(result$inputSetting$modelSettings$model, file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'), row.names = F)
+  #model settings - save as json
+  if(!dir.exists(file.path(dirPath, 'model'))){dir.create(file.path(dirPath, 'model'), recursive = T)}
+  utils::write.csv(result$model$settings$plpDataSettings, file = file.path(dirPath, 'model','plpDataSettings.csv'), row.names = F)
+  utils::write.csv(result$model$settings$covariateSettings, file = file.path(dirPath, 'model','covariateSettings.csv'), row.names = F)
+  utils::write.csv(result$model$settings$populationSettings, file = file.path(dirPath, 'model','populationSettings.csv'), row.names = F)
+  utils::write.csv(result$model$settings$featureEngineering, file = file.path(dirPath, 'model','featureEngineering.csv'), row.names = F)
+  utils::write.csv(result$model$settings$tidyCovariates, file = file.path(dirPath, 'model','tidyCovariates.csv'), row.names = F)
+  utils::write.csv(result$model$settings$requireDenseMatrix, file = file.path(dirPath, 'model','requireDenseMatrix.csv'), row.names = F)
+  utils::write.csv(result$model$settings$modelSettings$model, file = file.path(dirPath, 'model','modelSettings_model.csv'), row.names = F)
+  utils::write.csv(result$model$settings$modelSettings$param, file = file.path(dirPath, 'model','modelSettings_param.csv'), row.names = F)
+  utils::write.csv(result$model$settings$modelSettings$finalModelParameters, file = file.path(dirPath, 'model','modelSettings_finalModelParameters.csv'), row.names = F)
+  utils::write.csv(result$model$settings$modelSettings$extraSettings, file = file.path(dirPath, 'model','modelSettings_extraSettings.csv'), row.names = F)
+  utils::write.csv(result$model$settings$splitSettings, file = file.path(dirPath, 'model','splitSettings.csv'), row.names = F)
   
-  if(!is.null(result$inputSetting$modelSettings$param)){
-    utils::write.csv(as.data.frame(t(unlist(result$inputSetting$modelSettings$param))), file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
-  }else{
-    utils::write.csv(NULL, file = file.path(dirPath, 'inputSetting','modelSettings_param.csv'), row.names = F)
-  }
-  utils::write.csv(result$inputSetting$modelSettings$name, file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'), row.names = F)
-  if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings)){
-    utils::write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$cvs, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'), row.names = F)
-    utils::write.csv(formatCovariateSettings(result$inputSetting$dataExtrractionSettings$covariateSettings)$fun, file = file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings_fun.csv'), row.names = F)
-  }
-  utils::write.csv(result$inputSetting$populationSettings$attrition, file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'), row.names = F)
-  result$inputSetting$populationSettings$attrition <- NULL
-  utils::write.csv(result$inputSetting$populationSettings, file = file.path(dirPath, 'inputSetting','populationSettings.csv'), row.names = F)
+  #trainDetails = list(
+  #  cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
+  #  outcomeId = attr(trainData, "metaData")$outcomeId,
+  #  cohortId = attr(trainData, "metaData")$cohortId,
+  #  attrition = attr(trainData, "metaData")$attrition, 
+  #  trainingTime = comp,
+  #  trainingDate = Sys.Date(),
+  #  hyperParamSearch = hyperSummary
+  #)
   
   #executionSummary
   if(!dir.exists(file.path(dirPath, 'executionSummary'))){dir.create(file.path(dirPath, 'executionSummary'), recursive = T)}
@@ -487,7 +432,7 @@ loadPlpFromCsv <- function(dirPath){
   
   result <- list()
   objects <- gsub('.csv','',dir(dirPath))
-  if(sum(!c('covariateSummary','executionSummary','inputSetting','performanceEvaluation')%in%objects)>0){
+  if(sum(!c('covariateSummary','executionSummary','performanceEvaluation', 'model')%in%objects)>0){
     stop('Incorrect csv results file')
   }
   
@@ -505,16 +450,7 @@ loadPlpFromCsv <- function(dirPath){
   result$executionSummary$TotalExecutionElapsedTime <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'))$x}, error = function(e){return(NULL)})
   result$executionSummary$ExecutionDateTime <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'))$x}, error = function(e){return(NULL)})
   
-  #inputSetting
-  result$inputSetting <- list()
-  result$inputSetting$modelSettings$model <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_model.csv'))$x}, error = function(e){return(NULL)})
-  result$inputSetting$modelSettings$param <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_param.csv')))}, error = function(e){return(NULL)})
-  result$inputSetting$modelSettings$name <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','modelSettings_name.csv'))$x}, error = function(e){return(NULL)})
-  
-  result$inputSetting$dataExtrractionSettings$covariateSettings <- tryCatch({reformatCovariateSettings(file.path(dirPath, 'inputSetting','dataExtrractionSettings_covariateSettings.csv'))}, error = function(e){return(NULL)})
-
-  result$inputSetting$populationSettings <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'inputSetting','populationSettings.csv')))}, error = function(e){return(NULL)})
-  result$inputSetting$populationSettings$attrition <- tryCatch({utils::read.csv(file = file.path(dirPath, 'inputSetting','populationSettings_attrition.csv'))}, error = function(e){return(NULL)})
+  #model settings
   
   #performanceEvaluation
   result$performanceEvaluation <- list()
@@ -524,13 +460,25 @@ loadPlpFromCsv <- function(dirPath){
   result$performanceEvaluation$calibrationSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'))}, error = function(e){return(NULL)})
   result$performanceEvaluation$predictionDistribution <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'))}, error = function(e){return(NULL)})
   
-  result$model$modelSettings <- result$inputSetting$modelSettings
-  result$model$populationSettings <- result$inputSetting$populationSettings
-  result$model$metaData$call$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
+  # load model settings
+  result$model <- list(settings = list())
+  ## result$model$settings$plpDataSettings
+  ##result$model$settings$modelSettings
+  ##result$model$settings$populationSettings
+  ##result$model$settings$covariateSettings
+  ## result$model$settings$featureEngineering
+  ## result$model$settings$tidyCovariates
+  ## result$model$settings$requireDenseMatrix
+  ## result$model$settings$modelSettings$model
+  ## result$model$settings$modelSettings$param
+  ##result$model$settings$modelSettings$finalModelParameters
+  ##result$model$settings$modelSettings$extraSettings
+  ##result$model$settings$splitSettings
   
   # add the model class 
   class(result$model) <- "plpModel"
-  attr(result$model, "type") <- 'missing'
+  attr(result$model, "predictionType") <- 'missing' #save and load these
+  attr(result$model, "modelType") <- 'missing' #save and load these
   
   class(result) <- "runPlp"
   return(result)

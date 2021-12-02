@@ -15,6 +15,20 @@
 # limitations under the License.
 context("LearningCurves")
 
+
+# learningCurve 
+learningCurve <- createLearningCurve(population = population, 
+  plpData = plpData, 
+  modelSettings = lrSet, 
+  testSplit = 'time', 
+  testFraction = 0.25, 
+  trainFractions = c(0.5,0.6), 
+  nfold = 3, 
+  clearffTemp = T, 
+  analysisId = 'learningCurve',
+  saveDirectory =  saveLoc
+)
+
 test_that("learningCurve", {
   testthat::expect_equal(class(learningCurve), "data.frame")
   testthat::expect_equal(sum(colnames(learningCurve)%in%c("Fraction",
@@ -38,6 +52,33 @@ test_that("learningCurvePar", {
   testthat::expect_equal(colnames(learningCurve), colnames(learningCurvePar))
 })
 
-
+test_that("plotLearningCurve", {
+  
+  # test the plot works
+  test <- plotLearningCurve(learningCurve = learningCurve,
+    metric = "AUROC",
+    abscissa = "observations",
+    plotTitle = "Learning Curve", 
+    plotSubtitle = NULL,
+    fileName = NULL)
+  testthat::expect_s3_class(test, 'ggplot')
+  
+  test <- plotLearningCurve(learningCurve = learningCurve,
+    metric = "AUPRC",
+    abscissa = "observations",
+    plotTitle = "Learning Curve", 
+    plotSubtitle = NULL,
+    fileName = NULL)
+  testthat::expect_s3_class(test, 'ggplot')
+  
+  test <- plotLearningCurve(learningCurve = learningCurve,
+    metric = "sBrier",
+    abscissa = "observations",
+    plotTitle = "Learning Curve", 
+    plotSubtitle = NULL,
+    fileName = NULL)
+  testthat::expect_s3_class(test, 'ggplot')
+  
+})
 
 

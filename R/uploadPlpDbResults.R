@@ -60,6 +60,10 @@ createPlpResultTables <- function(conn,
                 "RESULTS", "MODEL_RELATIONSHIP", "MODELS", "STUDIES", 
                 
                 "MODEL_SETTINGS", "COVARIATE_SETTINGS","POPULATION_SETTINGS", "TRAINING_SETTINGS",
+      
+      "FEATURE_ENGINEERING_SETTINGS", "SPLIT_SETTINGS", "PLP_DATA_SETTINGS", #new
+       "SAMPLE_SETTINGS", "TIDY_COVARIATES_SETTINGS", #new 
+      
                 "TARS", "COHORTS", "DATABASE_DETAILS", "RESEARCHERS" )
     
     if(stringAppendToTables != ''){
@@ -327,6 +331,9 @@ populatePlpResultTables <- function(conn,
                                   tempEmulationSchema = tempEmulationSchema)
       ParallelLogger::logInfo(paste0('modSetId: ', modSetId))
       
+      # add plp_data_settings, feature_engineering_settings, tidy_covariate_settings, sample_settings
+      
+      # this is now split setting
       trainingId <- addTrainingSettings(conn = conn, 
                                         resultSchema = resultSchema, 
                                         targetDialect = targetDialect,
@@ -342,21 +349,26 @@ populatePlpResultTables <- function(conn,
       modelId <- addModel(conn = conn, 
                           resultSchema = resultSchema, 
                           targetDialect = targetDialect,
-                          analysisId = mdl$analysisRef$analysisId,
-                          modelName = mdl$inputSetting$modelSettings$name,
+                          analysisId = mdl$analysisRef$analysisId, # trainDetails
+                          modelName = mdl$inputSetting$modelSettings$name, #standardise this
                           targetId = tId,
                           outcomeId = oId,
                           tarId = tarId,
+        #plpDataSettingId = plpDataSetId,
                           populationSettingId = popSetId,
                           modelSettingId = modSetId,
                           covariateSettingId = covSetId,
+        #sampleSettingId = sampleSetId,
+        #featureEngineeringSettingId = featureEngineeringSetId,
+        #tidyCovariateSettingId = tidyCovariateSetId,
                           researcherId = researcherId,
                           databaseId = dbId,
-                          hyperParamSearch = mdl$model$hyperParamSearch,
+                          hyperParamSearch = mdl$model$hyperParamSearch, #mdl$trainDetails$hyperParamSearch
                           plpModelFile = " ",
-                          dateTime = format(mdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"),
-                          trainingId = trainingId,
-                          trainingTime = mdl$model$trainingTime,
+        #require_dense_matrix = mdl$settings$requireDenseMatrix,
+                          dateTime = format(mdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"), #mdl$trainDetails$trainingDate
+                          trainingId = trainingId, # sampleSettingId = sampleSetId
+                          trainingTime = mdl$model$trainingTime, #mdl$trainDetails$trainingTime
                           intercept = ifelse(is.list(mdl$model), mdl$model$model$coefficients[1], 0),
                           stringAppendToTables = stringAppendToTables,
                           tempEmulationSchema = tempEmulationSchema)

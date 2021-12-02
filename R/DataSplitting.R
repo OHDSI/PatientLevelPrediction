@@ -156,7 +156,9 @@ splitData <- function(plpData = plpData,
       covariateSettings = attr(plpData, "metaData")$call$covariateSettings,
       populationSettings = attr(population, "metaData")$populationSettings,
       attrition = attr(population, "metaData")$attrition,
-      splitSettings = splitSettings
+      splitSettings = splitSettings,
+      
+      populationSize = nrow(trainData$labels)
     )
     class(trainData$covariateData) <- "CovariateData"
     
@@ -197,7 +199,8 @@ splitData <- function(plpData = plpData,
       covariateSettings = attr(plpData, "metaData")$call$covariateSettings,
       populationSettings = attr(population, "metaData")$populationSettings,
       attrition = attr(population, "metaData")$attrition,
-      splitSettings = splitSettings
+      splitSettings = splitSettings,
+      populationSize = nrow(trainData$labels)
       )
     class(trainData$covariateData) <- "CovariateData"
     
@@ -227,6 +230,40 @@ splitData <- function(plpData = plpData,
   
   class(result) <- 'splitData'
   return(result)
+}
+
+
+dataSummary <- function(data){
+  #Test/Train: lsit(covariates,covariateRef, label, folds)
+  
+  ParallelLogger::logInfo('Train Set:')
+  result <- data$Train$label %>% 
+    dplyr::inner_join(data$Train$folds, by = .data$rowId) %>% 
+    dplyr::group_by(.data$index) %>%
+    dplyr::summarise(N = length(.data$data$outcomeCount),
+      outcomes = sum(.data$data$outcomeCount)) %>% 
+    dplyr::collect()
+  
+  ParallelLogger::logInfo(paste0('Fold ', result$index ,' ', result$N, ' patients with ', result$outcomes, ' outcomes'))
+  
+  
+  result <- data$Train$covariates %>% 
+    dplyr::group_by(.data$covariateId) %>% 
+    dplyr::summarise(N = length(.data$covariateValue)) %>% 
+    dplyr::collect()
+  
+  ParallelLogger::logInfo(paste0(nrow(result), ' covariates in train data'))
+  
+  if('Test' %in% names(data)){
+    ParallelLogger::logInfo('Test Set:')
+    result <- data$Test$label %>% 
+      dplyr::collect()
+    
+    ParallelLogger::logInfo(paste0(nrow(result), ' patients with ', sum(result$outcomeCount>0), ' outcomes'))
+    
+  }
+  
+  return(invisible(TRUE))
 }
 
 
@@ -478,6 +515,8 @@ subjectSplitter <- function(population, splitSettings) {
   return(split)
 }
 
+
+# this is not needed for each function - just the setting where is it not used? (fix in future)
 checkInputsSplit <- function(test, train, nfold, seed){
   ParallelLogger::logDebug(paste0('test: ', test))
   checkIsClass(test, c('numeric','integer'))

@@ -26,14 +26,14 @@
 #' @return
 #' An object of class \code{preprocessingSettings}
 #' @export
-createPreprocessSettings(
+createPreprocessSettings <- function(
   minCovariateFraction = 0.001,
   normalizeData = TRUE,
   removeRedundancy = TRUE
   ){
   
-    checkIsClass(normalizeData, c('numeric','integer'))
-    checkHigherEqual(normalizeData,0)
+    checkIsClass(minCovariateFraction, c('numeric','integer'))
+    checkHigherEqual(minCovariateFraction,0)
   
     checkIsClass(normalizeData, c("logical"))
 

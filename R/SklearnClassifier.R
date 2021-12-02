@@ -20,6 +20,7 @@ fitSklearn <- function(trainData,
   classifierFunction = 'trainAdaBoost',
   param,
   search = "grid",
+  analysisId,
   ...) {
   
   # check covariate data
@@ -33,13 +34,17 @@ fitSklearn <- function(trainData,
   
   start <- Sys.time()
   
-  # convert the data to a sparse R Matrrix and then use reticulate to convert to python sparse
-  # need to save the covariateMap so we know the covariateId to columnId when applying model
-  mappedData <- createPythonData(trainData)
+  if(!is.null(trainData$folds)){
+    trainData$labels <- merge(trainData$labels, trainData$fold, by = 'rowId')
+  }
   
-  matrixData <- mappedData$pythonMatrixData
-  labels <- mappedData$pythonLabels
-  covariateMap <- mappedData$covariateMap
+  # convert the data to a sparse R Matrix and then use reticulate to convert to python sparse
+  # need to save the covariateMap so we know the covariateId to columnId when applying model
+  mappedData <- toSparseM(trainData)
+  
+  matrixData <- mappedData$dataMatrix
+  labels <- mappedData$labels
+  covariateRef <- mappedData$covariateRef
   
   # save the model to outLoc
   outLoc <- createTempModelLoc()
@@ -59,9 +64,9 @@ fitSklearn <- function(trainData,
       seed = pySettings$seed,
       requiresDenseMatrix = pySettings$requiresDenseMatrix,
       modelName = pySettings$name,
-      pythonImport = pythonImport,
-      pythonImportSecond = pythonImportSecond,
-      pythonClassifier = pythonClassifier,
+      pythonImport = pySettings$pythonImport,
+      pythonImportSecond = pySettings$pythonImportSecond,
+      pythonClassifier = pySettings$pythonClassifier,
       modelLocation = outLoc,
       paramSearch = param
       )
@@ -70,12 +75,10 @@ fitSklearn <- function(trainData,
   hyperSummary <- do.call(rbind, lapply(cvResult$paramGridSearch, function(x) x$hyperSummary))
 
   prediction <- cvResult$prediction
-  prediction <- merge(population, prediction[,c('rowId', 'value')], by='rowId', all = T)
-  
+ 
   variableImportance <- cvResult$variableImportance
   variableImportance[is.na(variableImportance)] <- 0
   
-  covariateRef <- as.data.frame(trainData$covariateData$covariateRef)
   incs <- rep(1, nrow(covariateRef))
   covariateRef$included <- incs
   covariateRef$covariateValue <- unlist(variableImportance) # check this is correct order
@@ -90,11 +93,10 @@ fitSklearn <- function(trainData,
     settings = list(
       plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
+      populationSettings = attr(trainData, "metaData")$populationSettings,
       featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      covariateMap = covariateMap,
       requireDenseMatrix = F,
-      populationSettings = attr(trainData, "metaData")$populationSettings,
       modelSettings = list(
         model = classifierFunction, 
         param = param,
@@ -105,6 +107,7 @@ fitSklearn <- function(trainData,
     ),
     
     trainDetails = list(
+      analysisId = analysisId,
       cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
       outcomeId = attr(trainData, "metaData")$outcomeId,
       cohortId = attr(trainData, "metaData")$cohortId,
@@ -118,10 +121,60 @@ fitSklearn <- function(trainData,
   )
   
   class(result) <- "plpModel"
-  attr(result, "predictionType") <- "pythonReticulate"
+  attr(result, "predictionFunction") <- "predictPythonSklearn"
   attr(result, "modelType") <- "binary"
   
   return(result)
+}
+
+
+predictPythonSklearn <- function(
+  plpModel, 
+  data, 
+  cohort
+  ){
+  
+  if(class(data) == 'plpData'){
+    # convert
+    matrixObjects <- toSparseM(
+      plpData = data, 
+      cohort = cohort,
+      map = plpModel$covariateImportance %>% 
+        dplyr::select(.data$columnId, .data$covariateId)
+    )
+    
+    newData <- matrixObjects$dataMatrix
+    cohort <- matrixObjects$labels
+    
+  }else{
+    newData <- data
+  }
+
+  # import
+  os <- reticulate::import('os')
+  joblib <- reticulate::import('joblib')
+  
+  # load model
+  modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"model.pkl"))
+  model <- joblib$load(os$path$join(modelLocation)) 
+  
+  included <- plpModel$covariateImportance$covariateId[plpModel$covariateImportance$included>0] # does this include map?
+  included <- included %>% dplyr::select(.data$columnId) 
+  pythonData <- reticulate::r_to_py(newData[,included, drop = F])
+
+  # make dense if needed
+  if(plpModel$settings$requireDenseMatrix){
+    pythonData$toarray()
+  }
+  
+  predictedValue <- model$predict_proba(pythonData)
+  cohort$value <- predictedValue[,2]
+  
+  attr(cohort, "metaData") <- list(predictionType="binary")
+
+  cohort <- cohort[,colnames(cohort)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','index', 'value','ageYear', 'gender')]
+  
+  return(cohort)
 }
 
 checkPySettings <- function(settings){
@@ -158,7 +211,8 @@ gridCvPython <- function(
   pythonImportSecond,
   pythonClassifier,
   modelLocation,
-  paramSearch)
+  paramSearch
+  )
   {
   
   ParallelLogger::logInfo(paste0("Rnning CV for ",modelName," model"))
@@ -185,8 +239,8 @@ gridCvPython <- function(
   
   for(gridId in 1:length(paramSearch)){
     
-    # initiate all predictions to 0
-    labels$value <- 0
+    # initiate prediction
+    prediction <- c()
     
     fold <- labels$index
     ParallelLogger::logInfo(paste0('Max fold: ', max(fold)))
@@ -198,37 +252,30 @@ gridCvPython <- function(
       trainX <- reticulate::r_to_py(matrixData[fold != i,])
       testX <- reticulate::r_to_py(matrixData[fold == i,])
       
-      ParallelLogger::logDebug(paste0('fold X dim: ', trainX$shape[0], 'x', trainX$shape[1]))
-      ParallelLogger::logDebug(paste0('fold Y length: ', np$shape(trainY)[[1]], ' with ',np$sum(trainY)[[1]], ' outcomes'))
-    
       if(requiresDenseMatrix){
         ParallelLogger::logInfo('Converting sparse martix to dense matrix (CV)')
         trainX <- trainX$toarray()
         testX <- testX$toarray()
       }
       
-      model <- fitPythonModel(trainX,trainY)
-      
-      ParallelLogger::logInfo(paste0("Training fold took (mins): ",difftime(timeEnd, timeStart, units='mins') ))
+      model <- fitPythonModel(classifier, paramSearch[[gridId]], seed, trainX, trainY, np, pythonClassifier)
       
       ParallelLogger::logInfo("Calculating predictions on left out fold set...")
-      predFold <- predictValues(model = model, newX = testX)
-
-      labels$value[fold == i] <- predFold[,1]
+      prediction <- rbind(prediction, predictValues(model = model, data = testX, cohort = labels[fold == i,]))
       
     }
     
     gridSearchPredictons[[gridId]] <- list(
-      prediction = labels,
+      prediction = prediction,
       param = paramSearch[[gridId]]
     )
   }
   
   # get best para (this could be modified to enable any metric instead of AUC, just need metric input in function)
   
-  paramGridSearch <- lapply(gridSearchPredictons, computeGridPerformance)  # cvAUCmean, cvAUC, param
+  paramGridSearch <- lapply(gridSearchPredictons, function(x){do.call(computeGridPerformance, x)})  # cvAUCmean, cvAUC, param
   
-  optimalParamInd < which.max(unlist(lapply(paramGridSearch, function(x) x$cvPerformance)))
+  optimalParamInd <- which.max(unlist(lapply(paramGridSearch, function(x) x$cvPerformance)))
   
   finalParam <- paramGridSearch[[optimalParamInd]]$param
   
@@ -245,24 +292,26 @@ gridCvPython <- function(
     trainX <- trainX$toarray()
   }
   
-  model <- fitPythonModel(trainX,trainY)
+  model <- fitPythonModel(classifier, finalParam , seed, trainX, trainY, np, pythonClassifier)
   
   ParallelLogger::logInfo("Calculating predictions on all train data...")
-  predictionValue <- predictValues(model = model, newX = trainX)
-  
-  labels$value <- predictionValue[,1]
-  labels$evaluationType <- 'Train'
+  prediction <- predictValues(model = model, data = trainX, cohort = labels)
+  prediction$evaluationType <- 'Train'
   
   prediction <- rbind(
-    labels,
+    prediction,
     cvPrediction
   )
   
   # saving model
-  joblib$dump(model, os$path$join(modelOutput,"model.pkl"), compress = True) 
+  if(!dir.exists(file.path(modelLocation))){
+    dir.create(file.path(modelLocation), recursive = T)
+  }
+ # joblib$dump(model, os$path$join(modelLocation,"model.pkl"), compress = T) 
+  joblib$dump(model, file.path(modelLocation,"model.pkl"), compress = T) 
   
   # feature importance
-  variableImportance <- reticulate::py_to_r(model$feature_importances_)
+  variableImportance <- model$feature_importances_
 
   return(
     list(
@@ -276,29 +325,42 @@ gridCvPython <- function(
 }
 
 
-fitPythonModel <- function(trainX,trainY){
-  ParallelLogger::logDebug(paste0('fold X dim: ', trainX$shape[0], 'x', trainX$shape[1]))
-  ParallelLogger::logDebug(paste0('fold Y length: ', np$shape(trainY)[[1]], ' with ',np$sum(trainY)[[1]], ' outcomes'))
+fitPythonModel <- function(classifier, param, seed, trainX, trainY, np, pythonClassifier){
+  ParallelLogger::logInfo(paste0('data X dim: ', trainX$shape[0], 'x', trainX$shape[1]))
+  ParallelLogger::logInfo(paste0('data Y length: ', np$shape(trainY)[[1]], ' with ',np$sum(trainY), ' outcomes'))
   
   timeStart <- Sys.time()
-  model = classifier(n_estimators = n_estimators, 
-    learning_rate = learning_rate, 
-    algorithm = 'SAMME.R', 
-    random_state = seed)  # paramSearch[[gridId]]
-  model = model$fit(trainX, trainY)
+  
+  # print parameters
+  # convert NULL to NA values
+  paramString <- param
+  for(ind in 1:length(paramString)){
+    if(is.null(paramString[[ind]])){
+      paramString[[ind]] <- 'null'
+    }
+  }
+  ParallelLogger::logInfo(paste(names(param), unlist(paramString), sep = ':', collapse = '    '))
+  
+  if(!is.null(param)){
+    model <- do.call(paste0(pythonClassifier,'Inputs'), list(classifier = classifier, param = param))
+  } else{
+    model <- classifier()
+  }
+  model <- model$fit(trainX, trainY)
   timeEnd <- Sys.time()
   
-  ParallelLogger::logInfo(paste0("Training final model took (mins): ",difftime(timeEnd, timeStart, units='mins') ))
+  ParallelLogger::logInfo(paste0("Training model took (mins): ",difftime(timeEnd, timeStart, units='mins') ))
   
   return(model)
 }
 
-predictValues <- function(model = model, newX = trainX){
+predictValues <- function(model, data, cohort){
   
-  newPredY <- model$predict_proba(newX)
-  predictionValue <- reticulate::py_to_r(newPredY)
+  predictionValue  <- model$predict_proba(data)
+  cohort$value <- predictionValue[,1]
+  attr(cohort, "metaData")$predictionType <-  "binary"
   
-  return(predictionValue)
+  return(cohort)
 }
 
 
@@ -320,7 +382,14 @@ computeGridPerformance <- function(prediction, param, performanceFunct = 'comput
     )
   }
   
-  hyperSummary <- cbind(metric, performance, performanceFold, unlist(param))
+  paramString <- param
+  for(ind in 1:length(paramString)){
+    if(is.null(paramString[[ind]])){
+      paramString[[ind]] <- 'null'
+    }
+  }
+  
+  hyperSummary <- c(performanceFunct, performance, performanceFold, unlist(paramString))
   names(hyperSummary) <- c(
     'Metric', 
     'cvPerformance', 

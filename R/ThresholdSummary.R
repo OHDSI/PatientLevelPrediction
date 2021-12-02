@@ -12,7 +12,7 @@
 #' @return
 #' A data.frame with all the measures
 #' @export
-getThresholdSummary(
+getThresholdSummary <- function(
   prediction = prediction,
   predictionType = type,
   typeColumn = typeColumn
@@ -204,7 +204,7 @@ getThresholdSummary_survival <- function(prediction, evalColumn, timepoint, ...)
           ttoutcome = "t", 
           timepoint = timepoint,  
           predictors = "p", 
-          xstart = 0.001, 
+          xstart = max(min(p),0.001), #0.001, 
           xstop = min(max(p),0.99), 
           xby = 0.001, 
           smooth=F

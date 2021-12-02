@@ -20,8 +20,7 @@ getPlpData(
   firstExposureOnly = FALSE,
   washoutPeriod = 0,
   sampleSize = NULL,
-  covariateSettings,
-  excludeDrugsFromCovariates = FALSE
+  covariateSettings
 )
 }
 \arguments{
@@ -84,8 +83,6 @@ but can already be done here for efficiency reasons.}
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
 \code{createCovariateSettings} function in the
 \code{FeatureExtraction} package.}
-
-\item{excludeDrugsFromCovariates}{A redundant option}
 }
 \value{
 Returns an object of type \code{plpData}, containing information on the cohorts, their

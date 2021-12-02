@@ -1,20 +1,21 @@
-createPythonData <- function(trainData){
+listCartesian <- function(allList){
   
-  labels <- trainData$labels %>% 
-    dplyr::mutate(rowIdPython = .data$rowId-1) %>%
-    dplyr::inner_join(trainData$folds, by = 'rowId')
-  labels <- as.matrix(labels[,c('rowIdPython','outcomeCount','index')])
+  sizes <- lapply(allList, function(x) 1:length(x))
+  combinations <- expand.grid(sizes)
   
-  x <- toSparseM(trainData, map = NULL)
+  result <- list()
+  length(result) <- nrow(combinations)
   
-  covariateMap <- x$map
-  pythonData <- reticulate::r_to_py(x$data)
+  for(i in 1:nrow(combinations)){
+    tempList <- list()
+    for(j in 1:ncol(combinations)){
+      tempList <- c(tempList, list(allList[[j]][[combinations[i,j]]]))
+    }
+    names(tempList) <- names(allList)
+    result[[i]] <- tempList
+  }
   
-  return(
-    list(
-      pythonMatrixData = pythonData,
-      pythonLabels = labels,
-      covariateMap = covariateMap
-    )
-  )
+  return(result)
 }
+
+  

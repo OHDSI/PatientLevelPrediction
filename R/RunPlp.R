@@ -32,8 +32,9 @@
 #'
 #' @param plpData                    An object of type \code{plpData} - the patient level prediction
 #'                                   data extracted from the CDM.
-#' @param outcomeId                  The ID of the outcome.                                       
-#' @param analysisId                 Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
+#' @param outcomeId                  (integer) The ID of the outcome.                                       
+#' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
+#' @param analysisName               (character) Name for the analysis
 #' @param populationSettings         An object of type \code{populationSettings} created using \code(createStudyPopulationSettings) that
 #'                                   specifies how the data class labels are defined and addition any exclusions to apply to the 
 #'                                   plpData cohort
@@ -256,6 +257,7 @@ runPlp <- function(
       plpData$metaData$cohortId, 
       outcomeId, 
       analysisId, 
+      analysisName,
       ExecutionDateTime
     )
   })
@@ -352,8 +354,9 @@ runPlp <- function(
   if(executeSettings$runModelDevelopment){
     # fit model
     settings <- list(
-      trainData=data$Train, 
-      modelSettings = modelSettings
+      trainData = data$Train, 
+      modelSettings = modelSettings,
+      analysisId = analysisId
     )
     
     ParallelLogger::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
@@ -364,31 +367,41 @@ runPlp <- function(
       error = function(e) { ParallelLogger::logError(e); return(NULL)}
     )
     
-    #apply to test data if exists:
-    if('Test' %in% names(data)){
-      predictionTest <- tryCatch(
+    if(!is.null(model)){
+      prediction <- model$prediction
+      # remove prediction from model
+      model$prediction <- NULL
+      
+      #apply to test data if exists:
+      if('Test' %in% names(data)){
+        predictionTest <- tryCatch(
+          {
+            predictPlp(
+              plpModel = model, 
+              covariateData = data$Test,
+              population = data$Test$labels
+            )
+          },
+          error = function(e) { ParallelLogger::logError(e); return(NULL)}
+        )
+        
+        predictionTest$evaluationType <- 'Test'
+        
+        if(!is.null(predictionTest)){
+          prediction <- rbind(model$prediction, predictionTest)
+        } 
+        
+        
+      }
+      
+      # evaluate model
+      performance <- tryCatch(
         {
-          predictPlp(
-            model = model, 
-            covariateData = data$Test
-          )
+          evaluatePlp(prediction, typeColumn = 'evaluationType')
         },
         error = function(e) { ParallelLogger::logError(e); return(NULL)}
       )
-      
-      if(!is.null(predictionTest)){
-        prediction <- rbind(prediction, predictionTest)
-      }
-      
     }
-    
-    # evaluate model
-    performance <- tryCatch(
-      {
-        evaluatePlp(prediction, typeColumn = 'evalType')
-      },
-      error = function(e) { ParallelLogger::logError(e); return(NULL)}
-    )
     
   }
   
@@ -396,7 +409,36 @@ runPlp <- function(
   # covariateSummary
   covariateSummary <- NULL
   if(executeSettings$runCovariateSummary){
-    covariateSummary <- covariateSummary(plpData, ...) # need to revise this
+    
+    if(!is.null(data$Test)){
+      strata <- data.frame(
+        rowId = c(
+          data$Train$labels$rowId, 
+          data$Test$labels$rowId 
+        ),
+        strataName = c(
+          rep('Train', nrow(data$Train$labels)), 
+          rep('Test', nrow(data$Test$labels))
+        )
+      )
+    } else{
+      strata <- data.frame(
+        rowId = c( data$Train$labels$rowId ),
+        strataName = c( rep('Train', nrow(data$Train$labels)) )
+      )
+    }
+    
+    covariateSummary <- do.call(covariateSummary,   
+      list(
+        covariateData = plpData$covariateData,
+        cohort = population %>% dplyr::select(.data$rowId),
+        labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount), 
+        strata = strata,
+        variableImportance = plpModel$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue),
+        featureEngineering = NULL
+        )
+    )
+  
   }
   
   #  ExecutionSummary details:
@@ -420,26 +462,26 @@ runPlp <- function(
     #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )
   
-  inputSetting <- list(
-    populationSettings = populationSettings, 
-    splitSettings = splitSettings, 
-    sampleSettings = sampleSettings,
-    featureEngineeringSettings = featureEngineeringSettings,
-    preprocessSettings = preprocessSettings, 
-    modelSettings = modelSettings
-  )
+  # do we need this?
+  ##inputSetting <- list(
+  ##  populationSettings = populationSettings, 
+  ##  splitSettings = splitSettings, 
+  ##  sampleSettings = sampleSettings,
+  ##  featureEngineeringSettings = featureEngineeringSettings,
+  ##  preprocessSettings = preprocessSettings, 
+  ##   modelSettings = modelSettings
+  ## )
   
   results <- list(
-    inputSetting = inputSetting, 
+    #inputSetting = inputSetting, 
     executionSummary = executionSummary, 
     model = model,
     prediction = prediction,
     performanceEvaluation = performance,
     covariateSummary = covariateSummary,
     analysisRef = list(
-      analysisId=analysisId,
-      analysisName=NULL,
-      analysisSettings= NULL
+      analysisId = analysisId,
+      analysisName = analysisName
       )
     )
   class(results) <- c('runPlp')

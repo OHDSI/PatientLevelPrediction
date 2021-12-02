@@ -30,16 +30,16 @@
 #'
 
 #' @export
-evaluatePlp <- function(prediction, typeColumn = 'evalType'){
+evaluatePlp <- function(prediction, typeColumn = 'evaluationType'){
 
   # checking inputs
   #========================================
-  predictionType <- attr(prediction, "metaData")$predictionType
+  modelType <- attr(prediction, "metaData")$modelType
   
   # could remove the bit below to let people add custom types (but currently
   # we are thinking this should be set - so people should add a new type 
   # evaluation into the package rather than use custom
-  if (!predictionType %in% c("binary","survival")) {
+  if (!modelType %in% c("binary","survival")) {
     stop('Currently only support binary or survival classification models')
   }
   
@@ -54,7 +54,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evalType'){
   ParallelLogger::logTrace(paste0('Calulating evaluation summary Started @ ',Sys.time()))
   evaluationStatistics <- getEvaluationStatistics(
     prediction = prediction, 
-    predictionType = predictionType,
+    predictionType = modelType,
     typeColumn = typeColumn
   )
       
@@ -64,7 +64,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evalType'){
   thresholdSummary <- tryCatch({
     getThresholdSummary(
       prediction = prediction,
-      predictionType = predictionType,
+      predictionType = modelType,
       typeColumn = typeColumn
     ) 
   },
@@ -76,7 +76,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evalType'){
   demographicSummary <- tryCatch({
     getDemographicSummary(
       prediction = prediction,
-      predictionType = predictionType,
+      predictionType = modelType,
       typeColumn = typeColumn
       )
     },
@@ -88,7 +88,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evalType'){
   calibrationSummary <- tryCatch({
     getCalibrationSummary(
       prediction = prediction,
-      predictionType = predictionType,
+      predictionType = modelType,
       typeColumn = typeColumn,
       numberOfStrata = 100,
       truncateFraction = 0.01
@@ -103,7 +103,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evalType'){
   predictionDistribution <- tryCatch({
     getPredictionDistribution(
       prediction = prediction,
-      predictionType = predictionType,
+      predictionType = modelType,
       typeColumn = typeColumn
     )
   },

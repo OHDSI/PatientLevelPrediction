@@ -88,6 +88,8 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   return(newCovariateData)
 }
 
+
+# is this used?
 # return prev of ffdf 
 calculatePrevs <- function(plpData, population){
   #===========================

@@ -16,7 +16,104 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' externalValidatePlp - Validate a model on new databases
+
+externalValidatePlp <- function(
+  plpModel,
+  plpData,
+  databaseName = 'database 1',
+  population,
+  settings = createValidationSettings(
+    recalibrate = 'weakRecalibration'
+  )
+){
+  
+  # Apply model 
+  #=======
+  prediction <- tryCatch({
+    predictPlp(
+      plpModel = plpModel, 
+      plpData = plpData, 
+      population = population
+    )},
+    error = function(e){ParallelLogger::logError(e)}
+  )
+  
+  prediction$evaluationType <- 'Validation'
+  
+  # Recalibrate
+  #=======
+  if(!is.null(settings$recalibrate)){
+    for(recalMethod in settings$recalibrate){
+      prediction <- tryCatch({recalibratePlp(prediction = prediction, method = recalMethod)
+      },
+        error = function(e){ParallelLogger::logError(e)}
+      )
+    }
+  }
+  
+  # Evaluate 
+  #=======
+  performance <- tryCatch({
+    evaluatePlp(prediction = prediction, typeColumn = 'evaluationType')
+  },
+    error = function(e){ParallelLogger::logError(e)}
+  )
+  
+  # step 6: covariate summary
+  labels <- tryCatch({
+    population %>% dplyr::select(.data$rowId, .data$outcomeCount)
+  },
+    error = function(e){ return(NULL) }
+  )
+  covariateSum <- tryCatch({
+    covariateSummary(
+      covariateData = plpData$covariateData, 
+      cohort = population, 
+      labels = labels, 
+      variableImportance = plpModel$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue)
+    )},
+    error = function(e){ return(NULL) }
+  )
+  
+  executionSettings <- list(
+    PackageVersion = list(
+      rVersion= R.Version()$version.string,
+      packageVersion = utils::packageVersion("PatientLevelPrediction")
+    ),
+    PlatformDetails= list(
+      platform= R.Version()$platform,
+      cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
+      RAM=utils::memory.size()
+    ) #  test for non-windows needed
+  )
+  
+  model = list(
+    model = 'external validation of model',
+    settings = plpModel$settings,
+    valdiationDetails   = list(
+      cdmDatabaseSchema = databaseName,
+      outcomeId = attr(population, 'metaData')$outcomeId,
+      cohortId = attr(plpData, 'metaData')$cohortId,
+      attrition = attr(population, 'metaData')$attrition,
+      valdationDate = Sys.Date()
+    ),
+  )
+  
+  result <- list(
+    model = model,
+    executionSettings = executionSettings,
+    prediction = prediction,
+    performanceEvaluation = performance,
+    covariateSummary = covariateSum
+  )
+  
+  class(result) <- 'externalValidatePlp'
+  return(result)
+  
+}
+
+
+#' externalValidateDbPlp - Validate a model on new databases
 #'
 #' @description
 #' This function extracts data using a user specified connection and cdm_schema, applied the model and then calcualtes the performance
@@ -24,268 +121,151 @@
 #' Users need to input a trained model (the output of runPlp()) and new database connections. The function will return a list of length equal to the 
 #' number of cdm_schemas input with the performance on the new data
 #' 
-#' @param plpResult                        The object returned by runPlp() containing the trained model
-#' @param connectionDetails                The connection details for extracting the new data 
-#' @param validationSchemaTarget         A string or vector of strings specifying the database containing the target cohorts
-#' @param validationSchemaOutcome       A string or vector of strings specifying the database containing the outcome cohorts
-#' @param validationSchemaCdm            A string or vector of strings specifying the database containing the cdm
-#' @param databaseNames                  A string of vector of strings specifying sharing friendly database names corresponding to validationSchemaCdm
-#' @param validationTableTarget          A string or vector of strings specifying the table containing the target cohorts
-#' @param validationTableOutcome        A string or vector of strings specifying the table containing the outcome cohorts
-#' @param validationIdTarget             An iteger specifying the cohort id for the target cohort
-#' @param validationIdOutcome           An iteger specifying the cohort id for the outcome cohort
-#' @param oracleTempSchema                 The temp oracle schema requires read/write 
-#' @param verbosity                        Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
-#'                                         \itemize{
-#'                                         \item{DEBUG}{Highest verbosity showing all debug statements}
-#'                                         \item{TRACE}{Showing information about start and end of steps}
-#'                                         \item{INFO}{Show informative information (Default)}
-#'                                         \item{WARN}{Show warning messages}
-#'                                         \item{ERROR}{Show error messages}
-#'                                         \item{FATAL}{Be silent except for fatal errors}
-#'                                         }
-#' @param keepPrediction                   Whether to keep the predicitons for the new data   
-#' @param recalibrate                      A vector of characters specifying the recalibration method to apply                 
-#' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
-#' @param outputFolder                     If you want to save the results enter the directory to save here
+#' @param plpModel                    The model object returned by runPlp() containing the trained model
+#' @param validationDatabaseDetails   A list of objects of class \code{validationDatabaseDetails} created using \code{createValidationDatabaseDetails}
+#' @param settings                    A settings object of class \code{validationSettings} created using \code{createValidationSettings}
+#' @param outputFolder                The directory to save the validation results to (subfolders are created per database in validationDatabaseDetails)
 #' 
 #' @return
 #' A list containing the performance for each validation_schema 
 #'
 #'
 #' @export
-externalValidatePlp <- function(plpResult,
-                                connectionDetails, 
-                                validationSchemaTarget,
-                                validationSchemaOutcome, 
-                                validationSchemaCdm, databaseNames,
-                                validationTableTarget='cohort', validationTableOutcome='cohort',
-                                validationIdTarget = NULL, validationIdOutcome = NULL,
-                                oracleTempSchema=NULL,#validationSchemaCdm,
-                                verbosity="INFO", keepPrediction=F,
-                                recalibrate = NULL,
-                                sampleSize = NULL,
-                                outputFolder){
+externalValidateDbPlp <- function(
+  plpModel,
+  validationDatabaseDetails = createDatabaseDetails(),
+  validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
+  settings = createValidationSettings(
+    recalibrate = 'weakRecalibration'
+    ),
+  outputFolder = getwd()
+){
   
-  # TODO:: ADD LOGGING, MORE INOUT TESTS, ADD TEST CASE IN PACKAGE... 
-  if(missing(plpResult))
-    stop('Need to input a plpResult')
-  if(class(plpResult)!="runPlp")
-    stop('Need to input a plpResult of class runPlp')
+  # Input checks 
+  #=======
   
-  if(!missing(outputFolder)){
-    if(missing(databaseNames)){
-      stop('Need to enter databaseNames if saving results to outputFolder')
-    }}
+  checkIsClass(plpModel, 'plpModel')
   
+  # check the class and make a list if a single database setting
+  if(class(validationDatabaseDetails) == 'list'){
+    lapply(validationDatabaseDetails, function(x) checkIsClass(x, 'databaseDetails'))
+  } else{
+    checkIsClass(validationDatabaseDetails, 'databaseDetails')
+    validationDatabaseDetails <- list(validationDatabaseDetails)
+  }
+  checkIsClass(validationRestrictPlpDataSettings, 'restrictPlpDataSettings')
+  checkIsClass(settings, 'validationSettings')
+
   if(missing(connectionDetails))
     stop('Need to enter connection details')
+
+  # create results list with the names of the databases to validate across
+  result <- list()
+  length(result) <- length(validationDatabaseDetails)
+  names(result) <- unlist(lapply(validationDatabaseDetails, function(x) attr(x, 'cdmDatabaseName')))
   
-  if(missing(validationSchemaTarget))
-    stop('Need to enter validationSchemaTarget ')
-  if(missing(validationSchemaOutcome))
-    stop('Need to enter validationSchemaOutcome ')
-  if(missing(validationSchemaCdm))
-    stop('Need to enter validationSchemaCdm ')
-  
-  # convert the lists to vectors (to keep backwards compat)
-  if(class(validationSchemaTarget)=='list'){
-    validationSchemaTarget <- unlist(validationSchemaTarget)
-  }
-  if(class(validationSchemaOutcome)=='list'){
-    validationSchemaOutcome <- unlist(validationSchemaOutcome)
-  }
-  if(class(validationSchemaCdm )=='list'){
-    validationSchemaCdm  <- unlist(validationSchemaCdm)
-  }
-  if(class(databaseNames)=='list'){
-    databaseNames  <- unlist(databaseNames)
-  }
-  if(class(validationTableTarget)=='list'){
-    validationTableTarget  <- unlist(validationTableTarget)
-  }
-  if(class(validationTableOutcome)=='list'){
-    validationTableOutcome  <- unlist(validationTableOutcome)
-  }
-  if(class(validationIdTarget)=='list'){
-    validationIdTarget  <- unlist(validationIdTarget)
-  }
-  if(class(validationIdOutcome)=='list'){
-    validationIdOutcome  <- unlist(validationIdOutcome)
-  }
-  
-  
-  # check lengths
-  if(length(validationSchemaTarget) != length(validationSchemaOutcome)){
-      stop('validationSchemaTarget and validationSchemaOutcome need to be the same length')
-    }
-  if(length(validationSchemaTarget) != length(validationSchemaCdm)){
-    stop('validationSchemaTarget and validationSchemaCdm need to be the same length')
-  }
-  
-  # check class
-  if(class(validationSchemaTarget)!=class(validationSchemaOutcome)){
-    stop('validationSchemaTarget and validationSchemaOutcome not same class')
-  }
-  if(class(validationSchemaTarget)!=class(validationSchemaCdm)){
-    stop('validationSchemaTarget and validationSchemaCdm not same class')
-  }
-  
-  if(!missing(databaseNames)){
-    if(length(validationSchemaTarget)!=length(databaseNames)){
-      stop('DatabaseNames not same length as validationSchemaTarget')
-    }
-  }
-  
-  
-  # add lots of test for tables and ids -  TODO?
-  
-  if(is.null(validationIdTarget))
-    validationIdTarget <- plpResult$inputSetting$populationSettings$cohortId# set the model ids
-  if(is.null(validationIdOutcome))
-    validationIdOutcome <- plpResult$inputSetting$populationSettings$outcomeId# set the model ids
-  
-  
-  results <- list()
-  length(results) <- length(validationSchemaCdm)
-  for(i in 1:length(validationSchemaCdm)){
-    # Now extract the data:
-    targetTable <- validationTableTarget
-    outcomeTable <- validationTableOutcome
+  for(databaseSettings in validationDatabaseDetails){
     
-    if(length(validationTableTarget)>1)
-      targetTable <- validationTableTarget[i]
-    if(length(validationTableOutcome)>1)
-      outcomeTable <- validationTableOutcome[i]
-    newData <- similarPlpData(plpModel= plpResult$model, createCohorts = F, 
-                                                      newConnectionDetails = connectionDetails, 
-                                                      newCdmDatabaseSchema = validationSchemaCdm[i], 
-                                                      newCohortDatabaseSchema = validationSchemaTarget[i], 
-                                                      newCohortTable = targetTable, 
-                                                      newCohortId = validationIdTarget, 
-                                                      newOutcomeDatabaseSchema = validationSchemaOutcome[i], 
-                                                      newOutcomeTable = outcomeTable, 
-                                                      newOutcomeId = validationIdOutcome, 
-                                                      newOracleTempSchema = oracleTempSchema,
-                                                      sample = sampleSize, 
-                                                      createPopulation = T )
+    databaseName <- attr(databaseSettings, 'cdmDatabaseName')
     
-    if(sum(newData$population$outcomeCount>0)<20){
-      warning('Outcome count is less than 20... external validation may be inaccurate')
+    ParallelLogger::logInfo(paste('Validating model on', databaseName))
+    
+    # Step 1: get data
+    #=======
+    
+    getPlpDataSettings <- list(
+      databaseSettings = databaseSettings,
+      restrictPlpDataSettings = validationRestrictPlpDataSettings
+      )
+    if(is.null(getPlpDataSettings$databaseSettings$cohortId)){
+      ParallelLogger::logInfo("cohortId not in databaseSettings so using model's")
+      getPlpDataSettings$databaseSettings$cohortId <- plpModel$trainDetails$cohortId
     }
-    if(sum(newData$population$outcomeCount>0)<5){
-      warning('Outcome count is less than 5... external validation stopped')
-      results[[i]] <- 'not run due to outcome count less than 5'
-    } else{
-      
-      results[[i]] <- applyModel(population=newData$population, plpData = newData$plpData, 
-                                                         calculatePerformance = T, plpModel = plpResult$model)
-      
-      if(!is.null(recalibrate)){
-        ParallelLogger::logInfo('Recalibrating')
-        for(k in 1:length(recalibrate)){
-          if(recalibrate[k] %in% c('RecalibrationintheLarge', 'weakRecalibration')){
-            ParallelLogger::logInfo(paste0('Using method ', recalibrate[k]))
-            recal <- recalibratePlp(results[[i]]$prediction, analysisId = plpResult$model$analysisId,
-                                    method = recalibrate[k])
-            
-            results[[i]]$prediction <- recal$prediction
-            results[[i]]$performanceEvaluation <- addRecalibration(results[[i]]$performanceEvaluation, 
-                                                                   recalibration = recal)
-          }
-          
-        }
-      }
-      
-      if(!keepPrediction){
-        results[[i]]$prediction <- NULL
-      }
-      
-      if(missing(databaseNames)){
-        niceName <-   rep('Not Entered', length(validationSchemaCdm))
-      } else{
-        niceName <-   databaseNames
-      }
-      results[[i]]$inputSetting<- list(databaseNames = niceName[i],
-                                    cohortId = validationIdTarget, 
-                                    outcomeId = validationIdOutcome,
-                                    # added the below
-                                    modelSettings = plpResult$model$modelSettings,
-                                    testSplit = 'NA',
-                                    testFraction = -1,
-                                    nfold = -1, 
-                                    splitSeed = -1,
-                                    populationSettings = plpResult$model$populationSettings,
-                                    dataExtrractionSettings = list(covariateSettings = plpResult$model$metaData$call$covariateSettings,
-                                                                   cdmDatabaseSchema = validationSchemaCdm[[i]],
-                                                                   databaseNames = niceName[i], #added [i]
-                                                                   cohortDatabaseSchema = validationSchemaTarget[[i]], 
-                                                                   cohortTable = targetTable, 
-                                                                   cohortId = validationIdTarget, 
-                                                                   outcomeDatabaseSchema = validationSchemaOutcome[[i]], 
-                                                                   outcomeTable = outcomeTable, 
-                                                                   outcomeIds = validationIdOutcome,
-                                                                   oracleTempSchema = oracleTempSchema,
-                                                                   sampleSize = sampleSize)
-                                    )
-      
-      results[[i]]$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
-                                                                  packageVersion = utils::packageVersion("PatientLevelPrediction")),
-                                            PlatformDetails= list(platform= R.Version()$platform,
-                                                                  cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
-                                                                  RAM=utils::memory.size()), #  test for non-windows needed
-                                            # Sys.info()
-                                            TotalExecutionElapsedTime = NULL,
-                                            ExecutionDateTime = Sys.Date())
-      
+    if(is.null(getPlpDataSettings$databaseSettings$outcomeIds)){
+      ParallelLogger::logInfo("cohortId not in databaseSettings  so using model's")
+      getPlpDataSettings$databaseSettings$outcomeIds <- plpModel$trainDetails$outcomeId
     }
     
-  }
-  
-  if(!missing(databaseNames)){
-    names(results) <- databaseNames
-    # do summary
-    summary <- do.call(rbind, lapply(1:length(results), function(i) summariseVal(results[[i]], 
-                                                                                 database=databaseNames[[i]])))
-  } else{
-    names(results) <- validationSchemaCdm # do I want to paste ids onto this?
-    # do summary
-    summary <- do.call(rbind, lapply(1:length(results), function(i) summariseVal(results[[i]], 
-                                                                                 database=validationSchemaCdm[[i]])))
-  }
-  
-  
-  summary <- reshape2::dcast(summary, Database ~ Metric, value.var="Value" )
-  
-  
-  result <- list(summary=summary,
-                 validation=results)
-  
-  class(result) <- 'validatePlp'
-  
-  # save results if not missing:
-  if(!missing(outputFolder)){
-    if(!dir.exists(outputFolder)){
-      dir.create(outputFolder)
+    if(is.null(getPlpDataSettings$restrictPlpDataSettings$firstExposureOnly)){
+      ParallelLogger::logInfo("firstExposureOnly not in restrictPlpDataSettings  so using model's")
+      getPlpDataSettings$restrictPlpDataSettings$firstExposureOnly <- plpModel$settings$plpDataSettings$firstExposureOnly
     }
-    for(i in 1:length(databaseNames)){
-      if(!dir.exists(file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId))){
-        dir.create(file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId), recursive = T)
-      }
-    saveRDS(result$validation[[i]], file.path(outputFolder,databaseNames[i],result$validation[[i]]$model$modelAnalysisId,'validationResult.rds'))
+    if(is.null(getPlpDataSettings$restrictPlpDataSettings$washoutPeriod)){
+      ParallelLogger::logInfo("washoutPeriod not in restrictPlpDataSettings so using model's")
+      getPlpDataSettings$restrictPlpDataSettings$washoutPeriod <- plpModel$settings$plpDataSettings$washoutPeriod
     }
+    
+    # we need to update this to restrict to model covariates and update custom features
+    getPlpDataSettings$covariateSettings <- plpModel$settings$covariateSettings
+    
+    plpData <- tryCatch({
+      do.call(getPlpData, getPlpDataSettings)
+    },
+      error = function(e){ParallelLogger::logError(e)}
+    )
+    # save?
+    
+    # Step 2: create population 
+    #=======
+    populationSettings <- plpModel$settings$populationSettings
+    populationSettings$outcomeId <- getPlpDataSettings$databaseSettings$outcomeIds
+    populationSettings$plpData <- plpData
+    
+    population <- tryCatch({
+      do.call(createStudyPopulation, populationSettings)
+    },
+      error = function(e){ParallelLogger::logError(e)}
+    )
+    
+    # Step 3: Apply model to plpData and population
+    #=======
+
+    result[[databaseName]] <- externalValidatePlp(
+      plpModel,
+      plpData,
+      databaseName = databaseName,
+      population,
+      settings = settings
+    )
+    
+    if(!dir.exists(file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId))){
+      dir.create(file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId), recursive = T)
+    }  
+    
+    savePlpResult(result[[databaseName]], dirPath = file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId, 'validationResult'))
   }
-  
+ 
   # Now return results
-  return(result)
+  return(invisible(result))
 }
 
 
-summariseVal <- function(result, database){
-  row.names(result$performanceEvaluation$evaluationStatistics) <- NULL
-  result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
-  result$performanceEvaluation$evaluationStatistics$Metric <- gsub('.auc','',result$performanceEvaluation$evaluationStatistics$Metric)
-  result$Database <- database
+#' createValidationSettings define optional settings for performing external validation
+#'
+#' @description
+#' This function creates the settings required by externalValidatePlp
+#' @details
+#' Users need to specify whether they want to sample or recalibate when performing external validation
+#' 
+#' @param recalibrate                      A vector of characters specifying the recalibration method to apply                 
+#' @return
+#' A setting object of class \code{validationSettings} containing a list of settings for externalValidatePlp
+#'
+#' @export
+createValidationSettings <- function(
+  recalibrate = NULL
+){
+  
+  checkIsClass(recalibrate, c('character','NULL'))
+  if(!is.null(recalibrate)){
+    if(sum(recalibrate %in% c('recalibrationInTheLarge', 'weakRecalibration'))!=length(recalibrate)){
+      ParallelLogger::logError('Incorrect recalibrate options used.  Must be recalibrationInTheLarge or weakRecalibration')
+    }
+  }
+
+  result = list(
+    recalibrate = recalibrate
+  )
+  class(result) <- 'validationSettings'
   return(result)
 }
-

@@ -4,16 +4,15 @@
 \alias{plotPlp}
 \title{Plot all the PatientLevelPrediction plots}
 \usage{
-plotPlp(result, filename, type = "test")
+plotPlp(plpResult, saveLocation, typeColumn = "evaluation")
 }
 \arguments{
-\item{result}{Object returned by the runPlp() function}
+\item{plpResult}{Object returned by the runPlp() function}
 
-\item{filename}{Name of the file where the plot should be saved, for example
-'plot.png'. See the function \code{ggsave} in the ggplot2 package for
-supported file formats.}
+\item{saveLocation}{Name of the directory where the plots should be saved}
 
-\item{type}{Evaluation data type either 'test', 'val' or 'train'}
+\item{typeColumn}{The name of the column specifying the evaluation type 
+(to stratify the plots)}
 }
 \value{
 TRUE if it ran

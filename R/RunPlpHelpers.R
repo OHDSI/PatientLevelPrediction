@@ -1,10 +1,11 @@
-printHeader <- function(plpData, cohortId, outcomeId , analysisId, ExecutionDateTime){
+printHeader <- function(plpData, cohortId, outcomeId , analysisId, analysisName, ExecutionDateTime){
   
   ParallelLogger::logInfo(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
   
   ParallelLogger::logInfo(paste0('Study started at: ', ExecutionDateTime))
   
   ParallelLogger::logInfo(sprintf('%-20s%s', 'AnalysisID: ',analysisId))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'AnalysisName: ',analysisName))
   
   # add header to analysis log
   ParallelLogger::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
@@ -14,6 +15,7 @@ printHeader <- function(plpData, cohortId, outcomeId , analysisId, ExecutionDate
  ## ParallelLogger::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
  ## ParallelLogger::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))
   
+  return(invisible(TRUE))
 }
 
 
@@ -27,15 +29,13 @@ checkInputs <- function(plpData, outcomeId, ...) {
   
   for(inputName in inputNames[!inputNames %in% c('plpData', 'outcomeId')]){
     
+    ParallelLogger::logDebug(paste0(names(inputs[[inputName]]), ' : ',
+      unlist(lapply(inputs[[inputName]], function(x) paste0(unlist(x), collapse= '-')))
+    )
+    )
+    
     # check class is correct
     if(class(inputs[[inputName]]) != inputName){
-      
-      # print settings
-      ParallelLogger::logInfo(paste0(names(inputs[[inputName]]), ' : ',
-                                      unlist(lapply(inputs[[inputName]], function(x) paste0(unlist(x), collapse= '-')))
-      )
-      )
-      
       ParallelLogger::logError(paste0('Incorrect ', inputName))
       return(invisible(FALSE))
     }
@@ -47,63 +47,35 @@ checkInputs <- function(plpData, outcomeId, ...) {
 }
 
 
-dataSummary <- function(data){
-  #Test/Train: lsit(covariates,covariateRef, label, folds)
+
+createExecuteSettings <- function(
+  runSplitData = F,
+  runSampleData = F,
+  runfeatureEngineering = F,
+  runPreprocessData = F,
+  runModelDevelopment = F,
+  runCovariateSummary = F
+){
   
-  ParallelLogger::logInfo('Train Set:')
-  result <- data$Train$label %>% 
-    dplyr::inner_join(data$Train$folds, by = .data$rowId) %>% 
-    dplyr::group_by(.data$index) %>%
-    dplyr::summarise(N = length(.data$data$outcomeCount),
-                     outcomes = sum(.data$data$outcomeCount)) %>% 
-    dplyr::collect()
+  checkIsClass(runSplitData, "logical")
+  checkIsClass(runSampleData, "logical")
+  checkIsClass(runfeatureEngineering, "logical")
+  checkIsClass(runPreprocessData, "logical")
+  checkIsClass(runModelDevelopment, "logical")
+  checkIsClass(runCovariateSummary, "logical")
   
-  ParallelLogger::logInfo(paste0('Fold ', result$index ,' ', result$N, ' patients with ', result$outcomes, ' outcomes'))
-  
-  
-  result <- data$Train$covariates %>% 
-    dplyr::group_by(.data$covariateId) %>% 
-    dplyr::summarise(N = length(.data$covariateValue)) %>% 
-    dplyr::collect()
-  
-  ParallelLogger::logInfo(paste0(nrow(result), ' covariates in train data'))
-  
-  if('Test' %in% names(data)){
-    ParallelLogger::logInfo('Test Set:')
-    result <- data$Test$label %>% 
-      dplyr::collect()
-    
-    ParallelLogger::logInfo(paste0(nrow(result), ' patients with ', sum(result$outcomeCount>0), ' outcomes'))
-    
-  }
-  
+  result <- as.list(match.call())
+  class(result) <- 'executeSettings'
+  return(result)
 }
 
-
-
-
-
-
-
-# check parameters
-ParallelLogger::logTrace('Parameter Check Started')
-ParallelLogger::logDebug(paste0('testSplit: ', testSplit))
-checkInStringVector(testSplit, c('person','time', 'stratified','subject'))
-ParallelLogger::logDebug(paste0('outcomeCount: ', sum(population[,'outcomeCount']>0)))
-checkHigherEqual(sum(population[,'outcomeCount']>0), 25)
-ParallelLogger::logDebug(paste0('plpData class: ', class(plpData)))
-
-
-
-createDataProcessingSettings(minCovariateFraction = 0.001,
-                             normalizeData = T)
-
-
-createLogSettings(verbosity = 'DEBUG',
-                  timeStamp = T,
-                  name = 'runPlp Log')
-
-
-createExecuteSettings(runProcessData = T,
-                      runModelDevelopment = T,
-                      runCovariateSummary = T)
+createDefaultExecuteSettings <- function(){
+  createExecuteSettings(
+    runSplitData = T,
+    runSampleData = F,
+    runfeatureEngineering = F,
+    runPreprocessData = T,
+    runModelDevelopment = T,
+    runCovariateSummary = T
+  )
+}
