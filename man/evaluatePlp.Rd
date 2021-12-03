@@ -4,7 +4,7 @@
 \alias{evaluatePlp}
 \title{evaluatePlp}
 \usage{
-evaluatePlp(prediction, typeColumn = "evalType")
+evaluatePlp(prediction, typeColumn = "evaluationType")
 }
 \arguments{
 \item{prediction}{The patient level prediction model's prediction}

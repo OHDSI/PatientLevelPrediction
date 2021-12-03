@@ -7,8 +7,7 @@
 calibrationLine(prediction, numberOfStrata = 10)
 }
 \arguments{
-\item{prediction}{A prediction object as generated using the
-\code{\link{predictProbabilities}} function.}
+\item{prediction}{A prediction object}
 
 \item{numberOfStrata}{The number of groups to split the prediction into}
 }

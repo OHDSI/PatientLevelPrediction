@@ -11,8 +11,7 @@ getDemographicSummary(
 )
 }
 \arguments{
-\item{prediction}{A prediction object as generated using the
-\code{\link{predict}} functions.}
+\item{prediction}{A prediction object}
 
 \item{predictionType}{The type of prediction (binary or survival)}
 

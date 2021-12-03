@@ -7,8 +7,7 @@
 averagePrecision(prediction)
 }
 \arguments{
-\item{prediction}{A prediction object as generated using the
-\code{\link{predictProbabilities}} function.}
+\item{prediction}{A prediction object}
 }
 \value{
 The average precision

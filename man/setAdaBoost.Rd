@@ -2,7 +2,7 @@
 % Please edit documentation in R/SklearnClassifierSettings.R
 \name{setAdaBoost}
 \alias{setAdaBoost}
-\title{Create setting for AdaBoost with python}
+\title{Create setting for AdaBoost with python DecisionTreeClassifier base estimator}
 \usage{
 setAdaBoost(
   nEstimators = list(10, 50, 200),
@@ -22,7 +22,7 @@ There is a trade-off between learningRate and nEstimators.}
 \item{seed}{A seed for the model}
 }
 \description{
-Create setting for AdaBoost with python
+Create setting for AdaBoost with python DecisionTreeClassifier base estimator
 }
 \examples{
 \dontrun{

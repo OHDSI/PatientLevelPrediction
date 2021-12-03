@@ -35,11 +35,11 @@
 #' @param outcomeId                  (integer) The ID of the outcome.                                       
 #' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
 #' @param analysisName               (character) Name for the analysis
-#' @param populationSettings         An object of type \code{populationSettings} created using \code(createStudyPopulationSettings) that
+#' @param populationSettings         An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
 #'                                   specifies how the data class labels are defined and addition any exclusions to apply to the 
 #'                                   plpData cohort
 #' @param splitSettings              An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.  
-#'                                   The default settings can be created using \code(createDefaultSplitSetting).                               
+#'                                   The default settings can be created using \code{createDefaultSplitSetting}.                               
 #' @param sampleSettings             An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
 #'                                   The default is none.
 #' @param featureEngineeringSettings An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)                                                        
@@ -285,7 +285,7 @@ runPlp <- function(
         splitData(
           plpData = plpData,
           population = population,
-          settings = splitSettings
+          splitSettings = splitSettings
         )
       },
       error = function(e){ParallelLogger::logError(e); return(NULL)}
@@ -335,7 +335,8 @@ runPlp <- function(
     
     data$Train$covariateData <- tryCatch(
       {
-        preprocessData(data = data$Train$covariateData, 
+        preprocessData(
+          covariateData = data$Train$covariateData, 
           preprocessSettings = preprocessSettings
         )
       },
@@ -378,7 +379,7 @@ runPlp <- function(
           {
             predictPlp(
               plpModel = model, 
-              covariateData = data$Test,
+              plpData = data$Test,
               population = data$Test$labels
             )
           },

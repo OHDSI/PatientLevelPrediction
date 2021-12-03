@@ -7,7 +7,7 @@
 setDecisionTree(
   criterion = list("gini"),
   splitter = list("best"),
-  maxDepth = list(4, 10, NULL),
+  maxDepth = list(as.integer(4), as.integer(10), NULL),
   minSamplesSplit = list(2, 10),
   minSamplesLeaf = list(10, 50),
   minWeightFractionLeaf = list(0),

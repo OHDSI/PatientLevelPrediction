@@ -229,17 +229,21 @@ diagnostic <- function(plpData = NULL,
   for(i in 1:length(outcomeIds)){
     oi <- outcomeIds[i]
     for(j in 1:length(riskWindowStart)){
-      population <- createStudyPopulation(plpData = data, 
-                                          outcomeId = oi, 
-                                          firstExposureOnly = F,
-                                          includeAllOutcomes = F, 
-                                          removeSubjectsWithPriorOutcome = F, 
-                                          requireTimeAtRisk = F, 
-                                          washoutPeriod = 0,
-                                          riskWindowStart = riskWindowStart[j], 
-                                          startAnchor = startAnchor[j], 
-                                          riskWindowEnd = riskWindowEnd[j], 
-                                          endAnchor = endAnchor[j])
+      population <- createStudyPopulation(
+        plpData = data, 
+        outcomeId = oi, 
+        populationSettings = createStudyPopulationSettings(
+          firstExposureOnly = F,
+          includeAllOutcomes = F, 
+          removeSubjectsWithPriorOutcome = F, 
+          requireTimeAtRisk = F, 
+          washoutPeriod = 0,
+          riskWindowStart = riskWindowStart[j], 
+          startAnchor = startAnchor[j], 
+          riskWindowEnd = riskWindowEnd[j], 
+          endAnchor = endAnchor[j]
+          )
+        )
       
       analysisId <- getAnalysisId(settings = settings, 
                                   cohortId = cohortId,
@@ -258,8 +262,11 @@ diagnostic <- function(plpData = NULL,
      
       proportion <- unique(rbind(proportion, proportionTemp))
 
-      characterizationTemp <- covariateSummary(plpData = data, 
-                                                population = population)
+      characterizationTemp <- covariateSummary(
+        covariateData = plpData$covariateData, 
+        cohort = population,
+        labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount)
+        )
       
       
       characterizationTemp <- characterizationTemp[,c('covariateId',
@@ -476,7 +483,6 @@ getProportions <- function(population,
                            cohortId,
                            outcomeId,
                            minCellCount = NULL){
-  
   
   details <- attr(population, 'metaData')
   

@@ -33,10 +33,10 @@ setMLP(
 
 \item{activation}{(list) Activation function for the hidden layer.
 \itemize{
-\item{'identity'}{no-op activation, useful to implement linear bottleneck, returns f(x) = x}
-\item{'logistic'}{ the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).}
-\item{'tanh'}{the hyperbolic tan function, returns f(x) = tanh(x).}
-\item{'relu'}{the rectified linear unit function, returns f(x) = max(0, x)}
+   \item{"identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x}
+   \item{"logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).}
+   \item{"tanh": the hyperbolic tan function, returns f(x) = tanh(x).}
+   \item{"relu": the rectified linear unit function, returns f(x) = max(0, x)}
  }}
 
 \item{solver}{(list) The solver for weight optimization. (‘lbfgs’, ‘sgd’, ‘adam’)}
@@ -45,11 +45,11 @@ setMLP(
 
 \item{batchSize}{(list) Size of minibatches for stochastic optimizers. If the solver is ‘lbfgs’, the classifier will not use minibatch. When set to “auto”, batchSize=min(200, n_samples).}
 
-\item{learningRate}{(list) [Only used when solver='sgd'] Learning rate schedule for weight updates.{‘constant’, ‘invscaling’, ‘adaptive’}, default=’constant’}
+\item{learningRate}{(list) Only used when solver='sgd' Learning rate schedule for weight updates.{‘constant’, ‘invscaling’, ‘adaptive’}, default=’constant’}
 
-\item{learningRateInit}{(list) [Only used when solver=’sgd’ or ‘adam’.] The initial learning rate used. It controls the step-size in updating the weights.}
+\item{learningRateInit}{(list) Only used when solver=’sgd’ or ‘adam’. The initial learning rate used. It controls the step-size in updating the weights.}
 
-\item{powerT}{(list) [Only used when solver=’sgd’.] The exponent for inverse scaling learning rate. It is used in updating effective learning rate when the learning_rate is set to ‘invscaling’.}
+\item{powerT}{(list) Only used when solver=’sgd’.  The exponent for inverse scaling learning rate. It is used in updating effective learning rate when the learning_rate is set to ‘invscaling’.}
 
 \item{maxIter}{(list)  Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations. For stochastic solvers (‘sgd’, ‘adam’), note that this determines the number of epochs (how many times each data point will be used), not the number of gradient steps.}
 
@@ -63,13 +63,13 @@ setMLP(
 
 \item{nesterovsMomentum}{(list) Whether to use Nesterov’s momentum. Only used when solver=’sgd’ and momentum > 0.}
 
-\item{earlyStopping}{(list) boolean Whether to use early stopping to terminate training when validation score is not improving. If set to true, it will automatically set aside 10% of training data as validation and terminate training when validation score is not improving by at least tol for n_iter_no_change consecutive epochs.}
+\item{earlyStopping}{(list) boolean Whether to use early stopping to terminate training when validation score is not improving. If set to true, it will automatically set aside 10 of training data as validation and terminate training when validation score is not improving by at least tol for n_iter_no_change consecutive epochs.}
 
 \item{validationFraction}{(list) The proportion of training data to set aside as validation set for early stopping. Must be between 0 and 1. Only used if earlyStopping is True.}
 
-\item{beta1}{(list) Exponential decay rate for estimates of first moment vector in adam, should be in [0, 1).}
+\item{beta1}{(list) Exponential decay rate for estimates of first moment vector in adam, should be in 0 to 1.}
 
-\item{beta2}{(list) Exponential decay rate for estimates of second moment vector in adam, should be in [0, 1).}
+\item{beta2}{(list) Exponential decay rate for estimates of second moment vector in adam, should be in 0 to 1.}
 
 \item{epsilon}{(list) Value for numerical stability in adam.}
 

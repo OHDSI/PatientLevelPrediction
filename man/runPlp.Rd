@@ -30,12 +30,12 @@ data extracted from the CDM.}
 
 \item{analysisId}{(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
 
-\item{populationSettings}{An object of type \code{populationSettings} created using \code(createStudyPopulationSettings) that
+\item{populationSettings}{An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
 specifies how the data class labels are defined and addition any exclusions to apply to the 
 plpData cohort}
 
 \item{splitSettings}{An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.
-The default settings can be created using \code(createDefaultSplitSetting).}
+The default settings can be created using \code{createDefaultSplitSetting}.}
 
 \item{sampleSettings}{An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
 The default is none.}

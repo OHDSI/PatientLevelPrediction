@@ -4,10 +4,10 @@
 \alias{createUnivariateFeatureSelection}
 \title{Create the settings for defining any feature selection that will be done}
 \usage{
-createUnivariateFeatureSelection(K = 100)
+createUnivariateFeatureSelection(k = 100)
 }
 \arguments{
-\item{K}{This function returns the K features most associated (univariately) to the outcome}
+\item{k}{This function returns the K features most associated (univariately) to the outcome}
 }
 \value{
 An object of class \code{featureEngineeringSettings}

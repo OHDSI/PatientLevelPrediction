@@ -3,8 +3,7 @@
 #' @details
 #' Generates a data.frame with the calibration per each 5 year age group and gender group
 #'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predict}} functions.
+#' @param prediction            A prediction object 
 #' @param predictionType        The type of prediction (binary or survival)                             
 #' @param typeColumn            A column that is used to stratify the results  
 #'

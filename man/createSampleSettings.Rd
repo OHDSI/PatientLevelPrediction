@@ -7,7 +7,7 @@ default sample functions.}
 \usage{
 createSampleSettings(
   type = "none",
-  numberOutcomestoNonOutcomes,
+  numberOutcomestoNonOutcomes = 1,
   sampleSeed = sample(10000, 1)
 )
 }

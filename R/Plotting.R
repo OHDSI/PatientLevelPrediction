@@ -171,7 +171,7 @@ plotPlp <- function(
   
   # add smooth calibration
   tryCatch({
-  plotSmoothCalibration(result = result, smooth = 'loess', nKnots = 5, 
+  plotSmoothCalibration(plpResult = plpResult, smooth = 'loess', nKnots = 5, 
                         type = typeColumn, zoom = 'data', 
     saveLocation = saveLocation,
     fileName = 'smooothCalibration.pdf'

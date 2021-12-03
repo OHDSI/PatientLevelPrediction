@@ -7,10 +7,15 @@
 setIterativeHardThresholding(
   K = 10,
   penalty = "bic",
-  seed = NULL,
-  exclude = NULL,
+  seed = sample(1e+05, 1),
+  exclude = c(),
   forceIntercept = F,
-  fitBestSubset = FALSE
+  fitBestSubset = FALSE,
+  initialRidgeVariance = 10000,
+  tolerance = 1e-08,
+  maxIterations = 10000,
+  threshold = 1e-06,
+  delta = 0
 )
 }
 \arguments{
@@ -25,6 +30,16 @@ setIterativeHardThresholding(
 \item{forceIntercept}{Logical: Force intercept coefficient into regularization}
 
 \item{fitBestSubset}{Logical: Fit final subset with no regularization}
+
+\item{initialRidgeVariance}{integer}
+
+\item{tolerance}{numeric}
+
+\item{maxIterations}{integer}
+
+\item{threshold}{numeric}
+
+\item{delta}{numeric}
 }
 \description{
 Create setting for lasso logistic regression

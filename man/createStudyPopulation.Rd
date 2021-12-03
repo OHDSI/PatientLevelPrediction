@@ -6,60 +6,21 @@
 \usage{
 createStudyPopulation(
   plpData,
-  population = NULL,
   outcomeId,
-  binary = T,
-  includeAllOutcomes = T,
-  firstExposureOnly = FALSE,
-  washoutPeriod = 0,
-  removeSubjectsWithPriorOutcome = TRUE,
-  priorOutcomeLookback = 99999,
-  requireTimeAtRisk = F,
-  minTimeAtRisk = 365,
-  riskWindowStart = 0,
-  startAnchor = "cohort start",
-  riskWindowEnd = 365,
-  endAnchor = "cohort start",
-  restrictTarToCohortEnd = F,
-  ...
+  populationSettings,
+  population = NULL
 )
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
 \code{getplpData}.}
 
-\item{population}{If specified, this population will be used as the starting point instead of the
-cohorts in the \code{plpData} object.}
-
 \item{outcomeId}{The  ID of the outcome.}
 
-\item{binary}{Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)}
+\item{populationSettings}{An object of class populationSettings created using \code{createPopulationSettings}}
 
-\item{includeAllOutcomes}{(binary) indicating whether to include people with outcomes who are not observed for the whole at risk period}
-
-\item{firstExposureOnly}{Should only the first exposure per subject be included? Note that
-this is typically done in the \code{createStudyPopulation} function,}
-
-\item{washoutPeriod}{The mininum required continuous observation time prior to index
-date for a person to be included in the cohort.}
-
-\item{removeSubjectsWithPriorOutcome}{Remove subjects that have the outcome prior to the risk window start?}
-
-\item{priorOutcomeLookback}{How many days should we look back when identifying prior outcomes?}
-
-\item{requireTimeAtRisk}{Should subject without time at risk be removed?}
-
-\item{minTimeAtRisk}{The minimum number of days at risk required to be included}
-
-\item{riskWindowStart}{The start of the risk window (in days) relative to the \code{startAnchor}.}
-
-\item{startAnchor}{The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".}
-
-\item{riskWindowEnd}{The end of the risk window (in days) relative to the \code{endAnchor} parameter}
-
-\item{endAnchor}{The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".}
-
-\item{restrictTarToCohortEnd}{If using a survival model and you want the time-at-risk to end at the cohort end date set this to T}
+\item{population}{If specified, this population will be used as the starting point instead of the
+cohorts in the \code{plpData} object.}
 
 \item{...}{Other inputs}
 }

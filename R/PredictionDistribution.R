@@ -3,8 +3,7 @@
 #' @details
 #' Calculates the quantiles from a predition object
 #'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predict}} functions.
+#' @param prediction            A prediction object 
 #' @param predictionType        The type of prediction (binary or survival)                             
 #' @param typeColumn            A column that is used to stratify the results  
 #'
@@ -35,8 +34,7 @@ getPredictionDistribution <- function(
 #' @details
 #' Calculates the quantiles from a predition object
 #'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
+#' @param prediction            A prediction object 
 #' @param evalColumn            A column that is used to stratify the results 
 #'
 #' @return

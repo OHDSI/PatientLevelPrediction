@@ -65,6 +65,8 @@ setLassoLogisticRegression<- function(
     maxIterations = maxIterations[1] #3000
   )
   
+  attr(param, 'modelType') <- 'binary' 
+  
   result <- list(
     fitFunction = "fitCyclopsModel",
     param = param
@@ -144,6 +146,8 @@ setCoxModel<- function(
     cvRepetitions = 1, #1
     maxIterations = maxIterations[1] #3000
   )
+  
+  attr(param, 'modelType') <- 'survival' 
   
   result <- list(
     fitFunction = "fitCyclopsModel",
@@ -229,6 +233,8 @@ setIterativeHardThresholding<- function(
     seed = seed[1],
     name = "Iterative Hard Thresholding"
   )
+  
+  attr(param, 'modelType') <- 'binary' 
   
   result <- list(
     fitFunction = "fitCyclopsModel",

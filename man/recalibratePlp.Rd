@@ -7,6 +7,7 @@
 recalibratePlp(
   prediction,
   analysisId,
+  typeColumn = "evaluationType",
   method = c("recalibrationInTheLarge", "weakRecalibration")
 )
 }

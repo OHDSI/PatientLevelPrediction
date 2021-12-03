@@ -366,72 +366,165 @@ return(covariateSettings)
 }
 
 
-#' Save parts of the plp result as a csv for transparent sharing
-#'
-#' @details
-#' Saves the main results as a csv (these files can be read by the shiny app)
-#'
-#' @param result                      An object of class runPlp with development or validation results
-#' @param dirPath                     The directory the save the results as csv files
-#' 
-#' @export
-savePlpToCsv <- function(result, dirPath){
+savePlpModelShareable <- function(plpModel, saveDirectory){
+  checkIsClass(plpModel, 'plpModel')
+  checkIsClass(saveDirectory, 'character')
   
-  #model settings - save as json
-  if(!dir.exists(file.path(dirPath, 'model'))){dir.create(file.path(dirPath, 'model'), recursive = T)}
-  utils::write.csv(result$model$settings$plpDataSettings, file = file.path(dirPath, 'model','plpDataSettings.csv'), row.names = F)
-  utils::write.csv(result$model$settings$covariateSettings, file = file.path(dirPath, 'model','covariateSettings.csv'), row.names = F)
-  utils::write.csv(result$model$settings$populationSettings, file = file.path(dirPath, 'model','populationSettings.csv'), row.names = F)
-  utils::write.csv(result$model$settings$featureEngineering, file = file.path(dirPath, 'model','featureEngineering.csv'), row.names = F)
-  utils::write.csv(result$model$settings$tidyCovariates, file = file.path(dirPath, 'model','tidyCovariates.csv'), row.names = F)
-  utils::write.csv(result$model$settings$requireDenseMatrix, file = file.path(dirPath, 'model','requireDenseMatrix.csv'), row.names = F)
-  utils::write.csv(result$model$settings$modelSettings$model, file = file.path(dirPath, 'model','modelSettings_model.csv'), row.names = F)
-  utils::write.csv(result$model$settings$modelSettings$param, file = file.path(dirPath, 'model','modelSettings_param.csv'), row.names = F)
-  utils::write.csv(result$model$settings$modelSettings$finalModelParameters, file = file.path(dirPath, 'model','modelSettings_finalModelParameters.csv'), row.names = F)
-  utils::write.csv(result$model$settings$modelSettings$extraSettings, file = file.path(dirPath, 'model','modelSettings_extraSettings.csv'), row.names = F)
-  utils::write.csv(result$model$settings$splitSettings, file = file.path(dirPath, 'model','splitSettings.csv'), row.names = F)
+  ParallelLogger::logInfo(paste0('Saving model to ',saveDirectory))
   
-  #trainDetails = list(
-  #  cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
-  #  outcomeId = attr(trainData, "metaData")$outcomeId,
-  #  cohortId = attr(trainData, "metaData")$cohortId,
-  #  attrition = attr(trainData, "metaData")$attrition, 
-  #  trainingTime = comp,
-  #  trainingDate = Sys.Date(),
-  #  hyperParamSearch = hyperSummary
-  #)
+  ensure_installed('RJSONIO')
+  if(!dir.exists(saveDirectory)){
+    dir.create(saveDirectory, recursive = T)
+  }
   
-  #executionSummary
-  if(!dir.exists(file.path(dirPath, 'executionSummary'))){dir.create(file.path(dirPath, 'executionSummary'), recursive = T)}
-  utils::write.csv(result$executionSummary$PackageVersion, file = file.path(dirPath, 'executionSummary','PackageVersion.csv'), row.names = F)
-  utils::write.csv(unlist(result$executionSummary$PlatformDetails), file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))
-  utils::write.csv(result$executionSummary$TotalExecutionElapsedTime, file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'), row.names = F)
-  utils::write.csv(result$executionSummary$ExecutionDateTime, file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'), row.names = F)
+  #============================================================
+  moveFile <- moveHdModel(plpModel, saveDirectory )
   
-  #performanceEvaluation
-  if(!dir.exists(file.path(dirPath, 'performanceEvaluation'))){dir.create(file.path(dirPath, 'performanceEvaluation'), recursive = T)}
-  utils::write.csv(result$performanceEvaluation$evaluationStatistics, file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'), row.names = F)
-  utils::write.csv(result$performanceEvaluation$thresholdSummary, file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'), row.names = F)
-  utils::write.csv(result$performanceEvaluation$demographicSummary, file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'), row.names = F)
-  utils::write.csv(result$performanceEvaluation$calibrationSummary, file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'), row.names = F)
-  utils::write.csv(result$performanceEvaluation$predictionDistribution, file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'), row.names = F)
+  if(!is.null(moveFile)){
+    plpModel$model <- saveDirectory
+  }
+  #============================================================
   
-  #covariateSummary
-  utils::write.csv(result$covariateSummary, file = file.path(dirPath,'covariateSummary.csv'), row.names = F)
+  # if deep (keras) then save hdfs
+  if(attr(plpModel, 'predictionFunction') == "predictXgboost"){
+    # fixing xgboost save/load issue
+    xgboost::xgb.save(model = plpModel$model, fname = file.path(saveDirectory, "model.json"))
+  } else{
+    model <- RJSONIO::toJSON(plpModel$model, digits = 23) # update this if a location and move model
+    write(model, file.path(saveDirectory, "model.json"))
+  }
+  
+  settings <- RJSONIO::toJSON(plpModel$settings, digits = 23)
+  write(settings, file.path(saveDirectory, "settings.json"))
+  
+  attributes <- list(
+    predictionFunction = attr(plpModel, 'predictionFunction'), 
+    modelType = attr(plpModel, 'modelType') 
+  )
+  write(attributes, file.path(saveDirectory,"attributes.json"))
+  
+  trainDetails <- RJSONIO::toJSON(plpModel$trainDetails, digits = 23)
+  write(trainDetails, file.path(saveDirectory, "trainDetails.json"))
+  
+  utils::write.csv(plpModel$covariateImportance %>% dplyr::filter(.data$covariateValue != 0 ), file.path(saveDirectory, "covariateImportance.csv"), row.names = F)
+  
+  return(invisible(saveDirectory))
+  
 }
 
-#' Loads parts of the plp result saved as csv files for transparent sharing
+loadJsonFile <- function(fileName) {
+  
+  ensure_installed('RJSONIO')
+  
+  result <- readChar(fileName, file.info(fileName)$size)
+  result <- RJSONIO::fromJSON(result)
+  
+  return(result)
+}
+
+loadPlpModelShareable <- function(loadDirectory){
+  
+  checkIsClass(loadDirectory, 'character')
+  if(!dir.exists(loadDirectory)){
+    ParallelLogger::logError('No model at specified loadDirectory')
+  }
+  
+  ParallelLogger::logInfo(paste0('Loading model from ', loadDirectory))
+  
+  plpModel <- list()
+  
+  attributes <- loadJsonFile(file.path(loadDirectory,"attributes.json"))
+  # make this automatic for atr in names(attributes){attr(plpModel, atr) <- attributes[atr]} ?
+  attr(plpModel, 'predictionFunction') <- attributes$predictionFunction
+  attr(plpModel, 'modelType') <- attributes$modelType
+  
+  plpModel$settings <- loadJsonFile(file.path(loadDirectory,"settings.json"))
+  plpModel$trainDetails <- loadJsonFile(file.path(loadDirectory,"trainDetails.json"))
+  
+  plpModel$covariateImportance <- utils::read.csv(file.path(loadDirectory,"covariateImportance.csv"))
+  
+  if(attributes$predictionFunction == "predictXgboost"){
+    ensure_installed("xgboost")
+      plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
+  }else{
+    plpModel$model <- loadJsonFile(file.path(loadDirectory,"model.json"))
+  } 
+  
+  # update the model location to the loadDirectory
+  plpModel <- updateModelLocation(plpModel, loadDirectory)
+  
+  # add the prediction function
+  plpModel$predict <- createTransform(plpModel)
+  
+  class(plpModel) <- "plpModel"
+  
+  return(plpModel)
+}
+
+#' Save the plp result as json files and csv files for transparent sharing
 #'
 #' @details
-#' Load the main results from csv files into a runPlp object
+#' Saves the main results json/csv files (these files can be read by the shiny app)
 #'
-#' @param dirPath                     The directory with the results as csv files
+#' @param result                      An object of class runPlp with development or validation results
+#' @param saveDirectory                     The directory the save the results as csv files
+#' @param minCellCount                Minimum cell count for the covariateSummary and certain evaluation results
 #' 
 #' @export
-loadPlpFromCsv <- function(dirPath){
+savePlpShareable <- function(result, saveDirectory, minCellCount = 10){
+  
+  #save model as json files
+  savePlpModelShareable(result$model, file.path(saveDirectory, 'model'))
+  
+  #executionSummary
+  if(!dir.exists(file.path(saveDirectory, 'executionSummary'))){dir.create(file.path(saveDirectory, 'executionSummary'), recursive = T)}
+  utils::write.csv(result$executionSummary$PackageVersion, file = file.path(saveDirectory, 'executionSummary','PackageVersion.csv'), row.names = F)
+  utils::write.csv(unlist(result$executionSummary$PlatformDetails), file = file.path(saveDirectory, 'executionSummary','PlatformDetails.csv'))
+  utils::write.csv(result$executionSummary$TotalExecutionElapsedTime, file = file.path(saveDirectory, 'executionSummary','TotalExecutionElapsedTime.csv'), row.names = F)
+  utils::write.csv(result$executionSummary$ExecutionDateTime, file = file.path(saveDirectory, 'executionSummary','ExecutionDateTime.csv'), row.names = F)
+  
+  #performanceEvaluation
+  if(!dir.exists(file.path(saveDirectory, 'performanceEvaluation'))){dir.create(file.path(saveDirectory, 'performanceEvaluation'), recursive = T)}
+  utils::write.csv(result$performanceEvaluation$evaluationStatistics, file = file.path(saveDirectory, 'performanceEvaluation','evaluationStatistics.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$thresholdSummary, file = file.path(saveDirectory, 'performanceEvaluation','thresholdSummary.csv'), row.names = F)
+  utils::write.csv(
+    removeCellCount(
+      result$performanceEvaluation$demographicSummary, 
+      minCellCount = minCellCount, 
+      filterColumns = c('PersonCountAtRisk', 'PersonCountWithOutcome')
+    ), 
+    file = file.path(saveDirectory, 'performanceEvaluation','demographicSummary.csv'), 
+    row.names = F
+  )
+  utils::write.csv(result$performanceEvaluation$calibrationSummary, file = file.path(saveDirectory, 'performanceEvaluation','calibrationSummary.csv'), row.names = F)
+  utils::write.csv(result$performanceEvaluation$predictionDistribution, file = file.path(saveDirectory, 'performanceEvaluation','predictionDistribution.csv'), row.names = F)
+  
+  #covariateSummary
+  utils::write.csv(
+    removeCellCount(
+      result$covariateSummary,
+      minCellCount = minCellCount, 
+      filterColumns = c('CovariateCount', 'CovariateCountWithOutcome', 'CovariateCountWithNoOutcome'),
+      extraCensorColumns = c('CovariateMeanWithOutcome', 'CovariateMeanWithNoOutcome'),
+      restrictColumns = c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','CovariateCountWithOutcome','CovariateCountWithNoOutcome','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','StandardizedMeanDiff')
+    ), 
+    file = file.path(saveDirectory,'covariateSummary.csv'), 
+    row.names = F
+  )
+}
+
+#' Loads the plp result saved as json/csv files for transparent sharing
+#'
+#' @details
+#' Load the main results from json/csv files into a runPlp object
+#'
+#' @param loadDirectory                     The directory with the results as json/csv files
+#' 
+#' @export
+loadPlpShareable <- function(loadDirectory){
   
   result <- list()
-  objects <- gsub('.csv','',dir(dirPath))
+  objects <- gsub('.csv','',dir(loadDirectory))
   if(sum(!c('covariateSummary','executionSummary','performanceEvaluation', 'model')%in%objects)>0){
     stop('Incorrect csv results file')
   }
@@ -440,46 +533,63 @@ loadPlpFromCsv <- function(dirPath){
   names(result) <- objects
   
   #covariateSummary
-  result$covariateSummary <- utils::read.csv(file = file.path(dirPath,'covariateSummary.csv'))
+  result$covariateSummary <- utils::read.csv(file = file.path(loadDirectory,'covariateSummary.csv'))
 
   #executionSummary
   result$executionSummary <- list()
-  result$executionSummary$PackageVersion <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'executionSummary','PackageVersion.csv')))}, error = function(e){return(NULL)})
-  result$executionSummary$PlatformDetails <- tryCatch({as.list(utils::read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$x)}, error = function(e){return(NULL)})
-  names(result$executionSummary$PlatformDetails) <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','PlatformDetails.csv'))$X}, error = function(e){return(NULL)})
-  result$executionSummary$TotalExecutionElapsedTime <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','TotalExecutionElapsedTime.csv'))$x}, error = function(e){return(NULL)})
-  result$executionSummary$ExecutionDateTime <- tryCatch({utils::read.csv(file = file.path(dirPath, 'executionSummary','ExecutionDateTime.csv'))$x}, error = function(e){return(NULL)})
+  result$executionSummary$PackageVersion <- tryCatch({as.list(utils::read.csv(file = file.path(loadDirectory, 'executionSummary','PackageVersion.csv')))}, error = function(e){return(NULL)})
+  result$executionSummary$PlatformDetails <- tryCatch({as.list(utils::read.csv(file = file.path(loadDirectory, 'executionSummary','PlatformDetails.csv'))$x)}, error = function(e){return(NULL)})
+  names(result$executionSummary$PlatformDetails) <- tryCatch({utils::read.csv(file = file.path(loadDirectory, 'executionSummary','PlatformDetails.csv'))$X}, error = function(e){return(NULL)})
+  result$executionSummary$TotalExecutionElapsedTime <- tryCatch({utils::read.csv(file = file.path(loadDirectory, 'executionSummary','TotalExecutionElapsedTime.csv'))$x}, error = function(e){return(NULL)})
+  result$executionSummary$ExecutionDateTime <- tryCatch({utils::read.csv(file = file.path(loadDirectory, 'executionSummary','ExecutionDateTime.csv'))$x}, error = function(e){return(NULL)})
   
   #model settings
   
   #performanceEvaluation
   result$performanceEvaluation <- list()
-  result$performanceEvaluation$evaluationStatistics <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','evaluationStatistics.csv'))}, error = function(e){return(NULL)})
-  result$performanceEvaluation$thresholdSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','thresholdSummary.csv'))}, error = function(e){return(NULL)})
-  result$performanceEvaluation$demographicSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','demographicSummary.csv'))}, error = function(e){return(NULL)})
-  result$performanceEvaluation$calibrationSummary <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','calibrationSummary.csv'))}, error = function(e){return(NULL)})
-  result$performanceEvaluation$predictionDistribution <- tryCatch({utils::read.csv(file = file.path(dirPath, 'performanceEvaluation','predictionDistribution.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$evaluationStatistics <- tryCatch({utils::read.csv(file = file.path(loadDirectory, 'performanceEvaluation','evaluationStatistics.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$thresholdSummary <- tryCatch({utils::read.csv(file = file.path(loadDirectory, 'performanceEvaluation','thresholdSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$demographicSummary <- tryCatch({utils::read.csv(file = file.path(loadDirectory, 'performanceEvaluation','demographicSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$calibrationSummary <- tryCatch({utils::read.csv(file = file.path(loadDirectory, 'performanceEvaluation','calibrationSummary.csv'))}, error = function(e){return(NULL)})
+  result$performanceEvaluation$predictionDistribution <- tryCatch({utils::read.csv(file = file.path(loadDirectory, 'performanceEvaluation','predictionDistribution.csv'))}, error = function(e){return(NULL)})
   
   # load model settings
-  result$model <- list(settings = list())
-  ## result$model$settings$plpDataSettings
-  ##result$model$settings$modelSettings
-  ##result$model$settings$populationSettings
-  ##result$model$settings$covariateSettings
-  ## result$model$settings$featureEngineering
-  ## result$model$settings$tidyCovariates
-  ## result$model$settings$requireDenseMatrix
-  ## result$model$settings$modelSettings$model
-  ## result$model$settings$modelSettings$param
-  ##result$model$settings$modelSettings$finalModelParameters
-  ##result$model$settings$modelSettings$extraSettings
-  ##result$model$settings$splitSettings
-  
-  # add the model class 
-  class(result$model) <- "plpModel"
-  attr(result$model, "predictionType") <- 'missing' #save and load these
-  attr(result$model, "modelType") <- 'missing' #save and load these
+  result$model <- loadPlpModelShareable(file.path(loadDirectory,'model'))
   
   class(result) <- "runPlp"
   return(result)
+}
+
+
+
+
+removeCellCount <- function(
+  data,
+  minCellCount = minCellCount, 
+  filterColumns = c('CovariateCount', 'CovariateCountWithOutcome', 'CovariateCountWithNoOutcome'),
+  extraCensorColumns = c('CovariateMeanWithOutcome', 'CovariateMeanWithNoOutcome'),
+  restrictColumns = NULL
+){
+  
+  # first restrict to certain columns if required
+  if(!is.null(restrictColumns)){
+    data <- data[,restrictColumns]
+  }
+  
+  #next find the rows that need censoring
+  ind <- rep(F, nrow(data))
+  for(i in 1:length(filterColumns)){
+    data[,filterColumns[i]][is.na(data[,filterColumns[i]])] <- 0
+    ind <- ind | (data[,filterColumns[i]] < minCellCount)
+  }
+  
+  # now replace these value with -1
+  
+  removeColumns <- c(filterColumns,extraCensorColumns)
+  
+  for(i in 1:length(removeColumns)){
+    data[ind,removeColumns[i]] <- NA
+  }
+  
+  return(data)
 }

@@ -7,8 +7,7 @@
 getPredictionDistribution_binary(prediction, evalColumn, ...)
 }
 \arguments{
-\item{prediction}{A prediction object as generated using the
-\code{\link{predictProbabilities}} function.}
+\item{prediction}{A prediction object}
 
 \item{evalColumn}{A column that is used to stratify the results}
 }

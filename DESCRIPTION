@@ -27,7 +27,6 @@ Depends:
 Imports:
     Andromeda,
     benchmarkme,
-    bit64,
     Cyclops (>= 3.0.0),
     DatabaseConnector (>= 3.0.0),
     dplyr,
@@ -55,7 +54,6 @@ Imports:
     zeallot
 Suggests:
     AUC,
-    aws.s3,
     BigKnn (>= 1.0.0),
     devtools,
     diagram, 
@@ -64,7 +62,6 @@ Suggests:
     htmlwidgets (> 0.8),
     htmltools,
     iterativeHardThresholding,
-    keras,
     knitr,
     markdown,
     memuse,

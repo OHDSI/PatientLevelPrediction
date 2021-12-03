@@ -4,8 +4,7 @@
 #' Calculates the TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
 #' from a prediction object
 #'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
+#' @param prediction            A prediction object 
 #' @param predictionType        The type of prediction (binary or survival)                             
 #' @param typeColumn            A column that is used to stratify the results                           
 #'
@@ -37,8 +36,7 @@ getThresholdSummary <- function(
 #' Calculates the TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
 #' from a prediction object
 #'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
+#' @param prediction            A prediction object 
 #' @param evalColumn            A column that is used to stratify the results                           
 #'
 #' @return

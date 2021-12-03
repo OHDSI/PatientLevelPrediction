@@ -274,30 +274,31 @@ return(model)
 
 
 #' Create setting for neural network model with python 
+#' 
 #' @param hiddenLayerSizes      (list of vectors) The ith element represents the number of neurons in the ith hidden layer.
 #' @param activation (list) Activation function for the hidden layer.
-#'                   \itemize{
-#'                   \item{'identity'}{no-op activation, useful to implement linear bottleneck, returns f(x) = x}
-#'                   \item{'logistic'}{ the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).}
-#'                   \item{'tanh'}{the hyperbolic tan function, returns f(x) = tanh(x).}
-#'                   \item{'relu'}{the rectified linear unit function, returns f(x) = max(0, x)}
-#'                    }
+#' \itemize{
+#'    \item{"identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x}
+#'    \item{"logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).}
+#'    \item{"tanh": the hyperbolic tan function, returns f(x) = tanh(x).}
+#'    \item{"relu": the rectified linear unit function, returns f(x) = max(0, x)}
+#'  }
 #' @param solver     (list) The solver for weight optimization. (‘lbfgs’, ‘sgd’, ‘adam’)
 #' @param alpha      (list) L2 penalty (regularization term) parameter.
 #' @param batchSize  (list) Size of minibatches for stochastic optimizers. If the solver is ‘lbfgs’, the classifier will not use minibatch. When set to “auto”, batchSize=min(200, n_samples).
-#' @param learningRate (list) [Only used when solver='sgd'] Learning rate schedule for weight updates.{‘constant’, ‘invscaling’, ‘adaptive’}, default=’constant’
-#' @param learningRateInit  (list) [Only used when solver=’sgd’ or ‘adam’.] The initial learning rate used. It controls the step-size in updating the weights.
-#' @param powerT     (list) [Only used when solver=’sgd’.] The exponent for inverse scaling learning rate. It is used in updating effective learning rate when the learning_rate is set to ‘invscaling’. 
+#' @param learningRate (list) Only used when solver='sgd' Learning rate schedule for weight updates.{‘constant’, ‘invscaling’, ‘adaptive’}, default=’constant’
+#' @param learningRateInit  (list) Only used when solver=’sgd’ or ‘adam’. The initial learning rate used. It controls the step-size in updating the weights.
+#' @param powerT     (list) Only used when solver=’sgd’.  The exponent for inverse scaling learning rate. It is used in updating effective learning rate when the learning_rate is set to ‘invscaling’. 
 #' @param maxIter  (list)  Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations. For stochastic solvers (‘sgd’, ‘adam’), note that this determines the number of epochs (how many times each data point will be used), not the number of gradient steps.
 #' @param shuffle (list) boolean: Whether to shuffle samples in each iteration. Only used when solver=’sgd’ or ‘adam’.
 #' @param tol        (list) Tolerance for the optimization. When the loss or score is not improving by at least tol for nIterNoChange consecutive iterations, unless learning_rate is set to ‘adaptive’, convergence is considered to be reached and training stops.
 #' @param warmStart (list) When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution.
 #' @param momentum (list) Momentum for gradient descent update. Should be between 0 and 1. Only used when solver=’sgd’.
 #' @param nesterovsMomentum (list) Whether to use Nesterov’s momentum. Only used when solver=’sgd’ and momentum > 0.
-#' @param earlyStopping (list) boolean Whether to use early stopping to terminate training when validation score is not improving. If set to true, it will automatically set aside 10% of training data as validation and terminate training when validation score is not improving by at least tol for n_iter_no_change consecutive epochs.
+#' @param earlyStopping (list) boolean Whether to use early stopping to terminate training when validation score is not improving. If set to true, it will automatically set aside 10 percent of training data as validation and terminate training when validation score is not improving by at least tol for n_iter_no_change consecutive epochs.
 #' @param validationFraction (list) The proportion of training data to set aside as validation set for early stopping. Must be between 0 and 1. Only used if earlyStopping is True.
-#' @param beta1    (list) Exponential decay rate for estimates of first moment vector in adam, should be in [0, 1).
-#' @param beta2    (list) Exponential decay rate for estimates of second moment vector in adam, should be in [0, 1).
+#' @param beta1    (list) Exponential decay rate for estimates of first moment vector in adam, should be in 0 to 1.
+#' @param beta2    (list) Exponential decay rate for estimates of second moment vector in adam, should be in 0 to 1.
 #' @param epsilon  (list) Value for numerical stability in adam.
 #' @param nIterNoChange     (list) Maximum number of epochs to not meet tol improvement. Only effective when solver=’sgd’ or ‘adam’.
 #' @param seed       A seed for the model 

@@ -5,57 +5,40 @@
 \title{createLearningCurve}
 \usage{
 createLearningCurve(
-  population,
   plpData,
-  modelSettings,
-  testSplit = "person",
-  testFraction = 0.25,
+  outcomeId,
+  analysisId = "learningCurve",
+  populationSettings = createStudyPopulationSettings(),
+  splitSettings = createDefaultSplitSetting(testFraction = 0.25, splitSeed = NULL,
+    nfold = 3, type = "stratified"),
   trainFractions = c(0.25, 0.5, 0.75),
-  trainEvents = NULL,
-  splitSeed = NULL,
-  nfold = 3,
-  indexes = NULL,
-  verbosity = "TRACE",
-  clearffTemp = FALSE,
-  minCovariateFraction = 0.001,
-  normalizeData = T,
-  saveDirectory = getwd(),
-  savePlpData = F,
-  savePlpResult = F,
-  savePlpPlots = F,
-  saveEvaluation = F,
-  timeStamp = FALSE,
-  analysisId = NULL
+  trainEvents = c(500, 1000, 1500),
+  sampleSettings = createSampleSettings(),
+  featureEngineeringSettings = createFeatureEngineeringSettings(),
+  preprocessSettings = createPreprocessSettings(minCovariateFraction = 0.001,
+    normalizeData = T),
+  modelSettings,
+  logSettings = createLogSettings(),
+  executeSettings = createExecuteSettings(runSplitData = T, runSampleData = F,
+    runfeatureEngineering = F, runPreprocessData = T, runModelDevelopment = T,
+    runCovariateSummary = F),
+  saveDirectory = getwd()
 )
 }
 \arguments{
-\item{population}{The population created using \code{createStudyPopulation()}
-that will be used to develop the model.}
+\item{plpData}{An object of type \code{plpData} - the patient level prediction
+data extracted from the CDM.}
 
-\item{plpData}{An object of type \code{plpData} - the patient level
-prediction data extracted from the CDM.}
+\item{outcomeId}{(integer) The ID of the outcome.}
 
-\item{modelSettings}{An object of class \code{modelSettings} created using
-one of the function:
-\itemize{
-  \item{{setLassoLogisticRegression} - a lasso logistic regression
-    model}
-  \item{\code{setGradientBoostingMachine} - a gradient boosting machine}
-  \item{\code{setRandomForest} - a random forest model}
-  \item{\code{setKNN} - a k-nearest neighbour model}
-}}
+\item{analysisId}{(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
 
-\item{testSplit}{Specifies the type of evaluation used. Can be either 
-\code{'person'} or \code{'time'}. The value \code{'time'} finds the date
-that splots the population into the testing and training fractions
-provided. Patients with an index after this date are assigned to the test
-set and patients with an index prior to this date are assigned to the
-training set. The value \code{'person'} splits the data randomly into
-testing and training sets according to fractions provided. The split is
-stratified by the class label.}
+\item{populationSettings}{An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
+specifies how the data class labels are defined and addition any exclusions to apply to the 
+plpData cohort}
 
-\item{testFraction}{The fraction of the data, which will be used as the 
-testing set in the patient split evaluation.}
+\item{splitSettings}{An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.
+The default settings can be created using \code{createDefaultSplitSetting}.}
 
 \item{trainFractions}{A list of training fractions to create models for.
 Note, providing \code{trainEvents} will override your input to
@@ -66,52 +49,45 @@ Therefore, it is recommended to provide \code{trainEvents} rather than
 \code{trainFractions}. Note, providing \code{trainEvents} will override
 your input to \code{trainFractions}. The format should be as follows:
 \itemize{
-  \item{\code{c(500, 1000, 1500)} - a list of training events}
+  \item{ \code{c(500, 1000, 1500) } - a list of training events}
 }}
 
-\item{splitSeed}{The seed used to split the testing and training set when
-using a 'person' type split}
+\item{sampleSettings}{An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
+The default is none.}
 
-\item{nfold}{The number of folds used in the cross validation (default = 
-\code{3}).}
+\item{featureEngineeringSettings}{An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)}
 
-\item{indexes}{A dataframe containing a rowId and index column where the 
-index value of -1 means in the test set, and positive integer represents
-the cross validation fold (default is \code{NULL}).}
+\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
+target population who must have a covariate for it to be included in the model training                            
+and whether to normalise the covariates before training}
 
-\item{verbosity}{Sets the level of the verbosity. If the log level is at or
-higher in priority than the logger threshold, a message will print. The 
-levels are:
+\item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
-  \item{\code{DEBUG} - highest verbosity showing all debug statements}
-  \item{\code{TRACE} - showing information about start and end of steps}
-  \item{\code{INFO} - show informative messages (default)}
-  \item{\code{WARN} - show warning messages}
-  \item{\code{ERROR} - show error messages}
-  \item{\code{FATAL} - be silent except for fatal errors}
+\item{setLassoLogisticRegression()}{ A lasso logistic regression model}
+\item{setGradientBoostingMachine()}{ A gradient boosting machine}
+\item{setAdaBoost()}{ An ada boost model}
+\item{setRandomForest()}{ A random forest model}
+\item{setDecisionTree()}{ A decision tree model}
+\item{setCovNN())}{ A convolutional neural network model}
+\item{setCIReNN()}{ A recurrent neural network model}
+\item{setMLP()}{ A neural network model}
+\item{setDeepNN()}{ A deep neural network model}
+\item{setKNN()}{ A KNN model}
+
 }}
 
-\item{clearffTemp}{Clears the temporary ff-directory after each iteration. 
-This can be useful, if the fitted models are large.}
+\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
+specifying how the logging is done}
 
-\item{minCovariateFraction}{Minimum covariate prevalence in population to
-avoid removal during preprocssing.}
+\item{executeSettings}{An object of \code{executeSettings} specifying which parts of the analysis to run}
 
-\item{normalizeData}{Whether to normalise the data}
+\item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
 
-\item{saveDirectory}{Location to save log and results}
+\item{analysisName}{(character) Name for the analysis}
 
-\item{savePlpData}{Whether to save the plpData}
+\item{cores}{The number of computer cores to use if running in parallel}
 
-\item{savePlpResult}{Whether to save the plpResult}
-
-\item{savePlpPlots}{Whether to save the plp plots}
-
-\item{saveEvaluation}{Whether to save the plp performance csv files}
-
-\item{timeStamp}{Include a timestamp in the log}
-
-\item{analysisId}{The analysis unique identifier}
+\item{parallel}{Whether to run the code in parallel}
 }
 \value{
 A learning curve object containing the various performance measures

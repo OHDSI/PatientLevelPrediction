@@ -26,11 +26,11 @@
 #' @param outcomeId                  (integer) The ID of the outcome.                                       
 #' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
 #' @param analysisName               (character) Name for the analysis
-#' @param populationSettings         An object of type \code{populationSettings} created using \code(createStudyPopulationSettings) that
+#' @param populationSettings         An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
 #'                                   specifies how the data class labels are defined and addition any exclusions to apply to the 
 #'                                   plpData cohort
 #' @param splitSettings              An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.  
-#'                                   The default settings can be created using \code(createDefaultSplitSetting).                               
+#'                                   The default settings can be created using \code{createDefaultSplitSetting}.                               
 #' @param sampleSettings             An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
 #'                                   The default is none.
 #' @param trainFractions A list of training fractions to create models for.
@@ -41,7 +41,7 @@
 #'   \code{trainFractions}. Note, providing \code{trainEvents} will override
 #'   your input to \code{trainFractions}. The format should be as follows:
 #'   \itemize{
-#'     \item{\code{c(500, 1000, 1500)} - a list of training events}
+#'     \item{ \code{c(500, 1000, 1500) } - a list of training events}
 #'   }
 #' @param featureEngineeringSettings An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)                                                        
 #' @param preprocessSettings         An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 

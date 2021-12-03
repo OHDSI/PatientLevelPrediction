@@ -4,7 +4,7 @@
 \alias{predictPlp}
 \title{predictPlp}
 \usage{
-predictPlp(plpModel, plpData, population)
+predictPlp(plpModel, plpData, population, timepoint)
 }
 \arguments{
 \item{plpModel}{An object of type \code{plpModel} - a patient level prediction model}
@@ -13,6 +13,8 @@ predictPlp(plpModel, plpData, population)
 data extracted from the CDM.}
 
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted or a cohort without the outcome known}
+
+\item{timepoint}{The timepoint to predict risk (survival models only)}
 }
 \value{
 A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.

@@ -8,8 +8,8 @@ getCalibrationSummary(
   prediction = prediction,
   predictionType = type,
   typeColumn = typeColumn,
-  numberOfStrata,
-  truncateFraction
+  numberOfStrata = 100,
+  truncateFraction = 0.05
 )
 }
 \arguments{

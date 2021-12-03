@@ -4,12 +4,12 @@
 \alias{plotPlp}
 \title{Plot all the PatientLevelPrediction plots}
 \usage{
-plotPlp(plpResult, saveLocation, typeColumn = "evaluation")
+plotPlp(plpResult, saveLocation = NULL, typeColumn = "evaluation")
 }
 \arguments{
 \item{plpResult}{Object returned by the runPlp() function}
 
-\item{saveLocation}{Name of the directory where the plots should be saved}
+\item{saveLocation}{Name of the directory where the plots should be saved (NULL means no saving)}
 
 \item{typeColumn}{The name of the column specifying the evaluation type 
 (to stratify the plots)}

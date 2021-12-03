@@ -4,7 +4,7 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(trainData, modelSettings, search = "grid")
+fitPlp(trainData, modelSettings, search = "grid", analysisId)
 }
 \arguments{
 \item{trainData}{An object of type \code{TrainData} created using \code{splitData}

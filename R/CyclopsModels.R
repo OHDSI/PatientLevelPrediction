@@ -165,7 +165,7 @@ fitCyclopsModel <- function(
   
   class(result) <- 'plpModel'
   attr(result, 'predictionFunction') <- 'predictCyclops'
-  attr(result, 'modelType') <- 'binary'
+  attr(result, 'modelType') <- attr(param, 'modelType')
   return(result)
 }
 
@@ -242,11 +242,15 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
       return(1/(1 + exp(0 - x)))
     }
     prediction$value <- link(prediction$value)
+    attr(prediction, "metaData")$modelType <- 'binary'
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     prediction$value <- exp(prediction$value)
     #if(max(prediction$value)>1){
     #  prediction$value <- prediction$value/max(prediction$value)
     #}
+    attr(prediction, "metaData")$modelType <- 'survival'
+    attr(prediction, 'metaData')$timepoint <- max(population$survivalTime, na.rm = T)
+    
   }
   return(prediction)
 }

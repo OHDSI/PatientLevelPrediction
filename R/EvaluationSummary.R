@@ -276,8 +276,7 @@ computeAuc <- function(prediction,
 #' @details
 #' Calculates the brierScore from prediction object
 #'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
+#' @param prediction            A prediction object
 #'
 #' @return
 #' A list containing the brier score and the scaled brier score
@@ -293,8 +292,7 @@ brierScore <- function(prediction){
 
 #' calibrationLine
 #'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
+#' @param prediction            A prediction object
 #' @param numberOfStrata        The number of groups to split the prediction into
 #'
 #' @details
@@ -363,8 +361,7 @@ calibrationLine <- function(prediction,numberOfStrata=10){
 #' @details
 #' Calculates the average precision from a predition object
 #'
-#' @param prediction            A prediction object as generated using the
-#'                              \code{\link{predictProbabilities}} function.
+#' @param prediction            A prediction object
 #'
 #' @return
 #' The average precision

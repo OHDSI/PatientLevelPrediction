@@ -61,7 +61,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   # apply prediction function
   prediction <- do.call(
-    attr(plpModel, "predictionType"), 
+    attr(plpModel, "predictionFunction"), 
     list(
       plpModel = plpModel, 
       data = plpData, 
@@ -72,7 +72,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   # add metaData
   metaData <- list(
     modelType = attr(plpModel, 'modelType'), #"binary", 
-    cohortId = attr(population,'metaData')$cohortId,
+    cohortId = attr(plpData,'metaData')$cohortId,
     outcomeId = attr(population,'metaData')$outcomeId,
     timepoint = attr(population,'metaData')$riskWindowEnd
   )
@@ -101,7 +101,16 @@ applyFeatureengineering <- function(
   settings
 ){
   
+  # if a single setting make it into a list
+  if(!is.null(settings$funct)){
+    settings <- list(settings)
+  }
+  
   # add code for implementing the feature engineering
+  for(set in settings){
+    set$settings$trainData <- covariateData
+    covariateData <- do.call(eval(parse(text = set$funct)), set$settings)
+  }
   
   # dont do anything for now
   return(covariateData)
