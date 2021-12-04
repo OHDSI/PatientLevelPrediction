@@ -49,6 +49,43 @@ populationSettings <- createStudyPopulationSettings(
   riskWindowEnd = 365,
   endAnchor = 'cohort start')
 
+
+# MODEL SETTINGS
+lrSet <- setLassoLogisticRegression()
+
+# RUNPLP - LASSO LR
+plpResult <- runPlp(
+  plpData = plpData, 
+  outcomeId = 2, 
+  analysisId = 'Test', 
+  analysisName = 'Testing analysis',
+  populationSettings = populationSettings, 
+  splitSettings = createDefaultSplitSetting(),
+  preprocessSettings = createPreprocessSettings(), 
+  modelSettings = lrSet, 
+  logSettings = createLogSettings(verbosity = 'TRACE'),
+  executeSettings = createDefaultExecuteSettings(), 
+  saveDirectory = 'D:/test/plp'
+  )
+
+#
+learningCurve <- PatientLevelPrediction::createLearningCurve(
+  plpData = plpData,
+  outcomeId = 2, parallel = F, cores = 2,
+  modelSettings = setLassoLogisticRegression(),
+  saveDirectory =  'D:/test/lcc',
+  splitSettings = createDefaultSplitSetting(testFraction = 0.2), 
+  trainFractions = c(0.6,0.8),
+  trainEvents = NULL,
+  preprocessSettings = createPreprocessSettings(
+    minFraction = 0.001,
+    normalize = T
+  )
+)
+
+plotLearningCurve(learningCurve = learningCurve, metric = 'AUROC')
+
+
 population <- createStudyPopulation(
   plpData = plpData,
   outcomeId = 2, 
@@ -102,15 +139,16 @@ surv <- PatientLevelPrediction::setCoxModel(variance = 0.01, seed = 1)
 
 
 # RUNPLP - LASSO LR
-plpResult <- runPlp(population = population, 
-                    plpData = plpData, 
-                    modelSettings = lrSet, 
-                    savePlpData = F, 
-                    savePlpResult = F, 
-                    saveEvaluation = F, 
-                    savePlpPlots = F, 
-                    analysisId = 'lrTest',
-                    saveDirectory =  saveLoc)
+plpResult <- runPlp(plpData = plpData, 
+  outcomeId = 2, 
+  analysisId = 'Test', 
+  populationSettings = populationSettings, 
+  splitSettings = createDefaultSplitSetting(), 
+  preprocessSettings = createPreprocessSettings(), 
+  modelSettings = lrSet, 
+  logSettings = createLogSettings(),
+  executeSettings = createDefaultExecuteSettings(), 
+  saveDirectory = 'D:/test/plp')
 
 # RUNPLP - survival Cox
 plpResult2 <- runPlp(population = population,

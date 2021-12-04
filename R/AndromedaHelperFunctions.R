@@ -17,7 +17,7 @@
 # limitations under the License.
 
 limitCovariatesToPopulation <- function(covariateData, rowIds) {
-  ParallelLogger::logInfo(paste0('Starting to limit covariate data to population...'))
+  ParallelLogger::logTrace(paste0('Starting to limit covariate data to population...'))
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
@@ -34,7 +34,7 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
                          indexName = 'covariates_ncovariateIds')
   
   class(newCovariateData) <- "CovariateData"
-  ParallelLogger::logInfo(paste0('Finished limiting covariate data to population...'))
+  ParallelLogger::logTrace(paste0('Finished limiting covariate data to population...'))
   return(newCovariateData)
 }
 

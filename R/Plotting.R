@@ -74,7 +74,11 @@ outcomeSurvivalPlot <- function(
   
   population <- do.call(
     what = 'createStudyPopulation',
-    args = populationSettings
+    args = list(
+      plpData = plpData, 
+      outcomeId = outcomeId, 
+      populationSettings = populationSettings
+      )
     )
   
   population$daysToEvent[is.na(population$daysToEvent)] <- population$survivalTime[is.na(population$daysToEvent)]
@@ -144,27 +148,27 @@ plotPlp <- function(
   )
   
   plotPredictedPDF(
-    result$performanceEvaluation, 
+    result, 
     saveLocation = saveLocation, 
     fileName = 'predictedPDF.pdf',
     type = typeColumn)
   plotPreferencePDF(
-    result$performanceEvaluation, 
+    result, 
     saveLocation = saveLocation, 
     fileName = 'preferencePDF.pdf', 
     type = typeColumn)
   plotPrecisionRecall(
-    result$performanceEvaluation, 
+    result, 
     saveLocation = saveLocation, 
     fileName = 'precisionRecall.pdf', 
     type = typeColumn)
   plotF1Measure(
-    result$performanceEvaluation, 
+    result, 
     saveLocation = saveLocation,
     fileName = 'f1Measure.pdf', 
     type = typeColumn)
   plotDemographicSummary(
-    result$performanceEvaluation, 
+    result, 
     saveLocation = saveLocation, 
     fileName = 'demographicSummary.pdf',
     type = typeColumn)
@@ -181,17 +185,17 @@ plotPlp <- function(
     }) 
   
   plotSparseCalibration(
-    result$performanceEvaluation, 
+    result, 
     saveLocation = saveLocation, 
     fileName = 'sparseCalibration.pdf', 
     type = typeColumn)
   plotSparseCalibration2(
-    result$performanceEvaluation,
+    result,
     saveLocation = saveLocation, 
     fileName = 'sparseCalibrationConventional.pdf', 
     type = typeColumn)
   plotPredictionDistribution(
-    result$performanceEvaluation, 
+    result, 
     saveLocation = saveLocation, 
     fileName = 'predictionDistribution.pdf', 
     type = typeColumn)
@@ -203,7 +207,7 @@ plotPlp <- function(
   )
   
   
-  if(sum(c('TrainCovariateMeanWithNoOutcome', 'TestCovariateMeanWithNoOutcome') %in% colnames(result$covariateSummary))==2){
+  if(sum(c('TrainWithNoOutcome_CovariateMean', 'TestWithNoOutcome_CovariateMean') %in% colnames(result$covariateSummary))==2){
     plotGeneralizability(
       result$covariateSummary, 
       saveLocation = saveLocation, 
@@ -288,7 +292,7 @@ plotSparseRoc <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 
@@ -322,8 +326,8 @@ plotPredictedPDF <- function(
   plots <- list()
   length(plots) <- length(evalTypes)
   
-  for(i in 1:length(evalTypes)){
-    evalType <- evalTypes[i]
+  for(ind in 1:length(evalTypes)){
+    evalType <- evalTypes[ind]
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
@@ -344,8 +348,8 @@ plotPredictedPDF <- function(
       upper <- x$predictionThreshold[i+1]} else {upper <- min(x$predictionThreshold[i]+0.01,1)}
   val <- x$predictionThreshold[i]+stats::runif(x$out[i])*(upper-x$predictionThreshold[i])
   vals <- c(val, vals)
-  }
-  vals[!is.na(vals)]
+  } 
+  vals <- vals[!is.na(vals)] #assigned
   
   vals2 <- c()
   for(i in 1:length(x$predictionThreshold)){
@@ -354,19 +358,20 @@ plotPredictedPDF <- function(
     val2 <- x$predictionThreshold[i]+stats::runif(x$nout[i])*(upper-x$predictionThreshold[i])
     vals2 <- c(val2, vals2)
   }
-  vals2[!is.na(vals2)]
+  vals2 <- vals2[!is.na(vals2)] #assigned
   
   x <- rbind(data.frame(variable=rep('outcome',length(vals)), value=vals),
              data.frame(variable=rep('No outcome',length(vals2)), value=vals2)
   )
   
-  plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(x=.data$value,
+  plots[[ind]] <- ggplot2::ggplot(x, ggplot2::aes(x=.data$value,
                                           group=.data$variable,
                                           fill=.data$variable)) +
     ggplot2::geom_density(ggplot2::aes(x=.data$value, fill=.data$variable), alpha=.3) +
-    ggplot2::scale_x_continuous("Prediction Threshold")+#, limits=c(0,1)) +
+    ggplot2::scale_x_continuous("Prediction Threshold") + #, limits=c(0,1)) +
     ggplot2::scale_y_continuous("Density") + 
-    ggplot2::guides(fill=ggplot2::guide_legend(title="Class"))
+    ggplot2::guides(fill=ggplot2::guide_legend(title="Class")) + 
+    ggplot2::ggtitle(evalType)
   }
   
   plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
@@ -377,7 +382,7 @@ plotPredictedPDF <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 
@@ -411,8 +416,8 @@ plotPreferencePDF <- function(
   plots <- list()
   length(plots) <- length(evalTypes)
   
-  for(i in 1:length(evalTypes)){
-    evalType <- evalTypes[i]
+  for(ind in 1:length(evalTypes)){
+    evalType <- evalTypes[ind]
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
@@ -434,7 +439,7 @@ plotPreferencePDF <- function(
     val <- x$preferenceThreshold[i]+stats::runif(x$out[i])*(upper-x$preferenceThreshold[i])
     vals <- c(val, vals)
   }
-  vals[!is.na(vals)]
+  vals <- vals[!is.na(vals)]
   
   vals2 <- c()
   for(i in 1:length(x$preferenceThreshold)){
@@ -443,19 +448,20 @@ plotPreferencePDF <- function(
     val2 <- x$preferenceThreshold[i]+stats::runif(x$nout[i])*(upper-x$preferenceThreshold[i])
     vals2 <- c(val2, vals2)
   }
-  vals2[!is.na(vals2)]
+  vals2 <- vals2[!is.na(vals2)]
   
   x <- rbind(data.frame(variable=rep('outcome',length(vals)), value=vals),
              data.frame(variable=rep('No outcome',length(vals2)), value=vals2)
   )
   
-  plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(x=.data$value,
+  plots[[ind]] <- ggplot2::ggplot(x, ggplot2::aes(x=.data$value,
                                           group=.data$variable,
                                           fill=.data$variable)) +
     ggplot2::geom_density(ggplot2::aes(x=.data$value, fill=.data$variable), alpha=.3) +
     ggplot2::scale_x_continuous("Preference Threshold")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("Density") + 
-    ggplot2::guides(fill=ggplot2::guide_legend(title="Class"))
+    ggplot2::guides(fill=ggplot2::guide_legend(title="Class")) +
+    ggplot2::ggtitle(evalType)
   
   }
   
@@ -467,7 +473,7 @@ plotPreferencePDF <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 
@@ -504,17 +510,18 @@ plotPrecisionRecall <- function(
   for(i in 1:length(evalTypes)){
     evalType <- evalTypes[i]
     
-    N <- sum(plpResult$performanceEvaluation$thresholdSummary %>% 
+    N <- max(plpResult$performanceEvaluation$thresholdSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-        dplyr::select(.data$PersonCountAtRisk) %>% 
+        dplyr::select(.data$falseCount) %>% 
+        dplyr::pull(), na.rm = T)
+
+    
+    O <- max(plpResult$performanceEvaluation$thresholdSummary %>% 
+        dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+        dplyr::select(.data$trueCount) %>% 
         dplyr::pull(), na.rm = T)
     
-    O <- sum(plpResult$performanceEvaluation$thresholdSummary %>% 
-        dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-        dplyr::select(.data$PersonCountWithOutcome) %>% 
-        dplyr::pull(), na.rm = T)
-    
-    inc <- O/N
+    inc <- O/(O + N)
     
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
@@ -525,7 +532,8 @@ plotPrecisionRecall <- function(
       ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
       ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
       ggplot2::geom_hline(yintercept = inc, linetype="dashed", 
-        color = "red", size=1) 
+        color = "red", size=1)  +
+      ggplot2::ggtitle(evalType)
   }
   
   plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
@@ -536,7 +544,7 @@ plotPrecisionRecall <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 
@@ -575,7 +583,7 @@ plotF1Measure <- function(
     
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$fpredictionThreshold, .data$f1Score)
+      dplyr::select(.data$predictionThreshold, .data$f1Score)
     
   if(sum(is.nan(x$f1Score))>0){
     x <- x[!is.nan(x$f1Score),]
@@ -586,7 +594,8 @@ plotF1Measure <- function(
     ggplot2::geom_line(size=1) +
     ggplot2::geom_point(size=1) +
     ggplot2::scale_x_continuous("predictionThreshold")+#, limits=c(0,1)) +
-    ggplot2::scale_y_continuous("F1Score")#, limits=c(0,1))
+    ggplot2::scale_y_continuous("F1Score") +#, limits=c(0,1))
+    ggplot2::ggtitle(evalType)
   }
   
   plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
@@ -597,7 +606,7 @@ plotF1Measure <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 
@@ -715,7 +724,8 @@ plotDemographicSummary <- function(
                                   guide = ggplot2::guide_legend(title = NULL),
                                   labels = c("Expected", "Observed")) +
 
-      ggplot2::guides(linetype=FALSE)
+      ggplot2::guides(linetype=FALSE) +
+      ggplot2::ggtitle(evalType)
   }
   
   plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
@@ -726,7 +736,7 @@ plotDemographicSummary <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 
@@ -797,7 +807,8 @@ plotSparseCalibration <- function(
                          linetype = 1,show.legend = TRUE,
                          color='darkblue') +
     ggplot2::scale_x_continuous("Average Predicted Probability") +
-    ggplot2::scale_y_continuous("Observed Fraction With Outcome")
+    ggplot2::scale_y_continuous("Observed Fraction With Outcome") +
+    ggplot2::ggtitle(evalType)
   }
 
   plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
@@ -808,7 +819,7 @@ plotSparseCalibration <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 #=============
@@ -867,7 +878,8 @@ plotSparseCalibration2 <- function(
                          show.legend = TRUE) +
     ggplot2::scale_x_continuous("Average Predicted Probability") +
     ggplot2::scale_y_continuous("Observed Fraction With Outcome") +
-    ggplot2::coord_cartesian(xlim = c(0, maxes), ylim=c(0,maxes)) 
+    ggplot2::coord_cartesian(xlim = c(0, maxes), ylim=c(0,maxes)) +
+    ggplot2::ggtitle(evalType)
   }
   
   plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
@@ -878,7 +890,7 @@ plotSparseCalibration2 <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 #=============
@@ -1235,7 +1247,7 @@ plotSmoothCalibration <- function(plpResult,
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 
@@ -1300,7 +1312,8 @@ plotPredictionDistribution <- function(
   ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one05, 
                                      xend = 2.1, yend = one05)) +
     ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one95, 
-                                       xend = 2.1, yend = one95))
+                                       xend = 2.1, yend = one95)) +
+    ggplot2::ggtitle(evalType)
   }
   
   plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
@@ -1311,7 +1324,7 @@ plotPredictionDistribution <- function(
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(invisible(plot))
+  return(plot)
 }
 
 
@@ -1345,13 +1358,13 @@ plotVariableScatterplot <- function(
   {
   
   # remove the non-incidence variables from the plot
-  covariateSummary <- covariateSummary[covariateSummary$CovariateMeanWithNoOutcome <= 1,]
+  covariateSummary <- covariateSummary[covariateSummary$WithNoOutcome_CovariateMean <= 1,]
   
   covariateSummary$size <- rep(0.1, nrow(covariateSummary))
   covariateSummary$size[covariateSummary$covariateValue!=0] <- 0.5
  
-  plot <- ggplot2::ggplot(covariateSummary, ggplot2::aes(y=.data$CovariateMeanWithOutcome, 
-                                                         x=.data$CovariateMeanWithNoOutcome,
+  plot <- ggplot2::ggplot(covariateSummary, ggplot2::aes(y=.data$WithOutcome_CovariateMean, 
+                                                         x=.data$WithNoOutcome_CovariateMean,
                                                          #size=abs(covariateValue)+0.1
                                                          size=.data$size
                                                          )) +
@@ -1391,14 +1404,14 @@ plotGeneralizability <- function(
   saveLocation = NULL,
   fileName = 'Generalizability.png'){
   
-  covariateSummary$TrainCovariateMeanWithOutcome[is.na(covariateSummary$TrainCovariateMeanWithOutcome)] <- 0
-  covariateSummary$TestCovariateMeanWithOutcome[is.na(covariateSummary$TestCovariateMeanWithOutcome)] <- 0
+  covariateSummary$TrainWithOutcome_CovariateMean[is.na(covariateSummary$TrainWithOutcome_CovariateMean)] <- 0
+  covariateSummary$TestWithOutcome_CovariateMean[is.na(covariateSummary$TestWithOutcome_CovariateMean)] <- 0
   
-  covariateSummary <- covariateSummary[covariateSummary$TrainCovariateMeanWithOutcome <= 1,]
+  covariateSummary <- covariateSummary[covariateSummary$TrainWithOutcome_CovariateMean <= 1,]
   
   plot1 <- ggplot2::ggplot(covariateSummary, 
-                          ggplot2::aes(.data$TrainCovariateMeanWithOutcome, 
-                                       .data$TestCovariateMeanWithOutcome)) +
+                          ggplot2::aes(.data$TrainWithOutcome_CovariateMean, 
+                                       .data$TestWithOutcome_CovariateMean)) +
     ggplot2::geom_point() +
     ggplot2::scale_x_continuous("Train set Mean") +
     ggplot2::scale_y_continuous("Test Set Mean") + 
@@ -1407,12 +1420,12 @@ plotGeneralizability <- function(
     ggplot2::ggtitle("Outcome")
     
  
-  covariateSummary$TrainCovariateMeanWithNoOutcome[is.na(covariateSummary$TrainCovariateMeanWithNoOutcome)] <- 0
-  covariateSummary$TestCovariateMeanWithNoOutcome[is.na(covariateSummary$TestCovariateMeanWithNoOutcome)] <- 0
+  covariateSummary$TrainWithNoOutcome_CovariateMean[is.na(covariateSummary$TrainWithNoOutcome_CovariateMean)] <- 0
+  covariateSummary$TestWithNoOutcome_CovariateMean[is.na(covariateSummary$TestWithNoOutcome_CovariateMean)] <- 0
   
   plot2 <- ggplot2::ggplot(covariateSummary, 
-                          ggplot2::aes(.data$TrainCovariateMeanWithNoOutcome, 
-                                       .data$TestCovariateMeanWithNoOutcome)) +
+                          ggplot2::aes(.data$TrainWithNoOutcome_CovariateMean, 
+                                       .data$TestWithNoOutcome_CovariateMean)) +
     ggplot2::geom_point() +
     ggplot2::scale_x_continuous("Train set Mean") +
     ggplot2::scale_y_continuous("Test Set Mean") + 

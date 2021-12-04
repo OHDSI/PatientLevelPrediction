@@ -20,32 +20,32 @@
 #' @details
 #' Returns an object of class \code{preprocessingSettings} that specifies how to preprocess the training data
 #'
-#' @param minCovariateFraction             The minimum fraction of target population who must have a covariate for it to be included in the model training                            
-#' @param normalizeData                    Whether to normalise the covariates before training (Default: TRUE)
+#' @param minFraction             The minimum fraction of target population who must have a covariate for it to be included in the model training                            
+#' @param normalize                    Whether to normalise the covariates before training (Default: TRUE)
 #' @param removeRedundancy                 Whether to remove redundant features (Default: TRUE)
 #' @return
 #' An object of class \code{preprocessingSettings}
 #' @export
 createPreprocessSettings <- function(
-  minCovariateFraction = 0.001,
-  normalizeData = TRUE,
+  minFraction = 0.001,
+  normalize = TRUE,
   removeRedundancy = TRUE
   ){
   
-    checkIsClass(minCovariateFraction, c('numeric','integer'))
-    checkHigherEqual(minCovariateFraction,0)
+    checkIsClass(minFraction, c('numeric','integer'))
+    checkHigherEqual(minFraction,0)
   
-    checkIsClass(normalizeData, c("logical"))
+    checkIsClass(normalize, c("logical"))
 
     checkIsClass(removeRedundancy, c("logical"))
   
     preprocessingSettings <- list(
-      minCovariateFraction = minCovariateFraction,
-      normalizeData = normalizeData,
+      minFraction = minFraction,
+      normalize = normalize,
       removeRedundancy = removeRedundancy
       )
   
-  class(preprocessingSettings) <- "preprocessingSettings"
+  class(preprocessingSettings) <- "preprocessSettings"
   return(preprocessingSettings)
   
 }
@@ -70,8 +70,8 @@ preprocessData <- function (covariateData,
   checkIsClass(covariateData, c("CovariateData"))
   checkIsClass(preprocessSettings, c("preprocessSettings"))
   
-  ParallelLogger::logDebug(paste0('minCovariateFraction: ', preprocessSettings$minCovariateFraction))
-  ParallelLogger::logDebug(paste0('normalizeData: ', preprocessSettings$normalizeData))
+  ParallelLogger::logDebug(paste0('minFraction: ', preprocessSettings$minFraction))
+  ParallelLogger::logDebug(paste0('normalize: ', preprocessSettings$normalize))
   ParallelLogger::logDebug(paste0('removeRedundancy: ', preprocessSettings$removeRedundancy))
   
   preprocessSettings$covariateData <- covariateData

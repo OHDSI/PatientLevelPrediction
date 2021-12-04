@@ -21,8 +21,8 @@ getEvaluationStatistics <- function(
 getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn] %>% pull())
-  
+  evalTypes <- unique(prediction[,evalColumn])
+
   for(evalType in evalTypes){
     
     predictionOfInterest <- prediction %>% dplyr::filter(.data[[evalColumn]] == evalType)
@@ -95,8 +95,8 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
     calinlarge <- calibrationInLarge(predictionOfInterest)
     result <- rbind(
       result, 
-      c(evalType, 'calibrationInLarge mean prediction', calibrationInLarge$meanPredictionRisk),
-      c(evalType, 'calibrationInLarge observed risk', calibrationInLarge$observedRisk)
+      c(evalType, 'calibrationInLarge mean prediction', calinlarge$meanPredictionRisk),
+      c(evalType, 'calibrationInLarge observed risk', calinlarge$observedRisk)
     )
     ParallelLogger::logInfo(paste0('Calibration in large- Mean predicted risk ', round(calinlarge$meanPredictionRisk, digits = 4), ' : observed risk ',round(calinlarge$observedRisk, digits = 4)))
     
@@ -138,7 +138,7 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
     
   }
   
-  class(result) <- data.frame
+  result <- as.data.frame(result)
   colnames(result) <- c('evaluation','metric','value')
   
   return(result)

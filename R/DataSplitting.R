@@ -122,6 +122,7 @@ splitData <- function(plpData = plpData,
     # NO TEST SET
     trainId <- splitId[splitId$index>0,]
     trainData <- list()
+    class(trainData) <- 'plpData'
     trainData$labels <- population %>% dplyr::filter(.data$rowId %in% trainId$rowId)
     trainData$folds <- trainId
   
@@ -144,15 +145,9 @@ splitData <- function(plpData = plpData,
     #trainData$covariateData$covariateRef <- plpData$covariateRef
     attr(trainData, "metaData") <- list(
       outcomeId = attr(population, "metaData")$outcomeId,
-      cohortId = attr(plpData, "metaData")$call$cohortId,
+      cohortId = attr(population, "metaData")$cohortId,
       cdmDatabaseSchema = attr(plpData, "metaData")$call$cdmDatabaseSchema,
-      plpDataSettings = list(
-        firstExposureOnly = attr(plpData, "metaData")$firstExposureOnly, 
-        washoutPeriod = attr(plpData, "metaData")$washoutPeriod, 
-        sampleSize = attr(plpData, "metaData")$sampleSize,
-        studyStartDate =  attr(plpData, "metaData")$studyStartDate,
-        studyEndDate = attr(plpData, "metaData")$studyEndDate
-      ),
+      plpDataSettings = attr(population, "metaData")$plpDataSettings,
       covariateSettings = attr(plpData, "metaData")$call$covariateSettings,
       populationSettings = attr(population, "metaData")$populationSettings,
       attrition = attr(population, "metaData")$attrition,
@@ -160,6 +155,8 @@ splitData <- function(plpData = plpData,
       
       populationSize = nrow(trainData$labels)
     )
+    # add pop size to covariateData as used in tidyCovariates
+    attr(trainData$covariateData, "metaData") <- list(populationSize = nrow(trainData$labels))
     class(trainData$covariateData) <- "CovariateData"
     
     result <- list(Train =  trainData)
@@ -167,6 +164,7 @@ splitData <- function(plpData = plpData,
   }else{
     trainId <- splitId[splitId$index>0,]
     trainData <- list()
+    class(trainData) <- 'plpData'
     trainData$labels <- population %>% dplyr::filter(.data$rowId %in% trainId$rowId)
     trainData$folds <- trainId
     #trainData$covariateData <- Andromeda::andromeda()
@@ -187,36 +185,34 @@ splitData <- function(plpData = plpData,
     }
     attr(trainData, "metaData") <- list(
       outcomeId = attr(population, "metaData")$outcomeId,
-      cohortId = attr(plpData, "metaData")$call$cohortId,
+      cohortId = attr(population, "metaData")$cohortId,
       cdmDatabaseSchema = attr(plpData, "metaData")$call$cdmDatabaseSchema,
-      plpDataSettings = list(
-        firstExposureOnly = attr(plpData, "metaData")$firstExposureOnly, 
-        washoutPeriod = attr(plpData, "metaData")$washoutPeriod, 
-        sampleSize = attr(plpData, "metaData")$sampleSize,
-        studyStartDate =  attr(plpData, "metaData")$studyStartDate,
-        studyEndDate = attr(plpData, "metaData")$studyEndDate
-      ),
+      plpDataSettings = attr(population, "metaData")$plpDataSettings,
       covariateSettings = attr(plpData, "metaData")$call$covariateSettings,
       populationSettings = attr(population, "metaData")$populationSettings,
       attrition = attr(population, "metaData")$attrition,
       splitSettings = splitSettings,
       populationSize = nrow(trainData$labels)
       )
+    
+    # add pop size to covariateData as used in tidyCovariates
+    attr(trainData$covariateData, "metaData") <- list(populationSize = nrow(trainData$labels))
     class(trainData$covariateData) <- "CovariateData"
     
     testId <- splitId[splitId$index<0,]
     testData <- list()
+    class(testData) <- 'plpData'
     testData$labels <- population %>% dplyr::filter(.data$rowId %in% testId$rowId)
     #testData$covariateData <- Andromeda::andromeda()
     #testData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% testId$rowId)
     #testData$covariateData$covariateRef <- plpData$covariateRef
-    if(length(testIdId$rowId)<200000){
-      testIdData$covariateData <- limitCovariatesToPopulation(
+    if(length(testId$rowId)<200000){
+      testData$covariateData <- limitCovariatesToPopulation(
         plpData$covariateData, 
         testId$rowId
       )
     } else{
-      trainData$covariateData <- batchRestrict(plpData$covariateData, 
+      testData$covariateData <- batchRestrict(plpData$covariateData, 
         data.frame(rowId = testId$rowId), 
         sizeN = 10000000)
     }
@@ -240,14 +236,14 @@ dataSummary <- function(data){
   result <- data$Train$label %>% 
     dplyr::inner_join(data$Train$folds, by = .data$rowId) %>% 
     dplyr::group_by(.data$index) %>%
-    dplyr::summarise(N = length(.data$data$outcomeCount),
-      outcomes = sum(.data$data$outcomeCount)) %>% 
+    dplyr::summarise(N = length(.data$outcomeCount),
+      outcomes = sum(.data$outcomeCount)) %>% 
     dplyr::collect()
   
-  ParallelLogger::logInfo(paste0('Fold ', result$index ,' ', result$N, ' patients with ', result$outcomes, ' outcomes'))
+  ParallelLogger::logInfo(paste('Fold ', result$index ,' ', result$N, ' patients with ', result$outcomes, ' outcomes', sep ='', collapse = ' - '))
   
   
-  result <- data$Train$covariates %>% 
+  result <- data$Train$covariateData$covariates %>% 
     dplyr::group_by(.data$covariateId) %>% 
     dplyr::summarise(N = length(.data$covariateValue)) %>% 
     dplyr::collect()

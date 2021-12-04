@@ -5,15 +5,15 @@
 \title{Create the settings for preprocessing the trainData using \code{ }.}
 \usage{
 createPreprocessSettings(
-  minCovariateFraction = 0.001,
-  normalizeData = TRUE,
+  minFraction = 0.001,
+  normalize = TRUE,
   removeRedundancy = TRUE
 )
 }
 \arguments{
-\item{minCovariateFraction}{The minimum fraction of target population who must have a covariate for it to be included in the model training}
+\item{minFraction}{The minimum fraction of target population who must have a covariate for it to be included in the model training}
 
-\item{normalizeData}{Whether to normalise the covariates before training (Default: TRUE)}
+\item{normalize}{Whether to normalise the covariates before training (Default: TRUE)}
 
 \item{removeRedundancy}{Whether to remove redundant features (Default: TRUE)}
 }

@@ -89,8 +89,7 @@ covariateSummary <- function(
   # add variable importance if input
   if(!is.null(variableImportance)){
     covariateSummary <- covariateSummary %>% 
-      dplyr::left_join(variableImportance, by = 'covariateId') %>%
-      dplyr::rename(covariateValue = value)
+      dplyr::left_join(variableImportance, by = 'covariateId')
   }
   
   # add covariate names 

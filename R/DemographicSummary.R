@@ -68,7 +68,7 @@ getDemographicSummary_binary <- function(prediction, evalColumn , ...){
   }
   
   result <- as.data.frame(result)
-  return(demographicData)
+  return(result)
   
 }
 

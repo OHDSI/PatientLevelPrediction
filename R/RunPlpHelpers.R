@@ -19,9 +19,8 @@ printHeader <- function(plpData, cohortId, outcomeId , analysisId, analysisName,
 }
 
 
-checkInputs <- function(plpData, outcomeId, ...) {
+checkInputs <- function(inputs) {
   
-  inputs <- as.list(match.call())
   inputNames <- names(inputs)
   
   checkIsClass(inputs[['plpData']], c('plpData'))
@@ -47,7 +46,7 @@ checkInputs <- function(plpData, outcomeId, ...) {
 }
 
 
-
+#' @export
 createExecuteSettings <- function(
   runSplitData = F,
   runSampleData = F,
@@ -64,11 +63,19 @@ createExecuteSettings <- function(
   checkIsClass(runModelDevelopment, "logical")
   checkIsClass(runCovariateSummary, "logical")
   
-  result <- as.list(match.call())
+  result <- list(
+    runSplitData = runSplitData,
+    runSampleData = runSampleData,
+    runfeatureEngineering = runfeatureEngineering,
+    runPreprocessData = runPreprocessData,
+    runModelDevelopment = runModelDevelopment,
+    runCovariateSummary = runCovariateSummary
+  )
   class(result) <- 'executeSettings'
   return(result)
 }
 
+#' @export
 createDefaultExecuteSettings <- function(){
   createExecuteSettings(
     runSplitData = T,

@@ -91,23 +91,21 @@
 createLearningCurve <- function(
   plpData,
   outcomeId,
+  parallel = T,
+  cores = 4,
+  modelSettings,
+  saveDirectory = getwd(),
   analysisId = 'learningCurve',
   populationSettings = createStudyPopulationSettings(),
-  splitSettings = createDefaultSplitSetting(
-    testFraction = 0.25,
-    splitSeed = NULL,
-    nfold = 3,
-    type = 'stratified'
-    ),
+  splitSettings = createDefaultSplitSetting(),
   trainFractions = c(0.25, 0.50, 0.75),
   trainEvents = c(500, 1000, 1500),
   sampleSettings = createSampleSettings(),
   featureEngineeringSettings = createFeatureEngineeringSettings(),
   preprocessSettings = createPreprocessSettings(
-    minCovariateFraction = 0.001,
-    normalizeData = T
+    minFraction = 0.001,
+    normalize = T
   ),
-  modelSettings,
   logSettings = createLogSettings(),
   executeSettings = createExecuteSettings(
     runSplitData = T, 
@@ -116,8 +114,7 @@ createLearningCurve <- function(
     runPreprocessData = T,
     runModelDevelopment = T,
     runCovariateSummary = F
-    ),
-  saveDirectory =getwd()
+    )
 ){
   
   if (is.null(analysisId)) {
@@ -142,6 +139,10 @@ createLearningCurve <- function(
   ExecutionDateTime <- Sys.time()
   
   if(parallel){
+    
+    # save data
+    savePlpData(plpData, file.path(saveDirectory,'data'))
+    
     # code to run in parallel
     getLcSettings <- function(i){
       result <- list(
@@ -172,7 +173,7 @@ createLearningCurve <- function(
     }
     
     cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
-    ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda"))
+    ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda", "FeatureExtraction"))
     
     learningCurve <- ParallelLogger::clusterApply(cluster = cluster, 
       x = lcSettings, 
@@ -205,7 +206,7 @@ createLearningCurve <- function(
   learningCurve <- lapply(1:nRuns, function(i){
     
     settings$splitSettings$train = trainFractions[i]
-    settings$analysisId = paste(settings$analysisId, '_', i)                                  
+    settings$analysisId = paste0(settings$analysisId, '_', i)                                  
     result <- do.call(runPlp, settings)  
     
     result <- learningCurveHelper(
@@ -220,7 +221,7 @@ createLearningCurve <- function(
   
   learningCurve <- do.call(rbind,learningCurve)
 
-  reshape2::dcast(data = learningCurve,  trainFraction ~ name)
+  learningCurve <- reshape2::dcast(data = learningCurve,  trainFraction ~ name)
 
   endTime <- Sys.time()
   TotalExecutionElapsedTime <-
@@ -264,9 +265,14 @@ getTrainFractions <- function(
   splitSettings
 ){
   
-  populationSettings$plpData <- plpData
-  populationSettings$outcomeId <- outcomeId
-  population <- do.call(createStudyPopulation, populationSettings)
+  population <- do.call(
+    createStudyPopulation, 
+    list(
+      plpData = plpData,
+      outcomeId = outcomeId,
+      populationSettings = populationSettings
+    )
+  )
   
   # compute training set fractions from training events
   samplesRequired <- trainEvents/(sum(population$outcomeCount/nrow(population)))
@@ -298,7 +304,7 @@ learningCurveHelper <- function(result, trainFractions){
   
   result$name <- paste(result$evaluation, result$metric, sep='_')
   
-  result %>% dplyr::select(.data$name, .data$value)
+  result <- result %>% dplyr::select(.data$name, .data$value)
   
   result <- rbind(
     c('executionTime', executeTime), 
@@ -368,42 +374,62 @@ plotLearningCurve <- function(learningCurve,
   # check for performance metric to plot
   if(metric == "AUROC") {
     # create a data.frame with evalautionType, AUROC
+    tidyLearningCurve <- learningCurve %>% 
+      dplyr::rename(
+        Occurrences = .data$Train_outcomeCount, 
+        Observations = .data$Train_populationSize ) %>%
+      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$Test_AUROC, .data$Train_AUROC)
     
-    tidyLearningCurve <- learningCurve %>%
-      dplyr::rename(Training = .data$Train_AUROC, Testing = .data$Test_AUROC) %>%
-      dplyr::select(.data$Training, .data$Testing)
+    for(i in 1:ncol(tidyLearningCurve)){
+      tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
+    }
     
-    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), value.name = 'AUROC')
- 
+    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    
+    tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
     
     # define plot properties
     yAxisRange <- c(0.5, 1.0)
-    y <- "AUROC"
     
   } else if (metric == "AUPRC") {
     # tidy up dataframe
-
-    tidyLearningCurve <- learningCurve %>%
-      dplyr::rename(Training = .data$Train_AUPRC, Testing = .data$Test_AUPRC) %>%
-      dplyr::select(.data$Training, .data$Testing)
+    tidyLearningCurve <- learningCurve %>% 
+      dplyr::rename(
+        Occurrences = .data$Train_outcomeCount, 
+        Observations = .data$Train_populationSize ) %>%
+      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$Test_AUPRC, .data$Train_AUPRC)
     
-    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), value.name = 'AUPRC')
+    for(i in 1:ncol(tidyLearningCurve)){
+      tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
+    }
 
+    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    
+    tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
+    
     # define plot properties
     yAxisRange <- c(0.0, 1.0)
-    y <- "AUPRC"
     
   } else if (metric == "sBrier") {
     # tidy up dataframe
-    tidyLearningCurve <- learningCurve %>%
-      dplyr::rename(Training = .data$`Train_brier score scaled`, Testing = .data$`Test_brier score scaled`) %>%
-      dplyr::select(.data$Training, .data$Testing)
+    tidyLearningCurve <- learningCurve %>% 
+      dplyr::rename(
+        Occurrences = .data$Train_outcomeCount, 
+        Observations = .data$Train_populationSize ) %>%
+      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$`Test_brier score scaled`, .data$`Train_brier score scaled`)
     
-    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), value.name = 'sBrier')
+    for(i in 1:ncol(tidyLearningCurve)){
+      tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
+    }
+    
+    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    
+    tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
+    
     
     # define plot properties
     yAxisRange <- c(0.0, 1.0)
-    y <- "sBrier"
+    
   } else {
     stop("An incorrect metric has been specified.")
   }
@@ -420,12 +446,12 @@ plotLearningCurve <- function(learningCurve,
   
   # create plot object
   plot <- tidyLearningCurve %>%
-    ggplot2::ggplot(ggplot2::aes_string(x = abscissa, y = y,
+    ggplot2::ggplot(ggplot2::aes_string(x = abscissa, y= 'value',
       col = "Dataset")) +
     ggplot2::geom_line() +
     ggplot2::coord_cartesian(ylim = yAxisRange, expand = FALSE) +
     ggplot2::labs(title = plotTitle, subtitle = plotSubtitle, 
-      x = abscissaLabel) +
+      x = abscissaLabel, y = metric) +
     ggplot2::theme_light()
   
   # save plot, if fucntion call provides a file name

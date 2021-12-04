@@ -68,7 +68,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evaluationType'){
       typeColumn = typeColumn
     ) 
   },
-    error = function(e){ParallelLogger::logInfo(e);return(NULL)}
+    error = function(e){ParallelLogger::logInfo('getThresholdSummary error');ParallelLogger::logInfo(e);return(NULL)}
   )
       
   # 3) demographicSummary
@@ -80,7 +80,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evaluationType'){
       typeColumn = typeColumn
       )
     },
-    error = function(e){ParallelLogger::logInfo(e);return(NULL)}
+    error = function(e){ParallelLogger::logInfo('getDemographicSummary error');ParallelLogger::logInfo(e);return(NULL)}
   )
   
   # 4) calibrationSummary
@@ -94,7 +94,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evaluationType'){
       truncateFraction = 0.01
     )
   },
-    error = function(e){ParallelLogger::logInfo(e);return(NULL)}
+    error = function(e){ParallelLogger::logInfo('getCalibrationSummary error');ParallelLogger::logInfo(e);return(NULL)}
   )
   
   
@@ -107,7 +107,7 @@ evaluatePlp <- function(prediction, typeColumn = 'evaluationType'){
       typeColumn = typeColumn
     )
   },
-    error = function(e){ParallelLogger::logInfo(e);return(NULL)}
+    error = function(e){ParallelLogger::logInfo('getPredictionDistribution error');ParallelLogger::logInfo(e);return(NULL)}
   )
       
   result <- list(

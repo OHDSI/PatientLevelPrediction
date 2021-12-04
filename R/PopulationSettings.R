@@ -217,8 +217,9 @@ createStudyPopulation <- function(
     population <- plpData$cohorts
   }
   
-  # save the metadata
+  # save the metadata (should have the cohortId, outcomeId, plpDataSettings and population settings)
   metaData <- attr(population, "metaData")
+  metaData$plpDataSettings <- plpData$metaData$call$restrictPlpDataSettings
   metaData$outcomeId <- outcomeId
   metaData$populationSettings <- populationSettings
   

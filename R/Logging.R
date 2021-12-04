@@ -72,7 +72,6 @@ createLog <- function(
   
   logFileName <- gsub("[[:punct:]]", "", logFileName) 
   
-  clearLoggerType(logName)
   if(verbosity!="NONE"){
     logger <- ParallelLogger::createLogger(
       name = logName,
@@ -80,11 +79,12 @@ createLog <- function(
       appenders = list(
         ParallelLogger::createFileAppender(
           layout = ParallelLogger::layoutParallel,
-          fileName = logFileName
+          fileName = file.path(saveDirectory,paste0(logFileName, '.txt')),
+          expirationTime = 60*60*48
         )
       )
     )
-    ParallelLogger::registerLogger(logger)
+
   }
   
   return(logger)
@@ -99,7 +99,7 @@ checkFileExists <- function(
     ParallelLogger::logInfo(paste0('Creating save directory at: ', saveDirectory))
     dir.create(saveDirectory, recursive = T)
   }
-  reurn(invisible(dirExists))
+  return(invisible(dirExists))
 }
 
 closeLog <- function(logger){

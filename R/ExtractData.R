@@ -229,9 +229,7 @@ getPlpData <- function(
                                                  cdm_version = databaseDetails$cdmVersion)
   cohorts <- DatabaseConnector::querySql(connection, cohortSql)
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
-  metaData.cohort <- list(cohortId = databaseDetails$cohortId,
-                          studyStartDate = restrictPlpDataSettings$studyStartDate,
-                          studyEndDate = restrictPlpDataSettings$studyEndDate)
+  metaData.cohort <- list(cohortId = databaseDetails$cohortId)
   
   if(nrow(cohorts)==0)
     stop('Target population is empty')

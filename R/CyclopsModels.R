@@ -109,13 +109,15 @@ fitCyclopsModel <- function(
   prediction <- predictCyclops(
     plpModel = list(model = modelTrained),
     cohort = trainData$labels, 
-    plpData = plpData
+    data = plpData
     )
   prediction$evaluationType <- 'Train'
   
   # get cv AUC
   cvPrediction  <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
   cvPrediction$evaluationType <- 'CV'
+  # fit date issue convertion caused by andromeda 
+  cvPrediction$cohortStartDate <- as.Date(cvPrediction$cohortStartDate, origin = '1970-01-01')
   
   prediction <- rbind(prediction, cvPrediction[,colnames(prediction)])
   
@@ -182,10 +184,10 @@ fitCyclopsModel <- function(
 #'
 #' @param predictiveModel   An object of type \code{predictiveModel} as generated using
 #'                          \code{\link{fitPlp}}.
-#' @param plpData        The covariateData containing the covariates for the population                       
+#' @param data         The new plpData containing the covariateData for the new population                       
 #' @param cohort       The cohort to calculate the prediction for
 #' @export
-predictCyclops <- function(plpModel, plpData, cohort ) {
+predictCyclops <- function(plpModel, data, cohort ) {
   start <- Sys.time()
   
   ParallelLogger::logTrace('predictProbabilities - predictAndromeda start')
@@ -249,7 +251,9 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     #  prediction$value <- prediction$value/max(prediction$value)
     #}
     attr(prediction, "metaData")$modelType <- 'survival'
-    attr(prediction, 'metaData')$timepoint <- max(population$survivalTime, na.rm = T)
+    if(modelType == "survival"){
+      attr(prediction, 'metaData')$timepoint <- max(population$survivalTime, na.rm = T)
+    }
     
   }
   return(prediction)
@@ -364,7 +368,7 @@ getCV <- function(
 
 getVariableImportance <- function(modelTrained, trainData){
   varImp <- data.frame(
-    covariateId = names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)'],
+    covariateId = as.double(names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)']),
     value = modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)']
   )
 
@@ -374,11 +378,13 @@ if(sum(abs(varImp$value)>0)==0){
 } else {
   ParallelLogger::logInfo('Creating variable importance data frame')
   
-  trainData$covariateData$varImp <- varImp
-  on.exit(trainData$covariateData$varImp <- NULL, add = T)
+  #trainData$covariateData$varImp <- varImp
+  #on.exit(trainData$covariateData$varImp <- NULL, add = T)
   
   varImp <- trainData$covariateData$covariateRef %>% 
-    dplyr::left_join(trainData$covariateData$varImp) %>%
+    dplyr::collect()  %>%
+    #dplyr::left_join(trainData$covariateData$varImp) %>%
+    dplyr::left_join(varImp, by = 'covariateId') %>%
     dplyr::mutate(covariateValue = ifelse(is.na(.data$value), 0, .data$value)) %>%
     dplyr::select(-.data$value) %>%
     dplyr::arrange(-abs(.data$covariateValue)) %>%

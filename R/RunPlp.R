@@ -194,6 +194,7 @@ runPlp <- function(
   plpData,
   outcomeId = plpData$metaData$call$outcomeIds[1],
   analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = '-'),
+  analysisName = 'Study details',
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(
     type = 'stratified', 
@@ -220,24 +221,27 @@ runPlp <- function(
   
   # start log 
   analysisPath <- file.path(saveDirectory, analysisId)
-  logSetting$saveDirectory <- analysisPath
-  logSettings$logFileName <- 'plpLog.txt'
+  logSettings$saveDirectory <- analysisPath
+  logSettings$logFileName <- 'plpLog'
   logger <- do.call(createLog,logSettings)
+  ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
   
   #check inputs + print 
   settingsValid <- tryCatch(
     {
       checkInputs(
-        plpData, 
-        outcomeId,
-        populationSettings, 
-        splitSettings,
-        sampleSettings,
-        featureEngineeringSettings, 
-        dataProcessingSettings, 
-        modelSettings,
-        executeSettings
+        inputs = list(
+          plpData = plpData, 
+          outcomeId = outcomeId,
+          populationSettings = populationSettings, 
+          splitSettings = splitSettings,
+          sampleSettings = sampleSettings,
+          featureEngineeringSettings = featureEngineeringSettings, 
+          preprocessSettings = preprocessSettings, 
+          modelSettings = modelSettings,
+          executeSettings = executeSettings
+        )
       )
     },
     error = function(e){ParallelLogger::logError(e); return(NULL)}
@@ -263,12 +267,15 @@ runPlp <- function(
   })
   
   # create the population
-  populationSettings$outcomeId <- outcomeId
   population <- tryCatch(
     {
       do.call(
         createStudyPopulation, 
-        populationSettings
+        list(
+          plpData = plpData,
+          outcomeId = outcomeId,
+          populationSettings = populationSettings
+        )
       )
     },
     error = function(e){ParallelLogger::logError(e); return(NULL)}
@@ -389,7 +396,7 @@ runPlp <- function(
         predictionTest$evaluationType <- 'Test'
         
         if(!is.null(predictionTest)){
-          prediction <- rbind(model$prediction, predictionTest)
+          prediction <- rbind(prediction, predictionTest)
         } 
         
         
@@ -408,7 +415,7 @@ runPlp <- function(
   
   
   # covariateSummary
-  covariateSummary <- NULL
+  covariateSummaryResult <- NULL
   if(executeSettings$runCovariateSummary){
     
     if(!is.null(data$Test)){
@@ -429,7 +436,7 @@ runPlp <- function(
       )
     }
     
-    covariateSummary <- do.call(covariateSummary,   
+    covariateSummaryResult <- do.call(covariateSummary,   
       list(
         covariateData = plpData$covariateData,
         cohort = population %>% dplyr::select(.data$rowId),
@@ -459,19 +466,9 @@ runPlp <- function(
       ),
     TotalExecutionElapsedTime = TotalExecutionElapsedTime,
     ExecutionDateTime = ExecutionDateTime,
-    Log = logFileName # location for now
+    Log = logSettings$logFileName # location for now
     #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )
-  
-  # do we need this?
-  ##inputSetting <- list(
-  ##  populationSettings = populationSettings, 
-  ##  splitSettings = splitSettings, 
-  ##  sampleSettings = sampleSettings,
-  ##  featureEngineeringSettings = featureEngineeringSettings,
-  ##  preprocessSettings = preprocessSettings, 
-  ##   modelSettings = modelSettings
-  ## )
   
   results <- list(
     #inputSetting = inputSetting, 
@@ -479,7 +476,7 @@ runPlp <- function(
     model = model,
     prediction = prediction,
     performanceEvaluation = performance,
-    covariateSummary = covariateSummary,
+    covariateSummary = covariateSummaryResult,
     analysisRef = list(
       analysisId = analysisId,
       analysisName = analysisName
@@ -487,7 +484,6 @@ runPlp <- function(
     )
   class(results) <- c('runPlp')
   
-  ParallelLogger::logInfo(paste0('Log saved to ',logFileName))  
   ParallelLogger::logInfo("Run finished successfully.")
   
   # save the results
@@ -497,7 +493,9 @@ runPlp <- function(
   ParallelLogger::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
   
   # update from temp location to saved location
-  results$model <- updateModelLocation(results$model, file.path(analysisPath,'plpResult'))
+  if(!is.null(updateModelLocation(results$model, file.path(analysisPath,'plpResult')))){
+    results$model <- updateModelLocation(results$model, file.path(analysisPath,'plpResult'))
+  }
   
   return(results)
   

@@ -46,7 +46,7 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
   }
   
   if(!dir.exists(file)){
-    dir.create(file)
+    dir.create(file, recursive = T)
   }
   
   # save the actual values in the metaData
@@ -119,7 +119,7 @@ savePlpModel <- function(plpModel, dirPath){
   
   # If model is saved on hard drive move it...
   #============================================================
-  moveFile <- moveHdModel(plpModel, dirPath )
+  moveFile <- moveModelFile(plpModel, dirPath )
 
   if(!is.null(moveFile)){
     plpModel$model <- moveFile
@@ -134,20 +134,14 @@ savePlpModel <- function(plpModel, dirPath){
   } 
   
   saveRDS(plpModel, file = file.path(dirPath, "plpModel.rds"))
-  
-  attributes <- list(
-    predictionFunction = attr(plpModel, 'predictionFunction'), 
-    modelType = attr(plpModel, 'modelType') 
-    )
-  saveRDS(attributes, file = file.path(dirPath,  "attributes.rds"))
-  
+
 }
 
 moveModelFile <- function(plpModel, dirPath ){
   
-  if(grep('sklearn', tolower(attr(plpModel, 'predictionFunction')))){
+  if(length(grep('sklearn', tolower(attr(plpModel, 'predictionFunction'))))>0){
     saveName <- 'sklearn_model'
-  } else if(grep('knn', tolower(attr(plpModel, 'predictionFunction')))){
+  } else if(length(grep('knn', tolower(attr(plpModel, 'predictionFunction'))))>0){
     saveName <- 'knn_model'
   } else{
     return(NULL)
@@ -187,23 +181,15 @@ loadPlpModel <- function(dirPath) {
   plpModel <- tryCatch(readRDS(file.path(dirPath, "plpModel.rds")),
                                error=function(e) NULL)
   
-  attributes <- readRDS(file.path(dirPath, "attributes.rds"))
-  
-  if(attributes$predictionFunction == "predictXgboost"){
+  if(attr(plpModel, 'predictionFunction') == "predictXgboost"){
     ensure_installed("xgboost")
-    if('model' %in% dir(dirPath)){
-      plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model"))
-    } else{
-      plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
-    }
+    plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
   } 
   
-  attr(plpModel, 'modelType') <- attributes$modelType
-  attr(plpModel, 'predictionFunction') <- attributes$predictionFunction
-  class(plpModel) <- "plpModel"
-  
   # update the model location to the load dirPath
-  plpModel <- updateModelLocation(plpModel, dirPath)
+  if(!is.null(updateModelLocation(plpModel, dirPath))){
+    plpModel$model <- updateModelLocation(plpModel, dirPath)
+  }
   
   # make this backwrds compatible for ffdf:
   plpModel$predict <- createTransform(plpModel)
@@ -213,9 +199,9 @@ loadPlpModel <- function(dirPath) {
 
 updateModelLocation  <- function(plpModel, dirPath){
   
-  if(grep('sklearn', tolower(attr(plpModel, 'predictionFunction')))){
+  if(length(grep('sklearn', tolower(attr(plpModel, 'predictionFunction'))))>0){
     saveName <- 'sklearn_model'
-  } else if(grep('knn', tolower(attr(plpModel, 'predictionFunction')))){
+  } else if(length(grep('knn', tolower(attr(plpModel, 'predictionFunction'))))>0){
     saveName <- 'knn_model'
   } else{
     return(NULL)
@@ -307,65 +293,6 @@ loadPlpResult <- function(dirPath){
 }
 
 
-#result$inputSetting$dataExtrractionSettings$covariateSettings
-formatCovariateSettings <- function(covariateSettings){
-  
-  if(class(covariateSettings) == "covariateSettings"){
-    return(list(cvs = data.frame(X = names(unlist(covariateSettings)), x= unlist(covariateSettings)), 
-                fun = attr(covariateSettings,'fun')))
-    
-  } else{
-    return(list(cvs = do.call(rbind, lapply(1:length(covariateSettings), function(i){
-      inds <- which(lapply(covariateSettings[[i]], class) == "function")
-      if(length(inds)>0){
-        for(j in inds){
-          covariateSettings[[i]][[j]] <- paste0(deparse(covariateSettings[[i]][[j]]), collapse = " ")
-        }
-      }
-    tempResult <- data.frame(names = names(unlist(covariateSettings[[i]])),
-               values = unlist(covariateSettings[[i]]))
-    tempResult$settingsId <- i
-    return(tempResult)
-    })), 
-    fun = unlist(lapply(covariateSettings, function(x) attr(x,'fun')))
-    )
-    )
-  }
-  
-}
-
-reformatCovariateSettings <- function(covariateSettingsLocation){
-  # adding this to stop warnings when files does not exist
-  if(!file.exists(covariateSettingsLocation)){
-    return(NULL)
-  }
-  cs <- utils::read.csv(covariateSettingsLocation, stringsAsFactors=FALSE)
-  fun <- utils::read.csv(gsub('.csv','_fun.csv',covariateSettingsLocation), stringsAsFactors=FALSE)
-  
-  if(sum(colnames(cs)%in%c('X','x'))==2){
-    covariateSettings <- cs$x
-    covariateSettings <- as.list(covariateSettings)
-    names(covariateSettings) <- cs$X
-    attr(covariateSettings,'fun') <- fun$x
-    class(covariateSettings) <- 'covariateSettings'
-  } else {
-    
-    covariateSettings <- list()
-    length(covariateSettings) <- max(cs$settingsId)
-    
-    for(i in 1:max(cs$settingsId)){
-      covariateSettings[[i]] <- cs$values[cs$settingsId==i]
-      covariateSettings[[i]] <- as.list(covariateSettings[[i]])
-      names(covariateSettings[[i]]) <- cs$names[cs$settingsId==i]
-      attr(covariateSettings[[i]],'fun') <- fun$x[i]
-    }
-    
-  }
-  
-return(covariateSettings)
-}
-
-
 savePlpModelShareable <- function(plpModel, saveDirectory){
   checkIsClass(plpModel, 'plpModel')
   checkIsClass(saveDirectory, 'character')
@@ -378,7 +305,7 @@ savePlpModelShareable <- function(plpModel, saveDirectory){
   }
   
   #============================================================
-  moveFile <- moveHdModel(plpModel, saveDirectory )
+  moveFile <- moveModelFile(plpModel, saveDirectory )
   
   if(!is.null(moveFile)){
     plpModel$model <- saveDirectory

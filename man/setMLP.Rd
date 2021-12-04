@@ -63,7 +63,7 @@ setMLP(
 
 \item{nesterovsMomentum}{(list) Whether to use Nesterov’s momentum. Only used when solver=’sgd’ and momentum > 0.}
 
-\item{earlyStopping}{(list) boolean Whether to use early stopping to terminate training when validation score is not improving. If set to true, it will automatically set aside 10 of training data as validation and terminate training when validation score is not improving by at least tol for n_iter_no_change consecutive epochs.}
+\item{earlyStopping}{(list) boolean Whether to use early stopping to terminate training when validation score is not improving. If set to true, it will automatically set aside 10 percent of training data as validation and terminate training when validation score is not improving by at least tol for n_iter_no_change consecutive epochs.}
 
 \item{validationFraction}{(list) The proportion of training data to set aside as validation set for early stopping. Must be between 0 and 1. Only used if earlyStopping is True.}
 
