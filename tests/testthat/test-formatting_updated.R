@@ -171,7 +171,48 @@ test_that("checkRam", {
   
 })
 
+formattingCovs <- Andromeda::andromeda()
+formattingCovs$covariates <- data.frame(
+  rowId = c(
+    rep(1, 5), 
+    rep(2, 3), 
+    rep(4, 2),
+    rep(50, 6)
+  ),
+  covariateId = c(
+    c(1001, 1213104, 1233105, 1, 99),
+    c(1001, 2, 99),
+    c(1001, 4),
+    c(1,99, 98, 2, 4,3)
+  ),
+  covariateValue = rep(1, 16)
+)
 
+formattingCovs$covariateRef <- data.frame(
+  covariateId = c(1001, 1213104, 25,26, 1233105, 1, 99, 2,4,98,3),
+  covariateName = c(paste0('Covariate_', 1:11))
+  )
 
+formattingcohort <- data.frame(
+  rowId = c(1:4,50), 
+  outcomeCount = c(1,1,0,0,0)
+  )
 
-##[TODO] - ADD TESTS FOR SQL CREATION EXISTING AND PLP LOG REG MODELS...
+formattingData <- list(
+  labels = formattingcohort,
+  covariateData = formattingCovs
+)
+
+test_that("testCorrectLables", {
+  
+  data <- toSparseM(plpData = formattingData)
+  
+  expect_equal(
+    as.data.frame(data$labels), 
+    data.frame(
+      outcomeCount = c(1,1,0,0,0),
+      rowId = 1:5
+      )
+    )
+  
+})

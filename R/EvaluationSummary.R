@@ -21,7 +21,7 @@ getEvaluationStatistics <- function(
 getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(as.data.frame(prediction)[,evalColumn])
 
   for(evalType in evalTypes){
     
@@ -153,7 +153,7 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
   }
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(as.data.frame(prediction)[,evalColumn])
   
   for(evalType in evalTypes){
     

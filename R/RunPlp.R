@@ -396,7 +396,7 @@ runPlp <- function(
         predictionTest$evaluationType <- 'Test'
         
         if(!is.null(predictionTest)){
-          prediction <- rbind(prediction, predictionTest)
+          prediction <- rbind(predictionTest, prediction[, colnames(prediction)!='index'])
         } 
         
         
@@ -442,7 +442,7 @@ runPlp <- function(
         cohort = population %>% dplyr::select(.data$rowId),
         labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount), 
         strata = strata,
-        variableImportance = plpModel$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue),
+        variableImportance = model$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue),
         featureEngineering = NULL
         )
     )

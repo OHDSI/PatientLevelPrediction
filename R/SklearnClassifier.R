@@ -96,7 +96,7 @@ fitSklearn <- function(trainData,
       populationSettings = attr(trainData, "metaData")$populationSettings,
       featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = F,
+      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
       modelSettings = list(
         model = classifierFunction, 
         param = param,
@@ -155,24 +155,37 @@ predictPythonSklearn <- function(
   joblib <- reticulate::import('joblib')
   
   # load model
-  modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"model.pkl"))
+  modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.pkl"))
   model <- joblib$load(os$path$join(modelLocation)) 
   
-  included <- plpModel$covariateImportance$covariateId[plpModel$covariateImportance$included>0] # does this include map?
-  included <- included %>% dplyr::select(.data$columnId) 
+  included <- plpModel$covariateImportance$columnId[plpModel$covariateImportance$included>0] # does this include map?
   pythonData <- reticulate::r_to_py(newData[,included, drop = F])
 
   # make dense if needed
   if(plpModel$settings$requireDenseMatrix){
-    pythonData$toarray()
+    pythonData <- pythonData$toarray()
   }
   
-  predictedValue <- model$predict_proba(pythonData)
-  cohort$value <- predictedValue[,2]
-  
-  attr(cohort, "metaData") <- list(predictionType="binary")
+  cohort <- predictValues(
+    model = model, 
+    data = pythonData, 
+    cohort = cohort, 
+    type = attr(plpModel, 'modelType')
+  )
 
-  cohort <- cohort[,colnames(cohort)%in%c('rowId','subjectId','cohortStartDate','outcomeCount','index', 'value','ageYear', 'gender')]
+  return(cohort)
+}
+
+predictValues <- function(model, data, cohort, type = 'binary'){
+  
+  predictionValue  <- model$predict_proba(data)
+  cohort$value <- predictionValue[,2]
+  
+  cohort <- cohort %>% 
+    dplyr::select(-.data$rowId) %>%
+    dplyr::rename(rowId = .data$originalRowId)
+  
+  attr(cohort, "metaData")$modelType <-  type
   
   return(cohort)
 }
@@ -261,7 +274,7 @@ gridCvPython <- function(
       model <- fitPythonModel(classifier, paramSearch[[gridId]], seed, trainX, trainY, np, pythonClassifier)
       
       ParallelLogger::logInfo("Calculating predictions on left out fold set...")
-      prediction <- rbind(prediction, predictValues(model = model, data = testX, cohort = labels[fold == i,]))
+      prediction <- rbind(prediction, predictValues(model = model, data = testX, cohort = labels[fold == i,], type = 'binary'))
       
     }
     
@@ -295,7 +308,7 @@ gridCvPython <- function(
   model <- fitPythonModel(classifier, finalParam , seed, trainX, trainY, np, pythonClassifier)
   
   ParallelLogger::logInfo("Calculating predictions on all train data...")
-  prediction <- predictValues(model = model, data = trainX, cohort = labels)
+  prediction <- predictValues(model = model, data = trainX, cohort = labels, type = 'binary')
   prediction$evaluationType <- 'Train'
   
   prediction <- rbind(
@@ -311,7 +324,7 @@ gridCvPython <- function(
   joblib$dump(model, file.path(modelLocation,"model.pkl"), compress = T) 
   
   # feature importance
-  variableImportance <- model$feature_importances_
+  variableImportance <- tryCatch({model$feature_importances_}, error = function(e){ParallelLogger::logInfo(e);return(rep(1,ncol(matrixData)))})
 
   return(
     list(
@@ -354,14 +367,7 @@ fitPythonModel <- function(classifier, param, seed, trainX, trainY, np, pythonCl
   return(model)
 }
 
-predictValues <- function(model, data, cohort){
-  
-  predictionValue  <- model$predict_proba(data)
-  cohort$value <- predictionValue[,1]
-  attr(cohort, "metaData")$predictionType <-  "binary"
-  
-  return(cohort)
-}
+
 
 
 computeGridPerformance <- function(prediction, param, performanceFunct = 'computeAuc'){

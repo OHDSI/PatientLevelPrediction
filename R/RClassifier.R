@@ -132,7 +132,7 @@ applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariat
       
     }
     
-    attr(cvPrediction, "metaData") <- list(predictionType = "binary")
+    attr(cvPrediction, "metaData") <- list(modelType = "binary") # make this some attribute of model
 
     # save hyper-parameter cv prediction
     gridSearchPredictions[[gridId]] <- list(
@@ -180,8 +180,14 @@ applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariat
   )
   
   # variable importance - how to mak sure this just returns a vector?
-  variableImportance <- tryCatch({do.call(attr(hyperparamGrid, 'settings')$varImpRFunction, list(model = finalModel, covariateMap = covariateMap))},
+  variableImportance <- tryCatch(
+    {do.call(
+      attr(hyperparamGrid, 'settings')$varImpRFunction, 
+      list(model = finalModel, covariateMap = covariateMap)
+    )}
+    ,
     error = function(e){
+      ParallelLogger::logInfo('Error calculating variableImportance');
       ParallelLogger::logInfo(e);
       return(NULL)
     })

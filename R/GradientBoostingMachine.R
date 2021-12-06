@@ -108,7 +108,7 @@ varImpXgboost <- function(
   varImp <- merge(covariateMap, varImp, by.x='columnId', by.y='Feature')
   varImp <- varImp %>% 
     dplyr::mutate(included = 1) %>%
-    dplyr::rename(covariateValue = Gain) %>% 
+    dplyr::rename(covariateValue = .data$Gain) %>% 
     dplyr::select(.data$covariateId, .data$covariateValue, .data$included)
   
   return(varImp)
@@ -148,12 +148,14 @@ predictXgboost <- function(
   pred <- data.frame(value = stats::predict(model, newData))
   prediction <- cohort
   prediction$value <- pred$value
-  #pred$rowId <- 1:nrow(pred)
-  #prediction <- merge(cohort, pred, by = 'rowId')
   
   # fix the rowIds to be the old ones?
+  # now use the originalRowId and remove the matrix rowId
+  prediction <- prediction %>% 
+    dplyr::select(-.data$rowId) %>%
+    dplyr::rename(rowId = .data$originalRowId)
 
-  attr(prediction, "metaData") <- list(predictionType = "binary")
+  attr(prediction, "metaData") <- list(modelType = attr(plpModel, "modelType"))
   
   return(prediction)
 }
@@ -166,7 +168,7 @@ fitXgboost <- function(
   ){
   
   if(!is.null(hyperParameters$earlyStopRound)){
-    trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix)*0.1)
+    trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix)*0.9)
     train <- xgboost::xgb.DMatrix(
       data = dataMatrix[trainInd,, drop = F], 
       label = labels$outcomeCount[trainInd]
@@ -189,6 +191,10 @@ fitXgboost <- function(
   N <- nrow(labels)
   outcomeProportion <- outcomes/N
   
+  # adding weights
+  weights <- labels$outcomeCount*(N/outcomes)
+  weights[weights == 0] <- 1
+  
   model <- xgboost::xgb.train(
     data = train, 
     params = list(
@@ -206,7 +212,8 @@ fitXgboost <- function(
     watchlist = watchlist,
     print_every_n = 10,
     early_stopping_rounds = hyperParameters$earlyStopRound,
-    maximize = T
+    maximize = T,
+    weight = weights # add weights to improve model
     )
   
   return(model)

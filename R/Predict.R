@@ -51,6 +51,8 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
     )
   )
   
+  ParallelLogger::logTrace('did FE')
+  
   # do preprocessing
   plpData$covariateData <- do.call(
     applyTidyCovariateData, 
@@ -58,6 +60,8 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
     preprocessSettings = plpModel$settings$tidyCovariates
     )
   )
+  
+  ParallelLogger::logTrace('did tidy')
   
   # apply prediction function
   prediction <- do.call(
@@ -78,16 +82,18 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   )
   
   # survival cyclops stuff (move this somewhere else)?
-  if(!is.null(plpModel$model$baselineHazard)){
-    if(missing(timepoint)){
-      timepoint <- attr(population,'metaData')$riskWindowEnd
+  if(attr(plpModel, 'modelType') == 'survival'){
+    if(!is.null(plpModel$model$baselineHazard)){
+      if(missing(timepoint)){
+        timepoint <- attr(population,'metaData')$riskWindowEnd
+      }
+      bhind <- which.min(abs(plpModel$model$baselineHazard$time-timepoint))
+      prediction$value <- 1-plpModel$model$baselineHazard$surv[bhind]^prediction$value
+      
+      metaData$baselineHazardTimepoint <- plpModel$model$baselineHazard$time[bhind]
+      metaData$baselineHazard <- plpModel$model$baselineHazard$surv[bhind]
+      metaData$offset <- 0
     }
-    bhind <- which.min(abs(plpModel$model$baselineHazard$time-timepoint))
-    prediction$value <- 1-plpModel$model$baselineHazard$surv[bhind]^prediction$value
-    
-    metaData$baselineHazardTimepoint <- plpModel$model$baselineHazard$time[bhind]
-    metaData$baselineHazard <- plpModel$model$baselineHazard$surv[bhind]
-    metaData$offset <- 0
   }
 
   attr(prediction, "metaData") <- metaData

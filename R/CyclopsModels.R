@@ -109,7 +109,7 @@ fitCyclopsModel <- function(
   prediction <- predictCyclops(
     plpModel = list(model = modelTrained),
     cohort = trainData$labels, 
-    data = plpData
+    data = trainData
     )
   prediction$evaluationType <- 'Train'
   
@@ -195,7 +195,7 @@ predictCyclops <- function(plpModel, data, cohort ) {
   prediction <- predictCyclopsType(
     plpModel$model$coefficients,
     cohort,
-    plpData$covariateData,
+    data$covariateData,
     plpModel$model$modelType
   )
   

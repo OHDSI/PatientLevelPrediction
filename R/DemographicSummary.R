@@ -32,7 +32,7 @@ getDemographicSummary <- function(
 getDemographicSummary_binary <- function(prediction, evalColumn , ...){
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(as.data.frame(prediction)[,evalColumn])
   
   for(evalType in evalTypes){
     
@@ -76,7 +76,7 @@ getDemographicSummary_binary <- function(prediction, evalColumn , ...){
 getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = NULL, ...){
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(as.data.frame(prediction)[,evalColumn])
   
   for(evalType in evalTypes){
     

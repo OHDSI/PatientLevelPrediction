@@ -86,7 +86,7 @@ createRestrictPlpDataSettings <- function(
 #'                                       Server, this should specifiy both the database and the schema,
 #'                                       so for example 'cdm_instance.dbo'.
 #' @param cdmDatabaseName                A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)
-#' @param oracleTempSchema               For Oracle only: the name of the database schema where you
+#' @param tempEmulationSchema            For dmbs like Oracle only: the name of the database schema where you
 #'                                       want all temporary tables to be managed. Requires
 #'                                       create/insert permissions to this database.
 #' @param cohortDatabaseSchema           The name of the database schema that is the location where the
@@ -102,7 +102,7 @@ createRestrictPlpDataSettings <- function(
 #'                                       outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
 #'                                       SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
 #' @param cohortId                       An integer specifying the cohort id for the target cohort
-#' @param outcomeId                      An integer specifying the cohort id for the outcome cohort
+#' @param outcomeIds                      A single integer or vector of integers specifying the cohort ids for the outcome cohorts
 #' @param cdmVersion                     Define the OMOP CDM version used: currently support "4" and
 #'                                       "5".
 #' @return
@@ -113,26 +113,26 @@ createDatabaseDetails <- function(
   connectionDetails,
   cdmDatabaseSchema,
   cdmDatabaseName,
-  oracleTempSchema = cdmDatabaseSchema,
+  tempEmulationSchema = cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "cohort",
   cohortId = NULL,
-  outcomeId = NULL,
+  outcomeIds = NULL,
   cdmVersion = 5
 ){
   result <- list(
     connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
     cdmDatabaseName = cdmDatabaseName,
-    oracleTempSchema = oracleTempSchema,
+    tempEmulationSchema = tempEmulationSchema,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
     outcomeDatabaseSchema = outcomeDatabaseSchema,
     outcomeTable = outcomeTable,
     cohortId = cohortId ,
-    outcomeIds = outcomeId,
+    outcomeIds = outcomeIds,
     cdmVersion = cdmVersion
   )
   
@@ -200,33 +200,36 @@ getPlpData <- function(
   on.exit(DatabaseConnector::disconnect(connection))
   dbms <- databaseDetails$connectionDetails$dbms
   
-  writeLines("\nConstructing the at risk cohort")
+  ParallelLogger::logTrace("\nConstructing the at risk cohort")
   if(!is.null(restrictPlpDataSettings$sampleSize))  writeLines(paste("\n Sampling ",restrictPlpDataSettings$sampleSize, " people"))
-  renderedSql <- SqlRender::loadRenderTranslateSql("CreateCohorts.sql",
-                                                   packageName = "PatientLevelPrediction",
-                                                   dbms = dbms,
-                                                   oracleTempSchema = databaseDetails$oracleTempSchema,
-                                                   cdm_database_schema = databaseDetails$cdmDatabaseSchema,
-                                                   cohort_database_schema = databaseDetails$cohortDatabaseSchema,
-                                                   cohort_table = databaseDetails$cohortTable,
-                                                   cdm_version = databaseDetails$cdmVersion,
-                                                   cohort_id = databaseDetails$cohortId,
-                                                   study_start_date = restrictPlpDataSettings$studyStartDate,
-                                                   study_end_date = restrictPlpDataSettings$studyEndDate,
-                                                   first_only = restrictPlpDataSettings$firstExposureOnly,
-                                                   washout_period = restrictPlpDataSettings$washoutPeriod,
-                                                   use_sample = !is.null(restrictPlpDataSettings$sampleSize),
-                                                   sample_number = restrictPlpDataSettings$sampleSize
+  renderedSql <- SqlRender::loadRenderTranslateSql(
+    "CreateCohorts.sql",
+    packageName = "PatientLevelPrediction",
+    dbms = dbms, 
+    tempEmulationSchema = databaseDetails$tempEmulationSchema,
+    cdm_database_schema = databaseDetails$cdmDatabaseSchema,
+    cohort_database_schema = databaseDetails$cohortDatabaseSchema,
+    cohort_table = databaseDetails$cohortTable,
+    cdm_version = databaseDetails$cdmVersion,
+    cohort_id = databaseDetails$cohortId,
+    study_start_date = restrictPlpDataSettings$studyStartDate,
+    study_end_date = restrictPlpDataSettings$studyEndDate,
+    first_only = restrictPlpDataSettings$firstExposureOnly,
+    washout_period = restrictPlpDataSettings$washoutPeriod,
+    use_sample = !is.null(restrictPlpDataSettings$sampleSize),
+    sample_number = restrictPlpDataSettings$sampleSize
   )
   DatabaseConnector::executeSql(connection, renderedSql)
   
-  writeLines("Fetching cohorts from server")
+  ParallelLogger::logTrace("Fetching cohorts from server")
   start <- Sys.time()
-  cohortSql <- SqlRender::loadRenderTranslateSql("GetCohorts.sql",
-                                                 packageName = "PatientLevelPrediction",
-                                                 dbms = dbms,
-                                                 oracleTempSchema = databaseDetails$oracleTempSchema,
-                                                 cdm_version = databaseDetails$cdmVersion)
+  cohortSql <- SqlRender::loadRenderTranslateSql(
+    "GetCohorts.sql",
+    packageName = "PatientLevelPrediction",
+    dbms = dbms, 
+    tempEmulationSchema = databaseDetails$tempEmulationSchema,
+    cdm_version = databaseDetails$cdmVersion
+  )
   cohorts <- DatabaseConnector::querySql(connection, cohortSql)
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
   metaData.cohort <- list(cohortId = databaseDetails$cohortId)
@@ -235,11 +238,11 @@ getPlpData <- function(
     stop('Target population is empty')
   
   delta <- Sys.time() - start
-  writeLines(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logTrace(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
   
   #covariateSettings$useCovariateCohortIdIs1 <- TRUE
-  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
-                                                         oracleTempSchema = databaseDetails$oracleTempSchema,
+  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection, 
+                                                         oracleTempSchema = databaseDetails$tempEmulationSchema,
                                                          cdmDatabaseSchema = databaseDetails$cdmDatabaseSchema,
                                                          cdmVersion = databaseDetails$cdmVersion,
                                                          cohortTable = "#cohort_person",
@@ -254,18 +257,20 @@ getPlpData <- function(
   Andromeda::createIndex(covariateData$covariates, c('covariateId', 'covariateValue'),
                          indexName = 'covariates_covariateId_value')
   
-  if(max(outcomeIds)!=-999){
-    writeLines("Fetching outcomes from server")
+  if(max(databaseDetails$outcomeIds)!=-999){
+    ParallelLogger::logTrace("Fetching outcomes from server")
     start <- Sys.time()
-    outcomeSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
-                                                    packageName = "PatientLevelPrediction",
-                                                    dbms = dbms,
-                                                    oracleTempSchema = databaseDetails$oracleTempSchema,
-                                                    cdm_database_schema = databaseDetails$cdmDatabaseSchema,
-                                                    outcome_database_schema = databaseDetails$outcomeDatabaseSchema,
-                                                    outcome_table = databaseDetails$outcomeTable,
-                                                    outcome_ids = databaseDetails$outcomeIds,
-                                                    cdm_version = databaseDetails$cdmVersion)
+    outcomeSql <- SqlRender::loadRenderTranslateSql(
+      "GetOutcomes.sql",
+      packageName = "PatientLevelPrediction",
+      dbms = dbms,
+      tempEmulationSchema = databaseDetails$tempEmulationSchema,
+      cdm_database_schema = databaseDetails$cdmDatabaseSchema,
+      outcome_database_schema = databaseDetails$outcomeDatabaseSchema,
+      outcome_table = databaseDetails$outcomeTable,
+      outcome_ids = databaseDetails$outcomeIds,
+      cdm_version = databaseDetails$cdmVersion
+    )
     outcomes <- DatabaseConnector::querySql(connection, outcomeSql)
     colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
     metaData.outcome <- data.frame(outcomeIds = databaseDetails$outcomeIds)
@@ -277,7 +282,7 @@ getPlpData <- function(
     attr(cohorts, "metaData") <- metaData.cohort
     
     delta <- Sys.time() - start
-    writeLines(paste("Loading outcomes took", signif(delta, 3), attr(delta, "units")))
+    ParallelLogger::logTrace(paste("Loading outcomes took", signif(delta, 3), attr(delta, "units")))
   } else {
     outcomes <- NULL
   }
@@ -286,18 +291,22 @@ getPlpData <- function(
   
   
   # Remove temp tables:
-  renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
-                                                   packageName = "PatientLevelPrediction",
-                                                   dbms = dbms,
-                                                   oracleTempSchema = databaseDetails$oracleTempSchema)
+  renderedSql <- SqlRender::loadRenderTranslateSql(
+    "RemoveCohortTempTables.sql",
+    packageName = "PatientLevelPrediction",
+    dbms = dbms,
+    tempEmulationSchema = databaseDetails$tempEmulationSchema
+  )
+  
   DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
   #DatabaseConnector::disconnect(connection)
   
   metaData <- covariateData$metaData
-  metaData$call <- match.call()
-  metaData$call$databaseDetails$connectionDetails = NULL
-  metaData$call$databaseDetails$connection = NULL
-  
+  metaData$databaseDetails <- databaseDetails
+  metaData$databaseDetails$connectionDetails = NULL
+  metaData$databaseDetails$connection = NULL
+  metaData$restrictPlpDataSettings <- restrictPlpDataSettings
+  metaData$covariateSettings <- covariateSettings
   
   # create the temporal settings (if temporal use)
   timeReference <- NULL

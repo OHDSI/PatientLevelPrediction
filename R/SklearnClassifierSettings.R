@@ -33,7 +33,7 @@
 #' @export
 setAdaBoost <- function(
   #baseEstimator = list(NULL),
-  nEstimators = list(10,50,200), 
+  nEstimators = list(10,50, 200), 
   learningRate = list(1, 0.5, 0.1), 
   algorithm = list('SAMME.R'),
   seed = sample(1000000,1)
@@ -46,7 +46,7 @@ setAdaBoost <- function(
   
   #lapply(1:length(baseEstimator), function(i) checkIsClass(maxDepth[[i]] , c("NULL")))
   
-  lapply(1:length(nEstimators), function(i) checkIsClass(nEstimators[[i]] , c("integer")))
+  lapply(1:length(nEstimators), function(i) checkIsClass(nEstimators[[i]] , c("integer", "numeric")))
   lapply(1:length(nEstimators), function(i) checkHigher(nEstimators[[i]] , 0))
   
   for(i in 1:length(nEstimators)){
@@ -309,7 +309,7 @@ return(model)
 #' }
 #' @export
 setMLP <- function(
-  hiddenLayerSizes = list(c(100), c(20,4)), 
+  hiddenLayerSizes = list(c(100), c(20,4)), #must be integers
   activation = list('relu'),
   solver = list('adam'),
   alpha = list(0.3,0.01,0.0001,0.000001), 
@@ -353,6 +353,11 @@ setMLP <- function(
   checkIsClass(beta2, c('list'))
   checkIsClass(epsilon, c('list'))
   checkIsClass(nIterNoChange, c('list'))
+  
+  
+  for(i in 1:length(hiddenLayerSizes)){
+      hiddenLayerSizes[[i]] <- as.integer(hiddenLayerSizes[[i]])
+  }
   
   
   for(i in 1:length(batchSize)){
@@ -441,8 +446,8 @@ MLPClassifierInputs <- function(classifier, param){
     nesterovs_momentum = param[[which.max(names(param)=='nesterovsMomentum')]],
     early_stopping = param[[which.max(names(param)=='earlyStopping')]],
     validation_fraction = param[[which.max(names(param)=='validationFraction')]],
-    beta1 = param[[which.max(names(param)=='beta1')]],
-    beta2 = param[[which.max(names(param)=='beta2')]],
+    beta_1 = param[[which.max(names(param)=='beta1')]],
+    beta_2 = param[[which.max(names(param)=='beta2')]],
     epsilon = param[[which.max(names(param)=='epsilon')]],
     n_iter_no_change = param[[which.max(names(param)=='nIterNoChange')]]
   )
@@ -464,15 +469,15 @@ setNaiveBayes <- function(){
   # test python is available and the required dependancies are there:
   ##checkPython()
   
-  param <- NULL
+  param <- list(none = 'true')
   
   attr(param, 'settings') <- list(
-    seed = as.integer(seed[1]),
-    paramNames = NULL, #use this for logging params
+    seed = as.integer(0),
+    paramNames = c(), #use this for logging params
     requiresDenseMatrix = T,
     name = "Naive Bayes",
     pythonImport = 'sklearn',
-    pythonImportSecond = 'naive_baye',
+    pythonImportSecond = 'naive_bayes',
     pythonClassifier = 'GaussianNB'
   )
   
@@ -483,6 +488,13 @@ setNaiveBayes <- function(){
   class(result) <- "modelSettings"
   
   return(result)
+}
+
+GaussianNBInputs <- function(classifier, param){
+  
+  model <- classifier()
+  
+  return(model)
 }
 
 
@@ -589,8 +601,10 @@ setRandomForest <- function(
   }
   
   for(i in 1:length(maxSamples)){
-    if(maxSamples[[i]]>=1){
-      maxSamples[[i]] <- as.integer(maxSamples[[i]])
+    if(class(maxSamples[[i]]) %in% c("numeric", "integer")){
+      if(maxSamples[[i]] >= 1){
+        maxSamples[[i]] <- as.integer(maxSamples[[i]])
+      }
     }
   }
   
@@ -759,7 +773,7 @@ SVCInputs <- function(classifier, param){
     cache_size = param[[which.max(names(param)=='cacheSize')]],
     class_weight = param[[which.max(names(param)=='classWeight')]],
     verbose = F,
-    maxIter = as.integer(-1),
+    max_iter = as.integer(-1),
     decision_function_shape = 'ovr',
     break_ties = F,
     random_state = param[[which.max(names(param)=='seed')]]

@@ -45,7 +45,7 @@ getThresholdSummary <- function(
 getThresholdSummary_binary <- function(prediction, evalColumn, ...){
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(as.data.frame(prediction)[,evalColumn])
   
   for(evalType in evalTypes){
     
@@ -174,7 +174,7 @@ getThresholdSummary_binary <- function(prediction, evalColumn, ...){
 getThresholdSummary_survival <- function(prediction, evalColumn, timepoint, ...){
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(as.data.frame(prediction)[,evalColumn])
   
   for(evalType in evalTypes){
     

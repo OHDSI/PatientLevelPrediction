@@ -45,7 +45,7 @@ getCalibrationSummary_binary <- function(
   ...) {
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(as.data.frame(prediction)[,evalColumn])
   
   for(evalType in evalTypes){
     
@@ -130,7 +130,7 @@ getCalibrationSummary_survival <- function(
   ...) {
   
   result <- c()
-  evalTypes <- unique(prediction[,evalColumn])
+  evalTypes <- unique(as.data.frame(prediction)[,evalColumn])
   
   for(evalType in evalTypes){
     

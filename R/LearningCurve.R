@@ -140,6 +140,13 @@ createLearningCurve <- function(
   
   if(parallel){
     
+    if(is.null(cores)){
+      ParallelLogger::logInfo(paste0('Number of cores not specified'))
+      cores <- parallel::detectCores()
+      ParallelLogger::logInfo(paste0('Using all ', cores))
+      ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
+    }
+    
     # save data
     savePlpData(plpData, file.path(saveDirectory,'data'))
     
@@ -164,13 +171,6 @@ createLearningCurve <- function(
       return(result)
     }
     lcSettings <- lapply(1:length(trainFractions), getLcSettings)
-    
-    if(is.null(cores)){
-      ParallelLogger::logInfo(paste0('Number of cores not specified'))
-      cores <- parallel::detectCores()
-      ParallelLogger::logInfo(paste0('Using all ', cores))
-      ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
-    }
     
     cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
     ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda", "FeatureExtraction"))
@@ -238,7 +238,6 @@ lcWrapper <- function(settings){
   result <- tryCatch({do.call(runPlp, settings)},
                      warning = function(war) {
                        ParallelLogger::logInfo(paste0('a warning: ', war))
-                       return(NULL)
                      }, 
                      error = function(err) {
                        ParallelLogger::logError(paste0('an error: ', err))
@@ -246,8 +245,8 @@ lcWrapper <- function(settings){
                      }       
   )
   if(!is.null(result)){
-    
-    final <- learningCurveHelper(result, settings$trainFraction)
+    ParallelLogger::logInfo('Extracting performance for learning curve...')
+    final <- learningCurveHelper(result, settings$splitSettings$train)
     return(final)
     
   } else{

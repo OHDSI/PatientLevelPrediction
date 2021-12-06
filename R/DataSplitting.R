@@ -167,9 +167,7 @@ splitData <- function(plpData = plpData,
     class(trainData) <- 'plpData'
     trainData$labels <- population %>% dplyr::filter(.data$rowId %in% trainId$rowId)
     trainData$folds <- trainId
-    #trainData$covariateData <- Andromeda::andromeda()
-    #trainData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% trainId$rowId)
-    #trainData$covariateData$covariateRef <- plpData$covariateRef
+    
     #restrict to trainIds
     if(length(trainId$rowId)<200000){
       trainData$covariateData <- limitCovariatesToPopulation(
@@ -203,9 +201,7 @@ splitData <- function(plpData = plpData,
     testData <- list()
     class(testData) <- 'plpData'
     testData$labels <- population %>% dplyr::filter(.data$rowId %in% testId$rowId)
-    #testData$covariateData <- Andromeda::andromeda()
-    #testData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% testId$rowId)
-    #testData$covariateData$covariateRef <- plpData$covariateRef
+    
     if(length(testId$rowId)<200000){
       testData$covariateData <- limitCovariatesToPopulation(
         plpData$covariateData, 

@@ -69,21 +69,6 @@ plpResult <- runPlp(
   )
 
 #
-learningCurve <- PatientLevelPrediction::createLearningCurve(
-  plpData = plpData,
-  outcomeId = 2, parallel = F, cores = 2,
-  modelSettings = setLassoLogisticRegression(),
-  saveDirectory =  'D:/test/lcc',
-  splitSettings = createDefaultSplitSetting(testFraction = 0.2), 
-  trainFractions = c(0.6,0.8),
-  trainEvents = NULL,
-  preprocessSettings = createPreprocessSettings(
-    minFraction = 0.001,
-    normalize = T
-  )
-)
-
-plotLearningCurve(learningCurve = learningCurve, metric = 'AUROC')
 
 
 population <- createStudyPopulation(

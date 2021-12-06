@@ -173,8 +173,11 @@ MapIds <- function(
       # change the rowId in labels
       newCovariateData$cohort <- cohort %>%
         dplyr::inner_join(rowMap, by = 'rowId') %>% 
-        dplyr::select(- .data$rowId) %>%
-        dplyr::rename(rowId = .data$xId) %>%
+        #dplyr::select(- .data$rowId) %>%
+        dplyr::rename(
+          originalRowId = .data$rowId,
+          rowId = .data$xId
+          ) %>%
         dplyr::arrange(.data$rowId)  # make sure it is ordered lowest to highest
     }
   
