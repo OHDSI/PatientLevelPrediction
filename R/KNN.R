@@ -79,15 +79,13 @@ fitKNN <- function(trainData, param, search = 'none', analysisId ){
   }
   indexFolder <- param$indexFolder
   
-  #removed as done in BigKnn
-  labels <- trainData$labels %>% 
-    dplyr::mutate(
-      y = sapply(.data$outcomeCount, function(x) min(1,x))
-    )
   
   BigKnn::buildKnnFromPlpData(
     plpData = trainData,
-    population = labels,
+    population = trainData$labels %>% 
+      dplyr::mutate(
+        y = sapply(.data$outcomeCount, function(x) min(1,x))
+      ),
     indexFolder = indexFolder,
     overwrite = TRUE
   )
@@ -97,19 +95,23 @@ fitKNN <- function(trainData, param, search = 'none', analysisId ){
   ParallelLogger::logInfo(paste0('Model knn trained - took:',  format(comp, digits=3)))
 
   variableImportance <- as.data.frame(trainData$covariateData$covariateRef)
-  variableImportance$covariateValue <- rep(0, nrow(variableImportance))
+  variableImportance$covariateValue <- rep(1, nrow(variableImportance))
   
-  prediction <- predict_knn(
-    trainData = trainData, 
-    population = labels, 
+  prediction <- predictKnn(
+    data = trainData, 
+    cohort = trainData$labels, 
     plpModel = list(
       model = indexFolder,
+      settings = list(
       modelSettings = list(
         model = 'knn',
-        modelParameters = list(k = k),
-        indexFolder = indexFolder,
-        threads = param$threads
+        param = list(
+          k = k,
+          indexFolder = indexFolder,
+          threads = param$threads
+          )
         )
+      )
       )
     )
   
@@ -121,9 +123,10 @@ fitKNN <- function(trainData, param, search = 'none', analysisId ){
     prediction = prediction,
     
     settings = list(
-      covariateSettings = attr(trainData, "metaData")$call$covariateSettings,
-      featureEngineering = attr(trainData$covariateData, "metaData"),
-      covariateMap = covariateMap,
+      plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
+      covariateSettings = attr(trainData, "metaData")$covariateSettings,
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
       requireDenseMatrix = F,
       populationSettings = attr(trainData, "metaData")$populationSettings,
       modelSettings = list(
@@ -131,13 +134,16 @@ fitKNN <- function(trainData, param, search = 'none', analysisId ){
         param = param,
         finalModelParameters = list(),
         extraSettings = attr(param, 'settings')
-      )
+      ),
+      splitSettings = attr(trainData, "metaData")$splitSettings
     ),
     
     trainDetails = list(
       analysisId = analysisId,
-      outcomeId = attr(trainData, "metaData")$populationSettings$outcomeId,
-      cohortId = attr(trainData, "metaData")$call$cohortId,
+      cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
+      outcomeId = attr(trainData, "metaData")$outcomeId,
+      cohortId = attr(trainData, "metaData")$cohortId,
+      attrition = attr(trainData, "metaData")$attrition, 
       trainingTime = comp,
       trainingDate = Sys.Date(),
       hyperParamSearch =c()
@@ -156,17 +162,17 @@ fitKNN <- function(trainData, param, search = 'none', analysisId ){
 
 predictKnn <- function(
   plpModel, 
-  covariateData, 
+  data, 
   cohort
 ){
   
   prediction <- BigKnn::predictKnn(
-    covariates = covaraiteData$covariates,
+    covariates = data$covariateData$covariates,
     cohort = cohort[,!colnames(cohort)%in%'cohortStartDate'],
-    indexFolder = model$model,
-    k = model$modelSettings$modelParameters$k,
+    indexFolder = plpModel$model,
+    k = plpModel$settings$modelSettings$param$k,
     weighted = TRUE,
-    threads = plpModel$modelSettings$threads
+    threads = plpModel$settings$modelSettings$param$threads
   )
   
   # can add: threads = 1 in the future
@@ -176,6 +182,8 @@ predictKnn <- function(
   prediction <- merge(cohort, prediction[,c('rowId','value')], by='rowId', 
     all.x=T, fill=0)
   prediction$value[is.na(prediction$value)] <- 0
+  
+  attr(prediction, "metaData") <- 'binary'
   
   return(prediction)
   
