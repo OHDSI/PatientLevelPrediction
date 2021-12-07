@@ -107,10 +107,10 @@ CREATE TABLE  @my_schema.@string_to_appendmodels (
 	  FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id),
     FOREIGN KEY (model_setting_id) REFERENCES @my_schema.@string_to_appendmodel_settings(model_setting_id),
 	  FOREIGN KEY (covariate_setting_id) REFERENCES @my_schema.@string_to_appendcovariate_settings(covariate_setting_id),
-	  FOREIGN KEY (sample_setting_id) REFERENCES @my_schema.@string_to_appendsample_settings(sample_setting_id)  -- new
-	  FOREIGN KEY (split_setting_id) REFERENCES @my_schema.@string_to_appendsplit_settings(split_setting_id)  -- new
-	  FOREIGN KEY (plp_data_setting_id) REFERENCES @my_schema.@string_to_appendplp_data_settings(plp_data_setting_id) -- new
-	  FOREIGN KEY (feature_engineering_setting_id) REFERENCES @my_schema.@string_to_appendfeature_engineering_settings(feature_engineering_setting_id) -- new
+	  FOREIGN KEY (sample_setting_id) REFERENCES @my_schema.@string_to_appendsample_settings(sample_setting_id),  -- new
+	  FOREIGN KEY (split_setting_id) REFERENCES @my_schema.@string_to_appendsplit_settings(split_setting_id),  -- new
+	  FOREIGN KEY (plp_data_setting_id) REFERENCES @my_schema.@string_to_appendplp_data_settings(plp_data_setting_id), -- new
+	  FOREIGN KEY (feature_engineering_setting_id) REFERENCES @my_schema.@string_to_appendfeature_engineering_settings(feature_engineering_setting_id), -- new
 	  FOREIGN KEY (tidy_covariates_setting_id) REFERENCES @my_schema.@string_to_appendtidy_covariates_settings(tidy_covariates_setting_id) -- new
 );
 
@@ -178,19 +178,19 @@ CREATE TABLE @my_schema.@string_to_appendcovariate_summary(
     covariate_count int NOT NULL,
 	covariate_mean float NOT NULL,
 	covariate_st_dev float NOT NULL,
-	covariate_count_with_no_outcome int NOT NULL,
-    covariate_mean_with_no_outcome float NOT NULL,
-	covariate_st_dev_with_no_outcome float NOT NULL,
-    covariate_count_with_outcome int NOT NULL,
-    covariate_mean_with_outcome float NOT NULL,
-	covariate_st_dev_with_outcome float NOT NULL,
+	with_no_outcome_covariate_count int NOT NULL,
+    with_no_outcome_covariate_mean float NOT NULL,
+	with_no_outcome_covariate_st_dev float NOT NULL,
+    with_outcome_covariate_count int NOT NULL,
+    with_outcome_covariate_mean float NOT NULL,
+	with_outcome_covariate_st_dev float NOT NULL,
     standardized_mean_diff float NOT NULL,
     FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
 );
 CREATE TABLE @my_schema.@string_to_appendthreshold_summary(
     --threshold_summary_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     result_id int NOT NULL,
-    eval char(10),
+    evaluation char(10),
     prediction_threshold float,
     preference_threshold float,
     positive_count int,
@@ -220,7 +220,7 @@ CREATE TABLE @my_schema.@string_to_appendthreshold_summary(
 CREATE TABLE @my_schema.@string_to_appendcalibration_summary(
     --calibration_summary_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     result_id int NOT NULL,
-    eval char(10),
+    evaluation char(10),
     prediction_threshold float,
     person_count_at_risk int,
     person_count_with_outcome int,
@@ -238,7 +238,7 @@ CREATE TABLE @my_schema.@string_to_appendcalibration_summary(
 CREATE TABLE @my_schema.@string_to_appendevaluation_statistics (
     --evaluation_stat_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
 	result_id int NOT NULL,
-	eval char(10),
+	evaluation char(10),
   metric varchar(50),
 	value float,
     FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
@@ -247,7 +247,7 @@ CREATE TABLE @my_schema.@string_to_appendevaluation_statistics (
 CREATE TABLE @my_schema.@string_to_appenddemographic_summary(
     --demographic_summary_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     result_id int NOT NULL,
-    eval char(10),
+    evaluation char(10),
     age_group char(20),
     gen_group char(20),
     person_count_at_risk int,
@@ -256,7 +256,7 @@ CREATE TABLE @my_schema.@string_to_appenddemographic_summary(
     st_dev_predicted_probability float,
     min_predicted_probability float,
     p_25_predicted_probability float,
-    median_predicted_probability float,
+    p_50_predicted_probability float,
     p_75_predicted_probability float,
     max_predicted_probability float,
     FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)

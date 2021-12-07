@@ -51,6 +51,7 @@ test_that("results uploaded to database", {
   if(!dir.exists(file.path(resultsLoc,'Validation','test', 'Analysis_1'))){
     dir.create(file.path(resultsLoc,'Validation','test', 'Analysis_1'), recursive = T)
   }
+  plpResult$model$valdiationDetails <- list(cohortId = 1, outcomeId = 3)
   saveRDS(plpResult, file.path(resultsLoc,'Validation','test', 'Analysis_1', 'validationResult.rds'))
 
   # add results:

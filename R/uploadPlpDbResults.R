@@ -403,11 +403,11 @@ populatePlpResultTables <- function(conn,
         splitSettingId = splitId, # changed from trainingId
         featureEngineeringSettingId = FESetId,
         tidyCovariatesSettingId = tidySetId,
+        requireDenseMatrix = mdl$model$settings$requireDenseMatrix,
         researcherId = researcherId,
         databaseId = dbId,
         hyperParamSearch = mdl$model$trainDetails$hyperParamSearch, #mdl$trainDetails$hyperParamSearch
         plpModelFile = " ",
-        require_dense_matrix = mdl$model$settings$requireDenseMatrix,
         dateTime = format(mdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"), #mdl$trainDetails$trainingDate
         trainingTime = mdl$model$trainDetails$trainingTime, #mdl$trainDetails$trainingTime
         intercept = ifelse(is.list(mdl$model), mdl$model$model$coefficients[1], 0),
@@ -1423,7 +1423,7 @@ addTidySetting <- function(
   
 }
 
-addSampleSettings <- function(
+addSampleSetting <- function(
   conn, 
   resultSchema, 
   targetDialect,
@@ -1577,7 +1577,7 @@ addFESetting <- function(
     ParallelLogger::logInfo('Adding new feature_engineering settings')
     
     data <- data.frame(
-      splitSettingsJson = json
+      featureEngineeringSettingsJson = json
     )
     
     DatabaseConnector::insertTable(connection = conn, 
@@ -1691,6 +1691,7 @@ addModel <- function(
   splitSettingId,
   featureEngineeringSettingId,
   tidyCovariatesSettingId,
+  requireDenseMatrix,
   researcherId,
   databaseId,
   hyperParamSearch,
@@ -1788,6 +1789,7 @@ addModel <- function(
       'split_setting_id',
       'feature_engineering_setting_id',
       'tidy_covariates_setting_id',
+      'require_dense_matrix',
       'researcher_id',
       'database_id',
       'hyper_param_search',
@@ -1809,6 +1811,7 @@ addModel <- function(
       splitSettingId,
       featureEngineeringSettingId,
       tidyCovariatesSettingId,
+      ifelse(requireDenseMatrix, "'T'", "'F'"),
       researcherId,
       databaseId,
       enc(hyperParamSearch),
@@ -1834,6 +1837,7 @@ addModel <- function(
                            split_setting_id,
                            feature_engineering_setting_id,
                            tidy_covariates_setting_id,
+                           require_dense_matrix,
     researcher_id,
     database_id,
     hyper_param_search,
@@ -1841,12 +1845,12 @@ addModel <- function(
     execution_date_time,
     training_time,
     intercept) VALUES 
-  ('@analysis_id', '@model_name', @target_id, @outcome_id, @tar_id, 
+  ('@analysis_id', '@model_name', @target_id, @outcome_id, @tar_id, @plp_data_setting_id,
   @population_setting_id, @model_setting_id, @covariate_setting_id, 
   @sample_setting_id, @split_setting_id, @feature_engineering_setting_id, @tidy_covariates_setting_id,
-  @researcher_id, 
+  '@require_dense_matrix', @researcher_id, 
   @database_id, '@hyper_param_search', '@plp_model_file', '@date_time', 
-    @training_id, @intercept)"
+    '@training_time', @intercept)"
     sql <- SqlRender::render(
       sql, 
       my_schema = resultSchema,
@@ -1863,12 +1867,12 @@ addModel <- function(
       split_setting_id = splitSettingId,
       feature_engineering_setting_id = featureEngineeringSettingId,
       tidy_covariates_setting_id = tidyCovariatesSettingId,
+      require_dense_matrix = ifelse(requireDenseMatrix, 'T', 'F'),
       researcher_id = researcherId,
       database_id = databaseId,
       hyper_param_search = hyperParamSearch,
       plp_model_file = plpModelFile,
       date_time = dateTime,
-      training_id = trainingId,
       training_time = trainingTime,
       intercept = intercept,
       string_to_append = stringAppendToTables
@@ -1896,6 +1900,7 @@ addModel <- function(
                            'split_setting_id',
                            'feature_engineering_setting_id',
                            'tidy_covariates_setting_id',
+                           'require_dense_matrix',
                                          'researcher_id',
                                          'database_id',
                                          'hyper_param_search',
@@ -1917,6 +1922,7 @@ addModel <- function(
                            splitSettingId,
                            featureEngineeringSettingId,
                            tidyCovariatesSettingId,
+                           ifelse(requireDenseMatrix, "'T'", "'F'"),
                                     researcherId,
                                     databaseId,
                                     enc(hyperParamSearch),
@@ -2310,13 +2316,15 @@ addEvaluationStatistics <- function(conn, resultSchema, targetDialect,
                                     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")){
   
   
-  value <- as.data.frame(performanceEvaluation$evaluationStatistics)
+  value <- data.frame(
+    evaluation = unlist(performanceEvaluation$evaluationStatistics$evaluation),
+    metric = unlist(performanceEvaluation$evaluationStatistics$metric),
+    value = as.numeric(unlist(performanceEvaluation$evaluationStatistics$value))
+      )
+  
   if(is.null(value)){
     return(NULL)
   }
-  
-  # make sure value is numeric
-  value$Value <- as.numeric(value$Value)  # new
   
   # edit names
   firstLower <- function(x) {

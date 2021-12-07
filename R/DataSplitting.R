@@ -146,13 +146,12 @@ splitData <- function(plpData = plpData,
     attr(trainData, "metaData") <- list(
       outcomeId = attr(population, "metaData")$outcomeId,
       cohortId = attr(population, "metaData")$cohortId,
-      cdmDatabaseSchema = attr(plpData, "metaData")$call$cdmDatabaseSchema,
+      cdmDatabaseSchema = plpData$metaData$databaseDetails$cdmDatabaseSchema,
       plpDataSettings = attr(population, "metaData")$plpDataSettings,
-      covariateSettings = attr(plpData, "metaData")$call$covariateSettings,
+      covariateSettings = plpData$metaData$covariateSettings,
       populationSettings = attr(population, "metaData")$populationSettings,
       attrition = attr(population, "metaData")$attrition,
       splitSettings = splitSettings,
-      
       populationSize = nrow(trainData$labels)
     )
     # add pop size to covariateData as used in tidyCovariates
@@ -184,9 +183,9 @@ splitData <- function(plpData = plpData,
     attr(trainData, "metaData") <- list(
       outcomeId = attr(population, "metaData")$outcomeId,
       cohortId = attr(population, "metaData")$cohortId,
-      cdmDatabaseSchema = attr(plpData, "metaData")$call$cdmDatabaseSchema,
+      cdmDatabaseSchema = plpData$metaData$databaseDetails$cdmDatabaseSchema,
       plpDataSettings = attr(population, "metaData")$plpDataSettings,
-      covariateSettings = attr(plpData, "metaData")$call$covariateSettings,
+      covariateSettings = plpData$metaData$covariateSettings,
       populationSettings = attr(population, "metaData")$populationSettings,
       attrition = attr(population, "metaData")$attrition,
       splitSettings = splitSettings,
