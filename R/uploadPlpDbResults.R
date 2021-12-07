@@ -280,19 +280,20 @@ populatePlpResultTables <- function(conn,
       tarId <- addTar(conn = conn, 
                       resultSchema = resultSchema, 
                       targetDialect = targetDialect,
-                      startDay = mdl$inputSetting$populationSettings$riskWindowStart, 
-                      startAnchor = mdl$inputSetting$populationSettings$startAnchor,
-                      endDay = mdl$inputSetting$populationSettings$riskWindowEnd,  
-                      endAnchor = mdl$inputSetting$populationSettings$endAnchor, 
+                      startDay = mdl$model$settings$populationSettings$riskWindowStart, 
+                      startAnchor = mdl$model$settings$populationSettings$startAnchor,
+                      endDay = mdl$model$settings$populationSettings$riskWindowEnd,  
+                      endAnchor = mdl$model$settings$populationSettings$endAnchor, 
                       stringAppendToTables = stringAppendToTables,
-                      tempEmulationSchema = tempEmulationSchema)
+                      tempEmulationSchema = tempEmulationSchema
+        )
       ParallelLogger::logInfo(paste0('tarId: ', tarId))
       
       tId <- addCohort(conn = conn, 
                        resultSchema = resultSchema, 
                        targetDialect = targetDialect,
                        jsonInput = jsonInput, type = cohortType,
-                       cohortId = mdl$inputSetting$dataExtrractionSettings$cohortId, 
+                       cohortId = mdl$model$trainDetails$cohortId, 
                        stringAppendToTables = stringAppendToTables,
                        tempEmulationSchema = tempEmulationSchema)
       ParallelLogger::logInfo(paste0('tId: ', tId))
@@ -301,7 +302,7 @@ populatePlpResultTables <- function(conn,
                        resultSchema = resultSchema, 
                        targetDialect = targetDialect,
                        jsonInput = jsonInput, type = cohortType,
-                       cohortId = mdl$inputSetting$populationSettings$outcomeId, 
+                       cohortId = mdl$model$trainDetails$outcomeId, 
                        stringAppendToTables = stringAppendToTables,
                        tempEmulationSchema = tempEmulationSchema)
       ParallelLogger::logInfo(paste0('oId: ', oId))
@@ -309,7 +310,7 @@ populatePlpResultTables <- function(conn,
       popSetId <- addPopulationSetting(conn = conn, 
                                        resultSchema = resultSchema, 
                                        targetDialect = targetDialect,
-                                       json = mdl$inputSetting$populationSettings, 
+                                       json = mdl$model$settings$populationSettings, 
                                        stringAppendToTables = stringAppendToTables,
                                        tempEmulationSchema = tempEmulationSchema)
       ParallelLogger::logInfo(paste0('popSetId: ', popSetId))
@@ -317,7 +318,7 @@ populatePlpResultTables <- function(conn,
       covSetId <- addCovariateSetting(conn = conn, 
                                       resultSchema = resultSchema, 
                                       targetDialect = targetDialect,
-                                      json = mdl$inputSetting$dataExtrractionSettings$covariateSettings, 
+                                      json = mdl$model$settings$covariateSettings, 
                                       stringAppendToTables = stringAppendToTables,
                                       tempEmulationSchema = tempEmulationSchema)
       ParallelLogger::logInfo(paste0('covSetId: ', covSetId))
@@ -325,53 +326,94 @@ populatePlpResultTables <- function(conn,
       modSetId <- addModelSetting(conn = conn, 
                                   resultSchema = resultSchema, 
                                   targetDialect = targetDialect,
-                                  modelType = mdl$inputSetting$modelSettings$model,
-                                  json = mdl$inputSetting$modelSettings, 
+                                  modelType = mdl$model$settings$modelSettings$model,
+                                  json = mdl$model$settings$modelSettings, 
                                   stringAppendToTables = stringAppendToTables,
                                   tempEmulationSchema = tempEmulationSchema)
       ParallelLogger::logInfo(paste0('modSetId: ', modSetId))
       
-      # add plp_data_settings, feature_engineering_settings, tidy_covariate_settings, sample_settings
+      # NEW: add plp_data_settings
+      plpDataSetId <- addPlpDataSetting(conn = conn, 
+        resultSchema = resultSchema, 
+        targetDialect = targetDialect,
+        json = mdl$model$settings$plpDataSettings, 
+        stringAppendToTables = stringAppendToTables,
+        tempEmulationSchema = tempEmulationSchema)
+      ParallelLogger::logInfo(paste0('plpDataSetId: ', plpDataSetId))
       
-      # this is now split setting
-      trainingId <- addTrainingSettings(conn = conn, 
-                                        resultSchema = resultSchema, 
-                                        targetDialect = targetDialect,
-                                        testSplit = mdl$inputSetting$testSplit,
-                                        testFraction = mdl$inputSetting$testFraction,
-                                        nfold = mdl$inputSetting$nfold,
-                                        splitSeed = mdl$inputSetting$splitSeed,
-                                        stringAppendToTables = stringAppendToTables,
-                                        tempEmulationSchema = tempEmulationSchema)
-      ParallelLogger::logInfo(paste0('trainingId: ', trainingId))
+      # NEW: add FE_settings
+      FESetId <- addFESetting(conn = conn, 
+        resultSchema = resultSchema, 
+        targetDialect = targetDialect,
+        json = mdl$model$settings$featureEngineering, 
+        stringAppendToTables = stringAppendToTables,
+        tempEmulationSchema = tempEmulationSchema)
+      ParallelLogger::logInfo(paste0('FESetId: ', FESetId))
+      
+      # NEW: add sample_settings
+      sampleSetId <- addSampleSetting(
+        conn = conn, 
+        resultSchema = resultSchema, 
+        targetDialect = targetDialect,
+        json = mdl$model$settings$sampleSettings, 
+        stringAppendToTables = stringAppendToTables,
+        tempEmulationSchema = tempEmulationSchema
+        )
+      ParallelLogger::logInfo(paste0('sampleSetId: ', sampleSetId)
+      )
+      
+      # NEW: add tidy_covariate_settings
+      tidySetId <- addTidySetting(
+        conn = conn, 
+        resultSchema = resultSchema, 
+        targetDialect = targetDialect,
+        json = mdl$model$settings$tidyCovariates, 
+        stringAppendToTables = stringAppendToTables,
+        tempEmulationSchema = tempEmulationSchema
+      )
+      ParallelLogger::logInfo(paste0('tidySetId: ', tidySetId))
+
+      
+      # this is now split setting - update this function
+      splitId <- addSplitSettings(
+        conn = conn, 
+        resultSchema = resultSchema, 
+        targetDialect = targetDialect,
+        json = mdl$model$settings$splitSettings,
+        stringAppendToTables = stringAppendToTables,
+        tempEmulationSchema = tempEmulationSchema
+      )
+      ParallelLogger::logInfo(paste0('splitId: ', splitId))
       
       # create this function
-      modelId <- addModel(conn = conn, 
-                          resultSchema = resultSchema, 
-                          targetDialect = targetDialect,
-                          analysisId = mdl$analysisRef$analysisId, # trainDetails
-                          modelName = mdl$inputSetting$modelSettings$name, #standardise this
-                          targetId = tId,
-                          outcomeId = oId,
-                          tarId = tarId,
-        #plpDataSettingId = plpDataSetId,
-                          populationSettingId = popSetId,
-                          modelSettingId = modSetId,
-                          covariateSettingId = covSetId,
-        #sampleSettingId = sampleSetId,
-        #featureEngineeringSettingId = featureEngineeringSetId,
-        #tidyCovariateSettingId = tidyCovariateSetId,
-                          researcherId = researcherId,
-                          databaseId = dbId,
-                          hyperParamSearch = mdl$model$hyperParamSearch, #mdl$trainDetails$hyperParamSearch
-                          plpModelFile = " ",
-        #require_dense_matrix = mdl$settings$requireDenseMatrix,
-                          dateTime = format(mdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"), #mdl$trainDetails$trainingDate
-                          trainingId = trainingId, # sampleSettingId = sampleSetId
-                          trainingTime = mdl$model$trainingTime, #mdl$trainDetails$trainingTime
-                          intercept = ifelse(is.list(mdl$model), mdl$model$model$coefficients[1], 0),
-                          stringAppendToTables = stringAppendToTables,
-                          tempEmulationSchema = tempEmulationSchema)
+      modelId <- addModel(
+        conn = conn, 
+        resultSchema = resultSchema, 
+        targetDialect = targetDialect,
+        analysisId = mdl$model$trainDetails$analysisId, # trainDetails
+        modelName = mdl$model$settings$modelSettings$model, #standardise this
+        targetId = tId,
+        outcomeId = oId,
+        tarId = tarId,
+        plpDataSettingId = plpDataSetId,
+        populationSettingId = popSetId,
+        modelSettingId = modSetId,
+        covariateSettingId = covSetId,
+        sampleSettingId = sampleSetId,
+        splitSettingId = splitId, # changed from trainingId
+        featureEngineeringSettingId = FESetId,
+        tidyCovariatesSettingId = tidySetId,
+        researcherId = researcherId,
+        databaseId = dbId,
+        hyperParamSearch = mdl$model$trainDetails$hyperParamSearch, #mdl$trainDetails$hyperParamSearch
+        plpModelFile = " ",
+        require_dense_matrix = mdl$model$settings$requireDenseMatrix,
+        dateTime = format(mdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"), #mdl$trainDetails$trainingDate
+        trainingTime = mdl$model$trainDetails$trainingTime, #mdl$trainDetails$trainingTime
+        intercept = ifelse(is.list(mdl$model), mdl$model$model$coefficients[1], 0),
+        stringAppendToTables = stringAppendToTables,
+        tempEmulationSchema = tempEmulationSchema
+      )
       ParallelLogger::logInfo(paste0('modelId: ', modelId))
       
       # add modelId and studyId
@@ -505,14 +547,14 @@ populatePlpResultTables <- function(conn,
                                    resultSchema = resultSchema, 
                                    targetDialect = targetDialect,
                                    jsonInput = jsonInput, type = cohortType,
-                                   cohortId = vmdl$inputSetting$cohortId, 
+                                   cohortId = vmdl$model$valdiationDetails$cohortId, 
                                    stringAppendToTables = stringAppendToTables,
                                    tempEmulationSchema = tempEmulationSchema)
                   oId <- addCohort(conn = conn, 
                                    resultSchema = resultSchema, 
                                    targetDialect = targetDialect,
                                    jsonInput = jsonInput, type = cohortType,
-                                   cohortId = vmdl$inputSetting$outcomeId, 
+                                   cohortId = vmdl$model$valdiationDetails$outcomeId, 
                                    stringAppendToTables = stringAppendToTables,
                                    tempEmulationSchema = tempEmulationSchema)
                   
@@ -1319,93 +1361,345 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
   return(jsonId)
 }
 
-
-addTrainingSettings <- function(conn, resultSchema, targetDialect,
-                                stringAppendToTables = '',
-                                testSplit,
-                                testFraction,
-                                nfold,
-                                splitSeed,
-                                tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
+addTidySetting <- function(
+  conn, 
+  resultSchema, 
+  targetDialect,
+  stringAppendToTables = '',
+  json,
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
-  result <- checkTable(conn = conn, 
-                       resultSchema = resultSchema, 
-                       stringAppendToTables = stringAppendToTables,
-                       targetDialect = targetDialect, 
-                       tableName = 'training_settings',
-                       columnNames = c('test_split', 'test_fraction',
-                                       'nfold',
-                                       'split_seed'), 
-                       values = c(paste0("'",testSplit,"'"), 
-                                  testFraction,
-                                  nfold,
-                                  splitSeed),
-                       tempEmulationSchema = tempEmulationSchema
-  )
-  
-  if(nrow(result)>0){
-    ParallelLogger::logInfo(paste0('Training settings already exists'))
-  } else {
-    
-    ParallelLogger::logInfo(paste0('Adding new training setting'))
-    
-    sql <- "INSERT INTO @my_schema.@string_to_appendtraining_settings(test_split, test_fraction,
-                                       nfold,
-                                       split_seed) 
-          VALUES ('@test_split', @test_fraction, @nfold, @split_seed);"
-    sql <- SqlRender::render(sql, 
-                             my_schema = resultSchema,
-                             test_split = testSplit,
-                             test_fraction = testFraction,
-                             nfold = nfold,
-                             split_seed = splitSeed,
-                             string_to_append = stringAppendToTables)
-    sql <- SqlRender::translate(sql, targetDialect = targetDialect,
-                                tempEmulationSchema = tempEmulationSchema)
-    DatabaseConnector::executeSql(conn, sql)
-    
-    result <- checkTable(conn = conn, 
-                         resultSchema = resultSchema, 
-                         stringAppendToTables = stringAppendToTables,
-                         targetDialect = targetDialect, 
-                         tableName = 'training_settings',
-                         columnNames = c('test_split', 'test_fraction',
-                                         'nfold',
-                                         'split_seed'), 
-                         values = c(paste0("'",testSplit,"'"), 
-                                    testFraction,
-                                    nfold,
-                                    splitSeed),
-                         tempEmulationSchema = tempEmulationSchema
-    )
-    
+  if(class(json)!='character'){
+    json <- RJSONIO::toJSON(json, digits = 23)
   }
   
-  return(result$trainingId[1])
+  jsonId <- checkJson(conn = conn,
+    resultSchema = resultSchema, 
+    stringAppendToTables = stringAppendToTables,
+    targetDialect = targetDialect, 
+    tableName = 'tidy_covariates_settings',
+    jsonColumnName = 'tidyCovariatesSettingsJson',
+    id = 'tidyCovariatesSettingId',
+    json = json,
+    tempEmulationSchema = tempEmulationSchema)
+  
+  if(is.null(jsonId)){
+    
+    ParallelLogger::logInfo('Adding new tidy covariates settings')
+    
+    data <- data.frame(
+      tidyCovariatesSettingsJson = json
+    )
+    
+    DatabaseConnector::insertTable(connection = conn, 
+      databaseSchema = resultSchema, 
+      tableName = paste0(stringAppendToTables, 'tidy_covariates_settings'),
+      data = data, 
+      dropTableIfExists = F, 
+      createTable = F, 
+      tempTable = F, 
+      progressBar = T,
+      camelCaseToSnakeCase = T,
+      tempEmulationSchema = tempEmulationSchema
+    )
+    
+    #getId of new
+    jsonId <- checkJson(conn = conn,
+      resultSchema = resultSchema, 
+      stringAppendToTables = stringAppendToTables,
+      targetDialect = targetDialect, 
+      tableName = 'tidy_covariates_settings',
+      jsonColumnName = 'tidyCovariatesSettingsJson',
+      id = 'tidyCovariatesSettingId',
+      json = json,
+      tempEmulationSchema = tempEmulationSchema)
+    
+  } else{
+    ParallelLogger::logInfo('tidy covariates setting exists')
+  }
+  
+  return(jsonId)
+  
+}
+
+addSampleSettings <- function(
+  conn, 
+  resultSchema, 
+  targetDialect,
+  stringAppendToTables = '',
+  json,
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
+){
+  
+  if(class(json)!='character'){
+    json <- RJSONIO::toJSON(json, digits = 23)
+  }
+  
+  jsonId <- checkJson(conn = conn,
+    resultSchema = resultSchema, 
+    stringAppendToTables = stringAppendToTables,
+    targetDialect = targetDialect, 
+    tableName = 'sample_settings',
+    jsonColumnName = 'sampleSettingsJson',
+    id = 'sampleSettingId',
+    json = json,
+    tempEmulationSchema = tempEmulationSchema)
+  
+  if(is.null(jsonId)){
+    
+    ParallelLogger::logInfo('Adding new sample settings')
+    
+    data <- data.frame(
+      sampleSettingsJson = json
+    )
+    
+    DatabaseConnector::insertTable(connection = conn, 
+      databaseSchema = resultSchema, 
+      tableName = paste0(stringAppendToTables, 'sample_settings'),
+      data = data, 
+      dropTableIfExists = F, 
+      createTable = F, 
+      tempTable = F, 
+      progressBar = T,
+      camelCaseToSnakeCase = T,
+      tempEmulationSchema = tempEmulationSchema
+    )
+    
+    #getId of new
+    jsonId <- checkJson(conn = conn,
+      resultSchema = resultSchema, 
+      stringAppendToTables = stringAppendToTables,
+      targetDialect = targetDialect, 
+      tableName = 'sample_settings',
+      jsonColumnName = 'sampleSettingsJson',
+      id = 'sampleSettingId',
+      json = json,
+      tempEmulationSchema = tempEmulationSchema)
+    
+  } else{
+    ParallelLogger::logInfo('sample setting exists')
+  }
+  
+  return(jsonId)
+  
+}
+
+addPlpDataSetting <- function(
+  conn, 
+  resultSchema, 
+  targetDialect,
+  stringAppendToTables = '',
+  json,
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
+){
+  
+  if(class(json)!='character'){
+    json <- RJSONIO::toJSON(json, digits = 23)
+  }
+  
+  jsonId <- checkJson(conn = conn,
+    resultSchema = resultSchema, 
+    stringAppendToTables = stringAppendToTables,
+    targetDialect = targetDialect, 
+    tableName = 'plp_data_settings',
+    jsonColumnName = 'plpDataSettingsJson',
+    id = 'plpDataSettingId',
+    json = json,
+    tempEmulationSchema = tempEmulationSchema)
+  
+  if(is.null(jsonId)){
+    
+    ParallelLogger::logInfo('Adding new plp data settings')
+    
+    data <- data.frame(
+      plpDataSettingsJson = json
+    )
+    
+    DatabaseConnector::insertTable(connection = conn, 
+      databaseSchema = resultSchema, 
+      tableName = paste0(stringAppendToTables, 'plp_data_settings'),
+      data = data, 
+      dropTableIfExists = F, 
+      createTable = F, 
+      tempTable = F, 
+      progressBar = T,
+      camelCaseToSnakeCase = T,
+      tempEmulationSchema = tempEmulationSchema
+    )
+    
+    #getId of new
+    jsonId <- checkJson(
+      conn = conn,
+      resultSchema = resultSchema, 
+      stringAppendToTables = stringAppendToTables,
+      targetDialect = targetDialect, 
+      tableName = 'plp_data_settings',
+      jsonColumnName = 'plpDataSettingsJson',
+      id = 'plpDataSettingId',
+      json = json,
+      tempEmulationSchema = tempEmulationSchema
+      )
+    
+  } else{
+    ParallelLogger::logInfo('Split setting exists')
+  }
+  
+  return(jsonId)
+  
+}
+
+addFESetting <- function(
+  conn, 
+  resultSchema, 
+  targetDialect,
+  stringAppendToTables = '',
+  json,
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
+){
+  
+  if(class(json)!='character'){
+    json <- RJSONIO::toJSON(json, digits = 23)
+  }
+  
+  jsonId <- checkJson(conn = conn,
+    resultSchema = resultSchema, 
+    stringAppendToTables = stringAppendToTables,
+    targetDialect = targetDialect, 
+    tableName = 'feature_engineering_settings',
+    jsonColumnName = 'featureEngineeringSettingsJson',
+    id = 'featureEngineeringSettingId',
+    json = json,
+    tempEmulationSchema = tempEmulationSchema)
+  
+  if(is.null(jsonId)){
+    
+    ParallelLogger::logInfo('Adding new feature_engineering settings')
+    
+    data <- data.frame(
+      splitSettingsJson = json
+    )
+    
+    DatabaseConnector::insertTable(connection = conn, 
+      databaseSchema = resultSchema, 
+      tableName = paste0(stringAppendToTables, 'feature_engineering_settings'),
+      data = data, 
+      dropTableIfExists = F, 
+      createTable = F, 
+      tempTable = F, 
+      progressBar = T,
+      camelCaseToSnakeCase = T,
+      tempEmulationSchema = tempEmulationSchema
+    )
+    
+    #getId of new
+    jsonId <- checkJson(conn = conn,
+      resultSchema = resultSchema, 
+      stringAppendToTables = stringAppendToTables,
+      targetDialect = targetDialect, 
+      tableName = 'feature_engineering_settings',
+      jsonColumnName = 'featureEngineeringSettingsJson',
+      id = 'featureEngineeringSettingId',
+      json = json,
+      tempEmulationSchema = tempEmulationSchema)
+    
+  } else{
+    ParallelLogger::logInfo('feature engineering setting exists')
+  }
+  
+  return(jsonId)
+  
+}
+
+addSplitSettings <- function(
+  conn, 
+  resultSchema, 
+  targetDialect,
+  stringAppendToTables = '',
+  json,
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
+){
+  
+  if(class(json)!='character'){
+    json <- RJSONIO::toJSON(json, digits = 23)
+  }
+  
+  jsonId <- checkJson(conn = conn,
+    resultSchema = resultSchema, 
+    stringAppendToTables = stringAppendToTables,
+    targetDialect = targetDialect, 
+    tableName = 'split_settings',
+    jsonColumnName = 'splitSettingsJson',
+    id = 'splitSettingId',
+    json = json,
+    tempEmulationSchema = tempEmulationSchema)
+  
+  if(is.null(jsonId)){
+    
+    ParallelLogger::logInfo('Adding new split settings')
+    
+    data <- data.frame(
+      splitSettingsJson = json
+      )
+    
+    DatabaseConnector::insertTable(connection = conn, 
+      databaseSchema = resultSchema, 
+      tableName = paste0(stringAppendToTables, 'split_settings'),
+      data = data, 
+      dropTableIfExists = F, 
+      createTable = F, 
+      tempTable = F, 
+      progressBar = T,
+      camelCaseToSnakeCase = T,
+      tempEmulationSchema = tempEmulationSchema
+      )
+    
+    #getId of new
+    jsonId <- checkJson(conn = conn,
+      resultSchema = resultSchema, 
+      stringAppendToTables = stringAppendToTables,
+      targetDialect = targetDialect, 
+      tableName = 'split_settings',
+      jsonColumnName = 'splitSettingsJson',
+      id = 'splitSettingId',
+      json = json,
+      tempEmulationSchema = tempEmulationSchema)
+    
+  } else{
+    ParallelLogger::logInfo('Split setting exists')
+  }
+  
+  return(jsonId)
   
 }
 
 
-addModel <- function(conn, resultSchema, targetDialect,
-                     stringAppendToTables = stringAppendToTables,
-                     analysisId,
-                     modelName,
-                     targetId,
-                     outcomeId,
-                     tarId,
-                     populationSettingId,
-                     modelSettingId,
-                     covariateSettingId,
-                     researcherId,
-                     databaseId,
-                     hyperParamSearch,
-                     plpModelFile,
-                     dateTime,
-                     trainingId,
-                     trainingTime,
-                     intercept,
-                     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")){
+addModel <- function(
+  conn, 
+  resultSchema, targetDialect,
+  stringAppendToTables = stringAppendToTables,
+  analysisId,
+  modelName,
+  targetId,
+  outcomeId,
+  tarId,
+  plpDataSettingId,
+  populationSettingId,
+  modelSettingId,
+  covariateSettingId,
+  sampleSettingId,
+  splitSettingId,
+  featureEngineeringSettingId,
+  tidyCovariatesSettingId,
+  researcherId,
+  databaseId,
+  hyperParamSearch,
+  plpModelFile,
+  dateTime,
+  trainingTime,
+  intercept,
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
+){
   
   if(is.null(analysisId)){
     stop('analysisId is null')
@@ -1422,6 +1716,10 @@ addModel <- function(conn, resultSchema, targetDialect,
   if(is.null(tarId)){
     stop('tarId is null')
   }
+  
+  if(is.null(plpDataSettingId)){
+    stop('plpDataSettingId is null')
+  }
   if(is.null(populationSettingId)){
     stop('populationSettingId is null')
   }
@@ -1431,6 +1729,19 @@ addModel <- function(conn, resultSchema, targetDialect,
   if(is.null(covariateSettingId)){
     stop('covariateSettingId is null')
   }
+  if(is.null(sampleSettingId)){
+    stop('sampleSettingId is null')
+  }
+  if(is.null(splitSettingId)){
+    stop('splitSettingId is null')
+  }
+  if(is.null(featureEngineeringSettingId)){
+    stop('featureEngineeringSettingId is null')
+  }
+  if(is.null(tidyCovariatesSettingId)){
+    stop('tidyCovariatesSettingId is null')
+  }
+  
   if(is.null(researcherId)){
     stop('researcherId is null')
   }
@@ -1459,43 +1770,53 @@ addModel <- function(conn, resultSchema, targetDialect,
   # TODO
   
   result <- checkTable(conn = conn, 
-                       resultSchema = resultSchema, 
-                       stringAppendToTables = stringAppendToTables,
-                       targetDialect = targetDialect, 
-                       tableName = 'models',
-                       columnNames = c('analysis_id',
-                                       'model_name',
-                                       'target_id',
-                                       'outcome_id',
-                                       'tar_id',
-                                       'population_setting_id',
-                                       'model_setting_id',
-                                       'covariate_setting_id',
-                                       'researcher_id',
-                                       'database_id',
-                                       'hyper_param_search',
-                                       'plp_model_file',
-                                       'execution_date_time',
-                                       'training_id',
-                                       'training_time',
-                                       'intercept'), 
-                       values = c(enc(analysisId),
-                                  enc(modelName),
-                                  targetId,
-                                  outcomeId,
-                                  tarId,
-                                  populationSettingId,
-                                  modelSettingId,
-                                  covariateSettingId,
-                                  researcherId,
-                                  databaseId,
-                                  enc(hyperParamSearch),
-                                  enc(plpModelFile),
-                                  enc(dateTime),
-                                  trainingId,
-                                  enc(trainingTime),
-                                  intercept),
-                       tempEmulationSchema = tempEmulationSchema
+    resultSchema = resultSchema, 
+    stringAppendToTables = stringAppendToTables,
+    targetDialect = targetDialect, 
+    tableName = 'models',
+    columnNames = c(
+      'analysis_id',
+      'model_name',
+      'target_id',
+      'outcome_id',
+      'tar_id',
+      'plp_data_setting_id',
+      'population_setting_id',
+      'model_setting_id',
+      'covariate_setting_id',
+      'sample_setting_id',
+      'split_setting_id',
+      'feature_engineering_setting_id',
+      'tidy_covariates_setting_id',
+      'researcher_id',
+      'database_id',
+      'hyper_param_search',
+      'plp_model_file',
+      'execution_date_time',
+      'training_time',
+      'intercept'), 
+    values = c(
+      enc(analysisId),
+      enc(modelName),
+      targetId,
+      outcomeId,
+      tarId,
+      plpDataSettingId,
+      populationSettingId,
+      modelSettingId,
+      covariateSettingId,
+      sampleSettingId,
+      splitSettingId,
+      featureEngineeringSettingId,
+      tidyCovariatesSettingId,
+      researcherId,
+      databaseId,
+      enc(hyperParamSearch),
+      enc(plpModelFile),
+      enc(dateTime),
+      enc(trainingTime),
+      intercept),
+    tempEmulationSchema = tempEmulationSchema
   )
   
   if(nrow(result)==0){
@@ -1505,40 +1826,53 @@ addModel <- function(conn, resultSchema, targetDialect,
     target_id,
     outcome_id,
     tar_id,
-    population_setting_id,
-    model_setting_id,
-    covariate_setting_id,
+    plp_data_setting_id,
+                           population_setting_id,
+                           model_setting_id,
+                           covariate_setting_id,
+                           sample_setting_id,
+                           split_setting_id,
+                           feature_engineering_setting_id,
+                           tidy_covariates_setting_id,
     researcher_id,
     database_id,
     hyper_param_search,
     plp_model_file,
     execution_date_time,
-    training_id,
     training_time,
     intercept) VALUES 
   ('@analysis_id', '@model_name', @target_id, @outcome_id, @tar_id, 
-  @population_setting_id, @model_setting_id, @covariate_setting_id, @researcher_id, 
+  @population_setting_id, @model_setting_id, @covariate_setting_id, 
+  @sample_setting_id, @split_setting_id, @feature_engineering_setting_id, @tidy_covariates_setting_id,
+  @researcher_id, 
   @database_id, '@hyper_param_search', '@plp_model_file', '@date_time', 
-    @training_id, '@training_time', @intercept)"
-    sql <- SqlRender::render(sql, 
-                             my_schema = resultSchema,
-                             analysis_id = analysisId,
-                             model_name = modelName,
-                             target_id = targetId,
-                             outcome_id = outcomeId,
-                             tar_id = tarId,
-                             population_setting_id = populationSettingId,
-                             model_setting_id = modelSettingId,
-                             covariate_setting_id = covariateSettingId,
-                             researcher_id = researcherId,
-                             database_id = databaseId,
-                             hyper_param_search = hyperParamSearch,
-                             plp_model_file = plpModelFile,
-                             date_time = dateTime,
-                             training_id = trainingId,
-                             training_time = trainingTime,
-                             intercept = intercept,
-                             string_to_append = stringAppendToTables)
+    @training_id, @intercept)"
+    sql <- SqlRender::render(
+      sql, 
+      my_schema = resultSchema,
+      analysis_id = analysisId,
+      model_name = modelName,
+      target_id = targetId,
+      outcome_id = outcomeId,
+      tar_id = tarId,
+      plp_data_setting_id= plpDataSettingId,
+      population_setting_id = populationSettingId,
+      model_setting_id = modelSettingId,
+      covariate_setting_id = covariateSettingId,
+      sample_setting_id = sampleSettingId,
+      split_setting_id = splitSettingId,
+      feature_engineering_setting_id = featureEngineeringSettingId,
+      tidy_covariates_setting_id = tidyCovariatesSettingId,
+      researcher_id = researcherId,
+      database_id = databaseId,
+      hyper_param_search = hyperParamSearch,
+      plp_model_file = plpModelFile,
+      date_time = dateTime,
+      training_id = trainingId,
+      training_time = trainingTime,
+      intercept = intercept,
+      string_to_append = stringAppendToTables
+    )
     sql <- SqlRender::translate(sql, targetDialect = targetDialect,
                                 tempEmulationSchema = tempEmulationSchema)
     DatabaseConnector::executeSql(conn, sql)
@@ -1554,15 +1888,20 @@ addModel <- function(conn, resultSchema, targetDialect,
                                          'target_id',
                                          'outcome_id',
                                          'tar_id',
-                                         'population_setting_id',
-                                         'model_setting_id',
-                                         'covariate_setting_id',
+                           'plp_data_setting_id',
+                           'population_setting_id',
+                           'model_setting_id',
+                           'covariate_setting_id',
+                           'sample_setting_id',
+                           'split_setting_id',
+                           'feature_engineering_setting_id',
+                           'tidy_covariates_setting_id',
                                          'researcher_id',
                                          'database_id',
                                          'hyper_param_search',
                                          'plp_model_file',
                                          'execution_date_time',
-                                         'training_id',
+                                         
                                          'training_time',
                                          'intercept'), 
                          values = c(enc(analysisId),
@@ -1570,15 +1909,19 @@ addModel <- function(conn, resultSchema, targetDialect,
                                     targetId,
                                     outcomeId,
                                     tarId,
-                                    populationSettingId,
-                                    modelSettingId,
-                                    covariateSettingId,
+                           plpDataSettingId,
+                           populationSettingId,
+                           modelSettingId,
+                           covariateSettingId,
+                           sampleSettingId,
+                           splitSettingId,
+                           featureEngineeringSettingId,
+                           tidyCovariatesSettingId,
                                     researcherId,
                                     databaseId,
                                     enc(hyperParamSearch),
                                     enc(plpModelFile),
                                     enc(dateTime),
-                                    trainingId,
                                     enc(trainingTime),
                                     intercept),
                          tempEmulationSchema = tempEmulationSchema
