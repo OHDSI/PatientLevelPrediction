@@ -85,7 +85,7 @@ sampleData <- function(trainData, sampleSettings){
   
   ParallelLogger::logInfo('Finished data sampling')
   
-  metaData$sampling <- list(settings = sampleSettings)
+  metaData$sampleSettings <- sampleSettings
   
   attr(trainData, "metaData") <- metaData
   return(trainData)

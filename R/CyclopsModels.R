@@ -147,7 +147,8 @@ fitCyclopsModel <- function(
         ),
         extraSettings = attr(param, 'settings')
       ),
-      splitSettings = attr(trainData, "metaData")$splitSettings
+      splitSettings = attr(trainData, "metaData")$splitSettings,
+      sampleSettings = attr(trainData, "metaData")$sampleSettings
     ),
     
     trainDetails = list(

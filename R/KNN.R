@@ -135,7 +135,8 @@ fitKNN <- function(trainData, param, search = 'none', analysisId ){
         finalModelParameters = list(),
         extraSettings = attr(param, 'settings')
       ),
-      splitSettings = attr(trainData, "metaData")$splitSettings
+      splitSettings = attr(trainData, "metaData")$splitSettings,
+      sampleSettings = attr(trainData, "metaData")$sampleSettings
     ),
     
     trainDetails = list(

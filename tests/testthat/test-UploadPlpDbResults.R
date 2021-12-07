@@ -46,12 +46,6 @@ test_that("results uploaded to database", {
   
   resultsLoc <- file.path(saveLoc,'dbUp')
   
-  # save main result
-  plpResult$inputSetting$dataExtrractionSettings$cohortId <- 1
-  plpResult$inputSetting$dataExtrractionSettings$outcomeId <- 2
-  plpResult$inputSetting$cohortId <- 1
-  plpResult$inputSetting$outcomeId <- 2
-  
   savePlpResult(plpResult, file.path(resultsLoc, 'Analysis_1','plpResult'))
   # save validation
   if(!dir.exists(file.path(resultsLoc,'Validation','test', 'Analysis_1'))){
