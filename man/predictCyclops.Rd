@@ -4,10 +4,10 @@
 \alias{predictCyclops}
 \title{Create predictive probabilities}
 \usage{
-predictCyclops(plpModel, plpData, cohort)
+predictCyclops(plpModel, data, cohort)
 }
 \arguments{
-\item{plpData}{The covariateData containing the covariates for the population}
+\item{data}{The new plpData containing the covariateData for the new population}
 
 \item{cohort}{The cohort to calculate the prediction for}
 

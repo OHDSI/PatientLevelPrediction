@@ -5,21 +5,19 @@
 \title{Run a list of predictions analyses}
 \usage{
 runMultiplePlp(
-  databaseSettings = createDatabaseDetails(),
+  databaseDetails = createDatabaseDetails(),
   modelDesignList = list(createModelDesign(targetId = 1, outcomeId = 2, modelSettings =
     setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
   onlyFetchData = F,
   splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
     trainFraction = 0.75, splitSeed = 123, nfold = 3),
-  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, name =
+  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
     "runPlp Log"),
   saveDirectory = getwd()
 )
 }
 \arguments{
-\item{databaseSettings}{The database settings created using \code{createDatabaseDetails()}}
-
 \item{modelDesignList}{A list of model designs created using \code{createModelDesign()}}
 
 \item{onlyFetchData}{Only fetches and saves the data object to the output folder without running the analysis.}
@@ -27,6 +25,8 @@ runMultiplePlp(
 \item{splitSettings}{The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}}
 
 \item{logSettings}{The setting spexcifying the logging for the analyses created using \code{createLogSettings()}}
+
+\item{databaseSettings}{The database settings created using \code{createDatabaseDetails()}}
 
 \item{saveDirectort}{Name of the folder where all the outputs will written to.}
 }

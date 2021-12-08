@@ -7,22 +7,22 @@
 createLearningCurve(
   plpData,
   outcomeId,
+  parallel = T,
+  cores = 4,
+  modelSettings,
+  saveDirectory = getwd(),
   analysisId = "learningCurve",
   populationSettings = createStudyPopulationSettings(),
-  splitSettings = createDefaultSplitSetting(testFraction = 0.25, splitSeed = NULL,
-    nfold = 3, type = "stratified"),
+  splitSettings = createDefaultSplitSetting(),
   trainFractions = c(0.25, 0.5, 0.75),
   trainEvents = c(500, 1000, 1500),
   sampleSettings = createSampleSettings(),
   featureEngineeringSettings = createFeatureEngineeringSettings(),
-  preprocessSettings = createPreprocessSettings(minCovariateFraction = 0.001,
-    normalizeData = T),
-  modelSettings,
+  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = T),
   logSettings = createLogSettings(),
   executeSettings = createExecuteSettings(runSplitData = T, runSampleData = F,
     runfeatureEngineering = F, runPreprocessData = T, runModelDevelopment = T,
-    runCovariateSummary = F),
-  saveDirectory = getwd()
+    runCovariateSummary = F)
 )
 }
 \arguments{
@@ -30,6 +30,27 @@ createLearningCurve(
 data extracted from the CDM.}
 
 \item{outcomeId}{(integer) The ID of the outcome.}
+
+\item{parallel}{Whether to run the code in parallel}
+
+\item{cores}{The number of computer cores to use if running in parallel}
+
+\item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
+\itemize{
+\item{setLassoLogisticRegression()}{ A lasso logistic regression model}
+\item{setGradientBoostingMachine()}{ A gradient boosting machine}
+\item{setAdaBoost()}{ An ada boost model}
+\item{setRandomForest()}{ A random forest model}
+\item{setDecisionTree()}{ A decision tree model}
+\item{setCovNN())}{ A convolutional neural network model}
+\item{setCIReNN()}{ A recurrent neural network model}
+\item{setMLP()}{ A neural network model}
+\item{setDeepNN()}{ A deep neural network model}
+\item{setKNN()}{ A KNN model}
+
+}}
+
+\item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
 
 \item{analysisId}{(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
 
@@ -61,33 +82,12 @@ The default is none.}
 target population who must have a covariate for it to be included in the model training                            
 and whether to normalise the covariates before training}
 
-\item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
-\itemize{
-\item{setLassoLogisticRegression()}{ A lasso logistic regression model}
-\item{setGradientBoostingMachine()}{ A gradient boosting machine}
-\item{setAdaBoost()}{ An ada boost model}
-\item{setRandomForest()}{ A random forest model}
-\item{setDecisionTree()}{ A decision tree model}
-\item{setCovNN())}{ A convolutional neural network model}
-\item{setCIReNN()}{ A recurrent neural network model}
-\item{setMLP()}{ A neural network model}
-\item{setDeepNN()}{ A deep neural network model}
-\item{setKNN()}{ A KNN model}
-
-}}
-
 \item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
 specifying how the logging is done}
 
 \item{executeSettings}{An object of \code{executeSettings} specifying which parts of the analysis to run}
 
-\item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
-
 \item{analysisName}{(character) Name for the analysis}
-
-\item{cores}{The number of computer cores to use if running in parallel}
-
-\item{parallel}{Whether to run the code in parallel}
 }
 \value{
 A learning curve object containing the various performance measures

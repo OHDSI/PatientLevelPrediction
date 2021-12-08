@@ -49,28 +49,61 @@ recalibratePlpRefit <- function(
   #get selected covariates
   includeCovariateIds <- plpModel$covariateImportance %>% 
     dplyr::filter(.data$covariateValue != 0) %>% 
-    dplyr::select(.data$covariateIds) %>% 
+    dplyr::select(.data$covariateId) %>% 
     dplyr::pull()
   
   # check which covariates are included in new data
   containedIds <- newData$covariateData$covariateRef %>% dplyr::collect()
   noShrinkage <- intersect(includeCovariateIds, containedIds$covariateId)
+  
   # add intercept
   noShrinkage <- append(noShrinkage, 0, 0)
-  setLassoRefit <- setLassoLogisticRegression(includeCovariateIds = includeCovariateIds,
-                                              noShrinkage = noShrinkage)
   
-  newData$labels <- population %>% dplyr::select(.data$rowId, .data$outcomeCount, .data$survivalTime)
-  newData$folds <- data.frame(rowId = newData$labels$rowId, index = sample(3, length(newData$labels)))
-  newModel <- fitPlp(trainData = newData, modelSettings = setLassoRefit)
+  setLassoRefit <- setLassoLogisticRegression(
+    includeCovariateIds = includeCovariateIds,
+    noShrinkage = noShrinkage
+  )
+  
+  newData$labels <- newPopulation #%>% 
+    #dplyr::select(
+    #  .data$rowId, 
+    #  .data$cohortStartDate,
+    #  .data$outcomeCount, 
+     # .data$survivalTime
+      #)
+  
+  newData$folds <- data.frame(
+    rowId = newData$labels$rowId, 
+    index = sample(1, length(newData$labels$rowId), replace = T)
+    )
+  
+  newModel <- fitPlp(
+    trainData = newData, 
+    modelSettings = setLassoRefit,
+    analysisId = 'recalibrationRefit'
+    )
   
   newModel$prediction$evaluationType <- 'recalibrationRefit'
 
-  oldPred <- plpModel$predict(plpData = newData, population = newPopulation)
+  oldPred <- plpModel$predict(
+    plpData = newData, 
+    population = newPopulation
+    )
+  
   oldPred$evaluationType <- 'validation'
-  prediction <- rbind(oldPred, newModel$prediction)
+  
+  prediction <- rbind(
+    oldPred, 
+    newModel$prediction[, colnames(oldPred)]
+    )
 
-  adjust <- newModel$covariateImportance %>% dplyr::filter(covariateValue != 0) %>% dplyr::select(.data$covariateId, .data$covariateValue)
+  adjust <- newModel$covariateImportance %>% 
+    dplyr::filter(covariateValue != 0) %>% 
+    dplyr::select(
+      .data$covariateId, 
+      .data$covariateValue
+      )
+  
   newIntercept <- newModel$model$coefficients[names(newModel$model$coefficients) == '(Intercept)']
   
   attr(prediction, "metaData")$recalibratePlpRefit <- list(adjust = adjust, newIntercept = newIntercept)

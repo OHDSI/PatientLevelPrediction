@@ -41,7 +41,8 @@ fitCyclopsModel <- function(
   
   start <- Sys.time() 
   
-  cyclopsData <- Cyclops::convertToCyclopsData(outcomes = trainData$covariateData$labels,
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = trainData$covariateData$labels,
     covariates = covariates,
     addIntercept = settings$addIntercept,
     modelType = modelTypeToCyclopsModelType(settings$modelType),
@@ -50,13 +51,6 @@ fitCyclopsModel <- function(
     quiet = TRUE
     )
 
-  #prior <- Cyclops::createPrior(
-  #  priorType =  param$priorType, 
-  #  forceIntercept = param$forceIntercept,
-  #  useCrossValidation = max(trainData$labels$index)>1, 
-  #  variance = param$startingVariance,
-  #  exclude = param$exclude
-  #  )
   if(settings$crossValidationInPrior){  
     param$priorParams$useCrossValidation <- max(trainData$folds$index)>1
   }
@@ -79,8 +73,13 @@ fitCyclopsModel <- function(
     
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
-      Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)}, 
-      finally = ParallelLogger::logInfo('Done.'))
+      Cyclops::fitCyclopsModel(
+        cyclopsData = cyclopsData, 
+        prior = prior, 
+        control = control
+        )}, 
+      finally = ParallelLogger::logInfo('Done.')
+      )
   } else{
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops with fixed varience')
@@ -149,6 +148,8 @@ fitCyclopsModel <- function(
       ),
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
+      
+      
     ),
     
     trainDetails = list(
@@ -400,13 +401,14 @@ filterCovariateIds <- function(param, covariateData){
   if ( (length(param$includeCovariateIds) != 0) & (length(param$excludeCovariateIds) != 0)) {
     covariates <- covariateData$covariates %>% 
       dplyr::filter(.data$covariateId %in% param$includeCovariateIds)  %>% 
-      dplyr::filter(!.data$covariateId %in% param$excludeCovariateIds)
+      dplyr::filter(!.data$covariateId %in% param$excludeCovariateIds) # does not work
   } else if ( (length(param$includeCovariateIds) == 0) & (length(param$excludeCovariateIds) != 0)) { 
     covariates <- covariateData$covariates %>% 
-      dplyr::filter(!.data$covariateId %in% param$excludeCovariateIds)
+      dplyr::filter(!.data$covariateId %in% param$excludeCovariateIds) # does not work
   } else if ( (length(param$includeCovariateIds) != 0) & (length(param$excludeCovariateIds) == 0)) {
+    includeCovariateIds <- as.double(param$includeCovariateIds) # fixes odd dplyr issue with param
     covariates <- covariateData$covariates %>% 
-      dplyr::filter(.data$covariateId %in% param$includeCovariateIds)
+      dplyr::filter(.data$covariateId %in% includeCovariateIds) 
   } else {
     covariates <- covariateData$covariates
   }

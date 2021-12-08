@@ -47,8 +47,8 @@
 createRestrictPlpDataSettings <- function(
   studyStartDate = "",
   studyEndDate = "",
-  firstExposureOnly = NULL,
-  washoutPeriod = NULL,
+  firstExposureOnly = F,
+  washoutPeriod = 0,
   sampleSize = NULL
 ){
   

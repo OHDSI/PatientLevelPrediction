@@ -8,13 +8,13 @@ createDatabaseDetails(
   connectionDetails,
   cdmDatabaseSchema,
   cdmDatabaseName,
-  oracleTempSchema = cdmDatabaseSchema,
+  tempEmulationSchema = cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "cohort",
   cohortId = NULL,
-  outcomeId = NULL,
+  outcomeIds = NULL,
   cdmVersion = 5
 )
 }
@@ -30,7 +30,7 @@ so for example 'cdm_instance.dbo'.}
 
 \item{cdmDatabaseName}{A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)}
 
-\item{oracleTempSchema}{For Oracle only: the name of the database schema where you
+\item{tempEmulationSchema}{For dmbs like Oracle only: the name of the database schema where you
 want all temporary tables to be managed. Requires
 create/insert permissions to this database.}
 
@@ -52,7 +52,7 @@ SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 
 \item{cohortId}{An integer specifying the cohort id for the target cohort}
 
-\item{outcomeId}{An integer specifying the cohort id for the outcome cohort}
+\item{outcomeIds}{A single integer or vector of integers specifying the cohort ids for the outcome cohorts}
 
 \item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and
 "5".}

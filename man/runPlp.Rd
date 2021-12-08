@@ -8,6 +8,7 @@ runPlp(
   plpData,
   outcomeId = plpData$metaData$call$outcomeIds[1],
   analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = "-"),
+  analysisName = "Study details",
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
     trainFraction = 0.75, splitSeed = 123, nfold = 3),
@@ -29,6 +30,8 @@ data extracted from the CDM.}
 \item{outcomeId}{(integer) The ID of the outcome.}
 
 \item{analysisId}{(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
+
+\item{analysisName}{(character) Name for the analysis}
 
 \item{populationSettings}{An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
 specifies how the data class labels are defined and addition any exclusions to apply to the 
@@ -67,8 +70,6 @@ specifying how the logging is done}
 \item{executeSettings}{An object of \code{executeSettings} specifying which parts of the analysis to run}
 
 \item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
-
-\item{analysisName}{(character) Name for the analysis}
 }
 \value{
 An object containing the following:

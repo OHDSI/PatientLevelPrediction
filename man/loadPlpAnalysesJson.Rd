@@ -4,10 +4,10 @@
 \alias{loadPlpAnalysesJson}
 \title{Load the multiple prediction json settings from a file}
 \usage{
-loadPlpAnalysesJson(jsonFileDirectory)
+loadPlpAnalysesJson(jsonFileLocation)
 }
 \arguments{
-\item{jsonFileDirectory}{The directory containing the file 'predictionAnalysisList.json' with the modelDesignList}
+\item{jsonFileLocation}{The location of the file 'predictionAnalysisList.json' with the modelDesignList}
 }
 \description{
 Load the multiple prediction json settings from a file

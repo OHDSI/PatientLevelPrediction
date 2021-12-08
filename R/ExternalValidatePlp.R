@@ -96,8 +96,10 @@ externalValidatePlp <- function(
       cohortId = attr(plpData, 'metaData')$cohortId,
       attrition = attr(population, 'metaData')$attrition,
       valdationDate = Sys.Date()
-    ),
+    )
   )
+  attr(model, "predictionFunction") <- 'none'
+  class(model) <- 'plpModel'
   
   result <- list(
     model = model,
@@ -156,17 +158,14 @@ externalValidateDbPlp <- function(
   checkIsClass(validationRestrictPlpDataSettings, 'restrictPlpDataSettings')
   checkIsClass(settings, 'validationSettings')
 
-  if(missing(connectionDetails))
-    stop('Need to enter connection details')
-
   # create results list with the names of the databases to validate across
   result <- list()
   length(result) <- length(validationDatabaseDetails)
   names(result) <- unlist(lapply(validationDatabaseDetails, function(x) attr(x, 'cdmDatabaseName')))
   
-  for(databaseSettings in validationDatabaseDetails){
+  for(databaseDetails in validationDatabaseDetails){
     
-    databaseName <- attr(databaseSettings, 'cdmDatabaseName')
+    databaseName <- attr(databaseDetails, 'cdmDatabaseName')
     
     ParallelLogger::logInfo(paste('Validating model on', databaseName))
     
@@ -174,16 +173,16 @@ externalValidateDbPlp <- function(
     #=======
     
     getPlpDataSettings <- list(
-      databaseSettings = databaseSettings,
+      databaseDetails = databaseDetails,
       restrictPlpDataSettings = validationRestrictPlpDataSettings
       )
-    if(is.null(getPlpDataSettings$databaseSettings$cohortId)){
+    if(is.null(getPlpDataSettings$databaseDetails$cohortId)){
       ParallelLogger::logInfo("cohortId not in databaseSettings so using model's")
-      getPlpDataSettings$databaseSettings$cohortId <- plpModel$trainDetails$cohortId
+      getPlpDataSettings$databaseDetails$cohortId <- plpModel$trainDetails$cohortId
     }
-    if(is.null(getPlpDataSettings$databaseSettings$outcomeIds)){
+    if(is.null(getPlpDataSettings$databaseDetails$outcomeIds)){
       ParallelLogger::logInfo("cohortId not in databaseSettings  so using model's")
-      getPlpDataSettings$databaseSettings$outcomeIds <- plpModel$trainDetails$outcomeId
+      getPlpDataSettings$databaseDetails$outcomeIds <- plpModel$trainDetails$outcomeId
     }
     
     if(is.null(getPlpDataSettings$restrictPlpDataSettings$firstExposureOnly)){
@@ -207,12 +206,16 @@ externalValidateDbPlp <- function(
     
     # Step 2: create population 
     #=======
-    populationSettings <- plpModel$settings$populationSettings
-    populationSettings$outcomeId <- getPlpDataSettings$databaseSettings$outcomeIds
-    populationSettings$plpData <- plpData
     
     population <- tryCatch({
-      do.call(createStudyPopulation, populationSettings)
+      do.call(
+        createStudyPopulation, 
+        list(
+          plpData = plpData,
+          outcomeId = getPlpDataSettings$databaseDetails$outcomeIds,
+          populationSettings = plpModel$settings$populationSettings
+        )
+      )
     },
       error = function(e){ParallelLogger::logError(e)}
     )
