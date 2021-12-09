@@ -17,16 +17,6 @@
 library("testthat")
 context("Sampling")
 
-trainData <- list()
-trainData$covaraiteData <- plpData$covaraiteData
-trainData$labels <- population
-trainData$folds <- data.frame(
-  rowId = population$rowId, 
-  index = sample(3, length(population$rowId), replace = t )
-  )
-attr(trainData, "metaData") <- list(settings = 'bla')
-
-
 testType <- sample(c('none', 'underSample', 'overSample'), 1)
 testNumberOutcomestoNonOutcomes <- 2
 testSampleSeed <- sample(10000,1)
@@ -105,18 +95,20 @@ test_that("createSampleSettings expected errors", {
 
 test_that("sampleData outputs are correct", {
   
+  trainData <- createTrainData(plpData, population)
+  
   sampleSettings <- sampleSettingFunc(type = 'none') 
   
   sampleData <- sampleData(trainData, sampleSettings)
   
   # make sure metaData captures
   expect_equal(
-    attr(sampleData, "metaData"),
-    attr(trainData, "metaData")
+    length(attr(sampleData, "metaData")),
+    length(attr(trainData, "metaData"))+1
   )
   
   expect_equal(
-    attr(sampleData, "metaData")$sampling$settings,
+    attr(sampleData, "metaData")$sampleSettings,
     sampleSettings
   )
   
@@ -144,8 +136,12 @@ test_that("sampleData outputs are correct", {
  
 test_that("underSampleData works", {
   
-  sampleSettings <- list(sampleSeed = 1,
-    numberOutcomestoNonOutcomes = 1)
+  trainData <- createTrainData(plpData, population)
+  
+  sampleSettings <- list(
+    sampleSeed = 1,
+    numberOutcomestoNonOutcomes = 1
+    )
   
   underSampleData <- underSampleData(trainData, sampleSettings)
   

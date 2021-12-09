@@ -27,7 +27,7 @@ test_that("batchRestrict", {
   covariateData <- PatientLevelPrediction:::batchRestrict(plpDataBig$covariateData, populationBig, sizeN = 10000000)
   testthat::expect_is(covariateData, 'CovariateData')
   
-  expect_equal(metaData, attr(covariateData, 'metaData'))
+  expect_equal(names(metaData), names(attr(covariateData, 'metaData')))
   
 })
 

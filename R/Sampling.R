@@ -76,16 +76,16 @@ sampleData <- function(trainData, sampleSettings){
   }
   
   for(sampleSetting in sampleSettings){
-    fun <- attr(sampleSettings, "fun")
+    fun <- attr(sampleSetting, "fun")
     args <- list(trainData = trainData,
-                 sampleSettings = sampleSettings)
+                 sampleSettings = sampleSetting)
     ParallelLogger::logInfo(paste0('Applying ', fun))
     trainData <- do.call(eval(parse(text = fun)), args)
   }
   
   ParallelLogger::logInfo('Finished data sampling')
   
-  metaData$sampleSettings <- sampleSettings
+  metaData$sampleSettings <- sampleSetting
   
   attr(trainData, "metaData") <- metaData
   return(trainData)
@@ -153,7 +153,7 @@ underSampleData <- function(trainData, sampleSettings){
   metaData$populationSize = nrow(sampleTrainData$labels)
   attr(sampleTrainData$covariateData, 'metaData') <- metaData
   
-  class(sampleTrainData$covariateData) <- 'covariateData'
+  class(sampleTrainData$covariateData) <- 'CovariateData'
   
   return(sampleTrainData)
 }

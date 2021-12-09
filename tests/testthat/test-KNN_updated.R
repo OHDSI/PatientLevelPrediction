@@ -1,21 +1,24 @@
 
-resultNames <- c('prediction', '', ...)
+resultNames <- c('executionSummary','model','prediction', 'performanceEvaluation', 'covariateSummary', 'analysisRef')
 
-plpResultKNN <- runPlp(population = population,
+plpResultKNN <- runPlp(
   plpData = plpData, 
-  modelSettings = knnSet, 
-  savePlpData = F, 
-  savePlpResult = F, 
-  saveEvaluation = F, 
-  savePlpPlots = F, 
-  analysisId = 'knnTest',
-  saveDirectory =  saveLoc)
-
+  outcomeId = 2, 
+  analysisId = 'knnTest', 
+  analysisName = 'Testing knn',
+  populationSettings = populationSettings, 
+  splitSettings = createDefaultSplitSetting(),
+  preprocessSettings = createPreprocessSettings(), 
+  modelSettings = setKNN(k=10), 
+  logSettings = createLogSettings(verbosity = 'TRACE'),
+  executeSettings = createDefaultExecuteSettings(), 
+  saveDirectory = file.path(saveLoc, 'knn')
+  )
 
 test_that("covRef is correct size", {
   
-  testthat::expect_equal(nrow(as.data.frame(plpData$covariateData$covariateRef)), 
-    nrow(plpResultKNN$model$varImp))
+  testthat::expect_true(nrow(as.data.frame(plpData$covariateData$covariateRef)) >=  
+    nrow(plpResultKNN$model$covariateImportance))
   
 })
 
@@ -33,9 +36,9 @@ test_that("KNN results have correct structure", {
 
 test_that("KNN settings", {
 
-model_set <- setKNN()
-testthat::expect_that(model_set, is_a("modelSettings"))
-testthat::expect_length(model_set,3)
+model_set <- setKNN(k=5)
+testthat::expect_is(model_set, "modelSettings")
+testthat::expect_length(model_set,2)
 testthat::expect_error(setKNN(k = 0))
 testthat::expect_error(setKNN(indexFolder = 2372))
 })

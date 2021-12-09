@@ -328,6 +328,7 @@ savePlpModelShareable <- function(plpModel, saveDirectory){
     predictionFunction = attr(plpModel, 'predictionFunction'), 
     modelType = attr(plpModel, 'modelType') 
   )
+  attributes <-  RJSONIO::toJSON(attributes)
   write(attributes, file.path(saveDirectory,"attributes.json"))
   
   trainDetails <- RJSONIO::toJSON(plpModel$trainDetails, digits = 23)
@@ -412,7 +413,7 @@ savePlpShareable <- function(result, saveDirectory, minCellCount = 10){
   
   #performanceEvaluation
   if(!dir.exists(file.path(saveDirectory, 'performanceEvaluation'))){dir.create(file.path(saveDirectory, 'performanceEvaluation'), recursive = T)}
-  utils::write.csv(result$performanceEvaluation$evaluationStatistics, file = file.path(saveDirectory, 'performanceEvaluation','evaluationStatistics.csv'), row.names = F)
+  utils::write.csv(removeList(result$performanceEvaluation$evaluationStatistics), file = file.path(saveDirectory, 'performanceEvaluation','evaluationStatistics.csv'), row.names = F)
   utils::write.csv(result$performanceEvaluation$thresholdSummary, file = file.path(saveDirectory, 'performanceEvaluation','thresholdSummary.csv'), row.names = F)
   utils::write.csv(
     removeCellCount(
@@ -431,13 +432,31 @@ savePlpShareable <- function(result, saveDirectory, minCellCount = 10){
     removeCellCount(
       result$covariateSummary,
       minCellCount = minCellCount, 
-      filterColumns = c('CovariateCount', 'CovariateCountWithOutcome', 'CovariateCountWithNoOutcome'),
-      extraCensorColumns = c('CovariateMeanWithOutcome', 'CovariateMeanWithNoOutcome'),
-      restrictColumns = c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','CovariateCountWithOutcome','CovariateCountWithNoOutcome','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','StandardizedMeanDiff')
+      filterColumns = c('CovariateCount', 'WithOutcome_CovariateCount', 'WithNoOutcome_CovariateCount'),
+      extraCensorColumns = c('WithOutcome_CovariateMean', 'WithNoOutcome_CovariateMean'),
+      restrictColumns = c('covariateId','covariateName', 'analysisId', 'conceptId','CovariateCount', 'covariateValue','WithOutcome_CovariateCount','WithNoOutcome_CovariateCount','WithOutcome_CovariateMean','WithNoOutcome_CovariateMean','StandardizedMeanDiff')
     ), 
     file = file.path(saveDirectory,'covariateSummary.csv'), 
     row.names = F
   )
+}
+
+removeList <- function(x){
+  
+  if(is.null(x)){
+    return(x)
+  }
+  
+  for(i in 1:ncol(x)){
+    x[,i] <- unlist(x[,i])
+  }
+  
+  if('value' %in% colnames(x)){
+    x$value <- as.double(x$value)
+  }
+  
+  return(x)
+  
 }
 
 #' Loads the plp result saved as json/csv files for transparent sharing
@@ -493,8 +512,8 @@ loadPlpShareable <- function(loadDirectory){
 removeCellCount <- function(
   data,
   minCellCount = minCellCount, 
-  filterColumns = c('CovariateCount', 'CovariateCountWithOutcome', 'CovariateCountWithNoOutcome'),
-  extraCensorColumns = c('CovariateMeanWithOutcome', 'CovariateMeanWithNoOutcome'),
+  filterColumns = c('CovariateCount', 'WithOutcome_CovariateCount', 'WithNoOutcome_CovariateCount'),
+  extraCensorColumns = c('WithOutcome_CovariateMean', 'WithNoOutcome_CovariateMean'),
   restrictColumns = NULL
 ){
   

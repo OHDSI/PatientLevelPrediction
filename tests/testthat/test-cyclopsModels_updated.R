@@ -200,7 +200,7 @@ test_that("set IHT inputs", {
   model_set <- setIterativeHardThresholding(penalty = penalty)
   expect_equal(model_set$param$priorParams$penalty, penalty)
   
-  model_set <- setIterativeHardThresholding(noShrinkage = c(1,2))
+  model_set <- setIterativeHardThresholding(exclude = c(1,2))
   expect_equal(model_set$param$priorParams$exclude, c(1,2))
   
   model_set <- setIterativeHardThresholding(forceIntercept = T)
@@ -244,7 +244,8 @@ trainData <- createTrainData(plpData, population)
 fitModel <- fitPlp(
   trainData = trainData,   
   modelSettings = modelSettings,
-  search = "grid"
+  search = "grid", 
+  analysisId = 'lrTest'
   )
 
 expect_equal(length(unique(fitModel$prediction$evaluationType)),2)

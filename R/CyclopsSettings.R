@@ -213,7 +213,7 @@ setIterativeHardThresholding<- function(
     priorParams = list(
       K = K,
       penalty = penalty, 
-      exclude = noShrinkage,
+      exclude = exclude,
       forceIntercept = forceIntercept,
       fitBestSubset = fitBestSubset,
       initialRidgeVariance = initialRidgeVariance,

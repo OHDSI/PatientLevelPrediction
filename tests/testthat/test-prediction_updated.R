@@ -39,14 +39,22 @@ test_that("prediction works", {
   # check prediction
   #=====================================
   pred <- predictPlp(plpModel=plpResult$model, 
-                                             population=population, 
-                                             plpData=plpData )
+    population=population, 
+    plpData=plpData 
+  )
   pred <- pred[order(pred$rowId),]
   plpResult$prediction <- plpResult$prediction[order(plpResult$prediction$rowId),]
   testthat::expect_equal(nrow(pred), 
-                         nrow(plpResult$prediction))
-  testthat::expect_equal(pred$value, 
-                         plpResult$prediction$value)
+                         nrow(population))
+  
+  rowId <- plpResult$prediction$rowId[plpResult$prediction$evaluationType == 'Test'][1]
+  
+  testthat::expect_equal(pred$value[pred$rowId == rowId], 
+                         plpResult$prediction$value[
+                           plpResult$prediction$evaluationType == 'Test' & 
+                             plpResult$prediction$rowId == rowId
+                           ]
+    )
   
   # check metaData
   expect_equal(length(names(attr(pred, "metaData"))), 4)  # 6 if survivial

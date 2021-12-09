@@ -16,22 +16,23 @@
 context("LearningCurves")
 
 
-test_that("learningCurve output correct", {
-  
-  # learningCurve 
-  learningCurve <- PatientLevelPrediction::createLearningCurve(
-    plpData = plpData,
-    outcomeId = 2, parallel = T, cores = 3,
-    modelSettings = setLassoLogisticRegression(),
-    saveDirectory =  'D:/test/lcc',
-    splitSettings = createDefaultSplitSetting(testFraction = 0.2), 
-    trainFractions = c(0.6,0.7,0.8),
-    trainEvents = NULL,
-    preprocessSettings = createPreprocessSettings(
-      minFraction = 0.001,
-      normalize = T
-    )
+# learningCurve 
+learningCurve <- PatientLevelPrediction::createLearningCurve(
+  plpData = plpData,
+  outcomeId = 2, parallel = T, cores = 3,
+  modelSettings = setLassoLogisticRegression(),
+  saveDirectory =  file.path(saveLoc, 'lcc'),
+  splitSettings = createDefaultSplitSetting(testFraction = 0.2), 
+  trainFractions = c(0.6,0.7,0.8),
+  trainEvents = NULL,
+  preprocessSettings = createPreprocessSettings(
+    minFraction = 0.001,
+    normalize = T
   )
+)
+
+test_that("learningCurve output correct", {
+
   
   testthat::expect_equal(class(learningCurve), "data.frame")
   testthat::expect_equal(sum(colnames(learningCurve)%in%c(

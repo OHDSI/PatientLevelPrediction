@@ -436,13 +436,22 @@ runPlp <- function(
       )
     }
     
+    variableImportance <- plpData$covariateData$covariateRef %>% 
+      dplyr::mutate(covariateValue = 0) %>% 
+      dplyr::select(.data$covariateId, .data$covariateValue)
+    if(!is.null(model)){
+      if(!is.null(model$covariateImportance)){
+        variableImportance <- model$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue)
+      }
+    }
+    
     covariateSummaryResult <- do.call(covariateSummary,   
       list(
         covariateData = plpData$covariateData,
         cohort = population %>% dplyr::select(.data$rowId),
         labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount), 
         strata = strata,
-        variableImportance = model$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue),
+        variableImportance = variableImportance,
         featureEngineering = NULL
         )
     )

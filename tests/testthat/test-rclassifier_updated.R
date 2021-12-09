@@ -46,7 +46,7 @@ test_that("GBM settings work", {
   expect_equal(attr(gbmSet$param, 'settings')$threads, 5)
   expect_equal(attr(gbmSet$param, 'settings')$varImpRFunction, 'varImpXgboost')
   expect_equal(attr(gbmSet$param, 'settings')$trainRFunction, 'fitXgboost')
-  expect_equal(attr(gbmSet$param, 'settings')$predictionRFunction, 'predictXgboost')
+  expect_equal(attr(gbmSet$param, 'settings')$predictRFunction, 'predictXgboost')
   
   expect_equal(length(gbmSet$param),2)
   
@@ -83,7 +83,8 @@ test_that("GBM working checks", {
   
   fitModel <- fitPlp(
     trainData = trainData,   
-    modelSettings = modelSettings
+    modelSettings = modelSettings, 
+    analysisId = 'gbmTest'
   )
   
   expect_equal(nrow(fitModel$prediction), nrow(trainData$labels)*2)

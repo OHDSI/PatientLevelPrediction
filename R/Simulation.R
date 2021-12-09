@@ -157,28 +157,35 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
  
   
   # Remove rownames else they will be copied to the ffdf objects:
-  metaData = list(cohortIds = 1,
-                  outcomeIds = 2:3,
-                  call = list())#plpDataSimulationProfile$metaData
+  metaData = list()
   
-  #remove details from profile
-  metaData$call$cdmDatabaseSchema = 'Profile'
-  metaData$call$outcomeDatabaseSchema = NULL
-  metaData$call$cohortDatabaseSchema = NULL
-  metaData$call$connectionDetails = NULL
-  metaData$call$outcomeTable = NULL
-  metaData$call$cohortTable = NULL
-  metaData$call$cdmVersion = 5
-  #metaData$call$covariateSettings = FeatureExtraction::createDefaultCovariateSettings()
-
-  metaData$cohortId = 1
-  metaData$outcomeIds = c(2,3)
-  metaData$studyStartDate = NULL
-  metaData$studyEndDate = NULL
-  metaData$attrition= data.frame(outcomeId=2,description='Simulated data', 
+  metaData$databaseDetails <- list(
+    cdmDatabaseSchema = 'Profile',
+    outcomeDatabaseSchema = NULL,
+    cohortDatabaseSchema = NULL,
+    connectionDetails = NULL,
+    outcomeTable = NULL,
+    cohortTable = NULL,
+    cdmVersion = 5,
+    cohortId = 1,
+    outcomeIds = c(2,3)
+  )
+  metaData$restrictPlpDataSettings <- list(
+    studyStartDate = NULL,
+    studyEndDate = NULL
+    )
+  metaData$covariateSettings <- FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T)
+  
+  
+  attrition <- data.frame(outcomeId=2,description='Simulated data', 
                                       targetCount=nrow(cohorts), uniquePeople=nrow(cohorts), 
                                       outcomes=nrow(outcomes))
-  attr(cohorts, "metaData") <- metaData
+  attr(cohorts, "metaData") <- list(
+    cohortId = 1, 
+    attrition = attrition
+    )
+  
+  attr(allOutcomes, "metaData") <- data.frame(outcomeIds = c(2,3))
   
   attr(covariateData, "metaData") <- list(populationSize = n)
   

@@ -74,7 +74,7 @@ recalibratePlpRefit <- function(
   
   newData$folds <- data.frame(
     rowId = newData$labels$rowId, 
-    index = sample(1, length(newData$labels$rowId), replace = T)
+    index = sample(2, length(newData$labels$rowId), replace = T)
     )
   
   newModel <- fitPlp(
@@ -97,12 +97,16 @@ recalibratePlpRefit <- function(
     newModel$prediction[, colnames(oldPred)]
     )
 
-  adjust <- newModel$covariateImportance %>% 
-    dplyr::filter(covariateValue != 0) %>% 
-    dplyr::select(
-      .data$covariateId, 
-      .data$covariateValue
+  if(!is.null(newModel$covariateImportance)){
+    adjust <- newModel$covariateImportance %>% 
+      dplyr::filter(covariateValue != 0) %>% 
+      dplyr::select(
+        .data$covariateId, 
+        .data$covariateValue
       )
+  } else{
+    adjust <- c()
+  }
   
   newIntercept <- newModel$model$coefficients[names(newModel$model$coefficients) == '(Intercept)']
   

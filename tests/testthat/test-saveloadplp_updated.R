@@ -151,6 +151,18 @@ test_that("loadPlpResultError", {
 })
 
 test_that("loadPlpResult", {
+  emptyModel <- list()
+  attr(emptyModel, 'predictionFunction') <- 'madeup'
+  class(emptyModel) <- "plpModel"
+  emptyResult <- list(
+    model = emptyModel,
+    prediction = data.frame(rowId=1:5, value = 1:5),
+    performanceEvaluation = data.frame(),
+    covariateSummary = NULL,
+    executionSettings = NULL
+  )
+  class(emptyResult) <- 'runPlp'
+  
   plpResultLoaded <- loadPlpResult(file.path(saveLoc,"plpResultTest"))
 
   expect_identical(plpResultLoaded$covariateSummary, emptyResult$covariateSummary)

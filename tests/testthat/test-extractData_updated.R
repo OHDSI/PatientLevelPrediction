@@ -30,7 +30,7 @@ test_that("getPlpData errors", {
 
 
 test_that("getPlpData works", {
-  testthat::expect_true(is(plpDataReal, "plpData"))
+  testthat::expect_true(is(plpData, "plpData"))
 })
 
 test_that("getCovariateData", {

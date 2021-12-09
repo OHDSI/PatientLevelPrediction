@@ -148,27 +148,27 @@ plotPlp <- function(
   )
   
   plotPredictedPDF(
-    result, 
+    plpResult, 
     saveLocation = saveLocation, 
     fileName = 'predictedPDF.pdf',
     type = typeColumn)
   plotPreferencePDF(
-    result, 
+    plpResult, 
     saveLocation = saveLocation, 
     fileName = 'preferencePDF.pdf', 
     type = typeColumn)
   plotPrecisionRecall(
-    result, 
+    plpResult, 
     saveLocation = saveLocation, 
     fileName = 'precisionRecall.pdf', 
     type = typeColumn)
   plotF1Measure(
-    result, 
+    plpResult, 
     saveLocation = saveLocation,
     fileName = 'f1Measure.pdf', 
     type = typeColumn)
   plotDemographicSummary(
-    result, 
+    plpResult, 
     saveLocation = saveLocation, 
     fileName = 'demographicSummary.pdf',
     type = typeColumn)
@@ -185,31 +185,31 @@ plotPlp <- function(
     }) 
   
   plotSparseCalibration(
-    result, 
+    plpResult, 
     saveLocation = saveLocation, 
     fileName = 'sparseCalibration.pdf', 
     type = typeColumn)
   plotSparseCalibration2(
-    result,
+    plpResult,
     saveLocation = saveLocation, 
     fileName = 'sparseCalibrationConventional.pdf', 
     type = typeColumn)
   plotPredictionDistribution(
-    result, 
+    plpResult, 
     saveLocation = saveLocation, 
     fileName = 'predictionDistribution.pdf', 
     type = typeColumn)
   
   plotVariableScatterplot(
-    result$covariateSummary,
+    plpResult$covariateSummary,
     saveLocation = saveLocation, 
     fileName = 'variableScatterplot.pdf'
   )
   
   
-  if(sum(c('TrainWithNoOutcome_CovariateMean', 'TestWithNoOutcome_CovariateMean') %in% colnames(result$covariateSummary))==2){
+  if(sum(c('TrainWithNoOutcome_CovariateMean', 'TestWithNoOutcome_CovariateMean') %in% colnames(plpResult$covariateSummary))==2){
     plotGeneralizability(
-      result$covariateSummary, 
+      plpResult$covariateSummary, 
       saveLocation = saveLocation, 
       fileName = 'generalizability.pdf'
     )
@@ -1376,8 +1376,9 @@ plotVariableScatterplot <- function(
     ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
     ggplot2::theme(legend.position="none")
   
-  if (!is.null(saveLocation))
-    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 3.5, dpi = 400)
+  if (!is.null(saveLocation)){
+    suppressWarnings(ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 3.5, dpi = 400))
+  }
   return(plot)
 }
 

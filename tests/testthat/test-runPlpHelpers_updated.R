@@ -34,10 +34,12 @@ test_that("check printHeader runs", {
 test_that("checkInputs", {
 
   check <- checkInputs(
-    plpData = plpData, 
-    outcomeId = 2, 
-    populationSettings = populationSettings
+    list(
+      plpData = plpData, 
+      outcomeId = 2, 
+      populationSettings = populationSettings
     )
+  )
   
   expect_is(check, "logical")
   expect_equal(check, TRUE)
@@ -45,27 +47,33 @@ test_that("checkInputs", {
   # error as NULL plpData
   expect_error(
     checkInputs(
-      plpData = NULL, 
-      outcomeId = 2, 
-      populationSettings = populationSettings
+      list(
+        plpData = NULL, 
+        outcomeId = 2, 
+        populationSettings = populationSettings
+      )
     )
   )
   
   # error as incorrect outcomeId
   expect_error(
     checkInputs(
-      plpData = plpData, 
-      outcomeId = 'test', 
-      populationSettings = populationSettings
+      list(
+        plpData = plpData, 
+        outcomeId = 'test', 
+        populationSettings = populationSettings
+      )
     )
   )
   
   # error as incorrect populationSettings
   expect_error(
     checkInputs(
-      plpData = plpData, 
-      outcomeId = 2, 
-      populationSettings = 'populationSettings'
+      list(
+        plpData = plpData, 
+        outcomeId = 2, 
+        populationSettings = 'populationSettings'
+      )
     )
   )
   

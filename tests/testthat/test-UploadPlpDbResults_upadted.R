@@ -17,7 +17,16 @@
 library("testthat")
 
 context("UploadPlpDbResults")
-conn <- DatabaseConnector::connect(connectionDetails)
+
+cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
+ohdsiDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
+connectionRedshift <- DatabaseConnector::createConnectionDetails(
+  dbms = "postgresql",
+  user = Sys.getenv("CDM5_POSTGRESQL_USER"),
+  password = URLdecode(Sys.getenv("CDM5_POSTGRESQL_PASSWORD")),
+  server = Sys.getenv("CDM5_POSTGRESQL_SERVER")
+  )
+conn <- DatabaseConnector::connect(connectionRedshift)
 
 
 randVar <- rawToChar(as.raw(sample(c(65:90,97:122), 5, replace=T)))

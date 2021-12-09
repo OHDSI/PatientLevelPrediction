@@ -18,61 +18,74 @@ context("Validation")
 
 # Test unit for the creation of the study externalValidatePlp
 
-test_that("input checks work", {
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails)
+
+databaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails, 
+  cdmDatabaseSchema = "main", 
+  cdmDatabaseName = "main",
+  cohortDatabaseSchema = "main", 
+  cohortTable = "cohort", 
+  outcomeDatabaseSchema = "main", 
+  outcomeTable =  "cohort",
+  cohortId = 1, 
+  outcomeIds = 3, #make this ids
+  cdmVersion = 5)
+
+modelVal <- plpResult$model
+validationDatabaseDetailsVal <- databaseDetails  # from run multiple tests
+validationRestrictPlpDataSettingsVal <- createRestrictPlpDataSettings(washoutPeriod = 0, sampleSize = NULL)
+recalSet <- createValidationSettings(recalibrate = 'weakRecalibration')
+saveLocation <- file.path(saveLoc, 'extern')
+
+setEV <- function(
+  model = modelVal,
+  validationDatabaseDetails = validationDatabaseDetailsVal,
+  validationRestrictPlpDataSettings = validationRestrictPlpDataSettingsVal,
+  settings = recalSet,
+  outputFolder = saveLocation
+){
+  result <- externalValidateDbPlp(
+    plpModel = model,
+    validationDatabaseDetails = validationDatabaseDetails,
+    validationRestrictPlpDataSettings = validationRestrictPlpDataSettings,
+    settings = settings,
+    outputFolder = outputFolder
+  )
+  
+  return(result)
+}
+
+
+test_that("incorrect input externalValidateDbPlp checks work", {
   
   # fails when plpResult is NULL
-  expect_error(externalValidatePlp(plpResult=NULL))
+  expect_error(externalValidateDbPlp(setEV(model=NULL)))
   # fails when plpResult is not class 'plpResult'
-  expect_error(externalValidatePlp(plpResult=list()))
+  expect_error(externalValidateDbPlp(setEV(model=list())))
   
   
-  #fails with no connection
-  expect_error(externalValidatePlp(plpResult=plpResult))
+  expect_error(externalValidateDbPlp(
+    setEV(validationDatabaseDetails = NULL)
+  ))
+    
+  expect_error(externalValidateDbPlp(
+    setEV(validationRestrictPlpDataSettings = NULL)
+  ))
   
-  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = NULL,
-                                                                  server = NULL,
-                                                                  user = NULL,
-                                                                  password = NULL,
-                                                                  port = NULL)
-  #fails as target and outcome schemas differ
-  expect_error(externalValidatePlp(plpResult=plpResult, connectionDetails = connectionDetails, 
-                                   validation_schema_target = list('cdm1', 'cdm2'), 
-                                   validation_schema_outcome = 'cdm', 
-                                   validation_schema_cdm = 'cdm', 
-                                   validation_table_target = 'table', validation_table_outcome = 'table',
-                                   validation_id_target = 1, validation_id_outcome = 1))
-  
-  #fails as target and outcome schemas differ
-  expect_error(externalValidatePlp(plpResult=plpResult, connectionDetails = connectionDetails, 
-                                   validation_schema_target = list('cdm1', 'cdm2'), 
-                                   validation_schema_outcome = 'cdm', 
-                                   validation_schema_cdm = list('cdm1', 'cdm2'), 
-                                   validation_table_target = 'table', validation_table_outcome = 'table',
-                                   validation_id_target = 1, validation_id_outcome = 1))
-  
-  #fails as target and outcome schemas differ
-  expect_error(externalValidatePlp(plpResult=plpResult, connectionDetails = connectionDetails, 
-                                   validation_schema_target = list('cdm1', 'cdm2'), 
-                                   validation_schema_outcome = list('cdm1', 'cdm2','cdm3'), 
-                                   validation_schema_cdm = list('cdm1', 'cdm2'), 
-                                   validation_table_target = 'table', validation_table_outcome = 'table',
-                                   validation_id_target = 1, validation_id_outcome = 1))
+  expect_error(externalValidateDbPlp(
+    setEV(outputFolder = NULL)
+  ))
+
   
 })
 
-exVal <- externalValidatePlp(plpResult=plpResultReal, 
-                             connectionDetails = connectionDetails, 
-                             validationSchemaTarget = ohdsiDatabaseSchema, 
-                             validationSchemaOutcome = ohdsiDatabaseSchema, 
-                             validationSchemaCdm = cdmDatabaseSchema, 
-                             validationTableTarge = 'cohorts', 
-                             validationTableOutcome = 'outs_test',
-                             databaseNames = 'test',
-                             validationIdTarget = 1, 
-                             validationIdOutcome = 2)
+
+
 test_that("external validate", {
   
-  testthat::expect_equal(class(exVal), 'validatePlp')
-  testthat::expect_equal(sum(names(exVal)%in%c('summary','validation')), 2)
+  exVal <- setEV()
+  testthat::expect_equal(class(exVal[[1]]), 'externalValidatePlp')
   
 })

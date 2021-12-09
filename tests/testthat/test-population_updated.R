@@ -207,9 +207,10 @@ test_that("createStudyPopulation minTimeAtRisk", {
     createStudyPopulationSettings(minTimeAtRisk = -1)
   )
   
-  rand <- sample(1000,1)
+  rand <- 365+sample(365,1)
   populationSettings <- createStudyPopulationSettings(
     minTimeAtRisk = rand,
+    riskWindowEnd = 1000
   )
   expect_equal(populationSettings$minTimeAtRisk, rand)
   
@@ -226,6 +227,7 @@ test_that("createStudyPopulation riskWindowStart", {
   rand <- sample(1000,1)
   populationSettings <- createStudyPopulationSettings(
     riskWindowStart = rand,
+    riskWindowEnd = rand + 365
   )
   expect_equal(populationSettings$riskWindowStart, rand)
   
@@ -240,7 +242,8 @@ test_that("createStudyPopulation riskWindowEnd", {
   
   rand <- sample(1000,1)
   populationSettings <- createStudyPopulationSettings(
-    riskWindowEnd = rand,
+    riskWindowEnd = rand, 
+    minTimeAtRisk = 1
   )
   expect_equal(populationSettings$riskWindowEnd, rand)
   

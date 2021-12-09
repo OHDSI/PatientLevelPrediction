@@ -19,6 +19,8 @@
 limitCovariatesToPopulation <- function(covariateData, rowIds) {
   ParallelLogger::logTrace(paste0('Starting to limit covariate data to population...'))
   
+  metaData <- attr(covariateData, 'metaData')
+  
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
   
@@ -33,6 +35,8 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
                          indexName = 'covariates_ncovariateIds')
   
+  metaData$populationSize <- length(rowIds)
+  attr(newCovariateData, 'metaData') <- metaData
   class(newCovariateData) <- "CovariateData"
   ParallelLogger::logTrace(paste0('Finished limiting covariate data to population...'))
   return(newCovariateData)
@@ -45,6 +49,8 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   ParallelLogger::logInfo('Due to data size using batchRestrict to limit covariate data to population')
   
   start <- Sys.time()
+  
+  metaData <- attr(covariateData, 'metaData')
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
@@ -80,6 +86,8 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
                          indexName = 'covariates_ncovariateIds')
   
+  metaData$populationSize <- nrow(population)
+  attr(newCovariateData, 'metaData') <- metaData
   class(newCovariateData) <- "CovariateData"
   
   timeTaken <- as.numeric(Sys.time() - start, units = "mins")

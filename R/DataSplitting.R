@@ -59,6 +59,7 @@ createDefaultSplitSetting <- function(testFraction=0.25,
   checkIsClass(type, c("character"))
   if(!type %in% c('stratified','time','subject')){
     ParallelLogger::logError("Invalid type setting.  Pick from: 'stratified','time','subject'")
+    stop('Incorrect Type')
   }
   
   splitSettings <- list(test = testFraction,
@@ -118,7 +119,7 @@ splitData <- function(plpData = plpData,
   splitId <- do.call(eval(parse(text = fun)), args)
 
   # now separate the data:
-  if(length(splitId$index<0)==0){
+  if(sum(splitId$index<0)==0){
     # NO TEST SET
     trainId <- splitId[splitId$index>0,]
     trainData <- list()
@@ -228,7 +229,7 @@ dataSummary <- function(data){
   #Test/Train: lsit(covariates,covariateRef, label, folds)
   
   ParallelLogger::logInfo('Train Set:')
-  result <- data$Train$label %>% 
+  result <- data$Train$labels %>% 
     dplyr::inner_join(data$Train$folds, by = .data$rowId) %>% 
     dplyr::group_by(.data$index) %>%
     dplyr::summarise(N = length(.data$outcomeCount),
@@ -275,8 +276,8 @@ randomSplitter <- function(population, splitSettings) {
     stop("Outcome only occurs in fewer than 10 people or only one class")
   }
 
-  if (floor(sum(population$outcomeCount > 0) * train/nfold) < 10) {
-    stop("Insufficient outcomes for choosen nfold value, please reduce")
+  if (floor(sum(population$outcomeCount > 0) * train/nfold) < 5) {
+    stop(paste0("Insufficient (",sum(population$outcomeCount > 0),") outcomes for choosen nfold value, please reduce"))
   }
   
 
@@ -428,7 +429,7 @@ subjectSplitter <- function(population, splitSettings) {
     stop("Outcome only occurs in fewer than 10 people or only one class")
   }
   
-  if (floor(sum(population$outcomeCount > 0) * train/nfold) < 10) {
+  if (floor(sum(population$outcomeCount > 0) * train/nfold) < 5) {
     stop("Insufficient outcomes for choosen nfold value, please reduce")
   }
   
@@ -517,7 +518,7 @@ checkInputsSplit <- function(test, train, nfold, seed){
   ParallelLogger::logDebug(paste0('train: ', train))
   checkIsClass(train, c('numeric','integer'))
   checkHigherEqual(train,0)
-  checkHigher(-1*train,-1)
+  checkHigherEqual(-1*train,-1)
   
   ParallelLogger::logDebug(paste0('nfold: ', nfold))
   checkIsClass(nfold, c('numeric','integer'))

@@ -25,8 +25,8 @@ library("PRROC")
 
 test_that("evaluatePlp", {
   eval <- evaluatePlp(
-    prediction = plpResultBinary$prediction,
-    typeColumn = 'evaluation'
+    prediction = plpResult$prediction,
+    typeColumn = 'evaluationType'
     )
   testthat::expect_equal(class(eval), 'plpEvaluation')
   testthat::expect_equal(names(eval), c('evaluationStatistics', 'thresholdSummary', 'demographicSummary', 'calibrationSummary', 'predictionDistribution') )
@@ -38,17 +38,30 @@ test_that("modelBasedConcordance", {
 })
 
 test_that("evaluatePlp_survival", {
+  
+  plpResultSurvivalPred <- data.frame(
+    rowId = 1:300, 
+    ageYear = sample(100, 300, replace = T),
+    gender = sample(c('8507','8532'), 300, replace = T),
+    outcomeCount = c(rep(1,40), rep(0,260)),
+    value = runif(300),
+    evaluationType = rep('Train', 300),
+    survivalTime = sample(2000, 300, replace = T)
+  )
+  attr(plpResultSurvivalPred, "metaData")$modelType <- 'survival'
+  attr(plpResultSurvivalPred, 'metaData')$timepoint <- 365
+  
   eval <- evaluatePlp(
-    prediction = plpResultSurvival$prediction,
-    typeColumn = 'evaluation'
+    prediction = plpResultSurvivalPred,
+    typeColumn = 'evaluationType'
     )
   testthat::expect_equal(class(eval), 'plpEvaluation')
-  testthat::expect_equal(names(eval), c('evaluationStatistics', 'demographicSummary', 'calibrationSummary', 'thresholdSummary') )
+  testthat::expect_true(5==sum(names(eval) %in% c('evaluationStatistics', 'demographicSummary', 'calibrationSummary', 'thresholdSummary', 'predictionDistribution') ))
 })
 
 test_that("AUROC", {
   Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
-  attr(Eprediction, "metaData") <- list(predictionType = "binary")
+  attr(Eprediction, "metaData") <- list(modelType = "binary")
   proc.auc <- pROC::roc(Eprediction$outcomeCount, Eprediction$value, algorithm = 3,
                         direction="<")
   tolerance <- 0.001

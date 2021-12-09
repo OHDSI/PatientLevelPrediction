@@ -17,12 +17,15 @@
 context("Diagnostic")
 
 test_that("test code works when using plpData", {
-  test <- diagnostic(plpData = plpData, cdmDatabaseName = 'madeup', 
-                     riskWindowStart = c(1,10), 
-                     startAnchor = rep('cohort start',2), 
-                     riskWindowEnd = c(365, 730),
-                     endAnchor = rep('cohort start',2),
-                     outputFolder = file.path(saveLoc, 'diagnostics'))
+  test <- diagnostic(
+    plpData = plpData, 
+    cdmDatabaseName = 'madeup', 
+    riskWindowStart = c(1,10), 
+    startAnchor = rep('cohort start',2), 
+    riskWindowEnd = c(365, 730),
+    endAnchor = rep('cohort start',2),
+    outputFolder = file.path(saveLoc, 'diagnostics')
+  )
   #check results are a list
   testthat::expect_equal(class(test), 'list')
                          

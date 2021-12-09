@@ -26,7 +26,8 @@ test_that("fitPlp", {
 plpModel <- fitPlp(
   trainData = trainData,   
   modelSettings = modelSettings,
-  search = "grid"
+  search = "grid", 
+  analysisId = 'fitting'
   )
 
 expect_is(plpModel$predict, "function")
@@ -46,14 +47,16 @@ test_that("fitPlp input errors", {
   expect_error(
     fitPlp(
       trainData = list(covariateData = NULL),   
-      modelSettings = modelSettings
+      modelSettings = modelSettings,
+      analysisId = 'fitting'
     )
   )
   
   expect_error(
     fitPlp(
       trainData = trainData,   
-      modelSettings = NULL
+      modelSettings = NULL,
+      analysisId = 'fitting'
     )
   )
   

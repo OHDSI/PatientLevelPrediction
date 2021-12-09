@@ -56,9 +56,9 @@ test_that("MapIds with no cohort", {
   expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(), 4)
   
   # some covariates not in data 5,6,7 so should be removed from covRef
-  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(), 3)
+  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(), 7)
   
-  correctCov <- mappings$covariateRef %>% dplyr::select(.data$covariateId) %>% dplyr::pull() %in% c(123,9,8)
+  correctCov <- mappings$covariateRef %>% dplyr::select(.data$covariateId) %>% dplyr::pull() %in% c(123,2002,10,3,4,9,8)
   expect_equal(sum(correctCov), length(correctCov))
   
 })
@@ -158,7 +158,7 @@ test_that("toSparseM", {
   testthat::expect_equal(test$labels %>% dplyr::tally() %>% dplyr::pull(), length(population$rowId))
   testthat::expect_equal(nrow(compTest), length(population$rowId))
   testthat::expect_true(ncol(compTest) <= nrow(plpData$covariateData$covariateRef))
-  testthat::expect_equal(ncol(compTest), compTest$covariateRef %>% dplyr::tally() %>% dplyr::pull())
+  testthat::expect_equal(ncol(compTest), test$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   testthat::expect_equal(ncol(compTest), test$covariateMap %>% dplyr::tally() %>% dplyr::pull())
   
   
@@ -208,7 +208,10 @@ test_that("testCorrectLables", {
   data <- toSparseM(plpData = formattingData)
   
   expect_equal(
-    as.data.frame(data$labels), 
+    data.frame(
+      outcomeCount = data$labels$outcomeCount,
+      rowId = data$labels$rowId
+      ), 
     data.frame(
       outcomeCount = c(1,1,0,0,0),
       rowId = 1:5

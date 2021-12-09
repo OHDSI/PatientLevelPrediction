@@ -158,8 +158,13 @@ setDecisionTree <- function(
   lapply(1:length(criterion), function(i) {if(!criterion[[i]] %in% c('gini', 'entropy')){stop('Incorrect criterion')}})
 
   
-  lapply(1:length(maxDepth), function(i) checkIsClass(maxDepth[[i]] , c("integer","NULL")))
+  lapply(1:length(maxDepth), function(i) checkIsClass(maxDepth[[i]] , c("numeric","integer","NULL")))
   lapply(1:length(maxDepth), function(i) checkHigher(ifelse(is.null(maxDepth[[i]]),1,maxDepth[[i]]) , 0))
+  for(i in 1:length(maxDepth)){
+    if(class(maxDepth[[i]]) %in% c("numeric", "integer")){
+      maxDepth[[i]] <- as.integer(maxDepth[[i]])
+    }
+  }
   
   lapply(1:length(minSamplesSplit), function(i) checkIsClass(minSamplesSplit[[i]] , c("numeric", "integer","NULL")))
   lapply(1:length(minSamplesSplit), function(i) checkHigher(ifelse(is.null(minSamplesSplit[[i]]),1, minSamplesSplit[[i]]) , 0))

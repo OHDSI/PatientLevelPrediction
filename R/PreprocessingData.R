@@ -77,6 +77,14 @@ preprocessData <- function (covariateData,
   preprocessSettings$covariateData <- covariateData
   covariateData <- do.call(FeatureExtraction::tidyCovariateData, preprocessSettings)
   
+  #update covariateRed
+  removed <- unique(
+    attr(covariateData, "metaData")$deletedInfrequentCovariateIds,
+    attr(covariateData, "metaData")$deletedRedundantCovariateIds
+    )
+  covariateData$covariateRef <- covariateData$covariateRef %>% 
+    dplyr::filter(!.data$covariateId  %in% removed)
+  
   metaData$tidyCovariateDataSettings <- attr(covariateData, "metaData")
   attr(covariateData, "metaData") <- metaData
   

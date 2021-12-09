@@ -83,7 +83,8 @@ population <- createStudyPopulation(
 createTrainData <- function(plpData, population){
   trainData <- list()
   trainData$covariateData <- Andromeda::copyAndromeda(plpData$covariateData)
-  trainData$labels <- population %>% dplyr::select(.data$rowId, .data$outcomeCount, .data$survivalTime)
+  attr(trainData$covariateData, "metaData") <- attr(plpData$covariateData, "metaData")
+  trainData$labels <- population
   trainData$folds <- data.frame(
     rowId = population$rowId,
     index = sample(3, nrow(population), replace = T)

@@ -36,7 +36,7 @@ checkInputs <- function(inputs) {
     # check class is correct
     if(class(inputs[[inputName]]) != inputName){
       ParallelLogger::logError(paste0('Incorrect ', inputName))
-      return(invisible(FALSE))
+      stop('Bad input')
     }
     
   }

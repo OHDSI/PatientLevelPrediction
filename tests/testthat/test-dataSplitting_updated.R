@@ -18,18 +18,18 @@ library("testthat")
 context("Data splitting")
 
 # check correct inputs
-testFraction <- sample(9,1)/10
-trainFraction <- 1-testFraction
-splitSeed <- sample(100000,1)
-nfold <- sample(10,1)
-type <- sample(c('stratified', 'time', 'subject'), 1)
+testFraction1 <- sample(9,1)/10
+trainFraction1 <- 1-testFraction1
+splitSeed1 <- sample(100000,1)
+nfold1 <- 1+sample(10,1)
+type1 <- sample(c('stratified', 'time', 'subject'), 1)
 
 defaultSetting <- function(
-  testFraction = testFraction, 
-  trainFraction = trainFraction, 
-  splitSeed = splitSeed, 
-  nfold = nfold,
-  type = type
+  testFraction = testFraction1, 
+  trainFraction = trainFraction1, 
+  splitSeed = splitSeed1, 
+  nfold = nfold1,
+  type = type1
 ){
   result <- createDefaultSplitSetting(
     testFraction = testFraction, 
@@ -49,19 +49,19 @@ test_that("createDefaultSplitSetting", {
   expect_is(splitSettings, 'splitSettings')
   
   expectFun <- 'randomSplitter'
-  if(type == 'time'){
+  if(type1 == 'time'){
     expectFun <- 'timeSplitter'
   }
-  if(type == 'subject'){
+  if(type1 == 'subject'){
     expectFun <- 'subjectSplitter'
   }
   
-  check_equal(attr(splitSettings, "fun"), expectFun)
+  expect_equal(attr(splitSettings, "fun"), expectFun)
   
-  check_equal(splitSettings$test, testFraction)
-  check_equal(splitSettings$train, trainFraction)
-  check_equal(splitSettings$seed, splitSeed)
-  check_equal(splitSettings$nfold, nfold)
+  expect_equal(splitSettings$test, testFraction1)
+  expect_equal(splitSettings$train, trainFraction1)
+  expect_equal(splitSettings$seed, splitSeed1)
+  expect_equal(splitSettings$nfold, nfold1)
   
   #check input errors for testFraction
   expect_error(
@@ -140,8 +140,8 @@ test_that("Main split function: splitData", {
   expect_equal(names(splitData), c('Train', 'Test'))
   
   # train and test are CovariateData
-  expect_is(splitData$Train, 'CovariateData')
-  expect_is(splitData$Test, 'CovariateData')
+  expect_is(splitData$Train$covariateData, 'CovariateData')
+  expect_is(splitData$Test$covariateData, 'CovariateData')
   
   # Train has labels/folds/covariateData
   expect_equal(names(splitData$Train), c('labels', 'folds', 'covariateData'))
@@ -151,16 +151,16 @@ test_that("Main split function: splitData", {
   
   # check attributes for Train
   expect_equal(attr(splitData$Train, "metaData")$outcomeId, attr(population, "metaData")$outcomeId)
-  expect_equal(attr(splitData$Train, "metaData")$cohortId, attr(plpData, "metaData")$call$cohortId)
+  expect_equal(attr(splitData$Train, "metaData")$cohortId, plpData$metaData$databaseDetails$cohortId)
   expect_equal(
     attr(splitData$Train, "metaData")$cdmDatabaseSchema, 
-    attr(plpData, "metaData")$call$cdmDatabaseSchema
+    plpData$metaData$databaseDetails$cdmDatabaseSchema
     )
   
   expect_is(attr(splitData$Train, "metaData")$plpDataSettings, 'list')
   expect_equal(
     attr(splitData$Train, "metaData")$covariateSettings, 
-    attr(plpData, "metaData")$call$covariateSettings
+    plpData$metaData$covariateSettings
   )
   expect_equal(
     attr(splitData$Train, "metaData")$populationSettings, 
@@ -227,6 +227,17 @@ test_that("Main split function: splitData", {
 })
 
 test_that("dataSummary works", {
+  
+  splitSettings <- defaultSetting(
+    testFraction = 0, 
+    trainFraction = 1
+  )
+  
+  splitData <- splitData(
+    plpData = plpData,
+    population = population,
+    splitSettings = splitSettings
+  )
 
 summaryPrint <- dataSummary(splitData)
 expect_equal(summaryPrint, TRUE)
@@ -256,7 +267,7 @@ test_that("Data stratified splitting", {
   test <- merge(DSpopulation2, test)
   test <- table(test$outcomeCount, test$index)
   test.returned <- paste(test, collapse='-')
-  test.expected <- paste(matrix(c(31,32,32,32,31,8,9,9,8,8), ncol=5, byrow=T),collapse='-')
+  test.expected <- paste(matrix(c(47,28,28,28,27,12,8,8,7,7), ncol=5, byrow=T),collapse='-')
   expect_identical(test.returned, test.expected)
   
   # fold creation check 2 (sum)

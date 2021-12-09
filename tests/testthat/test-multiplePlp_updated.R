@@ -33,23 +33,24 @@ databaseDetails <- createDatabaseDetails(
   cdmVersion = 5)
 
 
+analysis1 <- createModelDesign(
+  targetId = 1,
+  outcomeId = 3,
+  restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
+  populationSettings = createStudyPopulationSettings(),
+  covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+  featureEngineeringSettings = NULL,
+  sampleSettings = NULL,
+  preprocessSettings = createPreprocessSettings(),
+  modelSettings = setLassoLogisticRegression(seed = 12)
+)
+
 test_that("createModelDesign - test working", {
   
-  analysis1 <- createModelDesign(
-    targetId = 1,
-    outcomeId = 3,
-    restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
-    populationSettings = createStudyPopulationSettings(),
-    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
-    featureEngineeringSettings = NULL,
-    sampleSettings = NULL,
-    preprocessSettings = createPreprocessSettings(),
-    modelSettings = setLassoLogisticRegression(seed = 12)
-  )
   
   expect_equal(analysis1$targetId, 1)
   expect_equal(analysis1$outcomeId, 3)
-  expect_equal(analysis1$restrictPlpDataSettings, createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 9999))
+  expect_equal(analysis1$restrictPlpDataSettings, createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0))
   expect_equal(analysis1$covariateSettings, FeatureExtraction::createDefaultCovariateSettings())
   expect_equal(analysis1$featureEngineeringSettings, createFeatureEngineeringSettings())
   expect_equal(analysis1$preprocessSettings, createPreprocessSettings())
@@ -82,7 +83,7 @@ test_that("saving analyses settings", {
 
 test_that("loading analyses settings", {
   
-  analysisSetting <- loadPlpAnalysesJson(fileLocation)
+  analysisSetting <- loadPlpAnalysesJson(file.path(saveLoc, 'settings',"predictionAnalysisList.json"))
   
   expect_equal(analysis1$targetId, analysisSetting[[1]]$targetId)
   expect_equal(analysis1$outcomeId, analysisSetting[[1]]$outcomeId)
@@ -99,6 +100,18 @@ test_that("loading analyses settings", {
 }
 )
 
+analysis2 <- createModelDesign(
+  targetId = 10,
+  outcomeId = 2,
+  restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 9999),
+  populationSettings = createStudyPopulationSettings(),
+  covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = T),
+  featureEngineeringSettings = NULL,
+  sampleSettings = NULL,
+  preprocessSettings = createPreprocessSettings(),
+  modelSettings = setLassoLogisticRegression(seed = 12)
+)
+
 test_that("getSettingValues works", {
   
   # works for single setting:
@@ -110,17 +123,6 @@ test_that("getSettingValues works", {
   expect_equal(nrow(result), 1)
   expect_equal(result$value, 1)
   
-  analysis2 <- createModelDesign(
-    targetId = 10,
-    outcomeId = 2,
-    restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 9999),
-    populationSettings = createStudyPopulationSettings(),
-    covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = T),
-    featureEngineeringSettings = NULL,
-    sampleSettings = NULL,
-    preprocessSettings = createPreprocessSettings(),
-    modelSettings = setLassoLogisticRegression(seed = 12)
-  )
   
   # works for multiple setting:
   result <- getSettingValues(
@@ -162,6 +164,8 @@ test_that("getSettingValues works", {
 )
 
 test_that("getSettingFromId works", {
+  
+  result <- getidList(modelDesignList = list(analysis1, analysis2))
 
   cov <- getSettingFromId(idList = result, type = 'covariateSettings', id = 1)
   expect_equal(names(cov), names(FeatureExtraction::createDefaultCovariateSettings()))
@@ -173,6 +177,8 @@ test_that("getSettingFromId works", {
 
 
 test_that("getSettingsTable", {
+  
+  result <- getidList(modelDesignList = list(analysis1, analysis2))
 
   settingsTable <- getSettingsTable(
     modelDesignList = list(analysis1, analysis2), 
@@ -184,6 +190,12 @@ test_that("getSettingsTable", {
 
 test_that("getDataSettings", {
   
+  result <- getidList(modelDesignList = list(analysis1, analysis2))
+  
+  settingsTable <- getSettingsTable(
+    modelDesignList = list(analysis1, analysis2), 
+    idList = result
+  )
   dataSettings <- getDataSettings(settingsTable)
   expect_is(dataSettings, 'list')
   expect_equal(length(dataSettings), 2)

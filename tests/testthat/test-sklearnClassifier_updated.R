@@ -68,7 +68,8 @@ test_that("check fit of DecisionTree", {
   
   plpModel <- fitPlp(
     trainData = trainData, 
-    modelSettings = modelSettings
+    modelSettings = modelSettings,
+    analysisId = 'DecisionTree'
     )
   
   expect_equal(nrow(trainData$labels)*2, nrow(plpModel$prediction))

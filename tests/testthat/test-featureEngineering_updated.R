@@ -32,10 +32,10 @@ test_that("createFeatureEngineeringSettings correct class", {
   
   featureEngineeringSettings <- testFEFun()
   
-  check_is(featureEngineeringSettings, 'featureEngineeringSettings')
+  expect_is(featureEngineeringSettings, 'featureEngineeringSettings')
   
   checkFun <- 'sameData'  # this is the only option at the moment, edit this when more are added
-  check_equal(attr(featureEngineeringSettings, "fun"), checkFun)
+  expect_equal(attr(featureEngineeringSettings, "fun"), checkFun)
   
 })
 
@@ -53,9 +53,9 @@ test_that("createUnivariateFeatureSelection correct class", {
   k <- sample(1000,1)
   featureEngineeringSettings <- testUniFun(k = k)
   
-  check_is(featureEngineeringSettings, 'featureEngineeringSettings')
-  check_equal(featureEngineeringSettings$k, k)
-  check_equal(attr(featureEngineeringSettings, "fun"), 'univariateFeatureSelection')
+  expect_is(featureEngineeringSettings, 'featureEngineeringSettings')
+  expect_equal(featureEngineeringSettings$k, k)
+  expect_equal(attr(featureEngineeringSettings, "fun"), 'univariateFeatureSelection')
   
   expect_error(testUniFun(k = 'ffdff'))
   expect_error(testUniFun(k = NULL))
@@ -73,57 +73,57 @@ test_that("univariateFeatureSelection", {
   reducedTrainData <- univariateFeatureSelection(
     trainData = trainData, 
     featureEngineeringSettings = featureEngineeringSettings,
-    selectedFeature = NULL
+    covariateIdsInclude = NULL
     )
   
   newDataCovariateSize <- reducedTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   expect_true(newDataCovariateSize <= trainDataCovariateSize)
   
   # expect k many covariates left
-  expect_equals(k, reducedTrainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
+  expect_true(abs(k - reducedTrainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()) <= 1)
   
 })
 
 # refresh the training data
 trainData <- createTrainData(plpData, population)
 
-test_that("randomForestFeatureSelection correct class", {
+test_that("createRandomForestFeatureSelection correct class", {
   ntreesTest <- sample(1000,1)
   maxDepthTest <- sample(20,1)
-  featureEngineeringSettings <- randomForestFeatureSelection(
+  featureEngineeringSettings <- createRandomForestFeatureSelection(
     ntrees = ntreesTest, 
     maxDepth = maxDepthTest
     )
   
-  check_is(featureEngineeringSettings, 'featureEngineeringSettings')
-  check_equal(featureEngineeringSettings$ntrees, ntreesTest)
-  check_equal(featureEngineeringSettings$maxDepth, maxDepthTest)
-  check_equal(attr(featureEngineeringSettings, "fun"), 'randomForestFeatureSelection')
+  expect_is(featureEngineeringSettings, 'featureEngineeringSettings')
+  expect_equal(featureEngineeringSettings$ntrees, ntreesTest)
+  expect_equal(featureEngineeringSettings$max_depth, maxDepthTest)
+  expect_equal(attr(featureEngineeringSettings, "fun"), 'randomForestFeatureSelection')
   
   # error due to params
   expect_error(
-    randomForestFeatureSelection(
+    createRandomForestFeatureSelection(
       ntrees = -1, 
       maxDepth = maxDepthTest
     )
   )
   
   expect_error(
-    randomForestFeatureSelection(
+    createRandomForestFeatureSelection(
       ntrees = 'dfdfd', 
       maxDepth = maxDepthTest
     )
   )
   
   expect_error(
-    randomForestFeatureSelection(
+    createRandomForestFeatureSelection(
       ntrees = 50, 
       maxDepth = 'maxDepthTest'
     )
   )
   
   expect_error(
-    randomForestFeatureSelection(
+    createRandomForestFeatureSelection(
       ntrees = 50, 
       maxDepth = -1
     )
@@ -136,7 +136,7 @@ test_that("randomForestFeatureSelection", {
   
   ntreesTest <- sample(1000,1)
   maxDepthTest <- sample(20,1)
-  featureEngineeringSettings <- randomForestFeatureSelection(
+  featureEngineeringSettings <- createRandomForestFeatureSelection(
     ntrees = ntreesTest, 
     maxDepth = maxDepthTest
   )
@@ -146,7 +146,7 @@ test_that("randomForestFeatureSelection", {
   reducedTrainData <- randomForestFeatureSelection(
     trainData = trainData, 
     featureEngineeringSettings = featureEngineeringSettings,
-    selectedFeature = NULL
+    covariateIdsInclude = NULL
   )
   
   newDataCovariateSize <- reducedTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()

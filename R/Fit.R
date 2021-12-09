@@ -100,10 +100,10 @@ createTransform <- function(plpModel){
 
   transform <- function(plpData=NULL, population=NULL){
     #check model fitting makes sense:
-    if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$trainDetails$cohortId)
-      warning('cohortId of new data does not match training data')
-    if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$trainDetails$outcomeId)
-      warning('outcomeId of new data does not match training data or does not exist')
+    if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!= plpModel$trainDetails$cohortId)
+      ParallelLogger::logWarn('cohortId of new data does not match training data')
+    if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!= plpModel$trainDetails$outcomeId)
+      ParallelLogger::logWarn('outcomeId of new data does not match training data or does not exist')
   
     predictPlp(
       plpModel = plpModel, 

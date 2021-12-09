@@ -28,13 +28,14 @@ test_that("getPredictionDistribution binary type", {
     )
   
   expect_that(nrow(predSum ), equals(2))
-  expect_that(ncol(predSum ), equals(11))
+  expect_that(ncol(predSum ), equals(12))
   
   
   
   predBinary <- getPredictionDistribution_binary(
     prediction = Eprediction, 
-    evaluation = rep('Test',100)
+    evaluation = rep('Test',100), 
+    evalColumn = 'evaluation'
     )
   
   expect_equal(predBinary, predSum)
@@ -49,12 +50,14 @@ test_that("getPredictionDistribution survival type", {
     evaluation = rep('Test',100)
   )
   
-  expect_warning(
-    predSurvival <- getPredictionDistribution_survival(
-      prediction = Eprediction, 
-      evaluation = rep('Test',100)
-    )
+  predSurvival <-  getPredictionDistribution_survival(
+    prediction = Eprediction, 
+    evaluation = rep('Test',100),
+    evalColumn = 'evaluation'
   )
+  
+  expect_true(is.null(predSurvival))
+
   
 })
 
