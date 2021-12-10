@@ -88,7 +88,8 @@ Suggests:
 Remotes:
     ohdsi/FeatureExtraction,
     ohdsi/BigKnn,
-    ohdsi/IterativeHardThresholding
+    ohdsi/IterativeHardThresholding,
+    ohdsi/Eunomia
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 7.1.1
