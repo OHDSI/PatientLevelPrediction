@@ -65,7 +65,7 @@ test_that("createUnivariateFeatureSelection correct class", {
 
 test_that("univariateFeatureSelection", {
   
-  k <- sample(1000,1)
+  k <- 20+sample(100,1)
   featureEngineeringSettings <- testUniFun(k = k)
   
   trainDataCovariateSize <- trainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()

@@ -56,8 +56,9 @@ test_that("getThresholdSummary binary", {
 test_that("getThresholdSummary survival", {
   Eprediction <- data.frame(
     value = c(
-      sample(365,50,replace = T), 
-      (50+sample(365*2,150,replace = T))
+      (100+sample(10,50, replace = T)),
+      
+      (105+sample(10,150,replace = T))
       ), 
     outcomeCount = c(rep(1,50), rep(0,150)),
     evaluation = rep('Test', 200),

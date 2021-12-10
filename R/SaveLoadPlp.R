@@ -363,15 +363,15 @@ loadPlpModelShareable <- function(loadDirectory){
   
   attributes <- loadJsonFile(file.path(loadDirectory,"attributes.json"))
   # make this automatic for atr in names(attributes){attr(plpModel, atr) <- attributes[atr]} ?
-  attr(plpModel, 'predictionFunction') <- attributes$predictionFunction
-  attr(plpModel, 'modelType') <- attributes$modelType
+  attr(plpModel, 'predictionFunction') <- attributes[['predictionFunction']]
+  attr(plpModel, 'modelType') <- attributes[['modelType']]
   
   plpModel$settings <- loadJsonFile(file.path(loadDirectory,"settings.json"))
   plpModel$trainDetails <- loadJsonFile(file.path(loadDirectory,"trainDetails.json"))
   
   plpModel$covariateImportance <- utils::read.csv(file.path(loadDirectory,"covariateImportance.csv"))
   
-  if(attributes$predictionFunction == "predictXgboost"){
+  if(attributes[['predictionFunction']] == "predictXgboost"){
     ensure_installed("xgboost")
       plpModel$model <- xgboost::xgb.load(file.path(loadDirectory, "model.json"))
   }else{
@@ -534,7 +534,7 @@ removeCellCount <- function(
   
   # now replace these value with -1
   
-  removeColumns <- c(filterColumns,extraCensorColumns)
+  removeColumns <- c(filterColumns,extraCensorColumns)[c(filterColumns,extraCensorColumns) %in% colnames(data)]
   
   for(i in 1:length(removeColumns)){
     data[ind,removeColumns[i]] <- NA

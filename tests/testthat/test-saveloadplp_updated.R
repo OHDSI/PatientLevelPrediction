@@ -180,7 +180,7 @@ test_that("savePlpShareable works", {
   shareableLoad <- loadPlpShareable(file.path(saveLoc,"plpFriendly"))
   
   # check covariateSummary
-  testthat::expect_true(nrow(shareableLoad$covariateSummary), nrow(plpResult$covariateSummary))
+  testthat::expect_equal(nrow(shareableLoad$covariateSummary), nrow(plpResult$covariateSummary))
   
   # check performanceEvaluation
   expect_equal(dim(shareableLoad$performanceEvaluation$evaluationStatistics), 
