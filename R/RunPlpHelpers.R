@@ -46,6 +46,22 @@ checkInputs <- function(inputs) {
 }
 
 
+
+#' Creates list of settings specifying what parts of runPlp to execute
+#'
+#' @details
+#' define what parts of runPlp to execute
+#'
+#' @param runSplitData            TRUE or FALSE whether to split data into train/test
+#' @param runSampleData           TRUE or FALSE whether to over or under sample
+#' @param runfeatureEngineering   TRUE or FALSE whether to do feature engineering
+#' @param runPreprocessData       TRUE or FALSE whether to do preprocessing
+#' @param runModelDevelopment     TRUE or FALSE whether to develop the model
+#' @param runCovariateSummary     TRUE or FALSE whether to create covariate summary           
+#'
+#' @return
+#' list with TRUE/FALSE for each part of runPlp
+#'
 #' @export
 createExecuteSettings <- function(
   runSplitData = F,
@@ -75,6 +91,15 @@ createExecuteSettings <- function(
   return(result)
 }
 
+
+#' Creates default list of settings specifying what parts of runPlp to execute
+#'
+#' @details
+#' runs split, preprocess, model development and covariate summary
+#'
+#' @return
+#' list with TRUE for split, preprocess, model development and covariate summary
+#'
 #' @export
 createDefaultExecuteSettings <- function(){
   createExecuteSettings(

@@ -58,6 +58,7 @@ Suggests:
     devtools,
     diagram, 
     DT,
+    Eunomia,
     gnm,
     htmlwidgets (> 0.8),
     htmltools,
@@ -81,7 +82,6 @@ Suggests:
     SparseM,
     survAUC,
     survminer,
-    tensorflow,
     testthat,
     withr,
     xgboost (> 1.3.2.1)
