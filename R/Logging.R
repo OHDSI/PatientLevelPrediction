@@ -43,7 +43,7 @@ createLogSettings <- function(
   
   checkIsClass(verbosity, 'character')
   if(!verbosity%in%c("DEBUG","TRACE","INFO","WARN","FATAL","ERROR", "NONE")){
-    ParallelLogger::logWarning('Incorrect verbosity string - using INFO')
+    ParallelLogger::logWarn('Incorrect verbosity string - using INFO')
     verbosity <- "INFO"
   }
   checkBoolean(timeStamp)

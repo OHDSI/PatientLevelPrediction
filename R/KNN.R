@@ -36,7 +36,7 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
   checkHigher(k, 0)
   
   if(length(k)>1){
-    ParallelLogger::logWarning('k can only be a single value - using first value only')
+    ParallelLogger::logWarn('k can only be a single value - using first value only')
     k <- k[1]
   }
   
