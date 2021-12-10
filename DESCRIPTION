@@ -61,7 +61,7 @@ Suggests:
     gnm,
     htmlwidgets (> 0.8),
     htmltools,
-    iterativeHardThresholding,
+    IterativeHardThresholding,
     knitr,
     markdown,
     memuse,

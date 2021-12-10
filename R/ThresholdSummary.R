@@ -202,8 +202,8 @@ getThresholdSummary_survival <- function(prediction, evalColumn, timepoint, ...)
           ttoutcome = "t", 
           timepoint = timepoint,  
           predictors = "p", 
-          xstart = max(min(p),0.001), #0.001, 
-          xstop = min(max(p),0.99), 
+          xstart = max(min(preddat$p),0.001), #0.001, 
+          xstop = min(max(preddat$p),0.99), 
           xby = 0.001, 
           smooth=F
         )

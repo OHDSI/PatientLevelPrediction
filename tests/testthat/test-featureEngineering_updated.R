@@ -80,7 +80,7 @@ test_that("univariateFeatureSelection", {
   expect_true(newDataCovariateSize <= trainDataCovariateSize)
   
   # expect k many covariates left
-  expect_true(abs(k - reducedTrainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()) <= 1)
+  expect_true(abs(k - reducedTrainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()) <= 5)
   
 })
 
