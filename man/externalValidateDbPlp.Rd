@@ -15,7 +15,7 @@ externalValidateDbPlp(
 \arguments{
 \item{plpModel}{The model object returned by runPlp() containing the trained model}
 
-\item{validationDatabaseDetails}{A list of objects of class \code{validationDatabaseDetails} created using \code{createValidationDatabaseDetails}}
+\item{validationDatabaseDetails}{A list of objects of class \code{databaseDetails} created using \code{createDatabaseDetails}}
 
 \item{settings}{A settings object of class \code{validationSettings} created using \code{createValidationSettings}}
 

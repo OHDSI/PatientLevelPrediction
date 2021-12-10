@@ -28,8 +28,9 @@
 #' observation time distribution. 
 #'
 #' @param plpData                      The data object to do the diagnostic on - if NULL you need to specify the connection settings below
-#' @param databaseDetails            The database details created using \code{createDatabaseDetails}
-#' @param restrictPlpDataSettings    The restrictPlpDataSettings created using \code{createRestrictPlpDataSettings}
+#' @param cdmDatabaseName             The name of the database being diagnosed
+#' @param databaseDetails            (only used is plpData is NULL) The database details created using \code{createDatabaseDetails}
+#' @param restrictPlpDataSettings    (only used is plpData is NULL) The restrictPlpDataSettings created using \code{createRestrictPlpDataSettings}
 #' @param populationSettings         The population setting details created using \code{createPopulationSettings}
 #' @param outputFolder           Location to save results for shiny app
 #' @param minCellCount           The minimum count that will be displayed
@@ -50,6 +51,9 @@
 #' } 
 diagnostic <- function(
   plpData = NULL,
+  cdmDatabaseName = 'none',
+  cohortName,
+  outcomeNames,
   databaseDetails,
   restrictPlpDataSettings,
   populationSettings,
@@ -57,11 +61,11 @@ diagnostic <- function(
   minCellCount = 5
 ){
   
-  checkIsClass(databaseDetails, 'databaseDetails')
-  
-  cdmDatabaseName <- attr(databaseDetails, 'cdmDatabaseName')
-  
-  checkIsClass(restrictPlpDataSettings, 'restrictPlpDataSettings')
+  if(is.null(plpData)){
+    checkIsClass(databaseDetails, 'databaseDetails')
+    cdmDatabaseName <- attr(databaseDetails, 'cdmDatabaseName')
+    checkIsClass(restrictPlpDataSettings, 'restrictPlpDataSettings')
+  }
   
   if(class(populationSettings) != 'list'){
     populationSettings <- list(populationSettings)
@@ -213,7 +217,7 @@ diagnostic <- function(
 
       characterizationTemp <- covariateSummary(
         covariateData = plpData$covariateData, 
-        cohort = population,
+        cohort = population %>% dplyr::select(.data$rowId),
         labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount)
         )
       
@@ -225,6 +229,8 @@ diagnostic <- function(
                                                       'WithNoOutcome_CovariateCount',
                                                       'WithOutcome_CovariateMean',
                                                       'WithNoOutcome_CovariateMean')]
+      
+      characterizationTemp[is.na(characterizationTemp)] <- 0
       
       ind <- (characterizationTemp$CovariateCount < minCellCount)  
       ind2 <- (characterizationTemp$WithOutcome_CovariateCount < minCellCount) | (characterizationTemp$WithNoOutcome_CovariateCount < minCellCount)
@@ -257,7 +263,7 @@ diagnostic <- function(
   zipName <- file.path(outputFolder, paste0("Results_", cdmDatabaseName, ".zip"))
   files <- list.files(outputFolder, pattern = ".*\\.csv$")
   oldWd <- setwd(outputFolder)
-  on.exit(setwd(outputFolder), add = TRUE)
+  on.exit(setwd(oldWd), add = TRUE)
   DatabaseConnector::createZipFile(zipFile = zipName, files = files)
   ParallelLogger::logInfo("Results are ready for sharing at: ", zipName)
   
@@ -433,7 +439,7 @@ getProportions <- function(population,
                            outcomeId,
                            minCellCount = NULL){
   
-  details <- attr(population, 'metaData')
+  details <- attr(population, 'metaData')$populationSettings
   
   TAR <- paste0(details$startAnchor, ' + ', details$riskWindowStart, ' days - ',
                 details$endAnchor, ' + ', details$riskWindowEnd, ' days')

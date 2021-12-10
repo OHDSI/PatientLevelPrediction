@@ -20,10 +20,17 @@ test_that("test code works when using plpData", {
   test <- diagnostic(
     plpData = plpData, 
     cdmDatabaseName = 'madeup', 
-    riskWindowStart = c(1,10), 
-    startAnchor = rep('cohort start',2), 
-    riskWindowEnd = c(365, 730),
-    endAnchor = rep('cohort start',2),
+    cohortName = 'made up target',
+    outcomeNames = paste0('made up outcome', 1:2),
+    databaseDetails,
+    restrictPlpDataSettings,
+    populationSettings = createStudyPopulationSettings(
+      riskWindowStart = 1, 
+      startAnchor = 'cohort start', 
+      riskWindowEnd = 365,
+      endAnchor = 'cohort start'
+      ),
+    minCellCount = 5,
     outputFolder = file.path(saveLoc, 'diagnostics')
   )
   #check results are a list
@@ -36,10 +43,7 @@ test_that("test code works when using plpData", {
   testthat::expect_equal(T, dir.exists(file.path(saveLoc, 'diagnostics')))
   
   #check tar
-  
-  
+
   testthat::expect_equal(unique(test$proportion$TAR)[1], paste0('cohort start', ' + ', 1, ' days - ',
                                                         'cohort start', ' + ', 365, ' days'))
-  testthat::expect_equal(unique(test$proportion$TAR)[2], paste0('cohort start', ' + ', 10, ' days - ',
-                                                        'cohort start', ' + ', 730, ' days'))
 })

@@ -177,7 +177,7 @@ test_that("savePlpShareable works", {
   
   #check it works
   savePlpShareable(plpResult, file.path(saveLoc,"plpFriendly"), minCellCount = 0)
-  shareableLoad <- loadPlpFromCsv(file.path(saveLoc,"plpFriendly"))
+  shareableLoad <- loadPlpShareable(file.path(saveLoc,"plpFriendly"))
   
   # check covariateSummary
   testthat::expect_true(nrow(shareableLoad$covariateSummary), nrow(plpResult$covariateSummary))

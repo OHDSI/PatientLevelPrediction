@@ -379,7 +379,10 @@ loadPlpModelShareable <- function(loadDirectory){
   } 
   
   # update the model location to the loadDirectory
-  plpModel <- updateModelLocation(plpModel, loadDirectory)
+  update <- updateModelLocation(plpModel, loadDirectory)
+  if(!is.null(update)){
+    plpModel <- update
+  }
   
   # add the prediction function
   plpModel$predict <- createTransform(plpModel)
