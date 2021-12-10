@@ -94,7 +94,7 @@ covariateSummary <- function(
   
   # add covariate names 
   covariateSummary <- covariateData$covariateRef %>% 
-    dplyr::collect() %>% left_join(covariateSummary, by ='covariateId')
+    dplyr::collect() %>% dplyr::left_join(covariateSummary, by ='covariateId')
   
   ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
   
@@ -279,7 +279,7 @@ covariateSummarySubset <- function(
       restrictIds = subset
       )
   } else{
-    covariates <- covariateDat$covariates
+    covariates <- covariateData$covariates
   }
   
   ParallelLogger::logInfo(paste0('Calculating summary for subgroup ', subsetName))

@@ -192,7 +192,7 @@ checkRam <- function(covariateData, maxPercent){
   
   ensure_installed('memuse')
   
-  nrowV <- covariateData$covariates %>% dplyr::summarise(size = n()) %>% dplyr::collect()
+  nrowV <- covariateData$covariates %>% dplyr::summarise(size = dplyr::n()) %>% dplyr::collect()
   estRamB <- (nrowV$size/1000000*24000984)
   
   ramFree <- memuse::Sys.meminfo()

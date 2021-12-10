@@ -4,11 +4,7 @@
 \alias{getDemographicSummary}
 \title{Get a calibration per age/gender groups}
 \usage{
-getDemographicSummary(
-  prediction = prediction,
-  predictionType = type,
-  typeColumn = typeColumn
-)
+getDemographicSummary(prediction, predictionType, typeColumn = "evaluation")
 }
 \arguments{
 \item{prediction}{A prediction object}

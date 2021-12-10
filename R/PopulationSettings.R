@@ -153,7 +153,6 @@ createStudyPopulationSettings <- function(
 #' @param populationSettings    An object of class populationSettings created using \code{createPopulationSettings}
 #' @param population            If specified, this population will be used as the starting point instead of the
 #'                              cohorts in the \code{plpData} object.
-#' @param ...                   Other inputs
 #'
 #' @return
 #' A data frame specifying the study population. This data frame will have the following columns:

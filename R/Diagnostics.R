@@ -29,6 +29,8 @@
 #'
 #' @param plpData                      The data object to do the diagnostic on - if NULL you need to specify the connection settings below
 #' @param cdmDatabaseName             The name of the database being diagnosed
+#' @param cohortName                  Name of the target cohort
+#' @param outcomeNames                Vector of outcome names
 #' @param databaseDetails            (only used is plpData is NULL) The database details created using \code{createDatabaseDetails}
 #' @param restrictPlpDataSettings    (only used is plpData is NULL) The restrictPlpDataSettings created using \code{createRestrictPlpDataSettings}
 #' @param populationSettings         The population setting details created using \code{createPopulationSettings}

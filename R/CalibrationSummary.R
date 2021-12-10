@@ -16,9 +16,9 @@
 #' A dataframe with the calibration summary
 #' @export
 getCalibrationSummary <- function(
-  prediction = prediction,
-  predictionType = type,
-  typeColumn = typeColumn,
+  prediction,
+  predictionType,
+  typeColumn = 'evaluation',
   numberOfStrata = 100,
   truncateFraction = 0.05
   ){

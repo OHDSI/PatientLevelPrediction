@@ -205,15 +205,15 @@ runPlp <- function(
     ),
   sampleSettings = createSampleSettings(type = 'none'),
   featureEngineeringSettings = createFeatureEngineeringSettings(type = 'none'),
-  preprocessSettings = createPreprocessingSettings(
-    minCovariateFraction = 0.001,
-    normalizeData = T
+  preprocessSettings = createPreprocessSettings(
+    minFraction = 0.001,
+    normalize = T
     ),
   modelSettings = setLassoLogisticRegression(),
   logSettings = createLogSettings(
     verbosity = 'DEBUG',
     timeStamp = T,
-    name = 'runPlp Log'
+    logName = 'runPlp Log'
     ),
   executeSettings = createDefaultExecuteSettings(),
   saveDirectory = getwd()

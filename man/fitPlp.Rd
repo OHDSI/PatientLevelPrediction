@@ -20,6 +20,8 @@ data extracted from the CDM.}
 }}
 
 \item{search}{The search strategy for the hyper-parameter selection (currently not used)}
+
+\item{analysisId}{The id of the analysis}
 }
 \value{
 An object of class \code{plpModel} containing:

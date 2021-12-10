@@ -25,7 +25,6 @@
 #'                                   data extracted from the CDM.
 #' @param outcomeId                  (integer) The ID of the outcome.                                       
 #' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
-#' @param analysisName               (character) Name for the analysis
 #' @param populationSettings         An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
 #'                                   specifies how the data class labels are defined and addition any exclusions to apply to the 
 #'                                   plpData cohort

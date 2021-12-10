@@ -17,6 +17,8 @@ externalValidateDbPlp(
 
 \item{validationDatabaseDetails}{A list of objects of class \code{databaseDetails} created using \code{createDatabaseDetails}}
 
+\item{validationRestrictPlpDataSettings}{A list of population restriction settings created by \code{createRestrictPlpDataSettings()}}
+
 \item{settings}{A settings object of class \code{validationSettings} created using \code{createValidationSettings}}
 
 \item{outputFolder}{The directory to save the validation results to (subfolders are created per database in validationDatabaseDetails)}

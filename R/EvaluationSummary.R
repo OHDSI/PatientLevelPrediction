@@ -1,7 +1,7 @@
 getEvaluationStatistics <- function(
-  prediction = prediction, 
-  predictionType = type,
-  typeColumn = typeColumn
+  prediction, 
+  predictionType,
+  typeColumn = 'evaluation'
 ){
   
   evaluation <- do.call(

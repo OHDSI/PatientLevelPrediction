@@ -16,6 +16,8 @@ recalibratePlp(
 
 \item{analysisId}{The model analysisId}
 
+\item{typeColumn}{The column name where the strata types are specified}
+
 \item{method}{Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )}
 }
 \value{

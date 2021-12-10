@@ -11,9 +11,9 @@
 #' A dataframe with the calibration summary
 #' @export
 getDemographicSummary <- function(
-  prediction = prediction,
-  predictionType = type,
-  typeColumn = typeColumn
+  prediction,
+  predictionType,
+  typeColumn = 'evaluation'
 ){
   evaluation <- do.call(
     what = paste0('getDemographicSummary_', predictionType), 

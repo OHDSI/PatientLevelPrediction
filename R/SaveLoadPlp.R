@@ -373,7 +373,7 @@ loadPlpModelShareable <- function(loadDirectory){
   
   if(attributes$predictionFunction == "predictXgboost"){
     ensure_installed("xgboost")
-      plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
+      plpModel$model <- xgboost::xgb.load(file.path(loadDirectory, "model.json"))
   }else{
     plpModel$model <- loadJsonFile(file.path(loadDirectory,"model.json"))
   } 

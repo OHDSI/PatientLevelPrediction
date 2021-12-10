@@ -7,12 +7,12 @@
 predictCyclops(plpModel, data, cohort)
 }
 \arguments{
+\item{plpModel}{An object of type \code{predictiveModel} as generated using
+\code{\link{fitPlp}}.}
+
 \item{data}{The new plpData containing the covariateData for the new population}
 
 \item{cohort}{The cohort to calculate the prediction for}
-
-\item{predictiveModel}{An object of type \code{predictiveModel} as generated using
-\code{\link{fitPlp}}.}
 }
 \value{
 The value column in the result data.frame is: logistic: probabilities of the outcome, poisson:

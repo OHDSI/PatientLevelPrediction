@@ -21,8 +21,6 @@ createStudyPopulation(
 
 \item{population}{If specified, this population will be used as the starting point instead of the
 cohorts in the \code{plpData} object.}
-
-\item{...}{Other inputs}
 }
 \value{
 A data frame specifying the study population. This data frame will have the following columns:

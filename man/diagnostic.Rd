@@ -21,6 +21,10 @@ diagnostic(
 
 \item{cdmDatabaseName}{The name of the database being diagnosed}
 
+\item{cohortName}{Name of the target cohort}
+
+\item{outcomeNames}{Vector of outcome names}
+
 \item{databaseDetails}{(only used is plpData is NULL) The database details created using \code{createDatabaseDetails}}
 
 \item{restrictPlpDataSettings}{(only used is plpData is NULL) The restrictPlpDataSettings created using \code{createRestrictPlpDataSettings}}

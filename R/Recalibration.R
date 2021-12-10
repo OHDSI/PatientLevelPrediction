@@ -99,7 +99,7 @@ recalibratePlpRefit <- function(
 
   if(!is.null(newModel$covariateImportance)){
     adjust <- newModel$covariateImportance %>% 
-      dplyr::filter(covariateValue != 0) %>% 
+      dplyr::filter(.data$covariateValue != 0) %>% 
       dplyr::select(
         .data$covariateId, 
         .data$covariateValue
@@ -127,6 +127,7 @@ recalibratePlpRefit <- function(
 #' 
 #' @param prediction                      A prediction dataframe
 #' @param analysisId                      The model analysisId
+#' @param typeColumn                      The column name where the strata types are specified
 #' @param method                          Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )
 #' @return
 #' An object of class \code{runPlp} that is recalibrated on the new data

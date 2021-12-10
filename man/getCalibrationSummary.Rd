@@ -5,9 +5,9 @@
 \title{Get a sparse summary of the calibration}
 \usage{
 getCalibrationSummary(
-  prediction = prediction,
-  predictionType = type,
-  typeColumn = typeColumn,
+  prediction,
+  predictionType,
+  typeColumn = "evaluation",
   numberOfStrata = 100,
   truncateFraction = 0.05
 )

@@ -12,9 +12,9 @@
 #' A data.frame with all the measures
 #' @export
 getThresholdSummary <- function(
-  prediction = prediction,
-  predictionType = type,
-  typeColumn = typeColumn
+  prediction,
+  predictionType,
+  typeColumn = 'evaluation'
 ){
   evaluation <- do.call(
     what = paste0('getThresholdSummary_', predictionType), 
@@ -38,6 +38,7 @@ getThresholdSummary <- function(
 #'
 #' @param prediction            A prediction object 
 #' @param evalColumn            A column that is used to stratify the results                           
+#' @param ...                   Other inputs
 #'
 #' @return
 #' A data.frame with all the measures

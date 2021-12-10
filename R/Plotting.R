@@ -151,32 +151,32 @@ plotPlp <- function(
     plpResult, 
     saveLocation = saveLocation, 
     fileName = 'predictedPDF.pdf',
-    type = typeColumn)
+    typeColumn = typeColumn)
   plotPreferencePDF(
     plpResult, 
     saveLocation = saveLocation, 
     fileName = 'preferencePDF.pdf', 
-    type = typeColumn)
+    typeColumn = typeColumn)
   plotPrecisionRecall(
     plpResult, 
     saveLocation = saveLocation, 
     fileName = 'precisionRecall.pdf', 
-    type = typeColumn)
+    typeColumn = typeColumn)
   plotF1Measure(
     plpResult, 
     saveLocation = saveLocation,
     fileName = 'f1Measure.pdf', 
-    type = typeColumn)
+    typeColumn = typeColumn)
   plotDemographicSummary(
     plpResult, 
     saveLocation = saveLocation, 
     fileName = 'demographicSummary.pdf',
-    type = typeColumn)
+    typeColumn = typeColumn)
   
   # add smooth calibration
   tryCatch({
   plotSmoothCalibration(plpResult = plpResult, smooth = 'loess', nKnots = 5, 
-                        type = typeColumn, zoom = 'data', 
+                        type = 'Test', zoom = 'data', typeColumn = typeColumn,
     saveLocation = saveLocation,
     fileName = 'smooothCalibration.pdf'
     )
@@ -188,17 +188,17 @@ plotPlp <- function(
     plpResult, 
     saveLocation = saveLocation, 
     fileName = 'sparseCalibration.pdf', 
-    type = typeColumn)
+    typeColumn = typeColumn)
   plotSparseCalibration2(
     plpResult,
     saveLocation = saveLocation, 
     fileName = 'sparseCalibrationConventional.pdf', 
-    type = typeColumn)
+    typeColumn = typeColumn)
   plotPredictionDistribution(
     plpResult, 
     saveLocation = saveLocation, 
     fileName = 'predictionDistribution.pdf', 
-    type = typeColumn)
+    typeColumn = typeColumn)
   
   plotVariableScatterplot(
     plpResult$covariateSummary,

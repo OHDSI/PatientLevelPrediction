@@ -5,9 +5,9 @@
 \title{Calculates the prediction distribution}
 \usage{
 getPredictionDistribution(
-  prediction = prediction,
-  predictionType = type,
-  typeColumn = typeColumn
+  prediction,
+  predictionType,
+  typeColumn = "evaluation"
 )
 }
 \arguments{

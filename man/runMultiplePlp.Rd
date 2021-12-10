@@ -18,6 +18,8 @@ runMultiplePlp(
 )
 }
 \arguments{
+\item{databaseDetails}{The database settings created using \code{createDatabaseDetails()}}
+
 \item{modelDesignList}{A list of model designs created using \code{createModelDesign()}}
 
 \item{onlyFetchData}{Only fetches and saves the data object to the output folder without running the analysis.}
@@ -26,9 +28,7 @@ runMultiplePlp(
 
 \item{logSettings}{The setting spexcifying the logging for the analyses created using \code{createLogSettings()}}
 
-\item{databaseSettings}{The database settings created using \code{createDatabaseDetails()}}
-
-\item{saveDirectort}{Name of the folder where all the outputs will written to.}
+\item{saveDirectory}{Name of the folder where all the outputs will written to.}
 }
 \value{
 A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier

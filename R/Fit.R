@@ -36,6 +36,7 @@
 #'                                         \item{KNNclassifier()}{ A KNN model}
 #'                                         }
 #' @param search                           The search strategy for the hyper-parameter selection (currently not used)                                        
+#' @param analysisId                       The id of the analysis
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 

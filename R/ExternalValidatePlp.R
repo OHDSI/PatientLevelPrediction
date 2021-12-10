@@ -125,6 +125,7 @@ externalValidatePlp <- function(
 #' 
 #' @param plpModel                    The model object returned by runPlp() containing the trained model
 #' @param validationDatabaseDetails   A list of objects of class \code{databaseDetails} created using \code{createDatabaseDetails}
+#' @param validationRestrictPlpDataSettings   A list of population restriction settings created by \code{createRestrictPlpDataSettings()}
 #' @param settings                    A settings object of class \code{validationSettings} created using \code{createValidationSettings}
 #' @param outputFolder                The directory to save the validation results to (subfolders are created per database in validationDatabaseDetails)
 #' 

@@ -184,7 +184,7 @@ fitCyclopsModel <- function(
 #' The value column in the result data.frame is: logistic: probabilities of the outcome, poisson:
 #' Poisson rate (per day) of the outome, survival: hazard rate (per day) of the outcome.
 #'
-#' @param predictiveModel   An object of type \code{predictiveModel} as generated using
+#' @param plpModel   An object of type \code{predictiveModel} as generated using
 #'                          \code{\link{fitPlp}}.
 #' @param data         The new plpData containing the covariateData for the new population                       
 #' @param cohort       The cohort to calculate the prediction for

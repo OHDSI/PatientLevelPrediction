@@ -22,12 +22,12 @@
 #' @details
 #' This function will run all specified predictions as defined using . 
 #'
-#' @param databaseSettings               The database settings created using \code{createDatabaseDetails()}
+#' @param databaseDetails               The database settings created using \code{createDatabaseDetails()}
 #' @param modelDesignList                A list of model designs created using \code{createModelDesign()}
 #' @param onlyFetchData                  Only fetches and saves the data object to the output folder without running the analysis.
 #' @param splitSettings                  The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}
 #' @param logSettings                    The setting spexcifying the logging for the analyses created using \code{createLogSettings()}
-#' @param saveDirectort                   Name of the folder where all the outputs will written to.
+#' @param saveDirectory                   Name of the folder where all the outputs will written to.
 #' 
 #' @return
 #' A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
@@ -207,8 +207,8 @@ createModelDesign <- function(
     usePreprocess <- T
   } else{
     preprocessSettings <- createPreprocessSettings(
-      minCovariateFraction = 0.001,
-      normalizeData = T
+      minFraction = 0.001,
+      normalize = T
     )
   }
   
@@ -313,9 +313,9 @@ loadPlpAnalysesJson <- function(
   
   json <- tryCatch(
     {ParallelLogger::loadSettingsFromJson(file = file.path(jsonFileLocation))},
-    error=function(cond) {
+    error= function(cond) {
       ParallelLogger::logInfo('Issue with loading json file...');
-      ParallelLogger::logError(e)
+      ParallelLogger::logError(cond)
     })
   
   return(json$analyses)

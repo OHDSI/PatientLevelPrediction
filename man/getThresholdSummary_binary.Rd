@@ -10,6 +10,8 @@ getThresholdSummary_binary(prediction, evalColumn, ...)
 \item{prediction}{A prediction object}
 
 \item{evalColumn}{A column that is used to stratify the results}
+
+\item{...}{Other inputs}
 }
 \value{
 A data.frame with all the measures

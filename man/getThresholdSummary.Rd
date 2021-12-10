@@ -4,11 +4,7 @@
 \alias{getThresholdSummary}
 \title{Calculate all measures for sparse ROC}
 \usage{
-getThresholdSummary(
-  prediction = prediction,
-  predictionType = type,
-  typeColumn = typeColumn
-)
+getThresholdSummary(prediction, predictionType, typeColumn = "evaluation")
 }
 \arguments{
 \item{prediction}{A prediction object}

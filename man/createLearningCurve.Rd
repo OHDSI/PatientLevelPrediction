@@ -86,8 +86,6 @@ and whether to normalise the covariates before training}
 specifying how the logging is done}
 
 \item{executeSettings}{An object of \code{executeSettings} specifying which parts of the analysis to run}
-
-\item{analysisName}{(character) Name for the analysis}
 }
 \value{
 A learning curve object containing the various performance measures
