@@ -438,7 +438,8 @@ runPlp <- function(
     
     variableImportance <- plpData$covariateData$covariateRef %>% 
       dplyr::mutate(covariateValue = 0) %>% 
-      dplyr::select(.data$covariateId, .data$covariateValue)
+      dplyr::select(.data$covariateId, .data$covariateValue) %>% 
+      dplyr::collect()
     if(!is.null(model)){
       if(!is.null(model$covariateImportance)){
         variableImportance <- model$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue)
@@ -478,6 +479,13 @@ runPlp <- function(
     Log = logSettings$logFileName # location for now
     #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )
+  
+  # if model is NULL convert it to list for saving 
+  if(is.null(model)){
+    model <- list(noModel = T)
+    attr(model, "predictionFunction") <- 'noModel'
+    class(model) <- 'plpModel'
+  }
   
   results <- list(
     #inputSetting = inputSetting, 

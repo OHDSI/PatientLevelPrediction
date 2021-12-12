@@ -77,6 +77,7 @@ runMultiplePlp <- function(
     modelDesignList = modelDesignList, 
     idList = idList
   )
+  write.csv(settingstable, file.path(saveDirectory,'settings.csv'), row.names = F)
   
   # list(targetId, covariateSetting, outcomeIds, saveLocation)
   dataSettings <- getDataSettings(settingstable)
