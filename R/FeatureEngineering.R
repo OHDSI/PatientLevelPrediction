@@ -237,7 +237,7 @@ featureEngineer <- function(data, featureEngineeringSettings){
   
   for(featureEngineeringSetting in featureEngineeringSettings){
     fun <- attr(featureEngineeringSetting, "fun")
-    args <- list(data = data,
+    args <- list(trainData = data,
                  featureEngineeringSettings = featureEngineeringSetting)
     ParallelLogger::logInfo(paste0('Applying ',fun))
     data <- do.call(eval(parse(text = fun)), args)

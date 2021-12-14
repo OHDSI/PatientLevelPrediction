@@ -79,5 +79,24 @@ test_that("recalibratePlpRefit", {
 
 
 
+test_that("survival", {
+# survival
+metaData <- list(
+  predictionType = "survival", 
+  cohortId = 1,
+  outcomeId = 2,
+  timepoint = 365
+)
+
+attr(prediction, "metaData") <- metaData
+
+  test <- recalibratePlp(prediction, analysisId = 'Analysis_1',
+    method = 'weakRecalibration')
+
+  testthat::expect_true(sum(test$evaluationType == 'weakRecalibration') == 100)
+  
+})
+
+
 
 

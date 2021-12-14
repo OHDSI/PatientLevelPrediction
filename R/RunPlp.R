@@ -327,7 +327,7 @@ runPlp <- function(
       {
         featureEngineer(
           data = data$Train, 
-          featureEngineeringSettings = createFeatureEngineeringSettings
+          featureEngineeringSettings = featureEngineeringSettings
         )
       },
       error = function(e){ParallelLogger::logError(e); return(NULL)}
@@ -516,35 +516,6 @@ runPlp <- function(
   
   return(results)
   
-}
-
-
-#' @method summary runPlp
-#' @export
-summary.runPlp <- function(object, ...) {
-  
-  if(object$model$modelSettings$model=="lr_lasso"){
-    hyper <-  paste0("The final model hyper-parameters were - variance: ",format(as.double(object$model$hyperParamSearch['priorVariance']), digits = 5))
-  } else if(is.null(object$model$hyperParamSearch)){
-    hyper <- 'No hyper-parameters...'
-  } else {
-    finalmod <- object$model$hyperParamSearch[which.max(object$model$hyperParamSearch$cv_auc),]
-    finalmod <- finalmod[,!colnames(finalmod)%in%c('seed','cv_auc')]
-    hyper <- paste0("The final model hyper-parameters were -", 
-      paste(colnames(finalmod), finalmod, collapse='; ', sep=': ')
-    )
-  }
-  
-  writeLines(paste0("The study was started at: ", object$executionSummary$ExecutionDateTime, 
-    " and took at total of ", as.double(object$executionSummary$TotalExecutionElapsedTime, unit='mins'),
-    " minutes.  ", hyper))
-  
-  
-  # extract summary from object$performanceEvaluation$evaluationStatistics
-  result <- object$performanceEvaluation$evaluationStatistics
-  
-  class(result) <- "summary.runPlp"
-  return(result)
 }
 
 

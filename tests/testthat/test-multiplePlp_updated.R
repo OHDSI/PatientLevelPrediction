@@ -204,10 +204,22 @@ test_that("getDataSettings", {
 
 test_that("test run multiple", {
   
+  analysis3 <- createModelDesign(
+    targetId = 1,
+    outcomeId = 3,
+    restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
+    populationSettings = createStudyPopulationSettings(),
+    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    featureEngineeringSettings = createFeatureEngineeringSettings(),
+    sampleSettings = createSampleSettings(),
+    preprocessSettings = createPreprocessSettings(),
+    modelSettings = setLassoLogisticRegression(seed = 12)
+  )
+  
   runMultiplePlp(
     databaseDetails = databaseDetails,
     modelDesignList = list(
-      analysis1
+      analysis3
     ),
     onlyFetchData = F,
     splitSettings = createDefaultSplitSetting(
@@ -229,7 +241,6 @@ test_that("test run multiple", {
   expect_true(file.exists(file.path(saveLoc, 'multiple', 'Analysis_1','plpResult', 'runPlp.rds')))
   
 })
-
 
 test_that("validateMultiplePlp errors", {
   
