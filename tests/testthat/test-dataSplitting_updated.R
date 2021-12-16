@@ -17,6 +17,16 @@
 library("testthat")
 context("Data splitting")
 
+
+# make sure pop is all plpData people
+
+populationT <- plpData$cohorts
+populationT$outcomeCount <- sample(c(0,1), nrow(populationT), replace = T)
+attr(populationT, "metaData")$outcomeId <- 2
+attr(populationT, "metaData")$populationSettings <- list(madeup = T)
+attr(populationT, "metaData")$plpDataSettings <- list(madeup = T)
+attr(populationT, "metaData")$attrition <- c(1,2,3)
+
 # check correct inputs
 testFraction1 <- sample(9,1)/10
 trainFraction1 <- 1-testFraction1
@@ -129,7 +139,7 @@ test_that("Main split function: splitData", {
   
   splitData <- splitData(
     plpData = plpData,
-    population = population,
+    population = populationT,
     splitSettings = splitSettings
   )
   
@@ -150,7 +160,7 @@ test_that("Main split function: splitData", {
   expect_equal(names(splitData$Test), c('labels', 'covariateData'))
   
   # check attributes for Train
-  expect_equal(attr(splitData$Train, "metaData")$outcomeId, attr(population, "metaData")$outcomeId)
+  expect_equal(attr(splitData$Train, "metaData")$outcomeId, attr(populationT, "metaData")$outcomeId)
   expect_equal(attr(splitData$Train, "metaData")$cohortId, plpData$metaData$databaseDetails$cohortId)
   expect_equal(
     attr(splitData$Train, "metaData")$cdmDatabaseSchema, 
@@ -164,11 +174,11 @@ test_that("Main split function: splitData", {
   )
   expect_equal(
     attr(splitData$Train, "metaData")$populationSettings, 
-    attr(population, "metaData")$populationSettings
+    attr(populationT, "metaData")$populationSettings
   )
   expect_equal(
     attr(splitData$Train, "metaData")$attrition, 
-    attr(population, "metaData")$attrition
+    attr(populationT, "metaData")$attrition
   )
   
   expect_equal(
@@ -179,7 +189,7 @@ test_that("Main split function: splitData", {
   # train+test should be full data as train+test = 1
   expect_equal(
     nrow(splitData$Train$labels) + nrow(splitData$Test$labels), 
-    nrow(population)
+    nrow(populationT)
   )
   expect_equal(
     splitData$Train$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull() + 
@@ -207,7 +217,7 @@ test_that("Main split function: splitData", {
   
   splitData <- splitData(
     plpData = plpData,
-    population = population,
+    population = populationT,
     splitSettings = splitSettings
   )
   
@@ -217,7 +227,7 @@ test_that("Main split function: splitData", {
   # train labels should be the same size at the population
   expect_equal(
     nrow(splitData$Train$labels), 
-    nrow(population)
+    nrow(populationT)
   )
   expect_equal(
     splitData$Train$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull(), 
@@ -235,7 +245,7 @@ test_that("dataSummary works", {
   
   splitData <- splitData(
     plpData = plpData,
-    population = population,
+    population = populationT,
     splitSettings = splitSettings
   )
 
