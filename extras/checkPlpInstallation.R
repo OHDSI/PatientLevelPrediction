@@ -30,9 +30,7 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   sampleSize <- 2000
   plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
   
-  # create popualtion for outcome 2
-  population <- tryCatch({createStudyPopulation(plpData,
-    outcomeId = 2,
+  popSettings <- createStudyPopulationSettings(
     firstExposureOnly = FALSE,
     washoutPeriod = 0,
     removeSubjectsWithPriorOutcome = FALSE,
@@ -40,10 +38,16 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
     requireTimeAtRisk = FALSE,
     minTimeAtRisk=0,
     riskWindowStart = 0,
-    addExposureDaysToStart = FALSE,
+    startAnchor = 'cohort start',
     riskWindowEnd = 365,
-    addExposureDaysToEnd = FALSE
-    #,verbosity=INFO
+    endAnchor = 'cohort start'
+  )
+  
+  # create popualtion for outcome 2
+  population <- tryCatch({createStudyPopulation(
+    plpData = plpData,
+    outcomeId = 2,
+    populationSettings = popSettings
   )},
     error = function(e) {
       return(0)
@@ -60,16 +64,27 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
       return(NULL)
     })
   if(!is.null(modset)){
-    model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
-      testFraction = 0.5, nfold = 3, 
-      minCovariateFraction = 0, 
-      saveEvaluation = F, 
-      savePlpData = F, 
-      savePlpResult = F, 
-      savePlpPlots = F)},
-      error = function(e) {
-        return(NULL)
-      })} else {
+    model <- tryCatch({
+      runPlp(plpData = plpData, 
+             outcomeId = 2, 
+             analysisId = 'test1', 
+             analysisName = 'LASSO LR', 
+             populationSettings = populationSettings, 
+             splitSettings = createDefaultSplitSetting(), 
+             sampleSettings = createSampleSettings(), 
+             featureEngineeringSettings = createFeatureEngineeringSettings(), 
+             preprocessSettings = createPreprocessSettings(),
+             modelSettings = modset, 
+             logSettings = createLogSettings(), 
+             executeSettings = createDefaultExecuteSettings(),
+             saveDirectory = tempdir()
+             )
+    },
+    error = function(e) {
+      return(NULL)
+    }
+    )
+    } else {
         model <- NULL
       }
   if(is.null(model) || !"runPlp"%in%class(model))
@@ -83,18 +98,28 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
         return(NULL)
       })
     if(!is.null(modset)){
-      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
-        testFraction = 0.5, nfold = 3, 
-        minCovariateFraction = 0, 
-        saveEvaluation = F, 
-        savePlpData = F, 
-        savePlpResult = F, 
-        savePlpPlots = F)},
-        error = function(e) {
-          return(NULL)
-        })} else {
-          model <- NULL
-        }
+      model <- tryCatch({
+        runPlp(
+          plpData = plpData, 
+          outcomeId = 2, 
+          analysisId = 'test2', 
+          analysisName = 'RF', 
+          populationSettings = populationSettings, 
+          splitSettings = createDefaultSplitSetting(), 
+          sampleSettings = createSampleSettings(), 
+          featureEngineeringSettings = createFeatureEngineeringSettings(), 
+          preprocessSettings = createPreprocessSettings(),
+          modelSettings = modset, 
+          logSettings = createLogSettings(), 
+          executeSettings = createDefaultExecuteSettings(),
+          saveDirectory = tempdir()
+        )
+      },
+      error = function(e) {
+        return(NULL)
+      })} else {
+        model <- NULL
+      }
     if(is.null(model) || !"runPlp"%in%class(model))
       outCode <- outCode*13
     
@@ -103,13 +128,23 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
         return(NULL)
       })
     if(!is.null(modset)){
-      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
-        testFraction = 0.5, nfold = 3, 
-        minCovariateFraction = 0, 
-        saveEvaluation = F, 
-        savePlpData = F, 
-        savePlpResult = F, 
-        savePlpPlots = F)},
+      model <- tryCatch({
+        runPlp(
+          plpData = plpData, 
+          outcomeId = 2, 
+          analysisId = 'test3', 
+          analysisName = 'MLP', 
+          populationSettings = populationSettings, 
+          splitSettings = createDefaultSplitSetting(), 
+          sampleSettings = createSampleSettings(), 
+          featureEngineeringSettings = createFeatureEngineeringSettings(), 
+          preprocessSettings = createPreprocessSettings(),
+          modelSettings = modset, 
+          logSettings = createLogSettings(), 
+          executeSettings = createDefaultExecuteSettings(),
+          saveDirectory = tempdir()
+        )
+        },
         error = function(e) {
           return(NULL)
         })} else {
@@ -123,13 +158,23 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
         return(NULL)
       })
     if(!is.null(modset)){
-      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
-        testFraction = 0.5, nfold = 3, 
-        minCovariateFraction = 0, 
-        saveEvaluation = F, 
-        savePlpData = F, 
-        savePlpResult = F, 
-        savePlpPlots = F)},
+      model <- tryCatch({
+        runPlp(
+          plpData = plpData, 
+          outcomeId = 2, 
+          analysisId = 'test4', 
+          analysisName = 'AdaBoost', 
+          populationSettings = populationSettings, 
+          splitSettings = createDefaultSplitSetting(), 
+          sampleSettings = createSampleSettings(), 
+          featureEngineeringSettings = createFeatureEngineeringSettings(), 
+          preprocessSettings = createPreprocessSettings(),
+          modelSettings = modset, 
+          logSettings = createLogSettings(), 
+          executeSettings = createDefaultExecuteSettings(),
+          saveDirectory = tempdir()
+        )
+        },
         error = function(e) {
           return(NULL)
         })} else {
@@ -143,13 +188,23 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
         return(NULL)
       })
     if(!is.null(modset)){
-      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
-        testFraction = 0.5, nfold = 3, 
-        minCovariateFraction = 0, 
-        saveEvaluation = F, 
-        savePlpData = F, 
-        savePlpResult = F, 
-        savePlpPlots = F)},
+      model <- tryCatch({
+        runPlp(
+          plpData = plpData, 
+          outcomeId = 2, 
+          analysisId = 'test5', 
+          analysisName = 'DT', 
+          populationSettings = populationSettings, 
+          splitSettings = createDefaultSplitSetting(), 
+          sampleSettings = createSampleSettings(), 
+          featureEngineeringSettings = createFeatureEngineeringSettings(), 
+          preprocessSettings = createPreprocessSettings(),
+          modelSettings = modset, 
+          logSettings = createLogSettings(), 
+          executeSettings = createDefaultExecuteSettings(),
+          saveDirectory = tempdir()
+        )
+        },
         error = function(e) {
           return(NULL)
         })} else {
@@ -163,13 +218,23 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
         return(NULL)
       })
     if(!is.null(modset)){
-      model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
-        testFraction = 0.5, nfold = 3, 
-        minCovariateFraction = 0, 
-        saveEvaluation = F, 
-        savePlpData = F, 
-        savePlpResult = F, 
-        savePlpPlots = F)},
+      model <- tryCatch({
+        runPlp(
+          plpData = plpData, 
+          outcomeId = 2, 
+          analysisId = 'test6', 
+          analysisName = 'NB', 
+          populationSettings = populationSettings, 
+          splitSettings = createDefaultSplitSetting(), 
+          sampleSettings = createSampleSettings(), 
+          featureEngineeringSettings = createFeatureEngineeringSettings(), 
+          preprocessSettings = createPreprocessSettings(),
+          modelSettings = modset, 
+          logSettings = createLogSettings(), 
+          executeSettings = createDefaultExecuteSettings(),
+          saveDirectory = tempdir()
+        )
+        },
         error = function(e) {
           return(NULL)
         })} else {
@@ -186,13 +251,23 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
       return(NULL)
     })
   if(!is.null(modset)){
-    model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
-      testFraction = 0.5, nfold = 3, 
-      minCovariateFraction = 0, 
-      saveEvaluation = F, 
-      savePlpData = F, 
-      savePlpResult = F, 
-      savePlpPlots = F)},
+    model <- tryCatch({
+      runPlp(
+        plpData = plpData, 
+        outcomeId = 2, 
+        analysisId = 'test7', 
+        analysisName = 'KNN', 
+        populationSettings = populationSettings, 
+        splitSettings = createDefaultSplitSetting(), 
+        sampleSettings = createSampleSettings(), 
+        featureEngineeringSettings = createFeatureEngineeringSettings(), 
+        preprocessSettings = createPreprocessSettings(),
+        modelSettings = modset, 
+        logSettings = createLogSettings(), 
+        executeSettings = createDefaultExecuteSettings(),
+        saveDirectory = tempdir()
+      )
+      },
       error = function(e) {
         return(NULL)
       })} else {
@@ -206,13 +281,23 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
       return(NULL)
     })
   if(!is.null(modset)){
-    model <- tryCatch({runPlp(population, plpData, modelSettings = modset,
-      testFraction = 0.5, nfold = 3, 
-      minCovariateFraction = 0, 
-      saveEvaluation = F, 
-      savePlpData = F, 
-      savePlpResult = F, 
-      savePlpPlots = F)},
+    model <- tryCatch({
+      runPlp(
+        plpData = plpData, 
+        outcomeId = 2, 
+        analysisId = 'test8', 
+        analysisName = 'GBM', 
+        populationSettings = populationSettings, 
+        splitSettings = createDefaultSplitSetting(), 
+        sampleSettings = createSampleSettings(), 
+        featureEngineeringSettings = createFeatureEngineeringSettings(), 
+        preprocessSettings = createPreprocessSettings(),
+        modelSettings = modset, 
+        logSettings = createLogSettings(), 
+        executeSettings = createDefaultExecuteSettings(),
+        saveDirectory = tempdir()
+      )
+      },
       error = function(e) {
         return(NULL)
       })} else {
@@ -270,7 +355,7 @@ interpretInstallCode <- function(response){
     if(response%%37==0)
       writeLines('Issue with gradient boosting machine')
     if(response%%43==0)
-      writeLines('Issue with ffdf')
+      writeLines('Issue with Andromeda')
     
   }
   return(NULL)

@@ -113,7 +113,7 @@ Data Creation
 Impact of phenotypes
 </td>
 <td>
-Study Done - Paper being written
+Study Done - Paper submitted
 </td>
 </tr>
 
@@ -137,7 +137,7 @@ Model development
 What impact does test/train/validation design have on model performance
 </td>
 <td>
-<a href=''>In review at BMJ Open </a>
+<a href=''>BMJ Open </a>
 </td>
 </tr>
 
@@ -218,10 +218,10 @@ Study needs to be done
 Evaluation
 </td>
 <td>
-Evaluation	Is there a way to automatically simplify models?	
+Is there a way to automatically simplify models?	
 </td>
 <td>
-Study needs to be done
+<a href='https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html'>Study protocol under development </a>
 </td>
 </tr>
 </table>

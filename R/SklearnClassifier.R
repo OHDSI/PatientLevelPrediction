@@ -16,8 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-fitSklearn <- function(trainData,
-  classifierFunction = 'trainAdaBoost',
+fitSklearn <- function(
+  trainData,
   param,
   search = "grid",
   analysisId,
@@ -98,7 +98,7 @@ fitSklearn <- function(trainData,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
       requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
       modelSettings = list(
-        model = classifierFunction, 
+        model = pySettings$name, 
         param = param,
         finalModelParameters = cvResult$finalParam,
         extraSettings = attr(param, 'settings')

@@ -1,8 +1,5 @@
 library(PatientLevelPrediction)
 
-# We need to have a writable folder for the ff objects
-checkffFolder()
-
 # This demo will generate a stacked ensemble consisting 
 # of a Logistic Regression and Random Forest model.
 # Dependent on your system it can take some time to run
@@ -21,21 +18,18 @@ plpData <- simulatePlpData(
 )
 
 # Generate the study population
-population <- createStudyPopulation(
-  plpData,
-  outcomeId = 2,
+populationSettings <- createStudyPopulationSettings(
   binary = TRUE,
   firstExposureOnly = FALSE,
   washoutPeriod = 0,
   removeSubjectsWithPriorOutcome = FALSE,
   priorOutcomeLookback = 99999,
-  requireTimeAtRisk = FALSE,
+  requireTimeAtRisk = TRUE,
   minTimeAtRisk = 0,
   riskWindowStart = 0,
-  addExposureDaysToStart = FALSE,
+  startAnchor = 'cohort start',
   riskWindowEnd = 365,
-  addExposureDaysToEnd = FALSE,
-  verbosity = "INFO"
+  endAnchor = 'cohort start'
 )
 
 # Let's set the models and model building parameters
@@ -46,25 +40,50 @@ invisible(readline())
 model1 <- setLassoLogisticRegression()
 model2 <- setRandomForest()
 
-# Specify a test fraction and a sequence of training set fractions
-testFraction <- 0.2
+# Specify the spilt settings
+splitSettings <- createDefaultSplitSetting(
+  testFraction = 0.2, 
+  nfold = 4, 
+  splitSeed = 100 # this makes sure same split is done 
+  )
 
 # Specify the ensemble strategy
 ensembleStrategy <- 'stacked'
 
-# Specify the test split to be used
-testSplit <- 'person'
-
 # Now we build the stacked ensemble
 cat("Press a key to continue")
 invisible(readline())
-ensembleResults <- PatientLevelPrediction::runEnsembleModel(population, 
-                                                          dataList = list(plpData, plpData), 
-                                                          modelList = list(model1, model2),
-                                                          testSplit=testSplit,
-                                                          testFraction=testFraction,
-                                                          nfold=3, splitSeed=1000, 
-                                                          ensembleStrategy = ensembleStrategy) 
+ensembleResults <- runEnsembleModel(
+  ensembleStrategy = ensembleStrategy,
+  parallel = T,
+  maxCores = 2,
+  dataList = list(
+    plpData, 
+    plpData
+    ), 
+  outcomeIds = list(2,2),
+  populationSettings = list(
+    populationSettings, 
+    populationSettings
+    ),
+  sampleSettings = list(
+    createSampleSettings(),
+    createSampleSettings()
+  ),
+  featureEngineeringSettings = list(
+    createFeatureEngineeringSettings(),
+    createFeatureEngineeringSettings()
+  ),
+  preprocessSettings = list(
+    createPreprocessSettings(),
+    createPreprocessSettings()
+  ),
+  modelList = list(
+    model1, 
+    model2
+    ),
+  splitSettings = splitSettings
+) 
 
 # You could now save the model and apply it on other data as described in more detail
 # in the vignette.

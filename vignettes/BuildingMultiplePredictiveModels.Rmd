@@ -35,88 +35,177 @@ One our best practices is that we see the selection of models and all study sett
 
 Note that it is also possible to generate a Study Package directly in Atlas that allows for multiple patient-level prediction analyses this is out-of-scope for this vignette.
 
-# Creating the setting lists
-To develop multiple models the user has to create a list of Study Populations Settings, Covariate Settings, and Model Settings. These lists will then be combined in a Model Analysis List and all combinations of the elements in this list will be automatically run by the package. 
+# Creating a model design
 
-## Study population settings
-Suppose we like to make the following three population settings:
+The first step is to specify each model you wish to develop by using the `createModelDesign` function.  This function requires the following:
 
-*  study population 1: allows persons who have the outcome to leave the database before the end of time-at-risk and only those without the outcome who are observed for the whole time-at-risk period (requireTimeAtRisk = T).
-*  study population 2: does not impose the restriction that persons who do not experience the outcome need to be observed for the full time-at-risk period (requireTimeAtRisk = F).
-*  study population 3: does impose the restriction that persons who do not experience the outcome need to be observed for the full time-at-risk period (requireTimeAtRisk = T) and allows persons that had the outcome before (removeSubjectsWithPriorOutcome = F)
-
-The create a study population setting list we use the function `createStudyPopulationSettings` as described below:
-
-```{r tidy=FALSE,eval=FALSE}
-# define all study population settings
-studyPop1 <- createStudyPopulationSettings(binary = T,
-                                          includeAllOutcomes = F,
-                                          removeSubjectsWithPriorOutcome = T,
-                                          priorOutcomeLookback = 99999,
-                                          requireTimeAtRisk = T,
-                                          minTimeAtRisk=364,
-                                          riskWindowStart = 1,
-                                          riskWindowEnd = 365,
-                                          verbosity = "INFO")
-
-studyPop2 <- createStudyPopulationSettings(binary = T,
-                                           includeAllOutcomes = F,
-                                           removeSubjectsWithPriorOutcome = T,
-                                           priorOutcomeLookback = 99999,
-                                           requireTimeAtRisk = F,
-                                           minTimeAtRisk=364,
-                                           riskWindowStart = 1,
-                                           riskWindowEnd = 365,
-                                           verbosity = "INFO")
-
-studyPop3 <- createStudyPopulationSettings(binary = T,
-                                           includeAllOutcomes = F,
-                                           removeSubjectsWithPriorOutcome = F,
-                                           priorOutcomeLookback = 99999,
-                                           requireTimeAtRisk = T,
-                                           minTimeAtRisk=364,
-                                           riskWindowStart = 1,
-                                           riskWindowEnd = 365,
-                                           verbosity = "INFO")
-                                           
-# combine these in a population setting list
-populationSettingList <- list(studyPop1,studyPop2,studyPop3)
+```{r echo = FALSE, results ='asis'}
+library(knitr)
+kable(
+  data.frame(
+  input = c(
+    targetId,
+    outcomeId,
+    restrictPlpDataSettings,
+    populationSettings,
+    covariateSettings,
+    sampleSettings,
+    featureEngineeringSettings,
+    preprocessSettings,
+    modelSettings
+  ),
+  
+  Description = c(
+    "The id for the target cohort",
+    "The id for the outcome",
+    "The settings used to restrict the target population, created with createRestrictPlpDataSettings()",
+    "The settings used to restrict the target population and create the outcome labels, created with createStudyPopulationSettings()",
+    "The settings used to define the covariates, created with FeatureExtraction::createDefaultCovariateSettings()",
+    "The settings used to define any under/over sampling, created with createSampleSettings()",
+    "The settings used to define any feature engineering, created with createFeatureEngineeringSettings()",
+    "The settings used to define any preprocessing, created with createPreprocessSettings()",
+    "The settings used to define the model fitting settings, such as setLassoLogisticRegression()"
+  )
+  
+  ), 
+  caption = 'The inputs for the model design'
+  )
 ```
-## Covariate settings   
-The covariate settings are created using `createCovariateSettings`.  We can create multiple covariate settings and then combine them in a list:
+
+## Model design example 1
+For example, if we wanted to predict the outcome (id 2) occuring for the first time within 180 days of the the target population index date (id 1).  We are only interested in index dates betwrrn 2018-2020.  Finally, we only want to use age, gender in 5 year buckets and conditions as features.  The model can be specified by:
 
 ```{r tidy=FALSE,eval=FALSE}
-covSet1 <- createCovariateSettings(useDemographicsGender = T, 
-                                   useDemographicsAgeGroup = T, 
-                                   useConditionGroupEraAnyTimePrior = T,
-                                   useDrugGroupEraAnyTimePrior = T)
 
-covSet2 <- createCovariateSettings(useDemographicsGender = T, 
-                                   useDemographicsAgeGroup = T, 
-                                   useConditionGroupEraAnyTimePrior = T,
-                                   useDrugGroupEraAnyTimePrior = F)
+# Model 1 is only using data between 2018-2020:
+restrictPlpDataSettings <- createRestrictPlpDataSettings(
+  studyStartDate = '20180101', 
+  studyEndDate = '20191231'
+  )
 
-covariateSettingList <- list(covSet1, covSet2)
-```                                   
-## Algorithm settings                                    
-The model settings requires running the setModel functions for the machine learning algorithms of interest and specifying the hyper-parameter search and then combining these into a list.  For example, if we wanted to try a logistic regression, gradient boosting machine and ada boost model then:
+# predict outcome within 1 to 180 days after index
+# remove people with outcome prior and with < 365 days observation
+populationSettings <- createStudyPopulationSettings(
+  binary = T, 
+  firstExposureOnly = T, 
+  washoutPeriod = 365, 
+  removeSubjectsWithPriorOutcome = T,
+  priorOutcomeLookback = 9999,
+  requireTimeAtRisk = F, 
+  riskWindowStart = 1, 
+  riskWindowEnd = 180
+)
+
+# use age/gender in groups and condition groups as features
+covariateSettings <- FeatureExtraction::createCovariateSettings(
+  useDemographicsGender = T, 
+  useDemographicsAgeGroup = T, 
+  useConditionGroupEraAnyTimePrior = T
+)
+
+modelDesign1 <- createModelDesign(
+  targetId = 1, 
+  outcomeId = 2, 
+  restrictPlpDataSettings = restrictPlpDataSettings, 
+  populationSettings = populationSettings, 
+  covariateSettings = covariateSettings, 
+  featureEngineeringSettings = createFeatureEngineeringSettings(),
+  sampleSettings = createSampleSettings(), 
+  preprocessSettings = createPreprocessSettings(), 
+  modelSettings = setLassoLogisticRegression()
+  )
+
+```
+
+## Model design example 2
+For the second example, we want to predict the outcome (id 2) occuring for the first time within 730 days of the the target population index date (id 1). We want to train a random forest classifier. Finally, we want to use age, gender in 5 year buckets, drug ingredients (and groups) and conditions as features.  The model can be specified by:
 
 ```{r tidy=FALSE,eval=FALSE}
-gbm <- setGradientBoostingMachine()
-lr <- setLassoLogisticRegression()
-ada <- setAdaBoost()
 
-modelList <- list(gbm, lr, ada)
-```   
+# Model 1 is only using data between 2018-2020:
+restrictPlpDataSettings <- createRestrictPlpDataSettings(
+  )
 
-## Model analysis list   
-To create the complete plp model settings use `createPlpModelSettings` to combine the population, covariate and model settings.
+# predict outcome within 1 to 180 days after index
+# remove people with outcome prior and with < 365 days observation
+populationSettings <- createStudyPopulationSettings(
+  binary = T, 
+  firstExposureOnly = T, 
+  washoutPeriod = 365, 
+  removeSubjectsWithPriorOutcome = T,
+  priorOutcomeLookback = 9999,
+  requireTimeAtRisk = F, 
+  riskWindowStart = 1, 
+  riskWindowEnd = 730
+)
+
+# use age/gender in groups and condition groups as features
+covariateSettings <- FeatureExtraction::createCovariateSettings(
+  useDemographicsGender = T, 
+  useDemographicsAgeGroup = T, 
+  useConditionGroupEraAnyTimePrior = T, 
+  useDrugGroupEraAnyTimePrior = T 
+)
+
+modelDesign2 <- createModelDesign(
+  targetId = 1, 
+  outcomeId = 2, 
+  restrictPlpDataSettings = restrictPlpDataSettings, 
+  populationSettings = populationSettings, 
+  covariateSettings = covariateSettings, 
+  featureEngineeringSettings = createRandomForestFeatureSelection(ntrees = 500, maxDepth = 7),
+  sampleSettings = createSampleSettings(), 
+  preprocessSettings = createPreprocessSettings(), 
+  modelSettings = setRandomForest()
+  )
+
+```
+
+## Model design example 3
+For the third example, we want to predict the outcome (id 5) occuring during the cohort exposure of the the target population (id 1).  We want to train a gradient boosting machine.  Finally, we want to use age, gender in 5 year buckets and indications of measurements taken as features.  The model can be specified by:
 
 ```{r tidy=FALSE,eval=FALSE}
-modelAnalysisList <- createPlpModelSettings(modelList = modelList, 
-                                   covariateSettingList = covariateSettingList,
-                                   populationSettingList = populationSettingList)
-```  
+
+# Model 1 is only using data between 2018-2020:
+restrictPlpDataSettings <- createRestrictPlpDataSettings(
+  )
+
+# predict outcome within 1 to 180 days after index
+# remove people with outcome prior and with < 365 days observation
+populationSettings <- createStudyPopulationSettings(
+  binary = T, 
+  firstExposureOnly = T, 
+  washoutPeriod = 365, 
+  removeSubjectsWithPriorOutcome = F,
+  requireTimeAtRisk = F, 
+  riskWindowStart = 0,
+  startAnchor =  'cohort start',
+  riskWindowEnd = 0, 
+  endAnchor = 'cohort end'
+)
+
+# use age/gender in groups and condition groups as features
+covariateSettings <- FeatureExtraction::createCovariateSettings(
+  useDemographicsGender = T, 
+  useDemographicsAgeGroup = T, 
+  useMeasurementAnyTimePrior = T,
+  endDays = -1
+)
+
+modelDesign3 <- createModelDesign(
+  targetId = 1, 
+  outcomeId = 5, 
+  restrictPlpDataSettings = restrictPlpDataSettings, 
+  populationSettings = populationSettings, 
+  covariateSettings = covariateSettings, 
+  featureEngineeringSettings = createFeatureEngineeringSettings(),
+  sampleSettings = createSampleSettings(), 
+  preprocessSettings = createPreprocessSettings(), 
+  modelSettings = setGradientBoostingMachine()
+  )
+
+```
+
 
 # Running multiple models
 As we will be downloading loads of data in the multiple plp analysis it is useful to set the Andromeda temp folder to a directory with write access and plenty of space.
@@ -125,6 +214,7 @@ As we will be downloading loads of data in the multiple plp analysis it is usefu
 To run the study requires setting up a connectionDetails object
 
 ```{r tidy=FALSE,eval=FALSE}
+
 dbms <- "your dbms"
 user <- "your username"
 pw <- "your password"
@@ -136,6 +226,7 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                                 user = user,
                                                                 password = pw,
                                                                 port = port)
+
 ```
 
 Next you need to specify the cdmDatabaseSchema where your cdm database is found and workDatabaseSchema where your target population and outcome cohorts are and you need to specify a label for the database name: a string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported).
@@ -144,55 +235,66 @@ Next you need to specify the cdmDatabaseSchema where your cdm database is found 
 cdmDatabaseSchema <- "your cdmDatabaseSchema"
 workDatabaseSchema <- "your workDatabaseSchema"
 cdmDatabaseName <- "your cdmDatabaseName"
+cohortTable <- "your cohort table",
+
+databaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails, 
+  cdmDatabaseSchema = cdmDatabaseSchema, 
+  cdmDatabaseName = cdmDatabaseName , 
+  cohortDatabaseSchema = workDatabaseSchema, 
+  cohortTable = cohortTable, 
+  outcomeDatabaseSchema = workDatabaseSchema, 
+  outcomeTable = cohortTable 
+  cdmVersion = 5
+    )
+
 ```
 
 Now you can run the multiple patient-level prediction analysis by specifying the target cohort ids and outcome ids 
 
 ```{r tidy=FALSE,eval=FALSE}
-allresults <- runPlpAnalyses(connectionDetails = connectionDetails,
-                           cdmDatabaseSchema = cdmDatabaseSchema,
-                           cdmDatabaseName = cdmDatabaseName,
-                           oracleTempSchema = cdmDatabaseSchema,
-                           cohortDatabaseSchema = workDatabaseSchema,
-                           cohortTable = "your cohort table",
-                           outcomeDatabaseSchema = workDatabaseSchema,
-                           outcomeTable = "your cohort table",
-                           cdmVersion = 5,
-                           outputFolder = "./PlpMultiOutput",
-                           modelAnalysisList = modelAnalysisList,
-                           cohortIds = c(2484,6970),
-                           cohortNames = c('visit 2010','test cohort'),
-                           outcomeIds = c(7331,5287),
-                           outcomeNames =  c('outcome 1','outcome 2'),
-                           maxSampleSize = NULL,
-                           minCovariateFraction = 0,
-                           normalizeData = T,
-                           testSplit = "stratified",
-                           testFraction = 0.25,
-                           splitSeed = NULL,
-                           nfold = 3,
-                           verbosity = "INFO")
-```
-This will then save all the plpData objects from the study into "./PlpMultiOutput/plpData", the populations for the analysis into "./PlpMultiOutput/population" and the results into "./PlpMultiOutput/Result".  The csv named settings.csv found in "./PlpMultiOutput" has a row for each prediction model developed and points to the plpData and population used for the model development, it also has descriptions of the cohorts and settings if these are input by the user.
+results <- runMultiplePlp(
+  databaseDetails = databaseDetails, 
+  modelDesignList = list(
+    modelDesign1, 
+    modelDesign2, 
+    modelDesign3
+    ), 
+  onlyFetchData = F, 
+  splitSettings = createDefaultSplitSetting(), 
+  logSettings = createLogSettings(), 
+  saveDirectory =  "./PlpMultiOutput"
+  )
 
-Note that if for some reason the run is interrupted, e.g. because of an error, a new call to `RunPlpAnalyses` will continue and not restart until you remove the output folder.
+```
+This will then save all the plpData objects from the study into "./PlpMultiOutput/plpData_T1_L<i>" and the results into "./PlpMultiOutput/Analysis_<i>".  The csv file named settings.csv found in "./PlpMultiOutput" has a row for each prediction model developed and points to the plpData and settings used for the model development, it also has descriptions of the cohorts if these are input by the user.
+
+Note that if for some reason the run is interrupted, e.g. because of an error, a new call to `runMultiplePlp` will continue and not restart until you remove the output folder.
 
 # Validating multiple models
 If you have access to multiple databases on the same server in different schemas you could evaluate accross these using this call:
 
 ```{r tidy=FALSE,eval=FALSE}
-val <- evaluateMultiplePlp(analysesLocation = "./PlpMultiOutput",
-                           outputLocation = "./PlpMultiOutput/validation",
-                           connectionDetails = connectionDetails, 
-                           validationSchemaTarget = list('new_database_1.dbo',
-                                                              'new_database_2.dbo'),
-                           validationSchemaOutcome = list('new_database_1.dbo',
-                                                              'new_database_2.dbo'),
-                           validationSchemaCdm = list('new_database_1.dbo',
-                                                              'new_database_2.dbo'), 
-                           databaseNames = c('database1','database2'),
-                           validationTableTarget = 'your new cohort table',
-                           validationTableOutcome = 'your new cohort table')
+
+validationDatabaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails, 
+  cdmDatabaseSchema = 'new cdm schema', 
+  cdmDatabaseName = 'validation database', 
+  cohortDatabaseSchema = workDatabaseSchema, 
+  cohortTable = cohortTable, 
+  outcomeDatabaseSchema = workDatabaseSchema, 
+  outcomeTable = cohortTable, 
+  cdmVersion = 5
+  )
+
+val <- validateMultiplePlp(
+  analysesLocation = "./PlpMultiOutput",
+  valdiationDatabaseDetails = validationDatabaseDetails,
+  validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
+  recalibrate = NULL,
+  saveDirectory = "./PlpMultiOutput/validation"
+  )
+
 ```
 This then saves the external validation results in the validation folder of the main study (the outputLocation you used in runPlpAnalyses).
 
