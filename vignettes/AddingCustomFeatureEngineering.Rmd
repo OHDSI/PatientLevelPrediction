@@ -54,12 +54,12 @@ Let's consider the situation where we wish to create an age spline feature.  To 
 
 ## Create function
 
-Our age spline feature function will create a new feature using the FeatureExtraction age covariate (covariateId 1002).  We will implement a restricted cubic spline that requires specifying the number of knots.
+Our age spline feature function will create a new feature using the plpData$cohorts ageYear column.  We will implement a restricted cubic spline that requires specifying the number of knots.
 .  Therefore, the inputs for this are: 
  * `knots` an integer/double specifying the number of knots
  
 ```{r, echo = TRUE, eval=FALSE}
-createAgeSpineSettings <- function(
+createAgeSpine <- function(
                      knots = 5
                      ){
   
@@ -73,7 +73,7 @@ createAgeSpineSettings <- function(
     )
   
   # specify the function that will implement the sampling
-  attr(featureEngineeringSettings, "fun") <- "implementAgeSpineSettings"
+  attr(featureEngineeringSettings, "fun") <- "implementAgeSpine"
 
   # make sure the object returned is of class "sampleSettings"
   class(featureEngineeringSettings) <- "featureEngineeringSettings"
@@ -82,16 +82,16 @@ createAgeSpineSettings <- function(
 }
 ```
 
-We now need to create the 'implement' function `implementAgeSpineSettings()`
+We now need to create the 'implement' function `implementAgeSpine()`
 
 ## Implement function
 
 All 'implement' functions must take as input the trainData and the featureEngineeringSettings (this is the output of the 'create' function).  They must return a trainData object containing the new covariateData, labels and folds.
 
-In our example, the `createAgeSpineSettings()` will return a list with 'knots'.  The featureEngineeringSettings therefore contains this.
+In our example, the `createAgeSpine()` will return a list with 'knots'.  The featureEngineeringSettings therefore contains this.
 
 ```{r tidy=FALSE,eval=FALSE}
-implementAgeSpineSettings <- function(trainData, featureEngineeringSettings){
+implementAgeSpine <- function(trainData, featureEngineeringSettings){
 
   # currently not used
   knots <- featureEngineeringSettings$knots

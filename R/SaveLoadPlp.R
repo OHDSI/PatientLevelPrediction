@@ -1,6 +1,6 @@
 # @file PlpSaveLoad.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #

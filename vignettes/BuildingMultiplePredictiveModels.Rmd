@@ -44,15 +44,15 @@ library(knitr)
 kable(
   data.frame(
   input = c(
-    targetId,
-    outcomeId,
-    restrictPlpDataSettings,
-    populationSettings,
-    covariateSettings,
-    sampleSettings,
-    featureEngineeringSettings,
-    preprocessSettings,
-    modelSettings
+    'targetId',
+    'outcomeId',
+    'restrictPlpDataSettings',
+    'populationSettings',
+    'covariateSettings',
+    'sampleSettings',
+    'featureEngineeringSettings',
+    'preprocessSettings',
+    'modelSettings'
   ),
   
   Description = c(
@@ -122,11 +122,11 @@ For the second example, we want to predict the outcome (id 2) occuring for the f
 
 ```{r tidy=FALSE,eval=FALSE}
 
-# Model 1 is only using data between 2018-2020:
+# Model 2 has no restrictions when extracting data
 restrictPlpDataSettings <- createRestrictPlpDataSettings(
   )
 
-# predict outcome within 1 to 180 days after index
+# predict outcome within 1 to 730 days after index
 # remove people with outcome prior and with < 365 days observation
 populationSettings <- createStudyPopulationSettings(
   binary = T, 
@@ -139,7 +139,7 @@ populationSettings <- createStudyPopulationSettings(
   riskWindowEnd = 730
 )
 
-# use age/gender in groups and condition groups as features
+# use age/gender in groups and condition/drug groups as features
 covariateSettings <- FeatureExtraction::createCovariateSettings(
   useDemographicsGender = T, 
   useDemographicsAgeGroup = T, 
@@ -166,12 +166,12 @@ For the third example, we want to predict the outcome (id 5) occuring during the
 
 ```{r tidy=FALSE,eval=FALSE}
 
-# Model 1 is only using data between 2018-2020:
+# Model 3 has no restrictions when extracting data
 restrictPlpDataSettings <- createRestrictPlpDataSettings(
   )
 
-# predict outcome within 1 to 180 days after index
-# remove people with outcome prior and with < 365 days observation
+# predict outcome during target cohort start/end 
+# remove people with  < 365 days observation
 populationSettings <- createStudyPopulationSettings(
   binary = T, 
   firstExposureOnly = T, 
@@ -184,7 +184,7 @@ populationSettings <- createStudyPopulationSettings(
   endAnchor = 'cohort end'
 )
 
-# use age/gender in groups and condition groups as features
+# use age/gender in groups and measurement indicators as features
 covariateSettings <- FeatureExtraction::createCovariateSettings(
   useDemographicsGender = T, 
   useDemographicsAgeGroup = T, 
@@ -250,7 +250,7 @@ databaseDetails <- createDatabaseDetails(
 
 ```
 
-Now you can run the multiple patient-level prediction analysis by specifying the target cohort ids and outcome ids 
+Now you can run the multiple patient-level prediction analysis:
 
 ```{r tidy=FALSE,eval=FALSE}
 results <- runMultiplePlp(

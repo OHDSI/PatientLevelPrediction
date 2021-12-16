@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create setting for SVM with python — setSVM • PatientLevelPrediction</title>
+<title>Create setting for the python sklearn SVM (SVC function) — setSVM • PatientLevelPrediction</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Create setting for SVM with python — setSVM" />
-<meta property="og:description" content="Create setting for SVM with python" />
+<meta property="og:title" content="Create setting for the python sklearn SVM (SVC function) — setSVM" />
+<meta property="og:description" content="Create setting for the python sklearn SVM (SVC function)" />
 
 
 
@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -168,61 +174,66 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create setting for SVM with python</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/SVM.R'><code>R/SVM.R</code></a></small>
+    <h1>Create setting for the python sklearn SVM (SVC function)</h1>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/SklearnClassifierSettings.R'><code>R/SklearnClassifierSettings.R</code></a></small>
     <div class="hidden name"><code>setSVM.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Create setting for SVM with python</p>
+    <p>Create setting for the python sklearn SVM (SVC function)</p>
     </div>
 
     <pre class="usage"><span class='fu'>setSVM</span><span class='op'>(</span>
-  kernel <span class='op'>=</span> <span class='st'>"rbf"</span>,
-  C <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>0.9</span>, <span class='fl'>2</span>, <span class='fl'>0.1</span><span class='op'>)</span>,
-  degree <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>3</span>, <span class='fl'>5</span><span class='op'>)</span>,
-  gamma <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1e-04</span>, <span class='fl'>3e-05</span>, <span class='fl'>0.001</span>, <span class='fl'>0.01</span>, <span class='fl'>0.25</span><span class='op'>)</span>,
-  shrinking <span class='op'>=</span> <span class='cn'>T</span>,
-  coef0 <span class='op'>=</span> <span class='fl'>0</span>,
-  classWeight <span class='op'>=</span> <span class='st'>"balanced"</span>,
-  varImp <span class='op'>=</span> <span class='cn'>F</span>,
-  seed <span class='op'>=</span> <span class='cn'>NULL</span>
+  C <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>0.9</span>, <span class='fl'>2</span>, <span class='fl'>0.1</span><span class='op'>)</span>,
+  kernel <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"rbf"</span><span class='op'>)</span>,
+  degree <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>3</span>, <span class='fl'>5</span><span class='op'>)</span>,
+  gamma <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"scale"</span>, <span class='fl'>1e-04</span>, <span class='fl'>3e-05</span>, <span class='fl'>0.001</span>, <span class='fl'>0.01</span>, <span class='fl'>0.25</span><span class='op'>)</span>,
+  coef0 <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0</span><span class='op'>)</span>,
+  shrinking <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>TRUE</span><span class='op'>)</span>,
+  tol <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0.001</span><span class='op'>)</span>,
+  classWeight <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"balanced"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  cacheSize <span class='op'>=</span> <span class='fl'>500</span>,
+  seed <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span><span class='op'>(</span><span class='fl'>1e+05</span>, <span class='fl'>1</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>kernel</th>
-      <td><p>Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.</p></td>
+      <th>C</th>
+      <td><p>(list) Regularization parameter. The strength of the regularization is inversely proportional to C. Must be strictly positive. The penalty is a squared l2 penalty.</p></td>
     </tr>
     <tr>
-      <th>C</th>
-      <td><p>penalty parameter C of the error term.</p></td>
+      <th>kernel</th>
+      <td><p>(list) Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.</p></td>
     </tr>
     <tr>
       <th>degree</th>
-      <td><p>degree of kernel function is significant only in poly, rbf, sigmoid</p></td>
+      <td><p>(list) degree of kernel function is significant only in poly, rbf, sigmoid</p></td>
     </tr>
     <tr>
       <th>gamma</th>
-      <td><p>kernel coefficient for rbf and poly, by default 1/n_features will be taken.</p></td>
-    </tr>
-    <tr>
-      <th>shrinking</th>
-      <td><p>wether to use the shrinking heuristic.</p></td>
+      <td><p>(list) kernel coefficient for rbf and poly, by default 1/n_features will be taken. ‘scale’, ‘auto’ or float, default=’scale’</p></td>
     </tr>
     <tr>
       <th>coef0</th>
-      <td><p>independent term in kernel function. It is only significant in poly/sigmoid.</p></td>
+      <td><p>(list) independent term in kernel function. It is only significant in poly/sigmoid.</p></td>
+    </tr>
+    <tr>
+      <th>shrinking</th>
+      <td><p>(list) whether to use the shrinking heuristic.</p></td>
+    </tr>
+    <tr>
+      <th>tol</th>
+      <td><p>(list) Tolerance for stopping criterion.</p></td>
     </tr>
     <tr>
       <th>classWeight</th>
-      <td><p>Class weight based on imbalance either 'balanced' or 'none'</p></td>
+      <td><p>(list) Class weight based on imbalance either 'balanced' or NULL</p></td>
     </tr>
     <tr>
-      <th>varImp</th>
-      <td><p>Whether to calculate the variable importance using PFI</p></td>
+      <th>cacheSize</th>
+      <td><p>Specify the size of the kernel cache (in MB).</p></td>
     </tr>
     <tr>
       <th>seed</th>

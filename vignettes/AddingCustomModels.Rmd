@@ -119,6 +119,7 @@ The fit function should return a list of class `plpModel` with the following obj
  * covariateImportance \- a data.frame containing the columns 'covariateId', 'covariateValue' (the variable importance) and 'columnId' (the column number that the variable need to be mapped to when implementing the model)
  
 In additon the plpModel requires two attributes:
+
   * predictionFunction - the name of the function used to make predictions
   * modelType  - whether the model is 'binary' or 'survival' 
 

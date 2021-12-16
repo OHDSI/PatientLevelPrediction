@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -79,12 +79,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -100,13 +100,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -146,11 +152,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -181,8 +187,8 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-getting-data-and-creating-a-study-population" class="hasAnchor"><a href="#section-getting-data-and-creating-a-study-population" class="anchor"></a>Getting data and creating a study population</h2>
-          <p class="section-desc"><p>Functions for getting the necessary data from the database in Common Data Model, and creating a study population.</p></p>
+          <h2 id="section-extracting-data-from-the-omop-cdm-database" class="hasAnchor"><a href="#section-extracting-data-from-the-omop-cdm-database" class="anchor"></a>Extracting data from the OMOP CDM database</h2>
+          <p class="section-desc"><p>Functions for getting the necessary data from the database in Common Data Model and saving/loading.</p></p>
         </th>
       </tr>
       
@@ -191,6 +197,18 @@
       
       
       <tr>
+        
+        <td>
+          <p><code><a href="createDatabaseDetails.html">createDatabaseDetails()</a></code> </p>
+        </td>
+        <td><p>Create a setting that holds the details about the cdmDatabase connection for data extraction</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="createRestrictPlpDataSettings.html">createRestrictPlpDataSettings()</a></code> </p>
+        </td>
+        <td><p>createRestrictPlpDataSettings define extra restriction settings when calling getPlpData</p></td>
+      </tr><tr>
         
         <td>
           <p><code><a href="getPlpData.html">getPlpData()</a></code> </p>
@@ -208,18 +226,82 @@
           <p><code><a href="loadPlpData.html">loadPlpData()</a></code> </p>
         </td>
         <td><p>Load the cohort data from a folder</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="createStudyPopulation.html">createStudyPopulation()</a></code> </p>
-        </td>
-        <td><p>Create a study population</p></td>
       </tr>
     </tbody><tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-non-temporal-feature-models" class="hasAnchor"><a href="#section-non-temporal-feature-models" class="anchor"></a>Non-Temporal Feature Models</h2>
-          <p class="section-desc"><p>Functions for setting model that use non-temporal data and their hyper-parameter search.</p></p>
+          <h2 id="section-settings-for-designing-a-prediction-models" class="hasAnchor"><a href="#section-settings-for-designing-a-prediction-models" class="anchor"></a>Settings for designing a prediction models</h2>
+          <p class="section-desc"><p>Design settings required when developing a model.</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="createStudyPopulationSettings.html">createStudyPopulationSettings()</a></code> </p>
+        </td>
+        <td><p>create the study population settings</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="createDefaultSplitSetting.html">createDefaultSplitSetting()</a></code> </p>
+        </td>
+        <td><p>Create the settings for defining how the plpData are split into test/validation/train sets using 
+default splitting functions (either random stratified by outcome, time or subject splitting).</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="createSampleSettings.html">createSampleSettings()</a></code> </p>
+        </td>
+        <td><p>Create the settings for defining how the trainData from <code>splitData</code> are sampled using 
+default sample functions.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="createFeatureEngineeringSettings.html">createFeatureEngineeringSettings()</a></code> </p>
+        </td>
+        <td><p>Create the settings for defining any feature engineering that will be done</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="createPreprocessSettings.html">createPreprocessSettings()</a></code> </p>
+        </td>
+        <td><p>Create the settings for preprocessing the trainData using <code> </code>.</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-execution-settings-when-developing-a-model" class="hasAnchor"><a href="#section-execution-settings-when-developing-a-model" class="anchor"></a>Execution settings when developing a model</h2>
+          <p class="section-desc"><p>Execution settings required when developing a model.</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="createLogSettings.html">createLogSettings()</a></code> </p>
+        </td>
+        <td><p>Create the settings for logging the progression of the analysis</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="createExecuteSettings.html">createExecuteSettings()</a></code> </p>
+        </td>
+        <td><p>Creates list of settings specifying what parts of runPlp to execute</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-binary-classification-models" class="hasAnchor"><a href="#section-binary-classification-models" class="anchor"></a>Binary Classification Models</h2>
+          <p class="section-desc"><p>Functions for setting binary classifiers and their hyper-parameter search.</p></p>
         </th>
       </tr>
       
@@ -232,13 +314,13 @@
         <td>
           <p><code><a href="setAdaBoost.html">setAdaBoost()</a></code> </p>
         </td>
-        <td><p>Create setting for AdaBoost with python</p></td>
+        <td><p>Create setting for AdaBoost with python DecisionTreeClassifier base estimator</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="setDecisionTree.html">setDecisionTree()</a></code> </p>
         </td>
-        <td><p>Create setting for DecisionTree with python</p></td>
+        <td><p>Create setting for the scikit-learn 1.0.1 DecisionTree with python</p></td>
       </tr><tr>
         
         <td>
@@ -275,12 +357,18 @@
           <p><code><a href="setRandomForest.html">setRandomForest()</a></code> </p>
         </td>
         <td><p>Create setting for random forest model with python (very fast)</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="setSVM.html">setSVM()</a></code> </p>
+        </td>
+        <td><p>Create setting for the python sklearn SVM (SVC function)</p></td>
       </tr>
     </tbody><tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-temporal-feature-models" class="hasAnchor"><a href="#section-temporal-feature-models" class="anchor"></a>Temporal Feature Models</h2>
-          <p class="section-desc"><p>Functions for setting model that use temporal data and their hyper-parameter search.</p></p>
+          <h2 id="section-survival-models" class="hasAnchor"><a href="#section-survival-models" class="anchor"></a>Survival Models</h2>
+          <p class="section-desc"><p>Functions for setting survival models and their hyper-parameter search.</p></p>
         </th>
       </tr>
       
@@ -288,7 +376,13 @@
     </tbody><tbody>
       
       
-      
+      <tr>
+        
+        <td>
+          <p><code><a href="setCoxModel.html">setCoxModel()</a></code> </p>
+        </td>
+        <td><p>Create setting for lasso Cox model</p></td>
+      </tr>
     </tbody><tbody>
       <tr>
         <th colspan="2">
@@ -306,23 +400,13 @@
         <td>
           <p><code><a href="runPlp.html">runPlp()</a></code> </p>
         </td>
-        <td><p>runPlp - Train and evaluate the model</p></td>
+        <td><p>runPlp - Develop and internally evaluate a model using specified settings</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="applyModel.html">applyModel()</a></code> </p>
+          <p><code><a href="externalValidateDbPlp.html">externalValidateDbPlp()</a></code> </p>
         </td>
-        <td><p>Apply train model on new data
-Apply a Patient Level Prediction model on Patient Level Prediction Data and get the predicted risk
-in [0,1] for each person in the population. If the user inputs a population with an outcomeCount
-column then the function also returns the evaluation of the prediction (AUC, brier score,
-calibration)</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="evaluatePlp.html">evaluatePlp()</a></code> </p>
-        </td>
-        <td><p>evaluatePlp</p></td>
+        <td><p>externalValidateDbPlp - Validate a model on new databases</p></td>
       </tr><tr>
         
         <td>
@@ -363,51 +447,39 @@ calibration)</p></td>
       <tr>
         
         <td>
-          <p><code><a href="runPlpAnalyses.html">runPlpAnalyses()</a></code> </p>
+          <p><code><a href="createModelDesign.html">createModelDesign()</a></code> </p>
         </td>
-        <td><p>Run a list of predictions</p></td>
+        <td><p>Specify settings for deceloping a single model</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="createPlpModelSettings.html">createPlpModelSettings()</a></code> </p>
+          <p><code><a href="runMultiplePlp.html">runMultiplePlp()</a></code> </p>
         </td>
-        <td><p>create a an object specifying the multiple Plp model settings</p></td>
+        <td><p>Run a list of predictions analyses</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="combinePlpModelSettings.html">combinePlpModelSettings()</a></code> </p>
-        </td>
-        <td><p>combine two objects specifying multiple Plp model settings</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="createStudyPopulationSettings.html">createStudyPopulationSettings()</a></code> </p>
-        </td>
-        <td><p>create the study population settings</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="evaluateMultiplePlp.html">evaluateMultiplePlp()</a></code> </p>
+          <p><code><a href="validateMultiplePlp.html">validateMultiplePlp()</a></code> </p>
         </td>
         <td><p>externally validate the multiple plp models across new datasets</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="savePredictionAnalysisList.html">savePredictionAnalysisList()</a></code> </p>
+          <p><code><a href="savePlpAnalysesJson.html">savePlpAnalysesJson()</a></code> </p>
         </td>
-        <td><p>Saves a json prediction settings given R settings</p></td>
+        <td><p>Save the modelDesignList to a json file</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="loadPredictionAnalysisList.html">loadPredictionAnalysisList()</a></code> </p>
+          <p><code><a href="loadPlpAnalysesJson.html">loadPlpAnalysesJson()</a></code> </p>
         </td>
         <td><p>Load the multiple prediction json settings from a file</p></td>
       </tr>
     </tbody><tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-ensemble-model" class="hasAnchor"><a href="#section-ensemble-model" class="anchor"></a>Ensemble Model</h2>
-          <p class="section-desc"><p>Functions for creating an ensemble model</p></p>
+          <h2 id="section-saving-results-into-database" class="hasAnchor"><a href="#section-saving-results-into-database" class="anchor"></a>Saving results into database</h2>
+          <p class="section-desc"><p>Functions for saving the prediction model and performances into a database.</p></p>
         </th>
       </tr>
       
@@ -418,61 +490,15 @@ calibration)</p></td>
       <tr>
         
         <td>
-          <p><code><a href="runEnsembleModel.html">runEnsembleModel()</a></code> </p>
+          <p><code><a href="createPlpResultTables.html">createPlpResultTables()</a></code> </p>
         </td>
-        <td><p>ensemble - Create an ensembling model using different models</p></td>
+        <td><p>Create the results tables to store PatientLevelPrediction models and results into a database</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="applyEnsembleModel.html">applyEnsembleModel()</a></code> </p>
+          <p><code><a href="populatePlpResultTables.html">populatePlpResultTables()</a></code> </p>
         </td>
-        <td><p>Apply trained ensemble model on new data Apply a Patient Level Prediction model on Patient Level
-Prediction Data and get the predicted risk in [0,1] for each person in the population. If the user
-inputs a population with an outcomeCount column then the function also returns the evaluation of
-the prediction (AUC, brier score, calibration)</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="saveEnsemblePlpModel.html">saveEnsemblePlpModel()</a></code> </p>
-        </td>
-        <td><p>saves the Ensmeble plp model</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="loadEnsemblePlpModel.html">loadEnsemblePlpModel()</a></code> </p>
-        </td>
-        <td><p>loads the Ensmeble plp model and return a model list</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="saveEnsemblePlpResult.html">saveEnsemblePlpResult()</a></code> </p>
-        </td>
-        <td><p>saves the Ensemble plp results</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="loadEnsemblePlpResult.html">loadEnsemblePlpResult()</a></code> </p>
-        </td>
-        <td><p>loads the Ensemble plp results</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-external-validation" class="hasAnchor"><a href="#section-external-validation" class="anchor"></a>External validation</h2>
-          <p class="section-desc"><p>Functions for externally validating a model on new datasets</p></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="externalValidatePlp.html">externalValidatePlp()</a></code> </p>
-        </td>
-        <td><p>externalValidatePlp - Validate a model on new databases</p></td>
+        <td><p>Populate the PatientLevelPrediction results tables</p></td>
       </tr>
     </tbody><tbody>
       <tr>
@@ -498,31 +524,12 @@ the prediction (AUC, brier score, calibration)</p></td>
           <p><code><a href="viewMultiplePlp.html">viewMultiplePlp()</a></code> </p>
         </td>
         <td><p>open a local shiny app for viewing the result of a multiple PLP analyses</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-report-creation" class="hasAnchor"><a href="#section-report-creation" class="anchor"></a>Report Creation</h2>
-          <p class="section-desc"><p>Functions for creating documents</p></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="createPlpJournalDocument.html">createPlpJournalDocument()</a></code> </p>
-        </td>
-        <td><p>createPlpJournalDocument</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="createPlpReport.html">createPlpReport()</a></code> </p>
+          <p><code><a href="viewDatabaseResultPlp.html">viewDatabaseResultPlp()</a></code> </p>
         </td>
-        <td><p>createPlpReport</p></td>
+        <td><p>open a local shiny app for viewing the result of a PLP analyses from a database</p></td>
       </tr>
     </tbody><tbody>
       <tr>
@@ -638,12 +645,6 @@ was defined: from utopia to empirical data" (2016)</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="createLearningCurvePar.html">createLearningCurvePar()</a></code> </p>
-        </td>
-        <td><p>createLearningCurvePar</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="plotLearningCurve.html">plotLearningCurve()</a></code> </p>
         </td>
         <td><p>plotLearningCurve</p></td>
@@ -666,25 +667,6 @@ was defined: from utopia to empirical data" (2016)</p></td>
           <p><code><a href="simulatePlpData.html">simulatePlpData()</a></code> </p>
         </td>
         <td><p>Generate simulated data</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-helper-functions" class="hasAnchor"><a href="#section-helper-functions" class="anchor"></a>Helper functions</h2>
-          <p class="section-desc"><p>Various helper functions</p></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="checkPlpInstallation.html">checkPlpInstallation()</a></code> </p>
-        </td>
-        <td><p>Check PatientLevelPrediction and its dependencies are correctly installed</p></td>
       </tr>
     </tbody>
     </table>

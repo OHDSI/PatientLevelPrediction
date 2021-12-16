@@ -54,7 +54,7 @@ Let's consider the situation where we wish to create a split where females are u
 Our gender split function requires a single parameter, the number of folds used in cross validation. Therefore create a function with a single nfold input that returns a list of class 'splitSettings' with the 'fun' attribute specifying the 'implement' function we will use.
  
 ```{r, echo = TRUE, eval=FALSE}
-createDataSplit <- function(nfold)
+createGenderSplit <- function(nfold)
   {
   
   # create list of inputs to implement function

@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -177,26 +183,14 @@
     <p>Train various models using a default parameter gird search or user specified parameters</p>
     </div>
 
-    <pre class="usage"><span class='fu'>fitPlp</span><span class='op'>(</span>
-  <span class='va'>population</span>,
-  <span class='va'>data</span>,
-  <span class='va'>modelSettings</span>,
-  <span class='va'>cohortId</span>,
-  <span class='va'>outcomeId</span>,
-  minCovariateFraction <span class='op'>=</span> <span class='fl'>0.001</span>,
-  normalizeData <span class='op'>=</span> <span class='cn'>T</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>fitPlp</span><span class='op'>(</span><span class='va'>trainData</span>, <span class='va'>modelSettings</span>, search <span class='op'>=</span> <span class='st'>"grid"</span>, <span class='va'>analysisId</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>population</th>
-      <td><p>The population created using createStudyPopulation() who will have their risks predicted</p></td>
-    </tr>
-    <tr>
-      <th>data</th>
-      <td><p>An object of type <code>plpData</code> - the patient level prediction
+      <th>trainData</th>
+      <td><p>An object of type <code>TrainData</code> created using <code>splitData</code>
 data extracted from the CDM.</p></td>
     </tr>
     <tr>
@@ -210,20 +204,12 @@ data extracted from the CDM.</p></td>
 </ul></td>
     </tr>
     <tr>
-      <th>cohortId</th>
-      <td><p>Id of study cohort</p></td>
+      <th>search</th>
+      <td><p>The search strategy for the hyper-parameter selection (currently not used)</p></td>
     </tr>
     <tr>
-      <th>outcomeId</th>
-      <td><p>Id of outcome cohort</p></td>
-    </tr>
-    <tr>
-      <th>minCovariateFraction</th>
-      <td><p>The minimum fraction of the target popualtion who have a variable for it to be included in the model training</p></td>
-    </tr>
-    <tr>
-      <th>normalizeData</th>
-      <td><p>Whether to normalise the data before model fitting</p></td>
+      <th>analysisId</th>
+      <td><p>The id of the analysis</p></td>
     </tr>
     </table>
 

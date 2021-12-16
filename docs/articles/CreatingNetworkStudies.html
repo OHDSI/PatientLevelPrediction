@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -39,12 +39,12 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -60,13 +60,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -106,11 +112,11 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -124,13 +130,13 @@
 
       
 
-      </header><script src="CreatingNetworkStudies_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
+      </header><script src="CreatingNetworkStudies_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Making patient-level predictive network study packages</h1>
                         <h4 class="author">Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2021-09-29</h4>
+            <h4 class="date">2021-12-16</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/CreatingNetworkStudies.Rmd"><code>vignettes/CreatingNetworkStudies.Rmd</code></a></small>
       <div class="hidden name"><code>CreatingNetworkStudies.Rmd</code></div>
@@ -149,29 +155,34 @@
 <a href="#introduction" class="anchor"></a>Introduction</h1>
 <p>The OHDSI Patient Level Prediction (PLP) package provides the framework to implement prediction models at scale. This can range from developing a large number of models across sites (methodology and study design insight) to extensive external validation of existing models in the OHDSI PLP framework (model insight). This vignette describes how you can use the <code>PatientLevelPrediction</code> package to create a network study package.</p>
 </div>
-<div id="running-a-network-study-process" class="section level1">
+<div id="useful-publication" class="section level1">
 <h1 class="hasAnchor">
-<a href="#running-a-network-study-process" class="anchor"></a>Running a Network study Process</h1>
+<a href="#useful-publication" class="anchor"></a>Useful publication</h1>
+<p>The open access publication <a href="https://pubmed.ncbi.nlm.nih.gov/34560604/">A standardized analytics pipeline for reliable and rapid development and validation of prediction models using observational health data</a> details the process used to develop and validate prediction models using the OHDSI prediction framework and tools. This publication describes each of the steps and then demonstrates these by focusing on predicting death in those who have covid-19.</p>
+</div>
+<div id="main-steps-for-running-a-network-study" class="section level1">
+<h1 class="hasAnchor">
+<a href="#main-steps-for-running-a-network-study" class="anchor"></a>Main steps for running a network study</h1>
 <div id="step-1-developing-the-study" class="section level2">
 <h2 class="hasAnchor">
 <a href="#step-1-developing-the-study" class="anchor"></a>Step 1 – developing the study</h2>
 <ul>
 <li>Design the study: target/outcome cohort logic, concept sets for medical definitions, settings for developing new model or validation of adding existing models to framework. Suggestion: look in literature for validated definitions.</li>
 <li>Write a protocol that motivates the study and provides full details (sufficient for people to replicate the study in the future).</li>
-<li>Write an R package for implementing the study across diverse computational environments [see guidance below for structure of package and use the skeleton github package here: … ]</li>
+<li>Write an R package for implementing the study across diverse computational environments [see guidance below for structure of package and use the skeleton github package here: <a href="https://github.com/OHDSI/SkeletonPredictionStudy" class="uri">https://github.com/OHDSI/SkeletonPredictionStudy</a> ]</li>
 </ul>
 </div>
 <div id="step-2-implementing-the-study-part-1" class="section level2">
 <h2 class="hasAnchor">
 <a href="#step-2-implementing-the-study-part-1" class="anchor"></a>Step 2 – implementing the study part 1</h2>
 <ul>
-<li>Get contributors to install the package and dependencies. Ensure the package is installed correctly by running the checkInstall functions.</li>
+<li>Get contributors to install the package and dependencies. Ensure the package is installed correctly for each contributor by asking them to run the checkInstall functions (as specified in the InstallationGuide).</li>
 <li>Get contributors to run the createCohort function to inspect the target/outcome definitions. If the definitions are not suitable for a site, go back to step 1 and revise the cohort definitions.</li>
 </ul>
 </div>
-<div id="step-3-implementing-the-study-part-2-make-sure-package-checks-outputs-the-package-is-functioning-as-planned-and-the-definitions-are-valid-across-sites" class="section level2">
+<div id="step-3-implementing-the-study-part-2-make-sure-the-package-is-functioning-as-planned-and-the-definitions-are-valid-across-sites" class="section level2">
 <h2 class="hasAnchor">
-<a href="#step-3-implementing-the-study-part-2-make-sure-package-checks-outputs-the-package-is-functioning-as-planned-and-the-definitions-are-valid-across-sites" class="anchor"></a>Step 3 – implementing the study part 2 [make sure package checks outputs the package is functioning as planned and the definitions are valid across sites]</h2>
+<a href="#step-3-implementing-the-study-part-2-make-sure-the-package-is-functioning-as-planned-and-the-definitions-are-valid-across-sites" class="anchor"></a>Step 3 – implementing the study part 2 (make sure the package is functioning as planned and the definitions are valid across sites)</h2>
 <ul>
 <li>Get contributors to run the main.R with the settings configured to their environment</li>
 <li>Get the contributors to submit the results</li>
@@ -180,134 +191,26 @@
 <div id="step-4-publication" class="section level2">
 <h2 class="hasAnchor">
 <a href="#step-4-publication" class="anchor"></a>Step 4 – Publication</h2>
-<ul>
-<li>The study creator has the first option to be first author, if he/she does not wish to be first author then he/she can pick the most suitable person from the contributors. All contributors will be listed as authors on the paper. The last author will be the person who lead/managed the study, if this was the first author then the first author can pick the most suitable last author. All authors between the first and last author will be alphabetical by last name.</li>
-</ul>
+<p>The study creator has the first option to be first author, if he/she does not wish to be first author then he/she can pick the most suitable person from the contributors. All contributors will be listed as authors on the paper. The last author will be the person who lead/managed the study, if this was the first author then the first author can pick the most suitable last author. All authors between the first and last author will be alphabetical by last name.</p>
 </div>
 </div>
 <div id="package-skeleton---file-structure" class="section level1">
 <h1 class="hasAnchor">
 <a href="#package-skeleton---file-structure" class="anchor"></a>Package Skeleton - File Structure</h1>
 <ul>
-<li>DESCRIPTION – This file describes the R package and the dependencies</li>
-<li>NAMESPACE – This file is created automatically by Roxygen</li>
-<li>Readme.md – This file should provide the step by step guidance on implementing the package</li>
+<li>DESCRIPTION: This file describes the R package and the dependencies</li>
+<li>NAMESPACE: This file is created automatically by Roxygen</li>
+<li>Readme.md: This file should provide the step by step guidance on implementing the package</li>
 <li>R</li>
-<li>helpers.r – all the custom functions used by the package should be in this file (e.g., checkInstall)</li>
-<li>main.r – this file will call the functions in helpers.r to execute the full study</li>
-<li>submit.r – this file will be called at the end the submit the compressed folder to the study creator/manager.</li>
-<li>Man – this folder will contain the documentation for the functions in helpers.r (this should be automatically generated by roxygen)</li>
+<li>helpers.r: all the custom functions used by the package should be in this file (e.g., checkInstall)</li>
+<li>main.r: this file will call the functions in helpers.r to execute the full study</li>
+<li>submit.r: this file will be called at the end to submit the compressed folder to the study creator/manager.</li>
+<li>Man: this folder will contain the documentation for the functions in helpers.r (this should be automatically generated by roxygen)</li>
 <li>Inst</li>
-<li>sql/sql_sever
-<ul>
-<li>targetCohort – the target cohort parameterised sql code</li>
-<li>outcomeCohort – the outcome cohort parameterised sql code</li>
-</ul>
-</li>
-<li>extdata – place any data required for the package here</li>
-<li>plp_models – place any PLP models here</li>
-<li>existing_models – place the files for existing models here</li>
+<li>sql/sql_sever * targetCohort: the target cohort parameterised sql code * outcomeCohort: the outcome cohort parameterised sql code</li>
+<li>plp_models: place any PLP models here</li>
 <li>Extras</li>
 </ul>
-</div>
-<div id="package-skeleton---output-of-running-package" class="section level1">
-<h1 class="hasAnchor">
-<a href="#package-skeleton---output-of-running-package" class="anchor"></a>Package Skeleton - Output of Running Package</h1>
-<p>The output should contain three folders inside the study directory such as <code>outputLoc &lt;- (file.path(getwd(), paste0(studyName_database_date)))</code>: * Plots – containing the test/train or validation ROC plot, calibration plot, precision recall plot and optionally the demographic calibration plot. * Results – The output of running savePlpResult * Summary – a summary csv of performance and the table 1 csv</p>
-<p>Then there should also be a zip file of the folder in the working directory containing the same folders and files but with sensitive results removed (this will be created using the packageResults function). Once the contributor has inspected the zipped file and is happy with the content being shared, he/she can then finally run the submit function with the details provided in the readme.md.</p>
-</div>
-<div id="example-code-to-make-package-for-external-validation-of-plp-model" class="section level1">
-<h1 class="hasAnchor">
-<a href="#example-code-to-make-package-for-external-validation-of-plp-model" class="anchor"></a>Example Code To Make Package For External Validation of PLP Model</h1>
-<p>First you need to make a copy of the PatientLevelPrediciton skeleton package found here:</p>
-<p>Assuming you ran a sucessful PatientLevelPrediction model development and saved the output of <code><a href="../reference/runPlp.html">runPlp()</a></code> to to location ‘goodModel’ in your working directory then:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction">PatientLevelPrediction</a></span><span class="op">)</span>
-<span class="va">plpResult</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="st">"goodModel"</span><span class="op">)</span>
-
-<span class="co"># add the model to the skeleton package with sensitive information removed</span>
-<span class="fu">exportPlpResult</span><span class="op">(</span>plpResult <span class="op">=</span> <span class="va">plpResult</span>, modelName <span class="op">=</span> <span class="st">"Model Name"</span>, packageName <span class="op">=</span> <span class="st">"Your Package Name"</span>, 
-    gitHubLocation <span class="op">=</span> <span class="st">"location/of/github"</span>, includeEvaluationStatistics <span class="op">=</span> <span class="cn">T</span>, includeThresholdSummary <span class="op">=</span> <span class="cn">T</span>, 
-    includeDemographicSummary <span class="op">=</span> <span class="cn">T</span>, includeCalibrationSummary <span class="op">=</span> <span class="cn">T</span>, includePredictionDistribution <span class="op">=</span> <span class="cn">T</span>, 
-    includeCovariateSummary <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></code></pre></div>
-<p>Now you want to add the cohorts (generally the parameterized sql required to create one or more target and outcome cohorts). This should be added into the inst/sql/sql_server directory of your package. If you are using atlas to create the cohorts then you can use: <code>OhdsiRTools::insertCirceDefinitionInPackage()</code>. The settings for the cohort creation are defined in the inst/extdata directory in the file cohort_details.csv. this file contains two columns: cohortName and cohortId. The cohortName should contain the name of the sql file of the cohort in inst/sql/sql_server (e.g., a file called “targetCohort.sql” has the name “targetCohort”) and the cohortId is the default cohort_definition_id that will be used when people run the study corresponding to this cohort. The main.R file in the extras directory contains the vanilla code to run a study with the model eported into the package and the cohort files added.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction">PatientLevelPrediction</a></span><span class="op">)</span>
-<span class="co"># input settings for person running the study</span>
-<span class="va">connectionDetails</span> <span class="op">&lt;-</span> <span class="st">" "</span>
-<span class="va">cdmDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"their_cdm_database"</span>
-<span class="va">databaseName</span> <span class="op">&lt;-</span> <span class="st">"Name for database"</span>
-<span class="va">cohortDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"a_database_with_write_priv"</span>
-<span class="va">cohortTable</span> <span class="op">&lt;-</span> <span class="st">"package_table"</span>
-<span class="va">outputLocation</span> <span class="op">&lt;-</span> <span class="st">"location to save results"</span>
-
-<span class="va">cohortDetails</span> <span class="op">&lt;-</span> <span class="fu">createCohort</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>, 
-    cohortDatabaseSchema <span class="op">=</span> <span class="va">cohortDatabaseSchema</span>, cohortTable <span class="op">=</span> <span class="va">cohortTable</span>, package <span class="op">=</span> <span class="st">"Your Package Name"</span><span class="op">)</span>
-
-<span class="va">plpResult</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"model"</span>, package <span class="op">=</span> <span class="st">"Your Package Name"</span><span class="op">)</span><span class="op">)</span>
-<span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/externalValidatePlp.html">externalValidatePlp</a></span><span class="op">(</span>plpResult <span class="op">=</span> <span class="va">plpResult</span>, connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
-    validationSchemaTarget <span class="op">=</span> <span class="va">cohortDatabaseSchema</span>, validationSchemaOutcome <span class="op">=</span> <span class="va">cohortDatabaseSchema</span>, 
-    validationSchemaCdm <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>, validationTableTarget <span class="op">=</span> <span class="va">cohortTable</span>, 
-    validationTableOutcome <span class="op">=</span> <span class="va">cohortTable</span>, validationIdTarget <span class="op">=</span> <span class="va">target_cohort_id</span>, 
-    validationIdOutcome <span class="op">=</span> <span class="va">outcome_cohort_id</span><span class="op">)</span>
-
-<span class="co"># save results to standard output</span>
-<span class="va">resultLoc</span> <span class="op">&lt;-</span> <span class="fu">standardOutput</span><span class="op">(</span>result <span class="op">=</span> <span class="va">result</span>, outputLocation <span class="op">=</span> <span class="va">outputLocation</span>, studyName <span class="op">=</span> <span class="st">"external validation of ... model"</span>, 
-    databaseName <span class="op">=</span> <span class="va">databaseName</span>, cohortName <span class="op">=</span> <span class="st">"your cohortName"</span>, outcomeName <span class="op">=</span> <span class="st">"your outcomeName"</span><span class="op">)</span>
-
-<span class="co"># package results ready to submit</span>
-<span class="fu">packageResults</span><span class="op">(</span>mainFolder <span class="op">=</span> <span class="va">resultLoc</span>, includeROCplot <span class="op">=</span> <span class="cn">T</span>, includeCalibrationPlot <span class="op">=</span> <span class="cn">T</span>, 
-    includePRPlot <span class="op">=</span> <span class="cn">T</span>, includeTable1 <span class="op">=</span> <span class="cn">F</span>, includeThresholdSummary <span class="op">=</span> <span class="cn">T</span>, includeDemographicSummary <span class="op">=</span> <span class="cn">T</span>, 
-    includeCalibrationSummary <span class="op">=</span> <span class="cn">T</span>, includePredictionDistribution <span class="op">=</span> <span class="cn">T</span>, includeCovariateSummary <span class="op">=</span> <span class="cn">F</span>, 
-    removeLessThanN <span class="op">=</span> <span class="cn">F</span>, N <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></code></pre></div>
-<p>Where the target_cohort_id and outcome_cohort_id should correspond to the cohort_details.csv file.</p>
-<p>We recommend getting the network implementors to submit their results of <code>createCohort()</code> before continuing with the study to ensure definitions run across the network. After running the rest of main.R the implementor should inspect the files in the export folder created by the package to ensure there isn’t sensitive data remaining. Once checked the implementor can run submit.R to send the results to the study organisor. The submit.R file is:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">submitResults</span><span class="op">(</span>exportFolder <span class="op">=</span> <span class="va">outputLocation</span>, dbName <span class="op">=</span> <span class="va">databaseName</span>, <span class="va">key</span>, <span class="va">secret</span><span class="op">)</span></code></pre></div>
-</div>
-<div id="useful-patientlevelprediction-functions" class="section level1">
-<h1 class="hasAnchor">
-<a href="#useful-patientlevelprediction-functions" class="anchor"></a>Useful PatientLevelPrediction Functions</h1>
-<p>The functions to aid the creation of a network study are:</p>
-<table class="table">
-<colgroup>
-<col width="28%">
-<col width="46%">
-<col width="25%">
-</colgroup>
-<thead><tr class="header">
-<th>Function</th>
-<th>Description</th>
-<th>Usage</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>checkPlpInstall()</code></td>
-<td>This function checks the connection, and various aspects of the PLP package to check it is set up correctly</td>
-<td>This should be run with the appropriate settings to check the contributor is set up correctly for the study</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/getPlpData.html">getPlpData()</a></code></td>
-<td>This function extracts the data from the cdm for model development</td>
-<td>This should be used if developing new models</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/runPlp.html">runPlp()</a></code></td>
-<td>This function trains and tests a new PLP model</td>
-<td>This should be used if developing new models</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/transportPlp.html">transportPlp()</a></code></td>
-<td>This function exports the output of runPlp into an R package while removing sensitive objects</td>
-<td>This should be used when saving a model into a study package to validate the model</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/externalValidatePlp.html">externalValidatePlp()</a></code></td>
-<td>This function requires the user to inpute an existing model and then extracts the required data on a new database and applies/evaluates the model.</td>
-<td>This should be used if validating a PLP model</td>
-</tr>
-</tbody>
-</table>
 </div>
   </div>
 
