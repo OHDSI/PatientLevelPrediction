@@ -56,23 +56,19 @@ discriminationServer <- function(id, plpResult) {
       
       sumTable <- shiny::reactive({
         data <- plpResult()$performanceEvaluation$evaluationStatistics
-        data <- as.data.frame(data)
-        data$Metric <- as.character(data$Metric)
-        data$Value <- as.double(as.character(data$Value))
-        data$Value <- format(data$Value, digits = 4, scientific = F)
-        ind <- data$Metric %in% c('auc',
-                                  'AUROC', 
-                                  'AUC.auc',
-                                  'auc95lb',
-                                  'auc.auc95lb',
-                                  'AUC.auc_lb95ci',
-                                  'auc.auc95ub', 
-                                  'auc95ub',
-                                  'AUC.auc_ub95ci',
+        for(i in 1:ncol(data)){
+          data[,i] <- unlist(data[,i])
+        }
+        data$value <- as.double(as.character(data$value))
+        data$value <- format(data$value, digits = 4, scientific = F)
+        ind <- data$metric %in% c('AUROC', 
+                                  '95% lower AUROC',
+                                  '95% upper AUROC',
                                   'AUPRC'
+                                  
         )
         
-        reshape2::dcast(data[ind,], Eval ~ Metric, value.var = 'Value')
+        reshape2::dcast(data[ind,], evaluation ~ metric, value.var = 'value')
         
       })
       
@@ -122,33 +118,33 @@ discriminationServer <- function(id, plpResult) {
       )
       
      output$roc <- plotly::renderPlotly({
-       type <- trimws(sumTable()$Eval[input$summaryTable_rows_selected])
+       type <- trimws(sumTable()$evaluation[input$summaryTable_rows_selected])
        tryCatch({plots()$roc[[type]]}, error = function(err){emptyPlot(title = err)})
      })
       
       output$pr <- plotly::renderPlotly({
-        type <- trimws(sumTable()$Eval[input$summaryTable_rows_selected])
+        type <- trimws(sumTable()$evaluation[input$summaryTable_rows_selected])
         tryCatch({plots()$pr[[type]]}, error = function(err){emptyPlot(title = err)})
      })
       
       output$f1 <- plotly::renderPlotly({
-        type <- trimws(sumTable()$Eval[input$summaryTable_rows_selected])
+        type <- trimws(sumTable()$evaluation[input$summaryTable_rows_selected])
         tryCatch({plots()$f1[[type]]}, error = function(err){emptyPlot(title = err)})
       })
       
       # preference plot
       output$prefdist <- shiny::renderPlot({
-        type <- trimws(sumTable()$Eval[input$summaryTable_rows_selected])
+        type <- trimws(sumTable()$evaluation[input$summaryTable_rows_selected])
         tryCatch({plots()$prefpdf[[type]]}, error = function(err){emptyPlot(title = err)})
       })
       
       output$preddist <- shiny::renderPlot({
-        type <- trimws(sumTable()$Eval[input$summaryTable_rows_selected])
+        type <- trimws(sumTable()$evaluation[input$summaryTable_rows_selected])
         tryCatch({plots()$predpdf[[type]]}, error = function(err){emptyPlot(title = err)})
       })
       
       output$box <- shiny::renderPlot({
-        type <- trimws(sumTable()$Eval[input$summaryTable_rows_selected])
+        type <- trimws(sumTable()$evaluation[input$summaryTable_rows_selected])
         tryCatch({plots()$box[[type]]}, error = function(err){emptyPlot(title = err)})
       })
 
@@ -182,13 +178,13 @@ discriminationServer <- function(id, plpResult) {
 # pltting
 rocPlot <- function(eval, type){
   
-  types <- unique(eval$thresholdSummary$Eval)
+  types <- unique(eval$thresholdSummary$evaluation)
   rocobject <- list()
   length(rocobject) <- length(types)
   names(rocobject) <- types
   
   for(type in types){
-    data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%type,]
+    data <- eval$thresholdSummary[eval$thresholdSummary$evaluation%in%type,]
 
     rocobject[[type]] <- plotly::plot_ly(x = 1-c(0,data$specificity,1)) %>%
       plotly::add_lines(y = c(1,data$sensitivity,0),name = "hv", 
@@ -208,13 +204,13 @@ rocPlot <- function(eval, type){
 }
 
 prPlot <- function(eval, type){
-  types <- unique(eval$thresholdSummary$Eval)
+  types <- unique(eval$thresholdSummary$evaluation)
   probject <- list()
   length(probject) <- length(types)
   names(probject) <- types
   
   for(type in types){
-    data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%type,]
+    data <- eval$thresholdSummary[eval$thresholdSummary$evaluation%in%type,]
     
     popAv <- data$trueCount[1]/(data$trueCount[1] + data$falseCount[1])
     probject[[type]]  <- plotly::plot_ly(x = data$sensitivity) %>%
@@ -236,13 +232,13 @@ prPlot <- function(eval, type){
 }
 
 f1Plot <- function(eval, type){
-  types <- unique(eval$thresholdSummary$Eval)
+  types <- unique(eval$thresholdSummary$evaluation)
   f1object <- list()
   length(f1object) <- length(types)
   names(f1object) <- types
   
   for(type in types){
-    data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%type,]
+    data <- eval$thresholdSummary[eval$thresholdSummary$evaluation%in%type,]
     
     f1object[[type]]  <- plotly::plot_ly(x = data$predictionThreshold) %>%
       plotly::add_lines(y = data$f1Score, name = "hv", 
@@ -268,10 +264,10 @@ f1Plot <- function(eval, type){
 
 plotPredictedPDF <- function(evaluation, fileName=NULL){
   
-  if(!is.null(evaluation$thresholdSummary$Eval)){
-    types <- unique(evaluation$thresholdSummary$Eval)
+  if(!is.null(evaluation$thresholdSummary$evaluation)){
+    types <- unique(evaluation$thresholdSummary$evaluation)
   } else{
-    evaluation$thresholdSummary$Eval <- 'na'
+    evaluation$thresholdSummary$evaluation <- 'na'
     types <- 'na'
   }
   
@@ -282,8 +278,8 @@ plotPredictedPDF <- function(evaluation, fileName=NULL){
   for(type in types){
     
   ind <- 1:nrow(evaluation$thresholdSummary)
-  if(!is.null(evaluation$thresholdSummary$Eval)){
-    ind <- evaluation$thresholdSummary$Eval == type
+  if(!is.null(evaluation$thresholdSummary$evaluation)){
+    ind <- evaluation$thresholdSummary$evaluation == type
   }
   
   
@@ -333,10 +329,10 @@ return(plotResult)
 
 plotPreferencePDF <- function(evaluation, fileName=NULL){
   
-  if(!is.null(evaluation$thresholdSummary$Eval)){
-    types <- unique(evaluation$thresholdSummary$Eval)
+  if(!is.null(evaluation$thresholdSummary$evaluation)){
+    types <- unique(evaluation$thresholdSummary$evaluation)
   } else{
-    evaluation$thresholdSummary$Eval <- 'na'
+    evaluation$thresholdSummary$evaluation <- 'na'
     types <- 'na'
   }
   
@@ -347,13 +343,13 @@ plotPreferencePDF <- function(evaluation, fileName=NULL){
   for(type in types){
   
   ind <- 1:nrow(evaluation$thresholdSummary)
-  if(!is.null(evaluation$thresholdSummary$Eval)){
-    ind <- evaluation$thresholdSummary$Eval == type
+  if(!is.null(evaluation$thresholdSummary$evaluation)){
+    ind <- evaluation$thresholdSummary$evaluation == type
   }
   
-  x<- evaluation$thresholdSummary[ind,c('preferenceThreshold','truePositiveCount','trueNegativeCount',
+  x <- evaluation$thresholdSummary[ind,c('preferenceThreshold','truePositiveCount','trueNegativeCount',
                                         'falsePositiveCount','falseNegativeCount')]
-  x<- x[order(x$preferenceThreshold,-x$truePositiveCount),]
+  x <- x[order(x$preferenceThreshold,-x$truePositiveCount, x$trueNegativeCount),]
   x$out <- c(x$truePositiveCount[-length(x$truePositiveCount)]-x$truePositiveCount[-1], x$truePositiveCount[length(x$truePositiveCount)])
   x$nout <- c(x$falsePositiveCount[-length(x$falsePositiveCount)]-x$falsePositiveCount[-1], x$falsePositiveCount[length(x$falsePositiveCount)])
   
@@ -396,10 +392,10 @@ return(plotResult)
 
 plotPredictionDistribution <- function(evaluation){
   
-  if(!is.null(evaluation$predictionDistribution$Eval)){
-    types <- unique(evaluation$predictionDistribution$Eval)
+  if(!is.null(evaluation$predictionDistribution$evaluation)){
+    types <- unique(evaluation$predictionDistribution$evaluation)
   } else{
-    evaluation$predictionDistribution$Eval <- 'na'
+    evaluation$predictionDistribution$evaluation <- 'na'
     types <- 'na'
   }
   
@@ -410,8 +406,8 @@ plotPredictionDistribution <- function(evaluation){
   for(type in types){
   
   ind <- 1:nrow(evaluation$predictionDistribution)
-  if(!is.null(evaluation$predictionDistribution$Eval)){
-    ind <- evaluation$predictionDistribution$Eval == type
+  if(!is.null(evaluation$predictionDistribution$evaluation)){
+    ind <- evaluation$predictionDistribution$evaluation == type
   }
   x<- evaluation$predictionDistribution[ind,]
   

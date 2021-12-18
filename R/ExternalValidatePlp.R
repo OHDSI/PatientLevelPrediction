@@ -76,6 +76,7 @@ externalValidatePlp <- function(
   )
   
   executionSettings <- list(
+    ExecutionDateTime = Sys.Date(),
     PackageVersion = list(
       rVersion= R.Version()$version.string,
       packageVersion = utils::packageVersion("PatientLevelPrediction")
@@ -91,11 +92,13 @@ externalValidatePlp <- function(
     model = 'external validation of model',
     settings = plpModel$settings,
     valdiationDetails   = list(
+      developmentDatabase = plpModel$trainDetails$cdmDatabaseSchema,
       cdmDatabaseSchema = databaseName,
+      populationSettings = attr(population, 'metaData')$populationSettings,
       outcomeId = attr(population, 'metaData')$outcomeId,
       cohortId = attr(plpData, 'metaData')$cohortId,
       attrition = attr(population, 'metaData')$attrition,
-      valdationDate = Sys.Date()
+      valdationDate = Sys.Date() # is this needed?
     )
   )
   attr(model, "predictionFunction") <- 'none'

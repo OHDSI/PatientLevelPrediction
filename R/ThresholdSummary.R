@@ -72,7 +72,7 @@ getThresholdSummary_binary <- function(prediction, evalColumn, ...){
     }
     
     # add the preference score:
-    proportion <- sum(predictionOfInterest$outcomeCount)/nrow(predictionOfInterest)
+    proportion <- sum(predictionOfInterest$outcomeCount>0)/nrow(predictionOfInterest)
     # ISSUE WITH CAL # remove any predictions of 1
     predictionOfInterest$value[predictionOfInterest$value==1] <- 0.99999999
     x <- exp(log(predictionOfInterest$value/(1 - predictionOfInterest$value)) - log(proportion/(1 - proportion)))

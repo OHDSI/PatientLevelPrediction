@@ -29,13 +29,13 @@ setingsServer <- function(id, plpResult) {
     function(input, output, session) {
       
       # input tables
-      output$modelTable <- DT::renderDataTable(formatModSettings(plpResult()$model$modelSettings  ))
-      output$covariateTable <- DT::renderDataTable(formatCovSettings(plpResult()$model$metaData$call$covariateSettings))
-      output$populationTable <- DT::renderDataTable(formatPopSettings(plpResult()$model$populationSettings))
+      output$modelTable <- DT::renderDataTable(formatModSettings(plpResult()$model$settings$modelSettings  ))
+      output$covariateTable <- DT::renderDataTable(formatCovSettings(plpResult()$model$settings$covariateSettings))
+      output$populationTable <- DT::renderDataTable(formatPopSettings(plpResult()$model$settings$populationSettings))
       
-      output$hpTable <- DT::renderDataTable(DT::datatable(as.data.frame(plpResult()$model$hyperParamSearch),
+      output$hpTable <- DT::renderDataTable(DT::datatable(as.data.frame(plpResult()$model$trainDetails$hyperParamSearch),
                                                           options = list(scrollX = TRUE)))
-      output$attritionTable <- DT::renderDataTable(plpResult()$inputSetting$populationSettings$attrition)
+      output$attritionTable <- DT::renderDataTable(plpResult()$model$trainDetails$attrition) # diff for val
       
       
     }
@@ -46,9 +46,10 @@ setingsServer <- function(id, plpResult) {
 # helpers
 # format modelSettings
 formatModSettings <- function(modelSettings){
-  modelset <- data.frame(Setting = c('Model',names(modelSettings[[2]])),
-                         Value = c(modelSettings[[1]], unlist(lapply(modelSettings[[2]], 
-                                                                     function(x) paste0(x, collapse=',')))))
+  modelset <- data.frame(Setting = c(names(modelSettings$finalModelParameters)),
+                         Value = c(unlist(lapply(modelSettings$finalModelParameters, 
+                                                                     function(x) paste0(x, collapse=','))))
+    )
   row.names(modelset) <- NULL
   return(modelset)
 }

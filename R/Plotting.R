@@ -428,7 +428,7 @@ plotPreferencePDF <- function(
         .data$falseNegativeCount
       )
   
-  x<- x[order(x$preferenceThreshold,-x$truePositiveCount),]
+  x<- x[order(x$preferenceThreshold,-x$truePositiveCount, x$trueNegativeCount),]
   x$out <- c(x$truePositiveCount[-length(x$truePositiveCount)]-x$truePositiveCount[-1], x$truePositiveCount[length(x$truePositiveCount)])
   x$nout <- c(x$falsePositiveCount[-length(x$falsePositiveCount)]-x$falsePositiveCount[-1], x$falsePositiveCount[length(x$falsePositiveCount)])
   

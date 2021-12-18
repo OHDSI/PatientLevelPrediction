@@ -1,2 +1,0 @@
-outcomeId,cohortId,modelSettingsId,analysisId,devDatabase,populationSettingId,modelSettingId,covariateSettingId,modelSettingName,addExposureDaysToStart,riskWindowStart,addExposureDaysToEnd,riskWindowEnd,plpDataFolder,studyPopFile,plpResultFolder,cohortName,outcomeName
-

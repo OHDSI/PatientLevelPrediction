@@ -34,7 +34,10 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
         covariateSummary <- shiny::reactive({
           if(inputSingleView == "Model"){
           if(is.null(plpResult()$covariateSummary)){
-            covariateSummary <- loadCovSumFromDb(summaryTable[resultRow(),], mySchema, con, myTableAppend, targetDialect)
+            covariateSummary <- tryCatch(
+              {loadCovSumFromDb(summaryTable[resultRow(),], mySchema, con, myTableAppend, targetDialect)},
+              error = function(e){return(NULL)}
+              )
             return(covariateSummary)
           } else{
             return(plpResult()$covariateSummary)
@@ -51,7 +54,7 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
 
       
       output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(covariateSummary()),
-                                                                  nonZeroCount = sum(covariateSummary()$covariateValue!=0),
+                                                                  nonZeroCount = sum(covariateSummary()$covariateValue!=0, na.rm = T),
                                                                   intercept = getIntercept(plpResult())))
       
       # covariate model plots
@@ -83,7 +86,7 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
 # format covariate summary table
 formatCovariateTable <- function(covariateSummary){
   covariateSummary <- as.data.frame(covariateSummary)
-  for(coln in c('covariateValue','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','StandardizedMeanDiff')){
+  for(coln in c('covariateValue','WithOutcome_CovariateMean','WithNoOutcome_CovariateMean','StandardizedMeanDiff')){
     if(sum(colnames(covariateSummary)==coln)>0){
       covariateSummary[,coln] <- format(round(covariateSummary[,coln], 4), nsmall = 4)
       class(covariateSummary[,coln]) <- "numeric"
@@ -96,11 +99,11 @@ formatCovariateTable <- function(covariateSummary){
 
 editCovariates <- function(covs){
   if(!is.null(covs$StandardizedMeanDiff)){
-    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome','StandardizedMeanDiff')]),
+    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','WithOutcome_CovariateMean','WithNoOutcome_CovariateMean','StandardizedMeanDiff')]),
                 colnames = c('Covariate Name', 'Value','Count', 'Outcome Mean', 'Non-outcome Mean','Std Mean Diff')
     ))
   } else{
-    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome')]),
+    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','WithOutcome_CovariateMean','WithNoOutcome_CovariateMean')]),
                 colnames = c('Covariate Name', 'Value','Count', 'Outcome Mean', 'Non-outcome Mean')
     ))
   }
@@ -113,8 +116,8 @@ plotCovariateSummary <- function(covariateSummary){
   #writeLines(paste(colnames(covariateSummary)))
   #writeLines(paste(covariateSummary[1,]))
   # remove na values 
-  covariateSummary$CovariateMeanWithNoOutcome[is.na(covariateSummary$CovariateMeanWithNoOutcome)] <- 0
-  covariateSummary$CovariateMeanWithOutcome[is.na(covariateSummary$CovariateMeanWithOutcome)] <- 0
+  covariateSummary$WithNoOutcome_CovariateMean[is.na(covariateSummary$WithNoOutcome_CovariateMean)] <- 0
+  covariateSummary$WithOutcome_CovariateMean[is.na(covariateSummary$WithOutcome_CovariateMean)] <- 0
   if(!'covariateValue'%in%colnames(covariateSummary)){
     covariateSummary$covariateValue <- 1
   }
@@ -146,12 +149,12 @@ plotCovariateSummary <- function(covariateSummary){
             bordercolor = "#FFFFFF",
             borderwidth = 1)
   
-  ind <- covariateSummary$CovariateMeanWithNoOutcome <=1 & covariateSummary$CovariateMeanWithOutcome <= 1
+  ind <- covariateSummary$WithNoOutcome_CovariateMean <=1 & covariateSummary$WithOutcome_CovariateMean <= 1
   # create two plots -1 or less or g1
-  binary <- plotly::plot_ly(x = covariateSummary$CovariateMeanWithNoOutcome[ind],
+  binary <- plotly::plot_ly(x = covariateSummary$WithNoOutcome_CovariateMean[ind],
                             #size = covariateSummary$size[ind],
                             showlegend = F) %>%
-    plotly::add_markers(y = covariateSummary$CovariateMeanWithOutcome[ind],
+    plotly::add_markers(y = covariateSummary$WithOutcome_CovariateMean[ind],
                         color=factor(covariateSummary$color[ind]),
                         hoverinfo = 'text',
                         text = ~paste('</br> Type: ', covariateSummary$color[ind],
@@ -171,10 +174,10 @@ plotCovariateSummary <- function(covariateSummary){
       legend = list(orientation = 'h', y = -0.3), showlegend = T)
   
   if(sum(!ind)>0){
-    maxValue <- max(c(covariateSummary$CovariateMeanWithNoOutcome[!ind],
-                      covariateSummary$CovariateMeanWithOutcome[!ind]), na.rm = T)
-    meas <- plotly::plot_ly(x = covariateSummary$CovariateMeanWithNoOutcome[!ind] ) %>%
-      plotly::add_markers(y = covariateSummary$CovariateMeanWithOutcome[!ind],
+    maxValue <- max(c(covariateSummary$WithNoOutcome_CovariateMean[!ind],
+                      covariateSummary$WithOutcome_CovariateMean[!ind]), na.rm = T)
+    meas <- plotly::plot_ly(x = covariateSummary$WithNoOutcome_CovariateMean[!ind] ) %>%
+      plotly::add_markers(y = covariateSummary$WithOutcome_CovariateMean[!ind],
                           hoverinfo = 'text',
                           text = ~paste('</br> Type: ', covariateSummary$color[!ind],
                                         '</br> Time: ', covariateSummary$times[!ind],
@@ -202,9 +205,9 @@ getIntercept <- function(plpResult){
     
     if('model'%in%names(plpResult$model)){
       
-      if('coefficient'%in%names(plpResult$model$model)){
+      if('coefficients'%in%names(plpResult$model$model)){
         
-        return(plpResult$model$model$coefficient[1])
+        return(plpResult$model$model$coefficients[1])
         
       }
       

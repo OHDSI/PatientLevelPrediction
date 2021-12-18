@@ -53,8 +53,8 @@ validationServer <- function(id,
       output$validationTable <- DT::renderDataTable({
         if(nrow(validationTable())>0){
           
-          cind <- c('Analysis','T','O', 'Val', 'AUC','calibrationInLarge', 'T Size', 'O Count','Val (%)')%in%colnames(validationTable())
-          validationTable()[,c('Analysis','T','O', 'Val', 'AUC','calibrationInLarge', 'T Size', 'O Count','Val (%)')[cind]]
+          cind <- c('Analysis','T','O', 'Val', 'AUROC','calibrationInLarge intercept', 'T Size', 'O Count','Val (%)')%in%colnames(validationTable())
+          validationTable()[,c('Analysis','T','O', 'Val', 'AUROC','calibrationInLarge intercept', 'T Size', 'O Count','Val (%)')[cind]]
         } else{
           NULL
         }
@@ -135,13 +135,13 @@ plotRocs <- function(evaluationList,modelNames, type= NULL, fileName=NULL){
   createSteps <- function(evaluation, type, name){
     
     if(is.null(type)){
-      if(length(unique(evaluation$thresholdSummary$Eval))>1){
-        ind <- evaluation$thresholdSummary$Eval%in%c('test','validation')
+      if(length(unique(evaluation$thresholdSummary$evaluation))>1){
+        ind <- evaluation$thresholdSummary$evaluation%in%c('Test','validation')
         x<- evaluation$thresholdSummary[ind,c('falsePositiveRate','sensitivity')]} else{
           x<- evaluation$thresholdSummary[,c('falsePositiveRate','sensitivity')]
         }
     } else {
-      ind <- evaluation$thresholdSummary$Eval==type
+      ind <- evaluation$thresholdSummary$evaluation==type
       x <- evaluation$thresholdSummary[ind,c('falsePositiveRate','sensitivity')]
     }
     
@@ -190,14 +190,14 @@ plotCals <- function(evaluationList,modelNames, type = NULL, fileName=NULL){
   calVal <- function(evaluation, type, name){
     
     if(is.null(type)){
-      if(length(unique(evaluation$calibrationSummary$Eval))>1){
-        ind <- evaluation$calibrationSummary$Eval%in%c('test','validation')
+      if(length(unique(evaluation$calibrationSummary$evaluation))>1){
+        ind <- evaluation$calibrationSummary$evaluation%in%c('Test','validation')
         x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence','PersonCountAtRisk')]
       } else{
         x<- evaluation$calibrationSummary[,c('averagePredictedProbability','observedIncidence','PersonCountAtRisk')]
       }
     } else{
-      ind <- evaluation$calibrationSummary$Eval==type
+      ind <- evaluation$calibrationSummary$evaluation==type
       x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence','PersonCountAtRisk')]
     }
     
@@ -251,14 +251,14 @@ plotCalsSmooth <- function(evaluationList,modelNames, type = NULL){
   calVal <- function(evaluation, type, name){
     
     if(is.null(type)){
-      if(length(unique(evaluation$calibrationSummary$Eval))>1){
-        ind <- evaluation$calibrationSummary$Eval%in%c('test','validation')
+      if(length(unique(evaluation$calibrationSummary$evaluation))>1){
+        ind <- evaluation$calibrationSummary$evaluation%in%c('Test','validation')
         data <- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence','PersonCountAtRisk')]
       } else{
         data <- evaluation$calibrationSummary[,c('averagePredictedProbability','observedIncidence','PersonCountAtRisk')]
       }
     } else{
-      ind <- evaluation$calibrationSummary$Eval==type
+      ind <- evaluation$calibrationSummary$evaluation==type
       data <- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence','PersonCountAtRisk')]
     }
     
@@ -276,14 +276,14 @@ plotCalsSmooth <- function(evaluationList,modelNames, type = NULL){
   getVal <- function(evaluation, type, name){
     
     if(is.null(type)){
-      if(length(unique(evaluation$calibrationSummary$Eval))>1){
-        ind <- evaluation$calibrationSummary$Eval%in%c('test','validation')
+      if(length(unique(evaluation$calibrationSummary$evaluation))>1){
+        ind <- evaluation$calibrationSummary$evaluation%in%c('Test','validation')
         data <- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence')]
       } else{
         data <- evaluation$calibrationSummary[,c('averagePredictedProbability','observedIncidence')]
       }
     } else{
-      ind <- evaluation$calibrationSummary$Eval==type
+      ind <- evaluation$calibrationSummary$evaluation==type
       data <- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence')]
     }
     

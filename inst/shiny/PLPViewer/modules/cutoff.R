@@ -70,7 +70,7 @@ cutoffServer <- function(id, plpResult) {
       # update threshold slider based on results size
       shiny::observe({ 
         if(!is.null(plpResult()$performanceEvaluation)){
-          n <- nrow(plpResult()$performanceEvaluation$thresholdSummary[plpResult()$performanceEvaluation$thresholdSummary$Eval%in%c('test','validation'),])
+          n <- nrow(plpResult()$performanceEvaluation$thresholdSummary[plpResult()$performanceEvaluation$thresholdSummary$evaluation%in%c('Test','Validation'),])
         }else{
           n <- 100
         }
@@ -143,7 +143,7 @@ cutoffServer <- function(id, plpResult) {
 
 getORC <- function(eval, pointOfInterest){
   
-  data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
+  data <- eval$thresholdSummary[eval$thresholdSummary$evaluation%in%c('Test','Validation'),]
   data <- data[order(data$predictionThreshold),]
   pointOfInterest <- data[pointOfInterest,]
   

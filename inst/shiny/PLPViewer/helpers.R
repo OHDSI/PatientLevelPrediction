@@ -28,31 +28,18 @@ getPlpResult <- function(result,
       tempResult <- validation$validation[[i-1]]
       tempResult$type <- 'validation'
     }
-    tempResult$log <- 'log not available'
   }else if(inputType == 'plpNoClass'){
     tempResult <- result
     tempResult$type <- 'validation'
-    tempResult$log <- 'log not available'
   }else if( inputType == 'file') {
     
     # support rds, csv and runPlp objects
     tempResult <- NULL
     loc <- summaryTable[resultRow(),]$plpResultLocation
     locLoaderFunc <- summaryTable[resultRow(),]$plpResultLoad
-    
-    if(locLoaderFunc ==  'loadPlpFromCsv'){
-      logLocation <- file.path(loc,'plpLog.txt')
-    } else{
-      logLocation <- gsub('plpResult','plpLog.txt', gsub('validationResult.rds','plpLog.txt',gsub('plpResult.rds','plpLog.txt', as.character(loc))))
-    }
-    if(file.exists(logLocation)){
-      txt <- readLines(logLocation)
-    } else{
-      txt <- 'log not available'
-    }
-    if(file.exists(as.character(loc))){
+
+    if(dir.exists(as.character(loc))){
       tempResult <- do.call(as.character(locLoaderFunc), list(as.character(loc)))
-      tempResult$log <- txt
       tempResult$type <- ifelse(length(grep('/Validation',loc))>0,'validation','test')
     }
   }else {

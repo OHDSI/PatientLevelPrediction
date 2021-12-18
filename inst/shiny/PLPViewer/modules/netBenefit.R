@@ -40,7 +40,7 @@ nbServer <- function(id, plpResult) {
       output$nbSelect = shiny::renderUI({
         shiny::selectInput(inputId = session$ns('nbSelectInput'), 
                            label = 'Type:', 
-                           choices = unique(plpResult()$performanceEvaluation$thresholdSummary$Eval), 
+                           choices = unique(plpResult()$performanceEvaluation$thresholdSummary$evaluation), 
                            multiple = F, selectize=FALSE)
       })
       
@@ -87,8 +87,8 @@ extractNetBenefit <- function(performanceEvaluation, type=NULL, modelId=NULL){
   data <- performanceEvaluation$thresholdSummary
   
   if(!is.null(type)){
-    if(!is.null(data$Eval[1])){
-      data <- data[data$Eval==type,]
+    if(!is.null(data$evaluation[1])){
+      data <- data[data$evaluation==type,]
     }
   }
   
