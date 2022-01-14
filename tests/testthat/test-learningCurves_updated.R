@@ -34,7 +34,7 @@ learningCurve <- PatientLevelPrediction::createLearningCurve(
 test_that("learningCurve output correct", {
 
   
-  testthat::expect_equal(class(learningCurve), "data.frame")
+  testthat::expect_true(is.data.frame(learningCurve))
   testthat::expect_equal(sum(colnames(learningCurve)%in%c(
     "trainFraction",
     "Train_AUROC",
@@ -50,7 +50,6 @@ test_that("plotLearningCurve", {
   
   test <- plotLearningCurve(learningCurve = learningCurve, 
     metric = 'AUROC')
-  
   
   # test the plot works
   testthat::expect_s3_class(test, 'ggplot')

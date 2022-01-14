@@ -26,6 +26,7 @@
 #' @param modelDesignList                A list of model designs created using \code{createModelDesign()}
 #' @param onlyFetchData                  Only fetches and saves the data object to the output folder without running the analysis.
 #' @param splitSettings                  The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}
+#' @param cohortDefinitions               A list of cohort definitions for the target and outcome cohorts
 #' @param logSettings                    The setting spexcifying the logging for the analyses created using \code{createLogSettings()}
 #' @param saveDirectory                   Name of the folder where all the outputs will written to.
 #' 
@@ -50,6 +51,7 @@ runMultiplePlp <- function(
     splitSeed = 123, 
     nfold = 3
   ),
+  cohortDefinitions = NULL,
   logSettings = createLogSettings(
     verbosity = "DEBUG", 
     timeStamp = T, 
@@ -77,7 +79,17 @@ runMultiplePlp <- function(
     modelDesignList = modelDesignList, 
     idList = idList
   )
-  write.csv(settingstable, file.path(saveDirectory,'settings.csv'), row.names = F)
+  
+  if(!is.null(cohortDefinitions)){
+    cohortNames <- data.frame(
+      targetName = getNames(cohortDefinitions, settingstable$targetId),
+      outcomeName = getNames(cohortDefinitions, settingstable$outcomeId)
+      )
+    settingstable <- cbind(cohortNames, settingstable)
+  }
+  
+  utils::write.csv(settingstable, file.path(saveDirectory,'settings.csv'), row.names = F)
+  saveJsonFile(idList, file.path(saveDirectory,'settings.json'))
   
   # list(targetId, covariateSetting, outcomeIds, saveLocation)
   dataSettings <- getDataSettings(settingstable)
@@ -113,6 +125,7 @@ runMultiplePlp <- function(
   # runPlp
   if(!onlyFetchData){
     for(i in 1:nrow(settingstable)){
+      modelDesign <- modelDesignList[[i]]
       settings <- settingstable[i,]
       
       dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation)))>0
@@ -120,25 +133,31 @@ runMultiplePlp <- function(
       if(dataExists){
         plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
         
-        runPlpSettings <- list(
-          plpData = plpData,
-          outcomeId = settings$outcomeId,
-          analysisId = settings$analysisId,
-          populationSettings = getSettingFromId(idList, type = 'populationSettings', settings$populationSettings),
-          splitSettings = splitSettings,
-          sampleSettings = getSettingFromId(idList, type = 'sampleSettings', settings$sampleSettings),
-          featureEngineeringSettings = getSettingFromId(idList, type = 'featureEngineeringSettings', settings$featureEngineeringSettings),
-          preprocessSettings = getSettingFromId(idList, type = 'preprocessSettings', settings$preprocessSettings),
-          modelSettings = getSettingFromId (idList, type = 'modelSettings', settings$modelSettings),
-          logSettings = logSettings,
-          executeSettings = getSettingFromId(idList, type = 'executeSettings', settings$executeSettings),
-          saveDirectory = saveDirectory
-        )
-        
-        result <- tryCatch(
-          {do.call(runPlp, runPlpSettings)},
-          error = function(e){ParallelLogger::logInfo(e); return(NULL)}
-        )
+        analysisExists <- file.exists(file.path(saveDirectory, settings$analysisId,'plpResult', 'runPlp.rds'))
+        if(!analysisExists){
+          
+          runPlpSettings <- list(
+            plpData = plpData,
+            outcomeId = modelDesign$outcomeId,
+            analysisId = settings$analysisId,
+            populationSettings = modelDesign$populationSettings,
+            splitSettings = splitSettings,
+            sampleSettings = modelDesign$sampleSettings,
+            featureEngineeringSettings = modelDesign$featureEngineeringSettings,
+            preprocessSettings = modelDesign$preprocessSettings,
+            modelSettings = modelDesign$modelSettings,
+            logSettings = logSettings,
+            executeSettings = modelDesign$executeSettings,
+            saveDirectory = saveDirectory
+          )
+          
+          result <- tryCatch(
+            {do.call(runPlp, runPlpSettings)},
+            error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+          )
+        } else{
+          ParallelLogger::logInfo(paste('Analysis ', settings$analysisId, 'exists at', file.path(saveDirectory, settings$analysisId)))
+        }
       }
     }
     
@@ -162,6 +181,7 @@ runMultiplePlp <- function(
 #' @param sampleSettings                  Either NULL or an object of class \code{sampleSettings} with the over/under sampling settings used for model development
 #' @param preprocessSettings              Either NULL or an object of class \code{preprocessSettings} created using \code{createPreprocessingSettings()}
 #' @param modelSettings                   The model settings such as \code{setLassoLogisticRegression()}
+#' @param runCovariateSummary             Whether to run the covariateSummary
 #' 
 #' @return
 #' A list with analysis settings used to develop a single prediction model
@@ -176,7 +196,8 @@ createModelDesign <- function(
   featureEngineeringSettings = NULL,
   sampleSettings = NULL,
   preprocessSettings = NULL,
-  modelSettings
+  modelSettings = NULL,
+  runCovariateSummary = T
 ){
   
   checkIsClass(targetId, c('numeric','integer'))
@@ -230,8 +251,8 @@ createModelDesign <- function(
       runSampleData = useSample,
       runfeatureEngineering = useFE,
       runPreprocessData = usePreprocess,
-      runModelDevelopment = T,
-      runCovariateSummary = T
+      runModelDevelopment = !is.null(modelSettings),
+      runCovariateSummary =  runCovariateSummary
     )
     
   )
@@ -267,21 +288,32 @@ savePlpAnalysesJson <- function(
   createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
   createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
   ),
-  saveDirectory
+  saveDirectory = NULL
   ){
   
-  lapply(modelDesignList, function(x){checkIsClass(x, 'modelDesign')})
-  checkIsClass(saveDirectory, 'character')
-  if(!dir.exists(saveDirectory)){
-    dir.create(saveDirectory, recursive = T)
+  if(class(modelDesignList) == 'modelDesign'){
+    modelDesignList <- list(modelDesignList)
   }
+  
+  lapply(modelDesignList, function(x){checkIsClass(x, 'modelDesign')})
+
   
   # save this as a json
   jsonSettings <- list(analyses = modelDesignList)
   
-  ParallelLogger::saveSettingsToJson(jsonSettings, file=file.path(saveDirectory,"predictionAnalysisList.json"))
-  return(file.path(saveDirectory,"predictionAnalysisList.json"))  
+  if(!is.null(saveDirectory)){
+    checkIsClass(saveDirectory, 'character')
+    
+    if(!dir.exists(saveDirectory)){
+      dir.create(saveDirectory, recursive = T)
+    }
+    
+    saveJsonFile(jsonSettings, file=file.path(saveDirectory,"predictionAnalysisList.json"))
+    
+    return(file.path(saveDirectory,"predictionAnalysisList.json")) 
+  }
   
+  return(jsonSettings)
 }
 
 
@@ -295,7 +327,7 @@ savePlpAnalysesJson <- function(
 #'                                      
 #' @examples
 #' \dontrun{
-#' modelDesignList <- loadPlpAnalysesJson('location of json settings')
+#' modelDesignList <- loadPlpAnalysesJson('location of json settings')$analysis
 #' }
 #'
 #' @export
@@ -313,13 +345,13 @@ loadPlpAnalysesJson <- function(
   }
   
   json <- tryCatch(
-    {ParallelLogger::loadSettingsFromJson(file = file.path(jsonFileLocation))},
+    {loadJsonFile(fileName = file.path(jsonFileLocation))},
     error= function(cond) {
       ParallelLogger::logInfo('Issue with loading json file...');
       ParallelLogger::logError(cond)
     })
   
-  return(json$analyses)
+  return(json)
   
 }
 
@@ -336,7 +368,7 @@ loadPlpAnalysesJson <- function(
 #' are found and the connection and database settings for the new data
 #' 
 #' @param analysesLocation                The location where the multiple plp analyses are
-#' @param valdiationDatabaseDetails       The validation database settings created using \code{createDatabaseDetails()}
+#' @param validationDatabaseDetails       The validation database settings created using \code{createDatabaseDetails()}
 #' @param validationRestrictPlpDataSettings  The settings specifying the extra restriction settings when extracting the data created using \code{createRestrictPlpDataSettings()}.
 #' @param recalibrate                      A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')
 #' @param saveDirectory               The location to save to validation results
@@ -344,7 +376,7 @@ loadPlpAnalysesJson <- function(
 #' @export 
 validateMultiplePlp <- function(
   analysesLocation,
-  valdiationDatabaseDetails,
+  validationDatabaseDetails,
   validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
   recalibrate = NULL,
   saveDirectory = NULL
@@ -353,7 +385,7 @@ validateMultiplePlp <- function(
   # add input checks 
   checkIsClass(analysesLocation, 'character')
   
-  checkIsClass(valdiationDatabaseDetails, 'databaseDetails')
+  checkIsClass(validationDatabaseDetails, 'databaseDetails')
   checkIsClass(validationRestrictPlpDataSettings, 'restrictPlpDataSettings')
   
   checkIsClass(recalibrate, c('character', 'NULL'))
@@ -381,13 +413,13 @@ validateMultiplePlp <- function(
     if(dir.exists(file.path(modelSettings[i],'plpResult'))){
       ParallelLogger::logInfo(paste0('plpResult found in ',modelSettings ))
       
-      plpResult <- loadPlpResult(file.path(modelSettings,'plpResult'))
+      plpModel <- loadPlpModel(file.path(modelSettings,'plpResult','model'))
       
       validations <-   tryCatch(
         {
           externalValidateDbPlp(
-            plpModel = plpResult$model,
-            validationDatabaseDetails = valdiationDatabaseDetails,
+            plpModel = plpModel,
+            validationDatabaseDetails = validationDatabaseDetails,
             validationRestrictPlpDataSettings = validationRestrictPlpDataSettings,
             settings = createValidationSettings(
               recalibrate = recalibrate
@@ -419,100 +451,51 @@ validateMultiplePlp <- function(
 
 # HELPERS
 #===============================
-
-extractAttributes <- function(x){
-  if(is.list(x)){
-    
-    attributeNames <- attributes(x)
-    if(!is.null(attributeNames)){
-      x$attributes <- attributeNames[names(attributeNames) != 'names']
-    }
-    
-    for(i in 1:length(x)){
-      if(is.list(x[[i]])){
-        attributeNames <- attributes(x[[i]])
-        if(!is.null(attributeNames)){
-          x[[i]]$attributes <- attributeNames[names(attributeNames) != 'names']
-        }
-        
-      }
-    }
-    
+getidList <- function(modelDesignList){
+  
+  types <- c(
+    'targetId', 
+    'outcomeId', 
+    'restrictPlpDataSettings',
+    'covariateSettings', 
+    'populationSettings', 
+    'sampleSettings',
+    'featureEngineeringSettings',
+    'preprocessSettings',
+    'modelSettings',
+    'executeSettings'
+  )
+  
+  idList <- list()
+  length(idList) <- length(types)
+  names(idList) <- types
+  
+  for(type in types){
+    idList[[type]] <- getSettingValues(modelDesignList, type = type )
   }
   
-  return(x)
-}
-
-insertAttributes <- function(x){
-  
-  if(is.list(x)){
-    attributes <- x$attributes
-    x$attributes <- NULL
-    
-    if(!is.null(attributes)){
-      for(i in 1:length(attributes)){
-        attr(x, names(attributes)[i]) <- attributes[[i]]
-      }
-    }
-    
-    if(length(x)>0){
-      for(j in 1:length(x)){
-        if(is.list(x[[j]])){
-          if(!is.null(x[[j]]$attributes)){
-            for(i in 1:length(x[[j]]$attributes)){
-              attr(x[[j]], names(x[[j]]$attributes)[i]) <- x[[j]]$attributes[[i]]
-            }
-            x[[j]]$attributes <- NULL
-          }
-        }
-      }
-    }
-  }
-  return(x)
-}
-
-toJsonNice <- function(x){
-  
-  if(!class(x) %in% c('numeric','integer')){
-    
-    x <- extractAttributes(x)
-
-    return(RJSONIO::toJSON(x))
-  } else{
-    return(x)
-  }
-  
-}
-
-fromJsonNice <- function(x){
-  
-  if(class(x) == 'character'){
-    x <- RJSONIO::fromJSON(x)
-    
-    x <- insertAttributes(x)
-  }
-    
-  return(x)
+  return(idList)
 }
 
 
 getSettingValues <- function(modelDesignList, type = 'cohortId' ){
+  
   if(class(modelDesignList) == 'list'){
-    values <- unique(unlist(lapply(modelDesignList, function(x)toJsonNice(x[[type]])))
+    values <- unique(unlist(lapply(modelDesignList, function(x)jsonlite::serializeJSON(x[[type]])))
       )
   } else{
-    values <- modelDesignList[[type]]
+    values <- jsonlite::serializeJSON(modelDesignList[[type]])
   }
   
-  if(class(values[[1]]) != 'numeric'){
+  if(! type %in% c('targetId', 'outcomeId')  ){
     result <- data.frame(
       value = values,
       id = 1:length(values)
     )
   } else{
     result <- data.frame(
-      value = values,
-      id = values
+      value = sapply(values, function(x) jsonlite::unserializeJSON(x)),
+      id = sapply(values, function(x) jsonlite::unserializeJSON(x))
     )
   }
   
@@ -526,9 +509,12 @@ getIdsForSetting <- function(modelDesign, idList){
   
   for(settingType in names(idList)){
     
+    if(!settingType %in% c('targetId', 'outcomeId')){
     # get the index of the setting matching the design setting
-    ind <- which(idList[[settingType]]$value == toJsonNice(modelDesign[[settingType]]))
-    
+      ind <- which(idList[[settingType]]$value == jsonlite::serializeJSON(modelDesign[[settingType]]))
+    } else{
+      ind <- which(idList[[settingType]]$value == modelDesign[[settingType]])
+    }
     # get the id
     id <- idList[[settingType]]$id[ind]
     
@@ -557,40 +543,17 @@ getSettingsTable <- function(modelDesignList, idList){
 }
 
 
-getidList <- function(modelDesignList){
-  
-  types <- c(
-    'targetId', 
-    'outcomeId', 
-    'restrictPlpDataSettings',
-    'covariateSettings', 
-    'populationSettings', 
-    'sampleSettings',
-    'featureEngineeringSettings',
-    'preprocessSettings',
-    'modelSettings',
-    'executeSettings'
-    )
-  
-  idList <- list()
-  length(idList) <- length(types)
-  names(idList) <- types
-  
-  for(type in types){
-    idList[[type]] <- getSettingValues(modelDesignList, type = type )
-  }
-  
-  return(idList)
-}
-
-
 getSettingFromId <- function(
   idList, 
   type, 
   id
 ){
   ind <- which(idList[[type]]$id == id)
-  return(fromJsonNice(idList[[type]]$value[[ind]]))
+  if(!type %in% c('targetId', 'outcomeId')){
+    return(jsonlite::unserializeJSON(idList[[type]]$value[[ind]]))
+  } else{
+    return(idList[[type]]$value[[ind]])
+  }
 }
 
 
@@ -614,4 +577,23 @@ getDataSettings <- function(settingstable){
     )
   }
   return(result)
+}
+
+getNames <- function(
+  cohortDefinitions, 
+  ids
+){
+  
+  idNames <- lapply(cohortDefinitions, function(x) c(x$id, x$name))
+  idNames <- do.call(rbind, idNames)
+  colnames(idNames) <- c('id', 'name')
+  idNames <- as.data.frame(idNames)
+  
+  nams <- c()
+  for(id in ids){
+    nams <- c(nams, idNames$name[idNames$id == id])
+  }
+  
+  return(nams)
+  
 }

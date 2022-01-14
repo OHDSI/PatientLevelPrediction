@@ -66,7 +66,14 @@ nbServer <- function(id, plpResult) {
           result <- unique(result)
           ind <- !is.na(result$netBenefit) & is.finite(result$netBenefit) & !is.null(result$netBenefit) & is.finite(result$pt)
           
-          df2 <- reshape2::melt(result, id.vars = 'pt')
+          #df2 <- reshape2::melt(result, id.vars = 'pt')
+          df2 <- tidyr::pivot_longer(
+            data = result, 
+            cols = colnames(result)[colnames(result) != 'pt'], 
+            names_to = 'variable', 
+            values_to = 'value'
+            )
+          
           
           ggplot2::ggplot(df2, ggplot2::aes(x=pt, y=value, 
                                             group=variable, 

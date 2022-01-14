@@ -137,7 +137,7 @@ Model development
 What impact does test/train/validation design have on model performance
 </td>
 <td>
-<a href=''>BMJ Open </a>
+<a href='https://bmjopen.bmj.com/content/11/12/e050146'>BMJ Open </a>
 </td>
 </tr>
 
@@ -173,7 +173,7 @@ Model development
 Can we use ensembles to combine models developed using different databases to improve models transportability?
 </td>
 <td>
-<a href=''> Paper under review at Computer programs in biology and medicine</a>
+<a href=''> Paper under review at BMC </a>
 </td>
 </tr>
 
@@ -182,7 +182,7 @@ Can we use ensembles to combine models developed using different databases to im
 Evaluation
 </td>
 <td>
-How should we present models? (e.g., new visualizations)
+How should we present model performance? (e.g., new visualizations)
 </td>
 <td>
 <a href='https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1'>JAMIA Open</a>

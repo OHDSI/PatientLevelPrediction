@@ -8,7 +8,7 @@ savePlpAnalysesJson(
   modelDesignList = list(createModelDesign(targetId = 1, outcomeId = 2, modelSettings =
     setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
-  saveDirectory
+  saveDirectory = NULL
 )
 }
 \arguments{

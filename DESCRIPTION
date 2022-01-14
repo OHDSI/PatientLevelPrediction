@@ -3,7 +3,7 @@ Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
 Version: 5.0.0
-Date: 2021-12-08
+Date: 2022-01-08
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -26,32 +26,27 @@ Depends:
     FeatureExtraction (>= 3.0.0)
 Imports:
     Andromeda,
-    benchmarkme,
     Cyclops (>= 3.0.0),
     DatabaseConnector (>= 3.0.0),
     dplyr,
     ggplot2,
     gridExtra,
     Hmisc,
-    magrittr,
+    jsonlite,
     Matrix,
-    parallel,
+    memuse,
     ParallelLogger (>= 2.0.0),
     PRROC,
     Rcpp (>= 0.11.2),
-    reshape2,
     reticulate (> 1.16),
     rlang,
     rms,
     RSQLite,
-    slam,
     SqlRender (>= 1.1.3),
     survival,
     tibble,
     tidyr,
-    tools,
-    utils,
-    zeallot
+    utils
 Suggests:
     AUC,
     BigKnn (>= 1.0.0),
@@ -65,15 +60,14 @@ Suggests:
     IterativeHardThresholding,
     knitr,
     markdown,
-    memuse,
     Metrics,
     officer,
+    parallel,
     plotly,
     plyr,  
     pROC,
     R6,
     ResourceSelection,
-    RJSONIO,
     rmarkdown,
     scoring,
     shiny,

@@ -71,10 +71,6 @@ fitPlp <- function(
   # run through pipeline list and apply:
   #=========================================================
 
-  # add index here or somewhere else?
-  #Andromeda::createIndex(trainData$covariateData$covariates, c('rowId'),
-  #                       indexName = 'restrict_pop_rowId') # is this needed now?
-  
   # Now apply the classifier:
   fun <- eval(parse(text = modelSettings$fitFunction))
   args <- list(
@@ -86,32 +82,8 @@ fitPlp <- function(
   plpModel <- do.call(fun, args)
   ParallelLogger::logTrace('Returned from classifier function')
   
-  ParallelLogger::logTrace('Creating prediction function')
-  plpModel$predict <- createTransform(plpModel)
   class(plpModel) <- 'plpModel'
   
   return(plpModel)
   
-}
-
-
-
-# create transformation function
-createTransform <- function(plpModel){
-
-  transform <- function(plpData=NULL, population=NULL){
-    #check model fitting makes sense:
-    if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!= plpModel$trainDetails$cohortId)
-      ParallelLogger::logWarn('cohortId of new data does not match training data')
-    if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!= plpModel$trainDetails$outcomeId)
-      ParallelLogger::logWarn('outcomeId of new data does not match training data or does not exist')
-  
-    predictPlp(
-      plpModel = plpModel, 
-      plpData = plpData, 
-      population = population
-      )
-
-  }
-  return(transform)
 }

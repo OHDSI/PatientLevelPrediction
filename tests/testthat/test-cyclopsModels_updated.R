@@ -261,8 +261,6 @@ expect_equal(
 
 expect_true('covariateValue' %in% colnames(fitModel$covariateImportance))
 
-expect_equal(class(fitModel$predict), "function")
-
 expect_equal(fitModel$trainDetails$outcomeId, attr(trainData, 'metaData')$outcomeId)
 expect_equal(fitModel$trainDetails$cohortId, attr(trainData, 'metaData')$cohortId)
 

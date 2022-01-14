@@ -197,7 +197,7 @@ populatePlpResultTables <- function(conn,
                                     removePattern = NULL
 ){
 
-  ensure_installed("RJSONIO")
+  ensure_installed("jsonlite")
   
   # input checks
   ##TODO
@@ -1126,11 +1126,11 @@ addCohort <- function(conn, resultSchema, targetDialect,
     # make sure the json has been converted 
     if(class(json)!='character'){
       ParallelLogger::logInfo('converting json to character')
-      json <- RJSONIO::toJSON(json, digits = 23)
+      json <- jsonlite::serializeJSON(json, digits = 23)
     }
     
-    # reduce the side to save
-    json <-  substr(json, 1, 4000) # TESTING
+    # reduce the size to save
+    json <-  substr(json, 1, 4000) # TESTING - FIX THIS [TODO]
     
     #check whether cohort already in table:
     result <- checkTable(conn = conn, 
@@ -1198,7 +1198,7 @@ addPopulationSetting <- function(conn, resultSchema, targetDialect,
   # process json to make it ordered...
   # make sure the json has been converted 
   if(class(json)!='character'){
-    json <- RJSONIO::toJSON(json, digits = 23)
+    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
   jsonId <- checkJson(conn = conn,
@@ -1255,7 +1255,7 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
   # process json to make it ordered...
   # make sure the json has been converted 
   if(class(json)!='character'){
-    json <- RJSONIO::toJSON(json, digits = 23)
+    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
   jsonId <- checkJson(conn = conn,
@@ -1313,7 +1313,7 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
   # process json to make it ordered...
   # make sure the json has been converted 
   if(class(json)!='character'){
-    json <- RJSONIO::toJSON(json, digits = 23)
+    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
   jsonId <- checkJson(conn = conn,
@@ -1371,7 +1371,7 @@ addTidySetting <- function(
 ){
   
   if(class(json)!='character'){
-    json <- RJSONIO::toJSON(json, digits = 23)
+    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
   jsonId <- checkJson(conn = conn,
@@ -1392,7 +1392,8 @@ addTidySetting <- function(
       tidyCovariatesSettingsJson = json
     )
     
-    DatabaseConnector::insertTable(connection = conn, 
+    DatabaseConnector::insertTable(
+      connection = conn, 
       databaseSchema = resultSchema, 
       tableName = paste0(stringAppendToTables, 'tidy_covariates_settings'),
       data = data, 
@@ -1405,7 +1406,8 @@ addTidySetting <- function(
     )
     
     #getId of new
-    jsonId <- checkJson(conn = conn,
+    jsonId <- checkJson(
+      conn = conn,
       resultSchema = resultSchema, 
       stringAppendToTables = stringAppendToTables,
       targetDialect = targetDialect, 
@@ -1413,7 +1415,8 @@ addTidySetting <- function(
       jsonColumnName = 'tidyCovariatesSettingsJson',
       id = 'tidyCovariatesSettingId',
       json = json,
-      tempEmulationSchema = tempEmulationSchema)
+      tempEmulationSchema = tempEmulationSchema
+      )
     
   } else{
     ParallelLogger::logInfo('tidy covariates setting exists')
@@ -1433,10 +1436,11 @@ addSampleSetting <- function(
 ){
   
   if(class(json)!='character'){
-    json <- RJSONIO::toJSON(json, digits = 23)
+    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
-  jsonId <- checkJson(conn = conn,
+  jsonId <- checkJson(
+    conn = conn,
     resultSchema = resultSchema, 
     stringAppendToTables = stringAppendToTables,
     targetDialect = targetDialect, 
@@ -1444,7 +1448,8 @@ addSampleSetting <- function(
     jsonColumnName = 'sampleSettingsJson',
     id = 'sampleSettingId',
     json = json,
-    tempEmulationSchema = tempEmulationSchema)
+    tempEmulationSchema = tempEmulationSchema
+    )
   
   if(is.null(jsonId)){
     
@@ -1454,7 +1459,8 @@ addSampleSetting <- function(
       sampleSettingsJson = json
     )
     
-    DatabaseConnector::insertTable(connection = conn, 
+    DatabaseConnector::insertTable(
+      connection = conn, 
       databaseSchema = resultSchema, 
       tableName = paste0(stringAppendToTables, 'sample_settings'),
       data = data, 
@@ -1467,7 +1473,8 @@ addSampleSetting <- function(
     )
     
     #getId of new
-    jsonId <- checkJson(conn = conn,
+    jsonId <- checkJson(
+      conn = conn,
       resultSchema = resultSchema, 
       stringAppendToTables = stringAppendToTables,
       targetDialect = targetDialect, 
@@ -1475,7 +1482,8 @@ addSampleSetting <- function(
       jsonColumnName = 'sampleSettingsJson',
       id = 'sampleSettingId',
       json = json,
-      tempEmulationSchema = tempEmulationSchema)
+      tempEmulationSchema = tempEmulationSchema
+      )
     
   } else{
     ParallelLogger::logInfo('sample setting exists')
@@ -1495,7 +1503,7 @@ addPlpDataSetting <- function(
 ){
   
   if(class(json)!='character'){
-    json <- RJSONIO::toJSON(json, digits = 23)
+    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
   jsonId <- checkJson(conn = conn,
@@ -1516,7 +1524,8 @@ addPlpDataSetting <- function(
       plpDataSettingsJson = json
     )
     
-    DatabaseConnector::insertTable(connection = conn, 
+    DatabaseConnector::insertTable(
+      connection = conn, 
       databaseSchema = resultSchema, 
       tableName = paste0(stringAppendToTables, 'plp_data_settings'),
       data = data, 
@@ -1559,10 +1568,11 @@ addFESetting <- function(
 ){
   
   if(class(json)!='character'){
-    json <- RJSONIO::toJSON(json, digits = 23)
+    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
-  jsonId <- checkJson(conn = conn,
+  jsonId <- checkJson(
+    conn = conn,
     resultSchema = resultSchema, 
     stringAppendToTables = stringAppendToTables,
     targetDialect = targetDialect, 
@@ -1570,7 +1580,8 @@ addFESetting <- function(
     jsonColumnName = 'featureEngineeringSettingsJson',
     id = 'featureEngineeringSettingId',
     json = json,
-    tempEmulationSchema = tempEmulationSchema)
+    tempEmulationSchema = tempEmulationSchema
+    )
   
   if(is.null(jsonId)){
     
@@ -1580,7 +1591,8 @@ addFESetting <- function(
       featureEngineeringSettingsJson = json
     )
     
-    DatabaseConnector::insertTable(connection = conn, 
+    DatabaseConnector::insertTable(
+      connection = conn, 
       databaseSchema = resultSchema, 
       tableName = paste0(stringAppendToTables, 'feature_engineering_settings'),
       data = data, 
@@ -1593,7 +1605,8 @@ addFESetting <- function(
     )
     
     #getId of new
-    jsonId <- checkJson(conn = conn,
+    jsonId <- checkJson(
+      conn = conn,
       resultSchema = resultSchema, 
       stringAppendToTables = stringAppendToTables,
       targetDialect = targetDialect, 
@@ -1601,7 +1614,8 @@ addFESetting <- function(
       jsonColumnName = 'featureEngineeringSettingsJson',
       id = 'featureEngineeringSettingId',
       json = json,
-      tempEmulationSchema = tempEmulationSchema)
+      tempEmulationSchema = tempEmulationSchema
+      )
     
   } else{
     ParallelLogger::logInfo('feature engineering setting exists')
@@ -1621,10 +1635,11 @@ addSplitSettings <- function(
 ){
   
   if(class(json)!='character'){
-    json <- RJSONIO::toJSON(json, digits = 23)
+    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
-  jsonId <- checkJson(conn = conn,
+  jsonId <- checkJson(
+    conn = conn,
     resultSchema = resultSchema, 
     stringAppendToTables = stringAppendToTables,
     targetDialect = targetDialect, 
@@ -1632,7 +1647,8 @@ addSplitSettings <- function(
     jsonColumnName = 'splitSettingsJson',
     id = 'splitSettingId',
     json = json,
-    tempEmulationSchema = tempEmulationSchema)
+    tempEmulationSchema = tempEmulationSchema
+    )
   
   if(is.null(jsonId)){
     
@@ -1642,7 +1658,8 @@ addSplitSettings <- function(
       splitSettingsJson = json
       )
     
-    DatabaseConnector::insertTable(connection = conn, 
+    DatabaseConnector::insertTable(
+      connection = conn, 
       databaseSchema = resultSchema, 
       tableName = paste0(stringAppendToTables, 'split_settings'),
       data = data, 
@@ -1655,7 +1672,8 @@ addSplitSettings <- function(
       )
     
     #getId of new
-    jsonId <- checkJson(conn = conn,
+    jsonId <- checkJson(
+      conn = conn,
       resultSchema = resultSchema, 
       stringAppendToTables = stringAppendToTables,
       targetDialect = targetDialect, 
@@ -1663,7 +1681,8 @@ addSplitSettings <- function(
       jsonColumnName = 'splitSettingsJson',
       id = 'splitSettingId',
       json = json,
-      tempEmulationSchema = tempEmulationSchema)
+      tempEmulationSchema = tempEmulationSchema
+      )
     
   } else{
     ParallelLogger::logInfo('Split setting exists')
@@ -1761,7 +1780,7 @@ addModel <- function(
   
   if(!is.null(hyperParamSearch)){
     if(class(hyperParamSearch) != 'character'){
-      hyperParamSearch <- RJSONIO::toJSON(hyperParamSearch)
+      hyperParamSearch <- as.character(jsonlite::serializeJSON(hyperParamSearch, digits = 23))
     }
   }else{
     hyperParamSearch <- '' 
@@ -1770,7 +1789,8 @@ addModel <- function(
   # process json to make it ordered...
   # TODO
   
-  result <- checkTable(conn = conn, 
+  result <- checkTable(
+    conn = conn, 
     resultSchema = resultSchema, 
     stringAppendToTables = stringAppendToTables,
     targetDialect = targetDialect, 

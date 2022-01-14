@@ -36,6 +36,8 @@ plpDataEunomia <- PatientLevelPrediction::getPlpData(
 )
 
 
+
+
 plpResultEunomia <- PatientLevelPrediction::runPlp(
   plpData = plpDataEunomia, 
   outcomeId = 3, 

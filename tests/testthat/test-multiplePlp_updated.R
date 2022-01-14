@@ -85,17 +85,17 @@ test_that("loading analyses settings", {
   
   analysisSetting <- loadPlpAnalysesJson(file.path(saveLoc, 'settings',"predictionAnalysisList.json"))
   
-  expect_equal(analysis1$targetId, analysisSetting[[1]]$targetId)
-  expect_equal(analysis1$outcomeId, analysisSetting[[1]]$outcomeId)
-  expect_equal(analysis1$restrictPlpDataSettings, analysisSetting[[1]]$restrictPlpDataSettings)
-  expect_equal(attr(analysis1$covariateSettings, 'fun'), attr(analysisSetting[[1]]$covariateSettings,'fun') ) 
-  expect_equal(analysis1$populationSettings, analysisSetting[[1]]$populationSettings)
-  expect_equal(analysis1$sampleSettings, analysisSetting[[1]]$sampleSettings)
-  expect_equal(attr(analysis1$featureEngineeringSettings,'class'), attr(analysisSetting[[1]]$featureEngineeringSettings,'class'))
-  expect_equal(attr(analysis1$featureEngineeringSettings,'fun'), attr(analysisSetting[[1]]$featureEngineeringSettings,'fun'))
-  expect_equal(analysis1$preprocessSettings, analysisSetting[[1]]$preprocessSettings)
-  expect_equal(analysis1$modelSettings, analysisSetting[[1]]$modelSettings)
-  expect_equal(analysis1$executeSettings, analysisSetting[[1]]$executeSettings)
+  expect_equal(analysis1$targetId, analysisSetting$analyses[[1]]$targetId)
+  expect_equal(analysis1$outcomeId, analysisSetting$analyses[[1]]$outcomeId)
+  expect_equal(analysis1$restrictPlpDataSettings, analysisSetting$analyses[[1]]$restrictPlpDataSettings)
+  expect_equal(attr(analysis1$covariateSettings, 'fun'), attr(analysisSetting$analyses[[1]]$covariateSettings,'fun') ) 
+  expect_equal(analysis1$populationSettings, analysisSetting$analyses[[1]]$populationSettings)
+  expect_equal(analysis1$sampleSettings, analysisSetting$analyses[[1]]$sampleSettings)
+  expect_equal(attr(analysis1$featureEngineeringSettings,'class'), attr(analysisSetting$analyses[[1]]$featureEngineeringSettings,'class'))
+  expect_equal(attr(analysis1$featureEngineeringSettings,'fun'), attr(analysisSetting$analyses[[1]]$featureEngineeringSettings,'fun'))
+  expect_equal(analysis1$preprocessSettings, analysisSetting$analyses[[1]]$preprocessSettings)
+  expect_equal(analysis1$modelSettings, analysisSetting$analyses[[1]]$modelSettings)
+  expect_equal(analysis1$executeSettings, analysisSetting$analyses[[1]]$executeSettings)
   
 }
 )
@@ -137,20 +137,6 @@ test_that("getSettingValues works", {
 }
   )
 
-
-test_that("to from json works", {
-  
-  idJson <- toJsonNice(analysis1$targetId)
-  id <- fromJsonNice(idJson)
-  expect_equal(analysis1$targetId, id)
-  
-  covJson <- toJsonNice(analysis1$covariateSettings)
-  cov <- fromJsonNice(covJson)
-  expect_equal(unlist(analysis1$covariateSettings), unlist(cov))
-  expect_equal(attr(analysis1$covariateSettings, 'class'), attr(cov, 'class'))
-  expect_equal(attr(analysis1$covariateSettings, 'fun'), attr(cov, 'fun'))
-  
-})
 
 test_that("getSettingValues works", {
   
@@ -246,7 +232,7 @@ test_that("validateMultiplePlp errors", {
   
   PatientLevelPrediction::validateMultiplePlp(
     analysesLocation = file.path(saveLoc,'multiple'),
-    valdiationDatabaseDetails = databaseDetails, 
+    validationDatabaseDetails = databaseDetails, 
     validationRestrictPlpDataSettings = createRestrictPlpDataSettings(), 
     recalibrate = NULL
     )
@@ -258,7 +244,7 @@ expect_true(file.exists(file.path(saveLoc, 'multiple', 'Validation', 'main', 'An
   # no results error
   expect_error(evaluateMultiplePlp(
     analysesLocation = file.path(saveLoc,'madeup123') ,
-    valdiationDatabaseDetails = databaseDetails, 
+    validationDatabaseDetails = databaseDetails, 
     validationRestrictPlpDataSettings = createRestrictPlpDataSettings(), 
     recalibrate = NULL
     ))

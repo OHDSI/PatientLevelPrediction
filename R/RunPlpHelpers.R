@@ -24,7 +24,7 @@ checkInputs <- function(inputs) {
   inputNames <- names(inputs)
   
   checkIsClass(inputs[['plpData']], c('plpData'))
-  checkIsClass(inputs[['outcomeId']], c("numeric"))
+  checkIsClass(inputs[['outcomeId']], c("numeric", "integer"))
   
   for(inputName in inputNames[!inputNames %in% c('plpData', 'outcomeId')]){
     

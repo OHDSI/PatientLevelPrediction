@@ -70,50 +70,34 @@ test_that("savePlpModelError", {
   expect_error(savePlpModel(plpModel=NULL,dirPath=NULL))
 })
 
-plpModel <- list()
-attr(plpModel, 'predictionFunction') <- 'madeup'
-test_that("moveModelFile when not sklearn or knn", {
-  expect_equal(moveModelFile(plpModel=NULL, dirPath=NULL), NULL)
-  expect_equal(moveModelFile(plpModel=plpModel,dirPath=NULL), NULL)
-})
-
-
-dir.create(file.path(saveLoc, 'testMoveStart'))
-write.csv(data.frame(a=1,b=2), file = file.path(saveLoc, 'testMoveStart', 'file.csv'), row.names = F)
-plpModel <- list(model = file.path(saveLoc, 'testMoveStart'))
-attr(plpModel, 'predictionFunction') <- 'sklearn'
-test_that("moveModelFile when sklearn", {
-  dir.create(file.path(saveLoc, 'testMoveEnd'))
-  loc <- moveModelFile(plpModel = plpModel, dirPath=file.path(saveLoc, 'testMoveEnd'))
-  
-  expect_equal(dir(file.path(saveLoc, 'testMoveStart')), dir(file.path(saveLoc, 'testMoveEnd', 'sklearn_model')))
-})
-
 test_that("loadPlpModelError", {
   expect_error(loadPlpModel(dirPath=NULL))
   expect_error(loadPlpModel(dirPath='madeup.txt'))
 })
 
+# make an sklearn model to test file transport
+dir.create(file.path(saveLoc, 'testMoveStart'))
+write.csv(data.frame(a=1,b=2), file = file.path(saveLoc, 'testMoveStart', 'file.csv'), row.names = F)
+plpModelTemp <- plpResult$model
+plpModelTemp$model = file.path(saveLoc, 'testMoveStart')
+attr(plpModelTemp, 'saveType') <- 'file'
 
-test_that("updateModelLocation", {
-  plpModel <- list()
-  attr(plpModel, 'predictionFunction') <- 'madeup'
-  expect_equivalent(PatientLevelPrediction:::updateModelLocation(plpModel=plpModel, dirPath=NULL), NULL)
-  plpModel <- list()
-  attr(plpModel, 'predictionFunction') <- 'sklearn'
-  plpModel <- PatientLevelPrediction:::updateModelLocation(plpModel=plpModel, dirPath='C:test')
-  expect_equal(plpModel$model, 'C:test/sklearn_model')
+test_that("move model files when saveType is file", {
+  
+  savePlpModel(plpModel = plpModelTemp, dirPath = file.path(saveLoc, 'testMoveEnd'))
+  
+  expect_equal(dir(file.path(saveLoc, 'testMoveStart')), dir(file.path(saveLoc, 'testMoveEnd', 'model')))
 })
 
 test_that("savePrediction", {
   predLoc <- savePrediction(prediction = data.frame(rowId=1:10, value=1:10), 
-                            dirPath = saveLoc, fileName = "pred.csv"  )
+                            dirPath = saveLoc, fileName = "pred.json"  )
   expect_equal(file.exists(predLoc), T)
   
 })
 
 test_that("loadPrediction", {
-  pred <- loadPrediction(file.path(saveLoc,"pred.csv"))
+  pred <- loadPrediction(file.path(saveLoc,"pred.json"))
   expect_identical(data.frame(rowId=1:10, value=1:10), pred)
 })
 
@@ -125,7 +109,8 @@ test_that("savePlpResultError", {
 
 test_that("savePlpResult", {
   emptyModel <- list()
-  attr(emptyModel, 'predictionFunction') <- 'madeup'
+  attr(emptyModel, 'predictionFunction') <- 'none'
+  attr(emptyModel, 'saveType') <- 'RtoJson'
   class(emptyModel) <- "plpModel"
   emptyResult <- list(
     model = emptyModel,
@@ -152,7 +137,8 @@ test_that("loadPlpResultError", {
 
 test_that("loadPlpResult", {
   emptyModel <- list()
-  attr(emptyModel, 'predictionFunction') <- 'madeup'
+  attr(emptyModel, 'predictionFunction') <- 'none'
+  attr(emptyModel, 'saveType') <- 'RtoJson'
   class(emptyModel) <- "plpModel"
   emptyResult <- list(
     model = emptyModel,

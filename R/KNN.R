@@ -51,6 +51,8 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
     modelName = 'K Nearest Neighbors'
   )
   
+  attr(param, 'saveType') <- 'file'
+  
   result <- list(
     fitFunction = "fitKNN",
     param = param
@@ -157,6 +159,7 @@ fitKNN <- function(trainData, param, search = 'none', analysisId ){
   class(result) <- 'plpModel'
   attr(result, 'predictionFunction') <- 'predictKnn'
   attr(result, 'modelType') <- 'binary'
+  attr(result, 'saveType') <- attr(param, 'saveType')
   return(result)
 }
 

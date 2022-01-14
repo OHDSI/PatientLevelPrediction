@@ -53,7 +53,7 @@ getSummary  <- function(result,inputType,validation){
 getSummaryFromObject <- function(result, analysisId = NULL){
   
   timeV <- ifelse(is.null(result$executionSummary$ExecutionDateTime), '2000-01-01', result$executionSummary$ExecutionDateTime)
-  
+
   TAR <- getTAR(result$model$settings$populationSettings)
   eval <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
   
@@ -68,11 +68,19 @@ getSummaryFromObject <- function(result, analysisId = NULL){
     eval$evaluation <- 'Test'
   }
   
-  eval <- reshape2::dcast(
-    data = eval, 
-    formula = . ~ evaluation + metric, 
-    value.var = 'value' 
-    )
+  eval <- tidyr::pivot_wider( 
+    data = eval %>% 
+      dplyr::mutate(variable = paste(.data$evaluation, .data$metric, sep = '_')) %>% 
+      dplyr::select(-.data$evaluation, -.data$metric), 
+    names_from = 'variable', 
+    values_from = 'value'
+      ) 
+  
+  #eval <- reshape2::dcast(
+  #  data = eval, 
+  #  formula = . ~ evaluation + metric, 
+  #  value.var = 'value' 
+  #  )
   
   AUC <- paste0(
     signif(as.double(eval$Test_AUROC),3),
@@ -94,8 +102,8 @@ getSummaryFromObject <- function(result, analysisId = NULL){
     devDatabase <- ifelse(is.null(result$model$trainDetails$cdmDatabaseSchema),'Missing',result$model$trainDetails$cdmDatabaseSchema)
     valDatabase <- devDatabase
   } else{
-    devDatabase <- ifelse(is.null(result$model$valdiationDetails$developmentDatabase),'Missing',result$model$valdiationDetails$developmentDatabase)
-    valDatabase <- ifelse(is.null(result$model$valdiationDetails$cdmDatabaseSchema),'Missing',result$model$valdiationDetails$cdmDatabaseSchema)
+    devDatabase <- ifelse(is.null(result$model$validationDetails$developmentDatabase),'Missing',result$model$validationDetails$developmentDatabase)
+    valDatabase <- ifelse(is.null(result$model$validationDetails$cdmDatabaseSchema),'Missing',result$model$validationDetails$cdmDatabaseSchema)
 }
   allRes <- data.frame(analysisId = ifelse(is.null(analysisId), ifelse(is.null(result$analysisRef$analysisId), 'None', result$analysisRef$analysisId), analysisId),
                        devDatabase = devDatabase,

@@ -678,7 +678,13 @@ plotDemographicSummary <- function(
       
     }
 
-    x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
+    x <- tidyr::pivot_longer(
+      data = x, 
+      cols = colnames(x)[!colnames(x) %in% c('ageGroup','genGroup')], 
+      names_to = 'variable',
+      values_to = "value"
+      )
+    #x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
     
     # 1.96*StDevPredictedProbability
     ci <- plpResult$performanceEvaluation$demographicSummary %>% 

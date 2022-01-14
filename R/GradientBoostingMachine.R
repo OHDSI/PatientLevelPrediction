@@ -85,6 +85,8 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
     predictRFunction = 'predictXgboost'
   )
   
+  attr(param, 'saveType') <- 'xgboost'
+  
   result <- list(
     fitFunction = "fitRclassifier",
     param = param

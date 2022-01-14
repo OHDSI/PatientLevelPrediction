@@ -46,7 +46,8 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   # do feature engineering/selection
   plpData$covariateData <- do.call(
     applyFeatureengineering, 
-    list(covariateData = plpData$covariateData,
+    list(
+      covariateData = plpData$covariateData,
       settings = plpModel$settings$featureEngineering
     )
   )
@@ -56,12 +57,20 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   # do preprocessing
   plpData$covariateData <- do.call(
     applyTidyCovariateData, 
-    list(covariateData = plpData$covariateData,
-    preprocessSettings = plpModel$settings$tidyCovariates
+    list(
+      covariateData = plpData$covariateData,
+      preprocessSettings = plpModel$settings$tidyCovariates
     )
   )
   
   ParallelLogger::logTrace('did tidy')
+  
+  # add timepoint if not missing to population attribute
+  if(!missing(timepoint)){
+    attr(population, 'timepoint') <- timepoint
+  } else{
+    timepoint <- attr(population,'metaData')$populationSettings$riskWindowEnd
+  }
   
   # apply prediction function
   prediction <- do.call(
@@ -73,29 +82,18 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
       )
     )
   
-  # add metaData
-  metaData <- list(
-    modelType = attr(plpModel, 'modelType'), #"binary", 
-    cohortId = attr(plpData,'metaData')$cohortId,
-    outcomeId = attr(population,'metaData')$outcomeId,
-    timepoint = attr(population,'metaData')$riskWindowEnd
-  )
-  
-  # survival cyclops stuff (move this somewhere else)?
-  if(attr(plpModel, 'modelType') == 'survival'){
-    if(!is.null(plpModel$model$baselineHazard)){
-      if(missing(timepoint)){
-        timepoint <- attr(population,'metaData')$riskWindowEnd
-      }
-      bhind <- which.min(abs(plpModel$model$baselineHazard$time-timepoint))
-      prediction$value <- 1-plpModel$model$baselineHazard$surv[bhind]^prediction$value
-      
-      metaData$baselineHazardTimepoint <- plpModel$model$baselineHazard$time[bhind]
-      metaData$baselineHazard <- plpModel$model$baselineHazard$surv[bhind]
-      metaData$offset <- 0
-    }
+  if(!is.null(attr(prediction, "metaData"))){
+    metaData <- attr(prediction, "metaData")
+  } else{
+    metaData <- list()
   }
-
+  
+  # add metaData
+  metaData$modelType <- attr(plpModel, 'modelType') #"binary", 
+  metaData$cohortId <- attr(population,'metaData')$cohortId
+  metaData$outcomeId <- attr(population,'metaData')$outcomeId
+  metaData$timepoint <- timepoint
+  
   attr(prediction, "metaData") <- metaData
   return(prediction)
 }

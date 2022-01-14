@@ -102,7 +102,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
       ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
       location <- reticulate::conda_create(envname=envname, packages = "python", conda = "auto")
     }
-    packages <- c('numpy','scipy','scikit-learn', 'pandas','pydotplus','keras','joblib')
+    packages <- c('numpy','scipy','scikit-learn', 'pandas','pydotplus','keras','joblib', 'sklearn-json')
     ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))
     reticulate::conda_install(envname=envname, packages = packages, forge = TRUE, pip = FALSE,
                               pip_ignore_installed = TRUE, conda = "auto")
@@ -114,7 +114,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
       ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))
       location <- reticulate::virtualenv_create(envname=envname)
     }
-    packages <- c('numpy', 'scikit-learn','scipy', 'pandas','pydotplus','keras')
+    packages <- c('numpy', 'scikit-learn','scipy', 'pandas','pydotplus','keras', 'sklearn-json')
     ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))
     reticulate::virtualenv_install(envname=envname, packages = packages, 
                                    ignore_installed = TRUE)

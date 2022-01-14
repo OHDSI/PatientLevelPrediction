@@ -74,13 +74,11 @@ test_that("check fit of DecisionTree", {
   
   expect_equal(nrow(trainData$labels)*2, nrow(plpModel$prediction))
   expect_equal(length(unique(plpModel$prediction$evaluationType)), 2)
-  
-  expect_is(plpModel$predict, 'function')
-  
+
   expect_true(nrow(plpModel$covariateImportance) < trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   
   expect_true(dir.exists(plpModel$model))
-  expect_equal(dir(plpModel$model),"model.pkl")
+  expect_equal(dir(plpModel$model),"model.json")
   
   expect_equal(plpModel$trainDetails$outcomeId,2)
   expect_equal(plpModel$trainDetails$cohortId,1)

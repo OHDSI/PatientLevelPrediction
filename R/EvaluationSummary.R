@@ -84,11 +84,17 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
       c(evalType, 'E90', valProb['E90']),
       c(evalType, 'Emax', valProb['Emax'])
     )
-    ici <- ici(prediction)
-    result <- rbind(
-      result, 
-      c(evalType, 'ici', ifelse(is.null(ici), 'NA', ici))
-    )
+    ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Eavg: ', round(valProb['Eavg'], digits = 4)))
+    
+    
+    # Removing for now as too slow...
+    #ici <- ici(prediction)
+    #result <- rbind(
+    #  result, 
+    #  c(evalType, 'ici', ifelse(is.null(ici), 'NA', ici))
+    #)
+    #ParallelLogger::logInfo(paste0('ICI ', round(ifelse(is.null(ici), 'NA', ici), digits = 4)))
+    
     
     # calibration linear fit- returns gradient, intercept
     ParallelLogger::logTrace('Calculating Calibration-in-large')
@@ -212,10 +218,17 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
     
     
     # add e-stat
-    w<- tryCatch({rms::val.surv(est.surv=1-p,S=S,
-      u=timepoint, 
-      fun=function(pr)log(-log(pr)))},
-      error = function(e){ParallelLogger::logError(e); return(NULL)})
+    w <- tryCatch(
+      {
+        rms::val.surv(
+          est.surv = 1-p, 
+          S = S,
+          u = timepoint, 
+          fun = function(pr)log(-log(pr))
+        )
+      },
+      error = function(e){ParallelLogger::logError(e); return(NULL)}
+    )
     
     eStatistic <- -1
     eStatistic90 <- -1

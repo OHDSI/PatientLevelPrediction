@@ -68,7 +68,12 @@ discriminationServer <- function(id, plpResult) {
                                   
         )
         
-        reshape2::dcast(data[ind,], evaluation ~ metric, value.var = 'value')
+        tidyr::pivot_wider(
+          data = data[ind,], 
+          names_from = 'metric', 
+          values_from = 'value'
+          )
+        #reshape2::dcast(data[ind,], evaluation ~ metric, value.var = 'value')
         
       })
       

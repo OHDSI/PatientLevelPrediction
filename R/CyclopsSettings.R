@@ -53,6 +53,7 @@ setLassoLogisticRegression<- function(
   
   attr(param, 'settings') <- list(
     priorfunction = 'Cyclops::createPrior',
+    selectorType = "byPid",  # is this correct?
     crossValidationInPrior = T,
     modelType = 'logistic',
     addIntercept = T,
@@ -66,6 +67,7 @@ setLassoLogisticRegression<- function(
   )
   
   attr(param, 'modelType') <- 'binary' 
+  attr(param, 'saveType') <- 'RtoJson'
   
   result <- list(
     fitFunction = "fitCyclopsModel",
@@ -93,11 +95,11 @@ setLassoLogisticRegression<- function(
 #' @examples
 #' model.lr <- setCoxModel()
 #' @export
-setCoxModel<- function(
+setCoxModel <- function(
   variance = 0.01, 
   seed = NULL, 
   includeCovariateIds = c(), 
-  noShrinkage = c(0), 
+  noShrinkage = c(), 
   threads = -1, 
   upperLimit = 20, 
   lowerLimit = 0.01,
@@ -135,6 +137,7 @@ setCoxModel<- function(
   
   attr(param, 'settings') <- list(
     priorfunction = 'Cyclops::createPrior',
+    selectorType = "byRow",
     crossValidationInPrior = T,
     modelType = 'cox',
     addIntercept = F,
@@ -148,6 +151,7 @@ setCoxModel<- function(
   )
   
   attr(param, 'modelType') <- 'survival' 
+  attr(param, 'saveType') <- 'RtoJson'
   
   result <- list(
     fitFunction = "fitCyclopsModel",
@@ -226,6 +230,7 @@ setIterativeHardThresholding<- function(
   
   attr(param, 'settings') <- list(
     priorfunction = 'IterativeHardThresholding::createIhtPrior',
+    selectorType = "byRow",
     crossValidationInPrior = F,
     modelType = 'logistic',
     addIntercept = F,
@@ -235,6 +240,7 @@ setIterativeHardThresholding<- function(
   )
   
   attr(param, 'modelType') <- 'binary' 
+  attr(param, 'saveType') <- 'RtoJson'
   
   result <- list(
     fitFunction = "fitCyclopsModel",

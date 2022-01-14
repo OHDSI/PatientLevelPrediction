@@ -8,7 +8,7 @@ setCoxModel(
   variance = 0.01,
   seed = NULL,
   includeCovariateIds = c(),
-  noShrinkage = c(0),
+  noShrinkage = c(),
   threads = -1,
   upperLimit = 20,
   lowerLimit = 0.01,

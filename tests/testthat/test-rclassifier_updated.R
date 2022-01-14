@@ -94,8 +94,6 @@ test_that("GBM working checks", {
   expect_gte(min(fitModel$prediction$value), 0)
   expect_lte(max(fitModel$prediction$value), 1)
   
-  expect_equal(class(fitModel$predict), "function")
-  
   expect_equal(class(fitModel$model),"xgb.Booster")
   
   expect_lte(nrow(fitModel$covariateImportance), trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())

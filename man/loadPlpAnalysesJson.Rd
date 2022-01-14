@@ -18,7 +18,7 @@ that can be combined with connection settings to run a multiple prediction study
 }
 \examples{
 \dontrun{
-modelDesignList <- loadPlpAnalysesJson('location of json settings')
+modelDesignList <- loadPlpAnalysesJson('location of json settings')$analysis
 }
 
 }

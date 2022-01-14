@@ -13,7 +13,8 @@ createModelDesign(
   featureEngineeringSettings = NULL,
   sampleSettings = NULL,
   preprocessSettings = NULL,
-  modelSettings
+  modelSettings = NULL,
+  runCovariateSummary = T
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ createModelDesign(
 \item{preprocessSettings}{Either NULL or an object of class \code{preprocessSettings} created using \code{createPreprocessingSettings()}}
 
 \item{modelSettings}{The model settings such as \code{setLassoLogisticRegression()}}
+
+\item{runCovariateSummary}{Whether to run the covariateSummary}
 }
 \value{
 A list with analysis settings used to develop a single prediction model

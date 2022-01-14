@@ -84,7 +84,11 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   close(pb)
   
   Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
-                         indexName = 'covariates_ncovariateIds')
+    indexName = 'covariates_ncovariateIds')
+  Andromeda::createIndex(tbl = newCovariateData$covariates, c('rowId'),
+    indexName = 'covariates_rowId')
+  Andromeda::createIndex(tbl = newCovariateData$covariates, c('covariateId', 'covariateValue'),
+    indexName = 'covariates_covariateId_value')
   
   metaData$populationSize <- nrow(population)
   attr(newCovariateData, 'metaData') <- metaData

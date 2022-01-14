@@ -85,9 +85,11 @@ recalibratePlpRefit <- function(
   
   newModel$prediction$evaluationType <- 'recalibrationRefit'
 
-  oldPred <- plpModel$predict(
+  oldPred <- predictPlp(
+    plpModel = plpModel, 
     plpData = newData, 
-    population = newPopulation
+    population = newPopulation, 
+    timepoint = 0
     )
   
   oldPred$evaluationType <- 'validation'

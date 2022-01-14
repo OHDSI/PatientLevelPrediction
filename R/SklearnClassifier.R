@@ -68,7 +68,8 @@ fitSklearn <- function(
       pythonImportSecond = pySettings$pythonImportSecond,
       pythonClassifier = pySettings$pythonClassifier,
       modelLocation = outLoc,
-      paramSearch = param
+      paramSearch = param,
+      saveToJson = pySettings$saveToJson
       )
     )
   
@@ -124,6 +125,7 @@ fitSklearn <- function(
   class(result) <- "plpModel"
   attr(result, "predictionFunction") <- "predictPythonSklearn"
   attr(result, "modelType") <- "binary"
+  attr(result, "saveType") <- attr(param, 'saveType')
   
   return(result)
 }
@@ -153,11 +155,17 @@ predictPythonSklearn <- function(
 
   # import
   os <- reticulate::import('os')
-  joblib <- reticulate::import('joblib')
   
   # load model
-  modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.pkl"))
-  model <- joblib$load(os$path$join(modelLocation)) 
+  if(plpModel$settings$modelSettings$extraSettings$saveToJson){
+    skljson <- reticulate::import('sklearn_json')
+    modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.json"))
+    model <- skljson$from_json(modelLocation)
+  } else{
+    joblib <- reticulate::import('joblib')
+    modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.pkl"))
+    model <- joblib$load(os$path$join(modelLocation)) 
+  }
   
   included <- plpModel$covariateImportance$columnId[plpModel$covariateImportance$included>0] # does this include map?
   pythonData <- reticulate::r_to_py(newData[,included, drop = F])
@@ -201,6 +209,9 @@ checkPySettings <- function(settings){
   checkIsClass(settings$name, c('character'))
   ParallelLogger::logDebug(paste0('name: ', settings$name))
   
+  checkIsClass(settings$saveToJson, c('logical'))
+  ParallelLogger::logDebug(paste0('saveToJson: ', settings$saveToJson))
+  
   checkIsClass(settings$pythonImport, c('character'))
   ParallelLogger::logDebug(paste0('pythonImport: ', settings$pythonImport))
 
@@ -225,7 +236,8 @@ gridCvPython <- function(
   pythonImportSecond,
   pythonClassifier,
   modelLocation,
-  paramSearch
+  paramSearch,
+  saveToJson
   )
   {
   
@@ -322,7 +334,12 @@ gridCvPython <- function(
     dir.create(file.path(modelLocation), recursive = T)
   }
  # joblib$dump(model, os$path$join(modelLocation,"model.pkl"), compress = T) 
-  joblib$dump(model, file.path(modelLocation,"model.pkl"), compress = T) 
+  if(saveToJson){
+    skljson <- reticulate::import('sklearn_json')
+    skljson$to_json(model = model, model_name =  file.path(modelLocation,"model.json"))
+  } else{
+    joblib$dump(model, file.path(modelLocation,"model.pkl"), compress = T) 
+  }
   
   # feature importance
   variableImportance <- tryCatch({model$feature_importances_}, error = function(e){ParallelLogger::logInfo(e);return(rep(1,ncol(matrixData)))})

@@ -66,10 +66,11 @@ fitCyclopsModel <- function(
       upperLimit = param$upperLimit,
       tolerance  = settings$tolerance,
       cvRepetitions = 1, # make an option?
-      selectorType = "byPid",
+      selectorType = settings$selectorType,
       noiseLevel = "silent",
       threads = settings$threads,
-      maxIterations = settings$maxIterations)
+      maxIterations = settings$maxIterations
+      )
     
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
@@ -105,24 +106,32 @@ fitCyclopsModel <- function(
   
   #get prediction on test set:
   ParallelLogger::logTrace('Getting predictions on train set')
+  tempModel <- list(model = modelTrained)
+  attr(tempModel, "modelType") <- attr(param, 'modelType')
   prediction <- predictCyclops(
-    plpModel = list(model = modelTrained),
+    plpModel = tempModel,
     cohort = trainData$labels, 
     data = trainData
     )
   prediction$evaluationType <- 'Train'
   
-  # get cv AUC
-  cvPrediction  <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
-  cvPrediction$evaluationType <- 'CV'
-  # fit date issue convertion caused by andromeda 
-  cvPrediction$cohortStartDate <- as.Date(cvPrediction$cohortStartDate, origin = '1970-01-01')
-  
-  prediction <- rbind(prediction, cvPrediction[,colnames(prediction)])
-  
-  cvPerFold <-  unlist(lapply(modelTrained$cv, function(x){x$out_sample_auc}))
-  if(length(cvPerFold)>0){
-    names(cvPerFold) <- paste0('fold_auc', 1:length(cvPerFold))
+  # get cv AUC if exists
+  cvPerFold <- c()
+  if(!is.null(modelTrained$cv)){
+    cvPrediction  <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
+    cvPrediction$evaluationType <- 'CV'
+    # fit date issue convertion caused by andromeda 
+    cvPrediction$cohortStartDate <- as.Date(cvPrediction$cohortStartDate, origin = '1970-01-01')
+    
+    prediction <- rbind(prediction, cvPrediction[,colnames(prediction)])
+    
+    cvPerFold <-  unlist(lapply(modelTrained$cv, function(x){x$out_sample_auc}))
+    if(length(cvPerFold)>0){
+      names(cvPerFold) <- paste0('fold_auc', 1:length(cvPerFold))
+    }
+    
+    # remove the cv from the model:
+    modelTrained$cv <- NULL
   }
   
   result <- list(
@@ -170,6 +179,7 @@ fitCyclopsModel <- function(
   class(result) <- 'plpModel'
   attr(result, 'predictionFunction') <- 'predictCyclops'
   attr(result, 'modelType') <- attr(param, 'modelType')
+  attr(result, 'saveType') <- attr(param, 'saveType')
   return(result)
 }
 
@@ -200,6 +210,28 @@ predictCyclops <- function(plpModel, data, cohort ) {
     data$covariateData,
     plpModel$model$modelType
   )
+  
+  # survival cyclops use baseline hazard to convert to risk from exp(LP) to 1-S^exp(LP)
+  if(attr(plpModel, 'modelType') == 'survival'){
+    if(!is.null(plpModel$model$baselineHazard)){
+      if(is.null(attr(cohort, 'timepoint'))){
+        timepoint <- attr(cohort,'metaData')$populationSettings$riskWindowEnd
+      } else{
+        timepoint <- attr(cohort, 'timepoint')
+      }
+      bhind <- which.min(abs(plpModel$model$baselineHazard$time-timepoint))
+      #prediction$value <- 1-plpModel$model$baselineHazard$surv[bhind]^prediction$value
+      prediction$value <- (1-plpModel$model$baselineHazard$surv[bhind])*prediction$value
+      
+      
+      metaData <- list()
+      metaData$baselineHazardTimepoint <- plpModel$model$baselineHazard$time[bhind]
+      metaData$baselineHazard <- plpModel$model$baselineHazard$surv[bhind]
+      metaData$offset <- 0
+      
+      attr(prediction, 'metaData') <- metaData
+    }
+  }
   
   delta <- Sys.time() - start
   ParallelLogger::logInfo("Prediction took ", signif(delta, 3), " ", attr(delta, "units"))
@@ -248,12 +280,12 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     prediction$value <- link(prediction$value)
     attr(prediction, "metaData")$modelType <- 'binary'
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
+    
+    # add baseline hazard stuff
+    
     prediction$value <- exp(prediction$value)
-    #if(max(prediction$value)>1){
-    #  prediction$value <- prediction$value/max(prediction$value)
-    #}
     attr(prediction, "metaData")$modelType <- 'survival'
-    if(modelType == "survival"){
+    if(modelType == "survival"){ # is this needed?
       attr(prediction, 'metaData')$timepoint <- max(population$survivalTime, na.rm = T)
     }
     

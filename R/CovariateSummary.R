@@ -133,8 +133,26 @@ aggregateCovariateSummaries <- function(
         .data$CovariateStDev, 
       )
 
-    resultLabels <- reshape2::melt(resultLabels, id.vars = c('covariateId','group'))
-    resultLabels <- reshape2::dcast(resultLabels, covariateId~group+variable, fill = 0)
+    resultLabels <- tidyr::pivot_longer(
+      data = resultLabels, 
+      cols = colnames(resultLabels)[!colnames(resultLabels) %in% c('covariateId','group')],
+      names_to = 'variable', 
+      values_to = 'value'
+      )
+    
+    resultLabels <- resultLabels %>% 
+      dplyr::mutate(group_variable = paste(.data$group, .data$variable, sep ='_')) %>%
+      dplyr::select(-.data$group, -.data$variable)
+    
+    resultLabels <- tidyr::pivot_wider(
+      data = resultLabels, 
+      names_from = 'group_variable', 
+      values_from = 'value', 
+      values_fill = 0
+      )
+      
+    #resultLabels <- reshape2::melt(resultLabels, id.vars = c('covariateId','group'))
+    #resultLabels <- reshape2::dcast(resultLabels, covariateId~group+variable, fill = 0)
     
     resultLabels <- resultLabels %>% 
       dplyr::mutate(StandardizedMeanDiff = (.data$WithOutcome_CovariateMean - .data$WithNoOutcome_CovariateMean)/sqrt((.data$WithOutcome_CovariateStDev^2 + .data$WithNoOutcome_CovariateStDev^2)/2) )
@@ -165,8 +183,26 @@ aggregateCovariateSummaries <- function(
         .data$CovariateStDev, 
       )
     
-    resultLabelStratas <- reshape2::melt(resultLabelStratas, id.vars = c('covariateId','group'))
-    resultLabelStratas <- reshape2::dcast(resultLabelStratas, covariateId~group+variable, fill = 0)
+    resultLabelStratas <- tidyr::pivot_longer(
+      data = resultLabelStratas, 
+      cols = colnames(resultLabelStratas)[!colnames(resultLabelStratas) %in% c('covariateId','group')],
+      names_to = 'variable', 
+      values_to = 'value'
+    )
+    
+    resultLabelStratas <- resultLabelStratas %>% 
+      dplyr::mutate(group_variable = paste(.data$group, .data$variable, sep ='_')) %>%
+      dplyr::select(-.data$group, -.data$variable)
+    
+    resultLabelStratas <- tidyr::pivot_wider(
+      data = resultLabelStratas, 
+      names_from = 'group_variable', 
+      values_from = 'value', 
+      values_fill = 0
+    )
+    
+    #resultLabelStratas <- reshape2::melt(resultLabelStratas, id.vars = c('covariateId','group'))
+    #resultLabelStratas <- reshape2::dcast(resultLabelStratas, covariateId~group+variable, fill = 0)
     
     # labels only
     resultLabels <- covariateSummariesPerStrata %>% 
@@ -191,8 +227,26 @@ aggregateCovariateSummaries <- function(
         .data$CovariateStDev
       )
     
-    resultLabels <- reshape2::melt(resultLabels, id.vars = c('covariateId','groupLabel'))
-    resultLabels <- reshape2::dcast(resultLabels, covariateId~groupLabel+variable, fill = 0)
+    resultLabels <- tidyr::pivot_longer(
+      data = resultLabels, 
+      cols = colnames(resultLabels)[!colnames(resultLabels) %in% c('covariateId','groupLabel')],
+      names_to = 'variable', 
+      values_to = 'value'
+    )
+    
+    resultLabels <- resultLabels %>% 
+      dplyr::mutate(group_variable = paste(.data$groupLabel, .data$variable, sep ='_')) %>%
+      dplyr::select(-.data$groupLabel, -.data$variable)
+    
+    resultLabels <- tidyr::pivot_wider(
+      data = resultLabels, 
+      names_from = 'group_variable', 
+      values_from = 'value', 
+      values_fill = 0
+    )
+    
+    #resultLabels <- reshape2::melt(resultLabels, id.vars = c('covariateId','groupLabel'))
+    #resultLabels <- reshape2::dcast(resultLabels, covariateId~groupLabel+variable, fill = 0)
     
     resultLabels <- resultLabels %>% 
       dplyr::mutate(StandardizedMeanDiff = (.data$WithOutcome_CovariateMean - .data$WithNoOutcome_CovariateMean)/sqrt((.data$WithOutcome_CovariateStDev^2 + .data$WithNoOutcome_CovariateStDev^2)/2) )

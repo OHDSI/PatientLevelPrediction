@@ -22,7 +22,7 @@ externalValidatePlp <- function(
   plpData,
   databaseName = 'database 1',
   population,
-  settings = createValidationSettings(
+  settings = createValidationSettings(  # add covariateSummary option?
     recalibrate = 'weakRecalibration'
   )
 ){
@@ -75,38 +75,41 @@ externalValidatePlp <- function(
     error = function(e){ return(NULL) }
   )
   
-  executionSettings <- list(
+  executionSummary <- list(
     ExecutionDateTime = Sys.Date(),
     PackageVersion = list(
       rVersion= R.Version()$version.string,
       packageVersion = utils::packageVersion("PatientLevelPrediction")
     ),
     PlatformDetails= list(
-      platform= R.Version()$platform,
-      cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
-      RAM=utils::memory.size()
+      platform = R.Version()$platform,
+      cores = Sys.getenv('NUMBER_OF_PROCESSORS'),
+      RAM = memuse::Sys.meminfo()[1]
     ) #  test for non-windows needed
   )
   
   model = list(
     model = 'external validation of model',
     settings = plpModel$settings,
-    valdiationDetails   = list(
+    validationDetails   = list(
+      analysisId = '', #TODO add from model
+      analysisSource = '', #TODO add from model
       developmentDatabase = plpModel$trainDetails$cdmDatabaseSchema,
       cdmDatabaseSchema = databaseName,
       populationSettings = attr(population, 'metaData')$populationSettings,
       outcomeId = attr(population, 'metaData')$outcomeId,
       cohortId = attr(plpData, 'metaData')$cohortId,
       attrition = attr(population, 'metaData')$attrition,
-      valdationDate = Sys.Date() # is this needed?
+      validationDate = Sys.Date() # is this needed?
     )
   )
   attr(model, "predictionFunction") <- 'none'
+  attr(model, "saveType") <- 'RtoJson'
   class(model) <- 'plpModel'
   
   result <- list(
     model = model,
-    executionSettings = executionSettings,
+    executionSummary = executionSummary,
     prediction = prediction,
     performanceEvaluation = performance,
     covariateSummary = covariateSum
@@ -130,6 +133,8 @@ externalValidatePlp <- function(
 #' @param validationDatabaseDetails   A list of objects of class \code{databaseDetails} created using \code{createDatabaseDetails}
 #' @param validationRestrictPlpDataSettings   A list of population restriction settings created by \code{createRestrictPlpDataSettings()}
 #' @param settings                    A settings object of class \code{validationSettings} created using \code{createValidationSettings}
+#' @param logSettings                 An object of \code{logSettings} created using \code{createLogSettings} 
+#'                                    specifying how the logging is done 
 #' @param outputFolder                The directory to save the validation results to (subfolders are created per database in validationDatabaseDetails)
 #' 
 #' @return
@@ -144,6 +149,7 @@ externalValidateDbPlp <- function(
   settings = createValidationSettings(
     recalibrate = 'weakRecalibration'
     ),
+  logSettings = createLogSettings(verbosity = 'INFO', logName = 'validatePLP'),
   outputFolder = getwd()
 ){
   
@@ -170,6 +176,12 @@ externalValidateDbPlp <- function(
   for(databaseDetails in validationDatabaseDetails){
     
     databaseName <- attr(databaseDetails, 'cdmDatabaseName')
+    
+    # initiate log
+    logSettings$saveDirectory <- file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId)
+    logSettings$logFileName <- 'validationLog'
+    logger <- do.call(createLog,logSettings)
+    ParallelLogger::registerLogger(logger)
     
     ParallelLogger::logInfo(paste('Validating model on', databaseName))
     
@@ -204,9 +216,12 @@ externalValidateDbPlp <- function(
     plpData <- tryCatch({
       do.call(getPlpData, getPlpDataSettings)
     },
-      error = function(e){ParallelLogger::logError(e)}
+      error = function(e){ParallelLogger::logError(e); return(NULL)}
     )
-    # save?
+    
+    if(is.null(plpData)){
+      closeLog(logger)
+    }
     
     # Step 2: create population 
     #=======
@@ -221,25 +236,37 @@ externalValidateDbPlp <- function(
         )
       )
     },
-      error = function(e){ParallelLogger::logError(e)}
+      error = function(e){ParallelLogger::logError(e); return(NULL)}
     )
+    
+    if(is.null(population)){
+      closeLog(logger)
+    }
     
     # Step 3: Apply model to plpData and population
     #=======
 
-    result[[databaseName]] <- externalValidatePlp(
-      plpModel,
-      plpData,
-      databaseName = databaseName,
-      population,
-      settings = settings
+    result[[databaseName]] <- tryCatch({
+      externalValidatePlp(
+        plpModel,
+        plpData,
+        databaseName = databaseName,
+        population,
+        settings = settings
+      )},
+      error = function(e){ParallelLogger::logInfo(e); return(NULL)}
     )
     
-    if(!dir.exists(file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId))){
-      dir.create(file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId), recursive = T)
-    }  
-    
-    savePlpResult(result[[databaseName]], dirPath = file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId, 'validationResult'))
+    if(is.null(result[[databaseName]])){
+      closeLog(logger)
+    } else{
+      
+      if(!dir.exists(file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId))){
+        dir.create(file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId), recursive = T)
+      }  
+      
+      savePlpResult(result[[databaseName]], dirPath = file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId, 'validationResult'))
+    }
   }
  
   # Now return results

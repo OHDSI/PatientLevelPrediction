@@ -30,7 +30,6 @@ plpModel <- fitPlp(
   analysisId = 'fitting'
   )
 
-expect_is(plpModel$predict, "function")
 expect_is(plpModel, 'plpModel')
 
 })

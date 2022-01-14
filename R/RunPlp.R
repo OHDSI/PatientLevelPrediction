@@ -258,7 +258,7 @@ runPlp <- function(
   tryCatch({
     printHeader(
       plpData, 
-      plpData$metaData$cohortId, 
+      plpData$metaData$databaseDetails$cohortId, 
       outcomeId, 
       analysisId, 
       analysisName,
@@ -302,7 +302,7 @@ runPlp <- function(
     }
     
     dataSummary(data)
-  }
+  } 
   
   if(executeSettings$runSampleData){
     # sampling
@@ -470,9 +470,9 @@ runPlp <- function(
       packageVersion = utils::packageVersion("PatientLevelPrediction")
     ),
     PlatformDetails= list(
-      platform= R.Version()$platform,
-      cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
-      RAM=benchmarkme::get_ram()
+      platform = R.Version()$platform,
+      cores = Sys.getenv('NUMBER_OF_PROCESSORS'),
+      RAM = memuse::Sys.meminfo()[1]
       ),
     TotalExecutionElapsedTime = TotalExecutionElapsedTime,
     ExecutionDateTime = ExecutionDateTime,
@@ -508,11 +508,6 @@ runPlp <- function(
   tryCatch(savePlpResult(results, file.path(analysisPath,'plpResult')),
     finally= ParallelLogger::logTrace('Done.'))
   ParallelLogger::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
-  
-  # update from temp location to saved location
-  if(!is.null(updateModelLocation(results$model, file.path(analysisPath,'plpResult')))){
-    results$model <- updateModelLocation(results$model, file.path(analysisPath,'plpResult'))
-  }
   
   return(results)
   

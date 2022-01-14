@@ -138,7 +138,7 @@ createLearningCurve <- function(
   ExecutionDateTime <- Sys.time()
   
   if(parallel){
-    
+    ensure_installed('parallel')
     if(is.null(cores)){
       ParallelLogger::logInfo(paste0('Number of cores not specified'))
       cores <- parallel::detectCores()
@@ -219,8 +219,13 @@ createLearningCurve <- function(
   }
   
   learningCurve <- do.call(rbind,learningCurve)
-
-  learningCurve <- reshape2::dcast(data = learningCurve,  trainFraction ~ name)
+  
+  learningCurve <- tidyr::pivot_wider(
+    data = learningCurve, 
+    names_from = 'name', 
+    values_from = 'value'
+    )
+  #learningCurve <- reshape2::dcast(data = learningCurve,  trainFraction ~ name)
 
   endTime <- Sys.time()
   TotalExecutionElapsedTime <-
@@ -369,6 +374,8 @@ plotLearningCurve <- function(learningCurve,
   yAxisRange <- NULL
   y <- NULL
   
+  learningCurve <- as.data.frame(learningCurve)
+  
   # check for performance metric to plot
   if(metric == "AUROC") {
     # create a data.frame with evalautionType, AUROC
@@ -382,7 +389,14 @@ plotLearningCurve <- function(learningCurve,
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
     }
     
-    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    tidyLearningCurve <- tidyr::pivot_longer(
+      data = as.data.frame(tidyLearningCurve),
+      cols = colnames(as.data.frame(tidyLearningCurve))[!colnames(as.data.frame(tidyLearningCurve)) %in% c('trainFraction', 'Occurrences', 'Observations')], 
+      values_to = "value", 
+      names_to = 'variable'
+    )
+    
+    #tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
     
     tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
     
@@ -401,7 +415,13 @@ plotLearningCurve <- function(learningCurve,
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
     }
 
-    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    tidyLearningCurve <- tidyr::pivot_longer(
+      data = as.data.frame(tidyLearningCurve),
+      cols = colnames(as.data.frame(tidyLearningCurve))[!colnames(as.data.frame(tidyLearningCurve)) %in% c('trainFraction', 'Occurrences', 'Observations')], 
+      values_to = "value", 
+      names_to = 'variable'
+    )
+    #tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
     
     tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
     
@@ -420,7 +440,13 @@ plotLearningCurve <- function(learningCurve,
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
     }
     
-    tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    tidyLearningCurve <- tidyr::pivot_longer(
+      data = as.data.frame(tidyLearningCurve),
+      cols = colnames(as.data.frame(tidyLearningCurve))[!colnames(as.data.frame(tidyLearningCurve)) %in% c('trainFraction', 'Occurrences', 'Observations')], 
+      values_to = "value", 
+      names_to = 'variable'
+    )
+    #tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
     
     tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
     

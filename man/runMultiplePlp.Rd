@@ -12,6 +12,7 @@ runMultiplePlp(
   onlyFetchData = F,
   splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
     trainFraction = 0.75, splitSeed = 123, nfold = 3),
+  cohortDefinitions = NULL,
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
     "runPlp Log"),
   saveDirectory = getwd()
@@ -25,6 +26,8 @@ runMultiplePlp(
 \item{onlyFetchData}{Only fetches and saves the data object to the output folder without running the analysis.}
 
 \item{splitSettings}{The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}}
+
+\item{cohortDefinitions}{A list of cohort definitions for the target and outcome cohorts}
 
 \item{logSettings}{The setting spexcifying the logging for the analyses created using \code{createLogSettings()}}
 

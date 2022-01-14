@@ -89,6 +89,7 @@ fitRclassifier <- function(trainData, param, search = 'grid', analysisId){
   class(result) <- "plpModel"
   attr(result, "predictionFunction") <- settings$predictRFunction
   attr(result, "modelType") <- "binary"
+  attr(result, "saveType") <- attr(param, 'saveType')
   
   return(result)
 }

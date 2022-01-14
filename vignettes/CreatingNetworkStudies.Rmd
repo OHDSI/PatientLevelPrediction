@@ -19,7 +19,7 @@ output:
 %\VignetteIndexEntry{Making  patient-level predictive network study packages}
 -->
   
-  ```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
+```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
 library(PatientLevelPrediction)
 vignetteDataFolder <- "s:/temp/plpVignette"
 # Load all needed data if it exists on this computer:

@@ -9,6 +9,7 @@ externalValidateDbPlp(
   validationDatabaseDetails = createDatabaseDetails(),
   validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
   settings = createValidationSettings(recalibrate = "weakRecalibration"),
+  logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
   outputFolder = getwd()
 )
 }
@@ -20,6 +21,9 @@ externalValidateDbPlp(
 \item{validationRestrictPlpDataSettings}{A list of population restriction settings created by \code{createRestrictPlpDataSettings()}}
 
 \item{settings}{A settings object of class \code{validationSettings} created using \code{createValidationSettings}}
+
+\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
+specifying how the logging is done}
 
 \item{outputFolder}{The directory to save the validation results to (subfolders are created per database in validationDatabaseDetails)}
 }

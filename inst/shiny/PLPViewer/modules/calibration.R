@@ -37,6 +37,7 @@ calibrationServer <- function(id, plpResult) {
         }
 
         data$value <- as.double(as.character(data$value))
+        data$value <- format(data$value, digits = 4, scientific = F)
         ind <- data$metric %in% c(
           'calibrationInLarge intercept', 
           'weak calibration intercept',
@@ -52,7 +53,12 @@ calibrationServer <- function(id, plpResult) {
           'adjustIntercept'
         )
         
-        reshape2::dcast(data[ind,], evaluation ~ metric, value.var = 'value')
+        tidyr::pivot_wider(
+          data[ind,],
+          names_from = 'metric', 
+          values_from = 'value'
+          )
+        #reshape2::dcast(data[ind,], evaluation ~ metric, value.var = 'value')
         
       })
       
@@ -135,7 +141,13 @@ plotDemographicSummary <- function(evaluation, type = NULL,  fileName=NULL){
       
     }
     
-    x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
+    x <- tidyr::pivot_longer(
+      data = x, 
+      cols = !colnames(x)[colnames(x) %in% c('ageGroup','genGroup')], 
+      names_to = 'variable', 
+      values_to = 'value'
+      )
+    #x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
     
     # 1.96*StDevPredictedProbability
     ci <- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]

@@ -23,7 +23,7 @@
 #' @docType package
 #' @name PatientLevelPrediction
 #' @importFrom Rcpp evalCpp
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 #' @importFrom rlang .data
 #' @import FeatureExtraction
 #' @useDynLib PatientLevelPrediction
