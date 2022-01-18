@@ -54,7 +54,7 @@ jobs:
           activate-environment: r-reticulate
       
       - name: python main dependencies  
-        run: conda install --name r-reticulate numpy scipy scikit-learn pandas pydotplus joblib sklearn_json 
+        run: conda install --name r-reticulate numpy scipy scikit-learn pandas pydotplus joblib sklearn-json 
       
       - name: python scikit-survival dependencies    
         run: conda install --name r-reticulate -c sebp scikit-survival
