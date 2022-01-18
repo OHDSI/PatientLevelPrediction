@@ -1,4 +1,4 @@
-# @file ExtraFeatures.R
+# @file AdditionalCovariates.R
 #
 # Copyright 2022 Observational Health Data Sciences and Informatics
 #
@@ -48,8 +48,6 @@ getCohortCovariateData <- function(
   cohortId,
   covariateSettings
   ){
-  
-  
   
   # Some SQL to construct the covariate:
   sql <- paste(
