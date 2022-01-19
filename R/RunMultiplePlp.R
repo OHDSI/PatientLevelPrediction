@@ -566,12 +566,12 @@ getDataSettings <- function(settingstable){
   length(result) <- nrow(combos)
   for(i in 1:nrow(combos)){
     result[[i]] <- list(
-      targetId = combos[i,1],
-      covariateSettings = combos[i,2],
-      restrictPlpDataSettings = combos[i,3],
-      dataLocation = combos[i,4],
+      targetId = combos$targetId[i],
+      covariateSettings = combos$covariateSettings[i],
+      restrictPlpDataSettings = combos$restrictPlpDataSettings[i],
+      dataLocation = combos$dataLocation[i],
       outcomeIds = settingstable %>%  
-        dplyr::filter(.data$dataLocation == combos[i,4]) %>%  
+        dplyr::filter(.data$dataLocation == combos$dataLocation[i]) %>%  
         dplyr::select(.data$outcomeId) %>%  
         dplyr::pull()
     )
