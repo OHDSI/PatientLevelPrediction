@@ -83,6 +83,9 @@ diagnostic <- function(
   if(!is.null(plpData)){
     cohortId <- unique(plpData$cohorts$cohortId)
     outcomeIds <- unique(plpData$outcomes$outcomeId)
+  } else{
+    cohortId <- databaseDetails$cohortId
+    outcomeIds <- databaseDetails$outcomeIds
   }
   
   #create cohort names csv:

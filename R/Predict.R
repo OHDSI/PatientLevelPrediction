@@ -74,7 +74,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   # apply prediction function
   prediction <- do.call(
-    attr(plpModel, "predictionFunction"), 
+    eval(parse(text = attr(plpModel, "predictionFunction"))), 
     list(
       plpModel = plpModel, 
       data = plpData, 
