@@ -30,7 +30,7 @@ prediction <- data.frame(
   )
 
 metaData <- list(
-  predictionType = "binary", 
+  modelType = "binary", 
   cohortId = 1,
   outcomeId = 2,
   timepoint = 365
@@ -82,7 +82,7 @@ test_that("recalibratePlpRefit", {
 test_that("survival", {
 # survival
 metaData <- list(
-  predictionType = "survival", 
+  modelType = "survival", 
   cohortId = 1,
   outcomeId = 2,
   timepoint = 365
