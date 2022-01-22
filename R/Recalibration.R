@@ -156,7 +156,7 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = 'evaluationType'
 
 recalibrationInTheLarge <- function(prediction, columnType = 'evaluationType'){
   
-  if(attr(prediction, "metaData")$predictionType == 'binary'){
+  if(attr(prediction, "metaData")$modelType == 'binary'){
     misCal <- calibrationInLarge(prediction)
     obsOdds <- misCal$observedRisk/ (1-misCal$observedRisk)
     predOdds <- misCal$meanPredictionRisk/ (1 -  misCal$meanPredictionRisk)
@@ -172,7 +172,7 @@ recalibrationInTheLarge <- function(prediction, columnType = 'evaluationType'){
     return(prediction)
   }
   
-  if(attr(prediction, "metaData")$predictionType == 'survival'){
+  if(attr(prediction, "metaData")$modelType == 'survival'){
 
     ParallelLogger::logError('Survival recal in the large not currently available')
   }
@@ -184,7 +184,7 @@ recalibrationInTheLarge <- function(prediction, columnType = 'evaluationType'){
 weakRecalibration <- function(prediction, columnType = 'evaluationType'){
   
   # if binary:
-  if(attr(prediction, "metaData")$predictionType == 'binary'){
+  if(attr(prediction, "metaData")$modelType == 'binary'){
     recalibrated <- prediction
     recalibrated$value[recalibrated$value==0] <- 0.000000000000001
     recalibrated$value[recalibrated$value==1] <- 1-0.000000000000001
@@ -206,7 +206,7 @@ weakRecalibration <- function(prediction, columnType = 'evaluationType'){
   } 
   
   # add if survival
-  if(attr(prediction, "metaData")$predictionType == 'survival'){
+  if(attr(prediction, "metaData")$modelType == 'survival'){
     
     recalibrated <- prediction
     
