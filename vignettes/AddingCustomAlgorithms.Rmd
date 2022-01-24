@@ -139,7 +139,7 @@ If the population contains the columns outcomeCount and indexes, then these are 
 For example:
 
 ```{r tidy=FALSE,eval=FALSE}
-predict.madeup <- function(plpModel,population, plpData, ...){ 
+predict_madeup <- function(plpModel,population, plpData, ...){ 
 
   # ************* code to do prediction for each rowId in population
   # prediction <- code to do prediction here returning columns: rowId 
@@ -334,10 +334,10 @@ made_up_model <- function(data, population,
 ```
 
 ## Predict
-The final step is to create a predict function for the model. This gets added to the predict.R file.  In the example above the type `attr(result, 'type') <- 'madeup'` was madeup, so a `predict.madeup` function is required to be added into the predict.R.  The predict function needs to take as input the plpModel returned by the fit function, the population to apply the model on and the plpData specifying the covariates of the population.
+The final step is to create a predict function for the model. This gets added to the predict.R file.  In the example above the type `attr(result, 'type') <- 'madeup'` was madeup, so a `predict_madeup` function is required to be added into the predict.R.  The predict function needs to take as input the plpModel returned by the fit function, the population to apply the model on and the plpData specifying the covariates of the population.
 
 ```{r tidy=FALSE,eval=FALSE}
-predict.madeup <- function(plpModel,population, plpData, ...){ 
+predict_madeup <- function(plpModel,population, plpData, ...){ 
   result <- toSparseM(plpData, population, map=plpModel$covariateMap)
   data <- result$data[population$rowId,]
   prediction <- data.frame(rowId=population$rowId, 

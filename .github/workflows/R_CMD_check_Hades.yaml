@@ -54,9 +54,6 @@ jobs:
       
       - name: python main dependencies  
         run: conda install --name r-reticulate numpy scipy scikit-learn pandas pydotplus joblib 
-       
-      - name: python keras and tensorflow dependencies   
-        run: conda install --name r-reticulate -c conda-forge keras tensorflow
       
       - name: python scikit-survival dependencies    
         run: conda install --name r-reticulate -c sebp scikit-survival
@@ -99,7 +96,7 @@ jobs:
         shell: Rscript {0}
 
       - name: Install covr
-        if: runner.os == 'macOS'
+        if: runner.os == 'Windows'
         run: |
           remotes::install_cran("covr")
         shell: Rscript {0}
@@ -135,7 +132,7 @@ jobs:
           path: check/*.tar.gz
 
       - name: Test coverage
-        if: runner.os == 'macOS'
+        if: runner.os == 'Windows'
         run: covr::codecov()
         shell: Rscript {0}
 

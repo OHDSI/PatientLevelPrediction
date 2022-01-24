@@ -110,7 +110,7 @@ fitGradientBoostingMachine <- function(population, plpData, param, quiet=F,
   #TODO - how to incorporate indexes?
   
   # convert data into sparse Matrix:
-  result <- toSparseM(plpData,population,map=NULL, temporal = F)
+  result <- toSparseM(plpData,population,map=NULL)
   data <- result$data
   
   # now get population of interest

@@ -1,3 +1,20 @@
+PatientLevelPrediction 4.4.2
+======================
+- revised toSparseM() to do conversion in one go but check RAM availablility beforehand.
+- removed temporal plpData conversion in toSparseM (this will be done in DeepPatientLevelPrediction)
+
+PatientLevelPrediction 4.4.1
+======================
+- shiny can now read csv results
+- objects loaded via loadPlpFromCsv() can be saved using savePlpResult()
+
+PatientLevelPrediction 4.4.0
+======================
+- added database result storage 
+- added interface to database results in shiny
+- merged in shinyRepo that changed the shiny app to make it modular and added new features
+- removed deep learning as this is being added into new OHDSI package DeepPatientLevelPrediction
+
 PatientLevelPrediction 4.3.10
 ======================
 - save xgboost model as json file for transparency

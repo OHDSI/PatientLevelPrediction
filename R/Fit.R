@@ -198,7 +198,7 @@ createTransform <- function(plpModel){
     }
     
     
-    pred <- do.call(paste0('predict.',attr(plpModel, 'type')), list(plpModel=plpModel,
+    pred <- do.call(paste0('predict_',attr(plpModel, 'type')), list(plpModel=plpModel,
                                                                     plpData=plpData, 
                                                                     population=population))
 
