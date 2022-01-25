@@ -550,7 +550,7 @@ getSettingFromId <- function(
 ){
   ind <- which(idList[[type]]$id == id)
   if(!type %in% c('targetId', 'outcomeId')){
-    return(jsonlite::unserializeJSON(idList[[type]]$value[[ind]]))
+    return(jsonlite::unserializeJSON(as.character(idList[[type]]$value[[ind]])))
   } else{
     return(idList[[type]]$value[[ind]])
   }
