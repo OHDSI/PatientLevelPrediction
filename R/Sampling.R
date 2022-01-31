@@ -123,7 +123,7 @@ underSampleData <- function(trainData, sampleSettings){
     outcomeIds <- population$rowId[population$outcomeCount > 0 & population$index == i]
     nonoutcomeIds <- population$rowId[population$outcomeCount == 0 & population$index == i]
     
-    sampleSize <- length(outcomeIds)*sampleSettings$numberOutcomestoNonOutcomes
+    sampleSize <- length(outcomeIds)/sampleSettings$numberOutcomestoNonOutcomes
     
     if(sampleSize > length(nonoutcomeIds)){
       ParallelLogger::logWarn('Non-outcome count less that require sample size')
