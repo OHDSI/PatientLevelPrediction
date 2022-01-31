@@ -49,33 +49,20 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
   
-  maxRows <- RSQLite::dbGetQuery(covariateData, 
-                                 "SELECT count(*) as n FROM covariates;")
+  maxRows <- tally(covariateData$covariates, name = 'n') %>% collect()
   
-  steps <- ceiling(maxRows$n/sizeN)
+  Andromeda::batchApply(covariateData$covariates, function(tempData) {
   
-  
-  pb <- utils::txtProgressBar(style = 3)
-  
-  for(i in 1:steps){
-    utils::setTxtProgressBar(pb, i/steps)
-    
-    offset <- ((i-1)*sizeN)
-    limit <- sizeN
-    
-    tempData <- RSQLite::dbGetQuery(covariateData, 
-                                    paste0("SELECT * FROM covariates LIMIT ",limit," OFFSET ",offset," ;"))
-    
     filtered <- tempData %>% dplyr::inner_join(population, by = 'rowId')
     
-    if(i==1){
+    if ("covariates" %in% names(newCovariateData$covariates)) {
+      Andromeda::appendToTable(newCovariateData$covariates, data = filtered)
+    } else {
       newCovariateData$covariates <- filtered
-    } else{
-      Andromeda::appendToTable(tbl = newCovariateData$covariates, 
-                               data = filtered)
     }
-  }
-  close(pb)
+  },
+  progressBar = TRUE,
+  batchSize = sizeN)
   
   Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
                          indexName = 'covariates_ncovariateIds')

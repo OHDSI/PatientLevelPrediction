@@ -44,7 +44,6 @@ Imports:
     reticulate (> 1.16),
     rlang,
     rms,
-    RSQLite,
     slam,
     SqlRender (>= 1.1.3),
     survival,

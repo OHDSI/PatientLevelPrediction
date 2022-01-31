@@ -538,7 +538,7 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
     plpData$covariateData$population <- plpData$cohorts  %>%
       dplyr::select(.data$rowId)
   }
-  RSQLite::dbExecute(plpData$covariateData, "CREATE INDEX pop_rowId ON population(rowId)")
+  Andromeda::createIndex(plpData$covariateData$population, columnNames = "rowId", indexName = "pop_rowId")
   on.exit(plpData$covariateData$population <- NULL, add = TRUE)
   
   
@@ -572,9 +572,6 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
     if('indexes' %in% colnames(population)){
       Andromeda::createIndex(plpData$covariateData$newCovariates, c('covariateId','test','outcomeCount'),
                              indexName = 'newCovariates_covId_test_out')
-      #RSQLite::dbExecute(plpData$covariateData, 
-      #                   "CREATE INDEX newCovariates_covId_test_out ON newCovariates(covariateId,test,outcomeCount)")
-      
       
       plpData$covariateData$totals <- plpData$covariateData$population %>% 
         dplyr::group_by(.data$test, .data$outcomeCount) %>%
@@ -594,8 +591,6 @@ covariateSummary <- function(plpData, population = NULL, model = NULL){
     } else {
       Andromeda::createIndex(plpData$covariateData$newCovariates, c('covariateId','outcomeCount'),
                              indexName = 'newCovariates_covId_out')
-      #RSQLite::dbExecute(plpData$covariateData, 
-      #                   "CREATE INDEX newCovariates_covId_out ON newCovariates(covariateId,outcomeCount)")
       
       plpData$covariateData$totals <- plpData$covariateData$population %>% 
         dplyr::group_by(.data$outcomeCount) %>%
