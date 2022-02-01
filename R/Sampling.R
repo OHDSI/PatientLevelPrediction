@@ -100,8 +100,8 @@ sameData <- function(trainData, ...){
 
 underSampleData <- function(trainData, sampleSettings){
   
-  checkIsClass(sampleSettings$sampleSeed, c('numeric', 'interger'))
-  checkIsClass(sampleSettings$numberOutcomestoNonOutcomes, c('numeric', 'interger'))
+  checkIsClass(sampleSettings$sampleSeed, c('numeric', 'integer'))
+  checkIsClass(sampleSettings$numberOutcomestoNonOutcomes, c('numeric', 'integer'))
   checkHigherEqual(sampleSettings$numberOutcomestoNonOutcomes, 0)
   
   ParallelLogger::logInfo(paste0('sampleSeed: ', sampleSettings$sampleSeed))
@@ -160,7 +160,83 @@ underSampleData <- function(trainData, sampleSettings){
 
 overSampleData <- function(trainData, sampleSettings){
   
-  #TODO
+  checkIsClass(sampleSettings$sampleSeed, c('numeric', 'integer'))
+  checkIsClass(sampleSettings$numberOutcomestoNonOutcomes, c('numeric', 'integer'))
+  checkHigherEqual(sampleSettings$numberOutcomestoNonOutcomes, 0)
+  
+  ParallelLogger::logInfo(paste0('sampleSeed: ', sampleSettings$sampleSeed))
+  ParallelLogger::logInfo(paste0('numberOutcomestoNonOutcomes: ', sampleSettings$numberOutcomestoNonOutcomes))
+  
+  set.seed(sampleSettings$sampleSeed)
+  ParallelLogger::logInfo(paste0('Starting oversampling with seed ', sampleSettings$sampleSeed))
+  
+  population <- trainData$labels %>% dplyr::collect()
+  folds <- trainData$folds %>% dplyr::collect()
+  
+  population <- merge(population, folds, by = 'rowId')
+  
+  ParallelLogger::logInfo(paste0('Initial train data has ',sum(population$outcomeCount > 0),' outcomes to ',
+                                 sum(population$outcomeCount == 0), ' non-outcomes'))
+  
+  sampleTrainData <- list()
+  sampleTrainData$labels <- trainData$labels %>% dplyr::collect()
+  sampleTrainData$folds <- trainData$folds %>% dplyr::collect()
+  
+  sampleTrainData$covariateData <- Andromeda::andromeda()
+  sampleTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef
+  sampleTrainData$covariateData$covariates <- trainData$covariateData$covariates
+  
+  for(i in unique(folds$index)){
+    
+    outcomeIds <- population$rowId[population$outcomeCount > 0 & population$index == i]
+    nonoutcomeIds <- population$rowId[population$outcomeCount == 0 & population$index == i]
+    
+    sampleSize <- floor(length(nonoutcomeIds)*sampleSettings$numberOutcomestoNonOutcomes)
+    
+    if(sampleSize > length(nonoutcomeIds)){
+      ParallelLogger::logWarn('Non-outcome count less than required sample size')
+      sampleSize <- length(nonoutcomeIds) - length(outcomeIds)
+    } else {
+      sampleSize <- sampleSize - length(outcomeIds)
+    }
+    
+    while (sampleSize > 0){
+      tempSampleSize = min(length(outcomeIds),sampleSize)
+      # randomly oversample outcome people
+      sampleOutcomeIds <- sample(outcomeIds, tempSampleSize, replace = TRUE)
+      pplOfInterest <- unique(sampleOutcomeIds) # to enable oversampling with replacement
+      sampleSize <- sampleSize-length(pplOfInterest)
+      
+      addTrainData <- list()
+      addTrainData$labels <- trainData$labels %>% dplyr::filter(.data$rowId %in% pplOfInterest) 
+      addTrainData$labels <- addTrainData$labels %>% dplyr::mutate(newRowId = 1:nrow(addTrainData$labels))
+      addTrainData$labels <- addTrainData$labels %>% dplyr::mutate(newRowId = .data$newRowId + max(sampleTrainData$labels$rowId))
+      
+      addTrainData$folds <- trainData$folds %>% dplyr::filter(.data$rowId %in% pplOfInterest) 
+      addTrainData$folds <- dplyr::inner_join(addTrainData$folds, addTrainData$labels[, c("rowId", "newRowId")], copy=TRUE)
+      addTrainData$folds <- addTrainData$folds %>% dplyr::mutate(rowId = .data$newRowId)
+      addTrainData$folds <- dplyr::select(addTrainData$folds,-starts_with("newRowId"))
+      
+      addTrainData$covariateData$covariates <- trainData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% pplOfInterest) 
+      addTrainData$covariateData$covariates <- dplyr::inner_join(addTrainData$covariateData$covariates, addTrainData$labels[, c("rowId", "newRowId")], copy=TRUE)
+      addTrainData$covariateData$covariates <- addTrainData$covariateData$covariates %>% dplyr::mutate(rowId = .data$newRowId) 
+      addTrainData$covariateData$covariates <- dplyr::select(addTrainData$covariateData$covariates,-starts_with("newRowId"))
+      
+      addTrainData$labels <- addTrainData$labels %>% dplyr::mutate(rowId = .data$newRowId) 
+      addTrainData$labels <- dplyr::select(addTrainData$labels,-starts_with("newRowId"))
+      
+      sampleTrainData$labels <- dplyr::bind_rows(sampleTrainData$labels, addTrainData$labels)
+      sampleTrainData$folds <- dplyr::bind_rows(sampleTrainData$folds, addTrainData$folds)
+      appendToTable(sampleTrainData$covariateData$covariates, addTrainData$covariateData$covariates)
+    }
+  }
+  
+  #update metaData$populationSize = nrow(trainData$labels)
+  metaData <- attr(trainData$covariateData, 'metaData')
+  metaData$populationSize = nrow(sampleTrainData$labels)
+  attr(sampleTrainData$covariateData, 'metaData') <- metaData
+  
+  class(sampleTrainData$covariateData) <- 'CovariateData'
   
   return(trainData)
 }
