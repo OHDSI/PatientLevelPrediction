@@ -47,17 +47,39 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
   
   
   if(is.null(covariates)){
-    covariates <- plpResult$covariateSummary$covariateId[plpResult$covariateSummary$covariateValue!=0]
+    covariates <- plpResult$model$covariateImportance %>% 
+      dplyr::filter(.data$covariateValue != 0) %>% 
+      dplyr::select(.data$covariateId) %>% 
+      dplyr::pull()
   }
   
-  plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, population$rowId)
-  if(!is.null(plpResult$model$metaData$preprocessSettings)){
-    plpData$covariateData <- applyTidyCovariateData(plpData$covariateData,plpResult$model$metaData$preprocessSettings)
-  }
-  pred <- do.call(paste0('predict_',attr(plpResult$model, 'type')), list(plpModel=plpResult$model,
-                                                                  plpData=plpData, 
-                                                                  population=population))
-  attr(pred, "metaData")$predictionType <-  "binary"
+  # add code to format covariateData based on plpModel
+  # do feature engineering/selection
+  plpData$covariateData <- do.call(
+    applyFeatureengineering, 
+    list(covariateData = plpData$covariateData,
+      settings = plpResult$model$settings$featureEngineering
+    )
+  )
+  
+  # do preprocessing
+  plpData$covariateData <- do.call(
+    applyTidyCovariateData, 
+    list(covariateData = plpData$covariateData,
+      preprocessSettings = plpResult$model$settings$tidyCovariates
+    )
+  )
+  
+  # apply prediction function
+  pred <- do.call(
+    attr(plpResult$model, "predictionFunction"), 
+    list(
+      plpModel = plpResult$model, 
+      data = plpData, 
+      cohort = population
+    )
+  )
+  
   auc <- computeAuc(pred)
   
   #do permulation and savePlpData to temp loc
@@ -66,6 +88,7 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
   savePlpData(plpData, file = plpDataLocation)
   
   if(is.null(cores)){
+    ensure_installed('parallel')
     ParallelLogger::logInfo(paste0('Number of cores not specified'))
     cores <- parallel::detectCores()
     ParallelLogger::logInfo(paste0('Using all ', cores))
@@ -131,11 +154,15 @@ permutePerf <- function(settings){
     ParallelLogger::logInfo(paste0('Calculating prediction for permutation of covariate: ',settings$covariateId))
     
     # need to stop preprocessing and do it once...
-    pred <- do.call(paste0('predict_',attr(settings$plpModel, 'type')), 
-                    list(plpModel=settings$plpModel,
-                         plpData=plpData, 
-                         population=settings$population))
-    attr(pred, "metaData")$predictionType <-  "binary"
+    pred <- do.call(
+      attr(settings$plpModel, "predictionFunction"), 
+      list(
+        plpModel = settings$plpModel, 
+        data = plpData, 
+        cohort = settings$population
+      )
+    )
+
     auct <- computeAuc(pred)
     auc <- c(auc, auct)
   }

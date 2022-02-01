@@ -73,7 +73,7 @@ whether the prediction problem is worth executing." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -81,12 +81,12 @@ whether the prediction problem is worth executing." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -102,13 +102,19 @@ whether the prediction problem is worth executing." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -148,11 +154,11 @@ whether the prediction problem is worth executing." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -181,25 +187,13 @@ whether the prediction problem is worth executing.</p>
 
     <pre class="usage"><span class='fu'>diagnostic</span><span class='op'>(</span>
   plpData <span class='op'>=</span> <span class='cn'>NULL</span>,
-  <span class='va'>cdmDatabaseName</span>,
-  <span class='va'>connectionDetails</span>,
-  <span class='va'>cdmDatabaseSchema</span>,
-  oracleTempSchema <span class='op'>=</span> <span class='cn'>NULL</span>,
-  <span class='va'>cohortId</span>,
-  cohortName <span class='op'>=</span> <span class='va'>cohortId</span>,
-  <span class='va'>outcomeIds</span>,
-  outcomeNames <span class='op'>=</span> <span class='va'>outcomeIds</span>,
-  <span class='va'>cohortDatabaseSchema</span>,
-  cohortTable <span class='op'>=</span> <span class='st'>"cohort"</span>,
-  outcomeDatabaseSchema <span class='op'>=</span> <span class='va'>cohortDatabaseSchema</span>,
-  outcomeTable <span class='op'>=</span> <span class='va'>cohortTable</span>,
-  cdmVersion <span class='op'>=</span> <span class='fl'>5</span>,
-  riskWindowStart <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span>, <span class='fl'>1</span><span class='op'>)</span>,
-  startAnchor <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span><span class='op'>(</span><span class='st'>"cohort start"</span>, <span class='fl'>5</span><span class='op'>)</span>,
-  riskWindowEnd <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>365</span>, <span class='fl'>365</span> <span class='op'>*</span> <span class='fl'>2</span>, <span class='fl'>365</span> <span class='op'>*</span> <span class='fl'>3</span>, <span class='fl'>365</span> <span class='op'>*</span> <span class='fl'>4</span>, <span class='fl'>365</span> <span class='op'>*</span> <span class='fl'>5</span><span class='op'>)</span>,
-  endAnchor <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rep.html'>rep</a></span><span class='op'>(</span><span class='st'>"cohort start"</span>, <span class='fl'>5</span><span class='op'>)</span>,
+  cdmDatabaseName <span class='op'>=</span> <span class='st'>"none"</span>,
+  <span class='va'>cohortName</span>,
+  <span class='va'>outcomeNames</span>,
+  <span class='va'>databaseDetails</span>,
+  <span class='va'>restrictPlpDataSettings</span>,
+  <span class='va'>populationSettings</span>,
   outputFolder <span class='op'>=</span> <span class='cn'>NULL</span>,
-  sampleSize <span class='op'>=</span> <span class='cn'>NULL</span>,
   minCellCount <span class='op'>=</span> <span class='fl'>5</span>
 <span class='op'>)</span></pre>
 
@@ -212,102 +206,31 @@ whether the prediction problem is worth executing.</p>
     </tr>
     <tr>
       <th>cdmDatabaseName</th>
-      <td><p>Name of the database</p></td>
-    </tr>
-    <tr>
-      <th>connectionDetails</th>
-      <td><p>An R object of type<br /><code>connectionDetails</code> created using the
-function <code>createConnectionDetails</code> in the
-<code>DatabaseConnector</code> package.</p></td>
-    </tr>
-    <tr>
-      <th>cdmDatabaseSchema</th>
-      <td><p>The name of the database schema that contains the OMOP CDM
-instance.  Requires read permissions to this database. On SQL
-Server, this should specifiy both the database and the schema,
-so for example 'cdm_instance.dbo'.</p></td>
-    </tr>
-    <tr>
-      <th>oracleTempSchema</th>
-      <td><p>For Oracle only: the name of the database schema where you want
-all temporary tables to be managed. Requires create/insert
-permissions to this database.</p></td>
-    </tr>
-    <tr>
-      <th>cohortId</th>
-      <td><p>A unique identifier to define the at risk cohorts. CohortId is
-used to select the cohort_concept_id in the cohort-like table.</p></td>
+      <td><p>The name of the database being diagnosed</p></td>
     </tr>
     <tr>
       <th>cohortName</th>
-      <td><p>A string specifying the name of the target cohort</p></td>
-    </tr>
-    <tr>
-      <th>outcomeIds</th>
-      <td><p>A vector of cohort_definition_ids used to define outcomes.</p></td>
+      <td><p>Name of the target cohort</p></td>
     </tr>
     <tr>
       <th>outcomeNames</th>
-      <td><p>A vector of names for each outcome.</p></td>
+      <td><p>Vector of outcome names</p></td>
     </tr>
     <tr>
-      <th>cohortDatabaseSchema</th>
-      <td><p>The name of the database schema that is the location where the
-cohort data used to define the at risk cohort is available.
-If cohortTable = DRUG_ERA, cohortDatabaseSchema is not used
-by assumed to be cdmSchema.  Requires read permissions to this
-database.</p></td>
+      <th>databaseDetails</th>
+      <td><p>(only used is plpData is NULL) The database details created using <code>createDatabaseDetails</code></p></td>
     </tr>
     <tr>
-      <th>cohortTable</th>
-      <td><p>The tablename that contains the at risk cohort.  If
-cohortTable &lt;&gt; DRUG_ERA, then expectation is cohortTable has
-format of COHORT table: cohort_concept_id, SUBJECT_ID,
-COHORT_START_DATE, COHORT_END_DATE.</p></td>
+      <th>restrictPlpDataSettings</th>
+      <td><p>(only used is plpData is NULL) The restrictPlpDataSettings created using <code>createRestrictPlpDataSettings</code></p></td>
     </tr>
     <tr>
-      <th>outcomeDatabaseSchema</th>
-      <td><p>The name of the database schema that is the location where
-the data used to define the outcome cohorts is available. If
-cohortTable = CONDITION_ERA, exposureDatabaseSchema is not
-used by assumed to be cdmSchema.  Requires read permissions
-to this database.</p></td>
-    </tr>
-    <tr>
-      <th>outcomeTable</th>
-      <td><p>The tablename that contains the outcome cohorts.  If
-outcomeTable &lt;&gt; CONDITION_OCCURRENCE, then expectation is
-outcomeTable has format of COHORT table:
-COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
-COHORT_END_DATE.</p></td>
-    </tr>
-    <tr>
-      <th>cdmVersion</th>
-      <td><p>Define the OMOP CDM version used: currently support "4" and "5".</p></td>
-    </tr>
-    <tr>
-      <th>riskWindowStart</th>
-      <td><p>The start of the risk window (in days) relative to the <code>startAnchor</code>.</p></td>
-    </tr>
-    <tr>
-      <th>startAnchor</th>
-      <td><p>The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".</p></td>
-    </tr>
-    <tr>
-      <th>riskWindowEnd</th>
-      <td><p>The end of the risk window (in days) relative to the <code>endAnchor</code> parameter</p></td>
-    </tr>
-    <tr>
-      <th>endAnchor</th>
-      <td><p>The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".</p></td>
+      <th>populationSettings</th>
+      <td><p>The population setting details created using <code>createPopulationSettings</code></p></td>
     </tr>
     <tr>
       <th>outputFolder</th>
       <td><p>Location to save results for shiny app</p></td>
-    </tr>
-    <tr>
-      <th>sampleSize</th>
-      <td><p>Sample from the target population</p></td>
     </tr>
     <tr>
       <th>minCellCount</th>

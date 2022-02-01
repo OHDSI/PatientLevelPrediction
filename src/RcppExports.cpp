@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // aucWithCi
 std::vector<double> aucWithCi(std::vector<double> propensityScores, std::vector<int> treatment);
 RcppExport SEXP _PatientLevelPrediction_aucWithCi(SEXP propensityScoresSEXP, SEXP treatmentSEXP) {

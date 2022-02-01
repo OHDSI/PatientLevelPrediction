@@ -11,7 +11,7 @@ setGradientBoostingMachine(
   maxDepth = c(4, 6, 17),
   minRows = 2,
   learnRate = c(0.005, 0.01, 0.1),
-  seed = NULL
+  seed = sample(1e+07, 1)
 )
 }
 \arguments{

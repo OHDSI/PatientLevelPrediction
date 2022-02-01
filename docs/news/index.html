@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -79,12 +79,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -100,13 +100,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -146,11 +152,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -171,6 +177,22 @@
       <small>Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
+    <div id="patientlevelprediction-442" class="section level1">
+<h1 class="page-header" data-toc-text="4.4.2">
+<a href="#patientlevelprediction-442" class="anchor"></a>PatientLevelPrediction 4.4.2</h1>
+<ul>
+<li>revised toSparseM() to do conversion in one go but check RAM availablility beforehand.</li>
+<li>removed temporal plpData conversion in toSparseM (this will be done in DeepPatientLevelPrediction)</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-441" class="section level1">
+<h1 class="page-header" data-toc-text="4.4.1">
+<a href="#patientlevelprediction-441" class="anchor"></a>PatientLevelPrediction 4.4.1</h1>
+<ul>
+<li>shiny can now read csv results</li>
+<li>objects loaded via loadPlpFromCsv() can be saved using savePlpResult()</li>
+</ul>
+</div>
     <div id="patientlevelprediction-440" class="section level1">
 <h1 class="page-header" data-toc-text="4.4.0">
 <a href="#patientlevelprediction-440" class="anchor"></a>PatientLevelPrediction 4.4.0</h1>

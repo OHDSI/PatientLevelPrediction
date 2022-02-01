@@ -6,7 +6,7 @@
 was defined: from utopia to empirical data" (2016)}
 \usage{
 plotSmoothCalibration(
-  result,
+  plpResult,
   smooth = c("loess", "rcs"),
   span = 1,
   nKnots = 5,
@@ -15,11 +15,13 @@ plotSmoothCalibration(
   bins = 20,
   zoom = c("none", "deciles", "data"),
   sample = T,
+  typeColumn = "evaluation",
+  saveLocation = NULL,
   fileName = NULL
 )
 }
 \arguments{
-\item{result}{The result of running \code{\link{runPlp}} function. An object containing the
+\item{plpResult}{The result of running \code{\link{runPlp}} function. An object containing the
 model or location where the model is save, the data selection settings, the
 preprocessing and training settings as well as various performance measures
 obtained by the model.}
@@ -42,11 +44,16 @@ shows the entire space.}
 
 \item{sample}{If using loess then by default 20,000 patients will be sampled to save time}
 
-\item{fileName}{Name of the file where the plot should be saved, for example 'plot.png'. See the
-function \code{ggsave} in the ggplot2 package for supported file formats.}
+\item{typeColumn}{The name of the column specifying the evaluation type}
+
+\item{saveLocation}{Directory to save plot (if NULL plot is not saved)}
+
+\item{fileName}{Name of the file to save to plot, for example
+'plot.png'. See the function \code{ggsave} in the ggplot2 package for
+supported file formats.}
 }
 \value{
-A cowplot object. Use the \code{cowplot::save_plot} function to save to file in a different format.
+A ggplot object.
 }
 \description{
 Plot the smooth calibration as detailed in Calster et al. "A calibration heirarchy for risk models

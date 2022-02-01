@@ -1,6 +1,6 @@
 # @file ExtractData.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -15,6 +15,131 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
+
+#' createRestrictPlpDataSettings define extra restriction settings when calling getPlpData
+#'
+#' @description
+#' This function creates the settings used to restrict the target cohort when calling getPlpData
+#' @details
+#' Users need to specify the extra restrictions to apply when downloading the target cohort
+#' 
+#' @param studyStartDate               A calendar date specifying the minimum date that a cohort index
+#'                                     date can appear. Date format is 'yyyymmdd'.
+#' @param studyEndDate                 A calendar date specifying the maximum date that a cohort index
+#'                                     date can appear. Date format is 'yyyymmdd'. Important: the study
+#'                                     end data is also used to truncate risk windows, meaning no outcomes
+#'                                     beyond the study end date will be considered.
+#' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
+#'                                     this is typically done in the \code{createStudyPopulation} function,
+#'                                     but can already be done here for efficiency reasons.
+#' @param washoutPeriod                The mininum required continuous observation time prior to index
+#'                                     date for a person to be included in the at risk cohort. Note that
+#'                                     this is typically done in the \code{createStudyPopulation} function,
+#'                                     but can already be done here for efficiency reasons.
+#' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
+#' 
+#' @return
+#' A setting object of class \code{restrictPlpDataSettings} containing a list getPlpData extra settings
+#'
+#' @export
+createRestrictPlpDataSettings <- function(
+  studyStartDate = "",
+  studyEndDate = "",
+  firstExposureOnly = F,
+  washoutPeriod = 0,
+  sampleSize = NULL
+){
+  
+  if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
+    stop("Study start date must have format YYYYMMDD")
+  if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)
+    stop("Study end date must have format YYYYMMDD")
+  
+  # add input checks
+  checkIsClass(sampleSize, c('integer','numeric','NULL'))
+  
+  result <- list(
+    studyStartDate = studyStartDate,
+    studyEndDate = studyEndDate,
+    firstExposureOnly = firstExposureOnly,
+    washoutPeriod = washoutPeriod,
+    sampleSize = sampleSize
+  )
+  
+  class(result) <- 'restrictPlpDataSettings'
+  return(result)
+}
+
+#' Create a setting that holds the details about the cdmDatabase connection for data extraction
+#'
+#' @details
+#' This function simply stores the settings for communicating with the cdmDatabase when extracting 
+#' the target cohort and outcomes 
+#'
+#' @param connectionDetails              An R object of type \code{connectionDetails} created using the
+#'                                       function \code{createConnectionDetails} in the
+#'                                       \code{DatabaseConnector} package.
+#' @param cdmDatabaseSchema              The name of the database schema that contains the OMOP CDM
+#'                                       instance. Requires read permissions to this database. On SQL
+#'                                       Server, this should specifiy both the database and the schema,
+#'                                       so for example 'cdm_instance.dbo'.
+#' @param cdmDatabaseName                A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)
+#' @param tempEmulationSchema            For dmbs like Oracle only: the name of the database schema where you
+#'                                       want all temporary tables to be managed. Requires
+#'                                       create/insert permissions to this database.
+#' @param cohortDatabaseSchema           The name of the database schema that is the location where the
+#'                                       target cohorts are available.  Requires read
+#'                                       permissions to this database.
+#' @param cohortTable                    The tablename that contains the target cohorts.  Expectation is cohortTable
+#'                                       has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID,
+#'                                       COHORT_START_DATE, COHORT_END_DATE.
+#' @param outcomeDatabaseSchema          The name of the database schema that is the location where the
+#'                                       data used to define the outcome cohorts is available. Requires read permissions to
+#'                                       this database.
+#' @param outcomeTable                   The tablename that contains the outcome cohorts.  Expectation is
+#'                                       outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
+#'                                       SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
+#' @param cohortId                       An integer specifying the cohort id for the target cohort
+#' @param outcomeIds                      A single integer or vector of integers specifying the cohort ids for the outcome cohorts
+#' @param cdmVersion                     Define the OMOP CDM version used: currently support "4" and
+#'                                       "5".
+#' @return
+#' A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)
+#'
+#' @export
+createDatabaseDetails <- function(
+  connectionDetails,
+  cdmDatabaseSchema,
+  cdmDatabaseName,
+  tempEmulationSchema = cdmDatabaseSchema,
+  cohortDatabaseSchema = cdmDatabaseSchema,
+  cohortTable = "cohort",
+  outcomeDatabaseSchema = cdmDatabaseSchema,
+  outcomeTable = "cohort",
+  cohortId = NULL,
+  outcomeIds = NULL,
+  cdmVersion = 5
+){
+  result <- list(
+    connectionDetails = connectionDetails,
+    cdmDatabaseSchema = cdmDatabaseSchema,
+    cdmDatabaseName = cdmDatabaseName,
+    tempEmulationSchema = tempEmulationSchema,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    cohortTable = cohortTable,
+    outcomeDatabaseSchema = outcomeDatabaseSchema,
+    outcomeTable = outcomeTable,
+    cohortId = cohortId ,
+    outcomeIds = outcomeIds,
+    cdmVersion = cdmVersion
+  )
+  
+  attr(result, 'cdmDatabaseName') <- cdmDatabaseName
+  class(result) <- 'databaseDetails'
+  return(result)
+}
 
 #' Get the patient level prediction data from the server
 #' @description
@@ -32,52 +157,12 @@
 #' manually add the concept_ids and descendants to the \code{excludedCovariateConceptIds} of the
 #' \code{covariateSettings} argument.
 #'
-#' @param connectionDetails            An R object of type\cr\code{connectionDetails} created using the
-#'                                     function \code{createConnectionDetails} in the
-#'                                     \code{DatabaseConnector} package.
-#' @param cdmDatabaseSchema            The name of the database schema that contains the OMOP CDM
-#'                                     instance.  Requires read permissions to this database. On SQL
-#'                                     Server, this should specifiy both the database and the schema,
-#'                                     so for example 'cdm_instance.dbo'.
-#' @param oracleTempSchema             For Oracle only: the name of the database schema where you want
-#'                                     all temporary tables to be managed. Requires create/insert
-#'                                     permissions to this database.
-#' @param cohortId                     A unique identifier to define the at risk cohort. CohortId is
-#'                                     used to select the cohort_concept_id in the cohort-like table.
-#' @param outcomeIds                   A list of cohort_definition_ids used to define outcomes (-999 mean no outcome gets downloaded).
-#' @param studyStartDate               A calendar date specifying the minimum date that a cohort index
-#'                                     date can appear. Date format is 'yyyymmdd'.
-#' @param studyEndDate                 A calendar date specifying the maximum date that a cohort index
-#'                                     date can appear. Date format is 'yyyymmdd'. Important: the study
-#'                                     end data is also used to truncate risk windows, meaning no outcomes
-#'                                     beyond the study end date will be considered.
-#' @param cohortDatabaseSchema         The name of the database schema that is the location where the
-#'                                     cohort data used to define the at risk cohort is available.
-#'                                     Requires read permissions to this database.
-#' @param cohortTable                  The tablename that contains the at risk cohort.  cohortTable has
-#'                                     format of COHORT table: cohort_concept_id, SUBJECT_ID,
-#'                                     COHORT_START_DATE, COHORT_END_DATE.
-#' @param outcomeDatabaseSchema            The name of the database schema that is the location where
-#'                                         the data used to define the outcome cohorts is available. 
-#'                                         Requires read permissions to this database.
-#' @param outcomeTable                     The tablename that contains the outcome cohorts. Expectation is
-#'                                         outcomeTable has format of COHORT table:
-#'                                         COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
-#'                                         COHORT_END_DATE.
-#' @param cdmVersion                   Define the OMOP CDM version used: currently support "4", "5" and "6".
-#' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
-#'                                     this is typically done in the \code{createStudyPopulation} function,
-#'                                     but can already be done here for efficiency reasons.
-#' @param washoutPeriod                The mininum required continuous observation time prior to index
-#'                                     date for a person to be included in the at risk cohort. Note that
-#'                                     this is typically done in the \code{createStudyPopulation} function,
-#'                                     but can already be done here for efficiency reasons.
-#' @param sampleSize                   If not NULL, only this number of people will be sampled from the target population (Default NULL)
 #' 
+#' @param databaseDetails              The cdm database details created using \code{createDatabaseDetails()}
 #' @param covariateSettings            An object of type \code{covariateSettings} as created using the
 #'                                     \code{createCovariateSettings} function in the
 #'                                     \code{FeatureExtraction} package.
-#' @param excludeDrugsFromCovariates   A redundant option                                     
+#' @param restrictPlpDataSettings  Extra settings to apply to the target population while extracting data.  Created using \code{createRestrictPlpDataSettings()}.                                    
 #'
 #' @return
 #' Returns an object of type \code{plpData}, containing information on the cohorts, their
@@ -94,88 +179,72 @@
 #' constructed.} } The generic \code{()} and \code{summary()} functions have been implemented for this object.
 #'
 #' @export
-getPlpData <- function(connectionDetails,
-                       cdmDatabaseSchema,
-                       oracleTempSchema = cdmDatabaseSchema,
-                       cohortId,
-                       outcomeIds,
-                       studyStartDate = "",
-                       studyEndDate = "",
-                       cohortDatabaseSchema = cdmDatabaseSchema,
-                       cohortTable = "cohort",
-                       outcomeDatabaseSchema = cdmDatabaseSchema,
-                       outcomeTable = "cohort",
-                       cdmVersion = "5",
-                       firstExposureOnly = FALSE,
-                       washoutPeriod = 0,
-                       sampleSize = NULL,
-                       covariateSettings,
-                       excludeDrugsFromCovariates = FALSE) {
-  if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1)
-    stop("Study start date must have format YYYYMMDD")
-  if (studyEndDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyEndDate) == -1)
-    stop("Study end date must have format YYYYMMDD")
-  if(!is.null(sampleSize)){
-    if(!class(sampleSize) %in% c('numeric', 'integer'))
-      stop("sampleSize must be numeric")
-  }
+getPlpData <- function(
+  databaseDetails, 
+  covariateSettings,
+  restrictPlpDataSettings
+) {
   
-  if(is.null(cohortId))
+  checkIsClass(databaseDetails, 'databaseDetails')
+  checkIsClass(restrictPlpDataSettings, 'restrictPlpDataSettings')
+
+  if(is.null(databaseDetails$cohortId))
     stop('User must input cohortId')
-  if(length(cohortId)>1)
+  if(length(databaseDetails$cohortId)>1)
     stop('Currently only supports one cohortId at a time')
-  if(is.null(outcomeIds))
+  if(is.null(databaseDetails$outcomeIds))
     stop('User must input outcomeIds')
   #ToDo: add other checks the inputs are valid
   
-  connection <- DatabaseConnector::connect(connectionDetails)
+  connection <- DatabaseConnector::connect(databaseDetails$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
-  dbms <- connectionDetails$dbms
+  dbms <- databaseDetails$connectionDetails$dbms
   
-  writeLines("\nConstructing the at risk cohort")
-  if(!is.null(sampleSize))  writeLines(paste("\n Sampling ",sampleSize, " people"))
-  renderedSql <- SqlRender::loadRenderTranslateSql("CreateCohorts.sql",
-                                                   packageName = "PatientLevelPrediction",
-                                                   dbms = dbms,
-                                                   oracleTempSchema = oracleTempSchema,
-                                                   cdm_database_schema = cdmDatabaseSchema,
-                                                   cohort_database_schema = cohortDatabaseSchema,
-                                                   cohort_table = cohortTable,
-                                                   cdm_version = cdmVersion,
-                                                   cohort_id = cohortId,
-                                                   study_start_date = studyStartDate,
-                                                   study_end_date = studyEndDate,
-                                                   first_only = firstExposureOnly,
-                                                   washout_period = washoutPeriod,
-                                                   use_sample = !is.null(sampleSize),
-                                                   sample_number=sampleSize
+  ParallelLogger::logTrace("\nConstructing the at risk cohort")
+  if(!is.null(restrictPlpDataSettings$sampleSize))  writeLines(paste("\n Sampling ",restrictPlpDataSettings$sampleSize, " people"))
+  renderedSql <- SqlRender::loadRenderTranslateSql(
+    "CreateCohorts.sql",
+    packageName = "PatientLevelPrediction",
+    dbms = dbms, 
+    tempEmulationSchema = databaseDetails$tempEmulationSchema,
+    cdm_database_schema = databaseDetails$cdmDatabaseSchema,
+    cohort_database_schema = databaseDetails$cohortDatabaseSchema,
+    cohort_table = databaseDetails$cohortTable,
+    cdm_version = databaseDetails$cdmVersion,
+    cohort_id = databaseDetails$cohortId,
+    study_start_date = restrictPlpDataSettings$studyStartDate,
+    study_end_date = restrictPlpDataSettings$studyEndDate,
+    first_only = restrictPlpDataSettings$firstExposureOnly,
+    washout_period = restrictPlpDataSettings$washoutPeriod,
+    use_sample = !is.null(restrictPlpDataSettings$sampleSize),
+    sample_number = restrictPlpDataSettings$sampleSize
   )
   DatabaseConnector::executeSql(connection, renderedSql)
   
-  writeLines("Fetching cohorts from server")
+  ParallelLogger::logTrace("Fetching cohorts from server")
   start <- Sys.time()
-  cohortSql <- SqlRender::loadRenderTranslateSql("GetCohorts.sql",
-                                                 packageName = "PatientLevelPrediction",
-                                                 dbms = dbms,
-                                                 oracleTempSchema = oracleTempSchema,
-                                                 cdm_version = cdmVersion)
+  cohortSql <- SqlRender::loadRenderTranslateSql(
+    "GetCohorts.sql",
+    packageName = "PatientLevelPrediction",
+    dbms = dbms, 
+    tempEmulationSchema = databaseDetails$tempEmulationSchema,
+    cdm_version = databaseDetails$cdmVersion
+  )
   cohorts <- DatabaseConnector::querySql(connection, cohortSql)
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
-  metaData.cohort <- list(cohortId = cohortId,
-                          studyStartDate = studyStartDate,
-                          studyEndDate = studyEndDate)
+  metaData.cohort <- list(cohortId = databaseDetails$cohortId)
   
   if(nrow(cohorts)==0)
     stop('Target population is empty')
   
   delta <- Sys.time() - start
-  writeLines(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logTrace(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
   
   #covariateSettings$useCovariateCohortIdIs1 <- TRUE
-  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection,
-                                                         oracleTempSchema = oracleTempSchema,
-                                                         cdmDatabaseSchema = cdmDatabaseSchema,
-                                                         cdmVersion = cdmVersion,
+  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection, 
+                                                         oracleTempSchema = databaseDetails$tempEmulationSchema,
+                                                         cdmDatabaseSchema = databaseDetails$cdmDatabaseSchema,
+                                                         cdmVersion = databaseDetails$cdmVersion,
                                                          cohortTable = "#cohort_person",
                                                          cohortTableIsTemp = TRUE,
                                                          rowIdField = "row_id",
@@ -188,21 +257,23 @@ getPlpData <- function(connectionDetails,
   Andromeda::createIndex(covariateData$covariates, c('covariateId', 'covariateValue'),
                          indexName = 'covariates_covariateId_value')
   
-  if(max(outcomeIds)!=-999){
-    writeLines("Fetching outcomes from server")
+  if(max(databaseDetails$outcomeIds)!=-999){
+    ParallelLogger::logTrace("Fetching outcomes from server")
     start <- Sys.time()
-    outcomeSql <- SqlRender::loadRenderTranslateSql("GetOutcomes.sql",
-                                                    packageName = "PatientLevelPrediction",
-                                                    dbms = dbms,
-                                                    oracleTempSchema = oracleTempSchema,
-                                                    cdm_database_schema = cdmDatabaseSchema,
-                                                    outcome_database_schema = outcomeDatabaseSchema,
-                                                    outcome_table = outcomeTable,
-                                                    outcome_ids = outcomeIds,
-                                                    cdm_version = cdmVersion)
+    outcomeSql <- SqlRender::loadRenderTranslateSql(
+      "GetOutcomes.sql",
+      packageName = "PatientLevelPrediction",
+      dbms = dbms,
+      tempEmulationSchema = databaseDetails$tempEmulationSchema,
+      cdm_database_schema = databaseDetails$cdmDatabaseSchema,
+      outcome_database_schema = databaseDetails$outcomeDatabaseSchema,
+      outcome_table = databaseDetails$outcomeTable,
+      outcome_ids = databaseDetails$outcomeIds,
+      cdm_version = databaseDetails$cdmVersion
+    )
     outcomes <- DatabaseConnector::querySql(connection, outcomeSql)
     colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
-    metaData.outcome <- data.frame(outcomeIds =outcomeIds)
+    metaData.outcome <- data.frame(outcomeIds = databaseDetails$outcomeIds)
     attr(outcomes, "metaData") <- metaData.outcome
     if(nrow(outcomes)==0)
       stop('No Outcomes')
@@ -211,7 +282,7 @@ getPlpData <- function(connectionDetails,
     attr(cohorts, "metaData") <- metaData.cohort
     
     delta <- Sys.time() - start
-    writeLines(paste("Loading outcomes took", signif(delta, 3), attr(delta, "units")))
+    ParallelLogger::logTrace(paste("Loading outcomes took", signif(delta, 3), attr(delta, "units")))
   } else {
     outcomes <- NULL
   }
@@ -220,32 +291,22 @@ getPlpData <- function(connectionDetails,
   
   
   # Remove temp tables:
-  renderedSql <- SqlRender::loadRenderTranslateSql("RemoveCohortTempTables.sql",
-                                                   packageName = "PatientLevelPrediction",
-                                                   dbms = dbms,
-                                                   oracleTempSchema = oracleTempSchema)
+  renderedSql <- SqlRender::loadRenderTranslateSql(
+    "RemoveCohortTempTables.sql",
+    packageName = "PatientLevelPrediction",
+    dbms = dbms,
+    tempEmulationSchema = databaseDetails$tempEmulationSchema
+  )
+  
   DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
   #DatabaseConnector::disconnect(connection)
   
   metaData <- covariateData$metaData
-  metaData$call <- match.call()
-  metaData$call$connectionDetails = NULL
-  metaData$call$connection = NULL
-  metaData$call$cdmDatabaseSchema = cdmDatabaseSchema
-  metaData$call$oracleTempSchema = oracleTempSchema
-  metaData$call$cohortId = cohortId
-  metaData$call$outcomeIds = outcomeIds
-  metaData$call$studyStartDate = studyStartDate
-  metaData$call$studyEndDate = studyEndDate
-  metaData$call$cohortDatabaseSchema = cohortDatabaseSchema
-  metaData$call$cohortTable = cohortTable
-  metaData$call$outcomeDatabaseSchema = outcomeDatabaseSchema
-  metaData$call$outcomeTable = outcomeTable
-  metaData$call$cdmVersion = cdmVersion
-  metaData$call$firstExposureOnly = firstExposureOnly
-  metaData$call$washoutPeriod = washoutPeriod
-  metaData$call$covariateSettings= covariateSettings
-  metaData$call$sampleSize = sampleSize
+  metaData$databaseDetails <- databaseDetails
+  metaData$databaseDetails$connectionDetails = NULL
+  metaData$databaseDetails$connection = NULL
+  metaData$restrictPlpDataSettings <- restrictPlpDataSettings
+  metaData$covariateSettings <- covariateSettings
   
   # create the temporal settings (if temporal use)
   timeReference <- NULL

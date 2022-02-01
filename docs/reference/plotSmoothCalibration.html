@@ -75,7 +75,7 @@ was defined: from utopia to empirical data&quot; (2016)" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -83,12 +83,12 @@ was defined: from utopia to empirical data&quot; (2016)" />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -104,13 +104,19 @@ was defined: from utopia to empirical data&quot; (2016)" />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -150,11 +156,11 @@ was defined: from utopia to empirical data&quot; (2016)" />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -183,7 +189,7 @@ was defined: from utopia to empirical data" (2016)</p>
     </div>
 
     <pre class="usage"><span class='fu'>plotSmoothCalibration</span><span class='op'>(</span>
-  <span class='va'>result</span>,
+  <span class='va'>plpResult</span>,
   smooth <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"loess"</span>, <span class='st'>"rcs"</span><span class='op'>)</span>,
   span <span class='op'>=</span> <span class='fl'>1</span>,
   nKnots <span class='op'>=</span> <span class='fl'>5</span>,
@@ -192,6 +198,8 @@ was defined: from utopia to empirical data" (2016)</p>
   bins <span class='op'>=</span> <span class='fl'>20</span>,
   zoom <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"none"</span>, <span class='st'>"deciles"</span>, <span class='st'>"data"</span><span class='op'>)</span>,
   sample <span class='op'>=</span> <span class='cn'>T</span>,
+  typeColumn <span class='op'>=</span> <span class='st'>"evaluation"</span>,
+  saveLocation <span class='op'>=</span> <span class='cn'>NULL</span>,
   fileName <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre>
 
@@ -199,7 +207,7 @@ was defined: from utopia to empirical data" (2016)</p>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>result</th>
+      <th>plpResult</th>
       <td><p>The result of running <code><a href='runPlp.html'>runPlp</a></code> function. An object containing the
 model or location where the model is save, the data selection settings, the
 preprocessing and training settings as well as various performance measures
@@ -240,15 +248,24 @@ shows the entire space.</p></td>
       <td><p>If using loess then by default 20,000 patients will be sampled to save time</p></td>
     </tr>
     <tr>
+      <th>typeColumn</th>
+      <td><p>The name of the column specifying the evaluation type</p></td>
+    </tr>
+    <tr>
+      <th>saveLocation</th>
+      <td><p>Directory to save plot (if NULL plot is not saved)</p></td>
+    </tr>
+    <tr>
       <th>fileName</th>
-      <td><p>Name of the file where the plot should be saved, for example 'plot.png'. See the
-function <code>ggsave</code> in the ggplot2 package for supported file formats.</p></td>
+      <td><p>Name of the file to save to plot, for example
+'plot.png'. See the function <code>ggsave</code> in the ggplot2 package for
+supported file formats.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A cowplot object. Use the <code><a href='https://wilkelab.org/cowplot/reference/save_plot.html'>cowplot::save_plot</a></code> function to save to file in a different format.</p>
+    <p>A ggplot object.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Create a plot showing the smoothed calibration #'</p>

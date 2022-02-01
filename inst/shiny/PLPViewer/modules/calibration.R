@@ -31,20 +31,34 @@ calibrationServer <- function(id, plpResult) {
       
       sumTable <- shiny::reactive({
         data <- plpResult()$performanceEvaluation$evaluationStatistics
-        data <- as.data.frame(data)
-        data$Metric <- as.character(data$Metric)
-        data$Value <- as.double(as.character(data$Value))
-        ind <- data$Metric %in% c('CalibrationIntercept', 
-                                  'CalibrationSlope',
-                                  'CalibrationInLarge',
-                                  'Emean',
-                                  'E90',
-                                  'Emax', 
-                                  'correctionFactor',
-                                  'adjustGradient',
-                                  'adjustIntercept')
         
-        reshape2::dcast(data[ind,], Eval ~ Metric, value.var = 'Value')
+        for(i in 1:ncol(data)){
+          data[,i] <- unlist(data[,i])
+        }
+
+        data$value <- as.double(as.character(data$value))
+        data$value <- format(data$value, digits = 4, scientific = F)
+        ind <- data$metric %in% c(
+          'calibrationInLarge intercept', 
+          'weak calibration intercept',
+          'weak calibration gradient',
+          'calibrationInLarge mean prediction',
+          'calibrationInLarge observed risk',
+          'ici',
+          'Emean',
+          'E90',
+          'Emax', 
+          'correctionFactor',
+          'adjustGradient',
+          'adjustIntercept'
+        )
+        
+        tidyr::pivot_wider(
+          data[ind,],
+          names_from = 'metric', 
+          values_from = 'value'
+          )
+        #reshape2::dcast(data[ind,], evaluation ~ metric, value.var = 'value')
         
       })
       
@@ -59,7 +73,7 @@ calibrationServer <- function(id, plpResult) {
       })
       
       output$cal <- shiny::renderPlot({
-        type <- trimws(sumTable()$Eval[input$calTable_rows_selected])
+        type <- trimws(sumTable()$evaluation[input$calTable_rows_selected])
         print(type)
           tryCatch({plotSparseCalibration2(evaluation = plpResult()$performanceEvaluation, 
                                  type =  type)},#input$recal)
@@ -67,7 +81,7 @@ calibrationServer <- function(id, plpResult) {
       })
       
       output$demo <- shiny::renderPlot({
-        type <- trimws(sumTable()$Eval[input$calTable_rows_selected])
+        type <- trimws(sumTable()$evaluation[input$calTable_rows_selected])
           tryCatch(plotDemographicSummary(evaluation = plpResult()$performanceEvaluation, 
                                           type = type),
                    error= function(cond){return(NULL)})
@@ -93,11 +107,11 @@ plotDemographicSummary <- function(evaluation, type = NULL,  fileName=NULL){
     
     ind <- 1:nrow(evaluation$demographicSummary)
     if(is.null(type)){
-      if(!is.null(evaluation$demographicSummary$Eval)){
-        ind <- evaluation$demographicSummary$Eval%in%c('test','validation')
+      if(!is.null(evaluation$demographicSummary$evaluation)){
+        ind <- evaluation$demographicSummary$evaluation%in%c('Test','validation')
       }
     } else{
-      ind <- evaluation$demographicSummary$Eval==type
+      ind <- evaluation$demographicSummary$evaluation==type
     }
     
     x<- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability',
@@ -127,7 +141,13 @@ plotDemographicSummary <- function(evaluation, type = NULL,  fileName=NULL){
       
     }
     
-    x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
+    x <- tidyr::pivot_longer(
+      data = x, 
+      cols = !colnames(x)[colnames(x) %in% c('ageGroup','genGroup')], 
+      names_to = 'variable', 
+      values_to = 'value'
+      )
+    #x <- reshape2::melt(x, id.vars=c('ageGroup','genGroup'))
     
     # 1.96*StDevPredictedProbability
     ci <- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability','StDevPredictedProbability')]
@@ -190,11 +210,11 @@ plotSparseCalibration2 <- function(evaluation,
   ind <- 1:nrow(evaluation$calibrationSummary)
   
   if(is.null(type)){
-    if(!is.null(evaluation$calibrationSummary$Eval)){
-      ind <- evaluation$calibrationSummary$Eval%in%c('test','validation')
+    if(!is.null(evaluation$calibrationSummary$evaluation)){
+      ind <- evaluation$calibrationSummary$evaluation%in%c('Test','validation')
     }
   } else{
-    ind <- evaluation$calibrationSummary$Eval == type
+    ind <- evaluation$calibrationSummary$evaluation == type
   }
   # use calibrationSummary
   sparsePred <- evaluation$calibrationSummary[ind,]

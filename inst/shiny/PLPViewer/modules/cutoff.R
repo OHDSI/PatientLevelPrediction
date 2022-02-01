@@ -3,6 +3,13 @@ cutoffViewer <- function(id) {
   shiny::fluidRow(
     
     shiny::column(width = 12,
+      
+      shinydashboard::box(width = 12,
+        title = "Probability threshold plot: ",
+        status = "info", 
+        solidHeader = TRUE,
+        plotly::plotlyOutput(ns("ptp"))                 
+      ),
                   
                   shinydashboard::box(width = 12,
                                       title = "Cutoff Slider: ",
@@ -67,10 +74,26 @@ cutoffServer <- function(id, plpResult) {
              NPV = TN/(TN+FN) )
       })
       
+      # add probability threshold plot
+      ptp <- shiny::reactive({
+        eval <- plpResult()$performanceEvaluation
+        if(is.null(eval)){
+          return(NULL)
+        } else {
+          probThresPlot(eval = eval, pointOfInterest = input$slider1)
+        }
+          
+        })
+      
+      output$ptp <- plotly::renderPlotly(ptp())
+          
+          
+      
+      
       # update threshold slider based on results size
       shiny::observe({ 
         if(!is.null(plpResult()$performanceEvaluation)){
-          n <- nrow(plpResult()$performanceEvaluation$thresholdSummary[plpResult()$performanceEvaluation$thresholdSummary$Eval%in%c('test','validation'),])
+          n <- nrow(plpResult()$performanceEvaluation$thresholdSummary[plpResult()$performanceEvaluation$thresholdSummary$evaluation%in%c('Test','Validation'),])
         }else{
           n <- 100
         }
@@ -143,7 +166,7 @@ cutoffServer <- function(id, plpResult) {
 
 getORC <- function(eval, pointOfInterest){
   
-  data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
+  data <- eval$thresholdSummary[eval$thresholdSummary$evaluation%in%c('Test','Validation'),]
   data <- data[order(data$predictionThreshold),]
   pointOfInterest <- data[pointOfInterest,]
   
@@ -156,6 +179,82 @@ getORC <- function(eval, pointOfInterest){
   return(list(threshold = threshold, prefthreshold=preferenceThreshold,
               TP = TP, TN=TN,
               FP= FP, FN=FN))
+}
+
+probThresPlot <- function(eval, pointOfInterest){
+  
+  eval <- eval$thresholdSummary[eval$thresholdSummary$evaluation%in%c('Test','Validation'),]
+  eval <- eval[order(eval$predictionThreshold),]
+  
+  ay <- list(
+    tickfont = list(color = "red"),
+    overlaying = "y",
+    side = "right",
+    title = "positivePredictiveValue y-axis"
+  )
+  vline <- function(x = 0, color = "green") {
+    list(
+      type = "line",
+      y0 = 0,
+      y1 = 1,
+      yref = "paper",
+      x0 = x,
+      x1 = x,
+      line = list(color = color, dash="dot")
+    )
+  }
+  
+  eval$popfrac <- eval$positiveCount/(eval$positiveCount+eval$negativeCount)
+  
+  fig <- plotly::plot_ly(
+    data = eval, 
+    x = ~predictionThreshold, 
+    y = ~sensitivity, 
+    name = 'sensitivity', 
+    color = 'blue', 
+    type = 'scatter', 
+    mode = 'lines'
+  ) %>% 
+    plotly::add_trace(
+      yaxis = "y2",
+      y = ~positivePredictiveValue, 
+      name = 'positivePredictiveValue', 
+      color = 'red', 
+      mode = 'lines'
+    ) %>% 
+    plotly::add_trace(
+      y = ~negativePredictiveValue, 
+      name = 'negativePredictiveValue', 
+      color = 'green', 
+      mode = 'lines'
+    ) %>% 
+    plotly::add_trace(
+      y = ~popfrac, 
+      name = 'Fraction flagged',
+      color = 'black', 
+      mode = 'lines'
+    ) %>% layout(
+      title = "Probability Threshold Plot", yaxis2 = ay,
+      xaxis = list(title="Prediction Threshold "),
+      yaxis = list(title="Metric yaxis")
+    )%>%
+    plotly::layout(
+      plot_bgcolor='#e5ecf6',
+      xaxis = list(
+        zerolinecolor = '#ffff',
+        zerolinewidth = 2,
+        gridcolor = 'ffff'
+      ),
+      yaxis = list(
+        zerolinecolor = '#ffff',
+        zerolinewidth = 2,
+        gridcolor = 'ffff'
+      ),
+      shapes = list(vline(eval$predictionThreshold[pointOfInterest]))
+    )
+  
+  return(fig)
+  
 }
 
 

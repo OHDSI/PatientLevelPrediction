@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -169,7 +175,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create a study population</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/StudyPopulation.R'><code>R/StudyPopulation.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/PopulationSettings.R'><code>R/PopulationSettings.R</code></a></small>
     <div class="hidden name"><code>createStudyPopulation.Rd</code></div>
     </div>
 
@@ -179,25 +185,9 @@
 
     <pre class="usage"><span class='fu'>createStudyPopulation</span><span class='op'>(</span>
   <span class='va'>plpData</span>,
-  population <span class='op'>=</span> <span class='cn'>NULL</span>,
   <span class='va'>outcomeId</span>,
-  binary <span class='op'>=</span> <span class='cn'>T</span>,
-  includeAllOutcomes <span class='op'>=</span> <span class='cn'>T</span>,
-  firstExposureOnly <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  washoutPeriod <span class='op'>=</span> <span class='fl'>0</span>,
-  removeSubjectsWithPriorOutcome <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  priorOutcomeLookback <span class='op'>=</span> <span class='fl'>99999</span>,
-  requireTimeAtRisk <span class='op'>=</span> <span class='cn'>F</span>,
-  minTimeAtRisk <span class='op'>=</span> <span class='fl'>365</span>,
-  riskWindowStart <span class='op'>=</span> <span class='fl'>0</span>,
-  startAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>,
-  riskWindowEnd <span class='op'>=</span> <span class='fl'>365</span>,
-  endAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>,
-  verbosity <span class='op'>=</span> <span class='st'>"INFO"</span>,
-  restrictTarToCohortEnd <span class='op'>=</span> <span class='cn'>F</span>,
-  <span class='va'>addExposureDaysToStart</span>,
-  <span class='va'>addExposureDaysToEnd</span>,
-  <span class='va'>...</span>
+  <span class='va'>populationSettings</span>,
+  population <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -209,90 +199,17 @@
 <code>getplpData</code>.</p></td>
     </tr>
     <tr>
-      <th>population</th>
-      <td><p>If specified, this population will be used as the starting point instead of the
-cohorts in the <code>plpData</code> object.</p></td>
-    </tr>
-    <tr>
       <th>outcomeId</th>
       <td><p>The  ID of the outcome.</p></td>
     </tr>
     <tr>
-      <th>binary</th>
-      <td><p>Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)</p></td>
+      <th>populationSettings</th>
+      <td><p>An object of class populationSettings created using <code>createPopulationSettings</code></p></td>
     </tr>
     <tr>
-      <th>includeAllOutcomes</th>
-      <td><p>(binary) indicating whether to include people with outcomes who are not observed for the whole at risk period</p></td>
-    </tr>
-    <tr>
-      <th>firstExposureOnly</th>
-      <td><p>Should only the first exposure per subject be included? Note that
-this is typically done in the <code>createStudyPopulation</code> function,</p></td>
-    </tr>
-    <tr>
-      <th>washoutPeriod</th>
-      <td><p>The mininum required continuous observation time prior to index
-date for a person to be included in the cohort.</p></td>
-    </tr>
-    <tr>
-      <th>removeSubjectsWithPriorOutcome</th>
-      <td><p>Remove subjects that have the outcome prior to the risk window start?</p></td>
-    </tr>
-    <tr>
-      <th>priorOutcomeLookback</th>
-      <td><p>How many days should we look back when identifying prior outcomes?</p></td>
-    </tr>
-    <tr>
-      <th>requireTimeAtRisk</th>
-      <td><p>Should subject without time at risk be removed?</p></td>
-    </tr>
-    <tr>
-      <th>minTimeAtRisk</th>
-      <td><p>The minimum number of days at risk required to be included</p></td>
-    </tr>
-    <tr>
-      <th>riskWindowStart</th>
-      <td><p>The start of the risk window (in days) relative to the <code>startAnchor</code>.</p></td>
-    </tr>
-    <tr>
-      <th>startAnchor</th>
-      <td><p>The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".</p></td>
-    </tr>
-    <tr>
-      <th>riskWindowEnd</th>
-      <td><p>The end of the risk window (in days) relative to the <code>endAnchor</code> parameter</p></td>
-    </tr>
-    <tr>
-      <th>endAnchor</th>
-      <td><p>The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".</p></td>
-    </tr>
-    <tr>
-      <th>verbosity</th>
-      <td><p>Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:</p><ul>
-<li><p>DEBUGHighest verbosity showing all debug statements</p></li>
-<li><p>TRACEShowing information about start and end of steps</p></li>
-<li><p>INFOShow informative information (Default)</p></li>
-<li><p>WARNShow warning messages</p></li>
-<li><p>ERRORShow error messages</p></li>
-<li><p>FATALBe silent except for fatal errors</p></li>
-</ul></td>
-    </tr>
-    <tr>
-      <th>restrictTarToCohortEnd</th>
-      <td><p>If using a survival model and you want the time-at-risk to end at the cohort end date set this to T</p></td>
-    </tr>
-    <tr>
-      <th>addExposureDaysToStart</th>
-      <td><p>DEPRECATED: Add the length of exposure the start of the risk window? Use <code>startAnchor</code> instead.</p></td>
-    </tr>
-    <tr>
-      <th>addExposureDaysToEnd</th>
-      <td><p>DEPRECATED: Add the length of exposure the risk window? Use <code>endAnchor</code> instead.</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Other inputs</p></td>
+      <th>population</th>
+      <td><p>If specified, this population will be used as the starting point instead of the
+cohorts in the <code>plpData</code> object.</p></td>
     </tr>
     </table>
 

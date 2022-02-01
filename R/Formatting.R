@@ -1,6 +1,6 @@
 # @file formatting.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -26,7 +26,7 @@
 #' the package Matrix
 #' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction
 #'                                      data extracted from the CDM.
-#' @param population                    The population to include in the matrix
+#' @param cohort                        If specified the plpData is restricted to the rowIds in the cohort (otherwise plpData$labels is used)                                     
 #' @param map                           A covariate map (telling us the column number for covariates)
 #' @examples
 #' #TODO
@@ -41,97 +41,145 @@
 #' }
 #'
 #' @export
-toSparseM <- function(plpData,population, map=NULL){
-  # check logger
-  if(length(ParallelLogger::getLoggers())==0){
-    logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                        threshold = "INFO",
-                                        appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
-    ParallelLogger::registerLogger(logger)
-  }
+toSparseM <- function(plpData, cohort = NULL, map=NULL){
   
   ParallelLogger::logInfo(paste0('starting toSparseM'))
   
+  ParallelLogger::logDebug(
+    paste0(
+      'Max covariateId in original covariates: ', 
+      plpData$covariateData$covariates %>% 
+        dplyr::summarise(max = max(.data$covariateId, na.rm=T)) %>% 
+        dplyr::pull() 
+    )
+  )
   
-  ParallelLogger::logDebug(paste0('covariates nrow: ', nrow(plpData$covariateData$covariates)))
-  ParallelLogger::logDebug(paste0('covariateRef nrow: ', nrow(plpData$covariateData$covariateRef)))
-  
-   
-  #assign newIds to covariateRef
-  newcovariateData <- MapCovariates(plpData$covariateData,
-                                 population = population, 
-                                 mapping=map)
-  
-  ParallelLogger::logDebug(paste0('Max covariateId in covariates: ',as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(.data$covariateId, na.rm=T)))))
-  ParallelLogger::logDebug(paste0('# covariates in covariateRef: ', nrow(newcovariateData$covariateRef)))
-  ParallelLogger::logDebug(paste0('Max rowId in covariates: ', as.data.frame(newcovariateData$covariates %>% dplyr::summarise(max = max(.data$rowId, na.rm=T)))))
+  # assign covariateId to colummId specified in map (if null create columnIds)
+  # assign rowId to xId 
+  # return the new covariateData (rowId changes in covariates plus covariates/covariateRef with modified columnIds)
+  # return labels with modified rowId if plpData$labels exists
 
-  maxY <- as.data.frame(newcovariateData$mapping %>% dplyr::summarise(max=max(.data$newCovariateId, na.rm = TRUE)))$max
+  if(!is.null(plpData$labels)){
+    newcovariateData <- MapIds(
+      plpData$covariateData,
+      cohort = plpData$labels,
+      mapping=map
+      )
+  } else{
+    newcovariateData <- MapIds(
+      plpData$covariateData,
+      cohort = cohort,
+      mapping = map
+    )
+  }
+  
+  
+  ParallelLogger::logDebug(paste0('# covariates in mapped covariateRef: ', nrow(newcovariateData$covariateRef)))
+
+  maxY <- newcovariateData$mapping %>% 
+    dplyr::summarise(max=max(.data$columnId, na.rm = TRUE)) %>% 
+    dplyr::pull()
   ParallelLogger::logDebug(paste0('Max newCovariateId in mapping: ',maxY))
-  maxX <- max(population$rowId)
-  ParallelLogger::logDebug(paste0('Max rowId in population: ',maxX))
+  maxX <- newcovariateData$cohort %>% dplyr::summarise(max = max(.data$rowId, na.rm=T)) %>% dplyr::pull()
+  ParallelLogger::logDebug(paste0('Max rowId in new : ',maxX))
   
 
   ParallelLogger::logInfo(paste0('toSparseM non temporal used'))
     
   checkRam(newcovariateData, 0.9)  # estimates size of RAM required and makes sure it is less that 90%
     
-    data <- Matrix::sparseMatrix(i=as.data.frame(newcovariateData$covariates %>% dplyr::select(.data$rowId))$rowId,
-                                 j=as.data.frame(newcovariateData$covariates %>% dplyr::select(.data$covariateId))$covariateId,
-                                 x=as.data.frame(newcovariateData$covariates %>% dplyr::select(.data$covariateValue))$covariateValue,
-                                 dims=c(maxX,maxY))
+  data <- Matrix::sparseMatrix(
+    i = newcovariateData$covariates %>% dplyr::select(.data$rowId) %>% dplyr::pull(),
+    j = newcovariateData$covariates %>% dplyr::select(.data$columnId) %>% dplyr::pull(),
+    x = newcovariateData$covariates %>% dplyr::select(.data$covariateValue) %>% dplyr::pull(),
+    dims=c(maxX,maxY)
+  )
     
   ParallelLogger::logDebug(paste0('Sparse matrix with dimensionality: ', paste(dim(data), collapse=',')  ))
 
   ParallelLogger::logInfo(paste0('finishing toSparseM'))
   
-  result <- list(data=data,
-                 covariateRef=as.data.frame(newcovariateData$covariateRef),
-                 map=as.data.frame(newcovariateData$mapping))
+  result <- list(
+    dataMatrix = data,
+    labels = newcovariateData$cohort %>% dplyr::collect(),
+    covariateRef = as.data.frame(newcovariateData$covariateRef),
+    covariateMap = as.data.frame(newcovariateData$mapping)
+  )
   return(result)
-
 }
 
+# this functions takes covariate data and a cohort/population and remaps 
+# the covaiate and row ids 
 # restricts to pop and saves/creates mapping
-MapCovariates <- function(covariateData,population = NULL, mapping){
+MapIds <- function(
+  covariateData,
+  cohort = NULL,
+  mapping = NULL
+  ){
   
-  # to remove check notes
-  #covariateId <- oldCovariateId <- newCovariateId <- NULL
-  ParallelLogger::logInfo(paste0('starting MapCovariates'))
+  ParallelLogger::logInfo(paste0('starting to map the columns and rows'))
   
-  newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
-                                           analysisRef = covariateData$analysisRef)
   
-
-  if(is.null(mapping)){
-    mapping <- data.frame(oldCovariateId = as.data.frame(covariateData$covariateRef %>% dplyr::select(.data$covariateId)),
-                          newCovariateId = 1:nrow(covariateData$covariateRef))
+  # change the rowIds in cohort (if exists)
+  if(!is.null(cohort)){
+    rowMap <- data.frame(
+      rowId = cohort %>% dplyr::select(.data$rowId)
+    )
+    rowMap$xId <- 1:nrow(rowMap)
+  } else{
+    rowMap <- data.frame(
+      rowId = covariateData$covariates %>% 
+        dplyr::distinct(.data$rowId) %>% 
+        dplyr::pull()
+    )
+    rowMap$xId <- 1:nrow(rowMap)
   }
-  if(sum(colnames(mapping)%in%c('oldCovariateId','newCovariateId'))!=2){
-    colnames(mapping) <- c('oldCovariateId','newCovariateId')
+  
+  covariateData$rowMap <- rowMap
+  on.exit(covariateData$rowMap <- NULL)
+  
+  # change the rowIds in covariateData$covariates
+  if(is.null(mapping)){
+  
+    mapping <- data.frame(
+      covariateId = covariateData$covariates %>% 
+        dplyr::inner_join(covariateData$rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
+        dplyr::distinct(.data$covariateId) %>% 
+        dplyr::pull()
+    )
+    mapping$columnId <- 1:nrow(mapping)
   }
   covariateData$mapping <- mapping
+  on.exit(covariateData$mapping <- NULL, add = T)
   
-  if(!is.null(population)){
-  # restrict to population for speed
-  ParallelLogger::logTrace('restricting to population for speed and mapping')
-  covariateData$population <- data.frame(rowId = population[,'rowId'])
-  # assign new ids :
-  newCovariateData$covariates <- covariateData$covariates %>%
-    dplyr::inner_join(covariateData$population) %>% 
-    dplyr::rename(oldCovariateId = .data$covariateId) %>% 
-    dplyr::inner_join(covariateData$mapping) %>% 
-    dplyr::select(- .data$oldCovariateId)  %>%
-    dplyr::rename(covariateId = .data$newCovariateId)
-  covariateData$population <- NULL
-  } else{
+  newCovariateData <- Andromeda::andromeda()
+  # change the covariateIds in covariates
     newCovariateData$covariates <- covariateData$covariates %>%
-      dplyr::rename(oldCovariateId = .data$covariateId) %>% 
-      dplyr::inner_join(covariateData$mapping) %>% 
-      dplyr::select(- .data$oldCovariateId)  %>%
-      dplyr::rename(covariateId = .data$newCovariateId)
-  }
-  covariateData$mapping <- NULL
+      dplyr::inner_join(covariateData$mapping, by = 'covariateId')
+  
+    
+    # change the covariateIds in covariateRef
+    newCovariateData$covariateRef <- covariateData$mapping %>%
+      dplyr::inner_join(covariateData$covariateRef, by = 'covariateId')
+    
+    # change the rowId in covariates
+    newCovariateData$rowMap <- rowMap
+    newCovariateData$covariates <- newCovariateData$covariates %>%
+      dplyr::inner_join(newCovariateData$rowMap, by = 'rowId') %>% 
+      dplyr::select(- .data$rowId) %>%
+      dplyr::rename(rowId = .data$xId)
+    
+    if(!is.null(cohort)){
+      # change the rowId in labels
+      newCovariateData$cohort <- cohort %>%
+        dplyr::inner_join(rowMap, by = 'rowId') %>% 
+        #dplyr::select(- .data$rowId) %>%
+        dplyr::rename(
+          originalRowId = .data$rowId,
+          rowId = .data$xId
+          ) %>%
+        dplyr::arrange(.data$rowId)  # make sure it is ordered lowest to highest
+    }
   
   newCovariateData$mapping <- mapping
   
@@ -140,78 +188,11 @@ MapCovariates <- function(covariateData,population = NULL, mapping){
   return(newCovariateData)
 }
 
-
-# reformat the evaluation
-reformatPerformance <- function(train, test, analysisId){
-  
-  ParallelLogger::logInfo(paste0('starting reformatPerformance'))
-
-  nr1 <- length(unlist(train$evaluationStatistics[-1]))
-  nr2 <- length(unlist(test$evaluationStatistics[-1]))
-  evaluationStatistics <- cbind(analysisId=rep(analysisId,nr1+nr2),
-                                Eval=c(rep('train', nr1),rep('test', nr2)),
-                                Metric = names(c(unlist(train$evaluationStatistics[-1]),
-                                                 unlist(test$evaluationStatistics[-1]))),
-                                Value = c(unlist(train$evaluationStatistics[-1]),
-                                      unlist(test$evaluationStatistics[-1]))
-                                )
-
-
-  if(!is.null(test$thresholdSummary) & !is.null(train$thresholdSummary)){
-    nr1 <- nrow(train$thresholdSummary)
-    nr2 <- nrow(test$thresholdSummary)
-    thresholdSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
-                                    train$thresholdSummary),
-                              cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
-                                    test$thresholdSummary))
-  } else{
-    thresholdSummary <- NULL
-  }
-  
-
-  if(!is.null(train$demographicSummary) & !is.null(test$demographicSummary)){
-    nr1 <- nrow(train$demographicSummary)
-    nr2 <- nrow(test$demographicSummary)
-    demographicSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
-                                      train$demographicSummary),
-                                cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
-                                      test$demographicSummary))
-  } else{
-    demographicSummary <- NULL
-  }
-
-  nr1 <- nrow(train$calibrationSummary)
-  nr2 <- nrow(test$calibrationSummary)
-  calibrationSummary <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
-                                    train$calibrationSummary),
-                              cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
-                                    test$calibrationSummary))
-
-  if(!is.null(train$predictionDistribution) & !is.null(test$predictionDistribution)){
-    nr1 <- nrow(train$predictionDistribution)
-    nr2 <- nrow(test$predictionDistribution)
-    predictionDistribution <- rbind(cbind(analysisId=rep(analysisId,nr1),Eval=rep('train', nr1),
-                                    train$predictionDistribution),
-                              cbind(analysisId=rep(analysisId,nr2),Eval=rep('test', nr2),
-                                    test$predictionDistribution))
-  } else {
-    predictionDistribution <- NULL
-  }
-    
-  result <- list(evaluationStatistics=evaluationStatistics,
-                 thresholdSummary=thresholdSummary,
-                 demographicSummary =demographicSummary,
-                 calibrationSummary=calibrationSummary,
-                 predictionDistribution=predictionDistribution)
-
-  return(result)
-}
-
 checkRam <- function(covariateData, maxPercent){
   
   ensure_installed('memuse')
   
-  nrowV <- covariateData$covariates %>% dplyr::summarise(size = n()) %>% dplyr::collect()
+  nrowV <- covariateData$covariates %>% dplyr::summarise(size = dplyr::n()) %>% dplyr::collect()
   estRamB <- (nrowV$size/1000000*24000984)
   
   ramFree <- memuse::Sys.meminfo()

@@ -108,7 +108,7 @@ The final study population in which we will develop our model is often a subset 
 
 ## Model development settings
 
-To develop the model we have to decide which algorithm(s) we like to train. We see the selection of the best algorithm for a certain prediction problem as an empirical question, i.e. you need to let the data speak for itself and try different approaches to find the best one. There is no algorithm that will work best for all problems (no free lunch). In our package we therefore aim to implement many algorithms. Furthermore, we made the system modular so you can add your own custom algorithms as described in more detail in the [`AddingCustomAlgorithms`](Link to be added) vignette. 
+To develop the model we have to decide which algorithm(s) we like to train. We see the selection of the best algorithm for a certain prediction problem as an empirical question, i.e. you need to let the data speak for itself and try different approaches to find the best one. There is no algorithm that will work best for all problems (no free lunch). In our package we therefore aim to implement many algorithms. Furthermore, we made the system modular so you can add your own custom algorithms as described in more detail in the [`AddingCustomModels`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomModels.pdf) vignette. 
 
 Our package currently contains the following algorithms to choose from:
 
@@ -124,7 +124,7 @@ tabl <- "
 | AdaBoost | AdaBoost is a boosting ensemble technique. Boosting works by iteratively adding classifiers but adds more weight to the data-points that are misclassified by prior classifiers in the cost function when training the next classifier. We use the sklearn 'AdaboostClassifier' implementation in Python. | nEstimators (the maximum number of estimators at which boosting is terminated), learningRate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learningRate and nEstimators) |
 | Decision Tree | A decision tree is a classifier that partitions the variable space using individual tests selected using a greedy approach.  It aims to find partitions that have the highest information gain to separate the classes.  The decision tree can easily overfit by enabling a large number of partitions (tree depth) and often needs some regularization (e.g., pruning or specifying hyper-parameters that limit the complexity of the model). We use the sklearn 'DecisionTreeClassifier' implementation in Python. | maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight ('Balance' or 'None') |
 | Multilayer Perception | Neural networks contain multiple layers that weight their inputs using a non-linear function.  The first layer is the input layer, the last layer is the output layer the between are the hidden layers.  Neural networks are generally trained using feed forward back-propagation.  This is when you go through the network with a data-point and calculate the error between the true label and predicted label, then go backwards through the network and update the linear function weights based on the error.  This can also be performed as a batch, where multiple data-points are fee| size (the number of hidden nodes), alpha (the l2 regularisation), seed |
-| Deep Learning | Deep learning such as deep nets, convolutional neural networks or recurrent neural networks are similar to a neural network but have multiple hidden layers that aim to learn latent representations useful for prediction. In the seperate BuildingDeepLearningModels vignette we describe these models and hyper-parameters in more detail | see BuildingDeepLearningModels vignette  |
+| Deep Learning (now in seperate DeepPatientLevelPrediction R package) | Deep learning such as deep nets, convolutional neural networks or recurrent neural networks are similar to a neural network but have multiple hidden layers that aim to learn latent representations useful for prediction. In the seperate BuildingDeepLearningModels vignette we describe these models and hyper-parameters in more detail | see OHDSI/DeepPatientLevelPrediction|
 "
 cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
 ```
@@ -385,22 +385,35 @@ Now we can tell `PatientLevelPrediction` to extract all necessary data for our a
 The final step for extracting the data is to run the `getPlpData` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the washoutPeriod which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings. 
   
 ```{r tidy=FALSE,eval=FALSE}
-  plpData <- getPlpData(connectionDetails = connectionDetails,
+
+databaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails,
   cdmDatabaseSchema = cdmDatabaseSchema,
+  cdmDatabaseName = '',
   cohortDatabaseSchema = resultsDatabaseSchema,
   cohortTable = 'AFibStrokeCohort',
   cohortId = 1,
-  covariateSettings = covariateSettings,
   outcomeDatabaseSchema = resultsDatabaseSchema,
   outcomeTable = 'AFibStrokeCohort',
   outcomeIds = 2,
-  sampleSize = 10000
+  cdmVersion = 5
+  )
+
+# here you can define whether you want to sample the target cohort and add any
+# restrictions based on minimum prior observation, index date restrictions
+# or restricting to first index date (if people can be in target cohort multiple times)
+restrictPlpDataSettings <- createRestrictPlpDataSettings(sampleSize = 10000)
+
+  plpData <- getPlpData(
+    databaseDetails = databaseDetails, 
+    covariateSettings = covariateSettings,
+    restrictPlpDataSettings = restrictPlpDataSettings
   )
 ```
   
-Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
+Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the `createRestrictPlpDataSettings` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `Andromeda` (which uses [SQLite](https://www.sqlite.org/index.html)) to store information in a way that ensures R does not run out of memory, even when the data are large. 
   
-Creating the `plpData` object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because `plpData` uses `ff`, we cannot use R's regular save function. Instead, we'll have to use the `savePlpData()` function:
+Creating the `plpData` object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because `plpData` uses `Andromeda`, we cannot use R's regular save function. Instead, we'll have to use the `savePlpData()` function:
   
 ```{r tidy=TRUE,eval=FALSE}
   savePlpData(plpData, "stroke_in_af_data")
@@ -418,23 +431,75 @@ In Appendix 1, we demonstrate the effect of these settings on the subset of the 
 In the example below all the settings we defined for our study are imposed:
   
 ```{r tidy=FALSE,eval=FALSE}
-  population <- createStudyPopulation(plpData = plpData,
-  outcomeId = 2,
+  populationSettings <- createStudyPopulationSettings(
   washoutPeriod = 1095,
   firstExposureOnly = FALSE,
   removeSubjectsWithPriorOutcome = FALSE,
   priorOutcomeLookback = 1,
   riskWindowStart = 1,
   riskWindowEnd = 365,
-  addExposureDaysToStart = FALSE,
-  addExposureDaysToEnd = FALSE,
+  startAnchor =  'cohort start',
+  endAnchor =  'cohort start',
   minTimeAtRisk = 364,
   requireTimeAtRisk = TRUE,
-  includeAllOutcomes = TRUE,
-  verbosity = "DEBUG"
+  includeAllOutcomes = TRUE
   )
 ```
-  
+
+
+### Spliting the data into training/validation/testing datasets
+
+When developing a prediction model using supervised learning (when you have features paired with labels for a set of patients), the first step is to design  the development/internal validation process.  This requires specifying how to select the model hyper-parameters, how to learn the model parameters and how to fairly evaluate the model.  In general, the validation set is used to pick hyper-parameters, the training set is used to learn the model parameters and the test set is used to perform fair internal validation.  However, cross-validation can be implemented to pick the hyper-parameters on the training data (so a validation data set is not required).  Cross validation can also be used to estimate internal validation (so a testing data set is not required).
+
+In small data the best approach for internal validation has been shown to be boostrapping.  However, in big data (many patients and many features) bootstrapping is generally not feasible. In big data our research has shown that it is just important to have some form of fair evaluation (use a test set or cross validation).  For full details see [our BMJ open paper](add link). 
+
+In the PatientLevelPrediction package, the splitSettings define how the plpData are partitioned into training/validation/testing data.  Cross validation is always done, but using a test set is optional (when the data are small, it may be optimal to not use a test set).  For the splitSettings we can use the type (stratified/time/subject) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
+
+```{r tidy=FALSE,eval=FALSE}
+  splitSettings <- createDefaultSplitSetting(
+    trainFraction = 0.75,
+    testFraction = 0.25,
+    type = 'stratified',
+    nfold = 2, 
+    splitSeed = 1234
+    )
+```
+
+Note: it is possible to add a custom method to specify how the plpData are partitioned into training/validation/testing data, see [vignette for custom splitting](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSplitting.pdf).
+
+### Preprocessing the training data
+
+There a numerous data processing settings that a user must specify when developing a prediction model.  These are: 
+ * Whether to under-sample or over-sample the training data (this may be useful when there is class imballance (e.g., the outcome is very rare or very common))
+ * Whether to perform feature engineering or feature selection (e.g., create latent variables that are not observed in the data or reduce the dimensionality of the data)
+ * Whether to remove redundant features and normalize the data (this is required for some models)
+ 
+The default sample settings does nothing, it simply returns the trainData as input, see below: 
+
+```{r tidy=FALSE,eval=FALSE}
+  sampleSettings <- createSampleSettings()
+```
+
+However, the current package contains methods of under-sampling the non-outcome patients.  To perform undersampling, the `type` input should be 'underSample' and `numberOutcomestoNonOutcomes` must be specified (an integer specifying the number of non-outcomes per outcome).  It is possible to add any custom function for over/under sampling, see [vignette for custom sampling](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSamples.pdf).
+
+It is possible to specify a combination of feature engineering functions that take as input the trainData and output a new trainData with different features.  The default feature engineering setting does nothing:
+
+```{r tidy=FALSE,eval=FALSE}
+  featureEngineeringSettings <- createFeatureEngineeringSettings()
+```
+
+However, it is possible to add custom feature engineering functions into the pipeline, see [vignette for custom feature engineering](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomFeatureEngineering.pdf).
+
+Finally, the preprocessing setting is required.  For this setting the user can define `minFraction`, this removes any features that is observed in the training data for less than 0.01 fraction of the patients.  So, if  `minFraction = 0.01` then any feature that is seen in less than 1 percent of the target population is removed.  The input `normalize` specifies whether the features are scaled between 0 and 1, this is required for certain models (e.g., LASSO logistic regression).  The input `removeRedundancy` specifies whether features that are observed in all of the target population are removed.
+
+```{r tidy=FALSE,eval=FALSE}
+  preprocessSettingsSettings <- createPreprocessSettings(
+    minFraction = 0.01, 
+    normalize = T, 
+    removeRedundancy = T
+      )
+```
+
 ### Model Development
   
 In the set function of an algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
@@ -445,15 +510,33 @@ For example, if we use the following settings for the gradientBoostingMachine: n
 lrModel <- setLassoLogisticRegression()
 ```
   
-The `runPlP` function uses the population, `plpData`, and model settings to train and evaluate the model. We can use the testSplit (person/time) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
+The `runPlP` function requires the `plpData`, the `outcomeId` specifying the outcome being predicted and the settings: `populationSettings`, `splitSettings`, `sampleSettings`, `featureEngineeringSettings`, `preprocessSettings` and `modelSettings` to train and evaluate the model. 
   
 ```{r tidy=FALSE,eval=FALSE}
-  lrResults <- runPlp(population, plpData, modelSettings = lrModel, testSplit='stratified', 
-  testFraction=0.25, nfold=2, splitSeed = 1234)
+  lrResults <- runPlp(
+    plpData = plpData,
+    outcomeId = 2, 
+    analysisId = 'singleDemo',
+    analysisName = 'Demonstration of runPlp for training single PLP models',
+    populationSettings = populationSettings, 
+    splitSettings = splitSettings,
+    sampleSettings = sampleSettings, 
+    featureEngineeringSettings = featureEngineeringSettings, 
+    preprocessSettings = preprocessSettings,
+    modelSettings = lrModel,
+    logSettings = createLogSettings(), 
+    executeSettings = createExecuteSettings(
+      runSplitData = T, 
+      runSampleData = T, 
+      runfeatureEngineering = T, 
+      runPreprocessData = T, 
+      runModelDevelopment = T, 
+      runCovariateSummary = T
+    ), 
+    saveDirectory = file.path(getwd(), 'singlePlp')
+    )
 ```
 Under the hood the package will now use the [`Cyclops`](www.github.com/OHDSI/Cyclops) package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc. 
-  
-In the runPlp function there are several parameters to save the plpData, plpResults, plpPlots, evaluation etc. which are all set to True by default. However, there is also some functionality to this manually.
   
 You can save the model using:
   
@@ -697,17 +780,28 @@ Now we can tell `PatientLevelPrediction` to extract all necessary data for our a
 The final step for extracting the data is to run the `getPlpData` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the washoutPeriod which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings. 
     
 ```{r tidy=FALSE,eval=FALSE}
-    plpData <- getPlpData(connectionDetails = connectionDetails,
-                          cdmDatabaseSchema = cdmDatabaseSchema,
-                          cohortDatabaseSchema = resultsDatabaseSchema,
-                          cohortTable = 'AceAngioCohort',
-                          cohortId = 1,
-                          covariateSettings = covariateSettings,
-                          outcomeDatabaseSchema = resultsDatabaseSchema,
-                          outcomeTable = 'AceAngioCohort',
-                          outcomeIds = 2,
-                          sampleSize = 10000
-    )
+
+databaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails,
+  cdmDatabaseSchema = cdmDatabaseSchema,
+  cohortDatabaseSchema = resultsDatabaseSchema,
+  cohortTable = 'AceAngioCohort',
+  cohortId = 1,
+  outcomeDatabaseSchema = resultsDatabaseSchema,
+  outcomeTable = 'AceAngioCohort',
+  outcomeIds = 2
+  )
+
+restrictPlpDataSettings <- createRestrictPlpDataSettings(
+  sampleSize = 10000
+  )
+
+plpData <- getPlpData(
+  databaseDetails = databaseDetails, 
+  covariateSettings = covariateSettings, 
+  restrictPlpDataSettings = restrictPlpDataSettings
+  )
+
 ```
     
 Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the `getPlpData` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `ff` to store information in a way that ensures R does not run out of memory, even when the data are large. 
@@ -729,23 +823,74 @@ In Appendix 1, we demonstrate the effect of these settings on the subset of the 
 In the example below all the settings we defined for our study are imposed:
       
 ```{r tidy=FALSE,eval=FALSE}
-    population <- createStudyPopulation(plpData = plpData,
-                                        outcomeId = 2,
-                                        washoutPeriod = 364,
-                                        firstExposureOnly = FALSE,
-                                        removeSubjectsWithPriorOutcome = TRUE,
-                                        priorOutcomeLookback = 9999,
-                                        riskWindowStart = 1,
-                                        riskWindowEnd = 365,
-                                        addExposureDaysToStart = FALSE,
-                                        addExposureDaysToEnd = FALSE,
-                                        minTimeAtRisk = 364,
-                                        requireTimeAtRisk = TRUE,
-                                        includeAllOutcomes = TRUE,
-                                        verbosity = "DEBUG"
+    populationSettings <- createStudyPopulationSettings(
+      washoutPeriod = 364,
+      firstExposureOnly = FALSE,
+      removeSubjectsWithPriorOutcome = TRUE,
+      priorOutcomeLookback = 9999,
+      riskWindowStart = 1,
+      riskWindowEnd = 365, 
+      minTimeAtRisk = 364,
+      startAnchor = 'cohort start',
+      endAnchor = 'cohort start',
+      requireTimeAtRisk = TRUE,
+      includeAllOutcomes = TRUE
     )
 ```
-    
+
+### Spliting the data into training/validation/testing datasets
+
+When developing a prediction model using supervised learning (when you have features paired with labels for a set of patients), the first step is to design  the development/internal validation process.  This requires specifying how to select the model hyper-parameters, how to learn the model parameters and how to fairly evaluate the model.  In general, the validation set is used to pick hyper-parameters, the training set is used to learn the model parameters and the test set is used to perform fair internal validation.  However, cross-validation can be implemented to pick the hyper-parameters on the training data (so a validation data set is not required).  Cross validation can also be used to estimate internal validation (so a testing data set is not required).
+
+In small data the best approach for internal validation has been shown to be boostrapping.  However, in big data (many patients and many features) bootstrapping is generally not feasible. In big data our research has shown that it is just important to have some form of fair evaluation (use a test set or cross validation).  For full details see [our BMJ open paper](add link). 
+
+In the PatientLevelPrediction package, the splitSettings define how the plpData are partitioned into training/validation/testing data.  Cross validation is always done, but using a test set is optional (when the data are small, it may be optimal to not use a test set).  For the splitSettings we can use the type (stratified/time/subject) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
+
+```{r tidy=FALSE,eval=FALSE}
+  splitSettings <- createDefaultSplitSetting(
+    trainFraction = 0.75,
+    testFraction = 0.25,
+    type = 'stratified',
+    nfold = 2, 
+    splitSeed = 1234
+    )
+```
+
+Note: it is possible to add a custom method to specify how the plpData are partitioned into training/validation/testing data, see [vignette for custom splitting](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSplitting.pdf). 
+
+### Preprocessing the training data
+
+There a numerous data processing settings that a user must specify when developing a prediction model.  These are: 
+ * Whether to under-sample or over-sample the training data (this may be useful when there is class imballance (e.g., the outcome is very rare or very common))
+ * Whether to perform feature engineering or feature selection (e.g., create latent variables that are not observed in the data or reduce the dimensionality of the data)
+ * Whether to remove redundant features and normalize the data (this is required for some models)
+ 
+The default sample settings does nothing, it simply returns the trainData as input, see below: 
+
+```{r tidy=FALSE,eval=FALSE}
+  sampleSettings <- createSampleSettings()
+```
+
+However, the current package contains methods of under-sampling the non-outcome patients.  To perform undersampling, the `type` input should be 'underSample' and `numberOutcomestoNonOutcomes` must be specified (an integer specifying the number of non-outcomes per outcome).  It is possible to add any custom function for over/under sampling, see [vignette for custom sampling](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSamples.pdf).
+
+It is possible to specify a combination of feature engineering functions that take as input the trainData and output a new trainData with different features.  The default feature engineering setting does nothing:
+
+```{r tidy=FALSE,eval=FALSE}
+  featureEngineeringSettings <- createFeatureEngineeringSettings()
+```
+
+However, it is possible to add custom feature engineering functions into the pipeline, see [vignette for custom feature engineering](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomfeatureEngineering.pdf).
+
+Finally, the preprocessing setting is required.  For this setting the user can define `minFraction`, this removes any features that is observed in the training data for less than 0.01 fraction of the patients.  So, if  `minFraction = 0.01` then any feature that is seen in less than 1 percent of the target population is removed.  The input `normalize` specifies whether the features are scaled between 0 and 1, this is required for certain models (e.g., LASSO logistic regression).  The input `removeRedundancy` specifies whether features that are observed in all of the target population are removed.
+
+```{r tidy=FALSE,eval=FALSE}
+  preprocessSettingsSettings <- createPreprocessSettings(
+    minFraction = 0.01, 
+    normalize = T, 
+    removeRedundancy = T
+      )
+```
+
 ### Model Development
     
 In the set function of an algorithm the user can specify a list of eligible values for each hyper-parameter. All possible combinations of the hyper-parameters are included in a so-called grid search using cross-validation on the training set. If a user does not specify any value then the default value is used instead.
@@ -753,18 +898,41 @@ In the set function of an algorithm the user can specify a list of eligible valu
 For example, if we use the following settings for the gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search will apply the gradient boosting machine algorithm with ntrees=100 and maxDepth=4 plus  the  default  settings  for  other  hyper-parameters  and  ntrees=200  and  maxDepth=4  plus  the  default settings  for  other  hyper-parameters.  The  hyper-parameters  that lead to the  bestcross-validation  performance will then be chosen for the final  model. For our problem we choose to build a logistic regression model with the default hyper-parameters
     
 ```{r tidy=TRUE,eval=FALSE}
-    gbmModel <- setGradientBoostingMachine(ntrees = 5000, maxDepth = c(4,7,10), learnRate = c(0.001,0.01,0.1,0.9))
+    gbmModel <- setGradientBoostingMachine(
+      ntrees = 5000, 
+      maxDepth = c(4,7,10), 
+      learnRate = c(0.001,0.01,0.1,0.9)
+      )
 ```
     
-The `runPlP` function uses the population, `plpData`, and model settings to train and evaluate the model. We can use the testSplit (person/time) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
-      
+The `runPlP` function requires the `plpData`, the `outcomeId` specifying the outcome being predicted and the settings: `populationSettings`, `splitSettings`, `sampleSettings`, `featureEngineeringSettings`, `preprocessSettings` and `modelSettings` to train and evaluate the model. 
+  
 ```{r tidy=FALSE,eval=FALSE}
-    gbmResults <- runPlp(population, plpData, modelSettings = gbmModel, testSplit='stratified', 
-                         testFraction=0.25, nfold=2, splitSeed = 1234)
+  gbmResults <- runPlp(
+    plpData = plpData,
+    outcomeId = 2, 
+    analysisId = 'singleDemo2',
+    analysisName = 'Demonstration of runPlp for training single PLP models',
+    populationSettings = populationSettings, 
+    splitSettings = splitSettings,
+    sampleSettings = sampleSettings, 
+    featureEngineeringSettings = featureEngineeringSettings, 
+    preprocessSettings = preprocessSettings,
+    modelSettings = gbmModel,
+    logSettings = createLogSettings(), 
+    executeSettings = createExecuteSettings(
+      runSplitData = T, 
+      runSampleData = T, 
+      runfeatureEngineering = T, 
+      runPreprocessData = T, 
+      runModelDevelopment = T, 
+      runCovariateSummary = T
+    ), 
+    saveDirectory = file.path(getwd(), 'singlePlpExample2')
+    )
 ```
+
 Under the hood the package will now use the R xgboost package to fit a a gradient boosting machine model using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc. 
-    
-In the runPlp function there are several parameters to save the plpData, plpResults, plpPlots, evaluation etc. which are all set to True by default. However, there is also some functionality to this manually.
     
 You can save the model using:
       
@@ -962,102 +1130,24 @@ We recommend to always perform external validation, i.e. apply the final model o
 # load the trained model
 plpModel <- loadPlpModel(getwd(),'model')
 
-#load the new plpData and create the population
-plpData <- loadPlpData(getwd(),'data')
-population <- createStudyPopulation(plpData, 
-                                    outcomeId = 2, 
-                                    includeAllOutcomes = TRUE, 
-                                    firstExposureOnly = TRUE, 
-                                    washoutPeriod = 365, 
-                                    removeSubjectsWithPriorOutcome = TRUE, 
-                                    priorOutcomeLookback = 365,
-                                    riskWindowStart = 1,
-                                    requireTimeAtRisk = FALSE,
-                                    riskWindowEnd = 365
-)
+# add details of new database
+validationDatabaseDetails <- createDatabaseDetails()
 
-# apply the trained model on the new data
-validationResults <- applyModel(population,plpData,plpModel)
-```
-
-To make things easier we also provide a function for performing external validation of a model across one or multiple datasets:
-```{r tidy=FALSE,eval=FALSE}
-# load the trained model
-plpResult <- loadPlpResult(getwd(),'plpResult')
-
-connectionDetails <- createConnectionDetails(dbms = "postgresql", 
-                                             server = "localhost/ohdsi", 
-                                             user = "joe", 
-                                             password = "supersecret")
-
-validation <- externalValidatePlp(plpResult = plpResult, 
-                                  connectionDetails = connectionDetails,
-                                  validationSchemaTarget = 'new_cohort_schema',
-                                  validationSchemaOutcome = 'new_cohort_schema',
-                                  validationSchemaCdm = 'new_cdm_schema', 
-                                  validationTableTarget = 'cohort_table',
-                                  validationTableOutcome = 'cohort_table', 
-                                  validationIdTarget = 'cohort_id', 
-                                  validationIdOutcome = 'outcome_id', 
-                                  keepPrediction = T
-)
-
-```
-This will extract the new plpData from the specified schemas and cohort tables.  It will then apply the same population settings and the trained plp model.  Finally, it will evaluate the performance and return the standard output as `validation$performance` and if keepPrediction is TRUE then it will also return the prediction on the population as `validation$prediction`.  They can be inserted into the shiny app for viewing the model and validation by running: `viewPlp(runPlp=plpResult, validatePlp=validation )`.
-
-If you want to validate on multiple databases available you can insert the new schemas and cohort tables as a list:
-```{r tidy=FALSE,eval=FALSE}
-# load the trained model
-plpResult <- loadPlpResult(getwd(),'plpResult')
-
-connectionDetails <- createConnectionDetails(dbms = "postgresql", 
-                                             server = "localhost/ohdsi", 
-                                             user = "joe", 
-                                             password = "supersecret")
-
-validation <- externalValidatePlp(plpResult = plpResult, 
-                                  connectionDetails = connectionDetails,
-                                  validationSchemaTarget = list('new_cohort_schema1',
-                                                                'new_cohort_schema2'),
-                                  validationSchemaOutcome = list('new_cohort_schema1',
-                                                                 'new_cohort_schema2'),
-                                  validationSchemaCdm = list('new_cdm_schema1',
-                                                             'new_cdm_schema2'), 
-                                  validationTableTarget = list('new_cohort_table1',
-                                                               'new_cohort_table2'),
-                                  validationTableOutcome = list('new_cohort_table1',
-                                                                'new_cohort_table2'),
-                                  validationIdTarget = 'cohort_id', 
-                                  validationIdOutcome = 'outcome_id', 
-                                  keepPrediction = T
+# to externally validate the model and perform recalibration run:
+externalValidateDbPlp(
+  plpModel = plpModel,
+  validationDatabaseDetails = validationDatabaseDetails,
+  validationRestrictPlpDataSettings = plpModel$settings$plpDataSettings,
+  settings = createValidationSettings(
+    recalibrate = 'weakRecalibration'
+    ),
+  outputFolder = getwd()
 )
 
 ```
 
-# Journal paper generation
+This will extract the new plpData from the specified schemas and cohort tables.  It will then apply the same population settings and the trained plp model.  Finally, it will evaluate the performance and return the standard output as `validation$performanceEvaluation` and it will also return the prediction on the population as `validation$prediction`.  They can be inserted into the shiny app for viewing the model and validation by running: `viewPlp(runPlp=plpResult, validatePlp=validation )`.
 
-We have added functionality to automatically generate a word document you can use as start of a journal paper. It contains many of the generated study details and results.
-If you have performed external validation these results will can be added as well. Optionally, you can add a "Table 1" that contains data on many covariates for the target population. 
-
-You can create the draft journal paper by running this function:
-  
-```{r tidy=FALSE,eval=FALSE}
-
-createPlpJournalDocument(plpResult = <your plp results>, 
-                         plpValidation = <your validation results>,
-                         plpData = <your plp data>, 
-                         targetName = "<target population>",
-                         outcomeName = "<outcome>", 
-                         table1 = F, 
-                         connectionDetails = NULL,
-                         includeTrain = FALSE,
-                         includeTest = TRUE,
-                         includePredictionPicture = TRUE,
-                         includeAttritionPlot = TRUE,
-                         outputLocation = "<your location>"))
-````
-
-For more details see the help page of the function.
 
 \newpage
 # Other functionality
@@ -1067,11 +1157,12 @@ The package has much more functionality than described in this vignette and cont
   Functionality | Description | Vignette
 --------------- | --------------------------------------------- | ---------------
   Builing Multiple Models | This vignette describes how you can run multiple models automatically | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingMultiplePredictiveModels.pdf)
-Custom algorithms | This vignette describes how you can add your own custom algorithms in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomAlgorithms.pdf)
+Custom Models | This vignette describes how you can add your own custom algorithms in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomModels.pdf)
+Custom Splitting Functions | This vignette describes how you can add your own custom training/validation/testing splitting functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSplitting.pdf)
+Custom Sampling Functions | This vignette describes how you can add your own custom sampling functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSamples.pdf)
+Custom Feature Engineering/Selection | This vignette describes how you can add your own custom feature engineering and selection functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomFeatureEngineering.pdf)
 Ensemble models | This vignette describes how you can use the framework to build ensemble models, i.e combine multiple models in a super learner | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingEnsembleModels.pdf)
-Deep Learning Models | We have added extensive functionality for Deep Learning including several architectures in both pyTorch and Keras. These algorithms can be trained using GPU power | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingDeepLearningModels.pdf)
 Learning curves | Learning curves assess the effect of training set size on model performance by training a sequence of prediction models on successively larger subsets of the training set. A learning curve plot can also help in diagnosing a bias or variance problem as explained below. | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/GeneratingLearningCurves.pdf)
-Implementing existing models | This vignette describes how you can implement existing logistic regression models in the framework, e.g. as found in literature | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/ImplementingExistingModels.pdf)
 
 # Demos
 
