@@ -238,5 +238,5 @@ overSampleData <- function(trainData, sampleSettings){
   
   class(sampleTrainData$covariateData) <- 'CovariateData'
   
-  return(trainData)
+  return(sampleTrainData)
 }
