@@ -68,7 +68,7 @@ plpResult <- runPlp(
   modelSettings = lrSet, 
   logSettings = createLogSettings(verbosity = 'TRACE'),
   executeSettings = createDefaultExecuteSettings(), 
-  saveDirectory = 'D:/test/plp'
+  saveDirectory = saveLoc
   )
 
 #
