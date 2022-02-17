@@ -152,8 +152,6 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
 
 getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, ...){ 
   
-  ensure_installed("survAUC")
-  
   if(is.null(prediction$survivalTime)){
     stop('No survival time column present')
   }
