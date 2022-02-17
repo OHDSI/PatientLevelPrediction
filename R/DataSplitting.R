@@ -230,7 +230,7 @@ dataSummary <- function(data){
   
   ParallelLogger::logInfo('Train Set:')
   result <- data$Train$labels %>% 
-    dplyr::inner_join(data$Train$folds, by = .data$rowId) %>% 
+    dplyr::inner_join(data$Train$folds, by = 'rowId') %>% 
     dplyr::group_by(.data$index) %>%
     dplyr::summarise(N = length(.data$outcomeCount),
       outcomes = sum(.data$outcomeCount)) %>% 
