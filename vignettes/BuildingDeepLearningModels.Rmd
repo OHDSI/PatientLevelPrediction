@@ -31,9 +31,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-Electronic Health Records (EHR) data is high dimensional, heterogeneous, and sparse, which makes predictive modelling a challenge. In the early days, the machine learning community mainly focused on algorithm development, currently there is a shift to more powerful feature engineering. Deep Learning models are widely used to automatically learn high-level feature representations from the data, and have achieved remarkable results in image processing,  speech recognition and computational biology. Recently, interesting results have been shown using EHRs, but more extensive research is needed to assess the power of Deep Learning in this domain.
+Electronic Health Records (EHR) data is high dimensional, heterogeneous, and sparse, which makes predictive modelling a challenge. In the early days, the machine learning community 
+ly focused on algorithm development, currently there is a shift to more powerful feature engineering. Deep Learning models are widely used to automatically learn high-level feature representations from the data, and have achieved remarkable results in image processing,  speech recognition and computational biology. Recently, interesting results have been shown using EHRs, but more extensive research is needed to assess the power of Deep Learning in this domain.
 
-This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to build Deep Learning models. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf). Furthermore, this vignette assumes you are familiar with Deep Learning methods.
+This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to build Deep Learning models. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf). Furthermore, this vignette assumes you are familiar with Deep Learning methods.
 
 # Background
 
@@ -68,7 +69,7 @@ MLPTorch | Multi-Layer Perceptron Model | mlp_type (MLP = default, SNN = self-no
 ##Example
 The approach for logistic regression (LRTorch) and the Multi-Layer Perceptron (MLPTorch) is identical. Here we will take LRTorch as an example.
 
-You need to generate a `population` and `plpData` object as described in more detail in [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf). 
+You need to generate a `population` and `plpData` object as described in more detail in [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf). 
 
 Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.
 
@@ -244,9 +245,9 @@ CIReNN | units (The number of units of RNN layer - as a list of vectors), recurr
 ## Example
 We will now show how to use the temporal models by using CNNTorch as an example.
 
-You need to generate a `population` and `plpData` object as described in more detail in [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf). 
+You need to generate a `population` and `plpData` object as described in more detail in [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf). 
 
-Note that for these algorithms you need to extracted temporal data as described in the [FeatureExtraction vignette] (https://github.com/OHDSI/FeatureExtraction/blob/master/inst/doc/UsingFeatureExtraction.pdf) as follows:
+Note that for these algorithms you need to extracted temporal data as described in the [FeatureExtraction vignette] (https://github.com/OHDSI/FeatureExtraction/blob/main/inst/doc/UsingFeatureExtraction.pdf) as follows:
 
 ```{r eval=FALSE}
 settings <- createTemporalCovariateSettings(useConditionEraStart = FALSE,
