@@ -7,14 +7,14 @@ was defined: from utopia to empirical data" (2016)}
 \usage{
 plotSmoothCalibration(
   plpResult,
-  smooth = c("loess", "rcs"),
+  smooth = "loess",
   span = 1,
   nKnots = 5,
-  scatter = F,
+  scatter = FALSE,
   type = "test",
   bins = 20,
-  zoom = c("none", "deciles", "data"),
-  sample = T,
+  zoom = "none",
+  sample = TRUE,
   typeColumn = "evaluation",
   saveLocation = NULL,
   fileName = NULL
@@ -47,10 +47,6 @@ shows the entire space.}
 \item{typeColumn}{The name of the column specifying the evaluation type}
 
 \item{saveLocation}{Directory to save plot (if NULL plot is not saved)}
-
-\item{fileName}{Name of the file to save to plot, for example
-'plot.png'. See the function \code{ggsave} in the ggplot2 package for
-supported file formats.}
 }
 \value{
 A ggplot object.
