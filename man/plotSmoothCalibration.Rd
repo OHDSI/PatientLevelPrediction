@@ -13,7 +13,6 @@ plotSmoothCalibration(
   scatter = FALSE,
   type = "test",
   bins = 20,
-  zoom = "none",
   sample = TRUE,
   typeColumn = "evaluation",
   saveLocation = NULL,
@@ -39,14 +38,14 @@ computing and lower memory usage.}
 
 \item{bins}{The number of bins for the histogram. Default is 20.}
 
-\item{zoom}{Zoom in on the region containing the deciles or on the data. If not specified
-shows the entire space.}
-
 \item{sample}{If using loess then by default 20,000 patients will be sampled to save time}
 
 \item{typeColumn}{The name of the column specifying the evaluation type}
 
 \item{saveLocation}{Directory to save plot (if NULL plot is not saved)}
+
+\item{zoom}{Zoom in on the region containing the deciles or on the data. If not specified
+shows the entire space.}
 }
 \value{
 A ggplot object.
