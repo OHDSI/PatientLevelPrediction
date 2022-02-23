@@ -21,7 +21,7 @@ travis <- T
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
-if(F){
+if(Sys.info()['sysname'] != 'Windows' || is.null(Sys.info())){
 # configure and activate python
 PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
 PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
