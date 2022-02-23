@@ -936,8 +936,8 @@ plotSmoothCalibration <- function(plpResult,
                                   type = "test",
                                   bins = 20,
                                   sample = TRUE,
-  typeColumn = 'evaluation',
-  saveLocation = NULL,
+                                  typeColumn = 'evaluation',
+                                  saveLocation = NULL,
                                   fileName = NULL) {
   
   if (!smooth %in% c("loess", "rcs")) stop(ParallelLogger::logError("Smooth type must be either 'loess' or 'rcs"))
@@ -1019,21 +1019,7 @@ plotSmoothCalibration <- function(plpResult,
         lci = calibration - qt(.975, predictedFit$df) * se,
         uci = calibration + qt(.975, predictedFit$df) * se
       )
-    
-    # limits for zoom functionality
-    # if (zoom == "data") {
-    #   # xlim <- c(min(smoothData$p), max(smoothData$p))
-    #   maxes <- max(max(smoothData$p), max(fit$fitted))
-    #   xlim <- c(0, maxes)
-    #   ylim <- c(0, maxes)
-    # } else if (zoom == "deciles") {
-    #   xlim <- c(0, maxes)
-    #   ylim <- c(0, maxes)
-    # } else {
-    #   xlim <- c(0, 1)
-    #   ylim <- c(0, 1)
-    # }
-    # the main plot object, this one uses Loess regression
+
     xlim <- ylim <- c(0, 1)
     smoothPlot <- plotSmoothCalibrationLoess(data = smoothData) +
       ggplot2::coord_cartesian(
@@ -1051,19 +1037,6 @@ plotSmoothCalibration <- function(plpResult,
       failedEvalType[evalTypes[i]] <- TRUE
       next
     }
-
-    # construct the zoom limits
-    # if (zoom == "data") {
-    #   maxes <- max(max(xRange), max(predXRange))
-    #   xlim <- c(0, maxes)
-    #   ylim <- c(0, maxes)
-    # } else if (zoom == "deciles") {
-    #   xlim <- c(0, maxes)
-    #   ylim <- c(0, maxes)
-    # } else {
-    #   xlim <- c(0, 1)
-    #   ylim <- c(0, 1)
-    # }
     xlim <- ylim <- c(0, 1)
     smoothPlot <- smoothPlot +
       ggplot2::coord_cartesian(
@@ -1086,84 +1059,121 @@ plotSmoothCalibration <- function(plpResult,
   }
   
   # Histogram object detailing the distibution of event/noevent for each probability interval
-  count <- NULL
-  histPlot <- ggplot2::ggplot() +
-    ggplot2::geom_histogram(data = prediction[prediction$value <= xlim[2],],
-                            ggplot2::aes(.data$value, y = ggplot2::after_stat(count), 
-                                         fill = as.character(.data$outcomeCount)), #MAYBE ISSUE
-                            bins = bins,
-                            position = "stack",
-                            alpha = 0.5,
-                            boundary = 0,
-                            closed = "left") +
+    count <- NULL
+    histPlot <- ggplot2::ggplot() +
+      ggplot2::geom_histogram(
+        data = prediction[prediction$value <= xlim[2],],
+        ggplot2::aes(
+          x = .data$value,
+          y = ggplot2::after_stat(count), 
+          fill = as.character(.data$outcomeCount) #MAYBE ISSUE
+        ), 
+        bins = bins,
+        position = "stack",
+        alpha = 0.5,
+        boundary = 0,
+        closed = "left"
+      ) +
     ggplot2::facet_grid(.data$outcomeCount ~ ., scales = "free_y") +
     ggplot2::scale_fill_discrete(name = "Outcome") +
-    ggplot2::theme(strip.background = ggplot2::element_blank(),
-                   strip.text = ggplot2::element_blank()) +
-    ggplot2::labs(x = "Predicted Probability") +
-    ggplot2::coord_cartesian(xlim = xlim)
+      ggplot2::theme(
+        strip.background = ggplot2::element_blank(),
+        strip.text = ggplot2::element_blank()
+      ) +
+      ggplot2::labs(x = "Predicted Probability") +
+      ggplot2::coord_cartesian(xlim = xlim)
   
   } else {
     # use calibrationSummary
     sparsePred <- plpResult$performanceEvaluation$calibrationSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType)
     
-    limVal <- max(max(sparsePred$averagePredictedProbability),max(sparsePred$observedIncidence))
+    limVal <- max(
+      max(sparsePred$averagePredictedProbability),
+      max(sparsePred$observedIncidence)
+    )
     
-    smoothPlot <- ggplot2::ggplot(data = sparsePred, ggplot2::aes(x = .data$averagePredictedProbability, 
-                                                                   y = .data$observedIncidence)) +
-      ggplot2::stat_smooth(ggplot2::aes(color = "Loess", linetype = "Loess"),
-                           method = "loess",
-                           se = TRUE,
-                           #span = span,
-                           size = 1,
-                           show.legend = F) +
-      ggplot2::geom_segment(ggplot2::aes(x = 0,
-                                         xend = 1,
-                                         y = 0,
-                                         yend = 1,
-                                         color = "Ideal",
-                                         linetype = "Ideal")) +
-      ggplot2::coord_cartesian(xlim = c(0,limVal),
-                               ylim = c(0,limVal)) + 
-      ggplot2::scale_linetype_manual(name = "Models",
-                                     values = c(Loess = "solid",
-                                                Ideal = "dashed")) + 
+    smoothPlot <- ggplot2::ggplot(
+      data = sparsePred,
+      ggplot2::aes(
+        x = .data$averagePredictedProbability, 
+        y = .data$observedIncidence)
+    ) +
+      ggplot2::stat_smooth(
+        ggplot2::aes(color = "Loess", linetype = "Loess"),
+        method = "loess",
+        se = TRUE,
+        size = 1,
+        show.legend = F
+      ) +
+      ggplot2::geom_segment(
+        ggplot2::aes(
+          x = 0,
+          xend = 1,
+          y = 0,
+          yend = 1,
+          color = "Ideal",
+          linetype = "Ideal"
+        )
+      ) +
+      ggplot2::coord_cartesian(
+        xlim = c(0,limVal),
+        ylim = c(0,limVal)) + 
+      ggplot2::scale_linetype_manual(
+        name = "Models",
+        values = c(
+          Loess = "solid",
+          Ideal = "dashed"
+        )
+      ) + 
       ggplot2::scale_color_manual(name = "Models", values = c(Loess = "blue", Ideal = "red")) + 
       ggplot2::labs(x = "Predicted Probability", y = "Observed Probability")
     
     # construct the plot grid
     if (scatter) {
       smoothPlot <- smoothPlot + ggplot2::geom_point(data = sparsePred,
-                                                       ggplot2::aes(x = .data$averagePredictedProbability,
-                                                                    y = .data$observedIncidence),
-                                                       color = "black",
-                                                       size = 2)
+        ggplot2::aes(x = .data$averagePredictedProbability,
+          y = .data$observedIncidence),
+        color = "black",
+        size = 2)
     }
     
     # Histogram object detailing the distibution of event/noevent for each probability interval
     
-    popData1 <- sparsePred[,c('averagePredictedProbability', 'PersonCountWithOutcome')]
+    popData1 <- sparsePred[, c('averagePredictedProbability', 'PersonCountWithOutcome')]
     popData1$Label <- "Outcome"
-    colnames(popData1) <- c('averagePredictedProbability','PersonCount',"Label")
+    colnames(popData1) <- c('averagePredictedProbability', 'PersonCount', "Label")
     popData2 <- sparsePred[,c('averagePredictedProbability', 'PersonCountAtRisk')]
     popData2$Label <- "No Outcome"
-    popData2$PersonCountAtRisk <- -1*(popData2$PersonCountAtRisk -popData1$PersonCount)
-    colnames(popData2) <- c('averagePredictedProbability','PersonCount',"Label")
+    popData2$PersonCountAtRisk <- -1 * (popData2$PersonCountAtRisk - popData1$PersonCount)
+    colnames(popData2) <- c('averagePredictedProbability', 'PersonCount', "Label")
     popData <- rbind(popData1, popData2)
     popData$averagePredictedProbability <- factor(popData$averagePredictedProbability)
-    histPlot <- ggplot2::ggplot(popData, ggplot2::aes(y = .data$averagePredictedProbability, x = .data$PersonCount, 
-                                                       fill = .data$Label)) + 
-      ggplot2::geom_bar(data = popData[popData$Label == "Outcome",], stat = "identity") + 
-      ggplot2::geom_bar(data = popData[popData$Label == "No Outcome",], stat = "identity") + 
+    histPlot <- ggplot2::ggplot(
+      data = popData,
+      ggplot2::aes(
+        y = .data$averagePredictedProbability,
+        x = .data$PersonCount, 
+        fill = .data$Label
+      )
+    ) + 
+      ggplot2::geom_bar(
+        data = popData[popData$Label == "Outcome",],
+        stat = "identity"
+      ) + 
+      ggplot2::geom_bar(
+        data = popData[popData$Label == "No Outcome",],
+        stat = "identity"
+      ) +
       ggplot2::geom_bar(stat = "identity") + 
       ggplot2::scale_x_continuous(labels = abs) + 
-      #ggplot2::scale_fill_brewer(palette = "Set1") + 
       ggplot2::coord_flip( ) +
       ggplot2::theme_bw() + 
-      ggplot2::theme(axis.title.x=ggplot2::element_blank(),
-                     axis.text.x=ggplot2::element_blank(),
-                     axis.ticks.x=ggplot2::element_blank())
+      ggplot2::theme(
+        axis.title.x=ggplot2::element_blank(),
+        axis.text.x=ggplot2::element_blank(),
+        axis.ticks.x=ggplot2::element_blank()
+      )
   }
   
     if (!failedEvalType[i]) {
@@ -1192,7 +1202,13 @@ plotSmoothCalibration <- function(plpResult,
           evalTypes[i],
           ".jpg"
         )
-        ggplot2::ggsave(file.path(saveLocation, fileName), gridPlot, width = 5, height = 4.5, dpi = 400)
+        ggplot2::ggsave(
+          file.path(saveLocation, fileName),
+          gridPlot,
+          width = 5,
+          height = 4.5,
+          dpi = 400
+        )
       }
     }
   }
