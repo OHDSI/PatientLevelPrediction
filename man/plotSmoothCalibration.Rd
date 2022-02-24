@@ -11,7 +11,6 @@ plotSmoothCalibration(
   span = 0.75,
   nKnots = 5,
   scatter = FALSE,
-  type = "test",
   bins = 20,
   sample = TRUE,
   typeColumn = "evaluation",
@@ -34,8 +33,6 @@ computing and lower memory usage.}
 
 \item{scatter}{plot the decile calibrations as points on the graph. Default is False}
 
-\item{type}{Whether to use train or test data, default is test.}
-
 \item{bins}{The number of bins for the histogram. Default is 20.}
 
 \item{sample}{If using loess then by default 20,000 patients will be sampled to save time}
@@ -47,9 +44,6 @@ computing and lower memory usage.}
 \item{fileName}{Name of the file to save to plot, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 supported file formats.}
-
-\item{zoom}{Zoom in on the region containing the deciles or on the data. If not specified
-shows the entire space.}
 }
 \value{
 A ggplot object.

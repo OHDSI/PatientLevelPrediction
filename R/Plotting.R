@@ -914,10 +914,7 @@ plotSparseCalibration2 <- function(
 #'                        computing and lower memory usage.
 #' @param nKnots          The number of knots to be used by the rcs evaluation. Default is 5
 #' @param scatter         plot the decile calibrations as points on the graph. Default is False
-#' @param type            Whether to use train or test data, default is test.
 #' @param bins            The number of bins for the histogram. Default is 20.
-#' @param zoom            Zoom in on the region containing the deciles or on the data. If not specified
-#'                        shows the entire space.
 #' @param sample          If using loess then by default 20,000 patients will be sampled to save time                   
 #' @param typeColumn      The name of the column specifying the evaluation type
 #' @param saveLocation    Directory to save plot (if NULL plot is not saved)
@@ -933,7 +930,6 @@ plotSmoothCalibration <- function(plpResult,
                                   span = 0.75,
                                   nKnots = 5,
                                   scatter = FALSE,
-                                  type = "test",
                                   bins = 20,
                                   sample = TRUE,
                                   typeColumn = 'evaluation',
@@ -942,11 +938,8 @@ plotSmoothCalibration <- function(plpResult,
   
   if (!smooth %in% c("loess", "rcs")) stop(ParallelLogger::logError("Smooth type must be either 'loess' or 'rcs"))
   if (nKnots < 3) stop(ParallelLogger::logError("Number of knots must be larger than 3"))
-  if (!all(type %in% c("test", "train", "cv"))) stop(ParallelLogger::logError("Type must be one of 'test', 'train' or 'cv'"))
 
-  
   evalTypes <- unique(plpResult$performanceEvaluation$calibrationSummary[,typeColumn])
-  evalTypes <- evalTypes[match(type, tolower(evalTypes))]
   plots <- list()
   length(plots) <- length(evalTypes)
   
@@ -1009,13 +1002,13 @@ plotSmoothCalibration <- function(plpResult,
         # loess
         smoothData <- data.frame(y, p)
         fit <- stats::loess(y ~ p, degree = 2)
-        predictedFit <- predict(fit, se = TRUE)
+        predictedFit <- stats::predict(fit, se = TRUE)
         smoothData <- smoothData %>%
           dplyr::mutate(
             calibration = predictedFit$fit,
             se = predictedFit$se,
-            lci = calibration - qt(.975, predictedFit$df) * se,
-            uci = calibration + qt(.975, predictedFit$df) * se
+            lci = .data$calibration - stats::qt(.975, predictedFit$df) * .data$se,
+            uci = .data$calibration + stats::qt(.975, predictedFit$df) * .data$se
           )
 
         xlim <- ylim <- c(0, 1)
@@ -1048,8 +1041,8 @@ plotSmoothCalibration <- function(plpResult,
           ggplot2::geom_point(
             data = x,
             ggplot2::aes(
-              x = averagePredictedProbability,
-              y = observedIncidence),
+              x = .data$averagePredictedProbability,
+              y = .data$observedIncidence),
             color = "black",
             size = 2
           )
@@ -1061,9 +1054,9 @@ plotSmoothCalibration <- function(plpResult,
         ggplot2::geom_histogram(
           data = prediction,
           ggplot2::aes(
-            x = value,
+            x = .data$value,
             y = ggplot2::after_stat(count), 
-            fill = as.character(outcomeCount) #MAYBE ISSUE
+            fill = as.character(.data$outcomeCount) #MAYBE ISSUE
           ), 
           bins = bins,
           position = "stack",
@@ -1085,8 +1078,8 @@ plotSmoothCalibration <- function(plpResult,
       sparsePred <- plpResult$performanceEvaluation$calibrationSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>%
         dplyr::mutate(
-          y = observedIncidence,
-          p = averagePredictedProbability
+          y = .data$observedIncidence,
+          p = .data$averagePredictedProbability
         )
 
       smoothPlot <- plotSmoothCalibrationLoess(data = sparsePred, span = span)
@@ -1097,13 +1090,13 @@ plotSmoothCalibration <- function(plpResult,
           ggplot2::geom_point(
             data = sparsePred,
             ggplot2::aes(
-              x = p,
-              y = y,
-              color = "black",
-              size = 2
+              x = .data$p,
+              y = .data$y
             ),
+            size = 1,
+            color = "black",
             show.legend = FALSE
-          )
+          ) 
       }
       
       # Histogram object detailing the distibution of event/noevent for each probability interval
@@ -1164,7 +1157,7 @@ plotSmoothCalibration <- function(plpResult,
           nrow = 2,
           heights=c(2,1)
         )
-        fileNameComponents <- unlist(stringr::str_split(fileName, pattern = "\\."))
+        fileNameComponents <- unlist(strsplit(fileName, split = "\\."))
         n <- length(fileNameComponents)
         if (n > 2) {
           actualFileName <- paste(
@@ -1195,13 +1188,13 @@ plotSmoothCalibration <- function(plpResult,
 
 plotSmoothCalibrationLoess <- function(data, span = 0.75) {
   fit <- stats::loess(y ~ p, data = data, degree = 2, span = span)
-  predictedFit <- predict(fit, se = TRUE)
+  predictedFit <- stats::predict(fit, se = TRUE)
   data <- data %>%
     dplyr::mutate(
       calibration = predictedFit$fit,
       se = predictedFit$se,
-      lci = calibration - qt(.975, predictedFit$df) * se,
-      uci = calibration + qt(.975, predictedFit$df) * se
+      lci = .data$calibration - stats::qt(.975, predictedFit$df) * .data$se,
+      uci = .data$calibration + stats::qt(.975, predictedFit$df) * .data$se
     )
   
   plot <- ggplot2::ggplot(
@@ -1280,10 +1273,10 @@ plotSmoothCalibrationRcs <- function(data, nKnots) {
 
   xRange <- seq(0, p[length(p)], length.out = 1000)
   pred <- stats::predict(smoothFit, xRange, se.fit = T, type = "lp")
-  predXRange <- plogis(pred$linear.predictors)
+  predXRange <- stats::plogis(pred$linear.predictors)
   ciSmooth <- data.frame(
-    lci = plogis(pred$linear.predictors - 1.96 * pred$se.fit),
-    uci = plogis(pred$linear.predictors + 1.96 * pred$se.fit)
+    lci = stats::plogis(pred$linear.predictors - 1.96 * pred$se.fit),
+    uci = stats::plogis(pred$linear.predictors + 1.96 * pred$se.fit)
   )
 
   smoothData <- cbind(xRange, predXRange, ciSmooth)

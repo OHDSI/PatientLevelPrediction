@@ -95,7 +95,6 @@ test_that("plotSmoothCalibration", {
     span = 1,
     nKnots = 5,
     scatter = T,
-    type = "test",
     bins = 20,
     saveLocation = file.path(saveLoc, "plots")
   )
@@ -114,7 +113,6 @@ test_that("plotSmoothCalibration", {
     span = 1,
     nKnots = 5,
     scatter = T,
-    type = "test",
     bins = 20,
     sample = T,
     saveLocation = NULL) 
@@ -126,12 +124,11 @@ test_that("plotSmoothCalibration", {
     span = 1,
     nKnots = 5,
     scatter = F,
-    type = "test",
     bins = 20,
     fileName = NULL)
   testthat::expect_s3_class(test3$test$smoothPlot, c("gg", "ggplot"))
   testthat::expect_s3_class(test3$test$histPlot, c("gg", "ggplot"))
-  testthat::expect_true(
+  testthat::expect_true( # is this tested needed again?
     file.exists(
       file.path(saveLoc, "plots", "smoothCalibrationTest.pdf")
     )
