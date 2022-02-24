@@ -2,9 +2,11 @@ pandoc: 2.11.4
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
-  AddingCustomAlgorithms: AddingCustomAlgorithms.html
+  AddingCustomFeatureEngineering: AddingCustomFeatureEngineering.html
+  AddingCustomModels: AddingCustomModels.html
+  AddingCustomSamples: AddingCustomSamples.html
+  AddingCustomSplitting: AddingCustomSplitting.html
   BestPractices: BestPractices.html
-  BuildingDeepLearningModels: BuildingDeepLearningModels.html
   BuildingEnsembleModels: BuildingEnsembleModels.html
   BuildingMultiplePredictiveModels: BuildingMultiplePredictiveModels.html
   BuildingPredictiveModels: BuildingPredictiveModels.html
@@ -14,5 +16,5 @@ articles:
   InstallationGuide: InstallationGuide.html
   PatientLevelPrediction: PatientLevelPrediction.html
   Videos: Videos.html
-last_built: 2021-09-29T20:53Z
+last_built: 2021-12-16T15:29Z
 

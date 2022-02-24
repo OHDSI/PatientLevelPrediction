@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Package for patient level prediction using data in the OMOP Common Data
     Model
-Version: 4.4.2
-Date: 2021-10-08
+Version: 5.0.1
+Date: 2022-02-18
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -26,72 +26,67 @@ Depends:
     FeatureExtraction (>= 3.0.0)
 Imports:
     Andromeda,
-    benchmarkme,
-    bit64,
     Cyclops (>= 3.0.0),
-    DatabaseConnector (>= 3.0.0),
+    DatabaseConnector (>= 5.0.0),
     dplyr,
     ggplot2,
     gridExtra,
     Hmisc,
-    magrittr,
+    jsonlite,
     Matrix,
-    parallel,
+    memuse,
     ParallelLogger (>= 2.0.0),
     PRROC,
     Rcpp (>= 0.11.2),
-    reshape2,
     reticulate (> 1.16),
     rlang,
     rms,
     RSQLite,
-    slam,
     SqlRender (>= 1.1.3),
     survival,
     tibble,
     tidyr,
-    tools,
-    utils,
-    zeallot
+    utils
 Suggests:
     AUC,
-    aws.s3,
     BigKnn (>= 1.0.0),
+    DBI,
     devtools,
     diagram, 
     DT,
+    Eunomia,
     gnm,
     htmlwidgets (> 0.8),
     htmltools,
-    iterativeHardThresholding,
-    keras,
+    IterativeHardThresholding,
     knitr,
     markdown,
-    memuse,
     Metrics,
-    officer,
+    parallel,
     plotly,
-    plyr,  
+    plyr, 
+    pool,
     pROC,
     R6,
     ResourceSelection,
-    RJSONIO,
     rmarkdown,
     scoring,
     shiny,
     shinycssloaders,
     shinydashboard,
+    shinyWidgets,
     SparseM,
     survAUC,
     survminer,
-    tensorflow,
     testthat,
     withr,
     xgboost (> 1.3.2.1)
 Remotes:
-    ohdsi/FeatureExtraction,
     ohdsi/BigKnn,
-    ohdsi/IterativeHardThresholding
+    ohdsi/Eunomia,
+    ohdsi/FeatureExtraction,
+    ohdsi/IterativeHardThresholding,
+    ohdsi/ParallelLogger
 LinkingTo: Rcpp
 NeedsCompilation: yes
 RoxygenNote: 7.1.1

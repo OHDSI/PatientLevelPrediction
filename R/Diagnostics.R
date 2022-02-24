@@ -1,6 +1,6 @@
 # @file Diagnostics.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -28,48 +28,13 @@
 #' observation time distribution. 
 #'
 #' @param plpData                      The data object to do the diagnostic on - if NULL you need to specify the connection settings below
-#' @param cdmDatabaseName            Name of the database
-#' @param connectionDetails            An R object of type\cr\code{connectionDetails} created using the
-#'                                     function \code{createConnectionDetails} in the
-#'                                     \code{DatabaseConnector} package.
-#' @param cdmDatabaseSchema            The name of the database schema that contains the OMOP CDM
-#'                                     instance.  Requires read permissions to this database. On SQL
-#'                                     Server, this should specifiy both the database and the schema,
-#'                                     so for example 'cdm_instance.dbo'.
-#' @param oracleTempSchema             For Oracle only: the name of the database schema where you want
-#'                                     all temporary tables to be managed. Requires create/insert
-#'                                     permissions to this database.
-#' @param cohortId                     A unique identifier to define the at risk cohorts. CohortId is
-#'                                     used to select the cohort_concept_id in the cohort-like table.
-#' @param cohortName                   A string specifying the name of the target cohort                                    
-#' @param outcomeIds                   A vector of cohort_definition_ids used to define outcomes.
-#' @param outcomeNames                 A vector of names for each outcome.
-#' @param cohortDatabaseSchema         The name of the database schema that is the location where the
-#'                                     cohort data used to define the at risk cohort is available.
-#'                                     If cohortTable = DRUG_ERA, cohortDatabaseSchema is not used
-#'                                     by assumed to be cdmSchema.  Requires read permissions to this
-#'                                     database.
-#' @param cohortTable                  The tablename that contains the at risk cohort.  If
-#'                                     cohortTable <> DRUG_ERA, then expectation is cohortTable has
-#'                                     format of COHORT table: cohort_concept_id, SUBJECT_ID,
-#'                                     COHORT_START_DATE, COHORT_END_DATE.
-#' @param outcomeDatabaseSchema            The name of the database schema that is the location where
-#'                                         the data used to define the outcome cohorts is available. If
-#'                                         cohortTable = CONDITION_ERA, exposureDatabaseSchema is not
-#'                                         used by assumed to be cdmSchema.  Requires read permissions
-#'                                         to this database.
-#' @param outcomeTable                     The tablename that contains the outcome cohorts.  If
-#'                                         outcomeTable <> CONDITION_OCCURRENCE, then expectation is
-#'                                         outcomeTable has format of COHORT table:
-#'                                         COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
-#'                                         COHORT_END_DATE.
-#' @param cdmVersion                   Define the OMOP CDM version used: currently support "4" and "5".
-#' @param riskWindowStart        The start of the risk window (in days) relative to the \code{startAnchor}.
-#' @param startAnchor	           The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".
-#' @param riskWindowEnd          The end of the risk window (in days) relative to the \code{endAnchor} parameter
-#' @param endAnchor              The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".
+#' @param cdmDatabaseName             The name of the database being diagnosed
+#' @param cohortName                  Name of the target cohort
+#' @param outcomeNames                Vector of outcome names
+#' @param databaseDetails            (only used is plpData is NULL) The database details created using \code{createDatabaseDetails}
+#' @param restrictPlpDataSettings    (only used is plpData is NULL) The restrictPlpDataSettings created using \code{createRestrictPlpDataSettings}
+#' @param populationSettings         The population setting details created using \code{createPopulationSettings}
 #' @param outputFolder           Location to save results for shiny app
-#' @param sampleSize             Sample from the target population
 #' @param minCellCount           The minimum count that will be displayed
 #' 
 #' @return
@@ -86,27 +51,28 @@
 #' \dontrun{
 #' #******** EXAMPLE 1 ********* 
 #' } 
-diagnostic <- function(plpData = NULL,
-                       cdmDatabaseName,
-                       connectionDetails,
-                       cdmDatabaseSchema,
-                       oracleTempSchema = NULL,
-                       cohortId,
-                       cohortName = cohortId,
-                       outcomeIds,
-                       outcomeNames = outcomeIds,
-                       cohortDatabaseSchema,
-                       cohortTable = 'cohort',
-                       outcomeDatabaseSchema = cohortDatabaseSchema,
-                       outcomeTable = cohortTable,
-                       cdmVersion = 5,
-                       riskWindowStart = c(1,1,1,1,1),
-                       startAnchor = rep('cohort start',5),
-                       riskWindowEnd = c(365,365*2, 365*3,365*4,365*5),
-                       endAnchor = rep('cohort start',5),
-                       outputFolder = NULL,
-                       sampleSize = NULL,
-                       minCellCount = 5){
+diagnostic <- function(
+  plpData = NULL,
+  cdmDatabaseName = 'none',
+  cohortName,
+  outcomeNames,
+  databaseDetails,
+  restrictPlpDataSettings,
+  populationSettings,
+  outputFolder = NULL,
+  minCellCount = 5
+){
+  
+  if(is.null(plpData)){
+    checkIsClass(databaseDetails, 'databaseDetails')
+    cdmDatabaseName <- attr(databaseDetails, 'cdmDatabaseName')
+    checkIsClass(restrictPlpDataSettings, 'restrictPlpDataSettings')
+  }
+  
+  if(class(populationSettings) != 'list'){
+    populationSettings <- list(populationSettings)
+  }
+  lapply(populationSettings, function(x) checkIsClass(x, 'populationSettings'))
   
   if(!is.null(outputFolder)){
     if(!dir.exists(file.path(outputFolder))){
@@ -117,6 +83,9 @@ diagnostic <- function(plpData = NULL,
   if(!is.null(plpData)){
     cohortId <- unique(plpData$cohorts$cohortId)
     outcomeIds <- unique(plpData$outcomes$outcomeId)
+  } else{
+    cohortId <- databaseDetails$cohortId
+    outcomeIds <- databaseDetails$outcomeIds
   }
   
   #create cohort names csv:
@@ -145,17 +114,17 @@ diagnostic <- function(plpData = NULL,
     settings <- c()
   }
   maxAnalysis <-  ifelse(is.null(settings$analysisId), 0, max(settings$analysisId))
-  for(i in 1:length(riskWindowStart)){
+  for(i in 1:length(populationSettings)){
     for( j in 1:length(outcomeIds)){
       maxAnalysis <- maxAnalysis + 1
       settingsTemp <- data.frame(analysisId = maxAnalysis,
                                  cdmDatabaseName = cdmDatabaseName,
                                  cohortId = cohortId,
                                  outcomeId = outcomeIds[j],
-                                 riskWindowStart = riskWindowStart[i],
-                                 startAnchor = startAnchor[i],
-                                 riskWindowEnd = riskWindowEnd[i],
-                                 endAnchor = endAnchor[i]
+                                 riskWindowStart = populationSettings[[i]]$riskWindowStart,
+                                 startAnchor = populationSettings[[i]]$startAnchor,
+                                 riskWindowEnd = populationSettings[[i]]$riskWindowEnd,
+                                 endAnchor = populationSettings[[i]]$endAnchor
       )
       settings <- unique(rbind(settings, settingsTemp))
     }
@@ -169,19 +138,14 @@ diagnostic <- function(plpData = NULL,
     # get outcome and cohort data - dont need covariates
     
     ParallelLogger::logInfo('Extracting data')
-    dataSettings <- list(connectionDetails = connectionDetails,
-                     cdmDatabaseSchema = cdmDatabaseSchema,
-                     oracleTempSchema = oracleTempSchema,
-                     cohortId = cohortId,
-                     outcomeIds = outcomeIds,
-                     cohortDatabaseSchema = cohortDatabaseSchema,
-                     cohortTable = cohortTable,
-                     outcomeDatabaseSchema = outcomeDatabaseSchema,
-                     outcomeTable = outcomeTable,
-                     cdmVersion = cdmVersion,
-                     sampleSize = sampleSize,
-                     covariateSettings = FeatureExtraction::createDefaultCovariateSettings())
-    data <- do.call(getPlpData, dataSettings)
+    data <- do.call(
+      getPlpData, 
+      list(
+        databaseDetails = databaseDetails, 
+        covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+        restrictPlpDataSettings = restrictPlpDataSettings
+      )
+    )
   } else {
     data <- plpData
   } 
@@ -227,61 +191,65 @@ diagnostic <- function(plpData = NULL,
   }
   for(i in 1:length(outcomeIds)){
     oi <- outcomeIds[i]
-    for(j in 1:length(riskWindowStart)){
-      population <- createStudyPopulation(plpData = data, 
-                                          outcomeId = oi, 
-                                          firstExposureOnly = F,
-                                          includeAllOutcomes = F, 
-                                          removeSubjectsWithPriorOutcome = F, 
-                                          requireTimeAtRisk = F, 
-                                          washoutPeriod = 0,
-                                          riskWindowStart = riskWindowStart[j], 
-                                          startAnchor = startAnchor[j], 
-                                          riskWindowEnd = riskWindowEnd[j], 
-                                          endAnchor = endAnchor[j])
+    for(j in 1:length(populationSettings)){
       
-      analysisId <- getAnalysisId(settings = settings, 
-                                  cohortId = cohortId,
-                                  outcomeId = oi,
-                                  riskWindowStart = riskWindowStart[j], 
-                                  startAnchor = startAnchor[j], 
-                                  riskWindowEnd = riskWindowEnd[j], 
-                                  endAnchor = endAnchor[j])
+      population <- createStudyPopulation(
+        plpData = data, 
+        outcomeId = oi, 
+        populationSettings = populationSettings[[j]]
+        )
+
+      analysisId <- getAnalysisId(
+        settings = settings, 
+        cohortId = cohortId,
+        outcomeId = oi,
+        riskWindowStart = populationSettings[[j]]$riskWindowStart, 
+        startAnchor = populationSettings[[j]]$startAnchor, 
+        riskWindowEnd = populationSettings[[j]]$riskWindowEnd, 
+        endAnchor = populationSettings[[j]]$endAnchor
+      )
       
-      proportionTemp <- getProportions(population,
-                                       analysisId = analysisId,
-                                       cdmDatabaseName = cdmDatabaseName,
-                                       cohortId = cohortId,
-                                       outcomeId = oi,
-                                       minCellCount = minCellCount)
+      proportionTemp <- getProportions(
+        population,
+        analysisId = analysisId,
+        cdmDatabaseName = cdmDatabaseName,
+        cohortId = cohortId,
+        outcomeId = oi,
+        minCellCount = minCellCount
+      )
      
       proportion <- unique(rbind(proportion, proportionTemp))
 
-      characterizationTemp <- covariateSummary(plpData = data, 
-                                                population = population)
+      characterizationTemp <- covariateSummary(
+        covariateData = plpData$covariateData, 
+        cohort = population %>% dplyr::select(.data$rowId),
+        labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount)
+        )
       
       
       characterizationTemp <- characterizationTemp[,c('covariateId',
                                                       'covariateName',
                                                       'CovariateCount',
-                                                      'CovariateCountWithOutcome',
-                                                      'CovariateCountWithNoOutcome',
-                                                      'CovariateMeanWithOutcome',
-                                                      'CovariateMeanWithNoOutcome')]
+                                                      'WithOutcome_CovariateCount',
+                                                      'WithNoOutcome_CovariateCount',
+                                                      'WithOutcome_CovariateMean',
+                                                      'WithNoOutcome_CovariateMean')]
+      
+      characterizationTemp[is.na(characterizationTemp)] <- 0
       
       ind <- (characterizationTemp$CovariateCount < minCellCount)  
-      ind2 <- (characterizationTemp$CovariateCountWithOutcome < minCellCount) | (characterizationTemp$CovariateCountWithNoOutcome < minCellCount)
+      ind2 <- (characterizationTemp$WithOutcome_CovariateCount < minCellCount) | (characterizationTemp$WithNoOutcome_CovariateCount < minCellCount)
       
       characterizationTemp[ind,'CovariateCount'] <- -1
-      characterizationTemp[ind,'CovariateCountWithOutcome'] <- -1
-      characterizationTemp[ind,'CovariateCountWithNoOutcome'] <- -1
-      characterizationTemp[ind,'CovariateMeanWithOutcome'] <- -1
-      characterizationTemp[ind,'CovariateMeanWithNoOutcome'] <- -1
+      characterizationTemp[ind,'WithOutcome_CovariateCount'] <- -1
+      characterizationTemp[ind,'WithNoOutcome_CovariateCount'] <- -1
+      characterizationTemp[ind,'WithOutcome_CovariateMean'] <- -1
+      characterizationTemp[ind,'WithNoOutcome_CovariateMean'] <- -1
       
-      characterizationTemp[ind2,'CovariateCountWithOutcome'] <- -1
-      characterizationTemp[ind2,'CovariateCountWithNoOutcome'] <- -1
-      characterizationTemp[ind2,'CovariateMeanWithOutcome'] <- -1
-      characterizationTemp[ind2,'CovariateMeanWithNoOutcome'] <- -1
+      characterizationTemp[ind2,'WithOutcome_CovariateCount'] <- -1
+      characterizationTemp[ind2,'WithNoOutcome_CovariateCount'] <- -1
+      characterizationTemp[ind2,'WithOutcome_CovariateMean'] <- -1
+      characterizationTemp[ind2,'WithNoOutcome_CovariateMean'] <- -1
       
       # add analysisId
       characterizationTemp$analysisId <- analysisId
@@ -300,7 +268,7 @@ diagnostic <- function(plpData = NULL,
   zipName <- file.path(outputFolder, paste0("Results_", cdmDatabaseName, ".zip"))
   files <- list.files(outputFolder, pattern = ".*\\.csv$")
   oldWd <- setwd(outputFolder)
-  on.exit(setwd(outputFolder), add = TRUE)
+  on.exit(setwd(oldWd), add = TRUE)
   DatabaseConnector::createZipFile(zipFile = zipName, files = files)
   ParallelLogger::logInfo("Results are ready for sharing at: ", zipName)
   
@@ -476,8 +444,7 @@ getProportions <- function(population,
                            outcomeId,
                            minCellCount = NULL){
   
-  
-  details <- attr(population, 'metaData')
+  details <- attr(population, 'metaData')$populationSettings
   
   TAR <- paste0(details$startAnchor, ' + ', details$riskWindowStart, ' days - ',
                 details$endAnchor, ' + ', details$riskWindowEnd, ' days')

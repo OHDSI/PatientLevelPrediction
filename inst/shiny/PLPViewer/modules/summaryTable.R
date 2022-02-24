@@ -26,7 +26,7 @@ summaryServer <- function(id, summaryTable, cNamesExclude = c('studyId','Analysi
                                                                  thead(
                                                                    #tags$th(title=active_columns[i], colnames(data)[i])
                                                                    tr(apply(data.frame(colnames=c('Dev', 'Val', 'T','O', 'Model','Covariate setting',
-                                                                                                  'TAR', 'AUC', 'AUPRC', 
+                                                                                                  'TAR', 'AUROC', 'AUPRC', 
                                                                                                   'T Size', 'O Count','Val (%)', 'O Incidence (%)', 'timeStamp'), 
                                                                                        labels=c('Database used to develop the model', 'Database used to evaluate model', 'Target population - the patients you want to predict risk for','Outcome - what you want to predict', 
                                                                                                 'Model type','Id for the covariate/settings used','Time-at-risk period', 'Area under the reciever operating characteristics (test or validation)', 'Area under the precision recall curve (test or validation)',

@@ -7,9 +7,10 @@
 outcomeSurvivalPlot(
   plpData,
   outcomeId,
-  removeSubjectsWithPriorOutcome = T,
-  riskWindowStart = 1,
-  riskWindowEnd = 3650,
+  populationSettings = createStudyPopulationSettings(binary = T, includeAllOutcomes =
+    T, firstExposureOnly = FALSE, washoutPeriod = 0, removeSubjectsWithPriorOutcome =
+    TRUE, priorOutcomeLookback = 99999, requireTimeAtRisk = F, riskWindowStart = 1,
+    startAnchor = "cohort start", riskWindowEnd = 3650, endAnchor = "cohort start"),
   riskTable = T,
   confInt = T,
   yLabel = "Fraction of those who are outcome free in target population"
@@ -20,11 +21,7 @@ outcomeSurvivalPlot(
 
 \item{outcomeId}{The cohort id corresponding to the outcome}
 
-\item{removeSubjectsWithPriorOutcome}{Remove patients who have had the outcome before their target cohort index date from the plot}
-
-\item{riskWindowStart}{(integer) The time-at-risk starts at target cohort index date plus this value}
-
-\item{riskWindowEnd}{(integer) The time-at-risk ends at target cohort index date plus this value}
+\item{populationSettings}{The population settings created using \code{createStudyPopulationSettings}}
 
 \item{riskTable}{(binary) Whether to include a table at the bottom  of the plot showing the number of people at risk over time}
 

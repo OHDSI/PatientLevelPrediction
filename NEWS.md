@@ -1,3 +1,20 @@
+PatientLevelPrediction 5.0.0
+======================
+- plpModel now saved as json files when possible
+- Updated runPlp to make more modular
+- now possible to customise data splitting, feature engineering, sampling (over/under) and learning algorithm
+- added function for extracting cohort covariates
+- updated evalaution to evaluate per strata (evaluation column)
+- updated plpModel structure
+- updated runPlp structure
+- updated shiny and package to use tidyr and not reshape2
+- sklearn learning algorithms share the same fit function
+- r learning algorithms share the same fit function
+- interface to cyclops code revised 
+- ensemble learning removed (will be in separate package)
+- deep learning removed (will be in DeepPatientLevelPrediction package)
+
+
 PatientLevelPrediction 4.4.2
 ======================
 - revised toSparseM() to do conversion in one go but check RAM availablility beforehand.

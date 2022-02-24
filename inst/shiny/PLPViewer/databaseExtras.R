@@ -303,39 +303,37 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     result$inputSetting$populationSettings$attrition <- do.call(cbind, result$inputSetting$populationSettings$attrition)
     
     result$performanceEvaluation$demographicSummary <- getResult(con, paste0(myTableAppend,'demographic_summary'), resultId, mySchema, targetDialect = targetDialect)
-    result$performanceEvaluation$demographicSummary$eval <- trimws(result$performanceEvaluation$demographicSummary$eval)
+    result$performanceEvaluation$demographicSummary$evaluation <- trimws(result$performanceEvaluation$demographicSummary$evaluation)
     result$performanceEvaluation$demographicSummary$ageGroup <- trimws(result$performanceEvaluation$demographicSummary$ageGroup)
     result$performanceEvaluation$demographicSummary$genGroup <- trimws(result$performanceEvaluation$demographicSummary$genGroup)
-    colnames(result$performanceEvaluation$demographicSummary) <- editColnames(colnames(result$performanceEvaluation$demographicSummary), c('Eval',"PersonCountAtRisk","PersonCountWithOutcome", "StDevPredictedProbability",
+    colnames(result$performanceEvaluation$demographicSummary) <- editColnames(colnames(result$performanceEvaluation$demographicSummary), c('evaluation',"PersonCountAtRisk","PersonCountWithOutcome", "StDevPredictedProbability",
                                                                                                                                            "MinPredictedProbability", "P25PredictedProbability", "P50PredictedProbability",
                                                                                                                                            "P75PredictedProbability", "MaxPredictedProbability"))
     result$performanceEvaluation$predictionDistribution <- getResult(con, paste0(myTableAppend,'prediction_distribution'), resultId,mySchema, targetDialect = targetDialect ) 
-    result$performanceEvaluation$predictionDistribution$eval <- trimws(result$performanceEvaluation$predictionDistribution$eval)
+    result$performanceEvaluation$predictionDistribution$evaluation <- trimws(result$performanceEvaluation$predictionDistribution$evaluation)
     result$performanceEvaluation$predictionDistribution$class <- result$performanceEvaluation$predictionDistribution$classLabel
-    colnames(result$performanceEvaluation$predictionDistribution) <- editColnames(colnames(result$performanceEvaluation$predictionDistribution), c('Eval', "PersonCount", "StDevPredictedProbability", 
+    colnames(result$performanceEvaluation$predictionDistribution) <- editColnames(colnames(result$performanceEvaluation$predictionDistribution), c('evaluation', "PersonCount", "StDevPredictedProbability", 
                                                                                                                                                    "MinPredictedProbability", "P05PredictedProbability" , 
                                                                                                                                                    "P25PredictedProbability", "MedianPredictedProbability", 
                                                                                                                                                    "P75PredictedProbability" , "P95PredictedProbability","MaxPredictedProbability"))
     
-    result$model$modelSettings <- result$inputSetting$modelSettings
-    result$model$populationSettings <- result$inputSetting$populationSettings
-    result$model$metaData$call$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
+    result$model$settings$modelSettings <- result$inputSetting$modelSettings
+    result$model$settings$populationSettings <- result$inputSetting$populationSettings
+    result$model$settings$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
     
-    result$model$hyperParamSearch <- hyperParamSearch
+    result$model$trainDetails$hyperParamSearch <- hyperParamSearch
   
   }
   
   #performanceEvaluation
   result$performanceEvaluation$evaluationStatistics <- getResult(con, paste0(myTableAppend,'evaluation_statistics'), resultId, mySchema, targetDialect = targetDialect )
-  colnames(result$performanceEvaluation$evaluationStatistics) <- editColnames(colnames(result$performanceEvaluation$evaluationStatistics), c('Eval', 'Metric',"Value" ))
   
   result$performanceEvaluation$thresholdSummary <- getResult(con, paste0(myTableAppend,'threshold_summary'), resultId,mySchema, targetDialect = targetDialect)
-  result$performanceEvaluation$thresholdSummary$eval <- trimws(result$performanceEvaluation$thresholdSummary$eval)
-  colnames(result$performanceEvaluation$thresholdSummary) <- editColnames(colnames(result$performanceEvaluation$thresholdSummary), c('Eval'))
+  result$performanceEvaluation$thresholdSummary$evaluation <- trimws(result$performanceEvaluation$thresholdSummary$evaluation)
   
   result$performanceEvaluation$calibrationSummary <- getResult(con, paste0(myTableAppend,'calibration_summary'), resultId,mySchema, targetDialect = targetDialect)
-  result$performanceEvaluation$calibrationSummary$eval <- trimws(result$performanceEvaluation$calibrationSummary$eval)
-  colnames(result$performanceEvaluation$calibrationSummary) <- editColnames(colnames(result$performanceEvaluation$calibrationSummary), c('Eval',"PersonCountAtRisk","PersonCountWithOutcome","StDevPredictedProbability",
+  result$performanceEvaluation$calibrationSummary$evaluation <- trimws(result$performanceEvaluation$calibrationSummary$evaluation)
+  colnames(result$performanceEvaluation$calibrationSummary) <- editColnames(colnames(result$performanceEvaluation$calibrationSummary), c('evaluation',"PersonCountAtRisk","PersonCountWithOutcome","StDevPredictedProbability",
                                                                                                                                          "MinPredictedProbability", "P25PredictedProbability", "MedianPredictedProbability",
                                                                                                                                          "P75PredictedProbability", "MaxPredictedProbability"))
   

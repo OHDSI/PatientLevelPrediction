@@ -84,14 +84,6 @@ configurePython(envname='r-reticulate', envtype='conda')
 
 ```
 
-To add the R keras interface, in Rstudio run:
-
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-devtools::install_github("rstudio/keras")
-library(keras)
-install_keras()
-```
-
 Some of the less frequently used classifiers are not installed during this set-up to add them run:
 
 For GBM survival:
@@ -100,39 +92,41 @@ reticulate::conda_install(envname='r-reticulate', packages = c('scikit-survival'
 
 ```
 
-For any of the torch models:
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-reticulate::conda_install(envname='r-reticulate', packages = c('pytorch', 'torchvision', 'cpuonly'), forge = TRUE, pip = FALSE, channel = 'pytorch', pip_ignore_installed = TRUE, conda = 'auto')
-
-```
-
-
 # Testing installation
-To test whether the package is installed correctly run:
+To test whether the package is installed correctly, using the test script in '/extras', run:
 ```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
+
+# load the checkPlpInstallation function
+library(devtools)
+source_url('https://raw.github.com/OHDSI/PatientLevelPrediction/issue242/extras/checkPlpInstallation.R')
+
+# set up the database connection details
 library(DatabaseConnector)
-connectionDetails <- createConnectionDetails(dbms = 'sql_server', 
-                                             user = 'username', 
-                                             password = 'hidden', 
-                                             server = 'your server', 
-                                             port = 'your port')
-PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, 
-                                             python = T)
+connectionDetails <- createConnectionDetails(
+  dbms = 'sql_server', 
+  user = 'username', 
+  password = 'hidden', 
+  server = 'your server', 
+  port = 'your port'
+  )
+
+# run the test
+checkPlpInstallation(
+  connectionDetails = connectionDetails, 
+  python = T
+  )
 ```
 
 To test the installation (excluding python) run:
 ```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-library(DatabaseConnector)
-connectionDetails <- createConnectionDetails(dbms = 'sql_server', 
-                                           user = 'username', 
-                                           password = 'hidden', 
-                                           server = 'your server', 
-                                           port = 'your port')
-PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, 
-                                             python = F)
+
+checkPlpInstallation(
+  connectionDetails = connectionDetails, 
+  python = F
+  )
 ```
 
-The check can take a while to run since it will build the following models in sequence on simulated data:Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting.
+The check can take a while to run since it will build the following models in sequence on simulated data: Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting.
 Moreover, it will test the database connection. 
 
 # Installation issues

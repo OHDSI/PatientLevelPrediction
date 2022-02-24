@@ -6,91 +6,32 @@
 \usage{
 diagnostic(
   plpData = NULL,
-  cdmDatabaseName,
-  connectionDetails,
-  cdmDatabaseSchema,
-  oracleTempSchema = NULL,
-  cohortId,
-  cohortName = cohortId,
-  outcomeIds,
-  outcomeNames = outcomeIds,
-  cohortDatabaseSchema,
-  cohortTable = "cohort",
-  outcomeDatabaseSchema = cohortDatabaseSchema,
-  outcomeTable = cohortTable,
-  cdmVersion = 5,
-  riskWindowStart = c(1, 1, 1, 1, 1),
-  startAnchor = rep("cohort start", 5),
-  riskWindowEnd = c(365, 365 * 2, 365 * 3, 365 * 4, 365 * 5),
-  endAnchor = rep("cohort start", 5),
+  cdmDatabaseName = "none",
+  cohortName,
+  outcomeNames,
+  databaseDetails,
+  restrictPlpDataSettings,
+  populationSettings,
   outputFolder = NULL,
-  sampleSize = NULL,
   minCellCount = 5
 )
 }
 \arguments{
 \item{plpData}{The data object to do the diagnostic on - if NULL you need to specify the connection settings below}
 
-\item{cdmDatabaseName}{Name of the database}
+\item{cdmDatabaseName}{The name of the database being diagnosed}
 
-\item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the
-function \code{createConnectionDetails} in the
-\code{DatabaseConnector} package.}
+\item{cohortName}{Name of the target cohort}
 
-\item{cdmDatabaseSchema}{The name of the database schema that contains the OMOP CDM
-instance.  Requires read permissions to this database. On SQL
-Server, this should specifiy both the database and the schema,
-so for example 'cdm_instance.dbo'.}
+\item{outcomeNames}{Vector of outcome names}
 
-\item{oracleTempSchema}{For Oracle only: the name of the database schema where you want
-all temporary tables to be managed. Requires create/insert
-permissions to this database.}
+\item{databaseDetails}{(only used is plpData is NULL) The database details created using \code{createDatabaseDetails}}
 
-\item{cohortId}{A unique identifier to define the at risk cohorts. CohortId is
-used to select the cohort_concept_id in the cohort-like table.}
+\item{restrictPlpDataSettings}{(only used is plpData is NULL) The restrictPlpDataSettings created using \code{createRestrictPlpDataSettings}}
 
-\item{cohortName}{A string specifying the name of the target cohort}
-
-\item{outcomeIds}{A vector of cohort_definition_ids used to define outcomes.}
-
-\item{outcomeNames}{A vector of names for each outcome.}
-
-\item{cohortDatabaseSchema}{The name of the database schema that is the location where the
-cohort data used to define the at risk cohort is available.
-If cohortTable = DRUG_ERA, cohortDatabaseSchema is not used
-by assumed to be cdmSchema.  Requires read permissions to this
-database.}
-
-\item{cohortTable}{The tablename that contains the at risk cohort.  If
-cohortTable <> DRUG_ERA, then expectation is cohortTable has
-format of COHORT table: cohort_concept_id, SUBJECT_ID,
-COHORT_START_DATE, COHORT_END_DATE.}
-
-\item{outcomeDatabaseSchema}{The name of the database schema that is the location where
-the data used to define the outcome cohorts is available. If
-cohortTable = CONDITION_ERA, exposureDatabaseSchema is not
-used by assumed to be cdmSchema.  Requires read permissions
-to this database.}
-
-\item{outcomeTable}{The tablename that contains the outcome cohorts.  If
-outcomeTable <> CONDITION_OCCURRENCE, then expectation is
-outcomeTable has format of COHORT table:
-COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
-COHORT_END_DATE.}
-
-\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
-
-\item{riskWindowStart}{The start of the risk window (in days) relative to the \code{startAnchor}.}
-
-\item{startAnchor}{The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".}
-
-\item{riskWindowEnd}{The end of the risk window (in days) relative to the \code{endAnchor} parameter}
-
-\item{endAnchor}{The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".}
+\item{populationSettings}{The population setting details created using \code{createPopulationSettings}}
 
 \item{outputFolder}{Location to save results for shiny app}
-
-\item{sampleSize}{Sample from the target population}
 
 \item{minCellCount}{The minimum count that will be displayed}
 }

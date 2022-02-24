@@ -40,7 +40,7 @@ nbServer <- function(id, plpResult) {
       output$nbSelect = shiny::renderUI({
         shiny::selectInput(inputId = session$ns('nbSelectInput'), 
                            label = 'Type:', 
-                           choices = unique(plpResult()$performanceEvaluation$thresholdSummary$Eval), 
+                           choices = unique(plpResult()$performanceEvaluation$thresholdSummary$evaluation), 
                            multiple = F, selectize=FALSE)
       })
       
@@ -66,7 +66,14 @@ nbServer <- function(id, plpResult) {
           result <- unique(result)
           ind <- !is.na(result$netBenefit) & is.finite(result$netBenefit) & !is.null(result$netBenefit) & is.finite(result$pt)
           
-          df2 <- reshape2::melt(result, id.vars = 'pt')
+          #df2 <- reshape2::melt(result, id.vars = 'pt')
+          df2 <- tidyr::pivot_longer(
+            data = result, 
+            cols = colnames(result)[colnames(result) != 'pt'], 
+            names_to = 'variable', 
+            values_to = 'value'
+            )
+          
           
           ggplot2::ggplot(df2, ggplot2::aes(x=pt, y=value, 
                                             group=variable, 
@@ -87,8 +94,8 @@ extractNetBenefit <- function(performanceEvaluation, type=NULL, modelId=NULL){
   data <- performanceEvaluation$thresholdSummary
   
   if(!is.null(type)){
-    if(!is.null(data$Eval[1])){
-      data <- data[data$Eval==type,]
+    if(!is.null(data$evaluation[1])){
+      data <- data[data$evaluation==type,]
     }
   }
   

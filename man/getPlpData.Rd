@@ -4,88 +4,16 @@
 \alias{getPlpData}
 \title{Get the patient level prediction data from the server}
 \usage{
-getPlpData(
-  connectionDetails,
-  cdmDatabaseSchema,
-  oracleTempSchema = cdmDatabaseSchema,
-  cohortId,
-  outcomeIds,
-  studyStartDate = "",
-  studyEndDate = "",
-  cohortDatabaseSchema = cdmDatabaseSchema,
-  cohortTable = "cohort",
-  outcomeDatabaseSchema = cdmDatabaseSchema,
-  outcomeTable = "cohort",
-  cdmVersion = "5",
-  firstExposureOnly = FALSE,
-  washoutPeriod = 0,
-  sampleSize = NULL,
-  covariateSettings,
-  excludeDrugsFromCovariates = FALSE
-)
+getPlpData(databaseDetails, covariateSettings, restrictPlpDataSettings)
 }
 \arguments{
-\item{connectionDetails}{An R object of type\cr\code{connectionDetails} created using the
-function \code{createConnectionDetails} in the
-\code{DatabaseConnector} package.}
-
-\item{cdmDatabaseSchema}{The name of the database schema that contains the OMOP CDM
-instance.  Requires read permissions to this database. On SQL
-Server, this should specifiy both the database and the schema,
-so for example 'cdm_instance.dbo'.}
-
-\item{oracleTempSchema}{For Oracle only: the name of the database schema where you want
-all temporary tables to be managed. Requires create/insert
-permissions to this database.}
-
-\item{cohortId}{A unique identifier to define the at risk cohort. CohortId is
-used to select the cohort_concept_id in the cohort-like table.}
-
-\item{outcomeIds}{A list of cohort_definition_ids used to define outcomes (-999 mean no outcome gets downloaded).}
-
-\item{studyStartDate}{A calendar date specifying the minimum date that a cohort index
-date can appear. Date format is 'yyyymmdd'.}
-
-\item{studyEndDate}{A calendar date specifying the maximum date that a cohort index
-date can appear. Date format is 'yyyymmdd'. Important: the study
-end data is also used to truncate risk windows, meaning no outcomes
-beyond the study end date will be considered.}
-
-\item{cohortDatabaseSchema}{The name of the database schema that is the location where the
-cohort data used to define the at risk cohort is available.
-Requires read permissions to this database.}
-
-\item{cohortTable}{The tablename that contains the at risk cohort.  cohortTable has
-format of COHORT table: cohort_concept_id, SUBJECT_ID,
-COHORT_START_DATE, COHORT_END_DATE.}
-
-\item{outcomeDatabaseSchema}{The name of the database schema that is the location where
-the data used to define the outcome cohorts is available. 
-Requires read permissions to this database.}
-
-\item{outcomeTable}{The tablename that contains the outcome cohorts. Expectation is
-outcomeTable has format of COHORT table:
-COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
-COHORT_END_DATE.}
-
-\item{cdmVersion}{Define the OMOP CDM version used: currently support "4", "5" and "6".}
-
-\item{firstExposureOnly}{Should only the first exposure per subject be included? Note that
-this is typically done in the \code{createStudyPopulation} function,
-but can already be done here for efficiency reasons.}
-
-\item{washoutPeriod}{The mininum required continuous observation time prior to index
-date for a person to be included in the at risk cohort. Note that
-this is typically done in the \code{createStudyPopulation} function,
-but can already be done here for efficiency reasons.}
-
-\item{sampleSize}{If not NULL, only this number of people will be sampled from the target population (Default NULL)}
+\item{databaseDetails}{The cdm database details created using \code{createDatabaseDetails()}}
 
 \item{covariateSettings}{An object of type \code{covariateSettings} as created using the
 \code{createCovariateSettings} function in the
 \code{FeatureExtraction} package.}
 
-\item{excludeDrugsFromCovariates}{A redundant option}
+\item{restrictPlpDataSettings}{Extra settings to apply to the target population while extracting data.  Created using \code{createRestrictPlpDataSettings()}.}
 }
 \value{
 Returns an object of type \code{plpData}, containing information on the cohorts, their

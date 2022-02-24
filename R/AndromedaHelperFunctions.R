@@ -1,6 +1,6 @@
 # @file ffHelperFunctions.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -17,7 +17,9 @@
 # limitations under the License.
 
 limitCovariatesToPopulation <- function(covariateData, rowIds) {
-  ParallelLogger::logInfo(paste0('Starting to limit covariate data to population...'))
+  ParallelLogger::logTrace(paste0('Starting to limit covariate data to population...'))
+  
+  metaData <- attr(covariateData, 'metaData')
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
@@ -33,8 +35,10 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
                          indexName = 'covariates_ncovariateIds')
   
+  metaData$populationSize <- length(rowIds)
+  attr(newCovariateData, 'metaData') <- metaData
   class(newCovariateData) <- "CovariateData"
-  ParallelLogger::logInfo(paste0('Finished limiting covariate data to population...'))
+  ParallelLogger::logTrace(paste0('Finished limiting covariate data to population...'))
   return(newCovariateData)
 }
 
@@ -45,6 +49,8 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   ParallelLogger::logInfo('Due to data size using batchRestrict to limit covariate data to population')
   
   start <- Sys.time()
+  
+  metaData <- attr(covariateData, 'metaData')
   
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
@@ -78,8 +84,14 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   close(pb)
   
   Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
-                         indexName = 'covariates_ncovariateIds')
+    indexName = 'covariates_ncovariateIds')
+  Andromeda::createIndex(tbl = newCovariateData$covariates, c('rowId'),
+    indexName = 'covariates_rowId')
+  Andromeda::createIndex(tbl = newCovariateData$covariates, c('covariateId', 'covariateValue'),
+    indexName = 'covariates_covariateId_value')
   
+  metaData$populationSize <- nrow(population)
+  attr(newCovariateData, 'metaData') <- metaData
   class(newCovariateData) <- "CovariateData"
   
   timeTaken <- as.numeric(Sys.time() - start, units = "mins")
@@ -88,6 +100,8 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   return(newCovariateData)
 }
 
+
+# is this used?
 # return prev of ffdf 
 calculatePrevs <- function(plpData, population){
   #===========================

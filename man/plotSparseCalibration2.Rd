@@ -4,15 +4,21 @@
 \alias{plotSparseCalibration2}
 \title{Plot the conventional calibration}
 \usage{
-plotSparseCalibration2(evaluation, type = "test", fileName = NULL)
+plotSparseCalibration2(
+  plpResult,
+  typeColumn = "evaluation",
+  saveLocation = NULL,
+  fileName = "roc.png"
+)
 }
 \arguments{
-\item{evaluation}{A prediction object as generated using the
-\code{\link{runPlp}} function.}
+\item{plpResult}{A plp result object as generated using the \code{\link{runPlp}} function.}
 
-\item{type}{options: 'train' or test'}
+\item{typeColumn}{The name of the column specifying the evaluation type}
 
-\item{fileName}{Name of the file where the plot should be saved, for example
+\item{saveLocation}{Directory to save plot (if NULL plot is not saved)}
+
+\item{fileName}{Name of the file to save to plot, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 supported file formats.}
 }

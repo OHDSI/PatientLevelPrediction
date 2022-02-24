@@ -4,7 +4,7 @@
 \alias{recalibratePlpRefit}
 \title{recalibratePlpRefit}
 \usage{
-recalibratePlpRefit(plpModel, newPopulation, newData, testFraction = 0.25)
+recalibratePlpRefit(plpModel, newPopulation, newData)
 }
 \arguments{
 \item{plpModel}{The trained plpModel (runPlp$model)}
@@ -13,8 +13,6 @@ recalibratePlpRefit(plpModel, newPopulation, newData, testFraction = 0.25)
 
 \item{newData}{An object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
-
-\item{testFraction}{Fraction of data to used for internal validation}
 }
 \value{
 An object of class \code{runPlp} that is recalibrated on the new data

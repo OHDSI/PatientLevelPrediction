@@ -6,7 +6,7 @@
 standalone
 ^\.travis\.yml$
 deploy.sh
-extras
+extras/*
 man-roxygen
 xgboost
 compare_versions

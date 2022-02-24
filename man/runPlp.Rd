@@ -2,41 +2,51 @@
 % Please edit documentation in R/RunPlp.R
 \name{runPlp}
 \alias{runPlp}
-\title{runPlp - Train and evaluate the model}
+\title{runPlp - Develop and internally evaluate a model using specified settings}
 \usage{
 runPlp(
-  population,
   plpData,
-  minCovariateFraction = 0.001,
-  normalizeData = T,
-  modelSettings,
-  testSplit = "stratified",
-  testFraction = 0.25,
-  trainFraction = NULL,
-  splitSeed = NULL,
-  nfold = 3,
-  indexes = NULL,
-  saveDirectory = NULL,
-  savePlpData = T,
-  savePlpResult = T,
-  savePlpPlots = T,
-  saveEvaluation = T,
-  verbosity = "INFO",
-  timeStamp = FALSE,
-  analysisId = NULL,
-  runCovariateSummary = T,
-  save = NULL
+  outcomeId = plpData$metaData$call$outcomeIds[1],
+  analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = "-"),
+  analysisName = "Study details",
+  populationSettings = createStudyPopulationSettings(),
+  splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
+    trainFraction = 0.75, splitSeed = 123, nfold = 3),
+  sampleSettings = createSampleSettings(type = "none"),
+  featureEngineeringSettings = createFeatureEngineeringSettings(type = "none"),
+  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = T),
+  modelSettings = setLassoLogisticRegression(),
+  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
+    "runPlp Log"),
+  executeSettings = createDefaultExecuteSettings(),
+  saveDirectory = getwd()
 )
 }
 \arguments{
-\item{population}{The population created using createStudyPopulation() who will be used to develop the model}
-
 \item{plpData}{An object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
 
-\item{minCovariateFraction}{The minimum fraction of target population who must have a covariate for it to be included in the model training}
+\item{outcomeId}{(integer) The ID of the outcome.}
 
-\item{normalizeData}{Whether to normalise the covariates before training (Default: TRUE)}
+\item{analysisId}{(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
+
+\item{analysisName}{(character) Name for the analysis}
+
+\item{populationSettings}{An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
+specifies how the data class labels are defined and addition any exclusions to apply to the 
+plpData cohort}
+
+\item{splitSettings}{An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.
+The default settings can be created using \code{createDefaultSplitSetting}.}
+
+\item{sampleSettings}{An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
+The default is none.}
+
+\item{featureEngineeringSettings}{An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)}
+
+\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
+target population who must have a covariate for it to be included in the model training                            
+and whether to normalise the covariates before training}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
@@ -53,63 +63,25 @@ data extracted from the CDM.}
 
 }}
 
-\item{testSplit}{Either 'stratified', 'subject' or 'time' specifying the type of evaluation used.
-'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
-'stratified' splits the data into test (1-testFraction of the data) and
-train (validationFraction of the data) sets.  The split is stratified by the class label. 'subject' split is useful
-when a subject is in the data multiple times and you want all rows for the same subject in either the test or the train set but not in both.}
+\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
+specifying how the logging is done}
 
-\item{testFraction}{The fraction of the data to be used as the test set in the patient
-split evaluation.}
-
-\item{trainFraction}{A real number between 0 and 1 indicating the train set fraction of the data.
-If not set trainFraction is equal to 1 - test}
-
-\item{splitSeed}{The seed used to split the test/train set when using a person type testSplit}
-
-\item{nfold}{The number of folds used in the cross validation (default 3)}
-
-\item{indexes}{A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)}
+\item{executeSettings}{An object of \code{executeSettings} specifying which parts of the analysis to run}
 
 \item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
-
-\item{savePlpData}{Binary indicating whether to save the plpData object (default is T)}
-
-\item{savePlpResult}{Binary indicating whether to save the object returned by runPlp (default is T)}
-
-\item{savePlpPlots}{Binary indicating whether to save the performance plots as pdf files (default is T)}
-
-\item{saveEvaluation}{Binary indicating whether to save the oerformance as csv files (default is T)}
-
-\item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
-\itemize{
-\item{DEBUG}{Highest verbosity showing all debug statements}
-\item{TRACE}{Showing information about start and end of steps}
-\item{INFO}{Show informative information (Default)}
-\item{WARN}{Show warning messages}
-\item{ERROR}{Show error messages}
-\item{FATAL}{Be silent except for fatal errors}
-}}
-
-\item{timeStamp}{If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.}
-
-\item{analysisId}{Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
-
-\item{runCovariateSummary}{Whether to calculate the mean and sd for each covariate}
-
-\item{save}{Old input - please now use saveDirectory}
 }
 \value{
-An object containing the model or location where the model is save, the data selection settings, the preprocessing
-and training settings as well as various performance measures obtained by the model.
+An object containing the following:
 
-\item{predict}{A function that can be applied to new data to apply the trained model and make predictions}
-\item{model}{A list of class \code{plpModel} containing the model, training metrics and model metadata}
-\item{prediction}{A dataframe containing the prediction for each person in the test set }
-\item{evalType}{The type of evaluation that was performed ('person' or 'time')}
-\item{performanceTest}{A list detailing the size of the test sets}
-\item{performanceTrain}{A list detailing the size of the train sets}
-\item{time}{The complete time taken to do the model framework}
+ \itemize{
+          \item{inputSettings}{A list containing all the settings used to develop the model}
+          \item{model}{ The developed model of class \code{plpModel}}
+          \item{executionSummary}{ A list containing the hardward details, R package details and execution time}
+          \item{performanceEvaluation}{ Various internal performance metrics in sparse format}
+          \item{prediction}{ The plpData cohort table with the predicted risks added as a column (named value)}
+          \item{covariateSummary)}{ A characterization of the features for patients with and without the outcome during the time at risk}
+          \item{analysisRef}{ A list with details about the analysis}
+          }
 }
 \description{
 This provides a general framework for training patient level prediction models.  The user can select 
@@ -120,9 +92,8 @@ based on index year - older in training, newer in validation) or both (same as y
 no overlaps in patients within training set and validaiton set - any overlaps are removed from validation set)
 }
 \details{
-Users can define a risk period of interest for the prediction of the outcome relative to index or use
-the cohprt dates.  The user can then specify whether they wish to exclude patients who are not observed
-during the whole risk period, cohort period or experienced the outcome prior to the risk period.
+This function takes as input the plpData extracted from an OMOP CDM database and follows the specified settings to
+develop and internally validate a model for the specified outcomeId.
 }
 \examples{
 \dontrun{
@@ -130,11 +101,18 @@ during the whole risk period, cohort period or experienced the outcome prior to 
 #load plpData:
 plpData <- loadPlpData(file.path('C:','User','home','data'))
 
+# specify the outcome to predict (the plpData can have multiple outcomes)
+outcomeId <- 2042
+
+# specify a unique identifier for the analysis
+analysisId <- 'lrModel'
+
+# create population settings (this defines the labels in the data)
 #create study population to develop model on
 #require minimum of 365 days observation prior to at risk start
 #no prior outcome and person must be observed for 365 after index (minTimeAtRisk)
 #with risk window from 0 to 365 days after index
-population <- createStudyPopulation(plpData,outcomeId=2042,
+populationSettings <- createStudyPopulationSettings(plpData,
                                     firstExposureOnly = FALSE,
                                     washoutPeriod = 365,
                                     removeSubjectsWithPriorOutcome = TRUE,
@@ -145,31 +123,85 @@ population <- createStudyPopulation(plpData,outcomeId=2042,
                                     addExposureDaysToStart = FALSE,
                                     riskWindowEnd = 365,
                                     addExposureDaysToEnd = FALSE)
+                                    
+# create the split setting by specifying how you want to
+# partition the data into development (train/validation) and evaluation (test or CV)
+splitSettings <- createDefaultSplitSetting(testFraction = 0.25, 
+                                           trainFraction = 0.75, 
+                                           splitSeed = sample(100000,1), 
+                                           nfold=3,
+                                           type = 'stratified')                                   
+                                    
+                                    
+# create the settings specifying any under/over sampling 
+# in this example we do not do any
+sampleSettings <- createSampleSettings(type = 'none')  
+
+# specify any feature engineering that will be applied to the train data
+# in this example we do not do any
+featureEngineeringSettings <- createFeatureEngineeringSettings(type = 'none')   
+
+# specify whether to use normalization and removal of rare features
+# preprocessSettings <- ... 
+
 
 #lasso logistic regression predicting outcome 200 in cohorts 10 
 #using no feature selection with a time split evaluation with 30\% in test set
 #70\% in train set where the model hyper-parameters are selected using 3-fold cross validation:
 #and results are saved to file.path('C:','User','home')
-model.lr <- lassoLogisticRegression.set()
-mod.lr <- runPlp(population=population,
-                        plpData= plpData, minCovariateFraction = 0.001,
-                        modelSettings = model.lr ,
-                        testSplit = 'time', testFraction=0.3, 
-                        nfold=3, indexes=NULL,
-                        saveDirectory =file.path('C:','User','myPredictionName'),
-                        verbosity='INFO')
+modelSettingsLR <- setLassoLogisticRegression()
+
+# specify how you want the logging for the analysis
+# generally this is saved in a file with the results 
+# but you can define the level of logging 
+logSettings <- createLogSettings(verbosity = 'DEBUG',
+                                 timeStamp = T,
+                                 logName = 'runPlp LR Log')
+                                 
+# specify what parts of the analysis to run:
+# in this example we run everything
+executeSettings <- createExecuteSettings(runSplitData = T,
+                                         runSampleData = T,
+                                         runfeatureEngineering = T,
+                                         runProcessData = T,
+                                         runModelDevelopment = T,
+                                         runCovariateSummary = T)                                        
+
+lrModel <- runPlp(plpData = plpData,
+                  outcomeId = outcomeId, 
+                  analysisId = analysisId,
+                  populationSettings = populationSettings,
+                  splitSettings = splitSettings,
+                  sampleSettings = sampleSettings,
+                  featureEngineeringSettings = featureEngineeringSettings,
+                  preprocessSettings = preprocessSettings,
+                  modelSettings = modelSettingsLR,
+                  logSettings = logSettings
+                  executeSettings = executeSettings,
+                  saveDirectory = saveDirectory
+                  )
  
 #******** EXAMPLE 2 *********                                               
 # Gradient boosting machine with a grid search to select hyper parameters  
 # using the test/train/folds created for the lasso logistic regression above                       
-model.gbm <- gradientBoostingMachine.set(rsampRate=c(0.5,0.9,1),csampRate=1, 
+modelSettingsGBM <- gradientBoostingMachine.set(rsampRate=c(0.5,0.9,1),csampRate=1, 
                            ntrees=c(10,100), bal=c(F,T),
                            max_depth=c(4,5), learn_rate=c(0.1,0.01))
-mod.gbm <- runPlp(population=population,
-                        plpData= plpData,
-                        modelSettings = model.gbm,
-                        testSplit = 'time', testFraction=0.3, 
-                        nfold=3, indexes=mod.lr$indexes,
-                        saveDirectory =file.path('C:','User','myPredictionName2'))
+                           
+analysisId <- 'gbmModel'
+
+gbmModel <- runPlp(plpData = plpData,
+                  outcomeId = outcomeId, 
+                  analysisId = analysisId,
+                  populationSettings = populationSettings,
+                  splitSettings = splitSettings,
+                  sampleSettings = sampleSettings,
+                  featureEngineeringSettings = featureEngineeringSettings,
+                  preprocessSettings = preprocessSettings,
+                  modelSettings = modelSettingsGBM,
+                  logSettings = logSettings
+                  executeSettings = executeSettings,
+                  saveDirectory = saveDirectory
+                  )
 } 
 }

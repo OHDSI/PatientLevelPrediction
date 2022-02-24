@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -169,7 +175,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create setting for random forest model with python (very fast)</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/RandomForest.R'><code>R/RandomForest.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/SklearnClassifierSettings.R'><code>R/SklearnClassifierSettings.R</code></a></small>
     <div class="hidden name"><code>setRandomForest.Rd</code></div>
     </div>
 
@@ -178,42 +184,99 @@
     </div>
 
     <pre class="usage"><span class='fu'>setRandomForest</span><span class='op'>(</span>
-  mtries <span class='op'>=</span> <span class='op'>-</span><span class='fl'>1</span>,
-  ntrees <span class='op'>=</span> <span class='fl'>500</span>,
-  maxDepth <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>4</span>, <span class='fl'>10</span>, <span class='fl'>17</span><span class='op'>)</span>,
-  varImp <span class='op'>=</span> <span class='cn'>T</span>,
-  seed <span class='op'>=</span> <span class='cn'>NULL</span>
+  ntrees <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>100</span>, <span class='fl'>500</span><span class='op'>)</span>,
+  criterion <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"gini"</span><span class='op'>)</span>,
+  maxDepth <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>4</span>, <span class='fl'>10</span>, <span class='fl'>17</span><span class='op'>)</span>,
+  minSamplesSplit <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>5</span><span class='op'>)</span>,
+  minSamplesLeaf <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span><span class='op'>)</span>,
+  minWeightFractionLeaf <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0</span><span class='op'>)</span>,
+  mtries <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"auto"</span>, <span class='st'>"log2"</span><span class='op'>)</span>,
+  maxLeafNodes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>NULL</span><span class='op'>)</span>,
+  minImpurityDecrease <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0</span><span class='op'>)</span>,
+  bootstrap <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>TRUE</span><span class='op'>)</span>,
+  maxSamples <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>NULL</span>, <span class='fl'>0.9</span><span class='op'>)</span>,
+  oobScore <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span>,
+  nJobs <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>NULL</span><span class='op'>)</span>,
+  classWeight <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"balanced_subsample"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  seed <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span><span class='op'>(</span><span class='fl'>1e+05</span>, <span class='fl'>1</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>mtries</th>
-      <td><p>The number of features to include in each tree (-1 defaults to square root of total features)</p></td>
+      <th>ntrees</th>
+      <td><p>(list) The number of trees to build</p></td>
     </tr>
     <tr>
-      <th>ntrees</th>
-      <td><p>The number of trees to build</p></td>
+      <th>criterion</th>
+      <td><p>(list) The function to measure the quality of a split. Supported criteria are “gini” for the Gini impurity and “entropy” for the information gain. Note: this parameter is tree-specific.</p></td>
     </tr>
     <tr>
       <th>maxDepth</th>
-      <td><p>Maximum number of interactions - a large value will lead to slow model training</p></td>
+      <td><p>(list) The maximum depth of the tree. If NULL, then nodes are expanded until all leaves are pure or until all leaves contain less than minSamplesSplit samples.</p></td>
     </tr>
     <tr>
-      <th>varImp</th>
-      <td><p>Perform an initial variable selection prior to fitting the model to select the useful variables</p></td>
+      <th>minSamplesSplit</th>
+      <td><p>(list) The minimum number of samples required to split an internal node</p></td>
+    </tr>
+    <tr>
+      <th>minSamplesLeaf</th>
+      <td><p>(list) The minimum number of samples required to be at a leaf node. A split point at any depth will only be considered if it leaves at least minSamplesLeaf training samples in each of the left and right branches. This may have the effect of smoothing the model, especially in regression.</p></td>
+    </tr>
+    <tr>
+      <th>minWeightFractionLeaf</th>
+      <td><p>(list) The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sampleWeight is not provided.</p></td>
+    </tr>
+    <tr>
+      <th>mtries</th>
+      <td><p>(list) The number of features to consider when looking for the best split:</p><ul>
+<li><p>intthen consider max_features features at each split.</p></li>
+<li><p>floatthen max_features is a fraction and round(max_features * n_features) features are considered at each split</p></li>
+<li><p>'auto'then max_features=sqrt(n_features)</p></li>
+<li><p>'sqrt'then max_features=sqrt(n_features) (same as “auto”)</p></li>
+<li><p>'log2'then max_features=log2(n_features).</p></li>
+<li><p>NULLthen max_features=n_features</p></li>
+</ul></td>
+    </tr>
+    <tr>
+      <th>maxLeafNodes</th>
+      <td><p>(list) Grow trees with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes.</p></td>
+    </tr>
+    <tr>
+      <th>minImpurityDecrease</th>
+      <td><p>(list) A node will be split if this split induces a decrease of the impurity greater than or equal to this value.</p></td>
+    </tr>
+    <tr>
+      <th>bootstrap</th>
+      <td><p>(list) Whether bootstrap samples are used when building trees. If False, the whole dataset is used to build each tree.</p></td>
+    </tr>
+    <tr>
+      <th>maxSamples</th>
+      <td><p>(list) If bootstrap is True, the number of samples to draw from X to train each base estimator.</p></td>
+    </tr>
+    <tr>
+      <th>oobScore</th>
+      <td><p>(list) Whether to use out-of-bag samples to estimate the generalization score. Only available if bootstrap=True.</p></td>
+    </tr>
+    <tr>
+      <th>nJobs</th>
+      <td><p>The number of jobs to run in parallel.</p></td>
+    </tr>
+    <tr>
+      <th>classWeight</th>
+      <td><p>(list) Weights associated with classes. If not given, all classes are supposed to have weight one. NULL, “balanced”, “balanced_subsample”</p></td>
     </tr>
     <tr>
       <th>seed</th>
-      <td><p>An option to add a seed when training the final model</p></td>
+      <td><p>A seed when training the final model</p></td>
     </tr>
     </table>
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
-<span class='va'>model.rf</span> <span class='op'>&lt;-</span> <span class='fu'>setRandomForest</span><span class='op'>(</span>mtries<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>-</span><span class='fl'>1</span>,<span class='fl'>5</span>,<span class='fl'>20</span><span class='op'>)</span>,  ntrees<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>10</span>,<span class='fl'>100</span><span class='op'>)</span>, 
+<span class='va'>model.rf</span> <span class='op'>&lt;-</span> <span class='fu'>setRandomForest</span><span class='op'>(</span>mtries<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>'auto'</span>,<span class='fl'>5</span>,<span class='fl'>20</span><span class='op'>)</span>,  ntrees<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>10</span>,<span class='fl'>100</span><span class='op'>)</span>, 
                            maxDepth<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>5</span>,<span class='fl'>20</span><span class='op'>)</span><span class='op'>)</span>
 <span class='op'>}</span>                           
 </div></pre>

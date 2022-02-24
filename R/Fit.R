@@ -1,6 +1,6 @@
 # @file Fit.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -25,8 +25,7 @@
 #' The user can define the machine learning model to train (regularised logistic regression, random forest,
 #' gradient boosting machine, neural network and )
 #' 
-#' @param population                       The population created using createStudyPopulation() who will have their risks predicted
-#' @param data                             An object of type \code{plpData} - the patient level prediction
+#' @param trainData                        An object of type \code{TrainData} created using \code{splitData}
 #'                                         data extracted from the CDM.
 #' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
@@ -36,10 +35,8 @@
 #'                                         \item{GLMclassifier ()}{ A generalised linear model}
 #'                                         \item{KNNclassifier()}{ A KNN model}
 #'                                         }
-#' @param cohortId                         Id of study cohort
-#' @param outcomeId                        Id of outcome cohort
-#' @param minCovariateFraction             The minimum fraction of the target popualtion who have a variable for it to be included in the model training 
-#' @param normalizeData                    Whether to normalise the data before model fitting
+#' @param search                           The search strategy for the hyper-parameter selection (currently not used)                                        
+#' @param analysisId                       The id of the analysis
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
@@ -52,166 +49,41 @@
 #' \item{trainingTime}{The time taken to train the classifier}
 #'
 #'
-
 #' @export
-fitPlp <- function(population, data,   modelSettings,#featureSettings, 
-                   cohortId, outcomeId, minCovariateFraction=0.001, normalizeData=T){
+fitPlp <- function(
+  trainData,   
+  modelSettings,
+  search = "grid",
+  analysisId
+  )
+  {
   
-  if(is.null(population))
-    stop('Population is NULL')
-  if(is.null(data))
-    stop('plpData is NULL')
-  if(is.null(modelSettings$model))
+  if(is.null(trainData))
+    stop('trainData is NULL')
+  if(is.null(trainData$covariateData))
+    stop('covariateData is NULL')
+  checkIsClass(trainData$covariateData, 'CovariateData')
+  if(is.null(modelSettings$fitFunction))
     stop('No model specified')
+  checkIsClass(modelSettings, 'modelSettings')
   
-  plpData <- data
   #=========================================================
   # run through pipeline list and apply:
   #=========================================================
-  
-  # normalise the data:
-  removeRedundancy <- ifelse("timeId" %in%colnames(plpData$covariateData$covariates), F, T)
-  plpData$covariateData <- tryCatch({
-    suppressWarnings(FeatureExtraction::tidyCovariateData(covariateData=data$covariateData, 
-                                                          minFraction = minCovariateFraction,
-                                                          normalize = normalizeData,
-                                                          removeRedundancy = removeRedundancy))
-  })
-  
-  Andromeda::createIndex(plpData$covariateData$covariates, c('rowId'),
-                         indexName = 'restrict_pop_rowId') # is this needed now?
-  
+
   # Now apply the classifier:
-  fun <- modelSettings$model
-  args <- list(plpData =plpData,param =modelSettings$param, 
-               population=population, cohortId=cohortId, outcomeId=outcomeId)
+  fun <- eval(parse(text = modelSettings$fitFunction))
+  args <- list(
+    trainData = trainData,
+    param = modelSettings$param,
+    search = search,
+    analysisId = analysisId
+    )
   plpModel <- do.call(fun, args)
   ParallelLogger::logTrace('Returned from classifier function')
-  # add pre-processing details
-  plpModel$metaData$preprocessSettings <- attr(plpData$covariateData, "metaData") 
   
-  ParallelLogger::logTrace('Creating prediction function')
-  plpModel$predict <- createTransform(plpModel)
-  ParallelLogger::logTrace('Adding index')
-  plpModel$index <- population$indexes  ##?- dont think we need this, just the seed instead
   class(plpModel) <- 'plpModel'
   
   return(plpModel)
   
-}
-
-#NEED TO UPDATE....
-# fucntion for implementing the pre-processing (normalisation and redundant features removal)
-applyTidyCovariateData <- function(covariateData,preprocessSettings){
-
-  if (!FeatureExtraction::isCovariateData(covariateData))
-    stop("Data not of class CovariateData")
-  
-  newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
-                                           analysisRef = covariateData$analysisRef)
-  
-  maxs <- preprocessSettings$normFactors
-  deleteRedundantCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
-  deletedInfrequentCovariateIds <- preprocessSettings$deletedInfrequentCovariateIds
-  
-  # --- added for speed
-  deleteCovariateIds <- c(deleteRedundantCovariateIds,deletedInfrequentCovariateIds)
-  temp <- covariateData$covariateRef %>% dplyr::collect()
-  allCovariateIds <- temp$covariateId
-  covariateData$includeCovariates <- data.frame(covariateId = allCovariateIds[!allCovariateIds%in%deleteCovariateIds])
-  Andromeda::createIndex(covariateData$includeCovariates, c('covariateId'),
-                         indexName = 'includeCovariates_covariateId')
-  on.exit(covariateData$includeCovariates <- NULL, add = TRUE)
-  # ---
-
-  ParallelLogger::logInfo("Removing infrequent and redundant covariates and normalizing")
-  start <- Sys.time()       
-  
-  if(!is.null(maxs)){
-    if('bins'%in%colnames(maxs)){
-      covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = .data$bins) %>% 
-        dplyr::rename(maxValue = .data$maxs)
-    } else{
-      covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins)
-    }
-    on.exit(covariateData$maxes <- NULL, add = TRUE)
-    
-    # --- added for speed
-    Andromeda::createIndex(covariateData$maxes, c('covariateId'),
-                           indexName = 'maxes_covariateId')
-    # ---
-    
-    newCovariateData$covariates <- covariateData$covariates %>%  
-      dplyr::inner_join(covariateData$includeCovariates, by='covariateId') %>% # added as join
-      dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
-      dplyr::mutate(value = 1.0*.data$covariateValue/.data$maxValue) %>%
-      dplyr::select(- .data$covariateValue) %>%
-      dplyr::rename(covariateValue = .data$value)
-  } else{
-    newCovariateData$covariates <- covariateData$covariates %>% 
-      dplyr::inner_join(covariateData$includeCovariates, by='covariateId')
-  }
-  
-  # adding index for restrict to pop
-  Andromeda::createIndex(newCovariateData$covariates, c('rowId'),
-                         indexName = 'ncovariates_rowId')
-  
-  
-  class(newCovariateData) <- "CovariateData"
-  
-  delta <- Sys.time() - start
-  writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))
-  
-  # return processed data
-  return(newCovariateData)
-}
-
-# create transformation function
-createTransform <- function(plpModel){
-  #=============== edited this in last run
-  # remove index to save space 
-  plpModel$index <- NULL
-  ##plpModel$varImp <- NULL
-  # remove connection details for privacy
-  plpModel$metaData$call$connectionDetails <- NULL
-  #=====================
-  
-  transform <- function(plpData=NULL, population=NULL){
-    #check model fitting makes sense:
-    if(ifelse(!is.null(attr(population, "metaData")$cohortId),attr(population, "metaData")$cohortId,-1)!=plpModel$cohortId)
-      warning('cohortId of new data does not match training data')
-    if(ifelse(!is.null(attr(population, "metaData")$outcomeId),attr(population, "metaData")$outcomeId,-1)!=plpModel$outcomeId)
-      warning('outcomeId of new data does not match training data or does not exist')
-    
-    # apply normalsation to new data
-    if(!is.null(plpModel$metaData$preprocessSettings)){
-      plpData$covariateData <- applyTidyCovariateData(plpData$covariateData,plpModel$metaData$preprocessSettings)
-    }
-    
-    if(length(population$rowId)<200000){
-      plpData$covariateData <- limitCovariatesToPopulation(plpData$covariateData, 
-                                                           population$rowId)
-    } else{
-      plpData$covariateData <- batchRestrict(plpData$covariateData, 
-                                             data.frame(rowId = population$rowId), 
-                                             sizeN = 10000000)
-    }
-    
-    
-    pred <- do.call(paste0('predict_',attr(plpModel, 'type')), list(plpModel=plpModel,
-                                                                    plpData=plpData, 
-                                                                    population=population))
-
-    metaData <- list(trainDatabase = strsplit(do.call(paste, list(plpModel$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
-                     testDatabase = strsplit(do.call(paste, list(plpData$metaData$call$cdmDatabaseSchema)),'\\.')[[1]][1],
-                     studyStartDate = do.call(paste,list(plpModel$metaData$call$studyStartDate)), 
-                     studyEndDate = do.call(paste,list(plpModel$metaData$call$studyEndDate)),
-                     cohortId = plpModel$cohortId,
-                     outcomeId = plpModel$outcomeId,
-                     predictionType = attr(plpModel, 'predictionType') #'binary'
-    )
-    attr(pred, 'metaData') <- metaData
-    return(pred)
-  }
-  return(transform)
 }

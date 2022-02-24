@@ -28,7 +28,7 @@ navbar:
       href: reference/index.html
     intro:
       text: Get started
-      href: articles/PatientLevelPrediction.html
+      href: articles/InstallationGuide.html
     videos:
       text: Videos
       href: articles/Videos.html
@@ -49,44 +49,54 @@ navbar:
       href: https://ohdsi.github.io/Hades
 
 reference:
-  - title: "Getting data and creating a study population"
+  - title: "Extracting data from the OMOP CDM database"
     desc: >
-      Functions for getting the necessary data from the database in Common Data Model, and creating a study population.
+      Functions for getting the necessary data from the database in Common Data Model and saving/loading.
     contents:
+      - createDatabaseDetails
+      - createRestrictPlpDataSettings
       - getPlpData
       - savePlpData
-      - loadPlpData
-      - createStudyPopulation
-  - title: "Non-Temporal Feature Models"
+      - loadPlpData   
+  - title: "Settings for designing a prediction models"
     desc: >
-      Functions for setting model that use non-temporal data and their hyper-parameter search.
+      Design settings required when developing a model.
+    contents:
+      - createStudyPopulationSettings
+      - createDefaultSplitSetting
+      - createSampleSettings
+      - createFeatureEngineeringSettings
+      - createPreprocessSettings
+  - title: "Execution settings when developing a model"
+    desc: >
+      Execution settings required when developing a model.
+    contents:
+      - createLogSettings
+      - createExecuteSettings
+  - title: "Binary Classification Models"
+    desc: >
+      Functions for setting binary classifiers and their hyper-parameter search.
     contents:
       - setAdaBoost
-      - setDeepNN
       - setDecisionTree
       - setGradientBoostingMachine
       - setKNN
       - setLassoLogisticRegression
-      - setLRTorch
       - setMLP
-      - setMLPTorch
       - setNaiveBayes
       - setRandomForest
-  - title: "Temporal Feature Models"
+      - setSVM
+  - title: "Survival Models"
     desc: >
-      Functions for setting model that use temporal data and their hyper-parameter search.
+      Functions for setting survival models and their hyper-parameter search.
     contents:
-      - setCIReNN
-      - setCNNTorch
-      - setCovNN
-      - setRNNTorch
+      - setCoxModel
   - title: "Single Patient-Level Prediction Model"
     desc: >
       Functions for training/evaluating/applying a single patient-level-prediction model
     contents:
       - runPlp
-      - applyModel
-      - evaluatePlp
+      - externalValidateDbPlp
       - savePlpModel
       - loadPlpModel
       - savePlpResult
@@ -95,40 +105,24 @@ reference:
     desc: >
       Functions for training mutliple patient-level-prediction model in an efficient way.
     contents:
-      - runPlpAnalyses  
-      - createPlpModelSettings
-      - combinePlpModelSettings
-      - createStudyPopulationSettings
-      - evaluateMultiplePlp
-      - savePredictionAnalysisList
-      - loadPredictionAnalysisList
-  - title: "Ensemble Model"
+      - createModelDesign
+      - runMultiplePlp  
+      - validateMultiplePlp
+      - savePlpAnalysesJson 
+      - loadPlpAnalysesJson
+  - title: "Saving results into database"
     desc: >
-      Functions for creating an ensemble model
+      Functions for saving the prediction model and performances into a database.
     contents:
-      - runEnsembleModel
-      - applyEnsembleModel
-      - saveEnsemblePlpModel
-      - loadEnsemblePlpModel
-      - saveEnsemblePlpResult
-      - loadEnsemblePlpResult
-  - title: "External validation"
-    desc: >
-      Functions for externally validating a model on new datasets
-    contents:
-      - externalValidatePlp
+      - createPlpResultTables
+      - populatePlpResultTables     
   - title: "Shiny Viewers"
     desc: >
       Functions for viewing results via a shiny app
     contents:
       - viewPlp
       - viewMultiplePlp
-  - title: "Report Creation"
-    desc: >
-      Functions for creating documents
-    contents:
-      - createPlpJournalDocument
-      - createPlpReport
+      - viewDatabaseResultPlp
   - title: "Plotting"
     desc: >
       Functions for various performance plots
@@ -151,15 +145,9 @@ reference:
       Functions for creating and plotting learning curves
     contents:
       - createLearningCurve
-      - createLearningCurvePar
       - plotLearningCurve
   - title: "Simulation"
     desc: >
       Functions for simulating cohort method data objects.
     contents:
       - simulatePlpData
-  - title: "Helper functions"
-    desc: >
-      Various helper functions
-    contents:
-      - checkPlpInstallation

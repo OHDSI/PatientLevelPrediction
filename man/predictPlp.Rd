@@ -4,17 +4,17 @@
 \alias{predictPlp}
 \title{predictPlp}
 \usage{
-predictPlp(plpModel, population, plpData, index = NULL)
+predictPlp(plpModel, plpData, population, timepoint)
 }
 \arguments{
 \item{plpModel}{An object of type \code{plpModel} - a patient level prediction model}
 
-\item{population}{The population created using createStudyPopulation() who will have their risks predicted}
-
 \item{plpData}{An object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
 
-\item{index}{A data frame containing rowId: a vector of rowids and index: a vector of doubles the same length as the rowIds. If used, only the rowIds with a negative index value are used to calculate the prediction.}
+\item{population}{The population created using createStudyPopulation() who will have their risks predicted or a cohort without the outcome known}
+
+\item{timepoint}{The timepoint to predict risk (survival models only)}
 }
 \value{
 A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.

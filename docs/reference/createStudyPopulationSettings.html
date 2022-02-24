@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -169,7 +175,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>create the study population settings</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/RunMultiplePlp.R'><code>R/RunMultiplePlp.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/PopulationSettings.R'><code>R/PopulationSettings.R</code></a></small>
     <div class="hidden name"><code>createStudyPopulationSettings.Rd</code></div>
     </div>
 
@@ -188,11 +194,9 @@
   minTimeAtRisk <span class='op'>=</span> <span class='fl'>364</span>,
   riskWindowStart <span class='op'>=</span> <span class='fl'>1</span>,
   startAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>,
-  <span class='va'>addExposureDaysToStart</span>,
   riskWindowEnd <span class='op'>=</span> <span class='fl'>365</span>,
   endAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>,
-  <span class='va'>addExposureDaysToEnd</span>,
-  verbosity <span class='op'>=</span> <span class='st'>"INFO"</span>
+  restrictTarToCohortEnd <span class='op'>=</span> <span class='cn'>F</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -243,10 +247,6 @@ specified).</p></td>
       <td><p>The anchor point for the start of the risk window. Can be "cohort start" or "cohort end".</p></td>
     </tr>
     <tr>
-      <th>addExposureDaysToStart</th>
-      <td><p>DEPRECATED: Add the length of exposure the start of the risk window? Use <code>startAnchor</code> instead.</p></td>
-    </tr>
-    <tr>
       <th>riskWindowEnd</th>
       <td><p>The end of the risk window (in days) relative to the index data (+
 days of exposure if the <code>addExposureDaysToEnd</code> parameter is
@@ -257,19 +257,8 @@ specified).</p></td>
       <td><p>The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".</p></td>
     </tr>
     <tr>
-      <th>addExposureDaysToEnd</th>
-      <td><p>DEPRECATED: Add the length of exposure the risk window? Use <code>endAnchor</code> instead.</p></td>
-    </tr>
-    <tr>
-      <th>verbosity</th>
-      <td><p>Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:</p><ul>
-<li><p>DEBUGHighest verbosity showing all debug statements</p></li>
-<li><p>TRACEShowing information about start and end of steps</p></li>
-<li><p>INFOShow informative information (Default)</p></li>
-<li><p>WARNShow warning messages</p></li>
-<li><p>ERRORShow error messages</p></li>
-<li><p>FATALBe silent except for fatal errors</p></li>
-</ul><p>#'</p></td>
+      <th>restrictTarToCohortEnd</th>
+      <td><p>If using a survival model and you want the time-at-risk to end at the cohort end date set this to T</p></td>
     </tr>
     </table>
 
