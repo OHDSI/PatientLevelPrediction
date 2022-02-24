@@ -8,7 +8,7 @@ was defined: from utopia to empirical data" (2016)}
 plotSmoothCalibration(
   plpResult,
   smooth = "loess",
-  span = 1,
+  span = 0.75,
   nKnots = 5,
   scatter = FALSE,
   type = "test",
@@ -16,7 +16,7 @@ plotSmoothCalibration(
   sample = TRUE,
   typeColumn = "evaluation",
   saveLocation = NULL,
-  fileName = NULL
+  fileName = "smoothCalibration.pdf"
 )
 }
 \arguments{
@@ -43,6 +43,10 @@ computing and lower memory usage.}
 \item{typeColumn}{The name of the column specifying the evaluation type}
 
 \item{saveLocation}{Directory to save plot (if NULL plot is not saved)}
+
+\item{fileName}{Name of the file to save to plot, for example
+'plot.png'. See the function \code{ggsave} in the ggplot2 package for
+supported file formats.}
 
 \item{zoom}{Zoom in on the region containing the deciles or on the data. If not specified
 shows the entire space.}

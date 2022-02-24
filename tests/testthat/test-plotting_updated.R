@@ -20,7 +20,6 @@ context("Plotting")
 #TODO: add input checks and test these...
 #options(fftempdir = getwd())
 
-if (FALSE) {
 test_that("plots", {
 
   # test all the outputs are ggplots
@@ -78,7 +77,7 @@ test_that("plotPlp", {
     plpResult  = plpResult, 
     saveLocation = file.path(saveLoc, 'plots'),
     typeColumn = 'evaluation'
-    )
+  )
   testthat::expect_equal(test, T)
   testthat::expect_equal(dir.exists(file.path(saveLoc,'plots')), T)
   
@@ -86,53 +85,60 @@ test_that("plotPlp", {
   expect_true(length(dir(file.path(saveLoc,'plots')))>0)
   
 })
-}
-  
-if(T){
+
 test_that("plotSmoothCalibration", {
   
   # test the plot works
-  test <- plotSmoothCalibration(plpResult = plpResult, 
-                                smooth = "loess",
-                                span = 1,
-                                nKnots = 5,
-                                scatter = T,
-                                type = "test",
-                                bins = 20,
-                                zoom = "none",
-    saveLocation = NULL)
-  testthat::expect_s3_class(test[[1]][[1]], c("gg", "ggplot"))
+  test <- plotSmoothCalibration(
+    plpResult = plpResult, 
+    smooth = "loess",
+    span = 1,
+    nKnots = 5,
+    scatter = T,
+    type = "test",
+    bins = 20,
+    saveLocation = file.path(saveLoc, "plots")
+  )
+  testthat::expect_s3_class(test$test$smoothPlot, c("gg", "ggplot"))
+  testthat::expect_s3_class(test$test$histPlot, c("gg", "ggplot"))
+  testthat::expect_true(
+    file.exists(
+      file.path(saveLoc, "plots", "smoothCalibrationTest.pdf")
+    )
+  )
   
   pred <- plpResult$prediction
   plpResult$prediction <- NULL
   test2 <- plotSmoothCalibration(plpResult,
-                        smooth = "loess",
-                        span = 1,
-                        nKnots = 5,
-                        scatter = T,
-                        type = "test",
-                        bins = 20,
-                        zoom = "data",
-                        sample = T,
-                        saveLocation = NULL) 
-  testthat::expect_s3_class(test2[[1]][[1]], c("gg", "ggplot"))
+    smooth = "loess",
+    span = 1,
+    nKnots = 5,
+    scatter = T,
+    type = "test",
+    bins = 20,
+    sample = T,
+    saveLocation = NULL) 
+  testthat::expect_s3_class(test2$test$smoothPlot, c("gg", "ggplot"))
   plpResult$prediction <- pred
   
-  # this fails:
   test3 <- plotSmoothCalibration(plpResult,
-                                smooth = "rcs",
-                                span = 1,
-                                nKnots = 5,
-                                scatter = F,
-                                type = "test",
-                                bins = 20,
-                                zoom = "data",
-                                fileName = NULL)
-  testthat::expect_s3_class(test3[[1]][[1]], c("gg", "ggplot"))
+    smooth = "rcs",
+    span = 1,
+    nKnots = 5,
+    scatter = F,
+    type = "test",
+    bins = 20,
+    fileName = NULL)
+  testthat::expect_s3_class(test3$test$smoothPlot, c("gg", "ggplot"))
+  testthat::expect_s3_class(test3$test$histPlot, c("gg", "ggplot"))
+  testthat::expect_true(
+    file.exists(
+      file.path(saveLoc, "plots", "smoothCalibrationTest.pdf")
+    )
+  )
   
 })
 
-}
 
 
 

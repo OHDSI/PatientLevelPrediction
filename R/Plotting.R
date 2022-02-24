@@ -174,15 +174,13 @@ plotPlp <- function(
     typeColumn = typeColumn)
   
   # add smooth calibration
-  tryCatch({
-  plotSmoothCalibration(plpResult = plpResult, smooth = 'loess', nKnots = 5, 
-                        type = 'Test', zoom = 'data', typeColumn = typeColumn,
+  plotSmoothCalibration(
+    plpResult = plpResult,
+    smooth = 'loess',
+    typeColumn = typeColumn,
     saveLocation = saveLocation,
-    fileName = 'smooothCalibration.pdf'
-    )
-    }, error = function(e) {
-      return(NULL)
-    }) 
+    fileName = 'smoothCalibration.pdf'
+  )
   
   plotSparseCalibration(
     plpResult, 
@@ -907,30 +905,32 @@ plotSparseCalibration2 <- function(
 #'
 #' @details
 #' Create a plot showing the smoothed calibration #'
-#' @param plpResult  The result of running \code{\link{runPlp}} function. An object containing the
-#'                   model or location where the model is save, the data selection settings, the
-#'                   preprocessing and training settings as well as various performance measures
-#'                   obtained by the model.
-#'
-#' @param smooth     options: 'loess' or 'rcs'
-#' @param span       This specifies the width of span used for loess. This will allow for faster
-#'                   computing and lower memory usage.
-#' @param nKnots     The number of knots to be used by the rcs evaluation. Default is 5
-#' @param scatter    plot the decile calibrations as points on the graph. Default is False
-#' @param type       Whether to use train or test data, default is test.
-#' @param bins       The number of bins for the histogram. Default is 20.
-#' @param zoom       Zoom in on the region containing the deciles or on the data. If not specified
-#'                   shows the entire space.
-#' @param sample     If using loess then by default 20,000 patients will be sampled to save time                   
-#' @param typeColumn            The name of the column specifying the evaluation type
-#' @param saveLocation          Directory to save plot (if NULL plot is not saved)
+#' @param plpResult       The result of running \code{\link{runPlp}} function. An object containing the
+#'                        model or location where the model is save, the data selection settings, the
+#'                        preprocessing and training settings as well as various performance measures
+#'                        obtained by the model.
+#' @param smooth          options: 'loess' or 'rcs'
+#' @param span            This specifies the width of span used for loess. This will allow for faster
+#'                        computing and lower memory usage.
+#' @param nKnots          The number of knots to be used by the rcs evaluation. Default is 5
+#' @param scatter         plot the decile calibrations as points on the graph. Default is False
+#' @param type            Whether to use train or test data, default is test.
+#' @param bins            The number of bins for the histogram. Default is 20.
+#' @param zoom            Zoom in on the region containing the deciles or on the data. If not specified
+#'                        shows the entire space.
+#' @param sample          If using loess then by default 20,000 patients will be sampled to save time                   
+#' @param typeColumn      The name of the column specifying the evaluation type
+#' @param saveLocation    Directory to save plot (if NULL plot is not saved)
+#' @param fileName        Name of the file to save to plot, for example
+#'                        'plot.png'. See the function \code{ggsave} in the ggplot2 package for
+#'                        supported file formats.
 #' @return
 #' A ggplot object.
 #'
 #' @export
 plotSmoothCalibration <- function(plpResult,
                                   smooth = "loess",
-                                  span = 1,
+                                  span = 0.75,
                                   nKnots = 5,
                                   scatter = FALSE,
                                   type = "test",
@@ -938,7 +938,7 @@ plotSmoothCalibration <- function(plpResult,
                                   sample = TRUE,
                                   typeColumn = 'evaluation',
                                   saveLocation = NULL,
-                                  fileName = NULL) {
+                                  fileName = "smoothCalibration.pdf") {
   
   if (!smooth %in% c("loess", "rcs")) stop(ParallelLogger::logError("Smooth type must be either 'loess' or 'rcs"))
   if (nKnots < 3) stop(ParallelLogger::logError("Number of knots must be larger than 3"))
@@ -956,192 +956,192 @@ plotSmoothCalibration <- function(plpResult,
     evalType <- evalTypes[i]
     ParallelLogger::logInfo(paste("Smooth calibration plot for "), evalType)
   
-  
-  if('prediction'%in%names(plpResult)){
-    
-    x <- plpResult$performanceEvaluation$calibrationSummary %>% 
-      dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$averagePredictedProbability, .data$observedIncidence)
-    
-    prediction <-  plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
-  
-  maxVal <- max(x$averagePredictedProbability, x$observedIncidence)
-  maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence))
+    if('prediction'%in%names(plpResult)) {
+      x <- plpResult$performanceEvaluation$calibrationSummary %>% 
+        dplyr::filter(.data[[typeColumn]] == evalType) %>% 
+        dplyr::select(.data$averagePredictedProbability, .data$observedIncidence)
+      
+      prediction <-  plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
+      
+      maxVal <- max(x$averagePredictedProbability, x$observedIncidence)
+      maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence))
 
-  if (smooth == "rcs") {
-    if (missing(nKnots)) {
-      ParallelLogger::logInfo("Number of knots for the restricted cubic spline smoothing was automatically set to 5")
-    }
-  }
-
-  y <- prediction$outcomeCount
-  p <- prediction$value
-
-  nma <- !is.na(p + y)  # select only non-missing cases
-  sumNA <- sum(!nma)
-  if (sumNA > 0)
-    warning(ParallelLogger::logWarn(paste(sumNA, "observations deleted due to NA probabilities or outcomes")))
-  y <- y[nma]
-  p <- p[nma]
-
-  logit <- log(p/(1 - p))  # delete cases with 0 and 1 probs
-  nonInf <- !is.infinite(logit)
-  sumNonInf <- sum(!nonInf)
-  if (sumNonInf > 0)
-    warning(ParallelLogger::logWarn(paste(sumNonInf, "observations deleted due to probabilities of 0 or 1")))
-  y <- y[nonInf]
-  p <- p[nonInf]
-
-  y <- y[order(p)]
-  p <- p[order(p)]
-
-  if (smooth == "loess") {
-    if(sample){
-      if(length(p)>40000){
-      inds <- unique(c(0,seq(0, length(p), by = floor(length(p)/20000)), 
-                       length(p)))
-      p <- p[inds]
-      y <- y[inds]
-      } else if(length(p)>20000){
-        inds <- sample(length(p), 20000)
-        p <- p[inds]
-        y <- y[inds] 
+      if (smooth == "rcs") {
+        if (missing(nKnots)) {
+          ParallelLogger::logInfo("Number of knots for the restricted cubic spline smoothing was automatically set to 5")
+        }
       }
-    }
-    # loess
-    smoothData <- data.frame(y, p)
-    fit <- stats::loess(y ~ p, degree = 2)
-    predictedFit <- predict(fit, se = TRUE)
-    smoothData <- smoothData %>%
-      dplyr::mutate(
-        calibration = predictedFit$fit,
-        se = predictedFit$se,
-        lci = calibration - qt(.975, predictedFit$df) * se,
-        uci = calibration + qt(.975, predictedFit$df) * se
-      )
 
-    xlim <- ylim <- c(0, 1)
-    smoothPlot <- plotSmoothCalibrationLoess(data = smoothData) +
-      ggplot2::coord_cartesian(
-        xlim = xlim,
-        ylim = ylim
-      )
-  
-  } else {
-    # Restricted cubic splines
+      y <- prediction$outcomeCount
+      p <- prediction$value
 
-    smoothData <- data.frame(y, p)
-    smoothPlot <- plotSmoothCalibrationRcs(data = smoothData, nKnots = nKnots)
-    if (is.character(smoothPlot)) {
-      plots[[i]] <- smoothPlot
-      failedEvalType[evalTypes[i]] <- TRUE
-      next
-    }
-    xlim <- ylim <- c(0, 1)
-    smoothPlot <- smoothPlot +
-      ggplot2::coord_cartesian(
-        xlim = xlim,
-        ylim = ylim
-      )
+      nma <- !is.na(p + y)  # select only non-missing cases
+      sumNA <- sum(!nma)
+      if (sumNA > 0)
+        warning(ParallelLogger::logWarn(paste(sumNA, "observations deleted due to NA probabilities or outcomes")))
+      y <- y[nma]
+      p <- p[nma]
 
-  }
-  # construct the plot grid
-  if (scatter) {
-    smoothPlot <- smoothPlot +
-      ggplot2::geom_point(
-        data = x,
-        ggplot2::aes(
-          x = .data$averagePredictedProbability,
-          y = .data$observedIncidence),
-        color = "black",
-        size = 2
-      )
-  }
-  
-  # Histogram object detailing the distibution of event/noevent for each probability interval
-    count <- NULL
-    histPlot <- ggplot2::ggplot() +
-      ggplot2::geom_histogram(
-        data = prediction[prediction$value <= xlim[2],],
-        ggplot2::aes(
-          x = .data$value,
-          y = ggplot2::after_stat(count), 
-          fill = as.character(.data$outcomeCount) #MAYBE ISSUE
-        ), 
-        bins = bins,
-        position = "stack",
-        alpha = 0.5,
-        boundary = 0,
-        closed = "left"
-      ) +
-    ggplot2::facet_grid(.data$outcomeCount ~ ., scales = "free_y") +
-    ggplot2::scale_fill_discrete(name = "Outcome") +
-      ggplot2::theme(
-        strip.background = ggplot2::element_blank(),
-        strip.text = ggplot2::element_blank()
-      ) +
-      ggplot2::labs(x = "Predicted Probability") +
-      ggplot2::coord_cartesian(xlim = xlim)
-  
-  } else {
-    # use calibrationSummary
-    sparsePred <- plpResult$performanceEvaluation$calibrationSummary %>% 
-      dplyr::filter(.data[[typeColumn]] == evalType) %>%
-      dplyr::rename(
-        c(
-          "y" = "observedIncidence",
-          "p" = "averagePredictedProbability"
+      logit <- log(p/(1 - p))  # delete cases with 0 and 1 probs
+      nonInf <- !is.infinite(logit)
+      sumNonInf <- sum(!nonInf)
+      if (sumNonInf > 0)
+        warning(ParallelLogger::logWarn(paste(sumNonInf, "observations deleted due to probabilities of 0 or 1")))
+      y <- y[nonInf]
+      p <- p[nonInf]
+
+      y <- y[order(p)]
+      p <- p[order(p)]
+
+      if (smooth == "loess") {
+        if(sample){
+          if(length(p)>40000){
+            inds <- unique(c(0,seq(0, length(p), by = floor(length(p)/20000)), 
+              length(p)))
+            p <- p[inds]
+            y <- y[inds]
+          } else if(length(p)>20000){
+            inds <- sample(length(p), 20000)
+            p <- p[inds]
+            y <- y[inds] 
+          }
+        }
+        # loess
+        smoothData <- data.frame(y, p)
+        fit <- stats::loess(y ~ p, degree = 2)
+        predictedFit <- predict(fit, se = TRUE)
+        smoothData <- smoothData %>%
+          dplyr::mutate(
+            calibration = predictedFit$fit,
+            se = predictedFit$se,
+            lci = calibration - qt(.975, predictedFit$df) * se,
+            uci = calibration + qt(.975, predictedFit$df) * se
+          )
+
+        xlim <- ylim <- c(0, 1)
+        smoothPlot <- plotSmoothCalibrationLoess(data = smoothData, span = span) +
+          ggplot2::coord_cartesian(
+            xlim = xlim,
+            ylim = ylim
+          )
+      } else {
+        # Restricted cubic splines
+
+        smoothData <- data.frame(y, p)
+        smoothPlot <- plotSmoothCalibrationRcs(data = smoothData, nKnots = nKnots)
+        if (is.character(smoothPlot)) {
+          plots[[i]] <- smoothPlot
+          failedEvalType[evalTypes[i]] <- TRUE
+          next
+        }
+        xlim <- ylim <- c(0, 1)
+        smoothPlot <- smoothPlot +
+          ggplot2::coord_cartesian(
+            xlim = xlim,
+            ylim = ylim
+          )
+
+      }
+      # construct the plot grid
+      if (scatter) {
+        smoothPlot <- smoothPlot +
+          ggplot2::geom_point(
+            data = x,
+            ggplot2::aes(
+              x = averagePredictedProbability,
+              y = observedIncidence),
+            color = "black",
+            size = 2
+          )
+      }
+      
+      # Histogram object detailing the distibution of event/noevent for each probability interval
+      count <- NULL
+      histPlot <- ggplot2::ggplot() +
+        ggplot2::geom_histogram(
+          data = prediction,
+          ggplot2::aes(
+            x = value,
+            y = ggplot2::after_stat(count), 
+            fill = as.character(outcomeCount) #MAYBE ISSUE
+          ), 
+          bins = bins,
+          position = "stack",
+          alpha = 0.5,
+          boundary = 0,
+          closed = "left"
+        ) +
+        ggplot2::facet_grid(.data$outcomeCount ~ ., scales = "free_y") +
+        ggplot2::scale_fill_discrete(name = "Outcome") +
+        ggplot2::theme(
+          strip.background = ggplot2::element_blank(),
+          strip.text = ggplot2::element_blank()
+        ) +
+        ggplot2::labs(x = "Predicted Probability") +
+        ggplot2::coord_cartesian(xlim = xlim)
+      
+    } else {
+      # use calibrationSummary
+      sparsePred <- plpResult$performanceEvaluation$calibrationSummary %>% 
+        dplyr::filter(.data[[typeColumn]] == evalType) %>%
+        dplyr::mutate(
+          y = observedIncidence,
+          p = averagePredictedProbability
         )
-      )
 
-    smoothPlot <- plotSmoothCalibrationLoess(data = sparsePred)
-    
-    # construct the plot grid
-    if (scatter) {
-      smoothPlot <- smoothPlot + ggplot2::geom_point(data = sparsePred,
-        ggplot2::aes(x = .data$averagePredictedProbability,
-          y = .data$observedIncidence),
-        color = "black",
-        size = 2)
-    }
-    
-    # Histogram object detailing the distibution of event/noevent for each probability interval
-    
-    popData1 <- sparsePred[, c('averagePredictedProbability', 'PersonCountWithOutcome')]
-    popData1$Label <- "Outcome"
-    colnames(popData1) <- c('averagePredictedProbability', 'PersonCount', "Label")
-    popData2 <- sparsePred[,c('averagePredictedProbability', 'PersonCountAtRisk')]
-    popData2$Label <- "No Outcome"
-    popData2$PersonCountAtRisk <- -1 * (popData2$PersonCountAtRisk - popData1$PersonCount)
-    colnames(popData2) <- c('averagePredictedProbability', 'PersonCount', "Label")
-    popData <- rbind(popData1, popData2)
-    popData$averagePredictedProbability <- factor(popData$averagePredictedProbability)
-    histPlot <- ggplot2::ggplot(
-      data = popData,
-      ggplot2::aes(
-        y = .data$averagePredictedProbability,
-        x = .data$PersonCount, 
-        fill = .data$Label
-      )
-    ) + 
-      ggplot2::geom_bar(
-        data = popData[popData$Label == "Outcome",],
-        stat = "identity"
+      smoothPlot <- plotSmoothCalibrationLoess(data = sparsePred, span = span)
+      
+      # construct the plot grid
+      if (scatter) {
+        smoothPlot <- smoothPlot +
+          ggplot2::geom_point(
+            data = sparsePred,
+            ggplot2::aes(
+              x = p,
+              y = y,
+              color = "black",
+              size = 2
+            ),
+            show.legend = FALSE
+          )
+      }
+      
+      # Histogram object detailing the distibution of event/noevent for each probability interval
+      
+      popData1 <- sparsePred[, c('averagePredictedProbability', 'PersonCountWithOutcome')]
+      popData1$Label <- "Outcome"
+      colnames(popData1) <- c('averagePredictedProbability', 'PersonCount', "Label")
+      popData2 <- sparsePred[,c('averagePredictedProbability', 'PersonCountAtRisk')]
+      popData2$Label <- "No Outcome"
+      popData2$PersonCountAtRisk <- -1 * (popData2$PersonCountAtRisk - popData1$PersonCount)
+      colnames(popData2) <- c('averagePredictedProbability', 'PersonCount', "Label")
+      popData <- rbind(popData1, popData2)
+      popData$averagePredictedProbability <- factor(popData$averagePredictedProbability)
+      histPlot <- ggplot2::ggplot(
+        data = popData,
+        ggplot2::aes(
+          y = .data$averagePredictedProbability,
+          x = .data$PersonCount, 
+          fill = .data$Label
+        )
       ) + 
-      ggplot2::geom_bar(
-        data = popData[popData$Label == "No Outcome",],
-        stat = "identity"
-      ) +
-      ggplot2::geom_bar(stat = "identity") + 
-      ggplot2::scale_x_continuous(labels = abs) + 
-      ggplot2::coord_flip( ) +
-      ggplot2::theme_bw() + 
-      ggplot2::theme(
-        axis.title.x=ggplot2::element_blank(),
-        axis.text.x=ggplot2::element_blank(),
-        axis.ticks.x=ggplot2::element_blank()
-      )
-  }
+        ggplot2::geom_bar(
+          data = popData[popData$Label == "Outcome",],
+          stat = "identity"
+        ) + 
+        ggplot2::geom_bar(
+          data = popData[popData$Label == "No Outcome",],
+          stat = "identity"
+        ) +
+        ggplot2::geom_bar(stat = "identity") + 
+        ggplot2::scale_x_continuous(labels = abs) + 
+        ggplot2::coord_flip( ) +
+        ggplot2::theme(
+          axis.title.x=ggplot2::element_blank(),
+          axis.text.x=ggplot2::element_blank(),
+          axis.ticks.x=ggplot2::element_blank()
+        )
+    }
   
     if (!failedEvalType[i]) {
       plots[[i]]$smoothPlot <- smoothPlot
@@ -1151,8 +1151,8 @@ plotSmoothCalibration <- function(plpResult,
 
   names(plots) <- tolower(evalTypes)
   
-  if (!is.null(saveLocation)){
-    if(!dir.exists(saveLocation)){
+  if (!is.null(saveLocation)) {
+    if(!dir.exists(saveLocation)) {
       dir.create(saveLocation, recursive = T)
     }
     for (i in seq_along(evalTypes)) {
@@ -1164,13 +1164,24 @@ plotSmoothCalibration <- function(plpResult,
           nrow = 2,
           heights=c(2,1)
         )
-        fileName <- paste0(
-          "SmoothCalibration",
+        fileNameComponents <- unlist(stringr::str_split(fileName, pattern = "\\."))
+        n <- length(fileNameComponents)
+        if (n > 2) {
+          actualFileName <- paste(
+            fileNameComponents[1:(n - 1)],
+            collapse = "."
+          )
+        } else {
+          actualFileName = fileNameComponents[1]
+        }
+        saveFileName <- paste0(
+          actualFileName,
           evalTypes[i],
-          ".jpg"
+          ".",
+          fileNameComponents[n]
         )
         ggplot2::ggsave(
-          file.path(saveLocation, fileName),
+          file.path(saveLocation, saveFileName),
           gridPlot,
           width = 5,
           height = 4.5,
@@ -1182,8 +1193,8 @@ plotSmoothCalibration <- function(plpResult,
   return(plots)
 }
 
-plotSmoothCalibrationLoess <- function(data) {
-  fit <- stats::loess(y ~ p, data = data, degree = 2)
+plotSmoothCalibrationLoess <- function(data, span = 0.75) {
+  fit <- stats::loess(y ~ p, data = data, degree = 2, span = span)
   predictedFit <- predict(fit, se = TRUE)
   data <- data %>%
     dplyr::mutate(
