@@ -1086,48 +1086,15 @@ plotSmoothCalibration <- function(plpResult,
   } else {
     # use calibrationSummary
     sparsePred <- plpResult$performanceEvaluation$calibrationSummary %>% 
-      dplyr::filter(.data[[typeColumn]] == evalType)
-    
-    limVal <- max(
-      max(sparsePred$averagePredictedProbability),
-      max(sparsePred$observedIncidence)
-    )
-    
-    smoothPlot <- ggplot2::ggplot(
-      data = sparsePred,
-      ggplot2::aes(
-        x = .data$averagePredictedProbability, 
-        y = .data$observedIncidence)
-    ) +
-      ggplot2::stat_smooth(
-        ggplot2::aes(color = "Loess", linetype = "Loess"),
-        method = "loess",
-        se = TRUE,
-        size = 1,
-        show.legend = F
-      ) +
-      ggplot2::geom_segment(
-        ggplot2::aes(
-          x = 0,
-          xend = 1,
-          y = 0,
-          yend = 1,
-          color = "Ideal",
-          linetype = "Ideal"
+      dplyr::filter(.data[[typeColumn]] == evalType) %>%
+      dplyr::rename(
+        c(
+          "y" = "observedIncidence",
+          "p" = "averagePredictedProbability"
         )
-      ) +
-      ggplot2::coord_cartesian(
-        xlim = c(0,limVal),
-        ylim = c(0,limVal)) + 
-      ggplot2::scale_linetype_manual(
-        name = "Models",
-        values = c(
-          Loess = "solid",
-          Ideal = "dashed"
-        )
-      ) + 
-      ggplot2::scale_color_manual(name = "Models", values = c(Loess = "blue", Ideal = "red")) + 
-      ggplot2::labs(x = "Predicted Probability", y = "Observed Probability")
+      )
+
+    smoothPlot <- plotSmoothCalibrationLoess(data = sparsePred)
     
     # construct the plot grid
     if (scatter) {
