@@ -7,17 +7,16 @@ was defined: from utopia to empirical data" (2016)}
 \usage{
 plotSmoothCalibration(
   plpResult,
-  smooth = c("loess", "rcs"),
-  span = 1,
+  smooth = "loess",
+  span = 0.75,
   nKnots = 5,
-  scatter = F,
+  scatter = FALSE,
   type = "test",
   bins = 20,
-  zoom = c("none", "deciles", "data"),
-  sample = T,
+  sample = TRUE,
   typeColumn = "evaluation",
   saveLocation = NULL,
-  fileName = NULL
+  fileName = "smoothCalibration.pdf"
 )
 }
 \arguments{
@@ -39,9 +38,6 @@ computing and lower memory usage.}
 
 \item{bins}{The number of bins for the histogram. Default is 20.}
 
-\item{zoom}{Zoom in on the region containing the deciles or on the data. If not specified
-shows the entire space.}
-
 \item{sample}{If using loess then by default 20,000 patients will be sampled to save time}
 
 \item{typeColumn}{The name of the column specifying the evaluation type}
@@ -51,6 +47,9 @@ shows the entire space.}
 \item{fileName}{Name of the file to save to plot, for example
 'plot.png'. See the function \code{ggsave} in the ggplot2 package for
 supported file formats.}
+
+\item{zoom}{Zoom in on the region containing the deciles or on the data. If not specified
+shows the entire space.}
 }
 \value{
 A ggplot object.
