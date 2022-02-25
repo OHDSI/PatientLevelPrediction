@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -110,7 +110,7 @@
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -124,13 +124,13 @@
 
       
 
-      </header><div class="row">
+      </header><script src="BuildingEnsembleModels_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Building Ensemble Models</h1>
                         <h4 class="author">Xiaoyong Pan, Jenna Reps, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2021-03-16</h4>
+            <h4 class="date">2021-06-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/BuildingEnsembleModels.Rmd"><code>vignettes/BuildingEnsembleModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingEnsembleModels.Rmd</code></div>
@@ -150,7 +150,7 @@
 <p>This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction"><code>PatientLevelPrediction</code></a> package to build ensemble models. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf"><code>BuildingPredictiveModels</code> vignette</a>.</p>
 <p>This will enable studying ensemble methods at scale in the OHDSI data network.</p>
 <div class="figure">
-<img src="ensemble.png" alt="Ensemble model"><p class="caption">Ensemble model</p>
+<img src="ensemble.png" alt=""><p class="caption">Ensemble model</p>
 </div>
 <p>In PatientLevelPrediction package, four ensemble strategies have been implemented:</p>
 <ol style="list-style-type: decimal">
@@ -164,86 +164,98 @@
 <h1 class="hasAnchor">
 <a href="#usage" class="anchor"></a>Usage</h1>
 <p>Use the <a href="http://github.com/OHDSI/PatientLevelPrediction"><code>PatientLevelPrediction</code></a> package to generate a <code>population</code> and <code>plpData</code> object. Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span>(<span class="no">plpDataSimulationProfile</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">1234</span>)
-<span class="no">sampleSize</span> <span class="kw">&lt;-</span> <span class="fl">2000</span>
-<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/simulatePlpData.html">simulatePlpData</a></span>(
-  <span class="no">plpDataSimulationProfile</span>,
-  <span class="kw">n</span> <span class="kw">=</span> <span class="no">sampleSize</span>
-)
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">plpDataSimulationProfile</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
+<span class="va">sampleSize</span> <span class="op">&lt;-</span> <span class="fl">2000</span>
+<span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulatePlpData.html">simulatePlpData</a></span><span class="op">(</span>
+  <span class="va">plpDataSimulationProfile</span>,
+  n <span class="op">=</span> <span class="va">sampleSize</span>
+<span class="op">)</span>
 
-<span class="no">population</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span>(
-  <span class="no">plpData</span>,
-  <span class="kw">outcomeId</span> <span class="kw">=</span> <span class="fl">2</span>,
-  <span class="kw">binary</span> <span class="kw">=</span> <span class="fl">TRUE</span>,
-  <span class="kw">firstExposureOnly</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">washoutPeriod</span> <span class="kw">=</span> <span class="fl">0</span>,
-  <span class="kw">removeSubjectsWithPriorOutcome</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">priorOutcomeLookback</span> <span class="kw">=</span> <span class="fl">99999</span>,
-  <span class="kw">requireTimeAtRisk</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">minTimeAtRisk</span> <span class="kw">=</span> <span class="fl">0</span>,
-  <span class="kw">riskWindowStart</span> <span class="kw">=</span> <span class="fl">0</span>,
-  <span class="kw">addExposureDaysToStart</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">riskWindowEnd</span> <span class="kw">=</span> <span class="fl">365</span>,
-  <span class="kw">addExposureDaysToEnd</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">verbosity</span> <span class="kw">=</span> <span class="st">"INFO"</span>
-)</pre></body></html></div>
+<span class="va">population</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span><span class="op">(</span>
+  <span class="va">plpData</span>,
+  outcomeId <span class="op">=</span> <span class="fl">2</span>,
+  binary <span class="op">=</span> <span class="cn">TRUE</span>,
+  firstExposureOnly <span class="op">=</span> <span class="cn">FALSE</span>,
+  washoutPeriod <span class="op">=</span> <span class="fl">0</span>,
+  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">FALSE</span>,
+  priorOutcomeLookback <span class="op">=</span> <span class="fl">99999</span>,
+  requireTimeAtRisk <span class="op">=</span> <span class="cn">FALSE</span>,
+  minTimeAtRisk <span class="op">=</span> <span class="fl">0</span>,
+  riskWindowStart <span class="op">=</span> <span class="fl">0</span>,
+  addExposureDaysToStart <span class="op">=</span> <span class="cn">FALSE</span>,
+  riskWindowEnd <span class="op">=</span> <span class="fl">365</span>,
+  addExposureDaysToEnd <span class="op">=</span> <span class="cn">FALSE</span>,
+  verbosity <span class="op">=</span> <span class="st">"INFO"</span>
+<span class="op">)</span></code></pre></div>
 <p>Specify the prediction algorithms to be combined.</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="co"># Use LASSO logistic regression and Random Forest as base predictors</span>
-<span class="no">model1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setLassoLogisticRegression.html">setLassoLogisticRegression</a></span>()
-<span class="no">model2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/setRandomForest.html">setRandomForest</a></span>()</pre></body></html></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Use LASSO logistic regression and Random Forest as base predictors</span>
+<span class="va">model1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">model2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setRandomForest.html">setRandomForest</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p>Specify a test fraction and a sequence of training set fractions.</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">testFraction</span> <span class="kw">&lt;-</span> <span class="fl">0.2</span></pre></body></html></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">testFraction</span> <span class="op">&lt;-</span> <span class="fl">0.2</span></code></pre></div>
 <p>Specify an ensembleStrategy to combine multiple predictors. The strategy used for ensembling the outputs from different models, it can be ‘mean’, ‘product’, ‘weighted’ and ‘stacked’: ‘mean’ the average probability from differnt models ‘product’ the product rule ‘weighted’ the weighted average probability from different models using train AUC as weights. ‘stacked’ the stakced ensemble trains a logistics regression on different models.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">ensembleStrategy</span> <span class="kw">&lt;-</span> <span class="st">'stacked'</span></pre></body></html></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ensembleStrategy</span> <span class="op">&lt;-</span> <span class="st">'stacked'</span></code></pre></div>
 <p>Specify the test split to be used.</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="co"># Use a split by person, alterantively a time split is possible</span>
-<span class="no">testSplit</span> <span class="kw">&lt;-</span> <span class="st">'person'</span></pre></body></html></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Use a split by person, alterantively a time split is possible</span>
+<span class="va">testSplit</span> <span class="op">&lt;-</span> <span class="st">'person'</span></code></pre></div>
 <p>Run the ensemble learning to combine model1 and model2. You can also use different plpData for different models.</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">ensembleResults</span> <span class="kw">&lt;-</span> <span class="kw pkg">PatientLevelPrediction</span><span class="kw ns">::</span><span class="fu"><a href="../reference/runEnsembleModel.html">runEnsembleModel</a></span>(<span class="no">population</span>,
-                                   <span class="kw">dataList</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="no">plpData</span>, <span class="no">plpData</span>),
-                                   <span class="kw">modelList</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="no">model1</span>, <span class="no">model2</span>),
-                                   <span class="kw">testSplit</span><span class="kw">=</span><span class="no">testSplit</span>,
-                                   <span class="kw">testFraction</span><span class="kw">=</span><span class="no">testFraction</span>,
-                                   <span class="kw">nfold</span><span class="kw">=</span><span class="fl">3</span>, <span class="kw">splitSeed</span><span class="kw">=</span><span class="fl">1000</span>,
-                                   <span class="kw">ensembleStrategy</span> <span class="kw">=</span> <span class="no">ensembleStrategy</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ensembleResults</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/runEnsembleModel.html">runEnsembleModel</a></span><span class="op">(</span><span class="va">population</span>, 
+                                   dataList <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">plpData</span>, <span class="va">plpData</span><span class="op">)</span>, 
+                                   modelList <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">model1</span>, <span class="va">model2</span><span class="op">)</span>,
+                                   testSplit<span class="op">=</span><span class="va">testSplit</span>,
+                                   testFraction<span class="op">=</span><span class="va">testFraction</span>,
+                                   nfold<span class="op">=</span><span class="fl">3</span>, splitSeed<span class="op">=</span><span class="fl">1000</span>, 
+                                   ensembleStrategy <span class="op">=</span> <span class="va">ensembleStrategy</span><span class="op">)</span> </code></pre></div>
 <div id="saving-and-loading-the-ensemble-model" class="section level2">
 <h2 class="hasAnchor">
 <a href="#saving-and-loading-the-ensemble-model" class="anchor"></a>Saving and loading the ensemble model</h2>
 <p>You can save and load the model using:</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="../reference/saveEnsemblePlpModel.html">saveEnsemblePlpModel</a></span>(<span class="no">ensembleResults</span>$<span class="no">model</span>, <span class="kw">dirPath</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span>(), <span class="st">"model"</span>))
-<span class="no">ensembleModel</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadEnsemblePlpModel.html">loadEnsemblePlpModel</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span>(), <span class="st">"model"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/saveEnsemblePlpModel.html">saveEnsemblePlpModel</a></span><span class="op">(</span><span class="va">ensembleResults</span><span class="op">$</span><span class="va">model</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">ensembleModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadEnsemblePlpModel.html">loadEnsemblePlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
 <div id="apply-ensemble-model" class="section level1">
 <h1 class="hasAnchor">
 <a href="#apply-ensemble-model" class="anchor"></a>Apply Ensemble model</h1>
-<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadPlpData.html">loadPlpData</a></span>(<span class="st">"&lt;data file&gt;"</span>)
-<span class="no">populationSettings</span> <span class="kw">&lt;-</span> <span class="no">ensembleModel</span>$<span class="no">populationSettings</span>
-<span class="no">populationSettings</span>$<span class="no">plpData</span> <span class="kw">&lt;-</span> <span class="no">plpData</span>
-<span class="no">population</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span>(<span class="no">createStudyPopulation</span>, <span class="no">populationSettings</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpData.html">loadPlpData</a></span><span class="op">(</span><span class="st">"&lt;data file&gt;"</span><span class="op">)</span>
+<span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="va">ensembleModel</span><span class="op">$</span><span class="va">populationSettings</span>
+<span class="va">populationSettings</span><span class="op">$</span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="va">plpData</span>
+<span class="va">population</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">createStudyPopulation</span>, <span class="va">populationSettings</span><span class="op">)</span></code></pre></div>
 <p>Load the model.</p>
-<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="no">ensembleModel</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/loadEnsemblePlpModel.html">loadEnsemblePlpModel</a></span>(<span class="st">"&lt;model folder&gt;"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ensembleModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadEnsemblePlpModel.html">loadEnsemblePlpModel</a></span><span class="op">(</span><span class="st">"&lt;model folder&gt;"</span><span class="op">)</span></code></pre></div>
 <p>Get the predictions by applying the model:</p>
-<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="no">prediction</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/applyEnsembleModel.html">applyEnsembleModel</a></span>(<span class="no">population</span>,
-                                  <span class="kw">dataList</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="no">plpData</span>, <span class="no">plpData</span>),
-                                  <span class="kw">ensembleModel</span> <span class="kw">=</span> <span class="no">ensembleModel</span>)$<span class="no">prediction</span></pre></body></html></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/applyEnsembleModel.html">applyEnsembleModel</a></span><span class="op">(</span><span class="va">population</span>,
+                                  dataList <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">plpData</span>, <span class="va">plpData</span><span class="op">)</span>,
+                                  ensembleModel <span class="op">=</span> <span class="va">ensembleModel</span><span class="op">)</span><span class="op">$</span><span class="va">prediction</span></code></pre></div>
 </div>
 <div id="demo" class="section level1">
 <h1 class="hasAnchor">
 <a href="#demo" class="anchor"></a>Demo</h1>
 <p>We have added a demo of the ensemble training:</p>
-<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="co"># Show all demos in our package: </span>
- <span class="fu"><a href="https://rdrr.io/r/utils/demo.html">demo</a></span>(<span class="kw">package</span> <span class="kw">=</span> <span class="st">"PatientLevelPrediction"</span>)
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Show all demos in our package: </span>
+ <span class="fu"><a href="https://rdrr.io/r/utils/demo.html">demo</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"PatientLevelPrediction"</span><span class="op">)</span>
 
 <span class="co"># Run the learning curve</span>
- <span class="fu"><a href="https://rdrr.io/r/utils/demo.html">demo</a></span>(<span class="st">"EnsembleModelDemo"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
+ <span class="fu"><a href="https://rdrr.io/r/utils/demo.html">demo</a></span><span class="op">(</span><span class="st">"EnsembleModelDemo"</span>, package <span class="op">=</span> <span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="acknowledgments" class="section level1">
 <h1 class="hasAnchor">
 <a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
 <p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
-<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span>(<span class="st">"PatientLevelPrediction"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
 <pre><code>## 
 ## To cite PatientLevelPrediction in publications use:
 ## 
@@ -285,7 +297,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

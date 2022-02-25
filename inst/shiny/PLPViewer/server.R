@@ -66,7 +66,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(plpResult()$covariateSummary),
                                                               nonZeroCount = sum(plpResult()$covariateSummary$covariateValue!=0),
-                                                              intercept = ifelse(class(plpResult()$model$model)=='character' || !'model '%in% names(plpResult()$model),0,plpResult()$model$model$coefficients[1])))
+                                                              intercept = ifelse(class(plpResult()$model$model)=='character' || !'model' %in% names(plpResult()$model),0,plpResult()$model$model$coefficients[1])))
   
   # Download plpresult
   output$plpResult <- shiny::downloadHandler(
@@ -233,8 +233,8 @@ server <- shiny::shinyServer(function(input, output, session) {
                         'CalibrationSlope',
                         'CalibrationInLarge',
                         'Emean',
-                         'E90',
-                         'Emax', 
+                         'E90','E90.E90',
+                         'Emax', 'Emax.Emax',
                         'correctionFactor',
                         'adjustGradient',
                         'adjustIntercept')

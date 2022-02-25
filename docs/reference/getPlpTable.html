@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -151,7 +151,7 @@
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -177,15 +177,15 @@
     <p>Create a dataframe with the summary details of the population cohort for publications</p>
     </div>
 
-    <pre class="usage"><span class='fu'>getPlpTable</span>(
-  <span class='no'>cdmDatabaseSchema</span>,
-  <span class='no'>oracleTempSchema</span>,
-  <span class='no'>covariateSettings</span>,
-  <span class='kw'>longTermStartDays</span> <span class='kw'>=</span> -<span class='fl'>365</span>,
-  <span class='no'>population</span>,
-  <span class='no'>connectionDetails</span>,
-  <span class='kw'>cohortTable</span> <span class='kw'>=</span> <span class='st'>"#temp_person"</span>
-)</pre>
+    <pre class="usage"><span class='fu'>getPlpTable</span><span class='op'>(</span>
+  <span class='va'>cdmDatabaseSchema</span>,
+  <span class='va'>oracleTempSchema</span>,
+  <span class='va'>covariateSettings</span>,
+  longTermStartDays <span class='op'>=</span> <span class='op'>-</span><span class='fl'>365</span>,
+  <span class='va'>population</span>,
+  <span class='va'>connectionDetails</span>,
+  cohortTable <span class='op'>=</span> <span class='st'>"#temp_person"</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -225,9 +225,10 @@
     <p>This function is used to create a summary table for population to be inserted into publications</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'>getTable1</span> (<span class='no'>plpData</span>, <span class='no'>population</span>, <span class='no'>connectionDetails</span>)
-}</div></pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='fu'>getTable1</span> <span class='op'>(</span><span class='va'>plpData</span>, <span class='va'>population</span>, <span class='va'>connectionDetails</span><span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -243,7 +244,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

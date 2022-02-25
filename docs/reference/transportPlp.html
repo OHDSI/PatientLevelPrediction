@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -151,7 +151,7 @@
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -177,21 +177,21 @@
     <p>Transports a plpResult to a new location and removed sensitive data</p>
     </div>
 
-    <pre class="usage"><span class='fu'>transportPlp</span>(
-  <span class='no'>plpResult</span>,
-  <span class='kw'>modelName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>dataName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>outputFolder</span>,
-  <span class='kw'>n</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>includeEvaluationStatistics</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>includeThresholdSummary</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>includeDemographicSummary</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>includeCalibrationSummary</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>includePredictionDistribution</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>includeCovariateSummary</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>save</span> <span class='kw'>=</span> <span class='no'>T</span>,
-  <span class='kw'>reduceSize</span> <span class='kw'>=</span> <span class='no'>F</span>
-)</pre>
+    <pre class="usage"><span class='fu'>transportPlp</span><span class='op'>(</span>
+  <span class='va'>plpResult</span>,
+  modelName <span class='op'>=</span> <span class='cn'>NULL</span>,
+  dataName <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>outputFolder</span>,
+  n <span class='op'>=</span> <span class='cn'>NULL</span>,
+  includeEvaluationStatistics <span class='op'>=</span> <span class='cn'>T</span>,
+  includeThresholdSummary <span class='op'>=</span> <span class='cn'>T</span>,
+  includeDemographicSummary <span class='op'>=</span> <span class='cn'>T</span>,
+  includeCalibrationSummary <span class='op'>=</span> <span class='cn'>T</span>,
+  includePredictionDistribution <span class='op'>=</span> <span class='cn'>T</span>,
+  includeCovariateSummary <span class='op'>=</span> <span class='cn'>T</span>,
+  save <span class='op'>=</span> <span class='cn'>T</span>,
+  reduceSize <span class='op'>=</span> <span class='cn'>F</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -256,9 +256,10 @@ folder does not yet exist it will be created.</p></td>
     <p>This function is used to</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'>transportPlp</span>(<span class='no'>plpResult</span>, <span class='st'>"s:/temp/exportTest"</span>, <span class='kw'>n</span><span class='kw'>=</span><span class='fl'>10</span>)
-}</div></pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='fu'>transportPlp</span><span class='op'>(</span><span class='va'>plpResult</span>, <span class='st'>"s:/temp/exportTest"</span>, n<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -274,7 +275,7 @@ folder does not yet exist it will be created.</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

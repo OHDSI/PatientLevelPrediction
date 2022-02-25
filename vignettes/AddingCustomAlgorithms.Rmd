@@ -29,7 +29,7 @@ library(PatientLevelPrediction)
 ```
 # Introduction
 
-This vignette describes how you can add your own custom algorithms in the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package. This allows you to fully leverage the OHDSI PatientLevelPrediction framework for model development and validation. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
+This vignette describes how you can add your own custom algorithms in the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package. This allows you to fully leverage the OHDSI PatientLevelPrediction framework for model development and validation. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
 
 **We invite you to share your new algorithms with the OHDSI community through our [GitHub repository](http://github.com/OHDSI/PatientLevelPrediction).**
 
