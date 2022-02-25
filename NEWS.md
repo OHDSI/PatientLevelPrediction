@@ -1,3 +1,9 @@
+PatientLevelPrediction 5.0.2
+======================
+- updated json structure for specifying study design (made it friendlier to read)
+- includes smooth calibration plot fix (done by Alex)
+- fixed bug with multiple sample methods or feature engineering settings causing invalid error
+
 PatientLevelPrediction 5.0.0
 ======================
 - plpModel now saved as json files when possible
