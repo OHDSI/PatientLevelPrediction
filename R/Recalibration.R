@@ -23,8 +23,7 @@
 #' Train various models using a default parameter gird search or user specified parameters
 #'
 #' @details
-#' The user can define the machine learning model to train (regularised logistic regression, random forest,
-#' gradient boosting machine, neural network and )
+#' The user can refit the parameters selected by the original model in the new data.
 #' 
 #' @param plpModel                         The trained plpModel (runPlp$model)
 #' @param newPopulation                    The population created using createStudyPopulation() who will have their risks predicted
@@ -275,7 +274,7 @@ differentialRecalibration <- function(validationResult, originalPlpResult){
     
     #calculate correction factor
     correctionFactor <- log(valRatio / devRatio)
-    
+     
     validationResult$prediction$value = logFunct(inverseLog(validationResult$prediction$value) + correctionFactor)
     
     return(list(prediction = validationResult,
