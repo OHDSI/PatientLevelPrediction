@@ -139,6 +139,18 @@ test_that("Calibration metrics", {
   
   })
 
+test_that("E statistics binary", {
+  prediction <- data.frame(
+    value = c(seq(.1, .5, length.out = 5), NA, .2),
+    outcomeCount = c(0, 0, 0, 1, 1, 0, NA)
+  )
+  EStatsBinary <- PatientLevelPrediction:::calculateEStatisticsBinary(prediction)
+  expect_equal(
+    EStatsBinary,
+    c(Eavg = .34, E90 = .56, Emax = .6)
+  )
+})
+
   # TODO: test pref scores 
   # test computePreferenceScore(prediction)
  
