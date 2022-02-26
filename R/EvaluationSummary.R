@@ -71,13 +71,22 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
       c(evalType, 'brier score scaled', brier$brierScaled)
     )
     ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
+
     
     # using rms::val.prob
     indValProb <- predictionOfInterest$value>0 & predictionOfInterest$value < 1
-    valProb <- tryCatch(rms::val.prob(predictionOfInterest$value[indValProb], predictionOfInterest$outcomeCount[indValProb]), 
-      error = function(e){ParallelLogger::logInfo(e); return(c(Eavg = 0, 
-        E90 = 0, 
-        Emax = 0))})
+    valProb <- tryCatch(
+      calculateEStatisticsBinary(prediction = predictionOfInterest[indValProb, ]),
+      error = function(e) {
+        ParallelLogger::logInfo(e); return(
+          c(
+            Eavg = 0, 
+            E90 = 0, 
+            Emax = 0
+          )
+        )
+      }
+    )
     result <- rbind(
       result, 
       c(evalType, 'Eavg', valProb['Eavg']),
@@ -85,6 +94,8 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
       c(evalType, 'Emax', valProb['Emax'])
     )
     ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Eavg: ', round(valProb['Eavg'], digits = 4)))
+
+
     
     
     # Removing for now as too slow...
@@ -250,6 +261,28 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
   return(result)
 }
 
+
+calculateEStatisticsBinary <- function(prediction) {
+  risk <- prediction$value
+  outcome <- prediction$outcomeCount
+  notna <- ! is.na(risk + outcome)
+  risk <- risk[notna]
+  outcome <- outcome[notna]
+  smoothFit <- lowess(risk, outcome, iter = 0)
+  smoothCalibration <- approx(smoothFit, xout = risk, ties = mean)$y
+  distance <- abs(risk - smoothCalibration)
+  eavg <- mean(abs(risk - smoothCalibration))
+  emax <- max(distance)
+  e90 <- quantile(distance, probs = .9)
+  names(e90) <- NULL
+  return(
+    c(
+      Eavg = eavg,
+      E90 = e90,
+      Emax = emax
+    )
+  )
+}
 
 
 #==================================
