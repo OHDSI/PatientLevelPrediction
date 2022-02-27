@@ -151,6 +151,14 @@ test_that("E statistics binary", {
   )
 })
 
+test_that("Borrowed cut2", {
+   x <- c(1, rep(2, 2), rep(4, 4), rep(5, 5), rep(6, 6)) 
+   groups <- PatientLevelPrediction:::cut2(x, g = 3)
+   expect_true(
+     all(levels(groups) == c("[1,5)", "5", "6"))
+   )
+})
+
   # TODO: test pref scores 
   # test computePreferenceScore(prediction)
  

@@ -176,3 +176,95 @@ getOs <- function(){
   tolower(os)
 }
 
+
+# Borrowed and adapted from Hmisc: https://github.com/harrelfe/Hmisc/blob/39011dae3af3c943e67401ed6000644014707e8b/R/cut2.s
+cut2 <- function(x, g, m = 150, digits = 3) {
+
+  method <- 1 ## 20may02
+  x.unique <- sort(unique(c(x[!is.na(x)])))
+  min.dif <- min(diff(x.unique))/2
+  min.dif.factor <- 1
+
+  oldopt <- options('digits')
+  options(digits=digits)
+  on.exit(options(oldopt))
+
+  xlab <- attr(x, 'label')
+
+  nnm <- sum(!is.na(x))
+  if(missing(g)) g <- max(1,floor(nnm/m))
+  if(g < 1)
+    stop('g must be >=1, m must be positive')
+
+  options(digits=15)
+  n <- table(x)
+  xx <- as.double(names(n))
+  options(digits = digits)
+  cum <- cumsum(n)
+  m <- length(xx)
+
+  y <- as.integer(ifelse(is.na(x),NA,1))
+  labs <- character(g)
+  cuts <- stats::approx(cum, xx, xout=(1:g)*nnm/g,
+    method='constant', rule=2, f=1)$y
+  cuts[length(cuts)] <- max(xx)
+  lower <- xx[1]
+  upper <- 1e45
+  up <- low <- double(g)
+  i <- 0
+  for(j in 1:g) {
+    cj <- if(method==1 || j==1) cuts[j] else {
+      if(i==0)
+        stop('program logic error')
+      # Not used unique values found in table(x)
+      s <- if(is.na(lower)) FALSE else xx >= lower
+      cum.used <- if(all(s)) 0 else max(cum[!s])
+      if(j==m) max(xx) else if(sum(s)<2) max(xx) else
+                                                   stats::approx(cum[s]-cum.used, xx[s], xout=(nnm-cum.used)/(g-j+1),
+                                                     method='constant', rule=2, f=1)$y
+    }
+    
+    if(cj==upper) next
+    
+    i <- i + 1
+    upper <- cj
+    # assign elements to group i
+    # y contains the group number in the end
+    y[x >= (lower-min.dif.factor*min.dif)]  <- i
+    low[i] <- lower
+    lower <- if(j==g) upper else min(xx[xx > upper])
+    
+    if(is.na(lower)) lower <- upper
+    
+    up[i]  <- lower
+  }
+  
+  low  <- low[1:i]
+  up   <- up[1:i]
+  # Are the bounds different?
+  variation <- logical(i)
+  for(ii in 1:i) {
+    r <- range(x[y==ii], na.rm=TRUE)
+    variation[ii] <- diff(r) > 0
+  }
+  flow <- do.call(format,c(list(low), digits = 3))
+  fup  <- do.call(format,c(list(up),  digits = 3))
+  bb   <- c(rep(')',i-1),']')
+  labs <- ifelse(low==up | (!variation), flow,
+    paste('[',flow,',',fup,bb,sep=''))
+  ss <- y==0 & !is.na(y)
+  if(any(ss))
+    stop(paste('categorization error in cut2.  Values of x not appearing in any interval:\n',
+      paste(format(x[ss],digits=12),collapse=' '),
+      '\nLower endpoints:',
+      paste(format(low,digits=12), collapse=' '),
+      '\nUpper endpoints:',
+      paste(format(up,digits=12),collapse=' ')))
+
+  y <- structure(y, class='factor', levels=labs)
+
+  attr(y,'class') <- "factor"
+  if(length(xlab)) label(y) <- xlab
+
+  return(y)
+}
