@@ -1,41 +1,57 @@
 cutoffViewer <- function(id) {
+  
   ns <- shiny::NS(id)
+  
   shiny::fluidRow(
     
     shiny::column(width = 12,
       
-      shinydashboard::box(width = 12,
+      shinydashboard::box(
+        width = 12,
         title = "Probability threshold plot: ",
         status = "info", 
         solidHeader = TRUE,
         plotly::plotlyOutput(ns("ptp"))                 
       ),
-                  
-                  shinydashboard::box(width = 12,
-                                      title = "Cutoff Slider: ",
-                                      status = "info", 
-                                      solidHeader = TRUE,
-                                      shiny::sliderInput(ns("slider1"), 
-                                                         shiny::span("Pick Threshold ", shiny::textOutput('threshold'), style="font-family: Arial;font-size:14px;"), 
-                                                         min = 1, max = 100, value = 50, ticks = F
-                                      )                  
-                  ),
-                  shinydashboard::box(width = 12,
-                                      title = "Dashboard",
-                                      status = "warning", solidHeader = TRUE,
-                                      shinydashboard::infoBoxOutput(ns("performanceBoxThreshold")),
-                                      shinydashboard::infoBoxOutput(ns("performanceBoxIncidence")),
-                                      shinydashboard::infoBoxOutput(ns("performanceBoxPPV")),
-                                      shinydashboard::infoBoxOutput(ns("performanceBoxSpecificity")),
-                                      shinydashboard::infoBoxOutput(ns("performanceBoxSensitivity")),
-                                      shinydashboard::infoBoxOutput(ns("performanceBoxNPV"))
-                                      
-                  ),
-                  shinydashboard::box(width = 12,
-                                      title = "Cutoff Performance",
-                                      status = "warning", solidHeader = TRUE,
-                                      shiny::tableOutput(ns('twobytwo'))
-                  )
+      
+      shinydashboard::box(
+        width = 12,
+        title = "Cutoff Slider: ",
+        status = "info", 
+        solidHeader = TRUE,
+        shiny::sliderInput(
+          ns("slider1"), 
+          shiny::span(
+            "Pick Threshold ", 
+            shiny::textOutput('threshold'), 
+            style="font-family: Arial;font-size:14px;"
+            ), 
+          min = 1, 
+          max = 100, 
+          value = 50, 
+          ticks = F
+        )                  
+      ),
+      
+      shinydashboard::box(
+        width = 12,
+        title = "Dashboard",
+        status = "warning", solidHeader = TRUE,
+        shinydashboard::infoBoxOutput(ns("performanceBoxThreshold")),
+        shinydashboard::infoBoxOutput(ns("performanceBoxIncidence")),
+        shinydashboard::infoBoxOutput(ns("performanceBoxPPV")),
+        shinydashboard::infoBoxOutput(ns("performanceBoxSpecificity")),
+        shinydashboard::infoBoxOutput(ns("performanceBoxSensitivity")),
+        shinydashboard::infoBoxOutput(ns("performanceBoxNPV")
+        )
+      ),
+      
+      shinydashboard::box(
+        width = 12,
+        title = "Cutoff Performance",
+        status = "warning", solidHeader = TRUE,
+        shiny::tableOutput(ns('twobytwo'))
+      )
     )
   )
 }
@@ -208,8 +224,8 @@ probThresPlot <- function(eval, pointOfInterest){
   
   fig <- plotly::plot_ly(
     data = eval, 
-    x = ~predictionThreshold, 
-    y = ~sensitivity, 
+    x = ~ predictionThreshold, 
+    y = ~ sensitivity, 
     name = 'sensitivity', 
     color = 'blue', 
     type = 'scatter', 
@@ -217,35 +233,39 @@ probThresPlot <- function(eval, pointOfInterest){
   ) %>% 
     plotly::add_trace(
       yaxis = "y2",
-      y = ~positivePredictiveValue, 
+      y = ~ positivePredictiveValue, 
       name = 'positivePredictiveValue', 
       color = 'red', 
       mode = 'lines'
     ) %>% 
     plotly::add_trace(
-      y = ~negativePredictiveValue, 
+      y = ~ negativePredictiveValue, 
       name = 'negativePredictiveValue', 
       color = 'green', 
       mode = 'lines'
     ) %>% 
     plotly::add_trace(
-      y = ~popfrac, 
+      y = ~ popfrac, 
       name = 'Fraction flagged',
       color = 'black', 
       mode = 'lines'
-    ) %>% layout(
-      title = "Probability Threshold Plot", yaxis2 = ay,
-      xaxis = list(title="Prediction Threshold "),
-      yaxis = list(title="Metric yaxis")
-    )%>%
+    ) %>% 
     plotly::layout(
+      title = "Probability Threshold Plot", 
+      yaxis2 = ay,
+      #xaxis = list(title="Prediction Threshold"),
+      #yaxis = list(title="Metric yaxis")
+    #) %>%
+    #plotly::layout(
       plot_bgcolor='#e5ecf6',
       xaxis = list(
+        title = "Prediction Threshold",
         zerolinecolor = '#ffff',
         zerolinewidth = 2,
         gridcolor = 'ffff'
       ),
       yaxis = list(
+        title = "Metric yaxis",
         zerolinecolor = '#ffff',
         zerolinewidth = 2,
         gridcolor = 'ffff'
