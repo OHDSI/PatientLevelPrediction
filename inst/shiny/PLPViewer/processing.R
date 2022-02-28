@@ -132,7 +132,7 @@ getSummaryFromObject <- function(result, analysisId = NULL){
 summaryPlpAnalyses <- function(analysesLocation){ 
   # loads the analyses and validations to get summaries
   #========================================
-  settings <- read.csv(file.path(analysesLocation,'settings.csv'))
+  settings <- utils::read.csv(file.path(analysesLocation,'settings.csv'))
   settings <- settings[,!colnames(settings)%in%c('plpDataFolder','studyPopFile','plpResultFolder')]
   settings$analysisId <- gsub('Analysis_','', settings$analysisId) # fixing if Analysis_id in settings
   settings$analysisId <- paste0('Analysis_',  settings$analysisId)
@@ -219,7 +219,7 @@ getPerformance <- function(analysisLocation){
   if(type == 'csv'){
     
     require(PatientLevelPrediction)
-    res <- loadPlpShareable(file.path(analysisLocation))
+    res <- PatientLevelPrediction::loadPlpShareable(file.path(analysisLocation))
     result <- getSummaryFromObject(result = res, analysisId = analysisId)
     location <- file.path(analysisLocation)
     plpResultLoad <- 'loadPlpShareable'

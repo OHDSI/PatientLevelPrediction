@@ -1,50 +1,105 @@
 discriminationViewer <- function(id) {
+  
   ns <- shiny::NS(id)
+  
   shiny::div(
     
     # summary table
     shiny::fluidRow(
-      shinydashboard::box(status = 'info', width = 12,
-                          title = 'Summary',
-                          solidHeader = TRUE,
-                          shiny::p('Click on one of these rows to view corresponding plots:'),
-                          DT::dataTableOutput(ns('summaryTable'))
+      shinydashboard::box(
+        status = 'info', 
+        width = 12,
+        title = 'Summary',
+        solidHeader = TRUE,
+        shiny::p('Click on one of these rows to view corresponding plots:'),
+        DT::dataTableOutput(ns('summaryTable'))
       )
     ),
     
     
-  shiny::fluidRow(
-   shinydashboard::box( status = 'info',
-                         title = actionLink(ns("rocHelp"), "ROC Plot", icon = icon("info")),
-                         solidHeader = TRUE,
-                         shinycssloaders::withSpinner(plotly::plotlyOutput(ns('roc')))),
-    shinydashboard::box(status = 'info',
-                        title = actionLink(ns("prcHelp"), "Precision recall plot", icon = icon("info")),
-                        solidHeader = TRUE,
-                        side = "right",
-                        shinycssloaders::withSpinner(plotly::plotlyOutput(ns('pr'))))),
+    shiny::fluidRow(
+      shinydashboard::box( 
+        status = 'info',
+        title = shiny::actionLink(
+          ns("rocHelp"), 
+          "ROC Plot", 
+          icon = icon("info")
+        ),
+        solidHeader = TRUE,
+        shinycssloaders::withSpinner(
+          plotly::plotlyOutput(ns('roc'))
+        )
+      ),
+      shinydashboard::box(
+        status = 'info',
+        title = shiny::actionLink(
+          ns("prcHelp"), 
+          "Precision recall plot", 
+          icon = icon("info")
+        ),
+        solidHeader = TRUE,
+        side = "right",
+        shinycssloaders::withSpinner(
+          plotly::plotlyOutput(ns('pr'))
+        )
+      )
+    ),
+    
+    shiny::fluidRow(
+      shinydashboard::box(
+        status = 'info',
+        title = shiny::actionLink(
+          ns("f1Help"), 
+          "F1 Score Plot", 
+          icon = icon("info")
+        ),
+        solidHeader = TRUE,
+        shinycssloaders::withSpinner(
+          plotly::plotlyOutput(ns('f1'))
+        )
+      ),
+      shinydashboard::box(
+        status = 'info',
+        title = shiny::actionLink(
+          ns("boxHelp"),
+          "Box Plot", 
+          icon = icon("info")
+        ),
+        solidHeader = TRUE,
+        side = "right",
+        shinycssloaders::withSpinner(
+          shiny::plotOutput(ns('box'))
+        )
+      )
+    ),
   
-  shiny::fluidRow(
-    shinydashboard::box(status = 'info',
-                        title = actionLink(ns("f1Help"), "F1 Score Plot", icon = icon("info")),
-                        solidHeader = TRUE,
-                        shinycssloaders::withSpinner(plotly::plotlyOutput(ns('f1')))),
-    shinydashboard::box(status = 'info',
-                        title = actionLink(ns("boxHelp"),"Box Plot", icon = icon("info")),
-                        solidHeader = TRUE,
-                        side = "right",
-                        shinycssloaders::withSpinner(shiny::plotOutput(ns('box'))))),
-  
-  shiny::fluidRow(
-    shinydashboard::box(status = 'info',
-                        title = actionLink(ns("predDistHelp"),"Prediction Score Distribution", icon = icon("info")),
-                        solidHeader = TRUE,
-                        shinycssloaders::withSpinner(shiny::plotOutput(ns('preddist')))),
-    shinydashboard::box(status = 'info',
-                        title = actionLink(ns("prefDistHelp"),"Preference Score Distribution", icon = icon("info")),
-                        solidHeader = TRUE,
-                        side = "right",
-                        shinycssloaders::withSpinner(shiny::plotOutput(ns('prefdist')))))
+    shiny::fluidRow(
+      shinydashboard::box(
+        status = 'info',
+        title = shiny::actionLink(
+          ns("predDistHelp"),
+          "Prediction Score Distribution", 
+          icon = icon("info")
+        ),
+        solidHeader = TRUE,
+        shinycssloaders::withSpinner(
+          shiny::plotOutput(ns('preddist'))
+        )
+      ),
+      shinydashboard::box(
+        status = 'info',
+        title = shiny::actionLink(
+          ns("prefDistHelp"),
+          "Preference Score Distribution", 
+          icon = icon("info")
+        ),
+        solidHeader = TRUE,
+        side = "right",
+        shinycssloaders::withSpinner(
+          shiny::plotOutput(ns('prefdist'))
+        )
+      )
+    )
   )
 }
 
@@ -52,7 +107,6 @@ discriminationServer <- function(id, plpResult) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
-      
       
       sumTable <- shiny::reactive({
         data <- plpResult()$performanceEvaluation$evaluationStatistics
@@ -117,7 +171,6 @@ discriminationServer <- function(id, plpResult) {
                                         })
           )
           
-        print('dne plts')
         return(result)
       }
       )
@@ -153,22 +206,22 @@ discriminationServer <- function(id, plpResult) {
         tryCatch({plots()$box[[type]]}, error = function(err){emptyPlot(title = err)})
       })
 
-      observeEvent(input$rocHelp, {
+      shiny::observeEvent(input$rocHelp, {
         showInfoBox("ROC Help", "html/rocHelp.html")
       })
-      observeEvent(input$prcHelp, {
+      shiny::observeEvent(input$prcHelp, {
         showInfoBox("PRC Help", "html/prcHelp.html")
       })
-      observeEvent(input$f1Help, {
+      shiny::observeEvent(input$f1Help, {
         showInfoBox("F1 Score Plot Help", "html/f1Help.html")
       })
-      observeEvent(input$boxHelp, {
+      shiny::observeEvent(input$boxHelp, {
         showInfoBox("Box Plot Help", "html/boxHelp.html")
       })
-      observeEvent(input$predDistHelp, {
+      shiny::observeEvent(input$predDistHelp, {
         showInfoBox("Predicted Risk Distribution Help", "html/predDistHelp.html")
       })
-      observeEvent(input$prefDistHelp, {
+      shiny::observeEvent(input$prefDistHelp, {
         showInfoBox("Preference Score Distribution Help", "html/prefDistHelp.html")
       })
       
@@ -424,13 +477,17 @@ plotPredictionDistribution <- function(evaluation){
   one05 <- x$P05PredictedProbability[x$class==1]
   one95 <- x$P95PredictedProbability[x$class==1]
   
-  plot <-   ggplot2::ggplot(x, ggplot2::aes(x=as.factor(class),
-                                            ymin=MinPredictedProbability,
-                                            lower=P25PredictedProbability,
-                                            middle=MedianPredictedProbability,
-                                            upper=P75PredictedProbability, 
-                                            ymax=MaxPredictedProbability, 
-                                            color=as.factor(class))) + 
+  plot <-   ggplot2::ggplot(x, 
+    ggplot2::aes(
+      x=as.factor(class),
+      ymin=MinPredictedProbability,
+      lower=P25PredictedProbability,
+      middle=MedianPredictedProbability,
+      upper=P75PredictedProbability, 
+      ymax=MaxPredictedProbability, 
+      color=as.factor(class)
+    )
+  ) + 
     ggplot2::coord_flip() +
     ggplot2::geom_boxplot(stat="identity")  +
     ggplot2::scale_x_discrete("Class") + 

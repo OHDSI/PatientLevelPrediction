@@ -16,9 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library(shiny)
-library(plotly)
-library(shinycssloaders)
 source("helpers.R")
 source("emptyPlot.R")
 
@@ -76,7 +73,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   # change to single model explore tab when summary table row is selected
   shiny::observeEvent(resultRow(), {
-    updateTabsetPanel(session, "allView", selected = "Explore Selected Model")
+    shiny::updateTabsetPanel(session, "allView", selected = "Explore Selected Model")
   })
   
   # this loads all the results
@@ -142,33 +139,29 @@ server <- shiny::shinyServer(function(input, output, session) {
   #=======================
   output$researcherInfo <- shiny::renderTable(plpResult()$researcherInfo)
   
-  
-  # LOG
-  output$log <- shiny::renderText( paste(plpResult()$log, collapse="\n") )
-  
   # HELPER INFO
-  observeEvent(input$DescriptionInfo, {
+  shiny::observeEvent(input$DescriptionInfo, {
     showInfoBox("Description", "html/Description.html")
   })
-  observeEvent(input$SummaryInfo, {
+  shiny::observeEvent(input$SummaryInfo, {
     showInfoBox("Summary", "html/Summary.html")
   })
-  observeEvent(input$PerformanceInfo, {
+  shiny::observeEvent(input$PerformanceInfo, {
     showInfoBox("Performance", "html/Performance.html")
   })
-  observeEvent(input$ModelInfo, {
+  shiny::observeEvent(input$ModelInfo, {
     showInfoBox("Model", "html/Model.html")
   })
-  observeEvent(input$LogInfo, {
+  shiny::observeEvent(input$LogInfo, {
     showInfoBox("Log", "html/Log.html")
   })
-  observeEvent(input$SettingsInfo, {
+  shiny::observeEvent(input$SettingsInfo, {
     showInfoBox("Settings", "html/Settings.html")
   })
-  observeEvent(input$DataInfoInfo, {
+  shiny::observeEvent(input$DataInfoInfo, {
     showInfoBox("DataInfo", "html/DataInfo.html")
   })
-  observeEvent(input$HelpInfo, {
+  shiny::observeEvent(input$HelpInfo, {
     showInfoBox("HelpInfo", "html/Help.html")
   })
   

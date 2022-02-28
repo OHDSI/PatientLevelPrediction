@@ -232,7 +232,7 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     modSetId <- ids$modelSettingId
     covSetId <- ids$covariateSettingId
     
-    hyperParamSearch <- RJSONIO::fromJSON(ids$hyperParamSearch)
+    hyperParamSearch <- jsonlite::unserializeJSON(ids$hyperParamSearch)
    
     #covariateSummary 
     #made this null to speed up programme
@@ -254,7 +254,7 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     ParallelLogger::logInfo("end modeSet")
     
     if(length(tempModSettings$modelSettingsJson)>0){
-      result$inputSetting$modelSettings <- RJSONIO::fromJSON(tempModSettings$modelSettingsJson)
+      result$inputSetting$modelSettings <- jsonlite::unserializeJSON(tempModSettings$modelSettingsJson)
     } else{
       result$inputSetting$modelSettings <- list('missing', list(param = 'na'))
     }
@@ -272,7 +272,7 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     ParallelLogger::logInfo("end covSet")
     
     if(length(tempCovSettings$covariateSettingsJson)>0){
-      result$inputSetting$dataExtrractionSettings$covariateSettings <- RJSONIO::fromJSON(tempCovSettings$covariateSettingsJson)
+      result$inputSetting$dataExtrractionSettings$covariateSettings <- jsonlite::unserializeJSON(tempCovSettings$covariateSettingsJson)
     }else{
       result$inputSetting$dataExtrractionSettings$covariateSettings <- list()
     }
@@ -295,7 +295,7 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     ParallelLogger::logInfo("end popSet")
     
     if(length(tempPopSettings$populationSettingsJson)>0){
-      result$inputSetting$populationSettings <- RJSONIO::fromJSON(tempPopSettings$populationSettingsJson)
+      result$inputSetting$populationSettings <- jsonlite::unserializeJSON(tempPopSettings$populationSettingsJson)
     } else{
       result$inputSetting$populationSettings <- NULL
     }
