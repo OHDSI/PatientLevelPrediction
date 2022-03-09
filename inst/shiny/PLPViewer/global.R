@@ -31,7 +31,6 @@ if(useDatabase){
 
   myTableAppend <- Sys.getenv("shinydbTableAppend")
   
-
   if(myPort != ""){
     ParallelLogger::logInfo('Port')
     ParallelLogger::logInfo(paste(myPort))

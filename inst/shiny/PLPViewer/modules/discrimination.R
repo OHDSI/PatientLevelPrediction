@@ -471,7 +471,6 @@ plotPredictionDistribution <- function(evaluation){
   
   #(x=Class, y=predictedProbabllity sequence:  min->P05->P25->Median->P75->P95->max)
   
-  
   non05 <- x$P05PredictedProbability[x$class==0]
   non95 <- x$P95PredictedProbability[x$class==0]
   one05 <- x$P05PredictedProbability[x$class==1]

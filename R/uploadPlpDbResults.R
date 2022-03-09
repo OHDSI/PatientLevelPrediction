@@ -51,20 +51,42 @@ createPlpResultTables <- function(conn,
   if(deleteExistingTables){
     ParallelLogger::logInfo('Deleting existing tables')
     
-    tables <- c("CALIBRATION_SUMMARY", "COVARIATE_SUMMARY", "DEMOGRAPHIC_SUMMARY",
-                "EVALUATION_STATISTICS", "PREDICTION_DISTRIBUTION", "THRESHOLD_SUMMARY",
-                
-                
-                "STUDY_MODELS",
-                
-                "RESULTS", "MODEL_RELATIONSHIP", "MODELS", "STUDIES", 
-                
-                "MODEL_SETTINGS", "COVARIATE_SETTINGS","POPULATION_SETTINGS", "TRAINING_SETTINGS",
+    tables <- c(
+      "CALIBRATION_SUMMARY", 
+      "COVARIATE_SUMMARY", 
+      "DEMOGRAPHIC_SUMMARY",
+      "EVALUATION_STATISTICS", 
+      "PREDICTION_DISTRIBUTION", 
+      "THRESHOLD_SUMMARY",
       
-      "FEATURE_ENGINEERING_SETTINGS", "SPLIT_SETTINGS", "PLP_DATA_SETTINGS", #new
-       "SAMPLE_SETTINGS", "TIDY_COVARIATES_SETTINGS", #new 
+      "ATTRITION", #new 
       
-                "TARS", "COHORTS", "DATABASE_DETAILS", "RESEARCHERS" )
+      "DIAGNOSTICS", #new 
+      "RECALIBRATIONS", #new 
+      
+      "RESULTS", 
+      
+      "STUDY_MODELS",  
+      
+      "MODELS", 
+      
+      "MODEL_DESIGNS",  
+
+      "MODEL_SETTINGS", 
+      "COVARIATE_SETTINGS",
+      "POPULATION_SETTINGS", 
+      "FEATURE_ENGINEERING_SETTINGS", 
+      "SPLIT_SETTINGS", 
+      "PLP_DATA_SETTINGS", #new
+      "SAMPLE_SETTINGS", 
+      "TIDY_COVARIATES_SETTINGS", #new 
+      "TARS", 
+    
+      "STUDIES", 
+      "COHORTS",
+      "DATABASE_DETAILS", 
+      "RESEARCHERS" 
+      )
     
     if(stringAppendToTables != ''){
       tables <- paste0(toupper(gsub('_','',gsub(' ','', stringAppendToTables))), '_', tables)
@@ -127,6 +149,7 @@ createPlpResultTables <- function(conn,
   
 }
 
+# could add cohortDatabaseSchema and cohortTable as inputs below, plus database table
 
 #' Populate the PatientLevelPrediction results tables
 #' @description
@@ -138,7 +161,7 @@ createPlpResultTables <- function(conn,
 #' @param conn                         A connection to a database created by using the
 #'                                     function \code{connect} in the
 #'                                     \code{DatabaseConnector} package.
-#' @param resultSchema                 (string) The name of the database schema that the result tables will be created.
+#' @param resultSchema                 (string) The name of the database schema with the result tables.
 #' @param stringAppendToTables         (string) A string that appends to the PatientLevelPrediction result tables
 #' @param targetDialect                (string) The database management system being used
 #' @param tempEmulationSchema          (string) The temp schema used when the database management system is oracle
@@ -271,8 +294,10 @@ populatePlpResultTables <- function(conn,
     ParallelLogger::logInfo(paste0('Adding results for model @ ', modelRes))
     
     # TODO edit csv here
-    mdl <- tryCatch({PatientLevelPrediction::loadPlpResult(file.path(resultLocation, modelRes, 'plpResult'))}, 
-                    error = function(e){ParallelLogger::logInfo(e);return(NULL)})
+    mdl <- tryCatch(
+      {PatientLevelPrediction::loadPlpResult(file.path(resultLocation, modelRes, 'plpResult'))}, 
+                    error = function(e){ParallelLogger::logInfo(e);return(NULL)}
+      )
     
     if(!is.null(mdl)){
       
@@ -333,21 +358,25 @@ populatePlpResultTables <- function(conn,
       ParallelLogger::logInfo(paste0('modSetId: ', modSetId))
       
       # NEW: add plp_data_settings
-      plpDataSetId <- addPlpDataSetting(conn = conn, 
+      plpDataSetId <- addPlpDataSetting(
+        conn = conn, 
         resultSchema = resultSchema, 
         targetDialect = targetDialect,
         json = mdl$model$settings$plpDataSettings, 
         stringAppendToTables = stringAppendToTables,
-        tempEmulationSchema = tempEmulationSchema)
+        tempEmulationSchema = tempEmulationSchema
+        )
       ParallelLogger::logInfo(paste0('plpDataSetId: ', plpDataSetId))
       
       # NEW: add FE_settings
-      FESetId <- addFESetting(conn = conn, 
+      FESetId <- addFESetting(
+        conn = conn, 
         resultSchema = resultSchema, 
         targetDialect = targetDialect,
         json = mdl$model$settings$featureEngineering, 
         stringAppendToTables = stringAppendToTables,
-        tempEmulationSchema = tempEmulationSchema)
+        tempEmulationSchema = tempEmulationSchema
+        )
       ParallelLogger::logInfo(paste0('FESetId: ', FESetId))
       
       # NEW: add sample_settings
@@ -386,12 +415,10 @@ populatePlpResultTables <- function(conn,
       ParallelLogger::logInfo(paste0('splitId: ', splitId))
       
       # create this function
-      modelId <- addModel(
+      modelDesignId <- addModelDesign( # need to create
         conn = conn, 
         resultSchema = resultSchema, 
         targetDialect = targetDialect,
-        analysisId = mdl$model$trainDetails$analysisId, # trainDetails
-        modelName = mdl$model$settings$modelSettings$model, #standardise this
         targetId = tId,
         outcomeId = oId,
         tarId = tarId,
@@ -403,14 +430,27 @@ populatePlpResultTables <- function(conn,
         splitSettingId = splitId, # changed from trainingId
         featureEngineeringSettingId = FESetId,
         tidyCovariatesSettingId = tidySetId,
-        requireDenseMatrix = mdl$model$settings$requireDenseMatrix,
+        researcherId = researcherId,
+        stringAppendToTables = stringAppendToTables,
+        tempEmulationSchema = tempEmulationSchema
+      )
+      ParallelLogger::logInfo(paste0('modelDesignId: ', modelDesignId))
+      
+      # create this function
+      modelId <- addModel(
+        conn = conn, 
+        resultSchema = resultSchema, 
+        targetDialect = targetDialect,
+        analysisId = mdl$model$trainDetails$analysisId, # trainDetails
+        modelDesignId = modelDesignId,
         researcherId = researcherId,
         databaseId = dbId,
         hyperParamSearch = mdl$model$trainDetails$hyperParamSearch, #mdl$trainDetails$hyperParamSearch
         plpModelFile = " ",
-        dateTime = format(mdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"), #mdl$trainDetails$trainingDate
+        executionDateTime = format(mdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"), #mdl$trainDetails$trainingDate
         trainingTime = mdl$model$trainDetails$trainingTime, #mdl$trainDetails$trainingTime
         intercept = ifelse(is.list(mdl$model), mdl$model$model$coefficients[1], 0),
+        requireDenseMatrix = mdl$model$settings$requireDenseMatrix,
         stringAppendToTables = stringAppendToTables,
         tempEmulationSchema = tempEmulationSchema
       )
@@ -432,6 +472,7 @@ populatePlpResultTables <- function(conn,
         
         ##if exists 
         if(!is.null(mdl)){
+          # add attrition here...
           resultId <- addResult(conn = conn, 
                                 resultSchema = resultSchema, 
                                 targetDialect = targetDialect,
@@ -441,12 +482,25 @@ populatePlpResultTables <- function(conn,
                                 targetId = tId,
                                 outcomeId = oId,
                                 tarId = tarId,
+            restrictPlpDataSettingId = plpDataSetId,
                                 populationSettingId = popSetId,
                                 executionDateTime = format(mdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"),
                                 plpVersion = mdl$executionSummary$PackageVersion$packageVersion, 
                                 stringAppendToTables = stringAppendToTables,
                                 tempEmulationSchema = tempEmulationSchema)
           ParallelLogger::logInfo(paste0('resultId: ', resultId))
+          
+          # add attriition
+          if(!is.null(mdl$model$trainDetails$attrition)){
+            addAttrition(
+              conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+              resultId = resultId,
+              attrition = mdl$model$trainDetails$attrition,
+              overWriteIfExists = T, 
+              stringAppendToTables = stringAppendToTables,
+              tempEmulationSchema = tempEmulationSchema
+              )
+          }
           
           # add eval
           if(!is.null(mdl$performanceEvaluation)){
@@ -533,33 +587,72 @@ populatePlpResultTables <- function(conn,
               # load each result
               for(valInd in 1:nrow(valMods)){
                 
-              resultName <- dir(file.path(validationLocation, valDb, valMods$validationResults[valInd]))
-              resultName <- resultName[grep('.rds',resultName)]
-              
-              if(length(resultName)>0){
-                vmdl <- readRDS(file.path(validationLocation, valDb, valMods$validationResults[valInd], resultName[1] ))
-              } else{
-                vmdl <- NULL
-              }
+              #resultName <- dir(file.path(validationLocation, valDb, valMods$validationResults[valInd]))
+              #resultName <- resultName[grep('.rds',resultName)]
+                ParallelLogger::logInfo(paste0('Loading validation at:', file.path(validationLocation, valDb, valMods$validationResults[valInd], 'validationResult' )))
+                vmdl <- tryCatch(
+                  {PatientLevelPrediction::loadPlpResult(file.path(validationLocation, valDb, valMods$validationResults[valInd], 'validationResult' ))},
+                  error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+                )
+
                 
                 if(!is.null(vmdl)){
                   tId <- addCohort(conn = conn, 
                                    resultSchema = resultSchema, 
                                    targetDialect = targetDialect,
                                    jsonInput = jsonInput, type = cohortType,
-                                   cohortId = vmdl$model$valdiationDetails$cohortId, 
+                                   #cohortId = vmdl$model$validationDetails$cohortId,
+                    cohortId = ifelse(
+                      !is.null(vmdl$model$validationDetails$cohortId),
+                      vmdl$model$validationDetails$cohortId,
+                      vmdl$prediction$cohortId[1]
+                      ), 
                                    stringAppendToTables = stringAppendToTables,
                                    tempEmulationSchema = tempEmulationSchema)
                   oId <- addCohort(conn = conn, 
                                    resultSchema = resultSchema, 
                                    targetDialect = targetDialect,
                                    jsonInput = jsonInput, type = cohortType,
-                                   cohortId = vmdl$model$valdiationDetails$outcomeId, 
+                                   cohortId = vmdl$model$validationDetails$outcomeId, 
                                    stringAppendToTables = stringAppendToTables,
                                    tempEmulationSchema = tempEmulationSchema)
                   
-                  # get tarId TODO - not in these results
-                  # popSetId TODO - not in these results
+                  # get tarId (added)
+                  tarId <- addTar(
+                    conn = conn, 
+                    resultSchema = resultSchema, 
+                    targetDialect = targetDialect,
+                    startDay = vmdl$model$validationDetails$populationSettings$riskWindowStart, 
+                    startAnchor = vmdl$model$validationDetails$populationSettings$startAnchor,
+                    endDay = vmdl$model$validationDetails$populationSettings$riskWindowEnd,  
+                    endAnchor = vmdl$model$validationDetails$populationSettings$endAnchor, 
+                    stringAppendToTables = stringAppendToTables,
+                    tempEmulationSchema = tempEmulationSchema
+                  )
+                  
+                  # popSetId (added)
+                  popSetId <- addPopulationSetting(
+                    conn = conn, 
+                    resultSchema = resultSchema, 
+                    targetDialect = targetDialect,
+                    json = vmdl$model$validationDetails$populationSettings, 
+                    stringAppendToTables = stringAppendToTables,
+                    tempEmulationSchema = tempEmulationSchema
+                    )
+                  
+
+                  plpDataSetId <- addPlpDataSetting(
+                    conn = conn, 
+                    resultSchema = resultSchema, 
+                    targetDialect = targetDialect, 
+                    stringAppendToTables = stringAppendToTables, 
+                    tempEmulationSchema = tempEmulationSchema, 
+                    json = ifelse(
+                      !is.null(vmdl$model$validationDetails$plpDataSettings),
+                      vmdl$model$validationDetails$plpDataSettings,
+                      vmdl$model$settings$plpDataSettings
+                      ) 
+                    )
                   
                   # add result
                   resultId <- addResult(conn = conn, 
@@ -571,12 +664,26 @@ populatePlpResultTables <- function(conn,
                                         targetId = tId,
                                         outcomeId = oId,
                                         tarId = tarId,
+                    restrictPlpDataSettingId = plpDataSetId,
                                         populationSettingId = popSetId,
                                         executionDateTime = format(vmdl$executionSummary$ExecutionDateTime, format="%Y-%m-%d"),
                                         plpVersion = vmdl$executionSummary$PackageVersion$packageVersion, 
                                         stringAppendToTables = stringAppendToTables,
                                         tempEmulationSchema = tempEmulationSchema)
                   
+                  
+                  
+                  # add attrition
+                  if(!is.null(vmdl$model$validationDetails$attrition)){
+                    addAttrition(
+                      conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+                      resultId = resultId,
+                      attrition = vmdl$model$validationDetails$attrition,
+                      overWriteIfExists = T, 
+                      stringAppendToTables = stringAppendToTables,
+                      tempEmulationSchema = tempEmulationSchema
+                    )
+                  }
                   
                   # add performance 
                   #=============
@@ -1061,14 +1168,17 @@ getCohortFromList <- function(jsonList, cohortId){
   
   json <- jsonList[[id]]$cohort_json
   
-  details <- data.frame(name = jsonList[[id]]$cohort_name,
-                        cohortId = jsonList[[id]]$cohort_id,
-                        atlasId = jsonList[[id]]$cohort_id)
+  details <- data.frame(
+    cohortName = jsonList[[id]]$cohort_name,
+    cohortId = jsonList[[id]]$cohort_id,
+    webApiCohortId = jsonList[[id]]$cohort_id
+  )
   
   return(list(json = json,
               cohortTocreate = details))
 }
 
+# this can be simplified now we use cohort id as the json file name:
 getCohortFromPackage <- function(packageName, cohortId){
   
   ParallelLogger::logInfo(paste0('Adding cohorts from ', packageName))
@@ -1079,12 +1189,11 @@ getCohortFromPackage <- function(packageName, cohortId){
     
     ParallelLogger::logInfo(paste0('Extracting cohort ',cohortId,' json from ', packageName))
     # check required files:
-    cohortToCreateLoc <- system.file('settings',
-                                     'cohortsToCreate.csv',
+    cohortToCreateLoc <- system.file('Cohorts.csv', # updated for new skeleton
                                      package = packageName)
     
     if(!file.exists(cohortToCreateLoc)){
-      stop('No cohortsToCreate.csv in package')
+      stop('No Cohorts.csv in package')
     }
     
     if(!dir.exists(file.path(system.file(package = packageName), 'cohorts'))){
@@ -1095,9 +1204,9 @@ getCohortFromPackage <- function(packageName, cohortId){
   
   # add the cohorts and store the map atlas_id, cohort_id, cohort_name
   cohortsToCreate <- utils::read.csv(cohortToCreateLoc)
-  cohortTocreate <- cohortsToCreate[cohortsToCreate$atlasId == cohortId,]
+  cohortTocreate <- cohortsToCreate[cohortsToCreate$cohortId == cohortId,]
   
-  jsonFileName <- file.path(system.file(package = packageName), 'cohorts', paste0(cohortTocreate$name, '.json'))
+  jsonFileName <- file.path(system.file(package = packageName), 'cohorts', paste0(cohortTocreate$cohortId, '.json'))
   json <- readChar(jsonFileName, file.info(jsonFileName)$size)
   
   
@@ -1139,7 +1248,7 @@ addCohort <- function(conn, resultSchema, targetDialect,
                          targetDialect = targetDialect, 
                          tableName = 'cohorts',
                          columnNames = c('cohort_name', 'atlas_id'), 
-                         values = c(paste0("'",cohortTocreate$name[1],"'"), cohortTocreate$atlasId[1]),
+                         values = c(paste0("'",cohortTocreate$cohortName[1],"'"), cohortTocreate$cohortId[1]),
                          tempEmulationSchema = tempEmulationSchema
     )
     
@@ -1150,12 +1259,12 @@ addCohort <- function(conn, resultSchema, targetDialect,
     }
     
     if(addNew){
-      ParallelLogger::logInfo(paste0('Cohort ',cohortTocreate$name,' exists in result database with id', result$cohortId))
+      ParallelLogger::logInfo(paste0('Cohort ',cohortTocreate$cohortName,' exists in result database with id', result$cohortId))
     } else{
-      ParallelLogger::logInfo(paste0('Adding cohort ',cohortTocreate$name[1]))
+      ParallelLogger::logInfo(paste0('Adding cohort ',cohortTocreate$cohortName[1]))
       
-      data <- data.frame(cohortName = cohortTocreate$name, 
-                         atlasId = cohortTocreate$atlasId,
+      data <- data.frame(cohortName = cohortTocreate$cohortName, 
+                         atlasId = cohortTocreate$cohortId,
                          cohortJson = json)
       DatabaseConnector::insertTable(connection = conn, 
                                      databaseSchema = resultSchema, 
@@ -1176,7 +1285,7 @@ addCohort <- function(conn, resultSchema, targetDialect,
                            targetDialect = targetDialect, 
                            tableName = 'cohorts',
                            columnNames = c('cohort_name', 'atlas_id'), 
-                           values = c(paste0("'",cohortTocreate$name,"'"), cohortTocreate$atlasId),
+                           values = c(paste0("'",cohortTocreate$cohortName,"'"), cohortTocreate$cohortId),
                            tempEmulationSchema = tempEmulationSchema
       )
       
@@ -1255,7 +1364,23 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
   # process json to make it ordered...
   # make sure the json has been converted 
   if(class(json)!='character'){
-    json <- as.character(jsonlite::serializeJSON(json, digits = 23))
+    # this code created character that is too long for redshfit
+    #json <- as.character(jsonlite::serializeJSON(json, digits = 23))
+    # add attributes
+    if(class(json) == 'covariateSettings'){
+      json <- list(json)
+    }
+    json <- lapply(json, addAttributes)
+    #convert
+    json <- jsonlite::toJSON(
+      x = json, 
+      pretty = T, 
+      digits = 23, 
+      auto_unbox=TRUE, 
+      null = "null"
+    )
+    json <- as.character(json) # now convert to character
+    print(nchar(json))
   }
   
   jsonId <- checkJson(conn = conn,
@@ -1371,6 +1496,11 @@ addTidySetting <- function(
 ){
   
   if(class(json)!='character'){
+    
+    #modify to make smaller but keep key part
+    json$deletedInfrequentCovariateIds <- c()
+    json$normFactors <- json$normFactors %>% dplyr::filter(.data$maxValue !=1)
+    
     json <- as.character(jsonlite::serializeJSON(json, digits = 23))
   }
   
@@ -1693,12 +1823,10 @@ addSplitSettings <- function(
 }
 
 
-addModel <- function(
+addModelDesign <- function(
   conn, 
   resultSchema, targetDialect,
   stringAppendToTables = stringAppendToTables,
-  analysisId,
-  modelName,
   targetId,
   outcomeId,
   tarId,
@@ -1710,23 +1838,10 @@ addModel <- function(
   splitSettingId,
   featureEngineeringSettingId,
   tidyCovariatesSettingId,
-  requireDenseMatrix,
   researcherId,
-  databaseId,
-  hyperParamSearch,
-  plpModelFile,
-  dateTime,
-  trainingTime,
-  intercept,
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
-  if(is.null(analysisId)){
-    stop('analysisId is null')
-  }
-  if(is.null(modelName)){
-    stop('modelName is null')
-  }
   if(is.null(targetId)){
     stop('targetId is null')
   }
@@ -1765,14 +1880,172 @@ addModel <- function(
   if(is.null(researcherId)){
     stop('researcherId is null')
   }
+  
+  # process json to make it ordered...
+  # TODO
+  
+  result <- checkTable(
+    conn = conn, 
+    resultSchema = resultSchema, 
+    stringAppendToTables = stringAppendToTables,
+    targetDialect = targetDialect, 
+    tableName = 'model_designs',
+    columnNames = c(
+      'target_id',
+      'outcome_id',
+      'tar_id',
+      'plp_data_setting_id',
+      'population_setting_id',
+      'model_setting_id',
+      'covariate_setting_id',
+      'sample_setting_id',
+      'split_setting_id',
+      'feature_engineering_setting_id',
+      'tidy_covariates_setting_id',
+      'researcher_id'
+      ), 
+    values = c(
+      targetId,
+      outcomeId,
+      tarId,
+      plpDataSettingId,
+      populationSettingId,
+      modelSettingId,
+      covariateSettingId,
+      sampleSettingId,
+      splitSettingId,
+      featureEngineeringSettingId,
+      tidyCovariatesSettingId,
+      researcherId
+      ),
+    tempEmulationSchema = tempEmulationSchema
+  )
+  
+  if(nrow(result)==0){
+    # model
+    sql <- "INSERT INTO @my_schema.@string_to_appendmodel_designs(
+    target_id,
+    outcome_id,
+    tar_id,
+    plp_data_setting_id,
+    population_setting_id,
+    model_setting_id,
+    covariate_setting_id,
+    sample_setting_id,
+    split_setting_id,
+    feature_engineering_setting_id,
+    tidy_covariates_setting_id,
+    researcher_id
+    ) VALUES 
+  ( 
+  @target_id, 
+  @outcome_id, 
+  @tar_id, 
+  @plp_data_setting_id,
+  @population_setting_id, 
+  @model_setting_id, 
+  @covariate_setting_id, 
+  @sample_setting_id, 
+  @split_setting_id, 
+  @feature_engineering_setting_id, 
+  @tidy_covariates_setting_id,
+  @researcher_id
+    )"
+    sql <- SqlRender::render(
+      sql, 
+      my_schema = resultSchema,
+      target_id = targetId,
+      outcome_id = outcomeId,
+      tar_id = tarId,
+      plp_data_setting_id= plpDataSettingId,
+      population_setting_id = populationSettingId,
+      model_setting_id = modelSettingId,
+      covariate_setting_id = covariateSettingId,
+      sample_setting_id = sampleSettingId,
+      split_setting_id = splitSettingId,
+      feature_engineering_setting_id = featureEngineeringSettingId,
+      tidy_covariates_setting_id = tidyCovariatesSettingId,
+      researcher_id = researcherId,
+      string_to_append = stringAppendToTables
+    )
+    sql <- SqlRender::translate(sql, targetDialect = targetDialect,
+                                tempEmulationSchema = tempEmulationSchema)
+    DatabaseConnector::executeSql(conn, sql)
+    
+    #getId of new
+    result <- checkTable(conn = conn, 
+                         resultSchema = resultSchema, 
+                         stringAppendToTables = stringAppendToTables,
+                         targetDialect = targetDialect, 
+                         tableName = 'model_designs',
+                         columnNames = c(
+                                         'target_id',
+                                         'outcome_id',
+                                         'tar_id',
+                           'plp_data_setting_id',
+                           'population_setting_id',
+                           'model_setting_id',
+                           'covariate_setting_id',
+                           'sample_setting_id',
+                           'split_setting_id',
+                           'feature_engineering_setting_id',
+                           'tidy_covariates_setting_id',
+                            'researcher_id'), 
+                         values = c(targetId,
+                                    outcomeId,
+                                    tarId,
+                           plpDataSettingId,
+                           populationSettingId,
+                           modelSettingId,
+                           covariateSettingId,
+                           sampleSettingId,
+                           splitSettingId,
+                           featureEngineeringSettingId,
+                           tidyCovariatesSettingId,
+                           researcherId),
+                         tempEmulationSchema = tempEmulationSchema
+    )
+    
+  } 
+  
+  return(result$modelDesignId[1])
+}
+
+addModel <- function(
+  conn, 
+  resultSchema, 
+  targetDialect,
+  stringAppendToTables = stringAppendToTables,
+  analysisId,
+  modelDesignId,
+  researcherId,
+  databaseId,
+  hyperParamSearch,
+  plpModelFile,
+  executionDateTime,
+  trainingTime,
+  intercept,
+  requireDenseMatrix,
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
+){
+  
+  if(is.null(analysisId)){
+    stop('analysisId is null')
+  }
+  if(is.null(modelDesignId)){
+    stop('modelName is null')
+  }
+  if(is.null(researcherId)){
+    stop('researcherId is null')
+  }
   if(is.null(databaseId)){
     stop('databaseId is null')
   }
   if(is.null(plpModelFile)){
     stop('plpModelFile is null')
   }
-  if(is.null(dateTime)){
-    stop('dateTime is null')
+  if(is.null(executionDateTime)){
+    stop('executionDateTime is null')
   }
   if(is.null(intercept)){
     stop('intercept is null')
@@ -1797,168 +2070,116 @@ addModel <- function(
     tableName = 'models',
     columnNames = c(
       'analysis_id',
-      'model_name',
-      'target_id',
-      'outcome_id',
-      'tar_id',
-      'plp_data_setting_id',
-      'population_setting_id',
-      'model_setting_id',
-      'covariate_setting_id',
-      'sample_setting_id',
-      'split_setting_id',
-      'feature_engineering_setting_id',
-      'tidy_covariates_setting_id',
-      'require_dense_matrix',
+      'model_design_id',
       'researcher_id',
       'database_id',
       'hyper_param_search',
       'plp_model_file',
       'execution_date_time',
       'training_time',
-      'intercept'), 
+      'intercept',
+      'require_dense_matrix'
+      ), 
     values = c(
       enc(analysisId),
-      enc(modelName),
-      targetId,
-      outcomeId,
-      tarId,
-      plpDataSettingId,
-      populationSettingId,
-      modelSettingId,
-      covariateSettingId,
-      sampleSettingId,
-      splitSettingId,
-      featureEngineeringSettingId,
-      tidyCovariatesSettingId,
-      ifelse(requireDenseMatrix, "'T'", "'F'"),
+      modelDesignId,
       researcherId,
       databaseId,
       enc(hyperParamSearch),
       enc(plpModelFile),
-      enc(dateTime),
+      enc(executionDateTime),
       enc(trainingTime),
-      intercept),
+      intercept,
+      ifelse(requireDenseMatrix, "'T'", "'F'")
+      ),
     tempEmulationSchema = tempEmulationSchema
   )
   
   if(nrow(result)==0){
     # model
-    sql <- "INSERT INTO @my_schema.@string_to_appendmodels(analysis_id,
-    model_name,
-    target_id,
-    outcome_id,
-    tar_id,
-    plp_data_setting_id,
-                           population_setting_id,
-                           model_setting_id,
-                           covariate_setting_id,
-                           sample_setting_id,
-                           split_setting_id,
-                           feature_engineering_setting_id,
-                           tidy_covariates_setting_id,
-                           require_dense_matrix,
+    sql <- "INSERT INTO @my_schema.@string_to_appendmodels(
+    analysis_id,
+    model_design_id,
     researcher_id,
     database_id,
     hyper_param_search,
     plp_model_file,
     execution_date_time,
     training_time,
-    intercept) VALUES 
-  ('@analysis_id', '@model_name', @target_id, @outcome_id, @tar_id, @plp_data_setting_id,
-  @population_setting_id, @model_setting_id, @covariate_setting_id, 
-  @sample_setting_id, @split_setting_id, @feature_engineering_setting_id, @tidy_covariates_setting_id,
-  '@require_dense_matrix', @researcher_id, 
-  @database_id, '@hyper_param_search', '@plp_model_file', '@date_time', 
-    '@training_time', @intercept)"
+    intercept,
+    require_dense_matrix
+    ) VALUES 
+  ('@analysis_id', 
+  '@model_design_id',
+  @researcher_id,
+  @database_id, 
+  '@hyper_param_search', 
+  '@plp_model_file', 
+  '@execution_date_time', 
+  '@training_time', 
+   @intercept,
+  '@require_dense_matrix' 
+  )"
     sql <- SqlRender::render(
       sql, 
       my_schema = resultSchema,
       analysis_id = analysisId,
-      model_name = modelName,
-      target_id = targetId,
-      outcome_id = outcomeId,
-      tar_id = tarId,
-      plp_data_setting_id= plpDataSettingId,
-      population_setting_id = populationSettingId,
-      model_setting_id = modelSettingId,
-      covariate_setting_id = covariateSettingId,
-      sample_setting_id = sampleSettingId,
-      split_setting_id = splitSettingId,
-      feature_engineering_setting_id = featureEngineeringSettingId,
-      tidy_covariates_setting_id = tidyCovariatesSettingId,
-      require_dense_matrix = ifelse(requireDenseMatrix, 'T', 'F'),
+      model_design_id = modelDesignId,
       researcher_id = researcherId,
       database_id = databaseId,
       hyper_param_search = hyperParamSearch,
       plp_model_file = plpModelFile,
-      date_time = dateTime,
+      execution_date_time = executionDateTime,
       training_time = trainingTime,
       intercept = intercept,
+      require_dense_matrix = ifelse(requireDenseMatrix, 'T', 'F'),
       string_to_append = stringAppendToTables
     )
-    sql <- SqlRender::translate(sql, targetDialect = targetDialect,
-                                tempEmulationSchema = tempEmulationSchema)
+    sql <- SqlRender::translate(
+      sql, 
+      targetDialect = targetDialect,
+      tempEmulationSchema = tempEmulationSchema
+      )
     DatabaseConnector::executeSql(conn, sql)
     
     #getId of new
-    result <- checkTable(conn = conn, 
-                         resultSchema = resultSchema, 
-                         stringAppendToTables = stringAppendToTables,
-                         targetDialect = targetDialect, 
-                         tableName = 'models',
-                         columnNames = c('analysis_id',
-                                         'model_name',
-                                         'target_id',
-                                         'outcome_id',
-                                         'tar_id',
-                           'plp_data_setting_id',
-                           'population_setting_id',
-                           'model_setting_id',
-                           'covariate_setting_id',
-                           'sample_setting_id',
-                           'split_setting_id',
-                           'feature_engineering_setting_id',
-                           'tidy_covariates_setting_id',
-                           'require_dense_matrix',
-                                         'researcher_id',
-                                         'database_id',
-                                         'hyper_param_search',
-                                         'plp_model_file',
-                                         'execution_date_time',
-                                         
-                                         'training_time',
-                                         'intercept'), 
-                         values = c(enc(analysisId),
-                                    enc(modelName),
-                                    targetId,
-                                    outcomeId,
-                                    tarId,
-                           plpDataSettingId,
-                           populationSettingId,
-                           modelSettingId,
-                           covariateSettingId,
-                           sampleSettingId,
-                           splitSettingId,
-                           featureEngineeringSettingId,
-                           tidyCovariatesSettingId,
-                           ifelse(requireDenseMatrix, "'T'", "'F'"),
-                                    researcherId,
-                                    databaseId,
-                                    enc(hyperParamSearch),
-                                    enc(plpModelFile),
-                                    enc(dateTime),
-                                    enc(trainingTime),
-                                    intercept),
-                         tempEmulationSchema = tempEmulationSchema
+    result <- checkTable(
+      conn = conn, 
+      resultSchema = resultSchema, 
+      stringAppendToTables = stringAppendToTables,
+      targetDialect = targetDialect, 
+      tableName = 'models',
+      columnNames = c(
+        'analysis_id',
+        'model_design_id',
+        'researcher_id',
+        'database_id',
+        'hyper_param_search',
+        'plp_model_file',
+        'execution_date_time',
+        'training_time',
+        'intercept',
+        'require_dense_matrix'
+        ), 
+      values = c(
+        enc(analysisId),
+        modelDesignId,
+        researcherId,
+        databaseId,
+        enc(hyperParamSearch),
+        enc(plpModelFile),
+        enc(executionDateTime),
+        enc(trainingTime),
+        intercept,
+        ifelse(requireDenseMatrix, "'T'", "'F'")
+        ),
+      tempEmulationSchema = tempEmulationSchema
     )
     
   } 
   
   return(result$modelId[1])
 }
-
-
 
 addResult <- function(conn, resultSchema, targetDialect,
                       stringAppendToTables = '',
@@ -1968,6 +2189,7 @@ addResult <- function(conn, resultSchema, targetDialect,
                       targetId,
                       outcomeId,
                       tarId,
+  restrictPlpDataSettingId,
                       populationSettingId,
                       executionDateTime,
                       plpVersion,
@@ -1984,6 +2206,7 @@ addResult <- function(conn, resultSchema, targetDialect,
                                        'target_id',
                                        'outcome_id',
                                        'tar_id',
+                         'plp_data_setting_id',
                                        'population_setting_id',
                                        'execution_date_time',
                                        'plp_version'), 
@@ -1993,6 +2216,7 @@ addResult <- function(conn, resultSchema, targetDialect,
                                   targetId,
                                   outcomeId,
                                   tarId,
+                         restrictPlpDataSettingId,
                                   populationSettingId,
                                   enc(executionDateTime),
                                   enc(plpVersion)),
@@ -2008,12 +2232,13 @@ addResult <- function(conn, resultSchema, targetDialect,
     target_id,
     outcome_id,
     tar_id,
+    plp_data_setting_id,
     population_setting_id,
     execution_date_time,
     plp_version
   ) 
   VALUES (@model_id, @researcher_id, @database_id, @target_id, @outcome_id, @tar_id, 
-          @population_setting_id, '@execution_date_time', '@plp_version')"
+          @plp_data_setting_id, @population_setting_id, '@execution_date_time', '@plp_version')"
     sql <- SqlRender::render(sql, 
                              my_schema = resultSchema,
                              model_id = modelId,
@@ -2022,6 +2247,7 @@ addResult <- function(conn, resultSchema, targetDialect,
                              target_id = targetId,
                              outcome_id = outcomeId,
                              tar_id = tarId,
+      plp_data_setting_id = restrictPlpDataSettingId,
                              population_setting_id = populationSettingId,
                              execution_date_time = executionDateTime,
                              plp_version = plpVersion,
@@ -2042,6 +2268,7 @@ addResult <- function(conn, resultSchema, targetDialect,
                                          'target_id',
                                          'outcome_id',
                                          'tar_id',
+                           'plp_data_setting_id', 
                                          'population_setting_id',
                                          'execution_date_time',
                                          'plp_version'), 
@@ -2051,6 +2278,7 @@ addResult <- function(conn, resultSchema, targetDialect,
                                     targetId,
                                     outcomeId,
                                     tarId,
+                           restrictPlpDataSettingId,
                                     populationSettingId,
                                     enc(executionDateTime),
                                     enc(plpVersion)),
@@ -2060,6 +2288,73 @@ addResult <- function(conn, resultSchema, targetDialect,
   } 
   
   return(result$resultId[1])
+}
+
+# attrition
+addAttrition <- function(
+  conn, resultSchema, targetDialect,
+  stringAppendToTables = '',
+  resultId,
+  attrition,
+  overWriteIfExists = T,
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")){
+  
+  value <- attrition
+  if(is.null(value)){
+    return(NULL)
+  }
+  
+  # edit names
+  firstLower <- function(x) {
+    substr(x, 1, 1) <- tolower(substr(x, 1, 1))
+    return(x)
+  }
+  colnames(value) <- sapply(colnames(value), firstLower )
+
+  value$resultId <- resultId
+  
+  # get column names and check all present in object
+  columnNames <- getColumnNames(conn = conn, 
+    resultSchema = resultSchema, 
+    targetDialect = targetDialect, 
+    tableName = paste0(stringAppendToTables,'attrition'), 
+    tempEmulationSchema = tempEmulationSchema)
+  isValid <- sum(colnames(value)%in%columnNames) == length(columnNames)
+  
+  exists <- checkResultExists(conn = conn, 
+    resultSchema = resultSchema, 
+    targetDialect = targetDialect, 
+    tableName = paste0(stringAppendToTables,'attrition'),
+    resultId = resultId,
+    tempEmulationSchema = tempEmulationSchema)
+  
+  if(isValid && (!exists || overWriteIfExists)){
+    
+    # REMOVE existing result
+    if(exists){
+      sql <- "delete from @result_schema.@table_name where result_id = @result_id;"
+      sql <- SqlRender::render(sql, 
+        result_id=resultId,
+        result_schema = resultSchema,
+        table_name = paste0(stringAppendToTables,'attrition'))
+      sql <- SqlRender::translate(sql, 
+        targetDialect = targetDialect,
+        tempEmulationSchema = tempEmulationSchema)
+      DatabaseConnector::executeSql(conn, sql)
+    }
+    
+    # add 
+    ParallelLogger::logInfo(paste0('Inserting attrition for result ',resultId))
+    DatabaseConnector::insertTable(connection = conn, 
+      databaseSchema = resultSchema, 
+      tableName = paste0(stringAppendToTables,'attrition'), 
+      data = value[,columnNames], 
+      dropTableIfExists = F, createTable = F, tempTable = F, 
+      bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
+      tempEmulationSchema = tempEmulationSchema)
+  }
+  
+  return(invisible(NULL))
 }
 
 
@@ -2418,9 +2713,9 @@ addDemographicSummary <- function(conn, resultSchema, targetDialect,
     return(x)
   }
   colnames(value) <- sapply(colnames(value), firstLower )
-  if(sum(colnames(value)=="p50PredictedProbability")>0){
-    colnames(value)[colnames(value)=="p50PredictedProbability"] <- 'medianPredictedProbability'
-  }
+  #if(sum(colnames(value)=="p50PredictedProbability")>0){
+  #  colnames(value)[colnames(value)=="p50PredictedProbability"] <- 'medianPredictedProbability'
+  #}
   
   value$resultId <- resultId
   
@@ -2490,10 +2785,12 @@ addCovariateSummary <- function(conn, resultSchema, targetDialect,
   }
   colnames(value) <- sapply(colnames(value), firstLower )
   value$resultId <- resultId
+  # remove _ from names
+  colnames(value) <- gsub('_','', colnames(value))
   
   if(restrictToIncluded){
     ParallelLogger::logInfo('Restricting to covariates included in model')
-    value <- value[value$covariateValue!=0,] 
+    value <- value[value$covariateValue!=0 & !is.na(value$covariateValue),] 
   }
   
   # get column names and check all present in object
