@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -192,7 +192,8 @@
   featureEngineeringSettings <span class='op'>=</span> <span class='cn'>NULL</span>,
   sampleSettings <span class='op'>=</span> <span class='cn'>NULL</span>,
   preprocessSettings <span class='op'>=</span> <span class='cn'>NULL</span>,
-  <span class='va'>modelSettings</span>
+  modelSettings <span class='op'>=</span> <span class='cn'>NULL</span>,
+  runCovariateSummary <span class='op'>=</span> <span class='cn'>T</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -233,6 +234,10 @@
     <tr>
       <th>modelSettings</th>
       <td><p>The model settings such as <code><a href='setLassoLogisticRegression.html'>setLassoLogisticRegression()</a></code></p></td>
+    </tr>
+    <tr>
+      <th>runCovariateSummary</th>
+      <td><p>Whether to run the covariateSummary</p></td>
     </tr>
     </table>
 
