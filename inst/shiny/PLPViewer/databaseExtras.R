@@ -31,8 +31,8 @@ getDbSummary <- function(con, mySchema, targetDialect, myTableAppend = '' ){
      d.database_acronym AS Dev, 
      d.database_acronym AS Val,
      targets.cohort_name AS T, outcomes.cohort_name AS O,
-       models.model_name AS model, 
-       models.covariate_setting_id, 
+       model_settings.model_type AS model, 
+       model_designs.covariate_setting_id, 
        tars.tar_start_day, tars.tar_start_anchor, tars.tar_end_day, tars.tar_end_anchor,
        ROUND(aucResult.auc, 3) as auc,
        ROUND(auprcResult.auprc,4) as auprc,
@@ -43,11 +43,18 @@ getDbSummary <- function(con, mySchema, targetDialect, myTableAppend = '' ){
        
        FROM @my_schema.@my_table_appendresults AS results INNER JOIN @my_schema.@my_table_appendmodels AS models 
           ON results.model_id = models.model_id and
-             results.target_id = models.target_id and 
-             results.outcome_id = models.outcome_id and 
-             results.tar_id = models.tar_id and
-             results.population_setting_id = models.population_setting_id and
              results.database_id = models.database_id
+             
+    inner join @my_schema.@my_table_appendmodel_designs as model_designs
+    on model_designs.model_design_id = models.model_design_id and
+    results.target_id = model_designs.target_id and 
+             results.outcome_id = model_designs.outcome_id and 
+             results.tar_id = model_designs.tar_id and
+             results.population_setting_id = model_designs.population_setting_id
+         
+    inner join @my_schema.@my_table_appendmodel_settings as model_settings
+    on model_settings.model_setting_id = model_designs.model_setting_id
+    
              
         INNER JOIN @my_schema.@my_table_appendstudy_models AS s on models.model_id = s.model_id
        
@@ -56,11 +63,11 @@ getDbSummary <- function(con, mySchema, targetDialect, myTableAppend = '' ){
         LEFT JOIN (SELECT cohort_id, cohort_name FROM @my_schema.@my_table_appendcohorts) AS outcomes ON results.outcome_id = outcomes.cohort_id
         LEFT JOIN @my_schema.@my_table_appenddatabase_details AS d ON results.database_id = d.database_id 
         LEFT JOIN @my_schema.@my_table_appendtars AS tars ON results.tar_id = tars.tar_id
-        LEFT JOIN (SELECT result_id, value AS auc FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'AUC.auc' and eval in ('test','validation') ) AS aucResult ON results.result_id = aucResult.result_id
-        LEFT JOIN (SELECT result_id, value AS auprc FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'AUPRC' and eval in ('test','validation') ) AS auprcResult ON results.result_id = auprcResult.result_id
-        LEFT JOIN (SELECT result_id, sum(value) AS population_size FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'populationSize' group by result_id) AS nResult ON results.result_id = nResult.result_id
-        LEFT JOIN (SELECT result_id, sum(value) AS outcome_count FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'outcomeCount' group by result_id) AS oResult ON results.result_id = oResult.result_id
-        LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'populationSize' and eval = 'test') AS nTest ON results.result_id = nTest.result_id;"
+        LEFT JOIN (SELECT result_id, value AS auc FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'AUROC' and evaluation in ('Test','Validation') ) AS aucResult ON results.result_id = aucResult.result_id
+        LEFT JOIN (SELECT result_id, value AS auprc FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'AUPRC' and evaluation in ('Test','Validation') ) AS auprcResult ON results.result_id = auprcResult.result_id
+        LEFT JOIN (SELECT result_id, sum(value) AS population_size FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'populationSize' and evaluation in ('Test','Train') group by result_id) AS nResult ON results.result_id = nResult.result_id
+        LEFT JOIN (SELECT result_id, sum(value) AS outcome_count FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'outcomeCount' and evaluation in ('Test','Train') group by result_id) AS oResult ON results.result_id = oResult.result_id
+        LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'populationSize' and evaluation = 'Test') AS nTest ON results.result_id = nTest.result_id;"
     
     sql <- SqlRender::render(sql = sql, 
                              my_schema = mySchema,
@@ -95,18 +102,7 @@ getDbSummary <- function(con, mySchema, targetDialect, myTableAppend = '' ){
 
 }
 
-#' Extract the validations from the predictionLibrary database
-#'
-#' @details
-#' Load the validation results from database.
-#' 
-#' @param con  The connection of the database
-#' @param mySchema The result schema containing the results
-#' @param modelId The modelId to extract validation results
-#' @param targetDialect DBMS
-#' @param myTableAppend A string appended to results tables 
-#' 
-#' @export# 
+
 getValSummary <- function(con, mySchema, modelId, targetDialect, myTableAppend = '' ){
   ParallelLogger::logInfo("getting Val summary")
   
@@ -115,8 +111,8 @@ getValSummary <- function(con, mySchema, modelId, targetDialect, myTableAppend =
                                 --databases.database_acronym AS Dev, 
                                 d.database_acronym AS Val,
                                 targets.cohort_name AS T, outcomes.cohort_name AS O,
-   models.model_name AS model, 
-   models.covariate_setting_id, 
+   model_settings.model_type AS model, 
+   model_designs.covariate_setting_id, 
    tars.tar_start_day, tars.tar_start_anchor, tars.tar_end_day, tars.tar_end_anchor,
    ROUND(aucResult.auc, 3) as auc,
    ROUND(auprcResult.auprc,4) as auprc,
@@ -129,22 +125,28 @@ getValSummary <- function(con, mySchema, modelId, targetDialect, myTableAppend =
    FROM @my_schema.@my_table_appendresults AS results INNER JOIN @my_schema.@my_table_appendmodels AS models
     ON 
          results.model_id = models.model_id AND
-         results.tar_id = models.tar_id and
-         results.population_setting_id = models.population_setting_id and
          results.model_id = @model_id
+         
+    inner join @my_schema.@my_table_appendmodel_designs as model_designs
+    on model_designs.model_design_id = models.model_design_id and
+             results.tar_id = model_designs.tar_id and
+         results.population_setting_id = model_designs.population_setting_id
+         
+    inner join @my_schema.@my_table_appendmodel_settings as model_settings
+    on model_settings.model_setting_id = model_designs.model_setting_id
     
     LEFT JOIN (SELECT cohort_id, cohort_name FROM @my_schema.@my_table_appendcohorts) AS targets ON results.target_id = targets.cohort_id
     LEFT JOIN (SELECT cohort_id, cohort_name FROM @my_schema.@my_table_appendcohorts) AS outcomes ON results.outcome_id = outcomes.cohort_id
     LEFT JOIN @my_schema.@my_table_appenddatabase_details AS d ON results.database_id = d.database_id 
     LEFT JOIN @my_schema.@my_table_appendtars AS tars ON results.tar_id = tars.tar_id
-    LEFT JOIN (SELECT result_id, value AS auc FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'AUC.auc' and eval in ('test','validation') ) AS aucResult ON results.result_id = aucResult.result_id
-    LEFT JOIN (SELECT result_id, value AS auprc FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'AUPRC' and eval in ('test','validation') ) AS auprcResult ON results.result_id = auprcResult.result_id
+    LEFT JOIN (SELECT result_id, value AS auc FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'AUROC' and evaluation in ('Test','Validation') ) AS aucResult ON results.result_id = aucResult.result_id
+    LEFT JOIN (SELECT result_id, value AS auprc FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'AUPRC' and evaluation in ('Test','Validation') ) AS auprcResult ON results.result_id = auprcResult.result_id
     
-    LEFT JOIN (SELECT result_id, value AS calibration_in_large FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'CalibrationInLarge' and eval in ('test','validation') ) AS CalibrationInLargeResult ON results.result_id = CalibrationInLargeResult.result_id
+    LEFT JOIN (SELECT result_id, value AS calibration_in_large FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'calibrationInLarge intercept' and evaluation in ('Test','Validation') ) AS CalibrationInLargeResult ON results.result_id = CalibrationInLargeResult.result_id
 
-    LEFT JOIN (SELECT result_id, sum(value) AS population_size FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'populationSize' group by result_id) AS nResult ON results.result_id = nResult.result_id
-    LEFT JOIN (SELECT result_id, sum(value) AS outcome_count FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'outcomeCount' group by result_id) AS oResult ON results.result_id = oResult.result_id
-    LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'populationSize' and eval = 'test') AS nTest ON results.result_id = nTest.result_id;"
+    LEFT JOIN (SELECT result_id, sum(value) AS population_size FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'populationSize' and evaluation in ('Test','Train','Validation') group by result_id) AS nResult ON results.result_id = nResult.result_id
+    LEFT JOIN (SELECT result_id, sum(value) AS outcome_count FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'outcomeCount' and evaluation in ('Test','Train','Validation') group by result_id) AS oResult ON results.result_id = oResult.result_id
+    LEFT JOIN (SELECT result_id, value AS test_size FROM @my_schema.@my_table_appendevaluation_statistics where metric = 'populationSize' and evaluation in ('Test','Validation')) AS nTest ON results.result_id = nTest.result_id;"
   
   sql <- SqlRender::render(sql = sql, 
                            my_schema = mySchema, 
@@ -196,15 +198,7 @@ getResult <- function(con, tableName, resultId, mySchema, targetDialect){
   return(result)
 }
 
-#' Extract a plpResult from the predictionLibrary database
-#'
-#' @details
-#' Load the main results from database into a runPlp object
-#'
-#' @param chosenRow  The row from the summaryTable of the selected result
-#' 
-#' @export
-  
+
 loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTableAppend = ''){
   resultId <- chosenRow$resultId
   modelId <- chosenRow$analysisId
@@ -215,18 +209,24 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
   if (!val){
     print(paste0('model: ', modelId))
     ## get hyper_param_search plpResult$model$hyperParamSearch <- ...
-    sql <- "SELECT population_setting_id, model_setting_id, covariate_setting_id, hyper_param_search FROM @my_schema.@my_table_appendmodels AS models WHERE model_id = @model_id;"
+    #old sql <- "SELECT population_setting_id, model_setting_id, covariate_setting_id, hyper_param_search FROM @my_schema.@my_table_appendmodels AS models WHERE model_id = @model_id;"
+    sql <- "SELECT population_setting_id, model_setting_id, covariate_setting_id, hyper_param_search FROM 
+    @my_schema.@my_table_appendmodel_designs md inner join 
+    @my_schema.@my_table_appendmodels AS models 
+    on models.model_design_id = md.model_design_id
+    WHERE models.model_id = @model_id;"
+    
     sql <- SqlRender::render(sql = sql, 
                              my_schema = mySchema,
                              model_id = modelId,
                              my_table_append = myTableAppend)
     sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
-    ParallelLogger::logInfo("starting population")
+    ParallelLogger::logInfo("starting population, model setting and covariate setting")
 
     ids <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
     colnames(ids) <- SqlRender::snakeCaseToCamelCase(colnames(ids))
     
-    ParallelLogger::logInfo("finishing population")
+    ParallelLogger::logInfo("finishing population, model setting and covariate setting")
     
     popSetId <- ids$populationSettingId
     modSetId <- ids$modelSettingId
@@ -239,7 +239,7 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     result$covariateSummary <- NULL
    
     #inputSetting
-    result$inputSetting <- list()
+    result$model <- list(settings = list())
     
     sql <- "SELECT * FROM @my_schema.@my_table_appendmodel_settings AS model_setting WHERE model_setting_id = @model_setting_id"
     sql <- SqlRender::render(sql = sql, 
@@ -254,9 +254,9 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     ParallelLogger::logInfo("end modeSet")
     
     if(length(tempModSettings$modelSettingsJson)>0){
-      result$inputSetting$modelSettings <- jsonlite::unserializeJSON(tempModSettings$modelSettingsJson)
+      result$model$settings$modelSettings <- jsonlite::unserializeJSON(tempModSettings$modelSettingsJson)
     } else{
-      result$inputSetting$modelSettings <- list('missing', list(param = 'na'))
+      result$model$settings$modelSettings <- list('missing', list(param = 'na'))
     }
     
     sql <- "SELECT * FROM @my_schema.@my_table_appendcovariate_settings AS covariate_setting WHERE covariate_setting_id = @covariate_setting_id"
@@ -272,14 +272,28 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     ParallelLogger::logInfo("end covSet")
     
     if(length(tempCovSettings$covariateSettingsJson)>0){
-      result$inputSetting$dataExtrractionSettings$covariateSettings <- jsonlite::unserializeJSON(tempCovSettings$covariateSettingsJson)
-    }else{
-      result$inputSetting$dataExtrractionSettings$covariateSettings <- list()
-    }
-    
-    if(!is.null(result$inputSetting$dataExtrractionSettings$covariateSettings$endDays)){
-      class(result$inputSetting$dataExtrractionSettings$covariateSettings) <- 'covariateSettings'
-    }
+      # old result$inputSetting$dataExtrractionSettings$covariateSettings <- jsonlite::unserializeJSON(tempCovSettings$covariateSettingsJson)
+      result$model$settings$covariateSettings <- jsonlite::fromJSON(tempCovSettings$covariateSettingsJson, simplifyVector = T, simplifyDataFrame = F, simplifyMatrix = T)
+      
+      extractAttributes <- function(x){
+        
+        ind <- grep('attr_', names(x))
+        
+        if(length(ind)>0){
+          attributeValues <- x[ind]
+          x <- x[-ind]
+          names(attributeValues) <- gsub(pattern = 'attr_',replacement = '',x = names(attributeValues))
+          attributeValues$names <- names(x)
+          attributes(x) <- attributeValues
+        }
+        
+        return(x)
+      }
+      
+      result$model$settings$covariateSettings <- lapply(result$model$settings$covariateSettings, function(x) extractAttributes(x))
+  } else{
+    result$model$settings$covariateSettings <- list()
+  }
     
     
     sql <- "SELECT * FROM @my_schema.@my_table_appendpopulation_settings AS population_settings WHERE population_setting_id = @population_setting_id"
@@ -295,12 +309,25 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
     ParallelLogger::logInfo("end popSet")
     
     if(length(tempPopSettings$populationSettingsJson)>0){
-      result$inputSetting$populationSettings <- jsonlite::unserializeJSON(tempPopSettings$populationSettingsJson)
+      result$model$settings$populationSettings <- jsonlite::unserializeJSON(tempPopSettings$populationSettingsJson)
     } else{
-      result$inputSetting$populationSettings <- NULL
+      result$model$settings$populationSettings <- NULL
     }
     
-    result$inputSetting$populationSettings$attrition <- do.call(cbind, result$inputSetting$populationSettings$attrition)
+    # attrition
+    sql <- "SELECT * FROM @my_schema.@my_table_appendattrition WHERE result_id = @result_id"
+    ParallelLogger::logInfo("start attrition")
+    sql <- SqlRender::render(sql = sql, 
+      my_schema = mySchema,
+      result_id = resultId,
+      my_table_append = myTableAppend)
+    sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+    
+    tempAttrition  <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+    colnames(tempAttrition) <- SqlRender::snakeCaseToCamelCase(colnames(tempAttrition))
+    ParallelLogger::logInfo("end popSet")
+    
+    result$model$trainDetails$attrition <- as.data.frame(tempAttrition)
     
     result$performanceEvaluation$demographicSummary <- getResult(con, paste0(myTableAppend,'demographic_summary'), resultId, mySchema, targetDialect = targetDialect)
     result$performanceEvaluation$demographicSummary$evaluation <- trimws(result$performanceEvaluation$demographicSummary$evaluation)
@@ -317,9 +344,6 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
                                                                                                                                                    "P25PredictedProbability", "MedianPredictedProbability", 
                                                                                                                                                    "P75PredictedProbability" , "P95PredictedProbability","MaxPredictedProbability"))
     
-    result$model$settings$modelSettings <- result$inputSetting$modelSettings
-    result$model$settings$populationSettings <- result$inputSetting$populationSettings
-    result$model$settings$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
     
     result$model$trainDetails$hyperParamSearch <- hyperParamSearch
   
@@ -376,47 +400,7 @@ loadPlpFromDb <- function(chosenRow, mySchema, con, val = F, targetDialect, myTa
 
 
 
-#' Extract a covariateSummary from the predictionLibrary database
-#'
-#' @details
-#' Load the covariateSummary from database into a runPlp object
-#'
-#' @param chosenRow  The row from the summaryTable of the selected result
-#' 
-#' @export
 
-loadCovSumFromDb <- function(chosenRow, mySchema, con, myTableAppend = '', targetDialect = 'redshift'){
-  ParallelLogger::logInfo("starting covsum")
-  resultId <- chosenRow$resultId
-  sql <- "SELECT * FROM @my_schema.@my_table_appendcovariate_summary AS covariate_summary WHERE result_id = @result_id;" 
-  
-  sql <- SqlRender::render(sql = sql,
-                           my_schema = mySchema,
-                           result_id = resultId,
-                           my_table_append = myTableAppend)
-  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
-
-  covariateSummary <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
-  colnames(covariateSummary) <- SqlRender::snakeCaseToCamelCase(colnames(covariateSummary))
-  #print(colnames(covariateSummary))
-  #colnames(covariateSummary) <- SqlRender::snakeCaseToCamelCase(colnames(covariateSummary))
-  
-  
-  colnames(covariateSummary) <- editColnames(colnames(covariateSummary), c('CovariateCount', "CovariateMean", "CovariateStDev",
-                                                                           "CovariateCountWithNoOutcome","CovariateMeanWithNoOutcome",
-                                                                           "CovariateStDevWithNoOutcome" ,     "CovariateCountWithOutcome" ,
-                                                                           "CovariateMeanWithOutcome" ,        "CovariateStDevWithOutcome",
-                                                                           "StandardizedMeanDiff" ,            "TestCovariateCountWithNoOutcome",
-                                                                           "TestCovariateMeanWithNoOutcome",   "TestCovariateStDevWithNoOutcome",
-                                                                           "TrainCovariateCountWithNoOutcome", "TrainCovariateMeanWithNoOutcome",
-                                                                           "TrainCovariateStDevWithNoOutcome", "TestCovariateCountWithOutcome" ,
-                                                                           "TestCovariateMeanWithOutcome" ,    "TestCovariateStDevWithOutcome" ,
-                                                                           "TrainCovariateCountWithOutcome",   "TrainCovariateMeanWithOutcome" ,
-                                                                           "TrainCovariateStDevWithOutcome" ))
-  
-  ParallelLogger::logInfo("finishing covsum")
-  return(covariateSummary)
-}
 
 
 

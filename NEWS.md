@@ -1,3 +1,15 @@
+PatientLevelPrediction 5.0.4
+======================
+- updated installation documents
+- added tryCatch around plots to prevent code stopping
+
+PatientLevelPrediction 5.0.3
+======================
+- updated result schema (added model_design table with settings and added attrition table)
+- updated shiny app for new database result schema
+- removed C++ code for AUC and Rcpp dependency, now using pROC instead as faster
+- made covariate summary optional when externally validating 
+
 PatientLevelPrediction 5.0.2
 ======================
 - updated json structure for specifying study design (made it friendlier to read)

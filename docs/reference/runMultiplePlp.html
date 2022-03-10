@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -191,6 +191,7 @@
   onlyFetchData <span class='op'>=</span> <span class='cn'>F</span>,
   splitSettings <span class='op'>=</span> <span class='fu'><a href='createDefaultSplitSetting.html'>createDefaultSplitSetting</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"stratified"</span>, testFraction <span class='op'>=</span> <span class='fl'>0.25</span>,
     trainFraction <span class='op'>=</span> <span class='fl'>0.75</span>, splitSeed <span class='op'>=</span> <span class='fl'>123</span>, nfold <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>,
+  cohortDefinitions <span class='op'>=</span> <span class='cn'>NULL</span>,
   logSettings <span class='op'>=</span> <span class='fu'><a href='createLogSettings.html'>createLogSettings</a></span><span class='op'>(</span>verbosity <span class='op'>=</span> <span class='st'>"DEBUG"</span>, timeStamp <span class='op'>=</span> <span class='cn'>T</span>, logName <span class='op'>=</span>
     <span class='st'>"runPlp Log"</span><span class='op'>)</span>,
   saveDirectory <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>getwd</a></span><span class='op'>(</span><span class='op'>)</span>
@@ -214,6 +215,10 @@
     <tr>
       <th>splitSettings</th>
       <td><p>The train/validation/test splitting used by all analyses created using <code><a href='createDefaultSplitSetting.html'>createDefaultSplitSetting()</a></code></p></td>
+    </tr>
+    <tr>
+      <th>cohortDefinitions</th>
+      <td><p>A list of cohort definitions for the target and outcome cohorts</p></td>
     </tr>
     <tr>
       <th>logSettings</th>

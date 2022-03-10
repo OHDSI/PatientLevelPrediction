@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -177,6 +177,44 @@
       <small>Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
+    <div id="patientlevelprediction-503" class="section level1">
+<h1 class="page-header" data-toc-text="5.0.3">
+<a href="#patientlevelprediction-503" class="anchor"></a>PatientLevelPrediction 5.0.3</h1>
+<ul>
+<li>updated result schema (added model_design table with settings and added attrition table)</li>
+<li>updated shiny app for new database result schema</li>
+<li>removed C++ code for AUC and Rcpp dependency, now using pROC instead as faster</li>
+<li>made covariate summary optional when externally validating</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-502" class="section level1">
+<h1 class="page-header" data-toc-text="5.0.2">
+<a href="#patientlevelprediction-502" class="anchor"></a>PatientLevelPrediction 5.0.2</h1>
+<ul>
+<li>updated json structure for specifying study design (made it friendlier to read)</li>
+<li>includes smooth calibration plot fix (done by Alex)</li>
+<li>fixed bug with multiple sample methods or feature engineering settings causing invalid error</li>
+</ul>
+</div>
+    <div id="patientlevelprediction-500" class="section level1">
+<h1 class="page-header" data-toc-text="5.0.0">
+<a href="#patientlevelprediction-500" class="anchor"></a>PatientLevelPrediction 5.0.0</h1>
+<ul>
+<li>plpModel now saved as json files when possible</li>
+<li>Updated runPlp to make more modular</li>
+<li>now possible to customise data splitting, feature engineering, sampling (over/under) and learning algorithm</li>
+<li>added function for extracting cohort covariates</li>
+<li>updated evalaution to evaluate per strata (evaluation column)</li>
+<li>updated plpModel structure</li>
+<li>updated runPlp structure</li>
+<li>updated shiny and package to use tidyr and not reshape2</li>
+<li>sklearn learning algorithms share the same fit function</li>
+<li>r learning algorithms share the same fit function</li>
+<li>interface to cyclops code revised</li>
+<li>ensemble learning removed (will be in separate package)</li>
+<li>deep learning removed (will be in DeepPatientLevelPrediction package)</li>
+</ul>
+</div>
     <div id="patientlevelprediction-442" class="section level1">
 <h1 class="page-header" data-toc-text="4.4.2">
 <a href="#patientlevelprediction-442" class="anchor"></a>PatientLevelPrediction 4.4.2</h1>
