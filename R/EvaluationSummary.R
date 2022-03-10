@@ -224,28 +224,48 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
       c(evalType, timepoint, 'C-statistic upper 95% CI', cStatistic_u95CI)
     )
     ParallelLogger::logInfo(paste0('C-statistic: ',cStatistic, ' (',cStatistic_l95CI ,'-', cStatistic_u95CI ,')'))
-    
-    
+
     # add e-stat
-    w <- tryCatch(
-      {
-        rms::val.surv(
-          est.surv = 1-p, 
-          S = S,
-          u = timepoint, 
-          fun = function(pr)log(-log(pr))
+
+    .validateSurvival <- function(p, S, timepoint) {
+      estimatedSurvival <- 1 - p
+      notMissing <- !is.na(estimatedSurvival + S[, 1] + S[, 2])
+      estimatedSurvival   <- estimatedSurvival[notMissing]
+      S <- S[notMissing, ]
+      .curtail <- function(x) pmin(.9999, pmax(x, .0001))
+      f <- polspline::hare(
+        S[, 1],
+        S[, 2],
+        log(-log((.curtail(estimatedSurvival)))),
+        maxdim = 5
+      )
+      actual <- 1 - polspline::phare(timepoint, log(-log(estimatedSurvival)), f)
+
+      return(
+        list(
+          actual = actual,
+          estimatedSurvival = estimatedSurvival
         )
-      },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
-    )
-    
-    eStatistic <- -1
-    eStatistic90 <- -1
-    if(!is.null(w)){
-      eStatistic<-mean(abs(w$actual - w$p))
-      eStatistic90<-stats::quantile((abs(w$actual - w$p)),0.9)
-      
+      )
     }
+
+    w <- tryCatch(
+    {
+      .validateSurvival(
+        p = p,
+        S = S,
+        timepoint = timepoint
+      )
+    },
+    error = function(e){ParallelLogger::logError(e); return(NULL)}
+    )
+
+    eStatistic <- eStatistic90 <- -1
+    if (!is.null(w)) {
+      eStatistic <- quantile(abs(w$actual - w$estimatedSurvival), probs = .9)
+      eStatistic90 <- mean(abs(w$actual - w$estimatedSurvival))
+    }
+
     result <- rbind(
       result, 
       c(evalType, timepoint, 'E-statistic', eStatistic),
