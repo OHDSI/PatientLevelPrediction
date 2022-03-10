@@ -1,3 +1,8 @@
+PatientLevelPrediction 5.0.4
+======================
+- updated installation documents
+- added tryCatch around plots to prevent code stopping
+
 PatientLevelPrediction 5.0.3
 ======================
 - updated result schema (added model_design table with settings and added attrition table)

@@ -140,40 +140,62 @@ plotPlp <- function(
   }
   
   # run each of the plots:
-  plotSparseRoc(
+  tryCatch({
+    plotSparseRoc(
     plpResult = plpResult,
     typeColumn = typeColumn,
     saveLocation = saveLocation,
     fileName = 'sparseROC.pdf'
-  )
+  )},
+    error = function(e){ParallelLogger::logError('Issue with plotSparseRoc')})
   
-  plotPredictedPDF(
-    plpResult, 
-    saveLocation = saveLocation, 
-    fileName = 'predictedPDF.pdf',
-    typeColumn = typeColumn)
-  plotPreferencePDF(
-    plpResult, 
-    saveLocation = saveLocation, 
-    fileName = 'preferencePDF.pdf', 
-    typeColumn = typeColumn)
-  plotPrecisionRecall(
-    plpResult, 
-    saveLocation = saveLocation, 
-    fileName = 'precisionRecall.pdf', 
-    typeColumn = typeColumn)
-  plotF1Measure(
-    plpResult, 
-    saveLocation = saveLocation,
-    fileName = 'f1Measure.pdf', 
-    typeColumn = typeColumn)
-  plotDemographicSummary(
-    plpResult, 
-    saveLocation = saveLocation, 
-    fileName = 'demographicSummary.pdf',
-    typeColumn = typeColumn)
+  tryCatch({
+    plotPredictedPDF(
+      plpResult, 
+      saveLocation = saveLocation, 
+      fileName = 'predictedPDF.pdf',
+      typeColumn = typeColumn)
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotPredictedPDF')})
+
+  tryCatch({
+    plotPreferencePDF(
+      plpResult, 
+      saveLocation = saveLocation, 
+      fileName = 'preferencePDF.pdf', 
+      typeColumn = typeColumn)
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotPreferencePDF')})
   
+  tryCatch({
+    plotPrecisionRecall(
+      plpResult, 
+      saveLocation = saveLocation, 
+      fileName = 'precisionRecall.pdf', 
+      typeColumn = typeColumn)
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotPrecisionRecall')})
+  
+  tryCatch({
+    plotF1Measure(
+      plpResult, 
+      saveLocation = saveLocation,
+      fileName = 'f1Measure.pdf', 
+      typeColumn = typeColumn)
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotF1Measure')})
+  
+  tryCatch({
+    plotDemographicSummary(
+      plpResult, 
+      saveLocation = saveLocation, 
+      fileName = 'demographicSummary.pdf',
+      typeColumn = typeColumn)
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotDemographicSummary')})
+ 
   # add smooth calibration
+  tryCatch({ 
   plotSmoothCalibration(
     plpResult = plpResult,
     smooth = 'loess',
@@ -181,36 +203,55 @@ plotPlp <- function(
     saveLocation = saveLocation,
     fileName = 'smoothCalibration.pdf'
   )
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotSmoothCalibration')})
   
+  tryCatch({ 
   plotSparseCalibration(
     plpResult, 
     saveLocation = saveLocation, 
     fileName = 'sparseCalibration.pdf', 
     typeColumn = typeColumn)
-  plotSparseCalibration2(
-    plpResult,
-    saveLocation = saveLocation, 
-    fileName = 'sparseCalibrationConventional.pdf', 
-    typeColumn = typeColumn)
-  plotPredictionDistribution(
-    plpResult, 
-    saveLocation = saveLocation, 
-    fileName = 'predictionDistribution.pdf', 
-    typeColumn = typeColumn)
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotSparseCalibration')})
   
-  plotVariableScatterplot(
-    plpResult$covariateSummary,
-    saveLocation = saveLocation, 
-    fileName = 'variableScatterplot.pdf'
-  )
+  tryCatch({ 
+    plotSparseCalibration2(
+      plpResult,
+      saveLocation = saveLocation, 
+      fileName = 'sparseCalibrationConventional.pdf', 
+      typeColumn = typeColumn)
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotSparseCalibration2')})
+  
+  tryCatch({ 
+    plotPredictionDistribution(
+      plpResult, 
+      saveLocation = saveLocation, 
+      fileName = 'predictionDistribution.pdf', 
+      typeColumn = typeColumn)
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotPredictionDistribution')})
+  
+  tryCatch({ 
+    plotVariableScatterplot(
+      plpResult$covariateSummary,
+      saveLocation = saveLocation, 
+      fileName = 'variableScatterplot.pdf'
+    )
+  },
+    error = function(e){ParallelLogger::logError('Issue with plotVariableScatterplot')})
   
   
   if(sum(c('TrainWithNoOutcome_CovariateMean', 'TestWithNoOutcome_CovariateMean') %in% colnames(plpResult$covariateSummary))==2){
-    plotGeneralizability(
-      plpResult$covariateSummary, 
-      saveLocation = saveLocation, 
-      fileName = 'generalizability.pdf'
-    )
+    tryCatch({ 
+      plotGeneralizability(
+        plpResult$covariateSummary, 
+        saveLocation = saveLocation, 
+        fileName = 'generalizability.pdf'
+      )
+    },
+      error = function(e){ParallelLogger::logError('Issue with plotGeneralizability')})
   }
   
   return(invisible(TRUE))
