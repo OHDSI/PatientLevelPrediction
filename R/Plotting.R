@@ -1001,39 +1001,28 @@ plotSmoothCalibration <- function(plpResult,
         }
         # loess
         smoothData <- data.frame(y, p)
-        fit <- stats::loess(y ~ p, degree = 2)
-        predictedFit <- stats::predict(fit, se = TRUE)
-        smoothData <- smoothData %>%
-          dplyr::mutate(
-            calibration = predictedFit$fit,
-            se = predictedFit$se,
-            lci = .data$calibration - stats::qt(.975, predictedFit$df) * .data$se,
-            uci = .data$calibration + stats::qt(.975, predictedFit$df) * .data$se
-          )
-
-        xlim <- ylim <- c(0, 1)
+        # xlim <- ylim <- c(0, 1)
         smoothPlot <- plotSmoothCalibrationLoess(data = smoothData, span = span) +
           ggplot2::coord_cartesian(
-            xlim = xlim,
-            ylim = ylim
+            xlim = c(0, maxes),
+            ylim = c(0, maxes)
           )
       } else {
         # Restricted cubic splines
 
         smoothData <- data.frame(y, p)
-        smoothPlot <- plotSmoothCalibrationRcs(data = smoothData, nKnots = nKnots)
+        smoothPlot <- plotSmoothCalibrationRcs(data = smoothData, numberOfKnots = nKnots)
         if (is.character(smoothPlot)) {
           plots[[i]] <- smoothPlot
           failedEvalType[evalTypes[i]] <- TRUE
           next
         }
-        xlim <- ylim <- c(0, 1)
+
         smoothPlot <- smoothPlot +
           ggplot2::coord_cartesian(
-            xlim = xlim,
-            ylim = ylim
+            xlim = c(0, maxes),
+            ylim = c(0, maxes)
           )
-
       }
       # construct the plot grid
       if (scatter) {
@@ -1071,7 +1060,7 @@ plotSmoothCalibration <- function(plpResult,
           strip.text = ggplot2::element_blank()
         ) +
         ggplot2::labs(x = "Predicted Probability") +
-        ggplot2::coord_cartesian(xlim = xlim)
+        ggplot2::coord_cartesian(xlim = c(0, maxes))
       
     } else {
       # use calibrationSummary
@@ -1250,36 +1239,90 @@ plotSmoothCalibrationLoess <- function(data, span = 0.75) {
   return(plot)
 }
 
-plotSmoothCalibrationRcs <- function(data, nKnots) {
+plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
+  data <- data %>%
+    filter(!is.na(y) & !is.na(p))
   p <- data$p
-  for (k in nKnots:3) {
-    formSmooth <- paste0('y ~ rms::rcs(p, ', k, ')')
-    smoothFit <- suppressWarnings(rms::lrm(stats::as.formula(formSmooth), data = data, x = TRUE, y = TRUE))
-    smoothFitFail <- smoothFit$fail
-    if (smoothFitFail) {
+
+  .defineKnots <- function(predictedProbabilities, numberOfKnots) {
+    if (numberOfKnots == 3) {
+      lowestQuantile <- .1
+      highestQuantile <- .9
+    } else if (numberOfKnots > 3 & numberOfKnots <= 6) {
+      lowestQuantile <- .05
+      highestQuantile <- .95
+    } else if (numberOfKnots == 7) {
+      lowestQuantile <- .025
+      highestQuantile <- .975
+    } else {
+        # use mgcv defaults
+        return(numberOfKnots)
+    }
+    knotQuantiles <- seq(
+      lowestQuantile,
+      highestQuantile,
+      length.out = numberOfKnots
+    )
+
+    knotLocation <- quantile(
+      x = predictedProbabilities,
+      probs = knotQuantiles,
+      na.rm = TRUE
+    )
+
+    return(knotLocation)
+  }
+
+  for (k in numberOfKnots:3) {
+    if (k > 7) {
+      smoothFit <- tryCatch(
+        expr = {
+          mgcv::gam(
+            y ~ s(p, bs = 'cr', k = k, m = 2),
+            data = data,
+            family = binomial()
+          )
+        },
+        error = function(e) {
+          return("Failed")
+        }
+      )
+    } else {
+      smoothFit <- tryCatch(
+        expr = {
+          mgcv::gam(
+            y ~ s(p, bs = 'cr', k = k, m = 2),
+            data = data,
+            knots = list(p = .defineKnots(p, k)),
+            family = binomial()
+          )
+        },
+        error = function(e) {
+          return("Failed")
+        }
+      )
+    }
+    if (is.character(smoothFit)) {
       if (k > 3) {
         ParallelLogger::logInfo(paste0("Setting number of Knots to ", k, " led to estimation problems. Switching to nKnots = ", k-1))
       } else {
         ParallelLogger::logInfo(paste0('Unable to fit model'))
-        plot <- "Failed"
       }
+    } else {
+      break
     }
   }
 
-  # If the fit failed for all nKnots return "Failed"
-  if (smoothFitFail) {
-    return(plot)
-  }
+  if (is.character(smoothFit)) return("Failed")
 
-  xRange <- seq(0, p[length(p)], length.out = 1000)
-  pred <- stats::predict(smoothFit, xRange, se.fit = T, type = "lp")
-  predXRange <- stats::plogis(pred$linear.predictors)
-  ciSmooth <- data.frame(
-    lci = stats::plogis(pred$linear.predictors - 1.96 * pred$se.fit),
-    uci = stats::plogis(pred$linear.predictors + 1.96 * pred$se.fit)
+  xRange <- seq(min(p), max(p), length.out = 1e3)
+  predictWithSe <- predict(smoothFit, newdata = data.frame(p = xRange), se.fit = TRUE)
+  smoothData <- data.frame(
+    xRange = xRange,
+    predXRange = plogis(predictWithSe$fit),
+    lci = stats::plogis(predictWithSe$fit - 1.96 * predictWithSe$se.fit),
+    uci = stats::plogis(predictWithSe$fit + 1.96 * predictWithSe$se.fit)
   )
-
-  smoothData <- cbind(xRange, predXRange, ciSmooth)
   plot <- ggplot2::ggplot(
     data = smoothData,
     ggplot2::aes(
@@ -1299,17 +1342,17 @@ plotSmoothCalibrationRcs <- function(data, nKnots) {
         ymax = .data$uci
       ),
       fill = "blue",
-      alpha = 0.2
+      alpha = 0.2,
+      show.legend = FALSE
     ) +
-    ggplot2::geom_segment(
-      ggplot2::aes(
-        x = 0,
-        xend = 1,
-        y = 0,
-        yend = 1,
+    ggplot2::geom_abline(
+      mapping = ggplot2::aes(
+        slope = 1,
+        intercept = 0,
         color = "Ideal",
         linetype = "Ideal"
-      )
+      ),
+      show.legend = FALSE
     ) +
     ggplot2::scale_color_manual(
       name = "Models",
@@ -1320,7 +1363,7 @@ plotSmoothCalibrationRcs <- function(data, nKnots) {
       values = c(rcs = "solid", Ideal = "dashed")
     ) +
     ggplot2::labs(x = "", y = "Observed Probability")
-               
+
   return(plot)
 }
 
