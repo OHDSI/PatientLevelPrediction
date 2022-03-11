@@ -35,7 +35,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Introduction
 Ensemble models combine several models to improve the overall performance. Traditionally, weak learners were combined to boost performance but recent results show that combining several strong approaches can also result in a better performance. There are many examples in literature where ensemble models outperform individual models using stacking, i.e. a final logistic regresssion layer accross the individual model outputs, but other approaches like weigthing has also shown promising results. 
 
-This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to build ensemble models. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
+This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to build ensemble models. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
 
 This will enable studying ensemble methods at scale in the OHDSI data network.
 

@@ -64,7 +64,7 @@ As shown in Figure 2, to define a prediction problem we have to define t=0 by a 
 
 ![Examples of prediction problems](problems.png)
 
-This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the OMOP CDM. In this vignette we assume you have installed the package correctly using the [`InstallationGuide`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf).
+This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the OMOP CDM. In this vignette we assume you have installed the package correctly using the [`InstallationGuide`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/InstallationGuide.pdf).
 
 # Study specification
 
@@ -1156,13 +1156,14 @@ The package has much more functionality than described in this vignette and cont
   
   Functionality | Description | Vignette
 --------------- | --------------------------------------------- | ---------------
-  Builing Multiple Models | This vignette describes how you can run multiple models automatically | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingMultiplePredictiveModels.pdf)
-Custom Models | This vignette describes how you can add your own custom algorithms in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomModels.pdf)
-Custom Splitting Functions | This vignette describes how you can add your own custom training/validation/testing splitting functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSplitting.pdf)
-Custom Sampling Functions | This vignette describes how you can add your own custom sampling functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSamples.pdf)
-Custom Feature Engineering/Selection | This vignette describes how you can add your own custom feature engineering and selection functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomFeatureEngineering.pdf)
-Ensemble models | This vignette describes how you can use the framework to build ensemble models, i.e combine multiple models in a super learner | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingEnsembleModels.pdf)
-Learning curves | Learning curves assess the effect of training set size on model performance by training a sequence of prediction models on successively larger subsets of the training set. A learning curve plot can also help in diagnosing a bias or variance problem as explained below. | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/GeneratingLearningCurves.pdf)
+Builing Multiple Models | This vignette describes how you can run multiple models automatically | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingMultiplePredictiveModels.pdf)
+Custom Models | This vignette describes how you can add your own custom algorithms in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomModels.pdf)
+Custom Splitting Functions | This vignette describes how you can add your own custom training/validation/testing splitting functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSplitting.pdf)
+Custom Sampling Functions | This vignette describes how you can add your own custom sampling functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSamples.pdf)
+Custom Feature Engineering/Selection | This vignette describes how you can add your own custom feature engineering and selection functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomFeatureEngineering.pdf)
+Ensemble models | This vignette describes how you can use the framework to build ensemble models, i.e combine multiple models in a super learner | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingEnsembleModels.pdf)
+Learning curves | Learning curves assess the effect of training set size on model performance by training a sequence of prediction models on successively larger subsets of the training set. A learning curve plot can also help in diagnosing a bias or variance problem as explained below. | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/GeneratingLearningCurves.pdf)
+
 
 # Demos
 
