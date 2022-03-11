@@ -7,7 +7,8 @@
 recalibratePlp(
   prediction,
   analysisId,
-  method = c("recalibrationintheLarge", "weakRecalibration")
+  typeColumn = "evaluationType",
+  method = c("recalibrationInTheLarge", "weakRecalibration")
 )
 }
 \arguments{
@@ -15,7 +16,9 @@ recalibratePlp(
 
 \item{analysisId}{The model analysisId}
 
-\item{method}{Method used to recalibrate ('recalibrationintheLarge' or 'weakRecalibration' )}
+\item{typeColumn}{The column name where the strata types are specified}
+
+\item{method}{Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )}
 }
 \value{
 An object of class \code{runPlp} that is recalibrated on the new data

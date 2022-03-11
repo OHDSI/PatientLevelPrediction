@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -39,12 +39,12 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -60,13 +60,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -106,11 +112,11 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -124,13 +130,13 @@
 
       
 
-      </header><script src="CreatingShinyApp_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
+      </header><script src="CreatingShinyApp_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Creating Shiny App</h1>
                         <h4 class="author">Jenna Reps</h4>
             
-            <h4 class="date">2021-06-17</h4>
+            <h4 class="date">2022-03-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/CreatingShinyApp.Rmd"><code>vignettes/CreatingShinyApp.Rmd</code></a></small>
       <div class="hidden name"><code>CreatingShinyApp.Rmd</code></div>
@@ -287,7 +293,7 @@
     
     <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'plpResult'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
       <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="va">file</span>, <span class="st">'plpResult'</span><span class="op">)</span><span class="op">)</span>
-      <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/transportPlp.html">transportPlp</a></span><span class="op">(</span><span class="va">res</span>, n<span class="op">=</span> <span class="va">minCellCount</span>, 
+      <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu">transportPlp</span><span class="op">(</span><span class="va">res</span>, n<span class="op">=</span> <span class="va">minCellCount</span>, 
                                                   save <span class="op">=</span> <span class="cn">F</span>, dataName <span class="op">=</span> <span class="va">databaseName</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span>
       
       <span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span><span class="op">[</span><span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span><span class="op">$</span><span class="va">covariateValue</span><span class="op">!=</span><span class="fl">0</span>,<span class="op">]</span>
@@ -354,7 +360,7 @@
             
             <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html">file.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">'Validation'</span>,<span class="va">valOutOld</span>, <span class="st">'validationResult.rds'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
               <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">resultDirectory</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">'Validation'</span>,<span class="va">valOutOld</span>, <span class="st">'validationResult.rds'</span><span class="op">)</span><span class="op">)</span>
-              <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/transportPlp.html">transportPlp</a></span><span class="op">(</span><span class="va">res</span>, n<span class="op">=</span> <span class="va">minCellCount</span>, 
+              <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu">transportPlp</span><span class="op">(</span><span class="va">res</span>, n<span class="op">=</span> <span class="va">minCellCount</span>, 
                                                           save <span class="op">=</span> <span class="cn">F</span>, dataName <span class="op">=</span> <span class="va">databaseName</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span>
               <span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span><span class="op">[</span><span class="va">res</span><span class="op">$</span><span class="va">covariateSummary</span><span class="op">$</span><span class="va">covariateValue</span><span class="op">!=</span><span class="fl">0</span>,<span class="op">]</span>
               <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span><span class="op">(</span><span class="va">res</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">outputDirectory</span>,<span class="st">'Validation'</span>,<span class="va">valOut</span>, <span class="st">'validationResult.rds'</span><span class="op">)</span><span class="op">)</span>

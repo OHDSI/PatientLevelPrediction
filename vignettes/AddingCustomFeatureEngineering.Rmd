@@ -1,0 +1,159 @@
+---
+title: "Adding Custom Feature Engineering Functions"
+author: "Jenna Reps"
+date: "`r Sys.Date()`"
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead{}
+    - \fancyhead[CO,CE]{Custom Patient-Level Prediction Algorithms}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[LE,RO]{\thepage}
+    - \renewcommand{\headrulewidth}{0.4pt}
+    - \renewcommand{\footrulewidth}{0.4pt}
+output:
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Adding Custom Feature Engineering}
+-->
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(PatientLevelPrediction)
+```
+# Introduction
+
+This vignette describes how you can add your own custom function for feature engineering in the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
+
+**We invite you to share your new feature engineering functions with the OHDSI community through our [GitHub repository](http://github.com/OHDSI/PatientLevelPrediction).**
+
+# Feature Engineering Function Code Structure 
+
+To make a custom feature engineering function that can be used within PatientLevelPrediction you need to write two different functions.  The 'create' function and the 'implement' function.  
+
+The 'create' function, e.g., create\<FeatureEngineeringFunctionName\>, takes the parameters of the feature engineering 'implement' function as input, checks these are valid and outputs these as a list of class 'featureEngineeringSettings' with the 'fun' attribute specifying the 'implement' function to call.
+
+The 'implement' function, e.g., implement\<FeatureEngineeringFunctionName\>,  must take as input:
+ * trainData - a list containing:
+   - covariateData: the plpData$covariateData restricted to the training patients
+   - labels: a data frame that contain rowId (patient identifier) and outcomeCount (the class labels)
+   - folds: a data.frame that contains rowId (patient identifier) and index (the cross validation fold)
+ * featureEngineeringSettings - the output of your create\<FeatureEngineeringFunctionName\>
+ 
+The 'implement' function can then do any manipulation of the trainData (adding new features or removing features) but must output a trainData object containing the new covariateData, labels and folds for the training data patients.
+
+# Example
+
+Let's consider the situation where we wish to create an age spline feature.  To make this custom feature engineering function we need to write the 'create' and 'implement' R functions.
+
+## Create function
+
+Our age spline feature function will create a new feature using the plpData$cohorts ageYear column.  We will implement a restricted cubic spline that requires specifying the number of knots.
+.  Therefore, the inputs for this are: 
+ * `knots` an integer/double specifying the number of knots
+ 
+```{r, echo = TRUE, eval=FALSE}
+createAgeSpine <- function(
+                     knots = 5
+                     ){
+  
+  # add input checks
+  checkIsClass(knots, c('numeric','integer'))
+  checkHigher(knots,0)
+  
+  # create list of inputs to implement function
+  featureEngineeringSettings <- list(
+    knots = knots
+    )
+  
+  # specify the function that will implement the sampling
+  attr(featureEngineeringSettings, "fun") <- "implementAgeSpine"
+
+  # make sure the object returned is of class "sampleSettings"
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+  
+}
+```
+
+We now need to create the 'implement' function `implementAgeSpine()`
+
+## Implement function
+
+All 'implement' functions must take as input the trainData and the featureEngineeringSettings (this is the output of the 'create' function).  They must return a trainData object containing the new covariateData, labels and folds.
+
+In our example, the `createAgeSpine()` will return a list with 'knots'.  The featureEngineeringSettings therefore contains this.
+
+```{r tidy=FALSE,eval=FALSE}
+implementAgeSpine <- function(trainData, featureEngineeringSettings){
+
+  # currently not used
+  knots <- featureEngineeringSettings$knots
+  
+  
+  # age in in trainData$labels as ageYear
+  ageData <- trainData$labels
+  
+  # now implement the code to do your desired feature engineering
+  
+  data <- Matrix::sparseMatrix(
+    i = 1:length(ageData$rowId),
+    j = rep(1, length(ageData$rowId)),
+    x = ageData$ageYear,
+    dims=c(length(ageData$rowId),1)
+  )
+  
+  data <- as.matrix(data)
+  x <- data[,1]
+  y <- ageData$outcomeCount
+  
+mRCS <- rms::ols(
+  y~rms::rcs(x, 
+             stats::quantile(
+               x, 
+               c(0, .05, .275, .5, .775, .95, 1),
+               include.lowest = TRUE
+               )
+             )
+  )
+
+newData <- data.frame(
+  rowId = ageData$rowId,
+  covariateId = 2002,
+  covariateValue = mRCS$fitted.values
+  )
+
+# add new data
+Andromeda::appendToTable(tbl = trainData$covariateData$covariates, 
+                         data = newData)
+  
+  # return the updated trainData
+  return(trainData)
+}
+
+```
+
+
+# Acknowledgments
+
+Considerable work has been dedicated to provide the `PatientLevelPrediction` package.
+
+```{r tidy=TRUE,eval=TRUE}
+citation("PatientLevelPrediction")
+```
+
+**Please reference this paper if you use the PLP Package in your work:**
+
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+
+
+This work is supported in part through the National Science Foundation grant IIS 1251151.
+
+
+

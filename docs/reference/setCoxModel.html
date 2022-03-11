@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -169,7 +175,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create setting for lasso Cox model</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/CoxModel.R'><code>R/CoxModel.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/CyclopsSettings.R'><code>R/CyclopsSettings.R</code></a></small>
     <div class="hidden name"><code>setCoxModel.Rd</code></div>
     </div>
 
@@ -177,18 +183,56 @@
     <p>Create setting for lasso Cox model</p>
     </div>
 
-    <pre class="usage"><span class='fu'>setCoxModel</span><span class='op'>(</span>variance <span class='op'>=</span> <span class='fl'>0.01</span>, seed <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>setCoxModel</span><span class='op'>(</span>
+  variance <span class='op'>=</span> <span class='fl'>0.01</span>,
+  seed <span class='op'>=</span> <span class='cn'>NULL</span>,
+  includeCovariateIds <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>)</span>,
+  noShrinkage <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>)</span>,
+  threads <span class='op'>=</span> <span class='op'>-</span><span class='fl'>1</span>,
+  upperLimit <span class='op'>=</span> <span class='fl'>20</span>,
+  lowerLimit <span class='op'>=</span> <span class='fl'>0.01</span>,
+  tolerance <span class='op'>=</span> <span class='fl'>2e-07</span>,
+  maxIterations <span class='op'>=</span> <span class='fl'>3000</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>variance</th>
-      <td><p>a single value used as the starting value for the automatic lambda search</p></td>
+      <td><p>Numeric: prior distribution starting variance</p></td>
     </tr>
     <tr>
       <th>seed</th>
       <td><p>An option to add a seed when training the model</p></td>
+    </tr>
+    <tr>
+      <th>includeCovariateIds</th>
+      <td><p>a set of covariate IDS to limit the analysis to</p></td>
+    </tr>
+    <tr>
+      <th>noShrinkage</th>
+      <td><p>a set of covariates whcih are to be forced to be included in the final model. default is the intercept</p></td>
+    </tr>
+    <tr>
+      <th>threads</th>
+      <td><p>An option to set number of threads when training model</p></td>
+    </tr>
+    <tr>
+      <th>upperLimit</th>
+      <td><p>Numeric: Upper prior variance limit for grid-search</p></td>
+    </tr>
+    <tr>
+      <th>lowerLimit</th>
+      <td><p>Numeric: Lower prior variance limit for grid-search</p></td>
+    </tr>
+    <tr>
+      <th>tolerance</th>
+      <td><p>Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence</p></td>
+    </tr>
+    <tr>
+      <th>maxIterations</th>
+      <td><p>Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error</p></td>
     </tr>
     </table>
 

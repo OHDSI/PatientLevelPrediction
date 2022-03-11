@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -39,12 +39,12 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -60,13 +60,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -106,11 +112,11 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -124,13 +130,13 @@
 
       
 
-      </header><script src="BestPractices_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
+      </header><script src="BestPractices_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Best Practice Research</h1>
                         <h4 class="author">Jenna Reps, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2021-06-17</h4>
+            <h4 class="date">2022-03-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/BestPractices.rmd"><code>vignettes/BestPractices.rmd</code></a></small>
       <div class="hidden name"><code>BestPractices.rmd</code></div>
@@ -160,13 +166,24 @@ Link
 </tr>
 <tr>
 <td>
+Problem Specification
+</td>
+<td>
+When is prediction suitable in observational data?
+</td>
+<td>
+Guidelines needed
+</td>
+</tr>
+<tr>
+<td>
 Data Creation
 </td>
 <td>
 Comparison of cohort vs case-control design
 </td>
 <td>
-In review
+<a href="https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00501-2">Journal of Big Data</a>
 </td>
 </tr>
 <tr>
@@ -177,7 +194,7 @@ Data Creation
 Addressing loss to follow-up (right censoring)
 </td>
 <td>
-<a href="https://link.springer.com/article/10.1186/s12911-021-01408-x">Paper link</a>
+<a href="https://link.springer.com/article/10.1186/s12911-021-01408-x">BMC medical informatics and decision makingk</a>
 </td>
 </tr>
 <tr>
@@ -188,7 +205,7 @@ Data Creation
 Investigating how to address left censoring in features construction
 </td>
 <td>
-<a href="https://assets.researchsquare.com/files/rs-227607/v1/8280dd89-dbb6-43d2-9d57-bc621e9b112b.pdf">Paper link</a>
+<a href="https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01370-2">BMC Medical Research Methodology</a>
 </td>
 </tr>
 <tr>
@@ -199,7 +216,7 @@ Data Creation
 Impact of over/under-sampling
 </td>
 <td>
-TODO
+Study being developed
 </td>
 </tr>
 <tr>
@@ -210,7 +227,7 @@ Data Creation
 Impact of phenotypes
 </td>
 <td>
-TODO
+Study Done - Paper submitted
 </td>
 </tr>
 <tr>
@@ -221,7 +238,7 @@ Model development
 How much data do we need for prediction - Learning curves at scale
 </td>
 <td>
-<a href="https://arxiv.org/abs/2008.07361">Paper link</a>
+<a href="https://arxiv.org/abs/2008.07361">Preprint link</a>
 </td>
 </tr>
 <tr>
@@ -232,7 +249,7 @@ Model development
 What impact does test/train/validation design have on model performance
 </td>
 <td>
-<a href="">In review</a>
+<a href="https://bmjopen.bmj.com/content/11/12/e050146">BMJ Open </a>
 </td>
 </tr>
 <tr>
@@ -243,7 +260,7 @@ Model development
 What is the impact of the classifier
 </td>
 <td>
-<a href="https://academic.oup.com/jamia/article/25/8/969/4989437?login=true">Paper link</a>
+<a href="https://academic.oup.com/jamia/article/25/8/969/4989437?login=true">JAMIA</a>
 </td>
 </tr>
 <tr>
@@ -254,7 +271,7 @@ Model development
 Can we find hyper-parameter combinations per classifier that consistently lead to good performing models when using claims/EHR data?
 </td>
 <td>
-<a href="">TODO</a>
+Study needs to be done
 </td>
 </tr>
 <tr>
@@ -262,10 +279,10 @@ Can we find hyper-parameter combinations per classifier that consistently lead t
 Model development
 </td>
 <td>
-How to improve models transportability?
+Can we use ensembles to combine models developed using different databases to improve models transportability?
 </td>
 <td>
-<a href="">In review</a>
+<a href=""> Paper under review at BMC </a>
 </td>
 </tr>
 <tr>
@@ -273,10 +290,10 @@ How to improve models transportability?
 Evaluation
 </td>
 <td>
-How should we present models? (e.g., new visualizations)
+How should we present model performance? (e.g., new visualizations)
 </td>
 <td>
-<a href="https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1">Paper Link</a>
+<a href="https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1">JAMIA Open</a>
 </td>
 </tr>
 <tr>
@@ -287,7 +304,7 @@ Evaluation
 How to interpret external validation performance (can we figure out why the performance drops or stays consistent)?
 </td>
 <td>
-<a href="">TODO</a>
+Study needs to be done
 </td>
 </tr>
 <tr>
@@ -298,7 +315,7 @@ Evaluation
 Recalibration methods
 </td>
 <td>
-<a href="">TODO</a>
+Study needs to be done
 </td>
 </tr>
 <tr>
@@ -306,10 +323,10 @@ Recalibration methods
 Evaluation
 </td>
 <td>
-Evaluation Is there a way to automatically simplify models?
+Is there a way to automatically simplify models?
 </td>
 <td>
-<a href="">TODO</a>
+<a href="https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html">Study protocol under development </a>
 </td>
 </tr>
 </table>

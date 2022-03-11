@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -39,12 +39,12 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -60,13 +60,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -106,11 +112,11 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -124,13 +130,13 @@
 
       
 
-      </header><script src="PatientLevelPrediction_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
+      </header><script src="PatientLevelPrediction_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Quick Install Guide</h1>
                         <h4 class="author">Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2021-06-17</h4>
+            <h4 class="date">2022-03-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/PatientLevelPrediction.rmd"><code>vignettes/PatientLevelPrediction.rmd</code></a></small>
       <div class="hidden name"><code>PatientLevelPrediction.rmd</code></div>
@@ -159,8 +165,8 @@
 <p>To install using devtools run:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">'devtools'</span><span class="op">)</span>
-<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"OHDSI/FeatureExtraction"</span><span class="op">)</span>
-<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">'ohdsi/PatientLevelPrediction'</span><span class="op">)</span></code></pre></div>
+<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"OHDSI/FeatureExtraction"</span><span class="op">)</span>
+<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">'ohdsi/PatientLevelPrediction'</span><span class="op">)</span></code></pre></div>
 <p>When installing using devtools make sure to close any other Rstudio sessions that are using PatientLevelPrediction or any dependency. Keeping Rstudio sessions open can cause locks that prevent the package installing.</p>
 </div>
 <div id="setting-up-python" class="section level2">
@@ -173,9 +179,9 @@
 <span class="fu"><a href="../reference/configurePython.html">configurePython</a></span><span class="op">(</span>envname<span class="op">=</span><span class="st">'r-reticulate'</span>, envtype<span class="op">=</span><span class="st">'conda'</span><span class="op">)</span></code></pre></div>
 <p>To add the R keras interface, in Rstudio run:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"rstudio/keras"</span><span class="op">)</span>
+<code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"rstudio/keras"</span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://keras.rstudio.com">keras</a></span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/pkg/keras/man/install_keras.html">install_keras</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://keras.rstudio.com/reference/install_keras.html">install_keras</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p>Some of the less frequently used classifiers are considered optional and are not installed by default. To install then, run:</p>
 <p>For GBM survival:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -196,7 +202,7 @@
                                              password <span class="op">=</span> <span class="st">'hidden'</span>, 
                                              server <span class="op">=</span> <span class="st">'your server'</span>, 
                                              port <span class="op">=</span> <span class="st">'your port'</span><span class="op">)</span>
-<span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/checkPlpInstallation.html">checkPlpInstallation</a></span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
+<span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu">checkPlpInstallation</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
                                              python <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></code></pre></div>
 <p>To test the installation (excluding python) run:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -207,7 +213,7 @@
                                            password <span class="op">=</span> <span class="st">'hidden'</span>, 
                                            server <span class="op">=</span> <span class="st">'your server'</span>, 
                                            port <span class="op">=</span> <span class="st">'your port'</span><span class="op">)</span>
-<span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/checkPlpInstallation.html">checkPlpInstallation</a></span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
+<span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu">checkPlpInstallation</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
                                              python <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></code></pre></div>
 <p>The check can take a while to run since it will build the following models in sequence on simulated data: Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.</p>
 </div>

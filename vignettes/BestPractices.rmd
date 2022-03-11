@@ -43,6 +43,20 @@ Link
 </th>
 </tr>
 
+
+<tr>
+<td>
+Problem Specification
+</td>
+<td>
+When is prediction suitable in observational data?
+</td>
+<td>
+Guidelines needed
+</td>
+</tr>
+
+
 <tr>
 <td>
 Data Creation
@@ -51,7 +65,7 @@ Data Creation
 Comparison of cohort vs case-control design
 </td>
 <td>
-In review
+<a href='https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00501-2'>Journal of Big Data</a>
 </td>
 </tr>
 
@@ -63,7 +77,7 @@ Data Creation
 Addressing loss to follow-up (right censoring)	
 </td>
 <td>
-<a href='https://link.springer.com/article/10.1186/s12911-021-01408-x'>Paper link</a>
+<a href='https://link.springer.com/article/10.1186/s12911-021-01408-x'>BMC medical informatics and decision makingk</a>
 </td>
 </tr>
 
@@ -75,7 +89,7 @@ Data Creation
 Investigating how to address left censoring in features construction
 </td>
 <td>
-<a href='https://assets.researchsquare.com/files/rs-227607/v1/8280dd89-dbb6-43d2-9d57-bc621e9b112b.pdf'>Paper link</a>
+<a href='https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01370-2'>BMC Medical Research Methodology</a>
 </td>
 </tr>
 
@@ -87,7 +101,7 @@ Data Creation
 Impact of over/under-sampling
 </td>
 <td>
-TODO
+Study being developed
 </td>
 </tr>
 
@@ -99,7 +113,7 @@ Data Creation
 Impact of phenotypes
 </td>
 <td>
-TODO
+Study Done - Paper submitted
 </td>
 </tr>
 
@@ -111,7 +125,7 @@ Model development
 How much data do we need for prediction - Learning curves at scale
 </td>
 <td>
-<a href='https://arxiv.org/abs/2008.07361'>Paper link</a>
+<a href='https://arxiv.org/abs/2008.07361'>Preprint link</a>
 </td>
 </tr>
 
@@ -123,7 +137,7 @@ Model development
 What impact does test/train/validation design have on model performance
 </td>
 <td>
-<a href=''>In review</a>
+<a href='https://bmjopen.bmj.com/content/11/12/e050146'>BMJ Open </a>
 </td>
 </tr>
 
@@ -135,7 +149,7 @@ Model development
 What is the impact of the classifier 
 </td>
 <td>
-<a href='https://academic.oup.com/jamia/article/25/8/969/4989437?login=true'>Paper link</a>
+<a href='https://academic.oup.com/jamia/article/25/8/969/4989437?login=true'>JAMIA</a>
 </td>
 </tr>
 
@@ -147,7 +161,7 @@ Model development
 Can we find hyper-parameter combinations per classifier that consistently lead to good performing models when using claims/EHR data?	
 </td>
 <td>
-<a href=''>TODO</a>
+Study needs to be done
 </td>
 </tr>
 
@@ -156,10 +170,10 @@ Can we find hyper-parameter combinations per classifier that consistently lead t
 Model development	
 </td>
 <td>
-How to improve models transportability?
+Can we use ensembles to combine models developed using different databases to improve models transportability?
 </td>
 <td>
-<a href=''>In review</a>
+<a href=''> Paper under review at BMC </a>
 </td>
 </tr>
 
@@ -168,10 +182,10 @@ How to improve models transportability?
 Evaluation
 </td>
 <td>
-How should we present models? (e.g., new visualizations)
+How should we present model performance? (e.g., new visualizations)
 </td>
 <td>
-<a href='https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1'>Paper Link</a>
+<a href='https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1'>JAMIA Open</a>
 </td>
 </tr>
 
@@ -183,7 +197,7 @@ Evaluation
 How to interpret external validation performance (can we figure out why the performance drops or stays consistent)?	
 </td>
 <td>
-<a href=''>TODO</a>
+Study needs to be done
 </td>
 </tr>
 
@@ -192,10 +206,10 @@ How to interpret external validation performance (can we figure out why the perf
 Evaluation
 </td>
 <td>
-Recalibration methods	
+Recalibration methods
 </td>
 <td>
-<a href=''>TODO</a>
+Study needs to be done
 </td>
 </tr>
 
@@ -204,10 +218,10 @@ Recalibration methods
 Evaluation
 </td>
 <td>
-Evaluation	Is there a way to automatically simplify models?	
+Is there a way to automatically simplify models?	
 </td>
 <td>
-<a href=''>TODO</a>
+<a href='https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html'>Study protocol under development </a>
 </td>
 </tr>
 </table>

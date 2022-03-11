@@ -73,7 +73,7 @@ extract the data needed to perform the analysis." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -81,12 +81,12 @@ extract the data needed to perform the analysis." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -102,13 +102,19 @@ extract the data needed to perform the analysis." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -148,11 +154,11 @@ extract the data needed to perform the analysis." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -170,7 +176,7 @@ extract the data needed to perform the analysis." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Get the patient level prediction data from the server</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/SaveLoadPlp.R'><code>R/SaveLoadPlp.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/ExtractData.R'><code>R/ExtractData.R</code></a></small>
     <div class="hidden name"><code>getPlpData.Rd</code></div>
     </div>
 
@@ -179,114 +185,14 @@ extract the data needed to perform the analysis." />
 extract the data needed to perform the analysis.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>getPlpData</span><span class='op'>(</span>
-  <span class='va'>connectionDetails</span>,
-  <span class='va'>cdmDatabaseSchema</span>,
-  oracleTempSchema <span class='op'>=</span> <span class='va'>cdmDatabaseSchema</span>,
-  <span class='va'>cohortId</span>,
-  <span class='va'>outcomeIds</span>,
-  studyStartDate <span class='op'>=</span> <span class='st'>""</span>,
-  studyEndDate <span class='op'>=</span> <span class='st'>""</span>,
-  cohortDatabaseSchema <span class='op'>=</span> <span class='va'>cdmDatabaseSchema</span>,
-  cohortTable <span class='op'>=</span> <span class='st'>"cohort"</span>,
-  outcomeDatabaseSchema <span class='op'>=</span> <span class='va'>cdmDatabaseSchema</span>,
-  outcomeTable <span class='op'>=</span> <span class='st'>"cohort"</span>,
-  cdmVersion <span class='op'>=</span> <span class='st'>"5"</span>,
-  firstExposureOnly <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  washoutPeriod <span class='op'>=</span> <span class='fl'>0</span>,
-  sampleSize <span class='op'>=</span> <span class='cn'>NULL</span>,
-  <span class='va'>covariateSettings</span>,
-  excludeDrugsFromCovariates <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>getPlpData</span><span class='op'>(</span><span class='va'>databaseDetails</span>, <span class='va'>covariateSettings</span>, <span class='va'>restrictPlpDataSettings</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>connectionDetails</th>
-      <td><p>An R object of type<br /><code>connectionDetails</code> created using the
-function <code>createConnectionDetails</code> in the
-<code>DatabaseConnector</code> package.</p></td>
-    </tr>
-    <tr>
-      <th>cdmDatabaseSchema</th>
-      <td><p>The name of the database schema that contains the OMOP CDM
-instance.  Requires read permissions to this database. On SQL
-Server, this should specifiy both the database and the schema,
-so for example 'cdm_instance.dbo'.</p></td>
-    </tr>
-    <tr>
-      <th>oracleTempSchema</th>
-      <td><p>For Oracle only: the name of the database schema where you want
-all temporary tables to be managed. Requires create/insert
-permissions to this database.</p></td>
-    </tr>
-    <tr>
-      <th>cohortId</th>
-      <td><p>A unique identifier to define the at risk cohort. CohortId is
-used to select the cohort_concept_id in the cohort-like table.</p></td>
-    </tr>
-    <tr>
-      <th>outcomeIds</th>
-      <td><p>A list of cohort_definition_ids used to define outcomes (-999 mean no outcome gets downloaded).</p></td>
-    </tr>
-    <tr>
-      <th>studyStartDate</th>
-      <td><p>A calendar date specifying the minimum date that a cohort index
-date can appear. Date format is 'yyyymmdd'.</p></td>
-    </tr>
-    <tr>
-      <th>studyEndDate</th>
-      <td><p>A calendar date specifying the maximum date that a cohort index
-date can appear. Date format is 'yyyymmdd'. Important: the study
-end data is also used to truncate risk windows, meaning no outcomes
-beyond the study end date will be considered.</p></td>
-    </tr>
-    <tr>
-      <th>cohortDatabaseSchema</th>
-      <td><p>The name of the database schema that is the location where the
-cohort data used to define the at risk cohort is available.
-Requires read permissions to this database.</p></td>
-    </tr>
-    <tr>
-      <th>cohortTable</th>
-      <td><p>The tablename that contains the at risk cohort.  cohortTable has
-format of COHORT table: cohort_concept_id, SUBJECT_ID,
-COHORT_START_DATE, COHORT_END_DATE.</p></td>
-    </tr>
-    <tr>
-      <th>outcomeDatabaseSchema</th>
-      <td><p>The name of the database schema that is the location where
-the data used to define the outcome cohorts is available. 
-Requires read permissions to this database.</p></td>
-    </tr>
-    <tr>
-      <th>outcomeTable</th>
-      <td><p>The tablename that contains the outcome cohorts. Expectation is
-outcomeTable has format of COHORT table:
-COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE,
-COHORT_END_DATE.</p></td>
-    </tr>
-    <tr>
-      <th>cdmVersion</th>
-      <td><p>Define the OMOP CDM version used: currently support "4", "5" and "6".</p></td>
-    </tr>
-    <tr>
-      <th>firstExposureOnly</th>
-      <td><p>Should only the first exposure per subject be included? Note that
-this is typically done in the <code>createStudyPopulation</code> function,
-but can already be done here for efficiency reasons.</p></td>
-    </tr>
-    <tr>
-      <th>washoutPeriod</th>
-      <td><p>The mininum required continuous observation time prior to index
-date for a person to be included in the at risk cohort. Note that
-this is typically done in the <code>createStudyPopulation</code> function,
-but can already be done here for efficiency reasons.</p></td>
-    </tr>
-    <tr>
-      <th>sampleSize</th>
-      <td><p>If not NULL, only this number of people will be sampled from the target population (Default NULL)</p></td>
+      <th>databaseDetails</th>
+      <td><p>The cdm database details created using <code><a href='createDatabaseDetails.html'>createDatabaseDetails()</a></code></p></td>
     </tr>
     <tr>
       <th>covariateSettings</th>
@@ -295,8 +201,8 @@ but can already be done here for efficiency reasons.</p></td>
 <code>FeatureExtraction</code> package.</p></td>
     </tr>
     <tr>
-      <th>excludeDrugsFromCovariates</th>
-      <td><p>A redundant option</p></td>
+      <th>restrictPlpDataSettings</th>
+      <td><p>Extra settings to apply to the target population while extracting data.  Created using <code><a href='createRestrictPlpDataSettings.html'>createRestrictPlpDataSettings()</a></code>.</p></td>
     </tr>
     </table>
 

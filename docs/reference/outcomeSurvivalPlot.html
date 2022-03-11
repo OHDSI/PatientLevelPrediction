@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -180,9 +186,10 @@
     <pre class="usage"><span class='fu'>outcomeSurvivalPlot</span><span class='op'>(</span>
   <span class='va'>plpData</span>,
   <span class='va'>outcomeId</span>,
-  removeSubjectsWithPriorOutcome <span class='op'>=</span> <span class='cn'>T</span>,
-  riskWindowStart <span class='op'>=</span> <span class='fl'>1</span>,
-  riskWindowEnd <span class='op'>=</span> <span class='fl'>3650</span>,
+  populationSettings <span class='op'>=</span> <span class='fu'><a href='createStudyPopulationSettings.html'>createStudyPopulationSettings</a></span><span class='op'>(</span>binary <span class='op'>=</span> <span class='cn'>T</span>, includeAllOutcomes <span class='op'>=</span>
+    <span class='cn'>T</span>, firstExposureOnly <span class='op'>=</span> <span class='cn'>FALSE</span>, washoutPeriod <span class='op'>=</span> <span class='fl'>0</span>, removeSubjectsWithPriorOutcome <span class='op'>=</span>
+    <span class='cn'>TRUE</span>, priorOutcomeLookback <span class='op'>=</span> <span class='fl'>99999</span>, requireTimeAtRisk <span class='op'>=</span> <span class='cn'>F</span>, riskWindowStart <span class='op'>=</span> <span class='fl'>1</span>,
+    startAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span>, riskWindowEnd <span class='op'>=</span> <span class='fl'>3650</span>, endAnchor <span class='op'>=</span> <span class='st'>"cohort start"</span><span class='op'>)</span>,
   riskTable <span class='op'>=</span> <span class='cn'>T</span>,
   confInt <span class='op'>=</span> <span class='cn'>T</span>,
   yLabel <span class='op'>=</span> <span class='st'>"Fraction of those who are outcome free in target population"</span>
@@ -200,16 +207,8 @@
       <td><p>The cohort id corresponding to the outcome</p></td>
     </tr>
     <tr>
-      <th>removeSubjectsWithPriorOutcome</th>
-      <td><p>Remove patients who have had the outcome before their target cohort index date from the plot</p></td>
-    </tr>
-    <tr>
-      <th>riskWindowStart</th>
-      <td><p>(integer) The time-at-risk starts at target cohort index date plus this value</p></td>
-    </tr>
-    <tr>
-      <th>riskWindowEnd</th>
-      <td><p>(integer) The time-at-risk ends at target cohort index date plus this value</p></td>
+      <th>populationSettings</th>
+      <td><p>The population settings created using <code>createStudyPopulationSettings</code></p></td>
     </tr>
     <tr>
       <th>riskTable</th>

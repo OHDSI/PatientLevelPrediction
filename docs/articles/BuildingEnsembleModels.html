@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -39,12 +39,12 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -60,13 +60,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -106,11 +112,11 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -124,13 +130,13 @@
 
       
 
-      </header><script src="BuildingEnsembleModels_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
+      </header><script src="BuildingEnsembleModels_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Building Ensemble Models</h1>
                         <h4 class="author">Xiaoyong Pan, Jenna Reps, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2021-06-17</h4>
+            <h4 class="date">2022-03-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/BuildingEnsembleModels.Rmd"><code>vignettes/BuildingEnsembleModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingEnsembleModels.Rmd</code></div>
@@ -206,7 +212,7 @@
 <span class="va">testSplit</span> <span class="op">&lt;-</span> <span class="st">'person'</span></code></pre></div>
 <p>Run the ensemble learning to combine model1 and model2. You can also use different plpData for different models.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">ensembleResults</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="../reference/runEnsembleModel.html">runEnsembleModel</a></span><span class="op">(</span><span class="va">population</span>, 
+<code class="sourceCode R"><span class="va">ensembleResults</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu">runEnsembleModel</span><span class="op">(</span><span class="va">population</span>, 
                                    dataList <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">plpData</span>, <span class="va">plpData</span><span class="op">)</span>, 
                                    modelList <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">model1</span>, <span class="va">model2</span><span class="op">)</span>,
                                    testSplit<span class="op">=</span><span class="va">testSplit</span>,
@@ -218,8 +224,8 @@
 <a href="#saving-and-loading-the-ensemble-model" class="anchor"></a>Saving and loading the ensemble model</h2>
 <p>You can save and load the model using:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="../reference/saveEnsemblePlpModel.html">saveEnsemblePlpModel</a></span><span class="op">(</span><span class="va">ensembleResults</span><span class="op">$</span><span class="va">model</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span>
-<span class="va">ensembleModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadEnsemblePlpModel.html">loadEnsemblePlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu">saveEnsemblePlpModel</span><span class="op">(</span><span class="va">ensembleResults</span><span class="op">$</span><span class="va">model</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">ensembleModel</span> <span class="op">&lt;-</span> <span class="fu">loadEnsemblePlpModel</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
 <div id="apply-ensemble-model" class="section level1">
@@ -232,10 +238,10 @@
 <span class="va">population</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">createStudyPopulation</span>, <span class="va">populationSettings</span><span class="op">)</span></code></pre></div>
 <p>Load the model.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">ensembleModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadEnsemblePlpModel.html">loadEnsemblePlpModel</a></span><span class="op">(</span><span class="st">"&lt;model folder&gt;"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">ensembleModel</span> <span class="op">&lt;-</span> <span class="fu">loadEnsemblePlpModel</span><span class="op">(</span><span class="st">"&lt;model folder&gt;"</span><span class="op">)</span></code></pre></div>
 <p>Get the predictions by applying the model:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/applyEnsembleModel.html">applyEnsembleModel</a></span><span class="op">(</span><span class="va">population</span>,
+<code class="sourceCode R"><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">applyEnsembleModel</span><span class="op">(</span><span class="va">population</span>,
                                   dataList <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">plpData</span>, <span class="va">plpData</span><span class="op">)</span>,
                                   ensembleModel <span class="op">=</span> <span class="va">ensembleModel</span><span class="op">)</span><span class="op">$</span><span class="va">prediction</span></code></pre></div>
 </div>

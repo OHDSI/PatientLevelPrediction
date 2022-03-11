@@ -1,6 +1,6 @@
 # @file Recalibration.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -30,16 +30,15 @@
 #' @param newPopulation                    The population created using createStudyPopulation() who will have their risks predicted
 #' @param newData                          An object of type \code{plpData} - the patient level prediction
 #'                                         data extracted from the CDM.
-#' @param testFraction                    Fraction of data to used for internal validation
 #' @return
 #' An object of class \code{runPlp} that is recalibrated on the new data
 #'
-
 #' @export
-recalibratePlpRefit <- function(plpModel,
-                                     newPopulation, 
-                                     newData, 
-                                     testFraction = 0.25){
+recalibratePlpRefit <- function(
+  plpModel,
+  newPopulation, 
+  newData
+){
   if (is.null(newPopulation))
     stop("NULL population")
   if (class(newData) != "plpData")
@@ -48,52 +47,74 @@ recalibratePlpRefit <- function(plpModel,
     stop("plpModel is not of class plpModel")
   
   #get selected covariates
-  includeCovariateIds <- plpModel$varImp$covariateId[plpModel$varImp$covariateValue!=0]
+  includeCovariateIds <- plpModel$covariateImportance %>% 
+    dplyr::filter(.data$covariateValue != 0) %>% 
+    dplyr::select(.data$covariateId) %>% 
+    dplyr::pull()
   
   # check which covariates are included in new data
   containedIds <- newData$covariateData$covariateRef %>% dplyr::collect()
   noShrinkage <- intersect(includeCovariateIds, containedIds$covariateId)
+  
   # add intercept
-  noShrinkage <- append(noShrinkage,0, 0)
-  setLassoRefit <- setLassoLogisticRegression(includeCovariateIds = includeCovariateIds,
-                                              noShrinkage = noShrinkage)
-    
-  result <- runPlp(population = newPopulation, analysisId = plpModel$analysisId,
-                   plpData = newData, 
-                   modelSettings = setLassoRefit, 
-                   testFraction = testFraction, 
-                   savePlpData = F, savePlpResult = F, savePlpPlots = F, saveEvaluation = F)
+  noShrinkage <- append(noShrinkage, 0, 0)
+  
+  setLassoRefit <- setLassoLogisticRegression(
+    includeCovariateIds = includeCovariateIds,
+    noShrinkage = noShrinkage
+  )
+  
+  newData$labels <- newPopulation #%>% 
+    #dplyr::select(
+    #  .data$rowId, 
+    #  .data$cohortStartDate,
+    #  .data$outcomeCount, 
+     # .data$survivalTime
+      #)
+  
+  newData$folds <- data.frame(
+    rowId = newData$labels$rowId, 
+    index = sample(2, length(newData$labels$rowId), replace = T)
+    )
+  
+  newModel <- fitPlp(
+    trainData = newData, 
+    modelSettings = setLassoRefit,
+    analysisId = 'recalibrationRefit'
+    )
+  
+  newModel$prediction$evaluationType <- 'recalibrationRefit'
 
+  oldPred <- predictPlp(
+    plpModel = plpModel, 
+    plpData = newData, 
+    population = newPopulation, 
+    timepoint = 0
+    )
   
-  recalibrateResult <- evaluatePlp(result$prediction)
+  oldPred$evaluationType <- 'validation'
   
-  recalibrateResult <- formatEvaluation(recalibrateResult = recalibrateResult, 
-                                        analysisId = plpModel$analysisId, 
-                                        eval = 'recalibrationRefit')
-  
-  prediction <- result$prediction[,c('rowId', 'value')]
-  colnames(prediction)[2] <- 'reestimateValue'
-  oldPred <- applyModel(population = newPopulation, plpData = newData, 
-                        plpModel = plpModel, calculatePerformance = F)
-  prediction <- merge(oldPred, prediction, by = 'rowId')
+  prediction <- rbind(
+    oldPred, 
+    newModel$prediction[, colnames(oldPred)]
+    )
 
-  adjust <- result$covariateSummary[,c('covariateValue', 'covariateId')]
-  adjust <- adjust[adjust$covariateValue != 0, ]
-  newIntercept <- result$model$model$coefficients[names(result$model$model$coefficients) == '(Intercept)']
+  if(!is.null(newModel$covariateImportance)){
+    adjust <- newModel$covariateImportance %>% 
+      dplyr::filter(.data$covariateValue != 0) %>% 
+      dplyr::select(
+        .data$covariateId, 
+        .data$covariateValue
+      )
+  } else{
+    adjust <- c()
+  }
   
+  newIntercept <- newModel$model$coefficients[names(newModel$model$coefficients) == '(Intercept)']
   
-  recalibrateResult$evaluationStatistics <- as.data.frame(recalibrateResult$evaluationStatistics)
-  recalibrateResult$evaluationStatistics$Metric <- as.character(recalibrateResult$evaluationStatistics$Metric)
-  recalibrateResult$evaluationStatistics$Value <- as.character(recalibrateResult$evaluationStatistics$Value)
-  recalibrateResult$evaluationStatistics <- rbind(recalibrateResult$evaluationStatistics,
-                                                  data.frame(analysisId = plpModel$analysisId,
-                                                             Eval = 'recalibrationRefit',
-                                                             Metric = c(as.character(adjust$covariateId),0),
-                                                             Value = c(adjust$covariateValue,newIntercept)))
+  attr(prediction, "metaData")$recalibratePlpRefit <- list(adjust = adjust, newIntercept = newIntercept)
   
-  return(list(prediction = prediction,
-              performanceEvalution = recalibrateResult)
-         )
+  return(prediction)
 }
 
 
@@ -108,65 +129,50 @@ recalibratePlpRefit <- function(plpModel,
 #' 
 #' @param prediction                      A prediction dataframe
 #' @param analysisId                      The model analysisId
-#' @param method                          Method used to recalibrate ('recalibrationintheLarge' or 'weakRecalibration' )
+#' @param typeColumn                      The column name where the strata types are specified
+#' @param method                          Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )
 #' @return
 #' An object of class \code{runPlp} that is recalibrated on the new data
 #'
 
 #' @export
-recalibratePlp <- function(prediction, analysisId,
-                           method = c('recalibrationintheLarge', 'weakRecalibration')){
+recalibratePlp <- function(prediction, analysisId, typeColumn = 'evaluationType',
+                           method = c('recalibrationInTheLarge', 'weakRecalibration')){
   # check input:
     if (class(prediction) != 'data.frame')
       stop("Incorrect prediction") 
   
   if(!method  %in% c('recalibrationInTheLarge', 'weakRecalibration'))
-    stop("Unknown recalibration method type. must be of type: RecalibrationintheLarge, weakRecalibration")
+    stop("Unknown recalibration method type. must be of type: recalibrationInTheLarge, weakRecalibration")
   
   
-  result <- do.call(method, list(prediction = prediction))
+  prediction <- do.call(method, list(prediction = prediction, columnType = typeColumn))
   
-  recalibrateResult <- evaluatePlp(result$prediction)
-  recalibrateResult <- formatEvaluation(recalibrateResult = recalibrateResult, 
-                                        analysisId = analysisId, 
-                                        eval = method)
-  
-  result$prediction <- result$prediction[,c('rowId', 'value')]
-  colnames(result$prediction)[2] <- paste0(result$type, 'Value')
-
-  prediction <- merge(prediction, result$prediction, by = 'rowId')
-  
-  recalibrateResult$evaluationStatistics <- rbind(recalibrateResult$evaluationStatistics,
-                                                  data.frame(analysisId = analysisId,
-                                                             Eval = result$type,
-                                                             Metric = unlist(names(result)[!names(result)%in%c('prediction','type')]),
-                                                             Value = unlist(result[!names(result)%in%c('prediction','type')]))
-                                                  )
-  
-  return(list(prediction = prediction,
-              performanceEvaluation = recalibrateResult)
-  )
+  return(prediction)
   
 }
 
 
 
-recalibrationInTheLarge <- function(prediction){
+recalibrationInTheLarge <- function(prediction, columnType = 'evaluationType'){
   
-  if(attr(prediction, "metaData")$predictionType == 'binary'){
+  if(attr(prediction, "metaData")$modelType == 'binary'){
     misCal <- calibrationInLarge(prediction)
     obsOdds <- misCal$observedRisk/ (1-misCal$observedRisk)
     predOdds <- misCal$meanPredictionRisk/ (1 -  misCal$meanPredictionRisk)
     correctionFactor <- log(obsOdds / predOdds)
     
-    prediction$value = logFunct(inverseLog(prediction$value) + correctionFactor)
+    recalibrated <- prediction
+    recalibrated$value = logFunct(inverseLog(recalibrated$value) + correctionFactor)
     
-    return(list(prediction = prediction,
-                type = 'recalibrationintheLarge',
-                correctionFactor = correctionFactor))
+    recalibrated[,columnType] <- 'recalibrationInTheLarge'
+    prediction <- rbind(prediction, recalibrated)
+    attr(prediction, 'metaData')$recalibrationInTheLarge = list(correctionFactor = correctionFactor)
+    
+    return(prediction)
   }
   
-  if(attr(prediction, "metaData")$predictionType == 'survival'){
+  if(attr(prediction, "metaData")$modelType == 'survival'){
 
     ParallelLogger::logError('Survival recal in the large not currently available')
   }
@@ -175,47 +181,53 @@ recalibrationInTheLarge <- function(prediction){
 }
 
 
-weakRecalibration <- function(prediction){
+weakRecalibration <- function(prediction, columnType = 'evaluationType'){
   
   # if binary:
-  if(attr(prediction, "metaData")$predictionType == 'binary'){
-    prediction$value[prediction$value==0] <- 0.000000000000001
-    prediction$value[prediction$value==1] <- 1-0.000000000000001
+  if(attr(prediction, "metaData")$modelType == 'binary'){
+    recalibrated <- prediction
+    recalibrated$value[recalibrated$value==0] <- 0.000000000000001
+    recalibrated$value[recalibrated$value==1] <- 1-0.000000000000001
     
-    y <- ifelse(prediction$outcomeCount>0, 1, 0)
-    inverseLog <- inverseLog(prediction$value)
+    y <- ifelse(recalibrated$outcomeCount>0, 1, 0)
+    inverseLog <- inverseLog(recalibrated$value)
     refit <- suppressWarnings(stats::glm(y ~ inverseLog, family = 'binomial'))
     
-    prediction$value <- logFunct((inverseLog * refit$coefficients[2]) + refit$coefficients[1])
+    recalibrated$value <- logFunct((inverseLog * refit$coefficients[2]) + refit$coefficients[1])
     
-    return(list(prediction = prediction, 
-                type = 'weakRecalibration',
-                adjustGradient = refit$coefficients[2], 
-                adjustIntercept = refit$coefficients[1]) 
-    )
+    recalibrated[,columnType] <- 'weakRecalibration'
+    prediction <- rbind(prediction, recalibrated)
+    attr(prediction, 'metaData')$weakRecalibration = list(
+      adjustGradient = refit$coefficients[2], 
+      adjustIntercept = refit$coefficients[1]
+      )
+    
+    return(prediction)
   } 
   
   # add if survival
-  if(attr(prediction, "metaData")$predictionType == 'survival'){
+  if(attr(prediction, "metaData")$modelType == 'survival'){
     
-    baseline <- ifelse(is.null(attr(prediction, "baselineHazard")), 0.9, attr(prediction, "baselineHazard"))
+    recalibrated <- prediction
+    
+    baseline <- ifelse(is.null(attr(recalibrated, "baselineHazard")), 0.9, attr(recalibrated, "baselineHazard"))
     ParallelLogger::logInfo(paste0('recal initial baseline hazard: ',baseline))
     
-    offset <- ifelse(is.null(attr(prediction, "offset")), 0, attr(prediction, "offset"))
+    offset <- ifelse(is.null(attr(recalibrated, "offset")), 0, attr(recalibrated, "offset"))
     ParallelLogger::logInfo(paste0('recal initial offset: ',offset))
     
-    timepoint <- ifelse(is.null(attr(prediction, "timePoint")), 365, attr(prediction, "timePoint"))
+    timepoint <- ifelse(is.null(attr(recalibrated, "timePoint")), 365, attr(recalibrated, "timePoint"))
     ParallelLogger::logInfo(paste0('recal initial timepoint: ',timepoint))
     
     if(!is.null(baseline)){
-      lp <- log(log(1-prediction$value)/log(baseline)) + offset
+      lp <- log(log(1-recalibrated$value)/log(baseline)) + offset
     } else{
-      lp <- log(prediction$value)
+      lp <- log(recalibrated$value)
     }
     
     
-    t <- apply(cbind(prediction$daysToCohortEnd, prediction$survivalTime), 1, min)
-    y <- ifelse(prediction$outcomeCount>0,1,0)  # observed outcome
+    t <- apply(cbind(recalibrated$daysToCohortEnd, recalibrated$survivalTime), 1, min)
+    y <- ifelse(recalibrated$outcomeCount>0,1,0)  # observed outcome
     y[t>timepoint] <- 0
     t[t>timepoint] <- timepoint
     S<- survival::Surv(t, y) 
@@ -223,14 +235,18 @@ weakRecalibration <- function(prediction){
     f.slope <- survival::coxph(S~lp)
     h.slope <- max(survival::basehaz(f.slope)$hazard)  # maximum OK because of prediction_horizon
     lp.slope <- stats::predict(f.slope)
-    prediction$value <- 1-exp(-h.slope*exp(lp.slope))
+    recalibrated$value <- 1-exp(-h.slope*exp(lp.slope))
     # 1-h.slope^exp(lp.slope)
     
-    return(list(prediction = prediction, 
-                type = 'weakRecalibration',
-                adjustGradient = f.slope$coefficients['lp'], 
-                adjustIntercept = h.slope) 
+    
+    recalibrated[,columnType] <- 'weakRecalibration'
+    prediction <- rbind(prediction, recalibrated)
+    attr(prediction, 'metaData')$weakRecalibration = list(
+      adjustGradient = f.slope$coefficients['lp'], 
+      adjustIntercept = h.slope
     )
+    
+    return(prediction)
     
   } 
   
@@ -245,109 +261,3 @@ inverseLog <- function(values){
   return(res)
 }
 
-#' addRecalibration
-#'
-#' @description
-#' Adds the recalibration results to the main results
-#'
-#' @details
-#' Append the recalibration results into the main results
-#' 
-#' @param performanceEvaluation           The main result performanceEvaluation
-#' @param recalibration                   The recalibration result
-#' @return
-#' An object of class \code{runPlp} that is recalibrated on the new data
-#'
-#' @export
-addRecalibration <- function(performanceEvaluation, recalibration){
-  
-  if(!is.null(recalibration$demographicSummary)){
-    ParallelLogger::logInfo('Appending recalibration demographicSummary')
-    performanceEvaluation$demographicSummary <- rbind(performanceEvaluation$demographicSummary,
-                                                      recalibration$demographicSummary)
-  }
-  
-  if(!is.null(recalibration$calibrationSummary )){
-    ParallelLogger::logInfo('Appending recalibration calibrationSummary ')
-    performanceEvaluation$calibrationSummary  <- rbind(performanceEvaluation$calibrationSummary ,
-                                                      recalibration$calibrationSummary )
-  }
-  
-  if(!is.null(recalibration$thresholdSummary )){
-    ParallelLogger::logInfo('Appending recalibration thresholdSummary ')
-    performanceEvaluation$thresholdSummary  <- rbind(performanceEvaluation$thresholdSummary ,
-                                                       recalibration$thresholdSummary )
-  }
-  
-  if(!is.null(recalibration$evaluationStatistics )){
-    ParallelLogger::logInfo('Appending recalibration evaluationStatistics ')
-    
-    performanceEvaluation$evaluationStatistics <- as.data.frame(performanceEvaluation$evaluationStatistics)
-    performanceEvaluation$evaluationStatistics$Metric <- as.character(performanceEvaluation$evaluationStatistics$Metric)
-    performanceEvaluation$evaluationStatistics$Value <- as.character(performanceEvaluation$evaluationStatistics$Value)
-    performanceEvaluation$evaluationStatistics <- rbind(performanceEvaluation$evaluationStatistics ,
-                                                       recalibration$evaluationStatistics )
-  }
-
-  if (method == "populationRisk"){
-    #get dev database (use test or train?)
-    eval <- as.data.frame(plpResult$performanceEvaluation$evaluationStatistics)
-    eval <- eval[eval$Eval %in% c('train',"validation"),]
-    devPopRisk <- as.double(as.character(eval$Value[eval$Metric=='outcomeCount']))/as.double(as.character(eval$Value[eval$Metric=='populationSize']))
-
-    valPopRisk <- sum(population$outcomeCount) / length(population$outcomeCount)
-    correctionFactor <- log(devPopRisk / valPopRisk)
-    recalResult <- plpResult
-    recalResult$model$model$coefficients["(Intercept)"] <- plpResult$model$model$coefficients["(Intercept)"] + correctionFactor 
-    recalResult$model$predict <- PatientLevelPrediction:::createTransform(recalResult$model)
-    #recalculate predictions
-     
-    
-    result <- applyModel(population=population2, plpData = validationData, 
-                         calculatePerformance = T, plpModel = recalResult$model)
-    
-    result$executionSummary <- list(PackageVersion = list(rVersion= R.Version()$version.string,
-                                                          packageVersion = utils::packageVersion("PatientLevelPrediction")),
-                                    PlatformDetails= list(platform= R.Version()$platform,
-                                                          cores= Sys.getenv('NUMBER_OF_PROCESSORS'),
-                                                          RAM=utils::memory.size()), #  test for non-windows needed
-                                    # Sys.info()
-                                    TotalExecutionElapsedTime = NULL,
-                                    ExecutionDateTime = Sys.Date())
-    
-  }
-  class(result) <- 'recalibratePlp'
-  return(result)
-}
-
-
-
-formatEvaluation <- function(recalibrateResult, analysisId, eval){
-  if(!is.null(recalibrateResult$demographicSummary)){
-    demoNames <- colnames(recalibrateResult$demographicSummary)
-    recalibrateResult$demographicSummary$analysisId  <- analysisId
-    recalibrateResult$demographicSummary$Eval <- eval
-    recalibrateResult$demographicSummary <- recalibrateResult$demographicSummary[,c("analysisId","Eval", demoNames )]
-  }
-  
-  if(!is.null(recalibrateResult$calibrationSummary)){
-    calNames <- colnames(recalibrateResult$calibrationSummary)
-    recalibrateResult$calibrationSummary$analysisId  <- analysisId
-    recalibrateResult$calibrationSummary$Eval <- eval
-    recalibrateResult$calibrationSummary <- recalibrateResult$calibrationSummary[,c("analysisId","Eval", calNames )]
-  }
-  
-  if(!is.null(recalibrateResult$thresholdSummary)){
-    thresNames <- colnames(recalibrateResult$thresholdSummary)
-    recalibrateResult$thresholdSummary$analysisId  <- analysisId
-    recalibrateResult$thresholdSummary$Eval <- eval
-    recalibrateResult$thresholdSummary <- recalibrateResult$thresholdSummary[,c("analysisId","Eval", thresNames )]
-  }
-  
-  recalibrateResult$evaluationStatistics$analysisId <- NULL
-  recalibrateResult$evaluationStatistics <- data.frame(analysisId = analysisId,
-                                                       Eval = eval,
-                                                       Metric = names(unlist(recalibrateResult$evaluationStatistics)),
-                                                       Value = unlist(recalibrateResult$evaluationStatistics))
-  return(recalibrateResult)
-}

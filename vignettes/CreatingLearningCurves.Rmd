@@ -69,7 +69,7 @@ Furthermore, we can observe high bias (underfitting) if a prediction model perfo
 
 # Creating the learning curve
 
-Use the [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create a `population` and `plpData` object. Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.
+Use the [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create a `plpData` object . Alternatively, you can make use of the data simulator. The following code snippet creates data for 12000 patients.
 
 ```{r eval=FALSE}
 set.seed(1234)
@@ -80,9 +80,12 @@ plpData <- simulatePlpData(
   n = sampleSize
 )
 
-population <- createStudyPopulation(
-  plpData,
-  outcomeId = 2,
+```
+
+Specify the population settings (this does additional exclusions such as requiring minimum prior observation or no prior outcome as well as specifying the time-at-risk period to enable labels to be created):
+
+```{r eval=FALSE}
+populationSettings <- createStudyPopulationSettings(
   binary = TRUE,
   firstExposureOnly = FALSE,
   washoutPeriod = 0,
@@ -104,35 +107,53 @@ modelSettings <- setLassoLogisticRegression()
 
 ```
 
-Specify a test fraction and a sequence of training set fractions. Alternatively, you can provide a sequence of training events instead of the training set fractions. This is recommended, because events are determinant of model performance. Make sure that your training set can provide the number of events specified.
+Specify the split settings and a sequence of training set fractions (these over ride the splitSetting trainFraction). Alternatively, instead of `trainFractions`,  you can provide a sequence of training events (`trainEvents`) instead of the training set fractions. This is recommended, because our research has shown that number of events is the important determinant of model performance. Make sure that your training set contains the number of events specified.
 
 ```{r eval = FALSE}
-testFraction <- 0.2
+
+splitSettings = createDefaultSplitSetting(
+  testFraction = 0.2,  
+  type = 'stratified',
+  splitSeed = 1000
+  )
+
 trainFractions <- seq(0.1, 0.8, 0.1) # Create eight training set fractions
 
 # alternatively use a sequence of training events by uncommenting the line below.
 # trainEvents <- seq(100, 5000, 100)
 ```
 
-Specify the test split to be used.
-
-```{r}
-# Use a split by person, alternatively a time split is possible
-testSplit <- 'stratified'
-```
 
 Create the learning curve object.
 
 ```{r eval=FALSE}
-learningCurve <- createLearningCurve(population,
-                                     plpData = plpData,
-                                     modelSettings = modelSettings,
-                                     testFraction = 0.2,
-                                     verbosity = "TRACE",
-                                     trainFractions = trainFractions,
-                                     # trainEvents = trainEvents,
-                                     splitSeed = 1000,
-                                     saveModel = TRUE)
+learningCurve <- createLearningCurve(
+  plpData = plpData,
+  outcomeId = 2,  
+  parallel = T,
+  cores = 4,
+  modelSettings = modelSettings,
+  saveDirectory = getwd(),
+  analysisId = 'learningCurve',
+  populationSettings = populationSettings,
+  splitSettings = splitSettings,
+  trainFractions = trainFractions,
+  trainEvents = NULL,
+  preprocessSettings = createPreprocessSettings(
+    minFraction = 0.001,
+    normalize = T
+  ),
+  executeSettings = createExecuteSettings(
+    runSplitData = T, 
+    runSampleData = F,
+    runfeatureEngineering = F,
+    runPreprocessData = T,
+    runModelDevelopment = T,
+    runCovariateSummary = F
+    )
+)
+  
+                                  
 ```
 
 Plot the learning curve object (Figure 4). Specify one of the available metrics: `AUROC`, `AUPRC`, `sBrier`. Moreover, you can specify what metric to put on the abscissa, number of `observations` or number of `events`. We recommend the latter, because `events` are determinant of model performance and allow you to better compare learning curves across different prediction problems and databases.
@@ -151,23 +172,10 @@ plotLearningCurve(
 
 
 # Parallel processing
+The learning curve object can be created in parallel, which can reduce computation time significantly.  Whether to run the code in parallel or not is specified using the `parallel` input. Currently this functionality is only available for LASSO logistic regression and gradient boosting machines. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis.
 
-The learning curve object can be created in parallel, which can reduce computation time significantly. Currently this functionality is only available for LASSO logistic regression and gradient boosting machines. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis.
+When running in parrallel, R will find the number of available processing cores automatically and register the required parallel backend. Alternatively, you can provide the number of cores you wish to use via the `cores` input.
 
-Use the parallelized version of the learning curve function to create the learning curve object in parallel. R will find the number of available processing cores automatically and register the required parallel backend. Alternatively, you can provide the number of cores you wish to use.
-
-```{r eval=FALSE}
-learningCurvePar <- createLearningCurvePar(
-  population,
-  plpData =  plpData,
-  modelSettings = modelSettings,
-  testSplit = testSplit,
-  testFraction = testFraction,
-  trainEvents = trainEvents,
-  cores = 4,
-  splitSeed = 1000
-)
-```
 # Demo
 
 We have added a demo of the learningcurve:

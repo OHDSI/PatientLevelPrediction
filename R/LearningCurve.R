@@ -1,6 +1,6 @@
 # @file LearningCurve.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -21,29 +21,17 @@
 #' @description Creates a learning curve object, which can be plotted using the
 #'  \code{plotLearningCurve()} function.
 #' 
-#' @param population The population created using \code{createStudyPopulation()}
-#'   that will be used to develop the model.
-#' @param plpData An object of type \code{plpData} - the patient level
-#'   prediction data extracted from the CDM.
-#' @param modelSettings An object of class \code{modelSettings} created using
-#'   one of the function:
-#'   \itemize{
-#'     \item{{setLassoLogisticRegression} - a lasso logistic regression
-#'       model}
-#'     \item{\code{setGradientBoostingMachine} - a gradient boosting machine}
-#'     \item{\code{setRandomForest} - a random forest model}
-#'     \item{\code{setKNN} - a k-nearest neighbour model}
-#'   }
-#' @param testSplit Specifies the type of evaluation used. Can be either 
-#'   \code{'person'} or \code{'time'}. The value \code{'time'} finds the date
-#'   that splots the population into the testing and training fractions
-#'   provided. Patients with an index after this date are assigned to the test
-#'   set and patients with an index prior to this date are assigned to the
-#'   training set. The value \code{'person'} splits the data randomly into
-#'   testing and training sets according to fractions provided. The split is
-#'   stratified by the class label.
-#' @param testFraction The fraction of the data, which will be used as the 
-#'   testing set in the patient split evaluation.
+#' @param plpData                    An object of type \code{plpData} - the patient level prediction
+#'                                   data extracted from the CDM.
+#' @param outcomeId                  (integer) The ID of the outcome.                                       
+#' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
+#' @param populationSettings         An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
+#'                                   specifies how the data class labels are defined and addition any exclusions to apply to the 
+#'                                   plpData cohort
+#' @param splitSettings              An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.  
+#'                                   The default settings can be created using \code{createDefaultSplitSetting}.                               
+#' @param sampleSettings             An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
+#'                                   The default is none.
 #' @param trainFractions A list of training fractions to create models for.
 #'   Note, providing \code{trainEvents} will override your input to
 #'   \code{trainFractions}.
@@ -52,38 +40,34 @@
 #'   \code{trainFractions}. Note, providing \code{trainEvents} will override
 #'   your input to \code{trainFractions}. The format should be as follows:
 #'   \itemize{
-#'     \item{\code{c(500, 1000, 1500)} - a list of training events}
+#'     \item{ \code{c(500, 1000, 1500) } - a list of training events}
 #'   }
-#' @param splitSeed The seed used to split the testing and training set when
-#'   using a 'person' type split                  
-#' @param nfold The number of folds used in the cross validation (default = 
-#'   \code{3}).
-#' @param indexes A dataframe containing a rowId and index column where the 
-#'   index value of -1 means in the test set, and positive integer represents
-#'   the cross validation fold (default is \code{NULL}).
-#' @param verbosity Sets the level of the verbosity. If the log level is at or
-#'   higher in priority than the logger threshold, a message will print. The 
-#'   levels are:
-#'   \itemize{
-#'     \item{\code{DEBUG} - highest verbosity showing all debug statements}
-#'     \item{\code{TRACE} - showing information about start and end of steps}
-#'     \item{\code{INFO} - show informative messages (default)}
-#'     \item{\code{WARN} - show warning messages}
-#'     \item{\code{ERROR} - show error messages}
-#'     \item{\code{FATAL} - be silent except for fatal errors}
-#'   }
-#' @param clearffTemp Clears the temporary ff-directory after each iteration. 
-#'   This can be useful, if the fitted models are large.
-#' @param minCovariateFraction Minimum covariate prevalence in population to
-#'   avoid removal during preprocssing.
-#' @param normalizeData Whether to normalise the data
-#' @param saveDirectory Location to save log and results
-#' @param savePlpData Whether to save the plpData
-#' @param savePlpResult Whether to save the plpResult
-#' @param savePlpPlots Whether to save the plp plots
-#' @param saveEvaluation Whether to save the plp performance csv files
-#' @param timeStamp Include a timestamp in the log
-#' @param analysisId The analysis unique identifier
+#' @param featureEngineeringSettings An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)                                                        
+#' @param preprocessSettings         An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
+#'                                   target population who must have a covariate for it to be included in the model training                            
+#'                                   and whether to normalise the covariates before training  
+#' @param modelSettings              An object of class \code{modelSettings} created using one of the function:
+#'                                         \itemize{
+#'                                         \item{setLassoLogisticRegression()}{ A lasso logistic regression model}
+#'                                         \item{setGradientBoostingMachine()}{ A gradient boosting machine}
+#'                                         \item{setAdaBoost()}{ An ada boost model}
+#'                                         \item{setRandomForest()}{ A random forest model}
+#'                                         \item{setDecisionTree()}{ A decision tree model}
+#'                                         \item{setCovNN())}{ A convolutional neural network model}
+#'                                         \item{setCIReNN()}{ A recurrent neural network model}
+#'                                         \item{setMLP()}{ A neural network model}
+#'                                         \item{setDeepNN()}{ A deep neural network model}
+#'                                         \item{setKNN()}{ A KNN model}
+#'                                         
+#'                                         } 
+#' @param logSettings                An object of \code{logSettings} created using \code{createLogSettings} 
+#'                                   specifying how the logging is done                                                                            
+#' @param executeSettings            An object of \code{executeSettings} specifying which parts of the analysis to run
+#' 
+#'                                                                                 
+#' @param saveDirectory         The path to the directory where the results will be saved (if NULL uses working directory)
+#' @param cores                 The number of computer cores to use if running in parallel
+#' @param parallel              Whether to run the code in parallel
 #'
 #' @return A learning curve object containing the various performance measures
 #'  obtained by the model for each training set fraction. It can be plotted
@@ -103,369 +87,145 @@
 #' }
 #' 
 #' @export
-createLearningCurve <- function(population,
-                                plpData,
-                                modelSettings,
-                                testSplit = 'person',
-                                testFraction = 0.25,
-                                trainFractions = c(0.25, 0.50, 0.75),
-                                trainEvents = NULL,
-                                splitSeed = NULL,
-                                nfold = 3,
-                                indexes = NULL,
-                                verbosity = 'TRACE',
-                                clearffTemp = FALSE,
-                                minCovariateFraction = 0.001,
-                                normalizeData = T,
-                                saveDirectory = getwd(),
-                                savePlpData = F,
-                                savePlpResult = F,
-                                savePlpPlots = F,
-                                saveEvaluation = F,
-                                timeStamp = FALSE,
-                                analysisId = NULL) {
+createLearningCurve <- function(
+  plpData,
+  outcomeId,
+  parallel = T,
+  cores = 4,
+  modelSettings,
+  saveDirectory = getwd(),
+  analysisId = 'learningCurve',
+  populationSettings = createStudyPopulationSettings(),
+  splitSettings = createDefaultSplitSetting(),
+  trainFractions = c(0.25, 0.50, 0.75),
+  trainEvents = c(500, 1000, 1500),
+  sampleSettings = createSampleSettings(),
+  featureEngineeringSettings = createFeatureEngineeringSettings(),
+  preprocessSettings = createPreprocessSettings(
+    minFraction = 0.001,
+    normalize = T
+  ),
+  logSettings = createLogSettings(),
+  executeSettings = createExecuteSettings(
+    runSplitData = T, 
+    runSampleData = F,
+    runfeatureEngineering = F,
+    runPreprocessData = T,
+    runModelDevelopment = T,
+    runCovariateSummary = F
+    )
+){
   
   if (is.null(analysisId)) {
     analysisId <- gsub(':', '', gsub('-', '', gsub(' ', '', Sys.time())))
   }
   
-  # remove all registered loggers
-  ParallelLogger::clearLoggers()
   
   # if trainEvents is provided override trainFractions input
   if (!is.null(trainEvents)) {
-    # compute training set fractions from training events
-    samplesRequired <- trainEvents/(sum(population$outcomeCount/nrow(population)))
-    trainFractionsTemp <- samplesRequired/nrow(population)
     
-    # filter out no. of events that would exceed the available training set size
-    binaryMask <- trainFractionsTemp <= (1.0 - testFraction)
+    trainFractions <- getTrainFractions(
+      trainEvents,
+      plpData, 
+      outcomeId, 
+      populationSettings,
+      splitSettings
+    )
     
-    # override any input to trainFractions with event-based training fractions
-    trainFractions <- trainFractionsTemp[binaryMask]
-    
-    # Check if any train fractions could be associated with the provided events
-    if(!length(trainFractions)) {
-      # If not, fall back on default train fractions
-      trainFractions <- c(0.25, 0.50, 0.75)
-    }
   }
-  
-  # number of training set fractions
-  nRuns <- length(trainFractions)
   
   # record global start time
   ExecutionDateTime <- Sys.time()
   
-  settings = list(population = population, 
-                  plpData = plpData, 
-                  minCovariateFraction = minCovariateFraction,
-                  normalizeData = normalizeData,
-                  modelSettings = modelSettings,
-                  testSplit = testSplit,
-                  testFraction = testFraction,
-                  splitSeed = splitSeed,
-                  nfold = nfold,
-                  indexes = indexes,
-                  saveDirectory = saveDirectory,
-                  savePlpData = savePlpData,
-                  savePlpResult = savePlpResult,
-                  savePlpPlots = savePlpPlots,
-                  saveEvaluation = saveEvaluation,
-                  verbosity = verbosity,
-                  timeStamp = timeStamp)
+  if(parallel){
+    ensure_installed('parallel')
+    if(is.null(cores)){
+      ParallelLogger::logInfo(paste0('Number of cores not specified'))
+      cores <- parallel::detectCores()
+      ParallelLogger::logInfo(paste0('Using all ', cores))
+      ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
+    }
+    
+    # save data
+    savePlpData(plpData, file.path(saveDirectory,'data'))
+    
+    # code to run in parallel
+    getLcSettings <- function(i){
+      result <- list(
+        plpData = file.path(saveDirectory,'data'),
+        outcomeId = outcomeId,
+        analysisId = paste0(analysisId,i),
+        populationSettings = populationSettings,
+        splitSettings = splitSettings,
+        sampleSettings = sampleSettings,
+        featureEngineeringSettings = featureEngineeringSettings,
+        preprocessSettings = preprocessSettings,
+        modelSettings = modelSettings,
+        logSettings = logSettings,
+        executeSettings = executeSettings,
+        saveDirectory = saveDirectory
+      )
+      result$splitSettings$train <- trainFractions[i]
+      
+      return(result)
+    }
+    lcSettings <- lapply(1:length(trainFractions), getLcSettings)
+    
+    cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
+    ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda", "FeatureExtraction"))
+    
+    learningCurve <- ParallelLogger::clusterApply(cluster = cluster, 
+      x = lcSettings, 
+      fun = lcWrapper, 
+      stopOnError = FALSE,
+      progressBar = TRUE)
+    ParallelLogger::stopCluster(cluster)
+    
+  } else{
   
+    # code to run not in parallel
+    # number of training set fractions
+    nRuns <- length(trainFractions)
+    
+    settings = list(
+      plpData = plpData,
+      outcomeId = outcomeId,
+      analysisId = analysisId,
+      populationSettings = populationSettings,
+      splitSettings = splitSettings,
+      sampleSettings = sampleSettings,
+      featureEngineeringSettings = featureEngineeringSettings,
+      preprocessSettings = preprocessSettings,
+      modelSettings = modelSettings,
+      logSettings = logSettings,
+      executeSettings = executeSettings,
+      saveDirectory = saveDirectory
+    )
+    
   learningCurve <- lapply(1:nRuns, function(i){
-                                      
-    settings$trainFraction = trainFractions[i]
-    settings$analysisId = paste(analysisId, '_', i)                                  
+    
+    settings$splitSettings$train = trainFractions[i]
+    settings$analysisId = paste0(settings$analysisId, '_', i)                                  
     result <- do.call(runPlp, settings)  
     
-    executeTime <- result$executionSummary$TotalExecutionElapsedTime
-    nPredictors <- sum(abs(result$model$model$coefficients) > 0)
+    result <- learningCurveHelper(
+      result = result,
+      trainFractions = trainFractions[i]
+      )
+    return(result)
     
-    result <- as.data.frame(result$performanceEvaluation$evaluationStatistics)
-
-    df <- data.frame( x = trainFractions[i] * 100,
-                      name = c('executionTime',paste0(result$Eval, result$Metric)), 
-                      value = c(as.double(executeTime) ,as.double(as.character(result$Value)))
-                      )
-    df$name <- as.character(df$name)
-    df$name[df$name == 'trainAUC.auc'] <- 'trainAUCROC'
-    df$name[df$name == 'testAUC.auc'] <- 'testAUCROC'
-    df$name[df$name == 'trainpopulationSize'] <- 'popSizeTrain'
-    df$name[df$name == 'trainoutcomeCount'] <- 'outcomeCountTrain'
-    df$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', df$name))
-    
-    df <- df[-grep('auc_',df$name),]
-    
-    df <- reshape2::dcast(df, x~ name)
-    
-    df$nPredictors <- nPredictors
-  
-    # return data frame row for each run
-    return(df)
   })
   
+  }
+  
   learningCurve <- do.call(rbind,learningCurve)
-
-  ParallelLogger::clearLoggers()
   
-  names(learningCurve) <- c(
-    "Fraction",
-    "Time",
-    "Occurrences",
-    "Observations",
-    "TestROC",
-    "TestPR",
-    "TestBrierScaled",
-    "TestBrierScore",
-    "TestCalibrationInLarge",
-    "TestCalibrationInLargeIntercept",
-    "TestCalibrationIntercept",
-    "TestCalibrationSlope",
-    "TestE90",
-    "TestEave",
-    "TestEmax",
-    "outcomeCountTest",
-    "popSizeTest",
-    "TrainROC",
-    "TrainPR",
-    "TrainBrierScaled",
-    "TrainBrierScore",
-    "TrainCalibrationInLarge",
-    "TrainCalibrationInLargeIntercept",
-    "TrainCalibrationIntercept",
-    "TrainCalibrationSlope",
-    "TrainE90",
-    "TrainEave",
-    "TrainEmax",
-    "nPredictors"
+  learningCurve <- tidyr::pivot_wider(
+    data = learningCurve, 
+    names_from = 'name', 
+    values_from = 'value'
     )
-
-  
-  endTime <- Sys.time()
-  TotalExecutionElapsedTime <-
-    as.numeric(difftime(endTime, ExecutionDateTime,
-                        units = "secs"))
-  ParallelLogger::logInfo('Finished in ', round(TotalExecutionElapsedTime), ' secs.')
-  
-  return(learningCurve)
-}
-
-#' @title createLearningCurvePar
-#' 
-#' @description Creates a learning curve in parallel, which can be plotted using
-#'  the \code{plotLearningCurve()} function. Currently this functionality is
-#'  only supported by Lasso Logistic Regression.
-#' 
-#' @param population The population created using \code{createStudyPopulation()}
-#'   that will be used to develop the model.
-#' @param plpData An object of type \code{plpData} - the patient level
-#'   prediction data extracted from the CDM.
-#' @param modelSettings An object of class \code{modelSettings} created using
-#'   one of the function. Currently only one model is supported:
-#'   \itemize{
-#'     \item{\code{setLassoLogisticRegression} - a lasso logistic regression
-#'       model}
-#'   }
-#' @param testSplit Specifies the type of evaluation used. Can be either 
-#'   \code{'person'} or \code{'time'}. The value \code{'time'} finds the date
-#'   that splots the population into the testing and training fractions
-#'   provided. Patients with an index after this date are assigned to the test
-#'   set and patients with an index prior to this date are assigned to the
-#'   training set. The value \code{'person'} splits the data randomly into
-#'   testing and training sets according to fractions provided. The split is
-#'   stratified by the class label.
-#' @param testFraction The fraction of the data, which will be used as the 
-#'   testing set in the patient split evaluation.
-#' @param trainFractions A list of training fractions to create models for.
-#'   Note, providing \code{trainEvents} will override your input to
-#'   \code{trainFractions}.
-#' @param trainEvents Events have shown to be determinant of model performance.
-#'   Therefore, it is recommended to provide \code{trainEvents} rather than
-#'   \code{trainFractions}. Note, providing \code{trainEvents} will override
-#'   your input to \code{trainFractions}. The format should be as follows:
-#'   \itemize{
-#'     \item{\code{c(500, 1000, 1500)} - a list of training events}
-#'   }
-#' @param splitSeed The seed used to split the testing and training set when
-#'   using a 'person' type split                  
-#' @param nfold The number of folds used in the cross validation (default = 
-#'   \code{3}).
-#' @param indexes A dataframe containing a rowId and index column where the 
-#'   index value of -1 means in the test set, and positive integer represents
-#'   the cross validation fold (default is \code{NULL}).
-#' @param verbosity Sets the level of the verbosity. If the log level is at or
-#'   higher in priority than the logger threshold, a message will print. The 
-#'   levels are:
-#'   \itemize{
-#'     \item{\code{DEBUG} - highest verbosity showing all debug statements}
-#'     \item{\code{TRACE} - showing information about start and end of steps}
-#'     \item{\code{INFO} - show informative messages (default)}
-#'     \item{\code{WARN} - show warning messages}
-#'     \item{\code{ERROR} - show error messages}
-#'     \item{\code{FATAL} - be silent except for fatal errors}
-#'   }
-#' @param minCovariateFraction Minimum covariate prevalence in population to
-#'   avoid removal during preprocssing.
-#' @param normalizeData Whether to normalise the data
-#' @param saveDirectory Location to save log and results
-#' @param savePlpData Whether to save the plpData
-#' @param savePlpResult Whether to save the plpResult
-#' @param savePlpPlots Whether to save the plp plots
-#' @param saveEvaluation Whether to save the plp performance csv files
-#' @param timeStamp Include a timestamp in the log
-#' @param analysisId The analysis unique identifier
-#' @param cores The number of cores to use
-#' @return A learning curve object containing the various performance measures
-#'  obtained by the model for each training set fraction. It can be plotted
-#'  using \code{plotLearningCurve}.
-#' 
-#' @examples
-#' \dontrun{
-#' # define model
-#' modelSettings = setLassoLogisticRegression()
-#' 
-#' # register parallel backend
-#' registerParallelBackend()
-#' 
-#' # create learning curve
-#' learningCurve <- createLearningCurvePar(population,
-#'                                         plpData,
-#'                                         modelSettings)
-#' # plot learning curve
-#' plotLearningCurve(learningCurve)
-#' }
-#' 
-#' @export
-createLearningCurvePar <- function(population,
-                                   plpData,
-                                   modelSettings,
-                                   testSplit = 'stratified',
-                                   testFraction = 0.25,
-                                   trainFractions = c(0.25, 0.50, 0.75),
-                                   trainEvents = NULL,
-                                   splitSeed = NULL,
-                                   nfold = 3,
-                                   indexes = NULL,
-                                   verbosity = 'TRACE',
-                                   minCovariateFraction = 0.001,
-                                   normalizeData = T,
-                                   saveDirectory = getwd(),
-                                   savePlpData = F,
-                                   savePlpResult = F,
-                                   savePlpPlots = F,
-                                   saveEvaluation = F,
-                                   timeStamp = FALSE,
-                                   analysisId = 'lc-',
-                                   cores = NULL) {
-  
-  ExecutionDateTime <- Sys.time()
-  
-  if(testSplit == 'person'){
-    testSplit <- 'stratified'
-  }
-  
-  if(!dir.exists(saveDirectory)){
-    dir.create(saveDirectory, recursive = T)
-  }
-  
-  savePlpData(plpData, file.path(saveDirectory,'data'))
-  
-  # if trainEvents is provided override trainFractions input
-  if (!is.null(trainEvents)) {
-    # compute training set fractions from training events
-    samplesRequired <- trainEvents/(sum(population$outcomeCount/nrow(population)))
-    trainFractionsTemp <- samplesRequired/nrow(population)
-    
-    # filter out no. of events that would exceed the available training set size
-    binaryMask <- trainFractionsTemp <= (1.0 - testFraction)
-    
-    # override any input to trainFractions with event-based training fractions
-    trainFractions <- trainFractionsTemp[binaryMask]
-    
-    # Check if any train fractions could be associated with the provided events
-    if(!length(trainFractions)) {
-      # If not, fall back on default train fractions
-      trainFractions <- c(0.25, 0.50, 0.75)
-    }
-  }
-  
-  getLcSettings <- function(i){
-    result <-list(population=population,
-                  plpData= file.path(saveDirectory,'data'),
-                  minCovariateFraction=minCovariateFraction,
-                  normalizeData=normalizeData,
-                  modelSettings=modelSettings,
-                  testSplit = testSplit,
-                  testFraction=testFraction,
-                  trainFraction=trainFractions[i],
-                  splitSeed=splitSeed,
-                  nfold=nfold,
-                  indexes=indexes,
-                  saveDirectory=saveDirectory,
-                  savePlpData=savePlpData,
-                  savePlpResult=savePlpResult,
-                  savePlpPlots=savePlpPlots,
-                  saveEvaluation=saveEvaluation,
-                  verbosity = verbosity,
-                  timeStamp = timeStamp,
-                  analysisId= paste0(analysisId,i))
-    return(result)
-  }
-  lcSettings <- lapply(1:length(trainFractions), getLcSettings)
-  
-  if(is.null(cores)){
-    ParallelLogger::logInfo(paste0('Number of cores not specified'))
-    cores <- parallel::detectCores()
-    ParallelLogger::logInfo(paste0('Using all ', cores))
-    ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
-  }
-  
-  cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
-  ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda"))
-  
-  learningCurve <- ParallelLogger::clusterApply(cluster = cluster, 
-                                                x = lcSettings, 
-                                                fun = lcWrapper, 
-                                                stopOnError = FALSE,
-                                                progressBar = TRUE)
-  ParallelLogger::stopCluster(cluster)
-  
-  learningCurve <- do.call(rbind, learningCurve)
-  
-  colnames(learningCurve) <- c(
-    "Fraction",
-    "Time",
-    "Occurrences",
-    "Observations",
-    "TestROC",
-    "TestPR",
-    "TestBrierScaled",
-    "TestBrierScore",
-    "TestCalibrationInLarge",
-    "TestCalibrationInLargeIntercept",
-    "TestCalibrationIntercept",
-    "TestCalibrationSlope",
-    "TestE90",
-    "TestEave",
-    "TestEmax",
-    "outcomeCountTest",
-    "popSizeTest",
-    "TrainROC",
-    "TrainPR",
-    "TrainBrierScaled",
-    "TrainBrierScore",
-    "TrainCalibrationInLarge",
-    "TrainCalibrationInLargeIntercept",
-    "TrainCalibrationIntercept",
-    "TrainCalibrationSlope",
-    "TrainE90",
-    "TrainEave",
-    "TrainEmax",
-    "nPredictors"
-  )
+  #learningCurve <- reshape2::dcast(data = learningCurve,  trainFraction ~ name)
 
   endTime <- Sys.time()
   TotalExecutionElapsedTime <-
@@ -475,9 +235,6 @@ createLearningCurvePar <- function(population,
   
   return(learningCurve)
 }
-
-
-
 
 lcWrapper <- function(settings){
   plpData <- PatientLevelPrediction::loadPlpData(settings$plpData)
@@ -485,7 +242,6 @@ lcWrapper <- function(settings){
   result <- tryCatch({do.call(runPlp, settings)},
                      warning = function(war) {
                        ParallelLogger::logInfo(paste0('a warning: ', war))
-                       return(NULL)
                      }, 
                      error = function(err) {
                        ParallelLogger::logError(paste0('an error: ', err))
@@ -493,31 +249,239 @@ lcWrapper <- function(settings){
                      }       
   )
   if(!is.null(result)){
-    executeTime = result$executionSummary$TotalExecutionElapsedTime
-    nPredictors <- sum(abs(result$model$model$coefficients) > 0)
-    
-    result = as.data.frame(result$performanceEvaluation$evaluationStatistics)
-    
-    dfr = data.frame( x = settings$trainFraction * 100,
-                      name = c('executionTime',paste0(result$Eval, result$Metric)), 
-                      value = c(as.double(executeTime) ,as.double(as.character(result$Value)))
-    )
-    dfr$name = as.character(dfr$name)
-    dfr$name[dfr$name == 'trainAUC.auc'] = 'trainAUCROC'
-    dfr$name[dfr$name == 'testAUC.auc'] = 'testAUCROC'
-    dfr$name[dfr$name == 'trainpopulationSize'] = 'popSizeTrain'
-    dfr$name[dfr$name == 'trainoutcomeCount'] = 'outcomeCountTrain'
-    dfr$name <- gsub('\\.Gradient','',gsub('\\.Intercept', '', dfr$name))
-    dfr = dfr[-grep('auc_',dfr$name),]
-    
-    dfr <- reshape2::dcast(dfr, x~ name)
-    
-    dfr$nPredictors <- nPredictors
-    
-    final <- dfr
-
+    ParallelLogger::logInfo('Extracting performance for learning curve...')
+    final <- learningCurveHelper(result, settings$splitSettings$train)
     return(final)
+    
   } else{
-    return(rep(0,29))
+    return(c())
   }
+}
+
+
+
+getTrainFractions <- function(
+  trainEvents,
+  plpData, 
+  outcomeId, 
+  populationSettings,
+  splitSettings
+){
+  
+  population <- do.call(
+    createStudyPopulation, 
+    list(
+      plpData = plpData,
+      outcomeId = outcomeId,
+      populationSettings = populationSettings
+    )
+  )
+  
+  # compute training set fractions from training events
+  samplesRequired <- trainEvents/(sum(population$outcomeCount/nrow(population)))
+  trainFractionsTemp <- samplesRequired/nrow(population)
+  
+  # filter out no. of events that would exceed the available training set size
+  binaryMask <- trainFractionsTemp <= (1.0 - splitSettings$testFraction)
+  
+  # override any input to trainFractions with event-based training fractions
+  trainFractions <- trainFractionsTemp[binaryMask]
+  
+  # Check if any train fractions could be associated with the provided events
+  if(!length(trainFractions)) {
+    # If not, fall back on default train fractions
+    trainFractions <- c(0.25, 0.50, 0.75)
+  }
+  
+  return(trainFractions)
+}
+
+
+learningCurveHelper <- function(result, trainFractions){
+
+  executeTime <- result$executionSummary$TotalExecutionElapsedTime
+  nPredictors <- result$model$covariateImportance %>% dplyr::filter(.data$covariateValue != 0) %>% dplyr::tally() %>% dplyr::pull()
+  
+  # evaluationStatistics is a data.frame with columns 'evaluation','metric','value'
+  result <- result$performanceEvaluation$evaluationStatistics
+  
+  result$name <- paste(result$evaluation, result$metric, sep='_')
+  
+  result <- result %>% dplyr::select(.data$name, .data$value)
+  
+  result <- rbind(
+    c('executionTime', executeTime), 
+    result, 
+    c('nPredictors', nPredictors)
+  )
+  
+  result$trainFraction <-   trainFractions * 100
+  
+  return(result)
+}
+
+
+
+
+#' @title plotLearningCurve
+#'
+#' @description Create a plot of the learning curve using the object returned
+#' from \code{createLearningCurve}.
+#'
+#' @param learningCurve An object returned by \code{\link{createLearningCurve}}
+#'   function.
+#' @param metric Specifies the metric to be plotted:
+#'   \itemize{
+#'     \item{\code{'AUROC'} - use the area under the Receiver Operating
+#'       Characteristic curve}
+#'     \item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
+#'     \item{\code{'sBrier'} - use the scaled Brier score}
+#'   }
+#' @param abscissa Specify the abscissa metric to be plotted:
+#'   \itemize{
+#'     \item{\code{'events'} - use number of events}
+#'     \item{\code{'observations'} - use number of observations}
+#'   }
+#' @param plotTitle Title of the learning curve plot.
+#' @param plotSubtitle Subtitle of the learning curve plot.
+#' @param fileName Filename of plot to be saved, for example \code{'plot.png'}.
+#'   See the function \code{ggsave} in the ggplot2 package for supported file 
+#'   formats.
+#'
+#' @return
+#' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to 
+#' file in a different format.
+#' 
+#' @examples
+#' \dontrun{
+#' # create learning curve object
+#' learningCurve <- createLearningCurve(population,
+#'                                      plpData,
+#'                                      modelSettings)
+#' # plot the learning curve
+#' plotLearningCurve(learningCurve)
+#' }
+#' 
+#' @export
+plotLearningCurve <- function(learningCurve,
+  metric = "AUROC",
+  abscissa = "events",
+  plotTitle = "Learning Curve", 
+  plotSubtitle = NULL,
+  fileName = NULL){
+  
+  tidyLearningCurve <- NULL
+  yAxisRange <- NULL
+  y <- NULL
+  
+  learningCurve <- as.data.frame(learningCurve)
+  
+  # check for performance metric to plot
+  if(metric == "AUROC") {
+    # create a data.frame with evalautionType, AUROC
+    tidyLearningCurve <- learningCurve %>% 
+      dplyr::rename(
+        Occurrences = .data$Train_outcomeCount, 
+        Observations = .data$Train_populationSize ) %>%
+      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$Test_AUROC, .data$Train_AUROC)
+    
+    for(i in 1:ncol(tidyLearningCurve)){
+      tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
+    }
+    
+    tidyLearningCurve <- tidyr::pivot_longer(
+      data = as.data.frame(tidyLearningCurve),
+      cols = colnames(as.data.frame(tidyLearningCurve))[!colnames(as.data.frame(tidyLearningCurve)) %in% c('trainFraction', 'Occurrences', 'Observations')], 
+      values_to = "value", 
+      names_to = 'variable'
+    )
+    
+    #tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    
+    tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
+    
+    # define plot properties
+    yAxisRange <- c(0.5, 1.0)
+    
+  } else if (metric == "AUPRC") {
+    # tidy up dataframe
+    tidyLearningCurve <- learningCurve %>% 
+      dplyr::rename(
+        Occurrences = .data$Train_outcomeCount, 
+        Observations = .data$Train_populationSize ) %>%
+      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$Test_AUPRC, .data$Train_AUPRC)
+    
+    for(i in 1:ncol(tidyLearningCurve)){
+      tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
+    }
+
+    tidyLearningCurve <- tidyr::pivot_longer(
+      data = as.data.frame(tidyLearningCurve),
+      cols = colnames(as.data.frame(tidyLearningCurve))[!colnames(as.data.frame(tidyLearningCurve)) %in% c('trainFraction', 'Occurrences', 'Observations')], 
+      values_to = "value", 
+      names_to = 'variable'
+    )
+    #tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    
+    tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
+    
+    # define plot properties
+    yAxisRange <- c(0.0, 1.0)
+    
+  } else if (metric == "sBrier") {
+    # tidy up dataframe
+    tidyLearningCurve <- learningCurve %>% 
+      dplyr::rename(
+        Occurrences = .data$Train_outcomeCount, 
+        Observations = .data$Train_populationSize ) %>%
+      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$`Test_brier score scaled`, .data$`Train_brier score scaled`)
+    
+    for(i in 1:ncol(tidyLearningCurve)){
+      tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
+    }
+    
+    tidyLearningCurve <- tidyr::pivot_longer(
+      data = as.data.frame(tidyLearningCurve),
+      cols = colnames(as.data.frame(tidyLearningCurve))[!colnames(as.data.frame(tidyLearningCurve)) %in% c('trainFraction', 'Occurrences', 'Observations')], 
+      values_to = "value", 
+      names_to = 'variable'
+    )
+    #tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
+    
+    tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x)strsplit(as.character(x), '_')[[1]][1])
+    
+    
+    # define plot properties
+    yAxisRange <- c(0.0, 1.0)
+    
+  } else {
+    stop("An incorrect metric has been specified.")
+  }
+  
+  if (abscissa == "observations") {
+    abscissa <- "Observations"
+    abscissaLabel <- "No. of observations"
+  } else if (abscissa == "events") {
+    abscissa <- "Occurrences"
+    abscissaLabel <- "No. of events"
+  } else {
+    stop("An incorrect abscissa has been specified.")
+  }
+  
+  # create plot object
+  plot <- tidyLearningCurve %>%
+    ggplot2::ggplot(ggplot2::aes_string(x = abscissa, y= 'value',
+      col = "Dataset")) +
+    ggplot2::geom_line() +
+    ggplot2::coord_cartesian(ylim = yAxisRange, expand = FALSE) +
+    ggplot2::labs(title = plotTitle, subtitle = plotSubtitle, 
+      x = abscissaLabel, y = metric) +
+    ggplot2::theme_light()
+  
+  # save plot, if fucntion call provides a file name
+  if ((!is.null(fileName)) & (is.character(fileName))) {
+    ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
+  }
+  
+  return(plot)
 }

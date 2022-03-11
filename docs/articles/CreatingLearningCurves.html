@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -39,12 +39,12 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -60,13 +60,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -106,11 +112,11 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -124,13 +130,13 @@
 
       
 
-      </header><script src="CreatingLearningCurves_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
+      </header><script src="CreatingLearningCurves_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Creating Learning Curves</h1>
                         <h4 class="author">Luis H. John, Jenna M. Reps, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2021-06-17</h4>
+            <h4 class="date">2022-03-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/CreatingLearningCurves.Rmd"><code>vignettes/CreatingLearningCurves.Rmd</code></a></small>
       <div class="hidden name"><code>CreatingLearningCurves.Rmd</code></div>
@@ -165,7 +171,7 @@
 <div id="creating-the-learning-curve" class="section level1">
 <h1 class="hasAnchor">
 <a href="#creating-the-learning-curve" class="anchor"></a>Creating the learning curve</h1>
-<p>Use the <a href="http://github.com/OHDSI/PatientLevelPrediction"><code>PatientLevelPrediction</code></a> package to create a <code>population</code> and <code>plpData</code> object. Alternatively, you can make use of the data simulator. The following code snippet creates a population of 12000 patients.</p>
+<p>Use the <a href="http://github.com/OHDSI/PatientLevelPrediction"><code>PatientLevelPrediction</code></a> package to create a <code>plpData</code> object . Alternatively, you can make use of the data simulator. The following code snippet creates data for 12000 patients.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">plpDataSimulationProfile</span><span class="op">)</span>
@@ -173,11 +179,10 @@
 <span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulatePlpData.html">simulatePlpData</a></span><span class="op">(</span>
   <span class="va">plpDataSimulationProfile</span>,
   n <span class="op">=</span> <span class="va">sampleSize</span>
-<span class="op">)</span>
-
-<span class="va">population</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulation.html">createStudyPopulation</a></span><span class="op">(</span>
-  <span class="va">plpData</span>,
-  outcomeId <span class="op">=</span> <span class="fl">2</span>,
+<span class="op">)</span></code></pre></div>
+<p>Specify the population settings (this does additional exclusions such as requiring minimum prior observation or no prior outcome as well as specifying the time-at-risk period to enable labels to be created):</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span>
   binary <span class="op">=</span> <span class="cn">TRUE</span>,
   firstExposureOnly <span class="op">=</span> <span class="cn">FALSE</span>,
   washoutPeriod <span class="op">=</span> <span class="fl">0</span>,
@@ -190,31 +195,48 @@
   verbosity <span class="op">=</span> <span class="st">"INFO"</span>
 <span class="op">)</span></code></pre></div>
 <p>Specify the prediction algorithm to be used.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Use LASSO logistic regression</span>
 <span class="va">modelSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<p>Specify a test fraction and a sequence of training set fractions. Alternatively, you can provide a sequence of training events instead of the training set fractions. This is recommended, because events are determinant of model performance. Make sure that your training set can provide the number of events specified.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">testFraction</span> <span class="op">&lt;-</span> <span class="fl">0.2</span>
+<p>Specify the split settings and a sequence of training set fractions (these over ride the splitSetting trainFraction). Alternatively, instead of <code>trainFractions</code>, you can provide a sequence of training events (<code>trainEvents</code>) instead of the training set fractions. This is recommended, because our research has shown that number of events is the important determinant of model performance. Make sure that your training set contains the number of events specified.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">splitSettings</span> <span class="op">=</span> <span class="fu"><a href="../reference/createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span>
+  testFraction <span class="op">=</span> <span class="fl">0.2</span>,  
+  type <span class="op">=</span> <span class="st">'stratified'</span>,
+  splitSeed <span class="op">=</span> <span class="fl">1000</span>
+  <span class="op">)</span>
+
 <span class="va">trainFractions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.8</span>, <span class="fl">0.1</span><span class="op">)</span> <span class="co"># Create eight training set fractions</span>
 
 <span class="co"># alternatively use a sequence of training events by uncommenting the line below.</span>
 <span class="co"># trainEvents &lt;- seq(100, 5000, 100)</span></code></pre></div>
-<p>Specify the test split to be used.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># Use a split by person, alternatively a time split is possible</span>
-<span class="va">testSplit</span> <span class="op">&lt;-</span> <span class="st">'stratified'</span></code></pre></div>
 <p>Create the learning curve object.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">learningCurve</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createLearningCurve.html">createLearningCurve</a></span><span class="op">(</span><span class="va">population</span>,
-                                     plpData <span class="op">=</span> <span class="va">plpData</span>,
-                                     modelSettings <span class="op">=</span> <span class="va">modelSettings</span>,
-                                     testFraction <span class="op">=</span> <span class="fl">0.2</span>,
-                                     verbosity <span class="op">=</span> <span class="st">"TRACE"</span>,
-                                     trainFractions <span class="op">=</span> <span class="va">trainFractions</span>,
-                                     <span class="co"># trainEvents = trainEvents,</span>
-                                     splitSeed <span class="op">=</span> <span class="fl">1000</span>,
-                                     saveModel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">learningCurve</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createLearningCurve.html">createLearningCurve</a></span><span class="op">(</span>
+  plpData <span class="op">=</span> <span class="va">plpData</span>,
+  outcomeId <span class="op">=</span> <span class="fl">2</span>,  
+  parallel <span class="op">=</span> <span class="cn">T</span>,
+  cores <span class="op">=</span> <span class="fl">4</span>,
+  modelSettings <span class="op">=</span> <span class="va">modelSettings</span>,
+  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>,
+  analysisId <span class="op">=</span> <span class="st">'learningCurve'</span>,
+  populationSettings <span class="op">=</span> <span class="va">populationSettings</span>,
+  splitSettings <span class="op">=</span> <span class="va">splitSettings</span>,
+  trainFractions <span class="op">=</span> <span class="va">trainFractions</span>,
+  trainEvents <span class="op">=</span> <span class="cn">NULL</span>,
+  preprocessSettings <span class="op">=</span> <span class="fu"><a href="../reference/createPreprocessSettings.html">createPreprocessSettings</a></span><span class="op">(</span>
+    minFraction <span class="op">=</span> <span class="fl">0.001</span>,
+    normalize <span class="op">=</span> <span class="cn">T</span>
+  <span class="op">)</span>,
+  executeSettings <span class="op">=</span> <span class="fu"><a href="../reference/createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span>
+    runSplitData <span class="op">=</span> <span class="cn">T</span>, 
+    runSampleData <span class="op">=</span> <span class="cn">F</span>,
+    runfeatureEngineering <span class="op">=</span> <span class="cn">F</span>,
+    runPreprocessData <span class="op">=</span> <span class="cn">T</span>,
+    runModelDevelopment <span class="op">=</span> <span class="cn">T</span>,
+    runCovariateSummary <span class="op">=</span> <span class="cn">F</span>
+    <span class="op">)</span>
+<span class="op">)</span></code></pre></div>
 <p>Plot the learning curve object (Figure 4). Specify one of the available metrics: <code>AUROC</code>, <code>AUPRC</code>, <code>sBrier</code>. Moreover, you can specify what metric to put on the abscissa, number of <code>observations</code> or number of <code>events</code>. We recommend the latter, because <code>events</code> are determinant of model performance and allow you to better compare learning curves across different prediction problems and databases.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/plotLearningCurve.html">plotLearningCurve</a></span><span class="op">(</span>
@@ -231,25 +253,14 @@
 <div id="parallel-processing" class="section level1">
 <h1 class="hasAnchor">
 <a href="#parallel-processing" class="anchor"></a>Parallel processing</h1>
-<p>The learning curve object can be created in parallel, which can reduce computation time significantly. Currently this functionality is only available for LASSO logistic regression and gradient boosting machines. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis.</p>
-<p>Use the parallelized version of the learning curve function to create the learning curve object in parallel. R will find the number of available processing cores automatically and register the required parallel backend. Alternatively, you can provide the number of cores you wish to use.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">learningCurvePar</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createLearningCurvePar.html">createLearningCurvePar</a></span><span class="op">(</span>
-  <span class="va">population</span>,
-  plpData <span class="op">=</span>  <span class="va">plpData</span>,
-  modelSettings <span class="op">=</span> <span class="va">modelSettings</span>,
-  testSplit <span class="op">=</span> <span class="va">testSplit</span>,
-  testFraction <span class="op">=</span> <span class="va">testFraction</span>,
-  trainEvents <span class="op">=</span> <span class="va">trainEvents</span>,
-  cores <span class="op">=</span> <span class="fl">4</span>,
-  splitSeed <span class="op">=</span> <span class="fl">1000</span>
-<span class="op">)</span></code></pre></div>
+<p>The learning curve object can be created in parallel, which can reduce computation time significantly. Whether to run the code in parallel or not is specified using the <code>parallel</code> input. Currently this functionality is only available for LASSO logistic regression and gradient boosting machines. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis.</p>
+<p>When running in parrallel, R will find the number of available processing cores automatically and register the required parallel backend. Alternatively, you can provide the number of cores you wish to use via the <code>cores</code> input.</p>
 </div>
 <div id="demo" class="section level1">
 <h1 class="hasAnchor">
 <a href="#demo" class="anchor"></a>Demo</h1>
 <p>We have added a demo of the learningcurve:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Show all demos in our package: </span>
  <span class="fu"><a href="https://rdrr.io/r/utils/demo.html">demo</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"PatientLevelPrediction"</span><span class="op">)</span>
 
@@ -266,7 +277,7 @@
 <h1 class="hasAnchor">
 <a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
 <p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
 <pre><code>## 
 ## To cite PatientLevelPrediction in publications use:

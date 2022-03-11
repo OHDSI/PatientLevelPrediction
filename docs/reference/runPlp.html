@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>runPlp - Train and evaluate the model — runPlp • PatientLevelPrediction</title>
+<title>runPlp - Develop and internally evaluate a model using specified settings — runPlp • PatientLevelPrediction</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="runPlp - Train and evaluate the model — runPlp" />
+<meta property="og:title" content="runPlp - Develop and internally evaluate a model using specified settings — runPlp" />
 <meta property="og:description" content="This provides a general framework for training patient level prediction models.  The user can select 
 various default feature selection methods or incorporate their own,  The user can also select from
 a range of default classifiers or incorporate their own.  There are three types of evaluations for the model
@@ -77,7 +77,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -85,12 +85,12 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -106,13 +106,19 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -152,11 +158,11 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -173,7 +179,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>runPlp - Train and evaluate the model</h1>
+    <h1>runPlp - Develop and internally evaluate a model using specified settings</h1>
     <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/RunPlp.R'><code>R/RunPlp.R</code></a></small>
     <div class="hidden name"><code>runPlp.Rd</code></div>
     </div>
@@ -188,48 +194,68 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
     </div>
 
     <pre class="usage"><span class='fu'>runPlp</span><span class='op'>(</span>
-  <span class='va'>population</span>,
   <span class='va'>plpData</span>,
-  minCovariateFraction <span class='op'>=</span> <span class='fl'>0.001</span>,
-  normalizeData <span class='op'>=</span> <span class='cn'>T</span>,
-  <span class='va'>modelSettings</span>,
-  testSplit <span class='op'>=</span> <span class='st'>"stratified"</span>,
-  testFraction <span class='op'>=</span> <span class='fl'>0.25</span>,
-  trainFraction <span class='op'>=</span> <span class='cn'>NULL</span>,
-  splitSeed <span class='op'>=</span> <span class='cn'>NULL</span>,
-  nfold <span class='op'>=</span> <span class='fl'>3</span>,
-  indexes <span class='op'>=</span> <span class='cn'>NULL</span>,
-  saveDirectory <span class='op'>=</span> <span class='cn'>NULL</span>,
-  savePlpData <span class='op'>=</span> <span class='cn'>T</span>,
-  savePlpResult <span class='op'>=</span> <span class='cn'>T</span>,
-  savePlpPlots <span class='op'>=</span> <span class='cn'>T</span>,
-  saveEvaluation <span class='op'>=</span> <span class='cn'>T</span>,
-  verbosity <span class='op'>=</span> <span class='st'>"INFO"</span>,
-  timeStamp <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  analysisId <span class='op'>=</span> <span class='cn'>NULL</span>,
-  runCovariateSummary <span class='op'>=</span> <span class='cn'>T</span>,
-  save <span class='op'>=</span> <span class='cn'>NULL</span>
+  outcomeId <span class='op'>=</span> <span class='va'>plpData</span><span class='op'>$</span><span class='va'>metaData</span><span class='op'>$</span><span class='va'>call</span><span class='op'>$</span><span class='va'>outcomeIds</span><span class='op'>[</span><span class='fl'>1</span><span class='op'>]</span>,
+  analysisId <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.Date</a></span><span class='op'>(</span><span class='op'>)</span>, <span class='va'>plpData</span><span class='op'>$</span><span class='va'>metaData</span><span class='op'>$</span><span class='va'>call</span><span class='op'>$</span><span class='va'>outcomeIds</span><span class='op'>[</span><span class='fl'>1</span><span class='op'>]</span>, sep <span class='op'>=</span> <span class='st'>"-"</span><span class='op'>)</span>,
+  analysisName <span class='op'>=</span> <span class='st'>"Study details"</span>,
+  populationSettings <span class='op'>=</span> <span class='fu'><a href='createStudyPopulationSettings.html'>createStudyPopulationSettings</a></span><span class='op'>(</span><span class='op'>)</span>,
+  splitSettings <span class='op'>=</span> <span class='fu'><a href='createDefaultSplitSetting.html'>createDefaultSplitSetting</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"stratified"</span>, testFraction <span class='op'>=</span> <span class='fl'>0.25</span>,
+    trainFraction <span class='op'>=</span> <span class='fl'>0.75</span>, splitSeed <span class='op'>=</span> <span class='fl'>123</span>, nfold <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>,
+  sampleSettings <span class='op'>=</span> <span class='fu'><a href='createSampleSettings.html'>createSampleSettings</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"none"</span><span class='op'>)</span>,
+  featureEngineeringSettings <span class='op'>=</span> <span class='fu'><a href='createFeatureEngineeringSettings.html'>createFeatureEngineeringSettings</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"none"</span><span class='op'>)</span>,
+  preprocessSettings <span class='op'>=</span> <span class='fu'><a href='createPreprocessSettings.html'>createPreprocessSettings</a></span><span class='op'>(</span>minFraction <span class='op'>=</span> <span class='fl'>0.001</span>, normalize <span class='op'>=</span> <span class='cn'>T</span><span class='op'>)</span>,
+  modelSettings <span class='op'>=</span> <span class='fu'><a href='setLassoLogisticRegression.html'>setLassoLogisticRegression</a></span><span class='op'>(</span><span class='op'>)</span>,
+  logSettings <span class='op'>=</span> <span class='fu'><a href='createLogSettings.html'>createLogSettings</a></span><span class='op'>(</span>verbosity <span class='op'>=</span> <span class='st'>"DEBUG"</span>, timeStamp <span class='op'>=</span> <span class='cn'>T</span>, logName <span class='op'>=</span>
+    <span class='st'>"runPlp Log"</span><span class='op'>)</span>,
+  executeSettings <span class='op'>=</span> <span class='fu'><a href='createDefaultExecuteSettings.html'>createDefaultExecuteSettings</a></span><span class='op'>(</span><span class='op'>)</span>,
+  saveDirectory <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>getwd</a></span><span class='op'>(</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>population</th>
-      <td><p>The population created using createStudyPopulation() who will be used to develop the model</p></td>
-    </tr>
-    <tr>
       <th>plpData</th>
       <td><p>An object of type <code>plpData</code> - the patient level prediction
 data extracted from the CDM.</p></td>
     </tr>
     <tr>
-      <th>minCovariateFraction</th>
-      <td><p>The minimum fraction of target population who must have a covariate for it to be included in the model training</p></td>
+      <th>outcomeId</th>
+      <td><p>(integer) The ID of the outcome.</p></td>
     </tr>
     <tr>
-      <th>normalizeData</th>
-      <td><p>Whether to normalise the covariates before training (Default: TRUE)</p></td>
+      <th>analysisId</th>
+      <td><p>(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.</p></td>
+    </tr>
+    <tr>
+      <th>analysisName</th>
+      <td><p>(character) Name for the analysis</p></td>
+    </tr>
+    <tr>
+      <th>populationSettings</th>
+      <td><p>An object of type <code>populationSettings</code> created using <code>createStudyPopulationSettings</code> that
+specifies how the data class labels are defined and addition any exclusions to apply to the 
+plpData cohort</p></td>
+    </tr>
+    <tr>
+      <th>splitSettings</th>
+      <td><p>An object of type <code>splitSettings</code> that specifies how to split the data into train/validation/test.
+The default settings can be created using <code>createDefaultSplitSetting</code>.</p></td>
+    </tr>
+    <tr>
+      <th>sampleSettings</th>
+      <td><p>An object of type <code>sampleSettings</code> that specifies any under/over sampling to be done.
+The default is none.</p></td>
+    </tr>
+    <tr>
+      <th>featureEngineeringSettings</th>
+      <td><p>An object of <code>featureEngineeringSettings</code> specifying any feature engineering to be learned (using the train data)</p></td>
+    </tr>
+    <tr>
+      <th>preprocessSettings</th>
+      <td><p>An object of <code>preprocessSettings</code>. This setting specifies the minimum fraction of 
+target population who must have a covariate for it to be included in the model training                            
+and whether to normalise the covariates before training</p></td>
     </tr>
     <tr>
       <th>modelSettings</th>
@@ -247,151 +273,40 @@ data extracted from the CDM.</p></td>
 </ul></td>
     </tr>
     <tr>
-      <th>testSplit</th>
-      <td><p>Either 'stratified', 'subject' or 'time' specifying the type of evaluation used.
-'time' find the date where testFraction of patients had an index after the date and assigns patients with an index prior to this date into the training set and post the date into the test set
-'stratified' splits the data into test (1-testFraction of the data) and
-train (validationFraction of the data) sets.  The split is stratified by the class label. 'subject' split is useful
-when a subject is in the data multiple times and you want all rows for the same subject in either the test or the train set but not in both.</p></td>
+      <th>logSettings</th>
+      <td><p>An object of <code>logSettings</code> created using <code>createLogSettings</code> 
+specifying how the logging is done</p></td>
     </tr>
     <tr>
-      <th>testFraction</th>
-      <td><p>The fraction of the data to be used as the test set in the patient
-split evaluation.</p></td>
-    </tr>
-    <tr>
-      <th>trainFraction</th>
-      <td><p>A real number between 0 and 1 indicating the train set fraction of the data.
-If not set trainFraction is equal to 1 - test</p></td>
-    </tr>
-    <tr>
-      <th>splitSeed</th>
-      <td><p>The seed used to split the test/train set when using a person type testSplit</p></td>
-    </tr>
-    <tr>
-      <th>nfold</th>
-      <td><p>The number of folds used in the cross validation (default 3)</p></td>
-    </tr>
-    <tr>
-      <th>indexes</th>
-      <td><p>A dataframe containing a rowId and index column where the index value of -1 means in the test set, and positive integer represents the cross validation fold (default is NULL)</p></td>
+      <th>executeSettings</th>
+      <td><p>An object of <code>executeSettings</code> specifying which parts of the analysis to run</p></td>
     </tr>
     <tr>
       <th>saveDirectory</th>
       <td><p>The path to the directory where the results will be saved (if NULL uses working directory)</p></td>
     </tr>
-    <tr>
-      <th>savePlpData</th>
-      <td><p>Binary indicating whether to save the plpData object (default is T)</p></td>
-    </tr>
-    <tr>
-      <th>savePlpResult</th>
-      <td><p>Binary indicating whether to save the object returned by runPlp (default is T)</p></td>
-    </tr>
-    <tr>
-      <th>savePlpPlots</th>
-      <td><p>Binary indicating whether to save the performance plots as pdf files (default is T)</p></td>
-    </tr>
-    <tr>
-      <th>saveEvaluation</th>
-      <td><p>Binary indicating whether to save the oerformance as csv files (default is T)</p></td>
-    </tr>
-    <tr>
-      <th>verbosity</th>
-      <td><p>Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:</p><ul>
-<li><p>DEBUGHighest verbosity showing all debug statements</p></li>
-<li><p>TRACEShowing information about start and end of steps</p></li>
-<li><p>INFOShow informative information (Default)</p></li>
-<li><p>WARNShow warning messages</p></li>
-<li><p>ERRORShow error messages</p></li>
-<li><p>FATALBe silent except for fatal errors</p></li>
-</ul></td>
-    </tr>
-    <tr>
-      <th>timeStamp</th>
-      <td><p>If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.</p></td>
-    </tr>
-    <tr>
-      <th>analysisId</th>
-      <td><p>Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.</p></td>
-    </tr>
-    <tr>
-      <th>runCovariateSummary</th>
-      <td><p>Whether to calculate the mean and sd for each covariate</p></td>
-    </tr>
-    <tr>
-      <th>save</th>
-      <td><p>Old input - please now use saveDirectory</p></td>
-    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object containing the model or location where the model is save, the data selection settings, the preprocessing
-and training settings as well as various performance measures obtained by the model.</p>
-<dt>predict</dt><dd><p>A function that can be applied to new data to apply the trained model and make predictions</p></dd>
-<dt>model</dt><dd><p>A list of class <code>plpModel</code> containing the model, training metrics and model metadata</p></dd>
-<dt>prediction</dt><dd><p>A dataframe containing the prediction for each person in the test set</p></dd>
-<dt>evalType</dt><dd><p>The type of evaluation that was performed ('person' or 'time')</p></dd>
-<dt>performanceTest</dt><dd><p>A list detailing the size of the test sets</p></dd>
-<dt>performanceTrain</dt><dd><p>A list detailing the size of the train sets</p></dd>
-<dt>time</dt><dd><p>The complete time taken to do the model framework</p></dd>
+    <p>An object containing the following:</p>
+<p></p><ul>
+<li><p>inputSettingsA list containing all the settings used to develop the model</p></li>
+<li><p>model The developed model of class <code>plpModel</code></p></li>
+<li><p>executionSummary A list containing the hardward details, R package details and execution time</p></li>
+<li><p>performanceEvaluation Various internal performance metrics in sparse format</p></li>
+<li><p>prediction The plpData cohort table with the predicted risks added as a column (named value)</p></li>
+<li><p>covariateSummary) A characterization of the features for patients with and without the outcome during the time at risk</p></li>
+<li><p>analysisRef A list with details about the analysis</p></li>
+</ul>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Users can define a risk period of interest for the prediction of the outcome relative to index or use
-the cohprt dates.  The user can then specify whether they wish to exclude patients who are not observed
-during the whole risk period, cohort period or experienced the outcome prior to the risk period.</p>
+    <p>This function takes as input the plpData extracted from an OMOP CDM database and follows the specified settings to
+develop and internally validate a model for the specified outcomeId.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
-<span class='co'>#******** EXAMPLE 1 ********* </span>
-<span class='co'>#load plpData:</span>
-<span class='va'>plpData</span> <span class='op'>&lt;-</span> <span class='fu'><a href='loadPlpData.html'>loadPlpData</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'home'</span>,<span class='st'>'data'</span><span class='op'>)</span><span class='op'>)</span>
-
-<span class='co'>#create study population to develop model on</span>
-<span class='co'>#require minimum of 365 days observation prior to at risk start</span>
-<span class='co'>#no prior outcome and person must be observed for 365 after index (minTimeAtRisk)</span>
-<span class='co'>#with risk window from 0 to 365 days after index</span>
-<span class='va'>population</span> <span class='op'>&lt;-</span> <span class='fu'><a href='createStudyPopulation.html'>createStudyPopulation</a></span><span class='op'>(</span><span class='va'>plpData</span>,outcomeId<span class='op'>=</span><span class='fl'>2042</span>,
-                                    firstExposureOnly <span class='op'>=</span> <span class='cn'>FALSE</span>,
-                                    washoutPeriod <span class='op'>=</span> <span class='fl'>365</span>,
-                                    removeSubjectsWithPriorOutcome <span class='op'>=</span> <span class='cn'>TRUE</span>,
-                                    priorOutcomeLookback <span class='op'>=</span> <span class='fl'>99999</span>,
-                                    requireTimeAtRisk <span class='op'>=</span> <span class='cn'>TRUE</span>,
-                                    minTimeAtRisk<span class='op'>=</span><span class='fl'>365</span>,
-                                    riskWindowStart <span class='op'>=</span> <span class='fl'>0</span>,
-                                    addExposureDaysToStart <span class='op'>=</span> <span class='cn'>FALSE</span>,
-                                    riskWindowEnd <span class='op'>=</span> <span class='fl'>365</span>,
-                                    addExposureDaysToEnd <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
-
-<span class='co'>#lasso logistic regression predicting outcome 200 in cohorts 10 </span>
-<span class='co'>#using no feature selection with a time split evaluation with 30% in test set</span>
-<span class='co'>#70% in train set where the model hyper-parameters are selected using 3-fold cross validation:</span>
-<span class='co'>#and results are saved to file.path('C:','User','home')</span>
-<span class='va'>model.lr</span> <span class='op'>&lt;-</span> <span class='fu'>lassoLogisticRegression.set</span><span class='op'>(</span><span class='op'>)</span>
-<span class='va'>mod.lr</span> <span class='op'>&lt;-</span> <span class='fu'>runPlp</span><span class='op'>(</span>population<span class='op'>=</span><span class='va'>population</span>,
-                        plpData<span class='op'>=</span> <span class='va'>plpData</span>, minCovariateFraction <span class='op'>=</span> <span class='fl'>0.001</span>,
-                        modelSettings <span class='op'>=</span> <span class='va'>model.lr</span> ,
-                        testSplit <span class='op'>=</span> <span class='st'>'time'</span>, testFraction<span class='op'>=</span><span class='fl'>0.3</span>, 
-                        nfold<span class='op'>=</span><span class='fl'>3</span>, indexes<span class='op'>=</span><span class='cn'>NULL</span>,
-                        saveDirectory <span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'myPredictionName'</span><span class='op'>)</span>,
-                        verbosity<span class='op'>=</span><span class='st'>'INFO'</span><span class='op'>)</span>
- 
-<span class='co'>#******** EXAMPLE 2 *********                                               </span>
-<span class='co'># Gradient boosting machine with a grid search to select hyper parameters  </span>
-<span class='co'># using the test/train/folds created for the lasso logistic regression above                       </span>
-<span class='va'>model.gbm</span> <span class='op'>&lt;-</span> <span class='fu'>gradientBoostingMachine.set</span><span class='op'>(</span>rsampRate<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.5</span>,<span class='fl'>0.9</span>,<span class='fl'>1</span><span class='op'>)</span>,csampRate<span class='op'>=</span><span class='fl'>1</span>, 
-                           ntrees<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>10</span>,<span class='fl'>100</span><span class='op'>)</span>, bal<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='cn'>F</span>,<span class='cn'>T</span><span class='op'>)</span>,
-                           max_depth<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>4</span>,<span class='fl'>5</span><span class='op'>)</span>, learn_rate<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.1</span>,<span class='fl'>0.01</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>mod.gbm</span> <span class='op'>&lt;-</span> <span class='fu'>runPlp</span><span class='op'>(</span>population<span class='op'>=</span><span class='va'>population</span>,
-                        plpData<span class='op'>=</span> <span class='va'>plpData</span>,
-                        modelSettings <span class='op'>=</span> <span class='va'>model.gbm</span>,
-                        testSplit <span class='op'>=</span> <span class='st'>'time'</span>, testFraction<span class='op'>=</span><span class='fl'>0.3</span>, 
-                        nfold<span class='op'>=</span><span class='fl'>3</span>, indexes<span class='op'>=</span><span class='va'>mod.lr</span><span class='op'>$</span><span class='va'>indexes</span>,
-                        saveDirectory <span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='st'>'C:'</span>,<span class='st'>'User'</span>,<span class='st'>'myPredictionName2'</span><span class='op'>)</span><span class='op'>)</span>
-<span class='op'>}</span> 
-</div></pre>
+    <pre class="examples"></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

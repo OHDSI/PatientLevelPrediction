@@ -4,17 +4,15 @@
 \alias{toSparseM}
 \title{Convert the plpData in COO format into a sparse R matrix}
 \usage{
-toSparseM(plpData, population, map = NULL, temporal = F)
+toSparseM(plpData, cohort = NULL, map = NULL)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} with covariate in coo format - the patient level prediction
 data extracted from the CDM.}
 
-\item{population}{The population to include in the matrix}
+\item{cohort}{If specified the plpData is restricted to the rowIds in the cohort (otherwise plpData$labels is used)}
 
 \item{map}{A covariate map (telling us the column number for covariates)}
-
-\item{temporal}{Whether you want to convert temporal data}
 }
 \value{
 Returns a list, containing the data as a sparse matrix, the plpData covariateRef

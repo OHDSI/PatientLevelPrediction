@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -169,7 +175,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create setting for neural network model with python</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/MLP.R'><code>R/MLP.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/SklearnClassifierSettings.R'><code>R/SklearnClassifierSettings.R</code></a></small>
     <div class="hidden name"><code>setMLP.Rd</code></div>
     </div>
 
@@ -178,56 +184,116 @@
     </div>
 
     <pre class="usage"><span class='fu'>setMLP</span><span class='op'>(</span>
-  size <span class='op'>=</span> <span class='fl'>4</span>,
-  alpha <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.3</span>, <span class='fl'>0.01</span>, <span class='fl'>0.001</span>, <span class='fl'>1e-06</span><span class='op'>)</span>,
-  maxIter <span class='op'>=</span> <span class='fl'>2000</span>,
-  tol <span class='op'>=</span> <span class='fl'>1e-04</span>,
-  learningRateInit <span class='op'>=</span> <span class='fl'>0.001</span>,
-  nIterNoChange <span class='op'>=</span> <span class='fl'>10</span>,
-  beta1 <span class='op'>=</span> <span class='fl'>0.9</span>,
-  beta2 <span class='op'>=</span> <span class='fl'>0.999</span>,
-  epsilon <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>0.1</span>, <span class='fl'>1e-08</span><span class='op'>)</span>,
-  seed <span class='op'>=</span> <span class='cn'>NULL</span>
+  hiddenLayerSizes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>100</span><span class='op'>)</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>20</span>, <span class='fl'>4</span><span class='op'>)</span><span class='op'>)</span>,
+  activation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"relu"</span><span class='op'>)</span>,
+  solver <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"adam"</span><span class='op'>)</span>,
+  alpha <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0.3</span>, <span class='fl'>0.01</span>, <span class='fl'>1e-04</span>, <span class='fl'>1e-06</span><span class='op'>)</span>,
+  batchSize <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"auto"</span><span class='op'>)</span>,
+  learningRate <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"constant"</span><span class='op'>)</span>,
+  learningRateInit <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0.001</span><span class='op'>)</span>,
+  powerT <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0.5</span><span class='op'>)</span>,
+  maxIter <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>200</span>, <span class='fl'>100</span><span class='op'>)</span>,
+  shuffle <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>TRUE</span><span class='op'>)</span>,
+  tol <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>1e-04</span><span class='op'>)</span>,
+  warmStart <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>TRUE</span><span class='op'>)</span>,
+  momentum <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0.9</span><span class='op'>)</span>,
+  nesterovsMomentum <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>TRUE</span><span class='op'>)</span>,
+  earlyStopping <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span>,
+  validationFraction <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0.1</span><span class='op'>)</span>,
+  beta1 <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0.9</span><span class='op'>)</span>,
+  beta2 <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0.999</span><span class='op'>)</span>,
+  epsilon <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>0.1</span>, <span class='fl'>1e-08</span><span class='op'>)</span>,
+  nIterNoChange <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>10</span><span class='op'>)</span>,
+  seed <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span><span class='op'>(</span><span class='fl'>1e+05</span>, <span class='fl'>1</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>size</th>
-      <td><p>The number of hidden nodes</p></td>
+      <th>hiddenLayerSizes</th>
+      <td><p>(list of vectors) The ith element represents the number of neurons in the ith hidden layer.</p></td>
+    </tr>
+    <tr>
+      <th>activation</th>
+      <td><p>(list) Activation function for the hidden layer.</p><ul>
+<li><p>"identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x</p></li>
+<li><p>"logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).</p></li>
+<li><p>"tanh": the hyperbolic tan function, returns f(x) = tanh(x).</p></li>
+<li><p>"relu": the rectified linear unit function, returns f(x) = max(0, x)</p></li>
+</ul></td>
+    </tr>
+    <tr>
+      <th>solver</th>
+      <td><p>(list) The solver for weight optimization. (‘lbfgs’, ‘sgd’, ‘adam’)</p></td>
     </tr>
     <tr>
       <th>alpha</th>
-      <td><p>The l2 regularisation</p></td>
+      <td><p>(list) L2 penalty (regularization term) parameter.</p></td>
     </tr>
     <tr>
-      <th>maxIter</th>
-      <td><p>Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations.</p></td>
+      <th>batchSize</th>
+      <td><p>(list) Size of minibatches for stochastic optimizers. If the solver is ‘lbfgs’, the classifier will not use minibatch. When set to “auto”, batchSize=min(200, n_samples).</p></td>
     </tr>
     <tr>
-      <th>tol</th>
-      <td><p>Tolerance for the optimization</p></td>
+      <th>learningRate</th>
+      <td><p>(list) Only used when solver='sgd' Learning rate schedule for weight updates.‘constant’, ‘invscaling’, ‘adaptive’, default=’constant’</p></td>
     </tr>
     <tr>
       <th>learningRateInit</th>
-      <td><p>The initial learning rate used. It controls the step-size in updating the weights.</p></td>
+      <td><p>(list) Only used when solver=’sgd’ or ‘adam’. The initial learning rate used. It controls the step-size in updating the weights.</p></td>
     </tr>
     <tr>
-      <th>nIterNoChange</th>
-      <td><p>Maximum number of epochs to not meet tol improvement.</p></td>
+      <th>powerT</th>
+      <td><p>(list) Only used when solver=’sgd’.  The exponent for inverse scaling learning rate. It is used in updating effective learning rate when the learning_rate is set to ‘invscaling’.</p></td>
+    </tr>
+    <tr>
+      <th>maxIter</th>
+      <td><p>(list)  Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations. For stochastic solvers (‘sgd’, ‘adam’), note that this determines the number of epochs (how many times each data point will be used), not the number of gradient steps.</p></td>
+    </tr>
+    <tr>
+      <th>shuffle</th>
+      <td><p>(list) boolean: Whether to shuffle samples in each iteration. Only used when solver=’sgd’ or ‘adam’.</p></td>
+    </tr>
+    <tr>
+      <th>tol</th>
+      <td><p>(list) Tolerance for the optimization. When the loss or score is not improving by at least tol for nIterNoChange consecutive iterations, unless learning_rate is set to ‘adaptive’, convergence is considered to be reached and training stops.</p></td>
+    </tr>
+    <tr>
+      <th>warmStart</th>
+      <td><p>(list) When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution.</p></td>
+    </tr>
+    <tr>
+      <th>momentum</th>
+      <td><p>(list) Momentum for gradient descent update. Should be between 0 and 1. Only used when solver=’sgd’.</p></td>
+    </tr>
+    <tr>
+      <th>nesterovsMomentum</th>
+      <td><p>(list) Whether to use Nesterov’s momentum. Only used when solver=’sgd’ and momentum &gt; 0.</p></td>
+    </tr>
+    <tr>
+      <th>earlyStopping</th>
+      <td><p>(list) boolean Whether to use early stopping to terminate training when validation score is not improving. If set to true, it will automatically set aside 10 percent of training data as validation and terminate training when validation score is not improving by at least tol for n_iter_no_change consecutive epochs.</p></td>
+    </tr>
+    <tr>
+      <th>validationFraction</th>
+      <td><p>(list) The proportion of training data to set aside as validation set for early stopping. Must be between 0 and 1. Only used if earlyStopping is True.</p></td>
     </tr>
     <tr>
       <th>beta1</th>
-      <td><p>Exponential decay rate for estimates of first moment vector in adam, should be in [0, 1).</p></td>
+      <td><p>(list) Exponential decay rate for estimates of first moment vector in adam, should be in 0 to 1.</p></td>
     </tr>
     <tr>
       <th>beta2</th>
-      <td><p>Exponential decay rate for estimates of second moment vector in adam, should be in [0, 1).</p></td>
+      <td><p>(list) Exponential decay rate for estimates of second moment vector in adam, should be in 0 to 1.</p></td>
     </tr>
     <tr>
       <th>epsilon</th>
-      <td><p>Value for numerical stability in adam.</p></td>
+      <td><p>(list) Value for numerical stability in adam.</p></td>
+    </tr>
+    <tr>
+      <th>nIterNoChange</th>
+      <td><p>(list) Maximum number of epochs to not meet tol improvement. Only effective when solver=’sgd’ or ‘adam’.</p></td>
     </tr>
     <tr>
       <th>seed</th>
@@ -238,7 +304,7 @@
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
-<span class='va'>model.mlp</span> <span class='op'>&lt;-</span> <span class='fu'>setMLP</span><span class='op'>(</span>size<span class='op'>=</span><span class='fl'>4</span>, alpha<span class='op'>=</span><span class='fl'>0.00001</span>, seed<span class='op'>=</span><span class='cn'>NULL</span><span class='op'>)</span>
+<span class='va'>model.mlp</span> <span class='op'>&lt;-</span> <span class='fu'>setMLP</span><span class='op'>(</span><span class='op'>)</span>
 <span class='op'>}</span>
 </div></pre>
   </div>

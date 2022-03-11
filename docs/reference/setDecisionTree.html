@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create setting for DecisionTree with python — setDecisionTree • PatientLevelPrediction</title>
+<title>Create setting for the scikit-learn 1.0.1 DecisionTree with python — setDecisionTree • PatientLevelPrediction</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Create setting for DecisionTree with python — setDecisionTree" />
-<meta property="og:description" content="Create setting for DecisionTree with python" />
+<meta property="og:title" content="Create setting for the scikit-learn 1.0.1 DecisionTree with python — setDecisionTree" />
+<meta property="og:description" content="Create setting for the scikit-learn 1.0.1 DecisionTree with python" />
 
 
 
@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.3.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -80,12 +80,12 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="../articles/PatientLevelPrediction.html">Get started</a>
+  <a href="../articles/InstallationGuide.html">Get started</a>
 </li>
 <li>
   <a href="../articles/Videos.html">Videos</a>
@@ -101,13 +101,19 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/AddingCustomAlgorithms.html">Adding Custom Patient-Level Prediction Algorithms</a>
+      <a href="../articles/AddingCustomFeatureEngineering.html">Adding Custom Feature Engineering Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomModels.html">Adding Custom Patient-Level Prediction Algorithms</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
+    </li>
+    <li>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
       <a href="../articles/BestPractices.html">Best Practice Research</a>
-    </li>
-    <li>
-      <a href="../articles/BuildingDeepLearningModels.html">Building Deep Learning Models</a>
     </li>
     <li>
       <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
@@ -147,11 +153,11 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://ohdsi.github.io/Hades">hadesLogo</a>
+  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -168,55 +174,75 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create setting for DecisionTree with python</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/DecisionTree.R'><code>R/DecisionTree.R</code></a></small>
+    <h1>Create setting for the scikit-learn 1.0.1 DecisionTree with python</h1>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/SklearnClassifierSettings.R'><code>R/SklearnClassifierSettings.R</code></a></small>
     <div class="hidden name"><code>setDecisionTree.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Create setting for DecisionTree with python</p>
+    <p>Create setting for the scikit-learn 1.0.1 DecisionTree with python</p>
     </div>
 
     <pre class="usage"><span class='fu'>setDecisionTree</span><span class='op'>(</span>
-  maxDepth <span class='op'>=</span> <span class='fl'>10</span>,
-  minSamplesSplit <span class='op'>=</span> <span class='fl'>2</span>,
-  minSamplesLeaf <span class='op'>=</span> <span class='fl'>10</span>,
-  minImpurityDecrease <span class='op'>=</span> <span class='fl'>10</span><span class='op'>^</span><span class='op'>-</span><span class='fl'>7</span>,
-  seed <span class='op'>=</span> <span class='cn'>NULL</span>,
-  classWeight <span class='op'>=</span> <span class='st'>"None"</span>,
-  plot <span class='op'>=</span> <span class='cn'>F</span>
+  criterion <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"gini"</span><span class='op'>)</span>,
+  splitter <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='st'>"best"</span><span class='op'>)</span>,
+  maxDepth <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='fl'>4</span><span class='op'>)</span>, <span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='fl'>10</span><span class='op'>)</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  minSamplesSplit <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>10</span><span class='op'>)</span>,
+  minSamplesLeaf <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>10</span>, <span class='fl'>50</span><span class='op'>)</span>,
+  minWeightFractionLeaf <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0</span><span class='op'>)</span>,
+  maxFeatures <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>100</span>, <span class='st'>"auto"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  maxLeafNodes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>NULL</span><span class='op'>)</span>,
+  minImpurityDecrease <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>10</span><span class='op'>^</span><span class='op'>-</span><span class='fl'>7</span><span class='op'>)</span>,
+  classWeight <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='cn'>NULL</span>, <span class='st'>"balanced"</span><span class='op'>)</span>,
+  seed <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span><span class='op'>(</span><span class='fl'>1e+06</span>, <span class='fl'>1</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
+      <th>criterion</th>
+      <td><p>The function to measure the quality of a split. Supported criteria are “gini” for the Gini impurity and “entropy” for the information gain.</p></td>
+    </tr>
+    <tr>
+      <th>splitter</th>
+      <td><p>The strategy used to choose the split at each node. Supported strategies are “best” to choose the best split and “random” to choose the best random split.</p></td>
+    </tr>
+    <tr>
       <th>maxDepth</th>
-      <td><p>The maximum depth of the tree</p></td>
+      <td><p>(list) The maximum depth of the tree. If NULL, then nodes are expanded until all leaves are pure or until all leaves contain less than min_samples_split samples.</p></td>
     </tr>
     <tr>
       <th>minSamplesSplit</th>
-      <td><p>The minimum samples per split</p></td>
+      <td><p>The minimum number of samples required to split an internal node</p></td>
     </tr>
     <tr>
       <th>minSamplesLeaf</th>
-      <td><p>The minimum number of samples per leaf</p></td>
+      <td><p>The minimum number of samples required to be at a leaf node. A split point at any depth will only be considered if it leaves at least minSamplesLeaf training samples in each of the left and right branches. This may have the effect of smoothing the model, especially in regression.</p></td>
+    </tr>
+    <tr>
+      <th>minWeightFractionLeaf</th>
+      <td><p>The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sampleWeight is not provided.</p></td>
+    </tr>
+    <tr>
+      <th>maxFeatures</th>
+      <td><p>(list) The number of features to consider when looking for the best split (int/'auto'/NULL)</p></td>
+    </tr>
+    <tr>
+      <th>maxLeafNodes</th>
+      <td><p>(list) Grow a tree with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes. (int/NULL)</p></td>
     </tr>
     <tr>
       <th>minImpurityDecrease</th>
       <td><p>Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.</p></td>
     </tr>
     <tr>
+      <th>classWeight</th>
+      <td><p>(list) Weights associated with classes 'balance' or NULL</p></td>
+    </tr>
+    <tr>
       <th>seed</th>
       <td><p>The random state seed</p></td>
-    </tr>
-    <tr>
-      <th>classWeight</th>
-      <td><p>Balance or None</p></td>
-    </tr>
-    <tr>
-      <th>plot</th>
-      <td><p>Boolean whether to plot the tree (requires python pydotplus module)</p></td>
     </tr>
     </table>
 

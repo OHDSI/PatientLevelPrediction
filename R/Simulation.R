@@ -1,6 +1,6 @@
 # @file simulation.R
 #
-# Copyright 2020 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -84,7 +84,6 @@
 #' @param plpDataSimulationProfile   An object of type \code{plpDataSimulationProfile} as generated
 #'                                   using the \cr\code{createplpDataSimulationProfile} function.
 #' @param n                          The size of the population to be generated.
-#' @param useInt64                   Make the covariateIds int64
 #'
 #' @details
 #' This function generates simulated data that is in many ways similar to the original data on which
@@ -95,7 +94,7 @@
 #' An object of type \code{plpData}.
 #'
 #' @export
-simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
+simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
   writeLines("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariatePrevalence
@@ -105,15 +104,12 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
   rowId <- sapply(personsPerCov, function(x, n) sample.int(size = x, n), n = n)
   rowId <- do.call("c", rowId)
   covariateIds <- as.numeric(names(covariatePrevalence))
-  covariateId <- sapply(1:length(personsPerCov),
+  covariateId <- unlist(sapply(1:length(personsPerCov),
                         function(x, personsPerCov, covariateIds) rep(covariateIds[x],
                                                                      personsPerCov[x]),
                         personsPerCov = personsPerCov,
-                        covariateIds = covariateIds)
-  if(useInt64){
-    covariateId <- bit64::as.integer64(do.call("c", covariateId))
-    plpDataSimulationProfile$covariateRef$covariateId <- bit64::as.integer64(plpDataSimulationProfile$covariateRef$covariateId)
-  }
+                        covariateIds = covariateIds))
+
   covariateValue <- rep(1, length(covariateId))
   covariateData <- Andromeda::andromeda(covariates = data.frame(rowId = rowId,
                                                                 covariateId = covariateId,
@@ -139,7 +135,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
   writeLines("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
-    prediction <- predictAndromeda(plpDataSimulationProfile$outcomeModels[[i]],
+    prediction <- predictCyclopsType(plpDataSimulationProfile$outcomeModels[[i]],
                                    cohorts,
                                    covariateData,
                                    modelType = "poisson")
@@ -161,28 +157,35 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, useInt64 = T) {
  
   
   # Remove rownames else they will be copied to the ffdf objects:
-  metaData = list(cohortIds = 1,
-                  outcomeIds = 2:3,
-                  call = list())#plpDataSimulationProfile$metaData
+  metaData = list()
   
-  #remove details from profile
-  metaData$call$cdmDatabaseSchema = 'Profile'
-  metaData$call$outcomeDatabaseSchema = NULL
-  metaData$call$cohortDatabaseSchema = NULL
-  metaData$call$connectionDetails = NULL
-  metaData$call$outcomeTable = NULL
-  metaData$call$cohortTable = NULL
-  metaData$call$cdmVersion = 5
-  metaData$call$covariateSettings = NULL
-
-  metaData$cohortId = 1
-  metaData$outcomeIds = c(2,3)
-  metaData$studyStartDate = NULL
-  metaData$studyEndDate = NULL
-  metaData$attrition= data.frame(outcomeId=2,description='Simulated data', 
+  metaData$databaseDetails <- list(
+    cdmDatabaseSchema = 'Profile',
+    outcomeDatabaseSchema = NULL,
+    cohortDatabaseSchema = NULL,
+    connectionDetails = NULL,
+    outcomeTable = NULL,
+    cohortTable = NULL,
+    cdmVersion = 5,
+    cohortId = 1,
+    outcomeIds = c(2,3)
+  )
+  metaData$restrictPlpDataSettings <- list(
+    studyStartDate = NULL,
+    studyEndDate = NULL
+    )
+  metaData$covariateSettings <- FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T)
+  
+  
+  attrition <- data.frame(outcomeId=2,description='Simulated data', 
                                       targetCount=nrow(cohorts), uniquePeople=nrow(cohorts), 
                                       outcomes=nrow(outcomes))
-  attr(cohorts, "metaData") <- metaData
+  attr(cohorts, "metaData") <- list(
+    cohortId = 1, 
+    attrition = attrition
+    )
+  
+  attr(allOutcomes, "metaData") <- data.frame(outcomeIds = c(2,3))
   
   attr(covariateData, "metaData") <- list(populationSize = n)
   

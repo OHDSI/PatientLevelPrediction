@@ -16,71 +16,69 @@ plpData <- simulatePlpData(
 )
 
 # Create the study population
-population <- createStudyPopulation(
-  plpData,
-  outcomeId = 2,
+populationSettings <- createStudyPopulationSettings(
   binary = TRUE,
   firstExposureOnly = FALSE,
   washoutPeriod = 0,
   removeSubjectsWithPriorOutcome = FALSE,
   priorOutcomeLookback = 99999,
-  requireTimeAtRisk = FALSE,
+  requireTimeAtRisk = TRUE,
   minTimeAtRisk = 0,
   riskWindowStart = 0,
+  startAnchor = 'cohort start',
   riskWindowEnd = 365,
-  verbosity = "INFO"
+  endAnchor = 'cohort start'
 )
 
 # Specify the prediction algorithm to be used
 modelSettings <- setLassoLogisticRegression()
 
 # Specify a test fraction and a sequence of training set fractions
-testFraction <- 0.2
+splitSettings <- createDefaultSplitSetting(
+  testFraction = 0.2,
+  type = 'stratified'
+  )
 trainEvents <- seq(100, 800, 100)
 
-# Specify the test split to be used
-testSplit <- 'stratified'
 
 # Create the learning curve object
 if (selection != "y" &&
     selection != "Y") {
   learningCurve <- createLearningCurve(
-    population,
-    plpData = plpData,
-    modelSettings = modelSettings,
-    testFraction = testFraction,
-    verbosity = "TRACE",
+    plpData = plpData, 
+    outcomeId = 2, 
+    analysisId = 'learningCurveDemo', 
+    parallel = F,
+    cores = 4, 
+    modelSettings = modelSettings, 
+    populationSettings = populationSettings, 
+    splitSettings = splitSettings, 
     trainEvents = trainEvents,
-    splitSeed = 1000
+    saveDirectory = './learningCurve'
 )
-  
-  # plot the learning curve by specify one of the available metrics: 
-  # 'AUROC', 'AUPRC', 'sBrier'.
-  plotLearningCurve(
-    learningCurve,
-    metric = "AUROC",
-    abscissa = "events",
-    plotTitle = "Learning Curve",
-    plotSubtitle = "AUROC performance"
-  )
   
 } else {
   # create a learning curve object in parallel
-  learningCurvePar <- createLearningCurvePar(
-    population,
-    plpData = plpData,
-    modelSettings = modelSettings,
-    testFraction = 0.2,
+  learningCurve <- createLearningCurve(
+    plpData = plpData, 
+    outcomeId = 2, 
+    analysisId = 'learningCurveDemo', 
+    parallel = T,
+    cores = 4, 
+    modelSettings = modelSettings, 
+    populationSettings = populationSettings, 
+    splitSettings = splitSettings, 
     trainEvents = trainEvents,
-    splitSeed = 1000
+    saveDirectory = './learningCurve'
   )
-  
-  # plot the learning curve
-  plotLearningCurve(
-    learningCurvePar,
-    metric = "AUROC",
-    abscissa = "events",
-    plotTitle = "Learning Curve Parallel",
-    plotSubtitle = "AUROC performance"
-  )
+
 }
+
+# plot the learning curve
+plotLearningCurve(
+  learningCurve,
+  metric = "AUROC",
+  abscissa = "events",
+  plotTitle = "Learning Curve Parallel",
+  plotSubtitle = "AUROC performance"
+)
