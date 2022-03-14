@@ -111,4 +111,7 @@ test_that("GBM working checks", {
   expect_equal(fitModel$trainDetails$outcomeId, 2)
   expect_equal(fitModel$trainDetails$cohortId, 1)
   
+  # test that at least some features have importances that are not zero
+  expect_equal(sum(abs(fitModel$covariateImportance$covariateValue))>0, TRUE)
+  
 })
