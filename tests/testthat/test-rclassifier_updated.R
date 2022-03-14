@@ -30,8 +30,10 @@ test_that("GBM settings work", {
     nthread = 5, 
     earlyStopRound = 25,
     maxDepth = 4, 
-    minRows = 2, 
+    minChildWeight = 1, 
     learnRate = 0.1,
+    alpha = 0,
+    lambda =1,
     seed = seed
     )
   
@@ -53,8 +55,12 @@ test_that("GBM settings work", {
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$ntrees)))), 2)
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$earlyStopRound)))), 1)
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$maxDepth)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$minRows)))), 1)
+  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$minChildWeight)))), 1)
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$learnRate)))), 1)
+  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$lambda)))), 1)
+  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$alpha)))), 1)
+  
+  
   
 })
 
@@ -65,10 +71,14 @@ test_that("GBM settings expected errors", {
 #=====================================
 
 testthat::expect_error(setGradientBoostingMachine(ntrees = -1))
-testthat::expect_error(setGradientBoostingMachine(minRows = 1))
+testthat::expect_error(setGradientBoostingMachine(minChildWeight = -1))
 testthat::expect_error(setGradientBoostingMachine(maxDepth = 0))
 testthat::expect_error(setGradientBoostingMachine(learnRate = -2))
 testthat::expect_error(setGradientBoostingMachine(seed = 'F'))
+testthat::expect_error(setGradientBoostingMachine(lambda = -1))
+testthat::expect_error(setGradientBoostingMachine(alpha = -1))
+testthat::expect_error(setGradientBoostingMachine(scalePosWeight = -1))
+
 
 
 })
