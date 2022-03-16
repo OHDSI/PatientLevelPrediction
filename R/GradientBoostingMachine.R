@@ -19,11 +19,14 @@
 #' Create setting for gradient boosting machine model using gbm_xgboost implementation
 #'
 #' @param ntrees     The number of trees to build 
-#' @param nthread   The number of computer threads to (how many cores do you have?)
-#' @param earlyStopRound   If the performance does not increase over earlyStopRound number of interactions then training stops (this prevents overfitting)
-#' @param maxDepth  Maximum number of interactions - a large value will lead to slow model training
-#' @param minRows   The minimum number of rows required at each end node of the tree
+#' @param nthread   The number of computer threads to use (how many cores do you have?)
+#' @param earlyStopRound   If the performance does not increase over earlyStopRound number of trees then training stops (this prevents overfitting)
+#' @param maxDepth  Maximum depth of each tree - a large value will lead to slow model training
+#' @param minChildWeight  Minimum sum of of instance weight in a child node - larger values are more conservative 
 #' @param learnRate The boosting learn rate
+#' @param scalePosWeight Controls weight of positive class in loss - useful for imbalanced classes
+#' @param lambda    L2 regularization on weights - larger is more conservative
+#' @param alpha     L1 regularization on weights - larger is more conservative
 #' @param seed       An option to add a seed when training the final model
 #'
 #' @examples
@@ -31,8 +34,9 @@
 #'                            maxDepth=c(4,6), learnRate=c(0.1,0.3))
 #'
 #' @export
-setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlyStopRound = 25,
-                                  maxDepth=c(4,6,17), minRows=2, learnRate=c(0.005, 0.01,0.1),
+setGradientBoostingMachine <- function(ntrees=c(100, 300), nthread=20, earlyStopRound = 25,
+                                  maxDepth=c(4,6,8), minChildWeight=1, learnRate=c(0.05, 0.1,0.3),
+                                  scalePosWeight=1, lambda=1, alpha=0,
                                   seed= sample(10000000,1)){
   
   ensure_installed("xgboost")
@@ -51,10 +55,10 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
     stop('maxDepth must be a numeric value >0')
   if(sum(maxDepth < 1)>0)
     stop('maxDepth must be greater that 0')
-  if(!class(minRows) %in% c("numeric", "integer"))
-    stop('minRows must be a numeric value >1')
-  if(sum(minRows < 2)>0)
-    stop('minRows must be greater that 1')
+  if(!class(minChildWeight) %in% c("numeric", "integer"))
+    stop('minChildWeight must be a numeric value >0')
+  if(sum(minChildWeight < 0)>0)
+    stop('minChildWeight must be greater that 0')
   if(class(learnRate)!='numeric')
     stop('learnRate must be a numeric value >0 and <= 1')
   if(sum(learnRate <= 0)>0)
@@ -63,16 +67,33 @@ setGradientBoostingMachine <- function(ntrees=c(100, 1000), nthread=20, earlySto
     stop('learnRate must be less that or equal to 1')
   if(!class(earlyStopRound) %in% c("numeric", "integer", "NULL"))
     stop('incorrect class for earlyStopRound')
+  if (sum(lambda < 0)>0)
+    stop('lambda must be 0 or greater')
+  if (!class(lambda) %in% c("numeric", "integer"))
+    stop('lambda must be a numeric value >= 0')
+  if (sum(alpha < 0)>0)
+    stop('alpha must be 0 or greater')
+  if (!class(alpha) %in% c("numeric", "integer"))
+    stop('alpha must be a numeric value >= 0')
+  if (sum(scalePosWeight < 0)>0)
+    stop('scalePosWeight must be 0 or greater')
+  if (!class(scalePosWeight) %in% c("numeric", "integer"))
+    stop('scalePosWeight must be a numeric value >= 0')
+  
   
   param <- split(
     expand.grid(
       ntrees=ntrees, 
       earlyStopRound=earlyStopRound,
       maxDepth=maxDepth, 
-      minRows=minRows, 
-      learnRate=learnRate
+      minChildWeight=minChildWeight, 
+      learnRate=learnRate,
+      lambda=lambda,
+      alpha=alpha,
+      scalePosWeight=scalePosWeight
       ),
-    1:(length(ntrees)*length(maxDepth)*length(minRows)*length(learnRate)*length(earlyStopRound))
+    1:(length(ntrees)*length(maxDepth)*length(minChildWeight)*length(learnRate)*
+         length(earlyStopRound)*length(lambda)*length(alpha)*length(scalePosWeight))
   )
   
   attr(param, 'settings') <- list(
@@ -106,7 +127,7 @@ varImpXgboost <- function(
   
   varImp <- xgboost::xgb.importance(model = model)
   
-  varImp$Feature <- as.numeric(varImp$Feature)+1 # adding +1 as xgboost index starts at 0
+  varImp$Feature <- as.numeric(substring(varImp$Feature,2))+1 # adding +1 as xgboost index starts at 0
   varImp <- merge(covariateMap, varImp, by.x='columnId', by.y='Feature')
   varImp <- varImp %>% 
     dplyr::mutate(included = 1) %>%
@@ -193,17 +214,16 @@ fitXgboost <- function(
   N <- nrow(labels)
   outcomeProportion <- outcomes/N
   
-  # adding weights
-  weights <- labels$outcomeCount*(N/outcomes)
-  weights[weights == 0] <- 1
-  
   model <- xgboost::xgb.train(
     data = train, 
     params = list(
       booster =  'gbtree',
       max_depth = hyperParameters$maxDepth,
       eta = hyperParameters$learnRate, 
-      min_child_weight = hyperParameters$minRows,
+      min_child_weight = hyperParameters$minChildWeight,
+      scale_pos_weight = hyperParameters$scalePosWeight,
+      lambda = hyperParameters$lambda,
+      alpha = hyperParameters$alpha,
       objective = "binary:logistic",
       #eval.metric = "logloss"
       base_score = outcomeProportion,
@@ -214,8 +234,7 @@ fitXgboost <- function(
     watchlist = watchlist,
     print_every_n = 10,
     early_stopping_rounds = hyperParameters$earlyStopRound,
-    maximize = T,
-    weight = weights # add weights to improve model
+    maximize = T
     )
   
   return(model)
