@@ -22,11 +22,9 @@
 #'
 #' @docType package
 #' @name PatientLevelPrediction
-#' @importFrom Rcpp evalCpp
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
 #' @import FeatureExtraction
-#' @useDynLib PatientLevelPrediction
 NULL
 
 #' A simulation profile
@@ -45,9 +43,4 @@ NULL
 #' @usage
 #' data(plpDataSimulationProfile)
 NULL
-
-
-.onLoad <- function(libname, pkgname) {
-
-}
 

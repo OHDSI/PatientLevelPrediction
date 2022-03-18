@@ -1,26 +1,41 @@
 calibrationViewer <- function(id) {
   ns <- shiny::NS(id)
   shiny::div(
-  shiny::fluidRow(
-      shinydashboard::box(status = 'info', width = 12,
-                        title = 'Summary',
-                        solidHeader = TRUE,
-                        shiny::p('Click on one of these rows to view corresponding plots:'),
-                        DT::dataTableOutput(ns('calTable'))
+    
+    shiny::fluidRow(
+      shinydashboard::box(
+        status = 'info', width = 12,
+        title = 'Summary',
+        solidHeader = TRUE,
+        shiny::p('Click on one of these rows to view corresponding plots:'),
+        DT::dataTableOutput(ns('calTable')
+        )
+      )
+    ),
+    
+    shiny::fluidRow(
+      shinydashboard::box(
+        status = 'info',
+        title = shiny::actionLink(
+          ns("calHelp"),
+          "Calibration Plot", 
+          icon = shiny::icon("info")
+        ),
+        solidHeader = TRUE,
+        shinycssloaders::withSpinner(shiny::plotOutput(ns('cal')))
+      ),
+      shinydashboard::box(
+        status = 'info',
+        title = shiny::actionLink(
+          ns("demoHelp"),
+          "Demographic Plot", 
+          icon = shiny::icon("info")
+        ),
+        solidHeader = TRUE,
+        side = "right",
+        shinycssloaders::withSpinner(shiny::plotOutput(ns('demo')))
+      )
     )
-  ),
-  
-  shiny::fluidRow(
-    shinydashboard::box(status = 'info',
-                        title = shiny::actionLink(ns("calHelp"),"Calibration Plot", icon = shiny::icon("info")),
-                        solidHeader = TRUE,
-                        shinycssloaders::withSpinner(shiny::plotOutput(ns('cal')))),
-    shinydashboard::box(status = 'info',
-                        title = shiny::actionLink(ns("demoHelp"),"Demographic Plot", icon = shiny::icon("info")),
-                        solidHeader = TRUE,
-                        side = "right",
-                        shinycssloaders::withSpinner(shiny::plotOutput(ns('demo'))))
-  )
   )
 }
 
@@ -75,16 +90,24 @@ calibrationServer <- function(id, plpResult) {
       output$cal <- shiny::renderPlot({
         type <- trimws(sumTable()$evaluation[input$calTable_rows_selected])
         print(type)
-          tryCatch({plotSparseCalibration2(evaluation = plpResult()$performanceEvaluation, 
-                                 type =  type)},#input$recal)
-                   error = function(err){emptyPlot(title = err)})
+        tryCatch(
+          {plotSparseCalibration2(
+            evaluation = plpResult()$performanceEvaluation, 
+            type =  type)
+          },
+          error = function(err){emptyPlot(title = err)}
+          )
       })
       
       output$demo <- shiny::renderPlot({
         type <- trimws(sumTable()$evaluation[input$calTable_rows_selected])
-          tryCatch(plotDemographicSummary(evaluation = plpResult()$performanceEvaluation, 
-                                          type = type),
-                   error= function(cond){return(NULL)})
+        tryCatch(
+          plotDemographicSummary(
+            evaluation = plpResult()$performanceEvaluation, 
+            type = type
+          ),
+          error= function(cond){return(NULL)}
+        )
       })
       
       

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Creates list of settings specifying what parts of runPlp to execute — createExecuteSettings • PatientLevelPrediction</title>
+<title>Extracts covariates based on cohorts — createCohortCovariateSettings • PatientLevelPrediction</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Creates list of settings specifying what parts of runPlp to execute — createExecuteSettings" />
-<meta property="og:description" content="Creates list of settings specifying what parts of runPlp to execute" />
+<meta property="og:title" content="Extracts covariates based on cohorts — createCohortCovariateSettings" />
+<meta property="og:description" content="Extracts covariates based on cohorts" />
 
 
 
@@ -174,59 +174,87 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Creates list of settings specifying what parts of runPlp to execute</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/RunPlpHelpers.R'><code>R/RunPlpHelpers.R</code></a></small>
-    <div class="hidden name"><code>createExecuteSettings.Rd</code></div>
+    <h1>Extracts covariates based on cohorts</h1>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/AdditionalCovariates.R'><code>R/AdditionalCovariates.R</code></a></small>
+    <div class="hidden name"><code>createCohortCovariateSettings.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Creates list of settings specifying what parts of runPlp to execute</p>
+    <p>Extracts covariates based on cohorts</p>
     </div>
 
-    <pre class="usage"><span class='fu'>createExecuteSettings</span><span class='op'>(</span>
-  runSplitData <span class='op'>=</span> <span class='cn'>F</span>,
-  runSampleData <span class='op'>=</span> <span class='cn'>F</span>,
-  runfeatureEngineering <span class='op'>=</span> <span class='cn'>F</span>,
-  runPreprocessData <span class='op'>=</span> <span class='cn'>F</span>,
-  runModelDevelopment <span class='op'>=</span> <span class='cn'>F</span>,
-  runCovariateSummary <span class='op'>=</span> <span class='cn'>F</span>
+    <pre class="usage"><span class='fu'>createCohortCovariateSettings</span><span class='op'>(</span>
+  <span class='va'>cohortName</span>,
+  <span class='va'>settingId</span>,
+  <span class='va'>cohortDatabaseSchema</span>,
+  <span class='va'>cohortTable</span>,
+  <span class='va'>cohortId</span>,
+  startDay <span class='op'>=</span> <span class='op'>-</span><span class='fl'>30</span>,
+  endDay <span class='op'>=</span> <span class='fl'>0</span>,
+  count <span class='op'>=</span> <span class='cn'>F</span>,
+  ageInteraction <span class='op'>=</span> <span class='cn'>F</span>,
+  lnAgeInteraction <span class='op'>=</span> <span class='cn'>F</span>,
+  analysisId <span class='op'>=</span> <span class='fl'>456</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>runSplitData</th>
-      <td><p>TRUE or FALSE whether to split data into train/test</p></td>
+      <th>cohortName</th>
+      <td><p>Name for the cohort</p></td>
     </tr>
     <tr>
-      <th>runSampleData</th>
-      <td><p>TRUE or FALSE whether to over or under sample</p></td>
+      <th>settingId</th>
+      <td><p>A unique id for the covariate time and</p></td>
     </tr>
     <tr>
-      <th>runfeatureEngineering</th>
-      <td><p>TRUE or FALSE whether to do feature engineering</p></td>
+      <th>cohortDatabaseSchema</th>
+      <td><p>The schema of the database with the cohort</p></td>
     </tr>
     <tr>
-      <th>runPreprocessData</th>
-      <td><p>TRUE or FALSE whether to do preprocessing</p></td>
+      <th>cohortTable</th>
+      <td><p>the table name that contains the covariate cohort</p></td>
     </tr>
     <tr>
-      <th>runModelDevelopment</th>
-      <td><p>TRUE or FALSE whether to develop the model</p></td>
+      <th>cohortId</th>
+      <td><p>cohort id for the covariate cohort</p></td>
     </tr>
     <tr>
-      <th>runCovariateSummary</th>
-      <td><p>TRUE or FALSE whether to create covariate summary</p></td>
+      <th>startDay</th>
+      <td><p>The number of days prior to index to start observing the cohort</p></td>
+    </tr>
+    <tr>
+      <th>endDay</th>
+      <td><p>The number of days prior to index to stop observing the cohort</p></td>
+    </tr>
+    <tr>
+      <th>count</th>
+      <td><p>If FALSE the covariate value is binary (1 means cohort occurred between index+startDay and index+endDay, 0 means it did not)
+If TRUE then the covariate value is the number of unique cohort_start_dates between index+startDay and index+endDay</p></td>
+    </tr>
+    <tr>
+      <th>ageInteraction</th>
+      <td><p>If TRUE multiple covariate value by the patient's age in years</p></td>
+    </tr>
+    <tr>
+      <th>lnAgeInteraction</th>
+      <td><p>If TRUE multiple covariate value by the log of the patient's age in years</p></td>
+    </tr>
+    <tr>
+      <th>analysisId</th>
+      <td><p>The analysisId for the covariate</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>list with TRUE/FALSE for each part of runPlp</p>
+    <p>An object of class covariateSettings specifying how to create the cohort covariate with the covariateId
+ cohortId x 100000 + settingId x 1000 + analysisId</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>define what parts of runPlp to execute</p>
+    <p>The user specifies a cohort and time period and then a covariate is constructed whether they are in the
+cohort during the time periods relative to target population cohort index</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

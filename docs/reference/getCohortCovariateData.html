@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Creates list of settings specifying what parts of runPlp to execute — createExecuteSettings • PatientLevelPrediction</title>
+<title>Extracts covariates based on cohorts — getCohortCovariateData • PatientLevelPrediction</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Creates list of settings specifying what parts of runPlp to execute — createExecuteSettings" />
-<meta property="og:description" content="Creates list of settings specifying what parts of runPlp to execute" />
+<meta property="og:title" content="Extracts covariates based on cohorts — getCohortCovariateData" />
+<meta property="og:description" content="Extracts covariates based on cohorts" />
 
 
 
@@ -174,59 +174,75 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Creates list of settings specifying what parts of runPlp to execute</h1>
-    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/RunPlpHelpers.R'><code>R/RunPlpHelpers.R</code></a></small>
-    <div class="hidden name"><code>createExecuteSettings.Rd</code></div>
+    <h1>Extracts covariates based on cohorts</h1>
+    <small class="dont-index">Source: <a href='https://github.com/OHDSI/PatientLevelPrediction/blob/master/R/AdditionalCovariates.R'><code>R/AdditionalCovariates.R</code></a></small>
+    <div class="hidden name"><code>getCohortCovariateData.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Creates list of settings specifying what parts of runPlp to execute</p>
+    <p>Extracts covariates based on cohorts</p>
     </div>
 
-    <pre class="usage"><span class='fu'>createExecuteSettings</span><span class='op'>(</span>
-  runSplitData <span class='op'>=</span> <span class='cn'>F</span>,
-  runSampleData <span class='op'>=</span> <span class='cn'>F</span>,
-  runfeatureEngineering <span class='op'>=</span> <span class='cn'>F</span>,
-  runPreprocessData <span class='op'>=</span> <span class='cn'>F</span>,
-  runModelDevelopment <span class='op'>=</span> <span class='cn'>F</span>,
-  runCovariateSummary <span class='op'>=</span> <span class='cn'>F</span>
+    <pre class="usage"><span class='fu'>getCohortCovariateData</span><span class='op'>(</span>
+  <span class='va'>connection</span>,
+  oracleTempSchema <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>cdmDatabaseSchema</span>,
+  cdmVersion <span class='op'>=</span> <span class='st'>"5"</span>,
+  cohortTable <span class='op'>=</span> <span class='st'>"#cohort_person"</span>,
+  rowIdField <span class='op'>=</span> <span class='st'>"row_id"</span>,
+  <span class='va'>aggregated</span>,
+  <span class='va'>cohortId</span>,
+  <span class='va'>covariateSettings</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>runSplitData</th>
-      <td><p>TRUE or FALSE whether to split data into train/test</p></td>
+      <th>connection</th>
+      <td><p>The database connection</p></td>
     </tr>
     <tr>
-      <th>runSampleData</th>
-      <td><p>TRUE or FALSE whether to over or under sample</p></td>
+      <th>oracleTempSchema</th>
+      <td><p>The temp schema if using oracle</p></td>
     </tr>
     <tr>
-      <th>runfeatureEngineering</th>
-      <td><p>TRUE or FALSE whether to do feature engineering</p></td>
+      <th>cdmDatabaseSchema</th>
+      <td><p>The schema of the OMOP CDM data</p></td>
     </tr>
     <tr>
-      <th>runPreprocessData</th>
-      <td><p>TRUE or FALSE whether to do preprocessing</p></td>
+      <th>cdmVersion</th>
+      <td><p>version of the OMOP CDM data</p></td>
     </tr>
     <tr>
-      <th>runModelDevelopment</th>
-      <td><p>TRUE or FALSE whether to develop the model</p></td>
+      <th>cohortTable</th>
+      <td><p>the table name that contains the target population cohort</p></td>
     </tr>
     <tr>
-      <th>runCovariateSummary</th>
-      <td><p>TRUE or FALSE whether to create covariate summary</p></td>
+      <th>rowIdField</th>
+      <td><p>string representing the unique identifier in the target population cohort</p></td>
+    </tr>
+    <tr>
+      <th>aggregated</th>
+      <td><p>whether the covariate should be aggregated</p></td>
+    </tr>
+    <tr>
+      <th>cohortId</th>
+      <td><p>cohort id for the target population cohort</p></td>
+    </tr>
+    <tr>
+      <th>covariateSettings</th>
+      <td><p>settings for the covariate cohorts and time periods</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>list with TRUE/FALSE for each part of runPlp</p>
+    <p>The models will now be in the package</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>define what parts of runPlp to execute</p>
+    <p>The user specifies a cohort and time period and then a covariate is constructed whether they are in the
+cohort during the time periods relative to target population cohort index</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

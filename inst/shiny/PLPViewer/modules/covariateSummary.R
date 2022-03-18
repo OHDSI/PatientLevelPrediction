@@ -3,22 +3,47 @@ covariateSummaryViewer <- function(id) {
   
   shiny::div(
   shiny::fluidRow(
-    shinydashboard::box( status = 'info',
-                         title = "Binary", solidHeader = TRUE,
-                         shinycssloaders::withSpinner(plotly::plotlyOutput(ns('covariateSummaryBinary')))),
-    shinydashboard::box(status = 'info',
-                        title = "Measurements", solidHeader = TRUE,
-                        side = "right",
-                        shinycssloaders::withSpinner(plotly::plotlyOutput(ns('covariateSummaryMeasure'))))),
-  shiny::fluidRow(width=12,
-                  shinydashboard::box(status = 'info', width = 12,
-                                      title = "Covariates", solidHeader = TRUE,
-                                      DT::dataTableOutput(ns('modelCovariateInfo')))),
-  shiny::fluidRow(width=12,
-                  shinydashboard::box(status = 'info', width = 12,
-                                      title = "Model Table", solidHeader = TRUE,
-                                      shiny::downloadButton("downloadData", "Download Model"),
-                                      DT::dataTableOutput(ns('modelView'))))
+    shinydashboard::box( 
+      status = 'info',
+      title = "Binary", 
+      solidHeader = TRUE,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns('covariateSummaryBinary')
+        )
+      )
+    ),
+    shinydashboard::box(
+      status = 'info',
+      title = "Measurements", 
+      solidHeader = TRUE,
+      side = "right",
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns('covariateSummaryMeasure')
+        )
+      )
+    )
+  ),
+    
+    shiny::fluidRow(
+      width=12,
+      shinydashboard::box(
+        status = 'info', width = 12,
+        title = "Covariates", solidHeader = TRUE,
+        DT::dataTableOutput(ns('modelCovariateInfo'))
+      )
+    ),
+    shiny::fluidRow(
+      width=12,
+      shinydashboard::box(status = 'info', 
+        width = 12,
+        title = "Model Table", 
+        solidHeader = TRUE,
+        shiny::downloadButton("downloadData", "Download Model"),
+        DT::dataTableOutput(ns('modelView'))
+      )
+    )
   )
 
 }
@@ -38,6 +63,7 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
               {loadCovSumFromDb(summaryTable[resultRow(),], mySchema, con, myTableAppend, targetDialect)},
               error = function(e){return(NULL)}
               )
+            print(colnames(covariateSummary)) # temp for debugging
             return(covariateSummary)
           } else{
             return(plpResult()$covariateSummary)
@@ -46,16 +72,19 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
         })
         
       # covariate table
-      output$modelView <- DT::renderDataTable(editCovariates(covariateSummary())$table,
-                                              colnames = editCovariates(covariateSummary())$colnames)
-      
-      
+        output$modelView <- DT::renderDataTable(
+          editCovariates(covariateSummary())$table,
+          colnames = editCovariates(covariateSummary())$colnames
+        )
       
 
-      
-      output$modelCovariateInfo <- DT::renderDataTable(data.frame(covariates = nrow(covariateSummary()),
-                                                                  nonZeroCount = sum(covariateSummary()$covariateValue!=0, na.rm = T),
-                                                                  intercept = getIntercept(plpResult())))
+      output$modelCovariateInfo <- DT::renderDataTable(
+        data.frame(
+          covariates = nrow(covariateSummary()),
+          nonZeroCount = sum(covariateSummary()$covariateValue!=0, na.rm = T),
+          intercept = getIntercept(plpResult())
+          )
+        )
       
       # covariate model plots
       covs <- shiny::reactive({
@@ -71,8 +100,11 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
       output$downloadData <- shiny::downloadHandler(
         filename = function(){'model.csv'},
         content = function(file) {
-          write.csv(covariateSummary()[,c('covariateName','covariateValue','CovariateCount','CovariateMeanWithOutcome','CovariateMeanWithNoOutcome' )]
-                    , file, row.names = FALSE)
+          utils::write.csv( 
+            covariateSummary()[,colnames(covariateSummary()) %in% c('covariateName','covariateValue','CovariateCount','WithOutcomeCovariateMean','WithNoOutcomeCovariateMean','WithOutcome_CovariateMean','WithNoOutcome_CovariateMean' )],
+            file, 
+            row.names = FALSE
+            )
         }
       )
       
@@ -86,7 +118,8 @@ covariateSummaryServer <- function(id, plpResult, summaryTable, resultRow, mySch
 # format covariate summary table
 formatCovariateTable <- function(covariateSummary){
   covariateSummary <- as.data.frame(covariateSummary)
-  for(coln in c('covariateValue','WithOutcome_CovariateMean','WithNoOutcome_CovariateMean','StandardizedMeanDiff')){
+  colnames(covariateSummary) <- gsub('_','', colnames(covariateSummary) )
+  for(coln in c('covariateValue','WithOutcomeCovariateMean','WithNoOutcomeCovariateMean','StandardizedMeanDiff')){
     if(sum(colnames(covariateSummary)==coln)>0){
       covariateSummary[,coln] <- format(round(covariateSummary[,coln], 4), nsmall = 4)
       class(covariateSummary[,coln]) <- "numeric"
@@ -98,12 +131,13 @@ formatCovariateTable <- function(covariateSummary){
 
 
 editCovariates <- function(covs){
+  colnames(covs) <- gsub('_','', colnames(covs) )
   if(!is.null(covs$StandardizedMeanDiff)){
-    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','WithOutcome_CovariateMean','WithNoOutcome_CovariateMean','StandardizedMeanDiff')]),
+    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','WithOutcomeCovariateMean','WithNoOutcomeCovariateMean','StandardizedMeanDiff')]),
                 colnames = c('Covariate Name', 'Value','Count', 'Outcome Mean', 'Non-outcome Mean','Std Mean Diff')
     ))
   } else{
-    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','WithOutcome_CovariateMean','WithNoOutcome_CovariateMean')]),
+    return(list(table = formatCovariateTable(covs[,c('covariateName','covariateValue','CovariateCount','WithOutcomeCovariateMean','WithNoOutcomeCovariateMean')]),
                 colnames = c('Covariate Name', 'Value','Count', 'Outcome Mean', 'Non-outcome Mean')
     ))
   }
@@ -113,11 +147,13 @@ editCovariates <- function(covs){
 
 plotCovariateSummary <- function(covariateSummary){
   
+  colnames(covariateSummary) <- gsub('_','', colnames(covariateSummary) )
+  
   #writeLines(paste(colnames(covariateSummary)))
   #writeLines(paste(covariateSummary[1,]))
   # remove na values 
-  covariateSummary$WithNoOutcome_CovariateMean[is.na(covariateSummary$WithNoOutcome_CovariateMean)] <- 0
-  covariateSummary$WithOutcome_CovariateMean[is.na(covariateSummary$WithOutcome_CovariateMean)] <- 0
+  covariateSummary$WithNoOutcomeCovariateMean[is.na(covariateSummary$WithNoOutcomeCovariateMean)] <- 0
+  covariateSummary$WithOutcomeCovariateMean[is.na(covariateSummary$WithOutcomeCovariateMean)] <- 0
   if(!'covariateValue'%in%colnames(covariateSummary)){
     covariateSummary$covariateValue <- 1
   }
@@ -149,12 +185,12 @@ plotCovariateSummary <- function(covariateSummary){
             bordercolor = "#FFFFFF",
             borderwidth = 1)
   
-  ind <- covariateSummary$WithNoOutcome_CovariateMean <=1 & covariateSummary$WithOutcome_CovariateMean <= 1
+  ind <- covariateSummary$WithNoOutcomeCovariateMean <=1 & covariateSummary$WithOutcomeCovariateMean <= 1
   # create two plots -1 or less or g1
-  binary <- plotly::plot_ly(x = covariateSummary$WithNoOutcome_CovariateMean[ind],
+  binary <- plotly::plot_ly(x = covariateSummary$WithNoOutcomeCovariateMean[ind],
                             #size = covariateSummary$size[ind],
                             showlegend = F) %>%
-    plotly::add_markers(y = covariateSummary$WithOutcome_CovariateMean[ind],
+    plotly::add_markers(y = covariateSummary$WithOutcomeCovariateMean[ind],
                         color=factor(covariateSummary$color[ind]),
                         hoverinfo = 'text',
                         text = ~paste('</br> Type: ', covariateSummary$color[ind],
@@ -174,10 +210,10 @@ plotCovariateSummary <- function(covariateSummary){
       legend = list(orientation = 'h', y = -0.3), showlegend = T)
   
   if(sum(!ind)>0){
-    maxValue <- max(c(covariateSummary$WithNoOutcome_CovariateMean[!ind],
-                      covariateSummary$WithOutcome_CovariateMean[!ind]), na.rm = T)
-    meas <- plotly::plot_ly(x = covariateSummary$WithNoOutcome_CovariateMean[!ind] ) %>%
-      plotly::add_markers(y = covariateSummary$WithOutcome_CovariateMean[!ind],
+    maxValue <- max(c(covariateSummary$WithNoOutcomeCovariateMean[!ind],
+                      covariateSummary$WithOutcomeCovariateMean[!ind]), na.rm = T)
+    meas <- plotly::plot_ly(x = covariateSummary$WithNoOutcomeCovariateMean[!ind] ) %>%
+      plotly::add_markers(y = covariateSummary$WithOutcomeCovariateMean[!ind],
                           hoverinfo = 'text',
                           text = ~paste('</br> Type: ', covariateSummary$color[!ind],
                                         '</br> Time: ', covariateSummary$times[!ind],
@@ -214,4 +250,34 @@ getIntercept <- function(plpResult){
     }
   }
   return(0)
+}
+
+
+toFirstUpper <- function(vec){
+  res <- lapply(vec, function(x) paste0(toupper(substr(x,1,1)), substr(x,2,nchar(x))))
+  return(unlist(res))
+}
+
+# code for database covariate extract
+loadCovSumFromDb <- function(chosenRow, mySchema, con, myTableAppend = '', targetDialect = 'redshift'){
+  ParallelLogger::logInfo("starting covsum")
+  resultId <- chosenRow$resultId
+  sql <- "SELECT * FROM @my_schema.@my_table_appendcovariate_summary AS covariate_summary WHERE result_id = @result_id;" 
+  
+  sql <- SqlRender::render(sql = sql,
+    my_schema = mySchema,
+    result_id = resultId,
+    my_table_append = myTableAppend)
+  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+  
+  covariateSummary <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(covariateSummary) <- SqlRender::snakeCaseToCamelCase(colnames(covariateSummary))
+  
+  # capitalize the first letter of column names 
+  # except covariateId covariateName analysisId conceptId
+  ind <- !colnames(covariateSummary) %in% c('covariateValue','covariateId', 'covariateName', 'analysisId', 'conceptId')
+  colnames(covariateSummary)[ind] <- toFirstUpper(colnames(covariateSummary)[ind])
+  
+  ParallelLogger::logInfo("finishing covsum")
+  return(covariateSummary)
 }

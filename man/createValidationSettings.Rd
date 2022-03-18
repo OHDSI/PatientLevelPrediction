@@ -4,10 +4,12 @@
 \alias{createValidationSettings}
 \title{createValidationSettings define optional settings for performing external validation}
 \usage{
-createValidationSettings(recalibrate = NULL)
+createValidationSettings(recalibrate = NULL, runCovariateSummary = T)
 }
 \arguments{
 \item{recalibrate}{A vector of characters specifying the recalibration method to apply}
+
+\item{runCovariateSummary}{Whether to run the covariate summary for the validation data}
 }
 \value{
 A setting object of class \code{validationSettings} containing a list of settings for externalValidatePlp

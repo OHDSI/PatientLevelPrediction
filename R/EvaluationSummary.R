@@ -273,12 +273,21 @@ computeAuc <- function(prediction,
     stop("Computing AUC is only implemented for binary classification models")
   
   if (confidenceInterval) {
-    auc <- aucWithCi(prediction$value, prediction$outcomeCount)
-    return(data.frame(auc = auc[1], auc_lb95ci = auc[2], auc_ub95ci = auc[3])) # edited 3rd to be ub?
+    return(aucWithCi(prediction = prediction$value, truth = prediction$outcomeCount))
   } else {
-    auc <- aucWithoutCi(prediction$value, prediction$outcomeCount)
-    return(auc)
+    return(aucWithoutCi(prediction = prediction$value, truth = prediction$outcomeCount))
   }
+}
+
+aucWithCi <- function(prediction, truth){
+  auc <- pROC::auc(as.factor(truth), prediction, direction="<")
+  aucci <-pROC::ci(auc)
+  return(data.frame(auc = aucci[2], auc_lb95ci = aucci[1], auc_ub95ci = aucci[3]))
+}
+
+aucWithoutCi <- function(prediction, truth){
+  auc <- pROC::auc(as.factor(truth), prediction, direction="<")
+  return(as.double(auc))
 }
 
 
