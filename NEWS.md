@@ -1,3 +1,7 @@
+PatientLevelPrediction 5.0.5
+======================
+- pulled in GBM update (default hyper-parameters and variable importance fix) work done by Egill (egillax)
+
 PatientLevelPrediction 5.0.4
 ======================
 - updated installation documents
@@ -13,7 +17,7 @@ PatientLevelPrediction 5.0.3
 PatientLevelPrediction 5.0.2
 ======================
 - updated json structure for specifying study design (made it friendlier to read)
-- includes smooth calibration plot fix (done by Alex)
+- includes smooth calibration plot fix - work done by Alex (rekkasa)
 - fixed bug with multiple sample methods or feature engineering settings causing invalid error
 
 PatientLevelPrediction 5.0.0

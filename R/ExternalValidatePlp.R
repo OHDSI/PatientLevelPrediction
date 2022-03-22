@@ -70,11 +70,11 @@ externalValidatePlp <- function(
   covariateSum <- tryCatch({
     covariateSummary(
       covariateData = plpData$covariateData, 
-      cohort = population, 
+      cohort = population[,colnames(population) != 'outcomeCount'], 
       labels = labels, 
       variableImportance = plpModel$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue)
     )},
-    error = function(e){ return(NULL) }
+    error = function(e){ParallelLogger::logInfo(e); return(NULL) }
   )
   } else{
     covariateSum <- NULL
