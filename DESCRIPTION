@@ -1,6 +1,6 @@
 Package: PatientLevelPrediction
 Type: Package
-Title: Package for patient level prediction using data in the OMOP Common Data
+Title: Developing patient level prediction using data in the OMOP Common Data
     Model
 Version: 5.0.5
 Date: 2022-03-16
@@ -31,16 +31,16 @@ Imports:
     dplyr,
     ggplot2,
     gridExtra,
-    Hmisc,
     jsonlite,
     Matrix,
     memuse,
+    mgcv,
     ParallelLogger (>= 2.0.0),
+    polspline,
     pROC,
     PRROC,
     reticulate (> 1.16),
     rlang,
-    rms,
     RSQLite,
     SqlRender (>= 1.1.3),
     survival,
