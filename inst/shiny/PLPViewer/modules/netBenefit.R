@@ -2,33 +2,37 @@ nbViewer <- function(id) {
   ns <- shiny::NS(id)
   
   shiny::div(
-  shiny::fluidRow(
-    shinydashboard::box(status = 'info', width = 12,
-                        title = 'Select net benefit type to view:',
-                        solidHeader = TRUE,
-                        shiny::uiOutput(ns('nbSelect'))
-                        #shiny::selectInput(inputId = ns('nbSelectInput'), 
-                        #                   label = 'Type:', 
-                        #                   choices = c('train', 'test'), 
-                        #                   multiple = F)
-                        
-                        )
     
-  ),
+    shiny::fluidRow(
+      shinydashboard::box(
+        status = 'info', 
+        width = 12,
+        title = 'Select net benefit type to view:',
+        solidHeader = TRUE,
+        shiny::uiOutput(ns('nbSelect'))
+      )
+    ),
   
-  shiny::fluidRow(
-    shinydashboard::box(status = 'info', width = 6,
-                        title = 'Net Benefit Plot',
-                        solidHeader = TRUE,
-                        side = "right",
-                        shinycssloaders::withSpinner(shiny::plotOutput(ns('nbPlot')))),
-    
-    shinydashboard::box(status = 'info', width = 6,
-                        title = 'Summary',
-                        solidHeader = TRUE,
-                        DT::dataTableOutput(ns('nbTable'))
+    shiny::fluidRow(
+      shinydashboard::box(
+        status = 'info', 
+        width = 6,
+        title = 'Net Benefit Plot',
+        solidHeader = TRUE,
+        side = "right",
+        shinycssloaders::withSpinner(
+          shiny::plotOutput(ns('nbPlot'))
+        )
+      ),
+      
+      shinydashboard::box(
+        status = 'info', 
+        width = 6,
+        title = 'Summary',
+        solidHeader = TRUE,
+        DT::dataTableOutput(ns('nbTable'))
+      )
     )
-  )
   )
 }
 
@@ -38,18 +42,23 @@ nbServer <- function(id, plpResult) {
     function(input, output, session) {
       
       output$nbSelect = shiny::renderUI({
-        shiny::selectInput(inputId = session$ns('nbSelectInput'), 
-                           label = 'Type:', 
-                           choices = unique(plpResult()$performanceEvaluation$thresholdSummary$evaluation), 
-                           multiple = F, selectize=FALSE)
+        shiny::selectInput(
+          inputId = session$ns('nbSelectInput'), 
+          label = 'Type:', 
+          choices = unique(plpResult()$performanceEvaluation$thresholdSummary$evaluation), 
+          multiple = F, 
+          selectize=FALSE
+        )
       })
       
       output$nbTable <- DT::renderDataTable({
         if(is.null(plpResult()$performanceEvaluation)){
           return(NULL)
         } else{
-          result <- extractNetBenefit(performanceEvaluation = plpResult()$performanceEvaluation, 
-                                      type=trimws(input$nbSelectInput))
+          result <- extractNetBenefit(
+            performanceEvaluation = plpResult()$performanceEvaluation, 
+            type=trimws(input$nbSelectInput)
+          )
           unique(result)
           result$treatAll <- format(result$treatAll, digits = 2, scientific = F)
           result$netBenefit <- format(result$netBenefit, digits = 2, scientific = F)
@@ -61,26 +70,31 @@ nbServer <- function(id, plpResult) {
         if(is.null(plpResult()$performanceEvaluation)){
           return(NULL)
         } else{
-          result <- extractNetBenefit(performanceEvaluation = plpResult()$performanceEvaluation, 
-                                      type=trimws(input$nbSelectInput))
+          result <- extractNetBenefit(
+            performanceEvaluation = plpResult()$performanceEvaluation, 
+            type=trimws(input$nbSelectInput)
+          )
           result <- unique(result)
           ind <- !is.na(result$netBenefit) & is.finite(result$netBenefit) & !is.null(result$netBenefit) & is.finite(result$pt)
           
-          #df2 <- reshape2::melt(result, id.vars = 'pt')
           df2 <- tidyr::pivot_longer(
             data = result, 
             cols = colnames(result)[colnames(result) != 'pt'], 
             names_to = 'variable', 
             values_to = 'value'
+          )
+          
+          
+          ggplot2::ggplot(
+            df2, 
+            ggplot2::aes(x=pt, 
+              y=value, 
+              group=variable, 
+              color = variable
             )
-          
-          
-          ggplot2::ggplot(df2, ggplot2::aes(x=pt, y=value, 
-                                            group=variable, 
-                                            color = variable)) +
+          ) +
             ggplot2::geom_line(ggplot2::aes(linetype=variable))+
             ggplot2::geom_point(ggplot2::aes(shape=variable))
-          #plot(result$pt[ind], result$netBenefit[ind])
         }
       })
       

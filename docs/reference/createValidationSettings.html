@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -183,7 +183,7 @@
     <p>This function creates the settings required by externalValidatePlp</p>
     </div>
 
-    <pre class="usage"><span class='fu'>createValidationSettings</span><span class='op'>(</span>recalibrate <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>createValidationSettings</span><span class='op'>(</span>recalibrate <span class='op'>=</span> <span class='cn'>NULL</span>, runCovariateSummary <span class='op'>=</span> <span class='cn'>T</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -191,6 +191,10 @@
     <tr>
       <th>recalibrate</th>
       <td><p>A vector of characters specifying the recalibration method to apply</p></td>
+    </tr>
+    <tr>
+      <th>runCovariateSummary</th>
+      <td><p>Whether to run the covariate summary for the validation data</p></td>
     </tr>
     </table>
 

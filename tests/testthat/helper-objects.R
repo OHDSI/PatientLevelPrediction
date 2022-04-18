@@ -21,10 +21,18 @@ travis <- T
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
-if(F){
-# configure and activate python
-PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
-PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
+
+if(ifelse(is.null(Sys.info()), T, Sys.info()['sysname'] != 'Windows')){
+  # configure and activate python
+  PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
+  PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
+  
+  # if mac install nomkl -- trying to fix github actions
+  if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
+    reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
+                              forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
+                              conda = "auto")
+  }
 }
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -68,7 +76,7 @@ plpResult <- runPlp(
   modelSettings = lrSet, 
   logSettings = createLogSettings(verbosity = 'TRACE'),
   executeSettings = createDefaultExecuteSettings(), 
-  saveDirectory = 'D:/test/plp'
+  saveDirectory = saveLoc
   )
 
 #

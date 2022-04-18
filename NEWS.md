@@ -1,3 +1,25 @@
+PatientLevelPrediction 5.0.5
+======================
+- pulled in GBM update (default hyper-parameters and variable importance fix) work done by Egill (egillax)
+
+PatientLevelPrediction 5.0.4
+======================
+- updated installation documents
+- added tryCatch around plots to prevent code stopping
+
+PatientLevelPrediction 5.0.3
+======================
+- updated result schema (added model_design table with settings and added attrition table)
+- updated shiny app for new database result schema
+- removed C++ code for AUC and Rcpp dependency, now using pROC instead as faster
+- made covariate summary optional when externally validating 
+
+PatientLevelPrediction 5.0.2
+======================
+- updated json structure for specifying study design (made it friendlier to read)
+- includes smooth calibration plot fix - work done by Alex (rekkasa)
+- fixed bug with multiple sample methods or feature engineering settings causing invalid error
+
 PatientLevelPrediction 5.0.0
 ======================
 - plpModel now saved as json files when possible

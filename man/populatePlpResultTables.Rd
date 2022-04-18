@@ -38,7 +38,7 @@ populatePlpResultTables(
 function \code{connect} in the
 \code{DatabaseConnector} package.}
 
-\item{resultSchema}{(string) The name of the database schema that the result tables will be created.}
+\item{resultSchema}{(string) The name of the database schema with the result tables.}
 
 \item{stringAppendToTables}{(string) A string that appends to the PatientLevelPrediction result tables}
 

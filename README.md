@@ -2,7 +2,9 @@ PatientLevelPrediction
 ======================
 
 [![Build Status](https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg)](https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check)
-[![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=develop)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=issue242)
+
+[![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=main)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=main)
+
 
 PatientLevelPrediction is part of [HADES](https://ohdsi.github.io/Hades).
 
@@ -47,11 +49,11 @@ Screenshots
 <tr valign="bottom">
 <td width = 50%>
 
-<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/master/vignettes/sparseCalibration.png" alt="Calibration plot" title="Calibration plot" />
+<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/main/vignettes/sparseCalibration.png" alt="Calibration plot" title="Calibration plot" />
 
 </td>
 <td width = 50%>
-<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/master/vignettes/sparseROC.png" alt="ROC plot" title="ROC plot" />
+<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/main/vignettes/sparseROC.png" alt="ROC plot" title="ROC plot" />
 
 </td>
 </tr><tr>
@@ -80,7 +82,7 @@ install Python 3.7 using Anaconda (https://www.continuum.io/downloads).
 Getting Started
 ===============
 
-- To install the package please read the [Package Installation guide](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/InstallationGuide.pdf)
+- To install the package please read the [Package Installation guide](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/InstallationGuide.pdf)
 
 - Have a look at the video below for an extensive demo of the package.
 
@@ -90,18 +92,18 @@ alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
 Please read the main vignette for the package:
 
-- [Building Single Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf)
+- [Building Single Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf)
 
 In addition we have created vignettes that describe advanced functionality in more detail:
 
-- [Building Multiple Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingMultiplePredictiveModels.pdf)
-- [Implementing Existing Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/ImplementingExistingModels.pdf)
-- [Adding Custom Machine Learning Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomAlgorithms.pdf)
-- [Building Deep Learning Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingDeepLearningModels.pdf)
-- [Building Ensemble Models](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingEnsembleModels.pdf)
-- [Creating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/CreatingLearningCurves.pdf)
+- [Building Multiple Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingMultiplePredictiveModels.pdf)
+- [Implementing Existing Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/ImplementingExistingModels.pdf)
+- [Adding Custom Machine Learning Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomAlgorithms.pdf)
+- [Building Deep Learning Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingDeepLearningModels.pdf)
+- [Building Ensemble Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingEnsembleModels.pdf)
+- [Creating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/CreatingLearningCurves.pdf)
 
-Package manual: [PatientLevelPrediction.pdf](https://github.com/OHDSI/PatientLevelPrediction/blob/master/extras/PatientLevelPrediction.pdf)
+Package manual: [PatientLevelPrediction.pdf](https://github.com/OHDSI/PatientLevelPrediction/blob/main/extras/PatientLevelPrediction.pdf)
 
 User Documentation
 ==================
@@ -131,5 +133,5 @@ Beta
 # Acknowledgements
 
 - The package is maintained by Jenna Reps and Peter Rijnbeek and has been developed with major contributions from Martijn Schuemie, Patrick Ryan, and Marc Suchard.
-- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins.
+- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins, Egill Fridgeirsson, Alex Rekkas
 - This project is supported in part through the National Science Foundation grant IIS 1251151.

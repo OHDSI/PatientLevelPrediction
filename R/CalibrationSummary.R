@@ -146,7 +146,7 @@ getCalibrationSummary_survival <- function(
   } else{
     gval <- numberOfStrata
   }
-  groups<-Hmisc::cut2(predictionOfInterest$value,g=gval)
+  groups<-cut2(predictionOfInterest$value,g=gval)
   n.groups<-length(levels(groups))
   pred<-tapply(predictionOfInterest$value,groups,mean)
   sizesN<-tapply(predictionOfInterest$value,groups,length)
@@ -199,3 +199,4 @@ getCalibrationSummary_survival <- function(
   return(result)
   
 }
+

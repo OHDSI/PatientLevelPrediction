@@ -39,7 +39,7 @@ There are two ways to create the shiny app:
 1) Using the atlas R generated prediction package 
 2) Manually using the PatientLevelPrediction functions in a script
 
-We assume you have experience with using the OHDSI PatientLevelPrediction package to develop and externally validate prediction models using data in the OMOP CDM.  If you do not have experience with this then please first read our general vignette [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
+We assume you have experience with using the OHDSI PatientLevelPrediction package to develop and externally validate prediction models using data in the OMOP CDM.  If you do not have experience with this then please first read our general vignette [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
 
 # Atlas Development Shiny App
 

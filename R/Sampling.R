@@ -215,19 +215,19 @@ overSampleData <- function(trainData, sampleSettings){
       addTrainData$folds <- trainData$folds %>% dplyr::filter(.data$rowId %in% pplOfInterest) 
       addTrainData$folds <- dplyr::inner_join(addTrainData$folds, addTrainData$labels[, c("rowId", "newRowId")], copy=TRUE)
       addTrainData$folds <- addTrainData$folds %>% dplyr::mutate(rowId = .data$newRowId)
-      addTrainData$folds <- dplyr::select(addTrainData$folds,-starts_with("newRowId"))
+      addTrainData$folds <- dplyr::select(addTrainData$folds,-dplyr::starts_with("newRowId"))
       
       addTrainData$covariateData$covariates <- trainData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% pplOfInterest) 
       addTrainData$covariateData$covariates <- dplyr::inner_join(addTrainData$covariateData$covariates, addTrainData$labels[, c("rowId", "newRowId")], copy=TRUE)
       addTrainData$covariateData$covariates <- addTrainData$covariateData$covariates %>% dplyr::mutate(rowId = .data$newRowId) 
-      addTrainData$covariateData$covariates <- dplyr::select(addTrainData$covariateData$covariates,-starts_with("newRowId"))
+      addTrainData$covariateData$covariates <- dplyr::select(addTrainData$covariateData$covariates,-dplyr::starts_with("newRowId"))
       
       addTrainData$labels <- addTrainData$labels %>% dplyr::mutate(rowId = .data$newRowId) 
-      addTrainData$labels <- dplyr::select(addTrainData$labels,-starts_with("newRowId"))
+      addTrainData$labels <- dplyr::select(addTrainData$labels,-dplyr::starts_with("newRowId"))
       
       sampleTrainData$labels <- dplyr::bind_rows(sampleTrainData$labels, addTrainData$labels)
       sampleTrainData$folds <- dplyr::bind_rows(sampleTrainData$folds, addTrainData$folds)
-      appendToTable(sampleTrainData$covariateData$covariates, addTrainData$covariateData$covariates)
+      Andromeda::appendToTable(sampleTrainData$covariateData$covariates, addTrainData$covariateData$covariates)
     }
   }
   

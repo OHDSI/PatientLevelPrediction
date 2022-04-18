@@ -71,13 +71,22 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
       c(evalType, 'brier score scaled', brier$brierScaled)
     )
     ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Brier: ', brier$brier))
+
     
     # using rms::val.prob
     indValProb <- predictionOfInterest$value>0 & predictionOfInterest$value < 1
-    valProb <- tryCatch(rms::val.prob(predictionOfInterest$value[indValProb], predictionOfInterest$outcomeCount[indValProb]), 
-      error = function(e){ParallelLogger::logInfo(e); return(c(Eavg = 0, 
-        E90 = 0, 
-        Emax = 0))})
+    valProb <- tryCatch(
+      calculateEStatisticsBinary(prediction = predictionOfInterest[indValProb, ]),
+      error = function(e) {
+        ParallelLogger::logInfo(e); return(
+          c(
+            Eavg = 0, 
+            E90 = 0, 
+            Emax = 0
+          )
+        )
+      }
+    )
     result <- rbind(
       result, 
       c(evalType, 'Eavg', valProb['Eavg']),
@@ -85,6 +94,8 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
       c(evalType, 'Emax', valProb['Emax'])
     )
     ParallelLogger::logInfo(sprintf('%-20s%.2f', 'Eavg: ', round(valProb['Eavg'], digits = 4)))
+
+
     
     
     # Removing for now as too slow...
@@ -152,8 +163,6 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
 
 getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, ...){ 
   
-  ensure_installed("survAUC")
-  
   if(is.null(prediction$survivalTime)){
     stop('No survival time column present')
   }
@@ -215,28 +224,48 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
       c(evalType, timepoint, 'C-statistic upper 95% CI', cStatistic_u95CI)
     )
     ParallelLogger::logInfo(paste0('C-statistic: ',cStatistic, ' (',cStatistic_l95CI ,'-', cStatistic_u95CI ,')'))
-    
-    
+
     # add e-stat
-    w <- tryCatch(
-      {
-        rms::val.surv(
-          est.surv = 1-p, 
-          S = S,
-          u = timepoint, 
-          fun = function(pr)log(-log(pr))
+
+    .validateSurvival <- function(p, S, timepoint) {
+      estimatedSurvival <- 1 - p
+      notMissing <- !is.na(estimatedSurvival + S[, 1] + S[, 2])
+      estimatedSurvival   <- estimatedSurvival[notMissing]
+      S <- S[notMissing, ]
+      .curtail <- function(x) pmin(.9999, pmax(x, .0001))
+      f <- polspline::hare(
+        S[, 1],
+        S[, 2],
+        log(-log((.curtail(estimatedSurvival)))),
+        maxdim = 5
+      )
+      actual <- 1 - polspline::phare(timepoint, log(-log(estimatedSurvival)), f)
+
+      return(
+        list(
+          actual = actual,
+          estimatedSurvival = estimatedSurvival
         )
-      },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
-    )
-    
-    eStatistic <- -1
-    eStatistic90 <- -1
-    if(!is.null(w)){
-      eStatistic<-mean(abs(w$actual - w$p))
-      eStatistic90<-stats::quantile((abs(w$actual - w$p)),0.9)
-      
+      )
     }
+
+    w <- tryCatch(
+    {
+      .validateSurvival(
+        p = p,
+        S = S,
+        timepoint = timepoint
+      )
+    },
+    error = function(e){ParallelLogger::logError(e); return(NULL)}
+    )
+
+    eStatistic <- eStatistic90 <- -1
+    if (!is.null(w)) {
+      eStatistic <- quantile(abs(w$actual - w$estimatedSurvival), probs = .9)
+      eStatistic90 <- mean(abs(w$actual - w$estimatedSurvival))
+    }
+
     result <- rbind(
       result, 
       c(evalType, timepoint, 'E-statistic', eStatistic),
@@ -252,6 +281,28 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
   return(result)
 }
 
+
+calculateEStatisticsBinary <- function(prediction) {
+  risk <- prediction$value
+  outcome <- prediction$outcomeCount
+  notna <- ! is.na(risk + outcome)
+  risk <- risk[notna]
+  outcome <- outcome[notna]
+  smoothFit <- lowess(risk, outcome, iter = 0)
+  smoothCalibration <- approx(smoothFit, xout = risk, ties = mean)$y
+  distance <- abs(risk - smoothCalibration)
+  eavg <- mean(abs(risk - smoothCalibration))
+  emax <- max(distance)
+  e90 <- quantile(distance, probs = .9)
+  names(e90) <- NULL
+  return(
+    c(
+      Eavg = eavg,
+      E90 = e90,
+      Emax = emax
+    )
+  )
+}
 
 
 #==================================
@@ -275,12 +326,21 @@ computeAuc <- function(prediction,
     stop("Computing AUC is only implemented for binary classification models")
   
   if (confidenceInterval) {
-    auc <- aucWithCi(prediction$value, prediction$outcomeCount)
-    return(data.frame(auc = auc[1], auc_lb95ci = auc[2], auc_ub95ci = auc[3])) # edited 3rd to be ub?
+    return(aucWithCi(prediction = prediction$value, truth = prediction$outcomeCount))
   } else {
-    auc <- aucWithoutCi(prediction$value, prediction$outcomeCount)
-    return(auc)
+    return(aucWithoutCi(prediction = prediction$value, truth = prediction$outcomeCount))
   }
+}
+
+aucWithCi <- function(prediction, truth){
+  auc <- pROC::auc(as.factor(truth), prediction, direction="<")
+  aucci <-pROC::ci(auc)
+  return(data.frame(auc = aucci[2], auc_lb95ci = aucci[1], auc_ub95ci = aucci[3]))
+}
+
+aucWithoutCi <- function(prediction, truth){
+  auc <- pROC::auc(as.factor(truth), prediction, direction="<")
+  return(as.double(auc))
 }
 
 

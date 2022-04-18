@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -188,6 +188,7 @@
   validationDatabaseDetails <span class='op'>=</span> <span class='fu'><a href='createDatabaseDetails.html'>createDatabaseDetails</a></span><span class='op'>(</span><span class='op'>)</span>,
   validationRestrictPlpDataSettings <span class='op'>=</span> <span class='fu'><a href='createRestrictPlpDataSettings.html'>createRestrictPlpDataSettings</a></span><span class='op'>(</span><span class='op'>)</span>,
   settings <span class='op'>=</span> <span class='fu'><a href='createValidationSettings.html'>createValidationSettings</a></span><span class='op'>(</span>recalibrate <span class='op'>=</span> <span class='st'>"weakRecalibration"</span><span class='op'>)</span>,
+  logSettings <span class='op'>=</span> <span class='fu'><a href='createLogSettings.html'>createLogSettings</a></span><span class='op'>(</span>verbosity <span class='op'>=</span> <span class='st'>"INFO"</span>, logName <span class='op'>=</span> <span class='st'>"validatePLP"</span><span class='op'>)</span>,
   outputFolder <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>getwd</a></span><span class='op'>(</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
@@ -209,6 +210,11 @@
     <tr>
       <th>settings</th>
       <td><p>A settings object of class <code>validationSettings</code> created using <code>createValidationSettings</code></p></td>
+    </tr>
+    <tr>
+      <th>logSettings</th>
+      <td><p>An object of <code>logSettings</code> created using <code>createLogSettings</code> 
+specifying how the logging is done</p></td>
     </tr>
     <tr>
       <th>outputFolder</th>

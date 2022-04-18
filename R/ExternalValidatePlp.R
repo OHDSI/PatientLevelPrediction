@@ -65,15 +65,20 @@ externalValidatePlp <- function(
   },
     error = function(e){ return(NULL) }
   )
+  
+  if(settings$runCovariateSummary){
   covariateSum <- tryCatch({
     covariateSummary(
       covariateData = plpData$covariateData, 
-      cohort = population, 
+      cohort = population[,colnames(population) != 'outcomeCount'], 
       labels = labels, 
       variableImportance = plpModel$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue)
     )},
-    error = function(e){ return(NULL) }
+    error = function(e){ParallelLogger::logInfo(e); return(NULL) }
   )
+  } else{
+    covariateSum <- NULL
+  }
   
   executionSummary <- list(
     ExecutionDateTime = Sys.Date(),
@@ -97,8 +102,9 @@ externalValidatePlp <- function(
       developmentDatabase = plpModel$trainDetails$cdmDatabaseSchema,
       cdmDatabaseSchema = databaseName,
       populationSettings = attr(population, 'metaData')$populationSettings,
+      plpDataSettings = attr(plpData, 'metaData')$restrictPlpDataSettings,
       outcomeId = attr(population, 'metaData')$outcomeId,
-      cohortId = attr(plpData, 'metaData')$cohortId,
+      cohortId = attr(plpData, 'metaData')$databaseDetails$cohortId,
       attrition = attr(population, 'metaData')$attrition,
       validationDate = Sys.Date() # is this needed?
     )
@@ -282,12 +288,14 @@ externalValidateDbPlp <- function(
 #' Users need to specify whether they want to sample or recalibate when performing external validation
 #' 
 #' @param recalibrate                      A vector of characters specifying the recalibration method to apply                 
+#' @param runCovariateSummary              Whether to run the covariate summary for the validation data
 #' @return
 #' A setting object of class \code{validationSettings} containing a list of settings for externalValidatePlp
 #'
 #' @export
 createValidationSettings <- function(
-  recalibrate = NULL
+  recalibrate = NULL,
+  runCovariateSummary = T
 ){
   
   checkIsClass(recalibrate, c('character','NULL'))
@@ -298,7 +306,8 @@ createValidationSettings <- function(
   }
 
   result = list(
-    recalibrate = recalibrate
+    recalibrate = recalibrate,
+    runCovariateSummary = runCovariateSummary
   )
   class(result) <- 'validationSettings'
   return(result)

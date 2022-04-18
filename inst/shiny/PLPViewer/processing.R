@@ -1,4 +1,4 @@
-settingsNames <- c('analysisId','modelSettings','covariateSetting', 'cohortName', 'outcomeName',
+settingsNames <- c('analysisId','modelSettings','covariateSetting', 'targetName', 'outcomeName',
   'populationSetting','modelSettingName')
 
 getSummary  <- function(result,inputType,validation){
@@ -22,7 +22,7 @@ getSummary  <- function(result,inputType,validation){
   
   columnsOfInt <- c('analysisId',
     'devDatabase', 'valDatabase',
-    'cohortName', 'outcomeName',
+    'targetName', 'outcomeName',
     'modelSettingName','covariateSetting', 
     'TAR', 'AUROC','AUPRC',
     'populationSize', 'outcomeCount',
@@ -108,8 +108,8 @@ getSummaryFromObject <- function(result, analysisId = NULL){
   allRes <- data.frame(analysisId = ifelse(is.null(analysisId), ifelse(is.null(result$analysisRef$analysisId), 'None', result$analysisRef$analysisId), analysisId),
                        devDatabase = devDatabase,
                        valDatabase = valDatabase,
-                       cohortName = 'T',
-                       outcomeName = 'O',
+                       cohortName = 'T', # needed?
+                       outcomeName = 'O', # needed?
                        modelSettingName = result$model$settings$modelSettings$model,
                        #covariateSetting = 1,
                        TAR = TAR,
@@ -132,7 +132,7 @@ getSummaryFromObject <- function(result, analysisId = NULL){
 summaryPlpAnalyses <- function(analysesLocation){ 
   # loads the analyses and validations to get summaries
   #========================================
-  settings <- read.csv(file.path(analysesLocation,'settings.csv'))
+  settings <- utils::read.csv(file.path(analysesLocation,'settings.csv'))
   settings <- settings[,!colnames(settings)%in%c('plpDataFolder','studyPopFile','plpResultFolder')]
   settings$analysisId <- gsub('Analysis_','', settings$analysisId) # fixing if Analysis_id in settings
   settings$analysisId <- paste0('Analysis_',  settings$analysisId)
@@ -144,7 +144,7 @@ summaryPlpAnalyses <- function(analysesLocation){
   
   # updated this
   devPerformance <- merge(settings[,settingsNames[settingsNames %in% colnames(settings)]],
-                          devPerformance, by='analysisId', all.x=T)
+                          devPerformance[, !colnames(devPerformance) %in% c('cohortName','outcomeName')[c('cohortName','outcomeName') %in% colnames(settings)]], by='analysisId', all.x=T)
   
   validationLocation <- file.path(analysesLocation,'Validation')
   if(length(dir(validationLocation))>0){
@@ -160,8 +160,11 @@ summaryPlpAnalyses <- function(analysesLocation){
       valPerformance <- do.call(rbind,lapply(file.path(valAnalyses), function(x) getPerformance(x)))
       
       valSettings <- settings[,settingsNames[settingsNames %in% colnames(settings)]] # removed TAR bits
-      valPerformance <- merge(valSettings,
-                              valPerformance, by='analysisId')
+      valPerformance <- merge(
+        valSettings,
+        valPerformance[, !colnames(valPerformance) %in% c('cohortName','outcomeName')[c('cohortName','outcomeName') %in% colnames(settings)]],
+          by='analysisId'
+      )
       valPerformance <- valPerformance[,colnames(devPerformance)] # make sure same order
       valPerformances <- rbind(valPerformances, valPerformance)
     }
@@ -216,7 +219,7 @@ getPerformance <- function(analysisLocation){
   if(type == 'csv'){
     
     require(PatientLevelPrediction)
-    res <- loadPlpShareable(file.path(analysisLocation))
+    res <- PatientLevelPrediction::loadPlpShareable(file.path(analysisLocation))
     result <- getSummaryFromObject(result = res, analysisId = analysisId)
     location <- file.path(analysisLocation)
     plpResultLoad <- 'loadPlpShareable'
@@ -248,8 +251,8 @@ getPerformance <- function(analysisLocation){
       AnalysisId = analysisId, 
       devDatabase = 'missing',
       valDatabase = 'missing',
-      cohortName = 'T',
-      outcomeName = 'O',
+      targetName = 'T', # NEEDED?
+      outcomeName = 'O', # NEEDED?
       modelSettingName = 'none',
       #covariateSetting = 1,
       TAR = '?',

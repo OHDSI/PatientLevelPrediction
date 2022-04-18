@@ -483,6 +483,7 @@ runPlp <- function(
   if(is.null(model)){
     model <- list(noModel = T)
     attr(model, "predictionFunction") <- 'noModel'
+    attr(model, "saveType") <- 'RtoJson'
     class(model) <- 'plpModel'
   }
   

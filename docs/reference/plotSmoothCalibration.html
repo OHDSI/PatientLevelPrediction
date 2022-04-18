@@ -75,7 +75,7 @@ was defined: from utopia to empirical data&quot; (2016)" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -190,17 +190,15 @@ was defined: from utopia to empirical data" (2016)</p>
 
     <pre class="usage"><span class='fu'>plotSmoothCalibration</span><span class='op'>(</span>
   <span class='va'>plpResult</span>,
-  smooth <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"loess"</span>, <span class='st'>"rcs"</span><span class='op'>)</span>,
-  span <span class='op'>=</span> <span class='fl'>1</span>,
+  smooth <span class='op'>=</span> <span class='st'>"loess"</span>,
+  span <span class='op'>=</span> <span class='fl'>0.75</span>,
   nKnots <span class='op'>=</span> <span class='fl'>5</span>,
-  scatter <span class='op'>=</span> <span class='cn'>F</span>,
-  type <span class='op'>=</span> <span class='st'>"test"</span>,
+  scatter <span class='op'>=</span> <span class='cn'>FALSE</span>,
   bins <span class='op'>=</span> <span class='fl'>20</span>,
-  zoom <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"none"</span>, <span class='st'>"deciles"</span>, <span class='st'>"data"</span><span class='op'>)</span>,
-  sample <span class='op'>=</span> <span class='cn'>T</span>,
+  sample <span class='op'>=</span> <span class='cn'>TRUE</span>,
   typeColumn <span class='op'>=</span> <span class='st'>"evaluation"</span>,
   saveLocation <span class='op'>=</span> <span class='cn'>NULL</span>,
-  fileName <span class='op'>=</span> <span class='cn'>NULL</span>
+  fileName <span class='op'>=</span> <span class='st'>"smoothCalibration.pdf"</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -231,17 +229,8 @@ computing and lower memory usage.</p></td>
       <td><p>plot the decile calibrations as points on the graph. Default is False</p></td>
     </tr>
     <tr>
-      <th>type</th>
-      <td><p>Whether to use train or test data, default is test.</p></td>
-    </tr>
-    <tr>
       <th>bins</th>
       <td><p>The number of bins for the histogram. Default is 20.</p></td>
-    </tr>
-    <tr>
-      <th>zoom</th>
-      <td><p>Zoom in on the region containing the deciles or on the data. If not specified
-shows the entire space.</p></td>
     </tr>
     <tr>
       <th>sample</th>

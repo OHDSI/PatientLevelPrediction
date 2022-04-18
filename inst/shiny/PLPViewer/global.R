@@ -1,10 +1,3 @@
-library(dplyr)
-ParallelLogger::clearLoggers()
-logger <- ParallelLogger::createLogger(name = "SIMPLE",
-                                       threshold = "INFO",
-                                       appenders = list(ParallelLogger::createConsoleAppender(layout = ParallelLogger::layoutTimestamp)))
-ParallelLogger::registerLogger(logger)
-
 # EDIT FOR REPO OR DATABASE
 useDatabase <- .GlobalEnv$shinySettings$useDatabase
 usePlpObject <- .GlobalEnv$shinySettings$usePlpObject
@@ -38,7 +31,6 @@ if(useDatabase){
 
   myTableAppend <- Sys.getenv("shinydbTableAppend")
   
-
   if(myPort != ""){
     ParallelLogger::logInfo('Port')
     ParallelLogger::logInfo(paste(myPort))
@@ -61,7 +53,7 @@ if(useDatabase){
   
   onStop(function() {
     if (DBI::dbIsValid(con)) {
-      writeLines("Closing connection pool")
+      ParallelLogger::logInfo("Closing connection pool")
       pool::poolClose(con)
     }
   })

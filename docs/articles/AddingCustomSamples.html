@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
       </span>
     </div>
 
@@ -136,7 +136,7 @@
       <h1 data-toc-skip>Adding Custom Sampling Functions</h1>
                         <h4 class="author">Jenna Reps</h4>
             
-            <h4 class="date">2021-12-16</h4>
+            <h4 class="date">2022-03-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/AddingCustomSamples.Rmd"><code>vignettes/AddingCustomSamples.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomSamples.Rmd</code></div>
@@ -230,7 +230,7 @@
     <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">rowId</span> <span class="op">%in%</span> <span class="va">sampleRowIds</span><span class="op">)</span> <span class="op">%&gt;%</span> 
     <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html">collect</a></span><span class="op">(</span><span class="op">)</span>
   
-  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span> <span class="op">&lt;-</span> <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://ohdsi.github.io/Andromeda/reference/andromeda_constructor.html">andromeda</a></span><span class="op">(</span><span class="op">)</span>
+  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span> <span class="op">&lt;-</span> <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/andromeda_constructor.html">andromeda</a></span><span class="op">(</span><span class="op">)</span>
   <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span> <span class="op">&lt;-</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span>
   <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">rowId</span> <span class="op">%in%</span> <span class="va">sampleRowIds</span><span class="op">)</span>
   
