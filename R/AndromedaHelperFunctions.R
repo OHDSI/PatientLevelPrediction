@@ -55,13 +55,11 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
   
-  maxRows <- tally(covariateData$covariates, name = 'n') %>% collect()
-  
   Andromeda::batchApply(covariateData$covariates, function(tempData) {
   
-    filtered <- tempData %>% dplyr::inner_join(population, by = 'rowId')
+    filtered <- dplyr::inner_join(tempData, population, by = 'rowId')
     
-    if ("covariates" %in% names(newCovariateData$covariates)) {
+    if ("covariates" %in% names(newCovariateData)) {
       Andromeda::appendToTable(newCovariateData$covariates, data = filtered)
     } else {
       newCovariateData$covariates <- filtered
@@ -70,12 +68,15 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   progressBar = TRUE,
   batchSize = sizeN)
   
-  Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
-    indexName = 'covariates_ncovariateIds')
-  Andromeda::createIndex(tbl = newCovariateData$covariates, c('rowId'),
-    indexName = 'covariates_rowId')
-  Andromeda::createIndex(tbl = newCovariateData$covariates, c('covariateId', 'covariateValue'),
-    indexName = 'covariates_covariateId_value')
+  Andromeda::createIndex(tbl = newCovariateData$covariates,
+                         columnNames = 'covariateId',
+                         indexName = 'covariates_ncovariateIds')
+  Andromeda::createIndex(tbl = newCovariateData$covariates,
+                         columnNames = 'rowId',
+                         indexName = 'covariates_rowId')
+  Andromeda::createIndex(tbl = newCovariateData$covariates,
+                         columnNames = c('covariateId', 'covariateValue'),
+                         indexName = 'covariates_covariateId_value')
   
   metaData$populationSize <- nrow(population)
   attr(newCovariateData, 'metaData') <- metaData
