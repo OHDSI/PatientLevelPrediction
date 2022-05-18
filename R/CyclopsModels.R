@@ -36,11 +36,25 @@ fitCyclopsModel <- function(
       y = sapply(.data$outcomeCount, function(x) min(1,x)),
       time = .data$survivalTime
     )
-    
+  
+  browser()
   covariates <- filterCovariateIds(param, trainData$covariateData)
   
-  start <- Sys.time() 
-  
+  if (!is.null(param$priorCoefs)) {
+    sourceCoefs <- param$priorCoefs[abs(param$priorCoefs)>0 & names(param$priorCoefs) != "(Intercept)"]
+
+    newCovariates <- covariates %>%
+      dplyr::filter(covariateId %in% !!names(sourceCoefs)) %>%
+      dplyr::mutate(newCovariateId = covariateId*-1) %>%
+      dplyr::select(-covariateId) %>%
+      dplyr::rename(covariateId = newCovariateId) %>%
+      dplyr::collect()
+    
+    Andromeda::appendToTable(covariates, newCovariates)
+  }
+
+  start <- Sys.time()
+
   cyclopsData <- Cyclops::convertToCyclopsData(
     outcomes = trainData$covariateData$labels,
     covariates = covariates,
