@@ -131,7 +131,8 @@ setCoxModel <- function(
     priorParams = list(
       priorType =  "laplace",
       variance = variance, 
-      exclude = noShrinkage
+      exclude = noShrinkage,
+      useCrossValidation = FALSE
     ),
     includeCovariateIds = includeCovariateIds, 
     upperLimit = upperLimit, 

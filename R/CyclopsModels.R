@@ -37,7 +37,6 @@ fitCyclopsModel <- function(
       time = .data$survivalTime
     )
   
-  browser()
   covariates <- filterCovariateIds(param, trainData$covariateData)
   
   if (!is.null(param$priorCoefs)) {
@@ -51,6 +50,7 @@ fitCyclopsModel <- function(
       dplyr::collect()
     
     Andromeda::appendToTable(covariates, newCovariates)
+    
   }
 
   start <- Sys.time()
@@ -64,6 +64,20 @@ fitCyclopsModel <- function(
     normalize = NULL,
     quiet = TRUE
     )
+  
+  if (!is.null(param$priorCoefs)) {
+    fixedCoefficients <- c(FALSE,
+                           rep(TRUE, length(sourceCoefs)),
+                           rep(FALSE, length(cyclopsData$coefficientNames)-(length(sourceCoefs)+1)))
+    
+    startingCoefficients <- rep(0, length(fixedCoefficients))
+    
+    # skip intercept index
+    startingCoefficients[2:(length(sourceCoefs)+1)] <- sourceCoefs
+  } else {
+    startingCoefficients <- NULL
+    fixedCoefficients <- NULL 
+  }
 
   if(settings$crossValidationInPrior){  
     param$priorParams$useCrossValidation <- max(trainData$folds$index)>1
@@ -86,12 +100,15 @@ fitCyclopsModel <- function(
       maxIterations = settings$maxIterations
       )
     
+    browser()
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
       Cyclops::fitCyclopsModel(
         cyclopsData = cyclopsData, 
         prior = prior, 
-        control = control
+        control = control,
+        fixedCoefficients = fixedCoefficients,
+        startingCoefficients = startingCoefficients
         )}, 
       finally = ParallelLogger::logInfo('Done.')
       )
