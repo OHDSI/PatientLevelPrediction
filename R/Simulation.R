@@ -187,7 +187,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   
   attr(allOutcomes, "metaData") <- data.frame(outcomeIds = c(2,3))
   
-  attr(covariateData, "metaData") <- list(populationSize = n)
+  attr(covariateData, "metaData") <- list(populationSize = n, cohortId = 1)
   
   result <- list(cohorts = cohorts,
                  outcomes = allOutcomes,
