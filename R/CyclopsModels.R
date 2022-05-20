@@ -100,7 +100,6 @@ fitCyclopsModel <- function(
       maxIterations = settings$maxIterations
       )
     
-    browser()
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
       Cyclops::fitCyclopsModel(
@@ -119,6 +118,7 @@ fitCyclopsModel <- function(
       finally = ParallelLogger::logInfo('Done.')) 
   }
   
+  
   modelTrained <- createCyclopsModel(
     fit = fit, 
     modelType = settings$modelType, 
@@ -127,7 +127,11 @@ fitCyclopsModel <- function(
     labels = trainData$covariateData$labels,
     folds = trainData$folds
     )
-
+  
+  if (!is.null(param$priorCoefs)) {
+    modelTrained$coefficients <- reparamTransferCoefs(modelTrained$coefficients)
+  }
+  
   # TODO get optimal lambda value
   ParallelLogger::logTrace('Returned from fitting to LassoLogisticRegression')
   comp <- Sys.time() - start
@@ -476,4 +480,17 @@ filterCovariateIds <- function(param, covariateData){
     covariates <- covariateData$covariates
   }
   return(covariates)
+}
+
+reparamTransferCoefs <- function(inCoefs) {
+  transferCoefs <- inCoefs[stringr::str_detect(names(inCoefs), "-")]
+  names(transferCoefs) <- substring(names(transferCoefs), 2)
+  
+  originalCoefs <- inCoefs[!stringr::str_detect(names(inCoefs), "-")]
+  # names(originalCoefs) <- names(coefs[!stringr::str_detect(names(coefs), "-")])
+  
+  coefs <- c(originalCoefs, transferCoefs, use.names = TRUE)
+  coefs <- tapply(coefs, names(coefs), sum)
+  
+  return(coefs)
 }
