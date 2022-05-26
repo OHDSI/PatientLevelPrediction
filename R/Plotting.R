@@ -769,7 +769,7 @@ plotDemographicSummary <- function(
                                   guide = ggplot2::guide_legend(title = NULL),
                                   labels = c("Expected", "Observed")) +
 
-      ggplot2::guides(linetype=FALSE) +
+      ggplot2::guides( linetype = "none") + # change from FALSE due to warning
       ggplot2::ggtitle(evalType)
   }
   
@@ -1282,7 +1282,7 @@ plotSmoothCalibrationLoess <- function(data, span = 0.75) {
 
 plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
   data <- data %>%
-    filter(!is.na(y) & !is.na(p))
+    dplyr::filter(!is.na(.data$y) & !is.na(.data$p))
   p <- data$p
 
   .defineKnots <- function(predictedProbabilities, numberOfKnots) {
@@ -1305,7 +1305,7 @@ plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
       length.out = numberOfKnots
     )
 
-    knotLocation <- quantile(
+    knotLocation <- stats::quantile(
       x = predictedProbabilities,
       probs = knotQuantiles,
       na.rm = TRUE
@@ -1321,7 +1321,7 @@ plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
           mgcv::gam(
             y ~ s(p, bs = 'cr', k = k, m = 2),
             data = data,
-            family = binomial()
+            family = stats::binomial()
           )
         },
         error = function(e) {
@@ -1335,7 +1335,7 @@ plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
             y ~ s(p, bs = 'cr', k = k, m = 2),
             data = data,
             knots = list(p = .defineKnots(p, k)),
-            family = binomial()
+            family = stats::binomial()
           )
         },
         error = function(e) {
@@ -1354,13 +1354,15 @@ plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
     }
   }
 
-  if (is.character(smoothFit)) return("Failed")
+  if (is.character(smoothFit)){
+    return("Failed")
+  }
 
   xRange <- seq(min(p), max(p), length.out = 1e3)
-  predictWithSe <- predict(smoothFit, newdata = data.frame(p = xRange), se.fit = TRUE)
+  predictWithSe <- stats::predict(smoothFit, newdata = data.frame(p = xRange), se.fit = TRUE)
   smoothData <- data.frame(
     xRange = xRange,
-    predXRange = plogis(predictWithSe$fit),
+    predXRange = stats::plogis(predictWithSe$fit),
     lci = stats::plogis(predictWithSe$fit - 1.96 * predictWithSe$se.fit),
     uci = stats::plogis(predictWithSe$fit + 1.96 * predictWithSe$se.fit)
   )

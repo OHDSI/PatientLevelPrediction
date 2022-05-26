@@ -31,7 +31,8 @@
 #' develop and internally validate a model for the specified outcomeId.
 #'
 #' @param plpData                    An object of type \code{plpData} - the patient level prediction
-#'                                   data extracted from the CDM.
+#'                                   data extracted from the CDM.  Can also include an initial population as 
+#'                                   plpData$popualtion.
 #' @param outcomeId                  (integer) The ID of the outcome.                                       
 #' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
 #' @param analysisName               (character) Name for the analysis
@@ -274,7 +275,8 @@ runPlp <- function(
         list(
           plpData = plpData,
           outcomeId = outcomeId,
-          populationSettings = populationSettings
+          populationSettings = populationSettings, 
+          population = plpData$population
         )
       )
     },

@@ -103,8 +103,8 @@ createRestrictPlpDataSettings <- function(
 #'                                       SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
 #' @param cohortId                       An integer specifying the cohort id for the target cohort
 #' @param outcomeIds                      A single integer or vector of integers specifying the cohort ids for the outcome cohorts
-#' @param cdmVersion                     Define the OMOP CDM version used: currently support "4" and
-#'                                       "5".
+#' @param cdmVersion                     Define the OMOP CDM version used: currently support "4" and "5".
+#' 
 #' @return
 #' A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)
 #'
@@ -122,6 +122,8 @@ createDatabaseDetails <- function(
   outcomeIds = NULL,
   cdmVersion = 5
 ){
+  
+  
   result <- list(
     connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
@@ -234,21 +236,23 @@ getPlpData <- function(
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
   metaData.cohort <- list(cohortId = databaseDetails$cohortId)
   
-  if(nrow(cohorts)==0)
+  if(nrow(cohorts)==0){
     stop('Target population is empty')
+  }
   
   delta <- Sys.time() - start
   ParallelLogger::logTrace(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
-  
-  #covariateSettings$useCovariateCohortIdIs1 <- TRUE
-  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection, 
-                                                         oracleTempSchema = databaseDetails$tempEmulationSchema,
-                                                         cdmDatabaseSchema = databaseDetails$cdmDatabaseSchema,
-                                                         cdmVersion = databaseDetails$cdmVersion,
-                                                         cohortTable = "#cohort_person",
-                                                         cohortTableIsTemp = TRUE,
-                                                         rowIdField = "row_id",
-                                                         covariateSettings = covariateSettings)
+
+  covariateData <- FeatureExtraction::getDbCovariateData(
+    connection = connection, 
+    oracleTempSchema = databaseDetails$tempEmulationSchema,
+    cdmDatabaseSchema = databaseDetails$cdmDatabaseSchema,
+    cdmVersion = databaseDetails$cdmVersion,
+    cohortTable = "#cohort_person",
+    cohortTableIsTemp = TRUE,
+    rowIdField = "row_id",
+    covariateSettings = covariateSettings
+  )
   # add indexes for tidyCov + covariate summary
   Andromeda::createIndex(covariateData$covariates, c('rowId'),
                          indexName = 'covariates_rowId')
@@ -275,8 +279,9 @@ getPlpData <- function(
     colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
     metaData.outcome <- data.frame(outcomeIds = databaseDetails$outcomeIds)
     attr(outcomes, "metaData") <- metaData.outcome
-    if(nrow(outcomes)==0)
+    if(nrow(outcomes)==0){
       stop('No Outcomes')
+    }
     
     metaData.cohort$attrition <- getCounts2(cohorts,outcomes, "Original cohorts")
     attr(cohorts, "metaData") <- metaData.cohort

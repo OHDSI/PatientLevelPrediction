@@ -129,36 +129,47 @@ savePlpModel <- function(plpModel, dirPath){
   
   # save the trainDetails
   if(!is.null(plpModel$trainDetails)){
-  plpModel$trainDetails$trainingTime <- paste(as.character(plpModel$trainDetails$trainingTime), attr(plpModel$trainDetails$trainingTime,'units'))
-  saveJsonFile(
-    rObject = plpModel$trainDetails, 
-    file = file.path(dirPath, 'trainDetails.json')
+    ParallelLogger::saveSettingsToJson(
+    object = plpModel$trainDetails, 
+    fileName = file.path(dirPath, 'trainDetails.json')
   )
   }
   
   # save the validationDetails
   if(!is.null(plpModel$validationDetails)){
-    plpModel$validationDetails$validationDate <- paste(as.character(plpModel$validationDetails$validationDate), attr(plpModel$validationDetails$validationDate,'units'))
-    saveJsonFile(
-      rObject = plpModel$validationDetails, 
-      file = file.path(dirPath, 'validationDetails.json')
+    ParallelLogger::saveSettingsToJson(
+      object = plpModel$validationDetails, 
+      fileName = file.path(dirPath, 'validationDetails.json')
     )
   }
   
   
   # save the settings
-  saveJsonFile(
-    rObject = plpModel$settings, 
-    file = file.path(dirPath, 'settings.json')
+  ParallelLogger::saveSettingsToJson(
+    object = plpModel$modelDesign, 
+    fileName = file.path(dirPath, 'modelDesign.json')
   )
+  
+  if(!is.null(plpModel$preprocess)){
+    
+    # cheap fix to get past bug in ParallelLogger::saveSettingsToJson with tibbles
+    plpModel$preprocess$tidyCovariates$normFactors <- 
+      as.data.frame(plpModel$preprocess$tidyCovariates$normFactors)
+    
+    ParallelLogger::saveSettingsToJson(
+    object = plpModel$preprocess, 
+    fileName = file.path(dirPath, 'preprocess.json')
+  )
+  }
+  
   
   # save the model based on saveType
   if(attr(plpModel, 'saveType') == "xgboost"){
     xgboost::xgb.save(model = plpModel$model, fname = file.path(dirPath, "model.json"))
   } else if(attr(plpModel, 'saveType') == "RtoJson"){
-    saveJsonFile(
-      rObject = plpModel$model, 
-      file = file.path(dirPath, 'model.json')
+    ParallelLogger::saveSettingsToJson(
+      object = plpModel$model, 
+      fileName = file.path(dirPath, 'model.json')
     )
   } else if(attr(plpModel, 'saveType') == "file"){
     # move the model into model
@@ -181,9 +192,9 @@ savePlpModel <- function(plpModel, dirPath){
   # save the attributes of plpModel
   modelAttributes <- attributes(plpModel)
   modelAttributes$names <- NULL
-  saveJsonFile(
-    rObject = modelAttributes, 
-    file = file.path(dirPath, 'attributes.json')
+  ParallelLogger::saveSettingsToJson(
+    object = modelAttributes, 
+    fileName = file.path(dirPath, 'attributes.json')
   )
   
   return(dirPath)
@@ -206,7 +217,7 @@ loadPlpModel <- function(dirPath) {
   
   plpModel <- list()
   modelAttributes <- tryCatch(
-    loadJsonFile(file.path(dirPath, 'attributes.json')),
+    ParallelLogger::loadSettingsFromJson(file.path(dirPath, 'attributes.json')),
     error = function(e){NULL}
   )
   
@@ -224,46 +235,39 @@ loadPlpModel <- function(dirPath) {
   
   if(file.exists(file.path(dirPath, "trainDetails.json"))){
     plpModel$trainDetails <- tryCatch(
-      loadJsonFile(file.path(dirPath, "trainDetails.json")),
+      ParallelLogger::loadSettingsFromJson(file.path(dirPath, "trainDetails.json")),
       error = function(e){NULL}
     )
   }
   if(file.exists(file.path(dirPath, "validationDetails.json"))){
     plpModel$validationDetails <- tryCatch(
-      loadJsonFile(file.path(dirPath, "validationDetails.json")),
+      ParallelLogger::loadSettingsFromJson(file.path(dirPath, "validationDetails.json")),
       error = function(e){NULL}
     )
   }
   
-  plpModel$settings <- tryCatch(
-    loadJsonFile(file.path(dirPath, "settings.json")),
+  plpModel$modelDesign <- tryCatch(
+    ParallelLogger::loadSettingsFromJson(file.path(dirPath, "modelDesign.json")),
     error = function(e){NULL}
   )
+  
+  if(file.exists(file.path(dirPath, "preprocess.json"))){
+    plpModel$preprocess <- tryCatch(
+      ParallelLogger::loadSettingsFromJson(file.path(dirPath, "preprocess.json")),
+      error = function(e){NULL}
+    )
+  }
   
   if(attr(plpModel, 'saveType') == "xgboost"){
     ensure_installed("xgboost")
     plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
   } else if(attr(plpModel, 'saveType') %in% c("RtoJson")){
-    plpModel$model <- loadJsonFile(file.path(dirPath, "model.json"))
+    plpModel$model <- ParallelLogger::loadSettingsFromJson(file.path(dirPath, "model.json"))
   } else{
     plpModel$model <- file.path(dirPath, 'model')
   }
 
   return(plpModel)
-}
-
-saveJsonFile <- function(rObject, file){
-  
-  jsonObject  <- jsonlite::serializeJSON(rObject, digits = 23)
-  write(jsonObject, file)
-}
-
-loadJsonFile <- function(fileName) {
-  
-  jsonObject <- readChar(fileName, file.info(fileName)$size)
-  rObject <- jsonlite::unserializeJSON(jsonObject)
-  
-  return(rObject)
 }
 
 
@@ -279,7 +283,10 @@ loadJsonFile <- function(fileName) {
 #' @export
 savePrediction <- function(prediction, dirPath, fileName='prediction.rds'){
   #TODO check inupts
-  saveJsonFile(prediction, file=file.path(dirPath,fileName))
+  ParallelLogger::saveSettingsToJson(
+    object = prediction, 
+    fileName = file.path(dirPath,fileName)
+    )
   
   return(file.path(dirPath,fileName))
 }
@@ -294,7 +301,7 @@ savePrediction <- function(prediction, dirPath, fileName='prediction.rds'){
 #' @export
 loadPrediction <- function(fileLocation){
   #TODO check inupts
-  prediction <- loadJsonFile(fileName = fileLocation)
+  prediction <- ParallelLogger::loadSettingsFromJson(fileName = fileLocation)
   return(prediction)
 }
 
@@ -362,7 +369,12 @@ savePlpShareable <- function(result, saveDirectory, minCellCount = 10){
   if(!dir.exists(saveDirectory)) dir.create(saveDirectory, recursive = T)
   
   #executionSummary
-  saveJsonFile(result$executionSummary, file.path(saveDirectory, 'executionSummary.json'))
+  result$executionSummary$PackageVersion$packageVersion <- as.character(result$executionSummary$PackageVersion$packageVersion)
+  result$executionSummary$PlatformDetails$RAM <- as.character(result$executionSummary$PlatformDetails$RAM)
+  ParallelLogger::saveSettingsToJson(
+    object = result$executionSummary, 
+    fileName = file.path(saveDirectory, 'executionSummary.json')
+    )
   
   #save model as json files
   savePlpModel(result$model, file.path(saveDirectory, 'model'))
@@ -399,7 +411,10 @@ savePlpShareable <- function(result, saveDirectory, minCellCount = 10){
   }
   
   #analysisRef
-  saveJsonFile(result$analysisRef, file.path(saveDirectory, 'analysisRef.json'))
+  ParallelLogger::saveSettingsToJson(
+    object = result$analysisRef, 
+    fileName = file.path(saveDirectory, 'analysisRef.json')
+    )
   
   return(invisible(saveDirectory))
 }
@@ -445,7 +460,7 @@ loadPlpShareable <- function(loadDirectory){
   result$model <- loadPlpModel(file.path(loadDirectory,'model'))
   
   #executionSummary
-  result$executionSummary <- tryCatch({loadJsonFile(fileName = file.path(loadDirectory, 'executionSummary.json'))}, error = function(e){return(NULL)})
+  result$executionSummary <- tryCatch({ParallelLogger::loadSettingsFromJson(fileName = file.path(loadDirectory, 'executionSummary.json'))}, error = function(e){return(NULL)})
   
   #performanceEvaluation
   result$performanceEvaluation <- list()
@@ -459,7 +474,7 @@ loadPlpShareable <- function(loadDirectory){
   result$covariateSummary <- utils::read.csv(file = file.path(loadDirectory,'covariateSummary.csv'))
 
   #analysisRef
-  result$analysisRef <- tryCatch({loadJsonFile(fileName = file.path(loadDirectory, 'analysisRef.json'))}, error = function(e){return(NULL)})
+  result$analysisRef <- tryCatch({ParallelLogger::loadSettingsFromJson(fileName = file.path(loadDirectory, 'analysisRef.json'))}, error = function(e){return(NULL)})
   
   class(result) <- "runPlp"
   return(result)
@@ -497,3 +512,39 @@ removeCellCount <- function(
   return(data)
 }
 
+
+extractDatabaseToCsv <- function(
+  conn,
+  databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
+  csvFolder
+  ){
+  
+  if(!dir.exists(csvFolder)){
+    dir.create(csvFolder, recursive = T)
+  }
+  
+  # get the table names using the function in uploadToDatabase.R
+  tables <- getPlpResultTables()
+  
+  for(table in tables){
+    sql <- "select * from @resultSchema.@appendtotable@tablename"
+    sql <- SqlRender::render(
+      sql, 
+      resultSchema = databaseSchemaSettings$resultSchema,
+      appendtotable = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablename = table 
+    )
+    sql <- SqlRender::translate(
+      sql = sql, 
+      targetDialect = databaseSchemaSettings$targetDialect, 
+      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema)
+    result <- DatabaseConnector::querySql(conn, sql)
+    
+    utils::write.csv(
+      x = result, 
+      file = file.path(csvFolder, paste0(table,'.csv')), 
+      row.names = F
+      )
+  }
+  
+}

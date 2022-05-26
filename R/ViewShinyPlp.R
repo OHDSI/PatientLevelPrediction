@@ -7,11 +7,22 @@
 #' 
 #' @export
 viewMultiplePlp <- function(analysesLocation){
-  viewPlps(result = analysesLocation, 
-           validation=NULL, 
-           useDatabase = F,
-           usePlpObject = F,
-           useFileSystem = T)
+  
+  if(!file.exists(file.path(analysesLocation, 'sqlite', 'databaseFile.sqlite'))){
+    stop('No database found')
+  }
+  
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = 'sqlite',
+    server = file.path(analysesLocation, 'sqlite', 'databaseFile.sqlite')
+  )
+  
+  databaseSettings <- list(
+    connectionDetails = connectionDetails, 
+    databaseSchema = 'main'
+  )
+  
+  viewPlps(databaseSettings)
 }
 
 #' viewPlp - Interactively view the performance and model settings
@@ -26,13 +37,31 @@ viewMultiplePlp <- function(analysesLocation){
 #' Opens a shiny app for interactively viewing the results
 #'
 #' @export
-
 viewPlp <- function(runPlp, validatePlp = NULL) {
-  viewPlps(result = runPlp, 
-           validation=validatePlp, 
-           useDatabase = F,
-           usePlpObject = T,
-           useFileSystem = F)
+  
+  server <- insertRunPlpToSqlite(
+    runPlp = runPlp, 
+    externalValidatePlp = validatePlp
+    )
+  
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = 'sqlite',
+    server = server
+  )
+  
+  databaseSettings <- list(
+    connectionDetails = connectionDetails, 
+    mySchema = 'main',
+    myTableAppend = '',
+    targetDialect = 'sqlite',
+    myServer = server,
+    myUser = NULL, 
+    myPassword = NULL,
+    myPort = NULL
+  )
+  
+  viewPlps(databaseSettings)
+
 }
 
 
@@ -50,26 +79,33 @@ viewPlp <- function(runPlp, validatePlp = NULL) {
 #' @param myTableAppend A string appended to the results tables (optional)
 #' 
 #' @export
-viewDatabaseResultPlp <- function(mySchema, myServer, myUser, myPassword, myDbms, myPort = NULL, myTableAppend){
+viewDatabaseResultPlp <- function(
+  mySchema, 
+  myServer, 
+  myUser, 
+  myPassword, 
+  myDbms, 
+  myPort = NULL, 
+  myTableAppend
+  ){
   
-  ensure_installed('pool')
-  ensure_installed('DBI')
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = myDbms,
+    server =  myServer, 
+    user = myUser, 
+    password = myPassword, 
+    port = myPort
+  )
   
-  Sys.setenv("shinydbSchema" = mySchema)
-  Sys.setenv("shinydbServer" = myServer)
-  Sys.setenv("shinydbUser" = myUser)
-  Sys.setenv("shinydbPw" = myPassword)
-  Sys.setenv("shinydbDbms" = myDbms)
-  if(!is.null(myPort)){
-    Sys.setenv("shinydbPort" = myPort)
-  }
-  Sys.setenv("shinydbTableAppend" = myTableAppend)
+  databaseSettings <- list(
+    connectionDetails = connectionDetails, 
+    databaseSchema = mySchema,
+    appendDatabaseSchema = myTableAppend,
+    targetDialect = myDbms
+  )
   
-  viewPlps(result = NULL, 
-           validation=NULL, 
-           useDatabase = T,
-           usePlpObject = F,
-           useFileSystem = F)
+  viewPlps(databaseSettings)
+  
 }
 
 
@@ -77,11 +113,7 @@ viewDatabaseResultPlp <- function(mySchema, myServer, myUser, myPassword, myDbms
 # code for multiple and single together
 # one shiny app 
 
-viewPlps <- function(result, 
-                     validation=NULL, 
-                     useDatabase = NULL, 
-                     usePlpObject = NULL,
-                     useFileSystem = NULL){
+viewPlps <- function(databaseSettings){
   ensure_installed("shiny")
   ensure_installed("shinydashboard")
   ensure_installed("shinycssloaders")
@@ -89,37 +121,14 @@ viewPlps <- function(result,
   ensure_installed("htmlwidgets")
   ensure_installed("shinyWidgets")
   ensure_installed("plotly")
- 
+  ensure_installed('pool')
+  ensure_installed('DBI')
+  
+  # set database settings into system variables
+  Sys.setenv("plpDatabaseSettings" = as.character(ParallelLogger::convertSettingsToJson(databaseSettings)))
+
   appDir <- system.file("shiny", "PLPViewer", package = "PatientLevelPrediction")
-  shinySettings <- list(result = result, 
-                        validation = validation, 
-                        useDatabase = useDatabase,
-                        usePlpObject = usePlpObject,
-                        useFileSystem = useFileSystem)
-  .GlobalEnv$shinySettings <- shinySettings
-  on.exit(rm(shinySettings, envir = .GlobalEnv))
+  #appDir <- "/Users/jreps/Documents/github/PatientLevelPrediction/inst/shiny/PLPViewer"
   shiny::runApp(appDir) 
 }
 
-
-
-#' Launch the Diagnostics Explorer Shiny app
-#'
-#' @param dataFolder       A folder where the exported zip files with the results are stored.  
-#'                         Zip files containing results from multiple databases can be placed in the same
-#'                         folder.
-#' @param launch.browser   Should the app be launched in your default browser, or in a Shiny window.
-#'                         Note: copying to clipboard will not work in a Shiny window.
-#'
-#' @details
-#' Launches a Shiny app that allows the user to explore the diagnostics
-#'
-#' @export
-launchDiagnosticsExplorer <- function(dataFolder, launch.browser = FALSE) {
-  ensure_installed("DT")
-  appDir <- system.file("shiny", "DiagnosticsExplorer", package = "PatientLevelPrediction")
-  shinySettings <- list(dataFolder = dataFolder)
-  .GlobalEnv$shinySettings <- shinySettings
-  on.exit(rm(shinySettings, envir = .GlobalEnv))
-  shiny::runApp(appDir)
-}

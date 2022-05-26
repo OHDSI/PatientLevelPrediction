@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
-Version: 5.0.5
-Date: 2022-03-16
+Version: 5.0.6
+Date: 2022-05-18
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -12,7 +12,7 @@ Authors@R: c(
     person("Peter", "Rijnbeek", role = c("aut"))
     )
 Maintainer: Jenna Reps <jreps@its.jnj.com>
-Description: A package for creating patient level prediction models. Given a
+Description: A user friendly way to create patient level prediction models using the OMOP common data model. Given a
     cohort of interest and an outcome of interest, the package can use data in the
     OMOP Common Data Model to build a large set of features. These features can then
     be assessed to fit a predictive model using a number of machine learning algorithms.
@@ -31,7 +31,6 @@ Imports:
     dplyr,
     ggplot2,
     gridExtra,
-    jsonlite,
     Matrix,
     memuse,
     mgcv,
@@ -86,5 +85,5 @@ Remotes:
     ohdsi/FeatureExtraction,
     ohdsi/IterativeHardThresholding,
     ohdsi/ParallelLogger
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Encoding: UTF-8

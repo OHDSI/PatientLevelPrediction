@@ -1,39 +1,42 @@
 
-# Download the PostreSQL driver ---------------------------
-# If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
-jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
-if (jarFolder == "") {
-  tempJarFolder <- tempfile("jdbcDrivers")
-  dir.create(tempJarFolder)
-  Sys.setenv("DATABASECONNECTOR_JAR_FOLDER" = tempJarFolder)
-  downloadJdbcDrivers("postgresql")
+# this files contains the objects used in the tests:
+travis <- F
+if(travis){
+  # Download the PostreSQL driver ---------------------------
+  # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
+  jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
+  if (jarFolder == "") {
+    tempJarFolder <- tempfile("jdbcDrivers")
+    dir.create(tempJarFolder)
+    Sys.setenv("DATABASECONNECTOR_JAR_FOLDER" = tempJarFolder)
+    downloadJdbcDrivers("postgresql")
+    
+    withr::defer({
+      unlink(tempJarFolder, recursive = TRUE, force = TRUE)
+      Sys.unsetenv("DATABASECONNECTOR_JAR_FOLDER")
+    }, testthat::teardown_env())
+  }
   
-  withr::defer({
-    unlink(tempJarFolder, recursive = TRUE, force = TRUE)
-    Sys.unsetenv("DATABASECONNECTOR_JAR_FOLDER")
-  }, testthat::teardown_env())
+  if(ifelse(is.null(Sys.info()), T, Sys.info()['sysname'] != 'Windows')){
+    # configure and activate python
+    PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
+    PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
+    
+    # if mac install nomkl -- trying to fix github actions
+    if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
+      reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
+                                forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
+                                conda = "auto")
+    }
+  }
 }
 
-
-# this files contains the objects used in the tests:
-travis <- T
 
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
 
-if(ifelse(is.null(Sys.info()), T, Sys.info()['sysname'] != 'Windows')){
-  # configure and activate python
-  PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
-  PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
-  
-  # if mac install nomkl -- trying to fix github actions
-  if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
-    reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
-                              forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
-                              conda = "auto")
-  }
-}
+
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
@@ -71,13 +74,31 @@ plpResult <- runPlp(
   analysisId = 'Test', 
   analysisName = 'Testing analysis',
   populationSettings = populationSettings, 
-  splitSettings = createDefaultSplitSetting(),
+  splitSettings = createDefaultSplitSetting(splitSeed = 12),
   preprocessSettings = createPreprocessSettings(), 
   modelSettings = lrSet, 
   logSettings = createLogSettings(verbosity = 'TRACE'),
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = saveLoc
   )
+
+
+# now diagnose
+diagnoseResult <- diagnosePlp(
+  plpData = plpData,
+  outcomeId = 2,
+  analysisId = 'Test', 
+  populationSettings = populationSettings,
+  splitSettings = createDefaultSplitSetting(splitSeed = 12),
+  saveDirectory = saveLoc,
+  modelSettings = lrSet,
+  logSettings =  createLogSettings(
+    verbosity = 'DEBUG',
+    timeStamp = T,
+    logName = 'diagnosePlp Log'
+  ),
+  preprocessSettings = createPreprocessSettings()
+)
 
 #
 

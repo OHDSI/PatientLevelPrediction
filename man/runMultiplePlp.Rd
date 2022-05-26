@@ -6,12 +6,10 @@
 \usage{
 runMultiplePlp(
   databaseDetails = createDatabaseDetails(),
-  modelDesignList = list(createModelDesign(targetId = 1, outcomeId = 2, modelSettings =
-    setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
+  modelDesignList = list(createModelDesign(cohortId = 1, outcomeId = 2, modelSettings =
+    setLassoLogisticRegression()), createModelDesign(cohortId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
   onlyFetchData = F,
-  splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
-    trainFraction = 0.75, splitSeed = 123, nfold = 3),
   cohortDefinitions = NULL,
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
     "runPlp Log"),
@@ -25,8 +23,6 @@ runMultiplePlp(
 
 \item{onlyFetchData}{Only fetches and saves the data object to the output folder without running the analysis.}
 
-\item{splitSettings}{The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}}
-
 \item{cohortDefinitions}{A list of cohort definitions for the target and outcome cohorts}
 
 \item{logSettings}{The setting spexcifying the logging for the analyses created using \code{createLogSettings()}}
@@ -36,7 +32,7 @@ runMultiplePlp(
 \value{
 A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
 for a set of analysis choices.\cr \verb{cohortId} \tab The ID of the target cohort populations.\cr
-\verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved \cr \verb{evaluationFolder} \tab The name of file containing the evaluation saved as a csv
+\verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved 
  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 }
 \description{

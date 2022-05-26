@@ -134,7 +134,8 @@ createStudyPopulationSettings <- function(
     startAnchor = startAnchor,
     riskWindowEnd = riskWindowEnd,
     endAnchor = endAnchor, 
-    restrictTarToCohortEnd = restrictTarToCohortEnd)
+    restrictTarToCohortEnd = restrictTarToCohortEnd
+    )
   
   class(result) <- 'populationSettings'
   return(result)
@@ -216,11 +217,11 @@ createStudyPopulation <- function(
     population <- plpData$cohorts
   }
   
-  # save the metadata (should have the cohortId, outcomeId, plpDataSettings and population settings)
+  # save the metadata (should have the ?cohortId, outcomeId, plpDataSettings and population settings)
   metaData <- attr(population, "metaData")
-  metaData$plpDataSettings <- plpData$metaData$restrictPlpDataSettings
+  metaData$restrictPlpDataSettings <- plpData$metaData$restrictPlpDataSettings
   metaData$outcomeId <- outcomeId
-  metaData$populationSettings <- populationSettings
+  metaData$populationSettings <- populationSettings # this will overwrite an existing setting
   
   # set the existing attrition
   if(is.null(metaData$attrition)){

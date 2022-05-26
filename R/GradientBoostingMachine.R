@@ -144,7 +144,7 @@ predictXgboost <- function(
   cohort
   ){
   
-  if(class(data) == 'plpData'){
+  if(inherits(data , 'plpData')){
     # convert
     matrixObjects <- toSparseM(
       plpData = data, 
@@ -162,7 +162,7 @@ predictXgboost <- function(
     newData <- data
   }
   
-  if(class(plpModel) == 'plpModel'){
+  if(inherits(plpModel, 'plpModel')){
     model <- plpModel$model
   } else{
     model <- plpModel

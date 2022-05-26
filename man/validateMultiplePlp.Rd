@@ -9,6 +9,7 @@ validateMultiplePlp(
   validationDatabaseDetails,
   validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
   recalibrate = NULL,
+  cohortDefinitions = NULL,
   saveDirectory = NULL
 )
 }
@@ -20,6 +21,8 @@ validateMultiplePlp(
 \item{validationRestrictPlpDataSettings}{The settings specifying the extra restriction settings when extracting the data created using \code{createRestrictPlpDataSettings()}.}
 
 \item{recalibrate}{A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')}
+
+\item{cohortDefinitions}{A list of cohortDefinitions}
 
 \item{saveDirectory}{The location to save to validation results}
 }

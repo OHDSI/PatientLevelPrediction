@@ -46,7 +46,7 @@ createSampleSettings <- function(type = 'none',
   
   sampleSettings <- list(
     numberOutcomestoNonOutcomes = numberOutcomestoNonOutcomes,
-    sampleSeed  = sampleSeed 
+    sampleSeed  = ifelse(type == 'none', 1, sampleSeed) # to make it the same for none
     )
   
   if(type == 'none'){
@@ -85,7 +85,7 @@ sampleData <- function(trainData, sampleSettings){
   
   ParallelLogger::logInfo('Finished data sampling')
   
-  metaData$sampleSettings <- sampleSetting
+  metaData$sampleSettings <- sampleSettings
   
   attr(trainData, "metaData") <- metaData
   return(trainData)

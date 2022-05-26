@@ -1,24 +1,12 @@
--- do we need this
-CREATE TABLE @my_schema.@string_to_appendstudies (
-    study_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	  study_name varchar(100),
-    study_description varchar(1000)
-);
-
+-- this should be in a seperate schema 
 CREATE TABLE @my_schema.@string_to_appendcohorts (
     cohort_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	atlas_id bigint,
+	  atlas_id bigint,
     cohort_name char(100) NOT NULL,
     cohort_json VARCHAR(MAX) NOT NULL
 );
 
-CREATE TABLE @my_schema.@string_to_appendresearchers (
-    researcher_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    researcher_name char(100) NOT NULL,
-    researcher_email char(100) NOT NULL,
-    researcher_affiliation char(250) NOT NULL
-);
-
+-- this should be in a seperate schema 
 CREATE TABLE @my_schema.@string_to_appenddatabase_details (
     database_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     database_name char(100) NOT NULL,
@@ -80,7 +68,7 @@ CREATE TABLE @my_schema.@string_to_appendsample_settings( -- new
 CREATE TABLE  @my_schema.@string_to_appendmodel_designs (
     model_design_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     --model_name CHAR(50) NOT NULL,
-    target_id int NOT NULL,
+    cohort_id int NOT NULL,
     outcome_id int NOT NULL,
     tar_id int NOT NULL,
     plp_data_setting_id int NOT NULL, -- new
@@ -91,11 +79,9 @@ CREATE TABLE  @my_schema.@string_to_appendmodel_designs (
 	  split_setting_id int NOT NULL, -- new
 	  feature_engineering_setting_id int NOT NULL, -- new
 	  tidy_covariates_setting_id int NOT NULL, -- new
-    researcher_id int NOT NULL,
-    FOREIGN KEY (target_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
+    FOREIGN KEY (cohort_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (outcome_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
-    FOREIGN KEY (researcher_id) REFERENCES @my_schema.@string_to_appendresearchers(researcher_id),
-	  FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
+    FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
 	  FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id),
     FOREIGN KEY (model_setting_id) REFERENCES @my_schema.@string_to_appendmodel_settings(model_setting_id),
 	  FOREIGN KEY (covariate_setting_id) REFERENCES @my_schema.@string_to_appendcovariate_settings(covariate_setting_id),
@@ -106,43 +92,70 @@ CREATE TABLE  @my_schema.@string_to_appendmodel_designs (
 	  FOREIGN KEY (tidy_covariates_setting_id) REFERENCES @my_schema.@string_to_appendtidy_covariates_settings(tidy_covariates_setting_id) -- new
 );
 
--- diagnostics holder (will add more tables)
+-- diagnostics holder
 CREATE TABLE  @my_schema.@string_to_appenddiagnostics(
    diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
    model_design_id int,
-   researcher_id int,
    database_id int NOT NULL,
    execution_date_time DATETIME2,
-   FOREIGN KEY (researcher_id) REFERENCES @my_schema.@string_to_appendresearchers(researcher_id),
    FOREIGN KEY (model_design_id) REFERENCES @my_schema.@string_to_appendmodel_designs(model_design_id),
    FOREIGN KEY (database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id)
 );
-
+CREATE TABLE  @my_schema.@string_to_appenddiagnostic_summary(
+   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   probast_id varchar(50),
+   result varchar(50),
+   FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
+);
+CREATE TABLE  @my_schema.@string_to_appenddiagnostic_predictors( -- call this kmplot
+   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   days_to_event int,
+   outcome_at_time int,
+   observed_at_start_of_day bigint
+   probast_id varchar(50),
+   input_type varchar(50),
+   FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
+);
+CREATE TABLE  @my_schema.@string_to_appenddiagnostic_participants(
+   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   design varchar(50),
+   metric varchar(50),
+   value float,
+   probast_id varchar(50),
+   FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
+);
+CREATE TABLE  @my_schema.@string_to_appenddiagnostic_outcomes(
+   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   xvalue int,
+   outcome_percent float,
+   aggregation,
+   probast_id varchar(50),
+   input_type varchar(50),
+   FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
+);
+CREATE TABLE  @my_schema.@string_to_appenddiagnostic_designs(
+   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   probast_id varchar(50),
+   value varchar(50),
+   FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
+);
+-- end diagnostics
 
 -- results
 CREATE TABLE  @my_schema.@string_to_appendmodels(
     model_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    researcher_id int,
     analysis_id varchar(50),
     model_design_id int,
     database_id int NOT NULL,
-	  hyper_param_search VARCHAR(MAX), -- new this contains the hyperparameter performances
-    plp_model_file char(50) NOT NULL,
+    model_type VARCHAR(50),
+    plp_model_file char(50) NOT NULL, -- reference to saved model location
+	  train_details VARCHAR(MAX), -- new this contains all the trainDetails
+	  preprocessing VARCHAR(MAX), -- new this contains the preprocessing required
 	  execution_date_time DATETIME2,
 	  training_time VARCHAR(100), -- previously new
 	  intercept float,
-	  require_dense_matrix char(1), -- new
-	  FOREIGN KEY (researcher_id) REFERENCES @my_schema.@string_to_appendresearchers(researcher_id),
 	  FOREIGN KEY (model_design_id) REFERENCES @my_schema.@string_to_appendmodel_designs(model_design_id),
     FOREIGN KEY (database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id)
-);
-
--- do we need this?
-CREATE TABLE @my_schema.@string_to_appendstudy_models (
-    study_id int,
-	  model_id int,
-	  FOREIGN KEY (study_id) REFERENCES @my_schema.@string_to_appendstudies(study_id),
-    FOREIGN KEY (model_id) REFERENCES @my_schema.@string_to_appendmodels(model_id)
 );
 
 -- make this relcaibration specific?
@@ -156,22 +169,22 @@ CREATE TABLE  @my_schema.@string_to_appendrecalibrations (
 	  FOREIGN KEY (recalibrated_model_id) REFERENCES @my_schema.@string_to_appendmodels(model_id)
 );
 
-CREATE TABLE  @my_schema.@string_to_appendresults (
-    result_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    model_id int NOT NULL,
-    researcher_id int NOT NULL,
-    database_id int NOT NULL,
-    target_id int NOT NULL,
+CREATE TABLE  @my_schema.@string_to_appendperformances (
+    performance_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    model_design_id int NOT NULL,
+    development_database_id int NOT NULL,
+    validation_database_id int NOT NULL,
+    cohort_id int NOT NULL,
     outcome_id int NOT NULL,
     tar_id int NOT NULL,
     plp_data_setting_id int NOT NULL, -- added
 	  population_setting_id int NOT NULL,
     execution_date_time DATETIME2,
     plp_version char(10),
-    FOREIGN KEY (model_id) REFERENCES @my_schema.@string_to_appendmodels(model_id),
-    FOREIGN KEY (researcher_id) REFERENCES @my_schema.@string_to_appendresearchers(researcher_id),
-    FOREIGN KEY (database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id),
-    FOREIGN KEY (target_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
+    FOREIGN KEY (model_design_id) REFERENCES @my_schema.@string_to_appendmodels_designs(model_design_id),
+    FOREIGN KEY (development_database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id),
+    FOREIGN KEY (validation_database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id),
+    FOREIGN KEY (cohort_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (outcome_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
     FOREIGN KEY (plp_data_setting_id) REFERENCES @my_schema.@string_to_appendplp_data_settings(plp_data_setting_id), -- new
@@ -180,18 +193,18 @@ CREATE TABLE  @my_schema.@string_to_appendresults (
 
 -- new
 CREATE TABLE @my_schema.@string_to_appendattrition (
-	  result_id int NOT NULL,
+	  performance_id int NOT NULL,
 	  outcome_id int,
 	  description varchar(1000),
-	  target_count int,
+	  target_count int, -- is this still target?
 	  unique_people int,
 	  outcomes int,
-    FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
+    FOREIGN KEY (performance_id) REFERENCES @my_schema.@string_to_appendperformances(performance_id)
 );
 
 CREATE TABLE @my_schema.@string_to_appendprediction_distribution (
     --distribution_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	  result_id int NOT NULL,
+	  performance_id int NOT NULL,
     evaluation char(10),
     class_label int,
     person_count int,
@@ -204,12 +217,12 @@ CREATE TABLE @my_schema.@string_to_appendprediction_distribution (
     p_75_predicted_probability float,
     p_95_predicted_probability float,
     max_predicted_probability float,
-    FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
+    FOREIGN KEY (performance_id) REFERENCES @my_schema.@string_to_appendperformances(performance_id)
 );
 
 CREATE TABLE @my_schema.@string_to_appendcovariate_summary(
     --cov_sum_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	result_id int NOT NULL,
+	performance_id int NOT NULL,
     covariate_id bigint NOT NULL,
 	covariate_name VARCHAR(1000) NOT NULL,
     concept_id int NOT NULL,
@@ -224,11 +237,11 @@ CREATE TABLE @my_schema.@string_to_appendcovariate_summary(
     with_outcome_covariate_mean float NOT NULL,
 	with_outcome_covariate_st_dev float NOT NULL,
     standardized_mean_diff float NOT NULL,
-    FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
+    FOREIGN KEY (performance_id) REFERENCES @my_schema.@string_to_appendperformances(performance_id)
 );
 CREATE TABLE @my_schema.@string_to_appendthreshold_summary(
     --threshold_summary_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    result_id int NOT NULL,
+    performance_id int NOT NULL,
     evaluation char(10),
     prediction_threshold float,
     preference_threshold float,
@@ -253,12 +266,12 @@ CREATE TABLE @my_schema.@string_to_appendthreshold_summary(
     positive_likelihood_ratio float,
     negative_likelihood_ratio float,
     diagnostic_odds_ratio float,
-    FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
+    FOREIGN KEY (performance_id) REFERENCES @my_schema.@string_to_appendperformances(performance_id)
 );
 
 CREATE TABLE @my_schema.@string_to_appendcalibration_summary(
     --calibration_summary_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    result_id int NOT NULL,
+    performance_id int NOT NULL,
     evaluation char(10),
     prediction_threshold float,
     person_count_at_risk int,
@@ -271,21 +284,21 @@ CREATE TABLE @my_schema.@string_to_appendcalibration_summary(
     p_75_predicted_probability float,
     max_predicted_probability float,
     observed_incidence float,
-    FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
+    FOREIGN KEY (performance_id) REFERENCES @my_schema.@string_to_appendperformances(performance_id)
 );
 
 CREATE TABLE @my_schema.@string_to_appendevaluation_statistics (
     --evaluation_stat_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	result_id int NOT NULL,
+	performance_id int NOT NULL,
 	evaluation char(10),
   metric varchar(50),
 	value float,
-    FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
+    FOREIGN KEY (performance_id) REFERENCES @my_schema.@string_to_appendperformances(performance_id)
 );
 
 CREATE TABLE @my_schema.@string_to_appenddemographic_summary(
     --demographic_summary_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    result_id int NOT NULL,
+    performance_id int NOT NULL,
     evaluation char(10),
     age_group char(20),
     gen_group char(20),
@@ -298,5 +311,9 @@ CREATE TABLE @my_schema.@string_to_appenddemographic_summary(
     p_50_predicted_probability float,
     p_75_predicted_probability float,
     max_predicted_probability float,
-    FOREIGN KEY (result_id) REFERENCES @my_schema.@string_to_appendresults(result_id)
+    FOREIGN KEY (performance_id) REFERENCES @my_schema.@string_to_appendperformances(performance_id)
 );
+
+
+-- add diagnostic tables here
+

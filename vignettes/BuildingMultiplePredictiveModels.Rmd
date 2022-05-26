@@ -44,7 +44,7 @@ library(knitr)
 kable(
   data.frame(
   input = c(
-    'targetId',
+    'cohortId',
     'outcomeId',
     'restrictPlpDataSettings',
     'populationSettings',
@@ -104,13 +104,14 @@ covariateSettings <- FeatureExtraction::createCovariateSettings(
 )
 
 modelDesign1 <- createModelDesign(
-  targetId = 1, 
+  cohortId = 1, 
   outcomeId = 2, 
   restrictPlpDataSettings = restrictPlpDataSettings, 
   populationSettings = populationSettings, 
   covariateSettings = covariateSettings, 
   featureEngineeringSettings = createFeatureEngineeringSettings(),
   sampleSettings = createSampleSettings(), 
+  splitSettings = createDefaultSplitSetting(), 
   preprocessSettings = createPreprocessSettings(), 
   modelSettings = setLassoLogisticRegression()
   )
@@ -148,13 +149,14 @@ covariateSettings <- FeatureExtraction::createCovariateSettings(
 )
 
 modelDesign2 <- createModelDesign(
-  targetId = 1, 
+  cohortId = 1, 
   outcomeId = 2, 
   restrictPlpDataSettings = restrictPlpDataSettings, 
   populationSettings = populationSettings, 
   covariateSettings = covariateSettings, 
   featureEngineeringSettings = createRandomForestFeatureSelection(ntrees = 500, maxDepth = 7),
   sampleSettings = createSampleSettings(), 
+  splitSettings = createDefaultSplitSetting(), 
   preprocessSettings = createPreprocessSettings(), 
   modelSettings = setRandomForest()
   )
@@ -193,13 +195,14 @@ covariateSettings <- FeatureExtraction::createCovariateSettings(
 )
 
 modelDesign3 <- createModelDesign(
-  targetId = 1, 
+  cohortId = 1, 
   outcomeId = 5, 
   restrictPlpDataSettings = restrictPlpDataSettings, 
   populationSettings = populationSettings, 
   covariateSettings = covariateSettings, 
   featureEngineeringSettings = createFeatureEngineeringSettings(),
   sampleSettings = createSampleSettings(), 
+  splitSettings = createDefaultSplitSetting(), 
   preprocessSettings = createPreprocessSettings(), 
   modelSettings = setGradientBoostingMachine()
   )
@@ -261,7 +264,6 @@ results <- runMultiplePlp(
     modelDesign3
     ), 
   onlyFetchData = F, 
-  splitSettings = createDefaultSplitSetting(), 
   logSettings = createLogSettings(), 
   saveDirectory =  "./PlpMultiOutput"
   )
@@ -292,18 +294,18 @@ val <- validateMultiplePlp(
   valdiationDatabaseDetails = validationDatabaseDetails,
   validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
   recalibrate = NULL,
-  saveDirectory = "./PlpMultiOutput/validation"
+  saveDirectory = "./PlpMultiOutput/Validation"
   )
 
 ```
-This then saves the external validation results in the validation folder of the main study (the outputLocation you used in runPlpAnalyses).
+This then saves the external validation results in the `Validation` folder of the main study (the outputLocation you used in runPlpAnalyses).
 
 # Viewing the results
 To view the results for the multiple prediction analysis:
 ```{r tidy=FALSE,eval=FALSE}
 viewMultiplePlp(analysesLocation="./PlpMultiOutput")
 ```
-If the validation directory in "./PlpMultiOutput" has results, the external validation will also be displayed.
+If the validation directory in "./PlpMultiOutput" has a sqlite results database, the external validation will also be displayed.
 
 # Acknowledgments
 

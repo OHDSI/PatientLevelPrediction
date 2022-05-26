@@ -25,7 +25,6 @@
 #' @param databaseDetails               The database settings created using \code{createDatabaseDetails()}
 #' @param modelDesignList                A list of model designs created using \code{createModelDesign()}
 #' @param onlyFetchData                  Only fetches and saves the data object to the output folder without running the analysis.
-#' @param splitSettings                  The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}
 #' @param cohortDefinitions               A list of cohort definitions for the target and outcome cohorts
 #' @param logSettings                    The setting spexcifying the logging for the analyses created using \code{createLogSettings()}
 #' @param saveDirectory                   Name of the folder where all the outputs will written to.
@@ -33,24 +32,17 @@
 #' @return
 #' A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
 #' for a set of analysis choices.\cr \verb{cohortId} \tab The ID of the target cohort populations.\cr
-#' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved \cr \verb{evaluationFolder} \tab The name of file containing the evaluation saved as a csv
+#' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved 
 #'  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 #'
 #' @export
 runMultiplePlp <- function(
   databaseDetails = createDatabaseDetails(),
   modelDesignList = list(
-    createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
-    createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
+    createModelDesign(cohortId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
+    createModelDesign(cohortId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
   ),
   onlyFetchData = F,
-  splitSettings = createDefaultSplitSetting(
-    type = "stratified", 
-    testFraction = 0.25,
-    trainFraction = 0.75, 
-    splitSeed = 123, 
-    nfold = 3
-  ),
   cohortDefinitions = NULL,
   logSettings = createLogSettings(
     verbosity = "DEBUG", 
@@ -64,61 +56,96 @@ runMultiplePlp <- function(
   checkIsClass(databaseDetails, c('databaseDetails'))
   checkIsClass(modelDesignList, c('list', 'modelDesign'))
   checkIsClass(onlyFetchData, 'logical')
-  checkIsClass(splitSettings, 'splitSettings')
   checkIsClass(logSettings, 'logSettings')
   checkIsClass(saveDirectory, 'character')
   if(!dir.exists(saveDirectory)){
     dir.create(saveDirectory, recursive = T)
   }
   
-  # get idList
-  idList <- getidList(modelDesignList = modelDesignList)
+  settingstable <- convertToJson(modelDesignList,cohortDefinitions)
   
-  # get settings data.frame
-  settingstable <- getSettingsTable(
-    modelDesignList = modelDesignList, 
-    idList = idList
-  )
-  
-  if(!is.null(cohortDefinitions)){
-    cohortNames <- data.frame(
-      targetName = getNames(cohortDefinitions, settingstable$targetId),
-      outcomeName = getNames(cohortDefinitions, settingstable$outcomeId)
-      )
-    settingstable <- cbind(cohortNames, settingstable)
+  if(nrow(settingstable) != length(modelDesignList)){
+    stop('Error in settingstable')
   }
   
+  # save the settings
   utils::write.csv(settingstable, file.path(saveDirectory,'settings.csv'), row.names = F)
-  saveJsonFile(idList, file.path(saveDirectory,'settings.json'))
-  
-  # list(targetId, covariateSetting, outcomeIds, saveLocation)
-  dataSettings <- getDataSettings(settingstable)
+
+  # group the outcomeIds per combination of data extraction settings
+  dataSettings <- settingstable %>% 
+    dplyr::group_by(
+      .data$cohortId,
+      .data$covariateSettings,
+      .data$restrictPlpDataSettings,
+      .data$dataLocation
+    ) %>% 
+    dplyr::summarise(
+      outcomeIds = paste(unique(.data$outcomeId), collapse = ',')
+      )
   
   # extract data
-  for(i in 1:length(dataSettings)){
-    dataExists <- length(dir(file.path(saveDirectory, dataSettings[[i]]$dataLocation)))>0
+  for(i in 1:nrow(dataSettings)){
+    dataExists <- length(dir(file.path(saveDirectory, dataSettings$dataLocation[i])))>0
     if(!dataExists){
-      ParallelLogger::logInfo(paste('Extracting data for cohort', dataSettings[[i]]$targetId, 'to', file.path(saveDirectory, dataSettings[[i]]$dataLocation)))
+      ParallelLogger::logInfo(paste('Extracting data for cohort', dataSettings$cohortId[i], 'to', file.path(saveDirectory, dataSettings$dataLocation[i])))
       
-      databaseDetails$cohortId <- dataSettings[[i]]$targetId
-      databaseDetails$outcomeIds <- dataSettings[[i]]$outcomeIds
+      databaseDetails$cohortId <- dataSettings$cohortId[i]
+      databaseDetails$outcomeIds <- strsplit(dataSettings$outcomeIds[i], ',')[[1]]
       
       plpDataSettings <- list(
         databaseDetails = databaseDetails,
-        covariateSettings = getSettingFromId(idList, type = 'covariateSettings', dataSettings[[i]]$covariateSettings),
-        restrictPlpDataSettings = getSettingFromId(idList, type = 'restrictPlpDataSettings', dataSettings[[i]]$restrictPlpDataSettings)
-        )
-      
+        covariateSettings = ParallelLogger::convertJsonToSettings(dataSettings$covariateSettings[i]),
+        restrictPlpDataSettings = ParallelLogger::convertJsonToSettings(dataSettings$restrictPlpDataSettings[i])
+      )
       
       plpData <- tryCatch(
         {do.call(getPlpData, plpDataSettings)},
         error = function(e){ParallelLogger::logInfo(e); return(NULL)}
       )
       if(!is.null(plpData)){
-        savePlpData(plpData, file.path(saveDirectory, dataSettings[[i]]$dataLocation))
+        savePlpData(plpData, file.path(saveDirectory, dataSettings$dataLocation[i]))
       }
     } else{
-      ParallelLogger::logInfo(paste('Data for cohort', dataSettings[[i]]$targetId, 'exists at', file.path(saveDirectory, dataSettings[[i]]$dataLocation)))
+      ParallelLogger::logInfo(paste('Data for cohort', dataSettings$cohortId[i], 'exists at', file.path(saveDirectory, dataSettings$dataLocation[i])))
+    }
+  }
+  
+  # runDiagnosis - NEW
+  if(!onlyFetchData){
+    for(i in 1:nrow(settingstable)){
+      modelDesign <- modelDesignList[[i]]
+      settings <- settingstable[i,] # just the data locations?
+      
+      dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation)))>0
+      
+      if(dataExists){
+        plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
+        
+        analysisExists <- file.exists(file.path(saveDirectory, settings$analysisId,'diagnosePlp.rds'))
+        
+        if(!analysisExists){
+          diagnosePlpSettings <- list(
+            plpData = plpData,
+            outcomeId = modelDesign$outcomeId,
+            analysisId = settings$analysisId,
+            populationSettings = modelDesign$populationSettings,
+            splitSettings = modelDesign$splitSettings,
+            sampleSettings = modelDesign$sampleSettings,
+            featureEngineeringSettings = modelDesign$featureEngineeringSettings,
+            preprocessSettings = modelDesign$preprocessSettings,
+            modelSettings = modelDesign$modelSettings,
+            logSettings = logSettings,
+            saveDirectory = saveDirectory
+          )
+          
+          diagnose <- tryCatch(
+            {do.call(diagnosePlp, diagnosePlpSettings)},
+            error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+          )
+        } else{
+          ParallelLogger::logInfo(paste('Diagnosis ', settings$analysisId, 'exists at', file.path(saveDirectory, settings$analysisId)))
+        }
+      }
     }
   }
   
@@ -126,7 +153,7 @@ runMultiplePlp <- function(
   if(!onlyFetchData){
     for(i in 1:nrow(settingstable)){
       modelDesign <- modelDesignList[[i]]
-      settings <- settingstable[i,]
+      settings <- settingstable[i,] # just the data locations?
       
       dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation)))>0
       
@@ -141,7 +168,7 @@ runMultiplePlp <- function(
             outcomeId = modelDesign$outcomeId,
             analysisId = settings$analysisId,
             populationSettings = modelDesign$populationSettings,
-            splitSettings = splitSettings,
+            splitSettings = modelDesign$splitSettings,
             sampleSettings = modelDesign$sampleSettings,
             featureEngineeringSettings = modelDesign$featureEngineeringSettings,
             preprocessSettings = modelDesign$preprocessSettings,
@@ -159,10 +186,22 @@ runMultiplePlp <- function(
           ParallelLogger::logInfo(paste('Analysis ', settings$analysisId, 'exists at', file.path(saveDirectory, settings$analysisId)))
         }
       }
-    }
-    
-    
+    } # end run per setting
   }
+  
+  # [TODO] add code to create sqlite database and populate with results...
+  if(!onlyFetchData){
+    insertResultsToSqlite(
+      resultLocation = saveDirectory, 
+      cohortDefinitions = cohortDefinitions,
+      databaseList = createDatabaseList(
+        cdmDatabaseSchemas = databaseDetails$cohortDatabaseSchema
+      ),
+      sqliteLocation = file.path(saveDirectory, 'sqlite')
+    )
+  }
+  
+  
   return(invisible(settingstable))
 }
 
@@ -172,7 +211,7 @@ runMultiplePlp <- function(
 #' @details
 #' This specifies a single analysis for developing as single model
 #'
-#' @param targetId              The id of the target cohort that will be used for data extraction (e.g., the ATLAS id)
+#' @param cohortId              The id of the target cohort that will be used for data extraction (e.g., the ATLAS id)
 #' @param outcomeId              The id of the outcome that will be used for data extraction (e.g., the ATLAS id)
 #' @param restrictPlpDataSettings       The settings specifying the extra restriction settings when extracting the data created using \code{createRestrictPlpDataSettings()}.
 #' @param populationSettings             The population settings specified by \code{createStudyPopulationSettings()}
@@ -181,6 +220,7 @@ runMultiplePlp <- function(
 #' @param sampleSettings                  Either NULL or an object of class \code{sampleSettings} with the over/under sampling settings used for model development
 #' @param preprocessSettings              Either NULL or an object of class \code{preprocessSettings} created using \code{createPreprocessingSettings()}
 #' @param modelSettings                   The model settings such as \code{setLassoLogisticRegression()}
+#' @param splitSettings                  The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}
 #' @param runCovariateSummary             Whether to run the covariateSummary
 #' 
 #' @return
@@ -188,7 +228,7 @@ runMultiplePlp <- function(
 #'
 #' @export
 createModelDesign <- function(
-  targetId,
+  cohortId,
   outcomeId,
   restrictPlpDataSettings = createRestrictPlpDataSettings(),
   populationSettings = createStudyPopulationSettings(),
@@ -197,19 +237,30 @@ createModelDesign <- function(
   sampleSettings = NULL,
   preprocessSettings = NULL,
   modelSettings = NULL,
+  splitSettings = createDefaultSplitSetting(
+    type = "stratified", 
+    testFraction = 0.25,
+    trainFraction = 0.75, 
+    splitSeed = 123, 
+    nfold = 3
+  ),
   runCovariateSummary = T
 ){
   
-  checkIsClass(targetId, c('numeric','integer'))
+  checkIsClass(cohortId, c('numeric','integer'))
   checkIsClass(outcomeId, c('numeric','integer'))
   
   checkIsClass(populationSettings, c('populationSettings'))
   checkIsClass(restrictPlpDataSettings, 'restrictPlpDataSettings')
   checkIsClass(covariateSettings, c('covariateSettings', 'list'))
+  checkIsClass(splitSettings, 'splitSettings')
   
   useFE <- F
   if(!is.null(featureEngineeringSettings)){
-    checkIsClass(featureEngineeringSettings, c('featureEngineeringSettings'))
+    if(class(featureEngineeringSettings) == 'featureEngineeringSettings'){
+      featureEngineeringSettings <- list(featureEngineeringSettings)
+    }
+    lapply(featureEngineeringSettings, function(x) checkIsClass(x, c('featureEngineeringSettings')))
     useFE <- T
   } else{
     featureEngineeringSettings <- createFeatureEngineeringSettings(type = "none")
@@ -217,7 +268,12 @@ createModelDesign <- function(
   
   useSample <- F
   if(!is.null(sampleSettings)){
-    checkIsClass(sampleSettings, c('sampleSettings'))
+    
+    if(class(sampleSettings) == 'sampleSettings'){
+      sampleSettings <- list(sampleSettings)
+    }
+    lapply(sampleSettings, function(x) checkIsClass(x, c('sampleSettings')))
+    
     useSample <- T
   } else{
     sampleSettings <- createSampleSettings(type = "none")
@@ -237,7 +293,7 @@ createModelDesign <- function(
   checkIsClass(modelSettings, c('modelSettings'))
   
   settings <- list(
-    targetId = targetId,
+    cohortId = cohortId,
     outcomeId = outcomeId,
     restrictPlpDataSettings = restrictPlpDataSettings,
     covariateSettings = covariateSettings,
@@ -246,6 +302,7 @@ createModelDesign <- function(
     featureEngineeringSettings = featureEngineeringSettings,
     preprocessSettings = preprocessSettings,
     modelSettings = modelSettings,
+    splitSettings = splitSettings,
     executeSettings = createExecuteSettings(
       runSplitData = T,
       runSampleData = useSample,
@@ -269,14 +326,15 @@ createModelDesign <- function(
 #' This function creates a json file with the modelDesignList saved
 #' 
 #' @param modelDesignList          A list of modelDesigns created using \code{createModelDesign()}
+#' @param cohortDefinitions        A list of the cohortDefinitions (generally extracted from ATLAS)
 #' @param saveDirectory            The directory to save the modelDesignList settings
 #'                                       
 #' @examples
 #' \dontrun{
 #' savePlpAnalysesJson(
 #' modelDesignList = list(
-#' createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
-#' createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
+#' createModelDesign(cohortId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
+#' createModelDesign(cohortId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
 #' ),
 #' saveDirectory = 'C:/bestModels'
 #' )
@@ -285,9 +343,11 @@ createModelDesign <- function(
 #' @export
 savePlpAnalysesJson <- function(
   modelDesignList = list(
-  createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
-  createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
+  createModelDesign(cohortId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
+  createModelDesign(cohortId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
   ),
+  cohortDefinitions = NULL,
+  # add cohortDefinitions
   saveDirectory = NULL
   ){
   
@@ -297,11 +357,6 @@ savePlpAnalysesJson <- function(
   
   lapply(modelDesignList, function(x){checkIsClass(x, 'modelDesign')})
 
-  
-  # save this as a json
-  modelDesignList <- lapply(modelDesignList, function(x) prepareToJson(x))
-  jsonSettings <- list(analyses = modelDesignList) # TODO: rename this ModelDesignList?
-  
   if(!is.null(saveDirectory)){
     checkIsClass(saveDirectory, 'character')
     
@@ -309,21 +364,27 @@ savePlpAnalysesJson <- function(
       dir.create(saveDirectory, recursive = T)
     }
     
-    modelDesignList <- jsonlite::toJSON(
-      x = jsonSettings, 
-      pretty = T, 
-      digits = 23, 
-      auto_unbox=TRUE, 
-      null = "null"
-      )
-    write(modelDesignList, file.path(saveDirectory,"predictionAnalysisList.json"))
-    
-    # should we add splitSettings to this and the input?
+    ParallelLogger::saveSettingsToJson(
+      object = list(
+        plpVersion = as.character(utils::packageVersion("PatientLevelPrediction")),
+        analyses = modelDesignList,
+        cohortDefinitions = cohortDefinitions
+      ), 
+      fileName = file.path(saveDirectory,"predictionAnalysisList.json")
+    )
     
     return(file.path(saveDirectory,"predictionAnalysisList.json")) 
   }
   
-  return(jsonSettings)
+  return(
+    ParallelLogger::convertSettingsToJson(
+      object = list(
+        plpVersion = as.character(utils::packageVersion("PatientLevelPrediction")),
+        analyses = modelDesignList,
+        cohortDefinitions = cohortDefinitions
+      )
+    )
+  )
 }
 
 
@@ -350,42 +411,9 @@ loadPlpAnalysesJson <- function(
     ParallelLogger::logError('Invalid directory - does not exist')
   }
   
-  if(!file.exists(file.path(jsonFileLocation))){
-    ParallelLogger::logError('predictionAnalysisList.json not found ')
-  }
+  rList <- ParallelLogger::loadSettingsFromJson(fileName = jsonFileLocation)
   
-  
-  json <- tryCatch(
-    {readChar(jsonFileLocation, file.info(jsonFileLocation)$size)},
-    error= function(cond) {
-      ParallelLogger::logInfo('Issue with loading json file...');
-      ParallelLogger::logError(cond)
-    })
-  json <- tryCatch(
-    {jsonlite::fromJSON(json, simplifyVector = T, simplifyDataFrame = F, simplifyMatrix = T)},
-    error = function(cond) {
-      ParallelLogger::logInfo('Issue with parsing json object...');
-      ParallelLogger::logError(cond)
-    })
-  json$analyses <- tryCatch(
-    {lapply(json$analyses, function(x) prepareToRlist(x))},
-    error = function(cond) {
-      ParallelLogger::logInfo('Issue converting json to R list...');
-      ParallelLogger::logError(cond)
-    })
-  
-  # if splitSettings in json
-  if('splitSettings' %in% names(json)){
-    # update the splitsetting (move this into load/saveplpAnalysis)
-    if('attributes' %in% names(json$splitSettings)){
-      atts <- json$splitSettings$attributes
-      json$splitSettings$attributes <- NULL
-      attributes(json$splitSettings) <- atts
-    }
-  }
-  
-  return(json)
-  
+  return(rList)
 }
 
 
@@ -404,6 +432,7 @@ loadPlpAnalysesJson <- function(
 #' @param validationDatabaseDetails       The validation database settings created using \code{createDatabaseDetails()}
 #' @param validationRestrictPlpDataSettings  The settings specifying the extra restriction settings when extracting the data created using \code{createRestrictPlpDataSettings()}.
 #' @param recalibrate                      A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')
+#' @param cohortDefinitions           A list of cohortDefinitions
 #' @param saveDirectory               The location to save to validation results
 #' 
 #' @export 
@@ -412,6 +441,7 @@ validateMultiplePlp <- function(
   validationDatabaseDetails,
   validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
   recalibrate = NULL,
+  cohortDefinitions = NULL,
   saveDirectory = NULL
   ){
 
@@ -466,167 +496,86 @@ validateMultiplePlp <- function(
     }
   }
   
+  # add to sqlite database - needed for shiny app
+  #=======================
+    if(is.null(saveDirectory)){
+      sqliteLocation <- file.path(analysesLocation, 'sqlite')
+    } else{
+      sqliteLocation <- file.path(saveDirectory,'sqlite')
+    }
+  
+  for(validationDatabase in dir(saveLocation)){
+    tryCatch({
+      insertResultsToSqlite(
+        resultLocation = file.path(saveLocation, validationDatabase), 
+        cohortDefinitions = cohortDefinitions,
+        databaseList = createDatabaseList(
+          cdmDatabaseSchemas = 'none'
+        ),
+        sqliteLocation = sqliteLocation
+      )
+    })
+  }
+  #=======================
+  
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# HELPERS
-#===============================
-getidList <- function(modelDesignList){
+convertToJson <-function(
+  modelDesignList,
+  cohortDefinitions = NULL
+){
   
-  types <- c(
-    'targetId', 
-    'outcomeId', 
-    'restrictPlpDataSettings',
-    'covariateSettings', 
-    'populationSettings', 
-    'sampleSettings',
-    'featureEngineeringSettings',
-    'preprocessSettings',
-    'modelSettings',
-    'executeSettings'
+  convertToJsonString <- function(x){as.character(ParallelLogger::convertSettingsToJson(x))}
+  
+  result <- data.frame(
+    analysisId = paste0('Analysis_', 1:length(modelDesignList)),
+    cohortId = unlist(lapply(modelDesignList, function(x) ifelse(is.null(x$cohortId), x$targetId, x$cohortId))),
+    outcomeId = unlist(lapply(modelDesignList, function(x) x$outcomeId)),
+    covariateSettings = unlist(lapply(modelDesignList, function(x) convertToJsonString(x$covariateSettings))),
+    restrictPlpDataSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$restrictPlpDataSettings))),
+    populationSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$populationSettings))),
+    sampleSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$sampleSettings))),
+    splitSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$splitSettings))),
+    featureEngineeringSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$featureEngineeringSettings))),
+    preprocessSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$preprocessSettings))),
+    modelSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$modelSettings))),
+    executeSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$executeSettings)))
   )
   
-  idList <- list()
-  length(idList) <- length(types)
-  names(idList) <- types
-  
-  for(type in types){
-    idList[[type]] <- getSettingValues(modelDesignList, type = type )
+  if(!is.null(cohortDefinitions)){
+    
+    cohorts <- data.frame(
+      cohortName = unlist(lapply(cohortDefinitions, function(x) x$name)),
+      cohortId = unlist(lapply(cohortDefinitions, function(x) x$id))
+    )
+    
+    result <- result %>% 
+      dplyr::left_join(cohorts, by = c("outcomeId" = "cohortId")) %>%
+      dplyr::rename(outcomeName = .data$cohortName) %>%
+      dplyr::left_join(cohorts, by = c('cohortId' = 'cohortId'))
+    
   }
   
-  return(idList)
-}
-
-
-getSettingValues <- function(modelDesignList, type = 'cohortId' ){
+  # get the names
+  uniqueSettings <-  result %>% 
+    dplyr::distinct(
+      .data$cohortId, 
+      .data$covariateSettings, 
+      .data$restrictPlpDataSettings
+    ) %>%
+    dplyr::mutate(dataLocation = paste0('cohortId_',.data$cohortId, '_L', dplyr::row_number()))
   
-  if(class(modelDesignList) == 'list'){
-    values <- unique(unlist(lapply(modelDesignList, function(x)jsonlite::serializeJSON(x[[type]])))
+  # add the data names
+  result <- result %>% 
+    dplyr::left_join(
+      uniqueSettings, 
+      by = c(
+        "cohortId" = "cohortId",
+        "covariateSettings" = "covariateSettings",
+        "restrictPlpDataSettings" = "restrictPlpDataSettings"
       )
-  } else{
-    values <- jsonlite::serializeJSON(modelDesignList[[type]])
-  }
-  
-  if(! type %in% c('targetId', 'outcomeId')  ){
-    result <- data.frame(
-      value = values,
-      id = 1:length(values)
     )
-  } else{
-    result <- data.frame(
-      value = sapply(values, function(x) jsonlite::unserializeJSON(x)),
-      id = sapply(values, function(x) jsonlite::unserializeJSON(x))
-    )
-  }
   
   return(result)
 }
 
-# get the ids for the model design settings
-getIdsForSetting <- function(modelDesign, idList){
-  
-  ids <- c()
-  
-  for(settingType in names(idList)){
-    
-    if(!settingType %in% c('targetId', 'outcomeId')){
-    # get the index of the setting matching the design setting
-      ind <- which(idList[[settingType]]$value == jsonlite::serializeJSON(modelDesign[[settingType]]))
-    } else{
-      ind <- which(idList[[settingType]]$value == modelDesign[[settingType]])
-    }
-    # get the id
-    id <- idList[[settingType]]$id[ind]
-    
-    ids <- c(ids, id)
-  }
-  
-  names(ids) <- names(idList)
-  
-  return(ids)
-}
-
-
-# this creates a data.frame with the analysisId and settingsId for each analysis
-# need to add the data location to this
-getSettingsTable <- function(modelDesignList, idList){
-  
-  result <- lapply(modelDesignList, function(x) getIdsForSetting(x, idList) )
-  settingsTable <- do.call(rbind, result)
-  settingsTable <- as.data.frame(settingsTable)
-  
-  settingsTable$analysisId <- paste0('Analysis_', 1:nrow(settingsTable))
-  
-  settingsTable$dataLocation <- paste0('T_',settingsTable$targetId, '_L_', settingsTable$covariateSettings*settingsTable$restrictPlpDataSettings)
-  
-  return(settingsTable)
-}
-
-
-getSettingFromId <- function(
-  idList, 
-  type, 
-  id
-){
-  ind <- which(idList[[type]]$id == id)
-  if(!type %in% c('targetId', 'outcomeId')){
-    return(jsonlite::unserializeJSON(as.character(idList[[type]]$value[[ind]])))
-  } else{
-    return(idList[[type]]$value[[ind]])
-  }
-}
-
-
-getDataSettings <- function(settingstable){
-  
-  combos <- settingstable %>% 
-    dplyr::distinct(.data$targetId,.data$covariateSettings,.data$restrictPlpDataSettings,.data$dataLocation)
-  
-  result <- list()
-  length(result) <- nrow(combos)
-  for(i in 1:nrow(combos)){
-    result[[i]] <- list(
-      targetId = combos$targetId[i],
-      covariateSettings = combos$covariateSettings[i],
-      restrictPlpDataSettings = combos$restrictPlpDataSettings[i],
-      dataLocation = combos$dataLocation[i],
-      outcomeIds = settingstable %>%  
-        dplyr::filter(.data$dataLocation == combos$dataLocation[i]) %>%  
-        dplyr::select(.data$outcomeId) %>%  
-        dplyr::pull()
-    )
-  }
-  return(result)
-}
-
-getNames <- function(
-  cohortDefinitions, 
-  ids
-){
-  
-  idNames <- lapply(cohortDefinitions, function(x) c(x$id, x$name))
-  idNames <- do.call(rbind, idNames)
-  colnames(idNames) <- c('id', 'name')
-  idNames <- as.data.frame(idNames)
-  
-  nams <- c()
-  for(id in ids){
-    nams <- c(nams, idNames$name[idNames$id == id])
-  }
-  
-  return(nams)
-  
-}

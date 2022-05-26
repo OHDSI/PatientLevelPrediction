@@ -77,13 +77,13 @@ setAdaBoost <- function(
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = F,
     name = "AdaBoost",
     pythonImport = 'sklearn',
     pythonImportSecond = 'ensemble',
     pythonClassifier = 'AdaBoostClassifier'
   )
   
+  attr(param, 'saveToJson') <- F
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -245,13 +245,13 @@ setDecisionTree <- function(
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Decision Tree",
     pythonImport = 'sklearn',
     pythonImportSecond = 'tree',
     pythonClassifier = 'DecisionTreeClassifier'
   )
   
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -421,13 +421,13 @@ setMLP <- function(
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = F, # current bug in sklearn-json
     name = "Neural Network",
     pythonImport = 'sklearn',
     pythonImportSecond = 'neural_network',
     pythonClassifier = 'MLPClassifier'
   )
   
+  attr(param, 'saveToJson') <- F # current bug when saving to json
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -489,13 +489,13 @@ setNaiveBayes <- function(){
     seed = as.integer(0),
     paramNames = c(), #use this for logging params
     requiresDenseMatrix = T,
-    saveToJson = T,
     name = "Naive Bayes",
     pythonImport = 'sklearn',
     pythonImportSecond = 'naive_bayes',
     pythonClassifier = 'GaussianNB'
   )
   
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -649,13 +649,13 @@ setRandomForest <- function(
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Random forest",
     pythonImport = 'sklearn',
     pythonImportSecond = 'ensemble',
     pythonClassifier = 'RandomForestClassifier'
   ) 
   
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -764,13 +764,13 @@ setSVM <- function(
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Support Vector Machine",
     pythonImport = 'sklearn',
     pythonImportSecond = 'svm',
     pythonClassifier = 'SVC'
   ) 
   
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
  
   result <- list(

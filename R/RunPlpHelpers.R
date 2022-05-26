@@ -8,9 +8,13 @@ printHeader <- function(plpData, cohortId, outcomeId , analysisId, analysisName,
   ParallelLogger::logInfo(sprintf('%-20s%s', 'AnalysisName: ',analysisName))
   
   # add header to analysis log
-  ParallelLogger::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'TargetID: ', cohortId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
+  if(!is.null(plpData$population)){
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Initial population size: ', nrow(plpData$population)))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Initial cases: ', sum(plpData$population$outcomeCount>0)))
+  }
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateData$covariateRef)))
  ## ParallelLogger::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
  ## ParallelLogger::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))

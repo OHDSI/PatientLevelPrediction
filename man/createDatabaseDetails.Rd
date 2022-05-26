@@ -54,8 +54,7 @@ SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 
 \item{outcomeIds}{A single integer or vector of integers specifying the cohort ids for the outcome cohorts}
 
-\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and
-"5".}
+\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
 }
 \value{
 A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)

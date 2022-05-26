@@ -152,10 +152,11 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
  covariateData$coefficients <- NULL
  
  # add indexes for covariate summary
- RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
- RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
+ Andromeda::createIndex(tbl = covariateData$covariates, columnNames = 'rowId', indexName = 'covsum_rowId')
+ Andromeda::createIndex(tbl = covariateData$covariates, columnNames = 'covariateId', indexName = 'covsum_covariateId')
+ #RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
+ #RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
  
-  
   # Remove rownames else they will be copied to the ffdf objects:
   metaData = list()
   
@@ -170,10 +171,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
     cohortId = 1,
     outcomeIds = c(2,3)
   )
-  metaData$restrictPlpDataSettings <- list(
-    studyStartDate = NULL,
-    studyEndDate = NULL
-    )
+  metaData$restrictPlpDataSettings <- PatientLevelPrediction::createRestrictPlpDataSettings()
   metaData$covariateSettings <- FeatureExtraction::createCovariateSettings(useDemographicsAgeGroup = T)
   
   

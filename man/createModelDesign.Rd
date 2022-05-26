@@ -5,7 +5,7 @@
 \title{Specify settings for deceloping a single model}
 \usage{
 createModelDesign(
-  targetId,
+  cohortId,
   outcomeId,
   restrictPlpDataSettings = createRestrictPlpDataSettings(),
   populationSettings = createStudyPopulationSettings(),
@@ -14,11 +14,13 @@ createModelDesign(
   sampleSettings = NULL,
   preprocessSettings = NULL,
   modelSettings = NULL,
+  splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
+    trainFraction = 0.75, splitSeed = 123, nfold = 3),
   runCovariateSummary = T
 )
 }
 \arguments{
-\item{targetId}{The id of the target cohort that will be used for data extraction (e.g., the ATLAS id)}
+\item{cohortId}{The id of the target cohort that will be used for data extraction (e.g., the ATLAS id)}
 
 \item{outcomeId}{The id of the outcome that will be used for data extraction (e.g., the ATLAS id)}
 
@@ -35,6 +37,8 @@ createModelDesign(
 \item{preprocessSettings}{Either NULL or an object of class \code{preprocessSettings} created using \code{createPreprocessingSettings()}}
 
 \item{modelSettings}{The model settings such as \code{setLassoLogisticRegression()}}
+
+\item{splitSettings}{The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}}
 
 \item{runCovariateSummary}{Whether to run the covariateSummary}
 }

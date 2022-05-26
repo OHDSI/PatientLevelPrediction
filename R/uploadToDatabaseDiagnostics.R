@@ -1,0 +1,359 @@
+#' Insert mutliple diagnosePlp results saved to a directory into a PLP result schema database
+#' @description
+#' This function inserts diagnosePlp results into the result schema
+#'
+#' @details
+#' This function can be used to upload diagnosePlp results into a database
+#'
+#' @param conn                         A connection to a database created by using the
+#'                                     function \code{connect} in the
+#'                                     \code{DatabaseConnector} package.
+#' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
+#' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
+#' @param databaseList              A ...
+#' @param resultLocation          The location of the diagnostic results
+#'    
+#' @return
+#' Returns NULL but uploads multiple diagnosePlp results into the database schema specified in databaseSchemaSettings
+#' 
+#' @export
+addMultipleDiagnosePlpToDatabase <- function(
+  conn,
+  databaseSchemaSettings,
+  cohortDefinitions,
+  databaseList,
+  resultLocation
+){
+  
+  diagnosisFiles <- file.path(dir(resultLocation, pattern = 'Analysis_'), 'diagnosePlp.rds')
+  
+  for(diagnosisFile in diagnosisFiles){
+    if(file.exists(diagnosisFile)){
+      diagnosePlp <- readRDS(diagnosisFile)
+      addDiagnosePlpToDatabase(
+        diagnosePlp = diagnosePlp,
+        conn = conn,
+        databaseSchemaSettings = databaseSchemaSettings,
+        cohortDefinitions = cohortDefinitions,
+        databaseList = databaseList
+      )
+    }
+  }
+  return(invisible(NULL))
+}
+
+#' Insert a diagnostic result into a PLP result schema database
+#' @description
+#' This function inserts a diagnostic result into the result schema
+#'
+#' @details
+#' This function can be used to upload a diagnostic result into a database
+#'
+#' @param diagnosePlp                  An object of class \code{diagnosePlp} 
+#' @param conn                         A connection to a database created by using the
+#'                                     function \code{connect} in the
+#'                                     \code{DatabaseConnector} package.
+#' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
+#' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
+#' @param databaseList              A list created by \code{createdatabaseList} to specify the databases
+#' @param overWriteIfExists            (default: T) Whether to delete existing results and overwrite them
+#'    
+#' @return
+#' Returns NULL but uploads the diagnostic into the database schema specified in databaseSchemaSettings
+#' 
+#' @export
+addDiagnosePlpToDatabase <- function(
+  diagnosePlp,
+  conn,
+  databaseSchemaSettings,
+  cohortDefinitions,
+  databaseList,
+  overWriteIfExists = T
+){
+  
+  modelDesignId <- insertModelDesignInDatabase(
+    object = diagnosePlp$modelDesign, 
+    conn = conn, 
+    databaseSchemaSettings = databaseSchemaSettings,
+    cohortDefinitions = cohortDefinitions 
+  )
+  
+  databaseId <- addDatabase(
+    conn = conn, 
+    databaseSchemaSettings = databaseSchemaSettings,
+    databaseDetail = getDatabaseDetail(
+      databaseList = databaseList,
+      databaseSchema = diagnosePlp$databaseSchema
+    )
+  )
+  
+  diagnoseId <- insertDiagnosisToDatabase(
+    diagnostics = diagnosePlp,
+    conn = conn,
+    databaseSchemaSettings = databaseSchemaSettings,
+    modelDesignId = modelDesignId,
+    databaseId = databaseId,
+    overWriteIfExists = overWriteIfExists
+  )
+  
+  return(invisible(diagnoseId))
+}  
+  
+  
+insertDiagnosisToDatabase <- function(
+  diagnostics,
+  conn,
+  databaseSchemaSettings,
+  modelDesignId,
+  databaseId,
+  overWriteIfExists = T
+){
+  
+ diagnosticId <- addDiagnostic(
+    conn = conn, 
+    resultSchema = databaseSchemaSettings$resultSchema, 
+    targetDialect = databaseSchemaSettings$targetDialect,
+    
+    modelDesignId = modelDesignId,
+    databaseId = databaseId,
+
+    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
+  )
+  ParallelLogger::logInfo(paste0('diagnosticId: ', diagnosticId))
+  
+  # now add the four tables
+  
+  ParallelLogger::logInfo('Adding DiagnosticSummary')
+  tryCatch({
+    addResultTable(
+      conn = conn, 
+      resultSchema = databaseSchemaSettings$resultSchema, 
+      targetDialect = databaseSchemaSettings$targetDialect,
+      
+      tableName = 'diagnostic_summary',
+      resultIdName = 'diagnosticId',
+      resultId = diagnosticId,
+      object = diagnostics$summary,
+      
+      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
+      overWriteIfExists = overWriteIfExists
+    )},
+    error = function(e){ParallelLogger::logError(e);}
+  )
+  
+  ParallelLogger::logInfo('Adding DiagnosticParticipants')
+  tryCatch({
+    addResultTable(
+      conn = conn, 
+      resultSchema = databaseSchemaSettings$resultSchema, 
+      targetDialect = databaseSchemaSettings$targetDialect,
+      
+      tableName = 'diagnostic_participants',
+      resultIdName = 'diagnosticId',
+      resultId = diagnosticId,
+      object = diagnostics$participants,
+      
+      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
+      overWriteIfExists = overWriteIfExists
+    )},
+    error = function(e){ParallelLogger::logError(e);}
+  )
+  
+  ParallelLogger::logInfo('Adding DiagnosticPredictors')
+  tryCatch({
+    addResultTable(
+      conn = conn, 
+      resultSchema = databaseSchemaSettings$resultSchema, 
+      targetDialect = databaseSchemaSettings$targetDialect,
+      
+      tableName = 'diagnostic_predictors',
+      resultIdName = 'diagnosticId',
+      resultId = diagnosticId,
+      object = diagnostics$predictors,
+      
+      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
+      overWriteIfExists = overWriteIfExists
+    )},
+    error = function(e){ParallelLogger::logError(e);}
+  )
+  
+  ParallelLogger::logInfo('Adding DiagnosticOutcomes')
+  tryCatch({
+    addResultTable(
+      conn = conn, 
+      resultSchema = databaseSchemaSettings$resultSchema, 
+      targetDialect = databaseSchemaSettings$targetDialect,
+      
+      tableName = 'diagnostic_outcomes',
+      resultIdName = 'diagnosticId',
+      resultId = diagnosticId,
+      object = diagnostics$outcomes,
+      
+      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
+      overWriteIfExists = overWriteIfExists
+    )},
+    error = function(e){ParallelLogger::logError(e);}
+  )
+  
+  ParallelLogger::logInfo('Adding DiagnosticDesigns')
+  tryCatch({
+    addResultTable(
+      conn = conn, 
+      resultSchema = databaseSchemaSettings$resultSchema, 
+      targetDialect = databaseSchemaSettings$targetDialect,
+      
+      tableName = 'diagnostic_designs',
+      resultIdName = 'diagnosticId',
+      resultId = diagnosticId,
+      object = diagnostics$designs,
+      
+      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
+      overWriteIfExists = overWriteIfExists
+    )},
+    error = function(e){ParallelLogger::logError(e);}
+  )
+  
+  return(invisible(diagnosticId))
+}
+
+
+
+addDiagnostic <- function(
+  conn, 
+  resultSchema, 
+  targetDialect,
+  
+  modelDesignId,
+  databaseId,
+  
+  stringAppendToTables,
+  tempEmulationSchema
+){
+  
+  result <- checkTable(conn = conn, 
+                       resultSchema = resultSchema, 
+                       stringAppendToTables = stringAppendToTables,
+                       targetDialect = targetDialect, 
+                       tableName = 'diagnostics',
+                       columnNames = c(
+                         'model_design_id',
+                         'database_id'
+                       ), 
+                       values = c(
+                         modelDesignId,
+                         databaseId
+                       ),
+                       tempEmulationSchema = tempEmulationSchema
+  )
+  
+  if(nrow(result)==0){
+    # model
+    sql <- "INSERT INTO @my_schema.@string_to_appenddiagnostics (
+    model_design_id,
+    database_id
+  ) 
+  VALUES (
+  @model_design_id, 
+    @database_id
+    )"
+    sql <- SqlRender::render(sql, 
+                             my_schema = resultSchema,
+                             model_design_id = modelDesignId,
+                             database_id = databaseId,
+                             string_to_append = stringAppendToTables)
+    sql <- SqlRender::translate(sql, targetDialect = targetDialect,
+                                tempEmulationSchema = tempEmulationSchema)
+    DatabaseConnector::executeSql(conn, sql)
+    
+    #getId of new
+    result <- checkTable(conn = conn, 
+                         resultSchema = resultSchema, 
+                         stringAppendToTables = stringAppendToTables,
+                         targetDialect = targetDialect, 
+                         tableName = 'diagnostics',
+                         columnNames = c(
+                           'model_design_id',
+                           'database_id'
+                         ), 
+                         values = c(
+                           modelDesignId,
+                           databaseId
+                         ),
+                         tempEmulationSchema = tempEmulationSchema
+    )
+    
+  } 
+  
+  return(result$diagnosticId[1])
+}
+
+# replace the performance inserts with this single function...
+addResultTable <- function(
+  conn = conn, 
+  resultSchema, 
+  targetDialect,
+  
+  tableName = 'diagnostic_summary',
+  resultIdName = 'diagnosticId',
+  resultId,
+  object,
+  
+  stringAppendToTables,
+  tempEmulationSchema,
+  overWriteIfExists = T
+){
+  
+    
+  object[resultIdName] <- resultId
+    
+    # get column names and check all present in object
+    columnNames <- getColumnNames(conn = conn, 
+                                  resultSchema = resultSchema, 
+                                  targetDialect = targetDialect, 
+                                  tableName = paste0(stringAppendToTables,tableName), 
+                                  tempEmulationSchema = tempEmulationSchema)
+    isValid <- sum(colnames(object)%in%columnNames) == length(columnNames)
+    
+    exists <- checkResultExists(conn = conn, 
+                                resultSchema = resultSchema, 
+                                targetDialect = targetDialect, 
+                                tableName = paste0(stringAppendToTables,tableName),
+                                resultIdName = resultIdName,
+                                resultId = resultId,
+                                tempEmulationSchema = tempEmulationSchema)
+    
+    if(isValid && (!exists || overWriteIfExists)){
+      
+      # REMOVE existing result
+      if(exists){
+        sql <- "delete from @result_schema.@table_name where @result_id_name = @result_id;"
+        sql <- SqlRender::render(sql, 
+                                 result_id_name = resultIdName,
+                                 result_id = resultId,
+                                 result_schema = resultSchema,
+                                 table_name = paste0(stringAppendToTables,tableName)
+                                 )
+        sql <- SqlRender::translate(sql, 
+                                    targetDialect = targetDialect,
+                                    tempEmulationSchema = tempEmulationSchema)
+        DatabaseConnector::executeSql(conn, sql)
+      }
+      
+      # add 
+      DatabaseConnector::insertTable(connection = conn, 
+                                     databaseSchema = resultSchema, 
+                                     tableName = paste0(stringAppendToTables,'tableName'), 
+                                     data = object[,columnNames], 
+                                     dropTableIfExists = F, createTable = F, tempTable = F, 
+                                     bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
+                                     tempEmulationSchema = tempEmulationSchema)
+    }
+    
+    return(invisible(NULL))
+  }

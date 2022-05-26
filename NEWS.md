@@ -1,3 +1,18 @@
+PatientLevelPrediction 5.1.0
+======================
+- replaced targetId in model design to cohortId for consistency throughout code
+- replaced plpDataSettings to restrictPlpDataSettings to improve naming consistency 
+- added ability to use initial population in runPlp by adding the population to plpData$population
+- added splitSettings into modelDesign
+- replaced saving json settings with ParallelLogger function
+- updated database result schema (removed researcher_id from tables - if desired a new table with the setting_ids and researcher_id could be added, removed study tables and revised results table to performances table with a reference to model_design_id and development_database_id to enable validation results without a model to be inserted)
+- added diagnostic code based on PROBAST
+- added diagnostic shiny module
+- added code to create sqlite database and populate in uploadToDatabase
+- add code to convert runPlp+val to sqlite database when viewing shiny
+- added code to extract database results into csv files: extractDatabaseToCsv()
+
+
 PatientLevelPrediction 5.0.5
 ======================
 - pulled in GBM update (default hyper-parameters and variable importance fix) work done by Egill (egillax)

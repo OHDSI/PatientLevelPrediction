@@ -264,7 +264,12 @@ cut2 <- function(x, g, m = 150, digits = 3) {
   y <- structure(y, class='factor', levels=labs)
 
   attr(y,'class') <- "factor"
-  if(length(xlab)) label(y) <- xlab
+  if(length(xlab)){
+    #label(y) <- xlab  # what is label?
+    # think the below does the same as the line above
+    class(y) <- 'labelled'
+    attr(y, 'label') <- xlab
+  }
 
   return(y)
 }

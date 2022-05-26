@@ -19,10 +19,12 @@
 
 fitCyclopsModel <- function(
   trainData, 
-  param, 
+  modelSettings, # old:param, 
   search='adaptive',
   analysisId,
   ...){
+  
+  param <- modelSettings$param
   
   # check plpData is coo format:
   if (!FeatureExtraction::isCovariateData(trainData$covariateData)){
@@ -136,39 +138,40 @@ fitCyclopsModel <- function(
   
   result <- list(
     model = modelTrained,
+    
+    preprocess = list(
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,#learned mapping
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,  #learned mapping
+      requireDenseMatrix = F
+    ),
+    
     prediction = prediction,
     
-    settings = list(
-      plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
+    modelDesign = list(
+      cohortId = attr(trainData, "metaData")$cohortId, # added
+      outcomeId = attr(trainData, "metaData")$outcomeId, # added
+      restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings, # made this restrictPlpDataSettings
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
-      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      covariateMap = NULL,
-      requireDenseMatrix = F,
-      populationSettings = attr(trainData, "metaData")$populationSettings,
-      modelSettings = list(
-        model = settings$modelType, 
-        param = param,
-        finalModelParameters = list(
-          variance = modelTrained$priorVariance,
-          log_likelihood = modelTrained$log_likelihood
-        ),
-        extraSettings = attr(param, 'settings')
-      ),
+      populationSettings = attr(trainData, "metaData")$populationSettings, 
+      featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
+      preprocessSettings = attr(trainData$covariateData, "metaData")$preprocessSettings,
+      modelSettings = modelSettings, #modified
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
-      
-      
     ),
     
     trainDetails = list(
-      analysisId = analysisId,
-      cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
-      outcomeId = attr(trainData, "metaData")$outcomeId,
-      cohortId = attr(trainData, "metaData")$cohortId,
+      analysisId = analysisId, 
+      analysisSource = '', #TODO add from model
+      developmentDatabase = attr(trainData, "metaData")$cdmDatabaseSchema,
       attrition = attr(trainData, "metaData")$attrition, 
-      trainingTime = comp,
+      trainingTime =  paste(as.character(abs(comp)), attr(comp,'units')),
       trainingDate = Sys.Date(),
+      modelName = settings$modelType,
+      finalModelParameters = list(
+        variance = modelTrained$priorVariance,
+        log_likelihood = modelTrained$log_likelihood
+      ),
       hyperParamSearch = cvPerFold
     ),
     

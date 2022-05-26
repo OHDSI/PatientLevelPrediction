@@ -48,7 +48,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
     applyFeatureengineering, 
     list(
       covariateData = plpData$covariateData,
-      settings = plpModel$settings$featureEngineering
+      settings = plpModel$preprocessing$featureEngineering
     )
   )
   
@@ -59,7 +59,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
     applyTidyCovariateData, 
     list(
       covariateData = plpData$covariateData,
-      preprocessSettings = plpModel$settings$tidyCovariates
+      preprocessSettings = plpModel$preprocessing$tidyCovariates
     )
   )
   
