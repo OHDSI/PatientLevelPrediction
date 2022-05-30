@@ -197,48 +197,51 @@ subgroupEvaluation <- function(prediction, subPopulation){
 #' @export
 createEvaluateSubgroup <- function(plpResult,connectionDetails = NULL, connection = NULL,
                                    cdmDatabaseSchema, cohortDatabaseSchema,
-                                   cohortTable, cohortJsonDirectory, outputFolder){
+                                   cohortTable, cohortIds, outputFolder,
+                                   # cohortJsonDirectory,
+                                   ){
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
   }
   # First construct a data frame with the cohorts to generate
-  cohortsToCreate <- CohortGenerator::createEmptyCohortSet()
-  cohortJsonFiles <- list.files(cohortJsonDirectory, full.names = T)
+  # cohortsToCreate <- CohortGenerator::createEmptyCohortSet()
+  # cohortJsonFiles <- list.files(cohortJsonDirectory, full.names = T)
   #test with celecoxib patients
   # cohortJsonFiles <- list.files(path = system.file("cohorts", package = "CohortGenerator"), full.names = TRUE)
-  
-  for (i in 1:length(cohortJsonFiles)) {
-    cohortJsonFileName <- cohortJsonFiles[i]
-    cohortFullName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
-    cohortJson <- CohortGenerator::readCirceExpressionJsonFile(cohortJsonFileName)
-    cohortExpression <- CohortGenerator::createCirceExpressionFromFile(cohortJsonFileName)
-    cohortsToCreate <- rbind(cohortsToCreate, data.frame(cohortId = i,
-                                                         cohortFullName = cohortFullName, 
-                                                         sql = CirceR::buildCohortQuery(cohortExpression, 
-                                                                                        options = CirceR::createGenerateOptions(generateStats = FALSE)),
-                                                         json = cohortJson,
-                                                         stringsAsFactors = FALSE))
-  }
-  
-  # Generate the cohort set against Eunomia. 
-  # cohortsGenerated contains a list of the cohortIds 
-  # successfully generated against the CDM
-  cohortsGenerated <- CohortGenerator::generateCohortSet(connectionDetails = connectionDetails,
-                                                         cdmDatabaseSchema = cdmDatabaseSchema,
-                                                         cohortDatabaseSchema = cohortDatabaseSchema,
-                                                         cohortTable = cohortTable,
-                                                         cohortSet = cohortsToCreate,
-                                                         createCohortTable = TRUE,
-                                                         incremental = FALSE,
-                                                         incrementalFolder = file.path(outputFolder, "RecordKeeping"),
-                                                         inclusionStatisticsFolder = outputFolder)
+  # 
+  # for (i in 1:length(cohortJsonFiles)) {
+  #   cohortJsonFileName <- cohortJsonFiles[i]
+  #   cohortFullName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
+  #   cohortJson <- CohortGenerator::readCirceExpressionJsonFile(cohortJsonFileName)
+  #   cohortExpression <- CohortGenerator::createCirceExpressionFromFile(cohortJsonFileName)
+  #   cohortsToCreate <- rbind(cohortsToCreate, data.frame(cohortId = i,
+  #                                                        cohortFullName = cohortFullName, 
+  #                                                        sql = CirceR::buildCohortQuery(cohortExpression, 
+  #                                                                                       options = CirceR::createGenerateOptions(generateStats = FALSE)),
+  #                                                        json = cohortJson,
+  #                                                        stringsAsFactors = FALSE))
+  # }
+  # 
+  # # Generate the cohort set against Eunomia. 
+  # # cohortsGenerated contains a list of the cohortIds 
+  # # successfully generated against the CDM
+  # cohortsGenerated <- CohortGenerator::generateCohortSet(connectionDetails = connectionDetails,
+  #                                                        cdmDatabaseSchema = cdmDatabaseSchema,
+  #                                                        cohortDatabaseSchema = cohortDatabaseSchema,
+  #                                                        cohortTable = cohortTable,
+  #                                                        cohortSet = cohortsToCreate,
+  #                                                        createCohortTable = TRUE,
+  #                                                        incremental = FALSE,
+  #                                                        incrementalFolder = file.path(outputFolder, "RecordKeeping"),
+  #                                                        inclusionStatisticsFolder = outputFolder)
   prediction <- plpResult$prediction
-  for (cohortId in cohortsToCreate$cohortId){
+  # for (cohortId in cohortsToCreate$cohortId){ 
+  for (cohortId in cohortIds){
     getPatientIdsSql <- SqlRender::render("SELECT COHORT_DEFINITION_ID,  SUBJECT_ID FROM @cohortDatabaseSchema.@cohortTable WHERE COHORT_DEFINITION_ID = @cohortId", cohortDatabaseSchema = cohortDatabaseSchema, cohortTable = cohortTable, cohortId = cohortId )
     patientSubset <- DatabaseConnector::querySql(connection, getPatientIdsSql, snakeCaseToCamelCase = T)
     result <- subgroupEvaluation(prediction, subPopulation = patientSubset)
-    saveRDS(result, file = file.path(outputFolder, paste0(cohortsToCreate$cohortFullName[cohortsToCreate$cohortId == cohortId], ".rds")))
+    saveRDS(result, file = file.path(outputFolder, paste0(cohortId, ".rds")))
   }
   
 }
