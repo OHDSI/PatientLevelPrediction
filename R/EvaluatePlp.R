@@ -188,14 +188,14 @@ subgroupEvaluation <- function(prediction, subPopulation){
 #' @param cohortDatabaseSchema         The name of the database schema that is the location where the
 #'                                     cohort data used to define the at risk cohort is available.
 #'                                     Requires read permissions to this database. 
-#' @param cohortJsonDirectory          Location of the directory containing the JSON files for the desired subgroup cohorts
+#' @param cohortIds                    the cohort ids which correspond to the relvant subgroups
 #' @param outputFolder                 The folder to save the results too
 #' 
 #' @return
 #' plpResult evaluation object for the subgroup
 #'
 #' @export
-createEvaluateSubgroup <- function(plpResult,connectionDetails = NULL, connection = NULL,
+getEvaluateSubgroup <- function(plpResult,connectionDetails = NULL, connection = NULL,
                                    cdmDatabaseSchema, cohortDatabaseSchema,
                                    cohortTable, cohortIds, outputFolder,
                                    # cohortJsonDirectory,
