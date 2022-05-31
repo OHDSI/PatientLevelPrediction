@@ -16,7 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-insertRunPlpToSqlite <- function(runPlp, externalValidatePlp = NULL){
+insertRunPlpToSqlite <- function(
+  runPlp, 
+  externalValidatePlp = NULL, 
+  diagnosePlp = NULL
+  ){
   
   sqliteLocation <- tempdir()
   
@@ -57,20 +61,41 @@ insertRunPlpToSqlite <- function(runPlp, externalValidatePlp = NULL){
     databaseList = databaseList
   )
   
-  # add validation results if they exist
+  # add validation results if entered
   if(!is.null(externalValidatePlp)){
     if(class(externalValidatePlp) == 'list'){
       for(i in 1:length(externalValidatePlp)){
-        addRunPlpToDatabase(
-          runPlp = externalValidatePlp[[i]],
+        tryCatch(
+          {
+            addRunPlpToDatabase(
+              runPlp = externalValidatePlp[[i]],
+              conn = conn,
+              databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
+              cohortDefinitions = cohortDefinitions,
+              databaseList = databaseList
+            )
+          }, error = function(e){ParallelLogger::logError(e)}
+        )
+      }
+    }
+  }
+  
+  # add diagnosis results if entered
+  if(!is.null(diagnosePlp)){
+    tryCatch(
+      {
+        addDiagnosePlpToDatabase(
+          diagnosePlp = diagnosePlp,
           conn = conn,
           databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
           cohortDefinitions = cohortDefinitions,
           databaseList = databaseList
         )
-      }
-    }
+      }, error = function(e){ParallelLogger::logError(e)}
+    )
   }
+  
+  
   return(file.path(sqliteLocation,'databaseFile.sqlite'))
 }
 

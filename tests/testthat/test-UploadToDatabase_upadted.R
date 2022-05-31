@@ -18,15 +18,6 @@ library("testthat")
 
 context("UploadToDatabase")
 
-if(!travis){
-Sys.setenv(CDM5_POSTGRESQL_CDM_SCHEMA = "cdmv5")
-Sys.setenv(CDM5_POSTGRESQL_OHDSI_SCHEMA = "ohdsi")
-Sys.setenv(CDM5_POSTGRESQL_USER = "ohdsi")
-Sys.setenv(CDM5_POSTGRESQL_PASSWORD = "2A1D5696742E")
-Sys.setenv(CDM5_POSTGRESQL_SERVER = "pgsqltest.cqnqzwtn5s1q.us-east-1.rds.amazonaws.com/vocabularyv5")
-Sys.setenv(DATABASECONNECTOR_JAR_FOLDER = "/Users/jreps/Documents/drivers")
-}
-
 cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
 ohdsiDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
 connectionRedshift <- DatabaseConnector::createConnectionDetails(
@@ -307,8 +298,20 @@ sql <- 'select count(*) as N from main.performances;'
 res <- DatabaseConnector::querySql(conn, sql)
 testthat::expect_true(res$N[1]>0)
 
+
+# check export to csv
+extractDatabaseToCsv(
+  conn = conn,
+  databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
+  csvFolder = file.path(saveLoc, 'csvFolder')
+)
+
+testthat::expect_true(dir.exists(file.path(saveLoc, 'csvFolder')))
+testthat::expect_true(length(dir(file.path(saveLoc, 'csvFolder'))) > 0 )
+
 # disconnect
 DatabaseConnector::disconnect(conn)
+
 
 })
   

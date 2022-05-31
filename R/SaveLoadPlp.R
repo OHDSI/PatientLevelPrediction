@@ -513,11 +513,14 @@ removeCellCount <- function(
 }
 
 
+# add test for this - cant save json to csv - remove this...
 extractDatabaseToCsv <- function(
   conn,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
   csvFolder
   ){
+  
+  ensure_installed('readr')
   
   if(!dir.exists(csvFolder)){
     dir.create(csvFolder, recursive = T)
@@ -540,10 +543,9 @@ extractDatabaseToCsv <- function(
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema)
     result <- DatabaseConnector::querySql(conn, sql)
     
-    utils::write.csv(
+    readr::write_excel_csv(
       x = result, 
-      file = file.path(csvFolder, paste0(table,'.csv')), 
-      row.names = F
+      file = file.path(csvFolder, paste0(table,'.csv'))
       )
   }
   

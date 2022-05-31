@@ -33,15 +33,17 @@ viewMultiplePlp <- function(analysesLocation){
 #' Either the result of runPlp and view the plots
 #' @param runPlp             The output of runPlp() (an object of class 'runPlp')
 #' @param validatePlp  The output of externalValidatePlp (on object of class 'validatePlp')
+#' @param diagnosePlp  The output of diagnosePlp()
 #' @return
 #' Opens a shiny app for interactively viewing the results
 #'
 #' @export
-viewPlp <- function(runPlp, validatePlp = NULL) {
+viewPlp <- function(runPlp, validatePlp = NULL, diagnosePlp = NULL) {
   
   server <- insertRunPlpToSqlite(
     runPlp = runPlp, 
-    externalValidatePlp = validatePlp
+    externalValidatePlp = validatePlp,
+    diagnosePlp = diagnosePlp
     )
   
   connectionDetails <- DatabaseConnector::createConnectionDetails(

@@ -1,6 +1,6 @@
 
 # this files contains the objects used in the tests:
-travis <- F
+travis <- T
 if(travis){
   # Download the PostreSQL driver ---------------------------
   # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded

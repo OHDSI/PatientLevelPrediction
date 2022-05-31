@@ -62,7 +62,7 @@ runMultiplePlp <- function(
     dir.create(saveDirectory, recursive = T)
   }
   
-  settingstable <- convertToJson(modelDesignList,cohortDefinitions)
+  settingstable <- convertToJson(modelDesignList,cohortDefinitions) # TODO: modify to accept target_id
   
   if(nrow(settingstable) != length(modelDesignList)){
     stop('Error in settingstable')
