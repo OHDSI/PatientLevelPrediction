@@ -168,14 +168,17 @@ modelBasedConcordance <- function(prediction){
 #' @export
 subgroupEvaluation <- function(prediction, subPopulation){
   subPrediction <- prediction[prediction$subjectId %in% subPopulation$subjectId,]
-  result <- evaluatePlp(subPrediction)
+  if (nrow(subPrediction) == 0){
+    return("empty subgroup")
+  }
+  result <- PatientLevelPrediction::evaluatePlp(subPrediction)
   return(result)
 }
 
 #' run multiple evaluations of the population
 #' 
 #' @details
-#' create subgroups on database instance and run the subgroup analyses
+#' Evaluate subgroups for an object of type plpResult on database instance
 #' 
 #' @param plpResult                    The result of running runPlp()
 #' @param connectionDetails            An R object of type\cr\code{connectionDetails} created using the
@@ -188,21 +191,25 @@ subgroupEvaluation <- function(prediction, subPopulation){
 #' @param cohortDatabaseSchema         The name of the database schema that is the location where the
 #'                                     cohort data used to define the at risk cohort is available.
 #'                                     Requires read permissions to this database. 
-#' @param cohortIds                    the cohort ids which correspond to the relvant subgroups
+#' @param cohortIds                    the cohort ids which correspond to the relevant subgroups
 #' @param outputFolder                 The folder to save the results too
 #' 
 #' @return
 #' plpResult evaluation object for the subgroup
 #'
 #' @export
-getEvaluateSubgroup <- function(plpResult,connectionDetails = NULL, connection = NULL,
+evaluateMultipleSubgroups <- function(plpResult,connectionDetails = NULL, connection = NULL,
                                    cdmDatabaseSchema, cohortDatabaseSchema,
-                                   cohortTable, cohortIds, outputFolder,
-                                   # cohortJsonDirectory,
+                                   cohortTable, cohortIds, outputFolder
+                                   # ,cohortJsonDirectory,
                                    ){
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
+  }
+  
+  if (is.null(plpResult$prediction)){
+    stop(" plpResult$prediction cannot be NULL")
   }
   # First construct a data frame with the cohorts to generate
   # cohortsToCreate <- CohortGenerator::createEmptyCohortSet()
