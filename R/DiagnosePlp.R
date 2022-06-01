@@ -271,7 +271,7 @@ diagnosePlp <- function(
     predictors = predictorDiag$diagnosticPredictorsFull,
     outcomes = outcomeDiag$diagnosticOutcomeFull,
     designs = designDiag$diagnosticDesignFull,
-    modelDesign = list(
+    modelDesign = PatientLevelPrediction::createModelDesign(
       cohortId = attr(plpData$cohorts, "metaData")$cohortId,
       outcomeId = outcomeId,
       restrictPlpDataSettings = plpData$metaData$restrictPlpDataSettings,
@@ -336,7 +336,7 @@ probastDesign <- function(
   if(!is.null(dim(diagnosticAggregate))){
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','result')
+    colnames(diagnosticAggregate) <- c('probastId','result_value')
   }
   
   return(
@@ -477,7 +477,7 @@ probastParticipants <- function(
   if(!is.null(dim(diagnosticAggregate))){
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','result')
+    colnames(diagnosticAggregate) <- c('probastId','result_value')
   }
   
   return(
@@ -618,7 +618,7 @@ probastPredictors <- function(
   if(!is.null(dim(diagnosticAggregate))){
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','result')
+    colnames(diagnosticAggregate) <- c('probastId','result_value')
   }
   
   return(
@@ -721,7 +721,7 @@ probastOutcome <- function(
   if(!is.null(dim(diagnosticAggregate))){
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','result')
+    colnames(diagnosticAggregate) <- c('probastId','result_value')
   }
   
   return(

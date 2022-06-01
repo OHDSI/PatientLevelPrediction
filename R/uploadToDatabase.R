@@ -868,7 +868,7 @@ getDatabaseDetail <- function(
       list(
         name = databaseSchema,
         acronym = '',
-        version = '',
+        version = 1,
         description = '',
         type = ''
       )
@@ -1183,7 +1183,7 @@ addDatabase <- function(
                                        'database_description', 'database_type'), 
                        values = c(paste0("'",databaseDetail$name,"'"), 
                                   paste0("'",databaseDetail$acronym,"'"),
-                                  paste0("'",databaseDetail$version,"'"),
+                                  databaseDetail$version,
                                   paste0("'",databaseDetail$description,"'"),
                                   paste0("'",databaseDetail$type,"'")),
                        tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
@@ -1196,7 +1196,7 @@ addDatabase <- function(
     sql <- "INSERT INTO @my_schema.@string_to_appenddatabase_details(database_name, database_acronym,
                                   database_version,
                                   database_description, database_type) 
-          VALUES ('@dbName','@db', '@version', '@desc', '@type');"
+          VALUES ('@dbName','@db', @version, '@desc', '@type');"
     sql <- SqlRender::render(sql, 
                              my_schema = databaseSchemaSettings$resultSchema,
                              dbName =databaseDetail$name, 
@@ -1218,7 +1218,7 @@ addDatabase <- function(
                                          'database_description', 'database_type'), 
                          values = c(paste0("'",databaseDetail$name,"'"), 
                                     paste0("'",databaseDetail$acronym,"'"),
-                                    paste0("'",databaseDetail$version,"'"),
+                                    databaseDetail$version,
                                     paste0("'",databaseDetail$description,"'"),
                                     paste0("'",databaseDetail$type,"'")),
                          tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema

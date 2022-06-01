@@ -19,7 +19,13 @@ viewMultiplePlp <- function(analysesLocation){
   
   databaseSettings <- list(
     connectionDetails = connectionDetails, 
-    databaseSchema = 'main'
+    mySchema = 'main',
+    myTableAppend = '',
+    targetDialect = 'sqlite',
+    myServer = file.path(analysesLocation, 'sqlite', 'databaseFile.sqlite'),
+    myUser = NULL, 
+    myPassword = NULL,
+    myPort = NULL
   )
   
   viewPlps(databaseSettings)
@@ -101,9 +107,13 @@ viewDatabaseResultPlp <- function(
   
   databaseSettings <- list(
     connectionDetails = connectionDetails, 
-    databaseSchema = mySchema,
-    appendDatabaseSchema = myTableAppend,
-    targetDialect = myDbms
+    mySchema = mySchema,
+    myTableAppend = myTableAppend,
+    targetDialect = myDbms,
+    myServer = myServer,
+    myUser = myUser, 
+    myPassword = myPassword,
+    myPort = myPort
   )
   
   viewPlps(databaseSettings)

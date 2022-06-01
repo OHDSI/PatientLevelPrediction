@@ -144,6 +144,7 @@ test_that("results uploaded to database", {
   
   resultsLoc <- file.path(saveLoc,'dbUp')
   
+  plpResult$model$trainDetails$developmentDatabase <- 'test' 
   savePlpResult(plpResult, file.path(resultsLoc, 'Analysis_1','plpResult'))
   # save validation
   if(!dir.exists(file.path(resultsLoc,'Validation','test', 'Analysis_1'))){

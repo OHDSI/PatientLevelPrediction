@@ -104,14 +104,14 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostics(
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_summary(
    diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
    probast_id varchar(50),
-   result varchar(50),
+   result_value varchar(50),
    FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
 );
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_predictors( -- call this kmplot
    diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
    days_to_event int,
    outcome_at_time int,
-   observed_at_start_of_day bigint
+   observed_at_start_of_day bigint,
    probast_id varchar(50),
    input_type varchar(50),
    FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
@@ -128,7 +128,7 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostic_outcomes(
    diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
    xvalue int,
    outcome_percent float,
-   aggregation,
+   aggregation varchar(50),
    probast_id varchar(50),
    input_type varchar(50),
    FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)

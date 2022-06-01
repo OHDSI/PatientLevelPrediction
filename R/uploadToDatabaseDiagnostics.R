@@ -25,7 +25,7 @@ addMultipleDiagnosePlpToDatabase <- function(
   resultLocation
 ){
   
-  diagnosisFiles <- file.path(dir(resultLocation, pattern = 'Analysis_'), 'diagnosePlp.rds')
+  diagnosisFiles <- file.path(resultLocation, dir(resultLocation, pattern = 'Analysis_'), 'diagnosePlp.rds')
   
   for(diagnosisFile in diagnosisFiles){
     if(file.exists(diagnosisFile)){
@@ -298,35 +298,36 @@ addResultTable <- function(
   conn = conn, 
   resultSchema, 
   targetDialect,
-  
   tableName = 'diagnostic_summary',
   resultIdName = 'diagnosticId',
   resultId,
   object,
-  
   stringAppendToTables,
   tempEmulationSchema,
   overWriteIfExists = T
 ){
   
-    
   object[resultIdName] <- resultId
     
     # get column names and check all present in object
-    columnNames <- getColumnNames(conn = conn, 
-                                  resultSchema = resultSchema, 
-                                  targetDialect = targetDialect, 
-                                  tableName = paste0(stringAppendToTables,tableName), 
-                                  tempEmulationSchema = tempEmulationSchema)
+  columnNames <- getColumnNames(
+    conn = conn, 
+    resultSchema = resultSchema, 
+    targetDialect = targetDialect, 
+    tableName = paste0(stringAppendToTables,tableName), 
+    tempEmulationSchema = tempEmulationSchema
+  )
     isValid <- sum(colnames(object)%in%columnNames) == length(columnNames)
     
-    exists <- checkResultExists(conn = conn, 
-                                resultSchema = resultSchema, 
-                                targetDialect = targetDialect, 
-                                tableName = paste0(stringAppendToTables,tableName),
-                                resultIdName = resultIdName,
-                                resultId = resultId,
-                                tempEmulationSchema = tempEmulationSchema)
+    exists <- checkResultExists(
+      conn = conn, 
+      resultSchema = resultSchema, 
+      targetDialect = targetDialect, 
+      tableName = paste0(stringAppendToTables,tableName),
+      resultIdName = SqlRender::camelCaseToSnakeCase(resultIdName),
+      resultId = resultId,
+      tempEmulationSchema = tempEmulationSchema
+    )
     
     if(isValid && (!exists || overWriteIfExists)){
       
@@ -334,7 +335,7 @@ addResultTable <- function(
       if(exists){
         sql <- "delete from @result_schema.@table_name where @result_id_name = @result_id;"
         sql <- SqlRender::render(sql, 
-                                 result_id_name = resultIdName,
+                                 result_id_name = SqlRender::camelCaseToSnakeCase(resultIdName),
                                  result_id = resultId,
                                  result_schema = resultSchema,
                                  table_name = paste0(stringAppendToTables,tableName)
@@ -346,13 +347,15 @@ addResultTable <- function(
       }
       
       # add 
-      DatabaseConnector::insertTable(connection = conn, 
-                                     databaseSchema = resultSchema, 
-                                     tableName = paste0(stringAppendToTables,'tableName'), 
-                                     data = object[,columnNames], 
-                                     dropTableIfExists = F, createTable = F, tempTable = F, 
-                                     bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
-                                     tempEmulationSchema = tempEmulationSchema)
+      DatabaseConnector::insertTable(
+        connection = conn, 
+        databaseSchema = resultSchema, 
+        tableName = paste0(stringAppendToTables,tableName), 
+        data = as.data.frame(object[,columnNames]), 
+        dropTableIfExists = F, createTable = F, tempTable = F, 
+        bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
+        tempEmulationSchema = tempEmulationSchema
+      )
     }
     
     return(invisible(NULL))

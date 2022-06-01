@@ -104,7 +104,7 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostics(
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_summary(
    diagnostic_id int NOT NULL,
    probast_id varchar(50),
-   result varchar(50),
+   result_value varchar(50),
    FOREIGN KEY (diagnostic_id) REFERENCES @string_to_appenddiagnostics(diagnostic_id)
 );
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_predictors( -- call this kmplot
@@ -128,7 +128,7 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostic_outcomes(
    diagnostic_id int NOT NULL,
    xvalue int,
    outcome_percent float,
-   aggregation,
+   aggregation varchar(50),
    probast_id varchar(50),
    input_type varchar(50),
    FOREIGN KEY (diagnostic_id) REFERENCES @string_to_appenddiagnostics(diagnostic_id)
