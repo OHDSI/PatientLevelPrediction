@@ -148,7 +148,7 @@ CREATE TABLE  @my_schema.@string_to_appendmodels(
     model_design_id int,
     database_id int NOT NULL,
     model_type VARCHAR(50),
-    plp_model_file char(50) NOT NULL, -- reference to saved model location
+    plp_model_file text NOT NULL, -- reference to saved model location
 	  train_details VARCHAR(MAX), -- new this contains all the trainDetails
 	  preprocessing VARCHAR(MAX), -- new this contains the preprocessing required
 	  execution_date_time DATETIME2,
@@ -181,7 +181,7 @@ CREATE TABLE  @my_schema.@string_to_appendperformances (
 	  population_setting_id int NOT NULL,
     execution_date_time DATETIME2,
     plp_version char(10),
-    FOREIGN KEY (model_design_id) REFERENCES @my_schema.@string_to_appendmodels_designs(model_design_id),
+    FOREIGN KEY (model_design_id) REFERENCES @my_schema.@string_to_appendmodel_designs(model_design_id),
     FOREIGN KEY (development_database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id),
     FOREIGN KEY (validation_database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id),
     FOREIGN KEY (cohort_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),

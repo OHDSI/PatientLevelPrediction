@@ -414,7 +414,7 @@ createDatabaseList <- function(
     acronyms <- cdmDatabaseSchemas
   }
   if(missing(versions)){
-    versions <- unlist(lapply(strsplit(cdmDatabaseSchemas, '_'), function(x) x[length(x)]))
+    versions <- rep(0, length(cdmDatabaseSchemas))
   }
   if(missing(descriptions)){
     descriptions <- rep('', length(cdmDatabaseSchemas))
