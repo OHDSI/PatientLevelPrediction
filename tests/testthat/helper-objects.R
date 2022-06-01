@@ -97,7 +97,9 @@ diagnoseResult <- diagnosePlp(
     timeStamp = T,
     logName = 'diagnosePlp Log'
   ),
-  preprocessSettings = createPreprocessSettings()
+  preprocessSettings = createPreprocessSettings(), 
+  sampleSettings = NULL, 
+  featureEngineeringSettings = NULL
 )
 
 #

@@ -83,7 +83,7 @@ predictionDiagnosticServer <- function(
           )
         }
       }
-      
+
       # connect
       if(F){
       if(diagnosticDatabaseSettings$myPort != ""){
@@ -116,10 +116,9 @@ predictionDiagnosticServer <- function(
       }
       
       # old connection 
-      
       conDetails <- DatabaseConnector::createConnectionDetails(
         dbms = diagnosticDatabaseSettings$targetDialect, 
-        server = diagnosticDatabaseSettings$server
+        server = diagnosticDatabaseSettings$myServer
         )
       con <- DatabaseConnector::connect(connectionDetails = conDetails)
 

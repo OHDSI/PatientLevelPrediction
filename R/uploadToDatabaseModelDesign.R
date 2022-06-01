@@ -474,6 +474,7 @@ addPopulationSetting <- function(conn, resultSchema, targetDialect,
   # make sure the json has been converted 
   if(class(json)!='character'){
     if(class(json)!='character'){
+      json <- orderJson(json) # to ensure attributes are alphabetic order
       json <- ParallelLogger::convertSettingsToJson(json)
       json <- as.character(json) # now convert to character
     }
@@ -533,6 +534,7 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
   # process json to make it ordered...
   # make sure the json has been converted 
   if(class(json)!='character'){
+    json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
   }
@@ -594,6 +596,7 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
   # process json to make it ordered...
   # make sure the json has been converted 
   if(class(json)!='character'){
+    json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
   }
@@ -653,6 +656,7 @@ addTidySetting <- function(
 ){
   
   if(class(json)!='character'){
+    json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
   }
@@ -719,6 +723,7 @@ addSampleSetting <- function(
 ){
   
   if(class(json)!='character'){
+    json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
   }
@@ -787,6 +792,7 @@ addPlpDataSetting <- function(
 ){
   
   if(class(json)!='character'){
+    json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
   }
@@ -853,6 +859,7 @@ addFESetting <- function(
 ){
   
   if(class(json)!='character'){
+    json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
   }
@@ -921,6 +928,7 @@ addSplitSettings <- function(
 ){
   
   if(class(json)!='character'){
+    json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
   }
@@ -977,4 +985,17 @@ addSplitSettings <- function(
   
   return(jsonId)
   
+}
+
+
+
+# the ParallelLogger conversion orders attributes - use this for consistency
+orderJson <- function(x){
+newx <- ParallelLogger::convertJsonToSettings(
+  ParallelLogger::convertSettingsToJson(
+    x
+    )
+  )
+
+return(newx)
 }

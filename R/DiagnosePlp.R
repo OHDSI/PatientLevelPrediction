@@ -336,7 +336,7 @@ probastDesign <- function(
   if(!is.null(dim(diagnosticAggregate))){
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','result_value')
+    colnames(diagnosticAggregate) <- c('probastId','resultValue')
   }
   
   return(
@@ -477,7 +477,7 @@ probastParticipants <- function(
   if(!is.null(dim(diagnosticAggregate))){
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','result_value')
+    colnames(diagnosticAggregate) <- c('probastId','resultValue')
   }
   
   return(
@@ -618,7 +618,7 @@ probastPredictors <- function(
   if(!is.null(dim(diagnosticAggregate))){
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','result_value')
+    colnames(diagnosticAggregate) <- c('probastId','resultValue')
   }
   
   return(
@@ -721,7 +721,7 @@ probastOutcome <- function(
   if(!is.null(dim(diagnosticAggregate))){
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','result_value')
+    colnames(diagnosticAggregate) <- c('probastId','resultValue')
   }
   
   return(

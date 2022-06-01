@@ -56,8 +56,8 @@ predictorServer <- function(
           session = session, 
           inputId = "predictorParameters", 
           label = "Select Setting", 
-          choices = unique(predTable()$type),
-          selected = unique(predTable()$type)[1]
+          choices = unique(predTable()$inputType),
+          selected = unique(predTable()$inputType)[1]
         )
       })
       
@@ -65,32 +65,32 @@ predictorServer <- function(
         
         tempPredTable <-  predTable() %>% 
           dplyr::filter(
-            .data$type == ifelse(
+            .data$inputType == ifelse(
               is.null(input$predictorParameters), 
-              unique(predTable()$type)[1],
+              unique(predTable()$inputType)[1],
               input$predictorParameters
             )
           ) %>%
           dplyr::select(
-            .data$daystoevent, 
-            .data$outcomeattime, 
-            .data$observedatstartofday
+            .data$daysToEvent, 
+            .data$outcomeAtTime, 
+            .data$observedAtStartOfDay
           ) %>%
           dplyr::mutate(
-            survivalT = (.data$observedatstartofday-.data$outcomeattime)/.data$observedatstartofday
+            survivalT = (.data$observedAtStartOfDay -.data$outcomeAtTime)/.data$observedAtStartOfDay
           ) %>%
           dplyr::filter(
-            !is.na(.data$daystoevent)
+            !is.na(.data$daysToEvent)
           )
         
         tempPredTable$probSurvT  <- unlist(
           lapply(
-            1:length(tempPredTable$daystoevent), 
-            function(x){prod(tempPredTable$survivalT[tempPredTable$daystoevent <= tempPredTable$daystoevent[x]])}
+            1:length(tempPredTable$daysToEvent), 
+            function(x){prod(tempPredTable$survivalT[tempPredTable$daysToEvent <= tempPredTable$daysToEvent[x]])}
           )
         )
         
-        plotly::plot_ly(x = ~ tempPredTable$daystoevent) %>% 
+        plotly::plot_ly(x = ~ tempPredTable$daysToEvent) %>% 
           plotly::add_lines(
             y = tempPredTable$probSurvT, 
             name = "hv", 

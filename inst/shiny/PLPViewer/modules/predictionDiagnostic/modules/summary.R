@@ -131,17 +131,30 @@ getDbSummary <- function(
 ){
   ParallelLogger::logInfo("gettingDb summary")
   
-  sql <- "SELECT distinct design.DIAGNOSTIC_ID,
-          design.DATABASE,
-          design.TARGET_JSON,
-          design.OUTCOME_JSON,
-          probast.PROBAST_ID,
-          probast.RESULT
+  sql <- "SELECT distinct design.MODEL_DESIGN_ID,
+          diagnostics.diagnostic_id,
+          database.DATABASE_NAME,
+          cohortT.COHORT_NAME target_name,
+          cohortO.COHORT_NAME outcome_name,
+          summary.PROBAST_ID,
+          summary.RESULT_VALUE
           
           from 
-          @my_schema.@my_table_appendDIAGNOSTIC_DESIGN_SETTINGS design inner join
-          @my_schema.@my_table_appendDIAGNOSTIC_PROBAST probast
-          on design.DIAGNOSTIC_ID = probast.DIAGNOSTIC_ID"
+          @my_schema.@my_table_appendDIAGNOSTICS inner join
+          @my_schema.@my_table_appendMODEL_DESIGNS design inner join
+          @my_schema.@my_table_appendDIAGNOSTIC_SUMMARY summary inner join
+          
+          @my_schema.@my_table_appendDATABASE_DETAILS database inner join
+          
+          @my_schema.@my_table_appendCOHORTS cohortT inner join
+          @my_schema.@my_table_appendCOHORTS cohortO 
+          
+          on diagnostics.DIAGNOSTIC_ID = summary.DIAGNOSTIC_ID and
+          diagnostics.MODEL_DESIGN_ID = design.MODEL_DESIGN_ID and
+          cohortT.cohort_id = design.cohort_id and
+          cohortO.cohort_id = design.outcome_id and
+          database.database_id = diagnostics.database_id
+  "
   
   sql <- SqlRender::render(sql = sql, 
                            my_schema = mySchema,
@@ -152,47 +165,31 @@ getDbSummary <- function(
   summaryTable <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
   colnames(summaryTable) <- SqlRender::snakeCaseToCamelCase(colnames(summaryTable))
   
-  summaryTable$targetName <- unlist(
-    lapply(
-      summaryTable$targetJson, 
-      function(x){jsonlite::unserializeJSON(x)$name}
-    )
-  )
-  summaryTable$outcomeName <- unlist(
-    lapply(
-      summaryTable$outcomeJson, 
-      function(x){jsonlite::unserializeJSON(x)$name}
-    )
-  )
+  print(summaryTable)
+
+  if(nrow(summaryTable)==0){
+    ParallelLogger::logInfo("No diagnostic summary")
+    return(NULL)
+  }
   
   summary <- summaryTable %>% tidyr::pivot_wider(
     id_cols = c(
       'diagnosticId', 
-      'database', 
+      'databaseName', 
       'targetName', 
       'outcomeName'
     ),
     names_from = 'probastId',
-    values_from = 'result'
-  ) %>% 
-    dplyr::mutate(
-      `1.2` = ifelse(
-        .data$`1.2.1`>=threshold1_2 & 
-          .data$`1.2.2`>=threshold1_2 &
-          .data$`1.2.3`>=threshold1_2 & 
-          .data$`1.2.4`>=threshold1_2,
-        'Pass', 
-        'Fail'
-      )
-    ) %>%
-    dplyr::select(
-      -c(
-        '1.2.1', 
-        '1.2.2', 
-        '1.2.3', 
-        '1.2.4'
-      )
-    ) %>%
+    values_from = 'resultValue'
+  )
+  
+  summary$`1.2` <- ifelse(
+    apply(summary[,grep('1.2.', colnames(summary))] > threshold1_2, 1, sum) == length(grep('1.2.', colnames(summary))),
+    'Pass', 
+    'Fail'
+  )
+  
+  summary <- summary[, - grep('1.2.', colnames(summary))] %>%
     dplyr::relocate(.data$`1.2`, .after = .data$`1.1`)
   ParallelLogger::logInfo("got summary")
   return(summary)

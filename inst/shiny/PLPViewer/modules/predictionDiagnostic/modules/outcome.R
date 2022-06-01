@@ -83,9 +83,9 @@ outcomeServer <- function(
                 )
               ), 
             x = ~xvalue, 
-            y = ~outcomepercent, 
-            group = ~type,
-            color = ~type,
+            y = ~outcomePercent, 
+            group = ~ inputType,
+            color = ~ inputType,
             type = 'scatter', 
             mode = 'lines'
           ) %>%
@@ -115,7 +115,7 @@ getOutcomesData <- function(
   
   sql <- "SELECT *
           from 
-          @my_schema.@my_table_appendDIAGNOSTIC_OUTCOME
+          @my_schema.@my_table_appendDIAGNOSTIC_OUTCOMES
           where DIAGNOSTIC_ID = @diagnostic_id"
   
   sql <- SqlRender::render(sql = sql, 
