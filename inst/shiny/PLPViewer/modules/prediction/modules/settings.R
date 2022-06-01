@@ -1,25 +1,26 @@
 settingsViewer <- function(id) {
   ns <- shiny::NS(id)
+  
   shiny::div(
-  shiny::h3('Model Settings: ',
-            shiny::a("help", href="https://ohdsi.github.io/PatientLevelPrediction/reference/index.html", target="_blank")
-  ),
-  DT::dataTableOutput(ns('modelTable')),
-  
-  shiny::h3('Population Settings: ',
-            shiny::a("help", href="https://ohdsi.github.io/PatientLevelPrediction/reference/createStudyPopulation.html", target="_blank")
-  ),
-  DT::dataTableOutput(ns('populationTable')),
-  
-  shiny::h3('Covariate Settings: ',
-            shiny::a("help", href="http://ohdsi.github.io/FeatureExtraction/reference/createCovariateSettings.html", target="_blank")
-  ),
-  DT::dataTableOutput(ns('covariateTable')),
-  
-  shiny::h3("Hyper-parameters"),
-  DT::dataTableOutput(ns('hpTable')),
-  shiny::h3("Attrition"),
-  DT::dataTableOutput(ns('attritionTable'))
+    
+    shinydashboard::box(
+      width = 12,
+      title = "Settings Dashboard",
+      status = "info", solidHeader = TRUE,
+      shinydashboard::infoBoxOutput(ns("cohort"), width = 4),
+      shinydashboard::infoBoxOutput(ns("outcome"), width = 4),
+      shinydashboard::infoBoxOutput(ns("restrictPlpData"), width = 4),
+      shinydashboard::infoBoxOutput(ns("population"), width = 4),
+      shinydashboard::infoBoxOutput(ns("covariates"), width = 4),
+      shinydashboard::infoBoxOutput(ns("featureEngineering"), width = 4),
+      shinydashboard::infoBoxOutput(ns("preprocess"), width = 4),
+      shinydashboard::infoBoxOutput(ns("split"), width = 4),
+      shinydashboard::infoBoxOutput(ns("sample"), width = 4),
+      shinydashboard::infoBoxOutput(ns("model"), width = 4),
+      shinydashboard::infoBoxOutput(ns("hyperparameters"), width = 4),
+      shinydashboard::infoBoxOutput(ns("attrition"), width = 4)
+    )
+    
   )
 }
 
@@ -32,14 +33,14 @@ setingsServer <- function(
   inputSingleView,
   myTableAppend, 
   targetDialect                     
-  ) {
+) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
       
       shiny::observe({
         if(!is.null(rowId()) & inputSingleView() == 'Design Settings'){
-
+          
           modelDesign <- getModelDesign(
             modelDesignId = resultTable$modelDesignId[rowId()],
             mySchema, 
@@ -65,36 +66,298 @@ setingsServer <- function(
             targetDialect   
           ) 
           
-          # input tables
-          output$modelTable <- DT::renderDataTable(
-            formatModSettings(modelDesign$modelSettings  )
-          )
-          output$covariateTable <- DT::renderDataTable(
-            formatCovSettings(modelDesign$covariateSettings)
-          )
-          output$populationTable <- DT::renderDataTable(
-            formatPopSettings(modelDesign$populationSettings)
-          )
-          
-          output$hpTable <- DT::renderDataTable(
-            DT::datatable(
-              as.data.frame(
-                hyperParamSearch
-              ),
-              options = list(scrollX = TRUE),
-              colnames = 'Fold AUROC'
+          # cohort settings
+          output$cohort <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Cohort',
+              shiny::actionButton(session$ns("showCohort"),"View"), 
+              icon = shiny::icon("users"),
+              color = "light-blue"
             )
+          })
+          shiny::observeEvent(
+            input$showCohort, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Cohort description",
+                shiny::p(modelDesign$cohort$cohortJson),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
           )
           
-          output$attritionTable <- DT::renderDataTable(
-            attrition
+          # outcome settings
+          output$outcome <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Outcome',
+              shiny::actionButton(session$ns("showOutcome"),"View"), 
+              icon = shiny::icon("heart"),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showOutcome, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Cohort description",
+                shiny::p(modelDesign$outcome$cohortJson),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
           )
+          
+          
+          # restrictPlpData settings
+          output$restrictPlpData <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'RestrictPlpData',
+              shiny::actionButton(session$ns("showRestrictPlpData"),"View"), 
+              icon = shiny::icon("filter"),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showRestrictPlpData, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Exclusions done during data extraction",
+                shiny::p(modelDesign$RestrictPlpData),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          
+          # Population settings
+          output$population <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Population',
+              shiny::actionButton(session$ns("showPopulation"),"View"), 
+              icon = shiny::icon("users-slash"),
+              color = "light-blue", 
+              width = 3,
+            )
+          })
+          shiny::observeEvent(
+            input$showPopulation, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Population Settings - exclusions after data extraction",
+                shiny::div(
+                  shiny::a("help", href="https://ohdsi.github.io/PatientLevelPrediction/reference/createStudyPopulation.html", target="_blank"),
+                  DT::renderDataTable(
+                    formatPopSettings(modelDesign$populationSettings)
+                  )
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          # Covariate settings
+          output$covariates <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Covariates',
+              shiny::actionButton(session$ns("showCovariates"),"View"), 
+              icon = shiny::icon("street-view"),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showCovariates, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Covariate Settings",
+                shiny::div(
+                  shiny::a("help", href="http://ohdsi.github.io/FeatureExtraction/reference/createCovariateSettings.html", target="_blank"),
+                  DT::renderDataTable(
+                    formatCovSettings(modelDesign$covariateSettings)
+                  )
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          # Model settings
+          output$model <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Model',
+              shiny::actionButton(session$ns("showModel"),"View"), 
+              icon = shiny::icon("sliders-h"),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showModel, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Model Settings",
+                shiny::div(
+                  shiny::h3('Model Settings: ',
+                            shiny::a("help", href="https://ohdsi.github.io/PatientLevelPrediction/reference/index.html", target="_blank")
+                  ),
+                  DT::renderDataTable(
+                    formatModSettings(modelDesign$modelSettings  )
+                  )
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          # featureEngineering settings
+          output$featureEngineering <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Feature Engineering',
+              shiny::actionButton(session$ns("showFeatureEngineering"),"View"), 
+              icon = shiny::icon("lightbulb"),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showFeatureEngineering, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Feature Engineering Settings",
+                shiny::div(
+                  shiny::p(modelDesign$featureEngineeringSettings)
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          # preprocess settings
+          output$preprocess <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Preprocess',
+              shiny::actionButton(session$ns("showPreprocess"),"View"), 
+              icon = shiny::icon("chalkboard"),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showPreprocess, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Preprocess Settings",
+                shiny::div(
+                  shiny::p(modelDesign$preprocessSettings)
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          # split settings
+          output$split <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Split',
+              shiny::actionButton(session$ns("showSplit"),"View"), 
+              icon = shiny::icon("object-ungroup"),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showSplit, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Split Settings",
+                shiny::div(
+                  shiny::p(modelDesign$splitSettings)
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          # sample settings
+          output$sample <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Sample',
+              shiny::actionButton(session$ns("showSample"),"View"), 
+              icon = shiny::icon("equals"),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showSample, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Sample Settings",
+                shiny::div(
+                  shiny::p(modelDesign$sampleSettings)
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          # extras
+          
+          # hyper-param
+          output$hyperparameters<- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Hyper-parameters',
+              shiny::actionButton(session$ns("showHyperparameters"),"View"), 
+              icon = shiny::icon('gear'),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showHyperparameters, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Hyper-parameters",
+                shiny::div(
+                  DT::renderDataTable(
+                    DT::datatable(
+                      as.data.frame(
+                        hyperParamSearch
+                      ),
+                      options = list(scrollX = TRUE),
+                      colnames = 'Fold AUROC'
+                    )
+                  )
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
+          # attrition
+          output$attrition <- shinydashboard::renderInfoBox({
+            shinydashboard::infoBox(
+              'Attrition',
+              shiny::actionButton(session$ns("showAttrition"),"View"), 
+              icon = shiny::icon('magnet'),
+              color = "light-blue"
+            )
+          })
+          shiny::observeEvent(
+            input$showAttrition, {
+              shiny::showModal(shiny::modalDialog(
+                title = "Attrition",
+                shiny::div(
+                  DT::renderDataTable(
+                    attrition %>% dplyr::select(-.data$performanceId, -.data$outcomeId)
+                  )
+                ),
+                easyClose = TRUE,
+                footer = NULL
+              ))
+            }
+          )
+          
         }
-      })
-  
+      }
+      )
     }
+    
   )
-}
+}         
+
 
 
 # helpers
@@ -136,7 +399,8 @@ getModelDesign <- function(
   splitId <- ids$splitSettingId
   tId <- ids$cohortId
   oId <- ids$outcomeId
-  # plpDataSettingId
+  plpDataSettingId <- ids$plpDataSettingId
+  tidyCovariatesSettingId <- ids$tidyCovariatesSettingId
   
   ParallelLogger::logInfo("start modeSet")
   sql <- "SELECT * FROM @my_schema.@my_table_appendmodel_settings WHERE model_setting_id = @model_setting_id"
@@ -175,6 +439,91 @@ getModelDesign <- function(
   colnames(tempSettings) <- SqlRender::snakeCaseToCamelCase(colnames(tempSettings))
   modelDesign$populationSettings <- ParallelLogger::convertJsonToSettings(tempSettings$populationSettingsJson)
   ParallelLogger::logInfo("end popSet")
+  
+  ParallelLogger::logInfo("start feSet")
+  sql <- "SELECT * FROM @my_schema.@my_table_appendfeature_engineering_settings WHERE feature_engineering_setting_id = @setting_id"
+  sql <- SqlRender::render(sql = sql, 
+                           my_schema = mySchema,
+                           setting_id = feSetId,
+                           my_table_append = myTableAppend)
+  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+  tempSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(tempSettings) <- SqlRender::snakeCaseToCamelCase(colnames(tempSettings))
+  modelDesign$featureEngineeringSettings <- tempSettings$featureEngineeringSettingsJson
+  ParallelLogger::logInfo("end feSet")
+  
+  ParallelLogger::logInfo("start tidySet")
+  sql <- "SELECT * FROM @my_schema.@my_table_appendtidy_covariates_settings WHERE tidy_covariates_setting_id = @setting_id"
+  sql <- SqlRender::render(sql = sql, 
+                           my_schema = mySchema,
+                           setting_id = tidyCovariatesSettingId,
+                           my_table_append = myTableAppend)
+  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+  tempSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(tempSettings) <- SqlRender::snakeCaseToCamelCase(colnames(tempSettings))
+  modelDesign$preprocessSettings <- tempSettings$tidyCovariatesSettingsJson
+  ParallelLogger::logInfo("end tidySet")
+  
+  ParallelLogger::logInfo("start RestrictPlpData")
+  sql <- "SELECT * FROM @my_schema.@my_table_appendplp_data_settings WHERE plp_data_setting_id = @setting_id"
+  sql <- SqlRender::render(sql = sql, 
+                           my_schema = mySchema,
+                           setting_id = plpDataSettingId,
+                           my_table_append = myTableAppend)
+  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+  tempSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(tempSettings) <- SqlRender::snakeCaseToCamelCase(colnames(tempSettings))
+  modelDesign$RestrictPlpData <- tempSettings$plpDataSettingsJson
+  ParallelLogger::logInfo("end RestrictPlpData")
+  
+  
+  ParallelLogger::logInfo("start sampleSet")
+  sql <- "SELECT * FROM @my_schema.@my_table_appendsample_settings WHERE sample_setting_id = @setting_id"
+  sql <- SqlRender::render(sql = sql, 
+                           my_schema = mySchema,
+                           setting_id = sampleSetId,
+                           my_table_append = myTableAppend)
+  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+  tempSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(tempSettings) <- SqlRender::snakeCaseToCamelCase(colnames(tempSettings))
+  modelDesign$sampleSettings <- tempSettings$sampleSettingsJson
+  ParallelLogger::logInfo("end sampleSet")
+  
+  ParallelLogger::logInfo("start splitSet")
+  sql <- "SELECT * FROM @my_schema.@my_table_appendsplit_settings WHERE split_setting_id = @setting_id"
+  sql <- SqlRender::render(sql = sql, 
+                           my_schema = mySchema,
+                           setting_id = splitId,
+                           my_table_append = myTableAppend)
+  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+  tempSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(tempSettings) <- SqlRender::snakeCaseToCamelCase(colnames(tempSettings))
+  modelDesign$splitSettings <- tempSettings$splitSettingsJson
+  ParallelLogger::logInfo("end splitSet")
+  
+  ParallelLogger::logInfo("start cohort")
+  sql <- "SELECT * FROM @my_schema.@my_table_appendcohorts WHERE cohort_id = @setting_id"
+  sql <- SqlRender::render(sql = sql, 
+                           my_schema = mySchema,
+                           setting_id = tId,
+                           my_table_append = myTableAppend)
+  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+  tempSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(tempSettings) <- SqlRender::snakeCaseToCamelCase(colnames(tempSettings))
+  modelDesign$cohort <- tempSettings
+  ParallelLogger::logInfo("end cohort")
+  
+  ParallelLogger::logInfo("start outcome")
+  sql <- "SELECT * FROM @my_schema.@my_table_appendcohorts WHERE cohort_id = @setting_id"
+  sql <- SqlRender::render(sql = sql, 
+                           my_schema = mySchema,
+                           setting_id = oId,
+                           my_table_append = myTableAppend)
+  sql <- SqlRender::translate(sql = sql, targetDialect =  targetDialect)
+  tempSettings <- DatabaseConnector::dbGetQuery(conn =  con, statement = sql) 
+  colnames(tempSettings) <- SqlRender::snakeCaseToCamelCase(colnames(tempSettings))
+  modelDesign$outcome <- tempSettings
+  ParallelLogger::logInfo("end outcome")
   
   return(modelDesign)
   }
