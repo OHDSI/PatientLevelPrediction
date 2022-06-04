@@ -3,6 +3,7 @@
 S3method(print,plpData)
 S3method(print,summary.plpData)
 S3method(summary,plpData)
+export(MapIds)
 export(averagePrecision)
 export(brierScore)
 export(calibrationLine)
