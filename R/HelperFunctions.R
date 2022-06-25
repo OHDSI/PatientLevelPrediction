@@ -40,6 +40,9 @@ ensure_installed <- function(pkg) {
   }
 }
 
+#' Create a temporary model location
+#' 
+#' @export
 createTempModelLoc <- function(){
   repeat{
     loc <- paste(tempdir(), paste0('python_models_',sample(10002323,1)), sep = '\\')

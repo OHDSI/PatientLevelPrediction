@@ -387,7 +387,14 @@ fitPythonModel <- function(classifier, param, seed, trainX, trainY, np, pythonCl
 
 
 
-
+#' Computes grid performance with a specified performance function
+#' 
+#' @param prediction a dataframe with predictions and outcomeCount per rowId
+#' @param param a list of hyperparameters
+#' @param performanceFunct a string specifying which performance function to use
+#' . Default ``'compute_AUC'``
+#' @return A list with overview of the performance
+#' @export
 computeGridPerformance <- function(prediction, param, performanceFunct = 'computeAuc'){
   
   performance <- do.call(
