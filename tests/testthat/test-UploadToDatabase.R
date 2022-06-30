@@ -151,7 +151,7 @@ test_that("results uploaded to database", {
     dir.create(file.path(resultsLoc,'Validation','test', 'Analysis_1'), recursive = T)
   }
   plpResult$model$validationDetails <- list(
-    cohortId = 1, 
+    targetId = 1, 
     outcomeId = 3,
     developmentDatabase = 'test',
     validationDatabase = 'test',
@@ -269,7 +269,7 @@ test_that("temporary sqlite with results works", {
   externalVal$model$model <- 'none'
   externalVal$model$trainDetails <- NULL
   externalVal$model$validationDetails <- list(
-    cohortId = 1, 
+    targetId = 1, 
     outcomeId = 3,
     developmentDatabase = 'test',
     validationDatabase = 'test',

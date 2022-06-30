@@ -6,14 +6,15 @@
 \usage{
 runMultiplePlp(
   databaseDetails = createDatabaseDetails(),
-  modelDesignList = list(createModelDesign(cohortId = 1, outcomeId = 2, modelSettings =
-    setLassoLogisticRegression()), createModelDesign(cohortId = 1, outcomeId = 3,
+  modelDesignList = list(createModelDesign(targetId = 1, outcomeId = 2, modelSettings =
+    setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
   onlyFetchData = F,
   cohortDefinitions = NULL,
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
     "runPlp Log"),
-  saveDirectory = getwd()
+  saveDirectory = getwd(),
+  sqliteLocation = file.path(saveDirectory, "sqlite")
 )
 }
 \arguments{
@@ -28,10 +29,12 @@ runMultiplePlp(
 \item{logSettings}{The setting spexcifying the logging for the analyses created using \code{createLogSettings()}}
 
 \item{saveDirectory}{Name of the folder where all the outputs will written to.}
+
+\item{sqliteLocation}{(optional) The location of the sqlite database with the results}
 }
 \value{
 A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
-for a set of analysis choices.\cr \verb{cohortId} \tab The ID of the target cohort populations.\cr
+for a set of analysis choices.\cr \verb{targetId} \tab The ID of the target cohort populations.\cr
 \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved 
  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 }

@@ -411,7 +411,7 @@ test_that("population creation parameters", {
   )
   cohorts <- data.frame(rowId=1:20, 
                         subjectId=1:20, 
-                        cohortId=rep(2,20),
+                        targetId=rep(2,20),
                         time=rep(365,20),
                         ageYear = rep(18,20),
                         gender = rep(8507,20),

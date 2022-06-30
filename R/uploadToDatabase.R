@@ -42,7 +42,7 @@ insertRunPlpToSqlite <- function(
   )
   
   cohortDefinitions <- list(
-    list(id = runPlp$model$modelDesign$cohortId, name = 'Target'),
+    list(id = runPlp$model$modelDesign$targetId, name = 'Target'),
     list(id = runPlp$model$modelDesign$outcomeId, name = 'Outcome')
   )
   
@@ -136,14 +136,21 @@ insertResultsToSqlite <- function(
   conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn))
   
-  createPlpResultTables(
-    conn = conn,
-    targetDialect = 'sqlite',
-    resultSchema = 'main', 
-    deleteTables = T, 
-    createTables = T,
-    stringAppendToTables = ''
-  )
+  tablesExists <- sum(getPlpResultTables() %in% DatabaseConnector::getTableNames(conn))
+  tablesExists <- tablesExists == length(getPlpResultTables())
+  
+  if(!tablesExists){
+    createPlpResultTables(
+      conn = conn,
+      targetDialect = 'sqlite',
+      resultSchema = 'main', 
+      deleteTables = T, 
+      createTables = T,
+      stringAppendToTables = ''
+    )
+  } else{
+    ParallelLogger::logInfo('Sql tables exist')
+  }
   
   # run insert models
   addMultipleRunPlpToDatabase(
@@ -470,7 +477,7 @@ addRunPlpToDatabase <- function(
 ){
   
   modelDesignId <- insertModelDesignInDatabase(
-    object = do.call(PatientLevelPrediction::createModelDesign,runPlp$model$modelDesign), 
+    object = runPlp$model$modelDesign, 
     conn = conn, 
     databaseSchemaSettings = databaseSchemaSettings,
     cohortDefinitions = cohortDefinitions 
@@ -483,7 +490,7 @@ addRunPlpToDatabase <- function(
     validationDatabase <- runPlp$model$trainDetails$developmentDatabase
     
     populationSettings <- runPlp$model$modelDesign$populationSettings
-    cohortId <- runPlp$model$modelDesign$cohortId
+    targetId <- runPlp$model$modelDesign$targetId
     outcomeId <- runPlp$model$modelDesign$outcomeId
     restrictPlpDataSettings <- runPlp$model$modelDesign$restrictPlpDataSettings
     
@@ -495,7 +502,7 @@ addRunPlpToDatabase <- function(
     validationDatabase <- runPlp$model$validationDetails$validationDatabase
     
     populationSettings <- runPlp$model$validationDetails$populationSettings
-    cohortId <- runPlp$model$validationDetails$cohortId
+    targetId <- runPlp$model$validationDetails$targetId
     outcomeId <- runPlp$model$validationDetails$outcomeId
     restrictPlpDataSettings <- runPlp$model$validationDetails$restrictPlpDataSettings
     
@@ -545,13 +552,13 @@ addRunPlpToDatabase <- function(
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   
-  validationCohortId <-  addCohort(
+  validationTargetId <-  addCohort(
     conn = conn, 
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     cohortDefinition = getCohortDefinitionJson(
       cohortDefinitions = cohortDefinitions,
-      cohortId = cohortId
+      cohortId = targetId
     ),
     stringAppendToTables = databaseSchemaSettings$stringAppendToCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
@@ -604,7 +611,7 @@ addRunPlpToDatabase <- function(
     validationTarId = validationTarId,
     validationPopulationId= validationPopulationId,
     validationPlpDataId = validationPlpDataId,
-    validationCohortId = validationCohortId,
+    validationTargetId = validationTargetId,
     validationOutcomeId = validationOutcomeId
   )
   

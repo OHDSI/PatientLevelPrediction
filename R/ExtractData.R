@@ -101,9 +101,10 @@ createRestrictPlpDataSettings <- function(
 #' @param outcomeTable                   The tablename that contains the outcome cohorts.  Expectation is
 #'                                       outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
 #'                                       SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
-#' @param cohortId                       An integer specifying the cohort id for the target cohort
+#' @param targetId                       An integer specifying the cohort id for the target cohort
 #' @param outcomeIds                      A single integer or vector of integers specifying the cohort ids for the outcome cohorts
 #' @param cdmVersion                     Define the OMOP CDM version used: currently support "4" and "5".
+#' @param cohortId                       (depreciated: use targetId) old input for the target cohort id
 #' 
 #' @return
 #' A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)
@@ -118,11 +119,18 @@ createDatabaseDetails <- function(
   cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "cohort",
-  cohortId = NULL,
+  targetId = NULL,
   outcomeIds = NULL,
-  cdmVersion = 5
+  cdmVersion = 5,
+  cohortId = NULL
 ){
   
+  if(is.null(targetId)){
+    if(!is.null(cohortId)){
+      ParallelLogger::logWarn('cohortId has been depreciated.  Please use targetId.')
+      targetId <- cohortId
+    }
+  }
   
   result <- list(
     connectionDetails = connectionDetails,
@@ -133,7 +141,7 @@ createDatabaseDetails <- function(
     cohortTable = cohortTable,
     outcomeDatabaseSchema = outcomeDatabaseSchema,
     outcomeTable = outcomeTable,
-    cohortId = cohortId ,
+    targetId = targetId,
     outcomeIds = outcomeIds,
     cdmVersion = cdmVersion
   )
@@ -190,10 +198,10 @@ getPlpData <- function(
   checkIsClass(databaseDetails, 'databaseDetails')
   checkIsClass(restrictPlpDataSettings, 'restrictPlpDataSettings')
 
-  if(is.null(databaseDetails$cohortId))
-    stop('User must input cohortId')
-  if(length(databaseDetails$cohortId)>1)
-    stop('Currently only supports one cohortId at a time')
+  if(is.null(databaseDetails$targetId))
+    stop('User must input targetId')
+  if(length(databaseDetails$targetId)>1)
+    stop('Currently only supports one targetId at a time')
   if(is.null(databaseDetails$outcomeIds))
     stop('User must input outcomeIds')
   #ToDo: add other checks the inputs are valid
@@ -213,7 +221,7 @@ getPlpData <- function(
     cohort_database_schema = databaseDetails$cohortDatabaseSchema,
     cohort_table = databaseDetails$cohortTable,
     cdm_version = databaseDetails$cdmVersion,
-    cohort_id = databaseDetails$cohortId,
+    target_id = databaseDetails$targetId,
     study_start_date = restrictPlpDataSettings$studyStartDate,
     study_end_date = restrictPlpDataSettings$studyEndDate,
     first_only = restrictPlpDataSettings$firstExposureOnly,
@@ -234,7 +242,7 @@ getPlpData <- function(
   )
   cohorts <- DatabaseConnector::querySql(connection, cohortSql)
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
-  metaData.cohort <- list(cohortId = databaseDetails$cohortId)
+  metaData.cohort <- list(targetId = databaseDetails$targetId)
   
   if(nrow(cohorts)==0){
     stop('Target population is empty')
@@ -341,7 +349,7 @@ getPlpData <- function(
 print.plpData <- function(x, ...) {
   writeLines("plpData object")
   writeLines("")
-  writeLines(paste("At risk concept ID:", attr(x$cohorts, "metaData")$cohortId))
+  writeLines(paste("At risk concept ID:", attr(x$cohorts, "metaData")$targetId))
   writeLines(paste("Outcome concept ID(s):", paste(attr(x$outcomes, "metaData")$outcomeIds, collapse = ",")))
 }
 
@@ -371,7 +379,7 @@ summary.plpData <- function(object,...){
 print.summary.plpData <- function(x, ...) {
   writeLines("plpData object summary")
   writeLines("")
-  writeLines(paste("At risk cohort concept ID:", x$metaData$cohortId))
+  writeLines(paste("At risk cohort concept ID:", x$metaData$targetId))
   writeLines(paste("Outcome concept ID(s):", x$metaData$outcomeIds, collapse = ","))
   writeLines("")
   writeLines(paste("People:", paste(x$people)))

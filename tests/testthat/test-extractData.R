@@ -23,9 +23,21 @@ test_that("summary.plpData", {
 })
 
 test_that("getPlpData errors", {
-  testthat::expect_error(getPlpData(cohortId = NULL))
-  testthat::expect_error(getPlpData(cohortId = c(1,2)))
-  testthat::expect_error(getPlpData(cohortId = 1, outcomeIds = NULL))
+  testthat::expect_error(
+    getPlpData(
+      databaseDetails = list(targetId = NULL)
+      )
+  )
+  testthat::expect_error(
+    getPlpData(
+      databaseDetails = list(targetId = c(1,2))
+      )
+  )
+  testthat::expect_error(
+    getPlpData(
+      databaseDetails = list(targetId = 1, outcomeIds = NULL)
+      )
+  )
 })
 
 

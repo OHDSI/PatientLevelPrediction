@@ -147,8 +147,8 @@ fitCyclopsModel <- function(
     
     prediction = prediction,
     
-    modelDesign = list(
-      cohortId = attr(trainData, "metaData")$cohortId, # added
+    modelDesign = PatientLevelPrediction::createModelDesign(
+      targetId = attr(trainData, "metaData")$targetId, # added
       outcomeId = attr(trainData, "metaData")$outcomeId, # added
       restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings, # made this restrictPlpDataSettings
       covariateSettings = attr(trainData, "metaData")$covariateSettings,

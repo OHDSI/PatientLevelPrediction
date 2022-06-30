@@ -77,6 +77,17 @@ recalibratePlpRefit <- function(
     index = sample(2, length(newData$labels$rowId), replace = T)
     )
   
+  # add dummy settings to fit model
+  attr(newData, "metaData")$outcomeId <- attr(newPopulation, 'metaData')$outcomeId
+  attr(newData, "metaData")$targetId <- attr(newPopulation, 'metaData')$targetId
+  attr(newData, "metaData")$restrictPlpDataSettings <- attr(newPopulation, 'metaData')$restrictPlpDataSettings
+  attr(newData, "metaData")$covariateSettings <- newData$metaData$covariateSettings
+  attr(newData, "metaData")$populationSettings <- attr(newPopulation, 'metaData')$populationSettings
+  attr(newData$covariateData, "metaData")$featureEngineeringSettings <- PatientLevelPrediction::createFeatureEngineeringSettings()
+  attr(newData$covariateData, "metaData")$preprocessSettings <- PatientLevelPrediction::createPreprocessSettings()
+  attr(newData, "metaData")$splitSettings <- PatientLevelPrediction::createDefaultSplitSetting()
+  attr(newData, "metaData")$sampleSettings <- PatientLevelPrediction::createSampleSettings()
+  
   newModel <- fitPlp(
     trainData = newData, 
     modelSettings = setLassoRefit,

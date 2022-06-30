@@ -67,8 +67,8 @@ fitRclassifier <- function(
     
     prediction = prediction,
     
-    modelDesign = list(
-      cohortId = attr(trainData, "metaData")$cohortId,
+    modelDesign = PatientLevelPrediction::createModelDesign(
+      targetId = attr(trainData, "metaData")$targetId,
       outcomeId = attr(trainData, "metaData")$outcomeId,
       restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,

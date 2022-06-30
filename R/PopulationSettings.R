@@ -217,7 +217,7 @@ createStudyPopulation <- function(
     population <- plpData$cohorts
   }
   
-  # save the metadata (should have the ?cohortId, outcomeId, plpDataSettings and population settings)
+  # save the metadata (should have the ?targetId, outcomeId, plpDataSettings and population settings)
   metaData <- attr(population, "metaData")
   metaData$restrictPlpDataSettings <- plpData$metaData$restrictPlpDataSettings
   metaData$outcomeId <- outcomeId
@@ -419,7 +419,7 @@ createStudyPopulation <- function(
     dplyr::mutate(timeAtRisk = .data$tarEnd - .data$tarStart + 1 ,
                   survivalTime = ifelse(.data$outcomeCount == 0, .data$tarEnd -.data$tarStart + 1, .data$first - .data$tarStart + 1),
                   daysToEvent = .data$first) %>%
-    dplyr::select(.data$rowId, .data$subjectId, .data$cohortId, .data$cohortStartDate, .data$daysFromObsStart,
+    dplyr::select(.data$rowId, .data$subjectId, .data$targetId, .data$cohortStartDate, .data$daysFromObsStart,
                   .data$daysToCohortEnd, .data$daysToObsEnd, .data$ageYear, .data$gender,
                   .data$outcomeCount, .data$timeAtRisk, .data$daysToEvent, .data$survivalTime)
 

@@ -259,7 +259,7 @@ runPlp <- function(
   tryCatch({
     printHeader(
       plpData, 
-      plpData$metaData$databaseDetails$cohortId, 
+      plpData$metaData$databaseDetails$targetId, 
       outcomeId, 
       analysisId, 
       analysisName,

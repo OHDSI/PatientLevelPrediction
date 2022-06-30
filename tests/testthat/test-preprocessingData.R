@@ -59,7 +59,7 @@ test_that("createPreprocessSettings", {
 
 test_that("createPreprocessSettings", {
   trainData <- createTrainData(plpData, population)
-  
+  attr(trainData$covariateData, "metaData")$preprocessSettings <- NULL # removing for test
   metaData <- attr(trainData$covariateData, "metaData")
   metaLength <- length(metaData)
   covSize <- trainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()

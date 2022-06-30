@@ -102,7 +102,7 @@ test_that("toSparseM", {
   
   cohorts <- data.frame(rowId=1:6,   
                         subjectId=1:6, 
-                        cohortId=rep(1,6),
+                        targetId=rep(1,6),
                         cohortStartDate= rep('2007-12-28 00:00:00.0',6),
                         daysFromObsStart= c(500,50,500,500,500,500),
                         daysToCohortEnd= rep(200,6),

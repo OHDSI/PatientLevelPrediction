@@ -28,14 +28,14 @@ databaseDetails <- createDatabaseDetails(
   cohortTable = "cohort", 
   outcomeDatabaseSchema = "main", 
   outcomeTable =  "cohort",
-  cohortId = 1, 
+  targetId = 1, 
   outcomeIds = 3, #make this ids
   cdmVersion = 5
   )
 
 
 analysis1 <- createModelDesign(
-  cohortId = 1,
+  targetId = 1,
   outcomeId = 3,
   restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
   populationSettings = createStudyPopulationSettings(),
@@ -49,12 +49,12 @@ analysis1 <- createModelDesign(
 
 test_that("createModelDesign - test working", {
   
-  
-  expect_equal(analysis1$cohortId, 1)
+  expect_equal(analysis1$targetId, 1)
   expect_equal(analysis1$outcomeId, 3)
   expect_equal(analysis1$restrictPlpDataSettings, createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0))
   expect_equal(analysis1$covariateSettings, FeatureExtraction::createDefaultCovariateSettings())
-  expect_equal(analysis1$featureEngineeringSettings, createFeatureEngineeringSettings())
+  expect_equal(analysis1$featureEngineeringSettings, list(createFeatureEngineeringSettings(type= "none")))
+  expect_equal(analysis1$sampleSettings, list(createSampleSettings(type = 'none')))
   expect_equal(analysis1$preprocessSettings, createPreprocessSettings())
   expect_equal(analysis1$splitSettings, createDefaultSplitSetting(splitSeed = 1))
   expect_equal(analysis1$modelSettings, setLassoLogisticRegression(seed = 12))
@@ -88,7 +88,7 @@ test_that("loading analyses settings", {
   
   analysisSetting <- loadPlpAnalysesJson(file.path(saveLoc, 'settings',"predictionAnalysisList.json"))
   
-  expect_equal(analysis1$cohortId, analysisSetting$analyses[[1]]$cohortId)
+  expect_equal(analysis1$targetId, analysisSetting$analyses[[1]]$targetId)
   expect_equal(analysis1$outcomeId, analysisSetting$analyses[[1]]$outcomeId)
   expect_equal(analysis1$restrictPlpDataSettings, analysisSetting$analyses[[1]]$restrictPlpDataSettings)
   expect_equal(attr(analysis1$covariateSettings, 'fun'), attr(analysisSetting$analyses[[1]]$covariateSettings,'fun') ) 
@@ -104,7 +104,7 @@ test_that("loading analyses settings", {
 )
 
 analysis2 <- createModelDesign(
-  cohortId = 10,
+  targetId = 10,
   outcomeId = 2,
   restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 9999),
   populationSettings = createStudyPopulationSettings(),
@@ -119,7 +119,7 @@ analysis2 <- createModelDesign(
 test_that("test run multiple", {
   
   analysis3 <- createModelDesign(
-    cohortId = 1,
+    targetId = 1,
     outcomeId = 3,
     restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
     populationSettings = createStudyPopulationSettings(),

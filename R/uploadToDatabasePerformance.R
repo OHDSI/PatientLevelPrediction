@@ -15,7 +15,7 @@ insertPerformanceInDatabase <- function(
   validationTarId,
   validationPopulationId,
   validationPlpDataId,
-  validationCohortId,
+  validationTargetId,
   validationOutcomeId
   
 ){
@@ -32,7 +32,7 @@ insertPerformanceInDatabase <- function(
     developmentDatabaseId = developmentDatabaseId,
     
     validationDatabaseId = validationDatabaseId,
-    validationCohortId = validationCohortId,
+    validationTargetId = validationTargetId,
     validationOutcomeId = validationOutcomeId,
     validationTarId = validationTarId,
     validationPlpDataId = validationPlpDataId,
@@ -102,7 +102,7 @@ addPerformance <- function(
   developmentDatabaseId,
   
   validationDatabaseId,
-  validationCohortId,
+  validationTargetId,
   validationOutcomeId,
   validationTarId,
   validationPlpDataId,
@@ -125,7 +125,7 @@ addPerformance <- function(
                          'development_database_id',
                          
                          'validation_database_id',
-                         'cohort_id',
+                         'target_id',
                          'outcome_id',
                          'tar_id',
                          'plp_data_setting_id',
@@ -136,7 +136,7 @@ addPerformance <- function(
                          developmentDatabaseId,
                          
                          validationDatabaseId,
-                         validationCohortId,
+                         validationTargetId,
                          validationOutcomeId,
                          validationTarId,
                          validationPlpDataId,
@@ -152,7 +152,7 @@ addPerformance <- function(
     development_database_id,
     
     validation_database_id,
-    cohort_id,
+    target_id,
     outcome_id,
     tar_id,
     plp_data_setting_id,
@@ -163,7 +163,7 @@ addPerformance <- function(
   ) 
   VALUES (
   @model_design_id, @development_database_id, 
-  @validation_database_id, @validation_cohort_id, @validation_outcome_id, @validation_tar_id, 
+  @validation_database_id, @validation_target_id, @validation_outcome_id, @validation_tar_id, 
           @validation_plp_data_setting_id, @validation_population_setting_id, 
     '@execution_date_time', '@plp_version')"
     sql <- SqlRender::render(sql, 
@@ -172,7 +172,7 @@ addPerformance <- function(
                              development_database_id = developmentDatabaseId,
                              
                              validation_database_id = validationDatabaseId,
-                             validation_cohort_id = validationCohortId,
+                             validation_target_id = validationTargetId,
                              validation_outcome_id = validationOutcomeId,
                              validation_tar_id = validationTarId,
                              validation_plp_data_setting_id = validationPlpDataId,
@@ -196,7 +196,7 @@ addPerformance <- function(
                            'development_database_id',
                            
                            'validation_database_id',
-                           'cohort_id',
+                           'target_id',
                            'outcome_id',
                            'tar_id',
                            'plp_data_setting_id',
@@ -207,7 +207,7 @@ addPerformance <- function(
                            developmentDatabaseId,
                            
                            validationDatabaseId,
-                           validationCohortId,
+                           validationTargetId,
                            validationOutcomeId,
                            validationTarId,
                            validationPlpDataId,

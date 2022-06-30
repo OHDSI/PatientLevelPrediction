@@ -90,7 +90,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   # add metaData
   metaData$modelType <- attr(plpModel, 'modelType') #"binary", 
-  metaData$cohortId <- attr(population,'metaData')$cohortId
+  metaData$targetId <- attr(population,'metaData')$targetId
   metaData$outcomeId <- attr(population,'metaData')$outcomeId
   metaData$timepoint <- timepoint
   

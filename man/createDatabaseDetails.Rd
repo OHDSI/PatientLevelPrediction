@@ -13,9 +13,10 @@ createDatabaseDetails(
   cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "cohort",
-  cohortId = NULL,
+  targetId = NULL,
   outcomeIds = NULL,
-  cdmVersion = 5
+  cdmVersion = 5,
+  cohortId = NULL
 )
 }
 \arguments{
@@ -50,11 +51,13 @@ this database.}
 outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
 SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 
-\item{cohortId}{An integer specifying the cohort id for the target cohort}
+\item{targetId}{An integer specifying the cohort id for the target cohort}
 
 \item{outcomeIds}{A single integer or vector of integers specifying the cohort ids for the outcome cohorts}
 
 \item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
+
+\item{cohortId}{(depreciated: use targetId) old input for the target cohort id}
 }
 \value{
 A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)

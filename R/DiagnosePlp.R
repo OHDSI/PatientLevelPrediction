@@ -29,7 +29,7 @@
 #' 
 #' @return
 #' A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
-#' for a set of analysis choices.\cr \verb{cohortId} \tab The ID of the target cohort populations.\cr
+#' for a set of analysis choices.\cr \verb{targetId} \tab The ID of the target cohort populations.\cr
 #' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved 
 #'  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 #'
@@ -37,8 +37,8 @@
 diagnoseMultiplePlp <- function(
   databaseDetails = createDatabaseDetails(),
   modelDesignList = list(
-    createModelDesign(cohortId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
-    createModelDesign(cohortId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
+    createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
+    createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
   ),
   cohortDefinitions = NULL,
   logSettings = createLogSettings(
@@ -64,13 +64,13 @@ diagnoseMultiplePlp <- function(
     stop('Error in settingstable')
   }
   
-  # save the settings
+  # save the settings: TODO fix
   utils::write.csv(settingstable, file.path(saveDirectory,'settings.csv'), row.names = F)
   
   # group the outcomeIds per combination of data extraction settings
   dataSettings <- settingstable %>% 
     dplyr::group_by(
-      .data$cohortId,
+      .data$targetId,
       .data$covariateSettings,
       .data$restrictPlpDataSettings,
       .data$dataLocation
@@ -83,9 +83,9 @@ diagnoseMultiplePlp <- function(
   for(i in 1:nrow(dataSettings)){
     dataExists <- length(dir(file.path(saveDirectory, dataSettings$dataLocation[i])))>0
     if(!dataExists){
-      ParallelLogger::logInfo(paste('Extracting data for cohort', dataSettings$cohortId[i], 'to', file.path(saveDirectory, dataSettings$dataLocation[i])))
+      ParallelLogger::logInfo(paste('Extracting data for cohort', dataSettings$targetId[i], 'to', file.path(saveDirectory, dataSettings$dataLocation[i])))
       
-      databaseDetails$cohortId <- dataSettings$cohortId[i]
+      databaseDetails$targetId <- dataSettings$targetId[i]
       databaseDetails$outcomeIds <- strsplit(dataSettings$outcomeIds[i], ',')[[1]]
       
       plpDataSettings <- list(
@@ -102,7 +102,7 @@ diagnoseMultiplePlp <- function(
         savePlpData(plpData, file.path(saveDirectory, dataSettings$dataLocation[i]))
       }
     } else{
-      ParallelLogger::logInfo(paste('Data for cohort', dataSettings$cohortId[i], 'exists at', file.path(saveDirectory, dataSettings$dataLocation[i])))
+      ParallelLogger::logInfo(paste('Data for cohort', dataSettings$targetId[i], 'exists at', file.path(saveDirectory, dataSettings$dataLocation[i])))
     }
   }
   
@@ -272,7 +272,7 @@ diagnosePlp <- function(
     outcomes = outcomeDiag$diagnosticOutcomeFull,
     designs = designDiag$diagnosticDesignFull,
     modelDesign = PatientLevelPrediction::createModelDesign(
-      cohortId = attr(plpData$cohorts, "metaData")$cohortId,
+      targetId = attr(plpData$cohorts, "metaData")$targetId,
       outcomeId = outcomeId,
       restrictPlpDataSettings = plpData$metaData$restrictPlpDataSettings,
       covariateSettings = plpData$metaData$covariateSettings,

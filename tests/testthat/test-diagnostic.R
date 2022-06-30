@@ -56,7 +56,7 @@ test_that("test diagnosePlp works", {
   testthat::expect_is(test$outcomes, 'data.frame') 
   testthat::expect_is(test$databaseSchema, 'character') 
   
-  testthat::expect_true(!is.null(test$modelDesign$cohortId))
+  testthat::expect_true(!is.null(test$modelDesign$targetId))
   testthat::expect_true(!is.null(test$modelDesign$outcomeId))
   testthat::expect_true(!is.null(test$modelDesign$restrictPlpDataSettings))
   testthat::expect_true(!is.null(test$modelDesign$covariateSettings))
@@ -79,13 +79,13 @@ test_that("test diagnoseMultiplePlp works", {
     cohortTable = "cohort", 
     outcomeDatabaseSchema = "main", 
     outcomeTable =  "cohort",
-    cohortId = 1, 
+    targetId = 1, 
     outcomeIds = 3, #make this ids
     cdmVersion = 5
   )
   
   analysis1 <- createModelDesign(
-    cohortId = 1,
+    targetId = 1,
     outcomeId = 3,
     restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
     populationSettings = createStudyPopulationSettings(),
@@ -98,7 +98,7 @@ test_that("test diagnoseMultiplePlp works", {
   )
   
   analysis2 <- createModelDesign(
-    cohortId = 1,
+    targetId = 1,
     outcomeId = 3,
     restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
     populationSettings = createStudyPopulationSettings(washoutPeriod = 400),

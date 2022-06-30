@@ -120,7 +120,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   class(covariateData) <- "CovariateData"
   
   writeLines("Generating cohorts")
-  cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), cohortId = 1)
+  cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), targetId = 1)
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
   r <- stats::runif(n)
   cohorts$time <- as.numeric(as.character(cut(r, breaks = c(0, breaks), labels = names(breaks))))
@@ -168,7 +168,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
     outcomeTable = NULL,
     cohortTable = NULL,
     cdmVersion = 5,
-    cohortId = 1,
+    targetId = 1,
     outcomeIds = c(2,3)
   )
   metaData$restrictPlpDataSettings <- PatientLevelPrediction::createRestrictPlpDataSettings()
@@ -179,7 +179,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                                       targetCount=nrow(cohorts), uniquePeople=nrow(cohorts), 
                                       outcomes=nrow(outcomes))
   attr(cohorts, "metaData") <- list(
-    cohortId = 1, 
+    targetId = 1, 
     attrition = attrition
     )
   

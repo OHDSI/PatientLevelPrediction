@@ -5,7 +5,7 @@
 \title{Specify settings for deceloping a single model}
 \usage{
 createModelDesign(
-  cohortId,
+  targetId,
   outcomeId,
   restrictPlpDataSettings = createRestrictPlpDataSettings(),
   populationSettings = createStudyPopulationSettings(),
@@ -20,7 +20,7 @@ createModelDesign(
 )
 }
 \arguments{
-\item{cohortId}{The id of the target cohort that will be used for data extraction (e.g., the ATLAS id)}
+\item{targetId}{The id of the target cohort that will be used for data extraction (e.g., the ATLAS id)}
 
 \item{outcomeId}{The id of the outcome that will be used for data extraction (e.g., the ATLAS id)}
 

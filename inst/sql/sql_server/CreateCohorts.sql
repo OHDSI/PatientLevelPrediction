@@ -17,7 +17,7 @@ limitations under the License.
 {DEFAULT @cohort_database_schema = 'CDM_SIM' }
 {DEFAULT @cohort_table = 'drug_era' }
 {DEFAULT @cdm_version = '5'}
-{DEFAULT @cohort_id = '' }
+{DEFAULT @target_id = '' }
 {DEFAULT @study_start_date = '' }
 {DEFAULT @study_end_date = '' }
 {DEFAULT @first_only = FALSE}
@@ -77,15 +77,15 @@ FROM ( -- first_only
 }
 FROM ( -- raw_cohorts 
 	SELECT subject_id,
-			   @cohort_id AS cohort_definition_id,
+			   @target_id AS cohort_definition_id,
 		     cohort_start_date,
 		     cohort_end_date
 	FROM @cohort_database_schema.@cohort_table cohort_table
 	
 {@cdm_version == "4"} ? {	
-	WHERE cohort_concept_id IN (@cohort_id)
+	WHERE cohort_concept_id IN (@target_id)
 } : {
-	WHERE cohort_definition_id IN (@cohort_id)
+	WHERE cohort_definition_id IN (@target_id)
 }
 	) raw_cohorts
 {@first_only} ? {

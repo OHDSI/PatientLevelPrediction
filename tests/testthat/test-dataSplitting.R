@@ -161,7 +161,7 @@ test_that("Main split function: splitData", {
   
   # check attributes for Train
   expect_equal(attr(splitData$Train, "metaData")$outcomeId, attr(populationT, "metaData")$outcomeId)
-  expect_equal(attr(splitData$Train, "metaData")$cohortId, plpData$metaData$databaseDetails$cohortId)
+  expect_equal(attr(splitData$Train, "metaData")$targetId, plpData$metaData$databaseDetails$targetId)
   expect_equal(
     attr(splitData$Train, "metaData")$cdmDatabaseSchema, 
     plpData$metaData$databaseDetails$cdmDatabaseSchema

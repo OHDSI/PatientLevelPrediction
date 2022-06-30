@@ -81,7 +81,7 @@ test_that("check fit of DecisionTree", {
   expect_equal(dir(plpModel$model),"model.json")
   
   expect_equal(plpModel$modelDesign$outcomeId,2)
-  expect_equal(plpModel$modelDesign$cohortId,1)
+  expect_equal(plpModel$modelDesign$targetId,1)
   # add check for other model design settings
   
 })

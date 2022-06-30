@@ -68,7 +68,7 @@ CREATE TABLE @my_schema.@string_to_appendsample_settings( -- new
 CREATE TABLE  @my_schema.@string_to_appendmodel_designs (
     model_design_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     --model_name CHAR(50) NOT NULL,
-    cohort_id int NOT NULL,
+    target_id int NOT NULL,
     outcome_id int NOT NULL,
     tar_id int NOT NULL,
     plp_data_setting_id int NOT NULL, -- new
@@ -79,7 +79,7 @@ CREATE TABLE  @my_schema.@string_to_appendmodel_designs (
 	  split_setting_id int NOT NULL, -- new
 	  feature_engineering_setting_id int NOT NULL, -- new
 	  tidy_covariates_setting_id int NOT NULL, -- new
-    FOREIGN KEY (cohort_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
+    FOREIGN KEY (target_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (outcome_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
 	  FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id),
@@ -174,7 +174,7 @@ CREATE TABLE  @my_schema.@string_to_appendperformances (
     model_design_id int NOT NULL,
     development_database_id int NOT NULL,
     validation_database_id int NOT NULL,
-    cohort_id int NOT NULL,
+    target_id int NOT NULL,
     outcome_id int NOT NULL,
     tar_id int NOT NULL,
     plp_data_setting_id int NOT NULL, -- added
@@ -184,7 +184,7 @@ CREATE TABLE  @my_schema.@string_to_appendperformances (
     FOREIGN KEY (model_design_id) REFERENCES @my_schema.@string_to_appendmodel_designs(model_design_id),
     FOREIGN KEY (development_database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id),
     FOREIGN KEY (validation_database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id),
-    FOREIGN KEY (cohort_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
+    FOREIGN KEY (target_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (outcome_id) REFERENCES @my_schema.@string_to_appendcohorts(cohort_id),
     FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
     FOREIGN KEY (plp_data_setting_id) REFERENCES @my_schema.@string_to_appendplp_data_settings(plp_data_setting_id), -- new

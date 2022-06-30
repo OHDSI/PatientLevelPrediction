@@ -1,3 +1,7 @@
+PatientLevelPrediction 5.1.1
+======================
+- replaced cohortId to targetId for consistency throughout code
+
 PatientLevelPrediction 5.1.0
 ======================
 - replaced targetId in model design to cohortId for consistency throughout code

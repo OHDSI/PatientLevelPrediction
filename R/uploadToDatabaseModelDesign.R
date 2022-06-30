@@ -23,10 +23,11 @@ insertModelDesignInDatabase <- function(
   cohortDefinitions
 ){
   
+  # REMOVE THIS
   if(class(object) == 'externalValidatePlp' | class(object) == 'runPlp'){
     
     object <- PatientLevelPrediction::createModelDesign(
-      cohortId = object$model$modelDesign$cohortId,
+      targetId = object$model$modelDesign$targetId,
       outcomeId = object$model$modelDesign$outcomeId,
       restrictPlpDataSettings = object$model$modelDesign$restrictPlpDataSettings,
       populationSettings = object$model$modelDesign$populationSettings,
@@ -87,7 +88,7 @@ insertModelDesignSettings <- function(
     targetDialect = databaseSchemaSettings$targetDialect,
     cohortDefinition = getCohortDefinitionJson(
       cohortDefinitions = cohortDefinitions,
-      cohortId = object$cohortId
+      cohortId = object$targetId
     ),
     stringAppendToTables = databaseSchemaSettings$stringAppendToCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
@@ -199,7 +200,7 @@ insertModelDesignSettings <- function(
     conn = conn, 
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
-    cohortId = tId,
+    targetId = tId,
     outcomeId = oId,
     tarId = tarId,
     plpDataSettingId = plpDataSetId,
@@ -222,7 +223,7 @@ addModelDesign <- function(
   conn, 
   resultSchema, targetDialect,
   stringAppendToTables = stringAppendToTables,
-  cohortId,
+  targetId,
   outcomeId,
   tarId,
   plpDataSettingId,
@@ -236,8 +237,8 @@ addModelDesign <- function(
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
-  if(is.null(cohortId)){
-    stop('cohortId is null')
+  if(is.null(targetId)){
+    stop('targetId is null')
   }
   if(is.null(outcomeId)){
     stop('outcomeId is null')
@@ -281,7 +282,7 @@ addModelDesign <- function(
     targetDialect = targetDialect, 
     tableName = 'model_designs',
     columnNames = c(
-      'cohort_id',
+      'target_id',
       'outcome_id',
       'tar_id',
       'plp_data_setting_id',
@@ -294,7 +295,7 @@ addModelDesign <- function(
       'tidy_covariates_setting_id'
     ), 
     values = c(
-      cohortId,
+      targetId,
       outcomeId,
       tarId,
       plpDataSettingId,
@@ -312,7 +313,7 @@ addModelDesign <- function(
   if(nrow(result)==0){
     # model
     sql <- "INSERT INTO @my_schema.@string_to_appendmodel_designs(
-    cohort_id,
+    target_id,
     outcome_id,
     tar_id,
     plp_data_setting_id,
@@ -325,7 +326,7 @@ addModelDesign <- function(
     tidy_covariates_setting_id
     ) VALUES 
   ( 
-  @cohort_id, 
+  @target_id, 
   @outcome_id, 
   @tar_id, 
   @plp_data_setting_id,
@@ -340,7 +341,7 @@ addModelDesign <- function(
     sql <- SqlRender::render(
       sql, 
       my_schema = resultSchema,
-      cohort_id = cohortId,
+      target_id = targetId,
       outcome_id = outcomeId,
       tar_id = tarId,
       plp_data_setting_id= plpDataSettingId,
@@ -364,7 +365,7 @@ addModelDesign <- function(
                          targetDialect = targetDialect, 
                          tableName = 'model_designs',
                          columnNames = c(
-                           'cohort_id',
+                           'target_id',
                            'outcome_id',
                            'tar_id',
                            'plp_data_setting_id',
@@ -376,7 +377,7 @@ addModelDesign <- function(
                            'feature_engineering_setting_id',
                            'tidy_covariates_setting_id'
                            ), 
-                         values = c(cohortId,
+                         values = c(targetId,
                                     outcomeId,
                                     tarId,
                                     plpDataSettingId,

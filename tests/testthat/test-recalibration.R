@@ -31,7 +31,7 @@ prediction <- data.frame(
 
 metaData <- list(
   modelType = "binary", 
-  cohortId = 1,
+  targetId = 1,
   outcomeId = 2,
   timepoint = 365
 )
@@ -62,9 +62,18 @@ testthat::expect_true(sum(test$evaluationType == 'weakRecalibration') == 100)
 
 
 test_that("recalibratePlpRefit", {
+  
+  newPop <- plpResult$prediction %>% dplyr::select(-.data$value) %>% dplyr::filter(.data$evaluationType %in% c('Test','Train'))
+  attr(newPop, 'metaData') <- list(
+    targetId = 1, 
+    outcomeId = 2,
+    restrictPlpDataSettings = PatientLevelPrediction::createRestrictPlpDataSettings(),
+    populationSettings = PatientLevelPrediction::createStudyPopulationSettings()
+  )
+  
   testRecal <- recalibratePlpRefit(
     plpModel = plpResult$model, 
-    newPopulation = plpResult$prediction %>% dplyr::select(-.data$value) %>% dplyr::filter(.data$evaluationType %in% c('Test','Train')), 
+    newPopulation = newPop, 
     newData = plpData
   )
   
@@ -83,7 +92,7 @@ test_that("survival", {
 # survival
 metaData <- list(
   modelType = "survival", 
-  cohortId = 1,
+  targetId = 1,
   outcomeId = 2,
   timepoint = 365
 )

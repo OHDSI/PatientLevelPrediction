@@ -100,6 +100,7 @@ test_that("createSampleSettings expected errors", {
 test_that("sampleData outputs are correct", {
   
   trainData <- createTrainData(plpData, population)
+  attr(trainData, "metaData")$sampleSettings <- NULL # remove for test
   
   sampleSettings <- sampleSettingFunc(type = 'none') 
   

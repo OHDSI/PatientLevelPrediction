@@ -3,9 +3,9 @@
 SELECT cast(row_id as int) row_id,
 	subject_id,
 {@cdm_version == "4"} ? {	
-	cohort_concept_id AS cohort_id,
+	cohort_concept_id AS target_id,
 } : {
-	cohort_definition_id AS cohort_id,
+	cohort_definition_id AS target_id,
 }
 	cohort_start_date,
 	days_from_obs_start,

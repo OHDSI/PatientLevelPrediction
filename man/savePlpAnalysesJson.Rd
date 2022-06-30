@@ -5,8 +5,8 @@
 \title{Save the modelDesignList to a json file}
 \usage{
 savePlpAnalysesJson(
-  modelDesignList = list(createModelDesign(cohortId = 1, outcomeId = 2, modelSettings =
-    setLassoLogisticRegression()), createModelDesign(cohortId = 1, outcomeId = 3,
+  modelDesignList = list(createModelDesign(targetId = 1, outcomeId = 2, modelSettings =
+    setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
   cohortDefinitions = NULL,
   saveDirectory = NULL
@@ -29,8 +29,8 @@ This function creates a json file with the modelDesignList saved
 \dontrun{
 savePlpAnalysesJson(
 modelDesignList = list(
-createModelDesign(cohortId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
-createModelDesign(cohortId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
+createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
+createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
 ),
 saveDirectory = 'C:/bestModels'
 )

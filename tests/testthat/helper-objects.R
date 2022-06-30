@@ -121,9 +121,17 @@ createTrainData <- function(plpData, population){
     index = sample(3, nrow(population), replace = T)
   )
   
+  # add settings objects
   attr(trainData, "metaData")$outcomeId <- 2
-  attr(trainData, "metaData")$cohortId <- 1
-
+  attr(trainData, "metaData")$targetId <- 1
+  attr(trainData, "metaData")$restrictPlpDataSettings <- attr(population, 'metaData')$restrictPlpDataSettings
+  attr(trainData, "metaData")$covariateSettings <- plpData$metaData$covariateSettings
+  attr(trainData, "metaData")$populationSettings <- attr(population, 'metaData')$populationSettings
+  attr(trainData$covariateData, "metaData")$featureEngineeringSettings <- PatientLevelPrediction::createFeatureEngineeringSettings()
+  attr(trainData$covariateData, "metaData")$preprocessSettings <- PatientLevelPrediction::createPreprocessSettings()
+  attr(trainData, "metaData")$splitSettings <- PatientLevelPrediction::createDefaultSplitSetting()
+  attr(trainData, "metaData")$sampleSettings <- PatientLevelPrediction::createSampleSettings()
+  
   class(trainData$covariateData) <- 'CovariateData'
   
   return(trainData)

@@ -102,7 +102,7 @@ The fit function should return a list of class `plpModel` with the following obj
     + tidyCovariates \- the preprocessing settings e.g., attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
     + requireDenseMatrix \- does the model require a dense matrix? e.g., attr(param, 'settings')$requiresDenseMatrix,
  * modelDesign \- a list containing:
-   + cohortId \- the id of the target cohort
+   + targetId \- the id of the target cohort
    + outcomeId \- the id of the outcome cohort
    + plpDataSettings \- the plpData settings e.g., attr(trainData, "metaData")$plpDataSettings
    + covariateSettings \- the covariate settings e.g.,  attr(trainData, "metaData")$covariateSettings
@@ -166,7 +166,7 @@ fitMadeUp <- function(trainData, modelSettings, search, analysisId){
                  ),
     modelDesign = list(
       outcomeId = attr(trainData, "metaData")$outcomeId,
-      cohortId = attr(trainData, "metaData")$cohortId,
+      targetId = attr(trainData, "metaData")$targetId,
       plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
@@ -344,7 +344,7 @@ fitMadeUp <- function(trainData, modelSettings, search, analysisId){
                  ),
     modelDesign = list(
       outcomeId = attr(trainData, "metaData")$outcomeId,
-      cohortId = attr(trainData, "metaData")$cohortId,
+      targetId = attr(trainData, "metaData")$targetId,
       plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,

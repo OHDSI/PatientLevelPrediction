@@ -104,7 +104,7 @@ externalValidatePlp <- function(
       populationSettings = attr(population, 'metaData')$populationSettings,
       restrictPlpDataSettings = attr(plpData, 'metaData')$restrictPlpDataSettings,
       outcomeId = attr(population, 'metaData')$outcomeId,
-      cohortId = attr(plpData, 'metaData')$databaseDetails$cohortId,
+      targetId = attr(plpData, 'metaData')$databaseDetails$targetId,
       attrition = attr(population, 'metaData')$attrition,
       validationDate = Sys.Date() # is this needed?
     )
@@ -198,9 +198,9 @@ externalValidateDbPlp <- function(
       databaseDetails = databaseDetails,
       restrictPlpDataSettings = validationRestrictPlpDataSettings
       )
-    if(is.null(getPlpDataSettings$databaseDetails$cohortId)){
-      ParallelLogger::logInfo("cohortId not in databaseSettings so using model's")
-      getPlpDataSettings$databaseDetails$cohortId <- plpModel$modelDesign$cohortId
+    if(is.null(getPlpDataSettings$databaseDetails$targetId)){
+      ParallelLogger::logInfo("targetId not in databaseSettings so using model's")
+      getPlpDataSettings$databaseDetails$targetId <- plpModel$modelDesign$targetId
     }
     if(is.null(getPlpDataSettings$databaseDetails$outcomeIds)){
       ParallelLogger::logInfo("outcomeId not in databaseSettings  so using model's")

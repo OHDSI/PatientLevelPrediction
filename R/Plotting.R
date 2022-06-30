@@ -83,7 +83,7 @@ outcomeSurvivalPlot <- function(
   
   population$daysToEvent[is.na(population$daysToEvent)] <- population$survivalTime[is.na(population$daysToEvent)]
   survivalFit <- survival::survfit(
-    survival::Surv(daysToEvent, outcomeCount)~cohortId,
+    survival::Surv(daysToEvent, outcomeCount)~targetId,
     #riskDecile, 
     population, 
     conf.int = TRUE

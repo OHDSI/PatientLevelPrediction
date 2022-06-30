@@ -6,8 +6,8 @@
 \usage{
 diagnoseMultiplePlp(
   databaseDetails = createDatabaseDetails(),
-  modelDesignList = list(createModelDesign(cohortId = 1, outcomeId = 2, modelSettings =
-    setLassoLogisticRegression()), createModelDesign(cohortId = 1, outcomeId = 3,
+  modelDesignList = list(createModelDesign(targetId = 1, outcomeId = 2, modelSettings =
+    setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
   cohortDefinitions = NULL,
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
@@ -28,7 +28,7 @@ diagnoseMultiplePlp(
 }
 \value{
 A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
-for a set of analysis choices.\cr \verb{cohortId} \tab The ID of the target cohort populations.\cr
+for a set of analysis choices.\cr \verb{targetId} \tab The ID of the target cohort populations.\cr
 \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved 
  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 }

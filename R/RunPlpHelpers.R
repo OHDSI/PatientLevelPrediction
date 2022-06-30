@@ -1,4 +1,4 @@
-printHeader <- function(plpData, cohortId, outcomeId , analysisId, analysisName, ExecutionDateTime){
+printHeader <- function(plpData, targetId, outcomeId , analysisId, analysisName, ExecutionDateTime){
   
   ParallelLogger::logInfo(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
   
@@ -8,7 +8,7 @@ printHeader <- function(plpData, cohortId, outcomeId , analysisId, analysisName,
   ParallelLogger::logInfo(sprintf('%-20s%s', 'AnalysisName: ',analysisName))
   
   # add header to analysis log
-  ParallelLogger::logInfo(sprintf('%-20s%s', 'TargetID: ', cohortId))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'TargetID: ', targetId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
   if(!is.null(plpData$population)){

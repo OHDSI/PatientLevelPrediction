@@ -21,7 +21,7 @@ test_that("check printHeader runs", {
   
   header <- printHeader(
     plpData = plpData, 
-    cohortId = 1, 
+    targetId = 1, 
     outcomeId = 2, 
     analysisId = 123, 
     analysisName = 'test', 

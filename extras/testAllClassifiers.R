@@ -20,7 +20,7 @@ databaseDetails <- createDatabaseDetails(
   cohortTable = "cohort", 
   outcomeDatabaseSchema = "main", 
   outcomeTable =  "cohort",
-  cohortId = 1, 
+  targetId = 1, 
   outcomeIds = 3, #make this ids
   cdmVersion = 5)
 
