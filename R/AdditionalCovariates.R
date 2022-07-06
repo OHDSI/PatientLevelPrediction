@@ -62,7 +62,7 @@ getCohortCovariateData <- function(
     " b.cohort_end_date >= dateadd(day, @startDay, a.cohort_start_date) ",
     "{@ageInteraction | @lnAgeInteraction}?{inner join @cdm_database_schema.person p on p.person_id=a.subject_id}",
     "where b.cohort_definition_id = @covariate_cohort_id
-    group by a.@row_id_field "
+    group by a.@row_id_field; "
   )
   
   sql <- SqlRender::render(
@@ -94,7 +94,7 @@ getCohortCovariateData <- function(
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   # Construct covariate reference:
   sql <- "select @covariate_id as covariate_id, '@concept_set' as covariate_name,
-  @analysis_id as analysis_id, -1 as concept_id"
+  @analysis_id as analysis_id, -1 as concept_id;"
   sql <- SqlRender::render(
     sql = sql, 
     covariate_id = covariateSettings$covariateId,
