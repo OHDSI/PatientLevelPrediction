@@ -1,3 +1,13 @@
+PatientLevelPrediction 5.3.2
+======================
+- moved FeatureExtraction to depends 
+
+PatientLevelPrediction 5.3.1
+======================
+- moved most of the shiny app code into OhdsiShinyModules
+- removed shiny dependencies and added OhdsiShinyModules to suggests
+- fixed bug with linux sklearn saving
+
 PatientLevelPrediction 5.1.1
 ======================
 - replaced cohortId to targetId for consistency throughout code

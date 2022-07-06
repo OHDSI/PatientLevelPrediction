@@ -24,7 +24,6 @@
 #' @name PatientLevelPrediction
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
-#' @import FeatureExtraction
 NULL
 
 #' A simulation profile

@@ -126,15 +126,7 @@ viewDatabaseResultPlp <- function(
 # one shiny app 
 
 viewPlps <- function(databaseSettings){
-  ensure_installed("shiny")
-  ensure_installed("shinydashboard")
-  ensure_installed("shinycssloaders")
-  ensure_installed("DT")
-  ensure_installed("htmlwidgets")
-  ensure_installed("shinyWidgets")
-  ensure_installed("plotly")
-  ensure_installed('pool')
-  ensure_installed('DBI')
+  ensure_installed("OhdsiShinyModules")
   
   # set database settings into system variables
   Sys.setenv("plpDatabaseSettings" = as.character(ParallelLogger::convertSettingsToJson(databaseSettings)))

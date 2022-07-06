@@ -320,7 +320,7 @@ return(model)
 #' }
 #' @export
 setMLP <- function(
-  hiddenLayerSizes = list(c(100), c(20,4)), #must be integers
+  hiddenLayerSizes = list(c(100), c(20)), #must be integers
   activation = list('relu'),
   solver = list('adam'),
   alpha = list(0.3,0.01,0.0001,0.000001), 
@@ -770,7 +770,7 @@ setSVM <- function(
     pythonClassifier = 'SVC'
   ) 
   
-  attr(param, 'saveToJson') <- T
+  attr(param, 'saveToJson') <- F # having issue loading json
   attr(param, 'saveType') <- 'file'
  
   result <- list(

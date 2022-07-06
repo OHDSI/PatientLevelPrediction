@@ -35,14 +35,6 @@ addInfo(
  icon = shiny::icon("table")
  ), 
  infoId = "PredictionInfo"
-) , 
-addInfo(
- item = shinydashboard::menuItem(
- text = "Prediction Diagnostic", 
- tabName = "PredictionDiagnostic", 
- icon = shiny::icon("stethoscope")
- ), 
- infoId = "PredictionDiagnosticInfo"
 ) 
 ) 
 
@@ -54,47 +46,38 @@ addInfo(
     #=============
     
 shiny::observeEvent(input$AboutInfo, {
-  showInfoBox("About", "modules/about/www/About.html")
+  showInfoBox("About", OhdsiShinyModules::aboutHelperFile())
 })
 shiny::observeEvent(input$PredictionInfo, {
-  showInfoBox("Prediction", "modules/prediction/www/Prediction.html")
+  showInfoBox("Prediction", OhdsiShinyModules::predictionHelperFile())
 })
-shiny::observeEvent(input$PredictionDiagnosticInfo, {
-  showInfoBox("PredictionDiagnostic", "modules/predictionDiagnostic/www/predictionDiagnostic.html")
-})
+
 
   #=============
   # module severs
   #=============
 runServer <- shiny::reactiveValues( 
 About = 0, 
-Prediction = 0, 
-PredictionDiagnostic = 0
+Prediction = 0
  ) 
 shiny::observeEvent(input$menu,{ 
 
     runServer[[input$menu]] <- runServer[[input$menu]] +1 
 if(input$menu == "About" & runServer[["About"]]==1){
-  aboutServer(
+  OhdsiShinyModules::aboutServer(
     id = "about"
     )
 }
 if(input$menu == "Prediction" & runServer[["Prediction"]]==1){
-  predictionServer(
+  OhdsiShinyModules::predictionServer(
+    #predictionServer(
     id = "prediction",
     resultDatabaseSettings = ParallelLogger::convertJsonToSettings(
       Sys.getenv('plpDatabaseSettings')
     )
  )
 }
-if(input$menu == "PredictionDiagnostic" & runServer[["PredictionDiagnostic"]]==1){
-  predictionDiagnosticServer(
-    id = "predictionDiagnostic",
-    resultDatabaseSettings = ParallelLogger::convertJsonToSettings(
-      Sys.getenv('plpDatabaseSettings')
-    )
-    )
-}
+
    }
   )
  }

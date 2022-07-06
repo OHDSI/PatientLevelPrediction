@@ -18,7 +18,7 @@ ensure_installed <- function(pkg) {
     if (interactive()) {
       message(msg, "\nWould you like to install it?")
       if (utils::menu(c("Yes", "No")) == 1) {
-        if(pkg%in%c('BigKnn', "IterativeHardThresholding")){
+        if(pkg%in%c('BigKnn', "IterativeHardThresholding", "OhdsiShinyModules")){
           
           # add code to check for devtools...
           dvtCheck <- tryCatch(utils::packageVersion('devtools'), 
@@ -42,8 +42,8 @@ ensure_installed <- function(pkg) {
 
 createTempModelLoc <- function(){
   repeat{
-    loc <- paste(tempdir(), paste0('python_models_',sample(10002323,1)), sep = '\\')
-    #loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
+    ##loc <- paste(tempdir(), paste0('python_models_',sample(10002323,1)), sep = '\\')
+    loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
     if(!dir.exists(loc)){
       return(loc)
     }

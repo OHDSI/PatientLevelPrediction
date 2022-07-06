@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
-Version: 5.1.1
-Date: 2022-05-18
+Version: 5.3.2
+Date: 2022-07-04
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -22,13 +22,13 @@ URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/Pa
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 VignetteBuilder: knitr
 Depends:
-    R (>= 3.3.0),
-    FeatureExtraction (>= 3.0.0)
+    R (>= 3.3.0)
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
     DatabaseConnector (>= 5.0.0),
     dplyr,
+    FeatureExtraction (>= 3.0.0),
     ggplot2,
     gridExtra,
     Matrix,
@@ -49,28 +49,20 @@ Imports:
 Suggests:
     AUC,
     BigKnn (>= 1.0.0),
-    DBI,
     devtools,
-    DT,
     Eunomia,
-    htmlwidgets (> 0.8),
-    htmltools,
     IterativeHardThresholding,
     knitr,
     markdown,
     Metrics,
     parallel,
-    plotly,
     plyr, 
     pool,
     readr,
     ResourceSelection,
     rmarkdown,
     scoring,
-    shiny,
-    shinycssloaders,
-    shinydashboard,
-    shinyWidgets,
+    OhdsiShinyModules (>= 0.2.0),
     survAUC,
     survminer,
     testthat,
@@ -81,6 +73,7 @@ Remotes:
     ohdsi/Eunomia,
     ohdsi/FeatureExtraction,
     ohdsi/IterativeHardThresholding,
-    ohdsi/ParallelLogger
+    ohdsi/ParallelLogger,
+    ohdsi/OhdsiShinyModules
 RoxygenNote: 7.2.0
 Encoding: UTF-8

@@ -1,6 +1,3 @@
-source("modules/about/module.R") 
-source("modules/prediction/module.R") 
-source("modules/predictionDiagnostic/module.R") 
 ui <- shinydashboard::dashboardPage( 
 
          skin = "black",  
@@ -16,7 +13,7 @@ ui <- shinydashboard::dashboardPage(
 
         shiny::img( 
 
-          src = "logo.png", 
+          src = OhdsiShinyModules::getLogoImage(),#"logo.png", 
 
           title = "OHDSI", 
 
@@ -57,21 +54,14 @@ shinydashboard::tabItem(
 
   tabName = "About", 
 
-  aboutViewer("about") 
+  OhdsiShinyModules::aboutViewer("about") 
 
 ),
 shinydashboard::tabItem( 
 
   tabName = "Prediction", 
 
-  predictionViewer("prediction") 
-
-),
-shinydashboard::tabItem( 
-
-  tabName = "PredictionDiagnostic", 
-
-  predictionDiagnosticViewer("predictionDiagnostic") 
+  OhdsiShinyModules::predictionViewer("prediction") 
 
 )
 )
