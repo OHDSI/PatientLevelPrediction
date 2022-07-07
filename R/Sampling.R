@@ -71,7 +71,7 @@ sampleData <- function(trainData, sampleSettings){
   ParallelLogger::logInfo('Starting data sampling')
   
   # if a single setting, make it a list
-  if(class(sampleSettings) == 'sampleSettings'){
+  if(inherits(sampleSettings,'sampleSettings')){
     sampleSettings <- list(sampleSettings)
   }
   

@@ -143,7 +143,7 @@ predictPythonSklearn <- function(
   cohort
   ){
   
-  if(class(data) == 'plpData'){
+  if(inherits(data, 'plpData')){
     # convert
     matrixObjects <- toSparseM(
       plpData = data, 

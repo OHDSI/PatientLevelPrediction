@@ -484,7 +484,7 @@ addRunPlpToDatabase <- function(
   )
   
   # Add model if runPlp
-  if(class(runPlp) == 'runPlp'){
+  if(inherits(runPlp, 'runPlp')){
     includesModel <- T
     developmentDatabase <- runPlp$model$trainDetails$developmentDatabase
     validationDatabase <- runPlp$model$trainDetails$developmentDatabase

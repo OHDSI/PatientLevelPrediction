@@ -24,7 +24,7 @@ insertModelDesignInDatabase <- function(
 ){
   
   # REMOVE THIS
-  if(class(object) == 'externalValidatePlp' | class(object) == 'runPlp'){
+  if(inherits(object, 'externalValidatePlp') | inherits(object, 'runPlp')){
     
     object <- PatientLevelPrediction::createModelDesign(
       targetId = object$model$modelDesign$targetId,
@@ -41,7 +41,7 @@ insertModelDesignInDatabase <- function(
     
   }
   
-  if(class(object) == 'modelDesign'){
+  if(inherits(object, 'modelDesign')){
     modelDesignId <- insertModelDesignSettings(
       object = object,
       conn = conn,

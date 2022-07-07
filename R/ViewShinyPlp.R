@@ -126,6 +126,7 @@ viewDatabaseResultPlp <- function(
 # one shiny app 
 
 viewPlps <- function(databaseSettings){
+  ensure_installed("shiny")
   ensure_installed("OhdsiShinyModules")
   
   # set database settings into system variables

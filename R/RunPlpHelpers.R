@@ -38,12 +38,12 @@ checkInputs <- function(inputs) {
     )
     
     # check class is correct
-    if(class(inputs[[inputName]]) != inputName && class(inputs[[inputName]]) != 'list'){
+    if(class(inputs[[inputName]]) != inputName && !inherits(inputs[[inputName]], 'list')){
       ParallelLogger::logError(paste0('Incorrect ', inputName))
       stop('Bad input')
     } 
     
-    if(class(inputs[[inputName]]) == 'list'){
+    if(inherits(inputs[[inputName]], 'list')){
       if(unique(unlist(lapply(inputs[[inputName]], class))) != inputName){
         ParallelLogger::logError(paste0('Incorrect ', inputName))
         stop('Bad input list')

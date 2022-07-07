@@ -1,6 +1,7 @@
 PatientLevelPrediction 5.3.2
 ======================
 - moved FeatureExtraction to depends 
+- fixed using inherits()
 
 PatientLevelPrediction 5.3.1
 ======================

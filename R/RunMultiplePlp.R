@@ -259,7 +259,7 @@ createModelDesign <- function(
   
   useFE <- F
   if(!is.null(featureEngineeringSettings)){
-    if(class(featureEngineeringSettings) == 'featureEngineeringSettings'){
+    if(inherits(featureEngineeringSettings, 'featureEngineeringSettings')){
       featureEngineeringSettings <- list(featureEngineeringSettings)
     }
     lapply(featureEngineeringSettings, function(x) checkIsClass(x, c('featureEngineeringSettings')))
@@ -271,7 +271,7 @@ createModelDesign <- function(
   useSample <- F
   if(!is.null(sampleSettings)){
     
-    if(class(sampleSettings) == 'sampleSettings'){
+    if(inherits(sampleSettings, 'sampleSettings')){
       sampleSettings <- list(sampleSettings)
     }
     lapply(sampleSettings, function(x) checkIsClass(x, c('sampleSettings')))
@@ -353,7 +353,7 @@ savePlpAnalysesJson <- function(
   saveDirectory = NULL
   ){
   
-  if(class(modelDesignList) == 'modelDesign'){
+  if(inherits(modelDesignList, 'modelDesign')){
     modelDesignList <- list(modelDesignList)
   }
   
