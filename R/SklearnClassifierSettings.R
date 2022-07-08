@@ -74,6 +74,7 @@ setAdaBoost <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'adaBoost',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
@@ -242,6 +243,7 @@ setDecisionTree <- function(
   param <- listCartesian(paramGrid)
 
   attr(param, 'settings') <- list(
+    modelType = 'decisionTree',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
@@ -418,6 +420,7 @@ setMLP <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'mlp',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
@@ -486,6 +489,7 @@ setNaiveBayes <- function(){
   param <- list(none = 'true')
   
   attr(param, 'settings') <- list(
+    modelType = 'naiveBayes',
     seed = as.integer(0),
     paramNames = c(), #use this for logging params
     requiresDenseMatrix = T,
@@ -646,6 +650,7 @@ setRandomForest <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'randomForest',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
@@ -761,6 +766,7 @@ setSVM <- function(
 
   
   attr(param, 'settings') <- list(
+    modelType = 'svm',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,

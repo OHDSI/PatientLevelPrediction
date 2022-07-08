@@ -48,6 +48,7 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
     )
   
   attr(param, 'settings') <- list(
+    modelType = 'knn',
     modelName = 'K Nearest Neighbors'
   )
   

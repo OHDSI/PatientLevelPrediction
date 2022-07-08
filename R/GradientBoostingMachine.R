@@ -97,7 +97,7 @@ setGradientBoostingMachine <- function(ntrees=c(100, 300), nthread=20, earlyStop
   )
   
   attr(param, 'settings') <- list(
-    modeType = 'Xgboost',
+    modelType = 'Xgboost',
     seed = seed[[1]],
     modelName = "Gradient Boosting Machine",
     threads = nthread[1],

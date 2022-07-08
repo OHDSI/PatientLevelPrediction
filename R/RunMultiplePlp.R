@@ -64,6 +64,32 @@ runMultiplePlp <- function(
     dir.create(saveDirectory, recursive = T)
   }
   
+  if(is.null(cohortDefinitions)){
+    
+    cohortIds <- unlist(
+      lapply(
+        X = 1:length(modelDesignList), 
+        FUN = function(i){
+          c(
+            modelDesignList[[i]]$targetId,
+            modelDesignList[[i]]$outcomeId
+          )
+        }
+      )
+    )
+    
+    cohortDefinitions <- lapply(
+      X = cohortIds, 
+      FUN = function(x){
+        list(
+          id = x, 
+          name = paste0('Cohort: ', x)
+        )
+      }
+    )
+  
+  }
+  
   settingstable <- convertToJson(modelDesignList,cohortDefinitions)
   
   if(nrow(settingstable) != length(modelDesignList)){
@@ -71,7 +97,18 @@ runMultiplePlp <- function(
   }
   
   # save the settings - TODO change this to save jsons in csv
-  utils::write.csv(settingstable, file.path(saveDirectory,'settings.csv'), row.names = F)
+  utils::write.csv(
+    x = settingstable %>% dplyr::select(
+      .data$analysisId,
+      .data$targetId, 
+      .data$targetName,
+      .data$outcomeId, 
+      .data$outcomeName,
+      .data$dataLocation
+      ), 
+    file.path(saveDirectory,'settings.csv'), 
+    row.names = F
+    )
 
   # group the outcomeIds per combination of data extraction settings
   dataSettings <- settingstable %>% 
@@ -554,7 +591,8 @@ convertToJson <-function(
     result <- result %>% 
       dplyr::left_join(cohorts, by = c("outcomeId" = "cohortId")) %>%
       dplyr::rename(outcomeName = .data$cohortName) %>%
-      dplyr::left_join(cohorts, by = c('targetId' = 'cohortId'))
+      dplyr::left_join(cohorts, by = c('targetId' = 'cohortId')) %>%
+      dplyr::rename(targetName = .data$cohortName) # new
     
   }
   

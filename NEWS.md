@@ -1,3 +1,12 @@
+PatientLevelPrediction 5.4.0
+======================
+- added saving of plp models into the result database 
+- added default cohortDefinitions in runMultiplePlp
+
+PatientLevelPrediction 5.3.3
+======================
+- added modelType to all models for database upload
+
 PatientLevelPrediction 5.3.2
 ======================
 - moved FeatureExtraction to depends 

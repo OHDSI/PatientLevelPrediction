@@ -163,31 +163,12 @@ savePlpModel <- function(plpModel, dirPath){
   }
   
   
-  # save the model based on saveType
-  if(attr(plpModel, 'saveType') == "xgboost"){
-    xgboost::xgb.save(model = plpModel$model, fname = file.path(dirPath, "model.json"))
-  } else if(attr(plpModel, 'saveType') == "RtoJson"){
-    ParallelLogger::saveSettingsToJson(
-      object = plpModel$model, 
-      fileName = file.path(dirPath, 'model.json')
+  # save the model part function to file 
+  saveModelPart(
+    model = plpModel$model, 
+    savetype = attr(plpModel, 'saveType'),
+    dirPath = dirPath
     )
-  } else if(attr(plpModel, 'saveType') == "file"){
-    # move the model into model
-    if(!dir.exists(file.path(dirPath, 'model'))){
-      dir.create(file.path(dirPath, 'model'), recursive = T)
-    }
-    for(file in dir(plpModel$model)){   
-      file.copy(
-        file.path(plpModel$model,file), 
-        file.path(dirPath,'model'), 
-        overwrite = TRUE,  
-        recursive = FALSE,
-        copy.mode = TRUE, 
-        copy.date = FALSE)
-    }
-  } else{
-    ParallelLogger::logWarn('Not sure how to save model - invalid saveType')
-  }
   
   # save the attributes of plpModel
   modelAttributes <- attributes(plpModel)
@@ -198,6 +179,39 @@ savePlpModel <- function(plpModel, dirPath){
   )
   
   return(dirPath)
+}
+
+
+saveModelPart <- function(model, savetype, dirPath){
+  # save the model based on saveType
+  if(savetype == "xgboost"){
+    xgboost::xgb.save(
+      model = model, 
+      fname = file.path(dirPath, "model.json")
+    )
+  } else if(savetype == "RtoJson"){
+    ParallelLogger::saveSettingsToJson(
+      object = model, 
+      fileName = file.path(dirPath, 'model.json')
+    )
+  } else if(savetype == "file"){
+    # move the model into model
+    if(!dir.exists(file.path(dirPath, 'model'))){
+      dir.create(file.path(dirPath, 'model'), recursive = T)
+    }
+    for(file in dir(model)){   
+      file.copy(
+        file.path(model,file), 
+        file.path(dirPath,'model'), 
+        overwrite = TRUE,  
+        recursive = FALSE,
+        copy.mode = TRUE, 
+        copy.date = FALSE)
+    }
+  } else{
+    ParallelLogger::logWarn('Not sure how to save model - invalid saveType')
+  }
+  
 }
 
 

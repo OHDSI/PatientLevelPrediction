@@ -58,7 +58,8 @@ insertRunPlpToSqlite <- function(
     conn = conn,
     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
     cohortDefinitions = cohortDefinitions,
-    databaseList = databaseList
+    databaseList = databaseList, 
+    modelSaveLocation = sqliteLocation
   )
   
   # add validation results if entered
@@ -72,7 +73,8 @@ insertRunPlpToSqlite <- function(
               conn = conn,
               databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
               cohortDefinitions = cohortDefinitions,
-              databaseList = databaseList
+              databaseList = databaseList, 
+              modelSaveLocation = sqliteLocation
             )
           }, error = function(e){ParallelLogger::logError(e)}
         )
@@ -158,7 +160,8 @@ insertResultsToSqlite <- function(
     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
     cohortDefinitions = cohortDefinitions,
     databaseList = databaseList,
-    resultLocation = resultLocation
+    resultLocation = resultLocation,
+    modelSaveLocation = sqliteLocation
   )
   
   # run insert diagnosis
@@ -276,6 +279,7 @@ createPlpResultTables <- function(
 #' @param databaseList              A list created by \code{createDatabaseList} to specify the databases
 #' @param resultLocation               (string) location of directory where the main package results were saved
 #' @param resultLocationVector         (only used when resultLocation is missing) a vector of locations with development or validation results  
+#' @param modelSaveLocation              The location of the file system for saving the models in a subdirectory  
 #'    
 #' @return
 #' Returns NULL but uploads all the results in resultLocation to the PatientLevelPrediction result tables in resultSchema
@@ -288,7 +292,8 @@ addMultipleRunPlpToDatabase <- function(conn,
                                       cdmDatabaseSchemas = c('cdm_truven_ccae_v123', 'cdm_madeup_v1')
                                     ),
                                     resultLocation = NULL,
-                                    resultLocationVector
+                                    resultLocationVector,
+                                    modelSaveLocation
 ){
   
   # for each development result add it to the database:
@@ -315,7 +320,8 @@ addMultipleRunPlpToDatabase <- function(conn,
         conn = conn,
         databaseSchemaSettings = databaseSchemaSettings,
         cohortDefinitions = cohortDefinitions,
-        databaseList = databaseList
+        databaseList = databaseList,
+        modelSaveLocation = modelSaveLocation
       )
       
     } #model not null 
@@ -463,6 +469,7 @@ createDatabaseList <- function(
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
 #' @param databaseList              A list created by \code{createDatabaseList} to specify the databases
+#' @param modelSaveLocation         The location of the directory that models will be saved to
 #'
 #' @return
 #' Returns a data.frame with the database details
@@ -473,7 +480,8 @@ addRunPlpToDatabase <- function(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList
+  databaseList,
+  modelSaveLocation
 ){
   
   modelDesignId <- insertModelDesignInDatabase(
@@ -535,7 +543,8 @@ addRunPlpToDatabase <- function(
       conn = conn,
       databaseSchemaSettings = databaseSchemaSettings,
       databaseId = developmentDatabaseId,
-      modelDesignId = modelDesignId
+      modelDesignId = modelDesignId,
+      modelSaveLocation = modelSaveLocation
     )
   }
   
@@ -628,8 +637,24 @@ insertModelInDatabase <- function(
   conn,
   databaseSchemaSettings,
   databaseId,
-  modelDesignId
+  modelDesignId,
+  modelSaveLocation
 ){
+  
+  # save the model to the file system
+  modelLocation <- file.path(
+    modelSaveLocation, 
+    'models',
+    paste0('folder-', modelDesignId, '-', databaseId)
+    )
+  if(!dir.exists(modelLocation)){
+    dir.create(modelLocation, recursive = T)
+  }
+  saveModelPart(
+    model = model$model,
+    savetype = attr(model, 'saveType'),
+    dirPath = modelLocation
+  )
   
     # create this function
     modelId <- addModel(
@@ -644,13 +669,13 @@ insertModelInDatabase <- function(
       modelDesignId = modelDesignId,
       databaseId = databaseId,
       modelType = model$trainDetails$modelName,
-      plpModelFile = as.character(ParallelLogger::convertSettingsToJson(model$model)), # add the json models here?
+      plpModelFile = modelLocation, # save the model to a location and add location here
       trainDetails = as.character(ParallelLogger::convertSettingsToJson(model$trainDetails)),
-      preprocessing = as.character(ParallelLogger::convertSettingsToJson(model$preprocessing)),
+      preprocessing = as.character(ParallelLogger::convertSettingsToJson(model$preprocess)),
       
       executionDateTime = format(model$trainDetails$trainingDate, format="%Y-%m-%d"), 
       trainingTime = model$trainDetails$trainingTime, 
-      intercept = ifelse(is.list(model$model), model$model$coefficients[1], 0),
+      intercept = ifelse(is.list(model$model) & attr(model, 'saveType') != 'xgboost', model$model$coefficients[1], 0),  # using the param useIntercept?
       
       stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
