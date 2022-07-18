@@ -108,9 +108,13 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   return(result)
 }
 
-# this functions takes covariate data and a cohort/population and remaps 
-# the covaiate and row ids 
-# restricts to pop and saves/creates mapping
+#' Map covariate and row Ids so they start from 1
+#' @description this functions takes covariate data and a cohort/population and remaps 
+#' the covariate and row ids, restricts to pop and saves/creates mapping
+#' @param covariateData a covariateData object
+#' @param cohort        if specified rowIds restricted to the ones in cohort
+#' @param mapping       A pre defined mapping to use 
+#' @export
 MapIds <- function(
   covariateData,
   cohort = NULL,
