@@ -36,11 +36,25 @@ fitCyclopsModel <- function(
       y = sapply(.data$outcomeCount, function(x) min(1,x)),
       time = .data$survivalTime
     )
-    
+  
   covariates <- filterCovariateIds(param, trainData$covariateData)
   
-  start <- Sys.time() 
-  
+  if (!is.null(param$priorCoefs)) {
+    sourceCoefs <- param$priorCoefs[abs(param$priorCoefs)>0 & names(param$priorCoefs) != "(Intercept)"]
+
+    newCovariates <- covariates %>%
+      dplyr::filter(covariateId %in% !!names(sourceCoefs)) %>%
+      dplyr::mutate(newCovariateId = covariateId*-1) %>%
+      dplyr::select(-covariateId) %>%
+      dplyr::rename(covariateId = newCovariateId) %>%
+      dplyr::collect()
+    
+    Andromeda::appendToTable(covariates, newCovariates)
+    
+  }
+
+  start <- Sys.time()
+
   cyclopsData <- Cyclops::convertToCyclopsData(
     outcomes = trainData$covariateData$labels,
     covariates = covariates,
@@ -50,6 +64,20 @@ fitCyclopsModel <- function(
     normalize = NULL,
     quiet = TRUE
     )
+  
+  if (!is.null(param$priorCoefs)) {
+    fixedCoefficients <- c(FALSE,
+                           rep(TRUE, length(sourceCoefs)),
+                           rep(FALSE, length(cyclopsData$coefficientNames)-(length(sourceCoefs)+1)))
+    
+    startingCoefficients <- rep(0, length(fixedCoefficients))
+    
+    # skip intercept index
+    startingCoefficients[2:(length(sourceCoefs)+1)] <- sourceCoefs
+  } else {
+    startingCoefficients <- NULL
+    fixedCoefficients <- NULL 
+  }
 
   if(settings$crossValidationInPrior){  
     param$priorParams$useCrossValidation <- max(trainData$folds$index)>1
@@ -77,7 +105,9 @@ fitCyclopsModel <- function(
       Cyclops::fitCyclopsModel(
         cyclopsData = cyclopsData, 
         prior = prior, 
-        control = control
+        control = control,
+        fixedCoefficients = fixedCoefficients,
+        startingCoefficients = startingCoefficients
         )}, 
       finally = ParallelLogger::logInfo('Done.')
       )
@@ -88,6 +118,7 @@ fitCyclopsModel <- function(
       finally = ParallelLogger::logInfo('Done.')) 
   }
   
+  
   modelTrained <- createCyclopsModel(
     fit = fit, 
     modelType = settings$modelType, 
@@ -96,7 +127,11 @@ fitCyclopsModel <- function(
     labels = trainData$covariateData$labels,
     folds = trainData$folds
     )
-
+  
+  if (!is.null(param$priorCoefs)) {
+    modelTrained$coefficients <- reparamTransferCoefs(modelTrained$coefficients)
+  }
+  
   # TODO get optimal lambda value
   ParallelLogger::logTrace('Returned from fitting to LassoLogisticRegression')
   comp <- Sys.time() - start
@@ -445,4 +480,16 @@ filterCovariateIds <- function(param, covariateData){
     covariates <- covariateData$covariates
   }
   return(covariates)
+}
+
+reparamTransferCoefs <- function(inCoefs) {
+  transferCoefs <- inCoefs[grepl("-", names(inCoefs))]
+  names(transferCoefs) <- substring(names(transferCoefs), 2)
+  
+  originalCoefs <- inCoefs[!grepl("-", names(inCoefs), )]
+
+  coefs <- c(originalCoefs, transferCoefs, use.names = TRUE)
+  coefs <- tapply(coefs, names(coefs), sum)
+  
+  return(coefs)
 }

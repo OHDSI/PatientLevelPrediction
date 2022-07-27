@@ -24,7 +24,9 @@ setLassoLogisticRegression<- function(
   upperLimit = 20, 
   lowerLimit = 0.01,
   tolerance = 2e-06,
-  maxIterations = 3000){
+  maxIterations = 3000,
+  priorCoefs = NULL
+  ){
   
   checkIsClass(seed, c('numeric','NULL','integer'))
   if(is.null(seed[1])){
@@ -48,7 +50,8 @@ setLassoLogisticRegression<- function(
       ),
     includeCovariateIds = includeCovariateIds, 
     upperLimit = upperLimit, 
-    lowerLimit = lowerLimit
+    lowerLimit = lowerLimit,
+    priorCoefs = priorCoefs
     )
   
   attr(param, 'settings') <- list(
