@@ -483,12 +483,11 @@ filterCovariateIds <- function(param, covariateData){
 }
 
 reparamTransferCoefs <- function(inCoefs) {
-  transferCoefs <- inCoefs[stringr::str_detect(names(inCoefs), "-")]
+  transferCoefs <- inCoefs[grepl("-", names(inCoefs))]
   names(transferCoefs) <- substring(names(transferCoefs), 2)
   
-  originalCoefs <- inCoefs[!stringr::str_detect(names(inCoefs), "-")]
-  # names(originalCoefs) <- names(coefs[!stringr::str_detect(names(coefs), "-")])
-  
+  originalCoefs <- inCoefs[!grepl("-", names(inCoefs), )]
+
   coefs <- c(originalCoefs, transferCoefs, use.names = TRUE)
   coefs <- tapply(coefs, names(coefs), sum)
   
