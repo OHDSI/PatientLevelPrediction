@@ -102,13 +102,13 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostics(
    FOREIGN KEY (database_id) REFERENCES @my_schema.@string_to_appenddatabase_details(database_id)
 );
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_summary(
-   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   diagnostic_id int NOT NULL,
    probast_id varchar(50),
    result_value varchar(50),
    FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
 );
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_predictors( -- call this kmplot
-   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   diagnostic_id int NOT NULL,
    days_to_event int,
    outcome_at_time int,
    observed_at_start_of_day bigint,
@@ -117,7 +117,7 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostic_predictors( -- call this km
    FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
 );
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_participants(
-   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   diagnostic_id int NOT NULL,
    design varchar(50),
    metric varchar(50),
    value float,
@@ -125,7 +125,7 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostic_participants(
    FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
 );
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_outcomes(
-   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   diagnostic_id int NOT NULL,
    xvalue int,
    outcome_percent float,
    aggregation varchar(50),
@@ -134,7 +134,7 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostic_outcomes(
    FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
 );
 CREATE TABLE  @my_schema.@string_to_appenddiagnostic_designs(
-   diagnostic_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+   diagnostic_id int NOT NULL,
    probast_id varchar(50),
    value varchar(50),
    FOREIGN KEY (diagnostic_id) REFERENCES @my_schema.@string_to_appenddiagnostics(diagnostic_id)
@@ -313,7 +313,4 @@ CREATE TABLE @my_schema.@string_to_appenddemographic_summary(
     max_predicted_probability float,
     FOREIGN KEY (performance_id) REFERENCES @my_schema.@string_to_appendperformances(performance_id)
 );
-
-
--- add diagnostic tables here
 

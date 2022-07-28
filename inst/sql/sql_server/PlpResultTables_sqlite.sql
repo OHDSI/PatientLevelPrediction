@@ -314,6 +314,3 @@ CREATE TABLE @my_schema.@string_to_appenddemographic_summary(
     FOREIGN KEY (performance_id) REFERENCES @string_to_appendperformances(performance_id)
 );
 
-
--- add diagnostic tables here
-

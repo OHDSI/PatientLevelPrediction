@@ -58,6 +58,32 @@ diagnoseMultiplePlp <- function(
     dir.create(saveDirectory, recursive = T)
   }
   
+  if(is.null(cohortDefinitions)){
+    
+    cohortIds <- unlist(
+      lapply(
+        X = 1:length(modelDesignList), 
+        FUN = function(i){
+          c(
+            modelDesignList[[i]]$targetId,
+            modelDesignList[[i]]$outcomeId
+          )
+        }
+      )
+    )
+    
+    cohortDefinitions <- lapply(
+      X = cohortIds, 
+      FUN = function(x){
+        list(
+          id = x, 
+          name = paste0('Cohort: ', x)
+        )
+      }
+    )
+    
+  }
+  
   settingstable <- convertToJson(modelDesignList,cohortDefinitions) # from runMultiplePlp.R
   
   if(nrow(settingstable) != length(modelDesignList)){
@@ -65,8 +91,19 @@ diagnoseMultiplePlp <- function(
   }
   
   # save the settings: TODO fix
-  utils::write.csv(settingstable, file.path(saveDirectory,'settings.csv'), row.names = F)
-  
+  utils::write.csv(
+    x = settingstable %>% dplyr::select(
+      .data$analysisId,
+      .data$targetId, 
+      .data$targetName,
+      .data$outcomeId, 
+      .data$outcomeName,
+      .data$dataLocation
+    ), 
+    file.path(saveDirectory,'settings.csv'), 
+    row.names = F
+  )
+
   # group the outcomeIds per combination of data extraction settings
   dataSettings <- settingstable %>% 
     dplyr::group_by(
