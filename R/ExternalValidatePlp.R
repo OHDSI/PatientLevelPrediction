@@ -95,16 +95,16 @@ externalValidatePlp <- function(
   
   model = list(
     model = 'external validation of model',
-    settings = plpModel$settings,
+    modelDesign = plpModel$modelDesign, # was settings
     validationDetails   = list(
       analysisId = '', #TODO add from model
       analysisSource = '', #TODO add from model
-      developmentDatabase = plpModel$trainDetails$cdmDatabaseSchema,
-      cdmDatabaseSchema = databaseName,
+      developmentDatabase = plpModel$trainDetails$developmentDatabase,
+      validationDatabase = databaseName,
       populationSettings = attr(population, 'metaData')$populationSettings,
-      plpDataSettings = attr(plpData, 'metaData')$restrictPlpDataSettings,
+      restrictPlpDataSettings = attr(plpData, 'metaData')$restrictPlpDataSettings,
       outcomeId = attr(population, 'metaData')$outcomeId,
-      cohortId = attr(plpData, 'metaData')$databaseDetails$cohortId,
+      targetId = attr(plpData, 'metaData')$databaseDetails$targetId,
       attrition = attr(population, 'metaData')$attrition,
       validationDate = Sys.Date() # is this needed?
     )
@@ -165,7 +165,7 @@ externalValidateDbPlp <- function(
   checkIsClass(plpModel, 'plpModel')
   
   # check the class and make a list if a single database setting
-  if(class(validationDatabaseDetails) == 'list'){
+  if(inherits(validationDatabaseDetails, 'list')){
     lapply(validationDatabaseDetails, function(x) checkIsClass(x, 'databaseDetails'))
   } else{
     checkIsClass(validationDatabaseDetails, 'databaseDetails')
@@ -198,26 +198,26 @@ externalValidateDbPlp <- function(
       databaseDetails = databaseDetails,
       restrictPlpDataSettings = validationRestrictPlpDataSettings
       )
-    if(is.null(getPlpDataSettings$databaseDetails$cohortId)){
-      ParallelLogger::logInfo("cohortId not in databaseSettings so using model's")
-      getPlpDataSettings$databaseDetails$cohortId <- plpModel$trainDetails$cohortId
+    if(is.null(getPlpDataSettings$databaseDetails$targetId)){
+      ParallelLogger::logInfo("targetId not in databaseSettings so using model's")
+      getPlpDataSettings$databaseDetails$targetId <- plpModel$modelDesign$targetId
     }
     if(is.null(getPlpDataSettings$databaseDetails$outcomeIds)){
-      ParallelLogger::logInfo("cohortId not in databaseSettings  so using model's")
-      getPlpDataSettings$databaseDetails$outcomeIds <- plpModel$trainDetails$outcomeId
+      ParallelLogger::logInfo("outcomeId not in databaseSettings  so using model's")
+      getPlpDataSettings$databaseDetails$outcomeIds <- plpModel$modelDesign$outcomeId
     }
     
     if(is.null(getPlpDataSettings$restrictPlpDataSettings$firstExposureOnly)){
       ParallelLogger::logInfo("firstExposureOnly not in restrictPlpDataSettings  so using model's")
-      getPlpDataSettings$restrictPlpDataSettings$firstExposureOnly <- plpModel$settings$plpDataSettings$firstExposureOnly
+      getPlpDataSettings$restrictPlpDataSettings$firstExposureOnly <- plpModel$modelDesign$restrictPlpDataSettings$firstExposureOnly
     }
     if(is.null(getPlpDataSettings$restrictPlpDataSettings$washoutPeriod)){
       ParallelLogger::logInfo("washoutPeriod not in restrictPlpDataSettings so using model's")
-      getPlpDataSettings$restrictPlpDataSettings$washoutPeriod <- plpModel$settings$plpDataSettings$washoutPeriod
+      getPlpDataSettings$restrictPlpDataSettings$washoutPeriod <- plpModel$modelDesign$restrictPlpDataSettings$washoutPeriod
     }
     
-    # we need to update this to restrict to model covariates and update custom features
-    getPlpDataSettings$covariateSettings <- plpModel$settings$covariateSettings
+    # TODO: we need to update this to restrict to model covariates and update custom features
+    getPlpDataSettings$covariateSettings <- plpModel$modelDesign$covariateSettings
     
     plpData <- tryCatch({
       do.call(getPlpData, getPlpDataSettings)

@@ -5,7 +5,7 @@
 \title{Create setting for neural network model with python}
 \usage{
 setMLP(
-  hiddenLayerSizes = list(c(100), c(20, 4)),
+  hiddenLayerSizes = list(c(100), c(20)),
   activation = list("relu"),
   solver = list("adam"),
   alpha = list(0.3, 0.01, 1e-04, 1e-06),

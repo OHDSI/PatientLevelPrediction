@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
-Version: 5.0.5
-Date: 2022-03-16
+Version: 5.4.0
+Date: 2022-07-08
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -12,7 +12,7 @@ Authors@R: c(
     person("Peter", "Rijnbeek", role = c("aut"))
     )
 Maintainer: Jenna Reps <jreps@its.jnj.com>
-Description: A package for creating patient level prediction models. Given a
+Description: A user friendly way to create patient level prediction models using the OMOP common data model. Given a
     cohort of interest and an outcome of interest, the package can use data in the
     OMOP Common Data Model to build a large set of features. These features can then
     be assessed to fit a predictive model using a number of machine learning algorithms.
@@ -22,16 +22,15 @@ URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/Pa
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 VignetteBuilder: knitr
 Depends:
-    R (>= 3.3.0),
-    FeatureExtraction (>= 3.0.0)
+    R (>= 3.3.0)
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
     DatabaseConnector (>= 5.0.0),
     dplyr,
+    FeatureExtraction (>= 3.0.0),
     ggplot2,
     gridExtra,
-    jsonlite,
     Matrix,
     memuse,
     mgcv,
@@ -50,31 +49,21 @@ Imports:
 Suggests:
     AUC,
     BigKnn (>= 1.0.0),
-    DBI,
     devtools,
-    diagram, 
-    DT,
     Eunomia,
-    gnm,
-    htmlwidgets (> 0.8),
-    htmltools,
     IterativeHardThresholding,
     knitr,
     markdown,
     Metrics,
     parallel,
-    plotly,
     plyr, 
     pool,
-    R6,
+    readr,
     ResourceSelection,
     rmarkdown,
     scoring,
     shiny,
-    shinycssloaders,
-    shinydashboard,
-    shinyWidgets,
-    SparseM,
+    OhdsiShinyModules (>= 0.2.0),
     survAUC,
     survminer,
     testthat,
@@ -85,6 +74,7 @@ Remotes:
     ohdsi/Eunomia,
     ohdsi/FeatureExtraction,
     ohdsi/IterativeHardThresholding,
-    ohdsi/ParallelLogger
-RoxygenNote: 7.1.2
+    ohdsi/ParallelLogger,
+    ohdsi/OhdsiShinyModules
+RoxygenNote: 7.2.0
 Encoding: UTF-8

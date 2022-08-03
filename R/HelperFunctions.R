@@ -18,7 +18,7 @@ ensure_installed <- function(pkg) {
     if (interactive()) {
       message(msg, "\nWould you like to install it?")
       if (utils::menu(c("Yes", "No")) == 1) {
-        if(pkg%in%c('BigKnn', "IterativeHardThresholding")){
+        if(pkg%in%c('BigKnn', "IterativeHardThresholding", "OhdsiShinyModules")){
           
           # add code to check for devtools...
           dvtCheck <- tryCatch(utils::packageVersion('devtools'), 
@@ -45,8 +45,8 @@ ensure_installed <- function(pkg) {
 #' @export
 createTempModelLoc <- function(){
   repeat{
-    loc <- paste(tempdir(), paste0('python_models_',sample(10002323,1)), sep = '\\')
-    #loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
+    ##loc <- paste(tempdir(), paste0('python_models_',sample(10002323,1)), sep = '\\')
+    loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
     if(!dir.exists(loc)){
       return(loc)
     }
@@ -100,6 +100,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
   if(envtype=='conda'){
     pEnvironments <- reticulate::conda_list()
     if(length(pEnvironments) > 0 && envname %in% pEnvironments$name){
+      location <- ''
       warning(paste0('Conda environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
@@ -112,6 +113,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
   } else {
     pEnvironments <- reticulate::virtualenv_list()
     if(length(pEnvironments) > 0 && envname %in% pEnvironments){
+      location <- ''
       warning(paste0('Python environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))
@@ -123,7 +125,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
                                    ignore_installed = TRUE)
   }
   
-  return(location)
+  return(invisible(location))
 }
 
 #' Use the virtual environment created using configurePython()
@@ -267,7 +269,12 @@ cut2 <- function(x, g, m = 150, digits = 3) {
   y <- structure(y, class='factor', levels=labs)
 
   attr(y,'class') <- "factor"
-  if(length(xlab)) label(y) <- xlab
+  if(length(xlab)){
+    #label(y) <- xlab  # what is label?
+    # think the below does the same as the line above
+    class(y) <- 'labelled'
+    attr(y, 'label') <- xlab
+  }
 
   return(y)
 }

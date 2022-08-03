@@ -41,12 +41,11 @@
 #' An object of class \code{plpModel} containing:
 #' 
 #' \item{model}{The trained prediction model}
-#' \item{modelLoc}{The path to where the model is saved (if saved)}
-#' \item{trainAuc}{The AUC obtained on the training set}
-#' \item{trainCalibration}{The calibration obtained on the training set}
-#' \item{modelSettings}{A list specifiying the model, preprocessing, outcomeId and cohortId}
-#' \item{metaData}{The model meta data}
-#' \item{trainingTime}{The time taken to train the classifier}
+#' \item{preprocess}{The preprocessing required when applying the model}
+#' \item{prediction}{The cohort data.frame with the predicted risk column added}
+#' \item{modelDesign}{A list specifiying the modelDesign settings used to fit the model}
+#' \item{trainDetails}{The model meta data}
+#' \item{covariateImportance}{The covariate importance for the model}
 #'
 #'
 #' @export
@@ -75,7 +74,7 @@ fitPlp <- function(
   fun <- eval(parse(text = modelSettings$fitFunction))
   args <- list(
     trainData = trainData,
-    param = modelSettings$param,
+    modelSettings, # old: param = modelSettings$param, # make this model settings?
     search = search,
     analysisId = analysisId
     )

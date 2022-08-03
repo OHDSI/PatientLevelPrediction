@@ -66,6 +66,7 @@ preprocessData <- function (covariateData,
                             preprocessSettings){
   
   metaData <- attr(covariateData, "metaData")
+  preprocessSettingsInput <- preprocessSettings # saving this before adding covariateData
   
   checkIsClass(covariateData, c("CovariateData"))
   checkIsClass(preprocessSettings, c("preprocessSettings"))
@@ -86,6 +87,7 @@ preprocessData <- function (covariateData,
     dplyr::filter(!.data$covariateId  %in% removed)
   
   metaData$tidyCovariateDataSettings <- attr(covariateData, "metaData")
+  metaData$preprocessSettings <- preprocessSettingsInput
   attr(covariateData, "metaData") <- metaData
   
   return(covariateData)

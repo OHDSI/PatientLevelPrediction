@@ -20,7 +20,7 @@ databaseDetails <- createDatabaseDetails(
   cohortTable = "cohort", 
   outcomeDatabaseSchema = "main", 
   outcomeTable =  "cohort",
-  cohortId = 1, 
+  targetId = 1, 
   outcomeIds = 3, #make this ids
   cdmVersion = 5)
 
@@ -85,6 +85,7 @@ plpResultEunomia8 <- PatientLevelPrediction::runPlp(
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = file.path(tempdir(), 'EunomiaTest7')
 )
+# issue with loading json - fixed by saving as pickle
 
 plpResultEunomia7 <- PatientLevelPrediction::runPlp(
   plpData = plpDataEunomia, 
@@ -112,11 +113,12 @@ plpResultEunomia6 <- PatientLevelPrediction::runPlp(
   sampleSettings = createSampleSettings(), 
   featureEngineeringSettings = createFeatureEngineeringSettings(), 
   preprocessSettings = createPreprocessSettings(), 
-  modelSettings = setMLP(), 
+  modelSettings = setMLP(hiddenLayerSizes = list(c(10))), 
   logSettings = createLogSettings(), 
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = file.path(tempdir(), 'EunomiaTest5')
 )
+# invalid hiddenLayerSizes can cause error 
 
 plpResultEunomia5 <- PatientLevelPrediction::runPlp(
   plpData = plpDataEunomia, 
@@ -133,7 +135,7 @@ plpResultEunomia5 <- PatientLevelPrediction::runPlp(
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = file.path(tempdir(), 'EunomiaTest4')
 )
-
+# worked
 
 plpResultEunomia3 <- PatientLevelPrediction::runPlp(
   plpData = plpDataEunomia, 
@@ -150,6 +152,7 @@ plpResultEunomia3 <- PatientLevelPrediction::runPlp(
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = file.path(tempdir(), 'EunomiaTest2')
 )
+# worked
 
 plpResultEunomia4 <- PatientLevelPrediction::runPlp(
   plpData = plpDataEunomia, 
@@ -166,7 +169,7 @@ plpResultEunomia4 <- PatientLevelPrediction::runPlp(
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = file.path(tempdir(), 'EunomiaTest3')
 )
-
+# worked
 
 
 plpResultEunomia2 <- PatientLevelPrediction::runPlp(
@@ -184,10 +187,10 @@ plpResultEunomia2 <- PatientLevelPrediction::runPlp(
     nthread = c(10),
     earlyStopRound = c(25), 
     maxDepth = c(4), 
-    minRows = c(5), 
     learnRate = c(0.2) 
   ), 
   logSettings = createLogSettings(), 
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = file.path(tempdir(), 'EunomiaTest')
 )
+# worked

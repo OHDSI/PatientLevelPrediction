@@ -4,12 +4,14 @@
 \alias{viewPlp}
 \title{viewPlp - Interactively view the performance and model settings}
 \usage{
-viewPlp(runPlp, validatePlp = NULL)
+viewPlp(runPlp, validatePlp = NULL, diagnosePlp = NULL)
 }
 \arguments{
 \item{runPlp}{The output of runPlp() (an object of class 'runPlp')}
 
 \item{validatePlp}{The output of externalValidatePlp (on object of class 'validatePlp')}
+
+\item{diagnosePlp}{The output of diagnosePlp()}
 }
 \value{
 Opens a shiny app for interactively viewing the results

@@ -14,6 +14,8 @@ createModelDesign(
   sampleSettings = NULL,
   preprocessSettings = NULL,
   modelSettings = NULL,
+  splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
+    trainFraction = 0.75, splitSeed = 123, nfold = 3),
   runCovariateSummary = T
 )
 }
@@ -35,6 +37,8 @@ createModelDesign(
 \item{preprocessSettings}{Either NULL or an object of class \code{preprocessSettings} created using \code{createPreprocessingSettings()}}
 
 \item{modelSettings}{The model settings such as \code{setLassoLogisticRegression()}}
+
+\item{splitSettings}{The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}}
 
 \item{runCovariateSummary}{Whether to run the covariateSummary}
 }

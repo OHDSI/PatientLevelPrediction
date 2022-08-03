@@ -74,16 +74,17 @@ setAdaBoost <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'adaBoost',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = F,
     name = "AdaBoost",
     pythonImport = 'sklearn',
     pythonImportSecond = 'ensemble',
     pythonClassifier = 'AdaBoostClassifier'
   )
   
+  attr(param, 'saveToJson') <- F
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -242,16 +243,17 @@ setDecisionTree <- function(
   param <- listCartesian(paramGrid)
 
   attr(param, 'settings') <- list(
+    modelType = 'decisionTree',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Decision Tree",
     pythonImport = 'sklearn',
     pythonImportSecond = 'tree',
     pythonClassifier = 'DecisionTreeClassifier'
   )
   
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -320,7 +322,7 @@ return(model)
 #' }
 #' @export
 setMLP <- function(
-  hiddenLayerSizes = list(c(100), c(20,4)), #must be integers
+  hiddenLayerSizes = list(c(100), c(20)), #must be integers
   activation = list('relu'),
   solver = list('adam'),
   alpha = list(0.3,0.01,0.0001,0.000001), 
@@ -418,16 +420,17 @@ setMLP <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'mlp',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = F, # current bug in sklearn-json
     name = "Neural Network",
     pythonImport = 'sklearn',
     pythonImportSecond = 'neural_network',
     pythonClassifier = 'MLPClassifier'
   )
   
+  attr(param, 'saveToJson') <- F # current bug when saving to json
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -486,16 +489,17 @@ setNaiveBayes <- function(){
   param <- list(none = 'true')
   
   attr(param, 'settings') <- list(
+    modelType = 'naiveBayes',
     seed = as.integer(0),
     paramNames = c(), #use this for logging params
     requiresDenseMatrix = T,
-    saveToJson = T,
     name = "Naive Bayes",
     pythonImport = 'sklearn',
     pythonImportSecond = 'naive_bayes',
     pythonClassifier = 'GaussianNB'
   )
   
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -646,16 +650,17 @@ setRandomForest <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'randomForest',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Random forest",
     pythonImport = 'sklearn',
     pythonImportSecond = 'ensemble',
     pythonClassifier = 'RandomForestClassifier'
   ) 
   
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -761,16 +766,17 @@ setSVM <- function(
 
   
   attr(param, 'settings') <- list(
+    modelType = 'svm',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Support Vector Machine",
     pythonImport = 'sklearn',
     pythonImportSecond = 'svm',
     pythonClassifier = 'SVC'
   ) 
   
+  attr(param, 'saveToJson') <- F # having issue loading json
   attr(param, 'saveType') <- 'file'
  
   result <- list(

@@ -231,7 +231,7 @@ featureEngineer <- function(data, featureEngineeringSettings){
   ParallelLogger::logInfo('Starting Feature Engineering')
   
   # if a single setting, make it a list
-  if(class(featureEngineeringSettings) == 'featureEngineeringSettings'){
+  if(inherits(featureEngineeringSettings, 'featureEngineeringSettings')){
     featureEngineeringSettings <- list(featureEngineeringSettings)
   }
   
@@ -242,6 +242,8 @@ featureEngineer <- function(data, featureEngineeringSettings){
     ParallelLogger::logInfo(paste0('Applying ',fun))
     data <- do.call(eval(parse(text = fun)), args)
   }
+  
+  attr(data, 'metaData')$featureEngineeringSettings <- featureEngineeringSettings
   
   ParallelLogger::logInfo('Done Feature Engineering')
   

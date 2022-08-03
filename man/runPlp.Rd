@@ -24,7 +24,8 @@ runPlp(
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} - the patient level prediction
-data extracted from the CDM.}
+data extracted from the CDM.  Can also include an initial population as 
+plpData$popualtion.}
 
 \item{outcomeId}{(integer) The ID of the outcome.}
 

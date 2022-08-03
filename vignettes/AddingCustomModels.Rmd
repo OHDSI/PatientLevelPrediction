@@ -97,25 +97,29 @@ The fit function should return a list of class `plpModel` with the following obj
 
  * model \- a trained model (or location of the model if it is not an R object)
  * prediction \- a data.frame object with the trainData$labels plus an extra column with the name 'value' corresponding to the predicted risk of having the outcome during the time-at-risk. 
- * settings \- a list containing:
-   + plpDataSettings \- the plpData settings e.g., attr(trainData, "metaData")$plpDataSettings
-   + covariateSettings \- the covariate settings e.g.,  attr(trainData, "metaData")$covariateSettings
-    + populationSettings \- the population settings e.g., attr(trainData, "metaData")$populationSettings,
+ * preprocessing \- the settings required to preprocess the data when applying the model
     + featureEngineering \- the feature engineering settings e.g., attr(trainData$covariateData, "metaData")$featureEngineering,
     + tidyCovariates \- the preprocessing settings e.g., attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
     + requireDenseMatrix \- does the model require a dense matrix? e.g., attr(param, 'settings')$requiresDenseMatrix,
+ * modelDesign \- a list containing:
+   + targetId \- the id of the target cohort
+   + outcomeId \- the id of the outcome cohort
+   + plpDataSettings \- the plpData settings e.g., attr(trainData, "metaData")$plpDataSettings
+   + covariateSettings \- the covariate settings e.g.,  attr(trainData, "metaData")$covariateSettings
+    + populationSettings \- the population settings e.g., attr(trainData, "metaData")$populationSettings,
+    + featureEngineeringSettings \- the feature engineering settings e.g., attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
+    + preprocessSettings \- the preprocessing settings e.g., attr(trainData$covariateData, "metaData")$preprocessSettings, 
     + modelSettings = a list containing: model (model name), param (the hyper-parameter search list), finalModelParameters (the final model hyper-parameters), extraSettings (any extra settings)
     + splitSettings \- the split settings e.g., attr(trainData, "metaData")$splitSettings,
     + sampleSettings \- the sample settings e.g., attr(trainData, "metaData")$sampleSettings
  * trainDetails \- a list containing:
    + analysisId \- the identifier for the analysis
-   + cdmDatabaseSchema \- the database used to develop the model
-   + outcomeId \- the outcome id
-   + cohortId \- the target population id
+   + developmentDatabase \- the database used to develop the model
    + attrition \- the attrition
    + trainingTime \- how long it took to train the model
    + trainingDate \- date of model training
    + hyperParamSearch \- the hyper-parameter search used to train the model
+   + any other objects specific to training 
  * covariateImportance \- a data.frame containing the columns 'covariateId', 'covariateValue' (the variable importance) and 'columnId' (the column number that the variable need to be mapped to when implementing the model)
  
 In additon the plpModel requires two attributes:
@@ -130,7 +134,9 @@ Note: If a new modelType is desired, then the evalaution code within PatientLeve
 A full example of a custom 'binary' classifier fit function is:
 
 ```{r tidy=FALSE,eval=FALSE}
-fitMadeUp <- function(trainData, param, search, analysisId){
+fitMadeUp <- function(trainData, modelSettings, search, analysisId){
+  
+  param <- modelSettings$param
   
   # **************** code to train the model here
   # trainedModel <- this code should apply each hyper-parameter combination   
@@ -152,13 +158,20 @@ fitMadeUp <- function(trainData, param, search, analysisId){
   # construct the standard output for a model:
   result <- list(model = trainedModel,
                  prediction = prediction, # the train and maybe the cross validation predictions for the trainData
-    settings = list(
+                 preprocessing = list(
+                   featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
+      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
+      
+                 ),
+    modelDesign = list(
+      outcomeId = attr(trainData, "metaData")$outcomeId,
+      targetId = attr(trainData, "metaData")$targetId,
       plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
-      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
+      featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
+      prerocessSettings = attr(trainData$covariateData, "metaData")$prerocessSettings, 
       modelSettings = list(
         model = attr(param, 'settings')$modelName, # the model name
         param = param,
@@ -171,9 +184,7 @@ fitMadeUp <- function(trainData, param, search, analysisId){
     
     trainDetails = list(
       analysisId = analysisId,
-      cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
-      outcomeId = attr(trainData, "metaData")$outcomeId,
-      cohortId = attr(trainData, "metaData")$cohortId,
+      developmentDatabase = attr(trainData, "metaData")$cdmDatabaseSchema,
       attrition = attr(trainData, "metaData")$attrition, 
       trainingTime = timeToTrain, # how long it took to train the model
       trainingDate = Sys.Date(),
@@ -256,9 +267,10 @@ setMadeUp <- function(a=c(1,4,6), b=2, seed=NULL){
 
 ## Fit 
 ```{r tidy=FALSE,eval=FALSE}
-fitMadeUp <- function(trainData, param, search, analysisId){
+fitMadeUp <- function(trainData, modelSettings, search, analysisId){
 
   # set the seed for reproducibility
+  param <- modelSettings$param
   set.seed(attr(param, 'settings')$seed)
   
   # add folds to labels:
@@ -324,13 +336,20 @@ fitMadeUp <- function(trainData, param, search, analysisId){
   # construct the standard output for a model:
   result <- list(model = trainedModel,
                  prediction = prediction, 
-    settings = list(
+    preprocessing = list(
+                   featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
+      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
+      
+                 ),
+    modelDesign = list(
+      outcomeId = attr(trainData, "metaData")$outcomeId,
+      targetId = attr(trainData, "metaData")$targetId,
       plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
-      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
+      featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
+      prerocessSettings = attr(trainData$covariateData, "metaData")$prerocessSettings, 
       modelSettings = list(
         model = attr(param, 'settings')$modelName, # the model name
         param = param,
@@ -343,14 +362,14 @@ fitMadeUp <- function(trainData, param, search, analysisId){
     
     trainDetails = list(
       analysisId = analysisId,
-      cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
-      outcomeId = attr(trainData, "metaData")$outcomeId,
-      cohortId = attr(trainData, "metaData")$cohortId,
+      developmentDatabase = attr(trainData, "metaData")$cdmDatabaseSchema,
       attrition = attr(trainData, "metaData")$attrition, 
       trainingTime = timeToTrain, # how long it took to train the model
       trainingDate = Sys.Date(),
       hyperParamSearch = hyperSummary # the hyper-parameters and performance data.frame
     ),
+    covariateImportance = merge(trainData$covariateData$covariateRef, varImp, by='covariateId') # add variable importance to covariateRef if possible
+  ),
     covariateImportance = varImp
   )
   class(result) <- 'plpModel'

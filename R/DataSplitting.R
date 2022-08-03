@@ -146,9 +146,9 @@ splitData <- function(plpData = plpData,
     #trainData$covariateData$covariateRef <- plpData$covariateRef
     attr(trainData, "metaData") <- list(
       outcomeId = attr(population, "metaData")$outcomeId,
-      cohortId = attr(population, "metaData")$cohortId,
+      targetId = attr(population, "metaData")$targetId,
       cdmDatabaseSchema = plpData$metaData$databaseDetails$cdmDatabaseSchema,
-      plpDataSettings = attr(population, "metaData")$plpDataSettings,
+      restrictPlpDataSettings = attr(population, "metaData")$restrictPlpDataSettings,
       covariateSettings = plpData$metaData$covariateSettings,
       populationSettings = attr(population, "metaData")$populationSettings,
       attrition = attr(population, "metaData")$attrition,
@@ -183,9 +183,9 @@ splitData <- function(plpData = plpData,
     }
     attr(trainData, "metaData") <- list(
       outcomeId = attr(population, "metaData")$outcomeId,
-      cohortId = attr(population, "metaData")$cohortId,
+      targetId = attr(population, "metaData")$targetId,
       cdmDatabaseSchema = plpData$metaData$databaseDetails$cdmDatabaseSchema,
-      plpDataSettings = attr(population, "metaData")$plpDataSettings,
+      restrictPlpDataSettings = attr(population, "metaData")$restrictPlpDataSettings,
       covariateSettings = plpData$metaData$covariateSettings,
       populationSettings = attr(population, "metaData")$populationSettings,
       attrition = attr(population, "metaData")$attrition,
