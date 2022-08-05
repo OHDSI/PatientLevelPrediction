@@ -9,7 +9,8 @@ addRunPlpToDatabase(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList
+  databaseList,
+  modelSaveLocation
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ function \code{connect} in the
 \item{cohortDefinitions}{(list) A list of cohortDefinitions (each list must contain: name, id)}
 
 \item{databaseList}{A list created by \code{createDatabaseList} to specify the databases}
+
+\item{modelSaveLocation}{The location of the directory that models will be saved to}
 }
 \value{
 Returns a data.frame with the database details
