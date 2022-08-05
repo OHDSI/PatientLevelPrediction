@@ -11,7 +11,8 @@ addMultipleRunPlpToDatabase(
   databaseList = createDatabaseList(cdmDatabaseSchemas = c("cdm_truven_ccae_v123",
     "cdm_madeup_v1")),
   resultLocation = NULL,
-  resultLocationVector
+  resultLocationVector,
+  modelSaveLocation
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ function \code{connect} in the
 \item{resultLocation}{(string) location of directory where the main package results were saved}
 
 \item{resultLocationVector}{(only used when resultLocation is missing) a vector of locations with development or validation results}
+
+\item{modelSaveLocation}{The location of the file system for saving the models in a subdirectory}
 }
 \value{
 Returns NULL but uploads all the results in resultLocation to the PatientLevelPrediction result tables in resultSchema
