@@ -20,16 +20,6 @@ context("AndromedaHelperFunctions")
 # add limitCovariatesToPopulation(covariateData, rowIds) test 
 
 
-# batcheRestrict test 
-test_that("batchRestrict", {
-  
-  metaData <- attr(plpDataBig$covariateData, 'metaData')
-  covariateData <- PatientLevelPrediction:::batchRestrict(plpDataBig$covariateData, populationBig, sizeN = 10000000)
-  testthat::expect_is(covariateData, 'CovariateData')
-  
-  expect_equal(names(metaData), names(attr(covariateData, 'metaData')))
-  
-})
 
 
 # can't test clearffTempDir or checkffFolder?

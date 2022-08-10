@@ -18,7 +18,7 @@ context("covariateSummary")
 
 testCovariateData <- Andromeda::andromeda()
 testCovariateData$covariates <- data.frame(
-  rowId = c(1,2,5,7,10),
+  rowId = c(1L,2L,5L,7L,10L),
   covariateId = rep(1001, 5),
   covariateValue = rep(1,5)
 )
