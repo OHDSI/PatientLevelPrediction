@@ -74,7 +74,14 @@ checkNotNull <- function(parameter) {
 
 checkIsClass<- function(parameter,classes) {
   name = deparse(substitute(parameter))
-  if (!class(parameter)%in%classes) {
+  if (length(class(parameter))==1) {
+    condition <- (!class(parameter)%in%classes)
+  } else {
+    # when parameter has multiple classes - like CovariateData which inherits from Andromeda
+    condition <- !all(class(parameter)==classes)
+  }
+  
+  if (condition) {
     ParallelLogger::logError(paste0(name, ' should be of class:', classes))      
     stop(paste0(name, ' is wrong class'))
   }

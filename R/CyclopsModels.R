@@ -56,7 +56,6 @@ fitCyclopsModel <- function(
   }
 
   start <- Sys.time()
-
   cyclopsData <- Cyclops::convertToCyclopsData(
     outcomes = trainData$covariateData$labels,
     covariates = covariates,
@@ -410,7 +409,7 @@ getCV <- function(
   fixed_prior <- Cyclops::createPrior("laplace", variance = cvVariance, useCrossValidation = FALSE)
   
   # add the index to the labels
-  labels <- merge(labels, folds, by = 'rowId')
+  labels <- merge(labels %>% dplyr::collect(), folds, by = 'rowId')
   
   result <- lapply(1:max(labels$index), function(i) {
     hold_out <- labels$index==i

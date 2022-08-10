@@ -68,7 +68,7 @@ preprocessData <- function (covariateData,
   metaData <- attr(covariateData, "metaData")
   preprocessSettingsInput <- preprocessSettings # saving this before adding covariateData
   
-  checkIsClass(covariateData, c("CovariateData"))
+  checkIsClass(covariateData, c("CovariateData", "Andromeda"))
   checkIsClass(preprocessSettings, c("preprocessSettings"))
   
   ParallelLogger::logDebug(paste0('minFraction: ', preprocessSettings$minFraction))

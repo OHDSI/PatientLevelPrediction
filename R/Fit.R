@@ -61,7 +61,7 @@ fitPlp <- function(
     stop('trainData is NULL')
   if(is.null(trainData$covariateData))
     stop('covariateData is NULL')
-  checkIsClass(trainData$covariateData, 'CovariateData')
+  checkIsClass(trainData$covariateData, c('CovariateData', 'Andromeda'))
   if(is.null(modelSettings$fitFunction))
     stop('No model specified')
   checkIsClass(modelSettings, 'modelSettings')

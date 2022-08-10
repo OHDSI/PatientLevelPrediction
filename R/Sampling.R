@@ -153,7 +153,7 @@ underSampleData <- function(trainData, sampleSettings){
   metaData$populationSize = nrow(sampleTrainData$labels)
   attr(sampleTrainData$covariateData, 'metaData') <- metaData
   
-  class(sampleTrainData$covariateData) <- 'CovariateData'
+  class(sampleTrainData$covariateData) <- c('CovariateData', 'Andromeda')
   
   return(sampleTrainData)
 }
@@ -236,7 +236,7 @@ overSampleData <- function(trainData, sampleSettings){
   metaData$populationSize = nrow(sampleTrainData$labels)
   attr(sampleTrainData$covariateData, 'metaData') <- metaData
   
-  class(sampleTrainData$covariateData) <- 'CovariateData'
+  class(sampleTrainData$covariateData) <- c('CovariateData', 'Andromeda')
   
   return(trainData)
 }

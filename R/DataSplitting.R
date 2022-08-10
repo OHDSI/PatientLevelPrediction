@@ -128,18 +128,11 @@ splitData <- function(plpData = plpData,
     trainData$folds <- trainId
   
     #restrict to trainIds
-    if(length(trainId$rowId)<200000){
-      trainData$covariateData <- limitCovariatesToPopulation(
+    trainData$covariateData <- limitCovariatesToPopulation(
         plpData$covariateData, 
         trainId$rowId
         )
-    } else{
-      trainData$covariateData <- batchRestrict(
-        plpData$covariateData, 
-        data.frame(rowId = trainId$rowId), 
-        sizeN = 10000000
-        )
-    }
+  
     
     #trainData$covariateData <- Andromeda::andromeda()
     #trainData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% trainId$rowId)
@@ -157,7 +150,7 @@ splitData <- function(plpData = plpData,
     )
     # add pop size to covariateData as used in tidyCovariates
     attr(trainData$covariateData, "metaData") <- list(populationSize = nrow(trainData$labels))
-    class(trainData$covariateData) <- "CovariateData"
+    class(trainData$covariateData) <- c("CovariateData", "Andromeda")
     
     result <- list(Train =  trainData)
     
@@ -169,18 +162,11 @@ splitData <- function(plpData = plpData,
     trainData$folds <- trainId
     
     #restrict to trainIds
-    if(length(trainId$rowId)<200000){
-      trainData$covariateData <- limitCovariatesToPopulation(
+    trainData$covariateData <- limitCovariatesToPopulation(
         plpData$covariateData, 
         trainId$rowId
       )
-    } else{
-      trainData$covariateData <- batchRestrict(
-        plpData$covariateData, 
-        data.frame(rowId = trainId$rowId), 
-        sizeN = 10000000
-        )
-    }
+    
     attr(trainData, "metaData") <- list(
       outcomeId = attr(population, "metaData")$outcomeId,
       targetId = attr(population, "metaData")$targetId,
@@ -192,27 +178,18 @@ splitData <- function(plpData = plpData,
       splitSettings = splitSettings,
       populationSize = nrow(trainData$labels)
       )
-    
-    # add pop size to covariateData as used in tidyCovariates
-    attr(trainData$covariateData, "metaData") <- list(populationSize = nrow(trainData$labels))
-    class(trainData$covariateData) <- "CovariateData"
-    
+
     testId <- splitId[splitId$index<0,]
     testData <- list()
     class(testData) <- 'plpData'
     testData$labels <- population %>% dplyr::filter(.data$rowId %in% testId$rowId)
     
-    if(length(testId$rowId)<200000){
-      testData$covariateData <- limitCovariatesToPopulation(
+    testData$covariateData <- limitCovariatesToPopulation(
         plpData$covariateData, 
         testId$rowId
       )
-    } else{
-      testData$covariateData <- batchRestrict(plpData$covariateData, 
-        data.frame(rowId = testId$rowId), 
-        sizeN = 10000000)
-    }
-    class(testData$covariateData) <- "CovariateData"
+    
+    class(testData$covariateData) <- c("CovariateData", "Andromeda")
     
     result <- list(
       Train =  trainData,
@@ -241,7 +218,7 @@ dataSummary <- function(data){
   
   result <- data$Train$covariateData$covariates %>% 
     dplyr::group_by(.data$covariateId) %>% 
-    dplyr::summarise(N = length(.data$covariateValue)) %>% 
+    dplyr::summarise(N = n()) %>% 
     dplyr::collect()
   
   ParallelLogger::logInfo(paste0(nrow(result), ' covariates in train data'))

@@ -144,8 +144,6 @@ applyTidyCovariateData <- function(
   temp <- covariateData$covariateRef %>% dplyr::collect()
   allCovariateIds <- temp$covariateId
   covariateData$includeCovariates <- data.frame(covariateId = allCovariateIds[!allCovariateIds%in%deleteCovariateIds])
-  Andromeda::createIndex(covariateData$includeCovariates, c('covariateId'),
-    indexName = 'includeCovariates_covariateId')
   on.exit(covariateData$includeCovariates <- NULL, add = TRUE)
   # ---
   
@@ -160,11 +158,6 @@ applyTidyCovariateData <- function(
       covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins)
     }
     on.exit(covariateData$maxes <- NULL, add = TRUE)
-    
-    # --- added for speed
-    Andromeda::createIndex(covariateData$maxes, c('covariateId'),
-      indexName = 'maxes_covariateId')
-    # ---
     
     newCovariateData$covariates <- covariateData$covariates %>%  
       dplyr::inner_join(covariateData$includeCovariates, by='covariateId') %>% # added as join
@@ -181,15 +174,7 @@ applyTidyCovariateData <- function(
   newCovariateData$covariateRef <- covariateData$covariateRef %>% 
     dplyr::inner_join(covariateData$includeCovariates, by='covariateId')
   
-  # adding index for restrict to pop
-  Andromeda::createIndex(
-    newCovariateData$covariates, 
-    c('rowId'),
-    indexName = 'ncovariates_rowId'
-  )
-  
-  
-  class(newCovariateData) <- "CovariateData"
+  class(newCovariateData) <- c("CovariateData", "Andromeda")
   
   delta <- Sys.time() - start
   writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))
