@@ -2,13 +2,10 @@
 ^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-.travis.yml
 standalone
-^\.travis\.yml$
 deploy.sh
 extras/*
 man-roxygen
-xgboost
 compare_versions
 .github
 docs/*

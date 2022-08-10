@@ -77,7 +77,7 @@ insertModelDesignSettings <- function(
     startAnchor = object$populationSettings$startAnchor,
     endDay = object$populationSettings$riskWindowEnd,  
     endAnchor = object$populationSettings$endAnchor, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('tarId: ', tarId))
@@ -90,7 +90,7 @@ insertModelDesignSettings <- function(
       cohortDefinitions = cohortDefinitions,
       cohortId = object$targetId
     ),
-    stringAppendToTables = databaseSchemaSettings$stringAppendToCohortDefinitionTables,
+    tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('tId: ', tId))
@@ -103,7 +103,7 @@ insertModelDesignSettings <- function(
       cohortDefinitions = cohortDefinitions,
       cohortId = object$outcomeId
     ),
-    stringAppendToTables = databaseSchemaSettings$stringAppendToCohortDefinitionTables,
+    tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('oId: ', oId))
@@ -113,7 +113,7 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = object$populationSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('popSetId: ', popSetId))
@@ -123,7 +123,7 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = object$covariateSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('covSetId: ', covSetId))
@@ -134,7 +134,7 @@ insertModelDesignSettings <- function(
     targetDialect = databaseSchemaSettings$targetDialect,
     modelType = attr(object$modelSettings$param, 'settings')$modelType, # make this the same as model$trainDetails$modelName?
     json = object$modelSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('modSetId: ', modSetId))
@@ -145,7 +145,7 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = object$restrictPlpDataSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('plpDataSetId: ', plpDataSetId))
@@ -156,7 +156,7 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = object$featureEngineeringSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('FESetId: ', FESetId))
@@ -167,7 +167,7 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = object$sampleSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('sampleSetId: ', sampleSetId))
@@ -178,7 +178,7 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = object$preprocessSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('tidySetId: ', tidySetId))
@@ -190,7 +190,7 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = object$splitSettings,
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('splitId: ', splitId))
@@ -211,7 +211,7 @@ insertModelDesignSettings <- function(
     splitSettingId = splitId, # changed from trainingId
     featureEngineeringSettingId = FESetId,
     tidyCovariatesSettingId = tidySetId,
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('modelDesignId: ', modelDesignId))
@@ -222,7 +222,7 @@ insertModelDesignSettings <- function(
 addModelDesign <- function(
   conn, 
   resultSchema, targetDialect,
-  stringAppendToTables = stringAppendToTables,
+  tablePrefix = tablePrefix,
   targetId,
   outcomeId,
   tarId,
@@ -278,7 +278,7 @@ addModelDesign <- function(
   result <- checkTable(
     conn = conn, 
     resultSchema = resultSchema, 
-    stringAppendToTables = stringAppendToTables,
+    tablePrefix = tablePrefix,
     targetDialect = targetDialect, 
     tableName = 'model_designs',
     columnNames = c(
@@ -352,7 +352,7 @@ addModelDesign <- function(
       split_setting_id = splitSettingId,
       feature_engineering_setting_id = featureEngineeringSettingId,
       tidy_covariates_setting_id = tidyCovariatesSettingId,
-      string_to_append = stringAppendToTables
+      string_to_append = tablePrefix
     )
     sql <- SqlRender::translate(sql, targetDialect = targetDialect,
                                 tempEmulationSchema = tempEmulationSchema)
@@ -361,7 +361,7 @@ addModelDesign <- function(
     #getId of new
     result <- checkTable(conn = conn, 
                          resultSchema = resultSchema, 
-                         stringAppendToTables = stringAppendToTables,
+                         tablePrefix = tablePrefix,
                          targetDialect = targetDialect, 
                          tableName = 'model_designs',
                          columnNames = c(
@@ -399,7 +399,7 @@ addModelDesign <- function(
 
 
 addTar <- function(conn, resultSchema, targetDialect,
-                   stringAppendToTables = '',
+                   tablePrefix = '',
                    startDay, 
                    startAnchor,
                    endDay,  
@@ -409,7 +409,7 @@ addTar <- function(conn, resultSchema, targetDialect,
   
   result <- checkTable(conn = conn, 
                        resultSchema = resultSchema, 
-                       stringAppendToTables = stringAppendToTables,
+                       tablePrefix = tablePrefix,
                        targetDialect = targetDialect, 
                        tableName = 'tars',
                        columnNames = c('tar_start_day', 'tar_start_anchor',
@@ -434,7 +434,7 @@ addTar <- function(conn, resultSchema, targetDialect,
                              tar_start_anchor = paste0("'",startAnchor,"'"),
                              tar_end_day = endDay,
                              tar_end_anchor = paste0("'",endAnchor,"'"),
-                             string_to_append = stringAppendToTables)
+                             string_to_append = tablePrefix)
     
     sql <- SqlRender::translate(sql, targetDialect = targetDialect, 
                                 tempEmulationSchema = tempEmulationSchema)
@@ -444,7 +444,7 @@ addTar <- function(conn, resultSchema, targetDialect,
     #getId of new
     result <- checkTable(conn = conn, 
                          resultSchema = resultSchema, 
-                         stringAppendToTables = stringAppendToTables,
+                         tablePrefix = tablePrefix,
                          targetDialect = targetDialect, 
                          tableName = 'tars',
                          columnNames = c('tar_start_day', 'tar_start_anchor',
@@ -466,7 +466,7 @@ addTar <- function(conn, resultSchema, targetDialect,
 }
 
 addPopulationSetting <- function(conn, resultSchema, targetDialect,
-                                 stringAppendToTables = '',
+                                 tablePrefix = '',
                                  json,
                                  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -483,7 +483,7 @@ addPopulationSetting <- function(conn, resultSchema, targetDialect,
   
   jsonId <- checkJson(conn = conn,
                       resultSchema = resultSchema, 
-                      stringAppendToTables = stringAppendToTables,
+                      tablePrefix = tablePrefix,
                       targetDialect = targetDialect, 
                       tableName = 'population_settings',
                       jsonColumnName = 'populationSettingsJson',
@@ -497,7 +497,7 @@ addPopulationSetting <- function(conn, resultSchema, targetDialect,
     data <- data.frame(populationSettingsJson = json)
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables, 'population_settings'),
+                                   tableName = paste0(tablePrefix, 'population_settings'),
                                    data = data, 
                                    dropTableIfExists = F, 
                                    createTable = F, 
@@ -510,7 +510,7 @@ addPopulationSetting <- function(conn, resultSchema, targetDialect,
     #getId of new
     jsonId <- checkJson(conn = conn,
                         resultSchema = resultSchema, 
-                        stringAppendToTables = stringAppendToTables,
+                        tablePrefix = tablePrefix,
                         targetDialect = targetDialect, 
                         tableName = 'population_settings',
                         jsonColumnName = 'populationSettingsJson',
@@ -527,7 +527,7 @@ addPopulationSetting <- function(conn, resultSchema, targetDialect,
 
 
 addCovariateSetting <- function(conn, resultSchema, targetDialect,
-                                stringAppendToTables = '',
+                                tablePrefix = '',
                                 json,
                                 tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -543,7 +543,7 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
   jsonId <- checkJson(
     conn = conn,
     resultSchema = resultSchema, 
-    stringAppendToTables = stringAppendToTables,
+    tablePrefix = tablePrefix,
     targetDialect = targetDialect, 
     tableName = 'covariate_settings',
     jsonColumnName = 'covariateSettingsJson',
@@ -559,7 +559,7 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
     data <- data.frame(covariateSettingsJson = json)
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables, 'covariate_settings'),
+                                   tableName = paste0(tablePrefix, 'covariate_settings'),
                                    data = data, 
                                    dropTableIfExists = F, 
                                    createTable = F, 
@@ -572,7 +572,7 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
     #getId of new
     jsonId <- checkJson(conn = conn,
                         resultSchema = resultSchema, 
-                        stringAppendToTables = stringAppendToTables,
+                        tablePrefix = tablePrefix,
                         targetDialect = targetDialect, 
                         tableName = 'covariate_settings',
                         jsonColumnName = 'covariateSettingsJson',
@@ -589,7 +589,7 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
 
 
 addModelSetting <- function(conn, resultSchema, targetDialect,
-                            stringAppendToTables = '',
+                            tablePrefix = '',
                             modelType, json,
                             tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -604,7 +604,7 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
   
   jsonId <- checkJson(conn = conn,
                       resultSchema = resultSchema, 
-                      stringAppendToTables = stringAppendToTables,
+                      tablePrefix = tablePrefix,
                       targetDialect = targetDialect, 
                       tableName = 'model_settings',
                       jsonColumnName = 'modelSettingsJson',
@@ -620,7 +620,7 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
                        modelSettingsJson = json)
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables, 'model_settings'),
+                                   tableName = paste0(tablePrefix, 'model_settings'),
                                    data = data, 
                                    dropTableIfExists = F, 
                                    createTable = F, 
@@ -632,7 +632,7 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
     #getId of new
     jsonId <- checkJson(conn = conn,
                         resultSchema = resultSchema, 
-                        stringAppendToTables = stringAppendToTables,
+                        tablePrefix = tablePrefix,
                         targetDialect = targetDialect, 
                         tableName = 'model_settings',
                         jsonColumnName = 'modelSettingsJson',
@@ -651,7 +651,7 @@ addTidySetting <- function(
   conn, 
   resultSchema, 
   targetDialect,
-  stringAppendToTables = '',
+  tablePrefix = '',
   json,
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -664,7 +664,7 @@ addTidySetting <- function(
   
   jsonId <- checkJson(conn = conn,
                       resultSchema = resultSchema, 
-                      stringAppendToTables = stringAppendToTables,
+                      tablePrefix = tablePrefix,
                       targetDialect = targetDialect, 
                       tableName = 'tidy_covariates_settings',
                       jsonColumnName = 'tidyCovariatesSettingsJson',
@@ -683,7 +683,7 @@ addTidySetting <- function(
     DatabaseConnector::insertTable(
       connection = conn, 
       databaseSchema = resultSchema, 
-      tableName = paste0(stringAppendToTables, 'tidy_covariates_settings'),
+      tableName = paste0(tablePrefix, 'tidy_covariates_settings'),
       data = data, 
       dropTableIfExists = F, 
       createTable = F, 
@@ -697,7 +697,7 @@ addTidySetting <- function(
     jsonId <- checkJson(
       conn = conn,
       resultSchema = resultSchema, 
-      stringAppendToTables = stringAppendToTables,
+      tablePrefix = tablePrefix,
       targetDialect = targetDialect, 
       tableName = 'tidy_covariates_settings',
       jsonColumnName = 'tidyCovariatesSettingsJson',
@@ -718,7 +718,7 @@ addSampleSetting <- function(
   conn, 
   resultSchema, 
   targetDialect,
-  stringAppendToTables = '',
+  tablePrefix = '',
   json,
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -732,7 +732,7 @@ addSampleSetting <- function(
   jsonId <- checkJson(
     conn = conn,
     resultSchema = resultSchema, 
-    stringAppendToTables = stringAppendToTables,
+    tablePrefix = tablePrefix,
     targetDialect = targetDialect, 
     tableName = 'sample_settings',
     jsonColumnName = 'sampleSettingsJson',
@@ -752,7 +752,7 @@ addSampleSetting <- function(
     DatabaseConnector::insertTable(
       connection = conn, 
       databaseSchema = resultSchema, 
-      tableName = paste0(stringAppendToTables, 'sample_settings'),
+      tableName = paste0(tablePrefix, 'sample_settings'),
       data = data, 
       dropTableIfExists = F, 
       createTable = F, 
@@ -766,7 +766,7 @@ addSampleSetting <- function(
     jsonId <- checkJson(
       conn = conn,
       resultSchema = resultSchema, 
-      stringAppendToTables = stringAppendToTables,
+      tablePrefix = tablePrefix,
       targetDialect = targetDialect, 
       tableName = 'sample_settings',
       jsonColumnName = 'sampleSettingsJson',
@@ -787,7 +787,7 @@ addPlpDataSetting <- function(
   conn, 
   resultSchema, 
   targetDialect,
-  stringAppendToTables = '',
+  tablePrefix = '',
   json,
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -800,7 +800,7 @@ addPlpDataSetting <- function(
   
   jsonId <- checkJson(conn = conn,
                       resultSchema = resultSchema, 
-                      stringAppendToTables = stringAppendToTables,
+                      tablePrefix = tablePrefix,
                       targetDialect = targetDialect, 
                       tableName = 'plp_data_settings',
                       jsonColumnName = 'plpDataSettingsJson',
@@ -819,7 +819,7 @@ addPlpDataSetting <- function(
     DatabaseConnector::insertTable(
       connection = conn, 
       databaseSchema = resultSchema, 
-      tableName = paste0(stringAppendToTables, 'plp_data_settings'),
+      tableName = paste0(tablePrefix, 'plp_data_settings'),
       data = data, 
       dropTableIfExists = F, 
       createTable = F, 
@@ -833,7 +833,7 @@ addPlpDataSetting <- function(
     jsonId <- checkJson(
       conn = conn,
       resultSchema = resultSchema, 
-      stringAppendToTables = stringAppendToTables,
+      tablePrefix = tablePrefix,
       targetDialect = targetDialect, 
       tableName = 'plp_data_settings',
       jsonColumnName = 'plpDataSettingsJson',
@@ -854,7 +854,7 @@ addFESetting <- function(
   conn, 
   resultSchema, 
   targetDialect,
-  stringAppendToTables = '',
+  tablePrefix = '',
   json,
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -868,7 +868,7 @@ addFESetting <- function(
   jsonId <- checkJson(
     conn = conn,
     resultSchema = resultSchema, 
-    stringAppendToTables = stringAppendToTables,
+    tablePrefix = tablePrefix,
     targetDialect = targetDialect, 
     tableName = 'feature_engineering_settings',
     jsonColumnName = 'featureEngineeringSettingsJson',
@@ -888,7 +888,7 @@ addFESetting <- function(
     DatabaseConnector::insertTable(
       connection = conn, 
       databaseSchema = resultSchema, 
-      tableName = paste0(stringAppendToTables, 'feature_engineering_settings'),
+      tableName = paste0(tablePrefix, 'feature_engineering_settings'),
       data = data, 
       dropTableIfExists = F, 
       createTable = F, 
@@ -902,7 +902,7 @@ addFESetting <- function(
     jsonId <- checkJson(
       conn = conn,
       resultSchema = resultSchema, 
-      stringAppendToTables = stringAppendToTables,
+      tablePrefix = tablePrefix,
       targetDialect = targetDialect, 
       tableName = 'feature_engineering_settings',
       jsonColumnName = 'featureEngineeringSettingsJson',
@@ -923,7 +923,7 @@ addSplitSettings <- function(
   conn, 
   resultSchema, 
   targetDialect,
-  stringAppendToTables = '',
+  tablePrefix = '',
   json,
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -937,7 +937,7 @@ addSplitSettings <- function(
   jsonId <- checkJson(
     conn = conn,
     resultSchema = resultSchema, 
-    stringAppendToTables = stringAppendToTables,
+    tablePrefix = tablePrefix,
     targetDialect = targetDialect, 
     tableName = 'split_settings',
     jsonColumnName = 'splitSettingsJson',
@@ -957,7 +957,7 @@ addSplitSettings <- function(
     DatabaseConnector::insertTable(
       connection = conn, 
       databaseSchema = resultSchema, 
-      tableName = paste0(stringAppendToTables, 'split_settings'),
+      tableName = paste0(tablePrefix, 'split_settings'),
       data = data, 
       dropTableIfExists = F, 
       createTable = F, 
@@ -971,7 +971,7 @@ addSplitSettings <- function(
     jsonId <- checkJson(
       conn = conn,
       resultSchema = resultSchema, 
-      stringAppendToTables = stringAppendToTables,
+      tablePrefix = tablePrefix,
       targetDialect = targetDialect, 
       tableName = 'split_settings',
       jsonColumnName = 'splitSettingsJson',

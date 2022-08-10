@@ -40,7 +40,7 @@ insertPerformanceInDatabase <- function(
     
     executionDateTime = executionDateTime,
     plpVersion = plpVersion, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('performanceId: ', performanceId))
@@ -54,7 +54,7 @@ insertPerformanceInDatabase <- function(
       performanceId = performanceId,
       attrition = attrition,
       overWriteIfExists = T, 
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
     )
   }
@@ -69,7 +69,7 @@ insertPerformanceInDatabase <- function(
       performanceId = performanceId,
       performanceEvaluation = performanceEvaluation,
       overWriteIfExists = T, 
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
     )
   }
@@ -83,7 +83,7 @@ insertPerformanceInDatabase <- function(
       covariateSummary = covariateSummary,
       restrictToIncluded = T,
       overWriteIfExists = T, 
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
     )
   }
@@ -110,14 +110,14 @@ addPerformance <- function(
   
   executionDateTime,
   plpVersion, 
-  stringAppendToTables,
+  tablePrefix,
   tempEmulationSchema
   
 ){
   
   result <- checkTable(conn = conn, 
                        resultSchema = resultSchema, 
-                       stringAppendToTables = stringAppendToTables,
+                       tablePrefix = tablePrefix,
                        targetDialect = targetDialect, 
                        tableName = 'performances',
                        columnNames = c(
@@ -180,7 +180,7 @@ addPerformance <- function(
                              
                              execution_date_time = executionDateTime,
                              plp_version = plpVersion,
-                             string_to_append = stringAppendToTables)
+                             string_to_append = tablePrefix)
     sql <- SqlRender::translate(sql, targetDialect = targetDialect,
                                 tempEmulationSchema = tempEmulationSchema)
     DatabaseConnector::executeSql(conn, sql)
@@ -188,7 +188,7 @@ addPerformance <- function(
     #getId of new
     result <- checkTable(conn = conn, 
                          resultSchema = resultSchema, 
-                         stringAppendToTables = stringAppendToTables,
+                         tablePrefix = tablePrefix,
                          targetDialect = targetDialect, 
                          tableName = 'performances',
                          columnNames = c(
@@ -224,7 +224,7 @@ addPerformance <- function(
 # attrition
 addAttrition <- function(
   conn, resultSchema, targetDialect,
-  stringAppendToTables = '',
+  tablePrefix = '',
   performanceId,
   attrition,
   overWriteIfExists = T,
@@ -248,14 +248,14 @@ addAttrition <- function(
   columnNames <- getColumnNames(conn = conn, 
                                 resultSchema = resultSchema, 
                                 targetDialect = targetDialect, 
-                                tableName = paste0(stringAppendToTables,'attrition'), 
+                                tableName = paste0(tablePrefix,'attrition'), 
                                 tempEmulationSchema = tempEmulationSchema)
   isValid <- sum(colnames(value)%in%columnNames) == length(columnNames)
   
   exists <- checkResultExists(conn = conn, 
                               resultSchema = resultSchema, 
                               targetDialect = targetDialect, 
-                              tableName = paste0(stringAppendToTables,'attrition'),
+                              tableName = paste0(tablePrefix,'attrition'),
                               resultId = performanceId,
                               tempEmulationSchema = tempEmulationSchema)
   
@@ -267,7 +267,7 @@ addAttrition <- function(
       sql <- SqlRender::render(sql, 
                                performance_id = performanceId,
                                result_schema = resultSchema,
-                               table_name = paste0(stringAppendToTables,'attrition'))
+                               table_name = paste0(tablePrefix,'attrition'))
       sql <- SqlRender::translate(sql, 
                                   targetDialect = targetDialect,
                                   tempEmulationSchema = tempEmulationSchema)
@@ -278,7 +278,7 @@ addAttrition <- function(
     ParallelLogger::logInfo(paste0('Inserting attrition for performance ',performanceId))
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables,'attrition'), 
+                                   tableName = paste0(tablePrefix,'attrition'), 
                                    data = value[,columnNames], 
                                    dropTableIfExists = F, createTable = F, tempTable = F, 
                                    bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
@@ -291,7 +291,7 @@ addAttrition <- function(
 
 # evals
 addEvaluation <- function(conn, resultSchema, targetDialect,
-                          stringAppendToTables = '',
+                          tablePrefix = '',
                           performanceId,
                           performanceEvaluation,
                           overWriteIfExists = T,
@@ -299,7 +299,7 @@ addEvaluation <- function(conn, resultSchema, targetDialect,
   
   ParallelLogger::logInfo('Adding PredictionDistribution')
   tryCatch({addPredictionDistribution(conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
-                                      stringAppendToTables = stringAppendToTables,
+                                      tablePrefix = tablePrefix,
                                       performanceId = performanceId,
                                       performanceEvaluation = performanceEvaluation,
                                       overWriteIfExists = overWriteIfExists,
@@ -308,7 +308,7 @@ addEvaluation <- function(conn, resultSchema, targetDialect,
   
   ParallelLogger::logInfo('Adding ThresholdSummary')
   tryCatch({addThresholdSummary(conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
-                                stringAppendToTables = stringAppendToTables,
+                                tablePrefix = tablePrefix,
                                 performanceId = performanceId,
                                 performanceEvaluation = performanceEvaluation,
                                 overWriteIfExists = overWriteIfExists,
@@ -317,7 +317,7 @@ addEvaluation <- function(conn, resultSchema, targetDialect,
   
   ParallelLogger::logInfo('Adding EvaluationStatistics')
   tryCatch({addEvaluationStatistics(conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
-                                    stringAppendToTables = stringAppendToTables,
+                                    tablePrefix = tablePrefix,
                                     performanceId = performanceId,
                                     performanceEvaluation = performanceEvaluation,
                                     overWriteIfExists = overWriteIfExists,
@@ -326,7 +326,7 @@ addEvaluation <- function(conn, resultSchema, targetDialect,
   
   ParallelLogger::logInfo('Adding CalibrationSummary')
   tryCatch({addCalibrationSummary(conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
-                                  stringAppendToTables = stringAppendToTables,
+                                  tablePrefix = tablePrefix,
                                   performanceId = performanceId,
                                   performanceEvaluation = performanceEvaluation,
                                   overWriteIfExists = overWriteIfExists,
@@ -335,7 +335,7 @@ addEvaluation <- function(conn, resultSchema, targetDialect,
   
   ParallelLogger::logInfo('Adding DemographicSummary')
   tryCatch({addDemographicSummary(conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
-                                  stringAppendToTables = stringAppendToTables,
+                                  tablePrefix = tablePrefix,
                                   performanceId = performanceId,
                                   performanceEvaluation = performanceEvaluation,
                                   overWriteIfExists = overWriteIfExists,
@@ -347,7 +347,7 @@ addEvaluation <- function(conn, resultSchema, targetDialect,
 }
 
 addPredictionDistribution <- function(conn, resultSchema, targetDialect,
-                                      stringAppendToTables = '',
+                                      tablePrefix = '',
                                       performanceId,
                                       performanceEvaluation,
                                       overWriteIfExists = T,
@@ -374,14 +374,14 @@ addPredictionDistribution <- function(conn, resultSchema, targetDialect,
   columnNames <- getColumnNames(conn = conn, 
                                 resultSchema = resultSchema, 
                                 targetDialect = targetDialect, 
-                                tableName = paste0(stringAppendToTables,'prediction_distribution'), 
+                                tableName = paste0(tablePrefix,'prediction_distribution'), 
                                 tempEmulationSchema = tempEmulationSchema)
   isValid <- sum(colnames(value)%in%columnNames) == length(columnNames)
   
   exists <- checkResultExists(conn = conn, 
                               resultSchema = resultSchema, 
                               targetDialect = targetDialect, 
-                              tableName = paste0(stringAppendToTables,'prediction_distribution'),
+                              tableName = paste0(tablePrefix,'prediction_distribution'),
                               resultIdName = 'performance_id',
                               resultId = performanceId,
                               tempEmulationSchema = tempEmulationSchema)
@@ -394,7 +394,7 @@ addPredictionDistribution <- function(conn, resultSchema, targetDialect,
       sql <- SqlRender::render(sql, 
                                performance_id = performanceId,
                                result_schema = resultSchema,
-                               table_name = paste0(stringAppendToTables,'prediction_distribution'))
+                               table_name = paste0(tablePrefix,'prediction_distribution'))
       sql <- SqlRender::translate(sql, 
                                   targetDialect = targetDialect,
                                   tempEmulationSchema = tempEmulationSchema)
@@ -405,7 +405,7 @@ addPredictionDistribution <- function(conn, resultSchema, targetDialect,
     ParallelLogger::logInfo(paste0('Inserting predictionDistribution for performance ', performanceId))
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables,'prediction_distribution'), 
+                                   tableName = paste0(tablePrefix,'prediction_distribution'), 
                                    data = value[,columnNames], 
                                    dropTableIfExists = F, createTable = F, tempTable = F, 
                                    bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
@@ -416,7 +416,7 @@ addPredictionDistribution <- function(conn, resultSchema, targetDialect,
 }
 
 addThresholdSummary <- function(conn, resultSchema, targetDialect,
-                                stringAppendToTables = '',
+                                tablePrefix = '',
                                 performanceId,
                                 performanceEvaluation,
                                 overWriteIfExists = T,
@@ -443,7 +443,7 @@ addThresholdSummary <- function(conn, resultSchema, targetDialect,
   columnNames <- getColumnNames(conn = conn, 
                                 resultSchema = resultSchema, 
                                 targetDialect = targetDialect, 
-                                stringAppendToTables = stringAppendToTables,
+                                tablePrefix = tablePrefix,
                                 tableName = 'threshold_summary',
                                 tempEmulationSchema = tempEmulationSchema)
   isValid <- sum(colnames(value)%in%columnNames) == length(columnNames)
@@ -451,7 +451,7 @@ addThresholdSummary <- function(conn, resultSchema, targetDialect,
   exists <- checkResultExists(conn = conn, 
                               resultSchema = resultSchema, 
                               targetDialect = targetDialect, 
-                              tableName = paste0(stringAppendToTables,'threshold_summary'),
+                              tableName = paste0(tablePrefix,'threshold_summary'),
                               resultIdName = 'performance_id',
                               resultId = performanceId,
                               tempEmulationSchema = tempEmulationSchema)
@@ -464,7 +464,7 @@ addThresholdSummary <- function(conn, resultSchema, targetDialect,
       sql <- SqlRender::render(sql, 
                                result_schema = resultSchema,
                                performance_id = performanceId,
-                               table_name = paste0(stringAppendToTables,'threshold_summary'))
+                               table_name = paste0(tablePrefix,'threshold_summary'))
       sql <- SqlRender::translate(sql, 
                                   targetDialect = targetDialect,
                                   tempEmulationSchema = tempEmulationSchema)
@@ -475,7 +475,7 @@ addThresholdSummary <- function(conn, resultSchema, targetDialect,
     ParallelLogger::logInfo(paste0('Inserting thresholdSummary for performance ',performanceId))
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables,'threshold_summary'), 
+                                   tableName = paste0(tablePrefix,'threshold_summary'), 
                                    data = value[,columnNames], 
                                    dropTableIfExists = F, createTable = F, tempTable = F, 
                                    bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
@@ -487,7 +487,7 @@ addThresholdSummary <- function(conn, resultSchema, targetDialect,
 
 
 addCalibrationSummary <- function(conn, resultSchema, targetDialect, 
-                                  stringAppendToTables = '',
+                                  tablePrefix = '',
                                   performanceId,
                                   performanceEvaluation,
                                   overWriteIfExists = T,
@@ -515,7 +515,7 @@ addCalibrationSummary <- function(conn, resultSchema, targetDialect,
   columnNames <- getColumnNames(conn = conn, 
                                 resultSchema = resultSchema, 
                                 targetDialect = targetDialect, 
-                                stringAppendToTables = stringAppendToTables,
+                                tablePrefix = tablePrefix,
                                 tableName = 'calibration_summary',
                                 tempEmulationSchema = tempEmulationSchema)
   isValid <- sum(colnames(value)%in%columnNames) == length(columnNames)
@@ -523,7 +523,7 @@ addCalibrationSummary <- function(conn, resultSchema, targetDialect,
   exists <- checkResultExists(conn = conn, 
                               resultSchema = resultSchema, 
                               targetDialect = targetDialect, 
-                              tableName = paste0(stringAppendToTables,'calibration_summary'),
+                              tableName = paste0(tablePrefix,'calibration_summary'),
                               resultIdName = 'performance_id',
                               resultId = performanceId,
                               tempEmulationSchema = tempEmulationSchema)
@@ -536,7 +536,7 @@ addCalibrationSummary <- function(conn, resultSchema, targetDialect,
       sql <- SqlRender::render(sql, 
                                result_schema = resultSchema,
                                performance_id= performanceId,
-                               table_name = paste0(stringAppendToTables,'calibration_summary'))
+                               table_name = paste0(tablePrefix,'calibration_summary'))
       sql <- SqlRender::translate(sql, 
                                   targetDialect = targetDialect,
                                   tempEmulationSchema = tempEmulationSchema)
@@ -547,7 +547,7 @@ addCalibrationSummary <- function(conn, resultSchema, targetDialect,
     ParallelLogger::logInfo(paste0('Inserting calibrationSummary for performance ', performanceId))
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables,'calibration_summary'), 
+                                   tableName = paste0(tablePrefix,'calibration_summary'), 
                                    data = value[,columnNames], 
                                    dropTableIfExists = F, createTable = F, tempTable = F, 
                                    bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
@@ -558,7 +558,7 @@ addCalibrationSummary <- function(conn, resultSchema, targetDialect,
 }
 
 addEvaluationStatistics <- function(conn, resultSchema, targetDialect,
-                                    stringAppendToTables = '',
+                                    tablePrefix = '',
                                     performanceId,
                                     performanceEvaluation,
                                     overWriteIfExists = T,
@@ -587,7 +587,7 @@ addEvaluationStatistics <- function(conn, resultSchema, targetDialect,
   columnNames <- getColumnNames(conn = conn, 
                                 resultSchema = resultSchema, 
                                 targetDialect = targetDialect, 
-                                stringAppendToTables = stringAppendToTables,
+                                tablePrefix = tablePrefix,
                                 tableName = 'evaluation_statistics',
                                 tempEmulationSchema = tempEmulationSchema)
   isValid <- sum(colnames(value)%in%columnNames) == length(columnNames)
@@ -595,7 +595,7 @@ addEvaluationStatistics <- function(conn, resultSchema, targetDialect,
   exists <- checkResultExists(conn = conn, 
                               resultSchema = resultSchema, 
                               targetDialect = targetDialect,
-                              tableName = paste0(stringAppendToTables,'evaluation_statistics'),
+                              tableName = paste0(tablePrefix,'evaluation_statistics'),
                               resultIdName = 'performance_id',
                               resultId = performanceId,
                               tempEmulationSchema = tempEmulationSchema)
@@ -608,7 +608,7 @@ addEvaluationStatistics <- function(conn, resultSchema, targetDialect,
       sql <- SqlRender::render(sql, 
                                result_schema = resultSchema,
                                performance_id = performanceId,
-                               table_name = paste0(stringAppendToTables,'evaluation_statistics'))
+                               table_name = paste0(tablePrefix,'evaluation_statistics'))
       sql <- SqlRender::translate(sql, 
                                   targetDialect = targetDialect,
                                   tempEmulationSchema = tempEmulationSchema)
@@ -619,7 +619,7 @@ addEvaluationStatistics <- function(conn, resultSchema, targetDialect,
     ParallelLogger::logInfo(paste0('Inserting evaluationSummary for performance ',performanceId))
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables,'evaluation_statistics'), 
+                                   tableName = paste0(tablePrefix,'evaluation_statistics'), 
                                    data = value[,columnNames], 
                                    dropTableIfExists = F, createTable = F, tempTable = F, 
                                    bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
@@ -630,7 +630,7 @@ addEvaluationStatistics <- function(conn, resultSchema, targetDialect,
 }
 
 addDemographicSummary <- function(conn, resultSchema, targetDialect, 
-                                  stringAppendToTables = '',
+                                  tablePrefix = '',
                                   performanceId,
                                   performanceEvaluation,
                                   overWriteIfExists = T,
@@ -658,7 +658,7 @@ addDemographicSummary <- function(conn, resultSchema, targetDialect,
   columnNames <- getColumnNames(conn = conn, 
                                 resultSchema = resultSchema, 
                                 targetDialect = targetDialect, 
-                                stringAppendToTables =  stringAppendToTables,
+                                tablePrefix =  tablePrefix,
                                 tableName = 'demographic_summary',
                                 tempEmulationSchema = tempEmulationSchema)
   isValid <- sum(colnames(value)%in%columnNames) == length(columnNames)
@@ -666,7 +666,7 @@ addDemographicSummary <- function(conn, resultSchema, targetDialect,
   exists <- checkResultExists(conn = conn, 
                               resultSchema = resultSchema, 
                               targetDialect = targetDialect, 
-                              tableName = paste0(stringAppendToTables,'demographic_summary'),
+                              tableName = paste0(tablePrefix,'demographic_summary'),
                               resultIdName = 'performance_id',
                               resultId = performanceId,
                               tempEmulationSchema = tempEmulationSchema)
@@ -679,7 +679,7 @@ addDemographicSummary <- function(conn, resultSchema, targetDialect,
       sql <- SqlRender::render(sql, 
                                result_schema = resultSchema,
                                performance_id = performanceId,
-                               table_name = paste0(stringAppendToTables,'demographic_summary'))
+                               table_name = paste0(tablePrefix,'demographic_summary'))
       sql <- SqlRender::translate(sql, 
                                   targetDialect = targetDialect,
                                   tempEmulationSchema = tempEmulationSchema)
@@ -690,7 +690,7 @@ addDemographicSummary <- function(conn, resultSchema, targetDialect,
     ParallelLogger::logInfo(paste0('Inserting demographicSummary for performance ',performanceId))
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables,'demographic_summary'), 
+                                   tableName = paste0(tablePrefix,'demographic_summary'), 
                                    data = value[,columnNames], 
                                    dropTableIfExists = F, createTable = F, tempTable = F, 
                                    bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
@@ -701,7 +701,7 @@ addDemographicSummary <- function(conn, resultSchema, targetDialect,
 }
 
 addCovariateSummary <- function(conn, resultSchema, targetDialect, 
-                                stringAppendToTables = '',
+                                tablePrefix = '',
                                 performanceId,
                                 covariateSummary,
                                 restrictToIncluded = T,
@@ -733,7 +733,7 @@ addCovariateSummary <- function(conn, resultSchema, targetDialect,
   columnNames <- getColumnNames(conn = conn, 
                                 resultSchema = resultSchema, 
                                 targetDialect = targetDialect, 
-                                stringAppendToTables = stringAppendToTables,
+                                tablePrefix = tablePrefix,
                                 tableName = 'covariate_summary',
                                 tempEmulationSchema = tempEmulationSchema)
   isValid <- sum(colnames(value)%in%columnNames) == length(columnNames)
@@ -741,7 +741,7 @@ addCovariateSummary <- function(conn, resultSchema, targetDialect,
   exists <- checkResultExists(conn = conn, 
                               resultSchema = resultSchema, 
                               targetDialect = targetDialect, 
-                              tableName = paste0(stringAppendToTables,'covariate_summary'),
+                              tableName = paste0(tablePrefix,'covariate_summary'),
                               resultIdName = 'performance_id',
                               resultId = performanceId,
                               tempEmulationSchema = tempEmulationSchema)
@@ -755,7 +755,7 @@ addCovariateSummary <- function(conn, resultSchema, targetDialect,
       sql <- SqlRender::render(sql, 
                                result_schema = resultSchema,
                                performance_id = performanceId,
-                               table_name = paste0(stringAppendToTables,'covariate_summary'))
+                               table_name = paste0(tablePrefix,'covariate_summary'))
       sql <- SqlRender::translate(sql, 
                                   targetDialect = targetDialect,
                                   tempEmulationSchema = tempEmulationSchema)
@@ -766,7 +766,7 @@ addCovariateSummary <- function(conn, resultSchema, targetDialect,
     ParallelLogger::logInfo(paste0('Inserting covariateSummary for result ', performanceId))
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables,'covariate_summary'), 
+                                   tableName = paste0(tablePrefix,'covariate_summary'), 
                                    data = value[,columnNames], 
                                    dropTableIfExists = F, createTable = F, tempTable = F, 
                                    bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,
@@ -783,14 +783,14 @@ addCovariateSummary <- function(conn, resultSchema, targetDialect,
 #====================
 
 # gets the column names in camelCase of a table
-getColumnNames <- function(conn, resultSchema, targetDialect, tableName, stringAppendToTables = '',
+getColumnNames <- function(conn, resultSchema, targetDialect, tableName, tablePrefix = '',
                            tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   sql <- "select top 1 * from @my_schema.@string_to_append@table;"
   sql <- SqlRender::render(sql, 
                            my_schema = resultSchema,
                            table = tableName,
-                           string_to_append = stringAppendToTables)
+                           string_to_append = tablePrefix)
   sql <- SqlRender::translate(sql, targetDialect = targetDialect,
                               tempEmulationSchema = tempEmulationSchema)
   result <- DatabaseConnector::querySql(connection = conn, sql = sql, snakeCaseToCamelCase = T)

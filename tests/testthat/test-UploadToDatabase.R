@@ -39,33 +39,33 @@ test_that("test createDatabaseSchemaSettings works", {
   
   databaseSchemaSettings <- createDatabaseSchemaSettings(
     resultSchema = ohdsiDatabaseSchema, 
-    stringAppendToResultSchemaTables = '',
+    tablePrefix = '',
     targetDialect = targetDialect
   )
   
   # check inputs as expected
   testthat::expect_true(databaseSchemaSettings$resultSchema == ohdsiDatabaseSchema)
-  testthat::expect_true(databaseSchemaSettings$stringAppendToResultSchemaTables == '')
+  testthat::expect_true(databaseSchemaSettings$tablePrefix == '')
   testthat::expect_true(databaseSchemaSettings$targetDialect == targetDialect)
   testthat::expect_true(databaseSchemaSettings$cohortDefinitionSchema == ohdsiDatabaseSchema)
   testthat::expect_true(databaseSchemaSettings$databaseDefinitionSchema == ohdsiDatabaseSchema)
-  testthat::expect_true(databaseSchemaSettings$stringAppendToCohortDefinitionTables == '')
-  testthat::expect_true(databaseSchemaSettings$stringAppendToDatabaseDefinitionTables == '')
+  testthat::expect_true(databaseSchemaSettings$tablePrefixCohortDefinitionTables == '')
+  testthat::expect_true(databaseSchemaSettings$tablePrefixDatabaseDefinitionTables == '')
   
   databaseSchemaSettings <- createDatabaseSchemaSettings(
     resultSchema = ohdsiDatabaseSchema, 
-    stringAppendToResultSchemaTables = '',
+    tablePrefix = '',
     targetDialect = targetDialect,
     cohortDefinitionSchema = 'test 123',
-    stringAppendToCohortDefinitionTables = 'a',
+    tablePrefixCohortDefinitionTables = 'a',
     databaseDefinitionSchema = 'test234',
-    stringAppendToDatabaseDefinitionTables = 'b'
+    tablePrefixDatabaseDefinitionTables = 'b'
   )
   
   testthat::expect_true(databaseSchemaSettings$cohortDefinitionSchema == 'test 123')
   testthat::expect_true(databaseSchemaSettings$databaseDefinitionSchema == 'test234')
-  testthat::expect_true(databaseSchemaSettings$stringAppendToCohortDefinitionTables == 'A_')
-  testthat::expect_true(databaseSchemaSettings$stringAppendToDatabaseDefinitionTables == 'B_')
+  testthat::expect_true(databaseSchemaSettings$tablePrefixCohortDefinitionTables == 'A_')
+  testthat::expect_true(databaseSchemaSettings$tablePrefixDatabaseDefinitionTables == 'B_')
   
   
   testthat::expect_true(class(databaseSchemaSettings) == 'plpDatabaseResultSchema')
@@ -130,7 +130,7 @@ test_that("database creation", {
     targetDialect = targetDialect,
     deleteTables = T, 
     createTables = T,
-    stringAppendToTables = appendRandom('test')
+    tablePrefix = appendRandom('test')
   )
   
   tableNames <- DatabaseConnector::getTableNames(connection = conn, databaseSchema = ohdsiDatabaseSchema)
@@ -165,7 +165,7 @@ test_that("results uploaded to database", {
     conn = conn, 
     databaseSchemaSettings = createDatabaseSchemaSettings(
       resultSchema = ohdsiDatabaseSchema, 
-      stringAppendToResultSchemaTables = appendRandom('test'),
+      tablePrefix = appendRandom('test'),
       targetDialect = targetDialect
     ), 
     cohortDefinitions = list(list(name = 'blank1', id = 1, cohort_json = 'bla'),
@@ -178,7 +178,8 @@ test_that("results uploaded to database", {
       description = c(1),
       type = c('claims')
     ),
-    resultLocation = resultsLoc
+    resultLocation = resultsLoc,
+    modelSaveLocation = file.path(saveLoc,'modelLocation') # new
   )
   
   # check the results table is populated
@@ -186,6 +187,8 @@ test_that("results uploaded to database", {
   sql <- SqlRender::render(sql, resultSchema = ohdsiDatabaseSchema, append = appendRandom('test_'))
   res <- DatabaseConnector::querySql(conn, sql)
   testthat::expect_true(res$N[1]>0)
+  
+  # add test: check model location has result?
 
 })
 
@@ -198,7 +201,7 @@ test_that("database deletion", {
     targetDialect = targetDialect,
     deleteTables = T, 
     createTables = F,
-    stringAppendToTables = appendRandom('test')
+    tablePrefix = appendRandom('test')
   )
   
   tableNames <- DatabaseConnector::getTableNames(connection = conn, databaseSchema = ohdsiDatabaseSchema)
@@ -302,7 +305,7 @@ testthat::expect_true(res$N[1]>0)
 
 # check export to csv
 extractDatabaseToCsv(
-  conn = conn,
+  connectionDetails = connectionDetails,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
   csvFolder = file.path(saveLoc, 'csvFolder')
 )

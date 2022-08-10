@@ -10,7 +10,7 @@ createPlpResultTables(
   resultSchema,
   deleteTables = T,
   createTables = T,
-  stringAppendToTables = "",
+  tablePrefix = "",
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
   testFile = NULL
 )
@@ -28,7 +28,7 @@ function \code{connect} in the
 
 \item{createTables}{If true the PatientLevelPrediction result tables will be created}
 
-\item{stringAppendToTables}{A string that appends to the PatientLevelPrediction result tables}
+\item{tablePrefix}{A string that appends to the PatientLevelPrediction result tables}
 
 \item{tempEmulationSchema}{The temp schema used when the database management system is oracle}
 
