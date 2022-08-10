@@ -212,11 +212,17 @@ getPlpData <- function(
   
   ParallelLogger::logTrace("\nConstructing the at risk cohort")
   if(!is.null(restrictPlpDataSettings$sampleSize))  writeLines(paste("\n Sampling ",restrictPlpDataSettings$sampleSize, " people"))
-  renderedSql <- SqlRender::loadRenderTranslateSql(
-    "CreateCohorts.sql",
-    packageName = "PatientLevelPrediction",
-    dbms = dbms, 
-    tempEmulationSchema = databaseDetails$tempEmulationSchema,
+
+  pathToSql <- system.file(
+    paste("sql/", "sql_server", 
+          sep = ""),
+    'CreateCohorts.sql', 
+    package = "PatientLevelPrediction"
+  )
+  
+  renderedSql <- readChar(pathToSql, file.info(pathToSql)$size) 
+  renderedSql <- SqlRender::render(
+    sql = renderedSql,
     cdm_database_schema = databaseDetails$cdmDatabaseSchema,
     cohort_database_schema = databaseDetails$cohortDatabaseSchema,
     cohort_table = databaseDetails$cohortTable,
@@ -229,16 +235,35 @@ getPlpData <- function(
     use_sample = !is.null(restrictPlpDataSettings$sampleSize),
     sample_number = restrictPlpDataSettings$sampleSize
   )
+  renderedSql <- SqlRender::translate(
+    sql = renderedSql, 
+    targetDialect = dbms, 
+    tempEmulationSchema = databaseDetails$tempEmulationSchema
+  )
+    
   DatabaseConnector::executeSql(connection, renderedSql)
   
   ParallelLogger::logTrace("Fetching cohorts from server")
   start <- Sys.time()
-  cohortSql <- SqlRender::loadRenderTranslateSql(
-    "GetCohorts.sql",
-    packageName = "PatientLevelPrediction",
-    dbms = dbms, 
-    tempEmulationSchema = databaseDetails$tempEmulationSchema,
+  
+  pathToSql <- system.file(
+    paste("sql/", "sql_server", 
+          sep = ""),
+    "GetCohorts.sql", 
+    package = "PatientLevelPrediction"
+  )
+  
+  cohortSql <- readChar(pathToSql, file.info(pathToSql)$size) 
+  
+  cohortSql <- SqlRender::render(
+    sql = cohortSql,
     cdm_version = databaseDetails$cdmVersion
+  )
+  
+  cohortSql <- SqlRender::translate(
+    sql = cohortSql, 
+    targetDialect = dbms, 
+    tempEmulationSchema = databaseDetails$tempEmulationSchema
   )
   cohorts <- DatabaseConnector::querySql(connection, cohortSql)
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
@@ -272,17 +297,31 @@ getPlpData <- function(
   if(max(databaseDetails$outcomeIds)!=-999){
     ParallelLogger::logTrace("Fetching outcomes from server")
     start <- Sys.time()
-    outcomeSql <- SqlRender::loadRenderTranslateSql(
-      "GetOutcomes.sql",
-      packageName = "PatientLevelPrediction",
-      dbms = dbms,
-      tempEmulationSchema = databaseDetails$tempEmulationSchema,
+    
+    pathToSql <- system.file(
+      paste("sql/", "sql_server", 
+            sep = ""),
+      "GetOutcomes.sql", 
+      package = "PatientLevelPrediction"
+    )
+    
+    outcomeSql <- readChar(pathToSql, file.info(pathToSql)$size) 
+    
+    outcomeSql <- SqlRender::render(
+      sql = outcomeSql,
       cdm_database_schema = databaseDetails$cdmDatabaseSchema,
       outcome_database_schema = databaseDetails$outcomeDatabaseSchema,
       outcome_table = databaseDetails$outcomeTable,
       outcome_ids = databaseDetails$outcomeIds,
       cdm_version = databaseDetails$cdmVersion
     )
+    
+    outcomeSql <- SqlRender::translate(
+      sql = outcomeSql, 
+      targetDialect = dbms, 
+      tempEmulationSchema = databaseDetails$tempEmulationSchema
+    )
+    
     outcomes <- DatabaseConnector::querySql(connection, outcomeSql)
     colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
     metaData.outcome <- data.frame(outcomeIds = databaseDetails$outcomeIds)
@@ -301,17 +340,22 @@ getPlpData <- function(
   }
   
   
-  
-  
   # Remove temp tables:
-  renderedSql <- SqlRender::loadRenderTranslateSql(
-    "RemoveCohortTempTables.sql",
-    packageName = "PatientLevelPrediction",
-    dbms = dbms,
+  pathToSql <- system.file(
+    paste("sql/", "sql_server", 
+          sep = ""),
+    "RemoveCohortTempTables.sql", 
+    package = "PatientLevelPrediction"
+  )
+  
+  removeSql <- readChar(pathToSql, file.info(pathToSql)$size) 
+  removeSql <- SqlRender::translate(
+    sql = removeSql, 
+    targetDialect = dbms, 
     tempEmulationSchema = databaseDetails$tempEmulationSchema
   )
   
-  DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
+  DatabaseConnector::executeSql(connection, removeSql, progressBar = FALSE, reportOverallTime = FALSE)
   #DatabaseConnector::disconnect(connection)
   
   metaData <- covariateData$metaData

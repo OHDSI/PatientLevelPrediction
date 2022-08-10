@@ -1,3 +1,10 @@
+PatientLevelPrediction 5.4.1
+======================
+- renamed the input corresponding to the string that gets appended to the results table names to tablePrefix
+- fixed issues with system.file() from SqlRender code breaking the tests
+- added an input fileAppend to the function that exports the database tables to csv files
+- moved the plp model (including preprocessing details) outside of the result database (into a specified folder) due to the size of the objects (too large to insert into the database). 
+
 PatientLevelPrediction 5.4.0
 ======================
 - added saving of plp models into the result database 

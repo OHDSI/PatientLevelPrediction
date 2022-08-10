@@ -7,7 +7,8 @@
 extractDatabaseToCsv(
   connectionDetails,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
-  csvFolder
+  csvFolder,
+  fileAppend = NULL
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ extractDatabaseToCsv(
 \item{databaseSchemaSettings}{The result database schema settings}
 
 \item{csvFolder}{Location to save the csv files}
+
+\item{fileAppend}{If set to a string this will be appended to the start of the csv file names}
 }
 \description{
 Exports all the results from a database into csv files

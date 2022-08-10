@@ -117,7 +117,7 @@ insertDiagnosisToDatabase <- function(
     modelDesignId = modelDesignId,
     databaseId = databaseId,
 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0('diagnosticId: ', diagnosticId))
@@ -136,7 +136,7 @@ insertDiagnosisToDatabase <- function(
       resultId = diagnosticId,
       object = diagnostics$summary,
       
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
       overWriteIfExists = overWriteIfExists
     )},
@@ -155,7 +155,7 @@ insertDiagnosisToDatabase <- function(
       resultId = diagnosticId,
       object = diagnostics$participants,
       
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
       overWriteIfExists = overWriteIfExists
     )},
@@ -174,7 +174,7 @@ insertDiagnosisToDatabase <- function(
       resultId = diagnosticId,
       object = diagnostics$predictors,
       
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
       overWriteIfExists = overWriteIfExists
     )},
@@ -193,7 +193,7 @@ insertDiagnosisToDatabase <- function(
       resultId = diagnosticId,
       object = diagnostics$outcomes,
       
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
       overWriteIfExists = overWriteIfExists
     )},
@@ -212,7 +212,7 @@ insertDiagnosisToDatabase <- function(
       resultId = diagnosticId,
       object = diagnostics$designs,
       
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema,
       overWriteIfExists = overWriteIfExists
     )},
@@ -232,13 +232,13 @@ addDiagnostic <- function(
   modelDesignId,
   databaseId,
   
-  stringAppendToTables,
+  tablePrefix,
   tempEmulationSchema
 ){
   
   result <- checkTable(conn = conn, 
                        resultSchema = resultSchema, 
-                       stringAppendToTables = stringAppendToTables,
+                       tablePrefix = tablePrefix,
                        targetDialect = targetDialect, 
                        tableName = 'diagnostics',
                        columnNames = c(
@@ -266,7 +266,7 @@ addDiagnostic <- function(
                              my_schema = resultSchema,
                              model_design_id = modelDesignId,
                              database_id = databaseId,
-                             string_to_append = stringAppendToTables)
+                             string_to_append = tablePrefix)
     sql <- SqlRender::translate(sql, targetDialect = targetDialect,
                                 tempEmulationSchema = tempEmulationSchema)
     DatabaseConnector::executeSql(conn, sql)
@@ -274,7 +274,7 @@ addDiagnostic <- function(
     #getId of new
     result <- checkTable(conn = conn, 
                          resultSchema = resultSchema, 
-                         stringAppendToTables = stringAppendToTables,
+                         tablePrefix = tablePrefix,
                          targetDialect = targetDialect, 
                          tableName = 'diagnostics',
                          columnNames = c(
@@ -302,7 +302,7 @@ addResultTable <- function(
   resultIdName = 'diagnosticId',
   resultId,
   object,
-  stringAppendToTables,
+  tablePrefix,
   tempEmulationSchema,
   overWriteIfExists = T
 ){
@@ -314,7 +314,7 @@ addResultTable <- function(
     conn = conn, 
     resultSchema = resultSchema, 
     targetDialect = targetDialect, 
-    tableName = paste0(stringAppendToTables,tableName), 
+    tableName = paste0(tablePrefix,tableName), 
     tempEmulationSchema = tempEmulationSchema
   )
     isValid <- sum(colnames(object)%in%columnNames) == length(columnNames)
@@ -323,7 +323,7 @@ addResultTable <- function(
       conn = conn, 
       resultSchema = resultSchema, 
       targetDialect = targetDialect, 
-      tableName = paste0(stringAppendToTables,tableName),
+      tableName = paste0(tablePrefix,tableName),
       resultIdName = SqlRender::camelCaseToSnakeCase(resultIdName),
       resultId = resultId,
       tempEmulationSchema = tempEmulationSchema
@@ -338,7 +338,7 @@ addResultTable <- function(
                                  result_id_name = SqlRender::camelCaseToSnakeCase(resultIdName),
                                  result_id = resultId,
                                  result_schema = resultSchema,
-                                 table_name = paste0(stringAppendToTables,tableName)
+                                 table_name = paste0(tablePrefix,tableName)
                                  )
         sql <- SqlRender::translate(sql, 
                                     targetDialect = targetDialect,
@@ -350,7 +350,7 @@ addResultTable <- function(
       DatabaseConnector::insertTable(
         connection = conn, 
         databaseSchema = resultSchema, 
-        tableName = paste0(stringAppendToTables,tableName), 
+        tableName = paste0(tablePrefix,tableName), 
         data = as.data.frame(object[,columnNames]), 
         dropTableIfExists = F, createTable = F, tempTable = F, 
         bulkLoad = F, camelCaseToSnakeCase = T, progressBar = T,

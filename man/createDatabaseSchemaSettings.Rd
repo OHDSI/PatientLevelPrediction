@@ -6,19 +6,19 @@
 \usage{
 createDatabaseSchemaSettings(
   resultSchema = "main",
-  stringAppendToResultSchemaTables = "",
+  tablePrefix = "",
   targetDialect = "sqlite",
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
   cohortDefinitionSchema = resultSchema,
-  stringAppendToCohortDefinitionTables = stringAppendToResultSchemaTables,
+  tablePrefixCohortDefinitionTables = tablePrefix,
   databaseDefinitionSchema = resultSchema,
-  stringAppendToDatabaseDefinitionTables = stringAppendToResultSchemaTables
+  tablePrefixDatabaseDefinitionTables = tablePrefix
 )
 }
 \arguments{
 \item{resultSchema}{(string) The name of the database schema with the result tables.}
 
-\item{stringAppendToResultSchemaTables}{(string) A string that appends to the PatientLevelPrediction result tables}
+\item{tablePrefix}{(string) A string that appends to the PatientLevelPrediction result tables}
 
 \item{targetDialect}{(string) The database management system being used}
 
@@ -26,11 +26,11 @@ createDatabaseSchemaSettings(
 
 \item{cohortDefinitionSchema}{(string) The name of the database schema with the cohort definition tables (defaults to resultSchema).}
 
-\item{stringAppendToCohortDefinitionTables}{(string) A string that appends to the cohort definition tables}
+\item{tablePrefixCohortDefinitionTables}{(string) A string that appends to the cohort definition tables}
 
 \item{databaseDefinitionSchema}{(string) The name of the database schema with the database definition tables (defaults to resultSchema).}
 
-\item{stringAppendToDatabaseDefinitionTables}{(string) A string that appends to the database definition tables}
+\item{tablePrefixDatabaseDefinitionTables}{(string) A string that appends to the database definition tables}
 }
 \value{
 Returns a list of class 'plpDatabaseResultSchema' with all the database settings
