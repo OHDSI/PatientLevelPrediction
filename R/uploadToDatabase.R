@@ -1149,7 +1149,9 @@ addCohort <- function(conn, resultSchema, targetDialect,
   }
   
   # reduce the size to save
-  json <-  substr(json, 1, 4000) # TESTING - FIX THIS [TODO]
+  if(!targetDialect %in% c('sqlite', 'postgres')){
+    json <-  substr(json, 1, 4000) # TESTING - FIX THIS [TODO]
+  }
   
   #check whether cohort already in table:
   result <- checkTable(conn = conn, 
