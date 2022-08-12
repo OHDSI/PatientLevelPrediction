@@ -402,7 +402,7 @@ summary.plpData <- function(object,...){
     outcomeCounts$personCount[i] <- length(unique(object$outcomes$rowId[object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i]]))
   }
   
-  covDetails <- FeatureExtraction::summary(object$covariateData)
+  covDetails <- summary(object$covariateData)
   result <- list(metaData = append(append(object$metaData, attr(object$cohorts, "metaData")), attr(object$outcomes, "metaData")),
                  people = people,
                  outcomeCounts = outcomeCounts,

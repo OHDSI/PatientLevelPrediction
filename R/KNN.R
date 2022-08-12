@@ -99,7 +99,7 @@ fitKNN <- function(trainData, modelSettings, search = 'none', analysisId ){
   
   ParallelLogger::logInfo(paste0('Model knn trained - took:',  format(comp, digits=3)))
 
-  variableImportance <- as.data.frame(trainData$covariateData$covariateRef)
+  variableImportance <- trainData$covariateData$covariateRef %>% dplyr::collect()
   variableImportance$covariateValue <- rep(1, nrow(variableImportance))
   
   prediction <- predictKnn(
@@ -192,7 +192,7 @@ predictKnn <- function(
     all.x=T, fill=0)
   prediction$value[is.na(prediction$value)] <- 0
   
-  attr(prediction, "metaData") <- 'binary'
+  attr(prediction, "metaData")$modelType <- 'binary'
   
   return(prediction)
   

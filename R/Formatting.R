@@ -87,7 +87,10 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   ParallelLogger::logInfo(paste0('toSparseM non temporal used'))
     
   checkRam(newcovariateData, 0.9)  # estimates size of RAM required and makes sure it is less that 90%
-    
+  
+  # need to collect here the df in ram, because if I pull individual columns from an arrow dataset
+  # there is no guarantee the order of data within columns is preserved
+  newcovariateData$covariates <- newcovariateData$covariates %>% dplyr::collect()  
   data <- Matrix::sparseMatrix(
     i = newcovariateData$covariates %>% dplyr::select(.data$rowId) %>% dplyr::pull(),
     j = newcovariateData$covariates %>% dplyr::select(.data$columnId) %>% dplyr::pull(),
@@ -102,8 +105,8 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   result <- list(
     dataMatrix = data,
     labels = newcovariateData$cohort %>% dplyr::collect(),
-    covariateRef = as.data.frame(newcovariateData$covariateRef),
-    covariateMap = as.data.frame(newcovariateData$mapping)
+    covariateRef = newcovariateData$covariateRef %>% dplyr::collect(),
+    covariateMap = newcovariateData$mapping %>% dplyr::collect()
   )
   return(result)
 }

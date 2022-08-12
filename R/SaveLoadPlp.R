@@ -55,7 +55,7 @@ savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
     plpData$metaData$call$sampleSize <- 'NULL'
   }
   
-  Andromeda::saveAndromeda(plpData$covariateData, file = file.path(file, "covariates"), maintainConnection = T)
+  Andromeda::saveAndromeda(plpData$covariateData, file = file.path(file, "covariates"))
   saveRDS(plpData$timeRef, file = file.path(file, "timeRef.rds"))
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
   saveRDS(plpData$outcomes, file = file.path(file, "outcomes.rds"))

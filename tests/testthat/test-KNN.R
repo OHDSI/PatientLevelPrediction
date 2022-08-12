@@ -17,7 +17,7 @@ plpResultKNN <- runPlp(
 
 test_that("covRef is correct size", {
   
-  testthat::expect_true(nrow(as.data.frame(plpData$covariateData$covariateRef)) >=  
+  testthat::expect_true(nrow(plpData$covariateData$covariateRef %>% dplyr::collect()) >=  
     nrow(plpResultKNN$model$covariateImportance))
   
 })
