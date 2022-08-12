@@ -117,7 +117,7 @@ diagnoseMultiplePlp <- function(
     )
   
   # extract data
-  for(i in 1:nrow(dataSettings)){
+  for(i in 1:nrow(as.data.frame(dataSettings))){
     dataExists <- length(dir(file.path(saveDirectory, dataSettings$dataLocation[i])))>0
     if(!dataExists){
       ParallelLogger::logInfo(paste('Extracting data for cohort', dataSettings$targetId[i], 'to', file.path(saveDirectory, dataSettings$dataLocation[i])))
@@ -144,7 +144,7 @@ diagnoseMultiplePlp <- function(
   }
   
   # diagnosePlp
-  for(i in 1:nrow(settingstable)){
+  for(i in 1:nrow(as.data.frame(settingstable))){
     modelDesign <- modelDesignList[[i]]
     settings <- settingstable[i,] # just the data locations?
     

@@ -38,7 +38,7 @@ insertRunPlpToSqlite <- function(
     resultSchema = 'main', 
     deleteTables = T, 
     createTables = T,
-    stringAppendToTables = ''
+    tablePrefix = ''
   )
   
   cohortDefinitions <- list(
@@ -148,7 +148,7 @@ insertResultsToSqlite <- function(
       resultSchema = 'main', 
       deleteTables = T, 
       createTables = T,
-      stringAppendToTables = ''
+      tablePrefix = ''
     )
   } else{
     ParallelLogger::logInfo('Sql tables exist')
@@ -190,7 +190,7 @@ insertResultsToSqlite <- function(
 #' @param resultSchema                 The name of the database schema that the result tables will be created.
 #' @param deleteTables                 If true any existing tables matching the PatientLevelPrediction result tables names will be deleted
 #' @param createTables                 If true the PatientLevelPrediction result tables will be created
-#' @param stringAppendToTables         A string that appends to the PatientLevelPrediction result tables
+#' @param tablePrefix         A string that appends to the PatientLevelPrediction result tables
 #' @param tempEmulationSchema          The temp schema used when the database management system is oracle
 #' 
 #' @param testFile                     (used for testing) The location of an sql file with the table creation code
@@ -205,7 +205,7 @@ createPlpResultTables <- function(
   resultSchema, 
   deleteTables = T, 
   createTables = T,
-  stringAppendToTables = '',
+  tablePrefix = '',
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
   testFile = NULL
 ){
@@ -222,7 +222,7 @@ createPlpResultTables <- function(
     targetDialect = targetDialect,
     tempEmulationSchema = tempEmulationSchema,
     tableNames = tableNames, 
-    stringAppendToTables = stringAppendToTables
+    tablePrefix = tablePrefix
   )
     
   }
@@ -231,33 +231,35 @@ createPlpResultTables <- function(
   if(createTables){
     ParallelLogger::logInfo('Creating PLP results tables')
     
-    if(stringAppendToTables != ''){
-      stringAppendToTables <- paste0(toupper(gsub('_','',gsub(' ','', stringAppendToTables))), '_')
+    if(tablePrefix != ''){
+      tablePrefix <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefix))), '_')
     }
-    
-    if(is.null(testFile)){
-      renderedSql <- SqlRender::loadRenderTranslateSql(
-        sqlFilename = ifelse(
-          targetDialect != 'sqlite',
-          "PlpResultTables.sql",
-          paste0("PlpResultTables_",targetDialect,".sql")
-          ), # need to add others
-        packageName = "PatientLevelPrediction",
-        dbms = targetDialect,
-        tempEmulationSchema = tempEmulationSchema,
-        my_schema = resultSchema,
-        string_to_append = stringAppendToTables
-      )
-    } else {
-      sql <- readChar(testFile, file.info(testFile)$size) 
-      renderedSql <- SqlRender::render(sql = sql[1],
-                                       my_schema = resultSchema,
-                                       string_to_append = stringAppendToTables)
-      renderedSql <- SqlRender::translate(sql = renderedSql,
-                                          targetDialect = targetDialect,
-                                          tempEmulationSchema = tempEmulationSchema)
       
-    }
+      sqlFileName <- ifelse(
+        targetDialect != 'sqlite',
+        "PlpResultTables.sql",
+        paste0("PlpResultTables_",targetDialect,".sql")
+      )
+      
+      pathToSql <- system.file(
+        paste("sql/", "sql_server", 
+              sep = ""),
+        sqlFileName, 
+        package = "PatientLevelPrediction"
+        )
+      
+      sql <- readChar(pathToSql, file.info(pathToSql)$size) 
+      renderedSql <- SqlRender::render(
+        sql = sql[1],
+        my_schema = resultSchema,
+        string_to_append = tablePrefix
+      )
+      renderedSql <- SqlRender::translate(
+        sql = renderedSql,
+        targetDialect = targetDialect,
+        tempEmulationSchema = tempEmulationSchema
+      )
+      
     
     DatabaseConnector::executeSql(conn, renderedSql)
   }
@@ -339,13 +341,13 @@ addMultipleRunPlpToDatabase <- function(conn,
 #' This function can be used to specify the database settings used to upload PatientLevelPrediction results into a database
 #'
 #' @param resultSchema                 (string) The name of the database schema with the result tables.
-#' @param stringAppendToResultSchemaTables         (string) A string that appends to the PatientLevelPrediction result tables
+#' @param tablePrefix         (string) A string that appends to the PatientLevelPrediction result tables
 #' @param targetDialect                (string) The database management system being used
 #' @param tempEmulationSchema          (string) The temp schema used when the database management system is oracle
 #' @param cohortDefinitionSchema                 (string) The name of the database schema with the cohort definition tables (defaults to resultSchema).
-#' @param stringAppendToCohortDefinitionTables         (string) A string that appends to the cohort definition tables
+#' @param tablePrefixCohortDefinitionTables         (string) A string that appends to the cohort definition tables
 #' @param databaseDefinitionSchema                 (string) The name of the database schema with the database definition tables (defaults to resultSchema).
-#' @param stringAppendToDatabaseDefinitionTables         (string) A string that appends to the database definition tables
+#' @param tablePrefixDatabaseDefinitionTables         (string) A string that appends to the database definition tables
 #'    
 #' @return
 #' Returns a list of class 'plpDatabaseResultSchema' with all the database settings
@@ -353,13 +355,13 @@ addMultipleRunPlpToDatabase <- function(conn,
 #' @export
 createDatabaseSchemaSettings <- function(
   resultSchema = 'main', 
-  stringAppendToResultSchemaTables = '',
+  tablePrefix = '',
   targetDialect = 'sqlite',
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
   cohortDefinitionSchema = resultSchema,
-  stringAppendToCohortDefinitionTables = stringAppendToResultSchemaTables,
+  tablePrefixCohortDefinitionTables = tablePrefix,
   databaseDefinitionSchema = resultSchema,
-  stringAppendToDatabaseDefinitionTables = stringAppendToResultSchemaTables
+  tablePrefixDatabaseDefinitionTables = tablePrefix
 ){
   
   if(missing(resultSchema)){
@@ -369,25 +371,25 @@ createDatabaseSchemaSettings <- function(
     stop('resultSchema must be a string')
   }
   
-  if(stringAppendToResultSchemaTables != ''){
-    stringAppendToResultSchemaTables <- paste0(toupper(gsub('_','',gsub(' ','', stringAppendToResultSchemaTables))), '_')
+  if(tablePrefix != ''){
+    tablePrefix <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefix))), '_')
   }
-  if(stringAppendToCohortDefinitionTables != ''){
-    stringAppendToCohortDefinitionTables <- paste0(toupper(gsub('_','',gsub(' ','', stringAppendToCohortDefinitionTables))), '_')
+  if(tablePrefixCohortDefinitionTables != ''){
+    tablePrefixCohortDefinitionTables <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefixCohortDefinitionTables))), '_')
   }
-  if(stringAppendToDatabaseDefinitionTables != ''){
-    stringAppendToDatabaseDefinitionTables <- paste0(toupper(gsub('_','',gsub(' ','', stringAppendToDatabaseDefinitionTables))), '_')
+  if(tablePrefixDatabaseDefinitionTables != ''){
+    tablePrefixDatabaseDefinitionTables <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefixDatabaseDefinitionTables))), '_')
   }
   
   result <- list(
     resultSchema = resultSchema,
-    stringAppendToResultSchemaTables = stringAppendToResultSchemaTables,
+    tablePrefix = tablePrefix,
     targetDialect = targetDialect,
     tempEmulationSchema = tempEmulationSchema,
     cohortDefinitionSchema  = cohortDefinitionSchema,
-    stringAppendToCohortDefinitionTables = stringAppendToCohortDefinitionTables,
+    tablePrefixCohortDefinitionTables = tablePrefixCohortDefinitionTables,
     databaseDefinitionSchema = databaseDefinitionSchema,
-    stringAppendToDatabaseDefinitionTables = stringAppendToDatabaseDefinitionTables
+    tablePrefixDatabaseDefinitionTables = tablePrefixDatabaseDefinitionTables
   )
   
   class(result) <- 'plpDatabaseResultSchema'
@@ -536,6 +538,7 @@ addRunPlpToDatabase <- function(
     )
   )
   
+  
   # add nodel if the result contains it
   if(includesModel){
     insertModelInDatabase(
@@ -557,7 +560,7 @@ addRunPlpToDatabase <- function(
     startAnchor = populationSettings$startAnchor,
     endDay = populationSettings$riskWindowEnd,  
     endAnchor = populationSettings$endAnchor, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   
@@ -569,7 +572,7 @@ addRunPlpToDatabase <- function(
       cohortDefinitions = cohortDefinitions,
       cohortId = targetId
     ),
-    stringAppendToTables = databaseSchemaSettings$stringAppendToCohortDefinitionTables,
+    tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   
@@ -581,7 +584,7 @@ addRunPlpToDatabase <- function(
       cohortDefinitions = cohortDefinitions,
       cohortId = outcomeId
     ),
-    stringAppendToTables = databaseSchemaSettings$stringAppendToCohortDefinitionTables,
+    tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   
@@ -590,7 +593,7 @@ addRunPlpToDatabase <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = populationSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   
@@ -599,7 +602,7 @@ addRunPlpToDatabase <- function(
     resultSchema = databaseSchemaSettings$resultSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
     json = restrictPlpDataSettings, 
-    stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   
@@ -650,11 +653,18 @@ insertModelInDatabase <- function(
   if(!dir.exists(modelLocation)){
     dir.create(modelLocation, recursive = T)
   }
-  saveModelPart(
-    model = model$model,
-    savetype = attr(model, 'saveType'),
+  # savign all the model as preprocessing was too large
+  # for database
+  savePlpModel(
+    plpModel = model, 
     dirPath = modelLocation
-  )
+    )
+  
+  #saveModelPart(
+  #  model = model$model,
+  #  savetype = attr(model, 'saveType'),
+  #  dirPath = modelLocation
+  #)
   
     # create this function
     modelId <- addModel(
@@ -670,14 +680,14 @@ insertModelInDatabase <- function(
       databaseId = databaseId,
       modelType = model$trainDetails$modelName,
       plpModelFile = modelLocation, # save the model to a location and add location here
-      trainDetails = as.character(ParallelLogger::convertSettingsToJson(model$trainDetails)),
-      preprocessing = as.character(ParallelLogger::convertSettingsToJson(model$preprocess)),
+      trainDetails = "",#as.character(ParallelLogger::convertSettingsToJson(model$trainDetails)),
+      preprocessing = "",#as.character(ParallelLogger::convertSettingsToJson(model$preprocess)),
       
       executionDateTime = format(model$trainDetails$trainingDate, format="%Y-%m-%d"), 
       trainingTime = model$trainDetails$trainingTime, 
       intercept = ifelse(is.list(model$model) & attr(model, 'saveType') != 'xgboost', model$model$coefficients[1], 0),  # using the param useIntercept?
       
-      stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+      tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
     )
     ParallelLogger::logInfo(
@@ -693,7 +703,7 @@ addModel <- function(
   conn, 
   resultSchema, 
   targetDialect,
-  stringAppendToTables,
+  tablePrefix,
   analysisId,
   modelDesignId,
   databaseId,
@@ -735,7 +745,7 @@ addModel <- function(
   result <- checkTable(
     conn = conn, 
     resultSchema = resultSchema, 
-    stringAppendToTables = stringAppendToTables,
+    tablePrefix = tablePrefix,
     targetDialect = targetDialect, 
     tableName = 'models',
     columnNames = c(
@@ -792,7 +802,7 @@ addModel <- function(
       training_time = trainingTime,
       intercept = intercept,
       
-      string_to_append = stringAppendToTables
+      string_to_append = tablePrefix
     )
     sql <- SqlRender::translate(
       sql, 
@@ -805,7 +815,7 @@ addModel <- function(
     result <- checkTable(
       conn = conn, 
       resultSchema = resultSchema, 
-      stringAppendToTables = stringAppendToTables,
+      tablePrefix = tablePrefix,
       targetDialect = targetDialect, 
       tableName = 'models',
       columnNames = c(
@@ -981,11 +991,11 @@ deleteTables <- function(
   targetDialect,
   tempEmulationSchema,
   tableNames, 
-  stringAppendToTables
+  tablePrefix
 ){
   
-  if(stringAppendToTables != ''){
-    tableNames <- paste0(toupper(gsub('_','',gsub(' ','', stringAppendToTables))), '_', tableNames)
+  if(tablePrefix != ''){
+    tableNames <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefix))), '_', tableNames)
   }
   
   alltables <- DatabaseConnector::getTableNames(
@@ -1065,7 +1075,7 @@ cleanNum <- function(x){
 
 checkTable <- function(conn,
                        resultSchema, 
-                       stringAppendToTables = '',
+                       tablePrefix = '',
                        targetDialect,
                        tableName,
                        columnNames, 
@@ -1080,7 +1090,7 @@ checkTable <- function(conn,
                            my_schema = resultSchema,
                            table = tableName,
                            input_vals = vals,
-                           string_to_append = stringAppendToTables)
+                           string_to_append = tablePrefix)
   sql <- SqlRender::translate(sql, targetDialect = targetDialect,
                               tempEmulationSchema = tempEmulationSchema)
   result <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = T)
@@ -1091,7 +1101,7 @@ checkTable <- function(conn,
 
 checkJson <- function(conn,
                       resultSchema, 
-                      stringAppendToTables = '',
+                      tablePrefix = '',
                       targetDialect,
                       tableName,
                       jsonColumnName,
@@ -1104,7 +1114,7 @@ checkJson <- function(conn,
   sql <- SqlRender::render(sql, 
                            my_schema = resultSchema,
                            table = tableName,
-                           string_to_append = stringAppendToTables)
+                           string_to_append = tablePrefix)
   sql <- SqlRender::translate(sql, targetDialect = targetDialect,
                               tempEmulationSchema = tempEmulationSchema)
   result <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = T)
@@ -1125,7 +1135,7 @@ checkJson <- function(conn,
 
 # adds json from package unless json is specified
 addCohort <- function(conn, resultSchema, targetDialect,
-                      stringAppendToTables = '',
+                      tablePrefix = '',
                       cohortDefinition, # this is the R list of the cohortDefinition
                       tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
@@ -1139,12 +1149,14 @@ addCohort <- function(conn, resultSchema, targetDialect,
   }
   
   # reduce the size to save
-  json <-  substr(json, 1, 4000) # TESTING - FIX THIS [TODO]
+  if(!targetDialect %in% c('sqlite', 'postgres')){
+    json <-  substr(json, 1, 4000) # TESTING - FIX THIS [TODO]
+  }
   
   #check whether cohort already in table:
   result <- checkTable(conn = conn, 
                        resultSchema = resultSchema, 
-                       stringAppendToTables = stringAppendToTables,
+                       tablePrefix = tablePrefix,
                        targetDialect = targetDialect, 
                        tableName = 'cohorts',
                        columnNames = c('cohort_name'), 
@@ -1168,7 +1180,7 @@ addCohort <- function(conn, resultSchema, targetDialect,
                        cohortJson = json)
     DatabaseConnector::insertTable(connection = conn, 
                                    databaseSchema = resultSchema, 
-                                   tableName = paste0(stringAppendToTables, 'cohorts'),
+                                   tableName = paste0(tablePrefix, 'cohorts'),
                                    data = data,
                                    dropTableIfExists = F, 
                                    createTable = F, 
@@ -1181,7 +1193,7 @@ addCohort <- function(conn, resultSchema, targetDialect,
     # now check and get id
     result <- checkTable(conn = conn, 
                          resultSchema = resultSchema, 
-                         stringAppendToTables = stringAppendToTables,
+                         tablePrefix = tablePrefix,
                          targetDialect = targetDialect, 
                          tableName = 'cohorts',
                          columnNames = c('cohort_name', 'atlas_id'), 
@@ -1207,7 +1219,7 @@ addDatabase <- function(
   
   result <- checkTable(conn = conn, 
                        resultSchema = databaseSchemaSettings$resultSchema, 
-                       stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+                       tablePrefix = databaseSchemaSettings$tablePrefix,
                        targetDialect = databaseSchemaSettings$targetDialect, 
                        tableName = 'database_details',
                        columnNames = c('database_name', 'database_acronym',
@@ -1236,14 +1248,14 @@ addDatabase <- function(
                              version = databaseDetail$version,
                              desc = databaseDetail$description,
                              type = databaseDetail$type,
-                             string_to_append = databaseSchemaSettings$stringAppendToResultSchemaTables)
+                             string_to_append = databaseSchemaSettings$tablePrefix)
     sql <- SqlRender::translate(sql, targetDialect = databaseSchemaSettings$targetDialect,
                                 tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema)
     DatabaseConnector::executeSql(conn, sql)
     
     result <- checkTable(conn = conn, 
                          resultSchema = databaseSchemaSettings$resultSchema, 
-                         stringAppendToTables = databaseSchemaSettings$stringAppendToResultSchemaTables,
+                         tablePrefix = databaseSchemaSettings$tablePrefix,
                          targetDialect = databaseSchemaSettings$targetDialect, 
                          tableName = 'database_details',
                          columnNames = c('database_name', 'database_acronym', 'database_version',

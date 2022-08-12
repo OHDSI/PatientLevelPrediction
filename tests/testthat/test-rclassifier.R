@@ -41,7 +41,7 @@ test_that("GBM settings work", {
   expect_equal(gbmSet$fitFunction, 'fitRclassifier')
   expect_is(gbmSet$param, 'list')
   
-  expect_equal(attr(gbmSet$param, 'settings')$modeType, 'Xgboost')
+  expect_equal(attr(gbmSet$param, 'settings')$modelType, 'Xgboost')
   expect_equal(attr(gbmSet$param, 'settings')$seed, seed)
   expect_equal(attr(gbmSet$param, 'settings')$modelName, "Gradient Boosting Machine")
   

@@ -533,22 +533,33 @@ removeCellCount <- function(
 #' @details
 #' Extracts the results from a database into a set of csv files
 #'
+#' @param conn  The connection to the database with the results
 #' @param connectionDetails                    The connectionDetails for the result database
 #' @param databaseSchemaSettings         The result database schema settings
 #' @param csvFolder      Location to save the csv files
+#' @param fileAppend     If set to a string this will be appended to the start of the csv file names
 #' 
 #' @export
 extractDatabaseToCsv <- function(
+  conn = NULL,
   connectionDetails,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
-  csvFolder
+  csvFolder,
+  fileAppend = NULL
   ){
   
   ensure_installed('readr')
   
-  # connect
-  conn <- DatabaseConnector::connect(connectionDetails)
-  on.exit(DatabaseConnector::disconnect(conn))
+  # check inputs
+  if(!is.null(fileAppend)){
+    fileAppend <- paste0(gsub('_','',gsub(' ','', fileAppend)), '_')
+  }
+  
+  if(is.null(conn)){
+    # connect
+    conn <- DatabaseConnector::connect(connectionDetails)
+    on.exit(DatabaseConnector::disconnect(conn))
+  }
   
   # create the folder to save the csv files
   if(!dir.exists(csvFolder)){
@@ -576,7 +587,7 @@ extractDatabaseToCsv <- function(
     # save the results as a csv
     readr::write_excel_csv(
       x = result, 
-      file = file.path(csvFolder, paste0(table,'.csv'))
+      file = file.path(csvFolder, paste0(fileAppend,table,'.csv'))
       )
   }
   
