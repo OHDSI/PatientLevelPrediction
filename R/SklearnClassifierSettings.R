@@ -499,7 +499,7 @@ setNaiveBayes <- function(){
     pythonClassifier = 'GaussianNB'
   )
   
-  attr(param, 'saveToJson') <- T
+  attr(param, 'saveToJson') <- F # testing if this fixes issue
   attr(param, 'saveType') <- 'file'
   
   result <- list(
