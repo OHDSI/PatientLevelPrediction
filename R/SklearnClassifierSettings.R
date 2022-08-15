@@ -499,7 +499,7 @@ setNaiveBayes <- function(){
     pythonClassifier = 'GaussianNB'
   )
   
-  attr(param, 'saveToJson') <- T
+  attr(param, 'saveToJson') <- F # testing if this fixes issu
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -659,7 +659,7 @@ setRandomForest <- function(
     pythonClassifier = 'RandomForestClassifier'
   ) 
   
-  attr(param, 'saveToJson') <- T
+  attr(param, 'saveToJson') <- F
   attr(param, 'saveType') <- 'file'
   
   result <- list(
