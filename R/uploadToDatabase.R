@@ -666,6 +666,10 @@ insertModelInDatabase <- function(
   #  dirPath = modelLocation
   #)
   
+  # need hyperParamSearch for shiny app but the other parts
+  # are too large to store into the database
+  trainDetails <- list(hyperParamSearch = model$trainDetails$hyperParamSearch)
+  
     # create this function
     modelId <- addModel(
       conn = conn, 
@@ -680,7 +684,7 @@ insertModelInDatabase <- function(
       databaseId = databaseId,
       modelType = model$trainDetails$modelName,
       plpModelFile = modelLocation, # save the model to a location and add location here
-      trainDetails = "",#as.character(ParallelLogger::convertSettingsToJson(model$trainDetails)),
+      trainDetails = as.character(ParallelLogger::convertSettingsToJson(trainDetails)),
       preprocessing = "",#as.character(ParallelLogger::convertSettingsToJson(model$preprocess)),
       
       executionDateTime = format(model$trainDetails$trainingDate, format="%Y-%m-%d"), 
