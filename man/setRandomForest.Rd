@@ -11,7 +11,7 @@ setRandomForest(
   minSamplesSplit = list(2, 5),
   minSamplesLeaf = list(1, 10),
   minWeightFractionLeaf = list(0),
-  mtries = list("auto", "log2"),
+  mtries = list("sqrt", "log2"),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(0),
   bootstrap = list(TRUE),
@@ -39,8 +39,7 @@ setRandomForest(
 \itemize{
 \item{int}{then consider max_features features at each split.}
 \item{float}{then max_features is a fraction and round(max_features * n_features) features are considered at each split}
-\item{'auto'}{then max_features=sqrt(n_features)}
-\item{'sqrt'}{then max_features=sqrt(n_features) (same as “auto”)}
+\item{'sqrt'}{then max_features=sqrt(n_features)}
 \item{'log2'}{then max_features=log2(n_features).}
 \item{NULL}{then max_features=n_features}
 }}

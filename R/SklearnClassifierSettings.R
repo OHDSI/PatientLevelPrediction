@@ -117,7 +117,7 @@ AdaBoostClassifierInputs <- function(classifier, param){
 #' @param minSamplesSplit    The minimum number of samples required to split an internal node
 #' @param minSamplesLeaf     The minimum number of samples required to be at a leaf node. A split point at any depth will only be considered if it leaves at least minSamplesLeaf training samples in each of the left and right branches. This may have the effect of smoothing the model, especially in regression.
 #' @param minWeightFractionLeaf    The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sampleWeight is not provided.
-#' @param maxFeatures   (list) The number of features to consider when looking for the best split (int/'auto'/NULL)
+#' @param maxFeatures   (list) The number of features to consider when looking for the best split (int/'sqrt'/NULL)
 #' @param maxLeafNodes (list) Grow a tree with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes. (int/NULL)
 #' @param minImpurityDecrease  Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf. 
 #' @param classWeight         (list) Weights associated with classes 'balance' or NULL
@@ -135,7 +135,7 @@ setDecisionTree <- function(
   minSamplesSplit = list(2, 10),
   minSamplesLeaf = list(10, 50),
   minWeightFractionLeaf = list(0),
-  maxFeatures = list(100,'auto', NULL),
+  maxFeatures = list(100,'sqrt', NULL),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(10^-7),
   classWeight = list(NULL, 'balanced'),
@@ -253,7 +253,7 @@ setDecisionTree <- function(
     pythonClassifier = 'DecisionTreeClassifier'
   )
   
-  attr(param, 'saveToJson') <- T
+  attr(param, 'saveToJson') <- F
   attr(param, 'saveType') <- 'file'
   
   result <- list(

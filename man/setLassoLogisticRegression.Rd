@@ -14,7 +14,8 @@ setLassoLogisticRegression(
   upperLimit = 20,
   lowerLimit = 0.01,
   tolerance = 2e-06,
-  maxIterations = 3000
+  maxIterations = 3000,
+  priorCoefs = NULL
 )
 }
 \arguments{

@@ -1,3 +1,8 @@
+PatientLevelPrediction 5.4.2
+======================
+- removed json saving for sklearn models since sklearn-json is no longer working for the latest sklearn
+
+
 PatientLevelPrediction 5.4.1
 ======================
 - renamed the input corresponding to the string that gets appended to the results table names to tablePrefix
