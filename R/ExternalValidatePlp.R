@@ -238,7 +238,7 @@ externalValidateDbPlp <- function(
         list(
           plpData = plpData,
           outcomeId = getPlpDataSettings$databaseDetails$outcomeIds,
-          populationSettings = plpModel$settings$populationSettings
+          populationSettings = plpModel$modelDesign$populationSettings
         )
       )
     },

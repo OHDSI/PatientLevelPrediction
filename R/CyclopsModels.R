@@ -283,7 +283,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     stop("Needs correct covariateData")
   }
   
-  intercept <- coefficients[names(coefficients)%in%'(Intercept)']
+  intercept <- coefficients[names(coefficients)%in%'(Intercept)'][[1]]
   if(length(intercept)==0) intercept <- 0
   coefficients <- coefficients[!names(coefficients)%in%'(Intercept)']
   coefficients <- data.frame(beta = as.numeric(coefficients),
@@ -346,7 +346,7 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
     ParallelLogger::logWarn(paste("GLM fitting issue: ", status))
   } else {
     status <- "OK"
-    coefficients <- stats::coef(fit) # not sure this is stats??
+    coefficients <- as.list(coef(fit))
     ParallelLogger::logInfo(paste("GLM fit status: ", status))
   }
   
@@ -440,7 +440,7 @@ getCV <- function(
 getVariableImportance <- function(modelTrained, trainData){
   varImp <- data.frame(
     covariateId = as.double(names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)']),
-    value = modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)']
+    value = as.numeric(modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
   )
 
 if(sum(abs(varImp$value)>0)==0){
