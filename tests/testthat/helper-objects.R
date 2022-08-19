@@ -1,7 +1,6 @@
 
 # this files contains the objects used in the tests:
-travis <- T
-if(travis){
+if(Sys.getenv('GITHUB_ACTIONS') == 'TRUE'){
   # Download the PostreSQL driver ---------------------------
   # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
   jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
