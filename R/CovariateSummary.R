@@ -358,27 +358,11 @@ covariateSummarySubset <- function(
 
 getCovariatesForGroup <- function(covariateData, restrictIds){
   # restrict covaraiteData to specified rowIds
-  if(length(restrictIds)<200000){
+  covariateData$restrictIds <- data.frame(rowId = restrictIds)
     
-    covariateData$restrictIds <- data.frame(rowId = restrictIds)
-    #on.exit(covariateData$restrictIds <- NULL, add = T)
-    
-    newCovariates <- covariateData$covariates %>% 
-      dplyr::inner_join(covariateData$restrictIds, by= 'rowId')
+  newCovariates <- covariateData$covariates %>% 
+    dplyr::inner_join(covariateData$restrictIds, by= 'rowId')
  
-  } else{
-    newCovariateData <- batchRestrict(
-      covariateData, 
-      data.frame(rowId = restrictIds), 
-      sizeN = 10000000
-      )
-    
-    newCovariates <- newCovariateData$covariates
-    
-  }
-  
-  # add index to rowId and covariateId?
-  
   return(newCovariates)
 }
 
