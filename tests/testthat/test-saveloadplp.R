@@ -27,8 +27,8 @@ test_that("savePlpDataError", {
 
 oldCohorts <- plpData$cohorts
 oldOutcomes <- plpData$outcomes
-oldCovariates <- as.data.frame(plpData$covariateData$covariates)
-oldCovariateRef <- as.data.frame(plpData$covariateData$covariateRef)
+oldCovariates <- plpData$covariateData$covariates %>% dplyr::arrange(rowId, covariateId) %>% dplyr::collect()
+oldCovariateRef <- plpData$covariateData$covariateRef %>% dplyr::collect()
 test_that("savePlpData", {
   savePlpData(plpData = plpData, 
               file =  file.path(saveLoc,"saveDataTest"), overwrite = T)
@@ -44,9 +44,9 @@ test_that("loadPlpData", {
   plpData <- loadPlpData(file = file.path(saveLoc,"saveDataTest"))
   expect_identical(plpData$cohorts, oldCohorts)
   expect_identical(plpData$outcomes, oldOutcomes)
-  expect_equal(as.data.frame(plpData$covariateData$covariates), 
+  expect_equal(plpData$covariateData$covariates %>% dplyr::arrange(rowId, covariateId)  %>% dplyr::collect(), 
                          oldCovariates)
-  expect_equal(as.data.frame(plpData$covariateData$covariateRef), 
+  expect_equal(plpData$covariateData$covariateRef %>% dplyr::collect(), 
                          oldCovariateRef)
 })
 
