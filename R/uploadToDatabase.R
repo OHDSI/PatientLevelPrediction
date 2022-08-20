@@ -689,7 +689,7 @@ insertModelInDatabase <- function(
       
       executionDateTime = format(model$trainDetails$trainingDate, format="%Y-%m-%d"), 
       trainingTime = model$trainDetails$trainingTime, 
-      intercept = ifelse(is.list(model$model) & attr(model, 'saveType') != 'xgboost', model$model$coefficients[1], 0),  # using the param useIntercept?
+      intercept = ifelse(is.list(model$model) & attr(model, 'saveType') != 'xgboost', model$model$coefficients$betas[1], 0),  # using the param useIntercept?
       
       tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
