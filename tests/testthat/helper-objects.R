@@ -1,6 +1,6 @@
 
 # this files contains the objects used in the tests:
-if(Sys.getenv('GITHUB_ACTIONS') == 'TRUE'){
+if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
   # Download the PostreSQL driver ---------------------------
   # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
   jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
@@ -135,16 +135,6 @@ createTrainData <- function(plpData, population){
   
   return(trainData)
 }
-
-
-sampleSize2 <- 1000+sample(1000,1)
-plpData2 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
-
-population2 <- createStudyPopulation(
-  plpData = plpData2,
-  outcomeId = 2, 
-  populationSettings = populationSettings
-)
 
 sampleSizeBig <- 10000
 plpDataBig <- simulatePlpData(plpDataSimulationProfile, n = sampleSizeBig)
