@@ -79,15 +79,15 @@ jobs:
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
 
-      - name: use r-reticulate environment
-        run: |
-          reticulate::use_condaenv("r-reticulate", required = TRUE)
-        shell: Rscript {0}
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
+          
+      - name: use r-reticulate environment
+        run: |
+          reticulate::use_condaenv("r-reticulate", required = TRUE)
+        shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
         with:
