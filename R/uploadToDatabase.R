@@ -957,14 +957,14 @@ getCohortDefinitionJson <- function(cohortDefinitions, cohortId){
 getResultLocations <- function(resultLocation){
   # get the model locations...
   
-  resultLocs <- file.path(
-    dir(
+  resultLocs <- dir(
       resultLocation, 
       pattern = 'Analysis_', 
       full.names = T
-    ), 
-    'plpResult'
   )
+  # automatically find Results folder, to handle both plpResult/ and validationResult/
+  resultLocs <- file.path(resultLocs, dir(resultLocs, pattern='Result'))
+  
   
   if(dir.exists(file.path(resultLocation, 'Validation'))){
     validationDatabases <- dir(file.path(resultLocation, 'Validation'))
