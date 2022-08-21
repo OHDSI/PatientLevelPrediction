@@ -360,9 +360,11 @@ loadPlpResult <- function(dirPath){
   
   result <- readRDS(file.path(dirPath, "runPlp.rds"))
   result$model = loadPlpModel(file.path(dirPath, "model"))
-
-  class(result) <- "runPlp"
   
+  if (is.null(class(result))) {
+    class(result) <- 'runPlp'
+  }
+
   return(result)
   
 }
