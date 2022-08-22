@@ -336,13 +336,16 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
 
   if (is.character(fit)) {
     coefficients <- c(0)
+    names(coefficients) <- ''
     status <- fit
   } else if (fit$return_flag == "ILLCONDITIONED") {
     coefficients <- c(0)
+    names(coefficients) <- ''
     status <- "ILL CONDITIONED, CANNOT FIT"
     ParallelLogger::logWarn(paste("GLM fitting issue: ", status))
   } else if (fit$return_flag == "MAX_ITERATIONS") {
     coefficients <- c(0)
+    names(coefficients) <- ''
     status <- "REACHED MAXIMUM NUMBER OF ITERATIONS, CANNOT FIT"
     ParallelLogger::logWarn(paste("GLM fitting issue: ", status))
   } else {
