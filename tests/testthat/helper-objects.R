@@ -44,9 +44,8 @@ dir.create(saveLoc)
 data(plpDataSimulationProfile, envir = environment())
 
 # PLPDATA
-sampleSize <- 2500+sample(1000,1)
+sampleSize <- 1000+sample(300,1)
 plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-#plpData$metaData$cohortId <- plpData$metaData$cohortIds
 
 # POPULATION
 populationSettings <- createStudyPopulationSettings(
@@ -135,13 +134,3 @@ createTrainData <- function(plpData, population){
   
   return(trainData)
 }
-
-sampleSizeBig <- 10000
-plpDataBig <- simulatePlpData(plpDataSimulationProfile, n = sampleSizeBig)
-
-populationBig <- createStudyPopulation(
-  plpData = plpDataBig,
-  outcomeId = 2, 
-  populationSettings = populationSettings
-)
-
