@@ -18,6 +18,8 @@ library("testthat")
 
 context("UploadToDatabase")
 
+# only run this during CI
+if (Sys.getenv('CI') == 'true') {
 cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
 ohdsiDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
 connectionRedshift <- DatabaseConnector::createConnectionDetails(
@@ -34,9 +36,9 @@ appendRandom <- function(x, rand = randVar){
   return(paste(rand, x, sep=''))
 }
 
-
+}
 test_that("test createDatabaseSchemaSettings works", {
-  
+  skip_if(Sys.getenv('CI') != 'true', 'not run locally')
   databaseSchemaSettings <- createDatabaseSchemaSettings(
     resultSchema = ohdsiDatabaseSchema, 
     tablePrefix = '',
@@ -123,7 +125,7 @@ test_that("getCohortDefinitionFromDefinitions", {
 
 
 test_that("database creation", {
-  
+  skip_if(Sys.getenv('CI') != 'true', 'not run locally')
   createPlpResultTables(
     conn = conn, 
     resultSchema = ohdsiDatabaseSchema, 
@@ -141,8 +143,8 @@ test_that("database creation", {
 
 
 test_that("results uploaded to database", {
-  
-  resultsLoc <- file.path(saveLoc,'dbUp')
+  skip_if(Sys.getenv('CI') != 'true', 'not run locally')
+    resultsLoc <- file.path(saveLoc,'dbUp')
   
   plpResult$model$trainDetails$developmentDatabase <- 'test' 
   savePlpResult(plpResult, file.path(resultsLoc, 'Analysis_1','plpResult'))
@@ -194,7 +196,7 @@ test_that("results uploaded to database", {
 
 
 test_that("database deletion", {
-
+  skip_if(Sys.getenv('CI') != 'true', 'not run locally')
   createPlpResultTables(
     conn = conn, 
     resultSchema = ohdsiDatabaseSchema, 
@@ -212,7 +214,9 @@ test_that("database deletion", {
 })
 
 # disconnect
-DatabaseConnector::disconnect(conn)
+if (Sys.getenv('CI') == 'true') {
+  DatabaseConnector::disconnect(conn)
+}
 
 # code to test sqlite creation, result and diagnostic upload all in one
 test_that("temporary sqlite with results works", {

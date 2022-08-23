@@ -21,8 +21,14 @@ context("FeatureImportance")
 
 test_that("pfi feature importance returns data.frame", {
   
+  # limit to a sample of 10 covariates for faster test
+  covariates <- plpResult$model$covariateImportance %>% 
+    dplyr::filter(.data$covariateValue != 0) %>% 
+    dplyr::select(.data$covariateId) %>% 
+    dplyr::pull()
+  covariates <- sample(covariates, 10)
   pfiTest <- pfi(plpResult, population, plpData, repeats = 1,
-                  covariates = NULL, cores = NULL, log = NULL,
+                  covariates = covariates, cores = NULL, log = NULL,
                   logthreshold = "INFO")
   
   testthat::expect_equal(class(pfiTest), 'data.frame')

@@ -5,6 +5,7 @@
 \title{Exports all the results from a database into csv files}
 \usage{
 extractDatabaseToCsv(
+  conn = NULL,
   connectionDetails,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
   csvFolder,
@@ -12,6 +13,8 @@ extractDatabaseToCsv(
 )
 }
 \arguments{
+\item{conn}{The connection to the database with the results}
+
 \item{connectionDetails}{The connectionDetails for the result database}
 
 \item{databaseSchemaSettings}{The result database schema settings}

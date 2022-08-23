@@ -283,11 +283,11 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     stop("Needs correct covariateData")
   }
   
-  intercept <- coefficients[names(coefficients)%in%'(Intercept)'][[1]]
+  intercept <- coefficients$betas[coefficients$covariateId%in%'(Intercept)']
   if(length(intercept)==0) intercept <- 0
-  coefficients <- coefficients[!names(coefficients)%in%'(Intercept)']
-  coefficients <- data.frame(beta = as.numeric(coefficients),
-    covariateId = as.numeric(names(coefficients)) #!@ modified 
+  betas <- coefficients$betas[!coefficients$covariateIds%in%'(Intercept)']
+  coefficients <- data.frame(beta = betas,
+    covariateId = coefficients$covariateIds[coefficients$covariateIds!='(Intercept)']
   )
   coefficients <- coefficients[coefficients$beta != 0, ]
   if(sum(coefficients$beta != 0)>0){
@@ -335,13 +335,16 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
 
   if (is.character(fit)) {
     coefficients <- c(0)
+    names(coefficients) <- ''
     status <- fit
   } else if (fit$return_flag == "ILLCONDITIONED") {
     coefficients <- c(0)
+    names(coefficients) <- ''
     status <- "ILL CONDITIONED, CANNOT FIT"
     ParallelLogger::logWarn(paste("GLM fitting issue: ", status))
   } else if (fit$return_flag == "MAX_ITERATIONS") {
     coefficients <- c(0)
+    names(coefficients) <- ''
     status <- "REACHED MAXIMUM NUMBER OF ITERATIONS, CANNOT FIT"
     ParallelLogger::logWarn(paste("GLM fitting issue: ", status))
   } else {
@@ -350,12 +353,17 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
     ParallelLogger::logInfo(paste("GLM fit status: ", status))
   }
   
+  # use a dataframe for the coefficients
+  betas <- as.numeric(coefficients)
+  betaNames <- names(coefficients)
+  coefficients <- data.frame(betas=betas, covariateIds=betaNames)
+  
   outcomeModel <- list(
-    coefficients = coefficients, 
     priorVariance = fit$variance,
     log_likelihood = fit$log_likelihood,
     modelType = modelType,
-    modelStatus = status
+    modelStatus = status,
+    coefficients = coefficients
   )
 
   if(modelType == "cox" || modelType == "survival") {
@@ -439,8 +447,8 @@ getCV <- function(
 
 getVariableImportance <- function(modelTrained, trainData){
   varImp <- data.frame(
-    covariateId = as.double(names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)']),
-    value = as.numeric(modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)'])
+    covariateId = as.double(modelTrained$coefficients$covariateIds[modelTrained$coefficients$covariateIds!='(Intercept)']),
+    value = modelTrained$coefficients$betas[modelTrained$coefficients$covariateIds!='(Intercept)']
   )
 
 if(sum(abs(varImp$value)>0)==0){

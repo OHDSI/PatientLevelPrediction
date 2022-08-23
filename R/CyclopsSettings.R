@@ -10,6 +10,7 @@
 #' @param lowerLimit  	Numeric: Lower prior variance limit for grid-search
 #' @param tolerance   Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error
+#' @param priorCoefs    Use coefficients from a previous model as starting points for model fit (transfer learning)
 #' 
 #' @examples
 #' model.lr <- setLassoLogisticRegression()

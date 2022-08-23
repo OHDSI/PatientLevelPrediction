@@ -18,8 +18,3 @@ library("testthat")
 context("AndromedaHelperFunctions")
 
 # add limitCovariatesToPopulation(covariateData, rowIds) test 
-
-
-
-
-# can't test clearffTempDir or checkffFolder?
