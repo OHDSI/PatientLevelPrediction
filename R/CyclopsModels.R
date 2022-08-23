@@ -283,6 +283,11 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     stop("Needs correct covariateData")
   }
   
+  if (inherits(coefficients, 'numeric')) {
+    coefficients <- data.frame(betas=as.numeric(coefficients),
+                               covariateIds=names(coefficients))
+  }
+  
   intercept <- coefficients$betas[coefficients$covariateId%in%'(Intercept)']
   if(length(intercept)==0) intercept <- 0
   betas <- coefficients$betas[!coefficients$covariateIds%in%'(Intercept)']
@@ -290,6 +295,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     covariateId = coefficients$covariateIds[coefficients$covariateIds!='(Intercept)']
   )
   coefficients <- coefficients[coefficients$beta != 0, ]
+  coefficients$covariateId <- as.numeric(coefficients$covariateId)
   if(sum(coefficients$beta != 0)>0){
     covariateData$coefficients <- coefficients
     on.exit(covariateData$coefficients <- NULL, add = TRUE)

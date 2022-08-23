@@ -135,10 +135,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   writeLines("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
-    coefficients <- data.frame(betas=as.numeric(plpDataSimulationProfile$outcomeModels[[i]]),
-                               covariateIds=names(plpDataSimulationProfile$outcomeModels[[i]])
-                               )
-    prediction <- predictCyclopsType(coefficients,
+    prediction <- predictCyclopsType(plpDataSimulationProfile$outcomeModels[[i]],
                                    cohorts,
                                    covariateData,
                                    modelType = "poisson")
