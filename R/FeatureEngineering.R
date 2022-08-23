@@ -122,7 +122,7 @@ univariateFeatureSelection <- function(
     SelectKBest <- sklearn$feature_selection$SelectKBest
     chi2 <- sklearn$feature_selection$chi2
     
-    kbest <- SelectKBest(chi2, k = featureEngineeringSettings$k)$fit(X, y$outcomeCount)
+    kbest <- SelectKBest(chi2, k = featureEngineeringSettings$k)$fit(X, y)
     kbest$scores_ <- np$nan_to_num(kbest$scores_)
     threshold <- -np$sort(-kbest$scores_)[(featureEngineeringSettings$k-1)]
     
