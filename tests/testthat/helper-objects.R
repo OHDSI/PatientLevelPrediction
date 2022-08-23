@@ -132,7 +132,7 @@ createTrainData <- function(plpData, population){
   attr(trainData, "metaData")$splitSettings <- PatientLevelPrediction::createDefaultSplitSetting()
   attr(trainData, "metaData")$sampleSettings <- PatientLevelPrediction::createSampleSettings()
   
-  class(trainData$covariateData) <- 'CovariateData'
+  class(trainData$covariateData) <- c('CovariateData', 'Andromeda')
   
   return(trainData)
 }
