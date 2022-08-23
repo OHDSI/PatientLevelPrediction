@@ -102,9 +102,9 @@ externalValidatePlp <- function(
       developmentDatabase = plpModel$trainDetails$developmentDatabase,
       validationDatabase = databaseName,
       populationSettings = attr(population, 'metaData')$populationSettings,
-      restrictPlpDataSettings = attr(plpData, 'metaData')$restrictPlpDataSettings,
+      restrictPlpDataSettings = plpData$metaData$restrictPlpDataSettings,
       outcomeId = attr(population, 'metaData')$outcomeId,
-      targetId = attr(plpData, 'metaData')$databaseDetails$targetId,
+      targetId = plpData$metaData$databaseDetails$targetId,
       attrition = attr(population, 'metaData')$attrition,
       validationDate = Sys.Date() # is this needed?
     )
@@ -238,7 +238,7 @@ externalValidateDbPlp <- function(
         list(
           plpData = plpData,
           outcomeId = getPlpDataSettings$databaseDetails$outcomeIds,
-          populationSettings = plpModel$settings$populationSettings
+          populationSettings = plpModel$modelDesign$populationSettings
         )
       )
     },

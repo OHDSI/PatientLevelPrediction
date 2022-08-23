@@ -689,7 +689,7 @@ insertModelInDatabase <- function(
       
       executionDateTime = format(model$trainDetails$trainingDate, format="%Y-%m-%d"), 
       trainingTime = model$trainDetails$trainingTime, 
-      intercept = ifelse(is.list(model$model) & attr(model, 'saveType') != 'xgboost', model$model$coefficients[1], 0),  # using the param useIntercept?
+      intercept = ifelse(is.list(model$model) & attr(model, 'saveType') != 'xgboost', model$model$coefficients$betas[1], 0),  # using the param useIntercept?
       
       tablePrefix = databaseSchemaSettings$tablePrefix,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
@@ -957,14 +957,14 @@ getCohortDefinitionJson <- function(cohortDefinitions, cohortId){
 getResultLocations <- function(resultLocation){
   # get the model locations...
   
-  resultLocs <- file.path(
-    dir(
+  resultLocs <- dir(
       resultLocation, 
       pattern = 'Analysis_', 
       full.names = T
-    ), 
-    'plpResult'
   )
+  # automatically find Results folder, to handle both plpResult/ and validationResult/
+  resultLocs <- file.path(resultLocs, dir(resultLocs, pattern='Result'))
+  
   
   if(dir.exists(file.path(resultLocation, 'Validation'))){
     validationDatabases <- dir(file.path(resultLocation, 'Validation'))

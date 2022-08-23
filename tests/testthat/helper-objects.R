@@ -1,7 +1,6 @@
 
 # this files contains the objects used in the tests:
-travis <- T
-if(travis){
+if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
   # Download the PostreSQL driver ---------------------------
   # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
   jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
@@ -45,9 +44,8 @@ dir.create(saveLoc)
 data(plpDataSimulationProfile, envir = environment())
 
 # PLPDATA
-sampleSize <- 2500+sample(1000,1)
+sampleSize <- 1000+sample(300,1)
 plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
-#plpData$metaData$cohortId <- plpData$metaData$cohortIds
 
 # POPULATION
 populationSettings <- createStudyPopulationSettings(
@@ -136,23 +134,3 @@ createTrainData <- function(plpData, population){
   
   return(trainData)
 }
-
-
-sampleSize2 <- 1000+sample(1000,1)
-plpData2 <- simulatePlpData(plpDataSimulationProfile, n = sampleSize2)
-
-population2 <- createStudyPopulation(
-  plpData = plpData2,
-  outcomeId = 2, 
-  populationSettings = populationSettings
-)
-
-sampleSizeBig <- 10000
-plpDataBig <- simulatePlpData(plpDataSimulationProfile, n = sampleSizeBig)
-
-populationBig <- createStudyPopulation(
-  plpData = plpDataBig,
-  outcomeId = 2, 
-  populationSettings = populationSettings
-)
-

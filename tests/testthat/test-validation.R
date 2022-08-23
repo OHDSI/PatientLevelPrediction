@@ -33,7 +33,7 @@ databaseDetails <- createDatabaseDetails(
   outcomeIds = 3, #make this ids
   cdmVersion = 5)
 
-modelVal <- plpResult$model
+modelVal <- loadPlpModel(file.path(saveLoc, 'Test', 'plpResult', 'model'))
 validationDatabaseDetailsVal <- databaseDetails  # from run multiple tests
 validationRestrictPlpDataSettingsVal <- createRestrictPlpDataSettings(washoutPeriod = 0, sampleSize = NULL)
 recalSet <- createValidationSettings(recalibrate = 'weakRecalibration')

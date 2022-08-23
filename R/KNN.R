@@ -192,7 +192,7 @@ predictKnn <- function(
     all.x=T, fill=0)
   prediction$value[is.na(prediction$value)] <- 0
   
-  attr(prediction, "metaData") <- 'binary'
+  attr(prediction, "metaData")$modelType <- 'binary'
   
   return(prediction)
   

@@ -1,8 +1,14 @@
 
 resultNames <- c('executionSummary','model','prediction', 'performanceEvaluation', 'covariateSummary', 'analysisRef')
 
+# reduce data so test runs quicker, still with at least 10 outcomes in test
+plpDataKNN <- plpData
+plpData$population <- plpData$cohorts[sample(nrow(plpData$cohorts), 400),]
+
+# will fit 100% on training data which produces a warning
+suppressWarnings({
 plpResultKNN <- runPlp(
-  plpData = plpData, 
+  plpData = plpDataKNN, 
   outcomeId = 2, 
   analysisId = 'knnTest', 
   analysisName = 'Testing knn',
@@ -14,6 +20,7 @@ plpResultKNN <- runPlp(
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = file.path(saveLoc, 'knn')
   )
+})
 
 test_that("covRef is correct size", {
   
