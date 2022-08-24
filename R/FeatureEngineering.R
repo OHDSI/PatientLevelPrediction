@@ -122,7 +122,7 @@ univariateFeatureSelection <- function(
     SelectKBest <- sklearn$feature_selection$SelectKBest
     chi2 <- sklearn$feature_selection$chi2
     
-    kbest <- SelectKBest(chi2, k = featureEngineeringSettings$k)$fit(X, y)
+    kbest <- SelectKBest(chi2, k = featureEngineeringSettings$k)$fit(X, y$outcomeCount)
     kbest$scores_ <- np$nan_to_num(kbest$scores_)
     threshold <- -np$sort(-kbest$scores_)[(featureEngineeringSettings$k-1)]
     
@@ -184,7 +184,7 @@ randomForestFeatureSelection <- function(
     max_depth = featureEngineeringSettings$max_depth #17
     
     rf = sklearn$ensemble$RandomForestClassifier(
-      max_features = 'auto', 
+      max_features = 'sqrt', 
       n_estimators = as.integer(ntrees),
       max_depth = as.integer(max_depth),
       min_samples_split = as.integer(2), 
@@ -231,7 +231,7 @@ featureEngineer <- function(data, featureEngineeringSettings){
   ParallelLogger::logInfo('Starting Feature Engineering')
   
   # if a single setting, make it a list
-  if(class(featureEngineeringSettings) == 'featureEngineeringSettings'){
+  if(inherits(featureEngineeringSettings, 'featureEngineeringSettings')){
     featureEngineeringSettings <- list(featureEngineeringSettings)
   }
   
@@ -242,6 +242,8 @@ featureEngineer <- function(data, featureEngineeringSettings){
     ParallelLogger::logInfo(paste0('Applying ',fun))
     data <- do.call(eval(parse(text = fun)), args)
   }
+  
+  attr(data, 'metaData')$featureEngineeringSettings <- featureEngineeringSettings
   
   ParallelLogger::logInfo('Done Feature Engineering')
   

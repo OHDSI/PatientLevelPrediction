@@ -10,6 +10,7 @@
 #' @param lowerLimit  	Numeric: Lower prior variance limit for grid-search
 #' @param tolerance   Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error
+#' @param priorCoefs    Use coefficients from a previous model as starting points for model fit (transfer learning)
 #' 
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
@@ -24,7 +25,9 @@ setLassoLogisticRegression<- function(
   upperLimit = 20, 
   lowerLimit = 0.01,
   tolerance = 2e-06,
-  maxIterations = 3000){
+  maxIterations = 3000,
+  priorCoefs = NULL
+  ){
   
   checkIsClass(seed, c('numeric','NULL','integer'))
   if(is.null(seed[1])){
@@ -48,7 +51,8 @@ setLassoLogisticRegression<- function(
       ),
     includeCovariateIds = includeCovariateIds, 
     upperLimit = upperLimit, 
-    lowerLimit = lowerLimit
+    lowerLimit = lowerLimit,
+    priorCoefs = priorCoefs
     )
   
   attr(param, 'settings') <- list(

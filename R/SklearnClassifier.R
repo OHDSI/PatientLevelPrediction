@@ -18,10 +18,12 @@
 
 fitSklearn <- function(
   trainData,
-  param,
+  modelSettings,
   search = "grid",
   analysisId,
   ...) {
+  
+  param <- modelSettings$param
   
   # check covariate data
   if(!FeatureExtraction::isCovariateData(trainData$covariateData)){stop("Needs correct covariateData")}
@@ -69,7 +71,7 @@ fitSklearn <- function(
       pythonClassifier = pySettings$pythonClassifier,
       modelLocation = outLoc,
       paramSearch = param,
-      saveToJson = pySettings$saveToJson
+      saveToJson = attr(param, 'saveToJson')
       )
     )
   
@@ -88,34 +90,37 @@ fitSklearn <- function(
   
   result <- list(
     model = file.path(outLoc),
+
+    preprocessing = list(
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
+      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix
+    ),
     
     prediction = prediction,
     
-    settings = list(
-      plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
+    modelDesign = PatientLevelPrediction::createModelDesign(
+      targetId = attr(trainData, "metaData")$targetId,
+      outcomeId = attr(trainData, "metaData")$outcomeId,
+      restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
-      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
-      modelSettings = list(
-        model = pySettings$name, 
-        param = param,
-        finalModelParameters = cvResult$finalParam,
-        extraSettings = attr(param, 'settings')
-      ),
+      featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
+      preprocessSettings = attr(trainData$covariateData, "metaData")$preprocessSettings,
+      modelSettings = modelSettings,
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
     ),
     
     trainDetails = list(
       analysisId = analysisId,
-      cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
-      outcomeId = attr(trainData, "metaData")$outcomeId,
-      cohortId = attr(trainData, "metaData")$cohortId,
+      analysisSource = '', #TODO add from model
+      developmentDatabase = attr(trainData, "metaData")$cdmDatabaseSchema,
       attrition = attr(trainData, "metaData")$attrition, 
-      trainingTime = comp,
+      trainingTime = paste(as.character(abs(comp)), attr(comp,'units')),
       trainingDate = Sys.Date(),
+      modelName = pySettings$name, 
+      finalModelParameters = cvResult$finalParam,
       hyperParamSearch = hyperSummary
     ),
     
@@ -125,7 +130,8 @@ fitSklearn <- function(
   class(result) <- "plpModel"
   attr(result, "predictionFunction") <- "predictPythonSklearn"
   attr(result, "modelType") <- "binary"
-  attr(result, "saveType") <- attr(param, 'saveType')
+  attr(result, "saveType") <- attr(param, 'saveType') # in save/load plp
+  attr(result, "saveToJson") <- attr(param, 'saveToJson') # when saving in reticulate
   
   return(result)
 }
@@ -137,7 +143,7 @@ predictPythonSklearn <- function(
   cohort
   ){
   
-  if(class(data) == 'plpData'){
+  if(inherits(data, 'plpData')){
     # convert
     matrixObjects <- toSparseM(
       plpData = data, 
@@ -157,13 +163,15 @@ predictPythonSklearn <- function(
   os <- reticulate::import('os')
   
   # load model
-  if(plpModel$settings$modelSettings$extraSettings$saveToJson){
+  if(attr(plpModel,'saveToJson')){
     skljson <- reticulate::import('sklearn_json')
-    modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.json"))
+    ##modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.json"))
+    modelLocation <- reticulate::r_to_py(file.path(plpModel$model,"model.json"))
     model <- skljson$from_json(modelLocation)
   } else{
     joblib <- reticulate::import('joblib')
-    modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.pkl"))
+    ##modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.pkl"))
+    modelLocation <- reticulate::r_to_py(file.path(plpModel$model,"model.pkl"))
     model <- joblib$load(os$path$join(modelLocation)) 
   }
   
@@ -171,7 +179,7 @@ predictPythonSklearn <- function(
   pythonData <- reticulate::r_to_py(newData[,included, drop = F])
 
   # make dense if needed
-  if(plpModel$settings$requireDenseMatrix){
+  if(plpModel$preprocess$requireDenseMatrix){
     pythonData <- pythonData$toarray()
   }
   
@@ -208,9 +216,6 @@ checkPySettings <- function(settings){
   
   checkIsClass(settings$name, c('character'))
   ParallelLogger::logDebug(paste0('name: ', settings$name))
-  
-  checkIsClass(settings$saveToJson, c('logical'))
-  ParallelLogger::logDebug(paste0('saveToJson: ', settings$saveToJson))
   
   checkIsClass(settings$pythonImport, c('character'))
   ParallelLogger::logDebug(paste0('pythonImport: ', settings$pythonImport))

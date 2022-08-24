@@ -1,4 +1,4 @@
-printHeader <- function(plpData, cohortId, outcomeId , analysisId, analysisName, ExecutionDateTime){
+printHeader <- function(plpData, targetId, outcomeId , analysisId, analysisName, ExecutionDateTime){
   
   ParallelLogger::logInfo(paste0('Patient-Level Prediction Package version ', utils::packageVersion("PatientLevelPrediction")))
   
@@ -8,9 +8,13 @@ printHeader <- function(plpData, cohortId, outcomeId , analysisId, analysisName,
   ParallelLogger::logInfo(sprintf('%-20s%s', 'AnalysisName: ',analysisName))
   
   # add header to analysis log
-  ParallelLogger::logInfo(sprintf('%-20s%s', 'CohortID: ', cohortId))
+  ParallelLogger::logInfo(sprintf('%-20s%s', 'TargetID: ', targetId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'OutcomeID: ', outcomeId))
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Cohort size: ', nrow(plpData$cohorts)))
+  if(!is.null(plpData$population)){
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Initial population size: ', nrow(plpData$population)))
+    ParallelLogger::logInfo(sprintf('%-20s%s', 'Initial cases: ', sum(plpData$population$outcomeCount>0)))
+  }
   ParallelLogger::logInfo(sprintf('%-20s%s', 'Covariates: ', nrow(plpData$covariateData$covariateRef)))
  ## ParallelLogger::logInfo(sprintf('%-20s%s', 'Population size: ', nrow(population)))
  ## ParallelLogger::logInfo(sprintf('%-20s%s', 'Cases: ', sum(population$outcomeCount>0)))
@@ -34,12 +38,12 @@ checkInputs <- function(inputs) {
     )
     
     # check class is correct
-    if(class(inputs[[inputName]]) != inputName && class(inputs[[inputName]]) != 'list'){
+    if(class(inputs[[inputName]]) != inputName && !inherits(inputs[[inputName]], 'list')){
       ParallelLogger::logError(paste0('Incorrect ', inputName))
       stop('Bad input')
     } 
     
-    if(class(inputs[[inputName]]) == 'list'){
+    if(inherits(inputs[[inputName]], 'list')){
       if(unique(unlist(lapply(inputs[[inputName]], class))) != inputName){
         ParallelLogger::logError(paste0('Incorrect ', inputName))
         stop('Bad input list')

@@ -48,6 +48,7 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
     )
   
   attr(param, 'settings') <- list(
+    modelType = 'knn',
     modelName = 'K Nearest Neighbors'
   )
   
@@ -63,7 +64,9 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
   return(result)
 }
 
-fitKNN <- function(trainData, param, search = 'none', analysisId ){
+fitKNN <- function(trainData, modelSettings, search = 'none', analysisId ){
+  
+  param <- modelSettings$param
 
   if (!FeatureExtraction::isCovariateData(trainData$covariateData)){
     stop("Needs correct covariateData")
@@ -104,52 +107,54 @@ fitKNN <- function(trainData, param, search = 'none', analysisId ){
     cohort = trainData$labels, 
     plpModel = list(
       model = indexFolder,
-      settings = list(
-      modelSettings = list(
-        model = 'knn',
-        param = list(
-          k = k,
-          indexFolder = indexFolder,
-          threads = param$threads
+      trainDetails = list(
+        finalModelParameters = list(
+            k = k,
+            threads = param$threads
           )
-        )
-      )
       )
     )
+  )
+      
   
   prediction$evaluationType <- 'Train'
   
   result <- list(
     model = indexFolder,
     
+    preprocess = list(
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,#learned mapping
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,  #learned mapping
+      requireDenseMatrix = F
+    ),
+    
     prediction = prediction,
     
-    settings = list(
-      plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
+    modelDesign = PatientLevelPrediction::createModelDesign(
+      targetId = attr(trainData, "metaData")$targetId,
+      outcomeId = attr(trainData, "metaData")$outcomeId,
+      restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
-      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = F,
       populationSettings = attr(trainData, "metaData")$populationSettings,
-      modelSettings = list(
-        model = 'KNN', 
-        param = param,
-        finalModelParameters = list(),
-        extraSettings = attr(param, 'settings')
-      ),
+      featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
+      preprocessSettings = attr(trainData$covariateData, "metaData")$preprocessSettings, 
+      modelSetting = modelSettings,
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
     ),
     
     trainDetails = list(
       analysisId = analysisId,
-      cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
-      outcomeId = attr(trainData, "metaData")$outcomeId,
-      cohortId = attr(trainData, "metaData")$cohortId,
+      developmentDatabase = attr(trainData, "metaData")$cdmDatabaseSchema,
       attrition = attr(trainData, "metaData")$attrition, 
-      trainingTime = comp,
+      trainingTime = paste(as.character(abs(comp)), attr(comp,'units')),
       trainingDate = Sys.Date(),
-      hyperParamSearch =c()
+      modelName = 'KNN',
+      hyperParamSearch =c(),
+      finalModelParameters = list(
+        k = k,
+        threads = param$threads
+          )
     ),
     
     covariateImportance = variableImportance
@@ -174,9 +179,9 @@ predictKnn <- function(
     covariates = data$covariateData$covariates,
     cohort = cohort[,!colnames(cohort)%in%'cohortStartDate'],
     indexFolder = plpModel$model,
-    k = plpModel$settings$modelSettings$param$k,
+    k = plpModel$trainDetails$finalModelParameters$k,
     weighted = TRUE,
-    threads = plpModel$settings$modelSettings$param$threads
+    threads = plpModel$trainDetails$finalModelParameters$threads
   )
   
   # can add: threads = 1 in the future
@@ -187,7 +192,7 @@ predictKnn <- function(
     all.x=T, fill=0)
   prediction$value[is.na(prediction$value)] <- 0
   
-  attr(prediction, "metaData") <- 'binary'
+  attr(prediction, "metaData")$modelType <- 'binary'
   
   return(prediction)
   

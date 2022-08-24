@@ -8,11 +8,14 @@ savePlpAnalysesJson(
   modelDesignList = list(createModelDesign(targetId = 1, outcomeId = 2, modelSettings =
     setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
+  cohortDefinitions = NULL,
   saveDirectory = NULL
 )
 }
 \arguments{
 \item{modelDesignList}{A list of modelDesigns created using \code{createModelDesign()}}
+
+\item{cohortDefinitions}{A list of the cohortDefinitions (generally extracted from ATLAS)}
 
 \item{saveDirectory}{The directory to save the modelDesignList settings}
 }

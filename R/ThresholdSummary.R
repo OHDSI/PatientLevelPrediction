@@ -81,6 +81,14 @@ getThresholdSummary_binary <- function(prediction, evalColumn, ...){
     # sort prediction
     predictionOfInterest <- predictionOfInterest[order(-predictionOfInterest$value),]
     
+    # because of numerical precision issues (I think), in very rare cases the preferenceScore 
+    # is not monotonically decreasing after this sort (it should follow the predictions)
+    # as a fix I remove the troublesome row from influencing the thresholdSummary
+    if (!all(predictionOfInterest$preferenceScore == cummin(predictionOfInterest$preferenceScore))) {
+      troubleRow <- (which((predictionOfInterest$preferenceScore == cummin(predictionOfInterest$preferenceScore))==FALSE))
+      predictionOfInterest <- predictionOfInterest[-troubleRow,]
+      }
+    
     # create indexes
     if(length(predictionOfInterest$preferenceScore)>100){
       indexesOfInt <- c(
@@ -165,6 +173,7 @@ getThresholdSummary_binary <- function(prediction, evalColumn, ...){
         diagnosticOddsRatio = diagnosticOddsRatio
       )
     )
+    
     
   }
   

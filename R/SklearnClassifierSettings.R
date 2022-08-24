@@ -74,16 +74,17 @@ setAdaBoost <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'adaBoost',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = F,
     name = "AdaBoost",
     pythonImport = 'sklearn',
     pythonImportSecond = 'ensemble',
     pythonClassifier = 'AdaBoostClassifier'
   )
   
+  attr(param, 'saveToJson') <- F
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -116,7 +117,7 @@ AdaBoostClassifierInputs <- function(classifier, param){
 #' @param minSamplesSplit    The minimum number of samples required to split an internal node
 #' @param minSamplesLeaf     The minimum number of samples required to be at a leaf node. A split point at any depth will only be considered if it leaves at least minSamplesLeaf training samples in each of the left and right branches. This may have the effect of smoothing the model, especially in regression.
 #' @param minWeightFractionLeaf    The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sampleWeight is not provided.
-#' @param maxFeatures   (list) The number of features to consider when looking for the best split (int/'auto'/NULL)
+#' @param maxFeatures   (list) The number of features to consider when looking for the best split (int/'sqrt'/NULL)
 #' @param maxLeafNodes (list) Grow a tree with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes. (int/NULL)
 #' @param minImpurityDecrease  Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf. 
 #' @param classWeight         (list) Weights associated with classes 'balance' or NULL
@@ -134,7 +135,7 @@ setDecisionTree <- function(
   minSamplesSplit = list(2, 10),
   minSamplesLeaf = list(10, 50),
   minWeightFractionLeaf = list(0),
-  maxFeatures = list(100,'auto', NULL),
+  maxFeatures = list(100,'sqrt', NULL),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(10^-7),
   classWeight = list(NULL, 'balanced'),
@@ -242,16 +243,17 @@ setDecisionTree <- function(
   param <- listCartesian(paramGrid)
 
   attr(param, 'settings') <- list(
+    modelType = 'decisionTree',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Decision Tree",
     pythonImport = 'sklearn',
     pythonImportSecond = 'tree',
     pythonClassifier = 'DecisionTreeClassifier'
   )
   
+  attr(param, 'saveToJson') <- F
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -320,7 +322,7 @@ return(model)
 #' }
 #' @export
 setMLP <- function(
-  hiddenLayerSizes = list(c(100), c(20,4)), #must be integers
+  hiddenLayerSizes = list(c(100), c(20)), #must be integers
   activation = list('relu'),
   solver = list('adam'),
   alpha = list(0.3,0.01,0.0001,0.000001), 
@@ -418,16 +420,17 @@ setMLP <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'mlp',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = F, # current bug in sklearn-json
     name = "Neural Network",
     pythonImport = 'sklearn',
     pythonImportSecond = 'neural_network',
     pythonClassifier = 'MLPClassifier'
   )
   
+  attr(param, 'saveToJson') <- F # current bug when saving to json
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -486,16 +489,17 @@ setNaiveBayes <- function(){
   param <- list(none = 'true')
   
   attr(param, 'settings') <- list(
+    modelType = 'naiveBayes',
     seed = as.integer(0),
     paramNames = c(), #use this for logging params
     requiresDenseMatrix = T,
-    saveToJson = T,
     name = "Naive Bayes",
     pythonImport = 'sklearn',
     pythonImportSecond = 'naive_bayes',
     pythonClassifier = 'GaussianNB'
   )
   
+  attr(param, 'saveToJson') <- F # testing if this fixes issu
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -527,8 +531,7 @@ GaussianNBInputs <- function(classifier, param){
 #' \itemize{
 #' \item{int}{then consider max_features features at each split.}
 #' \item{float}{then max_features is a fraction and round(max_features * n_features) features are considered at each split}
-#' \item{'auto'}{then max_features=sqrt(n_features)}
-#' \item{'sqrt'}{then max_features=sqrt(n_features) (same as “auto”)}
+#' \item{'sqrt'}{then max_features=sqrt(n_features)}
 #' \item{'log2'}{then max_features=log2(n_features).}
 #' \item{NULL}{then max_features=n_features}
 #' }
@@ -554,7 +557,7 @@ setRandomForest <- function(
   minSamplesSplit = list(2,5),
   minSamplesLeaf = list(1,10),
   minWeightFractionLeaf = list(0),
-  mtries = list('auto', 'log2'),
+  mtries = list('sqrt', 'log2'),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(0),
   bootstrap = list(TRUE),
@@ -646,16 +649,17 @@ setRandomForest <- function(
   param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
+    modelType = 'randomForest',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Random forest",
     pythonImport = 'sklearn',
     pythonImportSecond = 'ensemble',
     pythonClassifier = 'RandomForestClassifier'
   ) 
   
+  attr(param, 'saveToJson') <- F
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -761,16 +765,17 @@ setSVM <- function(
 
   
   attr(param, 'settings') <- list(
+    modelType = 'svm',
     seed = seed[[1]],
     paramNames = names(paramGrid), #use this for logging params
     requiresDenseMatrix = F,
-    saveToJson = T,
     name = "Support Vector Machine",
     pythonImport = 'sklearn',
     pythonImportSecond = 'svm',
     pythonClassifier = 'SVC'
   ) 
   
+  attr(param, 'saveToJson') <- F # having issue loading json
   attr(param, 'saveType') <- 'file'
  
   result <- list(
