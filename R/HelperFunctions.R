@@ -101,7 +101,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
     pEnvironments <- reticulate::conda_list()
     if(length(pEnvironments) > 0 && envname %in% pEnvironments$name){
       location <- ''
-      warning(paste0('Conda environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
+      warning(paste0('Conda environment ', envname,' exists.  You can use reticulate::conda_remove() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
       location <- reticulate::conda_create(envname=envname, packages = "python", conda = "auto")
@@ -114,7 +114,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
     pEnvironments <- reticulate::virtualenv_list()
     if(length(pEnvironments) > 0 && envname %in% pEnvironments){
       location <- ''
-      warning(paste0('Python environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
+      warning(paste0('Python environment ', envname,' exists.'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))
       location <- reticulate::virtualenv_create(envname=envname)
