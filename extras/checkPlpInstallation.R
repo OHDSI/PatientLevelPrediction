@@ -30,7 +30,7 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   sampleSize <- 2000
   plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
   
-  popSettings <- createStudyPopulationSettings(
+  populationSettings <- createStudyPopulationSettings(
     firstExposureOnly = FALSE,
     washoutPeriod = 0,
     removeSubjectsWithPriorOutcome = FALSE,
@@ -47,7 +47,7 @@ checkPlpInstallation <- function(connectionDetails=NULL, python=T) {
   population <- tryCatch({createStudyPopulation(
     plpData = plpData,
     outcomeId = 2,
-    populationSettings = popSettings
+    populationSettings = populationSettings
   )},
     error = function(e) {
       return(0)
