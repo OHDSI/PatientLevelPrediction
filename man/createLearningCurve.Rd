@@ -15,7 +15,7 @@ createLearningCurve(
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(),
   trainFractions = c(0.25, 0.5, 0.75),
-  trainEvents = c(500, 1000, 1500),
+  trainEvents = NULL,
   sampleSettings = createSampleSettings(),
   featureEngineeringSettings = createFeatureEngineeringSettings(),
   preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = T),
