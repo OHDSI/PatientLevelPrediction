@@ -58,9 +58,9 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
   if(!is.null(plpResult$model$preprocess$featureEngineering)){
     # do feature engineering/selection
     ParallelLogger::logInfo('Running FE in model')
-    plpData$covariateData <- do.call(
+    plpData <- do.call(
       applyFeatureengineering, 
-      list(covariateData = plpData$covariateData,
+      list(plpData = plpData,
            settings = plpResult$model$preprocess$featureEngineering
       )
     )

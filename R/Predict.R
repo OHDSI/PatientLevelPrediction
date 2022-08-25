@@ -48,7 +48,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
     plpData <- do.call(
       applyFeatureengineering, 
       list(
-        covariateData = plpData, # rename this input?
+        plpData = plpData,
         settings = plpModel$preprocessing$featureEngineering
       )
     )
@@ -105,7 +105,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
 
 
 applyFeatureengineering <- function(
-  covariateData, # change this input to plpData?
+  plpData, 
   settings
 ){
   
@@ -116,12 +116,12 @@ applyFeatureengineering <- function(
   
   # add code for implementing the feature engineering
   for(set in settings){
-    set$settings$trainData <- covariateData
-    covariateData <- do.call(eval(parse(text = set$funct)), set$settings)
+    set$settings$trainData <- plpData
+    plpData <- do.call(eval(parse(text = set$funct)), set$settings)
   }
   
   # dont do anything for now
-  return(covariateData)
+  return(plpData)
   
 }
 
