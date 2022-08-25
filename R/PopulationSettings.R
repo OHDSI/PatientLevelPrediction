@@ -191,7 +191,7 @@ createStudyPopulation <- function(
   restrictTarToCohortEnd <- populationSettings$restrictTarToCohortEnd
   
   # parameter checks
-  if(!class(plpData)%in%c('plpData')){
+  if(!inherits(x = plpData, what = c('plpData'))){
     ParallelLogger::logError('Check plpData format')
     stop('Wrong plpData input')
   }

@@ -35,12 +35,15 @@
 #'
 #' @export
 savePlpData <- function(plpData, file, envir=NULL, overwrite=F) {
-  if (missing(plpData))
+  if (missing(plpData)){
     stop("Must specify plpData")
-  if (missing(file))
+  }
+  if (missing(file)){
     stop("Must specify file")
-  if (!class(plpData) %in% c("plpData","plpData.libsvm"  ))
+  }
+  if (!inherits(x = plpData, what =  c("plpData"))){
     stop("Data not of class plpData")
+  }
   if(dir.exists(file.path(file, "covariates"))){
     stop('Folder to save covariates already exists...')
   }
@@ -108,12 +111,15 @@ loadPlpData <- function(file, readOnly = TRUE) {
 #'
 #' @export
 savePlpModel <- function(plpModel, dirPath){
-  if (missing(plpModel))
+  if (missing(plpModel)){
     stop("Must specify plpModel")
-  if (missing(dirPath))
+  }
+  if (missing(dirPath)){
     stop("Must specify directory path")
-  if (class(plpModel) != "plpModel")
+  }
+  if (!inherits(x = plpModel, what =  "plpModel")){
     stop("Not a plpModel")
+  }
   
   if(!dir.exists(dirPath)){
     ParallelLogger::logInfo('Creating directory to save model')
@@ -329,14 +335,16 @@ loadPrediction <- function(fileLocation){
 #' 
 #' @export
 savePlpResult <- function(result, dirPath){
-  if (missing(result))
+  if (missing(result)){
     stop("Must specify runPlp output")
-  if (missing(dirPath))
+  }
+  if (missing(dirPath)){
     stop("Must specify directory location")
-  #if (class(plpModel) != "plpModel")
-  #  stop("Not a plpModel")
-  
-  if(!dir.exists(dirPath)) dir.create(dirPath, recursive = T)
+  }
+
+  if(!dir.exists(dirPath)){
+    dir.create(dirPath, recursive = T)
+  }
   
   savePlpModel(result$model, dirPath=file.path(dirPath,'model') )
   result$model <- NULL
@@ -353,10 +361,12 @@ savePlpResult <- function(result, dirPath){
 #' 
 #' @export
 loadPlpResult <- function(dirPath){
-  if (!file.exists(dirPath))
+  if (!file.exists(dirPath)){
     stop(paste("Cannot find folder", dirPath))
-  if (!file.info(dirPath)$isdir)
+  }
+  if (!file.info(dirPath)$isdir){
     stop(paste("Not a folder", dirPath))
+  }
   
   result <- readRDS(file.path(dirPath, "runPlp.rds"))
   result$model = loadPlpModel(file.path(dirPath, "model"))

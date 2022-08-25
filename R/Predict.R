@@ -44,24 +44,28 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   
   # do feature engineering/selection
-  plpData$covariateData <- do.call(
-    applyFeatureengineering, 
-    list(
-      covariateData = plpData$covariateData,
-      settings = plpModel$preprocessing$featureEngineering
+  if(!is.null(plpModel$preprocessing$featureEngineering)){
+    plpData <- do.call(
+      applyFeatureengineering, 
+      list(
+        plpData = plpData,
+        settings = plpModel$preprocessing$featureEngineering
+      )
     )
-  )
+  }
   
   ParallelLogger::logTrace('did FE')
   
-  # do preprocessing
-  plpData$covariateData <- do.call(
-    applyTidyCovariateData, 
-    list(
-      covariateData = plpData$covariateData,
-      preprocessSettings = plpModel$preprocessing$tidyCovariates
+  if(!is.null(plpModel$preprocessing$tidyCovariates)){
+    # do preprocessing
+    plpData$covariateData <- do.call(
+      applyTidyCovariateData, 
+      list(
+        covariateData = plpData$covariateData,
+        preprocessSettings = plpModel$preprocessing$tidyCovariates
+      )
     )
-  )
+  }
   
   ParallelLogger::logTrace('did tidy')
   
@@ -101,7 +105,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
 
 
 applyFeatureengineering <- function(
-  covariateData,
+  plpData, 
   settings
 ){
   
@@ -112,12 +116,12 @@ applyFeatureengineering <- function(
   
   # add code for implementing the feature engineering
   for(set in settings){
-    set$settings$trainData <- covariateData
-    covariateData <- do.call(eval(parse(text = set$funct)), set$settings)
+    set$settings$trainData <- plpData
+    plpData <- do.call(eval(parse(text = set$funct)), set$settings)
   }
   
   # dont do anything for now
-  return(covariateData)
+  return(plpData)
   
 }
 

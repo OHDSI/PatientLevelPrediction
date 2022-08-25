@@ -64,7 +64,7 @@ insertRunPlpToSqlite <- function(
   
   # add validation results if entered
   if(!is.null(externalValidatePlp)){
-    if(class(externalValidatePlp) == 'list'){
+    if(inherits(x = externalValidatePlp, what =  'list')){
       for(i in 1:length(externalValidatePlp)){
         tryCatch(
           {
@@ -367,7 +367,7 @@ createDatabaseSchemaSettings <- function(
   if(missing(resultSchema)){
     stop('resultSchema required')
   }
-  if(class(resultSchema) != "character"){
+  if(!inherits(x = resultSchema, what = "character")){
     stop('resultSchema must be a string')
   }
   
@@ -1146,7 +1146,7 @@ addCohort <- function(conn, resultSchema, targetDialect,
   
   
   # make sure the json has been converted 
-  if(class(cohortDefinition)!='character'){
+  if(!inherits(x = cohortDefinition, what = 'character')){
     ParallelLogger::logInfo('converting json to character')
     json <- ParallelLogger::convertSettingsToJson(cohortDefinition)
     json <- as.character(json) # now convert to character

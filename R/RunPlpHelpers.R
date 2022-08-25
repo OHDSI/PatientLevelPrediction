@@ -38,13 +38,13 @@ checkInputs <- function(inputs) {
     )
     
     # check class is correct
-    if(class(inputs[[inputName]]) != inputName && !inherits(inputs[[inputName]], 'list')){
+    if(!inherits(x = inputs[[inputName]], what = c(inputName,'list'))){
       ParallelLogger::logError(paste0('Incorrect ', inputName))
       stop('Bad input')
     } 
     
-    if(inherits(inputs[[inputName]], 'list')){
-      if(unique(unlist(lapply(inputs[[inputName]], class))) != inputName){
+    if(inherits(x = inputs[[inputName]], what = 'list')){
+      if(sum(unlist(lapply(inputs[[inputName]], function(obj){inherits(x = obj, what = inputName)}))) != length(inputs[[inputName]])){
         ParallelLogger::logError(paste0('Incorrect ', inputName))
         stop('Bad input list')
       }

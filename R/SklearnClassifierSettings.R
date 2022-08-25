@@ -50,7 +50,7 @@ setAdaBoost <- function(
   lapply(1:length(nEstimators), function(i) checkHigher(nEstimators[[i]] , 0))
   
   for(i in 1:length(nEstimators)){
-    if(class(nEstimators[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = nEstimators[[i]], what = c("numeric", "integer"))){
       nEstimators[[i]] <- as.integer(nEstimators[[i]])
     }
   }
@@ -141,8 +141,9 @@ setDecisionTree <- function(
   classWeight = list(NULL, 'balanced'),
   seed = sample(1000000,1)
   ){
-  if(!class(seed[[1]])%in%c('numeric', 'integer'))
+  if(!inherits(x = seed[[1]], what = c('numeric', 'integer'))){
     stop('Invalid seed')
+  }
   
   checkIsClass(criterion, 'list')
   checkIsClass(splitter, 'list')
@@ -165,7 +166,7 @@ setDecisionTree <- function(
   lapply(1:length(maxDepth), function(i) checkIsClass(maxDepth[[i]] , c("numeric","integer","NULL")))
   lapply(1:length(maxDepth), function(i) checkHigher(ifelse(is.null(maxDepth[[i]]),1,maxDepth[[i]]) , 0))
   for(i in 1:length(maxDepth)){
-    if(class(maxDepth[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = maxDepth[[i]], what =  c("numeric", "integer"))){
       maxDepth[[i]] <- as.integer(maxDepth[[i]])
     }
   }
@@ -198,7 +199,7 @@ setDecisionTree <- function(
   lapply(1:length(maxFeatures), function(i) checkIsClass(maxFeatures[[i]] , c("numeric", "integer","character","NULL")))
   
   for(i in 1:length(maxFeatures)){
-    if(class(maxFeatures[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = maxFeatures[[i]], what =  c("numeric", "integer"))){
       maxFeatures[[i]] <- as.integer(maxFeatures[[i]])
     }
   }
@@ -207,7 +208,7 @@ setDecisionTree <- function(
   lapply(1:length(maxLeafNodes), function(i) checkHigher(ifelse(is.null(maxLeafNodes[[i]]),1,maxLeafNodes[[i]]) , 0))
   
   for(i in 1:length(maxLeafNodes)){
-    if(class(maxLeafNodes[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = maxLeafNodes[[i]], what =  c("numeric", "integer"))){
       maxLeafNodes[[i]] <- as.integer(maxLeafNodes[[i]])
     }
   }
@@ -374,19 +375,19 @@ setMLP <- function(
   
   
   for(i in 1:length(batchSize)){
-    if(class(batchSize[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = batchSize[[i]], what =  c("numeric", "integer"))){
       batchSize[[i]] <- as.integer(batchSize[[i]])
     }
   }
   
   for(i in 1:length(maxIter)){
-    if(class(maxIter[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = maxIter[[i]], what =  c("numeric", "integer"))){
       maxIter[[i]] <- as.integer(maxIter[[i]])
     }
   }
   
   for(i in 1:length(nIterNoChange)){
-    if(class(nIterNoChange[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = nIterNoChange[[i]], what =  c("numeric", "integer"))){
       nIterNoChange[[i]] <- as.integer(nIterNoChange[[i]])
     }
   }
@@ -586,12 +587,12 @@ setRandomForest <- function(
   
   # convert to integer when needed
   for(i in 1:length(ntrees)){
-    if(class(ntrees[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = ntrees[[i]], what = c("numeric", "integer"))){
       ntrees[[i]] <- as.integer(ntrees[[i]])
     }
   }
   for(i in 1:length(maxDepth)){
-    if(class(maxDepth[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = maxDepth[[i]], what =  c("numeric", "integer"))){
       maxDepth[[i]] <- as.integer(maxDepth[[i]])
     }
   }
@@ -609,19 +610,19 @@ setRandomForest <- function(
   }
   
   for(i in 1:length(maxLeafNodes)){
-    if(class(maxLeafNodes[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = maxLeafNodes[[i]], what =  c("numeric", "integer"))){
       maxLeafNodes[[i]] <- as.integer(maxLeafNodes[[i]])
     }
   }
   
   for(i in 1:length(nJobs)){
-    if(class(nJobs[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = nJobs[[i]], what =  c("numeric", "integer"))){
       nJobs[[i]] <- as.integer(nJobs[[i]])
     }
   }
   
   for(i in 1:length(maxSamples)){
-    if(class(maxSamples[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = maxSamples[[i]], what =  c("numeric", "integer"))){
       if(maxSamples[[i]] >= 1){
         maxSamples[[i]] <- as.integer(maxSamples[[i]])
       }
@@ -742,11 +743,10 @@ setSVM <- function(
   checkIsClass(classWeight, c('list'))
   
   for(i in 1:length(degree)){
-    if(class(degree[[i]]) %in% c("numeric", "integer")){
+    if(inherits(x = degree[[i]], what =  c("numeric", "integer"))){
       degree[[i]] <- as.integer(degree[[i]])
     }
   }
-  
   
   paramGrid = list(
     C = C,

@@ -39,12 +39,15 @@ recalibratePlpRefit <- function(
   newPopulation, 
   newData
 ){
-  if (is.null(newPopulation))
+  if (is.null(newPopulation)){
     stop("NULL population")
-  if (class(newData) != "plpData")
+  }
+  if (!inherits(x = newData, what =  "plpData")){
     stop("Incorrect plpData class")
-  if (class(plpModel) != "plpModel")
+  }
+  if (!inherits(x = plpModel, what = "plpModel")){
     stop("plpModel is not of class plpModel")
+  }
   
   #get selected covariates
   includeCovariateIds <- plpModel$covariateImportance %>% 
@@ -150,12 +153,13 @@ recalibratePlpRefit <- function(
 recalibratePlp <- function(prediction, analysisId, typeColumn = 'evaluationType',
                            method = c('recalibrationInTheLarge', 'weakRecalibration')){
   # check input:
-    if (class(prediction) != 'data.frame')
+    if (!inherits(x = prediction, what =  'data.frame')){
       stop("Incorrect prediction") 
+    }
   
-  if(!method  %in% c('recalibrationInTheLarge', 'weakRecalibration'))
+  if(!method  %in% c('recalibrationInTheLarge', 'weakRecalibration')){
     stop("Unknown recalibration method type. must be of type: recalibrationInTheLarge, weakRecalibration")
-  
+  }
   
   prediction <- do.call(method, list(prediction = prediction, columnType = typeColumn))
   
