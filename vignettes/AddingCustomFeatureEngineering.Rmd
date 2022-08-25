@@ -132,7 +132,18 @@ newData <- data.frame(
 # add new data
 Andromeda::appendToTable(tbl = trainData$covariateData$covariates, 
                          data = newData)
+
+featureEngeering <- list(
+    funct = 'implementAgeSpine',
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings
+    )
+  )
   
+  attr(trainData, 'metaData')$featureEngineering = listAppend(
+    attr(trainData, 'metaData')$featureEngineering,
+    featureEngeering
+ )
   # return the updated trainData
   return(trainData)
 }
