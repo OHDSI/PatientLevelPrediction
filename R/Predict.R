@@ -44,10 +44,10 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   
   # do feature engineering/selection
-  plpData$covariateData <- do.call(
+  plpData <- do.call(
     applyFeatureengineering, 
     list(
-      covariateData = plpData$covariateData,
+      covariateData = plpData,
       settings = plpModel$preprocessing$featureEngineering
     )
   )
@@ -55,10 +55,10 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   ParallelLogger::logTrace('did FE')
   
   # do preprocessing
-  plpData <- do.call(
+  plpData$covariateData <- do.call(
     applyTidyCovariateData, 
     list(
-      covariateData = plpData,
+      covariateData = plpData$covariateData,
       preprocessSettings = plpModel$preprocessing$tidyCovariates
     )
   )
