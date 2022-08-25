@@ -45,10 +45,10 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   # do feature engineering/selection
   if(!is.null(plpModel$preprocessing$featureEngineering)){
-    plpData$covariateData <- do.call(
+    plpData <- do.call(
       applyFeatureengineering, 
       list(
-        covariateData = plpData$covariateData,
+        covariateData = plpData, # rename this input?
         settings = plpModel$preprocessing$featureEngineering
       )
     )
@@ -105,7 +105,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
 
 
 applyFeatureengineering <- function(
-  covariateData,
+  covariateData, # change this input to plpData?
   settings
 ){
   

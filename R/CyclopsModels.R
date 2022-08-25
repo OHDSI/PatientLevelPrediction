@@ -188,7 +188,7 @@ fitCyclopsModel <- function(
       restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings, # made this restrictPlpDataSettings
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings, 
-      featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
+      featureEngineeringSettings = attr(trainData, "metaData")$featureEngineeringSettings,
       preprocessSettings = attr(trainData$covariateData, "metaData")$preprocessSettings,
       modelSettings = modelSettings, #modified
       splitSettings = attr(trainData, "metaData")$splitSettings,

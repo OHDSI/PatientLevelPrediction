@@ -3,7 +3,7 @@ resultNames <- c('executionSummary','model','prediction', 'performanceEvaluation
 
 # reduce data so test runs quicker, still with at least 10 outcomes in test
 plpDataKNN <- plpData
-plpData$population <- plpData$cohorts[sample(nrow(plpData$cohorts), 400),]
+plpDataKNN$population <- plpData$cohorts[sample(nrow(plpData$cohorts), 400),]
 
 # will fit 100% on training data which produces a warning
 suppressWarnings({
@@ -24,7 +24,7 @@ plpResultKNN <- runPlp(
 
 test_that("covRef is correct size", {
   
-  testthat::expect_true(nrow(as.data.frame(plpData$covariateData$covariateRef)) >=  
+  testthat::expect_true(nrow(plpDataKNN$covariateData$covariateRef %>% dplyr::collect()) >=  
     nrow(plpResultKNN$model$covariateImportance))
   
 })
