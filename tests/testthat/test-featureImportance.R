@@ -26,13 +26,17 @@ test_that("pfi feature importance returns data.frame", {
     dplyr::filter(.data$covariateValue != 0) %>% 
     dplyr::select(.data$covariateId) %>% 
     dplyr::pull()
-  covariates <- sample(covariates, 10)
-  pfiTest <- pfi(plpResult, population, plpData, repeats = 1,
-                  covariates = covariates, cores = NULL, log = NULL,
-                  logthreshold = "INFO")
   
-  testthat::expect_equal(class(pfiTest), 'data.frame')
-  testthat::expect_equal(sum(names(pfiTest)%in%c("covariateId", "pfi")), 2)
+  # if the model had non-zero covariates
+  if(length(covariates) > 0){
+    covariates <- sample(covariates, min(10,length(covariates)))
+    pfiTest <- pfi(plpResult, population, plpData, repeats = 1,
+                   covariates = covariates, cores = NULL, log = NULL,
+                   logthreshold = "INFO")
+    
+    testthat::expect_equal(class(pfiTest), 'data.frame')
+    testthat::expect_equal(sum(names(pfiTest)%in%c("covariateId", "pfi")), 2)
+  }
   
 })
 

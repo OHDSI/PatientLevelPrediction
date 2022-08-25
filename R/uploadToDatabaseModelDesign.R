@@ -64,7 +64,7 @@ insertModelDesignSettings <- function(
   cohortDefinitions
 ){
   
-  if(class(object) != 'modelDesign'){
+  if(!inherits(x = object, what = 'modelDesign')){
     stop('object in insertModelDesign() is not a modelDesign')
   }
   
@@ -473,12 +473,10 @@ addPopulationSetting <- function(conn, resultSchema, targetDialect,
   
   # process json to make it ordered...
   # make sure the json has been converted 
-  if(class(json)!='character'){
-    if(class(json)!='character'){
+  if(!inherits(x = json, what = 'character')){
       json <- orderJson(json) # to ensure attributes are alphabetic order
       json <- ParallelLogger::convertSettingsToJson(json)
       json <- as.character(json) # now convert to character
-    }
   }
   
   jsonId <- checkJson(conn = conn,
@@ -534,7 +532,7 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
   
   # process json to make it ordered...
   # make sure the json has been converted 
-  if(class(json)!='character'){
+  if(!inherits(x = json, what = 'character')){
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
@@ -596,7 +594,7 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
   
   # process json to make it ordered...
   # make sure the json has been converted 
-  if(class(json)!='character'){
+  if(!inherits(x = json, what = 'character')){
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
@@ -656,7 +654,7 @@ addTidySetting <- function(
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
-  if(class(json)!='character'){
+  if(!inherits(x = json, what = 'character')){
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
@@ -723,7 +721,7 @@ addSampleSetting <- function(
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
-  if(class(json)!='character'){
+  if(!inherits(x = json, what = 'character')){
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
@@ -792,7 +790,7 @@ addPlpDataSetting <- function(
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
-  if(class(json)!='character'){
+  if(!inherits(x = json, what = 'character')){
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
@@ -859,7 +857,7 @@ addFESetting <- function(
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
-  if(class(json)!='character'){
+  if(!inherits(x = json, what = 'character')){
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
@@ -928,7 +926,7 @@ addSplitSettings <- function(
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
-  if(class(json)!='character'){
+  if(!inherits(x = json, what = 'character')){
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character

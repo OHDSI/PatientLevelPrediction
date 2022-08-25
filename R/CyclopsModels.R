@@ -45,10 +45,10 @@ fitCyclopsModel <- function(
     sourceCoefs <- param$priorCoefs[abs(param$priorCoefs)>0 & names(param$priorCoefs) != "(Intercept)"]
 
     newCovariates <- covariates %>%
-      dplyr::filter(covariateId %in% !!names(sourceCoefs)) %>%
-      dplyr::mutate(newCovariateId = covariateId*-1) %>%
-      dplyr::select(-covariateId) %>%
-      dplyr::rename(covariateId = newCovariateId) %>%
+      dplyr::filter(.data$covariateId %in% !!names(sourceCoefs)) %>%
+      dplyr::mutate(newCovariateId = .data$covariateId*-1) %>%
+      dplyr::select(-.data$covariateId) %>%
+      dplyr::rename(covariateId = .data$newCovariateId) %>%
       dplyr::collect()
     
     Andromeda::appendToTable(covariates, newCovariates)

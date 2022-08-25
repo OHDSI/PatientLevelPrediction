@@ -208,7 +208,7 @@ setIterativeHardThresholding<- function(
     stop("forceIntercept must be of type: logical")
   if(!is.logical(fitBestSubset))
     stop("fitBestSubset must be of type: logical")
-  if(!class(seed)%in%c('numeric','NULL','integer'))
+  if(!inherits(x = seed, what = c('numeric','NULL','integer')))
     stop('Invalid seed')
 
 

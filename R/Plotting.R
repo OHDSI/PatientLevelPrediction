@@ -62,7 +62,7 @@ outcomeSurvivalPlot <- function(
   if(missing(outcomeId)){
     stop('outcomeId missing')
   }
-  if(class(plpData)!='plpData'){
+  if(!inherits(x = plpData, what = 'plpData')){
     stop('Incorrect plpData object')
   }
   if(!outcomeId%in%unique(plpData$outcomes$outcomeId)){
