@@ -56,13 +56,13 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   ParallelLogger::logTrace('did FE')
   
-  if(!is.null(plpModel$preprocessing$tidyCovariates)){
+  if(!is.null(plpModel$preprocess$tidyCovariates)){
     # do preprocessing
     plpData$covariateData <- do.call(
       applyTidyCovariateData, 
       list(
         covariateData = plpData$covariateData,
-        preprocessSettings = plpModel$preprocessing$tidyCovariates
+        preprocessSettings = plpModel$preprocess$tidyCovariates
       )
     )
   }
