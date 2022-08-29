@@ -95,6 +95,19 @@ sampleData <- function(trainData, sampleSettings){
 
 sameData <- function(trainData, ...){
   ParallelLogger::logInfo('No sampling - returning same data')
+  
+  # add attribute for FE
+  featureEngeering <- list(
+    funct = 'sameData',
+    settings = list(
+      none = T
+    )
+  )
+  attr(trainData, 'metaData')$featureEngineering = listAppend(
+    attr(trainData, 'metaData')$featureEngineering,
+    featureEngeering
+  )
+  
   return(trainData)
 }
 

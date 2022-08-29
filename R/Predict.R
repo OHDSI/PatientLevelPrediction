@@ -52,6 +52,9 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
         settings = plpModel$preprocessing$featureEngineering
       )
     )
+    featureEngineering <- T
+  } else{
+    featureEngineering <- F
   }
   
   ParallelLogger::logTrace('did FE')
@@ -65,6 +68,9 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
         preprocessSettings = plpModel$preprocess$tidyCovariates
       )
     )
+    tidyCovariates <- T
+  } else{
+    tidyCovariates <- F
   }
   
   ParallelLogger::logTrace('did tidy')
@@ -97,6 +103,10 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   metaData$targetId <- attr(population,'metaData')$targetId
   metaData$outcomeId <- attr(population,'metaData')$outcomeId
   metaData$timepoint <- timepoint
+  
+  # added information about running preprocessing/FE
+  metaData$tidyCovariates <- tidyCovariates
+  metaData$featureEngineering <- featureEngineering
   
   attr(prediction, "metaData") <- metaData
   return(prediction)
