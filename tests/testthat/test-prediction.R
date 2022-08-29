@@ -57,7 +57,7 @@ test_that("prediction works", {
     )
   
   # check metaData
-  expect_equal(length(names(attr(pred, "metaData"))), 4)  # 6 if survivial
+  expect_equal(length(names(attr(pred, "metaData"))), 6)  # 8 if survivial
   
   # add single person pred and compare with manual cal
   
