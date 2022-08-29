@@ -167,7 +167,7 @@ setCoxModel <- function(
 }
 
 
-#' Create setting for lasso logistic regression
+#' Create setting for Iterative Hard Thresholding
 #'  
 #' @param K              The maximum number of non-zero predictors
 #' @param penalty        Specifies the IHT penalty; possible values are `BIC` or `AIC` or a numeric value
@@ -254,4 +254,75 @@ setIterativeHardThresholding<- function(
   
   return(result)
 }
+
+#' Create setting for Ridge Regression using Cyclops
+#'  
+#'
+#' @export
+setRidgeRegression <- function(variance = 0.01, 
+                               seed = NULL, 
+                               includeCovariateIds = c(), 
+                               noShrinkage = c(0), 
+                               threads = -1, 
+                               forceIntercept = F,
+                               upperLimit = 20, 
+                               lowerLimit = 0.01,
+                               tolerance = 2e-06,
+                               maxIterations = 3000,
+                               priorCoefs = NULL
+){
+  
+  checkIsClass(seed, c('numeric','NULL','integer'))
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
+  checkIsClass(threads, c('numeric','integer'))
+  checkIsClass(variance, c('numeric','integer'))
+  checkHigherEqual(variance, 0)
+  
+  checkIsClass(lowerLimit, c('numeric','integer'))
+  checkIsClass(upperLimit, c('numeric','integer'))
+  
+  checkHigherEqual(upperLimit, lowerLimit)
+  
+  param <- list(
+    priorParams = list(
+      priorType =  "normal",
+      forceIntercept = forceIntercept,
+      variance = variance, 
+      exclude = noShrinkage
+    ),
+    includeCovariateIds = includeCovariateIds, 
+    upperLimit = upperLimit, 
+    lowerLimit = lowerLimit,
+    priorCoefs = priorCoefs
+  )
+  
+  attr(param, 'settings') <- list(
+    priorfunction = 'Cyclops::createPrior',
+    selectorType = "byPid",  # is this correct?
+    crossValidationInPrior = T,
+    modelType = 'logistic',
+    addIntercept = T,
+    useControl = T,
+    seed = seed[1],
+    name = "Ridge Logistic Regression",
+    threads = threads[1], 
+    tolerance = tolerance[1], #2e-06
+    cvRepetitions = 1, #1
+    maxIterations = maxIterations[1] #3000
+  )
+  
+  attr(param, 'modelType') <- 'binary' 
+  attr(param, 'saveType') <- 'RtoJson'
+  
+  result <- list(
+    fitFunction = "fitCyclopsModel",
+    param = param
+  )
+  class(result) <- "modelSettings"
+  
+  return(result)
+}
+
 

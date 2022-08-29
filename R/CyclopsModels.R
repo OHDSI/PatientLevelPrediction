@@ -126,7 +126,8 @@ fitCyclopsModel <- function(
     useCrossValidation = max(trainData$folds$index)>1, 
     cyclopsData = cyclopsData, 
     labels = trainData$covariateData$labels,
-    folds = trainData$folds
+    folds = trainData$folds,
+    prior = param$priorParams$priorType
     )
   
   if (!is.null(param$priorCoefs)) {
@@ -337,7 +338,8 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
 }
 
 
-createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds){
+createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
+                               prior){
 
   if (is.character(fit)) {
     coefficients <- c(0)
@@ -384,7 +386,8 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   
   #get CV
   if(modelType == "logistic" && useCrossValidation){
-    outcomeModel$cv <- getCV(cyclopsData, labels, cvVariance = fit$variance, folds = folds)
+    outcomeModel$cv <- getCV(cyclopsData, labels, cvVariance = fit$variance, folds = folds,
+                             prior=prior)
   }
   
   return(outcomeModel)
@@ -417,10 +420,11 @@ getCV <- function(
   cyclopsData, 
   labels,
   cvVariance,
-  folds
+  folds,
+  prior
 )
 {
-  fixed_prior <- Cyclops::createPrior("laplace", variance = cvVariance, useCrossValidation = FALSE)
+  fixed_prior <- Cyclops::createPrior(prior, variance = cvVariance, useCrossValidation = FALSE)
   
   # add the index to the labels
   labels <- merge(labels %>% dplyr::collect(), folds, by = 'rowId')
