@@ -88,6 +88,9 @@ jobs:
         run: |
           reticulate::use_condaenv("r-reticulate", required = TRUE)
         shell: Rscript {0}
+        
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
 
       - uses: r-lib/actions/check-r-package@v2
         with:
