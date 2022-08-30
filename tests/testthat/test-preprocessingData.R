@@ -109,3 +109,7 @@ test_that("createPreprocessSettings", {
   expect_equal(attr(newData, "metaData")$preprocessSettings, preprocessSettings)
   
 })
+
+test_that('Did tidy on test', {
+  expect_true(attr(plpResult$prediction, 'metaData')$tidyCovariates)
+})
