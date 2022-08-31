@@ -41,12 +41,12 @@ test_that("loadPlpDataError", {
 })
 
 test_that("loadPlpData", {
-  plpData <- loadPlpData(file = file.path(saveLoc,"saveDataTest"))
-  expect_identical(plpData$cohorts, oldCohorts)
-  expect_identical(plpData$outcomes, oldOutcomes)
-  expect_equal(as.data.frame(plpData$covariateData$covariates), 
+  loadedData <- loadPlpData(file = file.path(saveLoc,"saveDataTest"))
+  expect_identical(loadedData$cohorts, oldCohorts)
+  expect_identical(loadedData$outcomes, oldOutcomes)
+  expect_equal(as.data.frame(loadedData$covariateData$covariates), 
                          oldCovariates)
-  expect_equal(as.data.frame(plpData$covariateData$covariateRef), 
+  expect_equal(as.data.frame(loadedData$covariateData$covariateRef), 
                          oldCovariateRef)
 })
 
