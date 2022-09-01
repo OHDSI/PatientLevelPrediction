@@ -42,7 +42,7 @@ dir.create(saveLoc)
 data(plpDataSimulationProfile, envir = environment())
 
 # PLPDATA
-sampleSize <- 1000+sample(300,1)
+sampleSize <- 1500+sample(300,1)
 plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
 
 # POPULATION
@@ -108,87 +108,15 @@ population <- createStudyPopulation(
   )
 
 createTrainData <- function(plpData, population){
-  trainData <- list()
-  trainData$covariateData <- Andromeda::copyAndromeda(plpData$covariateData)
-  attr(trainData$covariateData, "metaData") <- attr(plpData$covariateData, "metaData")
-  trainData$labels <- population
-  trainData$folds <- data.frame(
-    rowId = population$rowId,
-    index = sample(3, nrow(population), replace = T)
-  )
-  
-  # add settings objects
-  attr(trainData, "metaData")$outcomeId <- 2
-  attr(trainData, "metaData")$targetId <- 1
-  attr(trainData, "metaData")$restrictPlpDataSettings <- attr(population, 'metaData')$restrictPlpDataSettings
-  attr(trainData, "metaData")$covariateSettings <- plpData$metaData$covariateSettings
-  attr(trainData, "metaData")$populationSettings <- attr(population, 'metaData')$populationSettings
-  attr(trainData$covariateData, "metaData")$featureEngineeringSettings <- PatientLevelPrediction::createFeatureEngineeringSettings()
-  attr(trainData$covariateData, "metaData")$preprocessSettings <- PatientLevelPrediction::createPreprocessSettings()
-  attr(trainData, "metaData")$splitSettings <- PatientLevelPrediction::createDefaultSplitSetting()
-  attr(trainData, "metaData")$sampleSettings <- PatientLevelPrediction::createSampleSettings()
-  
-  class(trainData$covariateData) <- 'CovariateData'
-  
+  data <- PatientLevelPrediction::splitData(plpData = plpData, population=population,
+                                            splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12))
+  trainData <- data$Train
   return(trainData)
 }
 
-
-connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-Eunomia::createCohorts(connectionDetails)
-
-covSet <- FeatureExtraction::createCovariateSettings(useDemographicsGender = T,
-                                                     useDemographicsAge = T,
-                                                     useDemographicsRace = T,
-                                                     useDemographicsEthnicity = T,
-                                                     useDemographicsAgeGroup = T,
-                                                     useConditionGroupEraLongTerm = T,
-                                                     useDrugEraStartLongTerm  = T,
-                                                     endDays = -1
-)
-
-databaseDetails <- PatientLevelPrediction::createDatabaseDetails(
-  connectionDetails = connectionDetails,
-  cdmDatabaseSchema = "main",
-  cohortDatabaseSchema = "main",
-  cohortTable = "cohort",
-  targetId = 4,
-  outcomeIds = 3,
-  outcomeDatabaseSchema = "main",
-  outcomeTable =  "cohort",
-  cdmDatabaseName = 'eunomia'
-)
-
-restrictPlpDataSettings <- PatientLevelPrediction::createRestrictPlpDataSettings(
-  firstExposureOnly = T,
-  washoutPeriod = 365
-)
-plpDataEunomia <- PatientLevelPrediction::getPlpData(
-          databaseDetails = databaseDetails,
-          restrictPlpDataSettings = restrictPlpDataSettings,
-          covariateSettings = covSet
-)
-
-populationSettingsEunomia <- PatientLevelPrediction::createStudyPopulationSettings(
-  requireTimeAtRisk = F,
-  riskWindowStart = 1,
-  riskWindowEnd = 365)
-
-populationEunomia <- PatientLevelPrediction::createStudyPopulation(plpDataEunomia,
-                                                                   outcomeId=3,
-                                                                   populationSettings = populationSettingsEunomia)
-
-plpResultsEunomia <- PatientLevelPrediction::runPlp(
-                        plpData = plpDataEunomia, 
-                        outcomeId = 3, 
-                        analysisId = 'TestEunomia', 
-                        analysisName = 'Testing analysis',
-                        populationSettings = populationSettingsEunomia, 
-                        splitSettings = createDefaultSplitSetting(splitSeed = 12),
-                        preprocessSettings = createPreprocessSettings(), 
-                        modelSettings = lrSet, 
-                        logSettings = createLogSettings(verbosity = 'TRACE'),
-                        executeSettings = createDefaultExecuteSettings(), 
-                        saveDirectory = saveLoc
-                      )
-
+createTestData <- function(plpData, population){
+  data <- PatientLevelPrediction::splitData(plpData = plpData, population=population,
+                                            splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12))
+  testData <- data$Test
+  return(testData)
+}

@@ -157,6 +157,7 @@ test_that("randomForestFeatureSelection", {
 test_that("featureSelection is applied on test_data", {
   k <- 10
   featureEngineeringSettings <- testUniFun(k = k)
+  trainData <- createTrainData(plpData, population)
   trainData <- univariateFeatureSelection(
     trainData = trainData, 
     featureEngineeringSettings = featureEngineeringSettings,
@@ -167,7 +168,7 @@ test_that("featureSelection is applied on test_data", {
   
   plpModel <- fitPlp(trainData, modelSettings, analysisId='FE')
   
-  prediction <- predictPlp(plpModel, plpData, population)
-    
+  testData <- createTestData(plpData, population)
+  prediction <- predictPlp(plpModel, testData, population)
   expect_true(attr(prediction, 'metaData')$featureEngineering)  
 })

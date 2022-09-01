@@ -19,7 +19,7 @@ context("LearningCurves")
 # learningCurve 
 learningCurve <- PatientLevelPrediction::createLearningCurve(
   plpData = plpData,
-  outcomeId = 2, parallel = T, cores = 3,
+  outcomeId = 2, parallel = F, cores = 3,
   modelSettings = setLassoLogisticRegression(),
   saveDirectory =  file.path(saveLoc, 'lcc'),
   splitSettings = createDefaultSplitSetting(testFraction = 0.2), 
