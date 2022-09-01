@@ -71,6 +71,7 @@ Suggests:
     xgboost (> 1.3.2.1)
 Remotes:
     egillax/BigKnn@arrow,
+    ohdsi/DatabaseConnector@develop,
     ohdsi/Eunomia,
     ohdsi/Andromeda@arrow,
     ohdsi/FeatureExtraction@arrow,
