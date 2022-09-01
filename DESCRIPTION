@@ -45,7 +45,8 @@ Imports:
     survival,
     tibble,
     tidyr,
-    utils
+    utils,
+    data.table
 Suggests:
     AUC,
     BigKnn (>= 1.0.0),
