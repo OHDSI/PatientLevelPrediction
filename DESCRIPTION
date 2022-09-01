@@ -70,7 +70,7 @@ Suggests:
     withr,
     xgboost (> 1.3.2.1)
 Remotes:
-    egillax/BigKnn@arrrow,
+    egillax/BigKnn@arrow,
     ohdsi/Eunomia,
     ohdsi/Andromeda@arrow,
     ohdsi/FeatureExtraction@arrow,
