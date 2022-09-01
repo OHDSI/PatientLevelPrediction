@@ -48,7 +48,6 @@ test_that("prediction works", {
                          nrow(population))
   
   rowId <- plpResult$prediction$rowId[plpResult$prediction$evaluationType == 'Test'][1]
-  
   testthat::expect_equal(pred$value[pred$rowId == rowId], 
                          plpResult$prediction$value[
                            plpResult$prediction$evaluationType == 'Test' & 

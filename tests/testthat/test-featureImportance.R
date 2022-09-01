@@ -20,7 +20,6 @@ context("FeatureImportance")
 
 
 test_that("pfi feature importance returns data.frame", {
-  
   # limit to a sample of 10 covariates for faster test
   covariates <- plpResult$model$covariateImportance %>% 
     dplyr::filter(.data$covariateValue != 0) %>% 

@@ -16,7 +16,7 @@
 
 context("SaveLoadPlp")
 
-saveLoc <- tempdir()
+saveTestLoc <- tempdir()
 
 test_that("savePlpDataError", {
   expect_error(savePlpData())
@@ -31,8 +31,8 @@ oldCovariates <- plpData$covariateData$covariates %>% dplyr::arrange(rowId, cova
 oldCovariateRef <- plpData$covariateData$covariateRef %>% dplyr::collect()
 test_that("savePlpData", {
   savePlpData(plpData = plpData, 
-              file =  file.path(saveLoc,"saveDataTest"), overwrite = T)
-  testExist <- dir.exists(file.path(saveLoc,"saveDataTest"))
+              file =  file.path(saveTestLoc,"saveDataTest"), overwrite = T)
+  testExist <- dir.exists(file.path(saveTestLoc,"saveDataTest"))
   expect_equal(testExist, T)
 })
 
@@ -41,13 +41,15 @@ test_that("loadPlpDataError", {
 })
 
 test_that("loadPlpData", {
-  loadedData <- loadPlpData(file = file.path(saveLoc,"saveDataTest"))
+  loadedData <- loadPlpData(file = file.path(saveTestLoc,"saveDataTest"))
   expect_identical(loadedData$cohorts, oldCohorts)
   expect_identical(loadedData$outcomes, oldOutcomes)
-  expect_equal(loadedData$covariateData$covariates %>% dplyr::collect(), 
-                         oldCovariates)
-  expect_equal(loadedData$covariateData$covariateRef %>% dplyr::collect(), 
-                         oldCovariateRef)
+  expect_equal(loadedData$covariateData$covariates %>% 
+                 dplyr::arrange(rowId, covariateId) %>% dplyr::collect(), 
+                         oldCovariates %>% dplyr::arrange(rowId, covariateId))
+  expect_equal(loadedData$covariateData$covariateRef %>% 
+                 dplyr::arrange(covariateId) %>% dplyr::collect(), 
+                         oldCovariateRef %>% dplyr::arrange(covariateId))
 })
 
 # add tests using simualted data...
