@@ -38,8 +38,9 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   return(newCovariateData)
 }
 
-# temporary add cyclops function here so I don't need to fork cyclops
-#' @describeIn convertToCyclopsData Convert data from two \code{Arrow} FileSystemDatasets
+#' convertToCyclopsData
+#' temporary add cyclops function here so I don't need to fork cyclops
+#' @description convertToCyclopsData Convert data from two \code{Arrow} FileSystemDatasets
 #' @export
 convertToCyclopsData.FileSystemDataset <- Cyclops:::convertToCyclopsData.tbl_dbi
 

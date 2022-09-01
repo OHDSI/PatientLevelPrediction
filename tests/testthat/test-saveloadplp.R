@@ -44,9 +44,9 @@ test_that("loadPlpData", {
   loadedData <- loadPlpData(file = file.path(saveLoc,"saveDataTest"))
   expect_identical(loadedData$cohorts, oldCohorts)
   expect_identical(loadedData$outcomes, oldOutcomes)
-  expect_equal(as.data.frame(loadedData$covariateData$covariates), 
+  expect_equal(loadedData$covariateData$covariates %>% dplyr::collect(), 
                          oldCovariates)
-  expect_equal(as.data.frame(loadedData$covariateData$covariateRef), 
+  expect_equal(loadedData$covariateData$covariateRef %>% dplyr::collect(), 
                          oldCovariateRef)
 })
 
