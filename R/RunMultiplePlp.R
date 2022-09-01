@@ -79,7 +79,7 @@ runMultiplePlp <- function(
     )
     
     cohortDefinitions <- lapply(
-      X = cohortIds, 
+      X = unique(cohortIds), # dont want the same id repeated
       FUN = function(x){
         list(
           id = x, 
