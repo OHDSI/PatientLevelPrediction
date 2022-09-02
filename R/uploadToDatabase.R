@@ -685,7 +685,7 @@ insertModelInDatabase <- function(
       modelType = model$trainDetails$modelName,
       plpModelFile = modelLocation, # save the model to a location and add location here
       trainDetails = as.character(ParallelLogger::convertSettingsToJson(trainDetails)),
-      preprocessing = "",#as.character(ParallelLogger::convertSettingsToJson(model$preprocess)),
+      preprocessing = "",#as.character(ParallelLogger::convertSettingsToJson(model$preprocessing)),
       
       executionDateTime = format(model$trainDetails$trainingDate, format="%Y-%m-%d"), 
       trainingTime = model$trainDetails$trainingTime, 

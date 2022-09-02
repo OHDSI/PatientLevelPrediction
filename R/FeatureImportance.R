@@ -55,26 +55,26 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
   
   # add code to format covariateData based on plpModel
   
-  if(!is.null(plpResult$model$preprocess$featureEngineering)){
+  if(!is.null(plpResult$model$preprocessing$featureEngineering)){
     # do feature engineering/selection
     ParallelLogger::logInfo('Running FE in model')
     plpData <- do.call(
       applyFeatureengineering, 
       list(plpData = plpData,
-           settings = plpResult$model$preprocess$featureEngineering
+           settings = plpResult$model$preprocessing$featureEngineering
       )
     )
   } else{
     ParallelLogger::logInfo('No FE in model')
   }
   
-  if(!is.null(plpResult$model$modelDesign$preprocessSettings)){
+  if(!is.null(plpResult$model$preprocessing$tidyCovariates)){
     # do preprocessing
     ParallelLogger::logInfo('Applying data tidying done in model')
     plpData$covariateData <- do.call(
       applyTidyCovariateData, 
       list(covariateData = plpData$covariateData,
-           preprocessSettings = plpResult$model$modelDesign$preprocessSettings
+           preprocessSettings = plpResult$model$preprocessing$tidyCovariates
       )
     )
   } else{
