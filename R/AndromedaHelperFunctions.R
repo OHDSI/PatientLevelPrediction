@@ -41,6 +41,15 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
 #' convertToCyclopsData
 #' temporary add cyclops function here so I don't need to fork cyclops
 #' @description convertToCyclopsData Convert data from two \code{Arrow} FileSystemDatasets
+#' @param outcomes    outcome dataset
+#' @param covariates  covariates dataset
+#' @param modelType   the model type (most often logistic regression)
+#' @param addIntercept  if an intercept should be added to the model
+#' @param checkSorting  check sorting
+#' @param checkRowIds  check row ids
+#' @param normalize   if normalize
+#' @param quiet       sssss....
+#' @param floatingPoint floats my boat.
 #' @export
 convertToCyclopsData.FileSystemDataset <- Cyclops:::convertToCyclopsData.tbl_dbi
 

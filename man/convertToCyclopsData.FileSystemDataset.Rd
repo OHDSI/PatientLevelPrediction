@@ -17,6 +17,25 @@ convertToCyclopsData.FileSystemDataset(
   floatingPoint = 64
 )
 }
+\arguments{
+\item{outcomes}{outcome dataset}
+
+\item{covariates}{covariates dataset}
+
+\item{modelType}{the model type (most often logistic regression)}
+
+\item{addIntercept}{if an intercept should be added to the model}
+
+\item{checkSorting}{check sorting}
+
+\item{checkRowIds}{check row ids}
+
+\item{normalize}{if normalize}
+
+\item{quiet}{sssss....}
+
+\item{floatingPoint}{floats my boat.}
+}
 \description{
 convertToCyclopsData Convert data from two \code{Arrow} FileSystemDatasets
 }
