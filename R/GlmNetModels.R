@@ -27,7 +27,6 @@
 #' @param nfolds            How many cross validation folds to perform, default=3
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
 #'
-#'
 #' @export
 setLassoGlmNet <- function(nlambda=100,
                            nfolds=3,
@@ -70,7 +69,6 @@ setLassoGlmNet <- function(nlambda=100,
 #' to have the first estimated model have zero coefficients.
 #' @param nfolds            How many cross validation folds to perform, default=3
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
-#'
 #'
 #' @export
 setRidgeGlmNet <- function(nlambda=100,
@@ -118,7 +116,6 @@ setRidgeGlmNet <- function(nlambda=100,
 #' to have the first estimated model have zero coefficients.
 #' @param nfolds            How many cross validation folds to perform, default=3
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
-#'
 #'
 #' @export
 setElasticNet <- function(nlambda=100,
@@ -311,7 +308,7 @@ fitGlmNet <- function(trainData,
   result <- list(
     model = cvResult$model,
     
-    preprocess = list(
+    preprocessing = list(
       featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,#learned mapping
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,  #learned mapping
       requireDenseMatrix = F
@@ -381,13 +378,13 @@ cvGlmNet <- function(dataMatrix,
   dataMatrix@Dimnames[[2]] <- as.character(covariateMap$covariateId)
   nvars <- dim(dataMatrix)[[2]]
   if (settings$adaptive) {
-    ridgeCv <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=0, family='binomial',
+    lassoCv <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=1, family='binomial',
                                   trace.it=1, nfolds=settings$nfolds, 
                                   lambda.min.ratio=param$lambda.min.ratio,
                                   foldId=labels$index, parallel=settings$parallel,
                                   type.measure = 'auc')
-    ridgeCoefs <- as.numeric(coef(ridgeCv, s = ridgeCv$lambda.min))[-1] # no intercept
-    penaltyFactor <- 1/abs(ridgeCoefs)
+    lassoCoefs <- as.numeric(coef(lassoCv, s = lassoCv$lambda.min))[-1] # no intercept
+    penaltyFactor <- 1/abs(lassoCoefs)
   } else {penaltyFactor <- rep(1, nvars)}
   glmFit <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=param$alpha, family='binomial',
                     trace.it = 1, nfolds=settings$nfolds, lambda.min.ratio=param$lambda.min.ratio,

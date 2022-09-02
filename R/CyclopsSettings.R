@@ -256,7 +256,17 @@ setIterativeHardThresholding<- function(
 }
 
 #' Create setting for Ridge Regression using Cyclops
-#'  
+#'
+#' @param variance   	Numeric: prior distribution starting variance
+#' @param seed       An option to add a seed when training the model
+#' @param includeCovariateIds a set of covariate IDS to limit the analysis to
+#' @param noShrinkage a set of covariates whcih are to be forced to be included in the final model. default is the intercept 
+#' @param threads    An option to set number of threads when training model
+#' @param forceIntercept  	Logical: Force intercept coefficient into prior
+#' @param upperLimit  	Numeric: Upper prior variance limit for grid-search
+#' @param lowerLimit  	Numeric: Lower prior variance limit for grid-search
+#' @param tolerance   Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence
+#' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error
 #'
 #' @export
 setRidgeRegression <- function(variance = 0.01, 
@@ -268,8 +278,7 @@ setRidgeRegression <- function(variance = 0.01,
                                upperLimit = 20, 
                                lowerLimit = 0.01,
                                tolerance = 2e-06,
-                               maxIterations = 3000,
-                               priorCoefs = NULL
+                               maxIterations = 3000
 ){
   
   checkIsClass(seed, c('numeric','NULL','integer'))
@@ -294,8 +303,7 @@ setRidgeRegression <- function(variance = 0.01,
     ),
     includeCovariateIds = includeCovariateIds, 
     upperLimit = upperLimit, 
-    lowerLimit = lowerLimit,
-    priorCoefs = priorCoefs
+    lowerLimit = lowerLimit
   )
   
   attr(param, 'settings') <- list(
@@ -307,6 +315,86 @@ setRidgeRegression <- function(variance = 0.01,
     useControl = T,
     seed = seed[1],
     name = "Ridge Logistic Regression",
+    threads = threads[1], 
+    tolerance = tolerance[1], #2e-06
+    cvRepetitions = 1, #1
+    maxIterations = maxIterations[1] #3000
+  )
+  
+  attr(param, 'modelType') <- 'binary' 
+  attr(param, 'saveType') <- 'RtoJson'
+  
+  result <- list(
+    fitFunction = "fitCyclopsModel",
+    param = param
+  )
+  class(result) <- "modelSettings"
+  
+  return(result)
+}
+
+#' Create setting for Broken Adaptive Ridge Regression using Cyclops
+#' 
+#' @description See paper: https://doi.org/10.1016/j.jspi.2020.12.001
+#'
+#' @param variance   	Numeric: prior distribution starting variance
+#' @param seed       An option to add a seed when training the model
+#' @param includeCovariateIds a set of covariate IDS to limit the analysis to
+#' @param noShrinkage a set of covariates whcih are to be forced to be included in the final model. default is the intercept 
+#' @param threads    An option to set number of threads when training model
+#' @param forceIntercept  	Logical: Force intercept coefficient into prior
+#' @param upperLimit  	Numeric: Upper prior variance limit for grid-search
+#' @param lowerLimit  	Numeric: Lower prior variance limit for grid-search
+#' @param tolerance   Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence
+#' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error
+#'
+#' @export
+setBar <- function(variance = 0.0001, 
+                   seed = NULL, 
+                   includeCovariateIds = c(), 
+                   noShrinkage = c(0), 
+                   threads = -1, 
+                   forceIntercept = F,
+                   upperLimit = 20, 
+                   lowerLimit = 0.01,
+                   tolerance = 2e-06,
+                   maxIterations = 3000
+){
+  
+  checkIsClass(seed, c('numeric','NULL','integer'))
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
+  checkIsClass(threads, c('numeric','integer'))
+  checkIsClass(variance, c('numeric','integer'))
+  checkHigherEqual(variance, 0)
+  
+  checkIsClass(lowerLimit, c('numeric','integer'))
+  checkIsClass(upperLimit, c('numeric','integer'))
+  
+  checkHigherEqual(upperLimit, lowerLimit)
+  
+  param <- list(
+    priorParams = list(
+      priorType =  "normal",
+      forceIntercept = forceIntercept,
+      variance = variance, 
+      exclude = noShrinkage
+    ),
+    includeCovariateIds = includeCovariateIds, 
+    upperLimit = upperLimit, 
+    lowerLimit = lowerLimit
+  )
+  
+  attr(param, 'settings') <- list(
+    priorfunction = 'BrokenAdaptiveRidge::createFastBarPrior',
+    selectorType = "byPid",  # is this correct?
+    crossValidationInPrior = T,
+    modelType = 'logistic',
+    addIntercept = T,
+    useControl = T,
+    seed = seed[1],
+    name = "Broken Adaptive Ridge Logistic Regression",
     threads = threads[1], 
     tolerance = tolerance[1], #2e-06
     cvRepetitions = 1, #1
