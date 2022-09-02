@@ -98,20 +98,18 @@ setGradientBoostingMachine <- function(ntrees=c(100, 300), nthread=20, earlyStop
     stop('scalePosWeight must be 0 or greater')
   }
 
-  param <- split(
-    expand.grid(
-      ntrees=ntrees, 
-      earlyStopRound=earlyStopRound,
-      maxDepth=maxDepth, 
-      minChildWeight=minChildWeight, 
-      learnRate=learnRate,
-      lambda=lambda,
-      alpha=alpha,
-      scalePosWeight=scalePosWeight
-      ),
-    1:(length(ntrees)*length(maxDepth)*length(minChildWeight)*length(learnRate)*
-         length(earlyStopRound)*length(lambda)*length(alpha)*length(scalePosWeight))
-  )
+  paramGrid <- list(
+      ntrees = ntrees, 
+      earlyStopRound = earlyStopRound,
+      maxDepth = maxDepth, 
+      minChildWeight = minChildWeight, 
+      learnRate = learnRate,
+      lambda = lambda,
+      alpha = alpha,
+      scalePosWeight = scalePosWeight
+      )
+  
+  param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
     modelType = 'Xgboost',

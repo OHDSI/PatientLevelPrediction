@@ -157,7 +157,7 @@ test_that("toSparseM", {
   compTest <- as.matrix(test$dataMatrix)
   testthat::expect_equal(test$labels %>% dplyr::tally() %>% dplyr::pull(), length(population$rowId))
   testthat::expect_equal(nrow(compTest), length(population$rowId))
-  testthat::expect_true(ncol(compTest) <= nrow(plpData$covariateData$covariateRef))
+  testthat::expect_true(ncol(compTest) <= plpData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   testthat::expect_equal(ncol(compTest), test$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   testthat::expect_equal(ncol(compTest), test$covariateMap %>% dplyr::tally() %>% dplyr::pull())
   

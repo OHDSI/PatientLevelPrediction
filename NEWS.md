@@ -1,3 +1,17 @@
+PatientLevelPrediction 5.4.4
+======================
+- fixed issue with 'preprocess' vs 'preprocessing' inconsistently used across models
+- added metaData tracking for feature engineering or preprocessing when predicting
+- fixed issue with FE using trainData$covariateData metaData rather than trainData
+- fixed bug when using sameData for FE
+
+PatientLevelPrediction 5.4.3
+======================
+- pulled in multiple bug fixes and test improvements from Egill
+- pulled in fix for learning curves from Henrik
+- Pulled in fix for feature engineering from Solomon
+- Cleaned check messages about comparing class(x) with a string by changing to inherits()
+
 PatientLevelPrediction 5.4.2
 ======================
 - removed json saving for sklearn models since sklearn-json is no longer working for the latest sklearn

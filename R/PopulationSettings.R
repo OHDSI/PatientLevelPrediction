@@ -266,7 +266,7 @@ createStudyPopulation <- function(
                              .(first = min(daysToEvent),
                                ocount = data.table::uniqueN(daysToEvent))][, .(rowId, first, ocount)]
   } else {
-    outcomeTar <- outcomeTar[, c('first', 'ocount') := .(0 ,0)][, .(rowId, first, ocount)] 
+    outcomeTAR <- outcomeTAR[, c('first', 'ocount') := .(0 ,0)][, .(rowId, first, ocount)] 
   }
   
   population[outcomeTAR, on=.(rowId), c('first', 'ocount') := .(i.first, i.ocount)]

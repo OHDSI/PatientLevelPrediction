@@ -19,7 +19,6 @@ context("FeatureEngineering")
 
 
 trainData <- createTrainData(plpData, population)
-
 testFEFun <- function(type = 'none'){
   
   result <- createFeatureEngineeringSettings(type = type)
@@ -65,7 +64,7 @@ test_that("createUnivariateFeatureSelection correct class", {
 
 test_that("univariateFeatureSelection", {
   
-  k <- 20+sample(100,1)
+  k <- 20+sample(10,1)
   featureEngineeringSettings <- testUniFun(k = k)
   
   trainDataCovariateSize <- trainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
@@ -80,7 +79,7 @@ test_that("univariateFeatureSelection", {
   expect_true(newDataCovariateSize <= trainDataCovariateSize)
   
   # expect k many covariates left - REMOVED AS TIES MAKES THIS FAIL OCCASIONALLY
-  ##expect_true(abs(k - reducedTrainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()) <= 5)
+  expect_equal(k,reducedTrainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   
 })
 
@@ -152,4 +151,23 @@ test_that("randomForestFeatureSelection", {
   newDataCovariateSize <- reducedTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   expect_true(newDataCovariateSize < trainDataCovariateSize)
 
+})
+
+test_that("featureSelection is applied on test_data", {
+  k <- 10
+  featureEngineeringSettings <- testUniFun(k = k)
+  trainData <- createTrainData(plpData, population)
+  trainData <- univariateFeatureSelection(
+    trainData = trainData, 
+    featureEngineeringSettings = featureEngineeringSettings,
+    covariateIdsInclude = NULL
+  )
+  
+  modelSettings <- setLassoLogisticRegression()
+  
+  plpModel <- fitPlp(trainData, modelSettings, analysisId='FE')
+  
+  testData <- createTestData(plpData, population)
+  prediction <- predictPlp(plpModel, testData, population)
+  expect_true(attr(prediction, 'metaData')$featureEngineering)  
 })

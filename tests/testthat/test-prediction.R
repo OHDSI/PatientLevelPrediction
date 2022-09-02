@@ -48,7 +48,6 @@ test_that("prediction works", {
                          nrow(population))
   
   rowId <- plpResult$prediction$rowId[plpResult$prediction$evaluationType == 'Test'][1]
-  
   testthat::expect_equal(pred$value[pred$rowId == rowId], 
                          plpResult$prediction$value[
                            plpResult$prediction$evaluationType == 'Test' & 
@@ -57,7 +56,7 @@ test_that("prediction works", {
     )
   
   # check metaData
-  expect_equal(length(names(attr(pred, "metaData"))), 4)  # 6 if survivial
+  expect_equal(length(names(attr(pred, "metaData"))), 6)  # 8 if survivial
   
   # add single person pred and compare with manual cal
   

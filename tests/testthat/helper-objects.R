@@ -35,8 +35,6 @@ saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
 
-
-
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -44,7 +42,7 @@ dir.create(saveLoc)
 data(plpDataSimulationProfile, envir = environment())
 
 # PLPDATA
-sampleSize <- 1000+sample(300,1)
+sampleSize <- 2000+sample(300,1)
 plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
 
 # POPULATION
@@ -110,27 +108,29 @@ population <- createStudyPopulation(
   )
 
 createTrainData <- function(plpData, population){
-  trainData <- list()
-  trainData$covariateData <- Andromeda::copyAndromeda(plpData$covariateData)
-  attr(trainData$covariateData, "metaData") <- attr(plpData$covariateData, "metaData")
-  trainData$labels <- population
-  trainData$folds <- data.frame(
-    rowId = population$rowId,
-    index = sample(3, nrow(population), replace = T)
-  )
-  
-  # add settings objects
-  attr(trainData, "metaData")$outcomeId <- 2
-  attr(trainData, "metaData")$targetId <- 1
-  attr(trainData, "metaData")$restrictPlpDataSettings <- attr(population, 'metaData')$restrictPlpDataSettings
-  attr(trainData, "metaData")$covariateSettings <- plpData$metaData$covariateSettings
-  attr(trainData, "metaData")$populationSettings <- attr(population, 'metaData')$populationSettings
-  attr(trainData$covariateData, "metaData")$featureEngineeringSettings <- PatientLevelPrediction::createFeatureEngineeringSettings()
-  attr(trainData$covariateData, "metaData")$preprocessSettings <- PatientLevelPrediction::createPreprocessSettings()
-  attr(trainData, "metaData")$splitSettings <- PatientLevelPrediction::createDefaultSplitSetting()
-  attr(trainData, "metaData")$sampleSettings <- PatientLevelPrediction::createSampleSettings()
-  
-  class(trainData$covariateData) <- c('CovariateData', 'Andromeda')
-  
+  data <- PatientLevelPrediction::splitData(plpData = plpData, population=population,
+                                            splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12))
+  trainData <- data$Train
   return(trainData)
 }
+
+createTestData <- function(plpData, population){
+  data <- PatientLevelPrediction::splitData(plpData = plpData, population=population,
+                                            splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12))
+  testData <- data$Test
+  return(testData)
+}
+
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails)
+
+covSet <- FeatureExtraction::createCovariateSettings(useDemographicsGender = T,
+                                                     useDemographicsAge = T,
+                                                     useDemographicsRace = T,
+                                                     useDemographicsEthnicity = T,
+                                                     useDemographicsAgeGroup = T,
+                                                     useConditionGroupEraLongTerm = T,
+                                                     useDrugEraStartLongTerm  = T,
+                                                     endDays = -1
+)
+

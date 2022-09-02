@@ -124,11 +124,13 @@ univariateFeatureSelection <- function(
     
     kbest <- SelectKBest(chi2, k = featureEngineeringSettings$k)$fit(X, y)
     kbest$scores_ <- np$nan_to_num(kbest$scores_)
-    threshold <- -np$sort(-kbest$scores_)[(featureEngineeringSettings$k-1)]
+
+    # taken from sklearn code, matches the application during transform call
+    k <- featureEngineeringSettings$k
+    mask <- np$zeros(length(kbest$scores_), dtype='bool')
+    mask[np$argsort(kbest$scores_, kind="mergesort")+1][(length(kbest$scores_)-k+1):length(kbest$scores_)] <- TRUE
     
-    inc <- kbest$scores_ >= threshold
-    
-    covariateIdsInclude <- covariateMap[inc,]$covariateId
+    covariateIdsInclude <- covariateMap[mask,]$covariateId
   }
   
   trainData$covariateData$covariates <- trainData$covariateData$covariates %>% 
@@ -137,7 +139,7 @@ univariateFeatureSelection <- function(
   trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>% 
     dplyr::filter(.data$covariateId %in% covariateIdsInclude)
   
-  featureEngeering <- list(
+  featureEngineering <- list(
     funct = 'univariateFeatureSelection',
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
@@ -147,7 +149,7 @@ univariateFeatureSelection <- function(
   
   attr(trainData, 'metaData')$featureEngineering = listAppend(
     attr(trainData, 'metaData')$featureEngineering,
-    featureEngeering
+    featureEngineering
   )
   
   return(trainData)

@@ -140,6 +140,7 @@ test_that("test run multiple", {
   runMultiplePlp(
     databaseDetails = databaseDetails,
     modelDesignList = list(
+      # add this twice to make sure no issue with overlapping ids?
       analysis3
     ),
     onlyFetchData = F,
