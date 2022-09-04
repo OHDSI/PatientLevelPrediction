@@ -130,6 +130,12 @@ viewPlps <- function(databaseSettings){
   ensure_installed("OhdsiShinyModules")
   
   # set database settings into system variables
+  for (name in names(databaseSettings$connectionDetails)) {
+    elem <- databaseSettings$connectionDetails[[name]]
+    if (is.function(elem)) {
+      databaseSettings$connectionDetails[[name]] <- elem()
+    }
+  }
   Sys.setenv("plpDatabaseSettings" = as.character(ParallelLogger::convertSettingsToJson(databaseSettings)))
 
   appDir <- system.file("shiny", "PLPViewer", package = "PatientLevelPrediction")
