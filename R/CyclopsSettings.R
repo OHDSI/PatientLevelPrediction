@@ -349,16 +349,18 @@ setRidgeRegression <- function(variance = 0.01,
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error
 #'
 #' @export
-setBar <- function(variance = 0.0001, 
+setBar <- function(variance = 1, 
                    seed = NULL, 
                    includeCovariateIds = c(), 
-                   noShrinkage = c(0), 
+                   noShrinkage = c("(Intercept)"), 
+                   penalty = 0.1,
                    threads = -1, 
                    forceIntercept = F,
                    upperLimit = 20, 
                    lowerLimit = 0.01,
                    tolerance = 2e-06,
-                   maxIterations = 3000
+                   maxIterations = 3000,
+                   threshold = 1e-6
 ){
   
   checkIsClass(seed, c('numeric','NULL','integer'))
@@ -376,10 +378,12 @@ setBar <- function(variance = 0.0001,
   
   param <- list(
     priorParams = list(
-      priorType =  "normal",
       forceIntercept = forceIntercept,
-      variance = variance, 
-      exclude = noShrinkage
+      initialRidgeVariance = variance, 
+      exclude = noShrinkage,
+      tolerance=tolerance,
+      penalty=penalty,
+      threshold=threshold
     ),
     includeCovariateIds = includeCovariateIds, 
     upperLimit = upperLimit, 
@@ -387,9 +391,9 @@ setBar <- function(variance = 0.0001,
   )
   
   attr(param, 'settings') <- list(
-    priorfunction = 'BrokenAdaptiveRidge::createFastBarPrior',
+    priorfunction = 'BrokenAdaptiveRidge::createBarPrior',
     selectorType = "byPid",  # is this correct?
-    crossValidationInPrior = T,
+    crossValidationInPrior = F,
     modelType = 'logistic',
     addIntercept = T,
     useControl = T,

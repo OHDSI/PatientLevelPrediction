@@ -84,6 +84,9 @@ fitCyclopsModel <- function(
     param$priorParams$useCrossValidation <- max(trainData$folds$index)>1
   }
   prior <- do.call(eval(parse(text = settings$priorfunction)), param$priorParams)
+  if (!is.null(param$priorParams$initialRidgeVariance)) {
+    param$priorParams$variance <- param$priorParams$initialRidgeVariance
+  }
 
   if(settings$useControl){
     
@@ -385,7 +388,7 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   class(outcomeModel) <- "plpModel"
   
   #get CV
-  if(modelType == "logistic" && useCrossValidation){
+  if(modelType == "logistic" && useCrossValidation && !is.null(prior)){
     outcomeModel$cv <- getCV(cyclopsData, labels, cvVariance = fit$variance, folds = folds,
                              prior=prior)
   }
@@ -421,10 +424,11 @@ getCV <- function(
   labels,
   cvVariance,
   folds,
-  prior
+  prior,
+  priorFun=Cyclops::createPrior
 )
 {
-  fixed_prior <- Cyclops::createPrior(prior, variance = cvVariance, useCrossValidation = FALSE)
+  fixed_prior <- priorFun(prior, variance = cvVariance, useCrossValidation = FALSE)
   
   # add the index to the labels
   labels <- merge(labels %>% dplyr::collect(), folds, by = 'rowId')
