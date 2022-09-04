@@ -26,12 +26,14 @@
 #' to have the first estimated model have zero coefficients.
 #' @param nfolds            How many cross validation folds to perform, default=3
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
-#'
+#' @param measure           measure to use for selecting best lambda, one of:
+#'  "default", "mse", "deviance", "class", "auc", "mae", "C"
 #' @export
 setLassoGlmNet <- function(nlambda=100,
                            nfolds=3,
                            lambda.min.ratio=0.01,
-                           parallel=TRUE){
+                           parallel=TRUE,
+                           measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('ntrees must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -40,14 +42,16 @@ setLassoGlmNet <- function(nlambda=100,
   param <- list(
     nlambda=nlambda,
     lambda.min.ratio=lambda.min.ratio,
-    alpha = 1
+    alpha = 1,
+    measure = measure
   )
   
   attr(param, 'settings') <- list(
     modelType = 'logistic',
     modelName = "Lasso Logistic Regression GLMNet",
     nfolds = nfolds,
-    parallel = parallel
+    parallel = parallel,
+    adaptive = FALSE
   )
   
   attr(param, 'saveType') <- 'RtoJson'
@@ -69,12 +73,14 @@ setLassoGlmNet <- function(nlambda=100,
 #' to have the first estimated model have zero coefficients.
 #' @param nfolds            How many cross validation folds to perform, default=3
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
-#'
+#' @param measure           measure to use for selecting best lambda, one of:
+#'  "default", "mse", "deviance", "class", "auc", "mae", "C"
 #' @export
 setRidgeGlmNet <- function(nlambda=100,
                            nfolds=3,
                            lambda.min.ratio=0.01,
-                           parallel=TRUE){
+                           parallel=TRUE,
+                           measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('ntrees must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -83,14 +89,16 @@ setRidgeGlmNet <- function(nlambda=100,
   param <- list(
     nlambda=nlambda,
     lambda.min.ratio=lambda.min.ratio,
-    alpha = 0
+    alpha = 0,
+    measure = measure
   )
   
   attr(param, 'settings') <- list(
     modelType = 'logistic',
     modelName = "Ridge Logistic Regression GLMNet",
     nfolds = nfolds,
-    parallel = parallel
+    parallel = parallel,
+    adaptive = FALSE
   )
   
   attr(param, 'saveType') <- 'RtoJson'
@@ -116,12 +124,15 @@ setRidgeGlmNet <- function(nlambda=100,
 #' to have the first estimated model have zero coefficients.
 #' @param nfolds            How many cross validation folds to perform, default=3
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
+#' @param measure           measure to use for selecting best lambda, one of:
+#'  "default", "mse", "deviance", "class", "auc", "mae", "C"
 #'
 #' @export
 setElasticNet <- function(nlambda=100,
                           nfolds=3,
                           lambda.min.ratio=0.01,
-                          parallel=TRUE){
+                          parallel=TRUE,
+                          measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('ntrees must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -130,14 +141,16 @@ setElasticNet <- function(nlambda=100,
   param <- list(
     nlambda=nlambda,
     lambda.min.ratio=lambda.min.ratio,
-    alpha = 0.5
+    alpha = 0.5,
+    measure=measure
   )
   
   attr(param, 'settings') <- list(
     modelType = 'logistic',
     modelName = "Elastic Net",
     nfolds = nfolds,
-    parallel = parallel
+    parallel = parallel,
+    adaptive = FALSE
   )
   
   attr(param, 'saveType') <- 'RtoJson'
@@ -163,13 +176,15 @@ setElasticNet <- function(nlambda=100,
 #' to have the first estimated model have zero coefficients.
 #' @param nfolds            How many cross validation folds to perform, default=3
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
-#'
+#' @param measure           measure to use for selecting best lambda, one of:
+#'  "default", "mse", "deviance", "class", "auc", "mae", "C"
 #'
 #' @export
 setAdaptiveLasso <- function(nlambda=100,
                              nfolds=3,
                              lambda.min.ratio=0.01,
-                             parallel=TRUE){
+                             parallel=TRUE,
+                             measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('ntrees must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -178,7 +193,8 @@ setAdaptiveLasso <- function(nlambda=100,
   param <- list(
     nlambda=nlambda,
     lambda.min.ratio=lambda.min.ratio,
-    alpha = 1
+    alpha = 1,
+    measure=measure
   )
   
   attr(param, 'settings') <- list(
@@ -212,13 +228,15 @@ setAdaptiveLasso <- function(nlambda=100,
 #' to have the first estimated model have zero coefficients.
 #' @param nfolds            How many cross validation folds to perform, default=3
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
-#'
+#' @param measure           measure to use for selecting best lambda, one of:
+#'  "default", "mse", "deviance", "class", "auc", "mae", "C"
 #'
 #' @export
 setAdaptiveElasticNet <- function(nlambda=100,
                                   nfolds=3,
                                   lambda.min.ratio=0.01,
-                                  parallel=TRUE){
+                                  parallel=TRUE,
+                                  measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('ntrees must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -227,7 +245,8 @@ setAdaptiveElasticNet <- function(nlambda=100,
   param <- list(
     nlambda=nlambda,
     lambda.min.ratio=lambda.min.ratio,
-    alpha = 0.5
+    alpha = 0.5,
+    measure=measure
   )
   
   attr(param, 'settings') <- list(
@@ -377,7 +396,7 @@ cvGlmNet <- function(dataMatrix,
   }
   dataMatrix@Dimnames[[2]] <- as.character(covariateMap$covariateId)
   nvars <- dim(dataMatrix)[[2]]
-  if (settings$adaptive) {
+  if (settings$adaptive==TRUE) {
     lassoCv <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=1, family='binomial',
                                   trace.it=1, nfolds=settings$nfolds, 
                                   lambda.min.ratio=param$lambda.min.ratio,
@@ -388,9 +407,10 @@ cvGlmNet <- function(dataMatrix,
   } else {penaltyFactor <- rep(1, nvars)}
   glmFit <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=param$alpha, family='binomial',
                     trace.it = 1, nfolds=settings$nfolds, lambda.min.ratio=param$lambda.min.ratio,
+                    nlambda=param$nlambda,
                     foldId=labels$index,
                     parallel=settings$parallel,
-                    type.measure = 'auc',
+                    type.measure = param$measure,
                     keep = TRUE,
                     penalty.factor = penaltyFactor
                     )  
