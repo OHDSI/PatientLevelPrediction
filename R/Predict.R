@@ -163,7 +163,6 @@ applyTidyCovariateData <- function(
   
   ParallelLogger::logInfo("Removing infrequent and redundant covariates and normalizing")
   start <- Sys.time()       
-  
   if(!is.null(maxs)){
     if('bins'%in%colnames(maxs)){
       covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = .data$bins) %>% 
@@ -178,7 +177,8 @@ applyTidyCovariateData <- function(
       dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
       dplyr::mutate(value = 1.0*.data$covariateValue/.data$maxValue) %>%
       dplyr::select(- .data$covariateValue) %>%
-      dplyr::rename(covariateValue = .data$value)
+      dplyr::rename(covariateValue = .data$value) %>% 
+      dplyr::select(-.data$maxValue)
   } else{
     newCovariateData$covariates <- covariateData$covariates %>% 
       dplyr::inner_join(covariateData$includeCovariates, by='covariateId')
