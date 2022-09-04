@@ -42,7 +42,7 @@ dir.create(saveLoc)
 data(plpDataSimulationProfile, envir = environment())
 
 # PLPDATA
-sampleSize <- 2000+sample(300,1)
+sampleSize <- 1500+sample(300,1)
 plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
 
 # POPULATION
@@ -120,17 +120,3 @@ createTestData <- function(plpData, population){
   testData <- data$Test
   return(testData)
 }
-
-connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-Eunomia::createCohorts(connectionDetails)
-
-covSet <- FeatureExtraction::createCovariateSettings(useDemographicsGender = T,
-                                                     useDemographicsAge = T,
-                                                     useDemographicsRace = T,
-                                                     useDemographicsEthnicity = T,
-                                                     useDemographicsAgeGroup = T,
-                                                     useConditionGroupEraLongTerm = T,
-                                                     useDrugEraStartLongTerm  = T,
-                                                     endDays = -1
-)
-

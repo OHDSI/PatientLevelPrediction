@@ -179,7 +179,7 @@ predictPythonSklearn <- function(
   pythonData <- reticulate::r_to_py(newData[,included, drop = F])
 
   # make dense if needed
-  if(plpModel$preprocess$requireDenseMatrix){
+  if(plpModel$preprocessing$requireDenseMatrix){
     pythonData <- pythonData$toarray()
   }
   
