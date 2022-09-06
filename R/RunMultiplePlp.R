@@ -512,7 +512,7 @@ validateMultiplePlp <- function(
     
     ParallelLogger::logInfo(paste0('Evaluating model in ',modelSettings ))
     
-    if(dir.exists(file.path(modelSettings[i],'plpResult'))){
+    if(dir.exists(file.path(modelSettings,'plpResult'))){
       ParallelLogger::logInfo(paste0('plpResult found in ',modelSettings ))
       
       plpModel <- loadPlpModel(file.path(modelSettings,'plpResult','model'))
