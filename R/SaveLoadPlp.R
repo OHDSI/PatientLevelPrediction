@@ -235,6 +235,11 @@ loadPlpModel <- function(dirPath) {
   if (!file.info(dirPath)$isdir)
     stop(paste("Not a folder", dirPath))
   
+  if (file.exists(file.path(dirPath, 'settings.json'))) {
+    #it's version a 5.0.5 model
+    return (plpModel <- load505PlpModel(dirPath))
+  }
+  
   plpModel <- list()
   modelAttributes <- tryCatch(
     ParallelLogger::loadSettingsFromJson(file.path(dirPath, 'attributes.json')),
@@ -272,7 +277,7 @@ loadPlpModel <- function(dirPath) {
   )
   
   # we don't use "preprocess" anymore, should be "preprocessing", 
-  # but leave this here if loading an older model
+  # but leave this here if loading an     n older model
   if(file.exists(file.path(dirPath, "preprocess.json"))){
     plpModel$preprocessing <- tryCatch(
       ParallelLogger::loadSettingsFromJson(file.path(dirPath, "preprocess.json")),
@@ -614,4 +619,90 @@ extractDatabaseToCsv <- function(
   
   return(invisible(NULL))
   
+}
+
+
+load505PlpModel <- function(dirPath) {
+  
+  plpModel <- list()
+  loadJson <- function(fileName) {
+    return(object <- jsonlite::unserializeJSON(readChar(fileName, file.info(fileName)$size)))
+  }
+  
+  modelAttributes <- tryCatch(
+    loadJson(file.path(dirPath, 'attributes.json')),
+    error = function(e){NULL}
+  )
+  
+  attributes(plpModel) <- modelAttributes
+  
+  plpModel$covariateImportance <- tryCatch(
+    utils::read.csv(file.path(dirPath, "covariateImportance.csv")),
+    error = function(e){NULL}
+  )
+  
+  if(file.exists(file.path(dirPath, "trainDetails.json"))){
+    plpModel$trainDetails <- tryCatch(
+      loadJson(file.path(dirPath, "trainDetails.json")),
+      error = function(e){NULL}
+    )
+  }
+  if(file.exists(file.path(dirPath, "validationDetails.json"))){
+    plpModel$validationDetails <- tryCatch(
+      loadJson(file.path(dirPath, "validationDetails.json")),
+      error = function(e){NULL}
+    )
+  }
+  
+  settings <- tryCatch(
+    loadJson(file.path(dirPath, 'settings.json')),
+    error = function(e){NULL}
+  )
+  plpModel <- convertSettingsToModelDesign(settings, plpModel)
+  
+  preprocessing <- list()
+  preprocessing$requireDenseMatrix <- settings$requireDenseMatrix
+  preprocessing$tidyCovariates <- settings$tidyCovariates
+  preprocessing$tidyCovariates$cohortId <- NULL
+  plpModel$preprocessing <- preprocessing
+  
+  if(attr(plpModel, 'saveType') == "xgboost"){
+    ensure_installed("xgboost")
+    plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
+  } else if(attr(plpModel, 'saveType') %in% c("RtoJson")){
+    plpModel$model <- loadJson(file.path(dirPath, "model.json"))
+  } else{
+    plpModel$model <- file.path(dirPath, 'model')
+  }
+  return(plpModel)
+}
+
+
+convertSettingsToModelDesign <- function(settings, plpModel) {
+  modelDesign <- list()
+  modelDesign$targetId <- plpModel$trainDetails$cohortId
+  plpModel$trainDetails$cohortId <- NULL
+  
+  modelDesign$outcomeId <- plpModel$trainDetails$outcomeId
+  plpModel$trainDetails$outcomeId <- NULL
+  
+  restrictPlpDataSettings <- list(studyStartDate=settings$plpDataSettings$studyStartDate,
+                                  studyEndDate=settings$plpDataSettings$studyEndDate,
+                                  firstExposureOnly=settings$plpDataSettings$firstExposureOnly,
+                                  washoutPeriod=settings$plpDataSettings$washoutPeriod,
+                                  sampleSize=settings$plpDataSettings$sampleSize)
+  class(restrictPlpDataSettings) <- 'restrictplpDataSettings'
+  modelDesign$restrictPlpDataSettings <- restrictPlpDataSettings
+  
+  modelDesign$covariateSettings <- settings$covariateSettings
+  modelDesign$populationSettings <- settings$populationSettings
+  modelDesign$sampleSettings <- settings$sampleSettings
+  modelDesign$featureEngineeringSettings <- settings$featureEngineering
+  modelDesign$preprocessSettings <- NULL # old format doesn't have this?
+  modelDesign$modelSettings <- settings$modelSettings
+  modelDesign$splitSettings <- settings$splitSettings
+  modelDesign$executeSettings <- NULL # missing from old format
+  class(modelDesign) <- 'modelDesign'
+  plpModel$modelDesign <- modelDesign
+  return(plpModel)
 }

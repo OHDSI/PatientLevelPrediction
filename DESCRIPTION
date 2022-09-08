@@ -26,6 +26,7 @@ Depends:
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
+    glmnet,
     DatabaseConnector (>= 5.0.0),
     dplyr,
     FeatureExtraction (>= 3.0.0),

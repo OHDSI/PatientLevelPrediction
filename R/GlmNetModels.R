@@ -35,9 +35,9 @@ setLassoGlmNet <- function(nlambda=100,
                            parallel=TRUE,
                            measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
-    stop('ntrees must be a numeric value >0 ')
+    stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
-    stop('ntrees must be greater that 0 or -1')
+    stop('nlambda must be greater that 0 or -1')
   
   param <- list(
     nlambda=nlambda,
@@ -54,7 +54,7 @@ setLassoGlmNet <- function(nlambda=100,
     adaptive = FALSE
   )
   
-  attr(param, 'saveType') <- 'RtoJson'
+  attr(param, 'saveType') <- 'file'
   attr(param, 'modelType') <- 'binary'
   
   result <- list(
@@ -82,9 +82,9 @@ setRidgeGlmNet <- function(nlambda=100,
                            parallel=TRUE,
                            measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
-    stop('ntrees must be a numeric value >0 ')
+    stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
-    stop('ntrees must be greater that 0 or -1')
+    stop('nlambda must be greater that 0 or -1')
   
   param <- list(
     nlambda=nlambda,
@@ -101,7 +101,7 @@ setRidgeGlmNet <- function(nlambda=100,
     adaptive = FALSE
   )
   
-  attr(param, 'saveType') <- 'RtoJson'
+  attr(param, 'saveType') <- 'file'
   attr(param, 'modelType') <- 'binary'
   
   result <- list(
@@ -134,9 +134,9 @@ setElasticNet <- function(nlambda=100,
                           parallel=TRUE,
                           measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
-    stop('ntrees must be a numeric value >0 ')
+    stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
-    stop('ntrees must be greater that 0 or -1')
+    stop('nlambda must be greater that 0 or -1')
   
   param <- list(
     nlambda=nlambda,
@@ -153,7 +153,7 @@ setElasticNet <- function(nlambda=100,
     adaptive = FALSE
   )
   
-  attr(param, 'saveType') <- 'RtoJson'
+  attr(param, 'saveType') <- 'file'
   attr(param, 'modelType') <- 'binary'
   
   result <- list(
@@ -186,9 +186,9 @@ setAdaptiveLasso <- function(nlambda=100,
                              parallel=TRUE,
                              measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
-    stop('ntrees must be a numeric value >0 ')
+    stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
-    stop('ntrees must be greater that 0 or -1')
+    stop('nlambda must be greater that 0 or -1')
   
   param <- list(
     nlambda=nlambda,
@@ -205,7 +205,7 @@ setAdaptiveLasso <- function(nlambda=100,
     adaptive = TRUE
   )
   
-  attr(param, 'saveType') <- 'RtoJson'
+  attr(param, 'saveType') <- 'file'
   attr(param, 'modelType') <- 'binary'
   
   result <- list(
@@ -238,9 +238,9 @@ setAdaptiveElasticNet <- function(nlambda=100,
                                   parallel=TRUE,
                                   measure='default'){
   if(!inherits(nlambda,c("numeric", "integer")))
-    stop('ntrees must be a numeric value >0 ')
+    stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
-    stop('ntrees must be greater that 0 or -1')
+    stop('nlambda must be greater that 0 or -1')
   
   param <- list(
     nlambda=nlambda,
@@ -257,7 +257,7 @@ setAdaptiveElasticNet <- function(nlambda=100,
     adaptive = TRUE
   )
   
-  attr(param, 'saveType') <- 'RtoJson'
+  attr(param, 'saveType') <- 'file'
   attr(param, 'modelType') <- 'binary'
   
   result <- list(
@@ -324,8 +324,12 @@ fitGlmNet <- function(trainData,
   covariateRef$included <- 0
   covariateRef$included[covariateRef$covariateValue != 0.0] <- 1
 
+  modelLoc <- createTempModelLoc()
+  if (!dir.exists(modelLoc)) {dir.create(modelLoc, recursive = TRUE)}
+  saveRDS(cvResult$model, file=file.path(modelLoc, 'glmNetModel.rds'))
+  
   result <- list(
-    model = cvResult$model,
+    model = modelLoc,
     
     preprocessing = list(
       featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,#learned mapping
@@ -386,7 +390,7 @@ cvGlmNet <- function(dataMatrix,
                      labels,
                      param,
                      covariateMap) {
-  
+  labels <- labels %>% dplyr::arrange(rowId)
   settings <- attr(param, 'settings')
   y <- labels$outcomeCount
   
@@ -408,15 +412,17 @@ cvGlmNet <- function(dataMatrix,
   glmFit <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=param$alpha, family='binomial',
                     trace.it = 1, nfolds=settings$nfolds, lambda.min.ratio=param$lambda.min.ratio,
                     nlambda=param$nlambda,
-                    foldId=labels$index,
+                    foldid=labels$index,
                     parallel=settings$parallel,
                     type.measure = param$measure,
                     keep = TRUE,
-                    penalty.factor = penaltyFactor
+                    standardize=FALSE,
+                    thresh=2e-6,
+                    penalty.factor=penaltyFactor
                     )  
   
   bestLambdaPos <- which(glmFit$lambda == glmFit$lambda.min)
-  coefficient <- as.matrix(coef(glmFit))
+  coefficient <- as.matrix(coef(glmFit, s=glmFit$lambda[bestLambdaPos]))
   coefDf <- data.frame(betas=as.numeric(coefficient),
                        covariateIds=attr(coefficient, 'dimnames')[[1]])
   
@@ -472,8 +478,8 @@ predictGlmNet <- function(plpModel,
                            cohort=cohort,
                            map=plpModel$covariateImportance %>% 
                              dplyr::select(.data$columnId, .data$covariateId))
-
-  preds <- predict(plpModel$model$modelObj, newx=sparseMatrix$dataMatrix, type='response',
+  model <- readRDS(file.path(plpModel$model, 'glmNetModel.rds'))
+  preds <- stats::predict(model$modelObj, newx=sparseMatrix$dataMatrix, type='response',
                    s='lambda.min')
   prediction <- sparseMatrix$labels
   prediction$value <- as.numeric(preds)
@@ -485,5 +491,3 @@ predictGlmNet <- function(plpModel,
 
   return(prediction)
 }
-
-

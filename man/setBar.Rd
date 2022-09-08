@@ -5,16 +5,18 @@
 \title{Create setting for Broken Adaptive Ridge Regression using Cyclops}
 \usage{
 setBar(
-  variance = 1e-04,
+  variance = 1,
   seed = NULL,
   includeCovariateIds = c(),
-  noShrinkage = c(0),
+  noShrinkage = c("(Intercept)"),
+  penalty = 0.1,
   threads = -1,
   forceIntercept = F,
   upperLimit = 20,
   lowerLimit = 0.01,
   tolerance = 2e-06,
-  maxIterations = 3000
+  maxIterations = 3000,
+  threshold = 1e-06
 )
 }
 \arguments{

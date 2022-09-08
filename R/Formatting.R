@@ -90,11 +90,11 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   
   # need to collect here the df in ram, because if I pull individual columns from an arrow dataset
   # there is no guarantee the order of data within columns is preserved
-  newcovariateData$covariates <- newcovariateData$covariates %>% dplyr::collect()  
+  covariates <- newcovariateData$covariates %>% dplyr::collect()  
   data <- Matrix::sparseMatrix(
-    i = newcovariateData$covariates %>% dplyr::select(.data$rowId) %>% dplyr::pull(),
-    j = newcovariateData$covariates %>% dplyr::select(.data$columnId) %>% dplyr::pull(),
-    x = newcovariateData$covariates %>% dplyr::select(.data$covariateValue) %>% dplyr::pull(),
+    i = covariates %>% dplyr::select(.data$rowId) %>% dplyr::pull(),
+    j = covariates %>% dplyr::select(.data$columnId) %>% dplyr::pull(),
+    x = covariates %>% dplyr::select(.data$covariateValue) %>% dplyr::pull(),
     dims=c(maxX,maxY)
   )
     
@@ -104,7 +104,7 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   
   result <- list(
     dataMatrix = data,
-    labels = newcovariateData$cohort %>% dplyr::collect(),
+    labels = newcovariateData$cohort %>% dplyr::collect() %>% dplyr::arrange(rowId),
     covariateRef = newcovariateData$covariateRef %>% dplyr::collect(),
     covariateMap = newcovariateData$mapping %>% dplyr::collect()
   )
@@ -130,13 +130,13 @@ MapIds <- function(
   # change the rowIds in cohort (if exists)
   if(!is.null(cohort)){
     rowMap <- data.frame(
-      rowId = cohort %>% dplyr::select(.data$rowId)
+      rowId = cohort %>% dplyr::select(.data$rowId) %>% dplyr::arrange(rowId)
     )
     rowMap$xId <- 1:nrow(rowMap)
   } else{
     rowMap <- data.frame(
       rowId = covariateData$covariates %>% 
-        dplyr::distinct(.data$rowId) %>% 
+        dplyr::distinct(.data$rowId) %>% dplyr::arrange(rowId) %>%
         dplyr::pull()
     )
     rowMap$xId <- 1:nrow(rowMap)
@@ -151,7 +151,7 @@ MapIds <- function(
     mapping <- data.frame(
       covariateId = covariateData$covariates %>% 
         dplyr::inner_join(covariateData$rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
-        dplyr::distinct(.data$covariateId) %>% 
+        dplyr::distinct(.data$covariateId) %>% dplyr::arrange(covariateId) %>%
         dplyr::pull()
     )
     mapping$columnId <- 1:nrow(mapping)

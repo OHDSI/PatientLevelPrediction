@@ -8,7 +8,8 @@ setAdaptiveElasticNet(
   nlambda = 100,
   nfolds = 3,
   lambda.min.ratio = 0.01,
-  parallel = TRUE
+  parallel = TRUE,
+  measure = "default"
 )
 }
 \arguments{
@@ -20,6 +21,9 @@ setAdaptiveElasticNet(
 to have the first estimated model have zero coefficients.}
 
 \item{parallel}{TRUE to use parallelization across folds (cores=nfolds)}
+
+\item{measure}{measure to use for selecting best lambda, one of:
+"default", "mse", "deviance", "class", "auc", "mae", "C"}
 }
 \description{
 Create setting for an adaptive Lasso regression model using glmnet
