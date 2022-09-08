@@ -19,13 +19,13 @@ viewMultiplePlp <- function(analysesLocation){
   
   databaseSettings <- list(
     connectionDetails = connectionDetails, 
-    mySchema = 'main',
-    myTableAppend = '',
-    targetDialect = 'sqlite',
-    myServer = file.path(analysesLocation, 'sqlite', 'databaseFile.sqlite'),
-    myUser = NULL, 
-    myPassword = NULL,
-    myPort = NULL
+    schema = 'main',
+    tablePrefix = '',
+    dbms = 'sqlite',
+    server = file.path(analysesLocation, 'sqlite', 'databaseFile.sqlite'),
+    user = NULL, 
+    password = NULL,
+    port = NULL
   )
   
   viewPlps(databaseSettings)
@@ -59,13 +59,13 @@ viewPlp <- function(runPlp, validatePlp = NULL, diagnosePlp = NULL) {
   
   databaseSettings <- list(
     connectionDetails = connectionDetails, 
-    mySchema = 'main',
-    myTableAppend = '',
-    targetDialect = 'sqlite',
-    myServer = server,
-    myUser = NULL, 
-    myPassword = NULL,
-    myPort = NULL
+    schema = 'main',
+    tablePrefix = '',
+    dbms = 'sqlite',
+    server = server,
+    user = NULL, 
+    password = NULL,
+    port = NULL
   )
   
   viewPlps(databaseSettings)
@@ -107,13 +107,13 @@ viewDatabaseResultPlp <- function(
   
   databaseSettings <- list(
     connectionDetails = connectionDetails, 
-    mySchema = mySchema,
-    myTableAppend = myTableAppend,
-    targetDialect = myDbms,
-    myServer = myServer,
-    myUser = myUser, 
-    myPassword = myPassword,
-    myPort = myPort
+    schema = mySchema,
+    tablePrefix = myTableAppend,
+    dbms = myDbms,
+    server = myServer,
+    user = myUser, 
+    password = myPassword,
+    port = myPort
   )
   
   viewPlps(databaseSettings)
