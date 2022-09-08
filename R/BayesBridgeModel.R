@@ -115,8 +115,8 @@ fitBayesBridge <- function(trainData,
   settings <- attr(param, 'settings')
   y <- labels$outcomeCount
   
-  bayesbridge <- reticulate::import('bayesbridge')
   np <- reticulate::import('numpy', convert = FALSE)
+  bayesbridge <- reticulate::import('bayesbridge')
   
   X <- reticulate::r_to_py(dataMatrix)
   y <- np$array(reticulate::r_to_py(y))
@@ -150,7 +150,6 @@ fitBayesBridge <- function(trainData,
   mcmcInfo <- gibbsOutput[[2]]
   comp <- Sys.time() - start
   ParallelLogger::logInfo("MCMC took ", signif(comp, 3), " ", attr(comp, "units"))
-  browser()
   modelTrained <- list()
   modelTrained$coefRaw <- mcmcSamples$coef
   modelTrained$coefficients <- apply(mcmcSamples$coef, 1, median)
@@ -205,30 +204,14 @@ fitBayesBridge <- function(trainData,
   
   #variable importance
   ParallelLogger::logTrace('Getting variable importance')
-  varImp <- data.frame(
+  variableImportance <- data.frame(
     covariateId = as.double(names(modelTrained$coefficients)[names(modelTrained$coefficients)!='(Intercept)']),
-    value = modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)']
+    covariateValue = modelTrained$coefficients[names(modelTrained$coefficients)!='(Intercept)']
   )
-  if(sum(abs(varImp$value)>0)==0){
-    ParallelLogger::logWarn('No non-zero coefficients')
-    varImp <- NULL
-  } else {
-    ParallelLogger::logInfo('Creating variable importance data frame')
-    
-    variableImportance <- covariateRef %>% 
-      dplyr::collect()  %>%
-      dplyr::left_join(varImp, by = 'covariateId') %>%
-      dplyr::mutate(covariateValue = ifelse(is.na(.data$value), 0, .data$value)) %>%
-      dplyr::select(-.data$value) %>%
-      dplyr::arrange(-abs(.data$covariateValue)) %>%
-      dplyr::collect()
-  } 
+  covariateRef <- merge(covariateRef, variableImportance, all.x = T, by = 'covariateId')
+  covariateRef$included <- 0
+  covariateRef$included[covariateRef$covariateValue != 0.0] <- 1
   
-  variableImportance[is.na(variableImportance)] <- 0
-  covariateRef$covariateValue <- variableImportance %>% 
-    dplyr::arrange(covariateId) %>% 
-    dplyr::select(covariateValue)
-  covariateRef <- covariateRef %>% dplyr::arrange(-abs(.data$covariateValue))
   
   #output result
   comp <- Sys.time() - start
@@ -312,13 +295,18 @@ predictBayesBridge <- function(plpModel, data, cohort, train = FALSE){
     betas <- reticulate::r_to_py(plpModel$model$coefRaw[-1,])
     X <- reticulate::r_to_py(newData)
     intercepts <- np$array(reticulate::r_to_py(plpModel$model$coefRaw[1,]))
-    values <- X$dot(betas)
-    values <- np$add(values, intercepts)
-    values <- link(reticulate::py_to_r(values))
-    valueMed <- apply(values, 1, median)
+    batchIndex <- 0:(reticulate::py_to_r(X$shape[[0]])-1)
+    batchIndex <- split(batchIndex, ceiling(seq_along(batchIndex) / 100))
+
+    valueMed <- lapply(batchIndex, function(x) {
+      values <- X[x]$dot(betas)
+      values <- np$add(values, intercepts)
+      values <- np$median(values,1L)
+      values <- as.numeric(link(reticulate::py_to_r(values)))
+    })
     
     #output
-    cohort$value <- valueMed
+    cohort$value <- as.numeric(unlist(valueMed))
     prediction <- cohort
     
     attr(prediction, "metaData")$modelType <- 'binary'
