@@ -111,8 +111,6 @@ setCoxModel <- function(
   maxIterations = 3000
 ){
   
-  ensure_installed("survAUC")
-
   checkIsClass(seed, c('numeric','NULL','integer'))
   if(is.null(seed[1])){
     seed <- as.integer(sample(100000000,1))
