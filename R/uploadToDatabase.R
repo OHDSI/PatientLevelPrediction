@@ -504,6 +504,8 @@ addRunPlpToDatabase <- function(
     outcomeId <- runPlp$model$modelDesign$outcomeId
     restrictPlpDataSettings <- runPlp$model$modelDesign$restrictPlpDataSettings
     
+    modelDevelopment <- 1 #added
+    
     attrition <- runPlp$model$trainDetails$attrition
     
   } else{
@@ -515,6 +517,8 @@ addRunPlpToDatabase <- function(
     targetId <- runPlp$model$validationDetails$targetId
     outcomeId <- runPlp$model$validationDetails$outcomeId
     restrictPlpDataSettings <- runPlp$model$validationDetails$restrictPlpDataSettings
+    
+    modelDevelopment <- 0 #added
     
     attrition <- runPlp$model$validationDetails$attrition
     
@@ -624,7 +628,9 @@ addRunPlpToDatabase <- function(
     validationPopulationId= validationPopulationId,
     validationPlpDataId = validationPlpDataId,
     validationTargetId = validationTargetId,
-    validationOutcomeId = validationOutcomeId
+    validationOutcomeId = validationOutcomeId,
+    
+    modelDevelopment = modelDevelopment
   )
   
   return(invisible(NULL))
@@ -943,7 +949,7 @@ getCohortDefinitionJson <- function(cohortDefinitions, cohortId){
   
   if(is.null(cohortDefinitions)){
     ParallelLogger::logInfo('No cohortDefinitions - not possible to get cohort name')
-    return(list(id = cohortId, name = 'Unknown'))
+    return(list(id = cohortId, name = paste0('Cohort: ', cohortId)))
   }
   
   #cohort_name, cohort_id and cohort_json

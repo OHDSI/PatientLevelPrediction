@@ -1,16 +1,17 @@
 -- this should be in a seperate schema 
-CREATE TABLE @my_schema.@string_to_appendcohorts (
-    cohort_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	  atlas_id bigint,
+CREATE TABLE @my_schema.@string_to_appendcohorts ( -- COHORT_DEFINITION
+    cohort_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY, -- TODO cohort_definition_id
+	  atlas_id bigint, -- remove?
     cohort_name char(100) NOT NULL,
-    cohort_json VARCHAR(MAX) NOT NULL
+    cohort_json VARCHAR(MAX) NOT NULL -- TODO json
 );
 
 -- this should be in a seperate schema 
-CREATE TABLE @my_schema.@string_to_appenddatabase_details (
+CREATE TABLE @my_schema.@string_to_appenddatabase_details ( -- DATABASE_META_DATA
     database_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    database_name char(100) NOT NULL,
-    database_acronym char(20) NOT NULL,
+    -- meta_database_id
+    database_name char(100) NOT NULL, -- cdm_source_name
+    database_acronym char(20) NOT NULL, -- cdm_source_abbreviation 
 	  database_version int NOT NULL,
     database_description char(1000) NOT NULL,
     database_type char(20) NOT NULL
@@ -179,6 +180,7 @@ CREATE TABLE  @my_schema.@string_to_appendperformances (
     tar_id int NOT NULL,
     plp_data_setting_id int NOT NULL, -- added
 	  population_setting_id int NOT NULL,
+	  model_development int NOT NULL, -- added
     execution_date_time DATETIME2,
     plp_version char(10),
     FOREIGN KEY (model_design_id) REFERENCES @my_schema.@string_to_appendmodel_designs(model_design_id),
@@ -189,6 +191,7 @@ CREATE TABLE  @my_schema.@string_to_appendperformances (
     FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
     FOREIGN KEY (plp_data_setting_id) REFERENCES @my_schema.@string_to_appendplp_data_settings(plp_data_setting_id), -- new
 	  FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id)
+	  
 );
 
 -- new

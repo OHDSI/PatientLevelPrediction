@@ -179,6 +179,7 @@ CREATE TABLE  @my_schema.@string_to_appendperformances (
     tar_id int NOT NULL,
     plp_data_setting_id int NOT NULL, -- added
 	  population_setting_id int NOT NULL,
+	  model_development int NOT NULL, -- added
     execution_date_time DATETIME2,
     plp_version char(10),
     FOREIGN KEY (model_design_id) REFERENCES @string_to_appendmodels_designs(model_design_id),
