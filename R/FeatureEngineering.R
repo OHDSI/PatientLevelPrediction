@@ -252,3 +252,87 @@ featureEngineer <- function(data, featureEngineeringSettings){
   return(data)
   
 }
+
+#' @export
+createAgeSplines <- function(nknots=5) {
+  # add input checks
+  checkIsClass(nknots, c('numeric','integer'))
+  checkHigher(nknots,3)
+  
+  # create list of inputs to implement function
+  featureEngineeringSettings <- list(
+    knots = nknots
+  )
+  
+  # specify the function that will implement the sampling
+  attr(featureEngineeringSettings, "fun") <- "implementAgeSplines"
+  
+  # make sure the object returned is of class "sampleSettings"
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+}
+
+
+implementAgeSplines <- function(trainData, featureEngineeringSettings, model=NULL) {
+  if (is.null(model)) {
+  knots <- featureEngineeringSettings$knots
+  ageData <- trainData$labels
+  y <- ageData$outcomeCount
+  X <- trainData$covariateData$covariates %>% dplyr::filter(covariateId==1002)
+  meanAge <- X %>% dplyr::summarize(meanAge=mean(covariateValue)) %>% dplyr::pull()
+  stdAge <- X %>% dplyr::summarize(stdAge=sd(covariateValue)) %>% dplyr::pull()
+  X_df <- X %>% dplyr::mutate(covariateValue = (covariateValue - meanAge)/stdAge) %>% dplyr::collect() %>% dplyr::arrange(rowId)
+  X <- X_df$covariateValue
+  model <- mgcv::gam(
+    y ~ s(X, bs='cr', k=knots, m=2)
+  )
+  newData <- data.frame(
+    rowId = X_df$rowId,
+    covariateId = 2002,
+    covariateValue = model$fitted.values
+  )
+  }
+  else {
+    X <- trainData$covariateData$covariates %>% dplyr::filter(covariateId==1002)
+    meanAge <- X %>% dplyr::summarize(meanAge=mean(covariateValue)) %>% dplyr::pull()
+    stdAge <- X %>% dplyr::summarize(stdAge=sd(covariateValue)) %>% dplyr::pull()
+    X_df <- X %>% dplyr::mutate(covariateValue = (covariateValue - meanAge)/stdAge) %>% dplyr::collect() %>% dplyr::arrange(rowId)
+    ageData <- trainData$labels
+    y <- ageData$outcomeCount
+    newData <- data.frame(y=y, X=X_df$covariateValue)
+    yHat <- predict(model, newData)
+    newData <- data.frame(
+      rowId = X_df$rowId,
+      covariateId = 2002,
+      covariateValue = yHat
+    )
+  }
+  Andromeda::appendToTable(trainData$covariateData$covariateRef, 
+                           data.frame(covariateId=2002,
+                                      covariateName='Cubic restricted age splines',
+                                      analysisId=2,
+                                      conceptId=2002))
+  Andromeda::appendToTable(trainData$covariateData$covariates,
+                           newData)
+  newCovariateData <- Andromeda::andromeda(analysisRef=trainData$covariateData$analysisRef,
+                  covariateRef=trainData$covariateData$covariateRef %>% dplyr::filter(covariateId != 1002),
+                  covariates=trainData$covariateData$covariates %>% dplyr::filter(covariateId != 1002))
+  metaData <- attr(trainData$covariateData, 'metaData')
+  trainData$covariateData <- newCovariateData
+  attr(trainData$covariateData,'metaData') <- metaData
+  class(trainData$covariateData) <- c('CovariateData', 'Andromeda')
+  featureEngineering <- list(
+    funct = 'implementAgeSplines',
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      model = model
+    )
+  )
+  
+  attr(trainData$covariateData, 'metaData')$featureEngineering = listAppend(
+    attr(trainData$covariateData, 'metaData')$featureEngineering,
+    featureEngineering
+  )
+  
+  return(trainData)
+}

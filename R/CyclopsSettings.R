@@ -335,7 +335,7 @@ setRidgeRegression <- function(variance = 0.01,
 #' 
 #' @description See paper: https://doi.org/10.1016/j.jspi.2020.12.001
 #'
-#' @param variance   	Numeric: prior distribution starting variance
+#' @param initialRidgeVariance   	Numeric: prior distribution starting variance
 #' @param seed       An option to add a seed when training the model
 #' @param includeCovariateIds a set of covariate IDS to limit the analysis to
 #' @param noShrinkage a set of covariates whcih are to be forced to be included in the final model. default is the intercept 
@@ -347,18 +347,18 @@ setRidgeRegression <- function(variance = 0.01,
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error
 #'
 #' @export
-setBar <- function(variance = 1, 
-                   seed = NULL, 
-                   includeCovariateIds = c(), 
-                   noShrinkage = c("(Intercept)"), 
-                   penalty = 0.1,
-                   threads = -1, 
-                   forceIntercept = F,
-                   upperLimit = 20, 
-                   lowerLimit = 0.01,
-                   tolerance = 2e-06,
-                   maxIterations = 3000,
-                   threshold = 1e-6
+setBrokenAdaptiveRidge <- function(initialRidgeVariance = 1, 
+                                   seed = NULL, 
+                                   includeCovariateIds = c(), 
+                                   noShrinkage = c("(Intercept)"), 
+                                   penalty = 0.1,
+                                   threads = -1, 
+                                   forceIntercept = F,
+                                   upperLimit = 20, 
+                                   lowerLimit = 0.01,
+                                   tolerance = 2e-06,
+                                   maxIterations = 3000,
+                                   threshold = 1e-6
 ){
   
   checkIsClass(seed, c('numeric','NULL','integer'))
@@ -366,8 +366,8 @@ setBar <- function(variance = 1,
     seed <- as.integer(sample(100000000,1))
   }
   checkIsClass(threads, c('numeric','integer'))
-  checkIsClass(variance, c('numeric','integer'))
-  checkHigherEqual(variance, 0)
+  checkIsClass(initialRidgeVariance, c('numeric','integer'))
+  checkHigherEqual(initialRidgeVariance, 0)
   
   checkIsClass(lowerLimit, c('numeric','integer'))
   checkIsClass(upperLimit, c('numeric','integer'))
@@ -377,7 +377,7 @@ setBar <- function(variance = 1,
   param <- list(
     priorParams = list(
       forceIntercept = forceIntercept,
-      initialRidgeVariance = variance, 
+      initialRidgeVariance = initialRidgeVariance, 
       exclude = noShrinkage,
       tolerance=tolerance,
       penalty=penalty,

@@ -9,7 +9,8 @@ setAdaptiveLasso(
   nfolds = 3,
   lambda.min.ratio = 0.01,
   parallel = TRUE,
-  measure = "default"
+  measure = "default",
+  lambdaStrategy = "min"
 )
 }
 \arguments{
@@ -24,6 +25,10 @@ to have the first estimated model have zero coefficients.}
 
 \item{measure}{measure to use for selecting best lambda, one of:
 "default", "mse", "deviance", "class", "auc", "mae", "C"}
+
+\item{lambdaStrategy}{strategy to select best lambda. Either the one that 
+minimizes/maximizes the selected measure (`min`) or the one that's within 1 standard error of that in the
+direction of a smaller model (`se`).}
 }
 \description{
 Create setting for an adaptive Lasso regression model using glmnet

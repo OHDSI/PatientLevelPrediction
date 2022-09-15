@@ -28,12 +28,16 @@
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
 #' @param measure           measure to use for selecting best lambda, one of:
 #'  "default", "mse", "deviance", "class", "auc", "mae", "C"
+#' @param lambdaStrategy    strategy to select best lambda. Either the one that 
+#' minimizes/maximizes the selected measure (`min`) or the one that's within 1 standard error of that in the
+#' direction of a smaller model (`se`).  
 #' @export
 setLassoGlmNet <- function(nlambda=100,
                            nfolds=3,
                            lambda.min.ratio=0.01,
                            parallel=TRUE,
-                           measure='default'){
+                           measure='default',
+                           lambdaStrategy='min'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -126,13 +130,16 @@ setRidgeGlmNet <- function(nlambda=100,
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
 #' @param measure           measure to use for selecting best lambda, one of:
 #'  "default", "mse", "deviance", "class", "auc", "mae", "C"
-#'
+#' @param lambdaStrategy    strategy to select best lambda. Either the one that 
+#' minimizes/maximizes the selected measure (`min`) or the one that's within 1 standard error of that in the
+#' direction of a smaller model (`se`). 
 #' @export
 setElasticNet <- function(nlambda=100,
                           nfolds=3,
                           lambda.min.ratio=0.01,
                           parallel=TRUE,
-                          measure='default'){
+                          measure='default',
+                          lambdaStrategy='min'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -178,13 +185,17 @@ setElasticNet <- function(nlambda=100,
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
 #' @param measure           measure to use for selecting best lambda, one of:
 #'  "default", "mse", "deviance", "class", "auc", "mae", "C"
+#' @param lambdaStrategy    strategy to select best lambda. Either the one that 
+#' minimizes/maximizes the selected measure (`min`) or the one that's within 1 standard error of that in the
+#' direction of a smaller model (`se`). 
 #'
 #' @export
 setAdaptiveLasso <- function(nlambda=100,
                              nfolds=3,
                              lambda.min.ratio=0.01,
                              parallel=TRUE,
-                             measure='default'){
+                             measure='default',
+                             lambdaStrategy='min'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -230,13 +241,17 @@ setAdaptiveLasso <- function(nlambda=100,
 #' @param parallel          TRUE to use parallelization across folds (cores=nfolds)
 #' @param measure           measure to use for selecting best lambda, one of:
 #'  "default", "mse", "deviance", "class", "auc", "mae", "C"
+#' @param lambdaStrategy    strategy to select best lambda. Either the one that 
+#' minimizes/maximizes the selected measure (`min`) or the one that's within 1 standard error of that in the
+#' direction of a smaller model (`se`). 
 #'
 #' @export
 setAdaptiveElasticNet <- function(nlambda=100,
                                   nfolds=3,
                                   lambda.min.ratio=0.01,
                                   parallel=TRUE,
-                                  measure='default'){
+                                  measure='default',
+                                  lambdaStrategy='min'){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
@@ -327,7 +342,6 @@ fitGlmNet <- function(trainData,
   modelLoc <- createTempModelLoc()
   if (!dir.exists(modelLoc)) {dir.create(modelLoc, recursive = TRUE)}
   saveRDS(cvResult$model, file=file.path(modelLoc, 'glmNetModel.rds'))
-  
   result <- list(
     model = modelLoc,
     
