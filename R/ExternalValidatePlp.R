@@ -177,19 +177,20 @@ externalValidateDbPlp <- function(
   # create results list with the names of the databases to validate across
   result <- list()
   length(result) <- length(validationDatabaseDetails)
-  names(result) <- unlist(lapply(validationDatabaseDetails, function(x) attr(x, 'cdmDatabaseName')))
+  names(result) <- unlist(lapply(validationDatabaseDetails, function(x) attr(x, 'databaseDetailsName')))
   
   for(databaseDetails in validationDatabaseDetails){
     
     databaseName <- attr(databaseDetails, 'cdmDatabaseName')
+    databaseDetailsName <- attr(databaseDetails, 'databaseDetailsName')
     
     # initiate log
-    logSettings$saveDirectory <- file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId)
+    logSettings$saveDirectory <- file.path(outputFolder, databaseDetailsName, plpModel$trainDetails$analysisId)
     logSettings$logFileName <- 'validationLog'
     logger <- do.call(createLog,logSettings)
     ParallelLogger::registerLogger(logger)
     
-    ParallelLogger::logInfo(paste('Validating model on', databaseName))
+    ParallelLogger::logInfo(paste('Validating model on', databaseDetailsName))
     
     # Step 1: get data
     #=======
@@ -252,7 +253,7 @@ externalValidateDbPlp <- function(
     # Step 3: Apply model to plpData and population
     #=======
 
-    result[[databaseName]] <- tryCatch({
+    result[[databaseDetailsName]] <- tryCatch({
       externalValidatePlp(
         plpModel,
         plpData,
@@ -263,15 +264,15 @@ externalValidateDbPlp <- function(
       error = function(e){ParallelLogger::logInfo(e); return(NULL)}
     )
     
-    if(is.null(result[[databaseName]])){
+    if(is.null(result[[databaseDetailsName]])){
       closeLog(logger)
     } else{
       
-      if(!dir.exists(file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId))){
-        dir.create(file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId), recursive = T)
+      if(!dir.exists(file.path(outputFolder, databaseDetailsName, plpModel$trainDetails$analysisId))){
+        dir.create(file.path(outputFolder, databaseDetailsName, plpModel$trainDetails$analysisId), recursive = T)
       }  
       
-      savePlpResult(result[[databaseName]], dirPath = file.path(outputFolder, databaseName, plpModel$trainDetails$analysisId, 'validationResult'))
+      savePlpResult(result[[databaseDetailsName]], dirPath = file.path(outputFolder, databaseDetailsName, plpModel$trainDetails$analysisId, 'validationResult'))
     }
   }
  

@@ -105,6 +105,9 @@ createRestrictPlpDataSettings <- function(
 #' @param outcomeIds                      A single integer or vector of integers specifying the cohort ids for the outcome cohorts
 #' @param cdmVersion                     Define the OMOP CDM version used: currently support "4" and "5".
 #' @param cohortId                       (depreciated: use targetId) old input for the target cohort id
+#' @param databaseDetailsName            An optional name that can be used to assign any distinct meaningful name 
+#'                                       to validation database details in order to create multiple database details 
+#'                                       using the same database but with different database versions, target ids, or anything else.
 #' 
 #' @return
 #' A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)
@@ -122,7 +125,8 @@ createDatabaseDetails <- function(
   targetId = NULL,
   outcomeIds = NULL,
   cdmVersion = 5,
-  cohortId = NULL
+  cohortId = NULL,
+  databaseDetailsName = cdmDatabaseName
 ){
   
   if(is.null(targetId)){
@@ -143,10 +147,12 @@ createDatabaseDetails <- function(
     outcomeTable = outcomeTable,
     targetId = targetId,
     outcomeIds = outcomeIds,
-    cdmVersion = cdmVersion
+    cdmVersion = cdmVersion,
+    databaseDetailsName = databaseDetailsName
   )
   
   attr(result, 'cdmDatabaseName') <- cdmDatabaseName
+  attr(result, "databaseDetailsName") <- databaseDetailsName
   class(result) <- 'databaseDetails'
   return(result)
 }

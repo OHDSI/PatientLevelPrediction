@@ -461,7 +461,6 @@ validateMultiplePlp <- function(
   # add input checks 
   checkIsClass(analysesLocation, 'character')
   
-  checkIsClass(validationDatabaseDetails, 'databaseDetails')
   checkIsClass(validationRestrictPlpDataSettings, 'restrictPlpDataSettings')
   
   checkIsClass(recalibrate, c('character', 'NULL'))
@@ -473,14 +472,13 @@ validateMultiplePlp <- function(
   # now fine all analysis folders..
   analyses <- analyses[grep('Analysis_',analyses)]
   
+  if(is.null(saveDirectory)){
+    saveLocation <- file.path(analysesLocation, 'Validation')
+  } else{
+    saveLocation <- saveDirectory
+  }
+  
   for(i in 1:length(analyses)){
-    
-    if(is.null(saveDirectory)){
-      saveLocation <- file.path(analysesLocation, 'Validation')
-    } else{
-      saveLocation <- saveDirectory
-    }
-    
     analysis <- analyses[i]
     modelSettings <- file.path(analysesLocation, analysis)
     
