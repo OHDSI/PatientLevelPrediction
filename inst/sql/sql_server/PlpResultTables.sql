@@ -11,7 +11,7 @@ CREATE TABLE @my_schema.@string_to_appendCOHORT_DEFINITION (
     cohort_name VARCHAR(MAX) NOT NULL,
     description VARCHAR(MAX),
     json VARCHAR(MAX),
-    sql_command VARCHAR(MAX),
+    sql_command VARCHAR(MAX)
 );
 
 -- link the database_id in the results with the database_meta_data_id
@@ -34,7 +34,7 @@ CREATE TABLE @my_schema.@string_to_appendDATABASE_META_DATA (
     CDM_VERSION varchar(MAX),
     VOCABULARY_VERSION varchar(MAX),
     MAX_OBS_PERIOD_END_DATE varchar(MAX) -- not date due to sqlite and consistency
-)
+);
 
 CREATE TABLE @my_schema.@string_to_appendtars (
     tar_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
