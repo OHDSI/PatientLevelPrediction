@@ -22,7 +22,7 @@ function \code{connect} in the
 
 \item{databaseSchemaSettings}{A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables}
 
-\item{cohortDefinitions}{(list) A list of cohortDefinitions (each list must contain: name, id)}
+\item{cohortDefinitions}{A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()}
 
 \item{databaseList}{A list created by \code{createDatabaseList} to specify the databases}
 

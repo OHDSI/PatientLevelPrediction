@@ -86,6 +86,7 @@ createRestrictPlpDataSettings <- function(
 #'                                       Server, this should specifiy both the database and the schema,
 #'                                       so for example 'cdm_instance.dbo'.
 #' @param cdmDatabaseName                A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)
+#' @param cdmDatabaseId                  A unique identifier for the database and version (this will be shown to OHDSI researchers if the results get transported)
 #' @param tempEmulationSchema            For dmbs like Oracle only: the name of the database schema where you
 #'                                       want all temporary tables to be managed. Requires
 #'                                       create/insert permissions to this database.
@@ -114,6 +115,7 @@ createDatabaseDetails <- function(
   connectionDetails,
   cdmDatabaseSchema,
   cdmDatabaseName,
+  cdmDatabaseId, # added for strategus
   tempEmulationSchema = cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
@@ -132,10 +134,20 @@ createDatabaseDetails <- function(
     }
   }
   
+  if(missing(cdmDatabaseName)){
+    ParallelLogger::logInfo('No cdm database name entered so using cdmDatabaseSchema')
+    cdmDatabaseName <- removeInvalidString(cdmDatabaseSchema)
+  }
+  if(missing(cdmDatabaseId)){
+    ParallelLogger::logInfo('No cdm database id entered so using cdmDatabaseSchema')
+    cdmDatabaseId <- removeInvalidString(cdmDatabaseSchema)
+  }
+  
   result <- list(
     connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
     cdmDatabaseName = cdmDatabaseName,
+    cdmDatabaseId = cdmDatabaseId,
     tempEmulationSchema = tempEmulationSchema,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,

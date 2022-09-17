@@ -605,10 +605,13 @@ extractDatabaseToCsv <- function(
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema)
     result <- DatabaseConnector::querySql(conn, sql)
     
+    # lower case for consistency in sharing csv results
+    colnames(result) <- tolower(colnames(result))
+    
     # save the results as a csv
     readr::write_excel_csv(
       x = result, 
-      file = file.path(csvFolder, paste0(fileAppend,table,'.csv'))
+      file = file.path(csvFolder, paste0(fileAppend,tolower(table),'.csv'))
       )
   }
   

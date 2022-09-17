@@ -8,6 +8,7 @@ createDatabaseDetails(
   connectionDetails,
   cdmDatabaseSchema,
   cdmDatabaseName,
+  cdmDatabaseId,
   tempEmulationSchema = cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
@@ -30,6 +31,8 @@ Server, this should specifiy both the database and the schema,
 so for example 'cdm_instance.dbo'.}
 
 \item{cdmDatabaseName}{A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)}
+
+\item{cdmDatabaseId}{A unique identifier for the database and version (this will be shown to OHDSI researchers if the results get transported)}
 
 \item{tempEmulationSchema}{For dmbs like Oracle only: the name of the database schema where you
 want all temporary tables to be managed. Requires

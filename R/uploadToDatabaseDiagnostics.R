@@ -54,7 +54,7 @@ addMultipleDiagnosePlpToDatabase <- function(
 #'                                     function \code{connect} in the
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
-#' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
+#' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
 #' @param databaseList              A list created by \code{createdatabaseList} to specify the databases
 #' @param overWriteIfExists            (default: T) Whether to delete existing results and overwrite them
 #'    
@@ -81,10 +81,8 @@ addDiagnosePlpToDatabase <- function(
   databaseId <- addDatabase(
     conn = conn, 
     databaseSchemaSettings = databaseSchemaSettings,
-    databaseDetail = getDatabaseDetail(
-      databaseList = databaseList,
-      databaseSchema = diagnosePlp$databaseSchema
-    )
+    databaseList = databaseList,
+    databaseSchema = diagnosePlp$databaseSchema
   )
   
   diagnoseId <- insertDiagnosisToDatabase(
