@@ -113,7 +113,7 @@ attrition,performance_id,int,Yes,No,No,No,The corresponding performance id
 attrition,outcome_id,int,Yes,No,No,No,The corresponding outcome id
 attrition,description,varchar,Yes,No,No,No,A description of the inclusions/exclusion 
 attrition,target_count,int,Yes,No,No,No,The number of target patients remaining
-attrition,unqiue_people,int,Yes,No,No,No,The number of distinct target patients remaining
+attrition,unique_people,int,Yes,No,No,No,The number of distinct target patients remaining
 attrition,outcomes,int,Yes,No,No,No,The number of target patients with the outcome remaining
 prediction_distribution,performance_id,int,Yes,No,No,No,The corresponding performance id
 prediction_distribution,evaluation,varchar,Yes,No,No,No,The type of evalaution (test/train/CV)
@@ -129,7 +129,7 @@ prediction_distribution,p_75_predicted_probability,float,Yes,No,No,No,the 75% qu
 prediction_distribution,p_95_predicted_probability,float,Yes,No,No,No,the 95% quantile of predicted risk
 prediction_distribution,max_predicted_probability,float,Yes,No,No,No,the max predicted risk
 covariate_summary,performance_id,int,Yes,No,No,No,The corresponding performance id
-covariate_summary,covaraite_id,bigint,Yes,No,No,No,The id for the covariate
+covariate_summary,covariate_id,bigint,Yes,No,No,No,The id for the covariate
 covariate_summary,covariate_name,varchar,Yes,No,No,No,the name for the covariate
 covariate_summary,concept_id,float,Yes,No,No,No,the concept id used to construct the covariate
 covariate_summary,covariate_value,float,Yes,No,No,No,the coefficient or covariate importance
