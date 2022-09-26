@@ -415,13 +415,15 @@ cvGlmNet <- function(dataMatrix,
   dataMatrix@Dimnames[[2]] <- as.character(covariateMap$covariateId)
   nvars <- dim(dataMatrix)[[2]]
   if (settings$adaptive==TRUE) {
-    lassoCv <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=1, family='binomial',
+    firstModel <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=param$alpha, family='binomial',
                                   trace.it=1, nfolds=settings$nfolds, 
                                   lambda.min.ratio=param$lambda.min.ratio,
                                   foldId=labels$index, parallel=settings$parallel,
-                                  type.measure = 'auc')
-    lassoCoefs <- as.numeric(coef(lassoCv, s = lassoCv$lambda.min))[-1] # no intercept
-    penaltyFactor <- 1/abs(lassoCoefs)
+                                  type.measure = param$measure,
+                                  standardize=FALSE,
+                                  thresh=2e-6)
+    firstModelCoefs <- as.numeric(coef(firstModel, s = firstModel$lambda.min))[-1] # no intercept
+    penaltyFactor <- 1/abs(firstModelCoefs) # could add gamma as the exponent (implicitly set to 1 now)
   } else {penaltyFactor <- rep(1, nvars)}
   glmFit <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=param$alpha, family='binomial',
                     trace.it = 1, nfolds=settings$nfolds, lambda.min.ratio=param$lambda.min.ratio,
