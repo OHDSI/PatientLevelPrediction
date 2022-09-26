@@ -64,32 +64,6 @@ runMultiplePlp <- function(
     dir.create(saveDirectory, recursive = T)
   }
   
-  if(is.null(cohortDefinitions)){
-    
-    cohortIds <- unlist(
-      lapply(
-        X = 1:length(modelDesignList), 
-        FUN = function(i){
-          c(
-            modelDesignList[[i]]$targetId,
-            modelDesignList[[i]]$outcomeId
-          )
-        }
-      )
-    )
-    
-    cohortDefinitions <- lapply(
-      X = unique(cohortIds), # dont want the same id repeated
-      FUN = function(x){
-        list(
-          id = x, 
-          name = paste0('Cohort: ', x)
-        )
-      }
-    )
-  
-  }
-  
   settingstable <- convertToJson(modelDesignList,cohortDefinitions)
   
   if(nrow(settingstable) != length(modelDesignList)){
@@ -537,11 +511,14 @@ validateMultiplePlp <- function(
   
   # add to sqlite database - needed for shiny app
   #=======================
-    if(is.null(saveDirectory)){
-      sqliteLocation <- file.path(analysesLocation, 'sqlite')
-    } else{
-      sqliteLocation <- file.path(saveDirectory,'sqlite')
-    }
+  
+  if(saveLocation == file.path(analysesLocation, 'Validation')){
+    ParallelLogger::logInfo('Saving validation results into the development sqlite database')
+    sqliteLocation <- file.path(analysesLocation, 'sqlite')
+  } else{
+    ParallelLogger::logInfo('Saving validation results into validation sqlite')
+    sqliteLocation <- file.path(saveDirectory,'sqlite')
+  }
   
   for(validationDatabase in dir(saveLocation)){
     tryCatch({
@@ -549,7 +526,7 @@ validateMultiplePlp <- function(
         resultLocation = file.path(saveLocation, validationDatabase), 
         cohortDefinitions = cohortDefinitions,
         databaseList = createDatabaseList(
-          cdmDatabaseSchemas = 'none'
+          cdmDatabaseSchemas = validationDatabase # 'none'
         ),
         sqliteLocation = sqliteLocation
       )
@@ -565,6 +542,32 @@ convertToJson <-function(
 ){
   
   convertToJsonString <- function(x){as.character(ParallelLogger::convertSettingsToJson(x))}
+  
+  if(is.null(cohortDefinitions)){
+    
+    cohortIds <- unlist(
+      lapply(
+        X = 1:length(modelDesignList), 
+        FUN = function(i){
+          c(
+            modelDesignList[[i]]$targetId,
+            modelDesignList[[i]]$outcomeId
+          )
+        }
+      )
+    )
+    
+    cohortDefinitions <- lapply(
+      X = unique(cohortIds), # dont want the same id repeated
+      FUN = function(x){
+        list(
+          id = x, 
+          name = paste0('Cohort: ', x)
+        )
+      }
+    )
+    
+  }
   
   result <- data.frame(
     analysisId = paste0('Analysis_', 1:length(modelDesignList)),

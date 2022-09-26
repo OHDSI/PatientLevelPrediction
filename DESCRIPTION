@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
-Version: 5.4.4
-Date: 2022-08-29
+Version: 5.4.5
+Date: 2022-09-12
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -64,7 +64,7 @@ Suggests:
     rmarkdown,
     scoring,
     shiny,
-    OhdsiShinyModules (>= 0.2.0),
+    OhdsiShinyModules (>= 0.2.3),
     survminer,
     testthat,
     withr,
