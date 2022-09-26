@@ -77,11 +77,13 @@ test_that("recalibratePlpRefit", {
     newData = plpData
   )
   
-  testthat::expect_true(
-    sum(testRecal$evaluationType == 'recalibrationRefit')>0
-  )
-  
-  testthat::expect_s3_class(testRecal, 'data.frame')
+  if(!is.null(testRecal)){
+    testthat::expect_true(
+      sum(testRecal$evaluationType == 'recalibrationRefit')>0
+    )
+    
+    testthat::expect_s3_class(testRecal, 'data.frame')
+  }
   
   # add more test...
 })

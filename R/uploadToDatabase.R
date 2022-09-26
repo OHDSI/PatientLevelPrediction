@@ -47,19 +47,12 @@ insertRunPlpToSqlite <- function(
   #  json = c('{}', '{}')
   #  )
     
-  databaseList <- createDatabaseList(
-    cdmDatabaseSchemas = unique(c(
-      runPlp$model$trainDetails$developmentDatabase,
-      unlist(lapply(externalValidatePlp, function(x) x$model$validationDetails$validationDatabase))
-    ))
-  )
-  
   addRunPlpToDatabase(
     runPlp = runPlp,
     conn = conn,
     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
     cohortDefinitions = NULL,#cohortDefinitions,
-    databaseList = databaseList, 
+    databaseList = NULL, 
     modelSaveLocation = sqliteLocation
   )
   
@@ -74,7 +67,7 @@ insertRunPlpToSqlite <- function(
               conn = conn,
               databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
               cohortDefinitions = NULL,#cohortDefinitions,
-              databaseList = databaseList, 
+              databaseList = NULL, 
               modelSaveLocation = sqliteLocation
             )
           }, error = function(e){ParallelLogger::logError(e)}
@@ -92,7 +85,7 @@ insertRunPlpToSqlite <- function(
           conn = conn,
           databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
           cohortDefinitions = NULL,#cohortDefinitions,
-          databaseList = databaseList
+          databaseList = NULL
         )
       }, error = function(e){ParallelLogger::logError(e)}
     )
@@ -121,9 +114,7 @@ insertRunPlpToSqlite <- function(
 insertResultsToSqlite <- function(
   resultLocation, 
   cohortDefinitions,
-  databaseList = createDatabaseList(
-    cdmDatabaseSchemas = c('cdm_truven_ccae_v123', 'cdm_madeup_v1')
-  ),
+  databaseList = NULL,
   sqliteLocation = file.path(resultLocation, 'sqlite')
 ){
   
@@ -279,7 +270,7 @@ createPlpResultTables <- function(
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
-#' @param databaseList              A list created by \code{createDatabaseList} to specify the databases
+#' @param databaseList              (Optional) A list created by \code{createDatabaseList} to specify the databases
 #' @param resultLocation               (string) location of directory where the main package results were saved
 #' @param resultLocationVector         (only used when resultLocation is missing) a vector of locations with development or validation results  
 #' @param modelSaveLocation              The location of the file system for saving the models in a subdirectory  
@@ -291,9 +282,7 @@ createPlpResultTables <- function(
 addMultipleRunPlpToDatabase <- function(conn, 
                                     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
                                     cohortDefinitions,
-                                    databaseList = createDatabaseList(
-                                      cdmDatabaseSchemas = c('cdm_truven_ccae_v123', 'cdm_madeup_v1')
-                                    ),
+                                    databaseList = NULL,
                                     resultLocation = NULL,
                                     resultLocationVector,
                                     modelSaveLocation
@@ -405,9 +394,9 @@ createDatabaseSchemaSettings <- function(
 #' @details
 #' This function is used when inserting database details into the PatientLevelPrediction database results schema
 #' 
-#' @param cdmDatabaseSchemas           (string vector) A vector of the cdmDatabaseSchemas used in the study
-#' @param cdmDatabaseName              A sharable name for the database
-#' @param databaseRefId                The databaseName or databaseId
+#' @param cdmDatabaseSchemas           (string vector) A vector of the cdmDatabaseSchemas used in the study - if the schemas are not unique per database please also specify databaseRefId
+#' @param cdmDatabaseNames             Sharable names for the databases
+#' @param databaseRefIds               (string vector) Unique database identifiers - what you specified as cdmDatabaseId in \code{PatientLevelPrediction::createDatabaseDetails()} when developing the models
 #'
 #' @return
 #' Returns a data.frame with the database details
@@ -415,18 +404,19 @@ createDatabaseSchemaSettings <- function(
 #' @export
 createDatabaseList <- function(
   cdmDatabaseSchemas,
-  cdmDatabaseName,
-  databaseRefId
+  cdmDatabaseNames,
+  databaseRefIds = NULL
 ){
   if(missing(cdmDatabaseSchemas)){
     stop('Need to specify cdmDatabaseSchemas')
   }
   
-  if(missing(databaseRefId)){
-    databaseRefId <- removeInvalidString(cdmDatabaseSchemas)
+  if(is.null(databaseRefIds)){
+    ParallelLogger::logInfo('No databaseRefId specified so using schema as unique database identifier')
+    databaseRefIds <- removeInvalidString(cdmDatabaseSchemas)
   }
-  if(missing(cdmDatabaseName)){
-    cdmDatabaseName <- removeInvalidString(cdmDatabaseSchemas)
+  if(missing(cdmDatabaseNames)){
+    cdmDatabaseNames <- removeInvalidString(cdmDatabaseSchemas)
   }
   
   
@@ -435,12 +425,12 @@ createDatabaseList <- function(
     
     function(i) list(
       databaseDetails = list(
-        databaseMetaDataId = databaseRefId[i]
+        databaseMetaDataId = databaseRefIds[i]
       ),
       databaseMetaData = list(
-        databaseId = databaseRefId[i],
+        databaseId = databaseRefIds[i],
         cdmSourceName = cdmDatabaseSchemas[i],
-        cdmSourceAbbreviation = cdmDatabaseName[i],
+        cdmSourceAbbreviation = cdmDatabaseNames[i],
         cdmHolder = '', # could get this from CDM_source inside runPlp in future
         sourceDesciption = '',
         sourceDocumentReference = '',
@@ -454,7 +444,9 @@ createDatabaseList <- function(
     )
   )
   
-  names(result) <- cdmDatabaseSchemas
+  names(result) <- databaseRefIds #cdmDatabaseSchemas
+  # using id as schema may not be unique
+  # id uses schema if it is not set
 
   return(result)
 }
@@ -474,9 +466,9 @@ createDatabaseList <- function(
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
-#' @param databaseList              A list created by \code{createDatabaseList} to specify the databases
 #' @param modelSaveLocation         The location of the directory that models will be saved to
-#'
+#' @param databaseList              (Optional) If you want to change the database name then used \code{createDatabaseList} to specify the database settings but use the same cdmDatabaseId was model development/validation
+#' 
 #' @return
 #' Returns a data.frame with the database details
 #' 
@@ -486,8 +478,8 @@ addRunPlpToDatabase <- function(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList,
-  modelSaveLocation
+  modelSaveLocation,
+  databaseList = NULL
 ){
   
   modelDesignId <- insertModelDesignInDatabase(
@@ -502,6 +494,8 @@ addRunPlpToDatabase <- function(
     includesModel <- T
     developmentDatabase <- runPlp$model$trainDetails$developmentDatabase
     validationDatabase <- runPlp$model$trainDetails$developmentDatabase
+    developmentDatabaseRefId <- runPlp$model$trainDetails$developmentDatabaseId
+    validationDatabaseRefId <- runPlp$model$trainDetails$developmentDatabaseId
     
     populationSettings <- runPlp$model$modelDesign$populationSettings
     targetId <- runPlp$model$modelDesign$targetId
@@ -511,11 +505,13 @@ addRunPlpToDatabase <- function(
     modelDevelopment <- 1 #added
     
     attrition <- runPlp$model$trainDetails$attrition
-    
+
   } else{
     includesModel <- F
     developmentDatabase <- runPlp$model$validationDetails$developmentDatabase
     validationDatabase <- runPlp$model$validationDetails$validationDatabase
+    developmentDatabaseRefId <- runPlp$model$validationDetails$developmentDatabaseId
+    validationDatabaseRefId <- runPlp$model$validationDetails$validationDatabaseId
     
     populationSettings <- runPlp$model$validationDetails$populationSettings
     targetId <- runPlp$model$validationDetails$targetId
@@ -533,14 +529,16 @@ addRunPlpToDatabase <- function(
     conn = conn, 
     databaseSchemaSettings = databaseSchemaSettings,
     databaseList = databaseList,
-    databaseSchema = developmentDatabase
+    databaseSchema = developmentDatabase, 
+    databaseId = developmentDatabaseRefId
   )
   
   validationDatabaseId <- addDatabase(
     conn = conn, 
     databaseSchemaSettings = databaseSchemaSettings,
     databaseList = databaseList,
-    databaseSchema = validationDatabase
+    databaseSchema = validationDatabase,
+    databaseId = validationDatabaseRefId
   )
   
   
@@ -1219,18 +1217,24 @@ addCohort <- function(
 addDatabase <- function(
   conn, 
   databaseSchemaSettings,
-  databaseList, # list with the database details
-  databaseSchema # the database identifier
+  databaseList = NULL, # list with the database details
+  databaseId = NULL, # the database id
+  databaseSchema # the database schema
 ){
   
-  # get the database tables for the databaseSchema  
+  if(is.null(databaseId)){
+    databaseId <- removeInvalidString(databaseSchema)
+  }
+  
+  # get the database tables for the databaseId 
   if(is.null(databaseList)){
-    databaseDataFrames <- createDatabaseList(cdmDatabaseSchemas = databaseSchema)[[1]]
+    databaseDataFrames <- createDatabaseList(cdmDatabaseSchemas = databaseSchema, databaseRefIds = databaseId)[[1]]
   } else{
-    if(databaseSchema %in% names(databaseList)){
-      databaseDataFrames <- databaseList[[databaseSchema]]
+    if(databaseId %in% names(databaseList)){
+      databaseDataFrames <- databaseList[[databaseId]]
     } else{
-      databaseDataFrames <- createDatabaseList(cdmDatabaseSchemas = databaseSchema)[[1]]
+      ParallelLogger::logInfo('database ID not found in databaseList so added new entry')
+      databaseDataFrames <- createDatabaseList(cdmDatabaseSchemas = databaseSchema, databaseRefIds = databaseId)[[1]]
     }
   }
   

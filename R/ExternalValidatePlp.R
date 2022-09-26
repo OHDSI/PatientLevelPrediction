@@ -100,7 +100,9 @@ externalValidatePlp <- function(
       analysisId = '', #TODO add from model
       analysisSource = '', #TODO add from model
       developmentDatabase = plpModel$trainDetails$developmentDatabase,
+      developmentDatabaseId = plpModel$trainDetails$developmentDatabaseId,
       validationDatabase = plpData$metaData$databaseDetails$cdmDatabaseSchema,
+      validationDatabaseId = plpData$metaData$databaseDetails$cdmDatabaseId,
       populationSettings = attr(population, 'metaData')$populationSettings,
       restrictPlpDataSettings = plpData$metaData$restrictPlpDataSettings,
       outcomeId = attr(population, 'metaData')$outcomeId,

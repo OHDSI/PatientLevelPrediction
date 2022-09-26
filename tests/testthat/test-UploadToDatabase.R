@@ -148,7 +148,7 @@ test_that("results uploaded to database", {
       json = rep('bla',3)
       ),
     databaseList = createDatabaseList(
-      cdmDatabaseSchema = c('test')
+      cdmDatabaseSchemas = c('test')
     ),
     resultLocation = resultsLoc,
     modelSaveLocation = file.path(saveLoc,'modelLocation') # new
@@ -205,7 +205,7 @@ test_that("temporary sqlite with results works", {
       json = rep('bla',3)
     ),
     databaseList = createDatabaseList(
-      cdmDatabaseSchema = c('test')
+      cdmDatabaseSchemas = c('test')
     ),
     sqliteLocation = file.path(resultsLoc, 'sqlite')
   )

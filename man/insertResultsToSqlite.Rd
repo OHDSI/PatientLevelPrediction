@@ -7,8 +7,7 @@
 insertResultsToSqlite(
   resultLocation,
   cohortDefinitions,
-  databaseList = createDatabaseList(cdmDatabaseSchemas = c("cdm_truven_ccae_v123",
-    "cdm_madeup_v1")),
+  databaseList = NULL,
   sqliteLocation = file.path(resultLocation, "sqlite")
 )
 }

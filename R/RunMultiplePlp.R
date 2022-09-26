@@ -209,8 +209,8 @@ runMultiplePlp <- function(
       cohortDefinitions = cohortDefinitions,
       databaseList = createDatabaseList(
         cdmDatabaseSchemas = databaseDetails$cohortDatabaseSchema,
-        cdmDatabaseName = databaseDetails$cdmDatabaseName,
-        databaseRefId = databaseDetails$cdmDatabaseId
+        cdmDatabaseNames = databaseDetails$cdmDatabaseName,
+        databaseRefIds = databaseDetails$cdmDatabaseId
       ),
       sqliteLocation = sqliteLocation
     )
@@ -530,8 +530,8 @@ validateMultiplePlp <- function(
         cohortDefinitions = cohortDefinitions,
         databaseList = createDatabaseList(
           cdmDatabaseSchemas = validationDatabaseDetails$cdmDatabaseSchema,
-          cdmDatabaseName = validationDatabaseDetails$cdmDatabaseName,
-          databaseRefId = validationDatabaseDetails$cdmDatabaseId 
+          cdmDatabaseNames = validationDatabaseDetails$cdmDatabaseName,
+          databaseRefIds = validationDatabaseDetails$cdmDatabaseId 
         ),
         sqliteLocation = sqliteLocation
       )

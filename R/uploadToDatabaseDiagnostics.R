@@ -10,7 +10,7 @@
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
-#' @param databaseList              A ...
+#' @param databaseList              (Optional) ...
 #' @param resultLocation          The location of the diagnostic results
 #'    
 #' @return
@@ -21,7 +21,7 @@ addMultipleDiagnosePlpToDatabase <- function(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList,
+  databaseList = NULL,
   resultLocation
 ){
   
@@ -55,7 +55,7 @@ addMultipleDiagnosePlpToDatabase <- function(
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
-#' @param databaseList              A list created by \code{createdatabaseList} to specify the databases
+#' @param databaseList              (Optional) If you wish to overwrite the settings in the plp object use \code{createdatabaseList} to specify the databases
 #' @param overWriteIfExists            (default: T) Whether to delete existing results and overwrite them
 #'    
 #' @return
@@ -67,7 +67,7 @@ addDiagnosePlpToDatabase <- function(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList,
+  databaseList = NULL,
   overWriteIfExists = T
 ){
   
@@ -82,7 +82,8 @@ addDiagnosePlpToDatabase <- function(
     conn = conn, 
     databaseSchemaSettings = databaseSchemaSettings,
     databaseList = databaseList,
-    databaseSchema = diagnosePlp$databaseSchema
+    databaseSchema = diagnosePlp$databaseSchema, 
+    databaseId = diagnosePlp$databaseId 
   )
   
   diagnoseId <- insertDiagnosisToDatabase(

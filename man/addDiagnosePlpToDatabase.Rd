@@ -9,7 +9,7 @@ addDiagnosePlpToDatabase(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList,
+  databaseList = NULL,
   overWriteIfExists = T
 )
 }
@@ -24,7 +24,7 @@ function \code{connect} in the
 
 \item{cohortDefinitions}{A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()}
 
-\item{databaseList}{A list created by \code{createdatabaseList} to specify the databases}
+\item{databaseList}{(Optional) If you wish to overwrite the settings in the plp object use \code{createdatabaseList} to specify the databases}
 
 \item{overWriteIfExists}{(default: T) Whether to delete existing results and overwrite them}
 }

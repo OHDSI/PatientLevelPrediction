@@ -4,14 +4,14 @@
 \alias{createDatabaseList}
 \title{Create a list with the database details and database meta data entries}
 \usage{
-createDatabaseList(cdmDatabaseSchemas, cdmDatabaseName, databaseRefId)
+createDatabaseList(cdmDatabaseSchemas, cdmDatabaseNames, databaseRefIds = NULL)
 }
 \arguments{
-\item{cdmDatabaseSchemas}{(string vector) A vector of the cdmDatabaseSchemas used in the study}
+\item{cdmDatabaseSchemas}{(string vector) A vector of the cdmDatabaseSchemas used in the study - if the schemas are not unique per database please also specify databaseRefId}
 
-\item{cdmDatabaseName}{A sharable name for the database}
+\item{cdmDatabaseNames}{Sharable names for the databases}
 
-\item{databaseRefId}{The databaseName or databaseId}
+\item{databaseRefIds}{(string vector) Unique database identifiers - what you specified as cdmDatabaseId in \code{PatientLevelPrediction::createDatabaseDetails()} when developing the models}
 }
 \value{
 Returns a data.frame with the database details

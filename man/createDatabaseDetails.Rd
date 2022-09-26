@@ -30,9 +30,9 @@ instance. Requires read permissions to this database. On SQL
 Server, this should specifiy both the database and the schema,
 so for example 'cdm_instance.dbo'.}
 
-\item{cdmDatabaseName}{A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)}
+\item{cdmDatabaseName}{A string with the name of the database - this is used in the shiny app and when externally validating models to name the result list and to specify the folder name when saving validation results (defaults to cdmDatabaseSchema if not specified)}
 
-\item{cdmDatabaseId}{A unique identifier for the database and version (this will be shown to OHDSI researchers if the results get transported)}
+\item{cdmDatabaseId}{A string with a unique identifier for the database and version - this is stored in the plp object for future reference and used by the shiny app (defaults to cdmDatabaseSchema if not specified)}
 
 \item{tempEmulationSchema}{For dmbs like Oracle only: the name of the database schema where you
 want all temporary tables to be managed. Requires

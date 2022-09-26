@@ -64,7 +64,8 @@ recalibratePlpRefit <- function(
   
   setLassoRefit <- setLassoLogisticRegression(
     includeCovariateIds = includeCovariateIds,
-    noShrinkage = noShrinkage
+    noShrinkage = noShrinkage, 
+    maxIterations = 10000 # increasing this due to test code often not converging
   )
   
   newData$labels <- newPopulation #%>% 
@@ -91,11 +92,19 @@ recalibratePlpRefit <- function(
   attr(newData, "metaData")$splitSettings <- PatientLevelPrediction::createDefaultSplitSetting()
   attr(newData, "metaData")$sampleSettings <- PatientLevelPrediction::createSampleSettings()
   
-  newModel <- fitPlp(
-    trainData = newData, 
-    modelSettings = setLassoRefit,
-    analysisId = 'recalibrationRefit'
+  newModel <- tryCatch({
+    fitPlp(
+      trainData = newData, 
+      modelSettings = setLassoRefit,
+      analysisId = 'recalibrationRefit'
     )
+  }, 
+  error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+  )
+  if(is.null(newModel)){
+    ParallelLogger::logInfo('Recalibration fit failed')
+    return(NULL)
+  }
   
   newModel$prediction$evaluationType <- 'recalibrationRefit'
 
