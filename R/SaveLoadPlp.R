@@ -156,15 +156,15 @@ savePlpModel <- function(plpModel, dirPath){
     fileName = file.path(dirPath, 'modelDesign.json')
   )
   
-  if(!is.null(plpModel$preprocess)){
+  if(!is.null(plpModel$preprocessing)){
     
     # cheap fix to get past bug in ParallelLogger::saveSettingsToJson with tibbles
-    plpModel$preprocess$tidyCovariates$normFactors <- 
-      as.data.frame(plpModel$preprocess$tidyCovariates$normFactors)
+    plpModel$preprocessing$tidyCovariates$normFactors <- 
+      as.data.frame(plpModel$preprocessing$tidyCovariates$normFactors)
     
     ParallelLogger::saveSettingsToJson(
-    object = plpModel$preprocess, 
-    fileName = file.path(dirPath, 'preprocess.json')
+    object = plpModel$preprocessing, 
+    fileName = file.path(dirPath, 'preprocessing.json')
   )
   }
   
@@ -271,12 +271,21 @@ loadPlpModel <- function(dirPath) {
     error = function(e){NULL}
   )
   
+  # we don't use "preprocess" anymore, should be "preprocessing", 
+  # but leave this here if loading an older model
   if(file.exists(file.path(dirPath, "preprocess.json"))){
-    plpModel$preprocess <- tryCatch(
+    plpModel$preprocessing <- tryCatch(
       ParallelLogger::loadSettingsFromJson(file.path(dirPath, "preprocess.json")),
       error = function(e){NULL}
     )
   }
+  if(file.exists(file.path(dirPath, "preprocessing.json")) & is.null(plpModel$preprocessing)){
+    plpModel$preprocessing <- tryCatch(
+      ParallelLogger::loadSettingsFromJson(file.path(dirPath, "preprocessing.json")),
+      error = function(e){NULL}
+    )
+  }
+  
   
   if(attr(plpModel, 'saveType') == "xgboost"){
     ensure_installed("xgboost")
