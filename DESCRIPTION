@@ -64,7 +64,6 @@ Suggests:
     scoring,
     shiny,
     OhdsiShinyModules (>= 0.2.3),
-    survAUC,
     survminer,
     testthat,
     withr,
