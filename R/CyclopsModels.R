@@ -83,7 +83,9 @@ fitCyclopsModel <- function(
   if(settings$crossValidationInPrior){  
     param$priorParams$useCrossValidation <- max(trainData$folds$index)>1
   }
+  if (!is.null(param$priorParams$penalty)) {
   if (param$priorParams$penalty == 'logN') {param$priorParams$penalty = log(nrow(trainData$labels))/2}
+  }
   prior <- do.call(eval(parse(text = settings$priorfunction)), param$priorParams)
   if (!is.null(param$priorParams$initialRidgeVariance)) {
     param$priorParams$variance <- param$priorParams$initialRidgeVariance
