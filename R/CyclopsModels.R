@@ -42,10 +42,11 @@ fitCyclopsModel <- function(
   covariates <- filterCovariateIds(param, trainData$covariateData)
   
   if (!is.null(param$priorCoefs)) {
-    sourceCoefs <- param$priorCoefs[abs(param$priorCoefs)>0 & names(param$priorCoefs) != "(Intercept)"]
-
+    sourceCoefs <- param$priorCoefs %>%
+      dplyr::filter(abs(betas)>0 & covariateIds != "(Intercept)")
+    
     newCovariates <- covariates %>%
-      dplyr::filter(.data$covariateId %in% !!names(sourceCoefs)) %>%
+      dplyr::filter(.data$covariateId %in% !!sourceCoefs$covariateIds) %>%
       dplyr::mutate(newCovariateId = .data$covariateId*-1) %>%
       dplyr::select(-.data$covariateId) %>%
       dplyr::rename(covariateId = .data$newCovariateId) %>%
@@ -69,13 +70,13 @@ fitCyclopsModel <- function(
   
   if (!is.null(param$priorCoefs)) {
     fixedCoefficients <- c(FALSE,
-                           rep(TRUE, length(sourceCoefs)),
-                           rep(FALSE, length(cyclopsData$coefficientNames)-(length(sourceCoefs)+1)))
+                           rep(TRUE, nrow(sourceCoefs)),
+                           rep(FALSE, length(cyclopsData$coefficientNames)-(nrow(sourceCoefs)+1)))
     
     startingCoefficients <- rep(0, length(fixedCoefficients))
     
     # skip intercept index
-    startingCoefficients[2:(length(sourceCoefs)+1)] <- sourceCoefs
+    startingCoefficients[2:(nrow(sourceCoefs)+1)] <- sourceCoefs$betas
   } else {
     startingCoefficients <- NULL
     fixedCoefficients <- NULL 
@@ -494,13 +495,17 @@ filterCovariateIds <- function(param, covariateData){
 }
 
 reparamTransferCoefs <- function(inCoefs) {
-  transferCoefs <- inCoefs[grepl("-", names(inCoefs))]
-  names(transferCoefs) <- substring(names(transferCoefs), 2)
+  transferCoefs <- inCoefs %>%
+    dplyr::filter(grepl("-", .data$covariateIds))
   
-  originalCoefs <- inCoefs[!grepl("-", names(inCoefs), )]
+  transferCoefs$covariateIds <- substring(transferCoefs$covariateIds, 2)
+  
+  originalCoefs <- inCoefs %>%
+    dplyr::filter(!grepl("-", .data$covariateIds))
+  
+  coefs <- rbind(originalCoefs, transferCoefs)
+  coefs <- rowsum(coefs$betas, coefs$covariateIds)
+  coefs <- data.frame(betas = coefs, covariateIds = rownames(coefs), row.names = NULL)
 
-  coefs <- c(originalCoefs, transferCoefs, use.names = TRUE)
-  coefs <- tapply(coefs, names(coefs), sum)
-  
   return(coefs)
 }
