@@ -10,7 +10,7 @@
 #'                                     function \code{connect} in the
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
-#' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
+#' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
 #'    
 #' @return
 #' Returns NULL but uploads the model design into the database schema specified in databaseSchemaSettings
@@ -68,6 +68,7 @@ insertModelDesignSettings <- function(
     stop('object in insertModelDesign() is not a modelDesign')
   }
   
+
   # add TAR
   tarId <- addTar(
     conn = conn, 
@@ -86,10 +87,7 @@ insertModelDesignSettings <- function(
     conn = conn, 
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
-    cohortDefinition = getCohortDefinitionJson(
-      cohortDefinitions = cohortDefinitions,
-      cohortId = object$targetId
-    ),
+    cohortDefinition = getCohortDef(cohortDefinitions, object$targetId),
     tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
@@ -99,10 +97,7 @@ insertModelDesignSettings <- function(
     conn = conn, 
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
-    cohortDefinition = getCohortDefinitionJson(
-      cohortDefinitions = cohortDefinitions,
-      cohortId = object$outcomeId
-    ),
+    cohortDefinition = getCohortDef(cohortDefinitions, object$outcomeId),
     tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )

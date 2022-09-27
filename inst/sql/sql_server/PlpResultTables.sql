@@ -1,19 +1,39 @@
--- this should be in a seperate schema 
-CREATE TABLE @my_schema.@string_to_appendcohorts (
-    cohort_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-	  atlas_id bigint,
-    cohort_name char(100) NOT NULL,
-    cohort_json VARCHAR(MAX) NOT NULL
+-- this links the PLP cohort_definition_id to the COHORT_DEFINITION
+CREATE TABLE @my_schema.@string_to_appendcohorts ( 
+    cohort_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY, -- 
+    cohort_definition_id int NOT NULL, -- the atlas id check type
+    cohort_name VARCHAR(MAX) NOT NULL
 );
 
--- this should be in a seperate schema 
-CREATE TABLE @my_schema.@string_to_appenddatabase_details (
+-- NEW - needs to match cohort generator COHORT_DEFINITION
+CREATE TABLE @my_schema.@string_to_appendCOHORT_DEFINITION (
+    cohort_definition_id int, -- check type
+    cohort_name VARCHAR(MAX) NOT NULL,
+    description VARCHAR(MAX),
+    json VARCHAR(MAX),
+    sql_command VARCHAR(MAX)
+);
+
+-- link the database_id in the results with the database_meta_data_id
+CREATE TABLE @my_schema.@string_to_appenddatabase_details ( -- DATABASE_META_DATA
     database_id int GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    database_name char(100) NOT NULL,
-    database_acronym char(20) NOT NULL,
-	  database_version int NOT NULL,
-    database_description char(1000) NOT NULL,
-    database_type char(20) NOT NULL
+    database_meta_data_id varchar(MAX) -- databaseId strategus 
+);
+
+-- NEW - needs to match stragegus DATABASE_META_DATA
+CREATE TABLE @my_schema.@string_to_appendDATABASE_META_DATA (
+    database_id varchar(MAX) PRIMARY KEY,
+    cdm_source_name varchar(MAX) NOT NULL,
+    cdm_source_abbreviation varchar(MAX) NOT NULL,
+    CDM_HOLDER varchar(MAX), 
+    SOURCE_DESCRIPTION varchar(MAX),
+    SOURCE_DOCUMENTATION_REFERENCE varchar(MAX),
+    CDM_ETL_REFERENCE varchar(MAX), 
+    SOURCE_RELEASE_DATE varchar(MAX), -- not date due to sqlite and consistency
+    CDM_RELEASE_DATE varchar(MAX), -- not date due to sqlite and consistency
+    CDM_VERSION varchar(MAX),
+    VOCABULARY_VERSION varchar(MAX),
+    MAX_OBS_PERIOD_END_DATE varchar(MAX) -- not date due to sqlite and consistency
 );
 
 CREATE TABLE @my_schema.@string_to_appendtars (
@@ -179,6 +199,7 @@ CREATE TABLE  @my_schema.@string_to_appendperformances (
     tar_id int NOT NULL,
     plp_data_setting_id int NOT NULL, -- added
 	  population_setting_id int NOT NULL,
+	  model_development int NOT NULL, -- added
     execution_date_time DATETIME2,
     plp_version char(10),
     FOREIGN KEY (model_design_id) REFERENCES @my_schema.@string_to_appendmodel_designs(model_design_id),
@@ -189,6 +210,7 @@ CREATE TABLE  @my_schema.@string_to_appendperformances (
     FOREIGN KEY (tar_id) REFERENCES @my_schema.@string_to_appendtars(tar_id),
     FOREIGN KEY (plp_data_setting_id) REFERENCES @my_schema.@string_to_appendplp_data_settings(plp_data_setting_id), -- new
 	  FOREIGN KEY (population_setting_id) REFERENCES @my_schema.@string_to_appendpopulation_settings(population_setting_id)
+	  
 );
 
 -- new

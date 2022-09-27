@@ -9,8 +9,8 @@ addRunPlpToDatabase(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList,
-  modelSaveLocation
+  modelSaveLocation,
+  databaseList = NULL
 )
 }
 \arguments{
@@ -22,11 +22,11 @@ function \code{connect} in the
 
 \item{databaseSchemaSettings}{A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables}
 
-\item{cohortDefinitions}{(list) A list of cohortDefinitions (each list must contain: name, id)}
-
-\item{databaseList}{A list created by \code{createDatabaseList} to specify the databases}
+\item{cohortDefinitions}{A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()}
 
 \item{modelSaveLocation}{The location of the directory that models will be saved to}
+
+\item{databaseList}{(Optional) If you want to change the database name then used \code{createDatabaseList} to specify the database settings but use the same cdmDatabaseId was model development/validation}
 }
 \value{
 Returns a data.frame with the database details

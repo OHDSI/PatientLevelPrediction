@@ -26,7 +26,7 @@
 #' @param modelDesignList                A list of model designs created using \code{createModelDesign()}
 #' @param onlyFetchData                  Only fetches and saves the data object to the output folder without running the analysis.
 #' @param cohortDefinitions               A list of cohort definitions for the target and outcome cohorts
-#' @param logSettings                    The setting spexcifying the logging for the analyses created using \code{createLogSettings()}
+#' @param logSettings                    The setting specifying the logging for the analyses created using \code{createLogSettings()}
 #' @param saveDirectory                   Name of the folder where all the outputs will written to.
 #' @param sqliteLocation                 (optional) The location of the sqlite database with the results
 #' 
@@ -62,32 +62,6 @@ runMultiplePlp <- function(
   checkIsClass(saveDirectory, 'character')
   if(!dir.exists(saveDirectory)){
     dir.create(saveDirectory, recursive = T)
-  }
-  
-  if(is.null(cohortDefinitions)){
-    
-    cohortIds <- unlist(
-      lapply(
-        X = 1:length(modelDesignList), 
-        FUN = function(i){
-          c(
-            modelDesignList[[i]]$targetId,
-            modelDesignList[[i]]$outcomeId
-          )
-        }
-      )
-    )
-    
-    cohortDefinitions <- lapply(
-      X = unique(cohortIds), # dont want the same id repeated
-      FUN = function(x){
-        list(
-          id = x, 
-          name = paste0('Cohort: ', x)
-        )
-      }
-    )
-  
   }
   
   settingstable <- convertToJson(modelDesignList,cohortDefinitions)
@@ -234,7 +208,9 @@ runMultiplePlp <- function(
       resultLocation = saveDirectory, 
       cohortDefinitions = cohortDefinitions,
       databaseList = createDatabaseList(
-        cdmDatabaseSchemas = databaseDetails$cohortDatabaseSchema
+        cdmDatabaseSchemas = databaseDetails$cohortDatabaseSchema,
+        cdmDatabaseNames = databaseDetails$cdmDatabaseName,
+        databaseRefIds = databaseDetails$cdmDatabaseId
       ),
       sqliteLocation = sqliteLocation
     )
@@ -537,24 +513,30 @@ validateMultiplePlp <- function(
   
   # add to sqlite database - needed for shiny app
   #=======================
-    if(is.null(saveDirectory)){
-      sqliteLocation <- file.path(analysesLocation, 'sqlite')
-    } else{
-      sqliteLocation <- file.path(saveDirectory,'sqlite')
-    }
   
-  for(validationDatabase in dir(saveLocation)){
+  if(saveLocation == file.path(analysesLocation, 'Validation')){
+    ParallelLogger::logInfo('Saving validation results into the development sqlite database')
+    sqliteLocation <- file.path(analysesLocation, 'sqlite')
+  } else{
+    ParallelLogger::logInfo('Saving validation results into validation sqlite')
+    sqliteLocation <- file.path(saveDirectory,'sqlite')
+  }
+  
+  #for(validationDatabase in dir(saveLocation)){ # why does this do all?
+  validationDatabase <- validationDatabaseDetails$cdmDatabaseName
     tryCatch({
       insertResultsToSqlite(
         resultLocation = file.path(saveLocation, validationDatabase), 
         cohortDefinitions = cohortDefinitions,
         databaseList = createDatabaseList(
-          cdmDatabaseSchemas = 'none'
+          cdmDatabaseSchemas = validationDatabaseDetails$cdmDatabaseSchema,
+          cdmDatabaseNames = validationDatabaseDetails$cdmDatabaseName,
+          databaseRefIds = validationDatabaseDetails$cdmDatabaseId 
         ),
         sqliteLocation = sqliteLocation
       )
     })
-  }
+  #}
   #=======================
   
 }
@@ -565,6 +547,34 @@ convertToJson <-function(
 ){
   
   convertToJsonString <- function(x){as.character(ParallelLogger::convertSettingsToJson(x))}
+  
+  if(is.null(cohortDefinitions)){
+    
+    cohortIds <- unlist(
+      lapply(
+        X = 1:length(modelDesignList), 
+        FUN = function(i){
+          c(
+            modelDesignList[[i]]$targetId,
+            modelDesignList[[i]]$outcomeId
+          )
+        }
+      )
+    )
+    cohortIds <- unique(cohortIds)
+    
+    cohortDefinitions <- data.frame(
+      cohortId = cohortIds,
+      cohortName = paste0('Cohort: ', cohortIds)
+    )
+      
+  } else{
+    cohortDefinitions <- cohortDefinitions %>% 
+      dplyr::select(
+        .data$cohortId, 
+        .data$cohortName
+        )
+  }
   
   result <- data.frame(
     analysisId = paste0('Analysis_', 1:length(modelDesignList)),
@@ -581,20 +591,11 @@ convertToJson <-function(
     executeSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$executeSettings)))
   )
   
-  if(!is.null(cohortDefinitions)){
-    
-    cohorts <- data.frame(
-      cohortName = unlist(lapply(cohortDefinitions, function(x) x$name)),
-      cohortId = unlist(lapply(cohortDefinitions, function(x) x$id))
-    )
-    
     result <- result %>% 
-      dplyr::left_join(cohorts, by = c("outcomeId" = "cohortId")) %>%
+      dplyr::left_join(cohortDefinitions, by = c("outcomeId" = "cohortId")) %>%
       dplyr::rename(outcomeName = .data$cohortName) %>%
-      dplyr::left_join(cohorts, by = c('targetId' = 'cohortId')) %>%
+      dplyr::left_join(cohortDefinitions, by = c('targetId' = 'cohortId')) %>%
       dplyr::rename(targetName = .data$cohortName) # new
-    
-  }
   
   # get the names
   uniqueSettings <-  result %>% 

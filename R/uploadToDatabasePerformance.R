@@ -16,7 +16,9 @@ insertPerformanceInDatabase <- function(
   validationPopulationId,
   validationPlpDataId,
   validationTargetId,
-  validationOutcomeId
+  validationOutcomeId,
+  
+  modelDevelopment #added 
   
 ){
   
@@ -38,6 +40,7 @@ insertPerformanceInDatabase <- function(
     validationPlpDataId = validationPlpDataId,
     validationPopulationId = validationPopulationId,
     
+    modelDevelopment = modelDevelopment,
     executionDateTime = executionDateTime,
     plpVersion = plpVersion, 
     tablePrefix = databaseSchemaSettings$tablePrefix,
@@ -108,6 +111,7 @@ addPerformance <- function(
   validationPlpDataId,
   validationPopulationId,
   
+  modelDevelopment,
   executionDateTime,
   plpVersion, 
   tablePrefix,
@@ -129,7 +133,8 @@ addPerformance <- function(
                          'outcome_id',
                          'tar_id',
                          'plp_data_setting_id',
-                         'population_setting_id'
+                         'population_setting_id',
+                         'model_development'
                        ), 
                        values = c(
                          modelDesignId,
@@ -140,7 +145,8 @@ addPerformance <- function(
                          validationOutcomeId,
                          validationTarId,
                          validationPlpDataId,
-                         validationPopulationId
+                         validationPopulationId,
+                         modelDevelopment
                        ),
                        tempEmulationSchema = tempEmulationSchema
   )
@@ -158,6 +164,8 @@ addPerformance <- function(
     plp_data_setting_id,
     population_setting_id,
     
+    model_development,
+    
     execution_date_time,
     plp_version
   ) 
@@ -165,6 +173,7 @@ addPerformance <- function(
   @model_design_id, @development_database_id, 
   @validation_database_id, @validation_target_id, @validation_outcome_id, @validation_tar_id, 
           @validation_plp_data_setting_id, @validation_population_setting_id, 
+          @model_development, 
     '@execution_date_time', '@plp_version')"
     sql <- SqlRender::render(sql, 
                              my_schema = resultSchema,
@@ -176,7 +185,9 @@ addPerformance <- function(
                              validation_outcome_id = validationOutcomeId,
                              validation_tar_id = validationTarId,
                              validation_plp_data_setting_id = validationPlpDataId,
-                             validation_population_setting_id = validationPopulationId,
+                             validation_population_setting_id = validationPopulationId, 
+                             
+                             model_development = modelDevelopment, 
                              
                              execution_date_time = executionDateTime,
                              plp_version = plpVersion,
@@ -200,7 +211,9 @@ addPerformance <- function(
                            'outcome_id',
                            'tar_id',
                            'plp_data_setting_id',
-                           'population_setting_id'
+                           'population_setting_id',
+                           
+                           'model_development'
                            ), 
                          values = c(
                            modelDesignId,
@@ -211,7 +224,9 @@ addPerformance <- function(
                            validationOutcomeId,
                            validationTarId,
                            validationPlpDataId,
-                           validationPopulationId
+                           validationPopulationId,
+                           
+                           modelDevelopment
                            ),
                          tempEmulationSchema = tempEmulationSchema
     )

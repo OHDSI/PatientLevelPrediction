@@ -20,7 +20,7 @@
 externalValidatePlp <- function(
   plpModel,
   plpData,
-  databaseName = 'database 1',
+  #databaseName = 'database 1', No longer needed
   population,
   settings = createValidationSettings(  # add covariateSummary option?
     recalibrate = 'weakRecalibration'
@@ -100,7 +100,9 @@ externalValidatePlp <- function(
       analysisId = '', #TODO add from model
       analysisSource = '', #TODO add from model
       developmentDatabase = plpModel$trainDetails$developmentDatabase,
-      validationDatabase = databaseName,
+      developmentDatabaseId = plpModel$trainDetails$developmentDatabaseId,
+      validationDatabase = plpData$metaData$databaseDetails$cdmDatabaseSchema,
+      validationDatabaseId = plpData$metaData$databaseDetails$cdmDatabaseId,
       populationSettings = attr(population, 'metaData')$populationSettings,
       restrictPlpDataSettings = plpData$metaData$restrictPlpDataSettings,
       outcomeId = attr(population, 'metaData')$outcomeId,
@@ -256,7 +258,7 @@ externalValidateDbPlp <- function(
       externalValidatePlp(
         plpModel,
         plpData,
-        databaseName = databaseName,
+        #databaseName = databaseName,
         population,
         settings = settings
       )},

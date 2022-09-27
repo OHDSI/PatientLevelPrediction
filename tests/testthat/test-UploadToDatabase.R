@@ -84,42 +84,14 @@ test_that("test createDatabaseDetails works", {
   
   testthat::expect_true(length(databaseList) == length(paste0('database', 1:5)))
   testthat::expect_true(class(databaseList) == 'list')
+  testthat::expect_true(!is.null(databaseList$database1$databaseDetails))
+  testthat::expect_true(!is.null(databaseList$database1$databaseMetaData))
   
-}
-)
-
-test_that("test getDatabaseDetail works", {
-  
-  databaseList <- createDatabaseList(
-    cdmDatabaseSchemas = paste0('database', 1:5)
+  testthat::expect_equal(
+    databaseList$database1$databaseDetails$databaseMetaDataId,
+    databaseList$database1$databaseMetaData$databaseId
   )
   
-  databaseValue <- getDatabaseDetail(
-    databaseList = databaseList ,
-    databaseSchema = 'database3'
-  )
-  testthat::expect_true(class(databaseValue) == 'list')
-  testthat::expect_true(databaseValue$name == 'database3')
-  
-  databaseValue <- getDatabaseDetail(
-    databaseList = databaseList ,
-    databaseSchema = 'none'
-  )
-  testthat::expect_true(class(databaseValue) == 'list')
-  testthat::expect_true(databaseValue$name == 'none')
-  
-}
-)
-
-test_that("getCohortDefinitionFromDefinitions", {
-  
-  cohortDefinitions <- list(list(name = 'blank1', id = 1, cohort_json = 'bla'),
-                            list(name = 'blank2', id = 2, cohort_json = 'bla'),
-                            list(name = 'blank3', id = 3, cohort_json = 'bla'))
-  
-  res <-  getCohortDefinitionJson(cohortDefinitions, cohortId =  2)
-  
-  testthat::expect_true(res$name == 'blank2')
 }
 )
 
@@ -170,15 +142,13 @@ test_that("results uploaded to database", {
       tablePrefix = appendRandom('test'),
       targetDialect = targetDialect
     ), 
-    cohortDefinitions = list(list(name = 'blank1', id = 1, cohort_json = 'bla'),
-                             list(name = 'blank2', id = 2, cohort_json = 'bla'),
-                             list(name = 'blank3', id = 3, cohort_json = 'bla')),
+    cohortDefinitions = data.frame(
+      cohortName = c('blank1','blank2','blank3'), 
+      cohortId = c(1,2,3), 
+      json = rep('bla',3)
+      ),
     databaseList = createDatabaseList(
-      cdmDatabaseSchema = c('test'), 
-      acronym = c('test'), 
-      version = c(1),
-      description = c(1),
-      type = c('claims')
+      cdmDatabaseSchemas = c('test')
     ),
     resultLocation = resultsLoc,
     modelSaveLocation = file.path(saveLoc,'modelLocation') # new
@@ -229,15 +199,13 @@ test_that("temporary sqlite with results works", {
   
   sqliteLocation <- insertResultsToSqlite(
     resultLocation = resultsLoc, 
-    cohortDefinitions = list(list(name = 'blank1', id = 1, cohort_json = 'bla'),
-                             list(name = 'blank2', id = 2, cohort_json = 'bla'),
-                             list(name = 'blank3', id = 3, cohort_json = 'bla')),
+    cohortDefinitions = data.frame(
+      cohortName = c('blank1','blank2','blank3'), 
+      cohortId = c(1,2,3), 
+      json = rep('bla',3)
+    ),
     databaseList = createDatabaseList(
-      cdmDatabaseSchema = c('test'), 
-      acronym = c('test'), 
-      version = c(1),
-      description = c(1),
-      type = c('claims')
+      cdmDatabaseSchemas = c('test')
     ),
     sqliteLocation = file.path(resultsLoc, 'sqlite')
   )
