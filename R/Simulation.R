@@ -152,9 +152,8 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
  covariateData$coefficients <- NULL
  
  # add indexes for covariate summary
- RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_rowId ON covariates(rowId)")
- RSQLite::dbExecute(covariateData, "CREATE INDEX covsum_covariateId ON covariates(covariateId)")
- 
+ Andromeda::createIndex(covariateData$covariates, columnNames = "rowId", indexName = "covsum_rowId")
+ Andromeda::createIndex(covariateData$covariates, columnNames = "covariateId", indexName = "covsum_covariateId")
   
   # Remove rownames else they will be copied to the ffdf objects:
   metaData = list()

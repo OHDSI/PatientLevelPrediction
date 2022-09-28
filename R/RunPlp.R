@@ -355,7 +355,6 @@ runPlp <- function(
     dataSummary(data)
   }
   
-  
   model <- NULL
   prediction <- NULL
   performance <- NULL
