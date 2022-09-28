@@ -8,14 +8,16 @@ createDatabaseDetails(
   connectionDetails,
   cdmDatabaseSchema,
   cdmDatabaseName,
+  cdmDatabaseId,
   tempEmulationSchema = cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "cohort",
-  cohortId = NULL,
+  targetId = NULL,
   outcomeIds = NULL,
-  cdmVersion = 5
+  cdmVersion = 5,
+  cohortId = NULL
 )
 }
 \arguments{
@@ -28,7 +30,9 @@ instance. Requires read permissions to this database. On SQL
 Server, this should specifiy both the database and the schema,
 so for example 'cdm_instance.dbo'.}
 
-\item{cdmDatabaseName}{A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)}
+\item{cdmDatabaseName}{A string with the name of the database - this is used in the shiny app and when externally validating models to name the result list and to specify the folder name when saving validation results (defaults to cdmDatabaseSchema if not specified)}
+
+\item{cdmDatabaseId}{A string with a unique identifier for the database and version - this is stored in the plp object for future reference and used by the shiny app (defaults to cdmDatabaseSchema if not specified)}
 
 \item{tempEmulationSchema}{For dmbs like Oracle only: the name of the database schema where you
 want all temporary tables to be managed. Requires
@@ -50,12 +54,13 @@ this database.}
 outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
 SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 
-\item{cohortId}{An integer specifying the cohort id for the target cohort}
+\item{targetId}{An integer specifying the cohort id for the target cohort}
 
 \item{outcomeIds}{A single integer or vector of integers specifying the cohort ids for the outcome cohorts}
 
-\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and
-"5".}
+\item{cdmVersion}{Define the OMOP CDM version used: currently support "4" and "5".}
+
+\item{cohortId}{(depreciated: use targetId) old input for the target cohort id}
 }
 \value{
 A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)

@@ -30,16 +30,18 @@ Features
 - Allows for multiple prediction design options.
 - Extracts the necessary data from a database in OMOP Common Data Model format for multiple covariate settings.
 - Uses a large set of covariates including for example all drugs, diagnoses, procedures, as well as age, comorbidity indexes, and custom covariates.
-- Includes a large number of state-of-the-art machine learning algorithms that can be used to develop predictive models, including Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural network and Deep learning (Convolutional neural networks, Recurrent neural network and Deep nets).
+- Allows you to add custom covariates or cohort covariates.
+- Includes a large number of state-of-the-art machine learning algorithms that can be used to develop predictive models, including Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural network and AdaBoost, SVM.
 - Allows you to add custom algorithms.
+- Allows you to add custom feature engineering
+- Allows you to add custom under/over sampling (or any other sampling) [note: based on existing research this is not recommended]
 - Contains functionality to externally validate models.
 - Includes functions to plot and explore model performance (ROC + Calibration).
-- Includes a shiny app to interactively view and explore results.
-- Implements existing models.
-- Builds ensemble models.
-- Builds Deep Learning models.
+- Build ensemble models using EnsemblePatientLevelPrediction.
+- Build Deep Learning models using DeepPatientLevelPrediction.
 - Generates learning curves.
-- Automatically creates a word document containing all the study results.
+- Includes a shiny app to interactively view and explore results.
+- In the shiny app you can create a html file document (report or protocol) containing all the study results.
 
 
 Screenshots
@@ -64,13 +66,12 @@ Screenshots
 
 Demo of the Shiny Apps can be found here:
 
-- [Single Prediction Viewer Shiny App](http://data.ohdsi.org/PredictionViewer/)
 - [Multiple Prediction Viewer Shiny App](http://data.ohdsi.org/smokingPhenotypeExplorer/)
 
 
 Technology
 ==========
-PatientLevelPrediction is an R package, with some functions implemented in C++ and python.
+PatientLevelPrediction is an R package, with some functions implemented in python.
 
 System Requirements
 ===================
@@ -99,8 +100,8 @@ In addition we have created vignettes that describe advanced functionality in mo
 - [Building Multiple Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingMultiplePredictiveModels.pdf)
 - [Implementing Existing Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/ImplementingExistingModels.pdf)
 - [Adding Custom Machine Learning Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomAlgorithms.pdf)
-- [Building Deep Learning Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingDeepLearningModels.pdf)
-- [Building Ensemble Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingEnsembleModels.pdf)
+- [Building Deep Learning Models](https://github.com/OHDSI/DeepPatientLevelPrediction)
+- [Building Ensemble Models](https://github.com/OHDSI/EnsemblePatientLevelPrediction)
 - [Creating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/CreatingLearningCurves.pdf)
 
 Package manual: [PatientLevelPrediction.pdf](https://github.com/OHDSI/PatientLevelPrediction/blob/main/extras/PatientLevelPrediction.pdf)
@@ -133,5 +134,5 @@ Beta
 # Acknowledgements
 
 - The package is maintained by Jenna Reps and Peter Rijnbeek and has been developed with major contributions from Martijn Schuemie, Patrick Ryan, and Marc Suchard.
-- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins.
+- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins, Egill Fridgeirsson, Alex Rekkas
 - This project is supported in part through the National Science Foundation grant IIS 1251151.

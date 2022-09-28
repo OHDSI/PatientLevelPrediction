@@ -39,12 +39,15 @@ recalibratePlpRefit <- function(
   newPopulation, 
   newData
 ){
-  if (is.null(newPopulation))
+  if (is.null(newPopulation)){
     stop("NULL population")
-  if (class(newData) != "plpData")
+  }
+  if (!inherits(x = newData, what =  "plpData")){
     stop("Incorrect plpData class")
-  if (class(plpModel) != "plpModel")
+  }
+  if (!inherits(x = plpModel, what = "plpModel")){
     stop("plpModel is not of class plpModel")
+  }
   
   #get selected covariates
   includeCovariateIds <- plpModel$covariateImportance %>% 
@@ -61,7 +64,8 @@ recalibratePlpRefit <- function(
   
   setLassoRefit <- setLassoLogisticRegression(
     includeCovariateIds = includeCovariateIds,
-    noShrinkage = noShrinkage
+    noShrinkage = noShrinkage, 
+    maxIterations = 10000 # increasing this due to test code often not converging
   )
   
   newData$labels <- newPopulation #%>% 
@@ -77,11 +81,30 @@ recalibratePlpRefit <- function(
     index = sample(2, length(newData$labels$rowId), replace = T)
     )
   
-  newModel <- fitPlp(
-    trainData = newData, 
-    modelSettings = setLassoRefit,
-    analysisId = 'recalibrationRefit'
+  # add dummy settings to fit model
+  attr(newData, "metaData")$outcomeId <- attr(newPopulation, 'metaData')$outcomeId
+  attr(newData, "metaData")$targetId <- attr(newPopulation, 'metaData')$targetId
+  attr(newData, "metaData")$restrictPlpDataSettings <- attr(newPopulation, 'metaData')$restrictPlpDataSettings
+  attr(newData, "metaData")$covariateSettings <- newData$metaData$covariateSettings
+  attr(newData, "metaData")$populationSettings <- attr(newPopulation, 'metaData')$populationSettings
+  attr(newData$covariateData, "metaData")$featureEngineeringSettings <- PatientLevelPrediction::createFeatureEngineeringSettings()
+  attr(newData$covariateData, "metaData")$preprocessSettings <- PatientLevelPrediction::createPreprocessSettings()
+  attr(newData, "metaData")$splitSettings <- PatientLevelPrediction::createDefaultSplitSetting()
+  attr(newData, "metaData")$sampleSettings <- PatientLevelPrediction::createSampleSettings()
+  
+  newModel <- tryCatch({
+    fitPlp(
+      trainData = newData, 
+      modelSettings = setLassoRefit,
+      analysisId = 'recalibrationRefit'
     )
+  }, 
+  error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+  )
+  if(is.null(newModel)){
+    ParallelLogger::logInfo('Recalibration fit failed')
+    return(NULL)
+  }
   
   newModel$prediction$evaluationType <- 'recalibrationRefit'
 
@@ -139,12 +162,13 @@ recalibratePlpRefit <- function(
 recalibratePlp <- function(prediction, analysisId, typeColumn = 'evaluationType',
                            method = c('recalibrationInTheLarge', 'weakRecalibration')){
   # check input:
-    if (class(prediction) != 'data.frame')
+    if (!inherits(x = prediction, what =  'data.frame')){
       stop("Incorrect prediction") 
+    }
   
-  if(!method  %in% c('recalibrationInTheLarge', 'weakRecalibration'))
+  if(!method  %in% c('recalibrationInTheLarge', 'weakRecalibration')){
     stop("Unknown recalibration method type. must be of type: recalibrationInTheLarge, weakRecalibration")
-  
+  }
   
   prediction <- do.call(method, list(prediction = prediction, columnType = typeColumn))
   

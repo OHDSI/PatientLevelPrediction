@@ -66,6 +66,7 @@ preprocessData <- function (covariateData,
                             preprocessSettings){
   
   metaData <- attr(covariateData, "metaData")
+  preprocessSettingsInput <- preprocessSettings # saving this before adding covariateData
   
   checkIsClass(covariateData, c("CovariateData"))
   checkIsClass(preprocessSettings, c("preprocessSettings"))
@@ -77,15 +78,17 @@ preprocessData <- function (covariateData,
   preprocessSettings$covariateData <- covariateData
   covariateData <- do.call(FeatureExtraction::tidyCovariateData, preprocessSettings)
   
-  #update covariateRed
-  removed <- unique(
+  #update covariateRef
+  removed <- unique(c(
     attr(covariateData, "metaData")$deletedInfrequentCovariateIds,
     attr(covariateData, "metaData")$deletedRedundantCovariateIds
+    )
     )
   covariateData$covariateRef <- covariateData$covariateRef %>% 
     dplyr::filter(!.data$covariateId  %in% removed)
   
   metaData$tidyCovariateDataSettings <- attr(covariateData, "metaData")
+  metaData$preprocessSettings <- preprocessSettingsInput
   attr(covariateData, "metaData") <- metaData
   
   return(covariateData)

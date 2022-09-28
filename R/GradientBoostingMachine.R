@@ -43,61 +43,76 @@ setGradientBoostingMachine <- function(ntrees=c(100, 300), nthread=20, earlyStop
   
   checkIsClass(seed, c('numeric', 'integer'))
   
-  if(length(nthread)>1)
+  if(length(nthread)>1){
     stop(paste('nthreads must be length 1'))
-  if(!class(seed)%in%c('numeric','NULL', 'integer'))
+  }
+  if(!inherits(x = seed, what = c('numeric','NULL', 'integer'))){
     stop('Invalid seed')
-  if(!class(ntrees) %in% c("numeric", "integer"))
-    stop('ntrees must be a numeric value >0 ')
-  if(sum(ntrees < 1)>0)
-    stop('ntrees must be greater that 0 or -1')
-  if(!class(maxDepth) %in% c("numeric", "integer"))
-    stop('maxDepth must be a numeric value >0')
-  if(sum(maxDepth < 1)>0)
+  }
+  if(!inherits(x = ntrees, what =  c("numeric", "integer"))){
+    stop('ntrees must be a numeric value ')
+  }
+  if(sum(ntrees < 1)  > 0 ){
+    stop('ntrees must be greater than 0 or -1')
+  }
+  if(!inherits(x = maxDepth, what =  c("numeric", "integer"))){
+    stop('maxDepth must be a numeric value')
+    }
+  if(sum(maxDepth < 1) > 0){
     stop('maxDepth must be greater that 0')
-  if(!class(minChildWeight) %in% c("numeric", "integer"))
-    stop('minChildWeight must be a numeric value >0')
-  if(sum(minChildWeight < 0)>0)
+  }
+  if(!inherits(x = minChildWeight, what =  c("numeric", "integer"))){
+    stop('minChildWeight must be a numeric value')
+  }
+  if(sum(minChildWeight < 0) > 0){
     stop('minChildWeight must be greater that 0')
-  if(class(learnRate)!='numeric')
-    stop('learnRate must be a numeric value >0 and <= 1')
-  if(sum(learnRate <= 0)>0)
+  }
+  if(!inherits(x = learnRate, what = 'numeric')){
+    stop('learnRate must be a numeric value')
+  }
+  if(sum(learnRate <= 0) > 0){
     stop('learnRate must be greater that 0')
-  if(sum(learnRate > 1)>0)
+  }
+  if(sum(learnRate > 1) > 0){
     stop('learnRate must be less that or equal to 1')
-  if(!class(earlyStopRound) %in% c("numeric", "integer", "NULL"))
+  }
+  if(!inherits(x = earlyStopRound, what =  c("numeric", "integer", "NULL"))){
     stop('incorrect class for earlyStopRound')
-  if (sum(lambda < 0)>0)
+  }
+  if (!inherits(x = lambda, what =  c("numeric", "integer"))){
+    stop('lambda must be a numeric value')
+  }
+  if (sum(lambda < 0) > 0){
     stop('lambda must be 0 or greater')
-  if (!class(lambda) %in% c("numeric", "integer"))
-    stop('lambda must be a numeric value >= 0')
-  if (sum(alpha < 0)>0)
+  }
+  if(!inherits(x = alpha, what =  c("numeric", "integer"))){
+    stop('alpha must be a numeric value')
+  }
+  if (sum(alpha < 0) > 0){
     stop('alpha must be 0 or greater')
-  if (!class(alpha) %in% c("numeric", "integer"))
-    stop('alpha must be a numeric value >= 0')
-  if (sum(scalePosWeight < 0)>0)
-    stop('scalePosWeight must be 0 or greater')
-  if (!class(scalePosWeight) %in% c("numeric", "integer"))
+  }
+  if (!inherits(x = scalePosWeight, what =  c("numeric", "integer"))){
     stop('scalePosWeight must be a numeric value >= 0')
+  }
+  if (sum(scalePosWeight < 0) > 0){
+    stop('scalePosWeight must be 0 or greater')
+  }
+
+  paramGrid <- list(
+      ntrees = ntrees, 
+      earlyStopRound = earlyStopRound,
+      maxDepth = maxDepth, 
+      minChildWeight = minChildWeight, 
+      learnRate = learnRate,
+      lambda = lambda,
+      alpha = alpha,
+      scalePosWeight = scalePosWeight
+      )
   
-  
-  param <- split(
-    expand.grid(
-      ntrees=ntrees, 
-      earlyStopRound=earlyStopRound,
-      maxDepth=maxDepth, 
-      minChildWeight=minChildWeight, 
-      learnRate=learnRate,
-      lambda=lambda,
-      alpha=alpha,
-      scalePosWeight=scalePosWeight
-      ),
-    1:(length(ntrees)*length(maxDepth)*length(minChildWeight)*length(learnRate)*
-         length(earlyStopRound)*length(lambda)*length(alpha)*length(scalePosWeight))
-  )
+  param <- listCartesian(paramGrid)
   
   attr(param, 'settings') <- list(
-    modeType = 'Xgboost',
+    modelType = 'Xgboost',
     seed = seed[[1]],
     modelName = "Gradient Boosting Machine",
     threads = nthread[1],
@@ -144,7 +159,7 @@ predictXgboost <- function(
   cohort
   ){
   
-  if(class(data) == 'plpData'){
+  if(inherits(data , 'plpData')){
     # convert
     matrixObjects <- toSparseM(
       plpData = data, 
@@ -162,7 +177,7 @@ predictXgboost <- function(
     newData <- data
   }
   
-  if(class(plpModel) == 'plpModel'){
+  if(inherits(plpModel, 'plpModel')){
     model <- plpModel$model
   } else{
     model <- plpModel
