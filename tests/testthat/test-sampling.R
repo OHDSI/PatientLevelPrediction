@@ -150,6 +150,8 @@ test_that("underSampleData works", {
   
   underSampleData <- underSampleData(trainData, sampleSettings)
   
+  expect_true(inherits(underSampleData, 'plpData')) # add test based on github issue
+  
   # the sampled data should be smaller...
   expect_true(nrow(underSampleData$labels) <= nrow(trainData$labels))
   
@@ -164,3 +166,30 @@ test_that("underSampleData works", {
   
 })
 
+
+test_that("overSampleData works", {
+  
+  trainData <- createTrainData(plpData, population)
+  
+  sampleSettings <- list(
+    sampleSeed = 1,
+    numberOutcomestoNonOutcomes = 0.5
+  )
+  
+  overSampleData <- overSampleData(trainData, sampleSettings)
+  
+  expect_true(inherits(overSampleData, 'plpData')) # add test based on github issue
+  
+  # the sampled data should be smaller...
+  expect_true(nrow(overSampleData$labels) >= nrow(trainData$labels))
+  
+  expect_true(nrow(overSampleData$folds) >= nrow(trainData$folds))
+  
+  expect_true(
+    overSampleData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull() >= trainData$covariateData$covariates  %>% dplyr::tally() %>% dplyr::pull()
+  )
+  
+  # perhaps add manual data test
+  
+  
+})
