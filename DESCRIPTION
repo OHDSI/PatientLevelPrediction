@@ -41,7 +41,6 @@ Imports:
     PRROC,
     reticulate (> 1.16),
     rlang,
-    rms,
     RSQLite,
     SqlRender (>= 1.1.3),
     survival,
