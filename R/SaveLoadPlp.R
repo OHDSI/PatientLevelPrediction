@@ -590,7 +590,8 @@ extractDatabaseToCsv <- function(
   # get the table names using the function in uploadToDatabase.R
   tables <- getPlpResultTables()
   
-  # extract result per table
+  # extract result per table - give option to extract from different cohort/database tables?
+  modelLocations <- list()
   for(table in tables){
     sql <- "select * from @resultSchema.@appendtotable@tablename"
     sql <- SqlRender::render(
@@ -605,11 +606,38 @@ extractDatabaseToCsv <- function(
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema)
     result <- DatabaseConnector::querySql(conn, sql)
     
+    # get the model locations
+    if(table == 'MODELS'){
+      modelLocations <- result$PLP_MODEL_FILE
+    }
+    
+    # lower case for consistency in sharing csv results
+    colnames(result) <- tolower(colnames(result))
+    
     # save the results as a csv
     readr::write_excel_csv(
       x = result, 
-      file = file.path(csvFolder, paste0(fileAppend,table,'.csv'))
+      file = file.path(csvFolder, paste0(fileAppend,tolower(table),'.csv'))
       )
+  }
+  
+  
+  # load plpModels from database file and save into csv file
+  if(length(modelLocations)>0){
+    if(!dir.exists(file.path(csvFolder, 'models'))){
+      dir.create(file.path(csvFolder, 'models'), recursive = T)
+    }
+    for(modelLocation in modelLocations){
+      modelLocAppend <- strsplit(x = modelLocation, split = '/')[[1]][length(strsplit(x = modelLocation, split = '/')[[1]])]
+      plpModel <- tryCatch(
+        {
+          PatientLevelPrediction::loadPlpModel(file.path(modelLocation))
+        }, error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+      )
+      if(!is.null(plpModel)){
+        PatientLevelPrediction::savePlpModel(plpModel, file.path(csvFolder, 'models', modelLocAppend))
+      }
+    }
   }
   
   return(invisible(NULL))

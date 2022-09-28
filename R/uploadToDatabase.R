@@ -41,24 +41,18 @@ insertRunPlpToSqlite <- function(
     tablePrefix = ''
   )
   
-  cohortDefinitions <- list(
-    list(id = runPlp$model$modelDesign$targetId, name = 'Target'),
-    list(id = runPlp$model$modelDesign$outcomeId, name = 'Outcome')
-  )
-  
-  databaseList <- createDatabaseList(
-    cdmDatabaseSchemas = c(
-      runPlp$model$trainDetails$developmentDatabase,
-      unlist(lapply(externalValidatePlp, function(x) x$model$validationDetails$validationDatabase))
-    )
-  )
-  
+  #cohortDefinitions <- data.frame(
+  #  cohortId = c(runPlp$model$modelDesign$targetId, runPlp$model$modelDesign$outcomeId),
+  #  cohortName = c('Target', 'Outcome'),
+  #  json = c('{}', '{}')
+  #  )
+    
   addRunPlpToDatabase(
     runPlp = runPlp,
     conn = conn,
     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
-    cohortDefinitions = cohortDefinitions,
-    databaseList = databaseList, 
+    cohortDefinitions = NULL,#cohortDefinitions,
+    databaseList = NULL, 
     modelSaveLocation = sqliteLocation
   )
   
@@ -72,8 +66,8 @@ insertRunPlpToSqlite <- function(
               runPlp = externalValidatePlp[[i]],
               conn = conn,
               databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
-              cohortDefinitions = cohortDefinitions,
-              databaseList = databaseList, 
+              cohortDefinitions = NULL,#cohortDefinitions,
+              databaseList = NULL, 
               modelSaveLocation = sqliteLocation
             )
           }, error = function(e){ParallelLogger::logError(e)}
@@ -90,8 +84,8 @@ insertRunPlpToSqlite <- function(
           diagnosePlp = diagnosePlp,
           conn = conn,
           databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
-          cohortDefinitions = cohortDefinitions,
-          databaseList = databaseList
+          cohortDefinitions = NULL,#cohortDefinitions,
+          databaseList = NULL
         )
       }, error = function(e){ParallelLogger::logError(e)}
     )
@@ -109,7 +103,7 @@ insertRunPlpToSqlite <- function(
 #' This function can be used upload PatientLevelPrediction results into an sqlite database
 #'
 #' @param resultLocation               (string) location of directory where the main package results were saved
-#' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
+#' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
 #' @param databaseList             A list created by \code{createDatabaseList} to specify the databases
 #' @param sqliteLocation               (string) location of directory where the sqlite database will be saved
 #'    
@@ -120,9 +114,7 @@ insertRunPlpToSqlite <- function(
 insertResultsToSqlite <- function(
   resultLocation, 
   cohortDefinitions,
-  databaseList = createDatabaseList(
-    cdmDatabaseSchemas = c('cdm_truven_ccae_v123', 'cdm_madeup_v1')
-  ),
+  databaseList = NULL,
   sqliteLocation = file.path(resultLocation, 'sqlite')
 ){
   
@@ -138,7 +130,7 @@ insertResultsToSqlite <- function(
   conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn))
   
-  tablesExists <- sum(getPlpResultTables() %in% DatabaseConnector::getTableNames(conn))
+  tablesExists <- sum(toupper(getPlpResultTables()) %in% toupper(DatabaseConnector::getTableNames(conn)))
   tablesExists <- tablesExists == length(getPlpResultTables())
   
   if(!tablesExists){
@@ -277,8 +269,8 @@ createPlpResultTables <- function(
 #'                                     function \code{connect} in the
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
-#' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
-#' @param databaseList              A list created by \code{createDatabaseList} to specify the databases
+#' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
+#' @param databaseList              (Optional) A list created by \code{createDatabaseList} to specify the databases
 #' @param resultLocation               (string) location of directory where the main package results were saved
 #' @param resultLocationVector         (only used when resultLocation is missing) a vector of locations with development or validation results  
 #' @param modelSaveLocation              The location of the file system for saving the models in a subdirectory  
@@ -290,9 +282,7 @@ createPlpResultTables <- function(
 addMultipleRunPlpToDatabase <- function(conn, 
                                     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
                                     cohortDefinitions,
-                                    databaseList = createDatabaseList(
-                                      cdmDatabaseSchemas = c('cdm_truven_ccae_v123', 'cdm_madeup_v1')
-                                    ),
+                                    databaseList = NULL,
                                     resultLocation = NULL,
                                     resultLocationVector,
                                     modelSaveLocation
@@ -386,10 +376,10 @@ createDatabaseSchemaSettings <- function(
     tablePrefix = tablePrefix,
     targetDialect = targetDialect,
     tempEmulationSchema = tempEmulationSchema,
-    cohortDefinitionSchema  = cohortDefinitionSchema,
-    tablePrefixCohortDefinitionTables = tablePrefixCohortDefinitionTables,
-    databaseDefinitionSchema = databaseDefinitionSchema,
-    tablePrefixDatabaseDefinitionTables = tablePrefixDatabaseDefinitionTables
+    cohortDefinitionSchema  = cohortDefinitionSchema, # could be removed
+    tablePrefixCohortDefinitionTables = tablePrefixCohortDefinitionTables, # could be removed
+    databaseDefinitionSchema = databaseDefinitionSchema, # could be removed
+    tablePrefixDatabaseDefinitionTables = tablePrefixDatabaseDefinitionTables # could be removed
   )
   
   class(result) <- 'plpDatabaseResultSchema'
@@ -397,18 +387,16 @@ createDatabaseSchemaSettings <- function(
 }
 
 
-#' Create a data frame with the database details
+#' Create a list with the database details and database meta data entries
 #' @description
-#' This function creates a data.frame with the details of the databases used in the study
+#' This function creates a list with the database details and database meta data entries used in the study
 #'
 #' @details
 #' This function is used when inserting database details into the PatientLevelPrediction database results schema
 #' 
-#' @param cdmDatabaseSchemas           (string vector) A vector of the cdmDatabaseSchemas used in the study
-#' @param acronyms                     (optional string vector) A vector of the acronyms for the cdmDatabaseSchemas
-#' @param versions                     (optional string vector) A vector of the database versions for the cdmDatabaseSchemas
-#' @param descriptions                 (optional string vector) A vector of the database descriptions for the cdmDatabaseSchemas
-#' @param types                        (optional string vector) A vector of the data types (e.g., claims or EHR) for the cdmDatabaseSchemas
+#' @param cdmDatabaseSchemas           (string vector) A vector of the cdmDatabaseSchemas used in the study - if the schemas are not unique per database please also specify databaseRefId
+#' @param cdmDatabaseNames             Sharable names for the databases
+#' @param databaseRefIds               (string vector) Unique database identifiers - what you specified as cdmDatabaseId in \code{PatientLevelPrediction::createDatabaseDetails()} when developing the models
 #'
 #' @return
 #' Returns a data.frame with the database details
@@ -416,41 +404,49 @@ createDatabaseSchemaSettings <- function(
 #' @export
 createDatabaseList <- function(
   cdmDatabaseSchemas,
-  acronyms,
-  versions, 
-  descriptions,
-  types
+  cdmDatabaseNames,
+  databaseRefIds = NULL
 ){
   if(missing(cdmDatabaseSchemas)){
     stop('Need to specify cdmDatabaseSchemas')
   }
   
-  if(missing(acronyms)){
-    acronyms <- cdmDatabaseSchemas
+  if(is.null(databaseRefIds)){
+    ParallelLogger::logInfo('No databaseRefId specified so using schema as unique database identifier')
+    databaseRefIds <- removeInvalidString(cdmDatabaseSchemas)
   }
-  if(missing(versions)){
-    versions <- rep(0, length(cdmDatabaseSchemas))
+  if(missing(cdmDatabaseNames)){
+    cdmDatabaseNames <- removeInvalidString(cdmDatabaseSchemas)
   }
-  if(missing(descriptions)){
-    descriptions <- rep('', length(cdmDatabaseSchemas))
-  }
-  if(missing(types)){
-    types <- rep('', length(cdmDatabaseSchemas))
-  }
+  
   
   result <- lapply(
     1:length(cdmDatabaseSchemas),
     
     function(i) list(
-      name = cdmDatabaseSchemas[i],
-      acronym = acronyms[i],
-      version = versions[i],
-      description = descriptions[i],
-      type = types[i]
+      databaseDetails = list(
+        databaseMetaDataId = databaseRefIds[i]
+      ),
+      databaseMetaData = list(
+        databaseId = databaseRefIds[i],
+        cdmSourceName = cdmDatabaseSchemas[i],
+        cdmSourceAbbreviation = cdmDatabaseNames[i],
+        cdmHolder = '', # could get this from CDM_source inside runPlp in future
+        sourceDesciption = '',
+        sourceDocumentReference = '',
+        cdmEtlReference = '', 
+        sourceReleaseDate = '',
+        cdmReleaseDate = '',
+        cdmVersion = '',
+        vocabularyVersion = '',
+        maxObsPeriodEndDate = ''
+      )
     )
   )
   
-  names(result) <- cdmDatabaseSchemas
+  names(result) <- databaseRefIds #cdmDatabaseSchemas
+  # using id as schema may not be unique
+  # id uses schema if it is not set
 
   return(result)
 }
@@ -469,10 +465,10 @@ createDatabaseList <- function(
 #'                                     function \code{connect} in the
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
-#' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
-#' @param databaseList              A list created by \code{createDatabaseList} to specify the databases
+#' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
 #' @param modelSaveLocation         The location of the directory that models will be saved to
-#'
+#' @param databaseList              (Optional) If you want to change the database name then used \code{createDatabaseList} to specify the database settings but use the same cdmDatabaseId was model development/validation
+#' 
 #' @return
 #' Returns a data.frame with the database details
 #' 
@@ -482,8 +478,8 @@ addRunPlpToDatabase <- function(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList,
-  modelSaveLocation
+  modelSaveLocation,
+  databaseList = NULL
 ){
   
   modelDesignId <- insertModelDesignInDatabase(
@@ -498,6 +494,8 @@ addRunPlpToDatabase <- function(
     includesModel <- T
     developmentDatabase <- runPlp$model$trainDetails$developmentDatabase
     validationDatabase <- runPlp$model$trainDetails$developmentDatabase
+    developmentDatabaseRefId <- runPlp$model$trainDetails$developmentDatabaseId
+    validationDatabaseRefId <- runPlp$model$trainDetails$developmentDatabaseId
     
     populationSettings <- runPlp$model$modelDesign$populationSettings
     targetId <- runPlp$model$modelDesign$targetId
@@ -507,11 +505,13 @@ addRunPlpToDatabase <- function(
     modelDevelopment <- 1 #added
     
     attrition <- runPlp$model$trainDetails$attrition
-    
+
   } else{
     includesModel <- F
     developmentDatabase <- runPlp$model$validationDetails$developmentDatabase
     validationDatabase <- runPlp$model$validationDetails$validationDatabase
+    developmentDatabaseRefId <- runPlp$model$validationDetails$developmentDatabaseId
+    validationDatabaseRefId <- runPlp$model$validationDetails$validationDatabaseId
     
     populationSettings <- runPlp$model$validationDetails$populationSettings
     targetId <- runPlp$model$validationDetails$targetId
@@ -528,18 +528,17 @@ addRunPlpToDatabase <- function(
   developmentDatabaseId <- addDatabase(
     conn = conn, 
     databaseSchemaSettings = databaseSchemaSettings,
-    databaseDetail = getDatabaseDetail(
-      databaseList = databaseList,
-      databaseSchema = developmentDatabase
-    )
+    databaseList = databaseList,
+    databaseSchema = developmentDatabase, 
+    databaseId = developmentDatabaseRefId
   )
+  
   validationDatabaseId <- addDatabase(
     conn = conn, 
     databaseSchemaSettings = databaseSchemaSettings,
-    databaseDetail = getDatabaseDetail(
-      databaseList = databaseList,
-      databaseSchema = validationDatabase
-    )
+    databaseList = databaseList,
+    databaseSchema = validationDatabase,
+    databaseId = validationDatabaseRefId
   )
   
   
@@ -572,10 +571,7 @@ addRunPlpToDatabase <- function(
     conn = conn, 
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
-    cohortDefinition = getCohortDefinitionJson(
-      cohortDefinitions = cohortDefinitions,
-      cohortId = targetId
-    ),
+    cohortDefinition = getCohortDef(cohortDefinitions,targetId),
     tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
@@ -584,10 +580,7 @@ addRunPlpToDatabase <- function(
     conn = conn, 
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema, 
     targetDialect = databaseSchemaSettings$targetDialect,
-    cohortDefinition = getCohortDefinitionJson(
-      cohortDefinitions = cohortDefinitions,
-      cohortId = outcomeId
-    ),
+    cohortDefinition = getCohortDef(cohortDefinitions,outcomeId),
     tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
@@ -887,78 +880,12 @@ getPlpResultTables <- function(){
       "TARS", 
       
       "DATABASE_DETAILS",
+      "DATABASE_META_DATA",
+      "COHORT_DEFINITION",
       "COHORTS"
     )
   )
 }
-
-# get the database detail list for a specified database schema
-
-#' Get the database details
-#' @description
-#' This function extracts the database details from a list of details
-#'
-#' @details
-#' This function extracts the database details from a list of details
-#' 
-#' @param databaseList              A list created by \code{createDatabaseList} to specify the databases
-#' @param databaseSchema               The database schema string
-#'
-#' @return
-#' Returns a list with the database details
-#' 
-#' @export
-getDatabaseDetail <- function(
-  databaseList,
-  databaseSchema
-){
-  
-  ind <- which(names(databaseList) == databaseSchema)
-  
-  if(length(ind) == 0){
-    return(
-      list(
-        name = databaseSchema,
-        acronym = '',
-        version = 1,
-        description = '',
-        type = ''
-      )
-    )
-  }else{
-    return(databaseList[[ind]])
-  }
-  
-}
-
-#' Get the cohort definition from a list of definitions
-#' @description
-#' This function extracts the cohort definition from a list
-#'
-#' @details
-#' This function extracts the cohort definition from a list
-#' 
-#' @param cohortDefinitions      A list of cohortDefinitions
-#' @param cohortId               The cohortId to extract the cohortDefinition for
-#'
-#' @return
-#' Returns a list with the cohort definition R object
-#' 
-#' @export
-getCohortDefinitionJson <- function(cohortDefinitions, cohortId){
-  
-  if(is.null(cohortDefinitions)){
-    ParallelLogger::logInfo('No cohortDefinitions - not possible to get cohort name')
-    return(list(id = cohortId, name = paste0('Cohort: ', cohortId)))
-  }
-  
-  #cohort_name, cohort_id and cohort_json
-  ParallelLogger::logInfo(paste0('Adding cohorts from input list'))
-  id <- which(unlist(lapply(cohortDefinitions, function(x){x$id == cohortId})))[1]
-  
-  return(cohortDefinitions[[id]])
-}
-
 
 getResultLocations <- function(resultLocation){
   # get the model locations...
@@ -1141,20 +1068,37 @@ checkJson <- function(conn,
 }
 
 
+getCohortDef <- function(cohortDefinitions, cohortId){
+  if(!is.null(cohortDefinitions)){
+    if(sum(cohortDefinitions$cohortId == cohortId) > 0){
+      return(cohortDefinitions[cohortDefinitions$cohortId == cohortId, ])
+    }
+  }
+  return(
+    data.frame(
+      cohortId = cohortId, 
+      cohortName = paste0('Cohort: ', cohortId),
+      json = '{}'
+    )
+  )
+}
 
 
 # adds json from package unless json is specified
-addCohort <- function(conn, resultSchema, targetDialect,
-                      tablePrefix = '',
-                      cohortDefinition, # this is the R list of the cohortDefinition
-                      tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
+addCohort <- function(
+  conn, 
+  resultSchema, 
+  targetDialect,
+  tablePrefix = '',
+  cohortDefinition, # this is the R data.frame of the cohortDefinition
+  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")
 ){
   
   
   # make sure the json has been converted 
-  if(!inherits(x = cohortDefinition, what = 'character')){
+  json <- cohortDefinition$json
+  if(!inherits(x = json , what = 'character')){
     ParallelLogger::logInfo('converting json to character')
-    json <- ParallelLogger::convertSettingsToJson(cohortDefinition)
     json <- as.character(json) # now convert to character
   }
   
@@ -1163,41 +1107,94 @@ addCohort <- function(conn, resultSchema, targetDialect,
     json <-  substr(json, 1, 4000) # TESTING - FIX THIS [TODO]
   }
   
-  #check whether cohort already in table:
+  #check whether cohort already in COHORT_DEFINITION table:
   result <- checkTable(conn = conn, 
                        resultSchema = resultSchema, 
                        tablePrefix = tablePrefix,
                        targetDialect = targetDialect, 
-                       tableName = 'cohorts',
+                       tableName = 'cohort_definition',
                        columnNames = c('cohort_name'), 
-                       values = c(paste0("'",cohortDefinition$name,"'")),
+                       values = c(paste0("'",cohortDefinition$cohortName,"'")),
                        tempEmulationSchema = tempEmulationSchema
   )
   
   addNew <- F
   if(nrow(result)>0){
-    addNew <- json %in% result$cohortJson
+    addNew <- json %in% result$json
     ParallelLogger::logInfo(paste0('json in jsons:', addNew))
   }
   
   if(addNew){
-    ParallelLogger::logInfo(paste0('Cohort ',cohortDefinition$name,' exists in result database with id', result$cohortId))
+    cohortDefinitionId <- result$cohortDefinitionId[result$json %in% json]
+    ParallelLogger::logInfo(paste0('Cohort ',cohortDefinition$cohortName,' exists in cohort_definition with cohort id', result$cohortDefinitionId[result$json %in% json]))
   } else{
-    ParallelLogger::logInfo(paste0('Adding cohort ',cohortDefinition$name))
+    ParallelLogger::logInfo(paste0('Adding cohort ',cohortDefinition$cohortName))
     
-    data <- data.frame(cohortName = cohortDefinition$name, 
-                       atlasId = cohortDefinition$id,
-                       cohortJson = json)
-    DatabaseConnector::insertTable(connection = conn, 
-                                   databaseSchema = resultSchema, 
-                                   tableName = paste0(tablePrefix, 'cohorts'),
-                                   data = data,
-                                   dropTableIfExists = F, 
-                                   createTable = F, 
-                                   tempTable = F, 
-                                   progressBar = T,
-                                   camelCaseToSnakeCase = T, 
-                                   tempEmulationSchema = tempEmulationSchema
+    data <- data.frame(
+      cohortName = cohortDefinition$cohortName, 
+      cohortDefinitionId = cohortDefinition$cohortId,
+      json = json
+    )
+    DatabaseConnector::insertTable(
+      connection = conn, 
+      databaseSchema = resultSchema, 
+      tableName = paste0(tablePrefix, 'cohort_definition'),
+      data = data,
+      dropTableIfExists = F, 
+      createTable = F, 
+      tempTable = F, 
+      progressBar = T,
+      camelCaseToSnakeCase = T, 
+      tempEmulationSchema = tempEmulationSchema
+    )
+    
+    # now check and get id
+    result <- checkTable(
+      conn = conn, 
+      resultSchema = resultSchema, 
+      tablePrefix = tablePrefix,
+      targetDialect = targetDialect, 
+      tableName = 'cohort_definition',
+      columnNames = c('cohort_name', 'cohort_definition_id'), 
+      values = c(paste0("'",cohortDefinition$cohortName,"'"), cohortDefinition$cohortId),
+      tempEmulationSchema = tempEmulationSchema
+    )
+    
+    jsonInd <- result$json %in% json
+    cohortDefinitionId <- result$cohortDefinitionId[jsonInd]
+  }
+  
+  # now add to cohorts table
+  result <- checkTable(conn = conn, 
+                       resultSchema = resultSchema, 
+                       tablePrefix = tablePrefix,
+                       targetDialect = targetDialect, 
+                       tableName = 'cohorts',
+                       columnNames = c('cohort_definition_id','cohort_name'), 
+                       values = c(cohortDefinitionId, paste0("'",cohortDefinition$cohortName,"'")),
+                       tempEmulationSchema = tempEmulationSchema
+  )
+  
+  if(nrow(result)>0){
+    ParallelLogger::logInfo(paste0('Cohort ',cohortDefinition$cohortName,' exists in cohorts with cohort id', result$cohortId))
+  } else{
+    ParallelLogger::logInfo(paste0('Adding cohort ',cohortDefinition$cohortName))
+    
+    data <- data.frame(
+      cohortDefinitionId = cohortDefinitionId,
+      cohortName = cohortDefinition$cohortName
+    )
+    DatabaseConnector::insertTable(
+      connection = conn, 
+      databaseSchema = resultSchema, 
+      tableName = paste0(tablePrefix, 'cohorts'),
+      data = data,
+      dropTableIfExists = F, 
+      createTable = F, 
+      tempTable = F, 
+      progressBar = T,
+      camelCaseToSnakeCase = T, 
+      tempEmulationSchema = tempEmulationSchema
     )
     
     # now check and get id
@@ -1206,14 +1203,10 @@ addCohort <- function(conn, resultSchema, targetDialect,
                          tablePrefix = tablePrefix,
                          targetDialect = targetDialect, 
                          tableName = 'cohorts',
-                         columnNames = c('cohort_name', 'atlas_id'), 
-                         values = c(paste0("'",cohortDefinition$name,"'"), cohortDefinition$id),
+                         columnNames = c('cohort_definition_id','cohort_name'), 
+                         values = c(cohortDefinitionId, paste0("'",cohortDefinition$cohortName,"'")),
                          tempEmulationSchema = tempEmulationSchema
     )
-    
-    jsonInd <- result$cohortJson %in% json
-    result <- result[jsonInd,]
-    
   }
   
   return(result$cohortId[1])
@@ -1224,40 +1217,96 @@ addCohort <- function(conn, resultSchema, targetDialect,
 addDatabase <- function(
   conn, 
   databaseSchemaSettings,
-  databaseDetail
+  databaseList = NULL, # list with the database details
+  databaseId = NULL, # the database id
+  databaseSchema # the database schema
 ){
+  
+  if(is.null(databaseId)){
+    databaseId <- removeInvalidString(databaseSchema)
+  }
+  
+  # get the database tables for the databaseId 
+  if(is.null(databaseList)){
+    databaseDataFrames <- createDatabaseList(cdmDatabaseSchemas = databaseSchema, databaseRefIds = databaseId)[[1]]
+  } else{
+    if(databaseId %in% names(databaseList)){
+      databaseDataFrames <- databaseList[[databaseId]]
+    } else{
+      ParallelLogger::logInfo('database ID not found in databaseList so added new entry')
+      databaseDataFrames <- createDatabaseList(cdmDatabaseSchemas = databaseSchema, databaseRefIds = databaseId)[[1]]
+    }
+  }
+  
+  
+  # check the database_meta_data
+  result <- checkTable(conn = conn, 
+                       resultSchema = databaseSchemaSettings$resultSchema, 
+                       tablePrefix = databaseSchemaSettings$tablePrefix,
+                       targetDialect = databaseSchemaSettings$targetDialect, 
+                       tableName = 'database_meta_data',
+                       columnNames = c('database_id'), 
+                       values = c(paste0("'",databaseDataFrames$databaseMetaData$databaseId,"'")),
+                       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
+  )
+  
+  if(nrow(result)>0){
+    ParallelLogger::logInfo(paste0('Database meta data ', databaseDataFrames$database_meta_data$databaseId ,' already exists'))
+  } else {
+    
+    sql <- "INSERT INTO @my_schema.@string_to_appenddatabase_meta_data(
+      database_id,
+      cdm_source_name,
+      cdm_source_abbreviation
+    ) 
+          VALUES ('@database_id','@cdm_source_name', '@cdm_source_abbreviation');"
+    sql <- SqlRender::render(
+      sql, 
+      my_schema = databaseSchemaSettings$resultSchema,
+      database_id = databaseDataFrames$databaseMetaData$databaseId, 
+      cdm_source_name = databaseDataFrames$databaseMetaData$cdmSourceName,
+      cdm_source_abbreviation = databaseDataFrames$databaseMetaData$cdmSourceAbbreviation,
+      string_to_append = databaseSchemaSettings$tablePrefix
+    )
+    sql <- SqlRender::translate(sql, targetDialect = databaseSchemaSettings$targetDialect,
+                                tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema)
+    DatabaseConnector::executeSql(conn, sql)
+    
+    result <- checkTable(conn = conn, 
+                         resultSchema = databaseSchemaSettings$resultSchema, 
+                         tablePrefix = databaseSchemaSettings$tablePrefix,
+                         targetDialect = databaseSchemaSettings$targetDialect, 
+                         tableName = 'database_meta_data',
+                         columnNames = c('database_id', 'cdm_source_name',
+                                         'cdm_source_abbreviation'), 
+                         values = c(paste0("'",databaseDataFrames$databaseMetaData$databaseId,"'"), 
+                                    paste0("'",databaseDataFrames$databaseMetaData$cdmSourceName,"'"),
+                                    paste0("'",databaseDataFrames$databaseMetaData$cdmSourceAbbreviation,"'")),
+                         tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
+    )
+    
+  }
   
   result <- checkTable(conn = conn, 
                        resultSchema = databaseSchemaSettings$resultSchema, 
                        tablePrefix = databaseSchemaSettings$tablePrefix,
                        targetDialect = databaseSchemaSettings$targetDialect, 
                        tableName = 'database_details',
-                       columnNames = c('database_name', 'database_acronym',
-                                       'database_version',
-                                       'database_description', 'database_type'), 
-                       values = c(paste0("'",databaseDetail$name,"'"), 
-                                  paste0("'",databaseDetail$acronym,"'"),
-                                  databaseDetail$version,
-                                  paste0("'",databaseDetail$description,"'"),
-                                  paste0("'",databaseDetail$type,"'")),
+                       columnNames = c('database_meta_data_id'), 
+                       values = c(paste0("'",databaseDataFrames$databaseDetails$databaseMetaDataId,"'")
+                                  ),
                        tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   
   if(nrow(result)>0){
-    ParallelLogger::logInfo(paste0('Database ', databaseDetail$name ,' already exists'))
+    ParallelLogger::logInfo(paste0('Database', result$databaseId ,' already exists'))
   } else {
     
-    sql <- "INSERT INTO @my_schema.@string_to_appenddatabase_details(database_name, database_acronym,
-                                  database_version,
-                                  database_description, database_type) 
-          VALUES ('@dbName','@db', @version, '@desc', '@type');"
+    sql <- "INSERT INTO @my_schema.@string_to_appenddatabase_details(database_meta_data_id) 
+          VALUES ('@database_meta_data_id');"
     sql <- SqlRender::render(sql, 
                              my_schema = databaseSchemaSettings$resultSchema,
-                             dbName =databaseDetail$name, 
-                             db = databaseDetail$acronym,
-                             version = databaseDetail$version,
-                             desc = databaseDetail$description,
-                             type = databaseDetail$type,
+                             database_meta_data_id = databaseDataFrames$databaseDetails$databaseMetaDataId, 
                              string_to_append = databaseSchemaSettings$tablePrefix)
     sql <- SqlRender::translate(sql, targetDialect = databaseSchemaSettings$targetDialect,
                                 tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema)
@@ -1268,13 +1317,9 @@ addDatabase <- function(
                          tablePrefix = databaseSchemaSettings$tablePrefix,
                          targetDialect = databaseSchemaSettings$targetDialect, 
                          tableName = 'database_details',
-                         columnNames = c('database_name', 'database_acronym', 'database_version',
-                                         'database_description', 'database_type'), 
-                         values = c(paste0("'",databaseDetail$name,"'"), 
-                                    paste0("'",databaseDetail$acronym,"'"),
-                                    databaseDetail$version,
-                                    paste0("'",databaseDetail$description,"'"),
-                                    paste0("'",databaseDetail$type,"'")),
+                         columnNames = c('database_meta_data_id'), 
+                         values = c(paste0("'",databaseDataFrames$databaseDetails$databaseMetaDataId,"'")
+                         ),
                          tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
     )
     

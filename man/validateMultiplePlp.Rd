@@ -16,7 +16,7 @@ validateMultiplePlp(
 \arguments{
 \item{analysesLocation}{The location where the multiple plp analyses are}
 
-\item{validationDatabaseDetails}{The validation database settings created using \code{createDatabaseDetails()}}
+\item{validationDatabaseDetails}{A single or list of validation database settings created using \code{createDatabaseDetails()}}
 
 \item{validationRestrictPlpDataSettings}{The settings specifying the extra restriction settings when extracting the data created using \code{createRestrictPlpDataSettings()}.}
 

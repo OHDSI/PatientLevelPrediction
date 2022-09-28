@@ -26,7 +26,7 @@ runMultiplePlp(
 
 \item{cohortDefinitions}{A list of cohort definitions for the target and outcome cohorts}
 
-\item{logSettings}{The setting spexcifying the logging for the analyses created using \code{createLogSettings()}}
+\item{logSettings}{The setting specifying the logging for the analyses created using \code{createLogSettings()}}
 
 \item{saveDirectory}{Name of the folder where all the outputs will written to.}
 

@@ -26,7 +26,7 @@
 #' @param modelDesignList                A list of model designs created using \code{createModelDesign()}
 #' @param onlyFetchData                  Only fetches and saves the data object to the output folder without running the analysis.
 #' @param cohortDefinitions               A list of cohort definitions for the target and outcome cohorts
-#' @param logSettings                    The setting spexcifying the logging for the analyses created using \code{createLogSettings()}
+#' @param logSettings                    The setting specifying the logging for the analyses created using \code{createLogSettings()}
 #' @param saveDirectory                   Name of the folder where all the outputs will written to.
 #' @param sqliteLocation                 (optional) The location of the sqlite database with the results
 #' 
@@ -208,7 +208,9 @@ runMultiplePlp <- function(
       resultLocation = saveDirectory, 
       cohortDefinitions = cohortDefinitions,
       databaseList = createDatabaseList(
-        cdmDatabaseSchemas = databaseDetails$cohortDatabaseSchema
+        cdmDatabaseSchemas = databaseDetails$cohortDatabaseSchema,
+        cdmDatabaseNames = databaseDetails$cdmDatabaseName,
+        databaseRefIds = databaseDetails$cdmDatabaseId
       ),
       sqliteLocation = sqliteLocation
     )
@@ -442,7 +444,7 @@ loadPlpAnalysesJson <- function(
 #' are found and the connection and database settings for the new data
 #' 
 #' @param analysesLocation                The location where the multiple plp analyses are
-#' @param validationDatabaseDetails       The validation database settings created using \code{createDatabaseDetails()}
+#' @param validationDatabaseDetails       A single or list of validation database settings created using \code{createDatabaseDetails()}
 #' @param validationRestrictPlpDataSettings  The settings specifying the extra restriction settings when extracting the data created using \code{createRestrictPlpDataSettings()}.
 #' @param recalibrate                      A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')
 #' @param cohortDefinitions           A list of cohortDefinitions
@@ -461,7 +463,14 @@ validateMultiplePlp <- function(
   # add input checks 
   checkIsClass(analysesLocation, 'character')
   
-  checkIsClass(validationDatabaseDetails, 'databaseDetails')
+  if(inherits(validationDatabaseDetails, 'databaseDetails')){
+    validationDatabaseDetails <- list(validationDatabaseDetails)
+  }
+  lapply(
+    validationDatabaseDetails, 
+    function(x){checkIsClass(x, 'databaseDetails')}
+    )
+  
   checkIsClass(validationRestrictPlpDataSettings, 'restrictPlpDataSettings')
   
   checkIsClass(recalibrate, c('character', 'NULL'))
@@ -520,19 +529,20 @@ validateMultiplePlp <- function(
     sqliteLocation <- file.path(saveDirectory,'sqlite')
   }
   
-  for(validationDatabase in dir(saveLocation)){
+  for(validationDatabaseDetail in validationDatabaseDetails){
     tryCatch({
       insertResultsToSqlite(
-        resultLocation = file.path(saveLocation, validationDatabase), 
+        resultLocation = file.path(saveLocation, validationDatabaseDetail$cdmDatabaseName), 
         cohortDefinitions = cohortDefinitions,
         databaseList = createDatabaseList(
-          cdmDatabaseSchemas = validationDatabase # 'none'
+          cdmDatabaseSchemas = validationDatabaseDetail$cdmDatabaseSchema,
+          cdmDatabaseNames = validationDatabaseDetail$cdmDatabaseName,
+          databaseRefIds = validationDatabaseDetail$cdmDatabaseId 
         ),
         sqliteLocation = sqliteLocation
       )
     })
   }
-  #=======================
   
 }
 
@@ -556,17 +566,19 @@ convertToJson <-function(
         }
       )
     )
+    cohortIds <- unique(cohortIds)
     
-    cohortDefinitions <- lapply(
-      X = unique(cohortIds), # dont want the same id repeated
-      FUN = function(x){
-        list(
-          id = x, 
-          name = paste0('Cohort: ', x)
-        )
-      }
+    cohortDefinitions <- data.frame(
+      cohortId = cohortIds,
+      cohortName = paste0('Cohort: ', cohortIds)
     )
-    
+      
+  } else{
+    cohortDefinitions <- cohortDefinitions %>% 
+      dplyr::select(
+        .data$cohortId, 
+        .data$cohortName
+        )
   }
   
   result <- data.frame(
@@ -584,20 +596,11 @@ convertToJson <-function(
     executeSettings = unlist(lapply(modelDesignList, function(x)  convertToJsonString(x$executeSettings)))
   )
   
-  if(!is.null(cohortDefinitions)){
-    
-    cohorts <- data.frame(
-      cohortName = unlist(lapply(cohortDefinitions, function(x) x$name)),
-      cohortId = unlist(lapply(cohortDefinitions, function(x) x$id))
-    )
-    
     result <- result %>% 
-      dplyr::left_join(cohorts, by = c("outcomeId" = "cohortId")) %>%
+      dplyr::left_join(cohortDefinitions, by = c("outcomeId" = "cohortId")) %>%
       dplyr::rename(outcomeName = .data$cohortName) %>%
-      dplyr::left_join(cohorts, by = c('targetId' = 'cohortId')) %>%
+      dplyr::left_join(cohortDefinitions, by = c('targetId' = 'cohortId')) %>%
       dplyr::rename(targetName = .data$cohortName) # new
-    
-  }
   
   # get the names
   uniqueSettings <-  result %>% 

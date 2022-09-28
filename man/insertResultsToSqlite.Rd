@@ -7,15 +7,14 @@
 insertResultsToSqlite(
   resultLocation,
   cohortDefinitions,
-  databaseList = createDatabaseList(cdmDatabaseSchemas = c("cdm_truven_ccae_v123",
-    "cdm_madeup_v1")),
+  databaseList = NULL,
   sqliteLocation = file.path(resultLocation, "sqlite")
 )
 }
 \arguments{
 \item{resultLocation}{(string) location of directory where the main package results were saved}
 
-\item{cohortDefinitions}{(list) A list of cohortDefinitions (each list must contain: name, id)}
+\item{cohortDefinitions}{A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()}
 
 \item{databaseList}{A list created by \code{createDatabaseList} to specify the databases}
 

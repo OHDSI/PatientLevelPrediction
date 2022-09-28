@@ -27,7 +27,7 @@ data extracted from the CDM.}
 An object of class \code{plpModel} containing:
 
 \item{model}{The trained prediction model}
-\item{preprocess}{The preprocessing required when applying the model}
+\item{preprocessing}{The preprocessing required when applying the model}
 \item{prediction}{The cohort data.frame with the predicted risk column added}
 \item{modelDesign}{A list specifiying the modelDesign settings used to fit the model}
 \item{trainDetails}{The model meta data}
