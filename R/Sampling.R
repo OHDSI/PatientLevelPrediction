@@ -151,6 +151,7 @@ underSampleData <- function(trainData, sampleSettings){
   
   # filter to these patients 
   sampleTrainData <- list()
+  class(sampleTrainData) <- 'plpData'
   sampleTrainData$labels <- trainData$labels %>% dplyr::filter(.data$rowId %in% pplOfInterest)
   sampleTrainData$folds <- trainData$folds %>% dplyr::filter(.data$rowId %in% pplOfInterest)
   
@@ -192,6 +193,7 @@ overSampleData <- function(trainData, sampleSettings){
                                  sum(population$outcomeCount == 0), ' non-outcomes'))
   
   sampleTrainData <- list()
+  class(sampleTrainData) <- 'plpData'
   sampleTrainData$labels <- trainData$labels %>% dplyr::collect()
   sampleTrainData$folds <- trainData$folds %>% dplyr::collect()
   
@@ -251,5 +253,5 @@ overSampleData <- function(trainData, sampleSettings){
   
   class(sampleTrainData$covariateData) <- 'CovariateData'
   
-  return(trainData)
+  return(sampleTrainData)
 }
