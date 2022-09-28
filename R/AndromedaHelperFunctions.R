@@ -55,40 +55,28 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000){
   newCovariateData <- Andromeda::andromeda(covariateRef = covariateData$covariateRef,
                                            analysisRef = covariateData$analysisRef)
   
-  maxRows <- RSQLite::dbGetQuery(covariateData, 
-                                 "SELECT count(*) as n FROM covariates;")
+  Andromeda::batchApply(covariateData$covariates, function(tempData) {
   
-  steps <- ceiling(maxRows$n/sizeN)
-  
-  
-  pb <- utils::txtProgressBar(style = 3)
-  
-  for(i in 1:steps){
-    utils::setTxtProgressBar(pb, i/steps)
+    filtered <- dplyr::inner_join(tempData, population, by = 'rowId')
     
-    offset <- ((i-1)*sizeN)
-    limit <- sizeN
-    
-    tempData <- RSQLite::dbGetQuery(covariateData, 
-                                    paste0("SELECT * FROM covariates LIMIT ",limit," OFFSET ",offset," ;"))
-    
-    filtered <- tempData %>% dplyr::inner_join(population, by = 'rowId')
-    
-    if(i==1){
+    if ("covariates" %in% names(newCovariateData)) {
+      Andromeda::appendToTable(newCovariateData$covariates, data = filtered)
+    } else {
       newCovariateData$covariates <- filtered
-    } else{
-      Andromeda::appendToTable(tbl = newCovariateData$covariates, 
-                               data = filtered)
     }
-  }
-  close(pb)
+  },
+  progressBar = TRUE,
+  batchSize = sizeN)
   
-  Andromeda::createIndex(tbl = newCovariateData$covariates, columnNames = 'covariateId', 
-    indexName = 'covariates_ncovariateIds')
-  Andromeda::createIndex(tbl = newCovariateData$covariates, c('rowId'),
-    indexName = 'covariates_rowId')
-  Andromeda::createIndex(tbl = newCovariateData$covariates, c('covariateId', 'covariateValue'),
-    indexName = 'covariates_covariateId_value')
+  Andromeda::createIndex(tbl = newCovariateData$covariates,
+                         columnNames = 'covariateId',
+                         indexName = 'covariates_ncovariateIds')
+  Andromeda::createIndex(tbl = newCovariateData$covariates,
+                         columnNames = 'rowId',
+                         indexName = 'covariates_rowId')
+  Andromeda::createIndex(tbl = newCovariateData$covariates,
+                         columnNames = c('covariateId', 'covariateValue'),
+                         indexName = 'covariates_covariateId_value')
   
   metaData$populationSize <- nrow(population)
   attr(newCovariateData, 'metaData') <- metaData
