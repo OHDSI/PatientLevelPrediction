@@ -27,6 +27,11 @@ addMultipleDiagnosePlpToDatabase <- function(
   
   diagnosisFiles <- file.path(resultLocation, dir(resultLocation, pattern = 'Analysis_'), 'diagnosePlp.rds')
   
+  if(length(diagnosisFiles) == 0){
+    ParallelLogger::logInfo('No diagnostic results found')
+    return(NULL)
+  }
+  
   for(diagnosisFile in diagnosisFiles){
     if(file.exists(diagnosisFile)){
       diagnosePlp <- readRDS(diagnosisFile)

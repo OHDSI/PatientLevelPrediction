@@ -43,7 +43,7 @@ fitCyclopsModel <- function(
   
   if (!is.null(param$priorCoefs)) {
     sourceCoefs <- param$priorCoefs %>%
-      dplyr::filter(abs(betas)>0 & covariateIds != "(Intercept)")
+      dplyr::filter(abs(.data$betas)>0 & .data$covariateIds != "(Intercept)")
     
     newCovariates <- covariates %>%
       dplyr::filter(.data$covariateId %in% !!sourceCoefs$covariateIds) %>%

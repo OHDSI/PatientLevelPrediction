@@ -24,6 +24,8 @@ insertRunPlpToSqlite <- function(
   
   sqliteLocation <- tempdir()
   
+  ensure_installed('RSQLite')
+  
   # create sqlite database
   connectionDetails <- DatabaseConnector::createConnectionDetails(
     dbms = 'sqlite',
@@ -121,6 +123,8 @@ insertResultsToSqlite <- function(
   if(!dir.exists(sqliteLocation)){
     dir.create(sqliteLocation, recursive = T)
   }
+  
+  ensure_installed('RSQLite')
   
   # create sqlite database
   connectionDetails <- DatabaseConnector::createConnectionDetails(
@@ -295,7 +299,7 @@ addMultipleRunPlpToDatabase <- function(conn,
   }
   
   if(length(resultLocationVector) == 0){
-    ParallelLogger::logError('No results found')
+    ParallelLogger::logInfo('No results found')
     return(NULL)
   }
   
