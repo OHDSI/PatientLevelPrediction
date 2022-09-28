@@ -444,7 +444,7 @@ loadPlpAnalysesJson <- function(
 #' are found and the connection and database settings for the new data
 #' 
 #' @param analysesLocation                The location where the multiple plp analyses are
-#' @param validationDatabaseDetails       The validation database settings created using \code{createDatabaseDetails()}
+#' @param validationDatabaseDetails       A single or list of validation database settings created using \code{createDatabaseDetails()}
 #' @param validationRestrictPlpDataSettings  The settings specifying the extra restriction settings when extracting the data created using \code{createRestrictPlpDataSettings()}.
 #' @param recalibrate                      A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')
 #' @param cohortDefinitions           A list of cohortDefinitions
@@ -463,7 +463,14 @@ validateMultiplePlp <- function(
   # add input checks 
   checkIsClass(analysesLocation, 'character')
   
-  checkIsClass(validationDatabaseDetails, 'databaseDetails')
+  if(inherits(validationDatabaseDetails, 'databaseDetails')){
+    validationDatabaseDetails <- list(validationDatabaseDetails)
+  }
+  lapply(
+    validationDatabaseDetails, 
+    function(x){checkIsClass(x, 'databaseDetails')}
+    )
+  
   checkIsClass(validationRestrictPlpDataSettings, 'restrictPlpDataSettings')
   
   checkIsClass(recalibrate, c('character', 'NULL'))
@@ -522,22 +529,20 @@ validateMultiplePlp <- function(
     sqliteLocation <- file.path(saveDirectory,'sqlite')
   }
   
-  #for(validationDatabase in dir(saveLocation)){ # why does this do all?
-  validationDatabase <- validationDatabaseDetails$cdmDatabaseName
+  for(validationDatabaseDetail in validationDatabaseDetails){
     tryCatch({
       insertResultsToSqlite(
-        resultLocation = file.path(saveLocation, validationDatabase), 
+        resultLocation = file.path(saveLocation, validationDatabaseDetail$cdmDatabaseName), 
         cohortDefinitions = cohortDefinitions,
         databaseList = createDatabaseList(
-          cdmDatabaseSchemas = validationDatabaseDetails$cdmDatabaseSchema,
-          cdmDatabaseNames = validationDatabaseDetails$cdmDatabaseName,
-          databaseRefIds = validationDatabaseDetails$cdmDatabaseId 
+          cdmDatabaseSchemas = validationDatabaseDetail$cdmDatabaseSchema,
+          cdmDatabaseNames = validationDatabaseDetail$cdmDatabaseName,
+          databaseRefIds = validationDatabaseDetail$cdmDatabaseId 
         ),
         sqliteLocation = sqliteLocation
       )
     })
-  #}
-  #=======================
+  }
   
 }
 

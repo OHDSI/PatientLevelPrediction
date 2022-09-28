@@ -284,13 +284,122 @@ extractDatabaseToCsv(
 
 testthat::expect_true(dir.exists(file.path(saveLoc, 'csvFolder')))
 testthat::expect_true(length(dir(file.path(saveLoc, 'csvFolder'))) > 0 )
-
+testthat::expect_true(dir.exists(file.path(saveLoc, 'csvFolder', 'models'))) # new
+testthat::expect_true(length(dir(file.path(saveLoc, 'csvFolder', 'models'))) > 0 ) # new
 # disconnect
 DatabaseConnector::disconnect(conn)
 
 
 })
+
+# importFromCsv test here as can use previous csv saving
+test_that("import from csv", {
   
+  
+  cohortDef <- extractCohortDefinitionsCSV(
+    csvFolder = file.path(saveLoc, 'csvFolder')
+  )
+  testthat::expect_true(inherits(cohortDef, 'data.frame'))
+  testthat::expect_true(ncol(cohortDef) == 4)
+  
+  databaseList <- extractDatabaseListCSV(
+    csvFolder = file.path(saveLoc, 'csvFolder')
+  )
+  testthat::expect_true(inherits(databaseList, 'list'))
+  testthat::expect_true(!is.null(databaseList[[1]]$databaseDetails))
+  testthat::expect_true(!is.null(databaseList[[1]]$databaseMetaData))
+  
+  # model designs work
+  modeldesignsRow <- data.frame(
+    target_id = 1, outcome_id = 2, population_setting_id = 1, 
+    plp_data_setting_id = 1, model_setting_id = 1, 
+    covariate_setting_id = 1, sample_setting_id = 1,
+    split_setting_id = 1, feature_engineering_setting_id =1	, 
+    tidy_covariates_setting_id = 1
+    )
+  res <- getModelDesignSettingTable(modeldesignsRow)
+  # expect res to be a data.frame, check values?
+  testthat::expect_true(inherits(res, 'data.frame'))
+  
+  modelDesign <- getModelDesignCsv(
+    modelDesignSettingTable = res, 
+    csvFolder = file.path(saveLoc, 'csvFolder')
+  ) 
+  testthat::expect_true(inherits(modelDesign, 'modelDesign'))
+  
+  # performance works
+  res <- getPerformanceEvaluationCsv(
+    performanceId = 1, 
+    csvFolder = file.path(saveLoc, 'csvFolder')
+  )
+  testthat::expect_true(inherits(res, 'list'))
+  testthat::expect_true(
+    sum(names(res) %in% 
+      c('evaluationStatistics', 'thresholdSummary',
+        'calibrationSummary', 'demographicSummary',
+        'predictionDistribution'
+      )
+    ) == 5
+  )
+  
+  
+  # test object extracts  
+  obj <- extractObjectFromCsv(
+    performanceId = 1, 
+    csvFolder = file.path(saveLoc, 'csvFolder')
+  )
+  testthat::expect_true(inherits(obj, 'externalValidatePlp') | inherits(obj, 'runPlp'))
+  
+  # test diagnostic extracted
+  diag <- extractDiagnosticFromCsv(
+    diagnosticId = 1, 
+    csvFolder = file.path(saveLoc, 'csvFolder')
+  )
+  testthat::expect_true(inherits(diag, 'diagnosePlp') | is.null(diag))
+  
+  
+  
+  # Testing everything together
+  csvServerLoc <- file.path(tempdir(), 'newCsvDatabase')
+  if(!dir.exists(file.path(tempdir(), 'newCsvDatabase'))){
+    dir.create(file.path(tempdir(), 'newCsvDatabase'), recursive = T)
+  }
+  newResultConn <- DatabaseConnector::createConnectionDetails(
+    dbms = 'sqlite', 
+    server = file.path(csvServerLoc,'newCsv.sqlite')
+    )
+  newResultConn <- DatabaseConnector::connect(newResultConn)
+  csvDatabaseSchemaSettings <-  PatientLevelPrediction::createDatabaseSchemaSettings(
+    resultSchema = 'main', 
+    tablePrefix = '', 
+    targetDialect = 'sqlite', 
+    tempEmulationSchema = NULL
+    )
+  
+  # create empty tables to insert csv into
+  PatientLevelPrediction::createPlpResultTables(
+    conn = newResultConn , 
+    targetDialect = 'sqlite', 
+    resultSchema = 'main', 
+    createTables = T, 
+    deleteTables = T, 
+    tablePrefix = '', 
+    tempEmulationSchema = NULL
+    )
+    
+  res <- insertCsvToDatabase(
+    csvFolder = file.path(saveLoc, 'csvFolder'),
+    conn = newResultConn,
+    databaseSchemaSettings = csvDatabaseSchemaSettings,
+    modelSaveLocation = file.path(csvServerLoc,'models'),
+    csvTableAppend = ''
+  )
+  testthat::expect_true(res)
+  
+  # check some of the tables
+  
+  
+})
 
 
 
