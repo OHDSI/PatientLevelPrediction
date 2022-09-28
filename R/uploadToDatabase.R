@@ -294,6 +294,11 @@ addMultipleRunPlpToDatabase <- function(conn,
     resultLocationVector <- getResultLocations(resultLocation)
   }
   
+  if(length(resultLocationVector) == 0){
+    ParallelLogger::logError('No results found')
+    return(NULL)
+  }
+  
   for(runPlpLocation in resultLocationVector){
     ParallelLogger::logInfo(paste0('Inserting result @ ', runPlpLocation, ' into database'))
     
