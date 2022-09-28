@@ -1,5 +1,5 @@
 ---
-title: "Patient-Level Prediction Installation Guide"
+title: "Patient-Level Prediction V5.1.0 Installation Guide"
 author: "Jenna Reps, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
 header-includes:
@@ -48,7 +48,6 @@ Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires in
 * Rstudio (https://www.rstudio.com/  )
 * Java (http://www.java.com )
 * Xcode command line tools(run in terminal: xcode-select --install) [MAC USERS ONLY]
-
 
 
 # Installing the Package
@@ -133,6 +132,24 @@ The list below provides solutions for some common issues:
 1. If you have an error when trying to install a package in R saying **'Dependancy X not available ...'** then this can sometimes be fixed by running `install.packages('X')` and then once that completes trying to reinstall the package that had the error.
 
 2. I have found that using the github `remotes`` to install packages can be impacted if you have **multiple R sessions** open as one session with a library open can cause the library to be locked and this can prevent an install of a package that depends on that library.
+
+
+## Common issues
+### python environment Mac/linux users: 
+to make sure R uses the r-reticulate python environment you may need to edit your .Rprofile with the location of the python binary for the PLP environment.    Edit the .Rprofile by running: 
+```{r eval=FALSE}
+usethis::edit_r_profile()
+``` 
+and add  
+```{r eval=FALSE} 
+Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep=":"))
+``` 
+to the file then save.  Where your python bin location is the location returned by 
+```{r eval=FALSE} 
+reticulate::conda_list() 
+``` 
+e.g., My PLP virtual environment location was /anaconda3/envs/PLP/bin/python so I added:  
+Sys.setenv(PATH = paste("/anaconda3/envs/PLP/bin", Sys.getenv("PATH"), sep=":"))
 
 # Acknowledgments
 

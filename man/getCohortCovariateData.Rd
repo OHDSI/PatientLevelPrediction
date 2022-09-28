@@ -31,7 +31,7 @@ getCohortCovariateData(
 
 \item{aggregated}{whether the covariate should be aggregated}
 
-\item{cohortId}{cohort id for the target population cohort}
+\item{cohortId}{cohort id for the target cohort}
 
 \item{covariateSettings}{settings for the covariate cohorts and time periods}
 }

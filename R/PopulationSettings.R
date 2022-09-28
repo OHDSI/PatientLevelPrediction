@@ -134,7 +134,8 @@ createStudyPopulationSettings <- function(
     startAnchor = startAnchor,
     riskWindowEnd = riskWindowEnd,
     endAnchor = endAnchor, 
-    restrictTarToCohortEnd = restrictTarToCohortEnd)
+    restrictTarToCohortEnd = restrictTarToCohortEnd
+    )
   
   class(result) <- 'populationSettings'
   return(result)
@@ -190,7 +191,7 @@ createStudyPopulation <- function(
   restrictTarToCohortEnd <- populationSettings$restrictTarToCohortEnd
   
   # parameter checks
-  if(!class(plpData)%in%c('plpData')){
+  if(!inherits(x = plpData, what = c('plpData'))){
     ParallelLogger::logError('Check plpData format')
     stop('Wrong plpData input')
   }
@@ -216,11 +217,11 @@ createStudyPopulation <- function(
     population <- plpData$cohorts
   }
   
-  # save the metadata (should have the cohortId, outcomeId, plpDataSettings and population settings)
+  # save the metadata (should have the ?targetId, outcomeId, plpDataSettings and population settings)
   metaData <- attr(population, "metaData")
-  metaData$plpDataSettings <- plpData$metaData$restrictPlpDataSettings
+  metaData$restrictPlpDataSettings <- plpData$metaData$restrictPlpDataSettings
   metaData$outcomeId <- outcomeId
-  metaData$populationSettings <- populationSettings
+  metaData$populationSettings <- populationSettings # this will overwrite an existing setting
   
   # set the existing attrition
   if(is.null(metaData$attrition)){
@@ -418,7 +419,7 @@ createStudyPopulation <- function(
     dplyr::mutate(timeAtRisk = .data$tarEnd - .data$tarStart + 1 ,
                   survivalTime = ifelse(.data$outcomeCount == 0, .data$tarEnd -.data$tarStart + 1, .data$first - .data$tarStart + 1),
                   daysToEvent = .data$first) %>%
-    dplyr::select(.data$rowId, .data$subjectId, .data$cohortId, .data$cohortStartDate, .data$daysFromObsStart,
+    dplyr::select(.data$rowId, .data$subjectId, .data$targetId, .data$cohortStartDate, .data$daysFromObsStart,
                   .data$daysToCohortEnd, .data$daysToObsEnd, .data$ageYear, .data$gender,
                   .data$outcomeCount, .data$timeAtRisk, .data$daysToEvent, .data$survivalTime)
 

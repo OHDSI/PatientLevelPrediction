@@ -4,6 +4,15 @@ nrow.default <- base::nrow
 nrow.tbl <- function(x){x %>% dplyr::tally() %>% dplyr::pull()}
 
 
+removeInvalidString <- function(string){
+  modString <- gsub('_', ' ', string)
+  modString <- gsub('\\.', ' ', modString)
+  modString <- gsub("[[:punct:]]", "", modString)
+  modString <- gsub(' ', '_', modString)
+  return(modString)
+}
+
+
 # Borrowed from devtools: https://github.com/hadley/devtools/blob/ba7a5a4abd8258c52cb156e7b26bb4bf47a79f0b/R/utils.r#L44
 is_installed <- function (pkg, version = 0) {
   installed_version <- tryCatch(utils::packageVersion(pkg), 
@@ -18,7 +27,7 @@ ensure_installed <- function(pkg) {
     if (interactive()) {
       message(msg, "\nWould you like to install it?")
       if (utils::menu(c("Yes", "No")) == 1) {
-        if(pkg%in%c('BigKnn', "IterativeHardThresholding")){
+        if(pkg%in%c('BigKnn', "IterativeHardThresholding", "OhdsiShinyModules")){
           
           # add code to check for devtools...
           dvtCheck <- tryCatch(utils::packageVersion('devtools'), 
@@ -40,10 +49,13 @@ ensure_installed <- function(pkg) {
   }
 }
 
+#' Create a temporary model location
+#' 
+#' @export
 createTempModelLoc <- function(){
   repeat{
-    loc <- paste(tempdir(), paste0('python_models_',sample(10002323,1)), sep = '\\')
-    #loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
+    ##loc <- paste(tempdir(), paste0('python_models_',sample(10002323,1)), sep = '\\')
+    loc <- file.path(tempdir(), paste0('python_models_',sample(10002323,1)))
     if(!dir.exists(loc)){
       return(loc)
     }
@@ -97,7 +109,8 @@ configurePython <- function(envname='PLP', envtype=NULL){
   if(envtype=='conda'){
     pEnvironments <- reticulate::conda_list()
     if(length(pEnvironments) > 0 && envname %in% pEnvironments$name){
-      warning(paste0('Conda environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
+      location <- ''
+      warning(paste0('Conda environment ', envname,' exists.  You can use reticulate::conda_remove() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
       location <- reticulate::conda_create(envname=envname, packages = "python", conda = "auto")
@@ -109,7 +122,8 @@ configurePython <- function(envname='PLP', envtype=NULL){
   } else {
     pEnvironments <- reticulate::virtualenv_list()
     if(length(pEnvironments) > 0 && envname %in% pEnvironments){
-      warning(paste0('Python environment ', envname,' exists.  You can use removePython() to remove if you want to fresh config'))
+      location <- ''
+      warning(paste0('Python environment ', envname,' exists.'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual python environment called ', envname))
       location <- reticulate::virtualenv_create(envname=envname)
@@ -120,7 +134,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
                                    ignore_installed = TRUE)
   }
   
-  return(location)
+  return(invisible(location))
 }
 
 #' Use the virtual environment created using configurePython()
@@ -264,7 +278,12 @@ cut2 <- function(x, g, m = 150, digits = 3) {
   y <- structure(y, class='factor', levels=labs)
 
   attr(y,'class') <- "factor"
-  if(length(xlab)) label(y) <- xlab
+  if(length(xlab)){
+    #label(y) <- xlab  # what is label?
+    # think the below does the same as the line above
+    class(y) <- 'labelled'
+    attr(y, 'label') <- xlab
+  }
 
   return(y)
 }

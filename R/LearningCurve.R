@@ -98,7 +98,7 @@ createLearningCurve <- function(
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(),
   trainFractions = c(0.25, 0.50, 0.75),
-  trainEvents = c(500, 1000, 1500),
+  trainEvents = NULL,
   sampleSettings = createSampleSettings(),
   featureEngineeringSettings = createFeatureEngineeringSettings(),
   preprocessSettings = createPreprocessSettings(
@@ -282,7 +282,7 @@ getTrainFractions <- function(
   trainFractionsTemp <- samplesRequired/nrow(population)
   
   # filter out no. of events that would exceed the available training set size
-  binaryMask <- trainFractionsTemp <= (1.0 - splitSettings$testFraction)
+  binaryMask <- trainFractionsTemp <= (1.0 - splitSettings$test)
   
   # override any input to trainFractions with event-based training fractions
   trainFractions <- trainFractionsTemp[binaryMask]

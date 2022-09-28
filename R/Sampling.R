@@ -46,7 +46,7 @@ createSampleSettings <- function(type = 'none',
   
   sampleSettings <- list(
     numberOutcomestoNonOutcomes = numberOutcomestoNonOutcomes,
-    sampleSeed  = sampleSeed 
+    sampleSeed  = ifelse(type == 'none', 1, sampleSeed) # to make it the same for none
     )
   
   if(type == 'none'){
@@ -71,7 +71,7 @@ sampleData <- function(trainData, sampleSettings){
   ParallelLogger::logInfo('Starting data sampling')
   
   # if a single setting, make it a list
-  if(class(sampleSettings) == 'sampleSettings'){
+  if(inherits(sampleSettings,'sampleSettings')){
     sampleSettings <- list(sampleSettings)
   }
   
@@ -85,7 +85,7 @@ sampleData <- function(trainData, sampleSettings){
   
   ParallelLogger::logInfo('Finished data sampling')
   
-  metaData$sampleSettings <- sampleSetting
+  metaData$sampleSettings <- sampleSettings
   
   attr(trainData, "metaData") <- metaData
   return(trainData)
@@ -95,6 +95,19 @@ sampleData <- function(trainData, sampleSettings){
 
 sameData <- function(trainData, ...){
   ParallelLogger::logInfo('No sampling - returning same data')
+  
+  # add attribute for FE
+  featureEngeering <- list(
+    funct = 'sameData',
+    settings = list(
+      none = T
+    )
+  )
+  attr(trainData, 'metaData')$featureEngineering = listAppend(
+    attr(trainData, 'metaData')$featureEngineering,
+    featureEngeering
+  )
+  
   return(trainData)
 }
 
@@ -138,6 +151,7 @@ underSampleData <- function(trainData, sampleSettings){
   
   # filter to these patients 
   sampleTrainData <- list()
+  class(sampleTrainData) <- 'plpData'
   sampleTrainData$labels <- trainData$labels %>% dplyr::filter(.data$rowId %in% pplOfInterest)
   sampleTrainData$folds <- trainData$folds %>% dplyr::filter(.data$rowId %in% pplOfInterest)
   
@@ -179,6 +193,7 @@ overSampleData <- function(trainData, sampleSettings){
                                  sum(population$outcomeCount == 0), ' non-outcomes'))
   
   sampleTrainData <- list()
+  class(sampleTrainData) <- 'plpData'
   sampleTrainData$labels <- trainData$labels %>% dplyr::collect()
   sampleTrainData$folds <- trainData$folds %>% dplyr::collect()
   
@@ -238,5 +253,5 @@ overSampleData <- function(trainData, sampleSettings){
   
   class(sampleTrainData$covariateData) <- 'CovariateData'
   
-  return(trainData)
+  return(sampleTrainData)
 }

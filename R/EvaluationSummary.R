@@ -262,8 +262,8 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
 
     eStatistic <- eStatistic90 <- -1
     if (!is.null(w)) {
-      eStatistic <- quantile(abs(w$actual - w$estimatedSurvival), probs = .9)
-      eStatistic90 <- mean(abs(w$actual - w$estimatedSurvival))
+      eStatistic <- mean(abs(w$actual - w$estimatedSurvival)) 
+      eStatistic90 <- stats::quantile(abs(w$actual - w$estimatedSurvival), probs = .9)
     }
 
     result <- rbind(
@@ -288,12 +288,12 @@ calculateEStatisticsBinary <- function(prediction) {
   notna <- ! is.na(risk + outcome)
   risk <- risk[notna]
   outcome <- outcome[notna]
-  smoothFit <- lowess(risk, outcome, iter = 0)
-  smoothCalibration <- approx(smoothFit, xout = risk, ties = mean)$y
+  smoothFit <- stats::lowess(risk, outcome, iter = 0)
+  smoothCalibration <- stats::approx(smoothFit, xout = risk, ties = mean)$y
   distance <- abs(risk - smoothCalibration)
   eavg <- mean(abs(risk - smoothCalibration))
   emax <- max(distance)
-  e90 <- quantile(distance, probs = .9)
+  e90 <- stats::quantile(distance, probs = .9)
   names(e90) <- NULL
   return(
     c(
@@ -333,13 +333,13 @@ computeAuc <- function(prediction,
 }
 
 aucWithCi <- function(prediction, truth){
-  auc <- pROC::auc(as.factor(truth), prediction, direction="<")
+  auc <- pROC::auc(as.factor(truth), prediction, direction="<", quiet=TRUE)
   aucci <-pROC::ci(auc)
   return(data.frame(auc = aucci[2], auc_lb95ci = aucci[1], auc_ub95ci = aucci[3]))
 }
 
 aucWithoutCi <- function(prediction, truth){
-  auc <- pROC::auc(as.factor(truth), prediction, direction="<")
+  auc <- pROC::auc(as.factor(truth), prediction, direction="<", quiet=TRUE)
   return(as.double(auc))
 }
 
