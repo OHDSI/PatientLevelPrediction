@@ -23,6 +23,8 @@ insertCsvToDatabase <- function(
   csvTableAppend = ''
 ){
   
+  ensure_installed('readr')
+  
   ParallelLogger::logInfo('Starting input checks')
   
   csvFileNames <- tryCatch({
@@ -43,7 +45,7 @@ insertCsvToDatabase <- function(
   # check all tables are in folder
   # settings/resultsDataModelSpecification.csv table_name
   resultNames <- paste0(unique(
-    utils::read.csv(
+    readr::read_csv(
       system.file(
         'settings',
         'resultsDataModelSpecification.csv',
@@ -87,7 +89,7 @@ insertCsvToDatabase <- function(
   )
   
   ParallelLogger::logInfo('Extracting performance ids')
-  performanceIds <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('performances', csvFileNames)]))$performance_id
+  performanceIds <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('performances', csvFileNames)]))$performance_id
     
   if(length(performanceIds) > 0 ){
     for(performanceId in performanceIds){  
@@ -115,7 +117,7 @@ insertCsvToDatabase <- function(
     }
   }
   
-  diagnosticIds <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('diagnostics', csvFileNames)]))$diagnostic_id
+  diagnosticIds <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('diagnostics', csvFileNames)]))$diagnostic_id
 
   if(length(diagnosticIds) > 0){
     for(diagnosticId in diagnosticIds){  
@@ -163,7 +165,7 @@ extractCohortDefinitionsCSV <- function(
   # cohort_definition: cohort_definition_id	cohort_name	description	json	sql_command 
   
   cohortDefinitionName <- dir(csvFolder, pattern = 'cohort_definition.csv')
-  cohort_definition <- utils::read.csv(file.path(csvFolder, cohortDefinitionName))
+  cohort_definition <- readr::read_csv(file.path(csvFolder, cohortDefinitionName))
   
   result <- data.frame(
     cohortId = cohort_definition$cohort_definition_id,
@@ -181,7 +183,7 @@ extractDatabaseListCSV <- function(
   # database_meta_data: database_id	cdm_source_name	cdm_source_abbreviation
   # database_details: database_id	database_meta_data_id
   databaseMetaDataName <- dir(csvFolder, pattern = 'database_meta_data.csv')
-  databaseMetaData  <- utils::read.csv(file.path(csvFolder, databaseMetaDataName))
+  databaseMetaData  <- readr::read_csv(file.path(csvFolder, databaseMetaDataName))
 
   databaseList <- createDatabaseList(
     cdmDatabaseSchemas = databaseMetaData$cdm_source_name,
@@ -234,7 +236,7 @@ getModelDesignCsv <- function(
   
   result <- list()
   for(i in 1:nrow(modelDesignSettingTable)){
-    table <- utils::read.csv(file.path(csvFolder, csvFileNames[grep(modelDesignSettingTable$tableName[i], csvFileNames)]))
+    table <- readr::read_csv(file.path(csvFolder, csvFileNames[grep(modelDesignSettingTable$tableName[i], csvFileNames)]))
     ind <- table[modelDesignSettingTable$idColumn[i]] == modelDesignSettingTable$value[i]
     result[[i]] <- table[ind,][modelDesignSettingTable$jsonColumn[i]]
     if(modelDesignSettingTable$convertJson[i]){
@@ -262,7 +264,7 @@ getPerformanceEvaluationCsv <- function(
     
     evaluationStatistics = tryCatch(
       {
-      res <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('evaluation_statistics', csvFileNames)])) %>%
+      res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('evaluation_statistics', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
         dplyr::select(-.data$performance_id);
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
@@ -272,7 +274,7 @@ getPerformanceEvaluationCsv <- function(
     ),
     
     thresholdSummary = tryCatch({
-      res <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('threshold_summary', csvFileNames)])) %>%
+      res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('threshold_summary', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
         dplyr::select(-.data$performance_id);
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
@@ -282,7 +284,7 @@ getPerformanceEvaluationCsv <- function(
     ),
     
     calibrationSummary = tryCatch({
-      res <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('calibration_summary', csvFileNames)])) %>%
+      res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('calibration_summary', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
         dplyr::select(-.data$performance_id);
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
@@ -292,7 +294,7 @@ getPerformanceEvaluationCsv <- function(
     ),
     
     demographicSummary = tryCatch({
-      res <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('demographic_summary', csvFileNames)])) %>%
+      res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('demographic_summary', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
         dplyr::select(-.data$performance_id);
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
@@ -302,7 +304,7 @@ getPerformanceEvaluationCsv <- function(
     ),
     
     predictionDistribution = tryCatch({
-      res <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('prediction_distribution', csvFileNames)])) %>%
+      res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('prediction_distribution', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
         dplyr::select(-.data$performance_id);
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
@@ -325,11 +327,11 @@ extractObjectFromCsv <- function(
   
   # get the model design
   # performance_id	model_design_id	development_database_id	validation_database_id	target_id	outcome_id	tar_id	plp_data_setting_id	population_setting_id	model_development	execution_date_time	plp_version
-  performances <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('performances', csvFileNames)]))
+  performances <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('performances', csvFileNames)]))
   poi <- performances[performances$performance_id == performanceId,,]
   
   modelDesignId <- poi$model_design_id
-  modeldesigns <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('model_designs', csvFileNames)]))
+  modeldesigns <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('model_designs', csvFileNames)]))
   # model_design_id	target_id	outcome_id	tar_id	plp_data_setting_id	population_setting_id	model_setting_id	covariate_setting_id	sample_setting_id	split_setting_id	feature_engineering_setting_id	tidy_covariates_setting_id
   modeldesigns <- modeldesigns[modeldesigns$model_design_id == modelDesignId,,]
   
@@ -342,7 +344,7 @@ extractObjectFromCsv <- function(
     csvFolder = csvFolder
     )
   
-  covariateSummary <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('covariate_summary', csvFileNames)])) %>%
+  covariateSummary <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('covariate_summary', csvFileNames)])) %>%
     dplyr::filter(.data$performance_id == !!poi$performance_id) %>%
     dplyr::select(-.data$performance_id)
   colnames(covariateSummary) <- SqlRender::snakeCaseToCamelCase(colnames(covariateSummary))
@@ -356,7 +358,7 @@ extractObjectFromCsv <- function(
   if(poi$model_development == 1){
 
     modelsName <- dir(csvFolder, pattern = 'models.csv')
-    models  <- utils::read.csv(file.path(csvFolder, modelsName))
+    models  <- readr::read_csv(file.path(csvFolder, modelsName))
     models <- models %>% 
       dplyr::filter(.data$model_design_id == !!poi$model_design_id ) %>%
       dplyr::filter(.data$database_id == !!poi$development_database_id)
@@ -381,9 +383,9 @@ extractObjectFromCsv <- function(
     
     # database_details: database_id	database_meta_data_id
     databaseMetaDataName <- dir(csvFolder, pattern = 'database_meta_data.csv')
-    databaseMetaData  <- utils::read.csv(file.path(csvFolder, databaseMetaDataName))
+    databaseMetaData  <- readr::read_csv(file.path(csvFolder, databaseMetaDataName))
     databaseDetailsName <- dir(csvFolder, pattern = 'database_details.csv')
-    databaseDetails  <- utils::read.csv(file.path(csvFolder, databaseDetailsName))
+    databaseDetails  <- readr::read_csv(file.path(csvFolder, databaseDetailsName))
     databases <- merge(databaseDetails, databaseMetaData, by.x = 'database_meta_data_id', by.y = 'database_id')
     
     dev <- databases[databases$database_id == poi$development_database_id,,]
@@ -395,17 +397,17 @@ extractObjectFromCsv <- function(
     validationDatabaseId <- val$database_meta_data_id
     
       attritionName <- dir(csvFolder, pattern = 'attrition.csv')
-      attrition  <- utils::read.csv(file.path(csvFolder, attritionName)) %>%
+      attrition  <- readr::read_csv(file.path(csvFolder, attritionName)) %>%
         dplyr::filter(.data$performance_id == !!poi$performance_id) %>%
         dplyr::select(-.data$performance_id)
       colnames(attrition) <- SqlRender::snakeCaseToCamelCase(colnames(attrition))
       
       cohortsName <- dir(csvFolder, pattern = 'cohorts.csv')
-      cohorts  <- utils::read.csv(file.path(csvFolder, cohortsName))
+      cohorts  <- readr::read_csv(file.path(csvFolder, cohortsName))
       plpDataSetName <- dir(csvFolder, pattern = 'plp_data_settings.csv')
-      plpDataSet  <- utils::read.csv(file.path(csvFolder, plpDataSetName))
+      plpDataSet  <- readr::read_csv(file.path(csvFolder, plpDataSetName))
       popSetName <- dir(csvFolder, pattern = 'population_settings.csv')
-      popSet  <- utils::read.csv(file.path(csvFolder, popSetName))
+      popSet  <- readr::read_csv(file.path(csvFolder, popSetName))
       
       # get the model
       plpModel <- list(
@@ -488,7 +490,7 @@ extractDiagnosticFromCsv <- function(
   
   # get the model design
   # performance_id	model_design_id	development_database_id	validation_database_id	target_id	outcome_id	tar_id	plp_data_setting_id	population_setting_id	model_development	execution_date_time	plp_version
-  diagnostics <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('diagnostics', csvFileNames)]))
+  diagnostics <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('diagnostics', csvFileNames)]))
   if(length(diagnostics) == 0){
     ParallelLogger::logInfo('No diagnostics in csv results')
     return(NULL)
@@ -500,7 +502,7 @@ extractDiagnosticFromCsv <- function(
   }
   
   modelDesignId <- doi$model_design_id
-  modeldesigns <- utils::read.csv(file.path(csvFolder, csvFileNames[grep('model_designs', csvFileNames)]))
+  modeldesigns <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('model_designs', csvFileNames)]))
   # model_design_id	target_id	outcome_id	tar_id	plp_data_setting_id	population_setting_id	model_setting_id	covariate_setting_id	sample_setting_id	split_setting_id	feature_engineering_setting_id	tidy_covariates_setting_id
   modeldesigns <- modeldesigns[modeldesigns$model_design_id == modelDesignId,,]
   
@@ -514,9 +516,9 @@ extractDiagnosticFromCsv <- function(
   )
   
   databaseMetaDataName <- dir(csvFolder, pattern = 'database_meta_data.csv')
-  databaseMetaData  <- utils::read.csv(file.path(csvFolder, databaseMetaDataName))
+  databaseMetaData  <- readr::read_csv(file.path(csvFolder, databaseMetaDataName))
   databaseDetailsName <- dir(csvFolder, pattern = 'database_details.csv')
-  databaseDetails  <- utils::read.csv(file.path(csvFolder, databaseDetailsName))
+  databaseDetails  <- readr::read_csv(file.path(csvFolder, databaseDetailsName))
   databases <- merge(databaseDetails, databaseMetaData, by.x = 'database_meta_data_id', by.y = 'database_id')
   
   db <- databases[databases$database_id == doi$database_id]
@@ -525,25 +527,25 @@ extractDiagnosticFromCsv <- function(
   databaseId <- db$database_meta_data_id
   
   outcomesName <- dir(csvFolder, pattern = 'diagnostic_outcomes.csv')
-  outcomes  <- utils::read.csv(file.path(csvFolder, outcomesName)) %>%
+  outcomes  <- readr::read_csv(file.path(csvFolder, outcomesName)) %>%
     dplyr::filter(.data$diagnostic_id == !! diagnosticId) %>%
     dplyr::select(-.data$diagnostic_id)
   colnames(outcomes)  <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
   
   predictorsName <- dir(csvFolder, pattern = 'diagnostic_predictors.csv')
-  predictors   <- utils::read.csv(file.path(csvFolder, predictorsName)) %>%
+  predictors   <- readr::read_csv(file.path(csvFolder, predictorsName)) %>%
     dplyr::filter(.data$diagnostic_id == !! diagnosticId) %>%
     dplyr::select(-.data$diagnostic_id)
   colnames(predictors)  <- SqlRender::snakeCaseToCamelCase(colnames(predictors))
   
   participantsName <- dir(csvFolder, pattern = 'diagnostic_participants.csv')
-  participants  <- utils::read.csv(file.path(csvFolder, participantsName)) %>%
+  participants  <- readr::read_csv(file.path(csvFolder, participantsName)) %>%
     dplyr::filter(.data$diagnostic_id == !! diagnosticId) %>%
     dplyr::select(-.data$diagnostic_id)
   colnames(participants)  <- SqlRender::snakeCaseToCamelCase(colnames(participants))
   
   summaryName <- dir(csvFolder, pattern = 'diagnostic_summary.csv')
-  summary  <- utils::read.csv(file.path(csvFolder, summaryName)) %>%
+  summary  <- readr::read_csv(file.path(csvFolder, summaryName)) %>%
     dplyr::filter(.data$diagnostic_id == !! diagnosticId) %>%
     dplyr::select(-.data$diagnostic_id)
   colnames(summary)  <- SqlRender::snakeCaseToCamelCase(colnames(summary))

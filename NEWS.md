@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.0.3
+======================
+- replaced utils::read.csv with readr::read_csv when inserting results from csv
+
 PatientLevelPrediction 6.0.2
 ======================
 - replaced gsub with sub when inserting csvs to database
