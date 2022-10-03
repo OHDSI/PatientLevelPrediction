@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.0.2
+======================
+- replaced gsub with sub when inserting csvs to database
+
 PatientLevelPrediction 6.0.1
 ======================
 - saved result specification csv in windows to fix odd formating issue

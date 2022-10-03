@@ -35,7 +35,7 @@ insertCsvToDatabase <- function(
   }
   
   if(!missing(csvTableAppend)){ 
-    csvFileNamesNoAppend <- gsub(csvTableAppend, '', csvFileNames)
+    csvFileNamesNoAppend <- sub(csvTableAppend, '', csvFileNames)
   } else{
     csvFileNamesNoAppend <- csvFileNames
     }
