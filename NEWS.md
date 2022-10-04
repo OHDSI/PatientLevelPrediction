@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.0.4
+======================
+- forcing cdmDatabaseId to be a string if integer is input
+
 PatientLevelPrediction 6.0.3
 ======================
 - replaced utils::read.csv with readr::read_csv when inserting results from csv
