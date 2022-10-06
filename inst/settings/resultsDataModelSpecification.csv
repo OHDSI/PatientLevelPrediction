@@ -1,4 +1,4 @@
-﻿table_name,column_name,data_type,is_required,primary_key,empty_is_na,mincellcount,description
+table_name,column_name,data_type,is_required,primary_key,empty_is_na,mincellcount,description
 cohorts,cohort_id,int,Yes,Yes,No,No,a unique identifier for the cohort in the plp results database
 cohorts,cohort_definition_id,bigint,Yes,No,No,No,the identifier in ATLAS for the cohort
 cohorts,cohort_name,varchar,Yes,No,No,No,the name of the cohort

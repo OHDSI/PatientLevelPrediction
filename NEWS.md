@@ -1,3 +1,19 @@
+PatientLevelPrediction 6.0.4
+======================
+- forcing cdmDatabaseId to be a string if integer is input
+
+PatientLevelPrediction 6.0.3
+======================
+- replaced utils::read.csv with readr::read_csv when inserting results from csv
+
+PatientLevelPrediction 6.0.2
+======================
+- replaced gsub with sub when inserting csvs to database
+
+PatientLevelPrediction 6.0.1
+======================
+- saved result specification csv in windows to fix odd formating issue
+
 PatientLevelPrediction 6.0.0
 ======================
 - fixed sample data bugs
