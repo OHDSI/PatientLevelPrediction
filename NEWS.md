@@ -1,3 +1,8 @@
+PatientLevelPrediction 6.0.5
+======================
+- Allow priorType to be passed down to getCV function in case prior is not 'laplace'
+- Seed specified in Cyclops model wasn't passed to Cyclops
+
 PatientLevelPrediction 6.0.4
 ======================
 - forcing cdmDatabaseId to be a string if integer is input
