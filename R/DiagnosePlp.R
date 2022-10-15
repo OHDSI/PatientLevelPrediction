@@ -320,7 +320,8 @@ diagnosePlp <- function(
       splitSettings = splitSettings,
       sampleSettings = sampleSettings
     ),
-    databaseSchema = plpData$metaData$databaseDetails$cdmDatabaseSchema
+    databaseSchema = plpData$metaData$databaseDetails$cdmDatabaseSchema,
+    databaseId = plpData$metaData$databaseDetails$cdmDatabaseId
   )
   
   class(result) <- 'diagnosePlp'

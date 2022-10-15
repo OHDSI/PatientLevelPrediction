@@ -2,26 +2,22 @@
 % Please edit documentation in R/uploadToDatabase.R
 \name{createDatabaseList}
 \alias{createDatabaseList}
-\title{Create a data frame with the database details}
+\title{Create a list with the database details and database meta data entries}
 \usage{
-createDatabaseList(cdmDatabaseSchemas, acronyms, versions, descriptions, types)
+createDatabaseList(cdmDatabaseSchemas, cdmDatabaseNames, databaseRefIds = NULL)
 }
 \arguments{
-\item{cdmDatabaseSchemas}{(string vector) A vector of the cdmDatabaseSchemas used in the study}
+\item{cdmDatabaseSchemas}{(string vector) A vector of the cdmDatabaseSchemas used in the study - if the schemas are not unique per database please also specify databaseRefId}
 
-\item{acronyms}{(optional string vector) A vector of the acronyms for the cdmDatabaseSchemas}
+\item{cdmDatabaseNames}{Sharable names for the databases}
 
-\item{versions}{(optional string vector) A vector of the database versions for the cdmDatabaseSchemas}
-
-\item{descriptions}{(optional string vector) A vector of the database descriptions for the cdmDatabaseSchemas}
-
-\item{types}{(optional string vector) A vector of the data types (e.g., claims or EHR) for the cdmDatabaseSchemas}
+\item{databaseRefIds}{(string vector) Unique database identifiers - what you specified as cdmDatabaseId in \code{PatientLevelPrediction::createDatabaseDetails()} when developing the models}
 }
 \value{
 Returns a data.frame with the database details
 }
 \description{
-This function creates a data.frame with the details of the databases used in the study
+This function creates a list with the database details and database meta data entries used in the study
 }
 \details{
 This function is used when inserting database details into the PatientLevelPrediction database results schema

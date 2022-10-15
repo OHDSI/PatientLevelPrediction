@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
-Version: 5.4.5
-Date: 2022-09-12
+Version: 6.0.4
+Date: 2022-10-05
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -40,7 +40,6 @@ Imports:
     PRROC,
     reticulate (> 1.16),
     rlang,
-    RSQLite,
     SqlRender (>= 1.1.3),
     survival,
     tibble,
@@ -62,9 +61,14 @@ Suggests:
     readr,
     ResourceSelection,
     rmarkdown,
+    RSQLite,
     scoring,
     shiny,
+<<<<<<< HEAD
     OhdsiShinyModules (>= 0.2.3),
+=======
+    OhdsiShinyModules (>= 1.0.0),
+>>>>>>> develop
     survminer,
     testthat,
     withr,

@@ -1,3 +1,27 @@
+PatientLevelPrediction 6.0.4
+======================
+- forcing cdmDatabaseId to be a string if integer is input
+
+PatientLevelPrediction 6.0.3
+======================
+- replaced utils::read.csv with readr::read_csv when inserting results from csv
+
+PatientLevelPrediction 6.0.2
+======================
+- replaced gsub with sub when inserting csvs to database
+
+PatientLevelPrediction 6.0.1
+======================
+- saved result specification csv in windows to fix odd formating issue
+
+PatientLevelPrediction 6.0.0
+======================
+- fixed sample data bugs
+- updated to use v1.0.0 of OhdsiShinyModules
+- updated plp database result tables to use the same structure for cohort and database as other HADES packages
+- added function to insert csv results into plp database result tables
+- added input for databaseId (database and version) when extracting data to be consistent with other HADES packages.  This is saved in plp objects.
+
 PatientLevelPrediction 5.4.4
 ======================
 - fixed issue with 'preprocess' vs 'preprocessing' inconsistently used across models

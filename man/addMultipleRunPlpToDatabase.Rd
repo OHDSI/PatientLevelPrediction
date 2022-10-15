@@ -8,8 +8,7 @@ addMultipleRunPlpToDatabase(
   conn,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
   cohortDefinitions,
-  databaseList = createDatabaseList(cdmDatabaseSchemas = c("cdm_truven_ccae_v123",
-    "cdm_madeup_v1")),
+  databaseList = NULL,
   resultLocation = NULL,
   resultLocationVector,
   modelSaveLocation
@@ -22,9 +21,9 @@ function \code{connect} in the
 
 \item{databaseSchemaSettings}{A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables}
 
-\item{cohortDefinitions}{(list) A list of cohortDefinitions (each list must contain: name, id)}
+\item{cohortDefinitions}{A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()}
 
-\item{databaseList}{A list created by \code{createDatabaseList} to specify the databases}
+\item{databaseList}{(Optional) A list created by \code{createDatabaseList} to specify the databases}
 
 \item{resultLocation}{(string) location of directory where the main package results were saved}
 

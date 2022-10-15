@@ -8,7 +8,7 @@ addMultipleDiagnosePlpToDatabase(
   conn,
   databaseSchemaSettings,
   cohortDefinitions,
-  databaseList,
+  databaseList = NULL,
   resultLocation
 )
 }
@@ -21,7 +21,7 @@ function \code{connect} in the
 
 \item{cohortDefinitions}{(list) A list of cohortDefinitions (each list must contain: name, id)}
 
-\item{databaseList}{A ...}
+\item{databaseList}{(Optional) ...}
 
 \item{resultLocation}{The location of the diagnostic results}
 }

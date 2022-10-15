@@ -81,6 +81,10 @@ fitPlp <- function(
   plpModel <- do.call(fun, args)
   ParallelLogger::logTrace('Returned from classifier function')
   
+  # adding trainDetails databaseId to all classifiers
+  # TODO - move other details into fit
+  plpModel$trainDetails$developmentDatabaseId = attr(trainData, "metaData")$cdmDatabaseId
+  
   class(plpModel) <- 'plpModel'
   
   return(plpModel)

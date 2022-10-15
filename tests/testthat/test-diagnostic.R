@@ -116,9 +116,9 @@ test_that("test diagnoseMultiplePlp works", {
       analysis1,
       analysis2
       ),
-    cohortDefinitions = list(
-      list(id = 1, name = 'target'),
-      list(id = 3, name = 'outcome')
+    cohortDefinitions = data.frame(
+      cohortId = c(1,3),
+      cohortName = c('target', 'outcome')
     ), 
     saveDirectory = file.path(saveLoc, 'diagnosticsMultiple')
   )
