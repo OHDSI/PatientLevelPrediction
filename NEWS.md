@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.0.5
+======================
+- fixing cox predictions
+
 PatientLevelPrediction 6.0.4
 ======================
 - forcing cdmDatabaseId to be a string if integer is input

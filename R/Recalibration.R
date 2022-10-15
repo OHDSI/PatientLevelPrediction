@@ -234,7 +234,8 @@ weakRecalibration <- function(prediction, columnType = 'evaluationType'){
     
     recalibrated <- prediction
     
-    baseline <- ifelse(is.null(attr(recalibrated, "baselineHazard")), 0.9, attr(recalibrated, "baselineHazard"))
+    # this will make the recalibration work if the baselineSurvival is missing
+    baseline <- ifelse(is.null(attr(recalibrated, "baselineSurvival")), 0.9, attr(recalibrated, "baselineSurvival"))
     ParallelLogger::logInfo(paste0('recal initial baseline hazard: ',baseline))
     
     offset <- ifelse(is.null(attr(recalibrated, "offset")), 0, attr(recalibrated, "offset"))
