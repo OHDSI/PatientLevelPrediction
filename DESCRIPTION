@@ -64,11 +64,7 @@ Suggests:
     RSQLite,
     scoring,
     shiny,
-<<<<<<< HEAD
-    OhdsiShinyModules (>= 0.2.3),
-=======
     OhdsiShinyModules (>= 1.0.0),
->>>>>>> develop
     survminer,
     testthat,
     withr,
