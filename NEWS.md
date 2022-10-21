@@ -1,3 +1,9 @@
+PatientLevelPrediction 6.0.6
+======================
+- added check for cdmDatabaseId into createDatabaseDetails
+- added test for check for cdmDatabaseId into createDatabaseDetails to error when NULL
+- removed session$onSessionEnded(shiny::stopApp)  from shiny server
+
 PatientLevelPrediction 6.0.5
 ======================
 - fixing cox predictions

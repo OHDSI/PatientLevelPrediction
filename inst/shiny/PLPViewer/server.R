@@ -1,7 +1,7 @@
 
   server <- shiny::shinyServer(function(input, output, session) { 
 
-  session$onSessionEnded(shiny::stopApp) 
+  #session$onSessionEnded(shiny::stopApp) 
 
   
 
