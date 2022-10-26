@@ -214,7 +214,7 @@ createStudyPopulation <- function(
   ParallelLogger::logDebug(paste0('restrictTarToCohortEnd: ', restrictTarToCohortEnd))
 
   if (is.null(population)) {
-    population <- plpData$cohorts
+    population <- rlang::duplicate(plpData$cohorts)
   }
   
   # save the metadata (should have the ?targetId, outcomeId, plpDataSettings and population settings)
