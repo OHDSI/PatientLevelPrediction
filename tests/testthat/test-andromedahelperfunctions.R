@@ -17,4 +17,13 @@
 library("testthat")
 context("AndromedaHelperFunctions")
 
-# add limitCovariatesToPopulation(covariateData, rowIds) test 
+test_that("limitCovariatesToPopulation works", {
+  rowIds <- population$rowId
+  
+  newCovariateData <- limitCovariatesToPopulation(plpData$covariateData, rowIds)
+  
+  expect_equal(length(unique(rowIds)), newCovariateData$covariates %>% 
+                 dplyr::summarise(unique=dplyr::n_distinct(rowId)) %>% 
+                 dplyr::pull())  
+  
+})
