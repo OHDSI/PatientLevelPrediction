@@ -117,7 +117,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                                         covariateRef = plpDataSimulationProfile$covariateRef,
                                         analysisRef  = data.frame(analysisId = 1))
   
-  class(covariateData) <- c("CovariateData", "Andromeda")
+  class(covariateData) <- c("CovariateData")
   
   writeLines("Generating cohorts")
   cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), targetId = 1)
@@ -149,9 +149,6 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
     allOutcomes <- rbind(allOutcomes, outcomes)
   }
   
- covariateData$coefficients <- NULL
- 
-  # Remove rownames else they will be copied to the ffdf objects:
   metaData = list()
   
   metaData$databaseDetails <- list(
