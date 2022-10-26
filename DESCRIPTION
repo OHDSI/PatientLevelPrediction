@@ -71,10 +71,11 @@ Suggests:
     xgboost (> 1.3.2.1)
 Remotes:
     egillax/BigKnn@arrow,
-    ohdsi/DatabaseConnector@arrow,
+    ohdsi/DatabaseConnector,
     ohdsi/Eunomia,
-    ohdsi/Andromeda@arrow,
-    ohdsi/FeatureExtraction@arrow,
+    ohdsi/Andromeda@arrow_S4,
+    ohdsi/Cyclops@arrow_S4,
+    ohdsi/FeatureExtraction@arrow_S4,
     ohdsi/IterativeHardThresholding,
     ohdsi/ParallelLogger,
     ohdsi/OhdsiShinyModules
