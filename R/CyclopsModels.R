@@ -254,20 +254,20 @@ predictCyclops <- function(plpModel, data, cohort ) {
   
   # survival cyclops use baseline hazard to convert to risk from exp(LP) to 1-S^exp(LP)
   if(attr(plpModel, 'modelType') == 'survival'){
-    if(!is.null(plpModel$model$baselineHazard)){
+    if(!is.null(plpModel$model$baselineSurvival)){
       if(is.null(attr(cohort, 'timepoint'))){
         timepoint <- attr(cohort,'metaData')$populationSettings$riskWindowEnd
       } else{
         timepoint <- attr(cohort, 'timepoint')
       }
-      bhind <- which.min(abs(plpModel$model$baselineHazard$time-timepoint))
-      #prediction$value <- 1-plpModel$model$baselineHazard$surv[bhind]^prediction$value
-      prediction$value <- (1-plpModel$model$baselineHazard$surv[bhind])*prediction$value
+      bhind <- which.min(abs(plpModel$model$baselineSurvival$time-timepoint))
+      # 1- baseline survival(time)^ (exp(betas*values))
+      prediction$value <- 1-plpModel$model$baselineSurvival$surv[bhind]^prediction$value
       
       
       metaData <- list()
-      metaData$baselineHazardTimepoint <- plpModel$model$baselineHazard$time[bhind]
-      metaData$baselineHazard <- plpModel$model$baselineHazard$surv[bhind]
+      metaData$baselineSurvivalTimepoint <- plpModel$model$baselineSurvival$time[bhind]
+      metaData$baselineSurvival <- plpModel$model$baselineSurvival$surv[bhind]
       metaData$offset <- 0
       
       attr(prediction, 'metaData') <- metaData
@@ -372,12 +372,12 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   )
 
   if(modelType == "cox" || modelType == "survival") {
-    baselineHazard <- tryCatch({survival::survfit(fit, type = "aalen")},
+    baselineSurvival <- tryCatch({survival::survfit(fit, type = "aalen")},
       error = function(e) {ParallelLogger::logInfo(e); return(NULL)})
-    if(is.null(baselineHazard)){
+    if(is.null(baselineSurvival)){
       ParallelLogger::logInfo('No baseline hazard function returned')
     }
-    outcomeModel$baselineHazard <- baselineHazard
+    outcomeModel$baselineSurvival <- baselineSurvival
   }
   class(outcomeModel) <- "plpModel"
   

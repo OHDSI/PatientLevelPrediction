@@ -1,10 +1,16 @@
 
   server <- shiny::shinyServer(function(input, output, session) { 
 
-  session$onSessionEnded(shiny::stopApp) 
+  #session$onSessionEnded(shiny::stopApp) 
 
-  
-
+    resultDatabaseSettings <- ParallelLogger::convertJsonToSettings(
+        Sys.getenv('plpDatabaseSettings')
+      )
+    resultDatabaseSettings$connectionDetails <- do.call(
+      DatabaseConnector::createConnectionDetails, 
+      resultDatabaseSettings$connectionDetailSettings
+    )
+    
   #============= 
 
   # sidebar menu 
@@ -72,9 +78,7 @@ if(input$menu == "Prediction" & runServer[["Prediction"]]==1){
   OhdsiShinyModules::predictionServer(
     #predictionServer(
     id = "prediction",
-    resultDatabaseSettings = ParallelLogger::convertJsonToSettings(
-      Sys.getenv('plpDatabaseSettings')
-    )
+    resultDatabaseSettings = resultDatabaseSettings
  )
 }
 

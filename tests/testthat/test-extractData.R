@@ -49,3 +49,13 @@ test_that("getCovariateData", {
   testthat::expect_error(getCovariateData())
 })
 
+test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
+  testthat::expect_error(createDatabaseDetails(
+    connectionDetails = list(), 
+    cdmDatabaseSchema = 'main', 
+    cdmDatabaseId = NULL, 
+    targetId = 1, 
+    outcomeIds = 2
+  ))
+})
+
