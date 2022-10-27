@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.0.7
+======================
+- fixed issue with shiny viewer converting connection details to large json
+
 PatientLevelPrediction 6.0.6
 ======================
 - added check for cdmDatabaseId into createDatabaseDetails
