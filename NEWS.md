@@ -1,3 +1,8 @@
+PatientLevelPrediction 6.0.8
+======================
+- Allow priorType to be passed down to getCV function in case prior is not 'laplace'
+- Seed specified in Cyclops model wasn't passed to Cyclops
+
 PatientLevelPrediction 6.0.7
 ======================
 - fixed issue with shiny viewer converting connection details to large json
