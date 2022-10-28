@@ -12,13 +12,13 @@ viewMultiplePlp <- function(analysesLocation){
     stop('No database found')
   }
   
-  connectionDetails <- DatabaseConnector::createConnectionDetails(
+  connectionDetailSettings <- list(
     dbms = 'sqlite',
     server = file.path(analysesLocation, 'sqlite', 'databaseFile.sqlite')
   )
   
   databaseSettings <- list(
-    connectionDetails = connectionDetails, 
+    connectionDetailSettings = connectionDetailSettings, 
     schema = 'main',
     tablePrefix = '',
     dbms = 'sqlite',
@@ -52,13 +52,13 @@ viewPlp <- function(runPlp, validatePlp = NULL, diagnosePlp = NULL) {
     diagnosePlp = diagnosePlp
     )
   
-  connectionDetails <- DatabaseConnector::createConnectionDetails(
+  connectionDetailSettings <- list(
     dbms = 'sqlite',
     server = server
   )
   
   databaseSettings <- list(
-    connectionDetails = connectionDetails, 
+    connectionDetailSettings = connectionDetailSettings, 
     schema = 'main',
     tablePrefix = '',
     dbms = 'sqlite',
@@ -97,7 +97,7 @@ viewDatabaseResultPlp <- function(
   myTableAppend
   ){
   
-  connectionDetails <- DatabaseConnector::createConnectionDetails(
+  connectionDetailSettings <- list(
     dbms = myDbms,
     server =  myServer, 
     user = myUser, 
@@ -106,7 +106,7 @@ viewDatabaseResultPlp <- function(
   )
   
   databaseSettings <- list(
-    connectionDetails = connectionDetails, 
+    connectionDetailSettings = connectionDetailSettings, 
     schema = mySchema,
     tablePrefix = myTableAppend,
     dbms = myDbms,
