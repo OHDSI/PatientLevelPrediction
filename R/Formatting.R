@@ -50,7 +50,7 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
       'Max covariateId in original covariates: ', 
       plpData$covariateData$covariates %>% 
         dplyr::summarise(max = max(.data$covariateId, na.rm=T)) %>% 
-        dplyr::pull() 
+        dplyr::collect() %>% dplyr::pull() 
     )
   )
   
@@ -78,9 +78,10 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
 
   maxY <- newcovariateData$mapping %>% 
     dplyr::summarise(max=max(.data$columnId, na.rm = TRUE)) %>% 
+    dplyr::collect() %>% 
     dplyr::pull()
   ParallelLogger::logDebug(paste0('Max newCovariateId in mapping: ',maxY))
-  maxX <- newcovariateData$cohort %>% dplyr::summarise(max = max(.data$rowId, na.rm=T)) %>% dplyr::pull()
+  maxX <- newcovariateData$cohort %>% dplyr::summarise(max = max(.data$rowId, na.rm=T)) %>%  dplyr::collect() %>% dplyr::pull()
   ParallelLogger::logDebug(paste0('Max rowId in new : ',maxX))
   
 
@@ -92,9 +93,9 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   # there is no guarantee the order of data within columns is preserved
   newcovariateData$covariates <- newcovariateData$covariates %>% dplyr::collect()  
   data <- Matrix::sparseMatrix(
-    i = newcovariateData$covariates %>% dplyr::select(.data$rowId) %>% dplyr::pull(),
-    j = newcovariateData$covariates %>% dplyr::select(.data$columnId) %>% dplyr::pull(),
-    x = newcovariateData$covariates %>% dplyr::select(.data$covariateValue) %>% dplyr::pull(),
+    i = newcovariateData$covariates %>% dplyr::select(.data$rowId) %>% dplyr::collect() %>% dplyr::pull(),
+    j = newcovariateData$covariates %>% dplyr::select(.data$columnId) %>% dplyr::collect() %>% dplyr::pull(),
+    x = newcovariateData$covariates %>% dplyr::select(.data$covariateValue) %>% dplyr::collect() %>% dplyr::pull(),
     dims=c(maxX,maxY)
   )
     
@@ -137,6 +138,7 @@ MapIds <- function(
     rowMap <- data.frame(
       rowId = covariateData$covariates %>% 
         dplyr::distinct(.data$rowId) %>% 
+        dplyr::collect() %>% 
         dplyr::pull()
     )
     rowMap$xId <- 1:nrow(rowMap)
@@ -152,6 +154,7 @@ MapIds <- function(
       covariateId = covariateData$covariates %>% 
         dplyr::inner_join(covariateData$rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
         dplyr::distinct(.data$covariateId) %>% 
+        dplyr::collect() %>% 
         dplyr::pull()
     )
     mapping$columnId <- 1:nrow(mapping)
