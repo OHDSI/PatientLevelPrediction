@@ -1,9 +1,3 @@
-# fix issue with nrow - temp fix for me locally
-nrow <- function(x){UseMethod("nrow",x)}
-nrow.default <- base::nrow
-nrow.tbl <- function(x){x %>% dplyr::tally() %>% dplyr::pull()}
-
-
 removeInvalidString <- function(string){
   modString <- gsub('_', ' ', string)
   modString <- gsub('\\.', ' ', modString)

@@ -5,7 +5,7 @@
 \title{Create setting for Broken Adaptive Ridge Regression using Cyclops}
 \usage{
 setBrokenAdaptiveRidge(
-  variance = 1,
+  initialRidgeVariance = 1,
   seed = NULL,
   includeCovariateIds = c(),
   noShrinkage = c("(Intercept)"),
@@ -20,7 +20,7 @@ setBrokenAdaptiveRidge(
 )
 }
 \arguments{
-\item{variance}{Numeric: prior distribution starting variance}
+\item{initialRidgeVariance}{Numeric: prior distribution starting variance}
 
 \item{seed}{An option to add a seed when training the model}
 

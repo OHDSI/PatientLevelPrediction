@@ -279,8 +279,8 @@ implementAgeSplines <- function(trainData, featureEngineeringSettings, model=NUL
   ageData <- trainData$labels
   y <- ageData$outcomeCount
   X <- trainData$covariateData$covariates %>% dplyr::filter(covariateId==1002)
-  meanAge <- X %>% dplyr::summarize(meanAge=mean(covariateValue)) %>% dplyr::pull()
-  stdAge <- X %>% dplyr::summarize(stdAge=sd(covariateValue)) %>% dplyr::pull()
+  meanAge <- X %>% dplyr::summarize(meanAge=mean(covariateValue)) %>% dplyr::collect() %>% dplyr::pull()
+  stdAge <- X %>% dplyr::summarize(stdAge=sd(covariateValue)) %>% dplyr::collect() %>% dplyr::pull()
   X_df <- X %>% dplyr::mutate(covariateValue = (covariateValue - meanAge)/stdAge) %>% dplyr::collect() %>% dplyr::arrange(rowId)
   X <- X_df$covariateValue
   model <- mgcv::gam(
@@ -294,8 +294,8 @@ implementAgeSplines <- function(trainData, featureEngineeringSettings, model=NUL
   }
   else {
     X <- trainData$covariateData$covariates %>% dplyr::filter(covariateId==1002)
-    meanAge <- X %>% dplyr::summarize(meanAge=mean(covariateValue)) %>% dplyr::pull()
-    stdAge <- X %>% dplyr::summarize(stdAge=sd(covariateValue)) %>% dplyr::pull()
+    meanAge <- X %>% dplyr::summarize(meanAge=mean(covariateValue)) %>% dplyr::collect() %>% dplyr::pull()
+    stdAge <- X %>% dplyr::summarize(stdAge=sd(covariateValue)) %>% dplyr::collect() %>% dplyr::pull()
     X_df <- X %>% dplyr::mutate(covariateValue = (covariateValue - meanAge)/stdAge) %>% dplyr::collect() %>% dplyr::arrange(rowId)
     ageData <- trainData$labels
     y <- ageData$outcomeCount

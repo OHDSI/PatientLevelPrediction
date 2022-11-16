@@ -50,6 +50,7 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
       'Max covariateId in original covariates: ', 
       plpData$covariateData$covariates %>% 
         dplyr::summarise(max = max(.data$covariateId, na.rm=T)) %>% 
+        dplyr::collect() %>%
         dplyr::pull() 
     )
   )
@@ -77,7 +78,8 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   ParallelLogger::logDebug(paste0('# covariates in mapped covariateRef: ', nrow(newcovariateData$covariateRef)))
 
   maxY <- newcovariateData$mapping %>% 
-    dplyr::summarise(max=max(.data$columnId, na.rm = TRUE)) %>% 
+    dplyr::summarise(max=max(.data$columnId, na.rm = TRUE)) %>%
+    dplyr::collect() %>%
     dplyr::pull()
   ParallelLogger::logDebug(paste0('Max newCovariateId in mapping: ',maxY))
   maxX <- newcovariateData$cohort %>% dplyr::summarise(max = max(.data$rowId, na.rm=T)) %>% dplyr::pull()
@@ -137,6 +139,7 @@ MapIds <- function(
     rowMap <- data.frame(
       rowId = covariateData$covariates %>% 
         dplyr::distinct(.data$rowId) %>% dplyr::arrange(rowId) %>%
+        dplyr::collect() %>%
         dplyr::pull()
     )
     rowMap$xId <- 1:nrow(rowMap)
@@ -152,6 +155,7 @@ MapIds <- function(
       covariateId = covariateData$covariates %>% 
         dplyr::inner_join(covariateData$rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
         dplyr::distinct(.data$covariateId) %>% dplyr::arrange(covariateId) %>%
+        dplyr::collect() %>%
         dplyr::pull()
     )
     mapping$columnId <- 1:nrow(mapping)
