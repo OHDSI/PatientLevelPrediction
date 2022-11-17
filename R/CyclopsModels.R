@@ -464,7 +464,7 @@ getCV <- function(
 
 getVariableImportance <- function(modelTrained, trainData){
   varImp <- data.frame(
-    covariateId = as.double(modelTrained$coefficients$covariateIds[modelTrained$coefficients$covariateIds!='(Intercept)']),
+    covariateId = bit64::as.integer64(modelTrained$coefficients$covariateIds[modelTrained$coefficients$covariateIds!='(Intercept)']),
     value = modelTrained$coefficients$betas[modelTrained$coefficients$covariateIds!='(Intercept)']
   )
 
