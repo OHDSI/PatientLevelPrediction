@@ -302,7 +302,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     covariateId = coefficients$covariateIds[coefficients$covariateIds!='(Intercept)']
   )
   coefficients <- coefficients[coefficients$beta != 0, ]
-  coefficients$covariateId <- as.numeric(coefficients$covariateId)
+  coefficients$covariateId <- bit64::as.integer64(coefficients$covariateId)
   if(sum(coefficients$beta != 0)>0){
     covariateData$coefficients <- coefficients
     on.exit(covariateData$coefficients <- NULL, add = TRUE)
