@@ -80,8 +80,8 @@ preprocessData <- function (covariateData,
   
   #update covariateRef
   removed <- unique(c(
-    attr(covariateData, "metaData")$deletedInfrequentCovariateIds,
-    attr(covariateData, "metaData")$deletedRedundantCovariateIds
+    bit64::as.integer64(attr(covariateData, "metaData")$deletedInfrequentCovariateIds),
+    bit64::as.integer64(attr(covariateData, "metaData")$deletedRedundantCovariateIds)
     )
     )
   covariateData$covariateRef <- covariateData$covariateRef %>% 
