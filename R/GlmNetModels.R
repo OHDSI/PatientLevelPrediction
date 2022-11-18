@@ -332,7 +332,7 @@ fitGlmNet <- function(trainData,
   comp <- Sys.time() - start
 
   variableImportance <- data.frame(
-    covariateId = as.double(cvResult$model$coefficients$covariateIds[cvResult$model$coefficients$covariateIds!='(Intercept)']),
+    covariateId = bit64::as.integer64(cvResult$model$coefficients$covariateIds[cvResult$model$coefficients$covariateIds!='(Intercept)']),
     covariateValue = cvResult$model$coefficients$betas[cvResult$model$coefficients$covariateIds!='(Intercept)']
   )
   covariateRef <- merge(covariateRef, variableImportance, all.x = T, by = 'covariateId')
