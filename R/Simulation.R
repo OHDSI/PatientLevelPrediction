@@ -92,6 +92,8 @@
 #'
 #' @return
 #' An object of type \code{plpData}.
+#' 
+#' @importClassesFrom FeatureExtraction CovariateData
 #'
 #' @export
 simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
