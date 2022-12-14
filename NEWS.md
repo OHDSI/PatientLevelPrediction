@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.0.9
+======================
+- Fix bug with python type being required to be int
+
 PatientLevelPrediction 6.0.8
 ======================
 - Allow priorType to be passed down to getCV function in case prior is not 'laplace'
