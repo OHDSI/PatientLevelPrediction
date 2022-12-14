@@ -1,3 +1,22 @@
+PatientLevelPrediction 6.0.8
+======================
+- Allow priorType to be passed down to getCV function in case prior is not 'laplace'
+- Seed specified in Cyclops model wasn't passed to Cyclops
+
+PatientLevelPrediction 6.0.7
+======================
+- fixed issue with shiny viewer converting connection details to large json
+
+PatientLevelPrediction 6.0.6
+======================
+- added check for cdmDatabaseId into createDatabaseDetails
+- added test for check for cdmDatabaseId into createDatabaseDetails to error when NULL
+- removed session$onSessionEnded(shiny::stopApp)  from shiny server
+
+PatientLevelPrediction 6.0.5
+======================
+- fixing cox predictions
+
 PatientLevelPrediction 6.0.4
 ======================
 - forcing cdmDatabaseId to be a string if integer is input
