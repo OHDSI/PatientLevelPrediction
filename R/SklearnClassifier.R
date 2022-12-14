@@ -149,7 +149,7 @@ predictPythonSklearn <- function(
       plpData = data, 
       cohort = cohort,
       map = plpModel$covariateImportance %>% 
-        dplyr::select(.data$columnId, .data$covariateId)
+        dplyr::select("columnId", "covariateId")
     )
     
     newData <- matrixObjects$dataMatrix
@@ -199,8 +199,8 @@ predictValues <- function(model, data, cohort, type = 'binary'){
   cohort$value <- predictionValue[,2]
   
   cohort <- cohort %>% 
-    dplyr::select(-.data$rowId) %>%
-    dplyr::rename(rowId = .data$originalRowId)
+    dplyr::select(-"rowId") %>%
+    dplyr::rename(rowId = "originalRowId")
   
   attr(cohort, "metaData")$modelType <-  type
   

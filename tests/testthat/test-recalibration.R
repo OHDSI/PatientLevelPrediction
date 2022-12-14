@@ -63,7 +63,7 @@ testthat::expect_true(sum(test$evaluationType == 'weakRecalibration') == 100)
 
 test_that("recalibratePlpRefit", {
   
-  newPop <- plpResult$prediction %>% dplyr::select(-.data$value) %>% dplyr::filter(.data$evaluationType %in% c('Test','Train'))
+  newPop <- plpResult$prediction %>% dplyr::select(-"value") %>% dplyr::filter(.data$evaluationType %in% c('Test','Train'))
   attr(newPop, 'metaData') <- list(
     targetId = 1, 
     outcomeId = 2,

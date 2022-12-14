@@ -52,7 +52,7 @@ recalibratePlpRefit <- function(
   #get selected covariates
   includeCovariateIds <- plpModel$covariateImportance %>% 
     dplyr::filter(.data$covariateValue != 0) %>% 
-    dplyr::select(.data$covariateId) %>% 
+    dplyr::select("covariateId") %>% 
     dplyr::pull()
   
   # check which covariates are included in new data
@@ -68,13 +68,7 @@ recalibratePlpRefit <- function(
     maxIterations = 10000 # increasing this due to test code often not converging
   )
   
-  newData$labels <- newPopulation #%>% 
-    #dplyr::select(
-    #  .data$rowId, 
-    #  .data$cohortStartDate,
-    #  .data$outcomeCount, 
-     # .data$survivalTime
-      #)
+  newData$labels <- newPopulation 
   
   newData$folds <- data.frame(
     rowId = newData$labels$rowId, 
@@ -126,8 +120,8 @@ recalibratePlpRefit <- function(
     adjust <- newModel$covariateImportance %>% 
       dplyr::filter(.data$covariateValue != 0) %>% 
       dplyr::select(
-        .data$covariateId, 
-        .data$covariateValue
+        "covariateId", 
+        "covariateValue"
       )
   } else{
     adjust <- c()

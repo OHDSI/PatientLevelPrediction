@@ -168,10 +168,10 @@ applyTidyCovariateData <- function(
   
   if(!is.null(maxs)){
     if('bins'%in%colnames(maxs)){
-      covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = .data$bins) %>% 
-        dplyr::rename(maxValue = .data$maxs)
+      covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = "bins") %>% 
+        dplyr::rename(maxValue = "maxs")
     } else{
-      covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins)
+      covariateData$maxes <- maxs 
     }
     on.exit(covariateData$maxes <- NULL, add = TRUE)
     
@@ -184,8 +184,8 @@ applyTidyCovariateData <- function(
       dplyr::inner_join(covariateData$includeCovariates, by='covariateId') %>% # added as join
       dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
       dplyr::mutate(value = 1.0*.data$covariateValue/.data$maxValue) %>%
-      dplyr::select(- .data$covariateValue) %>%
-      dplyr::rename(covariateValue = .data$value)
+      dplyr::select(-"covariateValue") %>%
+      dplyr::rename(covariateValue = "value")
   } else{
     newCovariateData$covariates <- covariateData$covariates %>% 
       dplyr::inner_join(covariateData$includeCovariates, by='covariateId')

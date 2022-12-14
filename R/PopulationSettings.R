@@ -262,7 +262,7 @@ createStudyPopulation <- function(
   outcomeTAR <- population %>% 
     dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
     dplyr::filter(.data$outcomeId == get('oId'))  %>% 
-    dplyr::select(.data$rowId, .data$daysToEvent, .data$tarStart, .data$tarEnd) %>% 
+    dplyr::select("rowId", "daysToEvent", "tarStart", "tarEnd") %>% 
     dplyr::filter(.data$daysToEvent >= .data$tarStart & .data$daysToEvent <= .data$tarEnd)  
   
   # prevent warnings when no results left
@@ -271,11 +271,11 @@ createStudyPopulation <- function(
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise(first = min(.data$daysToEvent),
                      ocount = length(unique(.data$daysToEvent)))  %>% 
-    dplyr::select(.data$rowId, .data$first, .data$ocount)
+    dplyr::select("rowId", "first", "ocount")
   } else {
     outcomeTAR <- outcomeTAR %>% 
       dplyr::mutate(first = 0, ocount = 0) %>% 
-      dplyr::select(.data$rowId, .data$first, .data$ocount) 
+      dplyr::select("rowId", "first", "ocount") 
   }
   
   population <- population %>%
@@ -332,14 +332,14 @@ createStudyPopulation <- function(
     outcomeBefore <- population %>% 
       dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
       dplyr::filter(outcomeId == get('oId'))  %>% 
-      dplyr::select(.data$rowId, .data$daysToEvent, .data$tarStart) %>% 
+      dplyr::select("rowId", "daysToEvent", "tarStart") %>% 
       dplyr::filter(.data$daysToEvent < .data$tarStart & .data$daysToEvent > -get('priorOutcomeLookback') ) 
     
     if(nrow(as.data.frame(outcomeBefore))>0){
       outcomeBefore %>%
         dplyr::group_by(.data$rowId) %>%
         dplyr::summarise(first = min(.data$daysToEvent))  %>% 
-        dplyr::select(.data$rowId)
+        dplyr::select("rowId")
     }
       
     population <- population %>%
@@ -419,9 +419,9 @@ createStudyPopulation <- function(
     dplyr::mutate(timeAtRisk = .data$tarEnd - .data$tarStart + 1 ,
                   survivalTime = ifelse(.data$outcomeCount == 0, .data$tarEnd -.data$tarStart + 1, .data$first - .data$tarStart + 1),
                   daysToEvent = .data$first) %>%
-    dplyr::select(.data$rowId, .data$subjectId, .data$targetId, .data$cohortStartDate, .data$daysFromObsStart,
-                  .data$daysToCohortEnd, .data$daysToObsEnd, .data$ageYear, .data$gender,
-                  .data$outcomeCount, .data$timeAtRisk, .data$daysToEvent, .data$survivalTime)
+    dplyr::select("rowId", "subjectId", "targetId", "cohortStartDate", "daysFromObsStart",
+                  "daysToCohortEnd", "daysToObsEnd", "ageYear", "gender",
+                  "outcomeCount", "timeAtRisk", "daysToEvent", "survivalTime")
 
     # check outcome still there
     if(sum(!is.na(population$daysToEvent))==0){
