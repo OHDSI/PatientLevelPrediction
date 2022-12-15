@@ -70,7 +70,7 @@ test_that("prediction works", {
 
 test_that("applyTidyCovariateData", {
   
-  covariateIds <- plpData$covariateData$covariateRef %>% dplyr::select(.data$covariateId) %>% dplyr::pull()
+  covariateIds <- plpData$covariateData$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull()
   remove <- sample(covariateIds, 10)
   deletedRedundantCovariateIds = remove[1:5]
   deletedInfrequentCovariateIds = remove[6:10]
@@ -95,7 +95,7 @@ test_that("applyTidyCovariateData", {
   # some covariates removed
   expect_true(newCovariateData$covariates %>% dplyr::tally() %>% dplyr::pull() < covariateCount)
   
-  newCovs <- newCovariateData$covariateRef %>% dplyr::select(.data$covariateId) %>% dplyr::pull()
+  newCovs <- newCovariateData$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull()
   
   expect_equal(sum(covariateIds[!covariateIds %in% newCovs] %in% remove),10)
   

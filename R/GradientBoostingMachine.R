@@ -146,8 +146,8 @@ varImpXgboost <- function(
   varImp <- merge(covariateMap, varImp, by.x='columnId', by.y='Feature')
   varImp <- varImp %>% 
     dplyr::mutate(included = 1) %>%
-    dplyr::rename(covariateValue = .data$Gain) %>% 
-    dplyr::select(.data$covariateId, .data$covariateValue, .data$included)
+    dplyr::rename(covariateValue = "Gain") %>% 
+    dplyr::select("covariateId", "covariateValue", "included")
   
   return(varImp)
   
@@ -165,7 +165,7 @@ predictXgboost <- function(
       plpData = data, 
       cohort = cohort,
       map = plpModel$covariateImportance %>% 
-        dplyr::select(.data$columnId, .data$covariateId)
+        dplyr::select("columnId", "covariateId")
     )
     
     # use the include??
@@ -190,8 +190,8 @@ predictXgboost <- function(
   # fix the rowIds to be the old ones?
   # now use the originalRowId and remove the matrix rowId
   prediction <- prediction %>% 
-    dplyr::select(-.data$rowId) %>%
-    dplyr::rename(rowId = .data$originalRowId)
+    dplyr::select(-"rowId") %>%
+    dplyr::rename(rowId = "originalRowId")
 
   attr(prediction, "metaData") <- list(modelType = attr(plpModel, "modelType"))
   

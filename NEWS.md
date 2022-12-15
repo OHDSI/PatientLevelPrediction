@@ -1,3 +1,8 @@
+PatientLevelPrediction 6.0.10
+======================
+- Updated test to skip test for FE setting if the model does not fit (this was causing occasional test fail)
+- replaced .data$ with "" for all dplyr::select to remove warnings
+
 PatientLevelPrediction 6.0.9
 ======================
 - Fix bug with python type being required to be int
