@@ -14,7 +14,7 @@ setDecisionTree(
   maxFeatures = list(100, "sqrt", NULL),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(10^-7),
-  classWeight = list(NULL, "balanced"),
+  classWeight = list(NULL),
   seed = sample(1e+06, 1)
 )
 }
