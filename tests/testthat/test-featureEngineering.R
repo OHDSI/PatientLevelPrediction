@@ -18,8 +18,6 @@ library("testthat")
 context("FeatureEngineering")
 
 
-trainData <- createTrainData(plpData, population)
-
 testFEFun <- function(type = 'none'){
   
   result <- createFeatureEngineeringSettings(type = type)
@@ -79,13 +77,11 @@ test_that("univariateFeatureSelection", {
   newDataCovariateSize <- reducedTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   expect_true(newDataCovariateSize <= trainDataCovariateSize)
   
-  # expect k many covariates left - REMOVED AS TIES MAKES THIS FAIL OCCASIONALLY
+  # expect k many covariates left
   expect_equal(k,reducedTrainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   
 })
 
-# refresh the training data
-trainData <- createTrainData(plpData, population)
 
 test_that("createRandomForestFeatureSelection correct class", {
   ntreesTest <- sample(1000,1)
