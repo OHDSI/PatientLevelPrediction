@@ -32,7 +32,6 @@
 #' }
 #' @export
 setAdaBoost <- function(
-  #baseEstimator = list(NULL),
   nEstimators = list(10,50, 200), 
   learningRate = list(1, 0.5, 0.1), 
   algorithm = list('SAMME.R'),
@@ -43,8 +42,6 @@ setAdaBoost <- function(
   checkIsClass(nEstimators, 'list')
   checkIsClass(learningRate, 'list')
   checkIsClass(algorithm, 'list')
-  
-  #lapply(1:length(baseEstimator), function(i) checkIsClass(maxDepth[[i]] , c("NULL")))
   
   lapply(1:length(nEstimators), function(i) checkIsClass(nEstimators[[i]] , c("integer", "numeric")))
   lapply(1:length(nEstimators), function(i) checkHigher(nEstimators[[i]] , 0))
@@ -64,7 +61,6 @@ setAdaBoost <- function(
   ##checkPython()
   
   paramGrid <- list(
-    baseEstimator = list(NULL),
     nEstimators = nEstimators,
     learningRate = learningRate,
     algorithm = algorithm,
@@ -100,7 +96,6 @@ setAdaBoost <- function(
 AdaBoostClassifierInputs <- function(classifier, param){
   
   model <- classifier(
-    base_estimator = param[[which.max(names(param)=='baseEstimator')]],
     n_estimators = param[[which.max(names(param)=='nEstimators')]],
     learning_rate = param[[which.max(names(param)=='learningRate')]],
     algorithm = param[[which.max(names(param)=='algorithm')]],

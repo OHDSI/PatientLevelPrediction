@@ -26,7 +26,7 @@ test_that("setAdaBoost settings work checks", {
   inputs <- AdaBoostClassifierInputs(list, adset$param[[1]])
   expect_equal(
     names(inputs), 
-    c("base_estimator","n_estimators","learning_rate","algorithm","random_state" )
+    c("n_estimators","learning_rate","algorithm","random_state" )
     )
   
 })
