@@ -239,7 +239,6 @@ testthat::expect_error(setIterativeHardThresholding(seed = 'F'))
 test_that("test logistic regression runs", {
 
 modelSettings <- setLassoLogisticRegression()
-trainData <- createTrainData(plpData, population)
 
 fitModel <- fitPlp(
   trainData = trainData,   
@@ -251,6 +250,8 @@ fitModel <- fitPlp(
 expect_equal(length(unique(fitModel$prediction$evaluationType)),2)
 expect_equal(nrow(fitModel$prediction), nrow(trainData$labels)*2)
 expect_true(length(fitModel$model$coefficients) < trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()+1)
+
+
 expect_true(!is.null(fitModel$trainDetails$trainingTime))
 expect_equal(fitModel$trainDetails$trainingDate,Sys.Date())
 
