@@ -336,7 +336,7 @@ setMLP <- function(
   validationFraction = list(0.1),
   beta1 = list(0.9), 
   beta2 = list(0.999), 
-  epsilon = list(1,0.1,0.00000001), 
+  epsilon = list(0.00000001), 
   nIterNoChange = list(10),
   seed = sample(100000,1)
   ){
