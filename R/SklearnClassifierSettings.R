@@ -133,7 +133,7 @@ setDecisionTree <- function(
   maxFeatures = list(100,'sqrt', NULL),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(10^-7),
-  classWeight = list(NULL, 'balanced'),
+  classWeight = list(NULL),
   seed = sample(1000000,1)
   ){
   if(!inherits(x = seed[[1]], what = c('numeric', 'integer'))){
@@ -560,7 +560,7 @@ setRandomForest <- function(
   maxSamples = list(NULL, 0.9),
   oobScore = list(FALSE),
   nJobs = list(NULL),
-  classWeight = list('balanced_subsample', NULL),
+  classWeight = list(NULL),
   seed = sample(100000,1)
   ){
   
@@ -685,7 +685,7 @@ RandomForestClassifierInputs <- function(classifier, param){
     oob_score = param[[which.max(names(param)=='oobScore')]],
     n_jobs = param[[which.max(names(param)=='nJobs')]],
     random_state = param[[which.max(names(param)=='seed')]],
-    verbose = 0,
+    verbose = 0L,
     warm_start = F,
     class_weight = param[[which.max(names(param)=='classWeight')]]
   )
@@ -720,7 +720,7 @@ setSVM <- function(
   coef0 = list(0.0),
   shrinking = list(TRUE), 
   tol = list(0.001),
-  classWeight = list('balanced', NULL), 
+  classWeight = list(NULL), 
   cacheSize  = 500,
   seed = sample(100000,1)
   ){
