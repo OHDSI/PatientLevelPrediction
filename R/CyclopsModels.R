@@ -48,7 +48,7 @@ fitCyclopsModel <- function(
     newCovariates <- covariates %>%
       dplyr::filter(.data$covariateId %in% !!sourceCoefs$covariateIds) %>%
       dplyr::mutate(newCovariateId = .data$covariateId*-1) %>%
-      dplyr::select(-.data$covariateId) %>%
+      dplyr::select(-"covariateId") %>%
       dplyr::rename(covariateId = .data$newCovariateId) %>%
       dplyr::collect()
     
@@ -303,7 +303,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
       dplyr::mutate(values = .data$covariateValue*.data$beta) %>%
       dplyr::group_by(.data$rowId) %>%
       dplyr::summarise(value = sum(.data$values, na.rm = TRUE)) %>%
-      dplyr::select(.data$rowId, .data$value)
+      dplyr::select("rowId", "value")
     
     prediction <- as.data.frame(prediction)
     prediction <- merge(population, prediction, by ="rowId", all.x = TRUE, fill = 0)
@@ -381,8 +381,8 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   }
   class(outcomeModel) <- "plpModel"
   
-  #get CV
-  if(modelType == "logistic" && useCrossValidation){
+  #get CV - added && status == "OK" to only run if the model fit sucsessfully 
+  if(modelType == "logistic" && useCrossValidation && status == "OK"){
     outcomeModel$cv <- getCV(cyclopsData, labels, cvVariance = fit$variance, folds = folds,
                              priorType = priorType)
   }
@@ -474,7 +474,7 @@ if(sum(abs(varImp$value)>0)==0){
     #dplyr::left_join(trainData$covariateData$varImp) %>%
     dplyr::left_join(varImp, by = 'covariateId') %>%
     dplyr::mutate(covariateValue = ifelse(is.na(.data$value), 0, .data$value)) %>%
-    dplyr::select(-.data$value) %>%
+    dplyr::select(-"value") %>%
     dplyr::arrange(-abs(.data$covariateValue)) %>%
     dplyr::collect()
 }

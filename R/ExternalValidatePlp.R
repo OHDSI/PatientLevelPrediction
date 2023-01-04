@@ -61,7 +61,7 @@ externalValidatePlp <- function(
   
   # step 6: covariate summary
   labels <- tryCatch({
-    population %>% dplyr::select(.data$rowId, .data$outcomeCount)
+    population %>% dplyr::select("rowId", "outcomeCount")
   },
     error = function(e){ return(NULL) }
   )
@@ -72,7 +72,7 @@ externalValidatePlp <- function(
       covariateData = plpData$covariateData, 
       cohort = population[,colnames(population) != 'outcomeCount'], 
       labels = labels, 
-      variableImportance = plpModel$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue)
+      variableImportance = plpModel$covariateImportance %>% dplyr::select("covariateId", "covariateValue")
     )},
     error = function(e){ParallelLogger::logInfo(e); return(NULL) }
   )
