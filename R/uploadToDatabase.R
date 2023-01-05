@@ -231,16 +231,16 @@ createPlpResultTables <- function(
       tablePrefix <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefix))), '_')
     }
       
-      sqlFileName <- ifelse(
-        targetDialect != 'sqlite',
-        "PlpResultTables.sql",
-        paste0("PlpResultTables_",targetDialect,".sql")
+      dialect <- ifelse(
+        targetDialect != 'sqlite',  # could add dmbs specific code for other dbms
+        'sql_server',
+        targetDialect
       )
       
       pathToSql <- system.file(
-        paste("sql/", "sql_server", 
+        paste("sql/", dialect, 
               sep = ""),
-        sqlFileName, 
+        "PlpResultTables.sql", 
         package = "PatientLevelPrediction"
         )
       
@@ -256,7 +256,6 @@ createPlpResultTables <- function(
         tempEmulationSchema = tempEmulationSchema
       )
       
-    
     DatabaseConnector::executeSql(conn, renderedSql)
   }
   
