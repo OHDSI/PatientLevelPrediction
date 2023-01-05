@@ -142,7 +142,11 @@ reduceTrainData <- function(trainData) {
     dplyr::filter(covariateId %in% covariates)
   reducedTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>% 
     dplyr::filter(covariateId %in% covariates)
+  
+  attributes(reducedTrainData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
+  class(reducedTrainData$covariateData) <- class(trainData$covariateData)
+  attributes(reducedTrainData)$metaData <- attributes(trainData)$metaData
   return(reducedTrainData)  
 }
 
-reducedTrainData <- reduceTrainData(trainData)
+tinyTrainData <- reduceTrainData(trainData)

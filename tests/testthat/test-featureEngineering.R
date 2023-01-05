@@ -65,11 +65,12 @@ test_that("univariateFeatureSelection", {
   
   k <- 20+sample(10,1)
   featureEngineeringSettings <- testUniFun(k = k)
+  newTrainData <- copyTrainData(trainData)
   
-  trainDataCovariateSize <- trainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
+  trainDataCovariateSize <- newTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   
   reducedTrainData <- univariateFeatureSelection(
-    trainData = trainData, 
+    trainData = newTrainData, 
     featureEngineeringSettings = featureEngineeringSettings,
     covariateIdsInclude = NULL
     )
@@ -137,10 +138,11 @@ test_that("randomForestFeatureSelection", {
     maxDepth = maxDepthTest
   )
   
-  trainDataCovariateSize <- trainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
+  newTrainData <- copyTrainData(trainData)
+  trainDataCovariateSize <- newTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   
   reducedTrainData <- randomForestFeatureSelection(
-    trainData = trainData, 
+    trainData = newTrainData, 
     featureEngineeringSettings = featureEngineeringSettings,
     covariateIdsInclude = NULL
   )
@@ -153,8 +155,9 @@ test_that("randomForestFeatureSelection", {
 test_that("featureSelection is applied on test_data", {
   k <- 10
   featureEngineeringSettings <- testUniFun(k = k)
-  trainData <- univariateFeatureSelection(
-    trainData = trainData, 
+  newTrainData <- copyTrainData(trainData)
+  newTrainData <- univariateFeatureSelection(
+    trainData = newTrainData, 
     featureEngineeringSettings = featureEngineeringSettings,
     covariateIdsInclude = NULL
   )
@@ -163,12 +166,11 @@ test_that("featureSelection is applied on test_data", {
   
   # added try catch due to model sometimes not fitting
   plpModel <- tryCatch(
-    {fitPlp(trainData, modelSettings, analysisId='FE')}, 
+    {fitPlp(newTrainData, modelSettings, analysisId='FE')}, 
     error = function(e){return(NULL)}
   )
   
   if(!is.null(plpModel)){ # if the model fit then check this
-    testData <- createTestData(plpData, population)
     prediction <- predictPlp(plpModel, testData, population)
     expect_true(attr(prediction, 'metaData')$featureEngineering) 
   }

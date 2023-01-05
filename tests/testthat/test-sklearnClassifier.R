@@ -62,7 +62,7 @@ test_that("check fit of DecisionTree", {
   )
   
   plpModel <- fitPlp(
-    trainData = reducedTrainData, 
+    trainData = tinyTrainData, 
     modelSettings = modelSettings,
     analysisId = 'DecisionTree'
     )
@@ -72,7 +72,7 @@ test_that("check fit of DecisionTree", {
   
 })
 
-# add tests for other classifiers
+
 test_that('AdaBoost fit works', {
   
   modelSettings <- setAdaBoost(nEstimators = list(10),
@@ -80,12 +80,13 @@ test_that('AdaBoost fit works', {
                                )
   
   plpModel <- fitPlp(
-    trainData = reducedTrainData, 
+    trainData = tinyTrainData, 
     modelSettings = modelSettings,
     analysisId = 'Adaboost'
   )
   
   expect_correct_fitPlp(plpModel, trainData)
+  expect_equal(dir(plpModel$model),"model.pkl")
   
 })
 
@@ -101,12 +102,13 @@ test_that('RandomForest fit works', {
                                    classWeight = list(NULL))
   
   plpModel <- fitPlp(
-    trainData = reducedTrainData, 
+    trainData = tinyTrainData, 
     modelSettings = modelSettings,
     analysisId = 'RandomForest'
   )
   
   expect_correct_fitPlp(plpModel, trainData)
+  expect_equal(dir(plpModel$model),"model.pkl")
   
 })
 
@@ -122,12 +124,14 @@ test_that('MLP fit works', {
   )
   
   plpModel <- fitPlp(
-    trainData = reducedTrainData, 
+    trainData = tinyTrainData, 
     modelSettings = modelSettings,
     analysisId = 'MLP'
   )
   
   expect_correct_fitPlp(plpModel, trainData)
+  expect_equal(dir(plpModel$model),"model.pkl")
+  
 })
 
 
@@ -135,12 +139,13 @@ test_that('Naive bayes fit works', {
   modelSettings <- setNaiveBayes()
   
   plpModel <- fitPlp(
-    trainData = reducedTrainData, 
+    trainData = tinyTrainData, 
     modelSettings = modelSettings,
     analysisId = 'Naive bayes'
   )
   
-  expect_correct_fitPlp(plpModel, trainData, outputRisk=FALSE) 
+  expect_correct_fitPlp(plpModel, trainData) 
+  expect_equal(dir(plpModel$model),"model.pkl")
   
 })
 
@@ -152,10 +157,12 @@ test_that('Support vector machine fit works', {
                           classWeight = list(NULL))
   
   plpModel <- fitPlp(
-    trainData = reducedTrainData, 
+    trainData = tinyTrainData, 
     modelSettings = modelSettings,
     analysisId = 'SVM'
   )
   
   expect_correct_fitPlp(plpModel, trainData) 
+  expect_equal(dir(plpModel$model),"model.pkl")
+  
 })
