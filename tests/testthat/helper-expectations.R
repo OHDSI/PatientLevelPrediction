@@ -19,3 +19,12 @@ expect_correct_fitPlp <- function(plpModel, trainData) {
   expect_equal(names(plpModel), c("model", "preprocessing", "prediction",
                                   "modelDesign", "trainDetails", "covariateImportance"))
 }
+
+expect_correct_predictions <- function(predictions, testData) {
+  
+  # predictions are all between 0 and 1
+  expect_true(all((predictions$value>=0) & (predictions$value<=1)))
+  expect_equal(NROW(testData$labels), NROW(predictions))
+  
+  
+}

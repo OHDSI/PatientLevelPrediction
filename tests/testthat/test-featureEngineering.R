@@ -153,7 +153,7 @@ test_that("randomForestFeatureSelection", {
 })
 
 test_that("featureSelection is applied on test_data", {
-  k <- 10
+  k <- 20
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)
   newTrainData <- univariateFeatureSelection(

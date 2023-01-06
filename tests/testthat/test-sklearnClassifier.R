@@ -72,6 +72,19 @@ test_that("check fit of DecisionTree", {
   
 })
 
+test_that('fitSklearn errors with wrong covariateData', {
+  
+  newTrainData <- copyTrainData(trainData)
+  class(newTrainData$covariateData) <- 'notCovariateData'
+  modelSettings <- setAdaBoost()
+  analysisId <- 42
+  
+  expect_error(fitSklearn(newTrainData,
+                          modelSettings,
+                          search='grid',
+                          analysisId))
+})
+
 
 test_that('AdaBoost fit works', {
   
@@ -165,4 +178,22 @@ test_that('Support vector machine fit works', {
   expect_correct_fitPlp(plpModel, trainData) 
   expect_equal(dir(plpModel$model),"model.pkl")
   
+})
+
+test_that('Sklearn predict works', {
+  
+  modelSettings <- setAdaBoost(nEstimators = list(10),
+                               learningRate = list(0.1),
+  )
+  
+  plpModel <- fitPlp(
+    trainData = tinyTrainData, 
+    modelSettings = modelSettings,
+    analysisId = 'Adaboost'
+  )
+  
+  predictions <- predictPythonSklearn(plpModel,
+                                      testData,
+                                      population)
+  expect_correct_predictions(predictions, testData)
 })

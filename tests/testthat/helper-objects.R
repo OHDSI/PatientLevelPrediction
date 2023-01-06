@@ -128,7 +128,7 @@ testData <- createTestData(plpData, population)
 # reduced trainData to only use 10 most important features (as decided by LR)
 reduceTrainData <- function(trainData) {
   covariates <- plpResult$model$covariateImportance %>% 
-    dplyr::slice_max(order_by = abs(covariateValue),n = 10) %>% 
+    dplyr::slice_max(order_by = abs(covariateValue),n = 20, with_ties = F) %>% 
     dplyr::pull(covariateId)
   
   reducedTrainData <- list(labels = trainData$labels,
@@ -150,3 +150,6 @@ reduceTrainData <- function(trainData) {
 }
 
 tinyTrainData <- reduceTrainData(trainData)
+
+tinyPlpData <- createTinyPlpData(plpData, plpResult)
+
