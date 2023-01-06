@@ -6,7 +6,7 @@
 \usage{
 insertCsvToDatabase(
   csvFolder,
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   modelSaveLocation,
   csvTableAppend = ""
@@ -15,7 +15,7 @@ insertCsvToDatabase(
 \arguments{
 \item{csvFolder}{The location to the csv folder with the plp results}
 
-\item{conn}{A connection to the plp results database that the csv results will be inserted into}
+\item{connectionDetails}{A connection details for the plp results database that the csv results will be inserted into}
 
 \item{databaseSchemaSettings}{A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables to insert the csv results into}
 

@@ -5,7 +5,7 @@
 \title{Insert mutliple diagnosePlp results saved to a directory into a PLP result schema database}
 \usage{
 addMultipleDiagnosePlpToDatabase(
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   cohortDefinitions,
   databaseList = NULL,
@@ -13,8 +13,8 @@ addMultipleDiagnosePlpToDatabase(
 )
 }
 \arguments{
-\item{conn}{A connection to a database created by using the
-function \code{connect} in the
+\item{connectionDetails}{A connection details created by using the
+function \code{createConnectionDetails} in the
 \code{DatabaseConnector} package.}
 
 \item{databaseSchemaSettings}{A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables}
