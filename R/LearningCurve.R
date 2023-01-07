@@ -307,7 +307,7 @@ learningCurveHelper <- function(result, trainFractions){
   
   result$name <- paste(result$evaluation, result$metric, sep='_')
   
-  result <- result %>% dplyr::select(.data$name, .data$value)
+  result <- result %>% dplyr::select("name", "value")
   
   result <- rbind(
     c('executionTime', executeTime), 
@@ -381,9 +381,9 @@ plotLearningCurve <- function(learningCurve,
     # create a data.frame with evalautionType, AUROC
     tidyLearningCurve <- learningCurve %>% 
       dplyr::rename(
-        Occurrences = .data$Train_outcomeCount, 
-        Observations = .data$Train_populationSize ) %>%
-      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$Test_AUROC, .data$Train_AUROC)
+        Occurrences = "Train_outcomeCount", 
+        Observations = "Train_populationSize" ) %>%
+      dplyr::select("trainFraction", "Occurrences", "Observations", "Test_AUROC", "Train_AUROC")
     
     for(i in 1:ncol(tidyLearningCurve)){
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
@@ -407,9 +407,9 @@ plotLearningCurve <- function(learningCurve,
     # tidy up dataframe
     tidyLearningCurve <- learningCurve %>% 
       dplyr::rename(
-        Occurrences = .data$Train_outcomeCount, 
-        Observations = .data$Train_populationSize ) %>%
-      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$Test_AUPRC, .data$Train_AUPRC)
+        Occurrences = "Train_outcomeCount", 
+        Observations = "Train_populationSize" ) %>%
+      dplyr::select("trainFraction", "Occurrences", "Observations", "Test_AUPRC", "Train_AUPRC")
     
     for(i in 1:ncol(tidyLearningCurve)){
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
@@ -432,9 +432,9 @@ plotLearningCurve <- function(learningCurve,
     # tidy up dataframe
     tidyLearningCurve <- learningCurve %>% 
       dplyr::rename(
-        Occurrences = .data$Train_outcomeCount, 
-        Observations = .data$Train_populationSize ) %>%
-      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$`Test_brier score scaled`, .data$`Train_brier score scaled`)
+        Occurrences = "Train_outcomeCount", 
+        Observations = "Train_populationSize" ) %>%
+      dplyr::select("trainFraction", "Occurrences", "Observations", "Test_brier score scaled", "Train_brier score scaled")
     
     for(i in 1:ncol(tidyLearningCurve)){
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))

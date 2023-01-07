@@ -93,12 +93,12 @@ diagnoseMultiplePlp <- function(
   # save the settings: TODO fix
   utils::write.csv(
     x = settingstable %>% dplyr::select(
-      .data$analysisId,
-      .data$targetId, 
-      .data$targetName,
-      .data$outcomeId, 
-      .data$outcomeName,
-      .data$dataLocation
+      "analysisId",
+      "targetId", 
+      "targetName",
+      "outcomeId", 
+      "outcomeName",
+      "dataLocation"
     ), 
     file.path(saveDirectory,'settings.csv'), 
     row.names = F
@@ -597,7 +597,7 @@ probastPredictors <- function(
         population %>% 
           dplyr::filter(.data$survivalTime >= x) %>%
           dplyr::tally() %>% 
-          dplyr::select(.data$n)
+          dplyr::select("n")
       }
     )
   )
@@ -618,7 +618,7 @@ probastPredictors <- function(
         populationFull %>% 
           dplyr::filter(.data$survivalTime >= x) %>%
           dplyr::tally() %>% 
-          dplyr::select(.data$n)
+          dplyr::select("n")
       }
     )
   )
@@ -789,7 +789,7 @@ getOutcomeSummary <- function(
       aggregation = 'age',
       inputType = type
     ) %>% 
-    dplyr::rename(xvalue = .data$ageYear)
+    dplyr::rename(xvalue = "ageYear")
   
   res[[2]] <-  population %>% 
     dplyr::group_by(.data$gender) %>%
@@ -799,7 +799,7 @@ getOutcomeSummary <- function(
       aggregation = 'gender',
       inputType = type
     )%>% 
-    dplyr::rename(xvalue = .data$gender)
+    dplyr::rename(xvalue = "gender")
   
   res[[3]] <- population %>% 
     dplyr::mutate(
@@ -812,7 +812,7 @@ getOutcomeSummary <- function(
       aggregation = 'year',
       inputType = type
     ) %>% 
-    dplyr::rename(xvalue = .data$year)
+    dplyr::rename(xvalue = "year")
   
   res[[4]] <- population %>% 
     dplyr::mutate(
@@ -825,7 +825,7 @@ getOutcomeSummary <- function(
       aggregation = 'month',
       inputType = type
     ) %>% 
-    dplyr::rename(xvalue = .data$year)
+    dplyr::rename(xvalue = "year")
   
   return(res)
 }
@@ -897,13 +897,13 @@ getDiagnostic <- function(
       dplyr::filter(.data$design == unique(diag$design)[1]) %>%
       dplyr::filter(.data$metric != 'N') %>%
       dplyr::arrange(.data$metric) %>%
-      dplyr::select(.data$value)
+      dplyr::select("value")
     , 
     diag %>% 
       dplyr::filter(.data$design == unique(diag$design)[2]) %>%
       dplyr::filter(.data$metric != 'N') %>%
       dplyr::arrange(.data$metric) %>%
-      dplyr::select(.data$value)
+      dplyr::select("value")
   )
   
   

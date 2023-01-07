@@ -54,7 +54,11 @@ createFeatureEngineeringSettings <- function(type = 'none'){
 #' @export
 createUnivariateFeatureSelection <- function(k = 100){
   
-  checkIsClass(k, c('numeric','integer'))
+  if (inherits(k, 'numeric')) {
+    k <- as.integer(k)
+  }
+  
+  checkIsClass(k, 'integer')
   checkHigherEqual(k, 0)
   
   featureEngineeringSettings <- list(k = k) 

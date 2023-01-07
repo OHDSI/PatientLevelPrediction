@@ -143,6 +143,10 @@ createDatabaseDetails <- function(
     cdmDatabaseId <- removeInvalidString(cdmDatabaseSchema)
   }
   
+  if(length(cdmDatabaseId) == 0 ){
+    stop('cdmDatabaseId must be a string with length > 0')
+  }
+  
   # check to make sure cdmDatabaseId is not an int as that will cause issues
   if(!inherits(cdmDatabaseId, 'character')){
     ParallelLogger::logInfo('cdmDatabaseId is not a string - this will cause issues when inserting into a result database so casting it')

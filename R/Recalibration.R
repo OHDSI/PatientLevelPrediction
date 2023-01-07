@@ -52,7 +52,7 @@ recalibratePlpRefit <- function(
   #get selected covariates
   includeCovariateIds <- plpModel$covariateImportance %>% 
     dplyr::filter(.data$covariateValue != 0) %>% 
-    dplyr::select(.data$covariateId) %>% 
+    dplyr::select("covariateId") %>% 
     dplyr::pull()
   
   # check which covariates are included in new data
@@ -68,13 +68,7 @@ recalibratePlpRefit <- function(
     maxIterations = 10000 # increasing this due to test code often not converging
   )
   
-  newData$labels <- newPopulation #%>% 
-    #dplyr::select(
-    #  .data$rowId, 
-    #  .data$cohortStartDate,
-    #  .data$outcomeCount, 
-     # .data$survivalTime
-      #)
+  newData$labels <- newPopulation 
   
   newData$folds <- data.frame(
     rowId = newData$labels$rowId, 
@@ -126,8 +120,8 @@ recalibratePlpRefit <- function(
     adjust <- newModel$covariateImportance %>% 
       dplyr::filter(.data$covariateValue != 0) %>% 
       dplyr::select(
-        .data$covariateId, 
-        .data$covariateValue
+        "covariateId", 
+        "covariateValue"
       )
   } else{
     adjust <- c()
@@ -234,7 +228,8 @@ weakRecalibration <- function(prediction, columnType = 'evaluationType'){
     
     recalibrated <- prediction
     
-    baseline <- ifelse(is.null(attr(recalibrated, "baselineHazard")), 0.9, attr(recalibrated, "baselineHazard"))
+    # this will make the recalibration work if the baselineSurvival is missing
+    baseline <- ifelse(is.null(attr(recalibrated, "baselineSurvival")), 0.9, attr(recalibrated, "baselineSurvival"))
     ParallelLogger::logInfo(paste0('recal initial baseline hazard: ',baseline))
     
     offset <- ifelse(is.null(attr(recalibrated, "offset")), 0, attr(recalibrated, "offset"))

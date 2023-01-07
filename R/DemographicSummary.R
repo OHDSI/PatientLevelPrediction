@@ -44,7 +44,7 @@ getDemographicSummary_binary <- function(prediction, evalColumn , ...){
         ageGroup = paste0('Age group: ', floor(.data$ageYear/5)*5, '-',floor(.data$ageYear/5)*5+4),
         genId = .data$gender,
         genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
-      dplyr::select(.data$rowId,.data$ageId,.data$ageGroup,.data$genId,.data$genGroup ) %>%
+      dplyr::select("rowId","ageId","ageGroup","genId","genGroup") %>%
       dplyr::inner_join(predictionOfInterest[,colnames(predictionOfInterest)%in%c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
     
     demographicData <- demographicData %>%
@@ -88,7 +88,7 @@ getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = N
         ageGroup = paste0('Age group: ', floor(.data$ageYear/5)*5, '-',floor(.data$ageYear/5)*5+4),
         genId = .data$gender,
         genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
-      dplyr::select(.data$rowId,.data$ageId,.data$ageGroup,.data$genId,.data$genGroup ) %>%
+      dplyr::select("rowId","ageId","ageGroup","genId","genGroup" ) %>%
       dplyr::inner_join(predictionOfInterest[,colnames(predictionOfInterest)%in%c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
     
     
@@ -112,9 +112,9 @@ getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = N
           dplyr::filter( .data$genGroup == gen & .data$ageGroup == age )
         
         if(nrow(tempDemo)>0){
-          t1 <- tempDemo %>% dplyr::select(.data$t)
-          y1 <- tempDemo %>% dplyr::select(.data$y)
-          p1 <- tempDemo %>% dplyr::select(.data$value)
+          t1 <- tempDemo %>% dplyr::select("t")
+          y1 <- tempDemo %>% dplyr::select("y")
+          p1 <- tempDemo %>% dplyr::select("value")
           
           out <- tryCatch(
             {
