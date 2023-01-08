@@ -47,7 +47,8 @@ calculatePrevs <- function(plpData, population){
   
   # add population to sqllite
   population <- tibble::as_tibble(population)
-  plpData$covariateData$population <- population %>% dplyr::select(.data$rowId, .data$outcomeCount)
+  plpData$covariateData$population <- population %>% 
+    dplyr::select("rowId", "outcomeCount")
   
   outCount <- nrow(plpData$covariateData$population %>% dplyr::filter(.data$outcomeCount == 1))
   nonOutCount <- nrow(plpData$covariateData$population %>% dplyr::filter(.data$outcomeCount == 0))
@@ -57,7 +58,7 @@ calculatePrevs <- function(plpData, population){
     dplyr::group_by(.data$covariateId) %>% 
     dplyr::summarise(prev.out = 1.0*sum(.data$outcomeCount==1, na.rm = TRUE)/outCount,
               prev.noout = 1.0*sum(.data$outcomeCount==0, na.rm = TRUE)/nonOutCount) %>%
-    dplyr::select(.data$covariateId, .data$prev.out, .data$prev.noout)
+    dplyr::select("covariateId", "prev.out", "prev.noout")
   
   #clear up data
   ##plpData$covariateData$population <- NULL

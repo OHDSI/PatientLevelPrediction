@@ -131,7 +131,7 @@ MapIds <- function(
   # change the rowIds in cohort (if exists)
   if(!is.null(cohort)){
     rowMap <- data.frame(
-      rowId = cohort %>% dplyr::select(.data$rowId)
+      rowId = cohort %>% dplyr::select("rowId")
     )
     rowMap$xId <- 1:nrow(rowMap)
   } else{
@@ -176,17 +176,16 @@ MapIds <- function(
     newCovariateData$rowMap <- rowMap
     newCovariateData$covariates <- newCovariateData$covariates %>%
       dplyr::inner_join(newCovariateData$rowMap, by = 'rowId') %>% 
-      dplyr::select(- .data$rowId) %>%
-      dplyr::rename(rowId = .data$xId)
+      dplyr::select(- "rowId") %>%
+      dplyr::rename(rowId = "xId")
     
     if(!is.null(cohort)){
       # change the rowId in labels
       newCovariateData$cohort <- cohort %>%
         dplyr::inner_join(rowMap, by = 'rowId') %>% 
-        #dplyr::select(- .data$rowId) %>%
         dplyr::rename(
-          originalRowId = .data$rowId,
-          rowId = .data$xId
+          originalRowId = "rowId",
+          rowId = "xId"
           ) %>%
         dplyr::arrange(.data$rowId)  # make sure it is ordered lowest to highest
     }

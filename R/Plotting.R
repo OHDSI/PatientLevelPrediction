@@ -297,7 +297,7 @@ plotSparseRoc <- function(
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$falsePositiveRate, .data$sensitivity)
+      dplyr::select("falsePositiveRate", "sensitivity")
     
     #x <- thresholdSummary[,c('falsePositiveRate','sensitivity')]
     x <- x[order(x$falsePositiveRate, x$sensitivity),]
@@ -370,11 +370,11 @@ plotPredictedPDF <- function(
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
-        .data$predictionThreshold,
-        .data$truePositiveCount,
-        .data$trueNegativeCount,
-        .data$falsePositiveCount,
-        .data$falseNegativeCount
+        "predictionThreshold",
+        "truePositiveCount",
+        "trueNegativeCount",
+        "falsePositiveCount",
+        "falseNegativeCount"
       )
   
   x<- x[order(x$predictionThreshold,-x$truePositiveCount, -x$falsePositiveCount),]
@@ -460,11 +460,11 @@ plotPreferencePDF <- function(
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
-        .data$preferenceThreshold,
-        .data$truePositiveCount,
-        .data$trueNegativeCount,
-        .data$falsePositiveCount,
-        .data$falseNegativeCount
+        "preferenceThreshold",
+        "truePositiveCount",
+        "trueNegativeCount",
+        "falsePositiveCount",
+        "falseNegativeCount"
       )
   
   x<- x[order(x$preferenceThreshold,-x$truePositiveCount, x$trueNegativeCount),]
@@ -551,20 +551,20 @@ plotPrecisionRecall <- function(
     
     N <- max(plpResult$performanceEvaluation$thresholdSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-        dplyr::select(.data$falseCount) %>% 
+        dplyr::select("falseCount") %>% 
         dplyr::pull(), na.rm = T)
 
     
     O <- max(plpResult$performanceEvaluation$thresholdSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-        dplyr::select(.data$trueCount) %>% 
+        dplyr::select("trueCount") %>% 
         dplyr::pull(), na.rm = T)
     
     inc <- O/(O + N)
     
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$positivePredictiveValue, .data$sensitivity)
+      dplyr::select("positivePredictiveValue", "sensitivity")
     
     plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(.data$sensitivity, .data$positivePredictiveValue)) +
       ggplot2::geom_line(size=1) +
@@ -622,7 +622,7 @@ plotF1Measure <- function(
     
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$predictionThreshold, .data$f1Score)
+      dplyr::select("predictionThreshold", "f1Score")
     
   if(sum(is.nan(x$f1Score))>0){
     x <- x[!is.nan(x$f1Score),]
@@ -688,11 +688,11 @@ plotDemographicSummary <- function(
     x <- plpResult$performanceEvaluation$demographicSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
-        .data$ageGroup,
-        .data$genGroup,
-        .data$averagePredictedProbability,
-        .data$PersonCountAtRisk, 
-        .data$PersonCountWithOutcome
+        "ageGroup",
+        "genGroup",
+        "averagePredictedProbability",
+        "PersonCountAtRisk", 
+        "PersonCountWithOutcome"
         )
   
     # remove -1 values:
@@ -729,10 +729,10 @@ plotDemographicSummary <- function(
     ci <- plpResult$performanceEvaluation$demographicSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
-        .data$ageGroup,
-        .data$genGroup,
-        .data$averagePredictedProbability,
-        .data$StDevPredictedProbability
+        "ageGroup",
+        "genGroup",
+        "averagePredictedProbability",
+        "StDevPredictedProbability"
       )
     
     ci$StDevPredictedProbability[is.na(ci$StDevPredictedProbability)] <- 1
@@ -821,7 +821,7 @@ plotSparseCalibration <- function(
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$calibrationSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$averagePredictedProbability, .data$observedIncidence)
+      dplyr::select("averagePredictedProbability", "observedIncidence")
 
   maxVal <- max(x$averagePredictedProbability,x$observedIncidence)
   model <- stats::lm(observedIncidence~averagePredictedProbability, data=x)
@@ -903,7 +903,7 @@ plotSparseCalibration2 <- function(
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$calibrationSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$averagePredictedProbability, .data$observedIncidence, .data$PersonCountAtRisk)
+      dplyr::select("averagePredictedProbability", "observedIncidence", "PersonCountAtRisk")
 
   cis <- apply(x, 1, function(x) stats::binom.test(round(x[2]*x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
   x$lci <- cis[1,]  
@@ -993,7 +993,7 @@ plotSmoothCalibration <- function(plpResult,
     if('prediction'%in%names(plpResult)) {
       x <- plpResult$performanceEvaluation$calibrationSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-        dplyr::select(.data$averagePredictedProbability, .data$observedIncidence)
+        dplyr::select("averagePredictedProbability", "observedIncidence")
       
       prediction <-  plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
       

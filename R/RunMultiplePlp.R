@@ -73,12 +73,12 @@ runMultiplePlp <- function(
   # save the settings - TODO change this to save jsons in csv
   utils::write.csv(
     x = settingstable %>% dplyr::select(
-      .data$analysisId,
-      .data$targetId, 
-      .data$targetName,
-      .data$outcomeId, 
-      .data$outcomeName,
-      .data$dataLocation
+      "analysisId",
+      "targetId", 
+      "targetName",
+      "outcomeId", 
+      "outcomeName",
+      "dataLocation"
       ), 
     file.path(saveDirectory,'settings.csv'), 
     row.names = F
@@ -576,8 +576,8 @@ convertToJson <-function(
   } else{
     cohortDefinitions <- cohortDefinitions %>% 
       dplyr::select(
-        .data$cohortId, 
-        .data$cohortName
+        "cohortId", 
+        "cohortName"
         )
   }
   
@@ -598,9 +598,9 @@ convertToJson <-function(
   
     result <- result %>% 
       dplyr::left_join(cohortDefinitions, by = c("outcomeId" = "cohortId")) %>%
-      dplyr::rename(outcomeName = .data$cohortName) %>%
+      dplyr::rename(outcomeName = "cohortName") %>%
       dplyr::left_join(cohortDefinitions, by = c('targetId' = 'cohortId')) %>%
-      dplyr::rename(targetName = .data$cohortName) # new
+      dplyr::rename(targetName = "cohortName") # new
   
   # get the names
   uniqueSettings <-  result %>% 
