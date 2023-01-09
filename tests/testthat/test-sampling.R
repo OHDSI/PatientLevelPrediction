@@ -99,17 +99,17 @@ test_that("createSampleSettings expected errors", {
 
 test_that("sampleData outputs are correct", {
   
-  trainData <- createTrainData(plpData, population)
-  attr(trainData, "metaData")$sampleSettings <- NULL # remove for test
+  newTrainData <- trainData
+  attr(newTrainData, "metaData")$sampleSettings <- NULL # remove for test
   
   sampleSettings <- sampleSettingFunc(type = 'none') 
   
-  sampleData <- sampleData(trainData, sampleSettings)
+  sampleData <- sampleData(newTrainData, sampleSettings)
   
   # make sure metaData captures
   expect_equal(
     length(attr(sampleData, "metaData")),
-    length(attr(trainData, "metaData"))+1
+    length(attr(newTrainData, "metaData"))+1
   )
   
   expect_equal(
@@ -120,17 +120,17 @@ test_that("sampleData outputs are correct", {
   # check the data is the same:
   expect_equal(
     nrow(sampleData$labels), 
-    nrow(trainData$labels)
+    nrow(newTrainData$labels)
   )
   
   expect_equal(
     nrow(sampleData$folds), 
-    nrow(trainData$folds)
+    nrow(newTrainData$folds)
   )
   
   expect_equal(
     sampleData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull(), 
-    trainData$covariateData$covariates  %>% dplyr::tally() %>% dplyr::pull()
+    newTrainData$covariateData$covariates  %>% dplyr::tally() %>% dplyr::pull()
   )
   
   
@@ -141,7 +141,7 @@ test_that("sampleData outputs are correct", {
  
 test_that("underSampleData works", {
   
-  trainData <- createTrainData(plpData, population)
+  newTrainData <- trainData
   
   sampleSettings <- list(
     sampleSeed = 1,
@@ -153,12 +153,15 @@ test_that("underSampleData works", {
   expect_true(inherits(underSampleData, 'plpData')) # add test based on github issue
   
   # the sampled data should be smaller...
-  expect_true(nrow(underSampleData$labels) <= nrow(trainData$labels))
+  expect_true(nrow(underSampleData$labels) <= nrow(newTrainData$labels))
   
-  expect_true(nrow(underSampleData$folds) <= nrow(trainData$folds))
+  expect_true(nrow(underSampleData$folds) <= nrow(newTrainData$folds))
   
   expect_true(
-    underSampleData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull() <= trainData$covariateData$covariates  %>% dplyr::tally() %>% dplyr::pull()
+    underSampleData$covariateData$covariates %>% 
+      dplyr::tally() %>% 
+      dplyr::pull() <= newTrainData$covariateData$covariates  %>% 
+      dplyr::tally() %>% dplyr::pull()
   )
   
   # perhaps add manual data test
@@ -169,24 +172,26 @@ test_that("underSampleData works", {
 
 test_that("overSampleData works", {
   
-  trainData <- createTrainData(plpData, population)
+  newTrainData <- trainData
   
   sampleSettings <- list(
     sampleSeed = 1,
     numberOutcomestoNonOutcomes = 0.5
   )
   
-  overSampleData <- overSampleData(trainData, sampleSettings)
+  overSampleData <- overSampleData(newTrainData, sampleSettings)
   
   expect_true(inherits(overSampleData, 'plpData')) # add test based on github issue
   
   # the sampled data should be smaller...
-  expect_true(nrow(overSampleData$labels) >= nrow(trainData$labels))
+  expect_true(nrow(overSampleData$labels) >= nrow(newTrainData$labels))
   
-  expect_true(nrow(overSampleData$folds) >= nrow(trainData$folds))
+  expect_true(nrow(overSampleData$folds) >= nrow(newTrainData$folds))
   
   expect_true(
-    overSampleData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull() >= trainData$covariateData$covariates  %>% dplyr::tally() %>% dplyr::pull()
+    overSampleData$covariateData$covariates %>% dplyr::tally() %>% 
+      dplyr::pull() >= newTrainData$covariateData$covariates  %>% 
+      dplyr::tally() %>% dplyr::pull()
   )
   
   # perhaps add manual data test

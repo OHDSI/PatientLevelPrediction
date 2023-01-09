@@ -114,9 +114,42 @@ createTrainData <- function(plpData, population){
   return(trainData)
 }
 
+trainData <- createTrainData(plpData, population)
+
 createTestData <- function(plpData, population){
   data <- PatientLevelPrediction::splitData(plpData = plpData, population=population,
                                             splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12))
   testData <- data$Test
   return(testData)
 }
+
+testData <- createTestData(plpData, population)
+
+# reduced trainData to only use 10 most important features (as decided by LR)
+reduceTrainData <- function(trainData) {
+  covariates <- plpResult$model$covariateImportance %>% 
+    dplyr::slice_max(order_by = abs(covariateValue),n = 20, with_ties = F) %>% 
+    dplyr::pull(covariateId)
+  
+  reducedTrainData <- list(labels = trainData$labels,
+                           folds = trainData$folds,
+                           covariateData = Andromeda::andromeda(
+                             analysisRef = trainData$covariateData$analysisRef
+                           ))
+  
+  
+  reducedTrainData$covariateData$covariates <- trainData$covariateData$covariates %>% 
+    dplyr::filter(covariateId %in% covariates)
+  reducedTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>% 
+    dplyr::filter(covariateId %in% covariates)
+  
+  attributes(reducedTrainData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
+  class(reducedTrainData$covariateData) <- class(trainData$covariateData)
+  attributes(reducedTrainData)$metaData <- attributes(trainData)$metaData
+  return(reducedTrainData)  
+}
+
+tinyTrainData <- reduceTrainData(trainData)
+
+tinyPlpData <- createTinyPlpData(plpData, plpResult)
+

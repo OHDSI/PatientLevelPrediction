@@ -12,7 +12,7 @@ setSVM(
   coef0 = list(0),
   shrinking = list(TRUE),
   tol = list(0.001),
-  classWeight = list("balanced", NULL),
+  classWeight = list(NULL),
   cacheSize = 500,
   seed = sample(1e+05, 1)
 )
