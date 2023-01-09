@@ -72,7 +72,7 @@ test_that("getTrainFractions works", {
     modelSettings = setLassoLogisticRegression(),
     saveDirectory =  file.path(saveLoc, 'lcc'),
     splitSettings = createDefaultSplitSetting(testFraction = 0.33, nfold=2), 
-    trainEvents = c(100,150),
+    trainEvents = c(150,200),
     preprocessSettings = createPreprocessSettings(
       minFraction = 0.001,
       normalize = T
