@@ -144,40 +144,40 @@ MapIds <- function(
     rowMap$xId <- 1:nrow(rowMap)
   }
   
-  covariateData$rowMap <- rowMap
-  on.exit(covariateData$rowMap <- NULL)
-  
   # change the rowIds in covariateData$covariates
   if(is.null(mapping)){
   
     mapping <- data.frame(
       covariateId = covariateData$covariates %>% 
-        dplyr::inner_join(covariateData$rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
+        dplyr::inner_join(rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
         dplyr::distinct(.data$covariateId) %>% 
         dplyr::collect() %>% 
         dplyr::pull()
     )
     mapping$columnId <- 1:nrow(mapping)
   }
-  covariateData$mapping <- mapping
-  on.exit(covariateData$mapping <- NULL, add = T)
-  
+
   newCovariateData <- Andromeda::andromeda()
   # change the covariateIds in covariates
     newCovariateData$covariates <- covariateData$covariates %>%
-      dplyr::inner_join(covariateData$mapping, by = 'covariateId')
+      dplyr::inner_join(mapping, by = 'covariateId')
   
     
     # change the covariateIds in covariateRef
-    newCovariateData$covariateRef <- covariateData$mapping %>%
-      dplyr::inner_join(covariateData$covariateRef, by = 'covariateId')
+    newCovariateData$covariateRef <- covariateData$covariateRef %>% 
+      dplyr::inner_join(mapping, by='covariateId')
     
     # change the rowId in covariates
-    newCovariateData$rowMap <- rowMap
     newCovariateData$covariates <- newCovariateData$covariates %>%
+<<<<<<< Updated upstream
       dplyr::inner_join(newCovariateData$rowMap, by = 'rowId') %>% 
       dplyr::select(- .data$rowId) %>%
       dplyr::rename(rowId = .data$xId)
+=======
+      dplyr::inner_join(rowMap, by = 'rowId') %>% 
+      dplyr::select(- "rowId") %>%
+      dplyr::rename(rowId = "xId")
+>>>>>>> Stashed changes
     
     if(!is.null(cohort)){
       # change the rowId in labels
