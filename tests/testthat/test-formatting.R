@@ -58,7 +58,7 @@ test_that("MapIds with no cohort", {
   # some covariates not in data 5,6,7 so should be removed from covRef
   expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(), 7)
   
-  correctCov <- mappings$covariateRef %>% dplyr::select(.data$covariateId) %>% dplyr::pull() %in% c(123,2002,10,3,4,9,8)
+  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull() %in% c(123,2002,10,3,4,9,8)
   expect_equal(sum(correctCov), length(correctCov))
   
 })
@@ -92,7 +92,7 @@ test_that("MapIds with a cohort", {
   # some covariates not in data 5,6,7 so should be removed from covRef
   expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(), 3)
   
-  correctCov <- mappings$covariateRef %>% dplyr::select(.data$covariateId) %>% dplyr::pull() %in% c(123,9,8)
+  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull() %in% c(123,9,8)
   expect_equal(sum(correctCov), length(correctCov))
   
 })

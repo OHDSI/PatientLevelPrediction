@@ -449,7 +449,7 @@ madeupPrediction <- function(plpModel, data , cohort){
       plpData = data, 
       cohort = cohort,
       map = plpModel$covariateImportance %>% 
-        dplyr::select(.data$columnId, .data$covariateId)
+        dplyr::select("columnId", "covariateId")
     )
     
     newData <- matrixObjects$dataMatrix
@@ -470,8 +470,8 @@ madeupPrediction <- function(plpModel, data , cohort){
   # fix the rowIds to be the old ones
   # now use the originalRowId and remove the matrix rowId
   cohort <- cohort %>% 
-    dplyr::select(-.data$rowId) %>%
-    dplyr::rename(rowId = .data$originalRowId)
+    dplyr::select(-"rowId") %>%
+    dplyr::rename(rowId = "originalRowId")
   
   attr(cohort, "metaData") <- list(modelType = attr(plpModel, 'modelType')) 
   return(cohort)

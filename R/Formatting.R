@@ -93,9 +93,9 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   # there is no guarantee the order of data within columns is preserved
   newcovariateData$covariates <- newcovariateData$covariates %>% dplyr::collect()  
   data <- Matrix::sparseMatrix(
-    i = newcovariateData$covariates %>% dplyr::select(.data$rowId) %>% dplyr::collect() %>% dplyr::pull(),
-    j = newcovariateData$covariates %>% dplyr::select(.data$columnId) %>% dplyr::collect() %>% dplyr::pull(),
-    x = newcovariateData$covariates %>% dplyr::select(.data$covariateValue) %>% dplyr::collect() %>% dplyr::pull(),
+    i = newcovariateData$covariates %>% dplyr::select("rowId") %>% dplyr::collect() %>% dplyr::pull(),
+    j = newcovariateData$covariates %>% dplyr::select("columnId") %>% dplyr::collect() %>% dplyr::pull(),
+    x = newcovariateData$covariates %>% dplyr::select("covariateValue") %>% dplyr::collect() %>% dplyr::pull(),
     dims=c(maxX,maxY)
   )
     
@@ -131,13 +131,13 @@ MapIds <- function(
   # change the rowIds in cohort (if exists)
   if(!is.null(cohort)){
     rowMap <- data.frame(
-      rowId = cohort %>% dplyr::select(.data$rowId)
+      rowId = cohort %>% dplyr::select("rowId")
     )
     rowMap$xId <- 1:nrow(rowMap)
   } else{
     rowMap <- data.frame(
       rowId = covariateData$covariates %>% 
-        dplyr::distinct(.data$rowId) %>% 
+        dplyr::distinct("rowId") %>% 
         dplyr::collect() %>% 
         dplyr::pull()
     )
@@ -150,7 +150,7 @@ MapIds <- function(
     mapping <- data.frame(
       covariateId = covariateData$covariates %>% 
         dplyr::inner_join(rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
-        dplyr::distinct(.data$covariateId) %>% 
+        dplyr::distinct("covariateId") %>% 
         dplyr::collect() %>% 
         dplyr::pull()
     )
@@ -169,24 +169,17 @@ MapIds <- function(
     
     # change the rowId in covariates
     newCovariateData$covariates <- newCovariateData$covariates %>%
-<<<<<<< Updated upstream
-      dplyr::inner_join(newCovariateData$rowMap, by = 'rowId') %>% 
-      dplyr::select(- .data$rowId) %>%
-      dplyr::rename(rowId = .data$xId)
-=======
       dplyr::inner_join(rowMap, by = 'rowId') %>% 
       dplyr::select(- "rowId") %>%
       dplyr::rename(rowId = "xId")
->>>>>>> Stashed changes
     
     if(!is.null(cohort)){
       # change the rowId in labels
       newCovariateData$cohort <- cohort %>%
         dplyr::inner_join(rowMap, by = 'rowId') %>% 
-        #dplyr::select(- .data$rowId) %>%
         dplyr::rename(
-          originalRowId = .data$rowId,
-          rowId = .data$xId
+          originalRowId = "rowId",
+          rowId = "xId"
           ) %>%
         dplyr::arrange(.data$rowId)  # make sure it is ordered lowest to highest
     }
