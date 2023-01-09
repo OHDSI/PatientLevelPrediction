@@ -9,16 +9,16 @@ dtset <- setDecisionTree(
   minSamplesSplit = list(2, 10),
   minSamplesLeaf = list(10, 50),
   minWeightFractionLeaf = list(0),
-  maxFeatures = list(100,'auto', NULL),
+  maxFeatures = list(100,'sqrt', NULL),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(10^-7),
-  classWeight = list(NULL, 'balanced'),
+  classWeight = list(NULL),
   seed = sample(1000000,1)
 )
 
 expect_equal(dtset$fitFunction, "fitSklearn")
 
-expect_equal(length(dtset$param), 3*2*2*3*2)
+expect_equal(length(dtset$param), 3*2*2*3*1)
 
 expect_equal(unique(unlist(lapply(dtset$param, function(x) x[[1]]))), 'gini')
 expect_equal(unique(unlist(lapply(dtset$param, function(x) x[[2]]))), 'best')
@@ -47,7 +47,6 @@ test_that("DecisionTree errors as expected", {
 
 test_that("check fit of DecisionTree", {
   
-  
   modelSettings <- setDecisionTree(
     criterion = list('gini'),
     splitter = list('best'),
@@ -55,36 +54,146 @@ test_that("check fit of DecisionTree", {
     minSamplesSplit = list(2),
     minSamplesLeaf = list(10),
     minWeightFractionLeaf = list(0),
-    maxFeatures = list(as.integer(100),'auto'),
+    maxFeatures = list('sqrt'),
     maxLeafNodes = list(NULL),
     minImpurityDecrease = list(10^-7),
-    classWeight = list(NULL, 'balanced'),
+    classWeight = list(NULL),
     seed = sample(1000000,1)
   )
-  trainData <- createTrainData(
-    plpData = plpData, 
-    population = population
-    )
   
   plpModel <- fitPlp(
-    trainData = trainData, 
+    trainData = tinyTrainData, 
     modelSettings = modelSettings,
     analysisId = 'DecisionTree'
     )
   
-  expect_equal(nrow(trainData$labels)*2, nrow(plpModel$prediction))
-  expect_equal(length(unique(plpModel$prediction$evaluationType)), 2)
-
-  expect_true(nrow(plpModel$covariateImportance) < trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
-  
-  expect_true(dir.exists(plpModel$model))
-  expect_equal(dir(plpModel$model),"model.pkl")
-  
-  expect_equal(plpModel$modelDesign$outcomeId,2)
-  expect_equal(plpModel$modelDesign$targetId,1)
+  expect_correct_fitPlp(plpModel, trainData)
   # add check for other model design settings
   
 })
 
-# add tests for other classifiers
+test_that('fitSklearn errors with wrong covariateData', {
+  
+  newTrainData <- copyTrainData(trainData)
+  class(newTrainData$covariateData) <- 'notCovariateData'
+  modelSettings <- setAdaBoost()
+  analysisId <- 42
+  
+  expect_error(fitSklearn(newTrainData,
+                          modelSettings,
+                          search='grid',
+                          analysisId))
+})
 
+
+test_that('AdaBoost fit works', {
+  
+  modelSettings <- setAdaBoost(nEstimators = list(10),
+                               learningRate = list(0.1),
+                               )
+  
+  plpModel <- fitPlp(
+    trainData = tinyTrainData, 
+    modelSettings = modelSettings,
+    analysisId = 'Adaboost'
+  )
+  
+  expect_correct_fitPlp(plpModel, trainData)
+  expect_equal(dir(plpModel$model),"model.pkl")
+  
+})
+
+
+test_that('RandomForest fit works', {
+  
+  modelSettings <- setRandomForest(ntrees=list(10),
+                                   maxDepth=list(4),
+                                   minSamplesSplit = list(2),
+                                   minSamplesLeaf = list(10),
+                                   mtries = list("sqrt"),
+                                   maxSamples = list(0.9),
+                                   classWeight = list(NULL))
+  
+  plpModel <- fitPlp(
+    trainData = tinyTrainData, 
+    modelSettings = modelSettings,
+    analysisId = 'RandomForest'
+  )
+  
+  expect_correct_fitPlp(plpModel, trainData)
+  expect_equal(dir(plpModel$model),"model.pkl")
+  
+})
+
+
+test_that('MLP fit works', {
+  modelSettings <- setMLP(
+    hiddenLayerSizes = list(c(20)),
+    alpha = list(1e-6),
+    maxIter = list(50),
+    epsilon = list(1e-08),
+    learningRateInit = list(0.01),
+    tol = list(1e-2) # reduce tol so I don't get convergence warnings
+  )
+  
+  plpModel <- fitPlp(
+    trainData = tinyTrainData, 
+    modelSettings = modelSettings,
+    analysisId = 'MLP'
+  )
+  
+  expect_correct_fitPlp(plpModel, trainData)
+  expect_equal(dir(plpModel$model),"model.pkl")
+  
+})
+
+
+test_that('Naive bayes fit works', {
+  modelSettings <- setNaiveBayes()
+  
+  plpModel <- fitPlp(
+    trainData = tinyTrainData, 
+    modelSettings = modelSettings,
+    analysisId = 'Naive bayes'
+  )
+  
+  expect_correct_fitPlp(plpModel, trainData) 
+  expect_equal(dir(plpModel$model),"model.pkl")
+  
+})
+
+
+test_that('Support vector machine fit works', {
+  modelSettings <- setSVM(C = list(1),
+                          degree = list(1),
+                          gamma = list('scale'),
+                          classWeight = list(NULL))
+  
+  plpModel <- fitPlp(
+    trainData = tinyTrainData, 
+    modelSettings = modelSettings,
+    analysisId = 'SVM'
+  )
+  
+  expect_correct_fitPlp(plpModel, trainData) 
+  expect_equal(dir(plpModel$model),"model.pkl")
+  
+})
+
+test_that('Sklearn predict works', {
+  
+  modelSettings <- setAdaBoost(nEstimators = list(10),
+                               learningRate = list(0.1),
+  )
+  
+  plpModel <- fitPlp(
+    trainData = tinyTrainData, 
+    modelSettings = modelSettings,
+    analysisId = 'Adaboost'
+  )
+  
+  predictions <- predictPythonSklearn(plpModel,
+                                      testData,
+                                      population)
+  expect_correct_predictions(predictions, testData)
+})

@@ -58,7 +58,6 @@ test_that("createPreprocessSettings", {
 })
 
 test_that("createPreprocessSettings", {
-  trainData <- createTrainData(plpData, population)
   attr(trainData$covariateData, "metaData")$preprocessSettings <- NULL # removing for test
   metaData <- attr(trainData$covariateData, "metaData")
   metaLength <- length(metaData)
@@ -86,7 +85,6 @@ test_that("createPreprocessSettings", {
   
   expect_equal(newFeatureCount, oldFeatureCount)
   
-  trainData <- createTrainData(plpData, population)
   oldFeatureCount <- trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()
   
   metaData <- attr(trainData$covariateData, "metaData")

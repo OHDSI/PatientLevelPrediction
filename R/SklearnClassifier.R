@@ -246,7 +246,7 @@ gridCvPython <- function(
   )
   {
   
-  ParallelLogger::logInfo(paste0("Rnning CV for ",modelName," model"))
+  ParallelLogger::logInfo(paste0("Running CV for ",modelName," model"))
  
   np <- reticulate::import('numpy')
   os <- reticulate::import('os')
