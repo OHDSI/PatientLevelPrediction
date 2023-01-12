@@ -1,3 +1,25 @@
+# @file SklearnToJson.R
+#
+# Copyright 2023 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitatons under the License.
+#
+#" Saves sklearn python model object to json in path
+#" @param     model a fitted sklearn python model object
+#" @param     path  path to the saved model file
+#" @export
 sklearnToJson <- function(model, path) {
   py <- reticulate::import_builtins(convert=FALSE)
   json <- reticulate::import("json", convert=FALSE)
@@ -17,19 +39,19 @@ sklearnToJson <- function(model, path) {
     stop("Unsupported model")
   }
   
-  modelPath <- file.path(path, "model.json")
-  
-  with(py$open(modelPath, "w"), as=file, {
+  with(py$open(path, "w"), as=file, {
     json$dump(serializedModel, fp=file)
   })
   return(invisible())
 }
 
+#" Loads sklearn python model from json 
+#" @param     path  path to the model json file
+#" @export
 sklearnFromJson <- function(path) {
   py <- reticulate::import_builtins(convert=FALSE)
   json <- reticulate::import("json", convert=FALSE)
-  modelPath <- file.path(path, "model.json")
-  with(py$open(modelPath, "r"), as=file, {
+  with(py$open(path, "r"), as=file, {
     model <- json$load(fp=file)
   })
   if (model["meta"] == "decision-tree") {
@@ -296,9 +318,9 @@ deSerializeMlp <- function(model_dict) {
   model <- do.call(sklearn$neural_network$MLPClassifier,
                    reticulate::py_to_r(model_dict["params"]))
   for (i in 0:(length(model_dict["coefs_"]) - 1)) {
-    reticulate::py_set_item(model_dict['coefs_'], i,
+    reticulate::py_set_item(model_dict["coefs_"], i,
                             np$array(model_dict["coefs_"][i]))
-    reticulate::py_set_item(model_dict['intercepts_'], i,
+    reticulate::py_set_item(model_dict["intercepts_"], i,
                             np$array(model_dict["intercepts_"][i]))
     
   }
@@ -316,36 +338,35 @@ deSerializeMlp <- function(model_dict) {
 
 serializeSVM <- function(model) {
   serialized_model = reticulate::dict(
-    'meta' = 'svm',
-    'class_weight_' = model$class_weight_$tolist(),
-    'classes_' = model$classes_$tolist(),
-    'support_' = model$support_$tolist(),
-    'n_support_' = model$n_support_$tolist(),
-    'intercept_' = model$intercept_$tolist(),
-    'probA_' = model$probA_$tolist(),
-    'probB_' = model$probB_$tolist(),
-    '_intercept_' = model$`_intercept_`$tolist(),
-    'shape_fit_' = model$shape_fit_,
-    '_gamma' = model$`_gamma`,
-    'params' = model$get_params()
+    "meta" = "svm",
+    "class_weight_" = model$class_weight_$tolist(),
+    "classes_" = model$classes_$tolist(),
+    "support_" = model$support_$tolist(),
+    "n_support_" = model$n_support_$tolist(),
+    "intercept_" = model$intercept_$tolist(),
+    "probA_" = model$probA_$tolist(),
+    "probB_" = model$probB_$tolist(),
+    "_intercept_" = model$`_intercept_`$tolist(),
+    "shape_fit_" = model$shape_fit_,
+    "_gamma" = model$`_gamma`,
+    "params" = model$get_params()
   )
-  
   if (inherits(model$support_vectors_, "numpy.ndarray")) {
     serialized_model["support_vectors_"] <- model$support_vectors_$tolist()
   } else {
-    recover() # apparently this can be sparse?
+    serialized_model["support_vectors_"] <- serializeCsrMatrix(model$support_vectors_)
   }
   
   if (inherits(model$dual_coef_, "numpy.ndarray")) {
     serialized_model["dual_coef_"] <- model$dual_coef_$tolist()
   } else {
-    recover()
+    serialized_model["dual_coef_"] <- serializeCsrMatrix(model$dual_coef_)
   }
   
   if (inherits(model$`_dual_coef_`, "numpy.ndarray")) {
     serialized_model["_dual_coef_"] <- model$`_dual_coef_`$tolist()
   } else {
-    recover()
+    serialized_model["_dual_coef_"] <- serializeCsrMatrix(model$`_dual_coef_`)
   }
  return(serialized_model)
 }
@@ -366,12 +387,53 @@ deSerializeSVM <- function(model_dict) {
   model$`_probB` <- np$array(model_dict["probB_"])$astype(np$float64)
   model$`_intercept_` <- np$array(model_dict["_intercept_"])$astype(np$float64)
   
-  model$support_vectors_ <- np$array(model_dict$support_vectors_)$astype(np$float64)
-  model$dual_coef_ <- np$array(model_dict$dual_coef_)$astype(np$float64)
-  model$`_dual_coef_` <- np$array(model_dict$`_dual_coef_`)$astype(np$float64)
-  model$`_sparse` <- FALSE
+  if ((model_dict$support_vectors_["meta"] != reticulate::py_none()) & 
+      (model_dict$support_vectors_["meta"] == "csr")) {
+    model$support_vectors_ <- deSerializeCsrMatrix(model_dict$support_vectors_)
+    model$`_sparse` <- TRUE
+  } else {
+    model$support_vectors_ <- np$array(model_dict$support_vectors_)$astype(np$float64)
+    model$`_sparse` <- FALSE
+  }
+  if ((model_dict$dual_coef_["meta"] != reticulate::py_none()) & 
+      (model_dict$dual_coef_["meta"] == "csr")) {
+    model$dual_coef_ <- deSerializeCsrMatrix(model_dict$dual_coef_)
+  } else {
+    model$dual_coef_ <- np$array(model_dict$dual_coef_)$astype(np$float64)
+  }
+  
+  if ((model_dict$`_dual_coef_`["meta"] != reticulate::py_none()) & 
+      (model_dict$`_dual_coef_`["meta"] == "csr")) {
+    model$`_dual_coef_` <- deSerializeCsrMatrix(model_dict$`dual_coef_`)
+  } else {
+    model$`_dual_coef_` <- np$array(model_dict$`_dual_coef_`)$astype(np$float64)
+  }
   return(model)
 }    
 
+serializeCsrMatrix <- function(csr_matrix) {
+  serialized_csr_matrix = reticulate::dict(
+    "meta" = "csr",
+    "indices" = csr_matrix$indices$tolist(),
+    "indptr" = csr_matrix$indptr$tolist(),
+    "_shape"= csr_matrix$`_shape`)
+  serialized_csr_matrix["data"] <- csr_matrix$data$tolist()
+  return(serialized_csr_matrix)
+}
+
+deSerializeCsrMatrix <- function(csr_dict, 
+                                 data_type=np$float64, 
+                                 indices_type=np$int32, 
+                                 indptr_type=np$int32) {
+  sp <- reticulate::import("scipy", convert=FALSE)
+  np <- reticulate::import("numpy", convert=FALSE)
+  csr_matrix <- sp$sparse$csr_matrix(
+    reticulate::tuple(list(np$array(csr_dict["data"])$astype(data_type),
+                           np$array(csr_dict["indices"])$astype(indices_type),
+                           np$array(csr_dict["indptr"])$astype(indptr_type))), 
+    shape=csr_dict["shape"]
+  )
+  return(csr_matrix)
+}
 
  

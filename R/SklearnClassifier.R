@@ -161,14 +161,11 @@ predictPythonSklearn <- function(
   
   # load model
   if(attr(plpModel,'saveToJson')){
-    skljson <- reticulate::import('sklearn_json')
-    ##modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.json"))
     modelLocation <- reticulate::r_to_py(file.path(plpModel$model,"model.json"))
-    model <- skljson$from_json(modelLocation)
+    model <- sklearnFromJson(path=modelLocation)
   } else{
     os <- reticulate::import('os')
     joblib <- reticulate::import('joblib', convert=FALSE)
-    ##modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.pkl"))
     modelLocation <- reticulate::r_to_py(file.path(plpModel$model,"model.pkl"))
     model <- joblib$load(os$path$join(modelLocation)) 
   }
@@ -333,10 +330,9 @@ gridCvPython <- function(
   if(!dir.exists(file.path(modelLocation))){
     dir.create(file.path(modelLocation), recursive = T)
   }
- # joblib$dump(model, os$path$join(modelLocation,"model.pkl"), compress = T) 
   if(saveToJson){
-    skljson <- reticulate::import('sklearn_json')
-    skljson$to_json(model = model, model_name =  file.path(modelLocation,"model.json"))
+    sklearnToJson(model=model,
+                  path=file.path(modelLocation,"model.json"))
   } else{
     joblib$dump(model, file.path(modelLocation,"model.pkl"), compress = T) 
   }

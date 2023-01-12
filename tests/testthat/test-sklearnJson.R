@@ -20,7 +20,7 @@ test_that("Decision tree to json is correct", {
   
   model <- classifier$fit(X,y)
   predictions <- reticulate::py_to_r(model$predict_proba(X_unseen))
-  path <- file.path(tempdir())
+  path <- file.path(tempdir(),"model.json")
   
   sklearnToJson(model, path)
   
@@ -36,7 +36,7 @@ test_that("Random forest to json is correct", {
   
   model <- classifier$fit(X,y)
   predictions <- reticulate::py_to_r(model$predict_proba(X_unseen))
-  path <- file.path(tempdir())
+  path <- file.path(tempdir(),"model.json")
   
   sklearnToJson(model, path)
   
@@ -52,7 +52,7 @@ test_that("Adaboost to json is correct", {
   
   model <- classifier$fit(X,y)
   predictions <- reticulate::py_to_r(model$predict_proba(X_unseen))
-  path <- file.path(tempdir())
+  path <- file.path(tempdir(), "model.json")
   
   sklearnToJson(model, path)
   
@@ -68,7 +68,7 @@ test_that("Naive Bayes to json is correct", {
   
   model <- classifier$fit(X,y)
   predictions <- reticulate::py_to_r(model$predict_proba(X_unseen))
-  path <- file.path(tempdir())
+  path <- file.path(tempdir(), "model.json")
   
   sklearnToJson(model, path)
   
@@ -85,7 +85,7 @@ test_that("MLP to json is correct", {
   
   model <- classifier$fit(X,y)
   predictions <- reticulate::py_to_r(model$predict_proba(X_unseen))
-  path <- file.path(tempdir())
+  path <- file.path(tempdir(), "model.json")
   
   sklearnToJson(model, path)
   
@@ -99,9 +99,24 @@ test_that("MLP to json is correct", {
 test_that("SVM to json is correct", {
   classifier <- sklearn$svm$SVC(probability=TRUE)
   
-  model <- classifier$fit(X,y)
+  # create sparse data because then some of the internal fields in the 
+  # SVM will be sparse
+  feature_hasher <- sklearn$feature_extraction$FeatureHasher(n_features=3L)
+  random <- reticulate::import("random", convert=FALSE)
+  features <- list()
+  y_sparse <- np$empty(100L)
+  for (i in 1:100) {
+    row <- reticulate::dict(a=random$randint(0,2),
+                            b=random$randint(3,5),
+                            c=random$randint(6,8))
+    features <- c(features, row)
+    reticulate::py_set_item(y_sparse, i - 1L, random$randint(0, 2))
+  } 
+  X_sparse <- feature_hasher$transform(features)
+  
+  model <- classifier$fit(X_sparse,y_sparse)
   predictions <- reticulate::py_to_r(model$predict_proba(X_unseen))
-  path <- file.path(tempdir())
+  path <- file.path(tempdir(), "model.json")
   
   sklearnToJson(model, path)
   
