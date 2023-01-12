@@ -80,7 +80,8 @@ test_that("Naive Bayes to json is correct", {
 })
 
 test_that("MLP to json is correct", {
-  classifier <- sklearn$neural_network$MLPClassifier()
+  # lower tolerance to not get convergence warning
+  classifier <- sklearn$neural_network$MLPClassifier(tol=1e-2)
   
   model <- classifier$fit(X,y)
   predictions <- reticulate::py_to_r(model$predict_proba(X_unseen))

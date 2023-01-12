@@ -252,6 +252,7 @@ serializeNaiveBayes <- function(model) {
 
 deSerializeNaiveBayes <- function(model_dict) {
   sklearn <- reticulate::import("sklearn", convert=FALSE)
+  np <- reticulate::import("numpy", convert=FALSE)
   model <- do.call(sklearn$naive_bayes$GaussianNB,
                    reticulate::py_to_r(model_dict["params"]))
   
