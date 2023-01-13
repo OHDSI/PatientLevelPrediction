@@ -18,8 +18,6 @@ library("testthat")
 context("FeatureEngineering")
 
 
-trainData <- createTrainData(plpData, population)
-
 testFEFun <- function(type = 'none'){
   
   result <- createFeatureEngineeringSettings(type = type)
@@ -67,11 +65,12 @@ test_that("univariateFeatureSelection", {
   
   k <- 20+sample(10,1)
   featureEngineeringSettings <- testUniFun(k = k)
+  newTrainData <- copyTrainData(trainData)
   
-  trainDataCovariateSize <- trainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
+  trainDataCovariateSize <- newTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   
   reducedTrainData <- univariateFeatureSelection(
-    trainData = trainData, 
+    trainData = newTrainData, 
     featureEngineeringSettings = featureEngineeringSettings,
     covariateIdsInclude = NULL
     )
@@ -79,13 +78,11 @@ test_that("univariateFeatureSelection", {
   newDataCovariateSize <- reducedTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   expect_true(newDataCovariateSize <= trainDataCovariateSize)
   
-  # expect k many covariates left - REMOVED AS TIES MAKES THIS FAIL OCCASIONALLY
+  # expect k many covariates left
   expect_equal(k,reducedTrainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   
 })
 
-# refresh the training data
-trainData <- createTrainData(plpData, population)
 
 test_that("createRandomForestFeatureSelection correct class", {
   ntreesTest <- sample(1000,1)
@@ -141,10 +138,11 @@ test_that("randomForestFeatureSelection", {
     maxDepth = maxDepthTest
   )
   
-  trainDataCovariateSize <- trainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
+  newTrainData <- copyTrainData(trainData)
+  trainDataCovariateSize <- newTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   
   reducedTrainData <- randomForestFeatureSelection(
-    trainData = trainData, 
+    trainData = newTrainData, 
     featureEngineeringSettings = featureEngineeringSettings,
     covariateIdsInclude = NULL
   )
@@ -155,11 +153,11 @@ test_that("randomForestFeatureSelection", {
 })
 
 test_that("featureSelection is applied on test_data", {
-  k <- 10
+  k <- 20
   featureEngineeringSettings <- testUniFun(k = k)
-  trainData <- createTrainData(plpData, population)
-  trainData <- univariateFeatureSelection(
-    trainData = trainData, 
+  newTrainData <- copyTrainData(trainData)
+  newTrainData <- univariateFeatureSelection(
+    trainData = newTrainData, 
     featureEngineeringSettings = featureEngineeringSettings,
     covariateIdsInclude = NULL
   )
@@ -168,12 +166,11 @@ test_that("featureSelection is applied on test_data", {
   
   # added try catch due to model sometimes not fitting
   plpModel <- tryCatch(
-    {fitPlp(trainData, modelSettings, analysisId='FE')}, 
+    {fitPlp(newTrainData, modelSettings, analysisId='FE')}, 
     error = function(e){return(NULL)}
   )
   
   if(!is.null(plpModel)){ # if the model fit then check this
-    testData <- createTestData(plpData, population)
     prediction <- predictPlp(plpModel, testData, population)
     expect_true(attr(prediction, 'metaData')$featureEngineering) 
   }

@@ -23,7 +23,7 @@ setMLP(
   validationFraction = list(0.1),
   beta1 = list(0.9),
   beta2 = list(0.999),
-  epsilon = list(1, 0.1, 1e-08),
+  epsilon = list(1e-08),
   nIterNoChange = list(10),
   seed = sample(1e+05, 1)
 )
