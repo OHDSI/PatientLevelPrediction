@@ -16,10 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitatons under the License.
 #
-#" Saves sklearn python model object to json in path
-#" @param     model a fitted sklearn python model object
-#" @param     path  path to the saved model file
-#" @export
+#' Saves sklearn python model object to json in path
+#' @param     model a fitted sklearn python model object
+#' @param     path  path to the saved model file
+#' @export
 sklearnToJson <- function(model, path) {
   py <- reticulate::import_builtins(convert=FALSE)
   json <- reticulate::import("json", convert=FALSE)
@@ -45,9 +45,9 @@ sklearnToJson <- function(model, path) {
   return(invisible())
 }
 
-#" Loads sklearn python model from json 
-#" @param     path  path to the model json file
-#" @export
+#' Loads sklearn python model from json 
+#' @param     path  path to the model json file
+#' @export
 sklearnFromJson <- function(path) {
   py <- reticulate::import_builtins(convert=FALSE)
   json <- reticulate::import("json", convert=FALSE)
