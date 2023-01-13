@@ -99,7 +99,7 @@ test_that('AdaBoost fit works', {
   )
   
   expect_correct_fitPlp(plpModel, trainData)
-  expect_equal(dir(plpModel$model),"model.pkl")
+  expect_equal(dir(plpModel$model),"model.json")
   
 })
 
@@ -121,7 +121,7 @@ test_that('RandomForest fit works', {
   )
   
   expect_correct_fitPlp(plpModel, trainData)
-  expect_equal(dir(plpModel$model),"model.pkl")
+  expect_equal(dir(plpModel$model),"model.json")
   
 })
 
@@ -143,7 +143,7 @@ test_that('MLP fit works', {
   )
   
   expect_correct_fitPlp(plpModel, trainData)
-  expect_equal(dir(plpModel$model),"model.pkl")
+  expect_equal(dir(plpModel$model),"model.json")
   
 })
 
@@ -158,7 +158,7 @@ test_that('Naive bayes fit works', {
   )
   
   expect_correct_fitPlp(plpModel, trainData) 
-  expect_equal(dir(plpModel$model),"model.pkl")
+  expect_equal(dir(plpModel$model),"model.json")
   
 })
 
@@ -176,7 +176,7 @@ test_that('Support vector machine fit works', {
   )
   
   expect_correct_fitPlp(plpModel, trainData) 
-  expect_equal(dir(plpModel$model),"model.pkl")
+  expect_equal(dir(plpModel$model),"model.json")
   
 })
 
