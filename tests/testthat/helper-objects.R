@@ -16,7 +16,7 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
     }, testthat::teardown_env())
   }
   
-  if(ifelse(is.null(Sys.info()), T, Sys.info()['sysname'] != 'Windows')){
+  # if(ifelse(is.null(Sys.info()), T, Sys.info()['sysname'] != 'Windows')){
     # configure and activate python
     PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
     PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
@@ -27,7 +27,7 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
                                 forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
                                 conda = "auto")
     }
-  }
+  # }
 }
 
 
