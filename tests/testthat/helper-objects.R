@@ -26,7 +26,6 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
                               forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
                               conda = "auto")
   }
-
 }
 
 
