@@ -137,7 +137,7 @@ MapIds <- function(
   } else{
     rowMap <- data.frame(
       rowId = covariateData$covariates %>% 
-        dplyr::distinct("rowId") %>% 
+        dplyr::distinct(rowId) %>% 
         dplyr::collect() %>% 
         dplyr::pull()
     )
@@ -185,6 +185,7 @@ MapIds <- function(
     }
   
   newCovariateData$mapping <- mapping
+  newCovariateData$rowMap <- rowMap
   
   ParallelLogger::logInfo(paste0('finished MapCovariates'))
   
