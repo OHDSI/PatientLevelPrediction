@@ -53,12 +53,12 @@ test_that("MapIds with no cohort", {
   expect_false('cohort' %in% names(mappings))
   
   # 4 rowIds in the data
-  expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(), 4)
+  expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 4)
   
   # some covariates not in data 5,6,7 so should be removed from covRef
-  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(), 7)
+  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 7)
   
-  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull() %in% c(123,2002,10,3,4,9,8)
+  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull(as_vector=TRUE) %in% c(123,2002,10,3,4,9,8)
   expect_equal(sum(correctCov), length(correctCov))
   
 })
@@ -84,15 +84,15 @@ test_that("MapIds with a cohort", {
   expect_true('cohort' %in% names(mappings))
   
   # 4 rowIds in the data
-  expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(), 2)
+  expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 2)
   
   # no covariates should be lost
-  expect_equal(mappings$covariates %>% dplyr::tally() %>% dplyr::pull(), 3)
+  expect_equal(mappings$covariates %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 3)
   
   # some covariates not in data 5,6,7 so should be removed from covRef
-  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(), 3)
+  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 3)
   
-  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull() %in% c(123,9,8)
+  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull(as_vector=TRUE) %in% c(123,9,8)
   expect_equal(sum(correctCov), length(correctCov))
   
 })
@@ -157,7 +157,7 @@ test_that("toSparseM", {
   compTest <- as.matrix(test$dataMatrix)
   testthat::expect_equal(test$labels %>% dplyr::tally() %>% dplyr::pull(), length(population$rowId))
   testthat::expect_equal(nrow(compTest), length(population$rowId))
-  testthat::expect_true(ncol(compTest) <= plpData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
+  testthat::expect_true(ncol(compTest) <= plpData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE))
   testthat::expect_equal(ncol(compTest), test$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   testthat::expect_equal(ncol(compTest), test$covariateMap %>% dplyr::tally() %>% dplyr::pull())
   

@@ -300,7 +300,6 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
   coefficients <- coefficients[coefficients$beta != 0, ]
   coefficients$covariateId <- as.numeric(coefficients$covariateId)
   if(sum(coefficients$beta != 0)>0){
-
     prediction <- covariateData$covariates %>% 
       dplyr::inner_join(coefficients, by= 'covariateId') %>% 
       dplyr::mutate(values = .data$covariateValue*.data$beta) %>%
