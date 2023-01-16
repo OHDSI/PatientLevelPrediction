@@ -26,5 +26,4 @@ test_that("limitCovariatesToPopulation works", {
                  dplyr::summarise(unique=dplyr::n_distinct(rowId)) %>% 
                  dplyr::collect() %>% 
                  dplyr::pull())  
-  
 })
