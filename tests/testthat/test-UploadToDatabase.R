@@ -107,9 +107,12 @@ test_that("database creation", {
     tablePrefix = appendRandom('test')
   )
   
-  tableNames <- DatabaseConnector::getTableNames(connection = conn, databaseSchema = ohdsiDatabaseSchema)
   # check the results table is created
-  testthat::expect_true(paste0(toupper(appendRandom('test')),'_PERFORMANCES') %in% tableNames)
+  testthat::expect_true(DatabaseConnector::existsTable(
+    connection = conn, 
+    databaseSchema = ohdsiDatabaseSchema,
+    tableName = paste0(appendRandom('test'),'_PERFORMANCES')
+  ))
 
 })
 
@@ -176,11 +179,13 @@ test_that("database deletion", {
     tablePrefix = appendRandom('test')
   )
   
-  tableNames <- DatabaseConnector::getTableNames(connection = conn, databaseSchema = ohdsiDatabaseSchema)
   # check the results table is then deleted
-  testthat::expect_false(paste0(toupper(appendRandom('test')),'_PERFORMANCES') %in% tableNames)
-  
-  
+  testthat::expect_false(DatabaseConnector::existsTable(
+    connection = conn, 
+    databaseSchema = ohdsiDatabaseSchema,
+    tableName = paste0(appendRandom('test'),'_PERFORMANCES')
+  ))
+
 })
 
 # disconnect

@@ -197,7 +197,7 @@ createPlpResultTables <- function(
   conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn))
   
-  tablesExists <- sum(toupper(getPlpResultTables()) %in% toupper(DatabaseConnector::getTableNames(conn)))
+  tablesExists <- sum(tolower(getPlpResultTables()) %in% tolower(DatabaseConnector::getTableNames(conn)))
   tablesExists <- tablesExists == length(getPlpResultTables())
   
   if(!tablesExists){
@@ -957,13 +957,14 @@ deleteTables <- function(
 ){
   
   if(tablePrefix != ''){
-    tableNames <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefix))), '_', tableNames)
+    tableNames <- tolower(paste0(gsub('_','',gsub(' ','', tablePrefix)), '_', tableNames))
   }
   
-  alltables <- DatabaseConnector::getTableNames(
+  alltables <- tolower(DatabaseConnector::getTableNames(
     connection = conn, 
     databaseSchema = databaseSchema
-  )
+  ))
+  
   
   for(tb in tableNames){
     if(tb %in% alltables){

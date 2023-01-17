@@ -86,7 +86,7 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
 
   ParallelLogger::logInfo(paste0('toSparseM non temporal used'))
     
-  checkRam(newcovariateData, 0.9)  # estimates size of RAM required and makes sure it is less that 90%
+  checkRam(newcovariateData)  # estimates size of RAM required and prints it
     
   data <- Matrix::sparseMatrix(
     i = newcovariateData$covariates %>% dplyr::select("rowId") %>% dplyr::pull(),
@@ -191,22 +191,12 @@ MapIds <- function(
   return(newCovariateData)
 }
 
-checkRam <- function(covariateData, maxPercent){
-  
-  ensure_installed('memuse')
+checkRam <- function(covariateData){
   
   nrowV <- covariateData$covariates %>% dplyr::summarise(size = dplyr::n()) %>% dplyr::collect()
   estRamB <- (nrowV$size/1000000*24000984)
   
-  ramFree <- memuse::Sys.meminfo()
-  ramFree <- as.double(ramFree$freeram)
-  
-  if(0.9*ramFree<estRamB){
-    ParallelLogger::logWarn('plpData size bigger than current available RAM')
-    stop('Insufficient RAM')
-  } else{
-    ParallelLogger::logInfo(paste0('plpData size estimated to use ',round(estRamB/ramFree*100,2),'% of available RAM (', round(estRamB/1000000000,1), 'GBs)'))
-  }
+  ParallelLogger::logInfo(paste0('plpData size estimated to use ', round(estRamB/1000000000,1), 'GBs of RAM'))
   
   return(invisible(TRUE))
 }

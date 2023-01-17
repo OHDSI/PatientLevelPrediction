@@ -16,17 +16,15 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
     }, testthat::teardown_env())
   }
   
-  if(ifelse(is.null(Sys.info()), T, Sys.info()['sysname'] != 'Windows')){
-    # configure and activate python
-    PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
-    PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
-    
-    # if mac install nomkl -- trying to fix github actions
-    if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
-      reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
-                                forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
-                                conda = "auto")
-    }
+  # configure and activate python
+  PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
+  PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
+  
+  # if mac install nomkl -- trying to fix github actions
+  if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
+    reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
+                              forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
+                              conda = "auto")
   }
 }
 
@@ -73,7 +71,7 @@ plpResult <- runPlp(
   splitSettings = createDefaultSplitSetting(splitSeed = 12),
   preprocessSettings = createPreprocessSettings(), 
   modelSettings = lrSet, 
-  logSettings = createLogSettings(verbosity = 'TRACE'),
+  logSettings = createLogSettings(verbosity = 'ERROR'),
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = saveLoc
   )

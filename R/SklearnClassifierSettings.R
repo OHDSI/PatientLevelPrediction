@@ -17,7 +17,6 @@
 # limitations under the License.
 
 #' Create setting for AdaBoost with python DecisionTreeClassifier base estimator
-# @param baseEstimator  (list) The base estimator from which the boosted ensemble is built. Support for sample weighting is required, as well as proper classes_ and n_classes_ attributes. If NULL, then the base estimator is DecisionTreeClassifier initialized with max_depth=1.
 #' @param nEstimators    (list) The maximum number of estimators at which boosting is terminated. In case of perfect fit, the learning procedure is stopped early.
 #' @param learningRate   (list) Weight applied to each classifier at each boosting iteration. A higher learning rate increases the contribution of each classifier. There is a trade-off between the learningRate and nEstimators parameters
 #'                       There is a trade-off between learningRate and nEstimators.
@@ -80,7 +79,7 @@ setAdaBoost <- function(
     pythonClassifier = 'AdaBoostClassifier'
   )
   
-  attr(param, 'saveToJson') <- F
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -249,7 +248,7 @@ setDecisionTree <- function(
     pythonClassifier = 'DecisionTreeClassifier'
   )
   
-  attr(param, 'saveToJson') <- F
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -426,7 +425,7 @@ setMLP <- function(
     pythonClassifier = 'MLPClassifier'
   )
   
-  attr(param, 'saveToJson') <- F # current bug when saving to json
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -495,7 +494,7 @@ setNaiveBayes <- function(){
     pythonClassifier = 'GaussianNB'
   )
   
-  attr(param, 'saveToJson') <- F # testing if this fixes issu
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -655,7 +654,7 @@ setRandomForest <- function(
     pythonClassifier = 'RandomForestClassifier'
   ) 
   
-  attr(param, 'saveToJson') <- F
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -770,7 +769,7 @@ setSVM <- function(
     pythonClassifier = 'SVC'
   ) 
   
-  attr(param, 'saveToJson') <- F # having issue loading json
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
  
   result <- list(

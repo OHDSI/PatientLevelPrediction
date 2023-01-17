@@ -58,14 +58,13 @@ insertCsvToDatabase <- function(
     ParallelLogger::logInfo(paste0('CSV folder missing these tables: ', missingTables))
     return(invisible(NULL))
   }
-  
+ 
   alltables <- getTableNamesPlp(
     connectionDetails = connectionDetails,
     databaseSchema = databaseSchemaSettings$resultSchema
   )
-
   
-  if(!paste0(toupper(databaseSchemaSettings$tablePrefix),'PERFORMANCES') %in% alltables){
+  if(!tolower(paste0(databaseSchemaSettings$tablePrefix,'PERFORMANCES')) %in% alltables){
     ParallelLogger::logInfo(
       paste0(
         'performance table: ',paste0(toupper(databaseSchemaSettings$tablePrefix),'PERFORMANCES'),' not found, result database only contains ', 
@@ -581,5 +580,5 @@ getTableNamesPlp <- function(
     databaseSchema = databaseSchema
   )
   
-  return(result)
+  return(tolower(result))
 }
