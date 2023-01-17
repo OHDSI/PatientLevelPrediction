@@ -60,12 +60,12 @@ insertCsvToDatabase <- function(
   }
   
   # check some plp tables exists in databaseSchemaSettings 
-  alltables <- DatabaseConnector::getTableNames(
+  alltables <- tolower(DatabaseConnector::getTableNames(
     connection = conn, 
     databaseSchema = databaseSchemaSettings$resultSchema
-  )
+  ))
   
-  if(!paste0(toupper(databaseSchemaSettings$tablePrefix),'PERFORMANCES') %in% alltables){
+  if(!tolower(paste0(databaseSchemaSettings$tablePrefix,'PERFORMANCES')) %in% alltables){
     ParallelLogger::logInfo(
       paste0(
         'performance table: ',paste0(toupper(databaseSchemaSettings$tablePrefix),'PERFORMANCES'),' not found, result database only contains ', 
