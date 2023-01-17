@@ -1,8 +1,6 @@
 
 # this files contains the objects used in the tests:
-print("In helper objects")
 if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
-  print("In first if statement")
   # Download the PostreSQL driver ---------------------------
   # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
   jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
@@ -11,11 +9,6 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
     dir.create(tempJarFolder)
     Sys.setenv("DATABASECONNECTOR_JAR_FOLDER" = tempJarFolder)
     DatabaseConnector::downloadJdbcDrivers("postgresql")
-    
-    withr::defer({
-      unlink(tempJarFolder, recursive = TRUE, force = TRUE)
-      Sys.unsetenv("DATABASECONNECTOR_JAR_FOLDER")
-    }, testthat::teardown_env())
   }
   
   # configure and activate python
@@ -24,14 +17,11 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
     
   # # if mac install nomkl -- trying to fix github actions
   if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
-    print("In second if statement")
     reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'),
                               forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE,
                               conda = "auto")
   }
 }
-
-print("Outside if statement")
 
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
