@@ -99,7 +99,7 @@ test_that("test createDatabaseDetails works", {
 test_that("database creation", {
   skip_if(Sys.getenv('CI') != 'true', 'not run locally')
   createPlpResultTables(
-    conn = conn, 
+    connectionDetails = connectionRedshift, 
     resultSchema = ohdsiDatabaseSchema, 
     targetDialect = targetDialect,
     deleteTables = T, 
@@ -139,7 +139,7 @@ test_that("results uploaded to database", {
   
   # add results:
   addMultipleRunPlpToDatabase(
-    conn = conn, 
+    connectionDetails  = connectionRedshift, 
     databaseSchemaSettings = createDatabaseSchemaSettings(
       resultSchema = ohdsiDatabaseSchema, 
       tablePrefix = appendRandom('test'),
@@ -171,7 +171,7 @@ test_that("results uploaded to database", {
 test_that("database deletion", {
   skip_if(Sys.getenv('CI') != 'true', 'not run locally')
   createPlpResultTables(
-    conn = conn, 
+    connectionDetails = connectionRedshift, 
     resultSchema = ohdsiDatabaseSchema, 
     targetDialect = targetDialect,
     deleteTables = T, 
@@ -300,7 +300,6 @@ DatabaseConnector::disconnect(conn)
 # importFromCsv test here as can use previous csv saving
 test_that("import from csv", {
   
-  
   cohortDef <- extractCohortDefinitionsCSV(
     csvFolder = file.path(saveLoc, 'csvFolder')
   )
@@ -369,11 +368,11 @@ test_that("import from csv", {
   if(!dir.exists(file.path(tempdir(), 'newCsvDatabase'))){
     dir.create(file.path(tempdir(), 'newCsvDatabase'), recursive = T)
   }
-  newResultConn <- DatabaseConnector::createConnectionDetails(
+  newResultConnDetails <- DatabaseConnector::createConnectionDetails(
     dbms = 'sqlite', 
     server = file.path(csvServerLoc,'newCsv.sqlite')
     )
-  newResultConn <- DatabaseConnector::connect(newResultConn)
+  newResultConn <- DatabaseConnector::connect(newResultConnDetails)
   csvDatabaseSchemaSettings <-  PatientLevelPrediction::createDatabaseSchemaSettings(
     resultSchema = 'main', 
     tablePrefix = '', 
@@ -383,7 +382,7 @@ test_that("import from csv", {
   
   # create empty tables to insert csv into
   PatientLevelPrediction::createPlpResultTables(
-    conn = newResultConn , 
+    connectionDetails = newResultConnDetails, 
     targetDialect = 'sqlite', 
     resultSchema = 'main', 
     createTables = T, 
@@ -394,7 +393,7 @@ test_that("import from csv", {
     
   res <- insertCsvToDatabase(
     csvFolder = file.path(saveLoc, 'csvFolder'),
-    conn = newResultConn,
+    connectionDetails = newResultConnDetails,
     databaseSchemaSettings = csvDatabaseSchemaSettings,
     modelSaveLocation = file.path(csvServerLoc,'models'),
     csvTableAppend = ''

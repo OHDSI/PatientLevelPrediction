@@ -6,7 +6,7 @@
 \usage{
 addRunPlpToDatabase(
   runPlp,
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   cohortDefinitions,
   modelSaveLocation,
@@ -16,8 +16,8 @@ addRunPlpToDatabase(
 \arguments{
 \item{runPlp}{An object of class \code{runPlp} or class \code{externalValidatePlp}}
 
-\item{conn}{A connection to a database created by using the
-function \code{connect} in the
+\item{connectionDetails}{A connection details created by using the
+function \code{createConnectionDetails} in the
 \code{DatabaseConnector} package.}
 
 \item{databaseSchemaSettings}{A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables}

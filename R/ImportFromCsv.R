@@ -6,7 +6,7 @@
 #' The user needs to have plp csv results in a single folder and an existing plp result database  
 #' 
 #' @param csvFolder        The location to the csv folder with the plp results
-#' @param conn             A connection to the plp results database that the csv results will be inserted into
+#' @param connectionDetails             A connection details for the plp results database that the csv results will be inserted into
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables to insert the csv results into  
 #' @param modelSaveLocation        The location to save any models from the csv folder - this should be the same location you picked when inserting other models into the database
 #' @param csvTableAppend       A string that appends the csv file names                       
@@ -17,7 +17,7 @@
 #' @export
 insertCsvToDatabase <- function(
   csvFolder,
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   modelSaveLocation,
   csvTableAppend = ''
@@ -58,12 +58,11 @@ insertCsvToDatabase <- function(
     ParallelLogger::logInfo(paste0('CSV folder missing these tables: ', missingTables))
     return(invisible(NULL))
   }
-  
-  # check some plp tables exists in databaseSchemaSettings 
-  alltables <- tolower(DatabaseConnector::getTableNames(
-    connection = conn, 
+ 
+  alltables <- getTableNamesPlp(
+    connectionDetails = connectionDetails,
     databaseSchema = databaseSchemaSettings$resultSchema
-  ))
+  )
   
   if(!tolower(paste0(databaseSchemaSettings$tablePrefix,'PERFORMANCES')) %in% alltables){
     ParallelLogger::logInfo(
@@ -108,7 +107,7 @@ insertCsvToDatabase <- function(
       # load into database
       addRunPlpToDatabase(
         runPlp = runPlp,
-        conn = conn,
+        connectionDetails = connectionDetails,
         databaseSchemaSettings = databaseSchemaSettings,
         cohortDefinitions = cohortDefinitions,
         modelSaveLocation = modelSaveLocation,
@@ -136,7 +135,7 @@ insertCsvToDatabase <- function(
           {
             addDiagnosePlpToDatabase(
               diagnosePlp = diagnosePlp,
-              conn = conn,
+              connectionDetails = connectionDetails,
               databaseSchemaSettings = databaseSchemaSettings,
               cohortDefinitions = cohortDefinitions,
               databaseList = databaseList
@@ -566,3 +565,20 @@ extractDiagnosticFromCsv <- function(
   return(result)
 }
 
+
+getTableNamesPlp <- function(
+    connectionDetails,
+    databaseSchema
+){
+  
+  # check some plp tables exists in databaseSchemaSettings 
+  conn <- DatabaseConnector::connect(connectionDetails) 
+  on.exit(DatabaseConnector::disconnect(conn))
+  
+  result <- DatabaseConnector::getTableNames(
+    connection = conn, 
+    databaseSchema = databaseSchema
+  )
+  
+  return(tolower(result))
+}
