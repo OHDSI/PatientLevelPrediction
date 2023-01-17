@@ -20,12 +20,12 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
   PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
   PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
     
-  # if mac install nomkl -- trying to fix github actions
-  if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
-    reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
-                              forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
-                              conda = "auto")
-  }
+  # # if mac install nomkl -- trying to fix github actions
+  # if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
+  #   reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
+  #                             forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
+  #                             conda = "auto")
+  # }
 }
 
 
