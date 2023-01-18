@@ -48,7 +48,7 @@ covariateSummary <- function(
   variableImportance = NULL,
   featureEngineering = NULL
 ){
-  
+  start <- Sys.time()
   ParallelLogger::logInfo(paste0('Calculating covariate summary @ ', Sys.time()))
   ParallelLogger::logInfo('This can take a while...')
   
@@ -97,7 +97,8 @@ covariateSummary <- function(
     dplyr::collect() %>% dplyr::left_join(covariateSummary, by ='covariateId')
   
   ParallelLogger::logInfo(paste0('Finished covariate summary @ ', Sys.time()))
-  
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Covariate Summary took ", signif(delta, 3), " ", attr(delta, "units"))
   return(covariateSummary)
 }
 

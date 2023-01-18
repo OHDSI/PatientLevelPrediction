@@ -42,7 +42,7 @@
 #'
 #' @export
 toSparseM <- function(plpData, cohort = NULL, map=NULL){
-  
+  start <- Sys.time()
   ParallelLogger::logInfo(paste0('starting toSparseM'))
   
   ParallelLogger::logDebug(
@@ -109,6 +109,9 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
     covariateRef = newcovariateData$covariateRef %>% dplyr::collect(),
     covariateMap = newcovariateData$mapping %>% dplyr::collect()
   )
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Sparse matrix conversion took ", 
+                          signif(delta, 3), " ", attr(delta, "units"))
   return(result)
 }
 

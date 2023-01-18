@@ -65,6 +65,7 @@ createSampleSettings <- function(type = 'none',
 
 # code to run the sampling - add desc
 sampleData <- function(trainData, sampleSettings){
+  start <- Sys.time()
   
   metaData <- attr(trainData, "metaData")
   
@@ -88,6 +89,8 @@ sampleData <- function(trainData, sampleSettings){
   metaData$sampleSettings <- sampleSettings
   
   attr(trainData, "metaData") <- metaData
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Sampling took ", signif(delta, 3), " ", attr(delta, "units"))
   return(trainData)
 }
 

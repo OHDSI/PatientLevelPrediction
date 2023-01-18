@@ -56,7 +56,7 @@ fitPlp <- function(
   analysisId
   )
   {
-  
+  start <- Sys.time()
   if(is.null(trainData))
     stop('trainData is NULL')
   if(is.null(trainData$covariateData))
@@ -86,7 +86,8 @@ fitPlp <- function(
   plpModel$trainDetails$developmentDatabaseId = attr(trainData, "metaData")$cdmDatabaseId
   
   class(plpModel) <- 'plpModel'
-  
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Model development took ", signif(delta, 3), " ", attr(delta, "units"))
   return(plpModel)
   
 }

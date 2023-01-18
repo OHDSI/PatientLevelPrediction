@@ -112,7 +112,7 @@ createDefaultSplitSetting <- function(testFraction=0.25,
 splitData <- function(plpData = plpData,
                       population = population,
                       splitSettings = splitSettings){
-  
+  start <- Sys.time()
   fun <- attr(splitSettings, "fun")
   args <- list(population = population,
                splitSettings = splitSettings)
@@ -200,6 +200,8 @@ splitData <- function(plpData = plpData,
   }
   
   class(result) <- 'splitData'
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("splitData took ", signif(delta, 3), " ", attr(delta, "units"))
   return(result)
 }
 
