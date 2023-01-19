@@ -30,7 +30,6 @@ dir.create(saveLoc)
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-ParallelLogger::clearLoggers()
 
 data(plpDataSimulationProfile, envir = environment())
 
