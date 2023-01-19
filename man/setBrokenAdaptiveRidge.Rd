@@ -9,7 +9,7 @@ setBrokenAdaptiveRidge(
   seed = NULL,
   includeCovariateIds = c(),
   noShrinkage = c("(Intercept)"),
-  penalty = 0.1,
+  penalty = "BIC",
   threads = -1,
   forceIntercept = F,
   upperLimit = 20,
@@ -28,6 +28,8 @@ setBrokenAdaptiveRidge(
 
 \item{noShrinkage}{a set of covariates whcih are to be forced to be included in the final model. default is the intercept}
 
+\item{penalty}{Specifies the BAR penalty; possible values are `BIC` or `AIC` or a numeric value}
+
 \item{threads}{An option to set number of threads when training model}
 
 \item{forceIntercept}{Logical: Force intercept coefficient into prior}
@@ -39,6 +41,8 @@ setBrokenAdaptiveRidge(
 \item{tolerance}{Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence}
 
 \item{maxIterations}{Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error}
+
+\item{threshold}{absolute threshold at which to force coefficient to 0}
 }
 \description{
 See paper: https://doi.org/10.1016/j.jspi.2020.12.001

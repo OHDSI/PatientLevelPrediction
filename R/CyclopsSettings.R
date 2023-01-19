@@ -340,19 +340,21 @@ setRidgeRegression <- function(variance = 0.01,
 #' @param seed       An option to add a seed when training the model
 #' @param includeCovariateIds a set of covariate IDS to limit the analysis to
 #' @param noShrinkage a set of covariates whcih are to be forced to be included in the final model. default is the intercept 
+#' @param penalty    Specifies the BAR penalty; possible values are `BIC` or `AIC` or a numeric value
 #' @param threads    An option to set number of threads when training model
 #' @param forceIntercept  	Logical: Force intercept coefficient into prior
 #' @param upperLimit  	Numeric: Upper prior variance limit for grid-search
 #' @param lowerLimit  	Numeric: Lower prior variance limit for grid-search
 #' @param tolerance   Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error
+#' @param threshold    absolute threshold at which to force coefficient to 0
 #'
 #' @export
 setBrokenAdaptiveRidge <- function(initialRidgeVariance = 1, 
                                    seed = NULL, 
                                    includeCovariateIds = c(), 
                                    noShrinkage = c("(Intercept)"), 
-                                   penalty = 0.1,
+                                   penalty = 'BIC',
                                    threads = -1, 
                                    forceIntercept = F,
                                    upperLimit = 20, 
