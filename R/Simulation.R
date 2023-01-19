@@ -134,7 +134,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   cohorts$gender <- 8532 #female
   cohorts$gender[sample((1:nrow(cohorts)), nrow(cohorts)/2)] <- 8507
   
-  ParallelLogger::LogInfo("Generating outcomes")
+  ParallelLogger::logInfo("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
     prediction <- predictCyclopsType(plpDataSimulationProfile$outcomeModels[[i]],
