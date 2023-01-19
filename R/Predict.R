@@ -193,7 +193,7 @@ applyTidyCovariateData <- function(
   class(newCovariateData) <- c("CovariateData")
   
   delta <- Sys.time() - start
-  writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))
+  ParallelLogger::logInfo(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))
   
   # return processed data
   return(newCovariateData)

@@ -85,7 +85,11 @@ fitCyclopsModel <- function(
     param$priorParams$useCrossValidation <- max(trainData$folds$index)>1
   }
   prior <- do.call(eval(parse(text = settings$priorfunction)), param$priorParams)
-
+  
+  if (!is.null(param$priorParams$initialRidgeVariance)) {
+    param$priorParams$variance <- param$priorParams$initialRidgeVariance
+  }
+  
   if(settings$useControl){
     
     control <- Cyclops::createControl(
@@ -384,7 +388,7 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   class(outcomeModel) <- "plpModel"
   
   #get CV - added && status == "OK" to only run if the model fit sucsessfully 
-  if(modelType == "logistic" && useCrossValidation && status == "OK"){
+  if(modelType == "logistic" && useCrossValidation && status == "OK" && !is.null(priorType)){
     outcomeModel$cv <- getCV(cyclopsData, labels, cvVariance = fit$variance, folds = folds,
                              priorType = priorType)
   }
