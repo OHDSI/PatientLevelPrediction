@@ -26,6 +26,7 @@ Depends:
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
+    BrokenAdaptiveRidge,
     DatabaseConnector (>= 5.0.0),
     dplyr,
     FeatureExtraction (>= 3.0.0),
@@ -72,6 +73,7 @@ Suggests:
 Remotes:
     ohdsi/BigKnn@arrow,
     ohdsi/DatabaseConnector,
+    ohdsi/BrokenAdaptiveRidge,
     ohdsi/Eunomia,
     ohdsi/Andromeda@arrow_S4,
     ohdsi/Cyclops@arrow_S4,
@@ -79,5 +81,5 @@ Remotes:
     ohdsi/IterativeHardThresholding,
     ohdsi/ParallelLogger,
     ohdsi/OhdsiShinyModules
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Encoding: UTF-8

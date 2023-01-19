@@ -98,7 +98,7 @@
 #' @export
 simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
-  writeLines("Generating covariates")
+  ParallelLogger::logInfo("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariatePrevalence
   
   personsPerCov <- stats::rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
@@ -121,7 +121,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   
   class(covariateData) <- c("CovariateData")
   
-  writeLines("Generating cohorts")
+  ParallelLogger::logInfo("Generating cohorts")
   cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), targetId = 1)
   breaks <- cumsum(plpDataSimulationProfile$timePrevalence)
   r <- stats::runif(n)
@@ -134,7 +134,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   cohorts$gender <- 8532 #female
   cohorts$gender[sample((1:nrow(cohorts)), nrow(cohorts)/2)] <- 8507
   
-  writeLines("Generating outcomes")
+  ParallelLogger::LogInfo("Generating outcomes")
   allOutcomes <- data.frame()
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
     prediction <- predictCyclopsType(plpDataSimulationProfile$outcomeModels[[i]],
