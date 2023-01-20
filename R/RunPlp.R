@@ -192,32 +192,34 @@
 #'                   )
 #' } 
 runPlp <- function(
-  plpData,
-  outcomeId = plpData$metaData$call$outcomeIds[1],
-  analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = '-'),
-  analysisName = 'Study details',
-  populationSettings = createStudyPopulationSettings(),
-  splitSettings = createDefaultSplitSetting(
-    type = 'stratified', 
-    testFraction=0.25, 
-    trainFraction = 0.75, 
-    splitSeed=123, 
-    nfold=3
+    plpData,
+    outcomeId = plpData$metaData$call$outcomeIds[1],
+    analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = '-'),
+    analysisName = 'Study details',
+    populationSettings = createStudyPopulationSettings(),
+    splitSettings = createDefaultSplitSetting(
+      type = 'stratified', 
+      testFraction=0.25, 
+      trainFraction = 0.75, 
+      splitSeed=123, 
+      nfold=3
     ),
-  sampleSettings = createSampleSettings(type = 'none'),
-  featureEngineeringSettings = createFeatureEngineeringSettings(type = 'none'),
-  preprocessSettings = createPreprocessSettings(
-    minFraction = 0.001,
-    normalize = T
+    sampleSettings = createSampleSettings(type = 'none'),
+    featureEngineeringSettings = createFeatureEngineeringSettings(type = 'none'),
+    preprocessSettings = createPreprocessSettings(
+      minFraction = 0.001,
+      normalize = T
     ),
-  modelSettings = setLassoLogisticRegression(),
-  logSettings = createLogSettings(
-    verbosity = 'DEBUG',
-    timeStamp = T,
-    logName = 'runPlp Log'
+    modelSettings = setLassoLogisticRegression(),
+    logSettings = createLogSettings(
+      verbosity = 'DEBUG',
+      timeStamp = T,
+      logName = 'runPlp Log'
     ),
-  executeSettings = createDefaultExecuteSettings(),
-  saveDirectory = getwd()
+    executeSettings = createDefaultExecuteSettings(),
+    saveDirectory = getwd(),
+    saveData = T,
+    loadData = NULL
 ){
   
   # start log 
@@ -246,7 +248,7 @@ runPlp <- function(
       )
     },
     error = function(e){ParallelLogger::logError(e); return(NULL)}
-    )
+  )
   
   if(is.null(settingsValid)){
     stop('Settings are invalid - check log for error message')
@@ -357,7 +359,18 @@ runPlp <- function(
     dataSummary(data)
   }
   
-  
+  # Save and/or load TrainTestData
+  if (saveData) {
+    file <- file.path(analysisPath, "TrainTestData")
+    saveTrainTestData(data, file, test=T)
+    ParallelLogger::logInfo(sprintf('Saved TrainTestData.'))
+  }
+
+  if (!is.null(loadData)) {
+    data <- loadTrainTestData(loadData)
+    ParallelLogger::logInfo(sprintf('Loaded TrainTestData.'))
+  }
+
   model <- NULL
   prediction <- NULL
   performance <- NULL
@@ -449,16 +462,16 @@ runPlp <- function(
     }
     
     covariateSummaryResult <- do.call(covariateSummary,   
-      list(
-        covariateData = plpData$covariateData,
-        cohort = population %>% dplyr::select(.data$rowId),
-        labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount), 
-        strata = strata,
-        variableImportance = variableImportance,
-        featureEngineering = NULL
-        )
+                                      list(
+                                        covariateData = plpData$covariateData,
+                                        cohort = population %>% dplyr::select(.data$rowId),
+                                        labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount), 
+                                        strata = strata,
+                                        variableImportance = variableImportance,
+                                        featureEngineering = NULL
+                                      )
     )
-  
+    
   }
   
   #  ExecutionSummary details:
@@ -475,7 +488,7 @@ runPlp <- function(
       platform = R.Version()$platform,
       cores = Sys.getenv('NUMBER_OF_PROCESSORS'),
       RAM = memuse::Sys.meminfo()[1]
-      ),
+    ),
     TotalExecutionElapsedTime = TotalExecutionElapsedTime,
     ExecutionDateTime = ExecutionDateTime,
     Log = logSettings$logFileName # location for now
@@ -500,8 +513,8 @@ runPlp <- function(
     analysisRef = list(
       analysisId = analysisId,
       analysisName = analysisName
-      )
     )
+  )
   class(results) <- c('runPlp')
   
   ParallelLogger::logInfo("Run finished successfully.")
@@ -509,11 +522,9 @@ runPlp <- function(
   # save the results
   ParallelLogger::logInfo(paste0('Saving PlpResult'))
   tryCatch(savePlpResult(results, file.path(analysisPath,'plpResult')),
-    finally= ParallelLogger::logTrace('Done.'))
+           finally= ParallelLogger::logTrace('Done.'))
   ParallelLogger::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
   
   return(results)
   
 }
-
-

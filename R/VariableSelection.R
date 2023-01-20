@@ -16,11 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO: add something to avoid perfect multicollinearity?
+# TODO: add function to manually select set of covariates/concept ids -> likefunction filterCovariateIds
 
 #' @export
 setUnivariateSelection <- function(modelSettings = PatientLevelPrediction::setLassoLogisticRegression(),
                                    corMethod = "pearson",
-                                   nVariables = 50) { # TODO: set dynamic number based on elbow
+                                   nVariables = 50, # TODO: set dynamic number based on elbow
+                                   saveDirectory = NULL, 
+                                   returnData = FALSE) { 
   
   checkIsClass(nVariables, c('numeric','integer'))
   # TODO: add class checks input (modelSettings, corMethod)?
@@ -29,7 +33,9 @@ setUnivariateSelection <- function(modelSettings = PatientLevelPrediction::setLa
     modelSettings = modelSettings,
     param = list(
       corMethod = corMethod,
-      nVariables = nVariables
+      nVariables = nVariables,
+      saveDirectory = saveDirectory,
+      returnData = returnData
     )
   )
   
@@ -52,6 +58,7 @@ fitUnivariateSelection <- function(
   
   # Settings variable selection
   param <- modelSettings$param$param
+  tempMetaData <- attr(trainData$covariateData, "metaData")  
   
   covariates <- as.data.frame(trainData$covariateData$covariates)
   
@@ -80,17 +87,29 @@ fitUnivariateSelection <- function(
     ParallelLogger::logTrace('No variable selection, number of covariates less than or equal to nVariables.')
   }
   
-  # Fit final PLP model
-  fun <- eval(parse(text = modelSettings$param$modelSettings$fitFunction))
-  args <- list(
-    trainData = trainData,
-    modelSettings = modelSettings$param$modelSettings,
-    search = search,
-    analysisId = analysisId
-  )
-  plpModel <- do.call(fun, args)
-  
-  return(plpModel)
+  # Save trainData
+  if (!is.null(modelSettings$param$param$saveDirectory)) {
+    file <- file.path(modelSettings$param$param$saveDirectory, analysisId, "TrainTestData")
+    attr(trainData$covariateData, "metaData") <- tempMetaData
+    saveTrainTestData(trainData, file, test=F)
+  }
+ 
+  if (param$returnData) {
+    return(trainData)
+  } else {
+    # Fit final PLP model
+    fun <- eval(parse(text = modelSettings$param$modelSettings$fitFunction))
+    args <- list(
+      trainData = trainData,
+      modelSettings = modelSettings$param$modelSettings,
+      search = search,
+      analysisId = analysisId
+    )
+    plpModel <- do.call(fun, args)
+    
+    return(plpModel)
+  }
+ 
 }
 
 #' @export
@@ -98,7 +117,8 @@ setStepwiseSelection <- function(modelSettings,
                                  selectMethod = "backward",
                                  nInitialVariables = 50, # TODO: set dynamic number based on elbow
                                  nVariables = 20, # TODO: set dynamic number based on elbow
-                                 stepSize = 1) { 
+                                 stepSize = 1,
+                                 saveDirectory = NULL) { 
   
   checkIsClass(nInitialVariables, c('numeric','integer'))
   checkIsClass(nVariables, c('numeric','integer'))
@@ -132,6 +152,8 @@ fitStepwiseSelection <- function(
     analysisId,
     stop = F,
     ...) {
+  
+  tempMetaData <- attr(trainData$covariateData, "metaData")  
   
   # Initial fit PLP model
   fun <- eval(parse(text = modelSettings$param$modelSettings$fitFunction))
@@ -176,6 +198,13 @@ fitStepwiseSelection <- function(
   }
   
   ParallelLogger::logTrace('Finished variable selection.')
+  
+  # Save trainData
+  if (!is.null(modelSettings$param$param$saveDirectory)) {
+    file <- file.path(modelSettings$param$param$saveDirectory, analysisId, "TrainTestData")
+    attr(trainData$covariateData, "metaData") <- tempMetaData
+    saveTrainTestData(trainData, file, test=F)
+  }
   
   # Fit final PLP model
   fun <- eval(parse(text = modelSettings$param$modelSettings$fitFunction))
