@@ -31,7 +31,7 @@ Features
 - Extracts the necessary data from a database in OMOP Common Data Model format for multiple covariate settings.
 - Uses a large set of covariates including for example all drugs, diagnoses, procedures, as well as age, comorbidity indexes, and custom covariates.
 - Allows you to add custom covariates or cohort covariates.
-- Includes a large number of state-of-the-art machine learning algorithms that can be used to develop predictive models, including Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural network and AdaBoost, SVM.
+- Includes a large number of state-of-the-art machine learning algorithms that can be used to develop predictive models, including Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural network, AdaBoost and Support vector machines.
 - Allows you to add custom algorithms.
 - Allows you to add custom feature engineering
 - Allows you to add custom under/over sampling (or any other sampling) [note: based on existing research this is not recommended]
@@ -71,11 +71,11 @@ Demo of the Shiny Apps can be found here:
 
 Technology
 ==========
-PatientLevelPrediction is an R package, with some functions implemented in python.
+PatientLevelPrediction is an R package, with some functions using python through reticulate.
 
 System Requirements
 ===================
-Requires R (version 3.3.0 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java and Python.
+Requires R (version 3.5.0 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java and Python.
 
 The python installation is required for some of the machine learning algorithms. We advise to
 install Python 3.7 using Anaconda (https://www.continuum.io/downloads). 
@@ -129,7 +129,6 @@ Development
 ===========
 PatientLevelPrediction is being developed in R Studio.
 
-Beta
 
 # Acknowledgements
 
