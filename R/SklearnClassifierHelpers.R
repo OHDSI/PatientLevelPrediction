@@ -23,24 +23,10 @@
 #' @param allList a list of lists
 #' @return A list with all possible combinations from the input list of lists
 #' @export
-listCartesian <- function(allList){
-  
-  sizes <- lapply(allList, function(x) 1:length(x))
-  combinations <- expand.grid(sizes)
-  
-  result <- list()
-  length(result) <- nrow(combinations)
-  
-  for(i in 1:nrow(combinations)){
-    tempList <- list()
-    for(j in 1:ncol(combinations)){
-      tempList <- c(tempList, list(allList[[j]][[combinations[i,j]]]))
-    }
-    names(tempList) <- names(allList)
-    result[[i]] <- tempList
-  }
-  
-  return(result)
+listCartesian <- function(allList) {
+  combinations <- expand.grid(allList)
+  results <- lapply(seq_len(nrow(combinations)),
+                    function(i) lapply(combinations, "[", i))
+  return(results)
 }
-
   
