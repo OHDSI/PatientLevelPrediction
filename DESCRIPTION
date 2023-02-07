@@ -27,7 +27,7 @@ Depends:
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
-    DatabaseConnector (>= 5.0.0),
+    DatabaseConnector (>= 6.0.0),
     dplyr,
     FeatureExtraction (>= 3.0.0),
     ggplot2,
@@ -78,6 +78,6 @@ Remotes:
     ohdsi/IterativeHardThresholding,
     ohdsi/ParallelLogger,
     ohdsi/OhdsiShinyModules@develop,
-    ohdsi/ResultModelManager
+    ohdsi/ResultModelManager@develop
 RoxygenNote: 7.2.1
 Encoding: UTF-8
