@@ -27,7 +27,7 @@ Depends:
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
-    DatabaseConnector (>= 5.0.0),
+    DatabaseConnector (>= 6.0.0),
     dplyr,
     FeatureExtraction (>= 3.0.0),
     ggplot2,
