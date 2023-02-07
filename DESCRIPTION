@@ -60,13 +60,11 @@ Suggests:
     pool,
     readr,
     ResourceSelection,
-    ResultModelManager,
     rmarkdown,
     RSQLite,
     scoring,
     shiny,
-    shinydashboard,
-    OhdsiShinyModules (>= 1.1.0),
+    OhdsiShinyModules (>= 1.0.0),
     survminer,
     testthat,
     withr,
@@ -77,7 +75,6 @@ Remotes:
     ohdsi/FeatureExtraction,
     ohdsi/IterativeHardThresholding,
     ohdsi/ParallelLogger,
-    ohdsi/OhdsiShinyModules@develop,
-    ohdsi/ResultModelManager@develop
-RoxygenNote: 7.2.1
+    ohdsi/OhdsiShinyModules
+RoxygenNote: 7.2.3
 Encoding: UTF-8
