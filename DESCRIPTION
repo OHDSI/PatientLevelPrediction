@@ -41,6 +41,7 @@ Imports:
     PRROC,
     reticulate (> 1.16),
     rlang,
+    shinydashboard,
     SqlRender (>= 1.1.3),
     survival,
     tibble,
