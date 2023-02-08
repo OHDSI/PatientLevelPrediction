@@ -65,7 +65,7 @@ Suggests:
     RSQLite,
     scoring,
     shiny,
-    OhdsiShinyModules (>= 1.1.0),
+    OhdsiShinyModules (>= 1.0.2),
     survminer,
     testthat,
     withr,
@@ -76,7 +76,7 @@ Remotes:
     ohdsi/FeatureExtraction,
     ohdsi/IterativeHardThresholding,
     ohdsi/ParallelLogger,
-    ohdsi/OhdsiShinyModules@develop,
+    ohdsi/OhdsiShinyModules,
     ohdsi/ResultModelManager
 RoxygenNote: 7.2.3
 Encoding: UTF-8
