@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.1.0
+======================
+- shiny app is now using ShinyAppBuilder with a config saved in the /inst folder
+
 PatientLevelPrediction 6.0.11
 ======================
 - fixed bugs introduced when sklearn inputs changed
