@@ -26,7 +26,7 @@
 listCartesian <- function(allList) {
   combinations <- expand.grid(allList)
   results <- lapply(seq_len(nrow(combinations)),
-                    function(i) sapply(combinations, "[", i))
+                    function(i) lapply(combinations, function(x) x[i][[1]]))
   return(results)
 }
   
