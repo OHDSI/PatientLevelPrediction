@@ -27,7 +27,7 @@ Depends:
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
-    DatabaseConnector (>= 5.0.0),
+    DatabaseConnector (>= 6.0.0),
     dplyr,
     FeatureExtraction (>= 3.0.0),
     ggplot2,
@@ -60,13 +60,11 @@ Suggests:
     pool,
     readr,
     ResourceSelection,
-    ResultModelManager,
+    ResultModelManager (>= 0.2.0),
     rmarkdown,
     RSQLite,
     scoring,
-    shiny,
-    shinydashboard,
-    OhdsiShinyModules (>= 1.1.0),
+    ShinyAppBuilder (>= 1.1.1),
     survminer,
     testthat,
     withr,
@@ -76,8 +74,7 @@ Remotes:
     ohdsi/Eunomia,
     ohdsi/FeatureExtraction,
     ohdsi/IterativeHardThresholding,
-    ohdsi/ParallelLogger,
-    ohdsi/OhdsiShinyModules@develop,
+    ohdsi/ShinyAppBuilder,
     ohdsi/ResultModelManager
 RoxygenNote: 7.2.1
 Encoding: UTF-8
