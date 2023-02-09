@@ -4,6 +4,7 @@ template:
 
 development:
   mode: auto
+  development: docs/dev
 
 home:
   links:
