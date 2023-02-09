@@ -1,0 +1,17 @@
+pandoc: 2.19.2
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  AddingCustomFeatureEngineering: AddingCustomFeatureEngineering.html
+  AddingCustomModels: AddingCustomModels.html
+  AddingCustomSamples: AddingCustomSamples.html
+  AddingCustomSplitting: AddingCustomSplitting.html
+  BestPractices: BestPractices.html
+  BuildingMultiplePredictiveModels: BuildingMultiplePredictiveModels.html
+  BuildingPredictiveModels: BuildingPredictiveModels.html
+  CreatingLearningCurves: CreatingLearningCurves.html
+  CreatingNetworkStudies: CreatingNetworkStudies.html
+  InstallationGuide: InstallationGuide.html
+  Videos: Videos.html
+last_built: 2023-02-09T17:42Z
+

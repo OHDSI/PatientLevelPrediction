@@ -1,0 +1,20 @@
+pandoc: 2.11.4
+pkgdown: 1.6.1
+pkgdown_sha: ~
+articles:
+  AddingCustomFeatureEngineering: AddingCustomFeatureEngineering.html
+  AddingCustomModels: AddingCustomModels.html
+  AddingCustomSamples: AddingCustomSamples.html
+  AddingCustomSplitting: AddingCustomSplitting.html
+  BestPractices: BestPractices.html
+  BuildingEnsembleModels: BuildingEnsembleModels.html
+  BuildingMultiplePredictiveModels: BuildingMultiplePredictiveModels.html
+  BuildingPredictiveModels: BuildingPredictiveModels.html
+  CreatingLearningCurves: CreatingLearningCurves.html
+  CreatingNetworkStudies: CreatingNetworkStudies.html
+  CreatingShinyApp: CreatingShinyApp.html
+  InstallationGuide: InstallationGuide.html
+  PatientLevelPrediction: PatientLevelPrediction.html
+  Videos: Videos.html
+last_built: 2022-03-09T19:04Z
+
