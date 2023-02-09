@@ -1,7 +1,10 @@
 template:
   params:
     bootswatch: cosmo
-    
+
+development:
+  mode: auto
+
 home:
   links:
   - text: Ask a question
