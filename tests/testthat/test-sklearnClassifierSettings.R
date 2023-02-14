@@ -11,10 +11,9 @@ test_that("setAdaBoost settings work checks", {
   
   expect_equal(length(adset$param), 3*3*1)
   
-  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[1]]))), NULL)
-  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[2]]))), c(10,50, 200))
-  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[3]]))), c(1, 0.5, 0.1))
-  expect_equal(unique(lapply(adset$param, function(x) x[[4]])), list('SAMME.R'))
+  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[1]]))), c(10,50, 200))
+  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[2]]))), c(1, 0.5, 0.1))
+  expect_equal(unique(lapply(adset$param, function(x) x[[3]])), list('SAMME.R'))
   
   expect_false(attr(adset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(adset$param, 'settings')$name, 'AdaBoost')
@@ -26,7 +25,7 @@ test_that("setAdaBoost settings work checks", {
   inputs <- AdaBoostClassifierInputs(list, adset$param[[1]])
   expect_equal(
     names(inputs), 
-    c("base_estimator","n_estimators","learning_rate","algorithm","random_state" )
+    c("n_estimators","learning_rate","algorithm","random_state" )
     )
   
 })
@@ -40,10 +39,6 @@ test_that("setAdaBoost errors as expected", {
   expect_error(setAdaBoost(seed  =  list('seed')))
   
 })
-
-
-
-
 
 
 test_that("setMLP settings work checks", {
@@ -99,12 +94,6 @@ test_that("setMLP settings work checks", {
 })
 
 
-
-
-
-
-
-
 test_that("setNaiveBayes settings work checks", {
   
   nbset <- setNaiveBayes(
@@ -126,11 +115,6 @@ test_that("setNaiveBayes settings work checks", {
 })
 
 
-
-
-
-
-
 test_that("setRandomForest settings work checks", {
   
   rfset <- setRandomForest(
@@ -140,20 +124,20 @@ test_that("setRandomForest settings work checks", {
     minSamplesSplit = list(2,5),
     minSamplesLeaf = list(1,10),
     minWeightFractionLeaf = list(0),
-    mtries = list('auto', 'log2'),
+    mtries = list('sqrt', 'log2'),
     maxLeafNodes = list(NULL),
     minImpurityDecrease = list(0),
     bootstrap = list(TRUE),
     maxSamples = list(NULL, 0.9),
     oobScore = list(FALSE),
     nJobs = list(NULL),
-    classWeight = list('balanced_subsample', NULL),
+    classWeight = list(NULL),
     seed = sample(100000,1)
   )
   
   expect_equal(rfset$fitFunction, "fitSklearn")
   
-  expect_equal(length(rfset$param), 2*3*2*2*2*2*2)
+  expect_equal(length(rfset$param), 2*3*2*2*2*2*1)
   
   expect_equal(unique(lapply(rfset$param, function(x) x[[1]])), list(100,500))
   expect_equal(unique(unlist(lapply(rfset$param, function(x) x[[3]]))), c(4,10,17))
@@ -175,8 +159,6 @@ test_that("setRandomForest settings work checks", {
 })
 
 
-
-
 test_that("setSVM  settings work checks", {
   
   svmset <- setSVM (
@@ -187,14 +169,14 @@ test_that("setSVM  settings work checks", {
     coef0 = list(0.0),
     shrinking = list(TRUE), 
     tol = list(0.001),
-    classWeight = list('balanced', NULL), 
+    classWeight = list(NULL), 
     cacheSize  = 500,
     seed = sample(100000,1)
   )
   
   expect_equal(svmset$fitFunction, "fitSklearn")
   
-  expect_equal(length(svmset$param), 4*3*6*2)
+  expect_equal(length(svmset$param), 4*3*6*1)
   
   expect_equal(unique(lapply(svmset$param, function(x) x[[4]])), list('scale', 1e-04, 3e-05, 0.001, 0.01, 0.25))
   expect_equal(unique(unlist(lapply(svmset$param, function(x) x[[1]]))), c(1,0.9,2,0.1))

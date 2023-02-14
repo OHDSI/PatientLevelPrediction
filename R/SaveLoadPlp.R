@@ -614,6 +614,8 @@ extractDatabaseToCsv <- function(
     # lower case for consistency in sharing csv results
     colnames(result) <- tolower(colnames(result))
     
+    # TODO: add min cell count filter here
+    
     # save the results as a csv
     readr::write_excel_csv(
       x = result, 

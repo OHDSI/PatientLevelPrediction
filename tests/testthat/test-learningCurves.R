@@ -19,17 +19,16 @@ context("LearningCurves")
 # learningCurve 
 learningCurve <- PatientLevelPrediction::createLearningCurve(
   plpData = plpData,
-  outcomeId = 2, parallel = F, cores = 3,
+  outcomeId = 2, parallel = F, cores = -1,
   modelSettings = setLassoLogisticRegression(),
   saveDirectory =  file.path(saveLoc, 'lcc'),
-  splitSettings = createDefaultSplitSetting(testFraction = 0.2), 
-  trainFractions = c(0.6, 0.7, 0.8),
+  splitSettings = createDefaultSplitSetting(testFraction = 0.2, nfold=2), 
+  trainFractions = c(0.6,0.7),
   trainEvents = NULL,
   preprocessSettings = createPreprocessSettings(
     minFraction = 0.001,
     normalize = T
-  ),
-  logSettings = createLogSettings(verbosity="TRACE", timeStamp = T, 'runPLPLog')
+  )
 )
 test_that("learningCurve output correct", {
 
@@ -42,7 +41,7 @@ test_that("learningCurve output correct", {
     "Train_populationSize",
     "Train_outcomeCount") ),5)
   
-  testthat::expect_equal(learningCurve$trainFraction,  c(0.6,0.7,0.8)*100)
+  testthat::expect_equal(learningCurve$trainFraction,  c(0.6,0.7)*100)
   
 })
 
@@ -64,4 +63,27 @@ test_that("plotLearningCurve", {
   
 })
 
+test_that("getTrainFractions works", {
+  
+  learningCurve <- PatientLevelPrediction::createLearningCurve(
+    plpData = tinyPlpData,
+    outcomeId = 2, parallel = F, cores = -1,
+    modelSettings = setLassoLogisticRegression(),
+    saveDirectory =  file.path(saveLoc, 'lcc'),
+    splitSettings = createDefaultSplitSetting(testFraction = 0.33, nfold=2), 
+    trainEvents = c(150,200),
+    preprocessSettings = createPreprocessSettings(
+      minFraction = 0.001,
+      normalize = T
+    )
+  )
+  testthat::expect_true(is.data.frame(learningCurve))
+  testthat::expect_equal(sum(colnames(learningCurve)%in%c(
+    "trainFraction",
+    "Train_AUROC",
+    "nPredictors",
+    "Train_populationSize",
+    "Train_outcomeCount") ),5)
+  
+})
 

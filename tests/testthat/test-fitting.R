@@ -18,7 +18,6 @@ library("testthat")
 
 context("Fitting")
 
-trainData <- createTrainData(plpData, population)
 modelSettings <- setLassoLogisticRegression()
 
 test_that("fitPlp", {

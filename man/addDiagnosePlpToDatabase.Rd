@@ -6,7 +6,7 @@
 \usage{
 addDiagnosePlpToDatabase(
   diagnosePlp,
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   cohortDefinitions,
   databaseList = NULL,
@@ -16,8 +16,8 @@ addDiagnosePlpToDatabase(
 \arguments{
 \item{diagnosePlp}{An object of class \code{diagnosePlp}}
 
-\item{conn}{A connection to a database created by using the
-function \code{connect} in the
+\item{connectionDetails}{A connection details created by using the
+function \code{createConnectionDetails} in the
 \code{DatabaseConnector} package.}
 
 \item{databaseSchemaSettings}{A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables}

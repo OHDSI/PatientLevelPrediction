@@ -166,7 +166,7 @@ test_that("toSparseM", {
 
 test_that("checkRam", {
   
-  ramCheck <- checkRam(createCovariateData(), 0.8)
+  ramCheck <- checkRam(createCovariateData())
   expect_true(ramCheck)
   
 })

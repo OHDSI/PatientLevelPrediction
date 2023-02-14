@@ -17,7 +17,6 @@
 # limitations under the License.
 
 #' Create setting for AdaBoost with python DecisionTreeClassifier base estimator
-# @param baseEstimator  (list) The base estimator from which the boosted ensemble is built. Support for sample weighting is required, as well as proper classes_ and n_classes_ attributes. If NULL, then the base estimator is DecisionTreeClassifier initialized with max_depth=1.
 #' @param nEstimators    (list) The maximum number of estimators at which boosting is terminated. In case of perfect fit, the learning procedure is stopped early.
 #' @param learningRate   (list) Weight applied to each classifier at each boosting iteration. A higher learning rate increases the contribution of each classifier. There is a trade-off between the learningRate and nEstimators parameters
 #'                       There is a trade-off between learningRate and nEstimators.
@@ -32,7 +31,6 @@
 #' }
 #' @export
 setAdaBoost <- function(
-  #baseEstimator = list(NULL),
   nEstimators = list(10,50, 200), 
   learningRate = list(1, 0.5, 0.1), 
   algorithm = list('SAMME.R'),
@@ -43,8 +41,6 @@ setAdaBoost <- function(
   checkIsClass(nEstimators, 'list')
   checkIsClass(learningRate, 'list')
   checkIsClass(algorithm, 'list')
-  
-  #lapply(1:length(baseEstimator), function(i) checkIsClass(maxDepth[[i]] , c("NULL")))
   
   lapply(1:length(nEstimators), function(i) checkIsClass(nEstimators[[i]] , c("integer", "numeric")))
   lapply(1:length(nEstimators), function(i) checkHigher(nEstimators[[i]] , 0))
@@ -64,7 +60,6 @@ setAdaBoost <- function(
   ##checkPython()
   
   paramGrid <- list(
-    baseEstimator = list(NULL),
     nEstimators = nEstimators,
     learningRate = learningRate,
     algorithm = algorithm,
@@ -84,7 +79,7 @@ setAdaBoost <- function(
     pythonClassifier = 'AdaBoostClassifier'
   )
   
-  attr(param, 'saveToJson') <- F
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -100,7 +95,6 @@ setAdaBoost <- function(
 AdaBoostClassifierInputs <- function(classifier, param){
   
   model <- classifier(
-    base_estimator = param[[which.max(names(param)=='baseEstimator')]],
     n_estimators = param[[which.max(names(param)=='nEstimators')]],
     learning_rate = param[[which.max(names(param)=='learningRate')]],
     algorithm = param[[which.max(names(param)=='algorithm')]],
@@ -138,7 +132,7 @@ setDecisionTree <- function(
   maxFeatures = list(100,'sqrt', NULL),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(10^-7),
-  classWeight = list(NULL, 'balanced'),
+  classWeight = list(NULL),
   seed = sample(1000000,1)
   ){
   if(!inherits(x = seed[[1]], what = c('numeric', 'integer'))){
@@ -254,7 +248,7 @@ setDecisionTree <- function(
     pythonClassifier = 'DecisionTreeClassifier'
   )
   
-  attr(param, 'saveToJson') <- F
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -341,7 +335,7 @@ setMLP <- function(
   validationFraction = list(0.1),
   beta1 = list(0.9), 
   beta2 = list(0.999), 
-  epsilon = list(1,0.1,0.00000001), 
+  epsilon = list(0.00000001), 
   nIterNoChange = list(10),
   seed = sample(100000,1)
   ){
@@ -431,7 +425,7 @@ setMLP <- function(
     pythonClassifier = 'MLPClassifier'
   )
   
-  attr(param, 'saveToJson') <- F # current bug when saving to json
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -500,7 +494,7 @@ setNaiveBayes <- function(){
     pythonClassifier = 'GaussianNB'
   )
   
-  attr(param, 'saveToJson') <- F # testing if this fixes issu
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -565,7 +559,7 @@ setRandomForest <- function(
   maxSamples = list(NULL, 0.9),
   oobScore = list(FALSE),
   nJobs = list(NULL),
-  classWeight = list('balanced_subsample', NULL),
+  classWeight = list(NULL),
   seed = sample(100000,1)
   ){
   
@@ -660,7 +654,7 @@ setRandomForest <- function(
     pythonClassifier = 'RandomForestClassifier'
   ) 
   
-  attr(param, 'saveToJson') <- F
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
   
   result <- list(
@@ -690,7 +684,7 @@ RandomForestClassifierInputs <- function(classifier, param){
     oob_score = param[[which.max(names(param)=='oobScore')]],
     n_jobs = param[[which.max(names(param)=='nJobs')]],
     random_state = param[[which.max(names(param)=='seed')]],
-    verbose = 0,
+    verbose = 0L,
     warm_start = F,
     class_weight = param[[which.max(names(param)=='classWeight')]]
   )
@@ -725,7 +719,7 @@ setSVM <- function(
   coef0 = list(0.0),
   shrinking = list(TRUE), 
   tol = list(0.001),
-  classWeight = list('balanced', NULL), 
+  classWeight = list(NULL), 
   cacheSize  = 500,
   seed = sample(100000,1)
   ){
@@ -775,7 +769,7 @@ setSVM <- function(
     pythonClassifier = 'SVC'
   ) 
   
-  attr(param, 'saveToJson') <- F # having issue loading json
+  attr(param, 'saveToJson') <- T
   attr(param, 'saveType') <- 'file'
  
   result <- list(

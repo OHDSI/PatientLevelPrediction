@@ -14,11 +14,11 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
   # configure and activate python
   PatientLevelPrediction::configurePython(envname = 'r-reticulate', envtype = "conda")
   PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
-    
-  # # if mac install nomkl -- trying to fix github actions
+  
+  # if mac install nomkl -- trying to fix github actions
   if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
-    reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'),
-                              forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE,
+    reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
+                              forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
                               conda = "auto")
   }
 }
@@ -65,7 +65,7 @@ plpResult <- runPlp(
   splitSettings = createDefaultSplitSetting(splitSeed = 12),
   preprocessSettings = createPreprocessSettings(), 
   modelSettings = lrSet, 
-  logSettings = createLogSettings(verbosity = 'TRACE'),
+  logSettings = createLogSettings(verbosity = 'ERROR'),
   executeSettings = createDefaultExecuteSettings(), 
   saveDirectory = saveLoc
   )
@@ -106,10 +106,42 @@ createTrainData <- function(plpData, population){
   return(trainData)
 }
 
+trainData <- createTrainData(plpData, population)
+
 createTestData <- function(plpData, population){
   data <- PatientLevelPrediction::splitData(plpData = plpData, population=population,
                                             splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12))
   testData <- data$Test
   return(testData)
 }
+
+testData <- createTestData(plpData, population)
+
+# reduced trainData to only use 10 most important features (as decided by LR)
+reduceTrainData <- function(trainData) {
+  covariates <- plpResult$model$covariateImportance %>% 
+    dplyr::slice_max(order_by = abs(covariateValue),n = 20, with_ties = F) %>% 
+    dplyr::pull(covariateId)
+  
+  reducedTrainData <- list(labels = trainData$labels,
+                           folds = trainData$folds,
+                           covariateData = Andromeda::andromeda(
+                             analysisRef = trainData$covariateData$analysisRef
+                           ))
+  
+  
+  reducedTrainData$covariateData$covariates <- trainData$covariateData$covariates %>% 
+    dplyr::filter(covariateId %in% covariates)
+  reducedTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>% 
+    dplyr::filter(covariateId %in% covariates)
+  
+  attributes(reducedTrainData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
+  class(reducedTrainData$covariateData) <- class(trainData$covariateData)
+  attributes(reducedTrainData)$metaData <- attributes(trainData)$metaData
+  return(reducedTrainData)  
+}
+
+tinyTrainData <- reduceTrainData(trainData)
+
+tinyPlpData <- createTinyPlpData(plpData, plpResult)
 

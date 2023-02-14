@@ -31,11 +31,9 @@ insertRunPlpToSqlite <- function(
     dbms = 'sqlite',
     server = file.path(sqliteLocation,'databaseFile.sqlite')
   )
-  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
-  on.exit(DatabaseConnector::disconnect(conn))
-  
+
   createPlpResultTables(
-    conn = conn,
+    connectionDetails = connectionDetails,
     targetDialect = 'sqlite',
     resultSchema = 'main', 
     deleteTables = T, 
@@ -51,7 +49,7 @@ insertRunPlpToSqlite <- function(
     
   addRunPlpToDatabase(
     runPlp = runPlp,
-    conn = conn,
+    connectionDetails = connectionDetails,
     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
     cohortDefinitions = NULL,#cohortDefinitions,
     databaseList = NULL, 
@@ -66,7 +64,7 @@ insertRunPlpToSqlite <- function(
           {
             addRunPlpToDatabase(
               runPlp = externalValidatePlp[[i]],
-              conn = conn,
+              connectionDetails = connectionDetails,
               databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
               cohortDefinitions = NULL,#cohortDefinitions,
               databaseList = NULL, 
@@ -84,7 +82,7 @@ insertRunPlpToSqlite <- function(
       {
         addDiagnosePlpToDatabase(
           diagnosePlp = diagnosePlp,
-          conn = conn,
+          connectionDetails = connectionDetails,
           databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
           cohortDefinitions = NULL,#cohortDefinitions,
           databaseList = NULL
@@ -131,28 +129,20 @@ insertResultsToSqlite <- function(
     dbms = 'sqlite',
     server = file.path(sqliteLocation,'databaseFile.sqlite')
   )
-  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
-  on.exit(DatabaseConnector::disconnect(conn))
   
-  tablesExists <- sum(toupper(getPlpResultTables()) %in% toupper(DatabaseConnector::getTableNames(conn)))
-  tablesExists <- tablesExists == length(getPlpResultTables())
-  
-  if(!tablesExists){
-    createPlpResultTables(
-      conn = conn,
+  # create tables if they dont exist
+  createPlpResultTables(
+      connectionDetails = connectionDetails,
       targetDialect = 'sqlite',
       resultSchema = 'main', 
       deleteTables = T, 
       createTables = T,
       tablePrefix = ''
     )
-  } else{
-    ParallelLogger::logInfo('Sql tables exist')
-  }
-  
+
   # run insert models
   addMultipleRunPlpToDatabase(
-    conn = conn, 
+    connectionDetails = connectionDetails, 
     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
     cohortDefinitions = cohortDefinitions,
     databaseList = databaseList,
@@ -162,7 +152,7 @@ insertResultsToSqlite <- function(
   
   # run insert diagnosis
   addMultipleDiagnosePlpToDatabase(
-    conn = conn, 
+    connectionDetails = connectionDetails,
     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
     cohortDefinitions = cohortDefinitions,
     databaseList = databaseList,
@@ -179,9 +169,7 @@ insertResultsToSqlite <- function(
 #' @details
 #' This function can be used to create (or delete) PatientLevelPrediction result tables
 #'
-#' @param conn                         A connection to a database created by using the
-#'                                     function \code{connect} in the
-#'                                     \code{DatabaseConnector} package.
+#' @param connectionDetails            The database connection details 
 #' @param targetDialect                The database management system being used
 #' @param resultSchema                 The name of the database schema that the result tables will be created.
 #' @param deleteTables                 If true any existing tables matching the PatientLevelPrediction result tables names will be deleted
@@ -196,7 +184,7 @@ insertResultsToSqlite <- function(
 #' 
 #' @export
 createPlpResultTables <- function(
-  conn,
+    connectionDetails,
   targetDialect = 'postgresql',
   resultSchema, 
   deleteTables = T, 
@@ -206,43 +194,54 @@ createPlpResultTables <- function(
   testFile = NULL
 ){
   
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn))
   
-  if(deleteTables){
-    ParallelLogger::logInfo('Deleting existing tables')
-    
-    tableNames <- getPlpResultTables()
-    
-  deleteTables(
-    conn = conn,
-    databaseSchema = resultSchema,
-    targetDialect = targetDialect,
-    tempEmulationSchema = tempEmulationSchema,
-    tableNames = tableNames, 
-    tablePrefix = tablePrefix
-  )
-    
-  }
+  tablesExists <- sum(tolower(getPlpResultTables()) %in% tolower(DatabaseConnector::getTableNames(conn)))
+  tablesExists <- tablesExists == length(getPlpResultTables())
   
-
-  if(createTables){
-    ParallelLogger::logInfo('Creating PLP results tables')
-    
-    if(tablePrefix != ''){
-      tablePrefix <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefix))), '_')
-    }
+  if(!tablesExists){
+    ParallelLogger::logInfo('All or some PLP result tables do not exist, tables being recreated')
+    if(deleteTables){
+      ParallelLogger::logInfo('Deleting existing tables')
       
-      sqlFileName <- ifelse(
-        targetDialect != 'sqlite',
-        "PlpResultTables.sql",
-        paste0("PlpResultTables_",targetDialect,".sql")
+      tableNames <- getPlpResultTables()
+      
+      deleteTables(
+        conn = conn,
+        databaseSchema = resultSchema,
+        targetDialect = targetDialect,
+        tempEmulationSchema = tempEmulationSchema,
+        tableNames = tableNames, 
+        tablePrefix = tablePrefix
       )
       
+    }
+    
+    
+    if(createTables){
+      ParallelLogger::logInfo('Creating PLP results tables')
+      
+      if(tablePrefix != ''){
+        tablePrefix <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefix))), '_')
+      }
+      
       pathToSql <- system.file(
-        paste("sql/", "sql_server", 
+        paste("sql/", targetDialect, 
               sep = ""),
-        sqlFileName, 
+        "PlpResultTables.sql", 
         package = "PatientLevelPrediction"
+      )
+      
+      if(!file.exists(pathToSql)){
+        # if no dbms specific file use sql_server
+        pathToSql <- system.file(
+          paste("sql/", 'sql_server', 
+                sep = ""),
+          "PlpResultTables.sql", 
+          package = "PatientLevelPrediction"
         )
+      }
       
       sql <- readChar(pathToSql, file.info(pathToSql)$size) 
       renderedSql <- SqlRender::render(
@@ -256,9 +255,20 @@ createPlpResultTables <- function(
         tempEmulationSchema = tempEmulationSchema
       )
       
+      DatabaseConnector::executeSql(conn, renderedSql)
+    }
     
-    DatabaseConnector::executeSql(conn, renderedSql)
+  } else{
+    ParallelLogger::logInfo('PLP result tables already exist')
   }
+  
+  # then migrate
+  ParallelLogger::logInfo('PLP result migrration being applied')
+  migrateDataModel(
+    connectionDetails = connectionDetails, # input is connection
+    databaseSchema = resultSchema,
+    tablePrefix = tablePrefix
+  )
   
 }
 
@@ -269,8 +279,8 @@ createPlpResultTables <- function(
 #' @details
 #' This function can be used upload PatientLevelPrediction results into a database
 #'
-#' @param conn                         A connection to a database created by using the
-#'                                     function \code{connect} in the
+#' @param connectionDetails            A connection details created by using the
+#'                                     function \code{createConnectionDetails} in the
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
@@ -283,14 +293,17 @@ createPlpResultTables <- function(
 #' Returns NULL but uploads all the results in resultLocation to the PatientLevelPrediction result tables in resultSchema
 #' 
 #' @export
-addMultipleRunPlpToDatabase <- function(conn, 
-                                    databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
-                                    cohortDefinitions,
-                                    databaseList = NULL,
-                                    resultLocation = NULL,
-                                    resultLocationVector,
-                                    modelSaveLocation
+addMultipleRunPlpToDatabase <- function(
+    connectionDetails, 
+    databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
+    cohortDefinitions,
+    databaseList = NULL,
+    resultLocation = NULL,
+    resultLocationVector,
+    modelSaveLocation
 ){
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn))
   
   # for each development result add it to the database:
   
@@ -318,7 +331,7 @@ addMultipleRunPlpToDatabase <- function(conn,
       #  Add runPlp to the database
       addRunPlpToDatabase(
         runPlp = runPlp,
-        conn = conn,
+        connectionDetails = connectionDetails,
         databaseSchemaSettings = databaseSchemaSettings,
         cohortDefinitions = cohortDefinitions,
         databaseList = databaseList,
@@ -470,8 +483,8 @@ createDatabaseList <- function(
 #' This function is used when inserting results into the PatientLevelPrediction database results schema
 #' 
 #' @param runPlp           An object of class \code{runPlp} or class \code{externalValidatePlp}
-#' @param conn                         A connection to a database created by using the
-#'                                     function \code{connect} in the
+#' @param connectionDetails            A connection details created by using the
+#'                                     function \code{createConnectionDetails} in the
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
@@ -484,12 +497,15 @@ createDatabaseList <- function(
 #' @export
 addRunPlpToDatabase <- function(
   runPlp,
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   cohortDefinitions,
   modelSaveLocation,
   databaseList = NULL
 ){
+  
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn))
   
   modelDesignId <- insertModelDesignInDatabase(
     object = runPlp$model$modelDesign, 
@@ -941,13 +957,14 @@ deleteTables <- function(
 ){
   
   if(tablePrefix != ''){
-    tableNames <- paste0(toupper(gsub('_','',gsub(' ','', tablePrefix))), '_', tableNames)
+    tableNames <- tolower(paste0(gsub('_','',gsub(' ','', tablePrefix)), '_', tableNames))
   }
   
-  alltables <- DatabaseConnector::getTableNames(
+  alltables <- tolower(DatabaseConnector::getTableNames(
     connection = conn, 
     databaseSchema = databaseSchema
-  )
+  ))
+  
   
   for(tb in tableNames){
     if(tb %in% alltables){

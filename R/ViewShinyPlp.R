@@ -126,14 +126,25 @@ viewDatabaseResultPlp <- function(
 # one shiny app 
 
 viewPlps <- function(databaseSettings){
-  ensure_installed("shiny")
-  ensure_installed("OhdsiShinyModules")
+  ensure_installed("ShinyAppBuilder") 
+  ensure_installed("ResultModelManager")
+  
+  connectionDetails <- do.call(
+    DatabaseConnector::createConnectionDetails, 
+    databaseSettings$connectionDetailSettings
+    )
+  connection <- ResultModelManager::ConnectionHandler$new(connectionDetails)
+  databaseSettings$connectionDetailSettings <- NULL
   
   # set database settings into system variables
-  Sys.setenv("plpDatabaseSettings" = as.character(ParallelLogger::convertSettingsToJson(databaseSettings)))
+  Sys.setenv("resultDatabaseDetails_prediction" = as.character(ParallelLogger::convertSettingsToJson(databaseSettings)))
 
-  appDir <- system.file("shiny", "PLPViewer", package = "PatientLevelPrediction")
-  #appDir <- "/Users/jreps/Documents/github/PatientLevelPrediction/inst/shiny/PLPViewer"
-  shiny::runApp(appDir) 
+  config <- ParallelLogger::loadSettingsFromJson(
+    fileName = system.file(
+      'shinyConfig.json', 
+      package = "PatientLevelPrediction"
+    )
+      )
+  
+  ShinyAppBuilder::viewShiny(config = config, connection = connection)
 }
-
