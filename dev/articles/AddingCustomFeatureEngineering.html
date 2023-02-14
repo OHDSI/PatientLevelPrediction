@@ -90,7 +90,7 @@
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/InstallationGuide.html">Patient-Level Prediction V5.1.0 Installation Guide</a>
+      <a href="../articles/InstallationGuide.html">Patient-Level Prediction V6.1.0 Installation Guide</a>
     </li>
     <li>
       <a href="../articles/Videos.html">Demo Videos</a>
@@ -133,7 +133,7 @@
       <h1 data-toc-skip>Adding Custom Feature Engineering Functions</h1>
                         <h4 data-toc-skip class="author">Jenna Reps</h4>
             
-            <h4 data-toc-skip class="date">2023-02-09</h4>
+            <h4 data-toc-skip class="date">2023-02-14</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/AddingCustomFeatureEngineering.Rmd" class="external-link"><code>vignettes/AddingCustomFeatureEngineering.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomFeatureEngineering.Rmd</code></div>
@@ -150,7 +150,7 @@
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
 <p>This vignette describes how you can add your own custom function for
-feature engineering in the Observational Health Data Sciencs and
+feature engineering in the Observational Health Data Sciences and
 Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
 package. This vignette assumes you have read and are comfortable with
 building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf" class="external-link"><code>BuildingPredictiveModels</code>
@@ -172,18 +172,27 @@ valid and outputs these as a list of class ‘featureEngineeringSettings’
 with the ‘fun’ attribute specifying the ‘implement’ function to
 call.</p>
 <p>The ‘implement’ function, e.g.,
-implement&lt;FeatureEngineeringFunctionName&gt;, must take as input: *
-trainData - a list containing: - covariateData: the
-plpData$covariateData restricted to the training patients - labels: a
-data frame that contain rowId (patient identifier) and outcomeCount (the
-class labels) - folds: a data.frame that contains rowId (patient
-identifier) and index (the cross validation fold) *
-featureEngineeringSettings - the output of your
-create&lt;FeatureEngineeringFunctionName&gt;</p>
+implement&lt;FeatureEngineeringFunctionName&gt;, must take as input:</p>
+<ul>
+<li>
+<p><code>trainData</code> - a list containing:</p>
+<ul>
+<li><p><code>covariateData</code>: the plpData$covariateData restricted
+to the training patients</p></li>
+<li><p><code>labels</code>: a data frame that contain rowId (patient
+identifier) and outcomeCount (the class labels)</p></li>
+<li><p><code>folds</code>: a data.frame that contains rowId (patient
+identifier) and index (the cross validation fold)</p></li>
+</ul>
+</li>
+<li><p><code>featureEngineeringSettings</code> - the output of your
+create&lt;FeatureEngineeringFunctionName&gt;</p></li>
+</ul>
 <p>The ‘implement’ function can then do any manipulation of the
 trainData (adding new features or removing features) but must output a
-trainData object containing the new covariateData, labels and folds for
-the training data patients.</p>
+<code>trainData</code> object containing the new
+<code>covariateData</code>, <code>labels</code> and <code>folds</code>
+for the training data patients.</p>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
@@ -195,12 +204,12 @@ write the ‘create’ and ‘implement’ R functions.</p>
 <h3 id="create-function">Create function<a class="anchor" aria-label="anchor" href="#create-function"></a>
 </h3>
 <p>Our age spline feature function will create a new feature using the
-plpData$cohorts ageYear column. We will implement a restricted cubic
-spline that requires specifying the number of knots. . Therefore, the
-inputs for this are: * <code>knots</code> an integer/double specifying
-the number of knots</p>
+<code>plpData\$cohorts</code> <code>ageYear</code> column. We will
+implement a restricted cubic spline that requires specifying the number
+of knots. . Therefore, the inputs for this are: * <code>knots</code> an
+integer/double specifying the number of knots</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">createAgeSpine</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">createAgeSpline</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
 <span>                     <span class="va">knots</span> <span class="op">=</span> <span class="fl">5</span></span>
 <span>                     <span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
@@ -227,15 +236,17 @@ the number of knots</p>
 <div class="section level3">
 <h3 id="implement-function">Implement function<a class="anchor" aria-label="anchor" href="#implement-function"></a>
 </h3>
-<p>All ‘implement’ functions must take as input the trainData and the
-featureEngineeringSettings (this is the output of the ‘create’
-function). They must return a trainData object containing the new
-covariateData, labels and folds.</p>
-<p>In our example, the <code>createAgeSpine()</code> will return a list
-with ‘knots’. The featureEngineeringSettings therefore contains
-this.</p>
+<p>All ‘implement’ functions must take as input the
+<code>trainData</code> and the <code>featureEngineeringSettings</code>
+(this is the output of the ‘create’ function). They must return a
+<code>trainData</code> object containing the new
+<code>covariateData</code>, <code>labels</code> and
+<code>folds</code>.</p>
+<p>In our example, the <code>createAgeSpline()</code> will return a list
+with ‘knots’. The <code>featureEngineeringSettings</code> therefore
+contains this.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">implementAgeSpine</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">featureEngineeringSettings</span><span class="op">)</span><span class="op">{</span></span>
+<code class="sourceCode R"><span><span class="va">implementAgeSpline</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">featureEngineeringSettings</span><span class="op">)</span><span class="op">{</span></span>
 <span></span>
 <span>  <span class="co"># currently not used</span></span>
 <span>  <span class="va">knots</span> <span class="op">&lt;-</span> <span class="va">featureEngineeringSettings</span><span class="op">$</span><span class="va">knots</span></span>
@@ -277,8 +288,8 @@ this.</p>
 <span><span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html" class="external-link">appendToTable</a></span><span class="op">(</span>tbl <span class="op">=</span> <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span>, </span>
 <span>                         data <span class="op">=</span> <span class="va">newData</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">featureEngeering</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    funct <span class="op">=</span> <span class="st">'implementAgeSpine'</span>,</span>
+<span><span class="va">featureEngineering</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    fun <span class="op">=</span> <span class="st">'implementAgeSpine'</span>,</span>
 <span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span></span>
 <span>    <span class="op">)</span></span>
@@ -286,7 +297,7 @@ this.</p>
 <span>  </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">'metaData'</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span> <span class="op">=</span> <span class="fu"><a href="../reference/listAppend.html">listAppend</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">'metaData'</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span>,</span>
-<span>    <span class="va">featureEngeering</span></span>
+<span>    <span class="va">featureEngineering</span></span>
 <span> <span class="op">)</span></span>
 <span>  <span class="co"># return the updated trainData</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">)</span></span>
