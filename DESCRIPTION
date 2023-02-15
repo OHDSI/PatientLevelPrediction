@@ -48,7 +48,8 @@ Imports:
     tibble,
     tidyr,
     utils,
-    data.table
+    data.table,
+    arrow (=10.0.0)
 Suggests:
     AUC,
     BigKnn (>= 1.0.0),
