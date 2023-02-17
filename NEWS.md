@@ -1,3 +1,14 @@
+PatientLevelPrediction 6.1.0
+======================
+- shiny app is now using ShinyAppBuilder with a config saved in the /inst folder
+
+PatientLevelPrediction 6.0.11
+======================
+- fixed bugs introduced when sklearn inputs changed
+- added sklearn model being saved as jsons
+- made changes around the DatabaseConnection get table names function to make it work for the updated DatabaseConnection
+- removed check RAM stop (now it just warns)
+
 PatientLevelPrediction 6.0.10
 ======================
 - Updated test to skip test for FE setting if the model does not fit (this was causing occasional test fail)

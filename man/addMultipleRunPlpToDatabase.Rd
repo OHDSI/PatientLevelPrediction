@@ -5,7 +5,7 @@
 \title{Populate the PatientLevelPrediction results tables}
 \usage{
 addMultipleRunPlpToDatabase(
-  conn,
+  connectionDetails,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
   cohortDefinitions,
   databaseList = NULL,
@@ -15,8 +15,8 @@ addMultipleRunPlpToDatabase(
 )
 }
 \arguments{
-\item{conn}{A connection to a database created by using the
-function \code{connect} in the
+\item{connectionDetails}{A connection details created by using the
+function \code{createConnectionDetails} in the
 \code{DatabaseConnector} package.}
 
 \item{databaseSchemaSettings}{A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables}
