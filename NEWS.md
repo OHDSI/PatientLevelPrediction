@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.2.1
+======================
+- added ensure_installed("ResultModelManager") to getDataMigrator()
+
 PatientLevelPrediction 6.1.0
 ======================
 - shiny app is now using ShinyAppBuilder with a config saved in the /inst folder
