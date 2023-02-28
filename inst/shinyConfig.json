@@ -1,0 +1,32 @@
+{
+  "shinyModules": [
+    {
+      "id": "about",
+      "tabName": "About",
+      "tabText": "About",
+      "shinyModulePackage": "OhdsiShinyModules",
+      "uiFunction": "aboutViewer",
+      "serverFunction": "aboutServer",
+      "databaseConnectionKeyService": null,
+      "databaseConnectionKeyUsername": null,
+      "infoBoxFile": "aboutHelperFile()",
+      "icon": "info",
+      "keyring": true,
+      "order": 1
+    },
+    {
+      "id": "prediction",
+      "tabName": "Prediction",
+      "tabText": "Prediction",
+      "shinyModulePackage": "OhdsiShinyModules",
+      "uiFunction": "predictionViewer",
+      "serverFunction": "predictionServer",
+      "databaseConnectionKeyService": "resultDatabaseDetails",
+      "databaseConnectionKeyUsername": "prediction",
+      "infoBoxFile": "predictionHelperFile()",
+      "icon": "chart-line",
+      "keyring": false,
+      "order": 2
+    }
+  ]
+}

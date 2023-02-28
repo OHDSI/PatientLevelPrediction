@@ -86,12 +86,12 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
 
   ParallelLogger::logInfo(paste0('toSparseM non temporal used'))
     
-  checkRam(newcovariateData, 0.9)  # estimates size of RAM required and makes sure it is less that 90%
+  checkRam(newcovariateData)  # estimates size of RAM required and prints it
     
   data <- Matrix::sparseMatrix(
-    i = newcovariateData$covariates %>% dplyr::select(.data$rowId) %>% dplyr::pull(),
-    j = newcovariateData$covariates %>% dplyr::select(.data$columnId) %>% dplyr::pull(),
-    x = newcovariateData$covariates %>% dplyr::select(.data$covariateValue) %>% dplyr::pull(),
+    i = newcovariateData$covariates %>% dplyr::select("rowId") %>% dplyr::pull(),
+    j = newcovariateData$covariates %>% dplyr::select("columnId") %>% dplyr::pull(),
+    x = newcovariateData$covariates %>% dplyr::select("covariateValue") %>% dplyr::pull(),
     dims=c(maxX,maxY)
   )
     
@@ -127,7 +127,7 @@ MapIds <- function(
   # change the rowIds in cohort (if exists)
   if(!is.null(cohort)){
     rowMap <- data.frame(
-      rowId = cohort %>% dplyr::select(.data$rowId)
+      rowId = cohort %>% dplyr::select("rowId")
     )
     rowMap$xId <- 1:nrow(rowMap)
   } else{
@@ -170,17 +170,16 @@ MapIds <- function(
     newCovariateData$rowMap <- rowMap
     newCovariateData$covariates <- newCovariateData$covariates %>%
       dplyr::inner_join(newCovariateData$rowMap, by = 'rowId') %>% 
-      dplyr::select(- .data$rowId) %>%
-      dplyr::rename(rowId = .data$xId)
+      dplyr::select(- "rowId") %>%
+      dplyr::rename(rowId = "xId")
     
     if(!is.null(cohort)){
       # change the rowId in labels
       newCovariateData$cohort <- cohort %>%
         dplyr::inner_join(rowMap, by = 'rowId') %>% 
-        #dplyr::select(- .data$rowId) %>%
         dplyr::rename(
-          originalRowId = .data$rowId,
-          rowId = .data$xId
+          originalRowId = "rowId",
+          rowId = "xId"
           ) %>%
         dplyr::arrange(.data$rowId)  # make sure it is ordered lowest to highest
     }
@@ -192,22 +191,12 @@ MapIds <- function(
   return(newCovariateData)
 }
 
-checkRam <- function(covariateData, maxPercent){
-  
-  ensure_installed('memuse')
+checkRam <- function(covariateData){
   
   nrowV <- covariateData$covariates %>% dplyr::summarise(size = dplyr::n()) %>% dplyr::collect()
   estRamB <- (nrowV$size/1000000*24000984)
   
-  ramFree <- memuse::Sys.meminfo()
-  ramFree <- as.double(ramFree$freeram)
-  
-  if(0.9*ramFree<estRamB){
-    ParallelLogger::logWarn('plpData size bigger than current available RAM')
-    stop('Insufficient RAM')
-  } else{
-    ParallelLogger::logInfo(paste0('plpData size estimated to use ',round(estRamB/ramFree*100,2),'% of available RAM (', round(estRamB/1000000000,1), 'GBs)'))
-  }
+  ParallelLogger::logInfo(paste0('plpData size estimated to use ', round(estRamB/1000000000,1), 'GBs of RAM'))
   
   return(invisible(TRUE))
 }

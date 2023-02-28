@@ -5,8 +5,8 @@
 #' @details
 #' This function can be used to upload diagnosePlp results into a database
 #'
-#' @param conn                         A connection to a database created by using the
-#'                                     function \code{connect} in the
+#' @param connectionDetails            A connection details created by using the
+#'                                     function \code{createConnectionDetails} in the
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            (list) A list of cohortDefinitions (each list must contain: name, id)
@@ -18,7 +18,7 @@
 #' 
 #' @export
 addMultipleDiagnosePlpToDatabase <- function(
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   cohortDefinitions,
   databaseList = NULL,
@@ -37,7 +37,7 @@ addMultipleDiagnosePlpToDatabase <- function(
       diagnosePlp <- readRDS(diagnosisFile)
       addDiagnosePlpToDatabase(
         diagnosePlp = diagnosePlp,
-        conn = conn,
+        connectionDetails = connectionDetails,
         databaseSchemaSettings = databaseSchemaSettings,
         cohortDefinitions = cohortDefinitions,
         databaseList = databaseList
@@ -55,8 +55,8 @@ addMultipleDiagnosePlpToDatabase <- function(
 #' This function can be used to upload a diagnostic result into a database
 #'
 #' @param diagnosePlp                  An object of class \code{diagnosePlp} 
-#' @param conn                         A connection to a database created by using the
-#'                                     function \code{connect} in the
+#' @param connectionDetails            A connection details created by using the
+#'                                     function \code{createConnectionDetails} in the
 #'                                     \code{DatabaseConnector} package.
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables                              
 #' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
@@ -69,12 +69,15 @@ addMultipleDiagnosePlpToDatabase <- function(
 #' @export
 addDiagnosePlpToDatabase <- function(
   diagnosePlp,
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   cohortDefinitions,
   databaseList = NULL,
   overWriteIfExists = T
 ){
+  
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn))
   
   modelDesignId <- insertModelDesignInDatabase(
     object = diagnosePlp$modelDesign, 

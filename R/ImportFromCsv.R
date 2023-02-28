@@ -6,7 +6,7 @@
 #' The user needs to have plp csv results in a single folder and an existing plp result database  
 #' 
 #' @param csvFolder        The location to the csv folder with the plp results
-#' @param conn             A connection to the plp results database that the csv results will be inserted into
+#' @param connectionDetails             A connection details for the plp results database that the csv results will be inserted into
 #' @param databaseSchemaSettings       A object created by \code{createDatabaseSchemaSettings} with all the settings specifying the result tables to insert the csv results into  
 #' @param modelSaveLocation        The location to save any models from the csv folder - this should be the same location you picked when inserting other models into the database
 #' @param csvTableAppend       A string that appends the csv file names                       
@@ -17,7 +17,7 @@
 #' @export
 insertCsvToDatabase <- function(
   csvFolder,
-  conn,
+  connectionDetails,
   databaseSchemaSettings,
   modelSaveLocation,
   csvTableAppend = ''
@@ -58,14 +58,13 @@ insertCsvToDatabase <- function(
     ParallelLogger::logInfo(paste0('CSV folder missing these tables: ', missingTables))
     return(invisible(NULL))
   }
-  
-  # check some plp tables exists in databaseSchemaSettings 
-  alltables <- DatabaseConnector::getTableNames(
-    connection = conn, 
+ 
+  alltables <- getTableNamesPlp(
+    connectionDetails = connectionDetails,
     databaseSchema = databaseSchemaSettings$resultSchema
   )
   
-  if(!paste0(toupper(databaseSchemaSettings$tablePrefix),'PERFORMANCES') %in% alltables){
+  if(!tolower(paste0(databaseSchemaSettings$tablePrefix,'PERFORMANCES')) %in% alltables){
     ParallelLogger::logInfo(
       paste0(
         'performance table: ',paste0(toupper(databaseSchemaSettings$tablePrefix),'PERFORMANCES'),' not found, result database only contains ', 
@@ -108,7 +107,7 @@ insertCsvToDatabase <- function(
       # load into database
       addRunPlpToDatabase(
         runPlp = runPlp,
-        conn = conn,
+        connectionDetails = connectionDetails,
         databaseSchemaSettings = databaseSchemaSettings,
         cohortDefinitions = cohortDefinitions,
         modelSaveLocation = modelSaveLocation,
@@ -136,7 +135,7 @@ insertCsvToDatabase <- function(
           {
             addDiagnosePlpToDatabase(
               diagnosePlp = diagnosePlp,
-              conn = conn,
+              connectionDetails = connectionDetails,
               databaseSchemaSettings = databaseSchemaSettings,
               cohortDefinitions = cohortDefinitions,
               databaseList = databaseList
@@ -266,7 +265,7 @@ getPerformanceEvaluationCsv <- function(
       {
       res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('evaluation_statistics', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
-        dplyr::select(-.data$performance_id);
+        dplyr::select(-"performance_id");
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
       res
     }, 
@@ -276,7 +275,7 @@ getPerformanceEvaluationCsv <- function(
     thresholdSummary = tryCatch({
       res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('threshold_summary', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
-        dplyr::select(-.data$performance_id);
+        dplyr::select(-"performance_id");
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
       res
     }, 
@@ -286,7 +285,7 @@ getPerformanceEvaluationCsv <- function(
     calibrationSummary = tryCatch({
       res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('calibration_summary', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
-        dplyr::select(-.data$performance_id);
+        dplyr::select(-"performance_id");
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
       res
     }, 
@@ -296,7 +295,7 @@ getPerformanceEvaluationCsv <- function(
     demographicSummary = tryCatch({
       res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('demographic_summary', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
-        dplyr::select(-.data$performance_id);
+        dplyr::select(-"performance_id");
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
       res
     }, 
@@ -306,7 +305,7 @@ getPerformanceEvaluationCsv <- function(
     predictionDistribution = tryCatch({
       res <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('prediction_distribution', csvFileNames)])) %>%
         dplyr::filter(.data$performance_id == !!performanceId) %>%
-        dplyr::select(-.data$performance_id);
+        dplyr::select(-"performance_id");
       colnames(res) <- SqlRender::snakeCaseToCamelCase( colnames(res));
       res
     }, 
@@ -346,7 +345,7 @@ extractObjectFromCsv <- function(
   
   covariateSummary <- readr::read_csv(file.path(csvFolder, csvFileNames[grep('covariate_summary', csvFileNames)])) %>%
     dplyr::filter(.data$performance_id == !!poi$performance_id) %>%
-    dplyr::select(-.data$performance_id)
+    dplyr::select(-"performance_id")
   colnames(covariateSummary) <- SqlRender::snakeCaseToCamelCase(colnames(covariateSummary))
   
   performanceEvaluation <- getPerformanceEvaluationCsv(
@@ -399,7 +398,7 @@ extractObjectFromCsv <- function(
       attritionName <- dir(csvFolder, pattern = 'attrition.csv')
       attrition  <- readr::read_csv(file.path(csvFolder, attritionName)) %>%
         dplyr::filter(.data$performance_id == !!poi$performance_id) %>%
-        dplyr::select(-.data$performance_id)
+        dplyr::select(-"performance_id")
       colnames(attrition) <- SqlRender::snakeCaseToCamelCase(colnames(attrition))
       
       cohortsName <- dir(csvFolder, pattern = 'cohorts.csv')
@@ -425,26 +424,26 @@ extractObjectFromCsv <- function(
             as.character(
               popSet %>% 
                 dplyr::filter(.data$population_setting_id == !!poi$population_setting_id) %>%
-                dplyr::select(.data$population_settings_json)
+                dplyr::select("population_settings_json")
             )
           ),
           restrictPlpDataSettings = ParallelLogger::convertJsonToSettings(
             as.character(
               plpDataSet %>% 
               dplyr::filter(.data$plp_data_setting_id == !!poi$plp_data_setting_id) %>%
-              dplyr::select(.data$plp_data_settings_json)
+              dplyr::select("plp_data_settings_json")
             )
           ),
           
           outcomeId = as.double(
             cohorts %>% 
               dplyr::filter(.data$cohort_id == !!poi$outcome_id) %>%
-              dplyr::select(.data$cohort_definition_id)
+              dplyr::select("cohort_definition_id")
           ),
           targetId = as.double(
             cohorts %>% 
               dplyr::filter(.data$cohort_id == !!poi$target_id) %>%
-              dplyr::select(.data$cohort_definition_id)
+              dplyr::select("cohort_definition_id")
           ),
           
           attrition = attrition
@@ -529,25 +528,25 @@ extractDiagnosticFromCsv <- function(
   outcomesName <- dir(csvFolder, pattern = 'diagnostic_outcomes.csv')
   outcomes  <- readr::read_csv(file.path(csvFolder, outcomesName)) %>%
     dplyr::filter(.data$diagnostic_id == !! diagnosticId) %>%
-    dplyr::select(-.data$diagnostic_id)
+    dplyr::select(-"diagnostic_id")
   colnames(outcomes)  <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
   
   predictorsName <- dir(csvFolder, pattern = 'diagnostic_predictors.csv')
   predictors   <- readr::read_csv(file.path(csvFolder, predictorsName)) %>%
     dplyr::filter(.data$diagnostic_id == !! diagnosticId) %>%
-    dplyr::select(-.data$diagnostic_id)
+    dplyr::select(-"diagnostic_id")
   colnames(predictors)  <- SqlRender::snakeCaseToCamelCase(colnames(predictors))
   
   participantsName <- dir(csvFolder, pattern = 'diagnostic_participants.csv')
   participants  <- readr::read_csv(file.path(csvFolder, participantsName)) %>%
     dplyr::filter(.data$diagnostic_id == !! diagnosticId) %>%
-    dplyr::select(-.data$diagnostic_id)
+    dplyr::select(-"diagnostic_id")
   colnames(participants)  <- SqlRender::snakeCaseToCamelCase(colnames(participants))
   
   summaryName <- dir(csvFolder, pattern = 'diagnostic_summary.csv')
   summary  <- readr::read_csv(file.path(csvFolder, summaryName)) %>%
     dplyr::filter(.data$diagnostic_id == !! diagnosticId) %>%
-    dplyr::select(-.data$diagnostic_id)
+    dplyr::select(-"diagnostic_id")
   colnames(summary)  <- SqlRender::snakeCaseToCamelCase(colnames(summary))
   
   result <- list(
@@ -566,3 +565,20 @@ extractDiagnosticFromCsv <- function(
   return(result)
 }
 
+
+getTableNamesPlp <- function(
+    connectionDetails,
+    databaseSchema
+){
+  
+  # check some plp tables exists in databaseSchemaSettings 
+  conn <- DatabaseConnector::connect(connectionDetails) 
+  on.exit(DatabaseConnector::disconnect(conn))
+  
+  result <- DatabaseConnector::getTableNames(
+    connection = conn, 
+    databaseSchema = databaseSchema
+  )
+  
+  return(tolower(result))
+}

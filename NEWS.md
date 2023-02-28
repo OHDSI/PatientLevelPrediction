@@ -1,3 +1,23 @@
+PatientLevelPrediction 6.1.0
+======================
+- shiny app is now using ShinyAppBuilder with a config saved in the /inst folder
+
+PatientLevelPrediction 6.0.11
+======================
+- fixed bugs introduced when sklearn inputs changed
+- added sklearn model being saved as jsons
+- made changes around the DatabaseConnection get table names function to make it work for the updated DatabaseConnection
+- removed check RAM stop (now it just warns)
+
+PatientLevelPrediction 6.0.10
+======================
+- Updated test to skip test for FE setting if the model does not fit (this was causing occasional test fail)
+- replaced .data$ with "" for all dplyr::select to remove warnings
+
+PatientLevelPrediction 6.0.9
+======================
+- Fix bug with python type being required to be int
+
 PatientLevelPrediction 6.0.8
 ======================
 - Allow priorType to be passed down to getCV function in case prior is not 'laplace'

@@ -23,8 +23,8 @@ test_that("pfi feature importance returns data.frame", {
   
   # limit to a sample of 10 covariates for faster test
   covariates <- plpResult$model$covariateImportance %>% 
-    dplyr::filter(.data$covariateValue != 0) %>% 
-    dplyr::select(.data$covariateId) %>% 
+    dplyr::filter("covariateValue" != 0) %>% 
+    dplyr::select("covariateId") %>% 
     dplyr::pull()
   
   # if the model had non-zero covariates
@@ -34,9 +34,35 @@ test_that("pfi feature importance returns data.frame", {
                    covariates = covariates, cores = NULL, log = NULL,
                    logthreshold = "INFO")
     
-    testthat::expect_equal(class(pfiTest), 'data.frame')
-    testthat::expect_equal(sum(names(pfiTest)%in%c("covariateId", "pfi")), 2)
+    expect_equal(class(pfiTest), 'data.frame')
+    expect_equal(sum(names(pfiTest)%in%c("covariateId", "pfi")), 2)
+    expect_true(all(!is.nan(pfiTest$pfi)))
+    
   }
   
+})
+
+test_that('pfi feature importance works with logger or without covariates', {
+  tinyResults <- runPlp(plpData = tinyPlpData,
+                        populationSettings = populationSettings,
+                        outcomeId = 2,
+                        analysisId = 'tinyFit',
+                        featureEngineeringSettings = createUnivariateFeatureSelection(k=20),
+                        executeSettings = createExecuteSettings(
+                          runSplitData = T,
+                          runSampleData = F,
+                          runfeatureEngineering = T,
+                          runPreprocessData = T,
+                          runModelDevelopment = T,
+                          runCovariateSummary = F
+                        ))
+  
+  pfiTest <- pfi(tinyResults, population, tinyPlpData, 
+                 covariates = NULL, log = file.path(tempdir(), 'pfiLog'))
+  
+  expect_equal(class(pfiTest), 'data.frame')
+  expect_equal(sum(names(pfiTest)%in%c("covariateId", "pfi")), 2)
+  expect_true(all(!is.nan(pfiTest$pfi)))
+
 })
 

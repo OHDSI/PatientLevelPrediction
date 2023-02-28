@@ -5,7 +5,7 @@
 \title{Create the results tables to store PatientLevelPrediction models and results into a database}
 \usage{
 createPlpResultTables(
-  conn,
+  connectionDetails,
   targetDialect = "postgresql",
   resultSchema,
   deleteTables = T,
@@ -16,9 +16,7 @@ createPlpResultTables(
 )
 }
 \arguments{
-\item{conn}{A connection to a database created by using the
-function \code{connect} in the
-\code{DatabaseConnector} package.}
+\item{connectionDetails}{The database connection details}
 
 \item{targetDialect}{The database management system being used}
 

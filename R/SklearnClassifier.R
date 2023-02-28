@@ -149,7 +149,7 @@ predictPythonSklearn <- function(
       plpData = data, 
       cohort = cohort,
       map = plpModel$covariateImportance %>% 
-        dplyr::select(.data$columnId, .data$covariateId)
+        dplyr::select("columnId", "covariateId")
     )
     
     newData <- matrixObjects$dataMatrix
@@ -158,23 +158,17 @@ predictPythonSklearn <- function(
   }else{
     newData <- data
   }
-
-  # import
-  os <- reticulate::import('os')
   
   # load model
   if(attr(plpModel,'saveToJson')){
-    skljson <- reticulate::import('sklearn_json')
-    ##modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.json"))
     modelLocation <- reticulate::r_to_py(file.path(plpModel$model,"model.json"))
-    model <- skljson$from_json(modelLocation)
+    model <- sklearnFromJson(path=modelLocation)
   } else{
-    joblib <- reticulate::import('joblib')
-    ##modelLocation <- reticulate::r_to_py(paste0(plpModel$model,"\\model.pkl"))
+    os <- reticulate::import('os')
+    joblib <- reticulate::import('joblib', convert=FALSE)
     modelLocation <- reticulate::r_to_py(file.path(plpModel$model,"model.pkl"))
     model <- joblib$load(os$path$join(modelLocation)) 
   }
-  
   included <- plpModel$covariateImportance$columnId[plpModel$covariateImportance$included>0] # does this include map?
   pythonData <- reticulate::r_to_py(newData[,included, drop = F])
 
@@ -194,13 +188,12 @@ predictPythonSklearn <- function(
 }
 
 predictValues <- function(model, data, cohort, type = 'binary'){
-  
   predictionValue  <- model$predict_proba(data)
-  cohort$value <- predictionValue[,2]
+  cohort$value <- reticulate::py_to_r(predictionValue)[,2]
   
   cohort <- cohort %>% 
-    dplyr::select(-.data$rowId) %>%
-    dplyr::rename(rowId = .data$originalRowId)
+    dplyr::select(-"rowId") %>%
+    dplyr::rename(rowId = "originalRowId")
   
   attr(cohort, "metaData")$modelType <-  type
   
@@ -246,7 +239,7 @@ gridCvPython <- function(
   )
   {
   
-  ParallelLogger::logInfo(paste0("Rnning CV for ",modelName," model"))
+  ParallelLogger::logInfo(paste0("Running CV for ",modelName," model"))
  
   np <- reticulate::import('numpy')
   os <- reticulate::import('os')
@@ -254,8 +247,7 @@ gridCvPython <- function(
   math <- reticulate::import('math')
   scipy <- reticulate::import('scipy')
   joblib <- reticulate::import('joblib')
-  
-  firstImport <- reticulate::import(pythonImport)
+  firstImport <- reticulate::import(pythonImport, convert=FALSE)
   
   if(!is.null(pythonImportSecond)){
     classifier <- firstImport[[pythonImportSecond]][[pythonClassifier]]
@@ -338,16 +330,15 @@ gridCvPython <- function(
   if(!dir.exists(file.path(modelLocation))){
     dir.create(file.path(modelLocation), recursive = T)
   }
- # joblib$dump(model, os$path$join(modelLocation,"model.pkl"), compress = T) 
   if(saveToJson){
-    skljson <- reticulate::import('sklearn_json')
-    skljson$to_json(model = model, model_name =  file.path(modelLocation,"model.json"))
+    sklearnToJson(model=model,
+                  path=file.path(modelLocation,"model.json"))
   } else{
     joblib$dump(model, file.path(modelLocation,"model.pkl"), compress = T) 
   }
   
   # feature importance
-  variableImportance <- tryCatch({model$feature_importances_}, error = function(e){ParallelLogger::logInfo(e);return(rep(1,ncol(matrixData)))})
+  variableImportance <- tryCatch({reticulate::py_to_r(model$feature_importances_)}, error = function(e){ParallelLogger::logInfo(e);return(rep(1,ncol(matrixData)))})
 
   return(
     list(

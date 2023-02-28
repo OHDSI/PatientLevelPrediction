@@ -49,7 +49,7 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
   if(is.null(covariates)){
     covariates <- plpResult$model$covariateImportance %>% 
       dplyr::filter(.data$covariateValue != 0) %>% 
-      dplyr::select(.data$covariateId) %>% 
+      dplyr::select("covariateId") %>% 
       dplyr::pull()
   }
   
@@ -189,7 +189,7 @@ permute <- function(plpDataLocation,cId,population){
   #get analysisId
   aId <- plpData$covariateData$covariateRef %>% 
     dplyr::filter(.data$covariateId == !!cId) %>%
-    dplyr::select(.data$analysisId) %>% dplyr::collect()
+    dplyr::select("analysisId") %>% dplyr::collect()
   
   # if analysis id is not 3 (age group), 4 (race) or 5 (ethnicity)
   if(!aId$analysisId %in% c(3,4,5)){
@@ -221,7 +221,7 @@ permute <- function(plpDataLocation,cId,population){
     connectedCovs <- plpData$covariateData$covariateRef %>% 
       dplyr::filter(.data$analysisId == !!aId$analysisId) %>% 
       dplyr::group_by(.data$covariateId) %>% 
-      dplyr::select(.data$covariateId) %>% 
+      dplyr::select("covariateId") %>% 
       dplyr::collect()
     plpToSwap <- plpData$covariateData$covariates %>% 
       dplyr::filter(.data$covariateId %in% !!connectedCovs$covariateId) %>% 

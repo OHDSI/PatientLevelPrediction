@@ -18,7 +18,7 @@ setRandomForest(
   maxSamples = list(NULL, 0.9),
   oobScore = list(FALSE),
   nJobs = list(NULL),
-  classWeight = list("balanced_subsample", NULL),
+  classWeight = list(NULL),
   seed = sample(1e+05, 1)
 )
 }
