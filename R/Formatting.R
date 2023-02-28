@@ -91,11 +91,11 @@ toSparseM <- function(plpData, cohort = NULL, map=NULL){
   
   # need to collect here the df in ram, because if I pull individual columns from an arrow dataset
   # there is no guarantee the order of data within columns is preserved
-  newcovariateData$covariates <- newcovariateData$covariates %>% dplyr::collect()  
+  covariates <- newcovariateData$covariates %>% dplyr::collect()  
   data <- Matrix::sparseMatrix(
-    i = newcovariateData$covariates %>% dplyr::select("rowId") %>% dplyr::collect() %>% dplyr::pull(),
-    j = newcovariateData$covariates %>% dplyr::select("columnId") %>% dplyr::collect() %>% dplyr::pull(),
-    x = newcovariateData$covariates %>% dplyr::select("covariateValue") %>% dplyr::collect() %>% dplyr::pull(),
+    i = covariates %>% dplyr::pull(rowId),
+    j = covariates %>% dplyr::pull(columnId),
+    x = covariates %>% dplyr::pull(covariateValue),
     dims=c(maxX,maxY)
   )
     
@@ -142,6 +142,7 @@ MapIds <- function(
       rowId = covariateData$covariates %>% 
         dplyr::distinct(rowId) %>% 
         dplyr::collect() %>% 
+        dplyr::arrange(rowId) %>%
         dplyr::pull()
     )
     rowMap$xId <- 1:nrow(rowMap)
@@ -155,6 +156,7 @@ MapIds <- function(
         dplyr::inner_join(rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
         dplyr::distinct(covariateId) %>% 
         dplyr::collect() %>% 
+        dplyr::arrange(covariateId) %>%
         dplyr::pull()
     )
     mapping$columnId <- 1:nrow(mapping)
