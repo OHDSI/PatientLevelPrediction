@@ -30,7 +30,7 @@ ensure_installed <- function(pkg) {
     if (interactive()) {
       message(msg, "\nWould you like to install it?")
       if (utils::menu(c("Yes", "No")) == 1) {
-        if(pkg%in%c('BigKnn', "IterativeHardThresholding", "OhdsiShinyModules", "ResultModelManager")){
+        if(pkg%in%c('BigKnn', "IterativeHardThresholding", "ShinyAppBuilder", "ResultModelManager")){
           
           # add code to check for devtools...
           dvtCheck <- tryCatch(utils::packageVersion('devtools'), 
