@@ -132,7 +132,7 @@ CREATE TABLE  @my_schema.@string_to_appenddiagnostic_predictors( -- call this km
    diagnostic_id int NOT NULL,
    days_to_event int,
    outcome_at_time int,
-   observed_at_start_of_day bigint
+   observed_at_start_of_day bigint,
    probast_id varchar(50),
    input_type varchar(50),
    FOREIGN KEY (diagnostic_id) REFERENCES @string_to_appenddiagnostics(diagnostic_id)
