@@ -302,7 +302,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     covariateId = coefficients$covariateIds[coefficients$covariateIds!='(Intercept)']
   )
   coefficients <- coefficients[coefficients$beta != 0, ]
-  coefficients$covariateId <- as.numeric(coefficients$covariateId)
+  coefficients$covariateId <- bit64::as.integer64(coefficients$covariateId)
   if(sum(coefficients$beta != 0)>0){
     prediction <- covariateData$covariates %>% 
       dplyr::inner_join(coefficients, by= 'covariateId') %>% 
@@ -462,7 +462,8 @@ getCV <- function(
 
 getVariableImportance <- function(modelTrained, trainData){
   varImp <- data.frame(
-    covariateId = as.double(modelTrained$coefficients$covariateIds[modelTrained$coefficients$covariateIds!='(Intercept)']),
+    covariateId = bit64::as.integer64
+    (modelTrained$coefficients$covariateIds[modelTrained$coefficients$covariateIds!='(Intercept)']),
     value = modelTrained$coefficients$betas[modelTrained$coefficients$covariateIds!='(Intercept)']
   )
 

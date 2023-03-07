@@ -136,6 +136,11 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   
   ParallelLogger::logInfo("Generating outcomes")
   allOutcomes <- data.frame()
+  covariateData$covariates <- covariateData$covariates %>%
+    dplyr::mutate(rowId = as.integer(rowId),
+                  covariateId = bit64::as.integer64(covariateId))
+  covariateData$covariateRef <- covariateData$covariateRef %>% 
+    dplyr::mutate(covariateId=bit64::as.integer64(covariateId))
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
     prediction <- predictCyclopsType(plpDataSimulationProfile$outcomeModels[[i]],
                                    cohorts,
