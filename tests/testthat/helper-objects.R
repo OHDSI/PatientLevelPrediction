@@ -66,7 +66,13 @@ plpResult <- runPlp(
   preprocessSettings = createPreprocessSettings(), 
   modelSettings = lrSet, 
   logSettings = createLogSettings(verbosity = 'ERROR'),
-  executeSettings = createDefaultExecuteSettings(), 
+  executeSettings = createExecuteSettings(
+    runSplitData = T,
+    runSampleData = F,
+    runfeatureEngineering = F,
+    runPreprocessData = T,
+    runModelDevelopment = T,
+    runCovariateSummary = F), 
   saveDirectory = saveLoc
   )
 
