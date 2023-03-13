@@ -16,6 +16,50 @@
 
 context("Diagnostic")
 
+
+test_that("getMaxEndDaysFromCovariates works", {
+  
+  covariateSettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsGender = T,
+    endDays = -1
+  )
+  testthat::expect_equal(getMaxEndDaysFromCovariates(covariateSettings), -1)
+  
+  covariateSettings <- list(
+    FeatureExtraction::createCovariateSettings(
+    useDemographicsGender = T,
+    endDays = -1
+  ),
+  FeatureExtraction::createCovariateSettings(
+    useDemographicsGender = T,
+    endDays = 2
+  )
+  )
+  testthat::expect_equal(getMaxEndDaysFromCovariates(covariateSettings), 2)
+  
+  covariateSettings <- list(
+    FeatureExtraction::createCovariateSettings(
+      useDemographicsGender = T,
+      endDays = -1,
+    ),
+    PatientLevelPrediction::createCohortCovariateSettings(
+      endDay = 5, 
+      settingId = 1, 
+      cohortName = 'test', 
+      cohortId = 1, 
+      analysisId = 111, 
+      cohortDatabaseSchema = '', cohortTable = '')
+  )
+  testthat::expect_equal(getMaxEndDaysFromCovariates(covariateSettings), 5)
+  
+  # if no covariate setting has endDays return 0
+  testthat::expect_equal(
+    getMaxEndDaysFromCovariates(list(empty = list(gfg=2), empty2 = list(ff=1))), 
+    0
+    )
+  
+})
+
 test_that("test diagnosePlp works", {
   test <- diagnosePlp(
     plpData = plpData,
