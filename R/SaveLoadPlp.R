@@ -671,11 +671,11 @@ getPlpSensitiveColumns <- function(){
       ),
     covariate_summary = list(
         c('covariate_count'),
-        c('with_no_outcome_covariate_count', 'with_outcome_covariate_count'),
-        c('test_with_no_outcome_covariate_count', 'test_with_outcome_covariate_count'),
-        c('train_with_no_outcome_covariate_count', 'train_with_outcome_covariate_count'),
-        c('train_with_no_outcome_covariate_count', 'test_with_no_outcome_covariate_count'),
-        c('train_with_outcome_covariate_count', 'test_with_outcome_covariate_count')
+        c('with_no_outcome_covariate_count', 'with_outcome_covariate_count')
+        #c('test_with_no_outcome_covariate_count', 'test_with_outcome_covariate_count'),
+        #c('train_with_no_outcome_covariate_count', 'train_with_outcome_covariate_count'),
+        #c('train_with_no_outcome_covariate_count', 'test_with_no_outcome_covariate_count'),
+        #c('train_with_outcome_covariate_count', 'test_with_outcome_covariate_count')
     ),
     calibration_summary = list(
         c('person_count_at_risk', 'person_count_with_outcome')

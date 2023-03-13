@@ -208,12 +208,7 @@ test_that("applyMinCellCount works", {
     with_outcome_covariate_count = c(90,45),
     with_outcome_covariate_mean = runif(2),
     with_outcome_covariate_st_dev = runif(2),
-    standardized_mean_diff = runif(2),
-    
-    train_with_no_outcome_covariate_count = c(8,4),
-    test_with_no_outcome_covariate_count = c(2,1),
-    train_with_outcome_covariate_count = c(70,35),
-    test_with_outcome_covariate_count = c(20,10)
+    standardized_mean_diff = runif(2)
   )
   
   minCellResult <- applyMinCellCount(
@@ -222,26 +217,22 @@ test_that("applyMinCellCount works", {
     result = result,
     minCellCount = 5
   )
-   # no removing covariate_count
+   # check nothing removed 
   testthat::expect_equal(2,sum(minCellResult$covariate_count != -1))
   testthat::expect_equal(2,sum(minCellResult$with_no_outcome_covariate_count != -1))
   testthat::expect_equal(2,sum(minCellResult$with_outcome_covariate_count != -1))
   
-  # remove the test/train counts as these had values < 5
-  testthat::expect_equal(2,sum(minCellResult$test_with_outcome_covariate_count == -1))
-  testthat::expect_equal(2,sum(minCellResult$train_with_outcome_covariate_count == -1))
-  testthat::expect_equal(2,sum(minCellResult$train_with_no_outcome_covariate_count == -1))
-  testthat::expect_equal(2,sum(minCellResult$test_with_no_outcome_covariate_count == -1))
-  
-  
-  # now check where no values should be removed:
+  # now check values are removed
   minCellResult <- applyMinCellCount(
     tableName = "covariate_summary",
     sensitiveColumns = getPlpSensitiveColumns(),
     result = result,
-    minCellCount = 0
+    minCellCount = 10
   )
+  testthat::expect_equal(0,sum(minCellResult$covariate_count == -1))
+  testthat::expect_equal(minCellResult$with_no_outcome_covariate_count[2],-1)
+  testthat::expect_equal(1,sum(minCellResult$with_no_outcome_covariate_count == -1))
+  testthat::expect_equal(1,sum(minCellResult$with_outcome_covariate_count == -1))
   
-  testthat::expect_equal(0,sum(minCellResult == -1))
   
 })
