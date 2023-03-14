@@ -195,6 +195,9 @@ saveModelPart <- function(model, savetype, dirPath){
       model = model, 
       fname = file.path(dirPath, "model.json")
     )
+  } else if(savetype == "lightgbm"){
+    lightgbm::lgb.save(booster = model,
+                       filename = file.path(dirPath, "model.json"))
   } else if(savetype == "RtoJson"){
     ParallelLogger::saveSettingsToJson(
       object = model, 
@@ -290,6 +293,9 @@ loadPlpModel <- function(dirPath) {
   if(attr(plpModel, 'saveType') == "xgboost"){
     ensure_installed("xgboost")
     plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
+  } else if(attr(plpModel, 'saveType') == "lightgbm"){
+    ensure_installed("lightgbm")
+    plpModel$model <- lightgbm::lgb.load(file.path(dirPath, "model.json"))
   } else if(attr(plpModel, 'saveType') %in% c("RtoJson")){
     plpModel$model <- ParallelLogger::loadSettingsFromJson(file.path(dirPath, "model.json"))
   } else{
