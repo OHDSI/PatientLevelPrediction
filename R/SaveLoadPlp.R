@@ -564,6 +564,8 @@ removeCellCount <- function(
 #' @param connectionDetails                    The connectionDetails for the result database
 #' @param databaseSchemaSettings         The result database schema settings
 #' @param csvFolder      Location to save the csv files
+#' @param minCellCount   The min value to show in cells that are sensitive (values less than this value will be replaced with -1)
+#' @param sensitiveColumns A named list (name of table columns belong to) with a list of columns to apply the minCellCount to.
 #' @param fileAppend     If set to a string this will be appended to the start of the csv file names
 #' 
 #' @export
@@ -572,6 +574,8 @@ extractDatabaseToCsv <- function(
   connectionDetails,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = 'main'),
   csvFolder,
+  minCellCount = 5,
+  sensitiveColumns = getPlpSensitiveColumns(),
   fileAppend = NULL
   ){
   
@@ -621,6 +625,14 @@ extractDatabaseToCsv <- function(
     colnames(result) <- tolower(colnames(result))
     
     # TODO: add min cell count filter here
+    if(tolower(table) %in% names(sensitiveColumns)){
+      result <- applyMinCellCount(
+        tableName = table,
+        sensitiveColumns = sensitiveColumns,
+        result = result,
+        minCellCount = minCellCount
+        )
+    }
     
     # save the results as a csv
     readr::write_excel_csv(
@@ -650,4 +662,50 @@ extractDatabaseToCsv <- function(
   
   return(invisible(NULL))
   
+}
+
+
+getPlpSensitiveColumns <- function(){
+  
+  result <- list(
+    
+    prediction_distribution = list(
+        c('person_count')
+      ),
+    covariate_summary = list(
+        c('covariate_count'),
+        c('with_no_outcome_covariate_count', 'with_outcome_covariate_count')
+    ),
+    calibration_summary = list(
+        c('person_count_at_risk', 'person_count_with_outcome')
+    ),
+    
+    demographic_summary = list(
+        c('person_count_at_risk'),
+        c('person_count_with_outcome')
+    )
+ 
+  )
+  
+  return(result)
+}
+
+
+applyMinCellCount <- function(
+  tableName,
+  sensitiveColumns,
+  result,
+  minCellCount
+){
+  
+  columnsToCensor <- sensitiveColumns[[tableName]]
+  
+  for(columns in columnsToCensor){
+    rowInd <- apply(result[,columns, drop = F] < minCellCount, 1, sum) > 0
+    if(sum(rowInd) > 0){
+      result[rowInd , columns] <- -1
+    }
+  }
+  
+  return(result)
 }
