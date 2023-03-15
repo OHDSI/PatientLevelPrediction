@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.1.0.9000</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.1.9000</span>
       </span>
     </div>
 
@@ -119,6 +119,8 @@
 <span>  <span class="va">connectionDetails</span>,</span>
 <span>  databaseSchemaSettings <span class="op">=</span> <span class="fu"><a href="createDatabaseSchemaSettings.html">createDatabaseSchemaSettings</a></span><span class="op">(</span>resultSchema <span class="op">=</span> <span class="st">"main"</span><span class="op">)</span>,</span>
 <span>  <span class="va">csvFolder</span>,</span>
+<span>  minCellCount <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  sensitiveColumns <span class="op">=</span> <span class="fu">getPlpSensitiveColumns</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  fileAppend <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -139,6 +141,14 @@
 
 <dt>csvFolder</dt>
 <dd><p>Location to save the csv files</p></dd>
+
+
+<dt>minCellCount</dt>
+<dd><p>The min value to show in cells that are sensitive (values less than this value will be replaced with -1)</p></dd>
+
+
+<dt>sensitiveColumns</dt>
+<dd><p>A named list (name of table columns belong to) with a list of columns to apply the minCellCount to.</p></dd>
 
 
 <dt>fileAppend</dt>

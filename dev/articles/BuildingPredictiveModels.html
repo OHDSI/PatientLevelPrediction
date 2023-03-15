@@ -34,7 +34,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.1.0.9000</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.1.9000</span>
       </span>
     </div>
 
@@ -134,7 +134,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2023-02-14</h4>
+            <h4 data-toc-skip class="date">2023-03-15</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingPredictiveModels.Rmd</code></div>
@@ -885,11 +885,11 @@ defined earlier.</p>
 <h4 id="data-extraction">Data extraction<a class="anchor" aria-label="anchor" href="#data-extraction"></a>
 </h4>
 <p>Now we can tell <code>PatientLevelPrediction</code> to extract all
-necessary data for our analysis. This is done using the <a href="https://github.com/OHDSI/FeatureExtration" class="external-link"><code>FeatureExtractionPackage</code></a>.
+necessary data for our analysis. This is done using the <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link"><code>FeatureExtractionPackage</code></a>.
 In short the FeatureExtractionPackage allows you to specify which
 features (covariates) need to be extracted, e.g. all conditions and drug
 exposures. It also supports the creation of custom covariates. For more
-detailed information on the FeatureExtraction package see its <a href="https://github.com/OHDSI/FeatureExtration" class="external-link">vignettes</a>. For our
+detailed information on the FeatureExtraction package see its <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link">vignettes</a>. For our
 example study we decided to use these settings:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu">createCovariateSettings</span><span class="op">(</span>useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -1472,11 +1472,11 @@ defined earlier.</p>
 <h4 id="data-extraction-1">Data extraction<a class="anchor" aria-label="anchor" href="#data-extraction-1"></a>
 </h4>
 <p>Now we can tell <code>PatientLevelPrediction</code> to extract all
-necessary data for our analysis. This is done using the <a href="https://github.com/OHDSI/FeatureExtration" class="external-link"><code>FeatureExtractionPackage</code></a>.
+necessary data for our analysis. This is done using the <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link"><code>FeatureExtractionPackage</code></a>.
 In short the FeatureExtractionPackage allows you to specify which
 features (covariates) need to be extracted, e.g. all conditions and drug
 exposures. It also supports the creation of custom covariates. For more
-detailed information on the FeatureExtraction package see its <a href="https://github.com/OHDSI/FeatureExtration" class="external-link">vignettes</a>. For our
+detailed information on the FeatureExtraction package see its <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link">vignettes</a>. For our
 example study we decided to use these settings:</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>    <span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu">createCovariateSettings</span><span class="op">(</span>useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>,</span>
