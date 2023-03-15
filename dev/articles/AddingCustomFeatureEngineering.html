@@ -90,7 +90,7 @@
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/InstallationGuide.html">Patient-Level Prediction V6.1.0 Installation Guide</a>
+      <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
     </li>
     <li>
       <a href="../articles/Videos.html">Demo Videos</a>
@@ -131,7 +131,8 @@
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Adding Custom Feature Engineering Functions</h1>
-                        <h4 data-toc-skip class="author">Jenna Reps</h4>
+                        <h4 data-toc-skip class="author">Jenna Reps,
+Egill Fridgeirsson</h4>
             
             <h4 data-toc-skip class="date">2023-03-15</h4>
       
@@ -153,7 +154,7 @@
 feature engineering in the Observational Health Data Sciences and
 Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
 package. This vignette assumes you have read and are comfortable with
-building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf" class="external-link"><code>BuildingPredictiveModels</code>
+building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf" class="external-link"><code>BuildingPredictiveModels</code>
 vignette</a>.</p>
 <p><strong>We invite you to share your new feature engineering functions
 with the OHDSI community through our <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link">GitHub
@@ -177,20 +178,23 @@ implement&lt;FeatureEngineeringFunctionName&gt;, must take as input:</p>
 <li>
 <p><code>trainData</code> - a list containing:</p>
 <ul>
-<li><p><code>covariateData</code>: the plpData$covariateData restricted
-to the training patients</p></li>
-<li><p><code>labels</code>: a data frame that contain rowId (patient
-identifier) and outcomeCount (the class labels)</p></li>
-<li><p><code>folds</code>: a data.frame that contains rowId (patient
-identifier) and index (the cross validation fold)</p></li>
+<li><p><code>covariateData</code>: the
+<code>plpData$covariateData</code>restricted to the training
+patients</p></li>
+<li><p><code>labels</code>: a data frame that contain
+<code>rowId</code>(patient identifier) and <code>outcomeCount</code>
+(the class labels)</p></li>
+<li><p><code>folds</code>: a data.frame that contains <code>rowId</code>
+(patient identifier) and <code>index</code> (the cross validation
+fold)</p></li>
 </ul>
 </li>
 <li><p><code>featureEngineeringSettings</code> - the output of your
 create&lt;FeatureEngineeringFunctionName&gt;</p></li>
 </ul>
 <p>The ‘implement’ function can then do any manipulation of the
-trainData (adding new features or removing features) but must output a
-<code>trainData</code> object containing the new
+<code>trainData</code> (adding new features or removing features) but
+must output a <code>trainData</code> object containing the new
 <code>covariateData</code>, <code>labels</code> and <code>folds</code>
 for the training data patients.</p>
 </div>
@@ -204,10 +208,10 @@ write the ‘create’ and ‘implement’ R functions.</p>
 <h3 id="create-function">Create function<a class="anchor" aria-label="anchor" href="#create-function"></a>
 </h3>
 <p>Our age spline feature function will create a new feature using the
-<code>plpData\$cohorts</code> <code>ageYear</code> column. We will
-implement a restricted cubic spline that requires specifying the number
-of knots. . Therefore, the inputs for this are: * <code>knots</code> an
-integer/double specifying the number of knots</p>
+<code>plpData$cohorts$ageYear</code> column. We will implement a
+restricted cubic spline that requires specifying the number of knots.
+Therefore, the inputs for this are: <code>knots</code> - an
+integer/double specifying the number of knots.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">createAgeSpline</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
 <span>                     <span class="va">knots</span> <span class="op">=</span> <span class="fl">5</span></span>
@@ -215,7 +219,7 @@ integer/double specifying the number of knots</p>
 <span>  </span>
 <span>  <span class="co"># add input checks</span></span>
 <span>  <span class="fu">checkIsClass</span><span class="op">(</span><span class="va">knots</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'numeric'</span>,<span class="st">'integer'</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu">checkHigher</span><span class="op">(</span><span class="va">knots</span>,<span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="fu">checkHigher</span><span class="op">(</span><span class="va">knots</span>, <span class="fl">3</span><span class="op">)</span> </span>
 <span>  </span>
 <span>  <span class="co"># create list of inputs to implement function</span></span>
 <span>  <span class="va">featureEngineeringSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -223,7 +227,7 @@ integer/double specifying the number of knots</p>
 <span>    <span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># specify the function that will implement the sampling</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span>, <span class="st">"fun"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"implementAgeSpine"</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span>, <span class="st">"fun"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"implementAgeSplines"</span></span>
 <span></span>
 <span>  <span class="co"># make sure the object returned is of class "sampleSettings"</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"featureEngineeringSettings"</span></span>
@@ -231,7 +235,7 @@ integer/double specifying the number of knots</p>
 <span>  </span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>We now need to create the ‘implement’ function
-<code>implementAgeSpine()</code></p>
+<code>implementAgeSplines()</code></p>
 </div>
 <div class="section level3">
 <h3 id="implement-function">Implement function<a class="anchor" aria-label="anchor" href="#implement-function"></a>
@@ -246,60 +250,58 @@ integer/double specifying the number of knots</p>
 with ‘knots’. The <code>featureEngineeringSettings</code> therefore
 contains this.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">implementAgeSpline</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">featureEngineeringSettings</span><span class="op">)</span><span class="op">{</span></span>
-<span></span>
-<span>  <span class="co"># currently not used</span></span>
-<span>  <span class="va">knots</span> <span class="op">&lt;-</span> <span class="va">featureEngineeringSettings</span><span class="op">$</span><span class="va">knots</span></span>
+<code class="sourceCode R"><span><span class="va">implementAgeSplines</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">featureEngineeringSettings</span>, <span class="va">model</span><span class="op">=</span><span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># if there is a model, it means this function is called through applyFeatureengineering, meaning it   # should apply the model fitten on training data to the test data</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">knots</span> <span class="op">&lt;-</span> <span class="va">featureEngineeringSettings</span><span class="op">$</span><span class="va">knots</span></span>
+<span>    <span class="va">ageData</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span></span>
+<span>    <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">ageData</span><span class="op">$</span><span class="va">outcomeCount</span></span>
+<span>    <span class="va">X</span> <span class="op">&lt;-</span> <span class="va">ageData</span><span class="op">$</span><span class="va">ageYear</span></span>
+<span>    <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">mgcv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.html" class="external-link">gam</a></span><span class="op">(</span></span>
+<span>      <span class="va">y</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">X</span>, bs<span class="op">=</span><span class="st">'cr'</span>, k<span class="op">=</span><span class="va">knots</span>, m<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>      rowId <span class="op">=</span> <span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span>,</span>
+<span>      covariateId <span class="op">=</span> <span class="fl">2002</span>,</span>
+<span>      covariateValue <span class="op">=</span> <span class="va">model</span><span class="op">$</span><span class="va">fitted.values</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="va">ageData</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span></span>
+<span>    <span class="va">X</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span><span class="op">$</span><span class="va">ageYear</span></span>
+<span>    <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">ageData</span><span class="op">$</span><span class="va">outcomeCount</span></span>
+<span>    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">y</span>, X<span class="op">=</span><span class="va">X</span><span class="op">)</span></span>
+<span>    <span class="va">yHat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">newData</span><span class="op">)</span></span>
+<span>    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>      rowId <span class="op">=</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span><span class="op">$</span><span class="va">rowId</span>,</span>
+<span>      covariateId <span class="op">=</span> <span class="fl">2002</span>,</span>
+<span>      covariateValue <span class="op">=</span> <span class="va">yHat</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
 <span>  </span>
+<span>  <span class="co"># update covRef</span></span>
+<span>  <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html" class="external-link">appendToTable</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span>, </span>
+<span>                           <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>covariateId<span class="op">=</span><span class="fl">2002</span>,</span>
+<span>                                      covariateName<span class="op">=</span><span class="st">'Cubic restricted age splines'</span>,</span>
+<span>                                      analysisId<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                                      conceptId<span class="op">=</span><span class="fl">2002</span><span class="op">)</span><span class="op">)</span></span>
 <span>  </span>
-<span>  <span class="co"># age in in trainData$labels as ageYear</span></span>
-<span>  <span class="va">ageData</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span></span>
+<span>  <span class="co"># update covariates</span></span>
+<span>  <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html" class="external-link">appendToTable</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span>, <span class="va">newData</span><span class="op">)</span></span>
 <span>  </span>
-<span>  <span class="co"># now implement the code to do your desired feature engineering</span></span>
-<span>  </span>
-<span>  <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/sparseMatrix.html" class="external-link">sparseMatrix</a></span><span class="op">(</span></span>
-<span>    i <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span><span class="op">)</span>,</span>
-<span>    j <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    x <span class="op">=</span> <span class="va">ageData</span><span class="op">$</span><span class="va">ageYear</span>,</span>
-<span>    dims<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span><span class="op">)</span>,<span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
-<span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
-<span>  <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">ageData</span><span class="op">$</span><span class="va">outcomeCount</span></span>
-<span>  </span>
-<span><span class="va">mRCS</span> <span class="op">&lt;-</span> <span class="fu">rms</span><span class="fu">::</span><span class="fu">ols</span><span class="op">(</span></span>
-<span>  <span class="va">y</span><span class="op">~</span><span class="fu">rms</span><span class="fu">::</span><span class="fu">rcs</span><span class="op">(</span><span class="va">x</span>, </span>
-<span>             <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span></span>
-<span>               <span class="va">x</span>, </span>
-<span>               <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">.05</span>, <span class="fl">.275</span>, <span class="fl">.5</span>, <span class="fl">.775</span>, <span class="fl">.95</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>               include.lowest <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>               <span class="op">)</span></span>
-<span>             <span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="va">newData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  rowId <span class="op">=</span> <span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span>,</span>
-<span>  covariateId <span class="op">=</span> <span class="fl">2002</span>,</span>
-<span>  covariateValue <span class="op">=</span> <span class="va">mRCS</span><span class="op">$</span><span class="va">fitted.values</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="co"># add new data</span></span>
-<span><span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html" class="external-link">appendToTable</a></span><span class="op">(</span>tbl <span class="op">=</span> <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span>, </span>
-<span>                         data <span class="op">=</span> <span class="va">newData</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">featureEngineering</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    fun <span class="op">=</span> <span class="st">'implementAgeSpine'</span>,</span>
+<span>  <span class="va">featureEngineering</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    fun <span class="op">=</span> <span class="st">'implementAgeSplines'</span>,</span>
 <span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span></span>
+<span>      featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span>,</span>
+<span>      model <span class="op">=</span> <span class="va">model</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">'metaData'</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span> <span class="op">=</span> <span class="fu"><a href="../reference/listAppend.html">listAppend</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">'metaData'</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">'metaData'</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span> <span class="op">=</span> <span class="fu"><a href="../reference/listAppend.html">listAppend</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">'metaData'</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span>,</span>
 <span>    <span class="va">featureEngineering</span></span>
-<span> <span class="op">)</span></span>
-<span>  <span class="co"># return the updated trainData</span></span>
+<span>  <span class="op">)</span></span>
+<span>  </span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
