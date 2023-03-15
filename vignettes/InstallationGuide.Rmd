@@ -1,6 +1,6 @@
 ---
-title: "Patient-Level Prediction V6.1.0 Installation Guide"
-author: "Jenna Reps, Peter R. Rijnbeek"
+title: "Patient-Level Prediction Installation Guide"
+author: "Jenna Reps, Peter R. Rijnbeek, Egill Fridgeirsson"
 date: '`r Sys.Date()`'
 header-includes:
     - \usepackage{fancyhdr}
