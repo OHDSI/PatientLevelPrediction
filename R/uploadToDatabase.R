@@ -1257,7 +1257,7 @@ addDatabase <- function(
     databaseDataFrames <- createDatabaseList(cdmDatabaseSchemas = databaseSchema, databaseRefIds = databaseId)[[1]]
   } else{
     if(databaseId %in% names(databaseList)){
-      databaseDataFrames <- databaseList[[databaseId]]
+      databaseDataFrames <- databaseList[[as.character(databaseId)]]
     } else{
       ParallelLogger::logInfo('database ID not found in databaseList so added new entry')
       databaseDataFrames <- createDatabaseList(cdmDatabaseSchemas = databaseSchema, databaseRefIds = databaseId)[[1]]
