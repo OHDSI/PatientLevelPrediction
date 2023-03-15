@@ -105,6 +105,7 @@ reference:
       - setRandomForest
       - setSVM
       - setIterativeHardThresholding
+      - setLightGBM
   - title: "Survival Models"
     desc: >
       Functions for setting survival models and their hyper-parameter search.
