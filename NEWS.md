@@ -1,3 +1,14 @@
+PatientLevelPrediction 6.3.1
+======================
+- fixed bug with multiple covariate settings in diagnose plp
+- added min cell count when exporting database results to csv files
+- light GBM added (thanks Jin Choi and Chungsoo Kim)
+- fixed minor bugs when uploading results to database
+
+PatientLevelPrediction 6.2.1
+======================
+- added ensure_installed("ResultModelManager") to getDataMigrator()
+
 PatientLevelPrediction 6.1.0
 ======================
 - shiny app is now using ShinyAppBuilder with a config saved in the /inst folder

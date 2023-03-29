@@ -190,3 +190,51 @@ test_that("savePlpShareable works", {
 })
 
 # Note: saving from database to csv is in the database upload test file
+
+
+
+test_that("applyMinCellCount works", {
+  
+  result <- data.frame(
+    performance_id = 1:2,
+    covariate_id = 1:2,
+    covariate_name = paste0('name', 1:2),
+    concept_id = 1:2,
+    covariate_value = runif(2),
+    covariate_count = c(100,50),
+    covariate_mean = runif(2),
+    covariate_st_dev = runif(2),
+    with_no_outcome_covariate_count = c(10,5),
+    with_no_outcome_covariate_mean = runif(2),
+    with_no_outcome_covariate_st_dev = runif(2),
+    with_outcome_covariate_count = c(90,45),
+    with_outcome_covariate_mean = runif(2),
+    with_outcome_covariate_st_dev = runif(2),
+    standardized_mean_diff = runif(2)
+  )
+  
+  minCellResult <- applyMinCellCount(
+    tableName = "covariate_summary",
+    sensitiveColumns = getPlpSensitiveColumns(),
+    result = result,
+    minCellCount = 5
+  )
+   # check nothing removed 
+  testthat::expect_equal(2,sum(minCellResult$covariate_count != -1))
+  testthat::expect_equal(2,sum(minCellResult$with_no_outcome_covariate_count != -1))
+  testthat::expect_equal(2,sum(minCellResult$with_outcome_covariate_count != -1))
+  
+  # now check values are removed
+  minCellResult <- applyMinCellCount(
+    tableName = "covariate_summary",
+    sensitiveColumns = getPlpSensitiveColumns(),
+    result = result,
+    minCellCount = 10
+  )
+  testthat::expect_equal(0,sum(minCellResult$covariate_count == -1))
+  testthat::expect_equal(minCellResult$with_no_outcome_covariate_count[2],-1)
+  testthat::expect_equal(1,sum(minCellResult$with_no_outcome_covariate_count == -1))
+  testthat::expect_equal(1,sum(minCellResult$with_outcome_covariate_count == -1))
+  
+  
+})

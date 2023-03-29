@@ -12,6 +12,7 @@
 #' @export
 migrateDataModel <- function(connectionDetails, databaseSchema, tablePrefix = "") {
   ParallelLogger::logInfo("Migrating data set")
+  
   migrator <- getDataMigrator(
     connectionDetails = connectionDetails, 
     databaseSchema = databaseSchema, 
@@ -37,6 +38,8 @@ migrateDataModel <- function(connectionDetails, databaseSchema, tablePrefix = ""
 
 
 getDataMigrator <- function(connectionDetails, databaseSchema, tablePrefix = "") {
+  ensure_installed("ResultModelManager")
+  
   ResultModelManager::DataMigrationManager$new(
     connectionDetails = connectionDetails,
     databaseSchema = databaseSchema,

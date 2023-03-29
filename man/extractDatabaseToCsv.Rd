@@ -9,6 +9,8 @@ extractDatabaseToCsv(
   connectionDetails,
   databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
   csvFolder,
+  minCellCount = 5,
+  sensitiveColumns = getPlpSensitiveColumns(),
   fileAppend = NULL
 )
 }
@@ -20,6 +22,10 @@ extractDatabaseToCsv(
 \item{databaseSchemaSettings}{The result database schema settings}
 
 \item{csvFolder}{Location to save the csv files}
+
+\item{minCellCount}{The min value to show in cells that are sensitive (values less than this value will be replaced with -1)}
+
+\item{sensitiveColumns}{A named list (name of table columns belong to) with a list of columns to apply the minCellCount to.}
 
 \item{fileAppend}{If set to a string this will be appended to the start of the csv file names}
 }
