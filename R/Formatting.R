@@ -147,13 +147,14 @@ MapIds <- function(
     )
     rowMap$xId <- 1:nrow(rowMap)
   }
-  
+  covariateData$rowMap <- rowMap
+  on.exit(covariateData$rowMap <- NULL)
   # change the rowIds in covariateData$covariates
   if(is.null(mapping)){
   
     mapping <- data.frame(
       covariateId = covariateData$covariates %>% 
-        dplyr::inner_join(rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
+        dplyr::inner_join(covariateData$rowMap, by = 'rowId') %>%  # first restrict the covariates to the rowMap$rowId
         dplyr::distinct(covariateId) %>% 
         dplyr::collect() %>% 
         dplyr::arrange(covariateId) %>%
@@ -161,20 +162,23 @@ MapIds <- function(
     )
     mapping$columnId <- 1:nrow(mapping)
   }
-
+  covariateData$mapping <- mapping
+  on.exit(covariateData$mapping <- NULL, add = T)
+  
   newCovariateData <- Andromeda::andromeda()
   # change the covariateIds in covariates
     newCovariateData$covariates <- covariateData$covariates %>%
-      dplyr::inner_join(mapping, by = 'covariateId')
+      dplyr::inner_join(covariateData$mapping, by = 'covariateId')
   
     
     # change the covariateIds in covariateRef
     newCovariateData$covariateRef <- covariateData$covariateRef %>% 
-      dplyr::inner_join(mapping, by='covariateId')
+      dplyr::inner_join(covariateData$mapping, by='covariateId')
     
     # change the rowId in covariates
+    newCovariateData$rowMap <- rowMap
     newCovariateData$covariates <- newCovariateData$covariates %>%
-      dplyr::inner_join(rowMap, by = 'rowId') %>% 
+      dplyr::inner_join(newCovariateData$rowMap, by = 'rowId') %>% 
       dplyr::select(- "rowId") %>%
       dplyr::rename(rowId = "xId")
     
@@ -190,8 +194,7 @@ MapIds <- function(
     }
   
   newCovariateData$mapping <- mapping
-  newCovariateData$rowMap <- rowMap
-  
+
   ParallelLogger::logInfo(paste0('finished MapCovariates'))
   
   return(newCovariateData)

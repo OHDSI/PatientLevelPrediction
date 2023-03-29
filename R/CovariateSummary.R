@@ -357,12 +357,12 @@ covariateSummarySubset <- function(
   return(result)
 }
 
+# restrict covariateData to specified rowIds
 getCovariatesForGroup <- function(covariateData, restrictIds){
-  # restrict covaraiteData to specified rowIds
   restrictIds <- data.frame(rowId = restrictIds)
-    
+  covariateData$restrictIds <- restrictIds
   newCovariates <- covariateData$covariates %>% 
-    dplyr::inner_join(restrictIds, by= 'rowId')
+    dplyr::inner_join(covariateData$restrictIds, by= 'rowId')
  
   return(newCovariates)
 }

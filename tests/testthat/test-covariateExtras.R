@@ -119,9 +119,9 @@ covs <- FeatureExtraction::getDbCovariateData(
   aggregated = F
   )
 
-expect_equal(1, covs$covariateRef %>% dplyr::tally() %>% dplyr::pull())
+expect_equal(1, covs$covariateRef %>% dplyr::tally() %>% dplyr::collect() %>% dplyr::pull())
 expect_equal(as.double(covs$covariateRef %>% dplyr::select("covariateId") %>% dplyr::collect()), covSet$covariateId)
-expect_true(covs$covariates %>% dplyr::tally() %>% dplyr::pull() > 0)
+expect_true(covs$covariates %>% dplyr::tally() %>% dplyr::collect() %>% dplyr::pull() > 0)
 
 })
 

@@ -53,12 +53,12 @@ test_that("MapIds with no cohort", {
   expect_false('cohort' %in% names(mappings))
   
   # 4 rowIds in the data
-  expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 4)
+  expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::collect() %>% dplyr::pull(), 4)
   
   # some covariates not in data 5,6,7 so should be removed from covRef
-  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 7)
+  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::collect() %>% dplyr::pull(), 7)
   
-  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull(as_vector=TRUE) %in% c(123,2002,10,3,4,9,8)
+  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::collect() %>% dplyr::pull() %in% c(123,2002,10,3,4,9,8)
   expect_equal(sum(correctCov), length(correctCov))
   
 })
@@ -84,15 +84,15 @@ test_that("MapIds with a cohort", {
   expect_true('cohort' %in% names(mappings))
   
   # 4 rowIds in the data
-  expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 2)
+  expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::collect() %>% dplyr::pull(), 2)
   
   # no covariates should be lost
-  expect_equal(mappings$covariates %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 3)
+  expect_equal(mappings$covariates %>% dplyr::tally() %>% dplyr::collect() %>% dplyr::pull(), 3)
   
   # some covariates not in data 5,6,7 so should be removed from covRef
-  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE), 3)
+  expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::collect() %>% dplyr::pull(), 3)
   
-  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::pull(as_vector=TRUE) %in% c(123,9,8)
+  correctCov <- mappings$covariateRef %>% dplyr::select("covariateId") %>% dplyr::collect() %>% dplyr::pull() %in% c(123,9,8)
   expect_equal(sum(correctCov), length(correctCov))
   
 })
@@ -131,7 +131,7 @@ test_that("toSparseM", {
   sparseMat.test <- toSparseM(FplpData,Fpopulation, map=NULL)
   matrix.real <- matrix(rep(0, 5*7), ncol=7)
   x <- c(1,1,1,3,3,3,5,5)
-  y <- c(1,2,3,2,4,5,6,7)
+  y <- c(5,6,7,1,2,7,3,4)
   for(a in 1:8) matrix.real[x[a],y[a]] <- 1
   expect_that(as.matrix(sparseMat.test$dataMatrix), is_equivalent_to(matrix.real))
   
@@ -157,7 +157,7 @@ test_that("toSparseM", {
   compTest <- as.matrix(test$dataMatrix)
   testthat::expect_equal(test$labels %>% dplyr::tally() %>% dplyr::pull(), length(population$rowId))
   testthat::expect_equal(nrow(compTest), length(population$rowId))
-  testthat::expect_true(ncol(compTest) <= plpData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull(as_vector=TRUE))
+  testthat::expect_true(ncol(compTest) <= plpData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::collect() %>% dplyr::pull())
   testthat::expect_equal(ncol(compTest), test$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   testthat::expect_equal(ncol(compTest), test$covariateMap %>% dplyr::tally() %>% dplyr::pull())
   

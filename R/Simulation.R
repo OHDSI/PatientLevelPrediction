@@ -113,10 +113,12 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
                         covariateIds = covariateIds))
 
   covariateValue <- rep(1, length(covariateId))
+  covariateRef <- plpDataSimulationProfile$covariateRef
+  covariateRef$covariateId <- bit64::as.integer64(covariateRef$covariateId)
   covariateData <- Andromeda::andromeda(covariates = data.frame(rowId = rowId,
-                                                                covariateId = covariateId,
+                                                                covariateId = bit64::as.integer64(covariateId),
                                                                 covariateValue = covariateValue),
-                                        covariateRef = plpDataSimulationProfile$covariateRef,
+                                        covariateRef = covariateRef,
                                         analysisRef  = data.frame(analysisId = 1))
   
   class(covariateData) <- c("CovariateData")
@@ -136,11 +138,6 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   
   ParallelLogger::logInfo("Generating outcomes")
   allOutcomes <- data.frame()
-  covariateData$covariates <- covariateData$covariates %>%
-    dplyr::mutate(rowId = as.integer(rowId),
-                  covariateId = bit64::as.integer64(covariateId))
-  covariateData$covariateRef <- covariateData$covariateRef %>% 
-    dplyr::mutate(covariateId=bit64::as.integer64(covariateId))
   for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
     prediction <- predictCyclopsType(plpDataSimulationProfile$outcomeModels[[i]],
                                    cohorts,
