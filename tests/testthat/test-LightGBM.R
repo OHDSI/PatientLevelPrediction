@@ -96,7 +96,8 @@ test_that("LightGBM working checks", {
   fitModel <- fitPlp(
     trainData = trainData,   
     modelSettings = modelSettings, 
-    analysisId = 'lgbmTest'
+    analysisId = 'lgbmTest',
+    analysisPath = tempdir()
   )
   
   expect_equal(nrow(fitModel$prediction), nrow(trainData$labels)*2)
