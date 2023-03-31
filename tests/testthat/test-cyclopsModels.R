@@ -244,7 +244,8 @@ fitModel <- fitPlp(
   trainData = trainData,   
   modelSettings = modelSettings,
   search = "grid", 
-  analysisId = 'lrTest'
+  analysisId = 'lrTest',
+  analysisPath = tempdir()
   )
 
 expect_equal(length(unique(fitModel$prediction$evaluationType)),2)
