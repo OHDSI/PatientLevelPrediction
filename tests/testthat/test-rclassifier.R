@@ -93,7 +93,8 @@ test_that("GBM working checks", {
   fitModel <- fitPlp(
     trainData = trainData,   
     modelSettings = modelSettings, 
-    analysisId = 'gbmTest'
+    analysisId = 'gbmTest',
+    analysisPath = tempdir()
   )
   
   expect_equal(nrow(fitModel$prediction), nrow(trainData$labels)*2)
