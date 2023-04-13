@@ -64,7 +64,8 @@ test_that("check fit of DecisionTree", {
   plpModel <- fitPlp(
     trainData = tinyTrainData, 
     modelSettings = modelSettings,
-    analysisId = 'DecisionTree'
+    analysisId = 'DecisionTree',
+    analysisPath = tempdir()
     )
   
   expect_correct_fitPlp(plpModel, trainData)
@@ -95,7 +96,8 @@ test_that('AdaBoost fit works', {
   plpModel <- fitPlp(
     trainData = tinyTrainData, 
     modelSettings = modelSettings,
-    analysisId = 'Adaboost'
+    analysisId = 'Adaboost',
+    analysisPath = tempdir()
   )
   
   expect_correct_fitPlp(plpModel, trainData)
@@ -117,7 +119,8 @@ test_that('RandomForest fit works', {
   plpModel <- fitPlp(
     trainData = tinyTrainData, 
     modelSettings = modelSettings,
-    analysisId = 'RandomForest'
+    analysisId = 'RandomForest',
+    analysisPath = tempdir()
   )
   
   expect_correct_fitPlp(plpModel, trainData)
@@ -139,7 +142,8 @@ test_that('MLP fit works', {
   plpModel <- fitPlp(
     trainData = tinyTrainData, 
     modelSettings = modelSettings,
-    analysisId = 'MLP'
+    analysisId = 'MLP',
+    analysisPath = tempdir()
   )
   
   expect_correct_fitPlp(plpModel, trainData)
@@ -154,7 +158,8 @@ test_that('Naive bayes fit works', {
   plpModel <- fitPlp(
     trainData = tinyTrainData, 
     modelSettings = modelSettings,
-    analysisId = 'Naive bayes'
+    analysisId = 'Naive bayes',
+    analysisPath = tempdir()
   )
   
   expect_correct_fitPlp(plpModel, trainData) 
@@ -172,7 +177,8 @@ test_that('Support vector machine fit works', {
   plpModel <- fitPlp(
     trainData = tinyTrainData, 
     modelSettings = modelSettings,
-    analysisId = 'SVM'
+    analysisId = 'SVM',
+    analysisPath = tempdir()
   )
   
   expect_correct_fitPlp(plpModel, trainData) 
@@ -189,7 +195,8 @@ test_that('Sklearn predict works', {
   plpModel <- fitPlp(
     trainData = tinyTrainData, 
     modelSettings = modelSettings,
-    analysisId = 'Adaboost'
+    analysisId = 'Adaboost',
+    analysisPath = tempdir()
   )
   
   predictions <- predictPythonSklearn(plpModel,

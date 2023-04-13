@@ -366,7 +366,8 @@ runPlp <- function(
     settings <- list(
       trainData = data$Train, 
       modelSettings = modelSettings,
-      analysisId = analysisId
+      analysisId = analysisId,
+      analysisPath = analysisPath
     )
     
     ParallelLogger::logInfo(sprintf('Training %s model',settings$modelSettings$name))  

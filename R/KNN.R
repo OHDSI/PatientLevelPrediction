@@ -64,7 +64,7 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
   return(result)
 }
 
-fitKNN <- function(trainData, modelSettings, search = 'none', analysisId ){
+fitKNN <- function(trainData, modelSettings, search = 'none', analysisId, ...){
   
   param <- modelSettings$param
 

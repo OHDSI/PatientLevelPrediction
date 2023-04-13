@@ -3,8 +3,8 @@ fitRclassifier <- function(
   trainData, 
   modelSettings, 
   search = 'grid', 
-  analysisId
-  ){
+  analysisId,
+  ...){
   
   param <- modelSettings$param
   

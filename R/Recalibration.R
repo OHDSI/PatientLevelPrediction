@@ -90,7 +90,8 @@ recalibratePlpRefit <- function(
     fitPlp(
       trainData = newData, 
       modelSettings = setLassoRefit,
-      analysisId = 'recalibrationRefit'
+      analysisId = 'recalibrationRefit',
+      analysisPath = NULL
     )
   }, 
   error = function(e){ParallelLogger::logInfo(e); return(NULL)}
