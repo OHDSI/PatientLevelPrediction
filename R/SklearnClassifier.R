@@ -416,13 +416,29 @@ computeGridPerformance <- function(prediction, param, performanceFunct = 'comput
     }
   }
   
-  hyperSummary <- c(performanceFunct, performance, performanceFold, unlist(paramString))
-  names(hyperSummary) <- c(
-    'Metric', 
-    'cvPerformance', 
-    paste0('cvPerformanceFold',1:length(performanceFold)),
-    names(param)
+  #hyperSummary <- c(performanceFunct, performance, performanceFold, unlist(paramString))
+  #names(hyperSummary) <- c(
+  #  'Metric', 
+  #  'cvPerformance', 
+  #  paste0('cvPerformanceFold',1:length(performanceFold)),
+  #  names(param)
+  #)
+  paramValues <- unlist(paramString)
+  names(paramValues) <- names(param)
+  
+  hyperSummary <- as.data.frame(
+    c(
+      data.frame(
+        metric = performanceFunct,
+        fold = c(0,1:length(performanceFold)),
+        value = c(performance,performanceFold)
+      ),
+      paramValues
+    )
   )
+
+  
+
   
   return(
     list(
