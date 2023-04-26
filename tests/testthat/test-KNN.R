@@ -6,7 +6,8 @@ test_that('KNN fit works', {
   plpModel <- fitPlp(
     trainData = tinyTrainData, 
     modelSettings = modelSettings,
-    analysisId = 'KNN'
+    analysisId = 'KNN',
+    analysisPath = tempdir()
   )
   
   expect_correct_fitPlp(plpModel, tinyTrainData) 

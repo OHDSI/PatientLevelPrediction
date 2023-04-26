@@ -167,7 +167,6 @@ test_that("results uploaded to database", {
 
 })
 
-
 test_that("database deletion", {
   skip_if(Sys.getenv('CI') != 'true', 'not run locally')
   createPlpResultTables(
@@ -405,5 +404,53 @@ test_that("import from csv", {
   
 })
 
+
+# new - check null model just reports message
+test_that("message if model is null", {
+  
+  model2 <- list(noModel = T)
+  attr(model2, "predictionFunction") <- 'noModel'
+  attr(model2, "saveType") <- 'RtoJson'
+  class(model2) <- 'plpModel'
+  
+  plpResult2 <- plpResult
+  plpResult2$model <- model2
+  
+  savePlpResult(plpResult2, file.path(tempdir(), 'null_model', 'Analysis_1', 'plpResult'))
+  
+  nullModelServerLoc <- file.path(tempdir(), 'nullModelDatabase')
+  if(!dir.exists(file.path(tempdir(), 'nullModelDatabase'))){
+    dir.create(file.path(tempdir(), 'nullModelDatabase'), recursive = T)
+  }
+  nullModelResultConnDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = 'sqlite', 
+    server = file.path(nullModelServerLoc,'sqlite.sqlite')
+  )
+  nullModelDatabaseSchemaSettings <-  createDatabaseSchemaSettings(
+    resultSchema = 'main', 
+    tablePrefix = '', 
+    targetDialect = 'sqlite', 
+    tempEmulationSchema = NULL
+  )
+  
+  createPlpResultTables(
+    connectionDetails = nullModelResultConnDetails,
+    targetDialect = 'sqlite',
+    resultSchema = 'main', 
+    deleteTables = T, 
+    createTables = T,
+    tablePrefix = ''
+  )
+
+  testthat::expect_message(
+    addMultipleRunPlpToDatabase(
+      connectionDetails = nullModelResultConnDetails, 
+      databaseSchemaSettings = nullModelDatabaseSchemaSettings,
+      resultLocation = file.path(tempdir(), 'null_model'), 
+      modelSaveLocation = file.path(tempdir(), 'null_model', 'models')
+    )
+  )
+  
+})
 
 
