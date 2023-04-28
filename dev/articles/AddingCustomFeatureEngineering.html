@@ -134,7 +134,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Egill Fridgeirsson</h4>
             
-            <h4 data-toc-skip class="date">2023-04-26</h4>
+            <h4 data-toc-skip class="date">2023-04-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/AddingCustomFeatureEngineering.Rmd" class="external-link"><code>vignettes/AddingCustomFeatureEngineering.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomFeatureEngineering.Rmd</code></div>
@@ -217,10 +217,6 @@ integer/double specifying the number of knots.</p>
 <span>                     <span class="va">knots</span> <span class="op">=</span> <span class="fl">5</span></span>
 <span>                     <span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
-<span>  <span class="co"># add input checks</span></span>
-<span>  <span class="fu">checkIsClass</span><span class="op">(</span><span class="va">knots</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'numeric'</span>,<span class="st">'integer'</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu">checkHigher</span><span class="op">(</span><span class="va">knots</span>, <span class="fl">3</span><span class="op">)</span> </span>
-<span>  </span>
 <span>  <span class="co"># create list of inputs to implement function</span></span>
 <span>  <span class="va">featureEngineeringSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    knots <span class="op">=</span> <span class="va">knots</span></span>
@@ -279,6 +275,10 @@ contains this.</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span>  </span>
+<span>  <span class="co"># remove existing age if in covariates </span></span>
+<span>  <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span> <span class="op">|&gt;</span> </span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="va">covariateId</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1002</span><span class="op">)</span><span class="op">)</span></span>
+<span>  </span>
 <span>  <span class="co"># update covRef</span></span>
 <span>  <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html" class="external-link">appendToTable</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span>, </span>
 <span>                           <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>covariateId<span class="op">=</span><span class="fl">2002</span>,</span>
@@ -290,7 +290,7 @@ contains this.</p>
 <span>  <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html" class="external-link">appendToTable</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span>, <span class="va">newData</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="va">featureEngineering</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    fun <span class="op">=</span> <span class="st">'implementAgeSplines'</span>,</span>
+<span>    funct <span class="op">=</span> <span class="st">'implementAgeSplines'</span>,</span>
 <span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span>,</span>
 <span>      model <span class="op">=</span> <span class="va">model</span></span>
