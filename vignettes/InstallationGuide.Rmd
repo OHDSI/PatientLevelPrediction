@@ -86,7 +86,7 @@ The list below provides solutions for some common issues:
 
 1. If you have an error when trying to install a package in R saying **'Dependancy X not available ...'** then this can sometimes be fixed by running `install.packages('X')` and then once that completes trying to reinstall the package that had the error.
 
-2. I have found that using the github `remotes`` to install packages can be impacted if you have **multiple R sessions** open as one session with a library open can cause the library to be locked and this can prevent an install of a package that depends on that library.
+2. I have found that using the github `remotes` to install packages can be impacted if you have **multiple R sessions** open as one session with a library open can cause the library to be locked and this can prevent an install of a package that depends on that library.
 
 
 ## Common issues
