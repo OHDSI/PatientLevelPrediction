@@ -430,7 +430,7 @@ computeGridPerformance <- function(prediction, param, performanceFunct = 'comput
     c(
       data.frame(
         metric = performanceFunct,
-        fold = c(0,1:length(performanceFold)),
+        fold = c("CV",as.character(1:length(performanceFold))),
         value = c(performance,performanceFold)
       ),
       paramValues
