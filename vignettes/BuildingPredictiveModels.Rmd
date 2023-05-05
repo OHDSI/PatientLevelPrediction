@@ -368,7 +368,7 @@ In this section we assume that our cohorts have been created either by using ATL
   
 ### Data extraction
   
-Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the [`FeatureExtractionPackage`](https://github.com/OHDSI/FeatureExtration). In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its [vignettes](https://github.com/OHDSI/FeatureExtration). For our example study we decided to use these settings:
+Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the [`FeatureExtractionPackage`](https://github.com/OHDSI/FeatureExtraction). In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its [vignettes](https://github.com/OHDSI/FeatureExtraction). For our example study we decided to use these settings:
   
 ```{r tidy=FALSE,eval=FALSE}		   
   covariateSettings <- createCovariateSettings(useDemographicsGender = TRUE,
@@ -763,7 +763,7 @@ In this section we assume that our cohorts have been created either by using ATL
     
 ### Data extraction
     
-Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the [`FeatureExtractionPackage`](https://github.com/OHDSI/FeatureExtration). In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its [vignettes](https://github.com/OHDSI/FeatureExtration). For our example study we decided to use these settings:
+Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the [`FeatureExtractionPackage`](https://github.com/OHDSI/FeatureExtraction). In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its [vignettes](https://github.com/OHDSI/FeatureExtraction). For our example study we decided to use these settings:
       
 ```{r tidy=FALSE,eval=FALSE}		   
     covariateSettings <- createCovariateSettings(useDemographicsGender = TRUE,

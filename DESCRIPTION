@@ -23,7 +23,7 @@ URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/Pa
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 VignetteBuilder: knitr
 Depends:
-    R (>= 3.3.0)
+    R (>= 4.0.0)
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
@@ -75,6 +75,7 @@ Remotes:
     ohdsi/Eunomia,
     ohdsi/FeatureExtraction,
     ohdsi/IterativeHardThresholding,
+    ohdsi/ParallelLogger,
     ohdsi/ShinyAppBuilder,
     ohdsi/ResultModelManager
 RoxygenNote: 7.2.3
