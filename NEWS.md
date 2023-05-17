@@ -1,3 +1,10 @@
+PatientLevelPrediction 6.3.2
+======================
+- fixed bug with database insert if result is incomplete
+- updated/fixed documentation (Egill)
+- added model path to models (Henrik)
+- updated hyper-parameter saving to data.frame and made consistent 
+
 PatientLevelPrediction 6.3.1
 ======================
 - fixed bug with multiple covariate settings in diagnose plp
