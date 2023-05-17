@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.2</span>
       </span>
     </div>
 
@@ -53,7 +55,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -75,9 +77,6 @@
       <a href="../articles/BestPractices.html">Best Practice Research</a>
     </li>
     <li>
-      <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
-    </li>
-    <li>
       <a href="../articles/BuildingMultiplePredictiveModels.html">Automatically Build Multiple Patient-Level Predictive Models</a>
     </li>
     <li>
@@ -90,9 +89,6 @@
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
     </li>
     <li>
@@ -101,7 +97,7 @@
   </ul>
 </li>
 <li>
-  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
+  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/" class="external-link">Tutorial</a>
 </li>
 <li>
   <a href="../articles/BestPractices.html">Best Practices</a>
@@ -112,10 +108,10 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades" class="external-link"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
-  <a href="https://github.com/OHDSI/PatientLevelPrediction">
+  <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link">
     <span class="fa fa-github fa-lg"></span>
      
   </a>
@@ -130,15 +126,16 @@
 
       
 
-      </header><script src="InstallationGuide_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Patient-Level Prediction Installation Guide</h1>
-                        <h4 class="author">Jenna Reps, Peter R. Rijnbeek</h4>
+                        <h4 data-toc-skip class="author">Jenna Reps,
+Peter R. Rijnbeek, Egill Fridgeirsson</h4>
             
-            <h4 class="date">2022-03-09</h4>
+            <h4 data-toc-skip class="date">2023-05-17</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/InstallationGuide.Rmd"><code>vignettes/InstallationGuide.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/InstallationGuide.Rmd" class="external-link"><code>vignettes/InstallationGuide.Rmd</code></a></small>
       <div class="hidden name"><code>InstallationGuide.Rmd</code></div>
 
     </div>
@@ -149,139 +146,156 @@
 %\VignetteEngine{knitr}
 %\VignetteIndexEntry{Installation guide}
 -->
-<div id="introduction" class="section level1">
-<h1 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h1>
-<p>This vignette describes how you need to install the Observational Health Data Sciencs and Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction"><code>PatientLevelPrediction</code></a> package under Windows, Mac, and Linux.</p>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
+<p>This vignette describes how you need to install the Observational
+Health Data Sciencs and Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
+package under Windows, Mac, and Linux.</p>
 </div>
-<div id="software-prerequisites" class="section level1">
-<h1 class="hasAnchor">
-<a href="#software-prerequisites" class="anchor"></a>Software Prerequisites</h1>
-<div id="windows-users" class="section level2">
-<h2 class="hasAnchor">
-<a href="#windows-users" class="anchor"></a>Windows Users</h2>
-<p>Under Windows the OHDSI Patient Level Prediction (PLP) package requires installing:</p>
+<div class="section level2">
+<h2 id="software-prerequisites">Software Prerequisites<a class="anchor" aria-label="anchor" href="#software-prerequisites"></a>
+</h2>
+<div class="section level3">
+<h3 id="windows-users">Windows Users<a class="anchor" aria-label="anchor" href="#windows-users"></a>
+</h3>
+<p>Under Windows the OHDSI Patient Level Prediction (PLP) package
+requires installing:</p>
 <ul>
-<li>R (<a href="https://cran.cnr.berkeley.edu/" class="uri">https://cran.cnr.berkeley.edu/</a> ) - (R &gt;= 3.3.0, but latest is recommended)</li>
-<li>Rstudio (<a href="https://www.rstudio.com/" class="uri">https://www.rstudio.com/</a> )</li>
-<li>Java (<a href="http://www.java.com" class="uri">http://www.java.com</a> )</li>
-<li>RTools (<a href="https://cran.r-project.org/bin/windows/Rtools/" class="uri">https://cran.r-project.org/bin/windows/Rtools/</a>)</li>
+<li>R (<a href="https://cran.cnr.berkeley.edu/" class="external-link uri">https://cran.cnr.berkeley.edu/</a> ) - (R &gt;= 4.0.0, but
+latest is recommended)</li>
+<li>Rstudio (<a href="https://www.rstudio.com/" class="external-link uri">https://www.rstudio.com/</a> )</li>
+<li>Java (<a href="http://www.java.com" class="external-link uri">http://www.java.com</a> )</li>
+<li>RTools (<a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link uri">https://cran.r-project.org/bin/windows/Rtools/</a>)</li>
 </ul>
 </div>
-<div id="maclinux-users" class="section level2">
-<h2 class="hasAnchor">
-<a href="#maclinux-users" class="anchor"></a>Mac/Linux Users</h2>
-<p>Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires installing:</p>
+<div class="section level3">
+<h3 id="maclinux-users">Mac/Linux Users<a class="anchor" aria-label="anchor" href="#maclinux-users"></a>
+</h3>
+<p>Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package
+requires installing:</p>
 <ul>
-<li>R (<a href="https://cran.cnr.berkeley.edu/" class="uri">https://cran.cnr.berkeley.edu/</a> ) - (R &gt;= 3.3.0, but latest is recommended)</li>
-<li>Rstudio (<a href="https://www.rstudio.com/" class="uri">https://www.rstudio.com/</a> )</li>
-<li>Java (<a href="http://www.java.com" class="uri">http://www.java.com</a> )</li>
-<li>Xcode command line tools(run in terminal: xcode-select –install) [MAC USERS ONLY]</li>
+<li>R (<a href="https://cran.cnr.berkeley.edu/" class="external-link uri">https://cran.cnr.berkeley.edu/</a> ) - (R &gt;= 4.0.0, but
+latest is recommended)</li>
+<li>Rstudio (<a href="https://www.rstudio.com/" class="external-link uri">https://www.rstudio.com/</a> )</li>
+<li>Java (<a href="http://www.java.com" class="external-link uri">http://www.java.com</a> )</li>
+<li>Xcode command line tools(run in terminal: xcode-select –install)
+[MAC USERS ONLY]</li>
 </ul>
 </div>
 </div>
-<div id="installing-the-package" class="section level1">
-<h1 class="hasAnchor">
-<a href="#installing-the-package" class="anchor"></a>Installing the Package</h1>
-<p>The preferred way to install the package is by using <code>remotes</code>, which will automatically install the latest release and all the latest dependencies.</p>
-<p>If you do not want the official release you could install the bleading edge version of the package (latest develop branch).</p>
-<p>Note that the latest develop branch could contain bugs, please report them to us if you experience problems.</p>
-<div id="installing-patientlevelprediction-using-remotes" class="section level2">
-<h2 class="hasAnchor">
-<a href="#installing-patientlevelprediction-using-remotes" class="anchor"></a>Installing PatientLevelPrediction using remotes</h2>
+<div class="section level2">
+<h2 id="installing-the-package">Installing the Package<a class="anchor" aria-label="anchor" href="#installing-the-package"></a>
+</h2>
+<p>The preferred way to install the package is by using
+<code>remotes</code>, which will automatically install the latest
+release and all the latest dependencies.</p>
+<p>If you do not want the official release you could install the
+bleeding edge version of the package (latest develop branch).</p>
+<p>Note that the latest develop branch could contain bugs, please report
+them to us if you experience problems.</p>
+<div class="section level3">
+<h3 id="installing-patientlevelprediction-using-remotes">Installing PatientLevelPrediction using remotes<a class="anchor" aria-label="anchor" href="#installing-patientlevelprediction-using-remotes"></a>
+</h3>
 <p>To install using <code>remotes</code> run:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span>
-<span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html">install_github</a></span><span class="op">(</span><span class="st">"OHDSI/FeatureExtraction"</span><span class="op">)</span>
-<span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html">install_github</a></span><span class="op">(</span><span class="st">"OHDSI/PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
-<p>When installing make sure to close any other Rstudio sessions that are using <code>PatientLevelPrediction</code> or any dependency. Keeping Rstudio sessions open can cause locks that prevent the package installing.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"OHDSI/PatientLevelPrediction"</span><span class="op">)</span></span></code></pre></div>
+<p>When installing make sure to close any other Rstudio sessions that
+are using <code>PatientLevelPrediction</code> or any dependency. Keeping
+Rstudio sessions open can cause locks that prevent the package
+installing.</p>
 </div>
 </div>
-<div id="creating-python-reticulate-environment" class="section level1">
-<h1 class="hasAnchor">
-<a href="#creating-python-reticulate-environment" class="anchor"></a>Creating Python Reticulate Environment</h1>
-<p>Many of the classifiers in the <code>PatientLevelPrediction</code> use a Python back end. To set up a python environment run:</p>
+<div class="section level2">
+<h2 id="creating-python-reticulate-environment">Creating Python Reticulate Environment<a class="anchor" aria-label="anchor" href="#creating-python-reticulate-environment"></a>
+</h2>
+<p>Many of the classifiers in the <code>PatientLevelPrediction</code>
+use a Python backend. To set up a python environment run:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction">PatientLevelPrediction</a></span><span class="op">)</span>
-<span class="fu">reticulate</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/reticulate/man/install_miniconda.html">install_miniconda</a></span><span class="op">(</span><span class="op">)</span>
-<span class="fu"><a href="../reference/configurePython.html">configurePython</a></span><span class="op">(</span>envname<span class="op">=</span><span class="st">'r-reticulate'</span>, envtype<span class="op">=</span><span class="st">'conda'</span><span class="op">)</span></code></pre></div>
-<p>Some of the less frequently used classifiers are not installed during this set-up to add them run:</p>
-<p>For GBM survival:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">reticulate</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/reticulate/man/conda-tools.html">conda_install</a></span><span class="op">(</span>envname<span class="op">=</span><span class="st">'r-reticulate'</span>, packages <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'scikit-survival'</span><span class="op">)</span>, forge <span class="op">=</span> <span class="cn">TRUE</span>, pip <span class="op">=</span> <span class="cn">FALSE</span>, pip_ignore_installed <span class="op">=</span> <span class="cn">TRUE</span>, conda <span class="op">=</span> <span class="st">"auto"</span>, channel <span class="op">=</span> <span class="st">'sebp'</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction" class="external-link">PatientLevelPrediction</a></span><span class="op">)</span></span>
+<span><span class="fu">reticulate</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/reticulate/reference/install_miniconda.html" class="external-link">install_miniconda</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/configurePython.html">configurePython</a></span><span class="op">(</span>envname<span class="op">=</span><span class="st">'r-reticulate'</span>, envtype<span class="op">=</span><span class="st">'conda'</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div id="testing-installation" class="section level1">
-<h1 class="hasAnchor">
-<a href="#testing-installation" class="anchor"></a>Testing installation</h1>
-<p>To test whether the package is installed correctly, using the test script in ‘/extras’, run:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># load the checkPlpInstallation function</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/">devtools</a></span><span class="op">)</span>
-<span class="fu"><a href="https://devtools.r-lib.org/reference/source_url.html">source_url</a></span><span class="op">(</span><span class="st">'https://raw.github.com/OHDSI/PatientLevelPrediction/issue242/extras/checkPlpInstallation.R'</span><span class="op">)</span>
-
-<span class="co"># set up the database connection details</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/DatabaseConnector/">DatabaseConnector</a></span><span class="op">)</span>
-<span class="va">connectionDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html">createConnectionDetails</a></span><span class="op">(</span>
-  dbms <span class="op">=</span> <span class="st">'sql_server'</span>, 
-  user <span class="op">=</span> <span class="st">'username'</span>, 
-  password <span class="op">=</span> <span class="st">'hidden'</span>, 
-  server <span class="op">=</span> <span class="st">'your server'</span>, 
-  port <span class="op">=</span> <span class="st">'your port'</span>
-  <span class="op">)</span>
-
-<span class="co"># run the test</span>
-<span class="fu">checkPlpInstallation</span><span class="op">(</span>
-  connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
-  python <span class="op">=</span> <span class="cn">T</span>
-  <span class="op">)</span></code></pre></div>
-<p>To test the installation (excluding python) run:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">checkPlpInstallation</span><span class="op">(</span>
-  connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, 
-  python <span class="op">=</span> <span class="cn">F</span>
-  <span class="op">)</span></code></pre></div>
-<p>The check can take a while to run since it will build the following models in sequence on simulated data: Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting. Moreover, it will test the database connection.</p>
-</div>
-<div id="installation-issues" class="section level1">
-<h1 class="hasAnchor">
-<a href="#installation-issues" class="anchor"></a>Installation issues</h1>
-<p>Installation issues need to be posted in our issue tracker: <a href="http://github.com/OHDSI/PatientLevelPrediction/issues" class="uri">http://github.com/OHDSI/PatientLevelPrediction/issues</a></p>
+<div class="section level2">
+<h2 id="installation-issues">Installation issues<a class="anchor" aria-label="anchor" href="#installation-issues"></a>
+</h2>
+<p>Installation issues need to be posted in our issue tracker: <a href="http://github.com/OHDSI/PatientLevelPrediction/issues" class="external-link uri">http://github.com/OHDSI/PatientLevelPrediction/issues</a></p>
 <p>The list below provides solutions for some common issues:</p>
 <ol style="list-style-type: decimal">
-<li><p>If you have an error when trying to install a package in R saying <strong>‘Dependancy X not available …’</strong> then this can sometimes be fixed by running <code><a href="https://rdrr.io/r/utils/install.packages.html">install.packages('X')</a></code> and then once that completes trying to reinstall the package that had the error.</p></li>
-<li><p>I have found that using the github `remotes`` to install packages can be impacted if you have <strong>multiple R sessions</strong> open as one session with a library open can cause the library to be locked and this can prevent an install of a package that depends on that library.</p></li>
+<li><p>If you have an error when trying to install a package in R saying
+<strong>‘Dependancy X not available …’</strong> then this can sometimes
+be fixed by running <code>install.packages('X')</code> and then once
+that completes trying to reinstall the package that had the
+error.</p></li>
+<li><p>I have found that using the github <code>remotes</code> to
+install packages can be impacted if you have <strong>multiple R
+sessions</strong> open as one session with a library open can cause the
+library to be locked and this can prevent an install of a package that
+depends on that library.</p></li>
 </ol>
+<div class="section level3">
+<h3 id="common-issues">Common issues<a class="anchor" aria-label="anchor" href="#common-issues"></a>
+</h3>
+<div class="section level4">
+<h4 id="python-environment-maclinux-users">python environment Mac/linux users:<a class="anchor" aria-label="anchor" href="#python-environment-maclinux-users"></a>
+</h4>
+<p>to make sure R uses the r-reticulate python environment you may need
+to edit your .Rprofile with the location of the python binary for the
+PLP environment. Edit the .Rprofile by running:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/edit.html" class="external-link">edit_r_profile</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>and add</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>PATH <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"your python bin location"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"PATH"</span><span class="op">)</span>, sep<span class="op">=</span><span class="st">":"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>to the file then save. Where your python bin location is the location
+returned by</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">reticulate</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/reticulate/reference/conda-tools.html" class="external-link">conda_list</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
+<p>e.g., My PLP virtual environment location was
+/anaconda3/envs/PLP/bin/python so I added:<br>
+Sys.setenv(PATH = paste(“/anaconda3/envs/PLP/bin”, Sys.getenv(“PATH”),
+sep=“:”))</p>
 </div>
-<div id="acknowledgments" class="section level1">
-<h1 class="hasAnchor">
-<a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
-<p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
+</h2>
+<p>Considerable work has been dedicated to provide the
+<code>PatientLevelPrediction</code> package.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
-<pre><code>## 
-## To cite PatientLevelPrediction in publications use:
-## 
-## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design
-## and implementation of a standardized framework to generate and evaluate
-## patient-level prediction models using observational healthcare data."
-## _Journal of the American Medical Informatics Association_, *25*(8),
-## 969-975. &lt;URL: https://doi.org/10.1093/jamia/ocy032&gt;.
-## 
-## A BibTeX entry for LaTeX users is
-## 
-##   @Article{,
-##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},
-##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},
-##     journal = {Journal of the American Medical Informatics Association},
-##     volume = {25},
-##     number = {8},
-##     pages = {969-975},
-##     year = {2018},
-##     url = {https://doi.org/10.1093/jamia/ocy032},
-##   }</code></pre>
-<p><strong>Please reference this paper if you use the PLP Package in your work:</strong></p>
-<p><a href="http://dx.doi.org/10.1093/jamia/ocy032">Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.</a></p>
-<p>This work is supported in part through the National Science Foundation grant IIS 1251151.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## To cite PatientLevelPrediction in publications use:</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design</span></span>
+<span><span class="co">##   and implementation of a standardized framework to generate and</span></span>
+<span><span class="co">##   evaluate patient-level prediction models using observational</span></span>
+<span><span class="co">##   healthcare data." _Journal of the American Medical Informatics</span></span>
+<span><span class="co">##   Association_, *25*(8), 969-975.</span></span>
+<span><span class="co">##   &lt;https://doi.org/10.1093/jamia/ocy032&gt;.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## A BibTeX entry for LaTeX users is</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   @Article{,</span></span>
+<span><span class="co">##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},</span></span>
+<span><span class="co">##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},</span></span>
+<span><span class="co">##     journal = {Journal of the American Medical Informatics Association},</span></span>
+<span><span class="co">##     volume = {25},</span></span>
+<span><span class="co">##     number = {8},</span></span>
+<span><span class="co">##     pages = {969-975},</span></span>
+<span><span class="co">##     year = {2018},</span></span>
+<span><span class="co">##     url = {https://doi.org/10.1093/jamia/ocy032},</span></span>
+<span><span class="co">##   }</span></span></code></pre>
+<p><strong>Please reference this paper if you use the PLP Package in
+your work:</strong></p>
+<p><a href="http://dx.doi.org/10.1093/jamia/ocy032" class="external-link">Reps JM, Schuemie
+MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a
+standardized framework to generate and evaluate patient-level prediction
+models using observational healthcare data. J Am Med Inform Assoc.
+2018;25(8):969-975.</a></p>
+<p>This work is supported in part through the National Science
+Foundation grant IIS 1251151.</p>
 </div>
   </div>
 
@@ -296,11 +310,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Jenna Reps, Martijn Schuemie, Marc Suchard, Patrick Ryan, Peter Rijnbeek.</p>
+  <p></p>
+<p>Developed by Jenna Reps, Martijn Schuemie, Marc Suchard, Patrick Ryan, Peter Rijnbeek, Egill Fridgeirsson.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer>
@@ -308,6 +324,8 @@
 
   
 
+
+  
 
   </body>
 </html>

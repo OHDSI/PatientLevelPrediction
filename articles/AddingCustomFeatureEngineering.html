@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.2</span>
       </span>
     </div>
 
@@ -53,7 +55,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -75,9 +77,6 @@
       <a href="../articles/BestPractices.html">Best Practice Research</a>
     </li>
     <li>
-      <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
-    </li>
-    <li>
       <a href="../articles/BuildingMultiplePredictiveModels.html">Automatically Build Multiple Patient-Level Predictive Models</a>
     </li>
     <li>
@@ -90,9 +89,6 @@
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
     </li>
     <li>
-      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
-    </li>
-    <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
     </li>
     <li>
@@ -101,7 +97,7 @@
   </ul>
 </li>
 <li>
-  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
+  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/" class="external-link">Tutorial</a>
 </li>
 <li>
   <a href="../articles/BestPractices.html">Best Practices</a>
@@ -112,10 +108,10 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades" class="external-link"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
-  <a href="https://github.com/OHDSI/PatientLevelPrediction">
+  <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link">
     <span class="fa fa-github fa-lg"></span>
      
   </a>
@@ -130,15 +126,16 @@
 
       
 
-      </header><script src="AddingCustomFeatureEngineering_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Adding Custom Feature Engineering Functions</h1>
-                        <h4 class="author">Jenna Reps</h4>
+                        <h4 data-toc-skip class="author">Jenna Reps,
+Egill Fridgeirsson</h4>
             
-            <h4 class="date">2022-03-09</h4>
+            <h4 data-toc-skip class="date">2023-05-17</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/AddingCustomFeatureEngineering.Rmd"><code>vignettes/AddingCustomFeatureEngineering.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/AddingCustomFeatureEngineering.Rmd" class="external-link"><code>vignettes/AddingCustomFeatureEngineering.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomFeatureEngineering.Rmd</code></div>
 
     </div>
@@ -149,135 +146,202 @@
 %\VignetteEngine{knitr}
 %\VignetteIndexEntry{Adding Custom Feature Engineering}
 -->
-<div id="introduction" class="section level1">
-<h1 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h1>
-<p>This vignette describes how you can add your own custom function for feature engineering in the Observational Health Data Sciencs and Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction"><code>PatientLevelPrediction</code></a> package. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf"><code>BuildingPredictiveModels</code> vignette</a>.</p>
-<p><strong>We invite you to share your new feature engineering functions with the OHDSI community through our <a href="http://github.com/OHDSI/PatientLevelPrediction">GitHub repository</a>.</strong></p>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
+<p>This vignette describes how you can add your own custom function for
+feature engineering in the Observational Health Data Sciences and
+Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
+package. This vignette assumes you have read and are comfortable with
+building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf" class="external-link"><code>BuildingPredictiveModels</code>
+vignette</a>.</p>
+<p><strong>We invite you to share your new feature engineering functions
+with the OHDSI community through our <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link">GitHub
+repository</a>.</strong></p>
 </div>
-<div id="feature-engineering-function-code-structure" class="section level1">
-<h1 class="hasAnchor">
-<a href="#feature-engineering-function-code-structure" class="anchor"></a>Feature Engineering Function Code Structure</h1>
-<p>To make a custom feature engineering function that can be used within PatientLevelPrediction you need to write two different functions. The ‘create’ function and the ‘implement’ function.</p>
-<p>The ‘create’ function, e.g., create&lt;FeatureEngineeringFunctionName&gt;, takes the parameters of the feature engineering ‘implement’ function as input, checks these are valid and outputs these as a list of class ‘featureEngineeringSettings’ with the ‘fun’ attribute specifying the ‘implement’ function to call.</p>
-<p>The ‘implement’ function, e.g., implement&lt;FeatureEngineeringFunctionName&gt;, must take as input: * trainData - a list containing: - covariateData: the plpData$covariateData restricted to the training patients - labels: a data frame that contain rowId (patient identifier) and outcomeCount (the class labels) - folds: a data.frame that contains rowId (patient identifier) and index (the cross validation fold) * featureEngineeringSettings - the output of your create&lt;FeatureEngineeringFunctionName&gt;</p>
-<p>The ‘implement’ function can then do any manipulation of the trainData (adding new features or removing features) but must output a trainData object containing the new covariateData, labels and folds for the training data patients.</p>
+<div class="section level2">
+<h2 id="feature-engineering-function-code-structure">Feature Engineering Function Code Structure<a class="anchor" aria-label="anchor" href="#feature-engineering-function-code-structure"></a>
+</h2>
+<p>To make a custom feature engineering function that can be used within
+PatientLevelPrediction you need to write two different functions. The
+‘create’ function and the ‘implement’ function.</p>
+<p>The ‘create’ function, e.g.,
+create&lt;FeatureEngineeringFunctionName&gt;, takes the parameters of
+the feature engineering ‘implement’ function as input, checks these are
+valid and outputs these as a list of class ‘featureEngineeringSettings’
+with the ‘fun’ attribute specifying the ‘implement’ function to
+call.</p>
+<p>The ‘implement’ function, e.g.,
+implement&lt;FeatureEngineeringFunctionName&gt;, must take as input:</p>
+<ul>
+<li>
+<p><code>trainData</code> - a list containing:</p>
+<ul>
+<li><p><code>covariateData</code>: the
+<code>plpData$covariateData</code>restricted to the training
+patients</p></li>
+<li><p><code>labels</code>: a data frame that contain
+<code>rowId</code>(patient identifier) and <code>outcomeCount</code>
+(the class labels)</p></li>
+<li><p><code>folds</code>: a data.frame that contains <code>rowId</code>
+(patient identifier) and <code>index</code> (the cross validation
+fold)</p></li>
+</ul>
+</li>
+<li><p><code>featureEngineeringSettings</code> - the output of your
+create&lt;FeatureEngineeringFunctionName&gt;</p></li>
+</ul>
+<p>The ‘implement’ function can then do any manipulation of the
+<code>trainData</code> (adding new features or removing features) but
+must output a <code>trainData</code> object containing the new
+<code>covariateData</code>, <code>labels</code> and <code>folds</code>
+for the training data patients.</p>
 </div>
-<div id="example" class="section level1">
-<h1 class="hasAnchor">
-<a href="#example" class="anchor"></a>Example</h1>
-<p>Let’s consider the situation where we wish to create an age spline feature. To make this custom feature engineering function we need to write the ‘create’ and ‘implement’ R functions.</p>
-<div id="create-function" class="section level2">
-<h2 class="hasAnchor">
-<a href="#create-function" class="anchor"></a>Create function</h2>
-<p>Our age spline feature function will create a new feature using the plpData$cohorts ageYear column. We will implement a restricted cubic spline that requires specifying the number of knots. . Therefore, the inputs for this are: * <code>knots</code> an integer/double specifying the number of knots</p>
+<div class="section level2">
+<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
+</h2>
+<p>Let’s consider the situation where we wish to create an age spline
+feature. To make this custom feature engineering function we need to
+write the ‘create’ and ‘implement’ R functions.</p>
+<div class="section level3">
+<h3 id="create-function">Create function<a class="anchor" aria-label="anchor" href="#create-function"></a>
+</h3>
+<p>Our age spline feature function will create a new feature using the
+<code>plpData$cohorts$ageYear</code> column. We will implement a
+restricted cubic spline that requires specifying the number of knots.
+Therefore, the inputs for this are: <code>knots</code> - an
+integer/double specifying the number of knots.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">createAgeSpine</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span>
-                     <span class="va">knots</span> <span class="op">=</span> <span class="fl">5</span>
-                     <span class="op">)</span><span class="op">{</span>
-  
-  <span class="co"># add input checks</span>
-  <span class="fu">checkIsClass</span><span class="op">(</span><span class="va">knots</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'numeric'</span>,<span class="st">'integer'</span><span class="op">)</span><span class="op">)</span>
-  <span class="fu">checkHigher</span><span class="op">(</span><span class="va">knots</span>,<span class="fl">0</span><span class="op">)</span>
-  
-  <span class="co"># create list of inputs to implement function</span>
-  <span class="va">featureEngineeringSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-    knots <span class="op">=</span> <span class="va">knots</span>
-    <span class="op">)</span>
-  
-  <span class="co"># specify the function that will implement the sampling</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span>, <span class="st">"fun"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"implementAgeSpine"</span>
-
-  <span class="co"># make sure the object returned is of class "sampleSettings"</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"featureEngineeringSettings"</span>
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span><span class="op">)</span>
-  
-<span class="op">}</span></code></pre></div>
-<p>We now need to create the ‘implement’ function <code>implementAgeSpine()</code></p>
+<code class="sourceCode R"><span><span class="va">createAgeSpline</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
+<span>                     <span class="va">knots</span> <span class="op">=</span> <span class="fl">5</span></span>
+<span>                     <span class="op">)</span><span class="op">{</span></span>
+<span>  </span>
+<span>  <span class="co"># create list of inputs to implement function</span></span>
+<span>  <span class="va">featureEngineeringSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    knots <span class="op">=</span> <span class="va">knots</span></span>
+<span>    <span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># specify the function that will implement the sampling</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span>, <span class="st">"fun"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"implementAgeSplines"</span></span>
+<span></span>
+<span>  <span class="co"># make sure the object returned is of class "sampleSettings"</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"featureEngineeringSettings"</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">featureEngineeringSettings</span><span class="op">)</span></span>
+<span>  </span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>We now need to create the ‘implement’ function
+<code>implementAgeSplines()</code></p>
 </div>
-<div id="implement-function" class="section level2">
-<h2 class="hasAnchor">
-<a href="#implement-function" class="anchor"></a>Implement function</h2>
-<p>All ‘implement’ functions must take as input the trainData and the featureEngineeringSettings (this is the output of the ‘create’ function). They must return a trainData object containing the new covariateData, labels and folds.</p>
-<p>In our example, the <code>createAgeSpine()</code> will return a list with ‘knots’. The featureEngineeringSettings therefore contains this.</p>
+<div class="section level3">
+<h3 id="implement-function">Implement function<a class="anchor" aria-label="anchor" href="#implement-function"></a>
+</h3>
+<p>All ‘implement’ functions must take as input the
+<code>trainData</code> and the <code>featureEngineeringSettings</code>
+(this is the output of the ‘create’ function). They must return a
+<code>trainData</code> object containing the new
+<code>covariateData</code>, <code>labels</code> and
+<code>folds</code>.</p>
+<p>In our example, the <code>createAgeSpline()</code> will return a list
+with ‘knots’. The <code>featureEngineeringSettings</code> therefore
+contains this.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">implementAgeSpine</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">featureEngineeringSettings</span><span class="op">)</span><span class="op">{</span>
-
-  <span class="co"># currently not used</span>
-  <span class="va">knots</span> <span class="op">&lt;-</span> <span class="va">featureEngineeringSettings</span><span class="op">$</span><span class="va">knots</span>
-  
-  
-  <span class="co"># age in in trainData$labels as ageYear</span>
-  <span class="va">ageData</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span>
-  
-  <span class="co"># now implement the code to do your desired feature engineering</span>
-  
-  <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/sparseMatrix.html">sparseMatrix</a></span><span class="op">(</span>
-    i <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span><span class="op">)</span>,
-    j <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span><span class="op">)</span><span class="op">)</span>,
-    x <span class="op">=</span> <span class="va">ageData</span><span class="op">$</span><span class="va">ageYear</span>,
-    dims<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span><span class="op">)</span>,<span class="fl">1</span><span class="op">)</span>
-  <span class="op">)</span>
-  
-  <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>
-  <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>
-  <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">ageData</span><span class="op">$</span><span class="va">outcomeCount</span>
-  
-<span class="va">mRCS</span> <span class="op">&lt;-</span> <span class="fu">rms</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rms/man/ols.html">ols</a></span><span class="op">(</span>
-  <span class="va">y</span><span class="op">~</span><span class="fu">rms</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rms/man/rms.trans.html">rcs</a></span><span class="op">(</span><span class="va">x</span>, 
-             <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span><span class="op">(</span>
-               <span class="va">x</span>, 
-               <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">.05</span>, <span class="fl">.275</span>, <span class="fl">.5</span>, <span class="fl">.775</span>, <span class="fl">.95</span>, <span class="fl">1</span><span class="op">)</span>,
-               include.lowest <span class="op">=</span> <span class="cn">TRUE</span>
-               <span class="op">)</span>
-             <span class="op">)</span>
-  <span class="op">)</span>
-
-<span class="va">newData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>
-  rowId <span class="op">=</span> <span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span>,
-  covariateId <span class="op">=</span> <span class="fl">2002</span>,
-  covariateValue <span class="op">=</span> <span class="va">mRCS</span><span class="op">$</span><span class="va">fitted.values</span>
-  <span class="op">)</span>
-
-<span class="co"># add new data</span>
-<span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html">appendToTable</a></span><span class="op">(</span>tbl <span class="op">=</span> <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span>, 
-                         data <span class="op">=</span> <span class="va">newData</span><span class="op">)</span>
-  
-  <span class="co"># return the updated trainData</span>
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">implementAgeSplines</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">featureEngineeringSettings</span>, <span class="va">model</span><span class="op">=</span><span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># if there is a model, it means this function is called through applyFeatureengineering, meaning it   # should apply the model fitten on training data to the test data</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">knots</span> <span class="op">&lt;-</span> <span class="va">featureEngineeringSettings</span><span class="op">$</span><span class="va">knots</span></span>
+<span>    <span class="va">ageData</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span></span>
+<span>    <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">ageData</span><span class="op">$</span><span class="va">outcomeCount</span></span>
+<span>    <span class="va">X</span> <span class="op">&lt;-</span> <span class="va">ageData</span><span class="op">$</span><span class="va">ageYear</span></span>
+<span>    <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">mgcv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.html" class="external-link">gam</a></span><span class="op">(</span></span>
+<span>      <span class="va">y</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">X</span>, bs<span class="op">=</span><span class="st">'cr'</span>, k<span class="op">=</span><span class="va">knots</span>, m<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>      rowId <span class="op">=</span> <span class="va">ageData</span><span class="op">$</span><span class="va">rowId</span>,</span>
+<span>      covariateId <span class="op">=</span> <span class="fl">2002</span>,</span>
+<span>      covariateValue <span class="op">=</span> <span class="va">model</span><span class="op">$</span><span class="va">fitted.values</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="va">ageData</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span></span>
+<span>    <span class="va">X</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span><span class="op">$</span><span class="va">ageYear</span></span>
+<span>    <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">ageData</span><span class="op">$</span><span class="va">outcomeCount</span></span>
+<span>    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">y</span>, X<span class="op">=</span><span class="va">X</span><span class="op">)</span></span>
+<span>    <span class="va">yHat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">newData</span><span class="op">)</span></span>
+<span>    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>      rowId <span class="op">=</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span><span class="op">$</span><span class="va">rowId</span>,</span>
+<span>      covariateId <span class="op">=</span> <span class="fl">2002</span>,</span>
+<span>      covariateValue <span class="op">=</span> <span class="va">yHat</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  </span>
+<span>  <span class="co"># remove existing age if in covariates </span></span>
+<span>  <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span> <span class="op">|&gt;</span> </span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="va">covariateId</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1002</span><span class="op">)</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># update covRef</span></span>
+<span>  <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html" class="external-link">appendToTable</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span>, </span>
+<span>                           <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>covariateId<span class="op">=</span><span class="fl">2002</span>,</span>
+<span>                                      covariateName<span class="op">=</span><span class="st">'Cubic restricted age splines'</span>,</span>
+<span>                                      analysisId<span class="op">=</span><span class="fl">2</span>,</span>
+<span>                                      conceptId<span class="op">=</span><span class="fl">2002</span><span class="op">)</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># update covariates</span></span>
+<span>  <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/appendToTable.html" class="external-link">appendToTable</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span>, <span class="va">newData</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">featureEngineering</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    funct <span class="op">=</span> <span class="st">'implementAgeSplines'</span>,</span>
+<span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span>,</span>
+<span>      model <span class="op">=</span> <span class="va">model</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">'metaData'</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span> <span class="op">=</span> <span class="fu"><a href="../reference/listAppend.html">listAppend</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">'metaData'</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span>,</span>
+<span>    <span class="va">featureEngineering</span></span>
+<span>  <span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 </div>
 </div>
-<div id="acknowledgments" class="section level1">
-<h1 class="hasAnchor">
-<a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
-<p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
+<div class="section level2">
+<h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
+</h2>
+<p>Considerable work has been dedicated to provide the
+<code>PatientLevelPrediction</code> package.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
-<pre><code>## 
-## To cite PatientLevelPrediction in publications use:
-## 
-## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design
-## and implementation of a standardized framework to generate and evaluate
-## patient-level prediction models using observational healthcare data."
-## _Journal of the American Medical Informatics Association_, *25*(8),
-## 969-975. &lt;URL: https://doi.org/10.1093/jamia/ocy032&gt;.
-## 
-## A BibTeX entry for LaTeX users is
-## 
-##   @Article{,
-##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},
-##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},
-##     journal = {Journal of the American Medical Informatics Association},
-##     volume = {25},
-##     number = {8},
-##     pages = {969-975},
-##     year = {2018},
-##     url = {https://doi.org/10.1093/jamia/ocy032},
-##   }</code></pre>
-<p><strong>Please reference this paper if you use the PLP Package in your work:</strong></p>
-<p><a href="http://dx.doi.org/10.1093/jamia/ocy032">Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.</a></p>
-<p>This work is supported in part through the National Science Foundation grant IIS 1251151.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## To cite PatientLevelPrediction in publications use:</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design</span></span>
+<span><span class="co">##   and implementation of a standardized framework to generate and</span></span>
+<span><span class="co">##   evaluate patient-level prediction models using observational</span></span>
+<span><span class="co">##   healthcare data." _Journal of the American Medical Informatics</span></span>
+<span><span class="co">##   Association_, *25*(8), 969-975.</span></span>
+<span><span class="co">##   &lt;https://doi.org/10.1093/jamia/ocy032&gt;.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## A BibTeX entry for LaTeX users is</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   @Article{,</span></span>
+<span><span class="co">##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},</span></span>
+<span><span class="co">##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},</span></span>
+<span><span class="co">##     journal = {Journal of the American Medical Informatics Association},</span></span>
+<span><span class="co">##     volume = {25},</span></span>
+<span><span class="co">##     number = {8},</span></span>
+<span><span class="co">##     pages = {969-975},</span></span>
+<span><span class="co">##     year = {2018},</span></span>
+<span><span class="co">##     url = {https://doi.org/10.1093/jamia/ocy032},</span></span>
+<span><span class="co">##   }</span></span></code></pre>
+<p><strong>Please reference this paper if you use the PLP Package in
+your work:</strong></p>
+<p><a href="http://dx.doi.org/10.1093/jamia/ocy032" class="external-link">Reps JM, Schuemie
+MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a
+standardized framework to generate and evaluate patient-level prediction
+models using observational healthcare data. J Am Med Inform Assoc.
+2018;25(8):969-975.</a></p>
+<p>This work is supported in part through the National Science
+Foundation grant IIS 1251151.</p>
 </div>
   </div>
 
@@ -292,11 +356,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Jenna Reps, Martijn Schuemie, Marc Suchard, Patrick Ryan, Peter Rijnbeek.</p>
+  <p></p>
+<p>Developed by Jenna Reps, Martijn Schuemie, Marc Suchard, Patrick Ryan, Peter Rijnbeek, Egill Fridgeirsson.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer>
@@ -304,6 +370,8 @@
 
   
 
+
+  
 
   </body>
 </html>
