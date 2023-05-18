@@ -258,7 +258,7 @@ CREATE TABLE @my_schema.@string_to_appendcovariate_summary(
     with_outcome_covariate_count int NOT NULL,
     with_outcome_covariate_mean float NOT NULL,
 	with_outcome_covariate_st_dev float NOT NULL,
-    standardized_mean_diff float NOT NULL,
+    standardized_mean_diff float,
     FOREIGN KEY (performance_id) REFERENCES @string_to_appendperformances(performance_id)
 );
 CREATE TABLE @my_schema.@string_to_appendthreshold_summary(
