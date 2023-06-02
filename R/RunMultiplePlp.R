@@ -132,11 +132,10 @@ runMultiplePlp <- function(
       dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation)))>0
       
       if(dataExists){
-        plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
-        
         analysisExists <- file.exists(file.path(saveDirectory, settings$analysisId,'diagnosePlp.rds'))
         
         if(!analysisExists){
+          plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
           diagnosePlpSettings <- list(
             plpData = plpData,
             outcomeId = modelDesign$outcomeId,
@@ -171,11 +170,10 @@ runMultiplePlp <- function(
       dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation)))>0
       
       if(dataExists){
-        plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
-        
         analysisExists <- file.exists(file.path(saveDirectory, settings$analysisId,'plpResult', 'runPlp.rds'))
+        
         if(!analysisExists){
-          
+          plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
           runPlpSettings <- list(
             plpData = plpData,
             outcomeId = modelDesign$outcomeId,

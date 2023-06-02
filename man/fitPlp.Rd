@@ -4,7 +4,7 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(trainData, modelSettings, search = "grid", analysisId)
+fitPlp(trainData, modelSettings, search = "grid", analysisId, analysisPath)
 }
 \arguments{
 \item{trainData}{An object of type \code{TrainData} created using \code{splitData}
@@ -22,6 +22,8 @@ data extracted from the CDM.}
 \item{search}{The search strategy for the hyper-parameter selection (currently not used)}
 
 \item{analysisId}{The id of the analysis}
+
+\item{analysisPath}{The path of the analysis}
 }
 \value{
 An object of class \code{plpModel} containing:

@@ -64,7 +64,7 @@ setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
   return(result)
 }
 
-fitKNN <- function(trainData, modelSettings, search = 'none', analysisId ){
+fitKNN <- function(trainData, modelSettings, search = 'none', analysisId, ...){
   
   param <- modelSettings$param
 
@@ -150,7 +150,7 @@ fitKNN <- function(trainData, modelSettings, search = 'none', analysisId ){
       trainingTime = paste(as.character(abs(comp)), attr(comp,'units')),
       trainingDate = Sys.Date(),
       modelName = 'KNN',
-      hyperParamSearch =c(),
+      hyperParamSearch = data.frame(),
       finalModelParameters = list(
         k = k,
         threads = param$threads

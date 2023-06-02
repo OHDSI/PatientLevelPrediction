@@ -1,7 +1,11 @@
 template:
   params:
     bootswatch: cosmo
-    
+
+development:
+  mode: auto
+  development: docs/dev
+
 home:
   links:
   - text: Ask a question
@@ -57,7 +61,8 @@ reference:
       - createRestrictPlpDataSettings
       - getPlpData
       - savePlpData
-      - loadPlpData   
+      - loadPlpData
+      - getCohortCovariateData
   - title: "Settings for designing a prediction models"
     desc: >
       Design settings required when developing a model.
@@ -67,12 +72,25 @@ reference:
       - createSampleSettings
       - createFeatureEngineeringSettings
       - createPreprocessSettings
+  - title: "Optional design settings"
+    desc: >
+      Settings for optional steps that can be used in the PLP pipeline
+    contents:
+      - createCohortCovariateSettings
+      - createRandomForestFeatureSelection
+      - createUnivariateFeatureSelection
+  - title: "External validation"
+    contents:
+      - createValidationSettings
+      - recalibratePlp
+      - recalibratePlpRefit
   - title: "Execution settings when developing a model"
     desc: >
       Execution settings required when developing a model.
     contents:
       - createLogSettings
       - createExecuteSettings
+      - createDefaultExecuteSettings
   - title: "Binary Classification Models"
     desc: >
       Functions for setting binary classifiers and their hyper-parameter search.
@@ -86,6 +104,8 @@ reference:
       - setNaiveBayes
       - setRandomForest
       - setSVM
+      - setIterativeHardThresholding
+      - setLightGBM
   - title: "Survival Models"
     desc: >
       Functions for setting survival models and their hyper-parameter search.
@@ -101,6 +121,7 @@ reference:
       - loadPlpModel
       - savePlpResult
       - loadPlpResult
+      - diagnosePlp
   - title: "Multiple Patient-Level Prediction Models"
     desc: >
       Functions for training mutliple patient-level-prediction model in an efficient way.
@@ -110,12 +131,34 @@ reference:
       - validateMultiplePlp
       - savePlpAnalysesJson 
       - loadPlpAnalysesJson
+      - diagnoseMultiplePlp
+  - title: "Individual pipeline functions"
+    desc: >
+      Functions for running parts of the PLP workflow
+    contents:
+      - createStudyPopulation
+      - splitData
+      - preprocessData
+      - fitPlp
+      - predictPlp
+      - evaluatePlp
+      - covariateSummary
   - title: "Saving results into database"
     desc: >
       Functions for saving the prediction model and performances into a database.
     contents:
+      - insertResultsToSqlite
       - createPlpResultTables
-      - populatePlpResultTables     
+      - addMultipleRunPlpToDatabase
+      - addRunPlpToDatabase
+      - createDatabaseSchemaSettings 
+      - createDatabaseList
+      - addDiagnosePlpToDatabase
+      - addMultipleDiagnosePlpToDatabase
+      - extractDatabaseToCsv
+      - insertCsvToDatabase
+      - insertModelDesignInDatabase
+      - migrateDataModel
   - title: "Shiny Viewers"
     desc: >
       Functions for viewing results via a shiny app
@@ -140,6 +183,7 @@ reference:
       - plotPreferencePDF
       - plotPredictionDistribution
       - plotVariableScatterplot
+      - outcomeSurvivalPlot
   - title: "Learning Curves"
     desc: >
       Functions for creating and plotting learning curves
@@ -151,3 +195,67 @@ reference:
       Functions for simulating cohort method data objects.
     contents:
       - simulatePlpData
+      - plpDataSimulationProfile
+  - title: "Data manipulation functions"
+    desc: >
+      Functions for manipulating data
+    contents:
+      - toSparseM
+      - MapIds
+  - title: "Helper/utility functions"
+    contents:
+      - listAppend
+      - listCartesian
+      - createTempModelLoc
+      - configurePython
+      - setPythonEnvironment
+  - title: "Evaluation measures"
+    contents:
+      - accuracy
+      - averagePrecision
+      - brierScore
+      - calibrationLine
+      - computeAuc
+      - f1Score
+      - falseDiscoveryRate
+      - falseNegativeRate
+      - falseOmissionRate
+      - falsePositiveRate
+      - ici
+      - modelBasedConcordance
+      - negativeLikelihoodRatio
+      - negativePredictiveValue
+      - positiveLikelihoodRatio
+      - positivePredictiveValue
+      - sensitivity
+      - specificity
+      - computeGridPerformance
+      - diagnosticOddsRatio
+      - getCalibrationSummary
+      - getDemographicSummary
+      - getThresholdSummary
+      - getThresholdSummary_binary
+      - getPredictionDistribution
+      - getPredictionDistribution_binary
+  - title: "Saving/loading models as json"
+    desc: >
+      Functions for saving or loading models as json
+    contents:
+      - sklearnFromJson
+      - sklearnToJson
+  - title: "Load/save for sharing"
+    desc: >
+      Functions for loading/saving objects for sharing
+    contents:
+      - savePlpShareable
+      - loadPlpShareable
+      - loadPrediction
+      - savePrediction
+  - title: "Feature importance"
+    contents:
+      - pfi
+  - title: "Other functions"
+    contents:
+      - predictCyclops
+    
+
