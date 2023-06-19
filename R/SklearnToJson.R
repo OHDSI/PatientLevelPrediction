@@ -54,17 +54,17 @@ sklearnFromJson <- function(path) {
   with(py$open(path, "r"), as=file, {
     model <- json$load(fp=file)
   })
-  if (model["meta"] == "decision-tree") {
+  if (reticulate::py_bool(model["meta"] == "decision-tree")) {
     model <- deSerializeDecisionTree(model)
-  } else if (model["meta"] == "rf") {
+  } else if (reticulate::py_bool(model["meta"] == "rf")) {
     model <- deSerializeRandomForest(model)
-  } else if (model["meta"] == "adaboost") {
+  } else if (reticulate::py_bool(model["meta"] == "adaboost")) {
     model <- deSerializeAdaboost(model)
-  } else if (model["meta"] == "naive-bayes") {
+  } else if (reticulate::py_bool(model["meta"] == "naive-bayes")) {
     model <- deSerializeNaiveBayes(model)
-  } else if (model["meta"] == "mlp") {
+  } else if (reticulate::py_bool(model["meta"] == "mlp")) {
     model <- deSerializeMlp(model)
-  }  else if (model["meta"] == "svm") {
+  }  else if (reticulate::py_bool(model["meta"] == "svm")) {
     model <- deSerializeSVM(model)
   } else {
     stop("Unsupported model")
@@ -181,7 +181,7 @@ serializeRandomForest <- function(model) {
     "params" = model$get_params(),
     "n_classes_" = model$n_classes_)
   
-  if (model$`__dict__`["oob_score_"] != reticulate::py_none()) { 
+  if (reticulate::py_bool(model$`__dict__`["oob_score_"] != reticulate::py_none())) { 
     serialized_model["oob_score_"] <- model$oob_score_ 
     serialized_model["oob_decision_function_"] <- model$oob_decision_function_$tolist()
   }
@@ -215,7 +215,7 @@ deSerializeRandomForest <- function(model_dict) {
   model$min_impurity_split <- model_dict["min_impurity_split"]
   model$n_classes_ <- model_dict["n_classes_"]
   
-  if (model_dict$oob_score_ != reticulate::py_none()){
+  if (reticulate::py_bool(model_dict$oob_score_ != reticulate::py_none())){
     model$oob_score_ <- model_dict["oob_score_"]
     model$oob_decision_function_ <-  model_dict["oob_decision_function_"]
   }
