@@ -387,23 +387,23 @@ deSerializeSVM <- function(model_dict) {
   model$`_probB` <- np$array(model_dict["probB_"])$astype(np$float64)
   model$`_intercept_` <- np$array(model_dict["_intercept_"])$astype(np$float64)
   
-  if ((model_dict$support_vectors_["meta"] != reticulate::py_none()) & 
-      (model_dict$support_vectors_["meta"] == "csr")) {
+  if (reticulate::py_bool((model_dict$support_vectors_["meta"] != reticulate::py_none())) & 
+      (reticulate::py_bool(model_dict$support_vectors_["meta"] == "csr"))) {
     model$support_vectors_ <- deSerializeCsrMatrix(model_dict$support_vectors_)
     model$`_sparse` <- TRUE
   } else {
     model$support_vectors_ <- np$array(model_dict$support_vectors_)$astype(np$float64)
     model$`_sparse` <- FALSE
   }
-  if ((model_dict$dual_coef_["meta"] != reticulate::py_none()) & 
-      (model_dict$dual_coef_["meta"] == "csr")) {
+  if (reticulate::py_bool((model_dict$dual_coef_["meta"] != reticulate::py_none())) & 
+      (reticulate::py_bool(model_dict$dual_coef_["meta"] == "csr"))) {
     model$dual_coef_ <- deSerializeCsrMatrix(model_dict$dual_coef_)
   } else {
     model$dual_coef_ <- np$array(model_dict$dual_coef_)$astype(np$float64)
   }
   
-  if ((model_dict$`_dual_coef_`["meta"] != reticulate::py_none()) & 
-      (model_dict$`_dual_coef_`["meta"] == "csr")) {
+  if (reticulate::py_bool((model_dict$`_dual_coef_`["meta"] != reticulate::py_none())) & 
+      (reticulate::py_bool(model_dict$`_dual_coef_`["meta"] == "csr"))) {
     model$`_dual_coef_` <- deSerializeCsrMatrix(model_dict$`dual_coef_`)
   } else {
     model$`_dual_coef_` <- np$array(model_dict$`_dual_coef_`)$astype(np$float64)
