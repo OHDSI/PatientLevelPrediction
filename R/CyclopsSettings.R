@@ -366,8 +366,7 @@ setBrokenAdaptiveRidge <- function(initialRidgeVariance = 1,
     seed <- as.integer(sample(100000000,1))
   }
   checkIsClass(threads, c('numeric','integer'))
-  checkIsClass(initialRidgeVariance, c('numeric','integer'))
-  checkHigherEqual(initialRidgeVariance, 0)
+  checkIsClass(initialRidgeVariance, c('numeric','integer', 'character'))
   
   checkIsClass(lowerLimit, c('numeric','integer'))
   checkIsClass(upperLimit, c('numeric','integer'))
