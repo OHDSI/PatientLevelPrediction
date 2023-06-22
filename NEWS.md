@@ -1,3 +1,8 @@
+PatientLevelPrediction 6.3.3
+======================
+- fixed bug introduced with new reticulate update in model saving to json tests
+
+
 PatientLevelPrediction 6.3.2
 ======================
 - fixed bug with database insert if result is incomplete
