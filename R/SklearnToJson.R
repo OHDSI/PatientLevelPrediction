@@ -54,17 +54,17 @@ sklearnFromJson <- function(path) {
   with(py$open(path, "r"), as=file, {
     model <- json$load(fp=file)
   })
-  if (model["meta"] == "decision-tree") {
+  if (reticulate::py_bool(model["meta"] == "decision-tree")) {
     model <- deSerializeDecisionTree(model)
-  } else if (model["meta"] == "rf") {
+  } else if (reticulate::py_bool(model["meta"] == "rf")) {
     model <- deSerializeRandomForest(model)
-  } else if (model["meta"] == "adaboost") {
+  } else if (reticulate::py_bool(model["meta"] == "adaboost")) {
     model <- deSerializeAdaboost(model)
-  } else if (model["meta"] == "naive-bayes") {
+  } else if (reticulate::py_bool(model["meta"] == "naive-bayes")) {
     model <- deSerializeNaiveBayes(model)
-  } else if (model["meta"] == "mlp") {
+  } else if (reticulate::py_bool(model["meta"] == "mlp")) {
     model <- deSerializeMlp(model)
-  }  else if (model["meta"] == "svm") {
+  }  else if (reticulate::py_bool(model["meta"] == "svm")) {
     model <- deSerializeSVM(model)
   } else {
     stop("Unsupported model")
@@ -181,7 +181,7 @@ serializeRandomForest <- function(model) {
     "params" = model$get_params(),
     "n_classes_" = model$n_classes_)
   
-  if (model$`__dict__`["oob_score_"] != reticulate::py_none()) { 
+  if (reticulate::py_bool(model$`__dict__`["oob_score_"] != reticulate::py_none())) { 
     serialized_model["oob_score_"] <- model$oob_score_ 
     serialized_model["oob_decision_function_"] <- model$oob_decision_function_$tolist()
   }
@@ -215,7 +215,7 @@ deSerializeRandomForest <- function(model_dict) {
   model$min_impurity_split <- model_dict["min_impurity_split"]
   model$n_classes_ <- model_dict["n_classes_"]
   
-  if (model_dict$oob_score_ != reticulate::py_none()){
+  if (reticulate::py_bool(model_dict$oob_score_ != reticulate::py_none())){
     model$oob_score_ <- model_dict["oob_score_"]
     model$oob_decision_function_ <-  model_dict["oob_decision_function_"]
   }
@@ -387,23 +387,23 @@ deSerializeSVM <- function(model_dict) {
   model$`_probB` <- np$array(model_dict["probB_"])$astype(np$float64)
   model$`_intercept_` <- np$array(model_dict["_intercept_"])$astype(np$float64)
   
-  if ((model_dict$support_vectors_["meta"] != reticulate::py_none()) & 
-      (model_dict$support_vectors_["meta"] == "csr")) {
+  if (reticulate::py_bool((model_dict$support_vectors_["meta"] != reticulate::py_none())) & 
+      (reticulate::py_bool(model_dict$support_vectors_["meta"] == "csr"))) {
     model$support_vectors_ <- deSerializeCsrMatrix(model_dict$support_vectors_)
     model$`_sparse` <- TRUE
   } else {
     model$support_vectors_ <- np$array(model_dict$support_vectors_)$astype(np$float64)
     model$`_sparse` <- FALSE
   }
-  if ((model_dict$dual_coef_["meta"] != reticulate::py_none()) & 
-      (model_dict$dual_coef_["meta"] == "csr")) {
+  if (reticulate::py_bool((model_dict$dual_coef_["meta"] != reticulate::py_none())) & 
+      (reticulate::py_bool(model_dict$dual_coef_["meta"] == "csr"))) {
     model$dual_coef_ <- deSerializeCsrMatrix(model_dict$dual_coef_)
   } else {
     model$dual_coef_ <- np$array(model_dict$dual_coef_)$astype(np$float64)
   }
   
-  if ((model_dict$`_dual_coef_`["meta"] != reticulate::py_none()) & 
-      (model_dict$`_dual_coef_`["meta"] == "csr")) {
+  if (reticulate::py_bool((model_dict$`_dual_coef_`["meta"] != reticulate::py_none())) & 
+      (reticulate::py_bool(model_dict$`_dual_coef_`["meta"] == "csr"))) {
     model$`_dual_coef_` <- deSerializeCsrMatrix(model_dict$`dual_coef_`)
   } else {
     model$`_dual_coef_` <- np$array(model_dict$`_dual_coef_`)$astype(np$float64)
