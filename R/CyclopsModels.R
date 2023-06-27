@@ -89,7 +89,7 @@ fitCyclopsModel <- function(
     if (param$priorParams$initialRidgeVariance == "auto") {
       normalControl <- Cyclops::createControl(
         fold = max(trainData$folds$index),
-        threads = settings$threads
+        threads = -1
       )
       normalPrior <- Cyclops::createPrior("normal",
                                           useCrossValidation = TRUE)
