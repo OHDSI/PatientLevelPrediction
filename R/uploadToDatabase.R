@@ -329,13 +329,18 @@ addMultipleRunPlpToDatabase <- function(
       ParallelLogger::logInfo('result loaded')
       
       #  Add runPlp to the database
-      addRunPlpToDatabase(
-        runPlp = runPlp,
-        connectionDetails = connectionDetails,
-        databaseSchemaSettings = databaseSchemaSettings,
-        cohortDefinitions = cohortDefinitions,
-        databaseList = databaseList,
-        modelSaveLocation = modelSaveLocation
+      tryCatch(
+        {addRunPlpToDatabase(
+          runPlp = runPlp,
+          connectionDetails = connectionDetails,
+          databaseSchemaSettings = databaseSchemaSettings,
+          cohortDefinitions = cohortDefinitions,
+          databaseList = databaseList,
+          modelSaveLocation = modelSaveLocation
+        )}, error = function(e){
+          ParallelLogger::logInfo('result upload failed: '); 
+          ParallelLogger::logInfo(e)
+          }
       )
       
     } #model not null 

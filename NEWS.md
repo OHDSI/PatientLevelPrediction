@@ -1,3 +1,22 @@
+PatientLevelPrediction 6.3.3
+======================
+- fixed bug introduced with new reticulate update in model saving to json tests
+
+
+PatientLevelPrediction 6.3.2
+======================
+- fixed bug with database insert if result is incomplete
+- updated/fixed documentation (Egill)
+- added model path to models (Henrik)
+- updated hyper-parameter saving to data.frame and made consistent 
+
+PatientLevelPrediction 6.3.1
+======================
+- fixed bug with multiple covariate settings in diagnose plp
+- added min cell count when exporting database results to csv files
+- light GBM added (thanks Jin Choi and Chungsoo Kim)
+- fixed minor bugs when uploading results to database
+
 PatientLevelPrediction 6.2.1
 ======================
 - added ensure_installed("ResultModelManager") to getDataMigrator()

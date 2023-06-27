@@ -528,6 +528,23 @@ probastParticipants <- function(
 }
 
 
+getMaxEndDaysFromCovariates <- function(covariateSettings){
+  
+  if(inherits(covariateSettings, 'covariateSettings')){
+    covariateSettings <- list(covariateSettings)
+  }
+  
+  vals <- unlist(lapply(covariateSettings, function(x){x$endDays}))
+  
+  if(length(vals) == 0){
+    return(0)
+  } else{
+    return(max(vals))
+  }
+}
+
+
+
 probastPredictors <- function(
   plpData, 
   outcomeId,
@@ -549,7 +566,7 @@ probastPredictors <- function(
   # covariate + outcome correlation; km of outcome (close to index or not)?
   probastId <- '2.2'
   if(populationSettings$startAnchor == 'cohort start'){
-    if(populationSettings$riskWindowStart > plpData$metaData$covariateSettings$endDays){
+    if(populationSettings$riskWindowStart > getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings)){
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
         c(probastId, 'Pass')
@@ -632,9 +649,9 @@ probastPredictors <- function(
   # 2.3.1
   # cov end_date <=0
   probastId <- '2.3'
-  if(plpData$metaData$covariateSettings$endDays <= 0){
+  if(getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings) <= 0){
     
-    if(plpData$metaData$covariateSettings$endDays < 0){
+    if(getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings) < 0){
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
         c(probastId, 'Pass')
@@ -692,7 +709,7 @@ probastOutcome <- function(
   # 3.6 - check tar after covariate end_days
   probastId <- '3.6'
   if(populationSettings$startAnchor == 'cohort start'){
-    if(populationSettings$riskWindowStart > plpData$metaData$covariateSettings$endDays){
+    if(populationSettings$riskWindowStart > getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings)){
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
         c(probastId, 'Pass')

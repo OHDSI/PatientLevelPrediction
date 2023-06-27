@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create the settings for preprocessing the trainData using \code{ }.
+#' Create the settings for preprocessing the trainData.
 #'
 #' @details
 #' Returns an object of class \code{preprocessingSettings} that specifies how to preprocess the training data

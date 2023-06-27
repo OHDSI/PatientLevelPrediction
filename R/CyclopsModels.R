@@ -173,7 +173,7 @@ fitCyclopsModel <- function(
   prediction$evaluationType <- 'Train'
   
   # get cv AUC if exists
-  cvPerFold <- c()
+  cvPerFold <- data.frame()
   if(!is.null(modelTrained$cv)){
     cvPrediction  <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
     cvPrediction$evaluationType <- 'CV'
@@ -184,7 +184,17 @@ fitCyclopsModel <- function(
     
     cvPerFold <-  unlist(lapply(modelTrained$cv, function(x){x$out_sample_auc}))
     if(length(cvPerFold)>0){
-      names(cvPerFold) <- paste0('fold_auc', 1:length(cvPerFold))
+      cvPerFold <- data.frame(
+        metric = 'AUC',
+        fold = 1:length(cvPerFold),
+        value = cvPerFold,
+        startingVariance = ifelse(is.null(param$priorParams$variance), 'NULL', param$priorParams$variance),
+        lowerLimit = ifelse(is.null(param$lowerLimit), 'NULL', param$lowerLimit),
+        upperLimit = ifelse(is.null(param$upperLimit), 'NULL', param$upperLimit),
+        tolerance  = ifelse(is.null(settings$tolerance), 'NULL', settings$tolerance)
+      )
+    } else{
+      cvPerFold <- data.frame()
     }
     
     # remove the cv from the model:

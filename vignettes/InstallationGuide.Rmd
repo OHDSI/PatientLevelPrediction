@@ -1,6 +1,6 @@
 ---
-title: "Patient-Level Prediction V5.1.0 Installation Guide"
-author: "Jenna Reps, Peter R. Rijnbeek"
+title: "Patient-Level Prediction Installation Guide"
+author: "Jenna Reps, Peter R. Rijnbeek, Egill Fridgeirsson"
 date: '`r Sys.Date()`'
 header-includes:
     - \usepackage{fancyhdr}
@@ -36,7 +36,7 @@ This vignette describes how you need to install the Observational Health Data Sc
 ## Windows Users
 Under Windows the OHDSI Patient Level Prediction (PLP) package requires installing:
 
-* R (https://cran.cnr.berkeley.edu/ ) \- (R >= 3.3.0, but latest is recommended)
+* R (https://cran.cnr.berkeley.edu/ ) \- (R >= 4.0.0, but latest is recommended)
 * Rstudio (https://www.rstudio.com/  )
 * Java (http://www.java.com )
 * RTools (https://cran.r-project.org/bin/windows/Rtools/) 
@@ -44,7 +44,7 @@ Under Windows the OHDSI Patient Level Prediction (PLP) package requires installi
 ## Mac/Linux Users
 Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires installing:
 
-* R (https://cran.cnr.berkeley.edu/ ) \- (R >= 3.3.0, but latest is recommended)
+* R (https://cran.cnr.berkeley.edu/ ) \- (R >= 4.0.0, but latest is recommended)
 * Rstudio (https://www.rstudio.com/  )
 * Java (http://www.java.com )
 * Xcode command line tools(run in terminal: xcode-select --install) [MAC USERS ONLY]
@@ -53,7 +53,7 @@ Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires in
 # Installing the Package
 The preferred way to install the package is by using `remotes`, which will automatically install the latest release and all the latest dependencies.
 
-If you do not want the official release you could install the bleading edge version of the package (latest develop branch).
+If you do not want the official release you could install the bleeding edge version of the package (latest develop branch).
 
 Note that the latest develop branch could contain bugs, please report them to us if you experience problems.
 
@@ -61,7 +61,6 @@ Note that the latest develop branch could contain bugs, please report them to us
 To install using `remotes` run:
 ```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
 install.packages("remotes")
-remotes::install_github("OHDSI/FeatureExtraction")
 remotes::install_github("OHDSI/PatientLevelPrediction")
 ```
 
@@ -69,7 +68,7 @@ When installing make sure to close any other Rstudio sessions that are using `Pa
 
 # Creating Python Reticulate Environment
 
-Many of the classifiers in the `PatientLevelPrediction` use a Python back end.  To set up a python environment run:
+Many of the classifiers in the `PatientLevelPrediction` use a Python backend.  To set up a python environment run:
 
 ```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
 library(PatientLevelPrediction)
@@ -78,50 +77,6 @@ configurePython(envname='r-reticulate', envtype='conda')
 
 ```
 
-Some of the less frequently used classifiers are not installed during this set-up to add them run:
-
-For GBM survival:
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-reticulate::conda_install(envname='r-reticulate', packages = c('scikit-survival'), forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, conda = "auto", channel = 'sebp')
-
-```
-
-# Testing installation
-To test whether the package is installed correctly, using the test script in '/extras', run:
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-
-# load the checkPlpInstallation function
-library(devtools)
-source_url('https://raw.github.com/OHDSI/PatientLevelPrediction/issue242/extras/checkPlpInstallation.R')
-
-# set up the database connection details
-library(DatabaseConnector)
-connectionDetails <- createConnectionDetails(
-  dbms = 'sql_server', 
-  user = 'username', 
-  password = 'hidden', 
-  server = 'your server', 
-  port = 'your port'
-  )
-
-# run the test
-checkPlpInstallation(
-  connectionDetails = connectionDetails, 
-  python = T
-  )
-```
-
-To test the installation (excluding python) run:
-```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
-
-checkPlpInstallation(
-  connectionDetails = connectionDetails, 
-  python = F
-  )
-```
-
-The check can take a while to run since it will build the following models in sequence on simulated data: Logistic Regression, RandomForest, MLP, AdaBoost, Decision Tree, Naive Bayes, KNN, Gradient Boosting.
-Moreover, it will test the database connection. 
 
 # Installation issues
 Installation issues need to be posted in our issue tracker:
@@ -131,12 +86,12 @@ The list below provides solutions for some common issues:
 
 1. If you have an error when trying to install a package in R saying **'Dependancy X not available ...'** then this can sometimes be fixed by running `install.packages('X')` and then once that completes trying to reinstall the package that had the error.
 
-2. I have found that using the github `remotes`` to install packages can be impacted if you have **multiple R sessions** open as one session with a library open can cause the library to be locked and this can prevent an install of a package that depends on that library.
+2. I have found that using the github `remotes` to install packages can be impacted if you have **multiple R sessions** open as one session with a library open can cause the library to be locked and this can prevent an install of a package that depends on that library.
 
 
 ## Common issues
 ### python environment Mac/linux users: 
-to make sure R uses the r-reticulate python environment you may need to edit your .Rprofile with the location of the python binary for the PLP environment.    Edit the .Rprofile by running: 
+to make sure R uses the r-reticulate python environment you may need to edit your .Rprofile with the location of the python binary for the PLP environment. Edit the .Rprofile by running: 
 ```{r eval=FALSE}
 usethis::edit_r_profile()
 ``` 

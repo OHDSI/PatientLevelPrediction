@@ -37,6 +37,7 @@
 #'                                         }
 #' @param search                           The search strategy for the hyper-parameter selection (currently not used)                                        
 #' @param analysisId                       The id of the analysis
+#' @param analysisPath                     The path of the analysis
 #' @return
 #' An object of class \code{plpModel} containing:
 #' 
@@ -53,7 +54,8 @@ fitPlp <- function(
   trainData,   
   modelSettings,
   search = "grid",
-  analysisId
+  analysisId,
+  analysisPath
   )
   {
   
@@ -76,7 +78,8 @@ fitPlp <- function(
     trainData = trainData,
     modelSettings, # old: param = modelSettings$param, # make this model settings?
     search = search,
-    analysisId = analysisId
+    analysisId = analysisId,
+    analysisPath = analysisPath
     )
   plpModel <- do.call(fun, args)
   ParallelLogger::logTrace('Returned from classifier function')
