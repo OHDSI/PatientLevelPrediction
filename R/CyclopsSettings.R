@@ -189,7 +189,7 @@ setIterativeHardThresholding<- function(
   exclude = c(), 
   forceIntercept = F,
   fitBestSubset = FALSE,
-  initialRidgeVariance = 10000,
+  initialRidgeVariance = 0.01,
   tolerance = 1e-08,
   maxIterations = 10000,
   threshold = 1e-06, 
