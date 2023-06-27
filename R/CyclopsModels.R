@@ -85,6 +85,23 @@ fitCyclopsModel <- function(
   if(settings$crossValidationInPrior){  
     param$priorParams$useCrossValidation <- max(trainData$folds$index)>1
   }
+  if (!is.null(param$priorParams$initialRidgeVariance)) {
+    if (param$priorParams$initialRidgeVariance == "auto") {
+      normalControl <- Cyclops::createControl(
+        fold = max(trainData$folds$index),
+        threads = settings$threads
+      )
+      normalPrior <- Cyclops::createPrior("normal",
+                                          useCrossValidation = TRUE)
+      fit <- tryCatch({
+        ParallelLogger::logInfo("Determining initialRidgeVariance")
+        Cyclops::fitCyclopsModel(cyclopsData,
+                                 prior = normalPrior,
+                                 control = normalControl)},
+        finally = ParallelLogger::logInfo("Done."))
+      param$priorParams$initialRidgeVariance <- fit$variance
+    }
+  }
   prior <- do.call(eval(parse(text = settings$priorfunction)), param$priorParams)
 
   if(settings$useControl){

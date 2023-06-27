@@ -173,7 +173,8 @@ setCoxModel <- function(
 #' @param exclude        A vector of numbers or covariateId names to exclude from prior
 #' @param forceIntercept Logical: Force intercept coefficient into regularization
 #' @param fitBestSubset  Logical: Fit final subset with no regularization 
-#' @param initialRidgeVariance  integer
+#' @param initialRidgeVariance  integer or character vector. If set to auto will fit Ridge regression using
+#' cross validation to determine best initialRidgeVariance value.
 #' @param tolerance      numeric
 #' @param maxIterations  integer
 #' @param threshold      numeric

@@ -11,7 +11,7 @@ setIterativeHardThresholding(
   exclude = c(),
   forceIntercept = F,
   fitBestSubset = FALSE,
-  initialRidgeVariance = 10000,
+  initialRidgeVariance = 0.01,
   tolerance = 1e-08,
   maxIterations = 10000,
   threshold = 1e-06,
@@ -31,7 +31,8 @@ setIterativeHardThresholding(
 
 \item{fitBestSubset}{Logical: Fit final subset with no regularization}
 
-\item{initialRidgeVariance}{integer}
+\item{initialRidgeVariance}{integer or character vector. If set to auto will fit Ridge regression using
+cross validation to determine best initialRidgeVariance value.}
 
 \item{tolerance}{numeric}
 
