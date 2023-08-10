@@ -99,6 +99,166 @@ createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17){
   return(featureEngineeringSettings)
 }
 
+#' Create the settings for adding a spline for continuous variables
+#'
+#' @details
+#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#'
+#' @param continousCovariateId     The covariateId to apply splines to
+#' @param knots            Either number of knots of vector of split values
+#' @param analysisId       The analysisId to use for the spline covariates  
+#'
+#' @return
+#' An object of class \code{featureEngineeringSettings}
+#' @export
+createSplineSettings <- function(
+    continousCovariateId,
+    knots,
+    analysisId = 683
+    ){
+  
+  checkIsClass(continousCovariateId, c('numeric','integer'))
+  checkIsClass(knots, c('numeric','integer'))
+  
+  featureEngineeringSettings <- list(
+    continousCovariateId = continousCovariateId,
+    knots = knots,
+    analysisId = analysisId
+  )
+  
+  attr(featureEngineeringSettings, "fun") <- "splineCovariates"
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  
+  return(featureEngineeringSettings)
+}
+  
+splineCovariates <- function(
+    trainData, 
+    featureEngineeringSettings,
+    knots = NULL
+    ){
+  
+  ParallelLogger::logInfo('Starting splineCovariates')
+  
+  if(is.null(knots)){
+    
+    if (length(featureEngineeringSettings$knots) == 1) {
+      measurements <- trainData$covariateData$covariates %>%
+        dplyr::filter(.data$covariateId == !!featureEngineeringSettings$continousCovariateId) %>%
+        as.data.frame()
+      knots <- measurements$covariateValue %>%
+        stats::quantile(seq(0.01, 0.99, length.out = featureEngineeringSettings$knots))
+    } else {
+      knots <- featureEngineeringSettings$knots
+    }
+  
+  }
+  
+  # apply the spline mapping  
+  trainData <- splineMap(
+    data = trainData,
+    covariateId = featureEngineeringSettings$continousCovariateId,
+    analysisId = featureEngineeringSettings$analysisId,
+    knots = knots
+    )
+
+  featureEngineering <- list(
+    funct = 'splineCovariates',
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      knots = knots
+    )
+  )
+  
+  # add the feature engineering in
+  attr(trainData, 'metaData')$featureEngineering = listAppend(
+    attr(trainData, 'metaData')$featureEngineering,
+    featureEngineering
+  )
+  ParallelLogger::logInfo('Finished splineCovariates')
+  
+  return(trainData)
+}
+
+# create the spline map to add spline columns
+splineMap <- function(
+    data, 
+    covariateId,
+    analysisId,
+    knots
+){
+  
+  ParallelLogger::logInfo('Starting splineMap')
+  measurements <- data$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!covariateId) %>%
+    as.data.frame()
+  
+  designMatrix <- splines::bs(
+    x = measurements$covariateValue,#knots[1]:knots[length(knots)],
+    knots = knots[2:(length(knots) - 1)],
+    Boundary.knots = knots[c(1, length(knots))]
+  )
+  
+  data$covariateData$covariates <- data$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId != !!covariateId)
+  
+  # get the covariate name
+  details <- data$covariateData$covariateRef %>%
+    dplyr::filter(.data$covariateId == !!covariateId) %>%
+    as.data.frame()
+  covariateName <- details$covariateName
+  
+  data$covariateData$covariateRef <- data$covariateData$covariateRef %>%
+    dplyr::filter(.data$covariateId != !!covariateId)
+  
+  # remove last 3 numbers as this was old analysis id
+  covariateId <- floor(covariateId/1000)
+  
+  # add the spline columns
+  for(i in 1:ncol(designMatrix)){
+    Andromeda::appendToTable(
+      tbl = data$covariateData$covariates, 
+      data = data.frame(
+        rowId = measurements$rowId,
+        covariateId = covariateId*10000+i*1000+analysisId,
+        covariateValue = designMatrix[,i]
+      )
+    )
+  }
+  
+  # add the covariates to the ref table
+  Andromeda::appendToTable(
+    tbl = data$covariateData$covariateRef,
+    data = data.frame(
+      covariateId = covariateId*10000+(1:(ncol(designMatrix)))*1000+analysisId,
+      covariateName = paste(
+        paste0(covariateName," spline component "),
+        1:ncol(designMatrix)
+      ),
+      analysisId = analysisId
+    )
+  )
+  
+  # add analysisRef for the first time a spline is added
+  analysisRef <- data$covariateData$analysisRef %>% as.data.frame()
+  if(!analysisId  %in% analysisRef$analysisId){
+    Andromeda::appendToTable(
+      tbl = data$covariateData$analysisRef,
+      data = data.frame(
+        analysisId = analysisId,
+        analysisName = 'splines',
+        domainId = 'feature engineering',
+        startDay = 0,
+        endDay = 0,
+        isBinary = 'N',
+        missingMeansZero = 'N'
+      )
+    )
+  }
+  ParallelLogger::logInfo('Finished splineMap')
+  return(data)
+}
+
 univariateFeatureSelection <- function(
   trainData, 
   featureEngineeringSettings,
