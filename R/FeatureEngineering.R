@@ -16,6 +16,30 @@
 # limitations under the License.
 
 
+featureEngineer <- function(data, featureEngineeringSettings){
+  
+  ParallelLogger::logInfo('Starting Feature Engineering')
+  
+  # if a single setting, make it a list
+  if(inherits(featureEngineeringSettings, 'featureEngineeringSettings')){
+    featureEngineeringSettings <- list(featureEngineeringSettings)
+  }
+  
+  for(featureEngineeringSetting in featureEngineeringSettings){
+    fun <- attr(featureEngineeringSetting, "fun")
+    args <- list(trainData = data,
+                 featureEngineeringSettings = featureEngineeringSetting)
+    ParallelLogger::logInfo(paste0('Applying ',fun))
+    data <- do.call(eval(parse(text = fun)), args)
+  }
+  
+  attr(data, 'metaData')$featureEngineeringSettings <- featureEngineeringSettings
+  
+  ParallelLogger::logInfo('Done Feature Engineering')
+  
+  return(data)
+  
+}
 
 #' Create the settings for defining any feature engineering that will be done
 #'
@@ -259,6 +283,135 @@ splineMap <- function(
   return(data)
 }
 
+
+
+#' Create the settings for adding a spline for continuous variables
+#'
+#' @details
+#' Returns an object of class \code{featureEngineeringSettings} that specifies how to do stratified imputation
+#'
+#' @param covariateId     The covariateId that needs imputed values
+#' @param ageSplits       A vector of age splits in years to create age groups
+#'
+#' @return
+#' An object of class \code{featureEngineeringSettings}
+#' @export
+createStratifiedImputationSettings <- function(
+    covariateId,
+    ageSplits = NULL
+){
+  
+  checkIsClass(covariateId, c('numeric','integer'))
+  checkIsClass(ageSplits, c('numeric','integer'))
+  
+  featureEngineeringSettings <- list(
+    covariateId = covariateId,
+    ageSplits = ageSplits
+  )
+  
+  attr(featureEngineeringSettings, "fun") <- "stratifiedImputeCovariates"
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  
+  return(featureEngineeringSettings)
+}
+
+stratifiedImputeCovariates <- function(
+    trainData, 
+    featureEngineeringSettings,
+    stratifiedMeans = NULL
+){
+  
+  if(is.null(stratifiedMeans)){
+    
+    stratifiedMeans <- calculateStratifiedMeans(
+      trainData = trainData,
+      featureEngineeringSettings = featureEngineeringSettings
+    )
+    
+  }
+  
+  trainData <- imputeMissingMeans(
+    trainData = trainData, 
+    covariateId = featureEngineeringSettings$covariateId,
+    ageSplits = featureEngineeringSettings$ageSplits,
+    stratifiedMeans = stratifiedMeans
+    )
+  
+  return(trainData)
+}
+
+calculateStratifiedMeans <- function(
+    trainData,
+    featureEngineeringSettings
+){
+  if(is.null(featureEngineeringSettings$ageSplits)){
+    trainData$cohorts$ageGroup <- floor(trainData$cohorts$ageYear/5)
+  } else{
+    trainData$cohorts$ageGroup <- rep(0, length(trainData$cohorts$ageYear))
+    for(i in 1:length(featureEngineeringSettings$ageSplits)){
+      trainData$cohorts$ageGroup[trainData$cohorts$ageYear > featureEngineeringSettings$ageSplits[i]] <- i
+    }
+  }
+  
+  trainData$covariateData$cohorts <- trainData$cohorts[,c('rowId', 'ageGroup', 'gender')]
+  
+  stratifiedMeans <- trainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!featureEngineeringSettings$covariateId) %>%
+    dplyr::inner_join(
+      y = trainData$covariateData$cohorts, 
+      by = c('rowId')
+    ) %>%
+    dplyr::group_by(.data$ageGroup, .data$gender) %>%
+    dplyr::summarise(covariateValue = mean(.data$covariateValue, na.rm = TRUE)) %>%
+    as.data.frame()
+  
+  return(stratifiedMeans)
+}
+
+imputeMissingMeans <- function(
+  trainData, 
+  covariateId,
+  ageSplits,
+  stratifiedMeans
+){
+  
+  if(is.null(ageSplits)){
+    trainData$cohorts$ageGroup <- floor(trainData$cohorts$ageYear/5)
+  } else{
+    trainData$cohorts$ageGroup <- rep(0, length(trainData$cohorts$ageYear))
+    for(i in 1:length(ageSplits)){
+      trainData$cohorts$ageGroup[trainData$cohorts$ageYear > ageSplits[i]] <- i
+    }
+  }
+  
+  rowIdsWithValues <- trainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !! covariateId) %>%
+    dplyr::select('rowId') %>%
+    dplyr::pull()
+  rowIdsWithMissingValues <- trainData$cohorts$rowId[!trainData$cohorts$rowId %in% rowIdsWithValues]
+  
+
+  imputedData <- trainData$cohorts %>% 
+    dplyr::filter(.data$rowId %in% rowIdsWithMissingValues) %>%
+    dplyr::select('rowId', 'ageGroup', 'gender') %>%
+    dplyr::left_join(
+      y = stratifiedMeans, 
+      by = c('ageGroup', 'gender')
+      ) %>%
+    dplyr::mutate(
+      covariateId = !!covariateId,
+      covariateValue = .data$covariateValue
+      ) %>%
+    dplyr::select('rowId', 'covariateId', 'covariateValue')
+    
+  Andromeda::appendToTable(
+    tbl = trainData$covariateData$covariates, 
+    data = imputedData
+  )
+  
+  return(trainData)
+}
+
 univariateFeatureSelection <- function(
   trainData, 
   featureEngineeringSettings,
@@ -392,27 +545,4 @@ randomForestFeatureSelection <- function(
 
 
 
-featureEngineer <- function(data, featureEngineeringSettings){
-  
-  ParallelLogger::logInfo('Starting Feature Engineering')
-  
-  # if a single setting, make it a list
-  if(inherits(featureEngineeringSettings, 'featureEngineeringSettings')){
-    featureEngineeringSettings <- list(featureEngineeringSettings)
-  }
-  
-  for(featureEngineeringSetting in featureEngineeringSettings){
-    fun <- attr(featureEngineeringSetting, "fun")
-    args <- list(trainData = data,
-                 featureEngineeringSettings = featureEngineeringSetting)
-    ParallelLogger::logInfo(paste0('Applying ',fun))
-    data <- do.call(eval(parse(text = fun)), args)
-  }
-  
-  attr(data, 'metaData')$featureEngineeringSettings <- featureEngineeringSettings
-  
-  ParallelLogger::logInfo('Done Feature Engineering')
-  
-  return(data)
-  
-}
+

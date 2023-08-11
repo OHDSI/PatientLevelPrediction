@@ -236,3 +236,57 @@ testthat::expect_true((knots+1) == nrow(as.data.frame(newData$covariateData$cova
 testthat::expect_true((knots+1) == length(table(as.data.frame(newData$covariateData$covariates)$covariateId)))
   
 })
+
+
+test_that("createStratifiedImputationSettings correct class", {
+  
+  featureEngineeringSettings <- createStratifiedImputationSettings(
+    covariateId = 12101, 
+    ageSplits = c(20,50,70)
+  )
+  
+  trainData <- simulatePlpData(plpDataSimulationProfile, n = 200)
+  
+  N <- 50
+  trainData$covariateData$covariates <- data.frame(
+    rowId = sample(trainData$cohorts$rowId, N),
+    covariateId = rep(12101, N),
+    covariateValue = sample(10, N, replace = T)
+  )
+  
+  trainData$covariateData$analysisRef <- data.frame(
+    analysisId = 101,
+    analysisName = 'cond',
+    domainId = 'madeup',
+    startDay = 0,
+    endDay = 0,
+    isBinary = 'N',
+    missingMeansZero = 'N'
+  )
+  
+  trainData$covariateData$covariateRef <- data.frame(
+    covariateId = 12101,
+    covariateName = 'test',
+    analysisId = 101,
+    conceptId = 1
+  )
+  
+  stratifiedMeans <- calculateStratifiedMeans(
+    trainData = trainData,
+    featureEngineeringSettings = featureEngineeringSettings
+  )
+  
+  testthat::expect_true(nrow(stratifiedMeans)  == 8)
+  
+imputedData <- imputeMissingMeans(
+    trainData = trainData, 
+    covariateId = 12101,
+    ageSplits = c(20,50,70),
+    stratifiedMeans = stratifiedMeans
+)
+
+testthat::expect_true(
+  nrow(as.data.frame(imputedData$covariateData$covariates)) == 200
+)
+
+})
