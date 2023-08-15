@@ -259,6 +259,7 @@ splineMap <- function(
         paste0(covariateName," spline component "),
         1:ncol(designMatrix)
       ),
+      conceptId = 0,
       analysisId = analysisId
     )
   )

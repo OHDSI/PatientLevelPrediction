@@ -66,6 +66,28 @@ covariateSummary <- function(
     strata = strata
   )
   
+  # apply feature engineering
+  if(!is.null(featureEngineering)){
+    
+    # create copy of covariateData
+    newCovariateData <- Andromeda::andromeda(
+      covariateRef = covariateData$covariateRef,
+      analysisRef = covariateData$analysisRef,
+      covariates = covariateData$covariates
+      )
+    covariateData <- newCovariateData
+    
+    if(!is.null(featureEngineering$funct)){
+      featureEngineering <- list(featureEngineering)
+    }
+    
+    for(fe in featureEngineering){
+      feSettings <- fe$settings
+      feSettings$trainData = list(covariateData = covariateData)
+      covariateData <- do.call(fe$funct, feSettings)$covariateData
+    }
+  }
+  
   # make this run in parallel for big speed improvements..
   covariateSummariesPerStrata <- lapply(subsetList, 
     function(x){

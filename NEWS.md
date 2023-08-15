@@ -1,3 +1,10 @@
+PatientLevelPrediction 6.3.4
+======================
+- added spline feature engineering 
+- added age/sex stratified imputation feature engineering
+- changed result table execution date types to varchar
+- updated covariateSummary to use feature engineering
+
 PatientLevelPrediction 6.3.3
 ======================
 - fixed bug introduced with new reticulate update in model saving to json tests

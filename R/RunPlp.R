@@ -450,6 +450,12 @@ runPlp <- function(
       }
     }
     
+    # apply FE if it is used
+    featureEngineering <- NULL
+    if(!is.null(model)){
+      featureEngineering <- model$preprocessing$featureEngineering
+    }
+    
     covariateSummaryResult <- do.call(covariateSummary,   
       list(
         covariateData = plpData$covariateData,
@@ -457,7 +463,7 @@ runPlp <- function(
         labels = population %>% dplyr::select("rowId", "outcomeCount"), 
         strata = strata,
         variableImportance = variableImportance,
-        featureEngineering = NULL
+        featureEngineering = featureEngineering
         )
     )
   
