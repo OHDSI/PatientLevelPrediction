@@ -136,6 +136,12 @@
     <loc>/reference/createSampleSettings.html</loc>
   </url>
   <url>
+    <loc>/reference/createSplineSettings.html</loc>
+  </url>
+  <url>
+    <loc>/reference/createStratifiedImputationSettings.html</loc>
+  </url>
+  <url>
     <loc>/reference/createStudyPopulation.html</loc>
   </url>
   <url>
