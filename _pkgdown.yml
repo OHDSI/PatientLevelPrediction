@@ -79,6 +79,8 @@ reference:
       - createCohortCovariateSettings
       - createRandomForestFeatureSelection
       - createUnivariateFeatureSelection
+      - createSplineSettings
+      - createStratifiedImputationSettings
   - title: "External validation"
     contents:
       - createValidationSettings

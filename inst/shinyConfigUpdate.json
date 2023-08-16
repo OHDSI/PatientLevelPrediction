@@ -1,0 +1,26 @@
+{
+  "shinyModules": [
+    {
+      "id": "about",
+      "tabName": "About",
+      "tabText": "About",
+      "shinyModulePackage": "OhdsiShinyModules",
+      "uiFunction": "aboutViewer",
+      "serverFunction": "aboutServer",
+      "infoBoxFile": "aboutHelperFile()",
+      "icon": "info",
+      "order": 1
+    },
+    {
+      "id": "prediction",
+      "tabName": "Prediction",
+      "tabText": "Prediction",
+      "shinyModulePackage": "OhdsiShinyModules",
+      "uiFunction": "patientLevelPredictionViewer",
+      "serverFunction": "patientLevelPredictionServer",
+      "infoBoxFile": "patientLevelPredictionHelperFile()",
+      "icon": "chart-line",
+      "order": 2
+    }
+  ]
+}

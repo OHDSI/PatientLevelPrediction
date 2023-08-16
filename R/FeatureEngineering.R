@@ -16,6 +16,30 @@
 # limitations under the License.
 
 
+featureEngineer <- function(data, featureEngineeringSettings){
+  
+  ParallelLogger::logInfo('Starting Feature Engineering')
+  
+  # if a single setting, make it a list
+  if(inherits(featureEngineeringSettings, 'featureEngineeringSettings')){
+    featureEngineeringSettings <- list(featureEngineeringSettings)
+  }
+  
+  for(featureEngineeringSetting in featureEngineeringSettings){
+    fun <- attr(featureEngineeringSetting, "fun")
+    args <- list(trainData = data,
+                 featureEngineeringSettings = featureEngineeringSetting)
+    ParallelLogger::logInfo(paste0('Applying ',fun))
+    data <- do.call(eval(parse(text = fun)), args)
+  }
+  
+  attr(data, 'metaData')$featureEngineeringSettings <- featureEngineeringSettings
+  
+  ParallelLogger::logInfo('Done Feature Engineering')
+  
+  return(data)
+  
+}
 
 #' Create the settings for defining any feature engineering that will be done
 #'
@@ -97,6 +121,296 @@ createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17){
   class(featureEngineeringSettings) <- "featureEngineeringSettings"
   
   return(featureEngineeringSettings)
+}
+
+#' Create the settings for adding a spline for continuous variables
+#'
+#' @details
+#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#'
+#' @param continousCovariateId     The covariateId to apply splines to
+#' @param knots            Either number of knots of vector of split values
+#' @param analysisId       The analysisId to use for the spline covariates  
+#'
+#' @return
+#' An object of class \code{featureEngineeringSettings}
+#' @export
+createSplineSettings <- function(
+    continousCovariateId,
+    knots,
+    analysisId = 683
+    ){
+  
+  checkIsClass(continousCovariateId, c('numeric','integer'))
+  checkIsClass(knots, c('numeric','integer'))
+  
+  featureEngineeringSettings <- list(
+    continousCovariateId = continousCovariateId,
+    knots = knots,
+    analysisId = analysisId
+  )
+  
+  attr(featureEngineeringSettings, "fun") <- "splineCovariates"
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  
+  return(featureEngineeringSettings)
+}
+  
+splineCovariates <- function(
+    trainData, 
+    featureEngineeringSettings,
+    knots = NULL
+    ){
+  
+  ParallelLogger::logInfo('Starting splineCovariates')
+  
+  if(is.null(knots)){
+    
+    if (length(featureEngineeringSettings$knots) == 1) {
+      measurements <- trainData$covariateData$covariates %>%
+        dplyr::filter(.data$covariateId == !!featureEngineeringSettings$continousCovariateId) %>%
+        as.data.frame()
+      knots <- measurements$covariateValue %>%
+        stats::quantile(seq(0.01, 0.99, length.out = featureEngineeringSettings$knots))
+    } else {
+      knots <- featureEngineeringSettings$knots
+    }
+  
+  }
+  
+  # apply the spline mapping  
+  trainData <- splineMap(
+    data = trainData,
+    covariateId = featureEngineeringSettings$continousCovariateId,
+    analysisId = featureEngineeringSettings$analysisId,
+    knots = knots
+    )
+
+  featureEngineering <- list(
+    funct = 'splineCovariates',
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      knots = knots
+    )
+  )
+  
+  # add the feature engineering in
+  attr(trainData, 'metaData')$featureEngineering = listAppend(
+    attr(trainData, 'metaData')$featureEngineering,
+    featureEngineering
+  )
+  ParallelLogger::logInfo('Finished splineCovariates')
+  
+  return(trainData)
+}
+
+# create the spline map to add spline columns
+splineMap <- function(
+    data, 
+    covariateId,
+    analysisId,
+    knots
+){
+  
+  ParallelLogger::logInfo('Starting splineMap')
+  measurements <- data$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!covariateId) %>%
+    as.data.frame()
+  
+  designMatrix <- splines::bs(
+    x = measurements$covariateValue,#knots[1]:knots[length(knots)],
+    knots = knots[2:(length(knots) - 1)],
+    Boundary.knots = knots[c(1, length(knots))]
+  )
+  
+  data$covariateData$covariates <- data$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId != !!covariateId)
+  
+  # get the covariate name
+  details <- data$covariateData$covariateRef %>%
+    dplyr::filter(.data$covariateId == !!covariateId) %>%
+    as.data.frame()
+  covariateName <- details$covariateName
+  
+  data$covariateData$covariateRef <- data$covariateData$covariateRef %>%
+    dplyr::filter(.data$covariateId != !!covariateId)
+  
+  # remove last 3 numbers as this was old analysis id
+  covariateId <- floor(covariateId/1000)
+  
+  # add the spline columns
+  for(i in 1:ncol(designMatrix)){
+    Andromeda::appendToTable(
+      tbl = data$covariateData$covariates, 
+      data = data.frame(
+        rowId = measurements$rowId,
+        covariateId = covariateId*10000+i*1000+analysisId,
+        covariateValue = designMatrix[,i]
+      )
+    )
+  }
+  
+  # add the covariates to the ref table
+  Andromeda::appendToTable(
+    tbl = data$covariateData$covariateRef,
+    data = data.frame(
+      covariateId = covariateId*10000+(1:(ncol(designMatrix)))*1000+analysisId,
+      covariateName = paste(
+        paste0(covariateName," spline component "),
+        1:ncol(designMatrix)
+      ),
+      conceptId = 0,
+      analysisId = analysisId
+    )
+  )
+  
+  # add analysisRef for the first time a spline is added
+  analysisRef <- data$covariateData$analysisRef %>% as.data.frame()
+  if(!analysisId  %in% analysisRef$analysisId){
+    Andromeda::appendToTable(
+      tbl = data$covariateData$analysisRef,
+      data = data.frame(
+        analysisId = analysisId,
+        analysisName = 'splines',
+        domainId = 'feature engineering',
+        startDay = 0,
+        endDay = 0,
+        isBinary = 'N',
+        missingMeansZero = 'N'
+      )
+    )
+  }
+  ParallelLogger::logInfo('Finished splineMap')
+  return(data)
+}
+
+
+
+#' Create the settings for adding a spline for continuous variables
+#'
+#' @details
+#' Returns an object of class \code{featureEngineeringSettings} that specifies how to do stratified imputation
+#'
+#' @param covariateId     The covariateId that needs imputed values
+#' @param ageSplits       A vector of age splits in years to create age groups
+#'
+#' @return
+#' An object of class \code{featureEngineeringSettings}
+#' @export
+createStratifiedImputationSettings <- function(
+    covariateId,
+    ageSplits = NULL
+){
+  
+  checkIsClass(covariateId, c('numeric','integer'))
+  checkIsClass(ageSplits, c('numeric','integer'))
+  
+  featureEngineeringSettings <- list(
+    covariateId = covariateId,
+    ageSplits = ageSplits
+  )
+  
+  attr(featureEngineeringSettings, "fun") <- "stratifiedImputeCovariates"
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  
+  return(featureEngineeringSettings)
+}
+
+stratifiedImputeCovariates <- function(
+    trainData, 
+    featureEngineeringSettings,
+    stratifiedMeans = NULL
+){
+  
+  if(is.null(stratifiedMeans)){
+    
+    stratifiedMeans <- calculateStratifiedMeans(
+      trainData = trainData,
+      featureEngineeringSettings = featureEngineeringSettings
+    )
+    
+  }
+  
+  trainData <- imputeMissingMeans(
+    trainData = trainData, 
+    covariateId = featureEngineeringSettings$covariateId,
+    ageSplits = featureEngineeringSettings$ageSplits,
+    stratifiedMeans = stratifiedMeans
+    )
+  
+  return(trainData)
+}
+
+calculateStratifiedMeans <- function(
+    trainData,
+    featureEngineeringSettings
+){
+  if(is.null(featureEngineeringSettings$ageSplits)){
+    trainData$cohorts$ageGroup <- floor(trainData$cohorts$ageYear/5)
+  } else{
+    trainData$cohorts$ageGroup <- rep(0, length(trainData$cohorts$ageYear))
+    for(i in 1:length(featureEngineeringSettings$ageSplits)){
+      trainData$cohorts$ageGroup[trainData$cohorts$ageYear > featureEngineeringSettings$ageSplits[i]] <- i
+    }
+  }
+  
+  trainData$covariateData$cohorts <- trainData$cohorts[,c('rowId', 'ageGroup', 'gender')]
+  
+  stratifiedMeans <- trainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!featureEngineeringSettings$covariateId) %>%
+    dplyr::inner_join(
+      y = trainData$covariateData$cohorts, 
+      by = c('rowId')
+    ) %>%
+    dplyr::group_by(.data$ageGroup, .data$gender) %>%
+    dplyr::summarise(covariateValue = mean(.data$covariateValue, na.rm = TRUE)) %>%
+    as.data.frame()
+  
+  return(stratifiedMeans)
+}
+
+imputeMissingMeans <- function(
+  trainData, 
+  covariateId,
+  ageSplits,
+  stratifiedMeans
+){
+  
+  if(is.null(ageSplits)){
+    trainData$cohorts$ageGroup <- floor(trainData$cohorts$ageYear/5)
+  } else{
+    trainData$cohorts$ageGroup <- rep(0, length(trainData$cohorts$ageYear))
+    for(i in 1:length(ageSplits)){
+      trainData$cohorts$ageGroup[trainData$cohorts$ageYear > ageSplits[i]] <- i
+    }
+  }
+  
+  rowIdsWithValues <- trainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !! covariateId) %>%
+    dplyr::select('rowId') %>%
+    dplyr::pull()
+  rowIdsWithMissingValues <- trainData$cohorts$rowId[!trainData$cohorts$rowId %in% rowIdsWithValues]
+  
+
+  imputedData <- trainData$cohorts %>% 
+    dplyr::filter(.data$rowId %in% rowIdsWithMissingValues) %>%
+    dplyr::select('rowId', 'ageGroup', 'gender') %>%
+    dplyr::left_join(
+      y = stratifiedMeans, 
+      by = c('ageGroup', 'gender')
+      ) %>%
+    dplyr::mutate(
+      covariateId = !!covariateId,
+      covariateValue = .data$covariateValue
+      ) %>%
+    dplyr::select('rowId', 'covariateId', 'covariateValue')
+    
+  Andromeda::appendToTable(
+    tbl = trainData$covariateData$covariates, 
+    data = imputedData
+  )
+  
+  return(trainData)
 }
 
 univariateFeatureSelection <- function(
@@ -232,27 +546,4 @@ randomForestFeatureSelection <- function(
 
 
 
-featureEngineer <- function(data, featureEngineeringSettings){
-  
-  ParallelLogger::logInfo('Starting Feature Engineering')
-  
-  # if a single setting, make it a list
-  if(inherits(featureEngineeringSettings, 'featureEngineeringSettings')){
-    featureEngineeringSettings <- list(featureEngineeringSettings)
-  }
-  
-  for(featureEngineeringSetting in featureEngineeringSettings){
-    fun <- attr(featureEngineeringSetting, "fun")
-    args <- list(trainData = data,
-                 featureEngineeringSettings = featureEngineeringSetting)
-    ParallelLogger::logInfo(paste0('Applying ',fun))
-    data <- do.call(eval(parse(text = fun)), args)
-  }
-  
-  attr(data, 'metaData')$featureEngineeringSettings <- featureEngineeringSettings
-  
-  ParallelLogger::logInfo('Done Feature Engineering')
-  
-  return(data)
-  
-}
+
