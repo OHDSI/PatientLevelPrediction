@@ -68,7 +68,7 @@ jobs:
       - name: Tell windows about miniconda
         shell: bash
         run: |
-          echo "C:\Miniconda" >> $GITHUB_PATH
+          echo "C:\Miniconda\bin" >> $GITHUB_PATH
         
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
