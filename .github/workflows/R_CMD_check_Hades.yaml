@@ -66,8 +66,9 @@ jobs:
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
           
       - name: Tell windows about miniconda
-        if: runner.os == 'Windows'
-        run: Add-Content $env:PATH "C:\Miniconda"
+        shell: bash
+        run: |
+          echo "C:\Miniconda" >> $GITHUB_PATH
         
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
