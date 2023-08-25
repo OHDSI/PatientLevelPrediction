@@ -78,7 +78,7 @@ System Requirements
 Requires R (version 4.0 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java and Python.
 
 The python installation is required for some of the machine learning algorithms. We advise to
-install Python 3.7 using Anaconda (https://www.continuum.io/downloads). 
+install Python 3.8 or higher using Anaconda (https://www.continuum.io/downloads). 
 
 Getting Started
 ===============
