@@ -65,10 +65,10 @@ jobs:
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
           
-      - name: Tell windows about miniconda
-        shell: bash
-        run: |
-          echo "C:\Miniconda\bin" >> $GITHUB_PATH
+      - name: Setup conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: "r-reticulate"
         
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
