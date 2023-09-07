@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Best Practice Research • PatientLevelPrediction</title>
+<title>Constrained predictors • PatientLevelPrediction</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Best Practice Research">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Constrained predictors">
 <meta property="og:description" content="PatientLevelPrediction">
 <meta name="robots" content="noindex">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
@@ -142,14 +142,13 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Best Practice Research</h1>
-                        <h4 data-toc-skip class="author">Jenna Reps,
-Peter R. Rijnbeek</h4>
+      <h1 data-toc-skip>Constrained predictors</h1>
+                        <h4 data-toc-skip class="author">Jenna Reps</h4>
             
             <h4 data-toc-skip class="date">2023-09-07</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/BestPractices.rmd" class="external-link"><code>vignettes/BestPractices.rmd</code></a></small>
-      <div class="hidden name"><code>BestPractices.rmd</code></div>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/ConstrainedPredictors.Rmd" class="external-link"><code>vignettes/ConstrainedPredictors.Rmd</code></a></small>
+      <div class="hidden name"><code>ConstrainedPredictors.Rmd</code></div>
 
     </div>
 
@@ -160,206 +159,52 @@ Peter R. Rijnbeek</h4>
 %\VignetteIndexEntry{Best Practices}
 -->
 <div class="section level2">
-<h2 id="best-practice-publications-using-the-ohdsi-patientlevelprediction-framework">Best practice publications using the OHDSI PatientLevelPrediction
-framework<a class="anchor" aria-label="anchor" href="#best-practice-publications-using-the-ohdsi-patientlevelprediction-framework"></a>
+<h2 id="constrained-predictors">Constrained Predictors<a class="anchor" aria-label="anchor" href="#constrained-predictors"></a>
 </h2>
+<p>Here we provide a set of phenotypes that can be used as predictors in
+prediction models or best practice research.</p>
 <table class="table">
 <tr>
 <th>
-Topic
+Phenotype Name
 </th>
 <th>
-Research Summary
+Category
 </th>
 <th>
-Link
+ATLAS link
 </th>
 </tr>
 <tr>
 <td>
-Problem Specification
+Acetaminophen prescirption
 </td>
 <td>
-When is prediction suitable in observational data?
+Medication
 </td>
 <td>
-Guidelines needed
-</td>
-</tr>
-<tr>
-<td>
-Data Creation
-</td>
-<td>
-Comparison of cohort vs case-control design
-</td>
-<td>
-<a href="https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00501-2" class="external-link">Journal
-of Big Data</a>
+ATLAS link
 </td>
 </tr>
 <tr>
 <td>
-Data Creation
+Alcoholism
 </td>
 <td>
-Addressing loss to follow-up (right censoring)
+Lifestyle
 </td>
 <td>
-<a href="https://link.springer.com/article/10.1186/s12911-021-01408-x" class="external-link">BMC
-medical informatics and decision makingk</a>
-</td>
-</tr>
-<tr>
-<td>
-Data Creation
-</td>
-<td>
-Investigating how to address left censoring in features construction
-</td>
-<td>
-<a href="https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01370-2" class="external-link">BMC
-Medical Research Methodology</a>
+ATLAS link
 </td>
 </tr>
 <tr>
 <td>
-Data Creation
+Anemia
 </td>
 <td>
-Impact of over/under-sampling
 </td>
 <td>
-Paper under review
-</td>
-</tr>
-<tr>
-<td>
-Data Creation
-</td>
-<td>
-Impact of phenotypes
-</td>
-<td>
-Study Done - Paper submitted
-</td>
-</tr>
-<tr>
-<td>
-Model development
-</td>
-<td>
-How much data do we need for prediction - Learning curves at scale
-</td>
-<td>
-<a href="https://www.sciencedirect.com/science/article/pii/S1386505622000764" class="external-link">International
-Journal of Medical Informatics</a>
-</td>
-</tr>
-<tr>
-<td>
-Model development
-</td>
-<td>
-What impact does test/train/validation design have on model performance
-</td>
-<td>
-<a href="https://bmjopen.bmj.com/content/11/12/e050146" class="external-link">BMJ Open </a>
-</td>
-</tr>
-<tr>
-<td>
-Model development
-</td>
-<td>
-What is the impact of the classifier
-</td>
-<td>
-<a href="https://academic.oup.com/jamia/article/25/8/969/4989437?login=true" class="external-link">JAMIA</a>
-</td>
-</tr>
-<tr>
-<td>
-Model development
-</td>
-<td>
-Can we find hyper-parameter combinations per classifier that
-consistently lead to good performing models when using claims/EHR data?
-</td>
-<td>
-Study needs to be done
-</td>
-</tr>
-<tr>
-<td>
-Model development
-</td>
-<td>
-Can we use ensembles to combine different algorithm models within a
-database to improve models transportability?
-</td>
-<td>
-Study Complete
-</td>
-</tr>
-<tr>
-<td>
-Model development
-</td>
-<td>
-Can we use ensembles to combine models developed using different
-databases to improve models transportability?
-</td>
-<td>
-<a href="https://link.springer.com/article/10.1186/s12911-022-01879-6" class="external-link">
-BMC Medical Informatics and Decision Making </a>
-</td>
-</tr>
-<tr>
-<td>
-Evaluation
-</td>
-<td>
-How should we present model performance? (e.g., new visualizations)
-</td>
-<td>
-<a href="https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1" class="external-link">JAMIA
-Open</a>
-</td>
-</tr>
-<tr>
-<td>
-Evaluation
-</td>
-<td>
-How to interpret external validation performance (can we figure out why
-the performance drops or stays consistent)?
-</td>
-<td>
-Study needs to be done
-</td>
-</tr>
-<tr>
-<td>
-Evaluation
-</td>
-<td>
-Recalibration methods
-</td>
-<td>
-Study needs to be done
-</td>
-</tr>
-<tr>
-<td>
-Evaluation
-</td>
-<td>
-Is there a way to automatically simplify models?
-</td>
-<td>
-<a href="https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html" class="external-link">Study
-protocol under development </a>
+ATLAS link
 </td>
 </tr>
 </table>

@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Best Practice Research • PatientLevelPrediction</title>
+<title>Benchmark Tasks • PatientLevelPrediction</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Best Practice Research">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Benchmark Tasks">
 <meta property="og:description" content="PatientLevelPrediction">
 <meta name="robots" content="noindex">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
@@ -142,14 +142,14 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Best Practice Research</h1>
+      <h1 data-toc-skip>Benchmark Tasks</h1>
                         <h4 data-toc-skip class="author">Jenna Reps,
-Peter R. Rijnbeek</h4>
+Ross Williams, Peter R. Rijnbeek</h4>
             
             <h4 data-toc-skip class="date">2023-09-07</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/BestPractices.rmd" class="external-link"><code>vignettes/BestPractices.rmd</code></a></small>
-      <div class="hidden name"><code>BestPractices.rmd</code></div>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/BenchmarkTasks.Rmd" class="external-link"><code>vignettes/BenchmarkTasks.Rmd</code></a></small>
+      <div class="hidden name"><code>BenchmarkTasks.Rmd</code></div>
 
     </div>
 
@@ -160,16 +160,21 @@ Peter R. Rijnbeek</h4>
 %\VignetteIndexEntry{Best Practices}
 -->
 <div class="section level2">
-<h2 id="best-practice-publications-using-the-ohdsi-patientlevelprediction-framework">Best practice publications using the OHDSI PatientLevelPrediction
-framework<a class="anchor" aria-label="anchor" href="#best-practice-publications-using-the-ohdsi-patientlevelprediction-framework"></a>
+<h2 id="benchmark-tasks-for-large-scale-empirical-analyses">Benchmark Tasks For Large-Scale Empirical Analyses<a class="anchor" aria-label="anchor" href="#benchmark-tasks-for-large-scale-empirical-analyses"></a>
 </h2>
+<p>Here we provide a set of diverse prediction tasks that can be used
+when evaluating the impact of the model design choice when developing
+models using observational data.</p>
 <table class="table">
 <tr>
 <th>
-Topic
+Target Cohort (index)
 </th>
 <th>
-Research Summary
+Outcome
+</th>
+<th>
+Time-at-risk
 </th>
 <th>
 Link
@@ -177,189 +182,244 @@ Link
 </tr>
 <tr>
 <td>
-Problem Specification
+Patients with an outpatient visit in 2017 with no prior cancer (first
+visit in 2017)
 </td>
 <td>
-When is prediction suitable in observational data?
+Lung cancer
 </td>
 <td>
-Guidelines needed
-</td>
-</tr>
-<tr>
-<td>
-Data Creation
+1 day - 3 years after index
 </td>
 <td>
-Comparison of cohort vs case-control design
-</td>
-<td>
-<a href="https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00501-2" class="external-link">Journal
-of Big Data</a>
 </td>
 </tr>
 <tr>
 <td>
-Data Creation
+Patients newly diagnosed with major depressive disorder (date of first
+record)
 </td>
 <td>
-Addressing loss to follow-up (right censoring)
+Bipolar
 </td>
 <td>
-<a href="https://link.springer.com/article/10.1186/s12911-021-01408-x" class="external-link">BMC
-medical informatics and decision makingk</a>
-</td>
-</tr>
-<tr>
-<td>
-Data Creation
+1 day - 365 day after index
 </td>
 <td>
-Investigating how to address left censoring in features construction
-</td>
-<td>
-<a href="https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01370-2" class="external-link">BMC
-Medical Research Methodology</a>
 </td>
 </tr>
 <tr>
 <td>
-Data Creation
+Patients with an outpatient visit in 2019
 </td>
 <td>
-Impact of over/under-sampling
+Dementia
 </td>
 <td>
-Paper under review
-</td>
-</tr>
-<tr>
-<td>
-Data Creation
+1 day - 3 years after index
 </td>
 <td>
-Impact of phenotypes
-</td>
-<td>
-Study Done - Paper submitted
 </td>
 </tr>
 <tr>
 <td>
-Model development
+Patients with an outpatient visit and a positive COVID test
 </td>
 <td>
-How much data do we need for prediction - Learning curves at scale
+Hospitalization with pneumonia
 </td>
 <td>
-<a href="https://www.sciencedirect.com/science/article/pii/S1386505622000764" class="external-link">International
-Journal of Medical Informatics</a>
-</td>
-</tr>
-<tr>
-<td>
-Model development
+1 day - 30 days after index
 </td>
 <td>
-What impact does test/train/validation design have on model performance
-</td>
-<td>
-<a href="https://bmjopen.bmj.com/content/11/12/e050146" class="external-link">BMJ Open </a>
 </td>
 </tr>
 <tr>
 <td>
-Model development
+Patients with an outpatient visit and a positive COVID test
 </td>
 <td>
-What is the impact of the classifier
+Hospitalization with pneumonia that required intensive services
+(ventilation, intubation, tracheotomy, or extracorporeal membrane
+oxygenation) or death
 </td>
 <td>
-<a href="https://academic.oup.com/jamia/article/25/8/969/4989437?login=true" class="external-link">JAMIA</a>
-</td>
-</tr>
-<tr>
-<td>
-Model development
+1 day - 30 days after index
 </td>
 <td>
-Can we find hyper-parameter combinations per classifier that
-consistently lead to good performing models when using claims/EHR data?
-</td>
-<td>
-Study needs to be done
 </td>
 </tr>
 <tr>
 <td>
-Model development
+Patients with an outpatient visit and a positive COVID test
 </td>
 <td>
-Can we use ensembles to combine different algorithm models within a
-database to improve models transportability?
+Death
 </td>
 <td>
-Study Complete
-</td>
-</tr>
-<tr>
-<td>
-Model development
+1 day - 30 days after index
 </td>
 <td>
-Can we use ensembles to combine models developed using different
-databases to improve models transportability?
-</td>
-<td>
-<a href="https://link.springer.com/article/10.1186/s12911-022-01879-6" class="external-link">
-BMC Medical Informatics and Decision Making </a>
 </td>
 </tr>
 <tr>
 <td>
-Evaluation
+Patients with T2DM who were treated with metformin and who became new
+adult users of one of sulfonylureas, thiazolidinediones, dipeptidyl
+peptidase-4 inhibitors, glucagon-like peptide-1 receptor agonists, or
+sodium-glucose co-transporter-2 inhibitors (date of secondary drug).
+Patients with HF or patients treated with insulin on or prior to the
+index date were excluded from the analysis. Patients were required to
+have been enrolled for at least 365 days before cohort entry.
 </td>
 <td>
-How should we present model performance? (e.g., new visualizations)
+Heart Failure
 </td>
 <td>
-<a href="https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1" class="external-link">JAMIA
-Open</a>
-</td>
-</tr>
-<tr>
-<td>
-Evaluation
+1 to 365 days
 </td>
 <td>
-How to interpret external validation performance (can we figure out why
-the performance drops or stays consistent)?
-</td>
-<td>
-Study needs to be done
 </td>
 </tr>
 <tr>
 <td>
-Evaluation
+Patients newly diagnosed with atrial fibrilation (date of initial afib
+record)
 </td>
 <td>
-Recalibration methods
+Ischemic stroke
 </td>
 <td>
-Study needs to be done
+1 to 365 days
+</td>
+<td>
 </td>
 </tr>
 <tr>
 <td>
-Evaluation
+Patients undergoing elective major non-cardiac surgery (date of
+surgery). Patients were required to have been enrolled for at least 365
+days before cohort entry.
 </td>
 <td>
-Is there a way to automatically simplify models?
+Earliest of AMI cardiac arrest or death (MACE)
 </td>
 <td>
-<a href="https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html" class="external-link">Study
-protocol under development </a>
+O to 30 days
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients starting intravitreal Anti-VEGF (date of administration)
+</td>
+<td>
+Kidney Failure
+</td>
+<td>
+1 to 365 days
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Pregnancy women (start of pregnancy)
+</td>
+<td>
+Preeclampsia
+</td>
+<td>
+During pregnancy
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Pregnancy women (start of pregnancy)
+</td>
+<td>
+Still birth
+</td>
+<td>
+During pregnancy
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with COPD (first record)
+</td>
+<td>
+Cardiovascular event and death
+</td>
+<td>
+1-30 days and 1-90 days
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients starting menopause (first record)
+</td>
+<td>
+Depression
+</td>
+<td>
+1 day - 3-years
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with anemia (date of first anemia record)
+</td>
+<td>
+Colorectal cancer
+</td>
+<td>
+1 day - 1-year
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with quadriplegia (date of first quadriplegia record)
+</td>
+<td>
+Death
+</td>
+<td>
+1 day - 1-year
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patient undergoing
+</td>
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+<td>
 </td>
 </tr>
 </table>
