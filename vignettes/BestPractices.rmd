@@ -101,7 +101,7 @@ Data Creation
 Impact of over/under-sampling
 </td>
 <td>
-Study being developed
+Paper under review
 </td>
 </tr>
 
@@ -125,7 +125,7 @@ Model development
 How much data do we need for prediction - Learning curves at scale
 </td>
 <td>
-<a href='https://arxiv.org/abs/2008.07361'>Preprint link</a>
+<a href='https://www.sciencedirect.com/science/article/pii/S1386505622000764'>International Journal of Medical Informatics</a>
 </td>
 </tr>
 
@@ -170,10 +170,22 @@ Study needs to be done
 Model development	
 </td>
 <td>
+Can we use ensembles to combine different algorithm models within a database to improve models transportability?
+</td>
+<td>
+Study Complete
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
 Can we use ensembles to combine models developed using different databases to improve models transportability?
 </td>
 <td>
-<a href=''> Paper under review at BMC </a>
+<a href='https://link.springer.com/article/10.1186/s12911-022-01879-6'> BMC Medical Informatics and Decision Making </a>
 </td>
 </tr>
 

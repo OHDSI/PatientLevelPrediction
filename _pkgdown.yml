@@ -20,6 +20,8 @@ navbar:
     - reference
     - articles
     - tutorial
+    - benchmarks
+    - predictors
     - bestpractice
     - news
     right: [hades, github]
@@ -39,6 +41,12 @@ navbar:
     bestpractice:
       text: Best Practices
       href: articles/BestPractices.html
+    benchmarks:
+      text: Benchmarks
+      href: articles/BenchmarkTasks.html
+    predictors:
+      text: Predictors
+      href: articles/ConstrainedPredictors.html
     news:
       text: Changelog
       href: news/index.html

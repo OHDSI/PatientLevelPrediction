@@ -1,0 +1,86 @@
+---
+title: "Constrained predictors"
+author: "Jenna Reps"
+date: '`r Sys.Date()`'
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead{}
+    - \fancyhead[CO,CE]{Installation Guide}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[LE,RO]{\thepage}
+    - \renewcommand{\headrulewidth}{0.4pt}
+    - \renewcommand{\footrulewidth}{0.4pt}
+output:
+  pdf_document:
+    includes:
+      in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Best Practices}
+-->
+
+## Constrained Predictors
+
+Here we provide a set of phenotypes that can be used as predictors in prediction models or best practice research.
+
+<table>
+
+<tr>
+<th>
+Phenotype Name
+</th>
+<th>
+Category
+</th>
+<th>
+ATLAS link
+</th>
+</tr>
+
+<tr>
+<td>
+Acetaminophen prescirption
+</td>
+<td>
+Medication
+</td>
+<td>
+ATLAS link
+</td>
+</tr>
+
+<tr>
+<td>
+Alcoholism
+</td>
+<td>
+Lifestyle
+</td>
+<td>
+ATLAS link
+</td>
+</tr>
+
+<tr>
+<td>
+Anemia
+</td>
+<td>
+
+</td>
+<td>
+ATLAS link
+</td>
+</tr>
+
+</table>
+    
