@@ -89,7 +89,11 @@ deSerializeTree <- function(tree_dict, nFeatures, nClasses, nOutputs) {
                             reticulate::tuple(reticulate::py_to_r(tree_dict["nodes"][i])))
   }
   
-  names = list("left_child", "right_child", "feature", "threshold", "impurity", "n_node_samples", "weighted_n_node_samples")
+  names <- list("left_child", "right_child", "feature", "threshold", "impurity", "n_node_samples", "weighted_n_node_samples")
+  if (length(tree_dict["nodes"][0])==8) {
+    # model used sklearn>=1.3 which added a parameter
+    names[[8]] <- "missing_go_to_left"
+  }
   
   sklearn <- reticulate::import("sklearn")
   np <- reticulate::import("numpy", convert = FALSE)

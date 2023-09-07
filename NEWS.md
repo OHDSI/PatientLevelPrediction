@@ -1,3 +1,9 @@
+PatientLevelPrediction 6.3.5
+======================
+- Fix sklearnToJson to be compatible with scikit-learn>=1.3
+- Fix github actions so it's not hardcoded to use python 3.7
+
+
 PatientLevelPrediction 6.3.4
 ======================
 - added spline feature engineering 
