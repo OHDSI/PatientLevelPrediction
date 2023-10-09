@@ -145,7 +145,7 @@
       <h1 data-toc-skip>Constrained predictors</h1>
                         <h4 data-toc-skip class="author">Jenna Reps</h4>
             
-            <h4 data-toc-skip class="date">2023-09-21</h4>
+            <h4 data-toc-skip class="date">2023-10-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/ConstrainedPredictors.Rmd" class="external-link"><code>vignettes/ConstrainedPredictors.Rmd</code></a></small>
       <div class="hidden name"><code>ConstrainedPredictors.Rmd</code></div>
@@ -161,40 +161,72 @@
 <div class="section level2">
 <h2 id="constrained-predictors">Constrained Predictors<a class="anchor" aria-label="anchor" href="#constrained-predictors"></a>
 </h2>
+<div class="section level3">
+<h3 id="how-to-use-the-phenotypelibrary-r-package">How to use the PhenotypeLibrary R package<a class="anchor" aria-label="anchor" href="#how-to-use-the-phenotypelibrary-r-package"></a>
+</h3>
 <p>Here we provide a set of phenotypes that can be used as predictors in
 prediction models or best practice research.</p>
+<p>These phenotypes can be extracted from the PhenotypeLibrary R
+package. To install the R package run:</p>
+<pre><code><span><span class="co">## Using github PAT from envvar GITHUB_PAT</span></span></code></pre>
+<pre><code><span><span class="co">## Downloading GitHub repo ohdsi/PhenotypeLibrary@HEAD</span></span></code></pre>
+<pre><code><span><span class="co">## cpp11    (NA -&gt; 0.4.6) [CRAN]</span></span>
+<span><span class="co">## progress (NA -&gt; 1.2.2) [CRAN]</span></span></code></pre>
+<pre><code><span><span class="co">## Installing 2 packages: cpp11, progress</span></span></code></pre>
+<pre><code><span><span class="co">## Installing packages into '/tmp/RtmpfTh6yB/temp_libpath271247f4bd94'</span></span>
+<span><span class="co">## (as 'lib' is unspecified)</span></span></code></pre>
+<pre><code><span><span class="co">## <span style="color: #00BBBB;">──</span> <span style="color: #00BBBB;">R CMD build</span> <span style="color: #00BBBB;">─────────────────────────────────────────────────────────────────</span></span></span>
+<span><span class="co">## * checking for file ‘/tmp/RtmpUD10cY/remotes30c129a3c2a1/OHDSI-PhenotypeLibrary-1d2341c/DESCRIPTION’ ... OK</span></span>
+<span><span class="co">## * preparing ‘PhenotypeLibrary’:</span></span>
+<span><span class="co">## * checking DESCRIPTION meta-information ... OK</span></span>
+<span><span class="co">## * checking for LF line-endings in source and make files and shell scripts</span></span>
+<span><span class="co">## * checking for empty or unneeded directories</span></span>
+<span><span class="co">## * building ‘PhenotypeLibrary_3.28.1.tar.gz’</span></span></code></pre>
+<pre><code><span><span class="co">## Installing package into '/tmp/RtmpfTh6yB/temp_libpath271247f4bd94'</span></span>
+<span><span class="co">## (as 'lib' is unspecified)</span></span></code></pre>
+<p>To extract the cohort definition for Alcoholism with an id of 1165,
+just run:</p>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
+<span><span class="co">##   cohortId cohortName json                                                 sql  </span></span>
+<span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>     <span style="text-decoration: underline;">1</span>165 Alcoholism <span style="color: #949494;">"</span>{\n\t\"cdmVersionRange\" : \"&gt;=5.0.0\",\n\t\"Prima… <span style="color: #949494;">"</span>CRE…</span></span></code></pre>
+<p>in general you can extract all the cohorts by running:</p>
+</div>
+<div class="section level3">
+<h3 id="the-full-set-of-predictor-phenotypes">The full set of predictor phenotypes<a class="anchor" aria-label="anchor" href="#the-full-set-of-predictor-phenotypes"></a>
+</h3>
 <table class="table">
 <tr>
 <th>
 Phenotype Name
 </th>
 <th>
-Category
+Disorder classification
 </th>
 <th>
-ATLAS link
+OHDSI Phenotype library ID
 </th>
-</tr>
-<tr>
-<td>
-Acetaminophen prescirption
-</td>
-<td>
-Medication
-</td>
-<td>
-ATLAS link
-</td>
 </tr>
 <tr>
 <td>
 Alcoholism
 </td>
 <td>
-Lifestyle
+Behavioral
 </td>
 <td>
-ATLAS link
+1165
+</td>
+</tr>
+<tr>
+<td>
+Smoking
+</td>
+<td>
+Behavioral
+</td>
+<td>
+1166
 </td>
 </tr>
 <tr>
@@ -202,12 +234,696 @@ ATLAS link
 Anemia
 </td>
 <td>
+Blood
 </td>
 <td>
-ATLAS link
+1188
+</td>
+</tr>
+<tr>
+<td>
+Osteoarthritis
+</td>
+<td>
+Bone
+</td>
+<td>
+1184
+</td>
+</tr>
+<tr>
+<td>
+Osteoporosis
+</td>
+<td>
+Bone
+</td>
+<td>
+1185
+</td>
+</tr>
+<tr>
+<td>
+Cancer
+</td>
+<td>
+Cancer
+</td>
+<td>
+1215
+</td>
+</tr>
+<tr>
+<td>
+Atrial fibrillation
+</td>
+<td>
+Cardiovascular
+</td>
+<td>
+1160
+</td>
+</tr>
+<tr>
+<td>
+Congestive heart failure
+</td>
+<td>
+Cardiovascular
+</td>
+<td>
+1154
+</td>
+</tr>
+<tr>
+<td>
+Coronary artery disease
+</td>
+<td>
+Cardiovascular
+</td>
+<td>
+1162
+</td>
+</tr>
+<tr>
+<td>
+Heart valve disorder
+</td>
+<td>
+Cardiovascular
+</td>
+<td>
+1172
+</td>
+</tr>
+<tr>
+<td>
+Hyperlipidemia
+</td>
+<td>
+Cardiovascular
+</td>
+<td>
+1170
+</td>
+</tr>
+<tr>
+<td>
+Hypertension
+</td>
+<td>
+Cardiovascular
+</td>
+<td>
+1198
+</td>
+</tr>
+<tr>
+<td>
+Angina
+</td>
+<td>
+Cardiovascular
+</td>
+<td>
+1159
+</td>
+</tr>
+<tr>
+<td>
+Skin Ulcer
+</td>
+<td>
+Debility
+</td>
+<td>
+1168
+</td>
+</tr>
+<tr>
+<td>
+Diabetes type 1
+</td>
+<td>
+Endocrine
+</td>
+<td>
+1193
+</td>
+</tr>
+<tr>
+<td>
+Diabetes type 2
+</td>
+<td>
+Endocrine
+</td>
+<td>
+1194
+</td>
+</tr>
+<tr>
+<td>
+Hypothyroidism
+</td>
+<td>
+Endocrine
+</td>
+<td>
+1171
+</td>
+</tr>
+<tr>
+<td>
+Obesity
+</td>
+<td>
+Endocrine
+</td>
+<td>
+1179
+</td>
+</tr>
+<tr>
+<td>
+Gastroesophageal reflux disease (GERD)
+</td>
+<td>
+GI
+</td>
+<td>
+1178
+</td>
+</tr>
+<tr>
+<td>
+Gastrointestinal (GI) bleed
+</td>
+<td>
+GI
+</td>
+<td>
+1197
+</td>
+</tr>
+<tr>
+<td>
+Inflammatory bowel disorder (IBD)
+</td>
+<td>
+GI/Rheumatology
+</td>
+<td>
+1180
+</td>
+</tr>
+<tr>
+<td>
+Hormonal contraceptives
+</td>
+<td>
+Gynecologic
+</td>
+<td>
+1190
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Aminoglycosides
+</td>
+<td>
+Infection
+</td>
+<td>
+1201
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Carbapenems
+</td>
+<td>
+Infection
+</td>
+<td>
+1202
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Cephalosporins
+</td>
+<td>
+Infection
+</td>
+<td>
+1203
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Fluoroquinolones
+</td>
+<td>
+Infection
+</td>
+<td>
+1204
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Glycopeptides and lipoglycopeptides
+</td>
+<td>
+Infection
+</td>
+<td>
+1205
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Macrolides
+</td>
+<td>
+Infection
+</td>
+<td>
+1206
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Monobactams
+</td>
+<td>
+Infection
+</td>
+<td>
+1207
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Oxazolidinones
+</td>
+<td>
+Infection
+</td>
+<td>
+1208
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Penicillins
+</td>
+<td>
+Infection
+</td>
+<td>
+1209
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Polypeptides
+</td>
+<td>
+Infection
+</td>
+<td>
+1210
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Rifamycins
+</td>
+<td>
+Infection
+</td>
+<td>
+1211
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Sulfonamides
+</td>
+<td>
+Infection
+</td>
+<td>
+1212
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Streptogramins
+</td>
+<td>
+Infection
+</td>
+<td>
+1213
+</td>
+</tr>
+<tr>
+<td>
+Antibiotics Tetracyclines
+</td>
+<td>
+Infection
+</td>
+<td>
+1214
+</td>
+</tr>
+<tr>
+<td>
+Pneumonia
+</td>
+<td>
+Infection/Respiratory
+</td>
+<td>
+1199
+</td>
+</tr>
+<tr>
+<td>
+Sepsis
+</td>
+<td>
+Infection
+</td>
+<td>
+1176
+</td>
+</tr>
+<tr>
+<td>
+Urinary tract infection (UTI)
+</td>
+<td>
+Infection
+</td>
+<td>
+1186
+</td>
+</tr>
+<tr>
+<td>
+Hepatitis
+</td>
+<td>
+Liver
+</td>
+<td>
+1169
+</td>
+</tr>
+<tr>
+<td>
+Anxiety
+</td>
+<td>
+Mood
+</td>
+<td>
+1189
+</td>
+</tr>
+<tr>
+<td>
+Depression (MDD)
+</td>
+<td>
+Mood
+</td>
+<td>
+1161
+</td>
+</tr>
+<tr>
+<td>
+Psychotic disorder
+</td>
+<td>
+Mood
+</td>
+<td>
+1175
+</td>
+</tr>
+<tr>
+<td>
+Antiepileptics (pain)
+</td>
+<td>
+Neurology/Pain
+</td>
+<td>
+1183
+</td>
+</tr>
+<tr>
+<td>
+Seizure
+</td>
+<td>
+Neurology
+</td>
+<td>
+1153
+</td>
+</tr>
+<tr>
+<td>
+Hemorrhagic stroke
+</td>
+<td>
+Neurology/Vascular
+</td>
+<td>
+1156
+</td>
+</tr>
+<tr>
+<td>
+Non-hemorrhagic stroke
+</td>
+<td>
+Neurology/Vascular
+</td>
+<td>
+1155
+</td>
+</tr>
+<tr>
+<td>
+Acetaminophen prescription
+</td>
+<td>
+Pain/Infection
+</td>
+<td>
+1187
+</td>
+</tr>
+<tr>
+<td>
+Low back pain
+</td>
+<td>
+Pain
+</td>
+<td>
+1173
+</td>
+</tr>
+<tr>
+<td>
+Neuropathy
+</td>
+<td>
+Pain/Neurology
+</td>
+<td>
+1174
+</td>
+</tr>
+<tr>
+<td>
+Opioids
+</td>
+<td>
+Pain
+</td>
+<td>
+1182
+</td>
+</tr>
+<tr>
+<td>
+Acute kidney injury
+</td>
+<td>
+Kidney
+</td>
+<td>
+1163
+</td>
+</tr>
+<tr>
+<td>
+Chronic kidney disease
+</td>
+<td>
+Kidney
+</td>
+<td>
+1191
+</td>
+</tr>
+<tr>
+<td>
+Asthma
+</td>
+<td>
+Respiratory
+</td>
+<td>
+1164
+</td>
+</tr>
+<tr>
+<td>
+Chronic obstructive pulmonary disorder (COPD)
+</td>
+<td>
+Respiratory
+</td>
+<td>
+1192
+</td>
+</tr>
+<tr>
+<td>
+Dyspnea
+</td>
+<td>
+Respiratory
+</td>
+<td>
+1195
+</td>
+</tr>
+<tr>
+<td>
+Respiratory failure
+</td>
+<td>
+Respiratory
+</td>
+<td>
+1177
+</td>
+</tr>
+<tr>
+<td>
+Sleep apnea
+</td>
+<td>
+Respiratory
+</td>
+<td>
+1167
+</td>
+</tr>
+<tr>
+<td>
+Rheumatoid arthritis
+</td>
+<td>
+Rheumatology
+</td>
+<td>
+1200
+</td>
+</tr>
+<tr>
+<td>
+Steroids
+</td>
+<td>
+Rheumatology/Pain/Pulmonary
+</td>
+<td>
+1181
+</td>
+</tr>
+<tr>
+<td>
+Peripheral vascular disease
+</td>
+<td>
+Vascular
+</td>
+<td>
+1157
+</td>
+</tr>
+<tr>
+<td>
+Aspirin
+</td>
+<td>
+Vascular
+</td>
+<td>
+1158
+</td>
+</tr>
+<tr>
+<td>
+Deep vein thrombosis (DVT)
+</td>
+<td>
+Vascular
+</td>
+<td>
+1152
+</td>
+</tr>
+<tr>
+<td>
+Edema
+</td>
+<td>
+Vascular
+</td>
+<td>
+1196
+</td>
+</tr>
+<tr>
+<td>
+Inpatient visit
+</td>
+<td>
+NA
+</td>
+<td>
+NA
 </td>
 </tr>
 </table>
+</div>
 </div>
   </div>
 
