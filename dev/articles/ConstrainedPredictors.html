@@ -168,29 +168,35 @@
 prediction models or best practice research.</p>
 <p>These phenotypes can be extracted from the PhenotypeLibrary R
 package. To install the R package run:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'ohdsi/PhenotypeLibrary'</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Using github PAT from envvar GITHUB_PAT</span></span></code></pre>
 <pre><code><span><span class="co">## Downloading GitHub repo ohdsi/PhenotypeLibrary@HEAD</span></span></code></pre>
 <pre><code><span><span class="co">## cpp11    (NA -&gt; 0.4.6) [CRAN]</span></span>
 <span><span class="co">## progress (NA -&gt; 1.2.2) [CRAN]</span></span></code></pre>
 <pre><code><span><span class="co">## Installing 2 packages: cpp11, progress</span></span></code></pre>
-<pre><code><span><span class="co">## Installing packages into '/tmp/RtmpfTh6yB/temp_libpath271247f4bd94'</span></span>
+<pre><code><span><span class="co">## Installing packages into '/tmp/Rtmp0RqQWJ/temp_libpath22707fb459c9'</span></span>
 <span><span class="co">## (as 'lib' is unspecified)</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #00BBBB;">──</span> <span style="color: #00BBBB;">R CMD build</span> <span style="color: #00BBBB;">─────────────────────────────────────────────────────────────────</span></span></span>
-<span><span class="co">## * checking for file ‘/tmp/RtmpUD10cY/remotes30c129a3c2a1/OHDSI-PhenotypeLibrary-1d2341c/DESCRIPTION’ ... OK</span></span>
+<span><span class="co">## * checking for file ‘/tmp/RtmpUqHTcW/remotes2c13304a25d0/OHDSI-PhenotypeLibrary-1d2341c/DESCRIPTION’ ... OK</span></span>
 <span><span class="co">## * preparing ‘PhenotypeLibrary’:</span></span>
 <span><span class="co">## * checking DESCRIPTION meta-information ... OK</span></span>
 <span><span class="co">## * checking for LF line-endings in source and make files and shell scripts</span></span>
 <span><span class="co">## * checking for empty or unneeded directories</span></span>
 <span><span class="co">## * building ‘PhenotypeLibrary_3.28.1.tar.gz’</span></span></code></pre>
-<pre><code><span><span class="co">## Installing package into '/tmp/RtmpfTh6yB/temp_libpath271247f4bd94'</span></span>
+<pre><code><span><span class="co">## Installing package into '/tmp/Rtmp0RqQWJ/temp_libpath22707fb459c9'</span></span>
 <span><span class="co">## (as 'lib' is unspecified)</span></span></code></pre>
 <p>To extract the cohort definition for Alcoholism with an id of 1165,
 just run:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">PhenotypeLibrary</span><span class="fu">::</span><span class="fu"><a href="https://ohdsi.github.io/PhenotypeLibrary/reference/getPlCohortDefinitionSet.html" class="external-link">getPlCohortDefinitionSet</a></span><span class="op">(</span><span class="fl">1165</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
 <span><span class="co">##   cohortId cohortName json                                                 sql  </span></span>
 <span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">1</span>     <span style="text-decoration: underline;">1</span>165 Alcoholism <span style="color: #949494;">"</span>{\n\t\"cdmVersionRange\" : \"&gt;=5.0.0\",\n\t\"Prima… <span style="color: #949494;">"</span>CRE…</span></span></code></pre>
 <p>in general you can extract all the cohorts by running:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">phenotypeDefinitions</span> <span class="op">&lt;-</span> <span class="fu">PhenotypeLibrary</span><span class="fu">::</span><span class="fu"><a href="https://ohdsi.github.io/PhenotypeLibrary/reference/getPlCohortDefinitionSet.html" class="external-link">getPlCohortDefinitionSet</a></span><span class="op">(</span><span class="fl">1152</span><span class="op">:</span><span class="fl">1215</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="the-full-set-of-predictor-phenotypes">The full set of predictor phenotypes<a class="anchor" aria-label="anchor" href="#the-full-set-of-predictor-phenotypes"></a>
