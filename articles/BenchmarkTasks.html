@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Making  patient-level predictive network study packages • PatientLevelPrediction</title>
+<title>Benchmark Tasks • PatientLevelPrediction</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Making  patient-level predictive network study packages">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Benchmark Tasks">
 <meta property="og:description" content="PatientLevelPrediction">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -141,15 +141,14 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Making patient-level predictive network study
-packages</h1>
+      <h1 data-toc-skip>Benchmark Tasks</h1>
                         <h4 data-toc-skip class="author">Jenna Reps,
-Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
+Ross Williams, Peter R. Rijnbeek</h4>
             
             <h4 data-toc-skip class="date">2023-10-11</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/CreatingNetworkStudies.Rmd" class="external-link"><code>vignettes/CreatingNetworkStudies.Rmd</code></a></small>
-      <div class="hidden name"><code>CreatingNetworkStudies.Rmd</code></div>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/BenchmarkTasks.Rmd" class="external-link"><code>vignettes/BenchmarkTasks.Rmd</code></a></small>
+      <div class="hidden name"><code>BenchmarkTasks.Rmd</code></div>
 
     </div>
 
@@ -157,108 +156,272 @@ Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
     
 <!--
 %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Making  patient-level predictive network study packages}
+%\VignetteIndexEntry{Best Practices}
 -->
-<div style="page-break-after: always;"></div>
 <div class="section level2">
-<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+<h2 id="benchmark-tasks-for-large-scale-empirical-analyses">Benchmark Tasks For Large-Scale Empirical Analyses<a class="anchor" aria-label="anchor" href="#benchmark-tasks-for-large-scale-empirical-analyses"></a>
 </h2>
-<p>The OHDSI Patient Level Prediction (PLP) package provides the
-framework to implement prediction models at scale. This can range from
-developing a large number of models across sites (methodology and study
-design insight) to extensive external validation of existing models in
-the OHDSI PLP framework (model insight). This vignette describes how you
-can use the <code>PatientLevelPrediction</code> package to create a
-network study package.</p>
-</div>
-<div class="section level2">
-<h2 id="useful-publication">Useful publication<a class="anchor" aria-label="anchor" href="#useful-publication"></a>
-</h2>
-<p>The open access publication <a href="https://pubmed.ncbi.nlm.nih.gov/34560604/" class="external-link">A standardized
-analytics pipeline for reliable and rapid development and validation of
-prediction models using observational health data</a> details the
-process used to develop and validate prediction models using the OHDSI
-prediction framework and tools. This publication describes each of the
-steps and then demonstrates these by focusing on predicting death in
-those who have covid-19.</p>
-</div>
-<div class="section level2">
-<h2 id="main-steps-for-running-a-network-study">Main steps for running a network study<a class="anchor" aria-label="anchor" href="#main-steps-for-running-a-network-study"></a>
-</h2>
-<div class="section level3">
-<h3 id="step-1-developing-the-study">Step 1 – developing the study<a class="anchor" aria-label="anchor" href="#step-1-developing-the-study"></a>
-</h3>
-<ul>
-<li>Design the study: target/outcome cohort logic, concept sets for
-medical definitions, settings for developing new model or validation of
-adding existing models to framework. Suggestion: look in literature for
-validated definitions.</li>
-<li>Write a protocol that motivates the study and provides full details
-(sufficient for people to replicate the study in the future).</li>
-<li>Write an R package for implementing the study across diverse
-computational environments [see guidance below for structure of package
-and use the skeleton github package here: <a href="https://github.com/OHDSI/SkeletonPredictionStudy" class="external-link uri">https://github.com/OHDSI/SkeletonPredictionStudy</a> ]</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="step-2-implementing-the-study-part-1">Step 2 – implementing the study part 1<a class="anchor" aria-label="anchor" href="#step-2-implementing-the-study-part-1"></a>
-</h3>
-<ul>
-<li>Get contributors to install the package and dependencies. Ensure the
-package is installed correctly for each contributor by asking them to
-run the checkInstall functions (as specified in the
-InstallationGuide).</li>
-<li>Get contributors to run the createCohort function to inspect the
-target/outcome definitions. If the definitions are not suitable for a
-site, go back to step 1 and revise the cohort definitions.</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="step-3-implementing-the-study-part-2-make-sure-the-package-is-functioning-as-planned-and-the-definitions-are-valid-across-sites">Step 3 – implementing the study part 2 (make sure the package is
-functioning as planned and the definitions are valid across sites)<a class="anchor" aria-label="anchor" href="#step-3-implementing-the-study-part-2-make-sure-the-package-is-functioning-as-planned-and-the-definitions-are-valid-across-sites"></a>
-</h3>
-<ul>
-<li>Get contributors to run the main.R with the settings configured to
-their environment</li>
-<li>Get the contributors to submit the results</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="step-4-publication">Step 4 – Publication<a class="anchor" aria-label="anchor" href="#step-4-publication"></a>
-</h3>
-<p>The study creator has the first option to be first author, if he/she
-does not wish to be first author then he/she can pick the most suitable
-person from the contributors. All contributors will be listed as authors
-on the paper. The last author will be the person who lead/managed the
-study, if this was the first author then the first author can pick the
-most suitable last author. All authors between the first and last author
-will be alphabetical by last name.</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="package-skeleton---file-structure">Package Skeleton - File Structure<a class="anchor" aria-label="anchor" href="#package-skeleton---file-structure"></a>
-</h2>
-<ul>
-<li>DESCRIPTION: This file describes the R package and the
-dependencies</li>
-<li>NAMESPACE: This file is created automatically by Roxygen</li>
-<li>Readme.md: This file should provide the step by step guidance on
-implementing the package</li>
-<li>R</li>
-<li>helpers.r: all the custom functions used by the package should be in
-this file (e.g., checkInstall)</li>
-<li>main.r: this file will call the functions in helpers.r to execute
-the full study</li>
-<li>submit.r: this file will be called at the end to submit the
-compressed folder to the study creator/manager.</li>
-<li>Man: this folder will contain the documentation for the functions in
-helpers.r (this should be automatically generated by roxygen)</li>
-<li>Inst</li>
-<li>sql/sql_sever * targetCohort: the target cohort parameterised sql
-code * outcomeCohort: the outcome cohort parameterised sql code</li>
-<li>plp_models: place any PLP models here</li>
-<li>Extras</li>
-</ul>
+<p>Here we provide a set of diverse prediction tasks that can be used
+when evaluating the impact of the model design choice when developing
+models using observational data.</p>
+<table class="table">
+<tr>
+<th>
+Target Cohort (index)
+</th>
+<th>
+Outcome
+</th>
+<th>
+Time-at-risk
+</th>
+<th>
+Link
+</th>
+</tr>
+<tr>
+<td>
+Patients with an outpatient visit in 2017 with no prior cancer (first
+visit in 2017)
+</td>
+<td>
+Lung cancer
+</td>
+<td>
+1 day - 3 years after index
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients newly diagnosed with major depressive disorder (date of first
+record)
+</td>
+<td>
+Bipolar
+</td>
+<td>
+1 day - 365 day after index
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with an outpatient visit in 2019
+</td>
+<td>
+Dementia
+</td>
+<td>
+1 day - 3 years after index
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with an outpatient visit and a positive COVID test
+</td>
+<td>
+Hospitalization with pneumonia
+</td>
+<td>
+1 day - 30 days after index
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with an outpatient visit and a positive COVID test
+</td>
+<td>
+Hospitalization with pneumonia that required intensive services
+(ventilation, intubation, tracheotomy, or extracorporeal membrane
+oxygenation) or death
+</td>
+<td>
+1 day - 30 days after index
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with an outpatient visit and a positive COVID test
+</td>
+<td>
+Death
+</td>
+<td>
+1 day - 30 days after index
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with T2DM who were treated with metformin and who became new
+adult users of one of sulfonylureas, thiazolidinediones, dipeptidyl
+peptidase-4 inhibitors, glucagon-like peptide-1 receptor agonists, or
+sodium-glucose co-transporter-2 inhibitors (date of secondary drug).
+Patients with HF or patients treated with insulin on or prior to the
+index date were excluded from the analysis. Patients were required to
+have been enrolled for at least 365 days before cohort entry.
+</td>
+<td>
+Heart Failure
+</td>
+<td>
+1 to 365 days
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients newly diagnosed with atrial fibrilation (date of initial afib
+record)
+</td>
+<td>
+Ischemic stroke
+</td>
+<td>
+1 to 365 days
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients undergoing elective major non-cardiac surgery (date of
+surgery). Patients were required to have been enrolled for at least 365
+days before cohort entry.
+</td>
+<td>
+Earliest of AMI cardiac arrest or death (MACE)
+</td>
+<td>
+O to 30 days
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients starting intravitreal Anti-VEGF (date of administration)
+</td>
+<td>
+Kidney Failure
+</td>
+<td>
+1 to 365 days
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Pregnancy women (start of pregnancy)
+</td>
+<td>
+Preeclampsia
+</td>
+<td>
+During pregnancy
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Pregnancy women (start of pregnancy)
+</td>
+<td>
+Still birth
+</td>
+<td>
+During pregnancy
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with COPD (first record)
+</td>
+<td>
+Cardiovascular event and death
+</td>
+<td>
+1-30 days and 1-90 days
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients starting menopause (first record)
+</td>
+<td>
+Depression
+</td>
+<td>
+1 day - 3-years
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with anemia (date of first anemia record)
+</td>
+<td>
+Colorectal cancer
+</td>
+<td>
+1 day - 1-year
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patients with quadriplegia (date of first quadriplegia record)
+</td>
+<td>
+Death
+</td>
+<td>
+1 day - 1-year
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+Patient undergoing
+</td>
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+</tr>
+</table>
 </div>
   </div>
 

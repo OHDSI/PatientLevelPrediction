@@ -16,6 +16,9 @@
     <loc>/articles/AddingCustomSplitting.html</loc>
   </url>
   <url>
+    <loc>/articles/BenchmarkTasks.html</loc>
+  </url>
+  <url>
     <loc>/articles/BestPractices.html</loc>
   </url>
   <url>
@@ -23,6 +26,9 @@
   </url>
   <url>
     <loc>/articles/BuildingPredictiveModels.html</loc>
+  </url>
+  <url>
+    <loc>/articles/ConstrainedPredictors.html</loc>
   </url>
   <url>
     <loc>/articles/CreatingLearningCurves.html</loc>
