@@ -67,6 +67,8 @@ jobs:
           
       - name: Setup conda
         uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: "r-reticulate"
         
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
