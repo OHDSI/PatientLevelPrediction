@@ -126,7 +126,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">configurePython</span><span class="op">(</span>envname <span class="op">=</span> <span class="st">"PLP"</span>, envtype <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">configurePython</span><span class="op">(</span>envname <span class="op">=</span> <span class="st">"PLP"</span>, envtype <span class="op">=</span> <span class="cn">NULL</span>, condaPythonVersion <span class="op">=</span> <span class="st">"3.11"</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -137,6 +137,10 @@
 
 <dt>envtype</dt>
 <dd><p>An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users</p></dd>
+
+
+<dt>condaPythonVersion</dt>
+<dd><p>String, Python version to use when creating a conda environment</p></dd>
 
 </dl></div>
     <div id="details">
