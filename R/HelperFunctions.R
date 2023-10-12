@@ -94,9 +94,10 @@ listAppend <- function(a, b){
 #'
 #' @param envname   A string for the name of the virtual environment (default is 'PLP') 
 #' @param envtype   An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users 
+#' @param condaPythonVersion String, Python version to use when creating a conda environment
 #'
 #' @export
-configurePython <- function(envname='PLP', envtype=NULL){
+configurePython <- function(envname='PLP', envtype=NULL, condaPythonVersion="3.11"){
   
   if(is.null(envtype)){
     if(getOs()=='windows'){
@@ -113,7 +114,7 @@ configurePython <- function(envname='PLP', envtype=NULL){
       warning(paste0('Conda environment ', envname,' exists.  You can use reticulate::conda_remove() to remove if you want to fresh config'))
     } else {
       ParallelLogger::logInfo(paste0('Creating virtual conda environment called ', envname))
-      location <- reticulate::conda_create(envname=envname, packages = "python", conda = "auto")
+      location <- reticulate::conda_create(envname=envname, packages = paste0("python==", condaPythonVersion), conda = "auto")
     }
     packages <- c('numpy','scipy','scikit-learn', 'pandas','pydotplus','joblib')
     ParallelLogger::logInfo(paste0('Adding python dependancies to ', envname))

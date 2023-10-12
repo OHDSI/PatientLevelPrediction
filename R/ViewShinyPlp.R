@@ -154,7 +154,7 @@ viewPlps <- function(databaseSettings){
     )
   } else{
     ohdsiModulesVersion <- strsplit(x = as.character(utils::packageVersion('OhdsiShinyModules')), split = '\\.')[[1]]
-    if(ohdsiModulesVersion[1]>=1 & ohdsiModulesVersion[2]>= 2){
+    if(paste0(ohdsiModulesVersion[1], ".", ohdsiModulesVersion[2])>= 1.2){
       config <- ParallelLogger::loadSettingsFromJson(
         fileName = system.file(
           'shinyConfigUpdate.json', 

@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.3.6
+======================
+- fix bug with ohdsi shiny modules version check (issue 415)
+
 PatientLevelPrediction 6.3.5
 ======================
 - Fix sklearnToJson to be compatible with scikit-learn>=1.3

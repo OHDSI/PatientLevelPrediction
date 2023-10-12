@@ -1145,7 +1145,7 @@ addCohort <- function(
                        targetDialect = targetDialect, 
                        tableName = 'cohort_definition',
                        columnNames = c('cohort_name'), 
-                       values = c(paste0("'",cohortDefinition$cohortName,"'")),
+                       values = c(paste0("'",gsub('\'', '', cohortDefinition$cohortName),"'")),
                        tempEmulationSchema = tempEmulationSchema
   )
   
@@ -1157,12 +1157,12 @@ addCohort <- function(
   
   if(addNew){
     cohortDefinitionId <- result$cohortDefinitionId[result$json %in% json]
-    ParallelLogger::logInfo(paste0('Cohort ',cohortDefinition$cohortName,' exists in cohort_definition with cohort id', result$cohortDefinitionId[result$json %in% json]))
+    ParallelLogger::logInfo(paste0('Cohort ',gsub('\'', '', cohortDefinition$cohortName),' exists in cohort_definition with cohort id', result$cohortDefinitionId[result$json %in% json]))
   } else{
-    ParallelLogger::logInfo(paste0('Adding cohort ',cohortDefinition$cohortName))
+    ParallelLogger::logInfo(paste0('Adding cohort ',gsub('\'', '', cohortDefinition$cohortName)))
     
     data <- data.frame(
-      cohortName = cohortDefinition$cohortName, 
+      cohortName = gsub('\'', '', cohortDefinition$cohortName), 
       cohortDefinitionId = cohortDefinition$cohortId,
       json = json
     )
@@ -1187,7 +1187,7 @@ addCohort <- function(
       targetDialect = targetDialect, 
       tableName = 'cohort_definition',
       columnNames = c('cohort_name', 'cohort_definition_id'), 
-      values = c(paste0("'",cohortDefinition$cohortName,"'"), cohortDefinition$cohortId),
+      values = c(paste0("'",gsub('\'', '', cohortDefinition$cohortName),"'"), cohortDefinition$cohortId),
       tempEmulationSchema = tempEmulationSchema
     )
     
@@ -1202,18 +1202,18 @@ addCohort <- function(
                        targetDialect = targetDialect, 
                        tableName = 'cohorts',
                        columnNames = c('cohort_definition_id','cohort_name'), 
-                       values = c(cohortDefinitionId, paste0("'",cohortDefinition$cohortName,"'")),
+                       values = c(cohortDefinitionId, paste0("'",gsub('\'', '', cohortDefinition$cohortName),"'")),
                        tempEmulationSchema = tempEmulationSchema
   )
   
   if(nrow(result)>0){
-    ParallelLogger::logInfo(paste0('Cohort ',cohortDefinition$cohortName,' exists in cohorts with cohort id', result$cohortId))
+    ParallelLogger::logInfo(paste0('Cohort ',gsub('\'', '', cohortDefinition$cohortName),' exists in cohorts with cohort id', result$cohortId))
   } else{
-    ParallelLogger::logInfo(paste0('Adding cohort ',cohortDefinition$cohortName))
+    ParallelLogger::logInfo(paste0('Adding cohort ',gsub('\'', '', cohortDefinition$cohortName)))
     
     data <- data.frame(
       cohortDefinitionId = cohortDefinitionId,
-      cohortName = cohortDefinition$cohortName
+      cohortName = gsub('\'', '', cohortDefinition$cohortName)
     )
     DatabaseConnector::insertTable(
       connection = conn, 
@@ -1235,7 +1235,7 @@ addCohort <- function(
                          targetDialect = targetDialect, 
                          tableName = 'cohorts',
                          columnNames = c('cohort_definition_id','cohort_name'), 
-                         values = c(cohortDefinitionId, paste0("'",cohortDefinition$cohortName,"'")),
+                         values = c(cohortDefinitionId, paste0("'",gsub('\'', '', cohortDefinition$cohortName),"'")),
                          tempEmulationSchema = tempEmulationSchema
     )
   }
