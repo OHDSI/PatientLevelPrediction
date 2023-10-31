@@ -294,10 +294,12 @@ createStudyPopulation <- function(
   if (firstExposureOnly) {
     ParallelLogger::logTrace(paste("Restricting to first exposure"))
     
-    population <- population %>%
-      dplyr::arrange(.data$subjectId,.data$cohortStartDate) %>%
-      dplyr::group_by(.data$subjectId) %>%
-      dplyr::filter(dplyr::row_number(.data$subjectId)==1)
+    if (nrow(population) > dplyr::n_distinct(population$subjectId)) {
+      population <- population %>%
+        dplyr::arrange(.data$subjectId,.data$cohortStartDate) %>%
+        dplyr::group_by(.data$subjectId) %>%
+        dplyr::filter(dplyr::row_number(.data$subjectId)==1)
+    }
     
     attrRow <- population %>% dplyr::group_by() %>%
       dplyr::summarise(outcomeId = get('oId'),
