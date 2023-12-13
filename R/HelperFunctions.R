@@ -101,9 +101,9 @@ configurePython <- function(envname='PLP', envtype=NULL, condaPythonVersion="3.1
   
   if(is.null(envtype)){
     if(getOs()=='windows'){
-      envtype=='conda'
+      envtype <- "conda"
     } else {
-      envtype=='python'
+      envtype <- "python"
     }
   }
   
