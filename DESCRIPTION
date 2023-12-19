@@ -76,6 +76,6 @@ Remotes:
     ohdsi/IterativeHardThresholding,
     ohdsi/ParallelLogger,
     ohdsi/ShinyAppBuilder,
-    ohdsi/ResultModelManager@v0.5.6
+    ohdsi/ResultModelManager,
 RoxygenNote: 7.2.3
 Encoding: UTF-8
