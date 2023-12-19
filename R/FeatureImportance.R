@@ -200,7 +200,7 @@ permute <- function(plpDataLocation,cId,population){
   
     # find a new random selection of people and give them the covariate and value
     newPlp <- sample(population$rowId,nSamp)
-    newData <- tibble::as_tibble(cbind(rowId = newPlp,coi[,-1]))
+    newData <- dplyr::as_tibble(cbind(rowId = newPlp,coi[,-1]))
     
     # swap old covariate data with new
     plpData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$covariateId != !!cId) %>% dplyr::collect()
@@ -215,7 +215,7 @@ permute <- function(plpDataLocation,cId,population){
     
     # sample the pop to replace 
     swapPlp <- sample(population$rowId,nSamp)
-    haveCidDataSwapped <- tibble::as_tibble(cbind(rowId = swapPlp,haveCidData[,-1]))
+    haveCidDataSwapped <- dplyr::as_tibble(cbind(rowId = swapPlp,haveCidData[,-1]))
     
     # find the swapped people to switch 
     connectedCovs <- plpData$covariateData$covariateRef %>% 
@@ -228,7 +228,7 @@ permute <- function(plpDataLocation,cId,population){
       dplyr::filter(.data$rowId %in% swapPlp) %>% 
       dplyr::collect()
     
-    swappedForCid <- tibble::as_tibble(cbind(rowId = haveCidData$rowId[1:nrow(plpToSwap)],plpToSwap[,-1]))
+    swappedForCid <- dplyr::as_tibble(cbind(rowId = haveCidData$rowId[1:nrow(plpToSwap)],plpToSwap[,-1]))
     
 
     # swap old covariate data with new
