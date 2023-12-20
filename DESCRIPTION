@@ -74,8 +74,6 @@ Remotes:
     ohdsi/BigKnn,
     ohdsi/Eunomia,
     ohdsi/FeatureExtraction,
-    ohdsi/IterativeHardThresholding,
-    ohdsi/ParallelLogger,
     ohdsi/ShinyAppBuilder,
     ohdsi/ResultModelManager
 RoxygenNote: 7.2.3
