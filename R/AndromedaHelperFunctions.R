@@ -97,7 +97,7 @@ calculatePrevs <- function(plpData, population){
   #===========================
   
   # add population to sqllite
-  population <- tibble::as_tibble(population)
+  population <- dplyr::as_tibble(population)
   plpData$covariateData$population <- population %>% 
     dplyr::select("rowId", "outcomeCount")
   

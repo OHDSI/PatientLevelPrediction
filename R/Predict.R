@@ -168,7 +168,7 @@ applyTidyCovariateData <- function(
   
   if(!is.null(maxs)){
     if('bins'%in%colnames(maxs)){
-      covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = "bins") %>% 
+      covariateData$maxes <- dplyr::as_tibble(maxs)  %>% dplyr::rename(covariateId = "bins") %>% 
         dplyr::rename(maxValue = "maxs")
     } else{
       covariateData$maxes <- maxs 
