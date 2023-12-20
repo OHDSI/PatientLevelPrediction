@@ -259,9 +259,9 @@ createStudyPopulation <- function(
     
   
   # get the outcomes during TAR
-  outcomeTAR <- population %>% 
-    dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
-    dplyr::filter(.data$outcomeId == get('oId'))  %>% 
+  outcomeTAR <- plpData$outcomes %>% 
+    dplyr::filter(.data$outcomeId == get("oId")) %>%
+    dplyr::inner_join(population, by = "rowId") %>%
     dplyr::select("rowId", "daysToEvent", "tarStart", "tarEnd") %>% 
     dplyr::filter(.data$daysToEvent >= .data$tarStart & .data$daysToEvent <= .data$tarEnd)  
   
