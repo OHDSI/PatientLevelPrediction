@@ -215,6 +215,9 @@ createStudyPopulation <- function(
 
   if (is.null(population)) {
     population <- plpData$cohorts
+  } else {
+    population <- plpData$cohorts %>% 
+      dplyr::filter(.data$rowId %in% (population %>% dplyr::pull(.data$rowId)))
   }
   
   # save the metadata (should have the ?targetId, outcomeId, plpDataSettings and population settings)
