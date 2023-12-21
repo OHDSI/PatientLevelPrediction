@@ -334,9 +334,9 @@ createStudyPopulation <- function(
       ParallelLogger::logTrace("Removing subjects with prior outcomes (if any)")
     
     # get the outcomes during TAR
-    outcomeBefore <- population %>% 
-      dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
+    outcomeBefore <- plpData$outcomes %>% 
       dplyr::filter(outcomeId == get('oId'))  %>% 
+      dplyr::inner_join(population, by = 'rowId') %>% 
       dplyr::select("rowId", "daysToEvent", "tarStart") %>% 
       dplyr::filter(.data$daysToEvent < .data$tarStart & .data$daysToEvent > -get('priorOutcomeLookback') ) 
     
