@@ -215,6 +215,9 @@ createStudyPopulation <- function(
 
   if (is.null(population)) {
     population <- plpData$cohorts
+  } else {
+    population <- plpData$cohorts %>% 
+      dplyr::filter(.data$rowId %in% (population %>% dplyr::pull(.data$rowId)))
   }
   
   # save the metadata (should have the ?targetId, outcomeId, plpDataSettings and population settings)
@@ -259,9 +262,9 @@ createStudyPopulation <- function(
     
   
   # get the outcomes during TAR
-  outcomeTAR <- population %>% 
-    dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
-    dplyr::filter(.data$outcomeId == get('oId'))  %>% 
+  outcomeTAR <- plpData$outcomes %>% 
+    dplyr::filter(.data$outcomeId == get("oId")) %>%
+    dplyr::inner_join(population, by = "rowId") %>%
     dplyr::select("rowId", "daysToEvent", "tarStart", "tarEnd") %>% 
     dplyr::filter(.data$daysToEvent >= .data$tarStart & .data$daysToEvent <= .data$tarEnd)  
   
@@ -331,9 +334,9 @@ createStudyPopulation <- function(
       ParallelLogger::logTrace("Removing subjects with prior outcomes (if any)")
     
     # get the outcomes during TAR
-    outcomeBefore <- population %>% 
-      dplyr::inner_join(plpData$outcomes, by ='rowId') %>% 
+    outcomeBefore <- plpData$outcomes %>% 
       dplyr::filter(outcomeId == get('oId'))  %>% 
+      dplyr::inner_join(population, by = 'rowId') %>% 
       dplyr::select("rowId", "daysToEvent", "tarStart") %>% 
       dplyr::filter(.data$daysToEvent < .data$tarStart & .data$daysToEvent > -get('priorOutcomeLookback') ) 
     
