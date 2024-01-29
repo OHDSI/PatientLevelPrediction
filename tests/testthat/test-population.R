@@ -495,4 +495,31 @@ test_that("population creation parameters", {
   
 })
 
+testthat::test_that("Providing an existing population and skipping population creation works", {
+  popSize <- 400
+  newPopulation <- population[sample.int(nrow.default(population), popSize), ]
+  
+  tinyPlpData$population <- newPopulation
+  
+  plpResults <- runPlp(
+    plpData = tinyPlpData,
+    outcomeId = 2,
+    analysisId = "1",
+    analysisName = "existing population",
+    populationSettings = createStudyPopulationSettings(),
+    splitSettings = createDefaultSplitSetting(),
+    modelSettings = setLassoLogisticRegression(),
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE,
+      runPreprocessData = FALSE,
+      runModelDevelopment = TRUE
+    )
+  )
+  
+  trainPredictions <- plpResults$prediction %>%
+    dplyr::filter(.data$evaluationType == "Train") %>% nrow.default()
+  testPredictions <- plpResults$prediction %>%
+    dplyr::filter(.data$evaluationType == "Test") %>% nrow.default()
+  expect_equal(popSize, trainPredictions + testPredictions)
+})
 

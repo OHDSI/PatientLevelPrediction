@@ -270,6 +270,7 @@ runPlp <- function(
   # create the population
   if(!is.null(plpData$population)) {
     ParallelLogger::logInfo('Using existing population')
+    population <- plpData$population
   } else {
     ParallelLogger::logInfo('Creating population')
     population <- tryCatch({
