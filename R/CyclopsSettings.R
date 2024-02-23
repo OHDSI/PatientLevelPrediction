@@ -408,7 +408,10 @@ setBrokenAdaptiveRidge <- function(initialRidgeVariance = 1,
     cvRepetitions = 1, #1
     maxIterations = maxIterations[1] #3000
   )
-  
+  if (penalty == "auto") {
+    attr(param, "settings")$manualCV <- TRUE
+    attr(param, "settings")$useControl <- FALSE
+  }
   attr(param, 'modelType') <- 'binary' 
   attr(param, 'saveType') <- 'RtoJson'
   

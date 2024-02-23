@@ -39,26 +39,26 @@ fitCyclopsModel <- function(
       time = .data$survivalTime
     )
   
-  covariates <- filterCovariateIds(param, trainData$covariateData)
+  trainData$covariateData$covariates <- filterCovariateIds(param, trainData$covariateData)
   
   if (!is.null(param$priorCoefs)) {
     sourceCoefs <- param$priorCoefs[abs(param$priorCoefs)>0 & names(param$priorCoefs) != "(Intercept)"]
 
-    newCovariates <- covariates %>%
+    newCovariates <- trainData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId %in% !!names(sourceCoefs)) %>%
       dplyr::mutate(newCovariateId = .data$covariateId*-1) %>%
       dplyr::select(-.data$covariateId) %>%
       dplyr::rename(covariateId = .data$newCovariateId) %>%
       dplyr::collect()
     
-    Andromeda::appendToTable(covariates, newCovariates)
+    Andromeda::appendToTable(trainData$covariateData$covariates, newCovariates)
     
   }
 
   start <- Sys.time()
   cyclopsData <- Cyclops::convertToCyclopsData(
     outcomes = trainData$covariateData$labels,
-    covariates = covariates,
+    covariates = trainData$covariateData$covariates,
     addIntercept = settings$addIntercept,
     modelType = modelTypeToCyclopsModelType(settings$modelType),
     checkRowIds = FALSE,
@@ -111,7 +111,6 @@ fitCyclopsModel <- function(
   }
 
   if(settings$useControl){
-    
     control <- Cyclops::createControl(
       cvType = "auto",
       fold = max(trainData$folds$index),
@@ -137,13 +136,19 @@ fitCyclopsModel <- function(
         )}, 
       finally = ParallelLogger::logInfo('Done.')
       )
+  } else if (settings$manualCV) {
+    result <- doCyclopsCvPenalty(data = trainData,
+                                  prior = prior,
+                                  fixedCoefficients = fixedCoefficients,
+                                  startingCoefficients = startingCoefficients)
+    fit <- result$modelFit
+    hyperParamSearch <- result$hyperParamSearch
   } else{
     fit <- tryCatch({
-      ParallelLogger::logInfo('Running Cyclops with fixed varience')
+      ParallelLogger::logInfo('Running Cyclops with fixed variance')
       Cyclops::fitCyclopsModel(cyclopsData, prior = prior)}, 
       finally = ParallelLogger::logInfo('Done.')) 
   }
-  
   
   modelTrained <- createCyclopsModel(
     fit = fit, 
@@ -178,7 +183,7 @@ fitCyclopsModel <- function(
   prediction$evaluationType <- 'Train'
   
   # get cv AUC if exists
-  cvPerFold <- c()
+  hyperParamSearch <- c()
   if(!is.null(modelTrained$cv)){
     cvPrediction  <- do.call(rbind, lapply(modelTrained$cv, function(x){x$predCV}))
     cvPrediction$evaluationType <- 'CV'
@@ -194,6 +199,7 @@ fitCyclopsModel <- function(
     
     # remove the cv from the model:
     modelTrained$cv <- NULL
+    hyperParamSearch <- cvPerFold
   }
   
   result <- list(
@@ -232,7 +238,7 @@ fitCyclopsModel <- function(
         variance = modelTrained$priorVariance,
         log_likelihood = modelTrained$log_likelihood
       ),
-      hyperParamSearch = cvPerFold
+      hyperParamSearch = hyperParamSearch
     ),
     
     covariateImportance = variableImportance
@@ -538,4 +544,106 @@ reparamTransferCoefs <- function(inCoefs) {
   coefs <- tapply(coefs, names(coefs), sum)
   
   return(coefs)
+}
+
+# do CV to determine the best penalty manually
+doCyclopsCvPenalty <- function(data,
+                               prior,
+                               fixedCoefficients,
+                               startingCoefficients,
+                               penaltyRatio = 0.1) {
+  # start with bic
+  startingPenalty <- log(nrow(data$labels)) / 2
+  
+  penalties <- seq(from = startingPenalty, 
+                   to = penaltyRatio * startingPenalty, 
+                   length.out = 10)
+  
+  nFolds <- length(unique(data$folds$index))
+  
+  hyperParamSearch <- data.frame(matrix(nrow = length(penalties), ncol = nFolds + 2)) 
+  colnames(hyperParamSearch) <- c("Penalty", "avg_CV", unlist(lapply(seq_len(nFolds), 
+                                                                     function(x) paste0("Fold_", x))))
+  ParallelLogger::logInfo("Performing hyperparameter tuning to determine best penalty")
+  start <- Sys.time()
+  for (i in seq_along(penalties)) {
+    hyperParamSearch[i, "Penalty"] <- penalties[i]
+    prior$penalty <- penalties[i]
+    
+    for (fold in seq_len(nFolds)) {
+      
+      trainData <- data$covariateData$covariates %>% 
+        dplyr::inner_join(data$folds, by = "rowId") %>%
+        dplyr::filter(index != fold) %>%
+        dplyr::select(c("rowId", "covariateId", "covariateValue")) %>%
+        dplyr::collect()
+      
+      trainOutcomes <- data$covariateData$labels %>% 
+        dplyr::inner_join(data$folds, by = "rowId") %>%
+        dplyr::filter(index != fold) %>%
+        dplyr::select(-index) %>%
+        dplyr::collect()
+      
+      cyclopsData <- Cyclops::convertToCyclopsData(
+        outcomes = trainOutcomes,
+        covariates = trainData,
+        addIntercept = TRUE,
+        modelType = "lr",
+        checkRowIds = FALSE,
+        normalize = NULL,
+        quiet = TRUE
+      )
+      
+      fit <- Cyclops::fitCyclopsModel(cyclopsData,
+                                      prior = prior,
+                                      fixedCoefficients = fixedCoefficients,
+                                      startingCoefficients = startingCoefficients)
+      
+      # predict on held out data
+      testData <- data$covariateData$covariates %>% 
+        dplyr::inner_join(data$folds, by = "rowId") %>%
+        dplyr::filter(index == fold) %>%
+        dplyr::select(c("rowId", "covariateId", "covariateValue")) %>%
+        dplyr::mutate(covariateId = as.numeric(.data$covariateId)) %>% 
+        dplyr::collect()
+      
+      testOutcomes <- data$covariateData$labels %>% 
+        dplyr::inner_join(data$folds, by = "rowId") %>%
+        dplyr::filter(index == fold) %>%
+        dplyr::select(-index) %>%
+        dplyr::collect()
+      
+      preds <- predict(fit, newCovariates = testData,
+                       newOutcomes = testOutcomes)
+      
+      # calculate performance 
+      prediction <- data.frame(outcomeCount = testOutcomes$outcomeCount,
+                               value = preds)
+      attr(prediction, "metaData")$modelType <- "binary"
+      auc <- computeAuc(prediction)
+      hyperParamSearch[i, paste0("Fold_", fold)] <- auc
+    }
+    hyperParamSearch[i, "avg_CV"] <- mean(as.numeric(hyperParamSearch[i, seq(3, 3 + nFolds - 1)]))
+  }
+  
+  bestIndex <- which.max(hyperParamSearch$avg_CV)
+  bestPenalty <- hyperParamSearch[bestIndex, "Penalty"]
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0("Hyperparameter tuning took ", signif(delta, 3), " ", attr(delta, "units")))
+  ParallelLogger::logInfo(paste0("Best penalty: ", signif(bestPenalty, 4),
+                                "With Performance of: ", signif(hyperParamSearch[bestIndex, "avg_CV"])))
+
+  # refit at best value
+  prior$penalty <- bestPenalty
+  cyclopsData <- Cyclops::convertToCyclopsData(data$covariateData$labels,
+                                               data$covariateData$covariates,
+                                               checkRowIds = FALSE,
+                                               quiet = TRUE)
+  ParallelLogger::logInfo("Refitting model with best penalty")
+  fit <- Cyclops::fitCyclopsModel(cyclopsData,
+                                  prior = prior,
+                                  fixedCoefficients = fixedCoefficients,
+                                  startingCoefficients = startingCoefficients)
+  results <- list(modelFit = fit,
+                  hyperParamSearch = hyperParamSearch)
 }
