@@ -358,7 +358,8 @@ setBrokenAdaptiveRidge <- function(initialRidgeVariance = 1,
                                    lowerLimit = 0.01,
                                    tolerance = 2e-06,
                                    maxIterations = 3000,
-                                   threshold = 1e-6
+                                   threshold = 1e-6,
+                                   prior = "Regular"
 ){
   
   checkIsClass(seed, c('numeric','NULL','integer'))
@@ -386,9 +387,15 @@ setBrokenAdaptiveRidge <- function(initialRidgeVariance = 1,
     upperLimit = upperLimit, 
     lowerLimit = lowerLimit
   )
+ 
+  if (prior == "Fast") {
+    priorFunction <- "BrokenAdaptiveRidge::createFastBarPrior"
+  } else {
+    priorFunction <- "BrokenAdaptiveRidge::createBarPrior"
+  }
   
   attr(param, 'settings') <- list(
-    priorfunction = 'BrokenAdaptiveRidge::createBarPrior',
+    priorfunction = priorFunction,
     selectorType = "byPid",  # is this correct?
     crossValidationInPrior = F,
     modelType = 'logistic',

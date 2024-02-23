@@ -96,10 +96,11 @@ fitCyclopsModel <- function(
                                         useCrossValidation = T)
     
     fit <- tryCatch({
-      ParallelLogger::logInfo("Determining intialRidgeVariance")
+      ParallelLogger::logInfo("Determining initialRidgeVariance")
       Cyclops::fitCyclopsModel(cyclopsData,
                                prior = normalPrior,
-                               control = normalControl)},
+                               control = normalControl,
+                               warnings = FALSE)},
       finally = ParallelLogger::logInfo("Done."))
     param$priorParams$initialRidgeVariance <- fit$variance
   }
