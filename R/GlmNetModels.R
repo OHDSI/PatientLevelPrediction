@@ -139,12 +139,16 @@ setElasticNet <- function(nlambda=100,
                           lambda.min.ratio=0.01,
                           parallel=TRUE,
                           measure='default',
-                          lambdaStrategy='min'){
+                          lambdaStrategy='min',
+                          seed = NULL){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
     stop('nlambda must be greater that 0 or -1')
-  
+  checkIsClass(seed, c('numeric','NULL','integer'))
+  if(is.null(seed[1])){
+    seed <- as.integer(sample(100000000,1))
+  }
   param <- list(
     nlambda=nlambda,
     lambda.min.ratio=lambda.min.ratio,
@@ -157,7 +161,8 @@ setElasticNet <- function(nlambda=100,
     modelName = "Elastic Net",
     nfolds = nfolds,
     parallel = parallel,
-    adaptive = FALSE
+    adaptive = FALSE,
+    seed = seed[1]
   )
   
   attr(param, 'saveType') <- 'file'
@@ -408,6 +413,7 @@ cvGlmNet <- function(dataMatrix,
   settings <- attr(param, 'settings')
   y <- labels$outcomeCount
   
+  set.seed(attr(param, "settings")$seed)
   
   if (settings$parallel) {
     doParallel::registerDoParallel(cores = settings$nfolds)
