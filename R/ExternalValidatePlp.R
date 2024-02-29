@@ -314,3 +314,154 @@ createValidationSettings <- function(
   class(result) <- 'validationSettings'
   return(result)
 }
+
+#' externalValidatePlp - Validate a model/s on new databases for a specific 
+#' predictionProblem
+#' 
+#' @param predictionProblem        The prediction problem object, should
+#' have one T and one O along with the populationSettings (anything else ? ) 
+#' could also be a list ? 
+#' @param plpModel                 The model object returned by runPlp() 
+#' containing the trained model or a list of such models (to save extracting 
+#' data multiple times from database)
+#' @param validationDatabaseDetails A list of objects of class 
+#' \code{databaseDetails} created using \code{createDatabaseDetails}
+#' @param restrictPlpDataSettings   A list of population restriction settings 
+#' created by \code{createRestrictPlpDataSettings()}
+#' @param validationSettings        A settings object of class 
+#' \code{validationSettings} created using \code{createValidationSettings}
+#' @param logSettings               An object of \code{logSettings} created 
+#' using \code{createLogSettings}
+#' @param outputFolder        The directory to save the validation results to 
+#' (subfolders are created per database in validationDatabaseDetails)
+#' @export
+validateExternal <- function(
+    predictionProblem, 
+    plpModel,
+    databaseDetails,
+    restrictPlpDataSettings,
+    validationSettings,
+    logSettings,
+    outputFolder,
+    matchModelsToTargets = TRUE
+  ) {
+  # Input checks 
+  #=======
+  if (inherits(predictionProblem, 'list')) {
+    lapply(predictionProblem, function(x) checkIsClass(x, 'predictionProblem'))
+  } else {
+    checkIsClass(predictionProblem, 'predictionProblem')
+    predictionProblem <- list(predictionProblem)
+  }
+  
+  if (inherits(plpModel, 'list')) {
+    lapply(plpModel, function(x) checkIsClass(x, 'plpModel'))
+  } else {
+    checkIsClass(plpModel, 'plpModel')
+    plpModel <- list(plpModel)
+  }
+  
+  # check the class and make a list if a single database setting
+  if (inherits(databaseDetails, 'list')) {
+    lapply(databaseDetails, function(x) checkIsClass(x, 'databaseDetails'))
+  } else{
+    checkIsClass(databaseDetails, 'databaseDetails')
+    databaseDetails <- list(databaseDetails)
+  }
+  checkIsClass(restrictPlpDataSettings, 'restrictPlpDataSettings')
+  checkIsClass(validationSettings, 'validationSettings')
+
+  # create results list with the names of the databases to validate across
+  result <- list()
+  length(result) <- length(databaseDetails)
+  names(result) <- unlist(lapply(databaseDetails, function(x) attr(x, 'cdmDatabaseName')))
+  
+  for (problem in predictionProblem) {
+    # get models that were developed on same target
+    if (matchModelsToTargets) {
+      currentModels <- filterModels(plpModel, problem)
+    } else {
+      currentModels <- plpModel
+    }
+    for (database in databaseDetails) {
+      databaseName <- database$cdmDatabaseName
+      # iniate log
+      logSettings$saveDirectory <- file.path(outputFolder, 
+                                             database$cdmDatabaseName)
+      logSettings$logFileName <- 'validationLog'
+      logger <- do.call(createLog, logSettings)
+      ParallelLogger::registerLogger(logger)
+      on.exit(logger$close())
+      
+      ParallelLogger::logInfo(paste('Validating model on', database$cdmDatabaseName))
+      
+      # get plpData 
+      database$targetId <- problem$targetId
+      
+      # what about case with multiple outcomeIds, could save by extracting once
+      database$outcomeIds <- problem$outcomeId
+      
+      # issue here is, covariatesettings is defined from model, which is the 
+      # next loop. if models can have different cov settings we are in trouble
+      # when extracting here. TODO add check that cov settings are same
+      plpData <- tryCatch({
+        do.call(getPlpData, list(
+          databaseDetails = database,
+          restrictPlpDataSettings = restrictPlpDataSettings,
+          covariateSettings = currentModels[[1]]$modelDesign$covariateSettings
+        ))
+      },
+      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      )
+      # # do I need to save ? if so I could skip retrieving it 
+      # plpDataName <- paste0("plpData_Target_", problem$targetId, "_Outcome_", problem$outcomeId)
+      # plpDataLocation <- file.path(outputFolder, databaseName, plpDataName)
+      # if (!dir.exists(file.path(outputFolder, databaseName))) {
+      #   dir.create(file.path(outputFolder, databaseName), recursive = T)
+      # }
+      # savePlpData(plpData, file = plpDataLocation)
+      # 
+      # create study population
+      population <- tryCatch({
+        do.call(
+          createStudyPopulation, 
+          list(
+            plpData = plpData,
+            outcomeId = problem$outcomeId,
+            populationSettings = problem$populationSettings
+          )
+        )
+      },
+      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      )
+      for (model in currentModels) {
+        result <- externalValidatePlp(
+          plpModel = model,
+          plpData = plpData,
+          population = population,
+          settings = validationSettings
+        )
+        devDatabase <- model$trainDetails$developmentDatabase
+        savePlpResult(result,
+                      dirPath = file.path(outputFolder,
+                                          databaseName,
+                                          devDatabase,
+                                          model$trainDetails$analysisId, 'validationResult'))
+      }
+    }
+  }
+  return(NULL)
+}
+
+filterModels <- function(plpModels, predictionProblem) {
+  # get models that were developed on same target
+  currentModels <- unlist(lapply(plpModels, function(x) {
+    if (x$modelDesign$targetId == predictionProblem$targetId) {
+      TRUE
+      } else
+    {
+      FALSE
+    }
+  }))
+  return(plpModels[currentModels])
+}
