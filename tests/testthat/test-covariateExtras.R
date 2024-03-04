@@ -113,7 +113,7 @@ covs <- FeatureExtraction::getDbCovariateData(
   cohortTable = "cohort", 
   cohortDatabaseSchema = "main", 
   cohortTableIsTemp = F, 
-  cohortId = 1, 
+  cohortIds = c(1), 
   rowIdField = 'rowId', 
   covariateSettings = covSet, 
   aggregated = F

@@ -30,7 +30,7 @@
 #' @param cohortTable  the table name that contains the target population cohort
 #' @param rowIdField  string representing the unique identifier in the target population cohort
 #' @param aggregated  whether the covariate should be aggregated
-#' @param cohortId  cohort id for the target cohort
+#' @param cohortIds  cohort id for the target cohort
 #' @param covariateSettings  settings for the covariate cohorts and time periods
 #'
 #' @return
@@ -45,7 +45,7 @@ getCohortCovariateData <- function(
   cohortTable = "#cohort_person",
   rowIdField = "row_id",
   aggregated,
-  cohortId,
+  cohortIds,
   covariateSettings
   ){
   
@@ -69,7 +69,7 @@ getCohortCovariateData <- function(
     sql,
     covariate_cohort_schema = covariateSettings$cohortDatabaseSchema,
     covariate_cohort_table = covariateSettings$cohortTable,
-    covariate_cohort_id = covariateSettings$cohortId,
+    covariate_cohort_id = covariateSettings$cohortIds,
     cohort_temp_table = cohortTable,
     row_id_field = rowIdField,
     startDay = covariateSettings$startDay,
@@ -154,7 +154,8 @@ getCohortCovariateData <- function(
 #' @param settingId   A unique id for the covariate time and 
 #' @param cohortDatabaseSchema  The schema of the database with the cohort
 #' @param cohortTable  the table name that contains the covariate cohort
-#' @param cohortId  cohort id for the covariate cohort
+#' @param cohortId  DEPRECATED cohort id for the covariate cohort
+#' @param cohortIds cohortId(s) for the covariate cohorts 
 #' @param startDay  The number of days prior to index to start observing the cohort
 #' @param endDay  The number of days prior to index to stop observing the cohort
 #' @param count   If FALSE the covariate value is binary (1 means cohort occurred between index+startDay and index+endDay, 0 means it did not)
@@ -191,7 +192,7 @@ createCohortCovariateSettings <- function(
     covariateId = cohortId*100000+settingId*1000+analysisId,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
-    cohortId = cohortId,
+    cohortIds = cohortId,
     startDay = startDay,
     endDays = endDay,
     count = count,
