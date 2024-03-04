@@ -154,8 +154,7 @@ getCohortCovariateData <- function(
 #' @param settingId   A unique id for the covariate time and 
 #' @param cohortDatabaseSchema  The schema of the database with the cohort
 #' @param cohortTable  the table name that contains the covariate cohort
-#' @param cohortId  DEPRECATED cohort id for the covariate cohort
-#' @param cohortIds cohortId(s) for the covariate cohorts 
+#' @param cohortId  cohort id for the covariate cohort
 #' @param startDay  The number of days prior to index to start observing the cohort
 #' @param endDay  The number of days prior to index to stop observing the cohort
 #' @param count   If FALSE the covariate value is binary (1 means cohort occurred between index+startDay and index+endDay, 0 means it did not)
