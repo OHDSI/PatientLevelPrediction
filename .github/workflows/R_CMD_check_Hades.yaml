@@ -87,13 +87,13 @@ jobs:
           path: check/*.tar.gz
           
       - name: Install covr
-        if: runner.os == 'Windows'
+        if: runner.os == 'Linux'
         run: |
           remotes::install_cran("covr")
         shell: Rscript {0}
 
       - name: Test coverage
-        if: runner.os == 'Windows'
+        if: runner.os == 'Linux'
         run: covr::codecov()
         shell: Rscript {0}
 
