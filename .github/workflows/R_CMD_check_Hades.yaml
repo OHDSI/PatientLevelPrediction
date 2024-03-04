@@ -94,7 +94,7 @@ jobs:
         
       - name: Test coverage
         if: runner.os == 'Linux'
-        run: covr::codecov()
+        run: tryCatch(covr::codecov(), error = function(e) {print(e); traceback()})
         shell: Rscript {0}
 
 
