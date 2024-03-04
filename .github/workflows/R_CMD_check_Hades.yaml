@@ -91,10 +91,13 @@ jobs:
         run: |
           remotes::install_cran("covr")
         shell: Rscript {0}
+        
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
 
       - name: Test coverage
         if: runner.os == 'Linux'
-        run: covr::codecov(quiet=FALSE)
+        run: covr::codecov()
         shell: Rscript {0}
 
 
