@@ -27,7 +27,7 @@ createCohortCovariateSettings(
 
 \item{cohortTable}{the table name that contains the covariate cohort}
 
-\item{cohortId}{cohort id for the covariate cohort}
+\item{cohortId}{DEPRECATED cohort id for the covariate cohort}
 
 \item{startDay}{The number of days prior to index to start observing the cohort}
 
@@ -41,6 +41,8 @@ If TRUE then the covariate value is the number of unique cohort_start_dates betw
 \item{lnAgeInteraction}{If TRUE multiple covariate value by the log of the patient's age in years}
 
 \item{analysisId}{The analysisId for the covariate}
+
+\item{cohortIds}{cohortId(s) for the covariate cohorts}
 }
 \value{
 An object of class covariateSettings specifying how to create the cohort covariate with the covariateId
