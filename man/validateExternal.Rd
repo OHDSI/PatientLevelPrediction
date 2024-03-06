@@ -25,6 +25,9 @@ could also be a list ?}
 containing the trained model or a list of such models (to save extracting 
 data multiple times from database)}
 
+\item{databaseDetails}{A list of objects of class 
+\code{databaseDetails} created using \code{createDatabaseDetails}}
+
 \item{restrictPlpDataSettings}{A list of population restriction settings 
 created by \code{createRestrictPlpDataSettings()}}
 
@@ -37,8 +40,8 @@ using \code{createLogSettings}}
 \item{outputFolder}{The directory to save the validation results to 
 (subfolders are created per database in validationDatabaseDetails)}
 
-\item{validationDatabaseDetails}{A list of objects of class 
-\code{databaseDetails} created using \code{createDatabaseDetails}}
+\item{matchModelsToTargets}{A boolean specifying if models should be validated 
+only on prediction problems with the same targetId}
 }
 \description{
 externalValidatePlp - Validate a model/s on new databases for a specific 
