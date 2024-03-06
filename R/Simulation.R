@@ -162,7 +162,8 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   metaData = list()
   
   metaData$databaseDetails <- list(
-    cdmDatabaseSchema = 'Profile',
+    cdmDatabaseSchema = 'CDM_SCHEMA',
+    cdmDatabaseName = "CDM_NAME",
     outcomeDatabaseSchema = NULL,
     cohortDatabaseSchema = NULL,
     connectionDetails = NULL,

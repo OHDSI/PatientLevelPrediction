@@ -20,12 +20,11 @@
 #' 
 #' @description A package for running predictions using data in the OMOP CDM
 #'
-#' @docType package
 #' @name PatientLevelPrediction
 #' @keywords internal
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
-NULL
+"_PACKAGE"
 
 #' A simulation profile
 #' @docType data

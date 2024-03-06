@@ -211,7 +211,8 @@ fitCyclopsModel <- function(
     trainDetails = list(
       analysisId = analysisId, 
       analysisSource = '', #TODO add from model
-      developmentDatabase = attr(trainData, "metaData")$cdmDatabaseSchema,
+      developmentDatabase = attr(trainData, "metaData")$cdmDatabaseName,
+      developmentDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema, 
       attrition = attr(trainData, "metaData")$attrition, 
       trainingTime =  paste(as.character(abs(comp)), attr(comp,'units')),
       trainingDate = Sys.Date(),
