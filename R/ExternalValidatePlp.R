@@ -324,7 +324,7 @@ createValidationSettings <- function(
 #' @param plpModel                 The model object returned by runPlp() 
 #' containing the trained model or a list of such models (to save extracting 
 #' data multiple times from database)
-#' @param validationDatabaseDetails A list of objects of class 
+#' @param databaseDetails A list of objects of class 
 #' \code{databaseDetails} created using \code{createDatabaseDetails}
 #' @param restrictPlpDataSettings   A list of population restriction settings 
 #' created by \code{createRestrictPlpDataSettings()}
@@ -334,6 +334,8 @@ createValidationSettings <- function(
 #' using \code{createLogSettings}
 #' @param outputFolder        The directory to save the validation results to 
 #' (subfolders are created per database in validationDatabaseDetails)
+#' @param matchModelsToTargets A boolean specifying if models should be validated 
+#' only on prediction problems with the same targetId
 #' @export
 validateExternal <- function(
     predictionProblem, 
