@@ -413,14 +413,14 @@ validateExternal <- function(
       },
       error = function(e){ParallelLogger::logError(e); return(NULL)}
       )
-      # # do I need to save ? if so I could skip retrieving it 
-      # plpDataName <- paste0("plpData_Target_", problem$targetId, "_Outcome_", problem$outcomeId)
-      # plpDataLocation <- file.path(outputFolder, databaseName, plpDataName)
-      # if (!dir.exists(file.path(outputFolder, databaseName))) {
-      #   dir.create(file.path(outputFolder, databaseName), recursive = T)
-      # }
-      # savePlpData(plpData, file = plpDataLocation)
-      # 
+      # do I need to save ? if so I could skip retrieving it
+      plpDataName <- paste0("plpData_Target_", problem$targetId, "_Outcome_", problem$outcomeId)
+      plpDataLocation <- file.path(outputFolder, databaseName, plpDataName)
+      if (!dir.exists(file.path(outputFolder, databaseName))) {
+        dir.create(file.path(outputFolder, databaseName), recursive = T)
+      }
+      savePlpData(plpData, file = plpDataLocation)
+      
       # create study population
       population <- tryCatch({
         do.call(
