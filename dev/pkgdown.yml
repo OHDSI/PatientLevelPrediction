@@ -1,4 +1,4 @@
-pandoc: 2.19.2
+pandoc: 3.1.11
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
@@ -15,5 +15,5 @@ articles:
   CreatingNetworkStudies: CreatingNetworkStudies.html
   InstallationGuide: InstallationGuide.html
   Videos: Videos.html
-last_built: 2024-01-29T16:21Z
+last_built: 2024-03-18T15:02Z
 

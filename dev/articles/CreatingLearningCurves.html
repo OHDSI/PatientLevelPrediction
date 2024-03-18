@@ -146,7 +146,7 @@
                         <h4 data-toc-skip class="author">Luis H. John,
 Jenna M. Reps, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2024-01-29</h4>
+            <h4 data-toc-skip class="date">2024-03-18</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/CreatingLearningCurves.Rmd" class="external-link"><code>vignettes/CreatingLearningCurves.Rmd</code></a></small>
       <div class="hidden name"><code>CreatingLearningCurves.Rmd</code></div>
@@ -178,8 +178,8 @@ performance on the testing set.</p>
 performance by training a sequence of prediction models on successively
 larger subsets of the training set. A learning curve plot can also help
 in diagnosing a bias or variance problem as explained below.</p>
-<div class="figure">
-<img src="learningCurve.png" alt=""><p class="caption">Learning curve example.</p>
+<div class="float">
+<img src="learningCurve.png" alt="Learning curve example."><div class="figcaption">Learning curve example.</div>
 </div>
 <p>Figure 1, shows an example of learning curve plot in which the
 vertical axis represents the model performance and the horizontal axis
@@ -205,8 +205,9 @@ testing set a little further, as the learning curve has not yet
 plateaued and, thus, the model is not saturated yet. Therefore, adding
 more data will decrease the gap between training set and testing set,
 which is the main indicator for a high variance problem.</p>
-<div class="figure">
-<img src="learningCurveVariance.png" alt=""><p class="caption">Prediction model suffering from high variance.</p>
+<div class="float">
+<img src="learningCurveVariance.png" alt="Prediction model suffering from high variance."><div class="figcaption">Prediction model suffering from high
+variance.</div>
 </div>
 <p>Furthermore, we can observe high bias (underfitting) if a prediction
 model performs poorly on the training set as well as on the testing set
@@ -216,8 +217,8 @@ Adding additional data will in this case have little to no impact on the
 model performance. Choosing another prediction algorithm that can find
 more complex (for example non-linear) relationships in the data may be
 an alternative approach to consider in this high bias situation.</p>
-<div class="figure">
-<img src="learningCurveBias.png" alt=""><p class="caption">Prediction model suffering from high bias.</p>
+<div class="float">
+<img src="learningCurveBias.png" alt="Prediction model suffering from high bias."><div class="figcaption">Prediction model suffering from high bias.</div>
 </div>
 </div>
 <div class="section level2">
@@ -316,8 +317,8 @@ and databases.</p>
 <span>  plotTitle <span class="op">=</span> <span class="st">'Learning Curve'</span>,</span>
 <span>  plotSubtitle <span class="op">=</span> <span class="st">'AUROC performance'</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="learningCurvePlot.png" alt=""><p class="caption">Learning curve plot.</p>
+<div class="float">
+<img src="learningCurvePlot.png" alt="Learning curve plot."><div class="figcaption">Learning curve plot.</div>
 </div>
 </div>
 <div class="section level2">

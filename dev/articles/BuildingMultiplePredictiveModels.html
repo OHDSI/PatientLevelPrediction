@@ -147,7 +147,7 @@ Predictive Models</h1>
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2024-01-29</h4>
+            <h4 data-toc-skip class="date">2024-03-18</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/BuildingMultiplePredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingMultiplePredictiveModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingMultiplePredictiveModels.Rmd</code></div>
@@ -416,21 +416,21 @@ database is found and workDatabaseSchema where your target population
 and outcome cohorts are and you need to specify a label for the database
 name: a string with a shareable name of the database (this will be shown
 to OHDSI researchers if the results get transported).</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cdmDatabaseSchema <span class="ot">&lt;-</span> <span class="st">"your cdmDatabaseSchema"</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>workDatabaseSchema <span class="ot">&lt;-</span> <span class="st">"your workDatabaseSchema"</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>cdmDatabaseName <span class="ot">&lt;-</span> <span class="st">"your cdmDatabaseName"</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>cohortTable <span class="ot">&lt;-</span> <span class="st">"your cohort table"</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>databaseDetails <span class="ot">&lt;-</span> <span class="fu">createDatabaseDetails</span>(</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">connectionDetails =</span> connectionDetails, </span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">cdmDatabaseSchema =</span> cdmDatabaseSchema, </span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">cdmDatabaseName =</span> cdmDatabaseName , </span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">cohortDatabaseSchema =</span> workDatabaseSchema, </span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">cohortTable =</span> cohortTable, </span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">outcomeDatabaseSchema =</span> workDatabaseSchema, </span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">outcomeTable =</span> cohortTable </span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">cdmVersion =</span> <span class="dv">5</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>cdmDatabaseSchema <span class="ot">&lt;-</span> <span class="st">"your cdmDatabaseSchema"</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>workDatabaseSchema <span class="ot">&lt;-</span> <span class="st">"your workDatabaseSchema"</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>cdmDatabaseName <span class="ot">&lt;-</span> <span class="st">"your cdmDatabaseName"</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>cohortTable <span class="ot">&lt;-</span> <span class="st">"your cohort table"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>databaseDetails <span class="ot">&lt;-</span> <span class="fu">createDatabaseDetails</span>(</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">connectionDetails =</span> connectionDetails, </span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">cdmDatabaseSchema =</span> cdmDatabaseSchema, </span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">cdmDatabaseName =</span> cdmDatabaseName , </span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">cohortDatabaseSchema =</span> workDatabaseSchema, </span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  <span class="at">cohortTable =</span> cohortTable, </span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="at">outcomeDatabaseSchema =</span> workDatabaseSchema, </span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">outcomeTable =</span> cohortTable </span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">cdmVersion =</span> <span class="dv">5</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>    )</span></code></pre></div>
 <p>Now you can run the multiple patient-level prediction analysis:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runMultiplePlp.html">runMultiplePlp</a></span><span class="op">(</span></span>

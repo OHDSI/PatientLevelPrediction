@@ -147,7 +147,7 @@ Algorithms</h1>
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2024-01-29</h4>
+            <h4 data-toc-skip class="date">2024-03-18</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/AddingCustomModels.Rmd" class="external-link"><code>vignettes/AddingCustomModels.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomModels.Rmd</code></div>
@@ -477,117 +477,117 @@ classifiers).</p>
 <div class="section level3">
 <h3 id="fit-1">Fit<a class="anchor" aria-label="anchor" href="#fit-1"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>fitMadeUp <span class="ot">&lt;-</span> <span class="cf">function</span>(trainData, modelSettings, search, analysisId){</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># set the seed for reproducibility</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  param <span class="ot">&lt;-</span> modelSettings<span class="sc">$</span>param</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>seed)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add folds to labels:</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  trainData<span class="sc">$</span>labels <span class="ot">&lt;-</span> <span class="fu">merge</span>(trainData<span class="sc">$</span>labels, trainData<span class="sc">$</span>folds, <span class="at">by=</span> <span class="st">'rowId'</span>)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># convert data into sparse R Matrix:</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  mappedData <span class="ot">&lt;-</span> <span class="fu">toSparseM</span>(trainData,<span class="at">map=</span><span class="cn">NULL</span>)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  matrixData <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>dataMatrix</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  labels <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>labels</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  covariateRef <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>covariateRef</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">#============= STEP 1 ======================================</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># pick the best hyper-params and then do final training on all data...</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">writeLines</span>(<span class="st">'Cross validation'</span>)</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  param.sel <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    param, </span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(x){</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>      <span class="fu">do.call</span>(</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        made_up_model, </span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>          <span class="at">param =</span> x, </span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>          <span class="at">final =</span> F, </span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>          <span class="at">data =</span> matrixData, </span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>          <span class="at">labels =</span> labels</span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>          )  </span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>  hyperSummary <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>hyperSum))</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  hyperSummary <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(hyperSummary)</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>  hyperSummary<span class="sc">$</span>auc <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>auc)) </span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  param.sel <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>auc))</span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>  bestInd <span class="ot">&lt;-</span> <span class="fu">which.max</span>(param.sel)</span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>  <span class="co">#get cross val prediction for best hyper-parameters</span></span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  prediction <span class="ot">&lt;-</span> param.sel[[bestInd]]<span class="sc">$</span>prediction</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>  prediction<span class="sc">$</span>evaluationType <span class="ot">&lt;-</span> <span class="st">'CV'</span></span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">writeLines</span>(<span class="st">'final train'</span>)</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>  finalResult <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    made_up_model, </span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list</span>(</span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>      <span class="at">param =</span> param[[bestInd]], </span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>      <span class="at">final =</span> T, </span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> matrixData, </span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> labels</span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>      )  </span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>  trainedModel <span class="ot">&lt;-</span> finalResult<span class="sc">$</span>model</span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>  <span class="co"># prediction risk on training data:</span></span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>  finalResult<span class="sc">$</span>prediction<span class="sc">$</span>evaluationType <span class="ot">&lt;-</span> <span class="st">'Train'</span></span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>  <span class="co"># get CV and train prediction</span></span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>  prediction <span class="ot">&lt;-</span> <span class="fu">rbind</span>(prediction, finalResult<span class="sc">$</span>prediction)</span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>  varImp <span class="ot">&lt;-</span> covariateRef <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">collect</span>()</span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>  <span class="co"># no feature importance available</span></span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>  vqrImp<span class="sc">$</span>covariateValue <span class="ot">&lt;-</span> <span class="dv">0</span> </span>
-<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a> timeToTrain <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>() <span class="sc">-</span> start</span>
-<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>  <span class="co"># construct the standard output for a model:</span></span>
-<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">model =</span> trainedModel,</span>
-<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>                 <span class="at">prediction =</span> prediction, </span>
-<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>    <span class="at">preprocessing =</span> <span class="fu">list</span>(</span>
-<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>                   <span class="at">featureEngineering =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>featureEngineering,</span>
-<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>      <span class="at">tidyCovariates =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>tidyCovariateDataSettings, </span>
-<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>      <span class="at">requireDenseMatrix =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>requiresDenseMatrix,</span>
-<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>                 ),</span>
-<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>    <span class="at">modelDesign =</span> <span class="fu">list</span>(</span>
-<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>      <span class="at">outcomeId =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>outcomeId,</span>
-<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>      <span class="at">targetId =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>targetId,</span>
-<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>      <span class="at">plpDataSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>plpDataSettings,</span>
-<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>      <span class="at">covariateSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>covariateSettings,</span>
-<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>      <span class="at">populationSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>populationSettings,</span>
-<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>      <span class="at">featureEngineeringSettings =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>featureEngineeringSettings,</span>
-<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>      <span class="at">prerocessSettings =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>prerocessSettings, </span>
-<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>      <span class="at">modelSettings =</span> <span class="fu">list</span>(</span>
-<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>        <span class="at">model =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>modelName, <span class="co"># the model name</span></span>
-<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>        <span class="at">param =</span> param,</span>
-<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>        <span class="at">finalModelParameters =</span> param[[bestInd]], <span class="co"># best hyper-parameters</span></span>
-<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>        <span class="at">extraSettings =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)</span>
-<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>      <span class="at">splitSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>splitSettings,</span>
-<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>      <span class="at">sampleSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>sampleSettings</span>
-<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>    <span class="at">trainDetails =</span> <span class="fu">list</span>(</span>
-<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>      <span class="at">analysisId =</span> analysisId,</span>
-<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>      <span class="at">developmentDatabase =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>cdmDatabaseSchema,</span>
-<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>      <span class="at">attrition =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>attrition, </span>
-<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>      <span class="at">trainingTime =</span> timeToTrain, <span class="co"># how long it took to train the model</span></span>
-<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>      <span class="at">trainingDate =</span> <span class="fu">Sys.Date</span>(),</span>
-<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a>      <span class="at">hyperParamSearch =</span> hyperSummary <span class="co"># the hyper-parameters and performance data.frame</span></span>
-<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>    <span class="at">covariateImportance =</span> <span class="fu">merge</span>(trainData<span class="sc">$</span>covariateData<span class="sc">$</span>covariateRef, varImp, <span class="at">by=</span><span class="st">'covariateId'</span>) <span class="co"># add variable importance to covariateRef if possible</span></span>
-<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>    covariateImportance <span class="ot">=</span> varImp</span>
-<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a>  <span class="er">)</span></span>
-<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>  <span class="fu">class</span>(result) <span class="ot">&lt;-</span> <span class="st">'plpModel'</span></span>
-<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>  <span class="fu">attr</span>(result, <span class="st">'predictionFunction'</span>) <span class="ot">&lt;-</span> <span class="st">'madeupPrediction'</span></span>
-<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>  <span class="fu">attr</span>(result, <span class="st">'modelType'</span>) <span class="ot">&lt;-</span> <span class="st">'binary'</span></span>
-<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(result)</span>
-<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>fitMadeUp <span class="ot">&lt;-</span> <span class="cf">function</span>(trainData, modelSettings, search, analysisId){</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="co"># set the seed for reproducibility</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  param <span class="ot">&lt;-</span> modelSettings<span class="sc">$</span>param</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>seed)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  </span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="co"># add folds to labels:</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  trainData<span class="sc">$</span>labels <span class="ot">&lt;-</span> <span class="fu">merge</span>(trainData<span class="sc">$</span>labels, trainData<span class="sc">$</span>folds, <span class="at">by=</span> <span class="st">'rowId'</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="co"># convert data into sparse R Matrix:</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  mappedData <span class="ot">&lt;-</span> <span class="fu">toSparseM</span>(trainData,<span class="at">map=</span><span class="cn">NULL</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  matrixData <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>dataMatrix</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  labels <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>labels</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  covariateRef <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>covariateRef</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  <span class="co">#============= STEP 1 ======================================</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>  <span class="co"># pick the best hyper-params and then do final training on all data...</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>  <span class="fu">writeLines</span>(<span class="st">'Cross validation'</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>  param.sel <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>    param, </span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>    <span class="cf">function</span>(x){</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>      <span class="fu">do.call</span>(</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>        made_up_model, </span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>        <span class="fu">list</span>(</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>          <span class="at">param =</span> x, </span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>          <span class="at">final =</span> F, </span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>          <span class="at">data =</span> matrixData, </span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>          <span class="at">labels =</span> labels</span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>          )  </span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>      )</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>      }</span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>    )</span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>  hyperSummary <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>hyperSum))</span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>  hyperSummary <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(hyperSummary)</span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>  hyperSummary<span class="sc">$</span>auc <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>auc)) </span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>  param.sel <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>auc))</span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>  bestInd <span class="ot">&lt;-</span> <span class="fu">which.max</span>(param.sel)</span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>  </span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>  <span class="co">#get cross val prediction for best hyper-parameters</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>  prediction <span class="ot">&lt;-</span> param.sel[[bestInd]]<span class="sc">$</span>prediction</span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>  prediction<span class="sc">$</span>evaluationType <span class="ot">&lt;-</span> <span class="st">'CV'</span></span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>  </span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>  <span class="fu">writeLines</span>(<span class="st">'final train'</span>)</span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>  finalResult <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>    made_up_model, </span>
+<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>    <span class="fu">list</span>(</span>
+<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a>      <span class="at">param =</span> param[[bestInd]], </span>
+<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>      <span class="at">final =</span> T, </span>
+<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>      <span class="at">data =</span> matrixData, </span>
+<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>      <span class="at">labels =</span> labels</span>
+<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>      )  </span>
+<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>    )</span>
+<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a>  </span>
+<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a>  trainedModel <span class="ot">&lt;-</span> finalResult<span class="sc">$</span>model</span>
+<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a>  </span>
+<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a>  <span class="co"># prediction risk on training data:</span></span>
+<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a>  finalResult<span class="sc">$</span>prediction<span class="sc">$</span>evaluationType <span class="ot">&lt;-</span> <span class="st">'Train'</span></span>
+<span id="cb6-57"><a href="#cb6-57" tabindex="-1"></a>  </span>
+<span id="cb6-58"><a href="#cb6-58" tabindex="-1"></a>  <span class="co"># get CV and train prediction</span></span>
+<span id="cb6-59"><a href="#cb6-59" tabindex="-1"></a>  prediction <span class="ot">&lt;-</span> <span class="fu">rbind</span>(prediction, finalResult<span class="sc">$</span>prediction)</span>
+<span id="cb6-60"><a href="#cb6-60" tabindex="-1"></a>  </span>
+<span id="cb6-61"><a href="#cb6-61" tabindex="-1"></a>  varImp <span class="ot">&lt;-</span> covariateRef <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">collect</span>()</span>
+<span id="cb6-62"><a href="#cb6-62" tabindex="-1"></a>  <span class="co"># no feature importance available</span></span>
+<span id="cb6-63"><a href="#cb6-63" tabindex="-1"></a>  vqrImp<span class="sc">$</span>covariateValue <span class="ot">&lt;-</span> <span class="dv">0</span> </span>
+<span id="cb6-64"><a href="#cb6-64" tabindex="-1"></a>  </span>
+<span id="cb6-65"><a href="#cb6-65" tabindex="-1"></a> timeToTrain <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>() <span class="sc">-</span> start</span>
+<span id="cb6-66"><a href="#cb6-66" tabindex="-1"></a></span>
+<span id="cb6-67"><a href="#cb6-67" tabindex="-1"></a>  <span class="co"># construct the standard output for a model:</span></span>
+<span id="cb6-68"><a href="#cb6-68" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">model =</span> trainedModel,</span>
+<span id="cb6-69"><a href="#cb6-69" tabindex="-1"></a>                 <span class="at">prediction =</span> prediction, </span>
+<span id="cb6-70"><a href="#cb6-70" tabindex="-1"></a>    <span class="at">preprocessing =</span> <span class="fu">list</span>(</span>
+<span id="cb6-71"><a href="#cb6-71" tabindex="-1"></a>                   <span class="at">featureEngineering =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>featureEngineering,</span>
+<span id="cb6-72"><a href="#cb6-72" tabindex="-1"></a>      <span class="at">tidyCovariates =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>tidyCovariateDataSettings, </span>
+<span id="cb6-73"><a href="#cb6-73" tabindex="-1"></a>      <span class="at">requireDenseMatrix =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>requiresDenseMatrix,</span>
+<span id="cb6-74"><a href="#cb6-74" tabindex="-1"></a>      </span>
+<span id="cb6-75"><a href="#cb6-75" tabindex="-1"></a>                 ),</span>
+<span id="cb6-76"><a href="#cb6-76" tabindex="-1"></a>    <span class="at">modelDesign =</span> <span class="fu">list</span>(</span>
+<span id="cb6-77"><a href="#cb6-77" tabindex="-1"></a>      <span class="at">outcomeId =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>outcomeId,</span>
+<span id="cb6-78"><a href="#cb6-78" tabindex="-1"></a>      <span class="at">targetId =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>targetId,</span>
+<span id="cb6-79"><a href="#cb6-79" tabindex="-1"></a>      <span class="at">plpDataSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>plpDataSettings,</span>
+<span id="cb6-80"><a href="#cb6-80" tabindex="-1"></a>      <span class="at">covariateSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>covariateSettings,</span>
+<span id="cb6-81"><a href="#cb6-81" tabindex="-1"></a>      <span class="at">populationSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>populationSettings,</span>
+<span id="cb6-82"><a href="#cb6-82" tabindex="-1"></a>      <span class="at">featureEngineeringSettings =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>featureEngineeringSettings,</span>
+<span id="cb6-83"><a href="#cb6-83" tabindex="-1"></a>      <span class="at">prerocessSettings =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>prerocessSettings, </span>
+<span id="cb6-84"><a href="#cb6-84" tabindex="-1"></a>      <span class="at">modelSettings =</span> <span class="fu">list</span>(</span>
+<span id="cb6-85"><a href="#cb6-85" tabindex="-1"></a>        <span class="at">model =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>modelName, <span class="co"># the model name</span></span>
+<span id="cb6-86"><a href="#cb6-86" tabindex="-1"></a>        <span class="at">param =</span> param,</span>
+<span id="cb6-87"><a href="#cb6-87" tabindex="-1"></a>        <span class="at">finalModelParameters =</span> param[[bestInd]], <span class="co"># best hyper-parameters</span></span>
+<span id="cb6-88"><a href="#cb6-88" tabindex="-1"></a>        <span class="at">extraSettings =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)</span>
+<span id="cb6-89"><a href="#cb6-89" tabindex="-1"></a>      ),</span>
+<span id="cb6-90"><a href="#cb6-90" tabindex="-1"></a>      <span class="at">splitSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>splitSettings,</span>
+<span id="cb6-91"><a href="#cb6-91" tabindex="-1"></a>      <span class="at">sampleSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>sampleSettings</span>
+<span id="cb6-92"><a href="#cb6-92" tabindex="-1"></a>    ),</span>
+<span id="cb6-93"><a href="#cb6-93" tabindex="-1"></a>    </span>
+<span id="cb6-94"><a href="#cb6-94" tabindex="-1"></a>    <span class="at">trainDetails =</span> <span class="fu">list</span>(</span>
+<span id="cb6-95"><a href="#cb6-95" tabindex="-1"></a>      <span class="at">analysisId =</span> analysisId,</span>
+<span id="cb6-96"><a href="#cb6-96" tabindex="-1"></a>      <span class="at">developmentDatabase =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>cdmDatabaseSchema,</span>
+<span id="cb6-97"><a href="#cb6-97" tabindex="-1"></a>      <span class="at">attrition =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>attrition, </span>
+<span id="cb6-98"><a href="#cb6-98" tabindex="-1"></a>      <span class="at">trainingTime =</span> timeToTrain, <span class="co"># how long it took to train the model</span></span>
+<span id="cb6-99"><a href="#cb6-99" tabindex="-1"></a>      <span class="at">trainingDate =</span> <span class="fu">Sys.Date</span>(),</span>
+<span id="cb6-100"><a href="#cb6-100" tabindex="-1"></a>      <span class="at">hyperParamSearch =</span> hyperSummary <span class="co"># the hyper-parameters and performance data.frame</span></span>
+<span id="cb6-101"><a href="#cb6-101" tabindex="-1"></a>    ),</span>
+<span id="cb6-102"><a href="#cb6-102" tabindex="-1"></a>    <span class="at">covariateImportance =</span> <span class="fu">merge</span>(trainData<span class="sc">$</span>covariateData<span class="sc">$</span>covariateRef, varImp, <span class="at">by=</span><span class="st">'covariateId'</span>) <span class="co"># add variable importance to covariateRef if possible</span></span>
+<span id="cb6-103"><a href="#cb6-103" tabindex="-1"></a>  ),</span>
+<span id="cb6-104"><a href="#cb6-104" tabindex="-1"></a>    covariateImportance <span class="ot">=</span> varImp</span>
+<span id="cb6-105"><a href="#cb6-105" tabindex="-1"></a>  <span class="er">)</span></span>
+<span id="cb6-106"><a href="#cb6-106" tabindex="-1"></a>  <span class="fu">class</span>(result) <span class="ot">&lt;-</span> <span class="st">'plpModel'</span></span>
+<span id="cb6-107"><a href="#cb6-107" tabindex="-1"></a>  <span class="fu">attr</span>(result, <span class="st">'predictionFunction'</span>) <span class="ot">&lt;-</span> <span class="st">'madeupPrediction'</span></span>
+<span id="cb6-108"><a href="#cb6-108" tabindex="-1"></a>  <span class="fu">attr</span>(result, <span class="st">'modelType'</span>) <span class="ot">&lt;-</span> <span class="st">'binary'</span></span>
+<span id="cb6-109"><a href="#cb6-109" tabindex="-1"></a>  <span class="fu">return</span>(result)</span>
+<span id="cb6-110"><a href="#cb6-110" tabindex="-1"></a>    </span>
+<span id="cb6-111"><a href="#cb6-111" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="helpers">Helpers<a class="anchor" aria-label="anchor" href="#helpers"></a>
