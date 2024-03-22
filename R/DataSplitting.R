@@ -197,10 +197,6 @@ splitData <- function(plpData = plpData,
       populationSize = nrow(trainData$labels)
       )
     
-    # add pop size to covariateData as used in tidyCovariates
-    attr(trainData$covariateData, "metaData") <- list(populationSize = nrow(trainData$labels))
-    class(trainData$covariateData) <- "CovariateData"
-    
     testId <- splitId[splitId$index<0,]
     testData <- list()
     class(testData) <- 'plpData'
@@ -216,7 +212,6 @@ splitData <- function(plpData = plpData,
         data.frame(rowId = testId$rowId), 
         sizeN = 10000000)
     }
-    class(testData$covariateData) <- "CovariateData"
     
     result <- list(
       Train =  trainData,
