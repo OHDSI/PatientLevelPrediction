@@ -297,6 +297,64 @@ test_that("test IHT incorrect inputs", {
   expect_error(setIterativeHardThresholding(seed = "F"))
 })
 
+test_that("set BAR inputs", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  modelSet <- setBrokenAdaptiveRidge(seed = 42)
+  expect_s3_class(modelSet, "modelSettings")
+  expect_equal(modelSet$fitFunction, "fitCyclopsModel")
+  expect_equal(modelSet$settings$modelName, "brokenAdaptiveRidge")
+  expect_equal(modelSet$settings$cyclopsModelType, "logistic")
+  expect_equal(modelSet$settings$modelType, "binary")
+  expect_equal(modelSet$settings$priorfunction, "BrokenAdaptiveRidge::createBarPrior")
+  expect_equal(modelSet$settings$manualPenaltyCv, TRUE)
+  expect_equal(modelSet$settings$manualPenaltyCvWarmStart, TRUE)
+  expect_equal(modelSet$settings$useControl, FALSE)
+  expect_equal(modelSet$param$priorParams$initialRidgeVariance, "auto")
+  expect_equal(modelSet$param$priorParams$penalty, "auto")
+
+  modelSet <- setBrokenAdaptiveRidge(
+    initialRidgeVariance = 0.5,
+    penalty = "logN",
+    penaltyRatio = 0.2,
+    penaltyGridSize = 5,
+    prior = "fast",
+    seed = 42
+  )
+  expect_equal(modelSet$settings$priorfunction, "BrokenAdaptiveRidge::createFastBarPrior")
+  expect_equal(modelSet$settings$manualPenaltyCv, FALSE)
+  expect_equal(modelSet$settings$useControl, TRUE)
+  expect_equal(modelSet$settings$penaltyRatio, 0.2)
+  expect_equal(modelSet$settings$penaltyGridSize, 5)
+  expect_equal(modelSet$param$priorParams$initialRidgeVariance, 0.5)
+  expect_equal(modelSet$param$priorParams$penalty, "logN")
+  expect_equal(modelSet$param$priorParams$maxIterations, 3000)
+})
+
+test_that("test BAR incorrect inputs", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = "bad"))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = c(0.1, 0.2)))
+  expect_error(setBrokenAdaptiveRidge(penalty = "bad"))
+  expect_error(setBrokenAdaptiveRidge(penalty = c(0.1, 0.2)))
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = 1))
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = 1.5))
+  expect_error(setBrokenAdaptiveRidge(prior = "bad"))
+})
+
+test_that("BAR penalty grid starts at log(n) / 2", {
+  labels <- data.frame(rowId = seq_len(100))
+
+  grid <- createBarPenaltyGrid(labels, penaltyRatio = 0.1, penaltyGridSize = 3)
+
+  expect_equal(length(grid), 3)
+  expect_equal(grid[1], log(100) / 2)
+  expect_equal(grid[3], 0.1 * log(100) / 2)
+})
+
 
 
 # ================ FUNCTION TESTING
