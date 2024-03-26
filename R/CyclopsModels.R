@@ -422,7 +422,7 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   #get CV - added && status == "OK" to only run if the model fit sucsessfully 
   if(modelType == "logistic" && useCrossValidation && !is.null(prior)){
     outcomeModel$cv <- getCV(cyclopsData, labels, cvVariance = fit$variance, folds = folds,
-                             priorType = prior)
+                             prior = prior)
   }
   
   return(outcomeModel)
