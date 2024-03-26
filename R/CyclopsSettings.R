@@ -371,3 +371,151 @@ setIterativeHardThresholding <- function(
 
   return(result)
 }
+
+
+#' Create setting for Broken Adaptive Ridge logistic regression
+#'
+#' @description
+#' Creates model settings for Broken Adaptive Ridge logistic regression using
+#' Cyclops and the BrokenAdaptiveRidge prior. `initialRidgeVariance = "auto"`
+#' first fits a ridge model with Cyclops cross-validation and uses the selected
+#' ridge variance to initialize BAR. `penalty = "auto"` cross-validates over a
+#' BAR penalty grid and refits using the penalty with the highest mean
+#' out-of-fold AUC.
+#'
+#' @param initialRidgeVariance Numeric prior starting variance, or `"auto"` to
+#'   estimate this using ridge cross-validation.
+#' @param seed An option to add a seed when training the model.
+#' @param includeCovariateIds A set of covariateIds to limit the analysis to.
+#' @param noShrinkage A set of covariates which are forced into the model. The
+#'   default is the intercept.
+#' @param penalty Numeric BAR penalty, `"logN"` to use `log(n) / 2`, or `"auto"`
+#'   to cross-validate over a penalty grid.
+#' @param penaltyRatio Minimum penalty in the automatic grid as a ratio of the
+#'   `log(n) / 2` starting penalty.
+#' @param penaltyGridSize Number of penalties to evaluate when `penalty = "auto"`.
+#' @param threads An option to set number of threads when training model.
+#' @param forceIntercept Logical: Force intercept coefficient into prior.
+#' @param upperLimit Numeric: Upper prior variance limit for grid-search.
+#' @param lowerLimit Numeric: Lower prior variance limit for grid-search.
+#' @param tolerance Numeric: maximum relative change in convergence criterion
+#'   from successive iterations to achieve convergence.
+#' @param maxIterations Integer: maximum iterations of Cyclops to attempt before
+#'   returning a failed-to-converge error.
+#' @param threshold Numeric BAR threshold.
+#' @param prior Which BAR prior implementation to use: `"regular"` or `"fast"`.
+#'
+#' @return `modelSettings` object
+#'
+#' @examplesIf rlang::is_installed("BrokenAdaptiveRidge")
+#' modelBar <- setBrokenAdaptiveRidge(seed = 42)
+#' @export
+setBrokenAdaptiveRidge <- function(
+    initialRidgeVariance = "auto",
+    seed = NULL,
+    includeCovariateIds = c(),
+    noShrinkage = c("(Intercept)"),
+    penalty = "auto",
+    penaltyRatio = 0.1,
+    penaltyGridSize = 10,
+    threads = -1,
+    forceIntercept = FALSE,
+    upperLimit = 20,
+    lowerLimit = 0.01,
+    tolerance = 2e-06,
+    maxIterations = 3000,
+    threshold = 1e-06,
+    prior = "regular") {
+  rlang::check_installed("BrokenAdaptiveRidge")
+
+  checkIsClass(seed, c("numeric", "NULL", "integer"))
+  if (is.null(seed[1])) {
+    seed <- as.integer(sample(100000000, 1))
+  }
+  checkIsClass(threads, c("numeric", "integer"))
+  checkIsClass(initialRidgeVariance, c("numeric", "integer", "character"))
+  if (length(initialRidgeVariance) != 1) {
+    stop("initialRidgeVariance must be a single value")
+  }
+  if (inherits(initialRidgeVariance, "character") && !identical(initialRidgeVariance, "auto")) {
+    stop('initialRidgeVariance must be numeric or "auto"')
+  }
+  checkIsClass(penalty, c("numeric", "integer", "character"))
+  if (length(penalty) != 1) {
+    stop("penalty must be a single value")
+  }
+  if (inherits(penalty, "character") && !penalty %in% c("auto", "logN")) {
+    stop('penalty must be numeric, "auto", or "logN"')
+  }
+  checkIsClass(penaltyRatio, c("numeric", "integer"))
+  checkHigherEqual(penaltyRatio, 0)
+  if (length(penaltyRatio) != 1 || penaltyRatio <= 0 || penaltyRatio >= 1) {
+    stop("penaltyRatio must be a single value greater than 0 and less than 1")
+  }
+  checkIsClass(penaltyGridSize, c("numeric", "integer"))
+  if (length(penaltyGridSize) != 1 || penaltyGridSize < 1 || penaltyGridSize != floor(penaltyGridSize)) {
+    stop("penaltyGridSize must be a single positive whole number")
+  }
+  checkIsClass(lowerLimit, c("numeric", "integer"))
+  checkIsClass(upperLimit, c("numeric", "integer"))
+  checkHigherEqual(upperLimit, lowerLimit)
+  if (!is.logical(forceIntercept)) {
+    stop("forceIntercept must be of type: logical")
+  }
+
+  prior <- tolower(prior[1])
+  if (!prior %in% c("regular", "fast")) {
+    stop('prior must be "regular" or "fast"')
+  }
+  priorFunction <- if (identical(prior, "fast")) {
+    "BrokenAdaptiveRidge::createFastBarPrior"
+  } else {
+    "BrokenAdaptiveRidge::createBarPrior"
+  }
+
+  param <- list(
+    priorParams = list(
+      forceIntercept = forceIntercept,
+      initialRidgeVariance = initialRidgeVariance,
+      exclude = noShrinkage,
+      tolerance = tolerance[1],
+      maxIterations = maxIterations[1],
+      penalty = penalty,
+      threshold = threshold
+    ),
+    includeCovariateIds = includeCovariateIds,
+    upperLimit = upperLimit,
+    lowerLimit = lowerLimit
+  )
+
+  settings <- list(
+    modelName = "brokenAdaptiveRidge",
+    modelType = "binary",
+    cyclopsModelType = "logistic",
+    priorfunction = priorFunction,
+    selectorType = "byPid",
+    crossValidationInPrior = FALSE,
+    addIntercept = TRUE,
+    useControl = !identical(penalty, "auto"),
+    manualPenaltyCv = identical(penalty, "auto"),
+    manualPenaltyCvWarmStart = TRUE,
+    penaltyRatio = penaltyRatio[1],
+    penaltyGridSize = penaltyGridSize[1],
+    seed = seed[1],
+    threads = threads[1],
+    tolerance = tolerance[1],
+    cvRepetitions = 1,
+    maxIterations = maxIterations[1],
+    saveType = "RtoJson",
+    predict = "predictCyclops"
+  )
+
+  result <- list(
+    fitFunction = "fitCyclopsModel",
+    param = param,
+    settings = settings
+  )
+  class(result) <- "modelSettings"
+
+  return(result)
+}
