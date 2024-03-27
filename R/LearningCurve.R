@@ -188,7 +188,7 @@ createLearningCurve <- function(
     nRuns <- length(trainFractions)
     
     settings = list(
-      plpData = plpData,
+      plpData = quote(plpData),
       outcomeId = outcomeId,
       analysisId = analysisId,
       populationSettings = populationSettings,
@@ -238,7 +238,7 @@ createLearningCurve <- function(
 
 lcWrapper <- function(settings){
   plpData <- PatientLevelPrediction::loadPlpData(settings$plpData)
-  settings$plpData <- plpData
+  settings$plpData <- quote(plpData)
   result <- tryCatch({do.call(runPlp, settings)},
                      warning = function(war) {
                        ParallelLogger::logInfo(paste0('a warning: ', war))
