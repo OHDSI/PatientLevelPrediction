@@ -15,8 +15,9 @@ copyTrainData <- function(trainData) {
 createTinyPlpData <- function(plpData, plpResult) {
   
   covariates <- plpResult$model$covariateImportance %>% 
-    dplyr::slice_max(order_by = abs(covariateValue),n = 20, with_ties=F) %>% 
-    dplyr::pull(covariateId)
+    dplyr::slice_max(order_by = abs(.data$covariateValue),
+                     n = 20, with_ties = F) %>% 
+    dplyr::pull(.data$covariateId)
   tinyPlpData <- plpData
   tinyPlpData$covariateData <- Andromeda::copyAndromeda(plpData$covariateData)
   

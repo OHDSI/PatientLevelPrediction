@@ -69,9 +69,10 @@ test_that("getTrainFractions works", {
   learningCurve <- PatientLevelPrediction::createLearningCurve(
     plpData = tinyPlpData,
     outcomeId = 2, parallel = F, cores = -1,
-    modelSettings = setLassoLogisticRegression(),
+    modelSettings = setLassoLogisticRegression(seed = 42),
     saveDirectory =  file.path(saveLoc, 'lcc'),
-    splitSettings = createDefaultSplitSetting(testFraction = 0.33, nfold=2), 
+    splitSettings = createDefaultSplitSetting(testFraction = 0.33, nfold = 2,
+                                              splitSeed = 42), 
     trainEvents = c(150,200),
     preprocessSettings = createPreprocessSettings(
       minFraction = 0.001,
@@ -79,7 +80,7 @@ test_that("getTrainFractions works", {
     )
   )
   testthat::expect_true(is.data.frame(learningCurve))
-  testthat::expect_equal(sum(colnames(learningCurve)%in%c(
+  testthat::expect_equal(sum(colnames(learningCurve) %in% c(
     "trainFraction",
     "Train_AUROC",
     "nPredictors",
