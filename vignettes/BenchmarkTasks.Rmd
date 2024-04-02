@@ -25,7 +25,7 @@ output:
 ---
 <!--
 %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Best Practices}
+%\VignetteIndexEntry{Benchmark Tasks}
 -->
 
 ## Benchmark Tasks For Large-Scale Empirical Analyses
