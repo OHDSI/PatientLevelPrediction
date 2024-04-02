@@ -36,13 +36,28 @@ dir.create(saveLoc)
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-data(plpDataSimulationProfile, envir = environment())
+data("plpDataSimulationProfile")
 
 # PLPDATA
-set.seed(42)
-sampleSize <- 1800
-plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails)
+outcomeId <- 3 # GIbleed
+
+databaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails, 
+  cdmDatabaseSchema = "main", 
+  cdmDatabaseName = "main",
+  cohortDatabaseSchema = "main", 
+  cohortTable = "cohort", 
+  outcomeDatabaseSchema = "main", 
+  outcomeTable =  "cohort",
+  targetId = 1, 
+  outcomeIds = outcomeId,
+  cdmVersion = 5)
+
+plpData <- getPlpData(databaseDetails = databaseDetails,
+                      covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+                      restrictPlpDataSettings = createRestrictPlpDataSettings()) 
 
 # POPULATION
 populationSettings <- createStudyPopulationSettings(
@@ -65,7 +80,7 @@ lrSet <- setLassoLogisticRegression(seed = 42)
 # RUNPLP - LASSO LR
 plpResult <- runPlp(
   plpData = plpData, 
-  outcomeId = 2, 
+  outcomeId = outcomeId, 
   analysisId = 'Test', 
   analysisName = 'Testing analysis',
   populationSettings = populationSettings, 
@@ -81,7 +96,7 @@ plpResult <- runPlp(
 # now diagnose
 diagnoseResult <- diagnosePlp(
   plpData = plpData,
-  outcomeId = 2,
+  outcomeId = outcomeId,
   analysisId = 'Test', 
   populationSettings = populationSettings,
   splitSettings = createDefaultSplitSetting(splitSeed = 12),
@@ -102,7 +117,7 @@ diagnoseResult <- diagnosePlp(
 
 population <- createStudyPopulation(
   plpData = plpData,
-  outcomeId = 2, 
+  outcomeId = outcomeId, 
   populationSettings = populationSettings
   )
 

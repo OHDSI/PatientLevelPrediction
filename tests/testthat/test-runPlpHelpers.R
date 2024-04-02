@@ -22,7 +22,7 @@ test_that("check printHeader runs", {
   header <- printHeader(
     plpData = plpData, 
     targetId = 1, 
-    outcomeId = 2, 
+    outcomeId = outcomeId, 
     analysisId = 123, 
     analysisName = 'test', 
     ExecutionDateTime = Sys.time()
@@ -36,7 +36,7 @@ test_that("checkInputs", {
   check <- checkInputs(
     list(
       plpData = plpData, 
-      outcomeId = 2, 
+      outcomeId = outcomeId, 
       populationSettings = populationSettings
     )
   )
@@ -49,7 +49,7 @@ test_that("checkInputs", {
     checkInputs(
       list(
         plpData = NULL, 
-        outcomeId = 2, 
+        outcomeId = outcomeId, 
         populationSettings = populationSettings
       )
     )
@@ -71,7 +71,7 @@ test_that("checkInputs", {
     checkInputs(
       list(
         plpData = plpData, 
-        outcomeId = 2, 
+        outcomeId = outcomeId, 
         populationSettings = 'populationSettings'
       )
     )

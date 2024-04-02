@@ -63,7 +63,7 @@ test_that("getMaxEndDaysFromCovariates works", {
 test_that("test diagnosePlp works", {
   test <- diagnosePlp(
     plpData = plpData,
-    outcomeId = 2,
+    outcomeId = outcomeId,
     analysisId = 'diagnoseTest',
     populationSettings = createStudyPopulationSettings(
       riskWindowStart = 1, 
@@ -112,25 +112,9 @@ test_that("test diagnosePlp works", {
 
 test_that("test diagnoseMultiplePlp works", {
   
-  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-  Eunomia::createCohorts(connectionDetails)
-  
-  databaseDetails <- createDatabaseDetails(
-    connectionDetails = connectionDetails, 
-    cdmDatabaseSchema = "main", 
-    cdmDatabaseName = "main",
-    cohortDatabaseSchema = "main", 
-    cohortTable = "cohort", 
-    outcomeDatabaseSchema = "main", 
-    outcomeTable =  "cohort",
-    targetId = 1, 
-    outcomeIds = 3, #make this ids
-    cdmVersion = 5
-  )
-  
   analysis1 <- createModelDesign(
     targetId = 1,
-    outcomeId = 3,
+    outcomeId = outcomeId,
     restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
     populationSettings = createStudyPopulationSettings(),
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
@@ -143,7 +127,7 @@ test_that("test diagnoseMultiplePlp works", {
   
   analysis2 <- createModelDesign(
     targetId = 1,
-    outcomeId = 3,
+    outcomeId = outcomeId,
     restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
     populationSettings = createStudyPopulationSettings(washoutPeriod = 400),
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
@@ -161,7 +145,7 @@ test_that("test diagnoseMultiplePlp works", {
       analysis2
       ),
     cohortDefinitions = data.frame(
-      cohortId = c(1,3),
+      cohortId = c(1, outcomeId),
       cohortName = c('target', 'outcome')
     ), 
     saveDirectory = file.path(saveLoc, 'diagnosticsMultiple')

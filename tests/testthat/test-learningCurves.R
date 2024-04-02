@@ -19,7 +19,7 @@ context("LearningCurves")
 # learningCurve 
 learningCurve <- PatientLevelPrediction::createLearningCurve(
   plpData = plpData,
-  outcomeId = 2, parallel = F, cores = -1,
+  outcomeId = outcomeId, parallel = F, cores = -1,
   modelSettings = setLassoLogisticRegression(),
   saveDirectory =  file.path(saveLoc, 'lcc'),
   splitSettings = createDefaultSplitSetting(testFraction = 0.2, nfold=2), 
@@ -68,7 +68,7 @@ test_that("getTrainFractions works", {
   
   learningCurve <- PatientLevelPrediction::createLearningCurve(
     plpData = tinyPlpData,
-    outcomeId = 2, parallel = F, cores = -1,
+    outcomeId = outcomeId, parallel = F, cores = -1,
     modelSettings = setLassoLogisticRegression(seed = 42),
     saveDirectory =  file.path(saveLoc, 'lcc'),
     splitSettings = createDefaultSplitSetting(testFraction = 0.33, nfold = 2,

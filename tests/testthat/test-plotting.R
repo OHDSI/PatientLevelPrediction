@@ -38,7 +38,7 @@ test_that("plots", {
   test <- plotF1Measure(plpResult, typeColumn = 'evaluation')
   testthat::expect_s3_class(test, 'arrangelist')
   
-  if(!is.null(plpResult$performanceEvaluation$demographicSummary)){
+  if (!is.null(plpResult$performanceEvaluation$demographicSummary)) {
     test <- plotDemographicSummary(plpResult, typeColumn = 'evaluation')
     testthat::expect_s3_class(test, 'arrangelist')
   }
@@ -52,7 +52,7 @@ test_that("plots", {
   test <- plotVariableScatterplot(plpResult$covariateSummary)
   testthat::expect_s3_class(test, 'ggplot')
   
-  test <- plotGeneralizability(plpResult$covariateSummary, fileName=NULL)
+  test <- plotGeneralizability(plpResult$covariateSummary, fileName = NULL)
   testthat::expect_s3_class(test, 'grob')
 
 })
@@ -61,7 +61,7 @@ test_that("plots", {
 test_that("outcomeSurvivalPlot", {
   
   # test the plot works
-  test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = 2)
+  test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = outcomeId)
   testthat::expect_s3_class(test, 'ggsurvplot')
   
   testthat::expect_error(outcomeSurvivalPlot())
@@ -82,7 +82,7 @@ test_that("plotPlp", {
   testthat::expect_equal(dir.exists(file.path(saveLoc,'plots')), T)
   
   # expect plots to be there
-  expect_true(length(dir(file.path(saveLoc,'plots')))>0)
+  expect_true(length(dir(file.path(saveLoc,'plots'))) > 0)
   
 })
 

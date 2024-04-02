@@ -470,8 +470,8 @@ plotLearningCurve <- function(learningCurve,
   
   # create plot object
   plot <- tidyLearningCurve %>%
-    ggplot2::ggplot(ggplot2::aes_string(x = abscissa, y= 'value',
-      col = "Dataset")) +
+    ggplot2::ggplot(ggplot2::aes(x = .data[[abscissa]], y = .data[['value']],
+      col = .data[["Dataset"]])) +
     ggplot2::geom_line() +
     ggplot2::coord_cartesian(ylim = yAxisRange, expand = FALSE) +
     ggplot2::labs(title = plotTitle, subtitle = plotSubtitle, 

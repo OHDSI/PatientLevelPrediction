@@ -17,26 +17,9 @@
 library("testthat")
 context("MultiplePlp")
 
-connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-Eunomia::createCohorts(connectionDetails)
-
-databaseDetails <- createDatabaseDetails(
-  connectionDetails = connectionDetails, 
-  cdmDatabaseSchema = "main", 
-  cdmDatabaseName = "main",
-  cohortDatabaseSchema = "main", 
-  cohortTable = "cohort", 
-  outcomeDatabaseSchema = "main", 
-  outcomeTable =  "cohort",
-  targetId = 1, 
-  outcomeIds = 3, #make this ids
-  cdmVersion = 5
-  )
-
-
 analysis1 <- createModelDesign(
   targetId = 1,
-  outcomeId = 3,
+  outcomeId = outcomeId,
   restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
   populationSettings = createStudyPopulationSettings(),
   covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
@@ -50,7 +33,7 @@ analysis1 <- createModelDesign(
 test_that("createModelDesign - test working", {
   
   expect_equal(analysis1$targetId, 1)
-  expect_equal(analysis1$outcomeId, 3)
+  expect_equal(analysis1$outcomeId, outcomeId)
   expect_equal(analysis1$restrictPlpDataSettings, createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0))
   expect_equal(analysis1$covariateSettings, FeatureExtraction::createDefaultCovariateSettings())
   expect_equal(analysis1$featureEngineeringSettings, list(createFeatureEngineeringSettings(type= "none")))
@@ -103,24 +86,11 @@ test_that("loading analyses settings", {
 }
 )
 
-analysis2 <- createModelDesign(
-  targetId = 10,
-  outcomeId = 2,
-  restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 9999),
-  populationSettings = createStudyPopulationSettings(),
-  covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = T),
-  featureEngineeringSettings = NULL,
-  sampleSettings = NULL,
-  preprocessSettings = createPreprocessSettings(),
-  modelSettings = setLassoLogisticRegression(seed = 12)
-)
-
-
 test_that("test run multiple", {
   
   analysis3 <- createModelDesign(
     targetId = 1,
-    outcomeId = 3,
+    outcomeId = outcomeId,
     restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
     populationSettings = createStudyPopulationSettings(),
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),

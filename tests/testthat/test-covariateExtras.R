@@ -18,10 +18,6 @@ library("testthat")
 
 context("CovariateExtras")
 
-connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-Eunomia::createCohorts(connectionDetails)
-
-
 test_that("settings creation", {
   
 covSet <- createCohortCovariateSettings(
