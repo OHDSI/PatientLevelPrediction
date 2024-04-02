@@ -22,7 +22,7 @@ analysis1 <- createModelDesign(
   outcomeId = outcomeId,
   restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
   populationSettings = createStudyPopulationSettings(),
-  covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+  covariateSettings = covariateSettings,
   featureEngineeringSettings = NULL,
   sampleSettings = NULL,
   splitSettings = createDefaultSplitSetting(splitSeed = 1),
@@ -35,7 +35,7 @@ test_that("createModelDesign - test working", {
   expect_equal(analysis1$targetId, 1)
   expect_equal(analysis1$outcomeId, outcomeId)
   expect_equal(analysis1$restrictPlpDataSettings, createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0))
-  expect_equal(analysis1$covariateSettings, FeatureExtraction::createDefaultCovariateSettings())
+  expect_equal(analysis1$covariateSettings, covariateSettings)
   expect_equal(analysis1$featureEngineeringSettings, list(createFeatureEngineeringSettings(type= "none")))
   expect_equal(analysis1$sampleSettings, list(createSampleSettings(type = 'none')))
   expect_equal(analysis1$preprocessSettings, createPreprocessSettings())
@@ -93,7 +93,7 @@ test_that("test run multiple", {
     outcomeId = outcomeId,
     restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
     populationSettings = createStudyPopulationSettings(),
-    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    covariateSettings = covariateSettings,
     featureEngineeringSettings = createFeatureEngineeringSettings(),
     sampleSettings = createSampleSettings(),
     preprocessSettings = createPreprocessSettings(),
@@ -104,7 +104,8 @@ test_that("test run multiple", {
       trainFraction = 0.75, 
       splitSeed = 123, 
       nfold = 3
-    )
+    ),
+    runCovariateSummary = FALSE
   )
   
   runMultiplePlp(

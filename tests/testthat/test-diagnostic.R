@@ -62,7 +62,7 @@ test_that("getMaxEndDaysFromCovariates works", {
 
 test_that("test diagnosePlp works", {
   test <- diagnosePlp(
-    plpData = plpData,
+    plpData = tinyPlpData,
     outcomeId = outcomeId,
     analysisId = 'diagnoseTest',
     populationSettings = createStudyPopulationSettings(
@@ -115,9 +115,11 @@ test_that("test diagnoseMultiplePlp works", {
   analysis1 <- createModelDesign(
     targetId = 1,
     outcomeId = outcomeId,
-    restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
+    restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, 
+                                                            washoutPeriod = 0,
+                                                            sampleSize = 100),
     populationSettings = createStudyPopulationSettings(),
-    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    covariateSettings = covariateSettings,
     featureEngineeringSettings = NULL,
     sampleSettings = NULL,
     splitSettings = createDefaultSplitSetting(),
@@ -128,9 +130,11 @@ test_that("test diagnoseMultiplePlp works", {
   analysis2 <- createModelDesign(
     targetId = 1,
     outcomeId = outcomeId,
-    restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, washoutPeriod = 0),
+    restrictPlpDataSettings = createRestrictPlpDataSettings(firstExposureOnly = F, 
+                                                            washoutPeriod = 0,
+                                                            sampleSize = 100),
     populationSettings = createStudyPopulationSettings(washoutPeriod = 400),
-    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    covariateSettings = covariateSettings,
     featureEngineeringSettings = NULL,
     sampleSettings = NULL,
     splitSettings = createDefaultSplitSetting(),

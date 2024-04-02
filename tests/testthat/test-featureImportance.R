@@ -21,7 +21,7 @@ context("FeatureImportance")
 
 test_that("pfi feature importance returns data.frame", {
   
-  # limit to a sample of 10 covariates for faster test
+  # limit to a sample of 2 covariates for faster test
   covariates <- plpResult$model$covariateImportance %>% 
     dplyr::filter("covariateValue" != 0) %>% 
     dplyr::select("covariateId") %>% 
@@ -30,11 +30,11 @@ test_that("pfi feature importance returns data.frame", {
   
   # if the model had non-zero covariates
   if(length(covariates) > 0){
-    if (length(covariates) > 10) {
-      covariates <- covariates[1:10]
+    if (length(covariates) > 2) {
+      covariates <- covariates[1:2]
     }
     pfiTest <- pfi(plpResult, population, plpData, repeats = 1,
-                   covariates = covariates, cores = NULL, log = NULL,
+                   covariates = covariates, cores = 1, log = NULL,
                    logthreshold = "INFO")
     
     expect_equal(class(pfiTest), 'data.frame')
@@ -46,21 +46,8 @@ test_that("pfi feature importance returns data.frame", {
 })
 
 test_that('pfi feature importance works with logger or without covariates', {
-  tinyResults <- runPlp(plpData = tinyPlpData,
-                        populationSettings = populationSettings,
-                        outcomeId = outcomeId,
-                        analysisId = 'tinyFit',
-                        featureEngineeringSettings = createUnivariateFeatureSelection(k = 10),
-                        executeSettings = createExecuteSettings(
-                          runSplitData = T,
-                          runSampleData = F,
-                          runfeatureEngineering = T,
-                          runPreprocessData = T,
-                          runModelDevelopment = T,
-                          runCovariateSummary = F
-                        ))
-  
-  pfiTest <- pfi(tinyResults, population, tinyPlpData, 
+
+  pfiTest <- pfi(tinyResults, population, nanoData, cores = 1, 
                  covariates = NULL, log = file.path(tempdir(), 'pfiLog'))
   
   expect_equal(class(pfiTest), 'data.frame')

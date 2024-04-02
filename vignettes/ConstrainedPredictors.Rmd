@@ -36,20 +36,20 @@ Here we provide a set of phenotypes that can be used as predictors in prediction
 
 These phenotypes can be extracted from the PhenotypeLibrary R package.  To install the R package run:
 
-```{r echo = T}
+```{r, echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=FALSE}
 remotes::install_github('ohdsi/PhenotypeLibrary')
 ```
 
 
 To extract the cohort definition for Alcoholism with an id of 1165, just run:
 
-```{r echo = T}
+```{r echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval = FALSE}
 PhenotypeLibrary::getPlCohortDefinitionSet(1165)
 ```
 
 in general you can extract all the cohorts by running:
 
-```{r echo = T}
+```{r echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval = FALSE}
 phenotypeDefinitions <- PhenotypeLibrary::getPlCohortDefinitionSet(1152:1215)
 ```
 

@@ -55,8 +55,14 @@ databaseDetails <- createDatabaseDetails(
   outcomeIds = outcomeId,
   cdmVersion = 5)
 
+covariateSettings <- FeatureExtraction::createCovariateSettings(
+  useDemographicsAge = TRUE,
+  useDemographicsGender = TRUE,
+  useConditionOccurrenceAnyTimePrior = TRUE
+)
+
 plpData <- getPlpData(databaseDetails = databaseDetails,
-                      covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+                      covariateSettings = covariateSettings,
                       restrictPlpDataSettings = createRestrictPlpDataSettings()) 
 
 # POPULATION
@@ -141,10 +147,10 @@ createTestData <- function(plpData, population){
 
 testData <- createTestData(plpData, population)
 
-# reduced trainData to only use 10 most important features (as decided by LR)
-reduceTrainData <- function(trainData) {
+# reduced trainData to only use n most important features (as decided by LR)
+reduceTrainData <- function(trainData, n=20) {
   covariates <- plpResult$model$covariateImportance %>% 
-    dplyr::slice_max(order_by = abs(.data$covariateValue),n = 20, with_ties = F) %>% 
+    dplyr::slice_max(order_by = abs(.data$covariateValue),n = n, with_ties = F) %>% 
     dplyr::pull(.data$covariateId)
   
   reducedTrainData <- list(labels = trainData$labels,
@@ -169,3 +175,16 @@ tinyTrainData <- reduceTrainData(trainData)
 
 tinyPlpData <- createTinyPlpData(plpData, plpResult)
 
+nanoData <- createTinyPlpData(plpData, plpResult, n = 2)
+tinyResults <- runPlp(plpData = nanoData,
+                      populationSettings = populationSettings,
+                      outcomeId = outcomeId,
+                      analysisId = 'tinyFit',
+                      executeSettings = createExecuteSettings(
+                        runSplitData = T,
+                        runSampleData = F,
+                        runfeatureEngineering = F,
+                        runPreprocessData = T,
+                        runModelDevelopment = T,
+                        runCovariateSummary = F
+                      ))

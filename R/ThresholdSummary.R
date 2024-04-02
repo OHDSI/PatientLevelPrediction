@@ -205,17 +205,19 @@ getThresholdSummary_survival <- function(prediction, evalColumn, timepoint, ...)
     )
     
     nbSummary <- tryCatch(
-      {
+      { xstart <- max(min(preddat$p),0.001); 
+        xstop <- min(max(preddat$p),0.99);
         stdca(
           data = preddat, 
           outcome = "y", 
           ttoutcome = "t", 
           timepoint = timepoint,  
           predictors = "p", 
-          xstart = max(min(preddat$p),0.001), #0.001, 
-          xstop = min(max(preddat$p),0.99), 
-          xby = 0.001, 
-          smooth=F
+          xstart = xstart, 
+          xstop = xstop, 
+          xby = (xstop - xstart)/100,
+          smooth = FALSE,
+          graph = FALSE
         )
       },
       error = function(e){ParallelLogger::logError(e); return(NULL)}
