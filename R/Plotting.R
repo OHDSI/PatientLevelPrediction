@@ -567,7 +567,7 @@ plotPrecisionRecall <- function(
       dplyr::select("positivePredictiveValue", "sensitivity")
     
     plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(.data$sensitivity, .data$positivePredictiveValue)) +
-      ggplot2::geom_line(size=1) +
+      ggplot2::geom_line(linewidth=1) +
       ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
       ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
       ggplot2::geom_hline(yintercept = inc, linetype="dashed", 

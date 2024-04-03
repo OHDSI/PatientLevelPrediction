@@ -14,7 +14,7 @@ test_that('KNN fit works', {
     analysisPath = tempdir()
   )
   
-  expect_correct_fitPlp(plpModel, tinyTrainData) 
+  expect_correct_fitPlp(plpModel, nanoTrainData) 
   
 })
 
