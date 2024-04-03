@@ -571,7 +571,7 @@ plotPrecisionRecall <- function(
       ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
       ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
       ggplot2::geom_hline(yintercept = inc, linetype="dashed", 
-        color = "red", size=1)  +
+        color = "red", linewidth = 1)  +
       ggplot2::ggtitle(evalType)
   }
   
