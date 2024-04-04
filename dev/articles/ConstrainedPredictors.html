@@ -145,7 +145,7 @@
       <h1 data-toc-skip>Constrained predictors</h1>
                         <h4 data-toc-skip class="author">Jenna Reps</h4>
             
-            <h4 data-toc-skip class="date">2024-03-27</h4>
+            <h4 data-toc-skip class="date">2024-04-04</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/ConstrainedPredictors.Rmd" class="external-link"><code>vignettes/ConstrainedPredictors.Rmd</code></a></small>
       <div class="hidden name"><code>ConstrainedPredictors.Rmd</code></div>
@@ -156,7 +156,7 @@
     
 <!--
 %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Best Practices}
+%\VignetteIndexEntry{Constrainted Predictors}
 -->
 <div class="section level2">
 <h2 id="constrained-predictors">Constrained Predictors<a class="anchor" aria-label="anchor" href="#constrained-predictors"></a>
@@ -170,33 +170,13 @@ prediction models or best practice research.</p>
 package. To install the R package run:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'ohdsi/PhenotypeLibrary'</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Using github PAT from envvar GITHUB_PAT. Use `gitcreds::gitcreds_set()` and unset GITHUB_PAT in .Renviron (or elsewhere) if you want to use the more secure git credential store instead.</span></span></code></pre>
-<pre><code><span><span class="co">## Downloading GitHub repo ohdsi/PhenotypeLibrary@HEAD</span></span></code></pre>
-<pre><code><span><span class="co">## cpp11    (NA -&gt; 0.4.7) [CRAN]</span></span>
-<span><span class="co">## progress (NA -&gt; 1.2.3) [CRAN]</span></span></code></pre>
-<pre><code><span><span class="co">## Installing 2 packages: cpp11, progress</span></span></code></pre>
-<pre><code><span><span class="co">## Installing packages into '/tmp/RtmpJvElmv/temp_libpath23e14a2e312'</span></span>
-<span><span class="co">## (as 'lib' is unspecified)</span></span></code></pre>
-<pre><code><span><span class="co">## <span style="color: #00BBBB;">──</span> <span style="color: #00BBBB;">R CMD build</span> <span style="color: #00BBBB;">─────────────────────────────────────────────────────────────────</span></span></span>
-<span><span class="co">## * checking for file ‘/tmp/RtmpLnNMYM/remotes2d82586fef01/OHDSI-PhenotypeLibrary-bccdd87/DESCRIPTION’ ... OK</span></span>
-<span><span class="co">## * preparing ‘PhenotypeLibrary’:</span></span>
-<span><span class="co">## * checking DESCRIPTION meta-information ... OK</span></span>
-<span><span class="co">## * checking for LF line-endings in source and make files and shell scripts</span></span>
-<span><span class="co">## * checking for empty or unneeded directories</span></span>
-<span><span class="co">## * building ‘PhenotypeLibrary_3.32.0.tar.gz’</span></span></code></pre>
-<pre><code><span><span class="co">## Installing package into '/tmp/RtmpJvElmv/temp_libpath23e14a2e312'</span></span>
-<span><span class="co">## (as 'lib' is unspecified)</span></span></code></pre>
 <p>To extract the cohort definition for Alcoholism with an id of 1165,
 just run:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">PhenotypeLibrary</span><span class="fu">::</span><span class="fu"><a href="https://ohdsi.github.io/PhenotypeLibrary/reference/getPlCohortDefinitionSet.html" class="external-link">getPlCohortDefinitionSet</a></span><span class="op">(</span><span class="fl">1165</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
-<span><span class="co">##   cohortId cohortName json                                                 sql  </span></span>
-<span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>     <span style="text-decoration: underline;">1</span>165 Alcoholism <span style="color: #949494;">"</span>{\n\t\"cdmVersionRange\" : \"&gt;=5.0.0\",\n\t\"Prima… <span style="color: #949494;">"</span>CRE…</span></span></code></pre>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">PhenotypeLibrary</span><span class="fu">::</span><span class="fu">getPlCohortDefinitionSet</span><span class="op">(</span><span class="fl">1165</span><span class="op">)</span></span></code></pre></div>
 <p>in general you can extract all the cohorts by running:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">phenotypeDefinitions</span> <span class="op">&lt;-</span> <span class="fu">PhenotypeLibrary</span><span class="fu">::</span><span class="fu"><a href="https://ohdsi.github.io/PhenotypeLibrary/reference/getPlCohortDefinitionSet.html" class="external-link">getPlCohortDefinitionSet</a></span><span class="op">(</span><span class="fl">1152</span><span class="op">:</span><span class="fl">1215</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">phenotypeDefinitions</span> <span class="op">&lt;-</span> <span class="fu">PhenotypeLibrary</span><span class="fu">::</span><span class="fu">getPlCohortDefinitionSet</span><span class="op">(</span><span class="fl">1152</span><span class="op">:</span><span class="fl">1215</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="the-full-set-of-predictor-phenotypes">The full set of predictor phenotypes<a class="anchor" aria-label="anchor" href="#the-full-set-of-predictor-phenotypes"></a>
