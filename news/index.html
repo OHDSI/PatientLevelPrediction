@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.7</span>
       </span>
     </div>
 
@@ -120,6 +120,18 @@
       <small>Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="6.3.7" id="patientlevelprediction-637">PatientLevelPrediction 6.3.7<a class="anchor" aria-label="anchor" href="#patientlevelprediction-637"></a></h2>
+<ul><li>Clean up dependencies, tibble removed and IHT and ParallelLogger from CRAN</li>
+<li>Use cohortIds for cohortCovariates to comply with FeatureExtraction</li>
+<li>Add cdmDatabaseName from DatabaseDetails to model output</li>
+<li>Fix bug when attributes weren’t preserved on trainData$covariateData after split</li>
+<li>Fix warnings in tests and speed them up</li>
+<li>Fix bug in assignment operator in configurePython</li>
+<li>Delay evaluation of plpData when using do.call like in learningCurves and runMultiplePlp</li>
+<li>Speed up population generation when subjectId’s are distinct</li>
+<li>Fix bug when population was still generated when provided to runPlp</li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="6.3.6" id="patientlevelprediction-636">PatientLevelPrediction 6.3.6<a class="anchor" aria-label="anchor" href="#patientlevelprediction-636"></a></h2>
 <ul><li>fix bug with ohdsi shiny modules version check (issue 415)</li>
