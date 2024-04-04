@@ -1,3 +1,17 @@
+PatientLevelPrediction 6.3.7
+======================
+- Clean up dependencies, tibble removed and IHT and ParallelLogger from CRAN
+- Use cohortIds for cohortCovariates to comply with FeatureExtraction
+- Add cdmDatabaseName from DatabaseDetails to model output
+- Fix bug when attributes weren't preserved on trainData$covariateData after split
+- Fix warnings in tests and speed them up
+- Fix bug in assignment operator in configurePython
+- Delay evaluation of plpData when using do.call like in learningCurves and 
+runMultiplePlp
+- Speed up population generation when subjectId's are distinct
+- Fix bug when population was still generated when provided to runPlp
+
+
 PatientLevelPrediction 6.3.6
 ======================
 - fix bug with ohdsi shiny modules version check (issue 415)
