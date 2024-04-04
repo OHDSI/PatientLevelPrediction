@@ -630,8 +630,8 @@ plotF1Measure <- function(
   }
   
   plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(.data$predictionThreshold, .data$f1Score)) +
-    ggplot2::geom_line(size=1) +
-    ggplot2::geom_point(size=1) +
+    ggplot2::geom_line(linewidth = 1) +
+    ggplot2::geom_point(size = 1) +
     ggplot2::scale_x_continuous("predictionThreshold")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("F1Score") +#, limits=c(0,1))
     ggplot2::ggtitle(evalType)
@@ -844,9 +844,9 @@ plotSparseCalibration <- function(
                                        )) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$lci,ymax=.data$uci, x=x), 
                          fill="blue", alpha=0.2) +
-    ggplot2::geom_point(size=1, color='darkblue') +
+    ggplot2::geom_point(size = 1, color='darkblue') +
     ggplot2::coord_cartesian(ylim = c(0, maxVal), xlim =c(0,maxVal)) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 2, size=1,
+    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = 1,
                          show.legend = TRUE) +
     ggplot2::geom_abline(intercept = res['Intercept'], slope = res['Gradient'],
                          linetype = 1,show.legend = TRUE,
@@ -919,7 +919,7 @@ plotSparseCalibration2 <- function(
     ggplot2::geom_point(size=2, color='black') +
     ggplot2::geom_errorbar(limits) +
     ggplot2::geom_line(colour='darkgrey') +
-    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 5, size=0.4,
+    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 5, linewidth=0.4,
                          show.legend = TRUE) +
     ggplot2::scale_x_continuous("Average Predicted Probability") +
     ggplot2::scale_y_continuous("Observed Fraction With Outcome") +

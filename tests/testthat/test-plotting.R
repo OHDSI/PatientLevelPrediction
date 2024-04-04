@@ -135,9 +135,3 @@ test_that("plotSmoothCalibration", {
   )
   
 })
-
-
-
-
-
-
