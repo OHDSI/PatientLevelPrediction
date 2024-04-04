@@ -111,30 +111,30 @@ getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = N
         tempDemo <- demographicSum %>% 
           dplyr::filter( .data$genGroup == gen & .data$ageGroup == age )
         
-        if(nrow(tempDemo)>0){
-          t1 <- tempDemo %>% dplyr::select("t")
-          y1 <- tempDemo %>% dplyr::select("y")
-          p1 <- tempDemo %>% dplyr::select("value")
+        if (nrow(tempDemo) > 1 & length(unique(tempDemo$y)) > 1) {
+          t <- tempDemo$t
+          y <- tempDemo$y
+          value <- tempDemo$value
           
           out <- tryCatch(
             {
               summary(
-                survival::survfit(survival::Surv(t1$t, y1$y) ~ 1), 
+                survival::survfit(survival::Surv(t, y) ~ 1), 
                 times = timepoint
               )
             },
-            error = function(e){ParallelLogger::logError(e); return(NULL)}
+            error = function(e){ParallelLogger::logError(e);return(NULL)}
           )
           
           if(!is.null(out)){
             demoTemp <- c(
               genGroup = gen, 
               ageGroup = age, 
-              PersonCountAtRisk = length(p1$value),
-              PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
+              PersonCountAtRisk = length(value),
+              PersonCountWithOutcome = round(length(value)*(1-out$surv)),
               observedRisk = 1-out$surv, 
-              averagePredictedProbability = mean(p1$value, na.rm = T),
-              StDevPredictedProbability = stats::sd(p1$value, na.rm = T)
+              averagePredictedProbability = mean(value, na.rm = T),
+              StDevPredictedProbability = stats::sd(value, na.rm = T)
               )
             
             demographicData <- rbind(demographicData, demoTemp)

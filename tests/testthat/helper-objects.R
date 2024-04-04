@@ -1,6 +1,6 @@
 
 # this files contains the objects used in the tests:
-if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
+if (Sys.getenv('GITHUB_ACTIONS') == 'true') {
   # Download the PostreSQL driver ---------------------------
   # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
   jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
@@ -21,7 +21,7 @@ if(Sys.getenv('GITHUB_ACTIONS') == 'true'){
   PatientLevelPrediction::setPythonEnvironment(envname = 'r-reticulate', envtype = "conda")
   
   # if mac install nomkl -- trying to fix github actions
-  if(ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
+  if (ifelse(is.null(Sys.info()), F, Sys.info()['sysname'] == 'Darwin')){
     reticulate::conda_install(envname = 'r-reticulate', packages = c('nomkl'), 
                               forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE, 
                               conda = "auto")
@@ -36,12 +36,34 @@ dir.create(saveLoc)
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # simulated data Tests
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-data(plpDataSimulationProfile, envir = environment())
+data("plpDataSimulationProfile")
 
 # PLPDATA
-sampleSize <- 1500+sample(300,1)
-plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails)
+outcomeId <- 3 # GIbleed
+
+databaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails, 
+  cdmDatabaseSchema = "main", 
+  cdmDatabaseName = "main",
+  cohortDatabaseSchema = "main", 
+  cohortTable = "cohort", 
+  outcomeDatabaseSchema = "main", 
+  outcomeTable =  "cohort",
+  targetId = 1, 
+  outcomeIds = outcomeId,
+  cdmVersion = 5)
+
+covariateSettings <- FeatureExtraction::createCovariateSettings(
+  useDemographicsAge = TRUE,
+  useDemographicsGender = TRUE,
+  useConditionOccurrenceAnyTimePrior = TRUE
+)
+
+plpData <- getPlpData(databaseDetails = databaseDetails,
+                      covariateSettings = covariateSettings,
+                      restrictPlpDataSettings = createRestrictPlpDataSettings()) 
 
 # POPULATION
 populationSettings <- createStudyPopulationSettings(
@@ -50,7 +72,7 @@ populationSettings <- createStudyPopulationSettings(
   removeSubjectsWithPriorOutcome = FALSE,
   priorOutcomeLookback = 99999,
   requireTimeAtRisk = T,
-  minTimeAtRisk=10,
+  minTimeAtRisk = 10,
   riskWindowStart = 0,
   startAnchor = 'cohort start',
   riskWindowEnd = 365,
@@ -59,12 +81,12 @@ populationSettings <- createStudyPopulationSettings(
 
 
 # MODEL SETTINGS
-lrSet <- setLassoLogisticRegression()
+lrSet <- setLassoLogisticRegression(seed = 42)
 
 # RUNPLP - LASSO LR
 plpResult <- runPlp(
   plpData = plpData, 
-  outcomeId = 2, 
+  outcomeId = outcomeId, 
   analysisId = 'Test', 
   analysisName = 'Testing analysis',
   populationSettings = populationSettings, 
@@ -80,7 +102,7 @@ plpResult <- runPlp(
 # now diagnose
 diagnoseResult <- diagnosePlp(
   plpData = plpData,
-  outcomeId = 2,
+  outcomeId = outcomeId,
   analysisId = 'Test', 
   populationSettings = populationSettings,
   splitSettings = createDefaultSplitSetting(splitSeed = 12),
@@ -101,12 +123,13 @@ diagnoseResult <- diagnosePlp(
 
 population <- createStudyPopulation(
   plpData = plpData,
-  outcomeId = 2, 
+  outcomeId = outcomeId, 
   populationSettings = populationSettings
   )
 
 createTrainData <- function(plpData, population){
-  data <- PatientLevelPrediction::splitData(plpData = plpData, population=population,
+  data <- PatientLevelPrediction::splitData(plpData = plpData, 
+                                            population = population,
                                             splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12))
   trainData <- data$Train
   return(trainData)
@@ -115,7 +138,8 @@ createTrainData <- function(plpData, population){
 trainData <- createTrainData(plpData, population)
 
 createTestData <- function(plpData, population){
-  data <- PatientLevelPrediction::splitData(plpData = plpData, population=population,
+  data <- PatientLevelPrediction::splitData(plpData = plpData,
+                                            population = population,
                                             splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12))
   testData <- data$Test
   return(testData)
@@ -123,11 +147,11 @@ createTestData <- function(plpData, population){
 
 testData <- createTestData(plpData, population)
 
-# reduced trainData to only use 10 most important features (as decided by LR)
-reduceTrainData <- function(trainData) {
+# reduced trainData to only use n most important features (as decided by LR)
+reduceTrainData <- function(trainData, n=20) {
   covariates <- plpResult$model$covariateImportance %>% 
-    dplyr::slice_max(order_by = abs(covariateValue),n = 20, with_ties = F) %>% 
-    dplyr::pull(covariateId)
+    dplyr::slice_max(order_by = abs(.data$covariateValue),n = n, with_ties = F) %>% 
+    dplyr::pull(.data$covariateId)
   
   reducedTrainData <- list(labels = trainData$labels,
                            folds = trainData$folds,
@@ -151,3 +175,16 @@ tinyTrainData <- reduceTrainData(trainData)
 
 tinyPlpData <- createTinyPlpData(plpData, plpResult)
 
+nanoData <- createTinyPlpData(plpData, plpResult, n = 2)
+tinyResults <- runPlp(plpData = nanoData,
+                      populationSettings = populationSettings,
+                      outcomeId = outcomeId,
+                      analysisId = 'tinyFit',
+                      executeSettings = createExecuteSettings(
+                        runSplitData = T,
+                        runSampleData = F,
+                        runfeatureEngineering = F,
+                        runPreprocessData = T,
+                        runModelDevelopment = T,
+                        runCovariateSummary = F
+                      ))

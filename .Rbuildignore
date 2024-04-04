@@ -10,5 +10,4 @@ compare_versions
 .github
 docs/*
 _pkgdown.yml
-
-
+^vignettes/articles$

@@ -17,7 +17,7 @@
 context("extractPlp")
 
 test_that("summary.plpData", {
-  attr(plpData$outcomes, "metaData")$outcomeIds <- c(2,3)
+  attr(plpData$outcomes, "metaData")$outcomeIds <- c(outcomeId)
   sum <- summary.plpData(plpData)
   testthat::expect_equal(class(sum),'summary.plpData')
 })
@@ -55,7 +55,7 @@ test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
     cdmDatabaseSchema = 'main', 
     cdmDatabaseId = NULL, 
     targetId = 1, 
-    outcomeIds = 2
+    outcomeIds = outcomeId
   ))
 })
 

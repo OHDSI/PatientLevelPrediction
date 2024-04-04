@@ -293,7 +293,7 @@ plotSparseRoc <- function(
   plots <- list()
   length(plots) <- length(evalTypes)
   
-  for(i in 1:length(evalTypes)){
+  for (i in 1:length(evalTypes)){
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
@@ -316,14 +316,14 @@ plotSparseRoc <- function(
         )
     ) +
       ggplot2::geom_polygon(fill = "blue", alpha = 0.2) +
-      ggplot2::geom_line(size=1) +
+      ggplot2::geom_line(linewidth = 1) +
       ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
-      ggplot2::scale_x_continuous("1 - specificity", limits=c(0,1)) +
-      ggplot2::scale_y_continuous("Sensitivity", limits=c(0,1)) + 
+      ggplot2::scale_x_continuous("1 - specificity", limits = c(0,1)) +
+      ggplot2::scale_y_continuous("Sensitivity", limits = c(0,1)) + 
       ggplot2::ggtitle(evalType)
   }
   
-  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  plot <- gridExtra::marrangeGrob(plots, nrow =length(plots), ncol = 1)
   
   if (!is.null(saveLocation)){
     if(!dir.exists(saveLocation)){
@@ -567,11 +567,11 @@ plotPrecisionRecall <- function(
       dplyr::select("positivePredictiveValue", "sensitivity")
     
     plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(.data$sensitivity, .data$positivePredictiveValue)) +
-      ggplot2::geom_line(size=1) +
+      ggplot2::geom_line(linewidth=1) +
       ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
       ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
       ggplot2::geom_hline(yintercept = inc, linetype="dashed", 
-        color = "red", size=1)  +
+        color = "red", linewidth = 1)  +
       ggplot2::ggtitle(evalType)
   }
   
@@ -1248,15 +1248,14 @@ plotSmoothCalibrationLoess <- function(data, span = 0.75) {
     fill = "blue",
     alpha = 0.2
   ) +
-  ggplot2::geom_segment(
-    ggplot2::aes(
-      x = 0,
-      xend = 1,
-      y = 0,
-      yend = 1,
-      color = "Ideal",
-      linetype = "Ideal"
-    )
+  ggplot2::annotate(
+    geom = "segment",
+    x = 0,
+    xend = 1,
+    y = 0,
+    yend = 1,
+    color = "red",
+    linetype = "dashed"
   ) +
   ggplot2::scale_linetype_manual(
     name = "Models",
@@ -1442,43 +1441,44 @@ plotPredictionDistribution <- function(
   plots <- list()
   length(plots) <- length(evalTypes)
   
-  for(i in 1:length(evalTypes)){
+  for (i in 1:length(evalTypes)) {
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$predictionDistribution %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) 
   
-  non05 <- x$P05PredictedProbability[x$class==0]
-  non95 <- x$P95PredictedProbability[x$class==0]
-  one05 <- x$P05PredictedProbability[x$class==1]
-  one95 <- x$P95PredictedProbability[x$class==1]
+  non05 <- x$P05PredictedProbability[x$class == 0]
+  non95 <- x$P95PredictedProbability[x$class == 0]
+  one05 <- x$P05PredictedProbability[x$class == 1]
+  one95 <- x$P95PredictedProbability[x$class == 1]
   
-  plots[[i]] <-   ggplot2::ggplot(x, ggplot2::aes(x=as.factor(.data$class),
-                                            ymin=.data$MinPredictedProbability,
-                                            lower=.data$P25PredictedProbability,
-                                            middle=.data$MedianPredictedProbability,
-                                            upper=.data$P75PredictedProbability, 
-                                            ymax=.data$MaxPredictedProbability, 
-                                            color=as.factor(.data$class))) + 
+  plots[[i]] <- ggplot2::ggplot(x,
+    ggplot2::aes(x = as.factor(class),
+                 ymin = .data$MinPredictedProbability,
+                 lower = .data$P25PredictedProbability,
+                 middle = .data$MedianPredictedProbability,
+                 upper = .data$P75PredictedProbability, 
+                 ymax = .data$MaxPredictedProbability, 
+                 color = as.factor(.data$class))) + 
     ggplot2::coord_flip() +
-    ggplot2::geom_boxplot(stat="identity")  +
+    ggplot2::geom_boxplot(stat = "identity")  +
     ggplot2::scale_x_discrete("Class") + 
     ggplot2::scale_y_continuous("Predicted Probability") + 
-    ggplot2::theme(legend.position="none") +
-    ggplot2::geom_segment(ggplot2::aes(x = 0.9, y = non05, 
-                     xend = 1.1, yend = non05), color='red') +
-    ggplot2::geom_segment(ggplot2::aes(x = 0.9, y = non95, 
-                                       xend = 1.1, yend = non95), color='red') +
-  ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one05, 
-                                     xend = 2.1, yend = one05)) +
-    ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one95, 
-                                       xend = 2.1, yend = one95)) +
-    ggplot2::ggtitle(evalType)
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::annotate("segment", x = 0.9, xend = 1.1, y = non05, yend = non05,
+                      color = "red") +
+    ggplot2::annotate("segment", x = 0.9, xend = 1.1, y = non95, yend = non95,
+                      color = "red") +
+    ggplot2::annotate("segment", x = 1.9, xend = 2.1, y = one05, yend = one05,
+                      color = "#00BFC4") +
+    ggplot2::annotate("segment", x = 1.9, xend = 2.1, y = one95, yend = one95,
+                      color = "#00BFC4") +
+     ggplot2::ggtitle(evalType)
   }
   
-  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  plot <- gridExtra::marrangeGrob(plots, nrow = length(plots), ncol = 1)
   
-  if (!is.null(saveLocation)){
-    if(!dir.exists(saveLocation)){
+  if (!is.null(saveLocation)) {
+    if (!dir.exists(saveLocation)) {
       dir.create(saveLocation, recursive = T)
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)

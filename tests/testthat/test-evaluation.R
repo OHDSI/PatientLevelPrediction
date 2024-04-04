@@ -38,15 +38,15 @@ test_that("modelBasedConcordance", {
 })
 
 test_that("evaluatePlp_survival", {
-  
+  N <- 100
   plpResultSurvivalPred <- data.frame(
-    rowId = 1:300, 
-    ageYear = sample(100, 300, replace = T),
-    gender = sample(c('8507','8532'), 300, replace = T),
-    outcomeCount = c(rep(1,40), rep(0,260)),
-    value = runif(300),
-    evaluationType = rep('Train', 300),
-    survivalTime = sample(2000, 300, replace = T)
+    rowId = 1:N, 
+    ageYear = sample(100, N, replace = T),
+    gender = sample(c('8507','8532'), N, replace = T),
+    outcomeCount = c(rep(1,N*0.1), rep(0,N*0.9)),
+    value = runif(N, max=0.1),
+    evaluationType = rep('Train', N),
+    survivalTime = sample(2000, N, replace = T)
   )
   attr(plpResultSurvivalPred, "metaData")$modelType <- 'survival'
   attr(plpResultSurvivalPred, 'metaData')$timepoint <- 365
