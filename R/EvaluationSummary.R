@@ -35,7 +35,7 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...){
     
     # auc
     ParallelLogger::logInfo(paste0('Calculating Performance for ', evalType))
-    ParallelLogger::logInfo('=============')
+   ParallelLogger::logInfo('=============')
     
     ParallelLogger::logTrace('Calculating AUC')
     auc <- computeAuc(predictionOfInterest, confidenceInterval = T)

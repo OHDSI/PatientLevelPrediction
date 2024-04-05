@@ -188,7 +188,7 @@ createLearningCurve <- function(
     nRuns <- length(trainFractions)
     
     settings = list(
-      plpData = plpData,
+      plpData = quote(plpData),
       outcomeId = outcomeId,
       analysisId = analysisId,
       populationSettings = populationSettings,
@@ -238,7 +238,7 @@ createLearningCurve <- function(
 
 lcWrapper <- function(settings){
   plpData <- PatientLevelPrediction::loadPlpData(settings$plpData)
-  settings$plpData <- plpData
+  settings$plpData <- quote(plpData)
   result <- tryCatch({do.call(runPlp, settings)},
                      warning = function(war) {
                        ParallelLogger::logInfo(paste0('a warning: ', war))
@@ -470,8 +470,8 @@ plotLearningCurve <- function(learningCurve,
   
   # create plot object
   plot <- tidyLearningCurve %>%
-    ggplot2::ggplot(ggplot2::aes_string(x = abscissa, y= 'value',
-      col = "Dataset")) +
+    ggplot2::ggplot(ggplot2::aes(x = .data[[abscissa]], y = .data[['value']],
+      col = .data[["Dataset"]])) +
     ggplot2::geom_line() +
     ggplot2::coord_cartesian(ylim = yAxisRange, expand = FALSE) +
     ggplot2::labs(title = plotTitle, subtitle = plotSubtitle, 

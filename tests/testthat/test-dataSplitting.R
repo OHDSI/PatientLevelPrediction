@@ -22,7 +22,7 @@ context("Data splitting")
 
 populationT <- plpData$cohorts
 populationT$outcomeCount <- sample(c(0,1), nrow(populationT), replace = T)
-attr(populationT, "metaData")$outcomeId <- 2
+attr(populationT, "metaData")$outcomeId <- outcomeId
 attr(populationT, "metaData")$populationSettings <- list(madeup = T)
 attr(populationT, "metaData")$restrictPlpDataSettings <- list(madeup = T)
 attr(populationT, "metaData")$attrition <- c(1,2,3)

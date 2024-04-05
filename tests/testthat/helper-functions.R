@@ -12,11 +12,12 @@ copyTrainData <- function(trainData) {
 }
 
 # create tiny dataset with subset of covariates based on lasso fit
-createTinyPlpData <- function(plpData, plpResult) {
+createTinyPlpData <- function(plpData, plpResult, n= 20) {
   
   covariates <- plpResult$model$covariateImportance %>% 
-    dplyr::slice_max(order_by = abs(covariateValue),n = 20, with_ties=F) %>% 
-    dplyr::pull(covariateId)
+    dplyr::slice_max(order_by = abs(.data$covariateValue),
+                     n = n, with_ties = F) %>% 
+    dplyr::pull(.data$covariateId)
   tinyPlpData <- plpData
   tinyPlpData$covariateData <- Andromeda::copyAndromeda(plpData$covariateData)
   

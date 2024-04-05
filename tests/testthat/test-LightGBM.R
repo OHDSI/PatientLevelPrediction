@@ -111,7 +111,7 @@ test_that("LightGBM working checks", {
   
   expect_lte(nrow(fitModel$covariateImportance), trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   
-  expect_equal(fitModel$modelDesign$outcomeId, 2)
+  expect_equal(fitModel$modelDesign$outcomeId, outcomeId)
   expect_equal(fitModel$modelDesign$targetId, 1)
   # TODO check other model design values?
   

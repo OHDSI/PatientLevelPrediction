@@ -32,7 +32,7 @@ prediction <- data.frame(
 metaData <- list(
   modelType = "binary", 
   targetId = 1,
-  outcomeId = 2,
+  outcomeId = outcomeId,
   timepoint = 365
 )
 
@@ -66,7 +66,7 @@ test_that("recalibratePlpRefit", {
   newPop <- plpResult$prediction %>% dplyr::select(-"value") %>% dplyr::filter(.data$evaluationType %in% c('Test','Train'))
   attr(newPop, 'metaData') <- list(
     targetId = 1, 
-    outcomeId = 2,
+    outcomeId = outcomeId,
     restrictPlpDataSettings = PatientLevelPrediction::createRestrictPlpDataSettings(),
     populationSettings = PatientLevelPrediction::createStudyPopulationSettings()
   )
@@ -95,7 +95,7 @@ test_that("survival", {
 metaData <- list(
   modelType = "survival", 
   targetId = 1,
-  outcomeId = 2,
+  outcomeId = outcomeId,
   timepoint = 365
 )
 

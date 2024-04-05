@@ -293,7 +293,7 @@ test_that("population creation parameters", {
   
   studyPopulation <- createStudyPopulation(
     plpData = plpData,
-    outcomeId = 3,
+    outcomeId = outcomeId,
     populationSettings = defaultSettings()
   )
   
@@ -306,7 +306,7 @@ test_that("population creation parameters", {
   #firstExposureOnly test (should have no effect on simulated data)
   studyPopulation <- createStudyPopulation(
     plpData = plpData,
-    outcomeId = 3,
+    outcomeId = outcomeId,
     populationSettings = defaultSettings(firstExposureOnly = T)
     )
   
@@ -317,7 +317,7 @@ test_that("population creation parameters", {
   #requireTimeAtRisk
   studyPopulation <- createStudyPopulation(
     plpData = plpData,
-    outcomeId = 3, 
+    outcomeId = outcomeId, 
     populationSettings = defaultSettings(requireTimeAtRisk = T)
     )
                                            
@@ -330,7 +330,7 @@ test_that("population creation parameters", {
   expect_warning(
     createStudyPopulation(
       plpData = plpData,
-      outcomeId = 3, 
+      outcomeId = outcomeId, 
       populationSettings = defaultSettings(requireTimeAtRisk = T, minTimeAtRisk = 99999)
     )
   )
@@ -338,7 +338,7 @@ test_that("population creation parameters", {
   #washoutPeriod = 365,
   studyPopulation <- createStudyPopulation(
     plpData = plpData,
-    outcomeId = 3, 
+    outcomeId = outcomeId, 
     populationSettings = defaultSettings(washoutPeriod = 365)
   )
   nrOutcomes4 <- sum(studyPopulation$outcomeCount)
@@ -349,7 +349,7 @@ test_that("population creation parameters", {
   expect_error(
     createStudyPopulation(
       plpData = plpData,
-      outcomeId = 3, 
+      outcomeId = outcomeId, 
       populationSettings = defaultSettings(washoutPeriod = -1)
     )
   )
@@ -358,7 +358,7 @@ test_that("population creation parameters", {
   expect_error(
     createStudyPopulation(
       plpData = plpData,
-      outcomeId = 3, 
+      outcomeId = outcomeId, 
       populationSettings = defaultSettings(
         priorOutcomeLookback = -1, 
         removeSubjectsWithPriorOutcome = T
@@ -370,7 +370,7 @@ test_that("population creation parameters", {
   expect_error(
     createStudyPopulation(
       plpData = plpData,
-      outcomeId = 3, 
+      outcomeId = outcomeId, 
       populationSettings = defaultSettings(
         minTimeAtRisk  = -1, 
         requireTimeAtRisk = T
@@ -382,7 +382,7 @@ test_that("population creation parameters", {
   expect_error(
     createStudyPopulation(
       plpData = plpData,
-      outcomeId = 3, 
+      outcomeId = outcomeId, 
       populationSettings = defaultSettings(
         startAnchor = 'cohort stard'
       )
@@ -394,7 +394,7 @@ test_that("population creation parameters", {
   expect_error(
     createStudyPopulation(
       plpData = plpData,
-      outcomeId = 3, 
+      outcomeId = outcomeId, 
       populationSettings = defaultSettings(
         endAnchor = 'cohort ent'
       )
@@ -495,4 +495,31 @@ test_that("population creation parameters", {
   
 })
 
+testthat::test_that("Providing an existing population and skipping population creation works", {
+  popSize <- 400
+  newPopulation <- population[sample.int(nrow.default(population), popSize), ]
+  
+  tinyPlpData$population <- newPopulation
+  
+  plpResults <- runPlp(
+    plpData = tinyPlpData,
+    outcomeId = 2,
+    analysisId = "1",
+    analysisName = "existing population",
+    populationSettings = createStudyPopulationSettings(),
+    splitSettings = createDefaultSplitSetting(),
+    modelSettings = setLassoLogisticRegression(),
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE,
+      runPreprocessData = FALSE,
+      runModelDevelopment = TRUE
+    )
+  )
+  
+  trainPredictions <- plpResults$prediction %>%
+    dplyr::filter(.data$evaluationType == "Train") %>% nrow.default()
+  testPredictions <- plpResults$prediction %>%
+    dplyr::filter(.data$evaluationType == "Test") %>% nrow.default()
+  expect_equal(popSize, trainPredictions + testPredictions)
+})
 

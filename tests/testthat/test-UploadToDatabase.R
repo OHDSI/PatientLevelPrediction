@@ -129,7 +129,7 @@ test_that("results uploaded to database", {
   }
   plpResult$model$validationDetails <- list(
     targetId = 1, 
-    outcomeId = 3,
+    outcomeId = outcomeId,
     developmentDatabase = 'test',
     validationDatabase = 'test',
     populationSettings = plpResult$model$modelDesign$populationSettings, 

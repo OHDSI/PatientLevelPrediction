@@ -2,8 +2,8 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
-Version: 6.3.6
-Date: 2023-10-09
+Version: 6.3.7
+Date: 2024-04-04
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
@@ -43,7 +43,6 @@ Imports:
     rlang,
     SqlRender (>= 1.1.3),
     survival,
-    tibble,
     tidyr,
     utils
 Suggests:
@@ -74,9 +73,7 @@ Remotes:
     ohdsi/BigKnn,
     ohdsi/Eunomia,
     ohdsi/FeatureExtraction,
-    ohdsi/IterativeHardThresholding,
-    ohdsi/ParallelLogger,
     ohdsi/ShinyAppBuilder,
-    ohdsi/ResultModelManager
-RoxygenNote: 7.2.3
+    ohdsi/ResultModelManager,
+RoxygenNote: 7.3.1
 Encoding: UTF-8

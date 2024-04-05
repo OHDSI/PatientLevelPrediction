@@ -115,7 +115,7 @@ test_that("toSparseM", {
                                                          outcomes=2))
   
   outcomes <- data.frame(rowId=c(1,2), 
-                         outcomeId=rep(2,2), 
+                         outcomeId=rep(outcomeId,2), 
                          daysToEvent=c(150,40))
   
   FplpData <- list(cohorts=cohorts,

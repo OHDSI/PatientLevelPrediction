@@ -1,6 +1,8 @@
 # fix issue with nrow - temp fix for me locally
 nrow <- function(x){UseMethod("nrow",x)}
+#' @exportS3Method NULL
 nrow.default <- base::nrow
+#' @exportS3Method NULL
 nrow.tbl <- function(x){x %>% dplyr::tally() %>% dplyr::pull()}
 
 
@@ -101,9 +103,9 @@ configurePython <- function(envname='PLP', envtype=NULL, condaPythonVersion="3.1
   
   if(is.null(envtype)){
     if(getOs()=='windows'){
-      envtype=='conda'
+      envtype <- "conda"
     } else {
-      envtype=='python'
+      envtype <- "python"
     }
   }
   

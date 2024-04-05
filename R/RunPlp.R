@@ -268,21 +268,23 @@ runPlp <- function(
   })
   
   # create the population
-  population <- tryCatch(
-    {
-      do.call(
-        createStudyPopulation, 
-        list(
-          plpData = plpData,
-          outcomeId = outcomeId,
-          populationSettings = populationSettings, 
-          population = plpData$population
-        )
-      )
-    },
+  if(!is.null(plpData$population)) {
+    ParallelLogger::logInfo('Using existing population')
+    population <- plpData$population
+  } else {
+    ParallelLogger::logInfo('Creating population')
+    population <- tryCatch({
+      do.call(createStudyPopulation,
+              list(plpData = plpData,
+                   outcomeId = outcomeId,
+                   populationSettings = populationSettings,
+                   population = plpData$population
+                   )
+      )},
     error = function(e){ParallelLogger::logError(e); return(NULL)}
-  )
-  
+    )
+  }
+    
   if(is.null(population)){
     stop('population NULL')
   }

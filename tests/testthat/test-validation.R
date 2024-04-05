@@ -17,22 +17,6 @@
 context("Validation")
 
 # Test unit for the creation of the study externalValidatePlp
-
-connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-Eunomia::createCohorts(connectionDetails)
-
-databaseDetails <- createDatabaseDetails(
-  connectionDetails = connectionDetails, 
-  cdmDatabaseSchema = "main", 
-  cdmDatabaseName = "main",
-  cohortDatabaseSchema = "main", 
-  cohortTable = "cohort", 
-  outcomeDatabaseSchema = "main", 
-  outcomeTable =  "cohort",
-  targetId = 1, 
-  outcomeIds = 3, #make this ids
-  cdmVersion = 5)
-
 modelVal <- loadPlpModel(file.path(saveLoc, 'Test', 'plpResult', 'model'))
 validationDatabaseDetailsVal <- databaseDetails  # from run multiple tests
 validationRestrictPlpDataSettingsVal <- createRestrictPlpDataSettings(washoutPeriod = 0, sampleSize = NULL)

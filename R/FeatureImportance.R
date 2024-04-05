@@ -105,23 +105,20 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
     ParallelLogger::logInfo(paste0('Using all ', cores))
     ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
   }
-  
+  getVpiSettings <- function(i) {
+    result <- list(plpModel = plpResult$model, 
+                   population = population, 
+                   plpDataLocation = plpDataLocation,
+                   covariateId = covariates[i],
+                   repeats = repeats)
+    return(result)
+  }
+  if (cores > 1) {
   cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
   ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda"))
   
-  
-  getVpiSettings <- function(i){
-    result <-list(plpModel = plpResult$model, 
-                  population = population, 
-                  plpDataLocation = plpDataLocation,
-                  covariateId = covariates[i],
-                  repeats = repeats)
-    return(result)
-  }
   vpiSettings <- lapply(1:length(covariates), getVpiSettings)
 
-  
-  #lapply(vpiSettings, function(x) do.call(permutePerf, x))
   aucP <- ParallelLogger::clusterApply(cluster = cluster, 
                                                 x = vpiSettings, 
                                                 fun = permutePerf, 
@@ -129,13 +126,15 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
                                                 progressBar = TRUE)
   ParallelLogger::stopCluster(cluster)
   
+  } else {
+    ParallelLogger::logInfo("Running in serial")
+    aucP <- lapply(1:length(covariates), function(i) {
+      permutePerf(getVpiSettings(i))
+    })
+  }
   aucP <- do.call(c, aucP)
-  
-  # do this in parellel
-
   varImp <- data.frame(covariateId = covariates,
-                       pfi = auc-aucP)
-  
+                       pfi = auc - aucP)
   return(varImp)
   
 }
@@ -200,7 +199,7 @@ permute <- function(plpDataLocation,cId,population){
   
     # find a new random selection of people and give them the covariate and value
     newPlp <- sample(population$rowId,nSamp)
-    newData <- tibble::as_tibble(cbind(rowId = newPlp,coi[,-1]))
+    newData <- dplyr::as_tibble(cbind(rowId = newPlp,coi[,-1]))
     
     # swap old covariate data with new
     plpData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$covariateId != !!cId) %>% dplyr::collect()
@@ -215,7 +214,7 @@ permute <- function(plpDataLocation,cId,population){
     
     # sample the pop to replace 
     swapPlp <- sample(population$rowId,nSamp)
-    haveCidDataSwapped <- tibble::as_tibble(cbind(rowId = swapPlp,haveCidData[,-1]))
+    haveCidDataSwapped <- dplyr::as_tibble(cbind(rowId = swapPlp,haveCidData[,-1]))
     
     # find the swapped people to switch 
     connectedCovs <- plpData$covariateData$covariateRef %>% 
@@ -228,7 +227,7 @@ permute <- function(plpDataLocation,cId,population){
       dplyr::filter(.data$rowId %in% swapPlp) %>% 
       dplyr::collect()
     
-    swappedForCid <- tibble::as_tibble(cbind(rowId = haveCidData$rowId[1:nrow(plpToSwap)],plpToSwap[,-1]))
+    swappedForCid <- dplyr::as_tibble(cbind(rowId = haveCidData$rowId[1:nrow(plpToSwap)],plpToSwap[,-1]))
     
 
     # swap old covariate data with new
